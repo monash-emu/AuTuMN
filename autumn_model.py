@@ -205,4 +205,4 @@ population.integrate(times)
 labels = population.labels
 population.make_time_plots(labels)
 
-print population.get_optima_compatible_soln()
+print (population.get_optima_compatible_soln())

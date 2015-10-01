@@ -31,7 +31,8 @@ class PopulationSystem():
         self.params[label] = val
 
     def convert_list_to_compartments(self, vec):
-        return {l:vec[i] for i, l in enumerate(self.labels)}
+
+        return {l: vec[i] for i, l in enumerate(self.labels)}
 
 #        result = {}
 #        n = len(self.labels)
@@ -99,7 +100,16 @@ class PopulationSystem():
         self.temp_vars["rate_infection_multiplier"] = \
             self.params["n_infection_contact"] * self.compartments["infectious"] \
             / self.temp_vars["pop_total"]
-        
+            
+    def calculate_susceptible_flows(self):
+        self.flows["susceptibles"] = \
+            self.params["rate_pop_birth"] * self.temp_vars["pop_total"] \
+            + self.compartments["under_treatment"] \
+                * self.params["rate_treatment_completion"] \
+            - self.compartments["susceptibles"] \
+                * ( self.temp_vars["rate_infection_multiplier"] \
+                    + self.params["rate_pop_death"])
+            
     def calculate_latent_flows(self):
         self.flows["early_latents"] = \
             self.compartments["susceptibles"] * self.temp_vars["rate_infection_multiplier"]   \
@@ -123,13 +133,7 @@ class PopulationSystem():
     
         self.flows = {}
     
-        self.flows["susceptibles"] = \
-            self.params["rate_pop_birth"] * self.temp_vars["pop_total"] \
-            + self.compartments["late_latents"] \
-                * self.params["rate_treatment_completion"]  \
-            - self.compartments["susceptibles"] \
-                * (   self.temp_vars["rate_infection_multiplier"] \
-                    + self.params["rate_pop_death"]) 
+        self.calculate_susceptible_flows()
             
         self.calculate_latent_flows()
         
@@ -156,7 +160,7 @@ class PopulationSystem():
         for label in self.labels:
             total_flow = total_flow + self.flows[label]
             
-        assert total_flow == 0.0
+#        assert total_flow == 0.0
 
 def make_times(start, end, step):
     times = []
@@ -194,7 +198,7 @@ population.set_param("rate_treatment_completion", .9 / time_treatment)
 population.set_param("rate_treatment_default", .05 / time_treatment)
 population.set_param("rate_treatment_death", .05 / time_treatment)
 
-times = make_times(0, 50, 5)
+times = make_times(0, 50, 1)
 population.integrate(times)
 
 labels = population.labels
@@ -202,37 +206,7 @@ population.make_time_plots(labels)
 
 
 
-population2 = PopulationSystem()
 
-population2.set_compartment("susceptibles", 1e6)
-population2.set_compartment("early_latents", 0.)
-population2.set_compartment("late_latents", 0.)
-population2.set_compartment("infectious", 1.)
-population2.set_compartment("under_treatment", 0.)
-
-population2.set_param("rate_pop_birth", 20. / 1e3)
-population2.set_param("rate_pop_death", 1. / 65)
-    
-population2.set_param("n_infection_contact", 10.)
-population2.set_param("rate_infection_early_progress", .1 / .5)
-population2.set_param("rate_infection_late_progress", .1 / 100.)
-population2.set_param("rate_infection_stabilise", .9 / .5)
-population2.set_param("rate_infection_spont_recover", .6 / 3.)
-population2.set_param("rate_infection_death", .4 / 3.)
-    
-time_treatment = .23
-population2.set_param("rate_treatment_detect", 1.)
-population2.set_param("time_treatment", time_treatment)
-population2.set_param("rate_treatment_completion", .9 / time_treatment)
-population2.set_param("rate_treatment_default", .05 / time_treatment)
-population2.set_param("rate_treatment_death", .05 / time_treatment)
-
-times = make_times(0, 50, 2)
-population2.integrate(times)
-
-labels = population2.labels
-population2.make_time_plots(labels, 'output.png')
 
 
 print population.get_optima_compatible_soln()
-print population2.get_optima_compatible_soln()

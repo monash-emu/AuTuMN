@@ -12,6 +12,7 @@ time: years
 import math
 from scipy.integrate import odeint
 import matplotlib.pylab as pylab
+import pylab as pl
 
 
 class PopulationSystem():
@@ -56,14 +57,36 @@ class PopulationSystem():
 
     def make_time_plots(self, plot_labels, png=None):
         n_row = int(math.ceil(len(plot_labels) / 2.))
+        n_col=2
 
         for i_plot, plot_label in enumerate(plot_labels):
             i_label = self.labels.index(plot_label)
             vals = self.soln[:, i_label]
-            pylab.subplot(n_row, 2, i_plot+1)
-            pylab.plot(self.times, vals)
+            pylab.subplot(n_row, n_col, i_plot+1)
+            pylab.plot(self.times, vals, linewidth=2)
             pylab.ylabel(self.labels[i_label])
+            pylab.xlabel('time')
+            pylab.tight_layout()
+        
+        if png is None:
+            pylab.show()
+        else:
+            pylab.savefig(png)
+            
+    def make_time_plots_color(self, plot_labels, png=None):
+        n_row = int(math.ceil(len(plot_labels) / 2.))
+        n_col=2
 
+        for i_plot, plot_label in enumerate(plot_labels):
+            i_label = self.labels.index(plot_label)
+            vals = self.soln[:, i_label]
+            colors = ('r', 'b', 'm', 'g', 'k') 
+            for row in range(n_row):
+                for col in range(n_col):
+                    pylab.subplot(n_row, n_col, i_plot+1)
+                    color = colors[i_plot % len(colors)]
+                    pylab.plot(self.times, vals, linewidth=2, color=color)
+        
         pylab.xlabel('time')
         pylab.tight_layout()
 
@@ -71,7 +94,33 @@ class PopulationSystem():
             pylab.show()
         else:
             pylab.savefig(png)
-
+            
+#Plot all compartments in one panel     
+    def make_time_plots_one_panel(self, plot_labels, png=None):
+        for i_plot, plot_label in enumerate(plot_labels):
+            i_label = self.labels.index(plot_label)
+            print (i_label)
+        pl.subplot(211)
+        pl.plot(self.times,self.soln[:,0], '-r', label = 'Susceptible', linewidth=2)
+        pl.plot(self.times,self.soln[:,1], '-b', label = 'Latent_early', linewidth=2) 
+        pl.plot(self.times,self.soln[:,2], '-m', label = 'Latent_late', linewidth=2) 
+        pl.plot(self.times,self.soln[:,3], '-g', label = 'Active', linewidth=2) 
+        pl.plot(self.times,self.soln[:,4], '-k', label = 'Under treatment', linewidth=2) 
+        pl.xlabel('Time')
+        pl.ylabel('Number of patients')
+        pl.legend(loc=0)
+        pl.show()
+        
+        pl.subplot(212)
+        pl.plot(self.times,self.soln[:,1], '-b', label = 'Latent_early', linewidth=2) 
+        pl.plot(self.times,self.soln[:,2], '-m', label = 'Latent_late', linewidth=2) 
+        pl.plot(self.times,self.soln[:,3], '-g', label = 'Active', linewidth=2) 
+        pl.plot(self.times,self.soln[:,4], '-k', label = 'Under treatment', linewidth=2) 
+        pl.xlabel('Time')
+        pl.ylabel('Number of patients')
+        pl.legend(loc=0)
+        pl.show()
+        
     def get_optima_compatible_soln(self):
         return self.soln[0, :]
 
@@ -92,8 +141,7 @@ class PopulationSystem():
         self.flows["deaths"] = \
             self.params["rate_tbfixed_death"] * self.compartments["active"] \
             + self.params["rate_tbprog_death"] * self.compartments["undertreatment"] \
-            + self.params["rate_pop_death"] \
-                * ( self.compartments["susceptible"]
+            + self.params["rate_pop_death"] * ( self.compartments["susceptible"] \
                     + self.compartments["latent_early"]
                     + self.compartments["latent_late"])
 
@@ -101,46 +149,46 @@ class PopulationSystem():
         self.flows["susceptible"] = \
             self.flows["births"] \
             + self.compartments["undertreatment"] \
-                * self.params["rate_tbprog_completion"] \
+            * self.params["rate_tbprog_completion"] \
             - self.compartments["susceptible"] \
                 * ( self.tracked_vars["rate_forceinfection"] \
                     + self.params["rate_pop_death"])
 
     def calculate_latent_flows(self):
         self.flows["latent_early"] = \
-            self.compartments["susceptible"] * self.tracked_vars["rate_forceinfection"]   \
+            self.compartments["susceptible"] * self.tracked_vars["rate_forceinfection"] \
             - self.compartments["latent_early"] \
-                * (   self.params["rate_tbfixed_earlyprog"]  \
+                * (self.params["rate_tbfixed_earlyprog"] \
                     + self.params["rate_tbfixed_stabilise"] \
                     + self.params["rate_pop_death"])
 
         self.flows["latent_late"] = \
-            self.compartments["latent_early"] * self.params["rate_tbfixed_stabilise"]  \
+            self.compartments["latent_early"] * self.params["rate_tbfixed_stabilise"] \
             + self.compartments["active"] * self.params["rate_tbfixed_recover"] \
             - self.compartments["latent_late"] \
-                * (   self.params["rate_tbfixed_lateprog"] 
+                * (self.params["rate_tbfixed_lateprog"] 
                     + self.params["rate_pop_death"]) 
 
     def calculate_active_flows(self):
         self.flows["active"] = \
             self.compartments["latent_early"] \
-                * self.params["rate_tbfixed_earlyprog"]   \
+                * self.params["rate_tbfixed_earlyprog"] \
             + self.compartments["latent_late"] \
-                * self.params["rate_tbfixed_lateprog"]   \
+                * self.params["rate_tbfixed_lateprog"] \
             + self.compartments["undertreatment"] \
                 * self.params["rate_tbprog_default"] \
             - self.compartments["active"] \
-                * (   self.params["rate_tbprog_detect"] \
-                    + self.params["rate_tbfixed_recover"]  \
-                    + self.params["rate_tbfixed_death"]  \
+                * (self.params["rate_tbprog_detect"] \
+                    + self.params["rate_tbfixed_recover"] \
+                    + self.params["rate_tbfixed_death"] \
                     + self.params["rate_pop_death"])
 
     def calculate_undertreatment_flows(self):
         self.flows["undertreatment"] = \
-            self.compartments["active"] * self.params["rate_tbprog_detect"]   \
+            self.compartments["active"] * self.params["rate_tbprog_detect"] \
             - self.compartments["undertreatment"] \
-                * (   self.params["rate_tbprog_default"] \
-                    + self.params["rate_tbprog_death"]  \
+                * (self.params["rate_tbprog_default"] \
+                    + self.params["rate_tbprog_death"] \
                     + self.params["rate_pop_death"] \
                     + self.params["rate_tbprog_completion"])
 
@@ -161,10 +209,11 @@ class PopulationSystem():
     def checks(self):
         for label in self.labels: # Check all compartments are positive
             assert self.compartments[label] >= 0.0
+            #assert sum(self.flows.values())==0.0 
         # Check total flows sum (approximately) to zero
         assert abs((sum(self.flows.values()) - 2 * self.flows["births"])) < 0.1
-
-
+        
+        
 def make_times(start, end, step):
     times = []
     time = start
@@ -204,5 +253,7 @@ population.integrate(times)
 
 labels = population.labels
 population.make_time_plots(labels)
+population.make_time_plots_color(labels)
+population.make_time_plots_one_panel(labels)
 
 print (population.get_optima_compatible_soln())

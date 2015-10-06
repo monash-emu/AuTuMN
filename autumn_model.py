@@ -12,7 +12,6 @@ time: years
 import math
 from scipy.integrate import odeint
 import matplotlib.pylab as pylab
-import pylab as pl
 
 
 class PopulationSystem():
@@ -32,7 +31,6 @@ class PopulationSystem():
         self.params[label] = val
 
     def convert_list_to_compartments(self, vec):
-
         return {l: vec[i] for i, l in enumerate(self.labels)}
 
     def convert_compartments_to_list(self, compartments):
@@ -100,26 +98,26 @@ class PopulationSystem():
         for i_plot, plot_label in enumerate(plot_labels):
             i_label = self.labels.index(plot_label)
             print (i_label)
-        pl.subplot(211)
-        pl.plot(self.times,self.soln[:,0], '-r', label = 'Susceptible', linewidth=2)
-        pl.plot(self.times,self.soln[:,1], '-b', label = 'Latent_early', linewidth=2) 
-        pl.plot(self.times,self.soln[:,2], '-m', label = 'Latent_late', linewidth=2) 
-        pl.plot(self.times,self.soln[:,3], '-g', label = 'Active', linewidth=2) 
-        pl.plot(self.times,self.soln[:,4], '-k', label = 'Under treatment', linewidth=2) 
-        pl.xlabel('Time')
-        pl.ylabel('Number of patients')
-        pl.legend(loc=0)
-        pl.show()
+        pylab.subplot(211)
+        pylab.plot(self.times,self.soln[:,0], '-r', label = 'Susceptible', linewidth=2)
+        pylab.plot(self.times,self.soln[:,1], '-b', label = 'Latent_early', linewidth=2) 
+        pylab.plot(self.times,self.soln[:,2], '-m', label = 'Latent_late', linewidth=2) 
+        pylab.plot(self.times,self.soln[:,3], '-g', label = 'Active', linewidth=2) 
+        pylab.plot(self.times,self.soln[:,4], '-k', label = 'Under treatment', linewidth=2) 
+        pylab.xlabel('Time')
+        pylab.ylabel('Number of patients')
+        pylab.legend(loc=0)
+        pylab.show()
         
-        pl.subplot(212)
-        pl.plot(self.times,self.soln[:,1], '-b', label = 'Latent_early', linewidth=2) 
-        pl.plot(self.times,self.soln[:,2], '-m', label = 'Latent_late', linewidth=2) 
-        pl.plot(self.times,self.soln[:,3], '-g', label = 'Active', linewidth=2) 
-        pl.plot(self.times,self.soln[:,4], '-k', label = 'Under treatment', linewidth=2) 
-        pl.xlabel('Time')
-        pl.ylabel('Number of patients')
-        pl.legend(loc=0)
-        pl.show()
+        pylab.subplot(212)
+        pylab.plot(self.times,self.soln[:,1], '-b', label = 'Latent_early', linewidth=2) 
+        pylab.plot(self.times,self.soln[:,2], '-m', label = 'Latent_late', linewidth=2) 
+        pylab.plot(self.times,self.soln[:,3], '-g', label = 'Active', linewidth=2) 
+        pylab.plot(self.times,self.soln[:,4], '-k', label = 'Under treatment', linewidth=2) 
+        pylab.xlabel('Time')
+        pylab.ylabel('Number of patients')
+        pylab.legend(loc=0)
+        pylab.show()
         
     def get_optima_compatible_soln(self):
         return self.soln[0, :]
@@ -259,7 +257,6 @@ population.make_time_plots_color(labels)
 population.make_time_plots_one_panel(labels)
 
 
- # Printing didn't work so used brackets
+# Printing didn't work so used brackets
 
 print (population.get_optima_compatible_soln())
-s

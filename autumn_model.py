@@ -3,7 +3,7 @@
 
 """
 
-Building up a library for disease spread model
+Building up an object oriented disease spread model
 
 time: years
 
@@ -12,6 +12,7 @@ time: years
 import math
 from scipy.integrate import odeint
 import matplotlib.pylab as pylab
+import pylab as pl
 
 
 class PopulationSystem():
@@ -20,7 +21,7 @@ class PopulationSystem():
         self.labels = []
         self.init_compartments = {}
         self.flows = {}
-        self.temp_vars = {}
+        self.tracked_vars = {}
         self.params = {}
 
     def set_compartment(self, label, init_val=0.0):
@@ -31,28 +32,12 @@ class PopulationSystem():
         self.params[label] = val
 
     def convert_list_to_compartments(self, vec):
-        return {l:vec[i] for i, l in enumerate(self.labels)}
 
-#        result = {}
-#        n = len(self.labels)
-#        for i in range(n):
-#            key = self.labels[i]
-#            val = vec[i]
-#            result[key] = val
-#        
-#        return result
-
+        return {l: vec[i] for i, l in enumerate(self.labels)}
 
     def convert_compartments_to_list(self, compartments):
         return [compartments[l] for l in self.labels]
 
-#        result = []
-#        for l in self.labels:
-#            c = compartments[l]
-#            result.append(c)
-#            
-#        return result
-        
     def get_init_list(self):
         return self.convert_compartments_to_list(self.init_compartments)
 
@@ -72,14 +57,36 @@ class PopulationSystem():
 
     def make_time_plots(self, plot_labels, png=None):
         n_row = int(math.ceil(len(plot_labels) / 2.))
+        n_col=2
 
         for i_plot, plot_label in enumerate(plot_labels):
             i_label = self.labels.index(plot_label)
-            vals = self.soln[:,i_label]
-            pylab.subplot(n_row, 2, i_plot+1)
-            pylab.plot(self.times, vals)
+            vals = self.soln[:, i_label]
+            pylab.subplot(n_row, n_col, i_plot+1)
+            pylab.plot(self.times, vals, linewidth=2)
             pylab.ylabel(self.labels[i_label])
+            pylab.xlabel('time')
+            pylab.tight_layout()
+        
+        if png is None:
+            pylab.show()
+        else:
+            pylab.savefig(png)
+            
+    def make_time_plots_color(self, plot_labels, png=None):
+        n_row = int(math.ceil(len(plot_labels) / 2.))
+        n_col=2
 
+        for i_plot, plot_label in enumerate(plot_labels):
+            i_label = self.labels.index(plot_label)
+            vals = self.soln[:, i_label]
+            colors = ('r', 'b', 'm', 'g', 'k') 
+            for row in range(n_row):
+                for col in range(n_col):
+                    pylab.subplot(n_row, n_col, i_plot+1)
+                    color = colors[i_plot % len(colors)]
+                    pylab.plot(self.times, vals, linewidth=2, color=color)
+        
         pylab.xlabel('time')
         pylab.tight_layout()
 
@@ -87,77 +94,128 @@ class PopulationSystem():
             pylab.show()
         else:
             pylab.savefig(png)
-
-    def get_optima_compatible_soln(self):
-        return self.soln[0,:]
-
-    def calculate_temp_vars(self):
-        self.temp_vars = {}
-    
-        self.temp_vars["pop_total"] = sum(self.compartments.values())
-    
-        self.temp_vars["rate_infection_multiplier"] = \
-            self.params["n_infection_contact"] * self.compartments["infectious"] \
-            / self.temp_vars["pop_total"]
+            
+#Plot all compartments in one panel     
+    def make_time_plots_one_panel(self, plot_labels, png=None):
+        for i_plot, plot_label in enumerate(plot_labels):
+            i_label = self.labels.index(plot_label)
+            print (i_label)
+        pl.subplot(211)
+        pl.plot(self.times,self.soln[:,0], '-r', label = 'Susceptible', linewidth=2)
+        pl.plot(self.times,self.soln[:,1], '-b', label = 'Latent_early', linewidth=2) 
+        pl.plot(self.times,self.soln[:,2], '-m', label = 'Latent_late', linewidth=2) 
+        pl.plot(self.times,self.soln[:,3], '-g', label = 'Active', linewidth=2) 
+        pl.plot(self.times,self.soln[:,4], '-k', label = 'Under treatment', linewidth=2) 
+        pl.xlabel('Time')
+        pl.ylabel('Number of patients')
+        pl.legend(loc=0)
+        pl.show()
         
-    def calculate_latent_flows(self):
-        self.flows["early_latents"] = \
-            self.compartments["susceptibles"] * self.temp_vars["rate_infection_multiplier"]   \
-            - self.compartments["early_latents"] \
-                * (   self.params["rate_infection_early_progress"]  \
-                    + self.params["rate_infection_stabilise"] \
+        pl.subplot(212)
+        pl.plot(self.times,self.soln[:,1], '-b', label = 'Latent_early', linewidth=2) 
+        pl.plot(self.times,self.soln[:,2], '-m', label = 'Latent_late', linewidth=2) 
+        pl.plot(self.times,self.soln[:,3], '-g', label = 'Active', linewidth=2) 
+        pl.plot(self.times,self.soln[:,4], '-k', label = 'Under treatment', linewidth=2) 
+        pl.xlabel('Time')
+        pl.ylabel('Number of patients')
+        pl.legend(loc=0)
+        pl.show()
+        
+    def get_optima_compatible_soln(self):
+        return self.soln[0, :]
+
+    def calculate_tracked_vars(self):
+        self.tracked_vars = {}
+
+        self.tracked_vars["pop_total"] = sum(self.compartments.values())
+
+        self.tracked_vars["rate_forceinfection"] = \
+            self.params["n_tbfixed_contact"] * self.compartments["active"] \
+            / self.tracked_vars["pop_total"]
+
+    def calculate_births_flows(self):
+        self.flows["births"] = \
+            self.params["rate_pop_birth"] * self.tracked_vars["pop_total"]
+
+    def calculate_deaths_flows(self):
+        self.flows["deaths"] = \
+            self.params["rate_tbfixed_death"] * self.compartments["active"] \
+            + self.params["rate_tbprog_death"] * self.compartments["undertreatment"] \
+            + self.params["rate_pop_death"] * ( self.compartments["susceptible"] \
+                    + self.compartments["latent_early"]
+                    + self.compartments["latent_late"])
+
+    def calculate_susceptible_flows(self):
+        self.flows["susceptible"] = \
+            self.flows["births"] \
+            + self.compartments["undertreatment"] \
+            * self.params["rate_tbprog_completion"] \
+            - self.compartments["susceptible"] \
+                * ( self.tracked_vars["rate_forceinfection"] \
                     + self.params["rate_pop_death"])
-              
-        self.flows["late_latents"] = \
-            self.compartments["early_latents"] * self.params["rate_infection_stabilise"]  \
-            + self.compartments["infectious"] * self.params["rate_infection_spont_recover"] \
-            - self.compartments["late_latents"] \
-                * (   self.params["rate_infection_late_progress"] 
+
+    def calculate_latent_flows(self):
+        self.flows["latent_early"] = \
+            self.compartments["susceptible"] * self.tracked_vars["rate_forceinfection"] \
+            - self.compartments["latent_early"] \
+                * (self.params["rate_tbfixed_earlyprog"] \
+                    + self.params["rate_tbfixed_stabilise"] \
+                    + self.params["rate_pop_death"])
+
+        self.flows["latent_late"] = \
+            self.compartments["latent_early"] * self.params["rate_tbfixed_stabilise"] \
+            + self.compartments["active"] * self.params["rate_tbfixed_recover"] \
+            - self.compartments["latent_late"] \
+                * (self.params["rate_tbfixed_lateprog"] 
                     + self.params["rate_pop_death"]) 
 
-        
+    def calculate_active_flows(self):
+        self.flows["active"] = \
+            self.compartments["latent_early"] \
+                * self.params["rate_tbfixed_earlyprog"] \
+            + self.compartments["latent_late"] \
+                * self.params["rate_tbfixed_lateprog"] \
+            + self.compartments["undertreatment"] \
+                * self.params["rate_tbprog_default"] \
+            - self.compartments["active"] \
+                * (self.params["rate_tbprog_detect"] \
+                    + self.params["rate_tbfixed_recover"] \
+                    + self.params["rate_tbfixed_death"] \
+                    + self.params["rate_pop_death"])
+
+    def calculate_undertreatment_flows(self):
+        self.flows["undertreatment"] = \
+            self.compartments["active"] * self.params["rate_tbprog_detect"] \
+            - self.compartments["undertreatment"] \
+                * (self.params["rate_tbprog_default"] \
+                    + self.params["rate_tbprog_death"] \
+                    + self.params["rate_pop_death"] \
+                    + self.params["rate_tbprog_completion"])
+
     def calculate_flows(self, y):
         self.compartments = self.convert_list_to_compartments(y)
 
-        self.calculate_temp_vars()
-    
+        self.calculate_tracked_vars()
         self.flows = {}
-    
-        self.flows["susceptibles"] = \
-            self.params["rate_pop_birth"] * self.temp_vars["pop_total"] \
-            + self.compartments["late_latents"] \
-                * self.params["rate_treatment_completion"]  \
-            - self.compartments["susceptibles"] \
-                * (   self.temp_vars["rate_infection_multiplier"] \
-                    + self.params["rate_pop_death"]) 
-            
+        self.calculate_births_flows()
+        self.calculate_deaths_flows()
+        self.calculate_susceptible_flows()
         self.calculate_latent_flows()
-        
-        self.flows["infectious"] = \
-            self.compartments["early_latents"] \
-                * self.params["rate_infection_early_progress"]   \
-            + self.compartments["late_latents"] \
-                * self.params["rate_infection_late_progress"]   \
-            - self.compartments["infectious"] \
-                * (   self.params["rate_treatment_detect"] \
-                    + self.params["rate_infection_spont_recover"]  \
-                    + self.params["rate_infection_death"]  \
-                    + self.params["rate_pop_death"]) 
-                
-        self.flows["under_treatment"] = \
-            self.compartments["infectious"] * self.params["rate_treatment_detect"]   \
-            - self.compartments["under_treatment"] \
-                * (   self.params["rate_treatment_default"] \
-                    + self.params["rate_treatment_death"]  \
-                    + self.params["rate_pop_death"] \
-                    + self.params["rate_treatment_completion"])
-           
-        total_flow = 0.0
-        for label in self.labels:
-            total_flow = total_flow + self.flows[label]
-            
-        #assert total_flow == 0.0
 
+        self.calculate_active_flows()
+        self.calculate_undertreatment_flows()
+
+
+        self.checks()
+
+    def checks(self):
+        for label in self.labels: # Check all compartments are positive
+            assert self.compartments[label] >= 0.0
+            #assert sum(self.flows.values())==0.0 
+        # Check total flows sum (approximately) to zero
+        assert abs((sum(self.flows.values()) - 2 * self.flows["births"])) < 0.1
+        
+        
 def make_times(start, end, step):
     times = []
     time = start
@@ -167,73 +225,41 @@ def make_times(start, end, step):
     return times
 
 
-
-
 population = PopulationSystem()
 
-population.set_compartment("susceptibles", 1e6)
-population.set_compartment("early_latents", 0.)
-population.set_compartment("late_latents", 0.)
-population.set_compartment("infectious", 1.)
-population.set_compartment("under_treatment", 0.)
+population.set_compartment("susceptible", 1e6)
+population.set_compartment("latent_early", 0.)
+population.set_compartment("latent_late", 0.)
+population.set_compartment("active", 1.)
+population.set_compartment("undertreatment", 0.)
 
 population.set_param("rate_pop_birth", 20. / 1e3)
 population.set_param("rate_pop_death", 1. / 65)
-    
-population.set_param("n_infection_contact", 10.)
-population.set_param("rate_infection_early_progress", .1 / .5)
-population.set_param("rate_infection_late_progress", .1 / 100.)
-population.set_param("rate_infection_stabilise", .9 / .5)
-population.set_param("rate_infection_spont_recover", .6 / 3.)
-population.set_param("rate_infection_death", .4 / 3.)
-    
-time_treatment = .5
-population.set_param("rate_treatment_detect", 1.)
-population.set_param("time_treatment", time_treatment)
-population.set_param("rate_treatment_completion", .9 / time_treatment)
-population.set_param("rate_treatment_default", .05 / time_treatment)
-population.set_param("rate_treatment_death", .05 / time_treatment)
 
-times = make_times(0, 50, 5)
+population.set_param("n_tbfixed_contact", 10.)
+population.set_param("rate_tbfixed_earlyprog", .1 / .5)
+population.set_param("rate_tbfixed_lateprog", .1 / 100.)
+population.set_param("rate_tbfixed_stabilise", .9 / .5)
+population.set_param("rate_tbfixed_recover", .6 / 3.)
+population.set_param("rate_tbfixed_death", .4 / 3.)
+
+time_treatment = .5
+population.set_param("rate_tbprog_detect", 1.)
+population.set_param("time_treatment", time_treatment)
+population.set_param("rate_tbprog_completion", .9 / time_treatment)
+population.set_param("rate_tbprog_default", .05 / time_treatment)
+population.set_param("rate_tbprog_death", .05 / time_treatment)
+
+times = make_times(0, 50, 1)
 population.integrate(times)
 
 labels = population.labels
 population.make_time_plots(labels)
+population.make_time_plots_color(labels)
+population.make_time_plots_one_panel(labels)
 
 
-
-population2 = PopulationSystem()
-
-population2.set_compartment("susceptibles", 1e6)
-population2.set_compartment("early_latents", 0.)
-population2.set_compartment("late_latents", 0.)
-population2.set_compartment("infectious", 1.)
-population2.set_compartment("under_treatment", 0.)
-
-population2.set_param("rate_pop_birth", 20. / 1e3)
-population2.set_param("rate_pop_death", 1. / 65)
-    
-population2.set_param("n_infection_contact", 10.)
-population2.set_param("rate_infection_early_progress", .1 / .5)
-population2.set_param("rate_infection_late_progress", .1 / 100.)
-population2.set_param("rate_infection_stabilise", .9 / .5)
-population2.set_param("rate_infection_spont_recover", .6 / 3.)
-population2.set_param("rate_infection_death", .4 / 3.)
-    
-time_treatment = .23
-population2.set_param("rate_treatment_detect", 1.)
-population2.set_param("time_treatment", time_treatment)
-population2.set_param("rate_treatment_completion", .9 / time_treatment)
-population2.set_param("rate_treatment_default", .05 / time_treatment)
-population2.set_param("rate_treatment_death", .05 / time_treatment)
-
-times = make_times(0, 50, 2)
-population2.integrate(times)
-
-labels = population2.labels
-population2.make_time_plots(labels, 'output.png')
-
-
-print(population.get_optima_compatible_soln())
-print(population2.get_optima_compatible_soln())
  # Printing didn't work so used brackets
+
+print (population.get_optima_compatible_soln())
+s

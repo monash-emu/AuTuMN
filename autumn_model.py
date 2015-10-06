@@ -199,10 +199,8 @@ class PopulationSystem():
         self.calculate_deaths_flows()
         self.calculate_susceptible_flows()
         self.calculate_latent_flows()
-
         self.calculate_active_flows()
         self.calculate_undertreatment_flows()
-
 
         self.checks()
 
@@ -255,8 +253,5 @@ labels = population.labels
 population.make_time_plots(labels)
 population.make_time_plots_color(labels)
 population.make_time_plots_one_panel(labels)
-
-
-# Printing didn't work so used brackets
 
 print (population.get_optima_compatible_soln())

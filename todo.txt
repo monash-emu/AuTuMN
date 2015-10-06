@@ -1,0 +1,16 @@
+Things to do:
+
+1. Get Bosco to teach us Github - already done today
+1.5. Get Dr Bosco Ph to teach DrDr Jim and Dr Tan Github
+2. Start programming in Github
+3. Change current working code for simple model over to object-oriented / something close to the final "look" of the code
+4. Start developing transmission model
+5. Link transmission model to Excel inputs spreadsheet - Tan will lead
+9. Link to minimisation algorithm - will have some sub-sections
+10. Link to minimisation algorithm written by UNSW Optima
+6. Develop Bayesian / machine learning code for refining model inputs
+7. Run code for example country
+8. Link to macroeconomic model
+10. Write reports 
+11. Write scientific papers 
+

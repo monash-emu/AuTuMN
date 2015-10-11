@@ -23,7 +23,7 @@ class PopulationSystem():
         self.tracked_vars = {}
         self.params = {}
 
-    def set_compartment(self, label, init_val=0.0):
+    def set_compartment(self, label, init_val = 0.0):
         self.labels.append(label)
         self.init_compartments[label] = init_val
 
@@ -206,6 +206,7 @@ class PopulationSystem():
 
     def checks(self):
         for label in self.labels: # Check all compartments are positive
+        for label in self.labels:  # Check all compartments are positive
             assert self.compartments[label] >= 0.0
             #assert sum(self.flows.values())==0.0 
         # Check total flows sum (approximately) to zero

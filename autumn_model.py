@@ -29,6 +29,7 @@ class PopulationSystem():
 
     def set_param(self, label, val):
         self.params[label] = val
+        assert val >= 0  # Ensure each individual parameter is positive
 
     def convert_list_to_compartments(self, vec):
         return {l: vec[i] for i, l in enumerate(self.labels)}
@@ -205,7 +206,6 @@ class PopulationSystem():
         self.checks()
 
     def checks(self):
-        for label in self.labels: # Check all compartments are positive
         for label in self.labels:  # Check all compartments are positive
             assert self.compartments[label] >= 0.0
             #assert sum(self.flows.values())==0.0 

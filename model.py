@@ -41,24 +41,6 @@ class PopulationSystem():
     def get_init_list(self):
         return self.convert_compartments_to_list(self.init_compartments)
 
-    def make_derivative_fn(self):
-
-        def derivative_fn(y, t):
-            self.calculate_flows(y)
-            return self.convert_compartments_to_list(self.flows)
-
-        return derivative_fn
-
-    def integrate(self, times):
-        self.times = times
-        derivative_fn = self.make_derivative_fn()
-        init_y = self.get_init_list()
-        self.soln = odeint(derivative_fn, init_y, times)
-
-    def get_soln(self, label):
-        i_label = self.labels.index(label)
-        return self.soln[:, i_label]
-
     def calculate_tracked_vars(self):
         self.tracked_vars = {}
 
@@ -145,8 +127,22 @@ class PopulationSystem():
         for label in self.labels:  # Check all compartments are positive
             assert self.compartments[label] >= 0.0
         # Check total flows sum (approximately) to zero
-        assert abs((sum(self.flows.values()) - 2 * self.flows["births"])) < 0.1
+        # assert abs((sum(self.flows.values()) - 2 * self.flows["births"])) < 0.1
         
+    def integrate(self, times):
+        self.times = times
+
+        def derivative_fn(y, t):
+            self.calculate_flows(y)
+            return self.convert_compartments_to_list(self.flows)
+
+        init_y = self.get_init_list()
+        self.soln = odeint(derivative_fn, init_y, times)
+
+    def get_soln(self, label):
+        i_label = self.labels.index(label)
+        return self.soln[:, i_label]
+
         
     
 

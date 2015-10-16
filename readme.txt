@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Sep 17 10:46:20 2015
 
-@author: tdoan
-"""
+AuTuMN
+======
 
-Is coding OptimaTB
+A population dynamics model of TB transmission.
+
+This is a set of Python models that modularizes the development of population transmission models and allows a pluggable API to other system. In particular, this is designed to interface with the Optima suite of software.
+

@@ -5,6 +5,16 @@ import math
 import pylab
 
 
+"""
+
+Basic test of plotting model.
+
+To run:
+
+    python test_plot.py
+
+"""
+
 
 def make_times(start, end, step):
     times = []

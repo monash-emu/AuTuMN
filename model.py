@@ -109,9 +109,10 @@ class PopulationSystem():
                     + self.params["rate_pop_death"] \
                     + self.params["rate_tbprog_completion"])
 
-    def calculate_flows(self, y):
+    def calculate_flows(self, y, t):
+        self.time = t
         self.compartments = self.convert_list_to_compartments(y)
-
+        
         self.calculate_tracked_vars()
         self.flows = {}
         self.calculate_births_flows()
@@ -133,7 +134,7 @@ class PopulationSystem():
         self.times = times
 
         def derivative_fn(y, t):
-            self.calculate_flows(y)
+            self.calculate_flows(y, t)
             return self.convert_compartments_to_list(self.flows)
 
         init_y = self.get_init_list()

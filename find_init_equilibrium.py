@@ -75,7 +75,7 @@ for time in make_steps(50, 1000, 5):
 
     active = population.get_soln('active')[-1]
     susceptible = population.get_soln('susceptible')[-1]
-    print time, "%.2f%% %.f" % (100*active/float(susceptible), susceptible)
+    print (time, "%.2f%% %.f" % (100*active/float(susceptible), susceptible))
 
 
 

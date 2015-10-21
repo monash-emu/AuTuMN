@@ -1,0 +1,15 @@
+name,value
+susceptible,1000000
+latent_early,0
+latent_late,0
+active,3000
+undertreatment,0
+rate_pop_birth,0.02
+rate_pop_death,0.02
+n_tbfixed_contact,10
+rate_tbfixed_earlyprog,0.2
+rate_tbfixed_lateprog,0
+rate_tbfixed_stabilise,1.8
+rate_tbfixed_recover,0.2
+rate_tbfixed_death,0.13
+rate_tbprog_detect,1

@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+
+from __future__ import print_function
+from xlrd import open_workbook # For opening Excel workbooks
+
 """
 Import model inputs from Excel spreadsheet 
 Version: 21 November 2015 by Tan Doan 
@@ -6,8 +10,6 @@ Version: 21 November 2015 by Tan Doan
 
 def import_input (filename='model_input.xlsx', verbose=0):
     
-    from utils import printv
-    from xlrd import open_workbook # For opening Excel workbooks
  
     # Constants -- array sizes are scalars x uncertainty
     constants = [
@@ -41,13 +43,13 @@ def import_input (filename='model_input.xlsx', verbose=0):
             data[name] = dict() # Create structure for holding data
             sheetdata = workbook.sheet_by_name(sheetname) # Load this workbook
             parcount = -1 # Initialize the parameter count
-            printv('Loading "%s"...' % sheetname, 2, verbose)
+            print('Loading "%s"...' % sheetname, 2, verbose)
             
             # Loop over each row in the workbook
             for row in range(sheetdata.nrows): 
                 paramcategory = sheetdata.cell_value(row,0) # See what's in the first column for this row
                 if paramcategory != '': # It's not blank: e.g. "Model parameters"
-                    printv('Loading "%s"...' % paramcategory, 3, verbose)
+                    print('Loading "%s"...' % paramcategory, 3, verbose)
                     parcount += 1 # Increment the parameter count
                     
                     if groupname=='constants':
@@ -57,19 +59,27 @@ def import_input (filename='model_input.xlsx', verbose=0):
                         raise Exception('Group name %s not recognized!' % groupname)
                         
                                         
+                subparam = ''
+
                 if paramcategory == '': # The first column is blank: it's time for the data
                     subparam = sheetdata.cell_value(row, 1) # Get the name of a subparameter, e.g. "rate_pop_birth"
                     
                 if subparam != '': # The subparameter name isn't blank, load something!
-                    printv('Parameter: %s' % subparam, 4, verbose)
+                    print('Parameter: %s' % subparam, 4, verbose)
                     
                        #create a new dictionary entry
                 
                     thesedata = sheetdata.row_values(row, start_colx=3, end_colx=5) # Data starts in 3rd column, finishes in 5th column
-                    thesedata = list(map(lambda val: nan if val=='' else val, thesedata)) # Replace blanks with nan, in case we don't have uncertainty range
+                    thesedata = list(map(lambda val: None if val=='' else val, thesedata)) # Replace blanks with None, in case we don't have uncertainty range
                     subpar = subparlist[parcount][1].pop(0) # Pop first entry of subparameter list
                     data[name][thispar][subpar] = thesedata # Store data
 
-    printv('...done loading data.', 2, verbose)
+    print('...done loading data.', 2, verbose)
  
     return data 
+
+
+if __name__ == "__main__":
+    data = import_input()
+    print(data)
+

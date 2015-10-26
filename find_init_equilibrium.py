@@ -1,6 +1,6 @@
 
-from model import SimplePopluationSystem, make_steps
-from plotting import make_time_plots_color
+from autumn.model import SimplePopluationSystem, make_steps
+from autumn.plotting import make_time_plots_color
 
 """
 find equilibrium
@@ -12,7 +12,7 @@ labels = population.labels
 for time in make_steps(50, 1000, 5):
 
     times = make_steps(0, time, 1)
-    population.integrate(times)
+    population.integrate_explicit(times)
 
     output = {}
     for label in labels:

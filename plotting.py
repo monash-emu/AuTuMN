@@ -56,7 +56,7 @@ def make_time_plots_one_panel(
 if __name__ == "__main__":
     from model import SingleComponentPopluationSystem, make_steps
     population = SingleComponentPopluationSystem()
-    population.integrate(make_steps(0, 50, 1))
+    population.integrate_scipy(make_steps(0, 50, 1))
     labels = population.labels
     make_time_plots_color(population, labels)
     make_time_plots_one_panel(population, labels, labels[1:])

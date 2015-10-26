@@ -11,7 +11,8 @@ Implicit time unit: years
 
 
 from scipy.integrate import odeint
-
+import numpy
+import copy
 
 
 def make_steps(start, end, delta):
@@ -58,9 +59,9 @@ class BasePopulationSystem():
 
     def checks(self):
         pass
-        
-    def integrate(self, times):
 
+    def make_derivate_fn(self):
+        
         def derivative_fn(y, t):
             self.time = t
             self.compartments = self.convert_list_to_compartments(y)
@@ -72,13 +73,44 @@ class BasePopulationSystem():
             self.checks()
             return flow_vector
 
+        return derivative_fn
+
+    def integrate_scipy(self, times):
+        derivative = self.make_derivate_fn()
         self.times = times
         init_y = self.get_init_list()
-        self.soln = odeint(derivative_fn, init_y, times)
+        self.soln = odeint(derivative, init_y, times)
+
+    def integrate_explicit(self, times):
+        self.times = times
+        y = self.get_init_list()
+
+        n_component = len(y)
+        n_time = len(self.times)
+        self.soln = numpy.zeros((n_time, n_component))
+
+        derivative = self.make_derivate_fn()
+        time = self.times[0]
+        self.soln[0,:] = y
+        min_dt = 0.05
+        for i_time, new_time in enumerate(self.times):
+            while time < new_time:
+                f = derivative(y, time)
+                time = time + min_dt
+                if time > new_time:
+                    time = new_time
+                    dt = new_time - time
+                else:
+                    dt = min_dt
+                for i in range(n_component):
+                    y[i] = y[i] + dt*f[i]
+            if i_time < n_time - 1:
+                self.soln[i_time+1,:] = y
 
     def get_soln(self, label):
         i_label = self.labels.index(label)
         return self.soln[:, i_label]
+
 
         
 class SimplePopluationSystem(BasePopulationSystem):
@@ -261,7 +293,6 @@ class SingleComponentPopluationSystem(BasePopulationSystem):
                     + self.params["rate_tbprog_death"] \
                     + self.params["rate_pop_death"] \
                     + self.params["rate_tbprog_completion"])
-
 
     def checks(self):
         for label in self.labels:  # Check all compartments are positive

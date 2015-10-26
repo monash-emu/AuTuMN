@@ -53,6 +53,19 @@ def make_time_plots_one_panel(
 
 
 
+def plot_fractions(population, plot_labels, png=None):
+
+    line_styles = ['-r', '-b', '-m', '-g', '-k']
+    population.calculate_fractions()
+    for plot_label, line_style in zip(plot_labels, line_styles):
+        pylab.plot(
+            population.times, 
+            population.fractions[plot_label], 
+            line_style,
+            label=plot_label.title(), linewidth=2)
+    pylab.xlabel('Time')
+    pylab.ylabel('Number of patients')
+    pylab.legend(loc=0)
 
 
 

@@ -107,6 +107,25 @@ class BasePopulationSystem():
             if i_time < n_time - 1:
                 self.soln[i_time+1,:] = y
 
+    def calculate_fractions(self):
+        solns = {}
+        for label in self.labels:
+            if label not in solns:
+                solns[label] = self.get_soln(label)
+
+        self.total = []
+        n = len(self.times)
+        for i in range(n):
+            t = 0.0
+            for label in self.labels:
+                t += solns[label][i]
+            self.total.append(t)
+
+        self.fractions = {}
+        for label in self.labels:
+            fraction = [v/t for v, t in zip(solns[label], self.total)]
+            self.fractions[label] = fraction
+
     def get_soln(self, label):
         i_label = self.labels.index(label)
         return self.soln[:, i_label]

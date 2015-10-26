@@ -13,13 +13,15 @@ Implicit time unit: years
 from scipy.integrate import odeint
 
 
-def make_steps(start, end, delta_step):
+
+def make_steps(start, end, delta):
     steps = []
     step = start
-    while step < end:
+    while step <= end:
         steps.append(step)
-        step += delta_step
+        step += delta
     return steps
+
 
 
 class BasePopulationSystem():

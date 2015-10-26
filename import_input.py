@@ -8,7 +8,7 @@ Import model inputs from Excel spreadsheet
 Version: 21 November 2015 by Tan Doan 
 """
 
-def import_input (filename='model_input.xlsx', verbose=0):
+def import_input (filename, verbose=0):
     
  
     # Constants -- array sizes are scalars x uncertainty
@@ -80,6 +80,6 @@ def import_input (filename='model_input.xlsx', verbose=0):
 
 
 if __name__ == "__main__":
-    data = import_input()
+    data = import_input('tests/model_input.xlsx')
     print(data)
 

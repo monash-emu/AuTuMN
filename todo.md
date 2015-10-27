@@ -16,3 +16,9 @@
 10. Write reports 
 11. Write scientific papers 
 
+Phillipines
+- 2013 - 98 million susceptible
+- active 0.05% 400n in 100,000
+- latent 30%?
+- vary n_tbfixed_contact
+- who data: http://www.who.int/tb/country/data/download/en/

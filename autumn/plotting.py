@@ -64,7 +64,7 @@ def plot_fractions(population, plot_labels, png=None):
             line_style,
             label=plot_label.title(), linewidth=2)
     pylab.xlabel('Time')
-    pylab.ylabel('Number of patients')
+    pylab.ylabel('Fraction of population')
     pylab.legend(loc=0)
 
 

@@ -14,7 +14,7 @@ def import_input (filename, verbose=0):
     # Constants -- array sizes are scalars x uncertainty
     constants = [
                  ['constants', 'const', [['model_parameters', ['rate_pop_birth', 'rate_pop_death', 'n_tbfixed_contact', 'rate_tbfixed_earlyprog', 'rate_tbfixed_lateprog', 'rate_tbfixed_stabilise', 'rate_tbfixed_recover', 'rate_tbfixed_death', 'rate_tbprog_detect']], \
-                                       ['initials_for_compartments', ['susceptible', 'latent_early', 'latent_late', 'active', 'undertreatment']]]]
+                                         ['initials_for_compartments', ['susceptible', 'latent_early', 'latent_late', 'active', 'undertreatment']]]]
                 ]
      
     ## Allows the list of groups to be used as name and also as variables
@@ -69,7 +69,7 @@ def import_input (filename, verbose=0):
                     
                        #create a new dictionary entry
                 
-                    thesedata = sheetdata.row_values(row, start_colx=3, end_colx=5) # Data starts in 3rd column, finishes in 5th column
+                    thesedata = sheetdata.row_values(row, start_colx=2, end_colx=5) # Data starts in 3rd column, finishes in 5th column
                     thesedata = list(map(lambda val: None if val=='' else val, thesedata)) # Replace blanks with None, in case we don't have uncertainty range
                     subpar = subparlist[parcount][1].pop(0) # Pop first entry of subparameter list
                     data[name][thispar][subpar] = thesedata # Store data

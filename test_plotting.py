@@ -5,7 +5,7 @@ import pylab
 population = SingleComponentPopluationSystem()
 population.integrate_scipy(make_steps(0, 50, 1))
 labels = population.labels
-plot_fractions(population, population.labels[1:])
+plot_fractions(population, population.labels)
 pylab.show()
 make_time_plots_color(population, labels)
 make_time_plots_one_panel(population, labels, labels[1:])

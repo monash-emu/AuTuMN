@@ -18,7 +18,7 @@
 
 Phillipines
 - 2013 - 98 million susceptible
-- active 0.05% 400n in 100,000
-- latent 30%?
-- vary n_tbfixed_contact
+- active 0.4% 400 in 100,000
+- latent guesstimate - 30%
+- vary n_tbfixed_contact 10-60
 - who data: http://www.who.int/tb/country/data/download/en/

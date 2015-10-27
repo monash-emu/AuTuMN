@@ -14,28 +14,6 @@ from scipy.integrate import odeint
 import numpy
 import copy
 
-""" 
-Import data from import_input.py
-"""
-from import_input import import_input  # how to make specficy directory 
-
-rate_pop_birth =          ['const']['model_parameters']['rate_pop_birth']
-rate_pop_death =          ['const']['model_parameters']['rate_pop_death']
-n_tbfixed_contact =       ['const']['model_parameters']['n_tbfixed_contact']
-rate_tbfixed_earlyprog =  ['const']['model_parameters']['rate_tbfixed_earlyprog']
-rate_tbfixed_lateprog =   ['const']['model_parameters']['rate_tbfixed_lateprog']
-rate_tbfixed_stabilise =  ['const']['model_parameters']['rate_tbfixed_stabilise']
-rate_tbfixed_recover =    ['const']['model_parameters']['rate_tbfixed_recover']
-rate_tbfixed_death =      ['const']['model_parameters']['rate_tbfixed_death']
-rate_tbprog_detect =      ['const']['model_parameters']['rate_tbprog_detect']
-
-susceptible =             ['const']['initials_for_compartments']['susceptible']
-latent_early =            ['const']['initials_for_compartments']['latent_early']
-latent_late =             ['const']['initials_for_compartments']['latent_late']
-active =                  ['const']['initials_for_compartments']['active']
-undertreatment =          ['const']['initials_for_compartments']['undertreatment']
-
-
 def make_steps(start, end, delta):
     steps = []
     step = start
@@ -56,7 +34,8 @@ class BasePopulationSystem():
         self.params = {}
 
     def set_compartment(self, label, init_val = 0.0):
-        self.labels.append(label)
+        if label not in self.labels:
+            self.labels.append(label)
         self.init_compartments[label] = init_val
 
     def set_param(self, label, val):

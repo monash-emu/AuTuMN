@@ -1,5 +1,5 @@
 
-from autumn.model import SimplePopluationSystem, make_steps
+from autumn.model import SingleLatentCompartmentWithNoBypassPopluation, make_steps
 from autumn.plotting import plot_fractions
 import pylab
 
@@ -56,8 +56,10 @@ def find_equilibrium_time(
     return None
 
 
-population = SimplePopluationSystem()
+population = SingleLatentCompartmentWithNoBypassPopluation()
 time = find_equilibrium_time(population, "latent")
 plot_fractions(population, population.labels)
 pylab.show()
 print "Found time=%s years" % time
+
+

@@ -6,6 +6,7 @@ from xlrd import open_workbook # For opening Excel workbooks
 """
 Import model inputs from Excel spreadsheet 
 Version: 21 November 2015 by Tan Doan 
+
 """
 
 def import_input (filename, verbose=0):
@@ -31,6 +32,9 @@ def import_input (filename, verbose=0):
     except: raise Exception('Failed to load spreadsheet: file "%s" not found!' % filename)
     
     sheetstructure_keys = list(sheetstructure.keys())
+    
+    # Keys: This method returns a list of all the available keys in the dictionary
+    # for example: dict = {'Name': 'Zara', 'Age': 7}  print "Value : %s" %  dict.keys() --> Value : ['Age', 'Name']
 
     ## Loop over each group of sheets
     for groupname in sheetstructure_keys: # Loop over each type of data

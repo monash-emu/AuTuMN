@@ -196,12 +196,12 @@ class SingleLatentCompartmentWithNoBypassPopluation(BasePopulationSystem):
             - self.vars["nprogress"]
         
         self.flows['active'] = \
-              self.vars["nprogress"] \
+            + self.vars["nprogress"] \
             - self.vars["activedeaths"] \
             - self.vars["ndetected"]
         
         self.flows['detected'] = \
-              self.vars["ndetected"] \
+            + self.vars["ndetected"] \
             - self.vars["detecteddeaths"] \
             - self.vars["ntreated"]
         
@@ -281,16 +281,16 @@ class SingleComponentPopluationSystem(BasePopulationSystem):
         self.flows["latent_early"] = \
             + self.compartments["susceptible"] * self.vars["rate_forceinfection"] \
             - self.compartments["latent_early"] \
-                * (   self.params["rate_tbfixed_earlyprog"] \
-                    + self.params["rate_tbfixed_stabilise"] \
-                    + self.params["rate_pop_death"])
+                * (  self.params["rate_tbfixed_earlyprog"] \
+                   + self.params["rate_tbfixed_stabilise"] \
+                   + self.params["rate_pop_death"])
 
         self.flows["latent_late"] = \
             + self.compartments["latent_early"] * self.params["rate_tbfixed_stabilise"] \
             + self.compartments["active"] * self.params["rate_tbfixed_recover"] \
             - self.compartments["latent_late"] \
-                * (self.params["rate_tbfixed_lateprog"] 
-                    + self.params["rate_pop_death"]) 
+                * (  self.params["rate_tbfixed_lateprog"] 
+                   + self.params["rate_pop_death"]) 
 
         self.flows["active"] = \
             + self.compartments["latent_early"] \
@@ -300,18 +300,18 @@ class SingleComponentPopluationSystem(BasePopulationSystem):
             + self.compartments["undertreatment"] \
                 * self.params["rate_tbprog_default"] \
             - self.compartments["active"] \
-                * (   self.params["rate_tbprog_detect"] \
-                    + self.params["rate_tbfixed_recover"] \
-                    + self.params["rate_tbfixed_death"] \
-                    + self.params["rate_pop_death"])
+                * (  self.params["rate_tbprog_detect"] \
+                   + self.params["rate_tbfixed_recover"] \
+                   + self.params["rate_tbfixed_death"] \
+                   + self.params["rate_pop_death"])
 
         self.flows["undertreatment"] = \
             + self.compartments["active"] * self.params["rate_tbprog_detect"] \
             - self.compartments["undertreatment"] \
-                * (   self.params["rate_tbprog_default"] \
-                    + self.params["rate_tbprog_death"] \
-                    + self.params["rate_pop_death"] \
-                    + self.params["rate_tbprog_completion"])
+                * (  self.params["rate_tbprog_default"] \
+                   + self.params["rate_tbprog_death"] \
+                   + self.params["rate_pop_death"] \
+                   + self.params["rate_tbprog_completion"])
 
     def checks(self):
         for label in self.labels:  # Check all compartments are positive

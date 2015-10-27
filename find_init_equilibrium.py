@@ -1,5 +1,6 @@
 
-from autumn.model import SimplePopluationSystem, make_steps
+#from autumn.model import SimplePopluationSystem, make_steps
+from autumn.model import SingleComponentPopluationSystem, make_steps
 from autumn.plotting import plot_fractions
 import pylab
 
@@ -47,8 +48,8 @@ def find_equilibrium_time(
             if abs(frac_diff) > max_equil_frac_diff:
                 is_converged = False
 
-        print "time=%.f dev=%.1f%% %s=%.1f%%" % (
-            time, max_fraction_diff*100, label, fraction[-1]*100)
+        print ("time=%.f dev=%.1f%% %s=%.1f%%" % (
+            time, max_fraction_diff*100, label, fraction[-1]*100))
 
         if is_converged:
             return time
@@ -56,8 +57,9 @@ def find_equilibrium_time(
     return None
 
 
-population = SimplePopluationSystem()
+#population = SimplePopluationSystem()
+population = SingleComponentPopluationSystem()
 time = find_equilibrium_time(population, "latent")
 plot_fractions(population, population.labels)
 pylab.show()
-print "Found time=%s years" % time
+print ("Found time=%s years" % time)

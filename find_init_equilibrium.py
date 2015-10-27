@@ -61,6 +61,6 @@ population = SingleLatentCompartmentWithNoBypassPopluation()
 time = find_equilibrium_time(population, "latent")
 plot_fractions(population, population.labels)
 pylab.show()
-print "Found time=%s years" % time
+print ("Found time=%s years" % time)
 
 

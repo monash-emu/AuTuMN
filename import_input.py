@@ -14,9 +14,33 @@ def import_input (filename, verbose=0):
  
     # Constants -- array sizes are scalars x uncertainty
     constants = [
-                 ['constants', 'const', [['model_parameters', ['rate_pop_birth', 'rate_pop_death', 'n_tbfixed_contact', 'rate_tbfixed_earlyprog', 'rate_tbfixed_lateprog', 'rate_tbfixed_stabilise', 'rate_tbfixed_recover', 'rate_tbfixed_death', 'rate_tbprog_detect']], \
-                                         ['initials_for_compartments', ['susceptible', 'latent_early', 'latent_late', 'active', 'undertreatment']]]]
-                ]
+       [
+           'constants', 
+           'const', 
+           [
+              ['model_parameters', 
+                   ['rate_pop_birth', 
+                    'rate_pop_death', 
+                    'n_tbfixed_contact', 
+                    'rate_tbfixed_earlyprog', 
+                    'rate_tbfixed_lateprog', 
+                    'rate_tbfixed_stabilise', 
+                    'rate_tbfixed_recover', 
+                    'rate_tbfixed_death', 
+                    'rate_tbprog_detect'
+                   ]
+              ], \
+              ['initials_for_compartments', 
+                   ['susceptible', 
+                    'latent_early', 
+                    'latent_late', 
+                    'active', 
+                    'undertreatment'
+                   ]
+              ]
+          ]
+       ]
+    ]
      
     ## Allows the list of groups to be used as name and also as variables
     ## This may be useful in the future when we have multiple sheets 
@@ -41,19 +65,24 @@ def import_input (filename, verbose=0):
         sheetgroup = sheetstructure[groupname]
         for sheet in sheetgroup: # Loop over each workbook for that data
             lastdatacol = None
-            sheetname = sheet[0] # Name of the workbook
+            
+            # Name of the workbook
+            sheetname = sheet[0] 
+
             name = sheet[1] # Pull out the name of this field
             subparlist = sheet[2] # List of subparameters
             data[name] = dict() # Create structure for holding data
             sheetdata = workbook.sheet_by_name(sheetname) # Load this workbook
             parcount = -1 # Initialize the parameter count
-            print('Loading "%s"...' % sheetname, 2, verbose)
+            if verbose > 0:
+                print('Loading "%s"...' % sheetname, 2, verbose)
             
             # Loop over each row in the workbook
             for row in range(sheetdata.nrows): 
                 paramcategory = sheetdata.cell_value(row,0) # See what's in the first column for this row
                 if paramcategory != '': # It's not blank: e.g. "Model parameters"
-                    print('Loading "%s"...' % paramcategory, 3, verbose)
+                    if verbose > 0:
+                        print('Loading "%s"...' % paramcategory, 3, verbose)
                     parcount += 1 # Increment the parameter count
                     
                     if groupname=='constants':
@@ -69,7 +98,8 @@ def import_input (filename, verbose=0):
                     subparam = sheetdata.cell_value(row, 1) # Get the name of a subparameter, e.g. "rate_pop_birth"
                     
                 if subparam != '': # The subparameter name isn't blank, load something!
-                    print('Parameter: %s' % subparam, 4, verbose)
+                    if verbose > 0:
+                        print('Parameter: %s' % subparam, 4, verbose)
                     
                        #create a new dictionary entry
                 
@@ -78,12 +108,13 @@ def import_input (filename, verbose=0):
                     subpar = subparlist[parcount][1].pop(0) # Pop first entry of subparameter list
                     data[name][thispar][subpar] = thesedata # Store data
 
-    print('...done loading data.', 2, verbose)
+    if verbose > 0:
+        print('...done loading data.', 2, verbose)
  
     return data 
 
 
 if __name__ == "__main__":
-    data = import_input('tests/model_input.xlsx')
+    data = import_input('tests/model_input.xlsx', verbose=0)
     print(data)
 

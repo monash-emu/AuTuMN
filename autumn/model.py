@@ -166,10 +166,10 @@ class SimplePopluationSystem(BasePopulationSystem):
         self.vars["nbirths"] = self.vars["population"] * self.params['birth']
 
         self.vars["ninfections"] = \
-            self.compartments["susceptible"] \
-                * (self.compartments["active"] + self.compartments["detected"]) \
-                / self.vars["population"] \
-                * self.params['ncontacts']
+              self.compartments["susceptible"] \
+            * (self.compartments["active"] + self.compartments["detected"]) \
+            / self.vars["population"] \
+            * self.params['ncontacts']
 
         self.vars["nrecovered"] = self.compartments["treated"] * self.params['recov']
 
@@ -186,29 +186,29 @@ class SimplePopluationSystem(BasePopulationSystem):
     def calculate_flows(self):
         self.flows['susceptible'] = \
             - self.compartments["susceptible"] * self.params['death'] \
-                + self.vars["nbirths"] \
-                - self.vars["ninfections"] \
-                + self.vars["nrecovered"] \
+            + self.vars["nbirths"] \
+            - self.vars["ninfections"] \
+            + self.vars["nrecovered"] \
         
         self.flows['latent'] = \
             - self.compartments["latent"] * self.params['death'] \
-                + self.vars["ninfections"] \
-                - self.vars["nprogress"]
+            + self.vars["ninfections"] \
+            - self.vars["nprogress"]
         
         self.flows['active'] = \
-            self.vars["nprogress"] \
-                - self.vars["activedeaths"] \
-                - self.vars["ndetected"]
+              self.vars["nprogress"] \
+            - self.vars["activedeaths"] \
+            - self.vars["ndetected"]
         
         self.flows['detected'] = \
-            self.vars["ndetected"] \
-                - self.vars["detecteddeaths"] \
-                - self.vars["ntreated"]
+              self.vars["ndetected"] \
+            - self.vars["detecteddeaths"] \
+            - self.vars["ntreated"]
         
         self.flows['treated'] = \
-            self.compartments["treated"] * (-self.params['treatdeath']) \
-                + self.vars["ntreated"] \
-                - self.vars["nrecovered"]
+            - self.compartments["treated"] * self.params['treatdeath'] \
+            + self.vars["ntreated"] \
+            - self.vars["nrecovered"]
 
     def checks(self):
         # Check all compartments are positive
@@ -262,7 +262,7 @@ class SingleComponentPopluationSystem(BasePopulationSystem):
             self.params["rate_pop_birth"] * self.vars["pop_total"]
 
         self.vars["deaths"] = \
-            self.params["rate_tbfixed_death"] \
+              self.params["rate_tbfixed_death"] \
                 * self.compartments["active"] \
             + self.params["rate_tbprog_death"] \
                 * self.compartments["undertreatment"] \
@@ -271,29 +271,29 @@ class SingleComponentPopluationSystem(BasePopulationSystem):
 
     def calculate_flows(self):
         self.flows["susceptible"] = \
-            self.vars["births"] \
+            + self.vars["births"] \
             + self.compartments["undertreatment"] \
                 * self.params["rate_tbprog_completion"] \
             - self.compartments["susceptible"] \
-                * ( self.vars["rate_forceinfection"] \
+                * (   self.vars["rate_forceinfection"] \
                     + self.params["rate_pop_death"])
 
         self.flows["latent_early"] = \
-            self.compartments["susceptible"] * self.vars["rate_forceinfection"] \
+            + self.compartments["susceptible"] * self.vars["rate_forceinfection"] \
             - self.compartments["latent_early"] \
-                * (self.params["rate_tbfixed_earlyprog"] \
+                * (   self.params["rate_tbfixed_earlyprog"] \
                     + self.params["rate_tbfixed_stabilise"] \
                     + self.params["rate_pop_death"])
 
         self.flows["latent_late"] = \
-            self.compartments["latent_early"] * self.params["rate_tbfixed_stabilise"] \
+            + self.compartments["latent_early"] * self.params["rate_tbfixed_stabilise"] \
             + self.compartments["active"] * self.params["rate_tbfixed_recover"] \
             - self.compartments["latent_late"] \
                 * (self.params["rate_tbfixed_lateprog"] 
                     + self.params["rate_pop_death"]) 
 
         self.flows["active"] = \
-            self.compartments["latent_early"] \
+            + self.compartments["latent_early"] \
                 * self.params["rate_tbfixed_earlyprog"] \
             + self.compartments["latent_late"] \
                 * self.params["rate_tbfixed_lateprog"] \
@@ -306,7 +306,7 @@ class SingleComponentPopluationSystem(BasePopulationSystem):
                     + self.params["rate_pop_death"])
 
         self.flows["undertreatment"] = \
-            self.compartments["active"] * self.params["rate_tbprog_detect"] \
+            + self.compartments["active"] * self.params["rate_tbprog_detect"] \
             - self.compartments["undertreatment"] \
                 * (   self.params["rate_tbprog_default"] \
                     + self.params["rate_tbprog_death"] \

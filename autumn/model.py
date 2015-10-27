@@ -132,7 +132,7 @@ class BasePopulationSystem():
 
 
         
-class SimplePopluationSystem(BasePopulationSystem):
+class SingleLatentCompartmentWithNoBypassPopluation(BasePopulationSystem):
 
     """
     Adapted from the OptimaTB prototype.
@@ -236,7 +236,7 @@ class SingleComponentPopluationSystem(BasePopulationSystem):
         self.set_param("rate_pop_birth", 20. / 1e3)
         self.set_param("rate_pop_death", 1. / 65)
 
-        self.set_param("n_tbfixed_contact", 10.)
+        self.set_param("n_tbfixed_contact", 40.)
         self.set_param("rate_tbfixed_earlyprog", .1 / .5)
         self.set_param("rate_tbfixed_lateprog", .1 / 100.)
         self.set_param("rate_tbfixed_stabilise", .9 / .5)

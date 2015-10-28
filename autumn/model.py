@@ -12,7 +12,8 @@ Implicit time unit: years
 
 from scipy.integrate import odeint
 import numpy
-import copy
+
+
 
 def make_steps(start, end, delta):
     steps = []
@@ -37,10 +38,10 @@ class BasePopulationSystem():
         if label not in self.labels:
             self.labels.append(label)
         self.init_compartments[label] = init_val
+        assert init_val >= 0  
 
     def set_param(self, label, val):
         self.params[label] = val
-        assert val >= 0  # Ensure each individual parameter is positive
 
     def convert_list_to_compartments(self, vec):
         return {l: vec[i] for i, l in enumerate(self.labels)}
@@ -79,59 +80,73 @@ class BasePopulationSystem():
         derivative = self.make_derivate_fn()
         self.times = times
         init_y = self.get_init_list()
-        self.soln = odeint(derivative, init_y, times)
-
+        self.soln_array = odeint(derivative, init_y, times)
+        self.calculate_fractions()
+        
     def integrate_explicit(self, times):
         self.times = times
         y = self.get_init_list()
 
         n_component = len(y)
         n_time = len(self.times)
-        self.soln = numpy.zeros((n_time, n_component))
+        self.soln_array = numpy.zeros((n_time, n_component))
 
         derivative = self.make_derivate_fn()
         time = self.times[0]
-        self.soln[0,:] = y
+        self.soln_array[0,:] = y
         min_dt = 0.05
         for i_time, new_time in enumerate(self.times):
             while time < new_time:
                 f = derivative(y, time)
+                old_time = time
                 time = time + min_dt
+                dt = min_dt
                 if time > new_time:
+                    dt = new_time - old_time
                     time = new_time
-                    dt = new_time - time
-                else:
-                    dt = min_dt
                 for i in range(n_component):
                     y[i] = y[i] + dt*f[i]
             if i_time < n_time - 1:
-                self.soln[i_time+1,:] = y
+                self.soln_array[i_time+1,:] = y
+        self.calculate_fractions()
 
     def calculate_fractions(self):
-        solns = {}
+        self.populations = {}
         for label in self.labels:
-            if label not in solns:
-                solns[label] = self.get_soln(label)
+            if label not in self.populations:
+                self.populations[label] = self.get_soln(label)
 
-        self.total = []
+        self.total_population = []
         n = len(self.times)
         for i in range(n):
             t = 0.0
             for label in self.labels:
-                t += solns[label][i]
-            self.total.append(t)
+                t += self.populations[label][i]
+            self.total_population.append(t)
 
         self.fractions = {}
         for label in self.labels:
-            fraction = [v/t for v, t in zip(solns[label], self.total)]
-            self.fractions[label] = fraction
+            self.fractions[label] = [
+                v/t for v, t in 
+                    zip(
+                        self.populations[label], 
+                        self.total_population
+                    )
+            ]
 
     def get_soln(self, label):
         i_label = self.labels.index(label)
-        return self.soln[:, i_label]
+        return self.soln_array[:, i_label]
 
+    def load_state(self, i_time):
+        self.time = self.times[i_time]
+        for i_label, label in enumerate(self.labels):
+            self.compartments[label] = \
+                self.soln_array[i_time,i_label]
+        self.calculate_vars()
 
         
+
 class SingleLatentCompartmentWithNoBypassPopluation(BasePopulationSystem):
 
     """
@@ -262,7 +277,7 @@ class SingleComponentPopluationSystem(BasePopulationSystem):
             self.params["rate_pop_birth"] * self.vars["pop_total"]
 
         self.vars["deaths"] = \
-              self.params["rate_tbfixed_death"] \
+            + self.params["rate_tbfixed_death"] \
                 * self.compartments["active"] \
             + self.params["rate_tbprog_death"] \
                 * self.compartments["undertreatment"] \

@@ -138,8 +138,15 @@ class BasePopulationSystem():
         i_label = self.labels.index(label)
         return self.soln_array[:, i_label]
 
+    def load_state(self, i_time):
+        self.time = self.times[i_time]
+        for i_label, label in enumerate(self.labels):
+            self.compartments[label] = \
+                self.soln_array[i_time,i_label]
+        self.calculate_vars()
 
         
+
 class SingleLatentCompartmentWithNoBypassPopluation(BasePopulationSystem):
 
     """

@@ -4,8 +4,8 @@ Test
 - implement Stage 18 model of the Dynamic Transmission Model
 """
 
-from autumn.model import BasePopulationSystem, make_steps
-from autumn.plotting import plot_fractions
+from modules.model import BasePopulationSystem, make_steps
+from modules.plotting import plot_fractions
 import pylab
 import os
 

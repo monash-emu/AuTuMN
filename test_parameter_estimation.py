@@ -9,12 +9,12 @@ within the Parameter object).
 
 import os
 import numpy
-from autumn.parameter_estimation import Parameter, Evidence
+from modules.parameter_estimation import Parameter, Evidence
 import pylab
 import emcee
 import stage5
 import scipy.optimize as optimize
-from autumn.model import make_steps, Stage2PopulationSystem
+from modules.model import make_steps, Stage2PopulationSystem
 
 
 def make_neg_fn(fn):

@@ -1,0 +1,6 @@
+# Only track python files in this directory
+*
+!*.py
+
+
+!.gitignore

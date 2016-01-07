@@ -1,0 +1,7 @@
+TITLE: Early progression proportion, Sloot et al. 2014
+
+REFERENCE: Sloot R, Schim van der Loeff MF, Kouw PM, Borgdorff MW. Risk of Tuberculosis after Recent Exposure. A 10-Year Follow-up Study of Contacts in Amsterdam. Am J Respir Crit Care Med. 2014;190(9):1044-1052.
+
+POINT ESTIMATE: 0.075
+
+EXPLANATION: From Figure 2, approximately 7 to 8% of the 739 contacts with evidence of infection developed active TB in the early high risk period, which lasted for around 6 months.

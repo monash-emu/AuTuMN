@@ -12,23 +12,30 @@ from scipy.stats import beta
 from scipy.stats import gamma
 from scipy.stats import norm
 from scipy.stats import truncnorm
-import matplotlib.pyplot
+import matplotlib
 
 
 class Parameter:
     """"  Initialises parameters with distributions prior to model runs """
-    def __init__(self, parameter_name, distribution, prior_estimate,
-                 spread, limits):
+    def __init__(self, parameter_name, parameter_type,
+                 distribution, prior_estimate, spread, limits,
+                 model_implementation):
         self.parameter_name = parameter_name
-        self.prior_estimate = prior_estimate
-        self.spread = spread
+        self.parameter_type = parameter_type
+        available_types = ['proportion',
+                           'rate',
+                           'sojourn time',
+                           'multiplier']
+        assert self.parameter_type in available_types
+        self.distribution = distribution
         available_distributions = ['beta_symmetric_params2',
                                    'beta_full_range', 'gamma',
                                    'normal_unlimited', 'normal_positive',
                                    'normal_truncated']
         assert distribution in available_distributions, \
             'Distribution not available'
-        self.distribution = distribution
+        self.prior_estimate = prior_estimate
+        self.spread = spread
         self.limits = limits
 
     def calculate_prior(self):
@@ -251,7 +258,8 @@ class Evidence:
 
     def goto_evidence_directory(self):
         pyfile_string = sys.argv[0]
-        directory_current = pyfile_string[0: pyfile_string.rfind('/')]
+        autumn_directory = pyfile_string[0: pyfile_string.rfind('/')]
+        directory_current = pyfile_string[0: autumn_directory.rfind('/')]
         evidence_directory \
             = directory_current + '/evidence/'
         os.chdir(evidence_directory)

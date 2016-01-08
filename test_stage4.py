@@ -178,7 +178,7 @@ class Stage4PopulationSystem(BasePopulationSystem):
 
 population = Stage4PopulationSystem()
 population.set_flows()
-population.make_graph('stage4.graph.png')
+#population.make_graph('stage4.graph.png')
 population.integrate_scipy(make_steps(0, 50, 1))
 plot_fractions(population, population.labels[:])
 pylab.savefig('stage4.fraction.png', dpi=300)

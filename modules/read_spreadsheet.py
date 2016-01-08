@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 from xlrd import open_workbook # For opening Excel workbooks
+from numpy import nan, zeros, isnan, array, logical_or, nonzero # For reading in empty values
 
 """
 Import model inputs from Excel spreadsheet 
@@ -13,7 +14,7 @@ TO DO LIST
 2. UNCERTAINTY RANGE 
 3. FIX MACROECONOMICS 
 4. ADD MORE WORKBOOKS 
-5. UPDATE EXCEP SPREADHSEET 
+5. UPDATE EXCEL SPREADHSEET 
 """
 def get_input (filename, verbose=0):
     
@@ -120,7 +121,80 @@ def get_input (filename, verbose=0):
         ]
       ]
    ]        
+   
+#    comorbidity = \
+#    [
+#        [
+#        'comorbidity', 'comor', 
+#        [
+#          ['malnutriprev', 
+#               ['04yr', 
+#                '5_14yr', 
+#                '15abov',
+#                'aggregated']], \
+#          ['diabetesprev', 
+#               ['04yr', 
+#                '5_14yr', 
+#                '15abov',
+#                'aggregated']],\
+#          ['HIVprev',
+#              ['04yr_CD4_300',
+#              '04yr_CD4_200_300',
+#              '04yr_CD4_200',
+#              '04yr_aggregated',
+#              '5_14yr_CD4_300',
+#              '5_14yr_CD4_200_300',
+#              '5_14yr_CD4_200',
+#              '5_14yr_aggregated',
+#              '15abov_CD4_300',
+#              '15abov_CD4_200_300',
+#              '15abov_CD4_200']]
+#        ]
+#      ]
+#   ]        
     
+    comorbidity = \
+    [
+        [
+        'comorbidity', 'comor', 
+        [
+          ['malnutrition', 
+               ['04yr', 
+                '5_14yr', 
+                '15abov',
+                'aggregate']], \
+          ['diabetes', 
+               ['04yr', 
+                '5_14yr', 
+                '15abov',
+                'aggregate']],\
+          ['HIV',
+              ['04yr_CD4_300',
+               '04yr_CD4_200_300',
+               '04yr_CD4_200',
+               '04yr_aggregate',
+              '5_14yr_CD4_300',
+              '5_14yr_CD4_200_300', 
+              '5_14yr_CD4_200', 
+              '5_14yr_aggregate', 
+              '15abov_CD4_300',
+              '15abov_CD4_200_300', 
+              '15abov_CD4_200', 
+              '15abov_aggregate']]
+        ]
+      ]
+   ]        
+    
+    #comorbidity =  [['comorbidity', 'comor', ['malnutrition', 'diabetes', 'HIV']]]
+    
+    population_size = \
+   [
+       ['population_size', 'popsize',
+            ['04yr',
+            '5_14yr',
+            '15abov']        
+        ]
+   ]
     
     sheetstructure = dict()
     sheetstructure['constants'] = constants
@@ -128,6 +202,8 @@ def get_input (filename, verbose=0):
     sheetstructure['costcoverage'] = costcoverage
     sheetstructure['tbprevalence'] = tbprevalence
     sheetstructure['tbincidence'] = tbincidence
+    sheetstructure['comorbidity'] = comorbidity
+    sheetstructure['population_size'] = population_size
     
     
 
@@ -185,7 +261,7 @@ def get_input (filename, verbose=0):
                         data['epiyears'].append(float(thiscell)) # Add this year
                         
                         
-            if name == 'tbprev' or name == 'tbinc': # Need to gather year ranges for economic data
+            if name == 'tbprev' or name == 'tbinc' or name == 'comor': # Need to gather year ranges for economic data
                 data['epiyears'] = [] # Initialize epidemiology data years
                 for col in range(sheetdata.ncols):
                     thiscell = sheetdata.cell_value(0, col) # 0 is the 1st row which is where the year data should be
@@ -226,8 +302,17 @@ def get_input (filename, verbose=0):
                           data[name][thispar] = dict() # Initialize to empty list 
                           #if verbose == 0: 
                            #   print (name, thispar)
-                    
-   
+                          
+                    if groupname == 'comorbidity':
+                        thispar = subparlist[parcount][0] # Get the name of this parameter e.g. "Malnutrition prevalence"
+                        data[name][thispar] = dict() # Need another structure 
+#                        if verbose == 0:
+#                            print(thispar)
+                        
+                    if groupname == 'population_size':
+                        thispar = subparlist[parcount] # Get the name of this parameter e.g. "0-4 years"
+                        data[name][thispar] =[] # Need another structure 
+    
                 subparam = ''
 
                 if paramcategory == '': # The first column is blank: it's time for the data
@@ -260,7 +345,7 @@ def get_input (filename, verbose=0):
                             cc = sheetdata.cell_value(row, 2) # Read in whether indicator is best, low, or high
                             data[name][subparlist[ccindices[cc]]].append(thesedata) # Actually append the data
                             
-                        if groupname in ['tbprevalence', 'tbincidence']:
+                        if groupname in ['tbprevalence', 'tbincidence', 'comorbidity']:
                             
                             #if verbose == 0: 
                                 #print(data, name, thispar)
@@ -287,9 +372,33 @@ def get_input (filename, verbose=0):
    #                         data[name][thispar][subpar][blhindices[blh]].append(thesedata) # Actually append the data
                             data[name][thispar][subpar] = thesedata # Store data
                                                                                
-                            
-                            
+#                        if groupname =='comorbidity':
+#                            thesedata = sheetdata.row_values(row, start_colx=3, end_colx=lastdatacol) # Data starts in 4rd column
+#                            thesedata = list(map(lambda val: None if val=='' else val, thesedata)) # Replace blanks with None, in case we don't have uncertainty range
+#                            subpar = subparlist[parcount][1].pop(0) # Pop first entry of subparameter list
+#                            #if verbose == 0: 
+#                             #   print (subpar)
+#                            data[name][thispar][subpar] = thesedata # Store data
+#                            #if verbose == 0 :
+#                             #   print (thesedata)
 
+                        if groupname == 'population_size':                            
+                            thesedata = sheetdata.row_values(row, start_colx=3, end_colx=lastdatacol) # Data starts in 4th column
+                            #thesedata = list(map(lambda val: nan if val== '' else val, thesedata)) # Replace blanks with nan
+                            #subpar = subparlist[parcount][1].pop(0) # Pop first entry of subparameter list
+                            #if verbose == 0:
+                             #   print(data, thispar, subpar)
+                            #assumptiondata = sheetdata.cell_value(row, assumptioncol)
+                            #if assumptiondata != '': thesedata = [assumptiondata] # Replace the (presumably blank) data if a non-blank assumption has been entered
+         #                   blhindices = {'Best':0, 'Low': 1, 'High': 2} # Define best-low-high indices
+                            #if verbose == 0: 
+                             #   print (blhindices)
+          #                  blh = sheetdata.cell_value(row, 2) # Read in whether indicator is best, low, or high
+                                                      
+   #                         data[name][thispar][subpar][blhindices[blh]].append(thesedata) # Actually append the data
+                            #data[name][thispar][subpar] = thesedata # Store data
+                            data[name][thispar] = thesedata # Store data
+                    
     if verbose > 0:
         print('...done loading data.', 2, verbose)
  

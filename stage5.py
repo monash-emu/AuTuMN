@@ -4,7 +4,7 @@ Test
 - implement Stage 18 model of the Dynamic Transmission Model
 """
 
-from autumn.model import BasePopulationSystem, make_steps
+from modules.model import BasePopulationSystem, make_steps
 
 class Model(BasePopulationSystem):
 
@@ -225,11 +225,11 @@ class Model(BasePopulationSystem):
 if __name__ == "__main__":
     import pylab
     import os
-    from autumn.plotting import plot_fractions
+    from modules.plotting import plot_fractions
 
     population = Model()
     population.set_flows()
-    population.make_graph('stage5.graph.png')
+#    population.make_graph('stage5.graph.png')
     population.integrate_scipy(make_steps(0, 100, 1))
     plot_fractions(population, population.labels)
     pylab.savefig('stage5.fraction.png', dpi=300)

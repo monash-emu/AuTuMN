@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 """
+The following module provides the framework for setting parameter objects -
+both parameters to be used in the model itself, as well as references to
+evidence that can subsequently be used to determine these parameter
+distributions.
+Need to check variance calculations - e.g. whether the gamma variance
+calculation is based on the variance or the standard deviation.
 Created on Thu Nov 12 13:45:23 2015
 
 @author: JTrauer
@@ -237,9 +243,10 @@ class Parameter:
 
     def graph_prior(self):
         self.calculate_prior()
-        matplotlib.pyplot.plot(self.xvalues, self.prior_pdf)
-        matplotlib.pyplot.plot(self.xvalues, self.prior_cdf)
+        matplotlib.pyplot.plot(self.xvalues, self.prior_pdf, 'r-')
+        matplotlib.pyplot.plot(self.xvalues, self.prior_cdf, 'b-')
         matplotlib.pyplot.xlim(0., self.x_max_forgraph)
+        matplotlib.pyplot.show()
 
 
 class Evidence:
@@ -259,10 +266,8 @@ class Evidence:
     def goto_evidence_directory(self):
         pyfile_string = sys.argv[0]
         autumn_directory = pyfile_string[0: pyfile_string.rfind('/')]
-        directory_current = pyfile_string[0: autumn_directory.rfind('/')]
-        evidence_directory \
-            = directory_current + '/evidence/'
-        os.chdir(evidence_directory)
+        self.evidence_directory = autumn_directory + '/evidence/'
+        os.chdir(self.evidence_directory)
 
     def open_pdf(self):
         self.goto_evidence_directory()

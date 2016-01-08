@@ -96,6 +96,19 @@ early_progression_adult_sloot2014 \
                'Follow-up Study of Contacts in Amsterdam. Am J Respir ' +
                'Crit Care Med. 2014;190(9):1044-1052.')
 
+# Diel early progression estimate
+early_progression_diel2011 \
+    = Evidence('Early progression proportion', 19. / 147.,
+               'Early progression proportion, Diel et al. 2011',
+               'early_progression_diel2011.pdf',
+               'Table 4: 19 of 147 untreated QFT-positive individuals got TB' +
+               'over two years of follow up',
+               'Diel R, Loddenkemper R, Niemann S, Meywald-Walter K, ' +
+               'Nienhaus A. Negative and Positive Predictive Value of a ' +
+               'Whole-Blood Inteferon-gamma Release Assay for Developing ' +
+               'Active Tuberculosis. Am J Respir Crit Care Med. ' +
+               '2010;183(1):88-95.')
+
 # DURATION OF EARLY LATENCY
 # Taken directly from early_progression_trauer2016
 early_latent_duration \
@@ -181,6 +194,8 @@ early_latent_duration_adult_sloot2014 \
                'Follow-up Study of Contacts in Amsterdam. Am J Respir ' +
                'Crit Care Med. 2014;190(9):1044-1052.')
 
+# Note - not possible to produce an estimate from the Diel paper
+
 # PROGRESSION RATE LATE LATENCY
 late_progression \
     = Parameter('Late progression rate',
@@ -202,15 +217,30 @@ untreated_duration \
     = Parameter('Untreated duration',
                 'sojourn time',
                 'gamma',
-                3., 1., 0, # Spread arbitrary, WHO use 1-4 in their calculations though
+                3., 1., 0,  # Spread fairly arbitrary, except that WHO use 1-4 in Global Report annex
                 ['reciprocal of active to late_latent or death total flows'])
 
-untreated_duration_tiemersma \
+untreated_duration_tiemersma2011 \
     = Evidence('Untreated duration', 3,
                'Untreated duration, Tiemersma et al. 2011',
-               'untreated_duration_tiemersma2011.pdf',
+               'natural_history_tiemersma2011.pdf',
                'Estimate from pre-chemotherapy literature of three years ' +
                'untreated', 'No confidence interval around this estimate')
+
+# UNTREATED CASE FATALITY
+untreated_casefatality_smearpos \
+    = Parameter('Untreated case fatality',
+                'proportion',
+                'beta_full_range',
+                .7, .3, 0,  # Spread arbitrary
+                ['proportion of flows other than detection out of active resulting in death'])
+
+untreated_casefatality_smearpos_tiemersma2011 \
+    = Evidence('Untreated case fatality', .7,
+               'Untreated case fatality, Tiemersma et al. 2011',
+               'natural_history_tiemersma2011.pdf',
+               '70% case fatality for smear-positive patients',
+               'Review of the pre-chemotherapy literature.')
 
 # RELATIVE TRANSMISSIBILITY MDR-TB
 relative_fitness_mdr \

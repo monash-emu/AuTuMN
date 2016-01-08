@@ -14,7 +14,9 @@ import parameter_setting
 #parameter_setting.early_progression.graph_prior()
 #parameter_setting.late_progression.graph_prior()
 
-parameter_setting.early_latent_duration_sloot2014.open_pdf()
-#parameter_setting.early_latent_duration_trauer2016.open_pdf()
+#parameter_setting.early_latent_duration_sloot2014.open_pdf()
+
+parameter_setting.untreated_duration_tiemersma2011.open_pdf()
+
 
 #parameter_setting.early_progression.graph_prior()

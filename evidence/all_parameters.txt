@@ -1,0 +1,90 @@
+CURRENT BASELINE PARAMETER DISTRIBUTIONS BEING USED IN THE MODEL 
+
+_____________________________________________________________
+
+TITLE: Early progression proportion
+
+TYPE: proportion
+
+DISTRIBUTION: Beta distribution with parameters determined from expectation and spread values
+
+_____________________________________________________________
+
+TITLE: Early progression proportion in children
+
+TYPE: proportion
+
+DISTRIBUTION: Beta distribution with parameters determined from expectation and spread values
+
+_____________________________________________________________
+
+TITLE: Early progression proportion in adults
+
+TYPE: proportion
+
+DISTRIBUTION: Beta distribution with parameters determined from expectation and spread values
+
+_____________________________________________________________
+
+TITLE: Time spent in early latency
+
+TYPE: timeperiod
+
+DISTRIBUTION: Gamma distribution with parameters determined from expectation and spread values
+
+_____________________________________________________________
+
+TITLE: Time spent in early latency - children
+
+TYPE: timeperiod
+
+DISTRIBUTION: Gamma distribution with parameters determined from expectation and spread values
+
+_____________________________________________________________
+
+TITLE: Time spent in early latency - adults
+
+TYPE: timeperiod
+
+DISTRIBUTION: Gamma distribution with parameters determined from expectation and spread values
+
+_____________________________________________________________
+
+TITLE: Late progression rate
+
+TYPE: rate
+
+DISTRIBUTION: Gamma distribution with parameters determined from expectation and spread values
+
+_____________________________________________________________
+
+TITLE: Untreated duration
+
+TYPE: timeperiod
+
+DISTRIBUTION: Gamma distribution with parameters determined from expectation and spread values
+
+_____________________________________________________________
+
+TITLE: Untreated case fatality
+
+TYPE: proportion
+
+DISTRIBUTION: Beta distribution with parameters determined from expectation and spread values
+
+_____________________________________________________________
+
+TITLE: Relative fitness
+
+TYPE: multiplier
+
+DISTRIBUTION: Beta distribution with parameters determined from expectation and spread values
+
+_____________________________________________________________
+
+TITLE: BCG protection
+
+TYPE: multiplier
+
+DISTRIBUTION: Beta distribution with parameters determined from expectation and spread values
+

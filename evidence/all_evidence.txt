@@ -1,0 +1,206 @@
+CURRENT EVIDENCE OBJECTS AVAILABLE FOR USE IN MODEL 
+
+_____________________________________________________________
+
+TITLE: Early progression proportion, Trauer et al. 2016
+
+REFERENCE: Sloot R, Schim van der Loeff MF, Kouw PM, Borgdorff MW. Risk of Tuberculosis after Recent Exposure. A 10-Year Follow-up Study of Contacts in Amsterdam. Am J Respir Crit Care Med. 2014;190(9):1044-1052.
+
+POINT ESTIMATE: 0.125
+
+CONFIDENCE INTERVAL: (0.096 - 0.154)
+
+EXPLANATION: Results describe 12.5% one year risk accruing over first 227 days. Confidence interval currently estimated. 
+
+_____________________________________________________________
+
+TITLE: Early progression proportion in children, Trauer et al. 2016
+
+REFERENCE: Sloot R, Schim van der Loeff MF, Kouw PM, Borgdorff MW. Risk of Tuberculosis after Recent Exposure. A 10-Year Follow-up Study of Contacts in Amsterdam. Am J Respir Crit Care Med. 2014;190(9):1044-1052.
+
+POINT ESTIMATE: 0.42
+
+CONFIDENCE INTERVAL: (0.308 - 0.532)
+
+EXPLANATION: Estimated pooled results for both paediatric groups.
+
+_____________________________________________________________
+
+TITLE: Early progression proportion in adults, Trauer et al. 2016
+
+REFERENCE: Sloot R, Schim van der Loeff MF, Kouw PM, Borgdorff MW. Risk of Tuberculosis after Recent Exposure. A 10-Year Follow-up Study of Contacts in Amsterdam. Am J Respir Crit Care Med. 2014;190(9):1044-1052.
+
+POINT ESTIMATE: 0.024
+
+CONFIDENCE INTERVAL: (0.009 - 0.0393)
+
+EXPLANATION: See comments for all-age evidence object.
+
+_____________________________________________________________
+
+TITLE: Early progression proportion, Sloot et al. 2014
+
+REFERENCE: Sloot R, Schim van der Loeff MF, Kouw PM, Borgdorff MW. Risk of Tuberculosis after Recent Exposure. A 10-Year Follow-up Study of Contacts in Amsterdam. Am J Respir Crit Care Med. 2014;190(9):1044-1052.
+
+POINT ESTIMATE: 0.095
+
+CONFIDENCE INTERVAL: (0.074 - 0.116)
+
+EXPLANATION: From Figure 2, approximately 9 to 10% of the 739 contacts with evidence of infection developed active TB in the early high risk period, which lasted for around two years. Confidence interval estimated from graphs.
+
+_____________________________________________________________
+
+TITLE: Early progression proportion in children, Sloot et al. 2014
+
+REFERENCE: Sloot R, Schim van der Loeff MF, Kouw PM, Borgdorff MW. Risk of Tuberculosis after Recent Exposure. A 10-Year Follow-up Study of Contacts in Amsterdam. Am J Respir Crit Care Med. 2014;190(9):1044-1052.
+
+POINT ESTIMATE: 0.26
+
+CONFIDENCE INTERVAL: (0.203 - 0.317)
+
+EXPLANATION: Estimated from Figure 3.
+
+_____________________________________________________________
+
+TITLE: Early progression proportion in adults, Sloot et al. 2014
+
+REFERENCE: Sloot R, Schim van der Loeff MF, Kouw PM, Borgdorff MW. Risk of Tuberculosis after Recent Exposure. A 10-Year Follow-up Study of Contacts in Amsterdam. Am J Respir Crit Care Med. 2014;190(9):1044-1052.
+
+POINT ESTIMATE: 0.07
+
+CONFIDENCE INTERVAL: (0.055 - 0.085)
+
+EXPLANATION: Estimated from Figure 3.
+
+_____________________________________________________________
+
+TITLE: Early progression proportion, Diel et al. 2011
+
+REFERENCE: Diel R, Loddenkemper R, Niemann S, Meywald-Walter K, Nienhaus A. Negative and Positive Predictive Value of a Whole-Blood Inteferon-gamma Release Assay for Developing Active Tuberculosis. Am J Respir Crit Care Med. 2010;183(1):88-95.
+
+POINT ESTIMATE: 0.12925170068
+
+CONFIDENCE INTERVAL: No confidence interval available from study
+
+EXPLANATION: Table 4: 19 of 147 untreated QFT-positive individuals got TBover two years of follow up
+
+_____________________________________________________________
+
+TITLE: Early latent duration, Trauer et al. 2016
+
+REFERENCE: Trauer JM, Moyo N, Tay E-L, Dale K, Ragonnet R, McBryde ES, Denholm JT. Risk of Active Tuberculosis in the Five Years Following Infection . . . 15%Chest. 2016;149(2):516-525.
+
+POINT ESTIMATE: 0.416666666667
+
+CONFIDENCE INTERVAL: No confidence interval available from study
+
+EXPLANATION: From the text of our Results (first paragraph).
+
+_____________________________________________________________
+
+TITLE: Early latent duration in children, Trauer et al. 2016
+
+REFERENCE: Trauer JM, Moyo N, Tay E-L, Dale K, Ragonnet R, McBryde ES, Denholm JT. Risk of Active Tuberculosis in the Five Years Following Infection . . . 15%Chest. 2016;149(2):516-525.
+
+POINT ESTIMATE: 0.397260273973
+
+CONFIDENCE INTERVAL: No confidence interval available from study
+
+EXPLANATION: From the text of our Results (first paragraph).
+
+_____________________________________________________________
+
+TITLE: Early latent duration in adults, Trauer et al. 2016
+
+REFERENCE: Trauer JM, Moyo N, Tay E-L, Dale K, Ragonnet R, McBryde ES, Denholm JT. Risk of Active Tuberculosis in the Five Years Following Infection . . . 15%Chest. 2016;149(2):516-525.
+
+POINT ESTIMATE: 0.621917808219
+
+CONFIDENCE INTERVAL: No confidence interval available from study
+
+EXPLANATION: From the text of our Results (first paragraph).
+
+_____________________________________________________________
+
+TITLE: Early latent duration, Sloot et al. 2014
+
+REFERENCE: Sloot R, Schim van der Loeff MF, Kouw PM, Borgdorff MW. Risk of Tuberculosis after Recent Exposure. A 10-Year Follow-up Study of Contacts in Amsterdam. Am J Respir Crit Care Med. 2014;190(9):1044-1052.
+
+POINT ESTIMATE: 1.8
+
+CONFIDENCE INTERVAL: No confidence interval available from study
+
+EXPLANATION: From Figure 2, high risk period lasts about two years.
+
+_____________________________________________________________
+
+TITLE: Early latent duration in children, Sloot et al. 2014
+
+REFERENCE: Sloot R, Schim van der Loeff MF, Kouw PM, Borgdorff MW. Risk of Tuberculosis after Recent Exposure. A 10-Year Follow-up Study of Contacts in Amsterdam. Am J Respir Crit Care Med. 2014;190(9):1044-1052.
+
+POINT ESTIMATE: 0.6
+
+CONFIDENCE INTERVAL: No confidence interval available from study
+
+EXPLANATION: From Figure 2, high risk period lasts about two years.
+
+_____________________________________________________________
+
+TITLE: Early latent duration in adults, Sloot et al. 2014
+
+REFERENCE: Sloot R, Schim van der Loeff MF, Kouw PM, Borgdorff MW. Risk of Tuberculosis after Recent Exposure. A 10-Year Follow-up Study of Contacts in Amsterdam. Am J Respir Crit Care Med. 2014;190(9):1044-1052.
+
+POINT ESTIMATE: 1.8
+
+CONFIDENCE INTERVAL: No confidence interval available from study
+
+EXPLANATION: From Figure 2, high risk period lasts about two years.
+
+_____________________________________________________________
+
+TITLE: Late progression rate, Horsburgh et al. 2010
+
+REFERENCE: Community based estimate of rate of reactivation from the US.
+
+POINT ESTIMATE: 0.00058
+
+CONFIDENCE INTERVAL: (0.00038 - 0.00089)
+
+EXPLANATION: Main finding is rate of reactivation of 0.04 per year
+
+_____________________________________________________________
+
+TITLE: Relative risk of TB, Colditz et al. 1994
+
+REFERENCE: Confidence interval provided for RR estimate.
+
+POINT ESTIMATE: 0.49
+
+CONFIDENCE INTERVAL: (0.34 - 0.7)
+
+EXPLANATION: Estimate of relative risk of TB in BCG vaccinated. 
+
+_____________________________________________________________
+
+TITLE: Untreated duration, Tiemersma et al. 2011
+
+REFERENCE: No confidence interval around this estimate
+
+POINT ESTIMATE: 3
+
+CONFIDENCE INTERVAL: No confidence interval available from study
+
+EXPLANATION: Estimate from pre-chemotherapy literature of three years untreated
+
+_____________________________________________________________
+
+TITLE: Untreated case fatality, Tiemersma et al. 2011
+
+REFERENCE: Review of the pre-chemotherapy literature.
+
+POINT ESTIMATE: 0.7
+
+CONFIDENCE INTERVAL: No confidence interval available from study
+
+EXPLANATION: 70% case fatality for smear-positive patients
+

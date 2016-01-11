@@ -1,0 +1,47 @@
+CURRENT BASELINE PARAMETER DISTRIBUTIONS BEING USED IN THE MODEL 
+
+_____________________________________________________________
+
+TITLE: Early progression proportion
+
+TYPE: proportion_____________________________________________________________
+
+TITLE: Early progression proportion in children
+
+TYPE: proportion_____________________________________________________________
+
+TITLE: Early progression proportion in adults
+
+TYPE: proportion_____________________________________________________________
+
+TITLE: Time spent in early latency
+
+TYPE: timeperiod_____________________________________________________________
+
+TITLE: Time spent in early latency - children
+
+TYPE: timeperiod_____________________________________________________________
+
+TITLE: Time spent in early latency - adults
+
+TYPE: timeperiod_____________________________________________________________
+
+TITLE: Late progression rate
+
+TYPE: rate_____________________________________________________________
+
+TITLE: Untreated duration
+
+TYPE: timeperiod_____________________________________________________________
+
+TITLE: Untreated case fatality
+
+TYPE: proportion_____________________________________________________________
+
+TITLE: Relative fitness
+
+TYPE: multiplier_____________________________________________________________
+
+TITLE: BCG protection
+
+TYPE: multiplier

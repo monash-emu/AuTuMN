@@ -21,16 +21,74 @@ from scipy.stats import truncnorm
 import matplotlib
 
 
+class AllEvidence(type):
+    def __iter__(evidencepiece):
+        return iter(evidencepiece.evidence_register)
+
+class Evidence:
+    """ Object to summarise evidence for use in parameter estimation """
+    __metaclass__ = AllEvidence
+    evidence_register = []
+    def __init__(self, parameter_name, point_estimate, confidence_interval,
+                 evidence_name, location_evidence, explanation_evidence,
+                 reference):
+        self.evidence_register.append(self)
+        self.name = parameter_name
+        self.estimate = point_estimate
+        self.interval = confidence_interval
+        self.location = location_evidence
+        self.evidence_name = evidence_name
+        self.reference = reference
+        self.explanation = explanation_evidence
+        if len(confidence_interval) == 2:
+            self.interval_text = ('(' + str(self.interval[0]) + ' - ' +
+               str(self.interval[1]) + ')')
+        elif len(confidence_interval) < 2:
+            self.interval_text = 'No confidence interval available from study'
+        self.text = ('\n\n' +
+            'TITLE: ' + self.evidence_name + '\n\n' +
+            'REFERENCE: ' + self.reference + '\n\n' +
+            'POINT ESTIMATE: ' + str(self.estimate) + '\n\n' +
+            'CONFIDENCE INTERVAL: ' + self.interval_text + '\n\n' +
+            'EXPLANATION: ' + self.explanation + '\n\n')
+
+    def __str__(self):
+        return self.name
+
+    def goto_evidence_directory(self):
+        pyfile_string = sys.argv[0]
+        autumn_directory = pyfile_string[0: pyfile_string.rfind('/')]
+        self.evidence_directory = autumn_directory + '/evidence/'
+        os.chdir(self.evidence_directory)
+
+    def open_pdf(self):
+        self.goto_evidence_directory()
+        os.startfile(self.location)
+
+    def write_explanation_document(self):
+        self.goto_evidence_directory()
+        file = open(self.evidence_name + '.txt', 'w')
+        file.write(self.text)
+        file.close()
+
+
+class AllParameters(type):
+    def __iter__(parameterinstance):
+        return(iter(parameterinstance.parameter_register))
+
 class Parameter:
     """"  Initialises parameters with distributions prior to model runs """
+    __metaclass__ = AllParameters
+    parameter_register = []
     def __init__(self, parameter_name, parameter_type,
                  distribution, prior_estimate, spread, limits,
                  model_implementation):
+        self.parameter_register.append(self)
         self.parameter_name = parameter_name
         self.parameter_type = parameter_type
         available_types = ['proportion',
                            'rate',
-                           'sojourn time',
+                           'timeperiod',
                            'multiplier']
         assert self.parameter_type in available_types
         self.distribution = distribution
@@ -41,7 +99,12 @@ class Parameter:
         assert distribution in available_distributions, \
             'Distribution not available'
         self.prior_estimate = prior_estimate
-        self.spread = spread
+        if len(spread) == 0:
+            self.spread = prior_estimate / 2.
+        elif len(spread) == 1:
+            self.spread = spread[0]
+        elif len(spread) == 2:
+            self.spread = (spread[1] - spread[0]) / 4.
         self.limits = limits
 
     def calculate_prior(self):
@@ -87,6 +150,8 @@ class Parameter:
     def beta_symmetric_params2(self):
         assert self.prior_estimate > self.spread, \
             'Spread greater than prior estimate, negative values will result'
+        self.distribution_description = ('Symmetric beta distribution with ' +
+            'alpha parameter = beta parameter = 2')
         if self.spread == 0:
             self.spread = self.prior_estimate / 2.
             print('No spread given, so prior_estimate used for range')
@@ -125,6 +190,8 @@ class Parameter:
         return beta_symmetric_params2_cdf
 
     def beta_full_range(self):
+        self.distribution_description = ('Beta distribution with parameters ' +
+            'determined from expectation and spread values')
         self.lower_limit = 0
         self.upper_limit = 1
         self.beta_param_alpha \
@@ -149,6 +216,8 @@ class Parameter:
         return beta_full_range_cdf
 
     def gamma(self):
+        self.distribution_description = ('Gamma distribution with parameters ' +
+            'determined from expectation and spread values')
         self.lower_limit = 0
         self.upper_limit = 'No upper limit'
         self.gamma_shape \
@@ -170,6 +239,8 @@ class Parameter:
         return gamma_cdf
         
     def normal_unlimited(self):
+        self.distribution_description = ('Normal distribution (not ' +
+            'truncated)')
         self.lower_limit = 'No lower limit'
         self.upper_limit = 'No upper limit'
         for i in range(len(self.xvalues)):
@@ -185,6 +256,8 @@ class Parameter:
         return normal_unlimited_cdf
 
     def normal_positive(self):
+        self.distribution_description = ('Normal distribution truncated ' +
+            'at zero only')
         self.lower_limit = 0
         self.upper_limit = 'No upper limit'
         for i in range(len(self.xvalues)):
@@ -204,6 +277,8 @@ class Parameter:
         return normal_positive_cdf
 
     def normal_truncated(self):
+        self.distribution_description = ('Normal distribution truncated at ' +
+            'defined points')
         self.lower_limit = self.limits[0]
         self.upper_limit = self.limits[1]
         for i in range(len(self.xvalues)):
@@ -248,36 +323,10 @@ class Parameter:
         matplotlib.pyplot.xlim(0., self.x_max_forgraph)
         matplotlib.pyplot.show()
 
+    def create_text(self):
+        self.calculate_prior()
+        self.text = ('\n\n' +
+            'TITLE: ' + self.parameter_name + '\n\n' +
+            'TYPE: ' + self.parameter_type + '\n\n' +
+            'DISTRIBUTION: ' + self.distribution_description + '\n\n')
 
-class Evidence:
-    """ Object to summarise evidence for use in parameter estimation """
-    def __init__(self, parameter_name, point_estimate, evidence_name,
-                 location_evidence, explanation_evidence, reference):
-        self.name = parameter_name
-        self.estimate = point_estimate
-        self.location = location_evidence
-        self.evidence_name = evidence_name
-        self.reference = reference
-        self.explanation = explanation_evidence
-
-    def __str__(self):
-        return self.name
-
-    def goto_evidence_directory(self):
-        pyfile_string = sys.argv[0]
-        autumn_directory = pyfile_string[0: pyfile_string.rfind('/')]
-        self.evidence_directory = autumn_directory + '/evidence/'
-        os.chdir(self.evidence_directory)
-
-    def open_pdf(self):
-        self.goto_evidence_directory()
-        os.startfile(self.location)
-
-    def write_explanation_document(self):
-        self.goto_evidence_directory()
-        file = open(self.evidence_name + '.txt', 'w')
-        file.write('TITLE: ' + self.evidence_name + '\n\n' +
-                   'REFERENCE: ' + self.reference + '\n\n' +
-                   'POINT ESTIMATE: ' + str(self.estimate) + '\n\n' +
-                   'EXPLANATION: ' + self.explanation)
-        file.close()

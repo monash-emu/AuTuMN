@@ -5,21 +5,36 @@ Created on Thu Jan 07 15:51:02 2016
 @author: James
 """
 import os
+#import win32com.client as win32
 os.chdir('modules')
 import parameter_setting
 
 # A few possible examples follow - uncomment as required
+#%%
+parameter_setting.proportion_early_progression.graph_prior()
 
-#parameter_setting.early_progression.graph_prior()
+#%%
+
+parameter_setting.proportion_casefatality_active_untreated_smearpos.spread
+
+
+#%%
 #parameter_setting.late_progression.graph_prior()
 #parameter_setting.early_latent_duration_sloot2014.open_pdf()
 #parameter_setting.untreated_duration_tiemersma2011.open_pdf()
 #parameter_setting.early_progression.graph_prior()
 #parameter_setting.early_progression_child_trauer2016.write_explanation_document()
 #parameter_setting.multiplier_relative_fitness_mdr.graph_prior()
+#vars(parameter_setting.multiplier_relative_fitness_mdr)
+#parameter_setting.proportion_early_progression.limits
+
 
 os.chdir('..')
 os.chdir('evidence')
+#word = win32.gencache.EnsureDispatch('Word.Application')
+#word.Visible = False
+#all_evidence_ = word.Documents.Add()
+#all_evidence_.PageSetup.RightMargin = 20
 file = open('all_evidence.txt', 'w')
 file.write('CURRENT EVIDENCE OBJECTS AVAILABLE FOR USE IN MODEL \n\n')
 for pieces_of_evidence in parameter_setting.Evidence:
@@ -35,6 +50,7 @@ for parameter_instances in parameter_setting.Parameter:
     parameter_instances.create_text()
     file.write(parameter_instances.text)
     print(parameter_instances)
+    parameter_instances.graph_prior()
 file.close()
 
 os.chdir('..')

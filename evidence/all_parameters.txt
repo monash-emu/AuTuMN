@@ -8,6 +8,16 @@ TYPE: proportion
 
 DISTRIBUTION: Beta distribution with parameters determined from expectation and spread values
 
+ESTIMATE: 0.125
+
+SPREAD: 0.0145
+
+LIMITS: No additional limits applied
+
+IMPLEMENTATION: Numerator is latent_early to active and denominator is latent_early to latent_late
+
+
+
 _____________________________________________________________
 
 TITLE: Early progression proportion in children
@@ -15,6 +25,16 @@ TITLE: Early progression proportion in children
 TYPE: proportion
 
 DISTRIBUTION: Beta distribution with parameters determined from expectation and spread values
+
+ESTIMATE: 0.42
+
+SPREAD: 0.056
+
+LIMITS: No additional limits applied
+
+IMPLEMENTATION: Numerator is latent_early to active (children) and denominator is latent_early to latent_late (children)
+
+
 
 _____________________________________________________________
 
@@ -24,6 +44,16 @@ TYPE: proportion
 
 DISTRIBUTION: Beta distribution with parameters determined from expectation and spread values
 
+ESTIMATE: 0.024
+
+SPREAD: 0.007575
+
+LIMITS: No additional limits applied
+
+IMPLEMENTATION: Numerator is latent_early to active (adults) and denominator is latent_early to latent_late (adults)
+
+
+
 _____________________________________________________________
 
 TITLE: Time spent in early latency
@@ -31,6 +61,14 @@ TITLE: Time spent in early latency
 TYPE: timeperiod
 
 DISTRIBUTION: Gamma distribution with parameters determined from expectation and spread values
+
+ESTIMATE: 0.416666666667
+
+SPREAD: 0.208333333333
+
+LIMITS: No additional limits applied
+
+IMPLEMENTATION: Time spent in early_latent (if not reinfected)
 
 _____________________________________________________________
 
@@ -40,6 +78,14 @@ TYPE: timeperiod
 
 DISTRIBUTION: Gamma distribution with parameters determined from expectation and spread values
 
+ESTIMATE: 0.397260273973
+
+SPREAD: 0.198630136986
+
+LIMITS: No additional limits applied
+
+IMPLEMENTATION: Time spent in early_latent (children, if not reinfected)
+
 _____________________________________________________________
 
 TITLE: Time spent in early latency - adults
@@ -47,6 +93,14 @@ TITLE: Time spent in early latency - adults
 TYPE: timeperiod
 
 DISTRIBUTION: Gamma distribution with parameters determined from expectation and spread values
+
+ESTIMATE: 0.621917808219
+
+SPREAD: 0.31095890411
+
+LIMITS: No additional limits applied
+
+IMPLEMENTATION: Time spent in early_latent (adults, if not reinfected)
 
 _____________________________________________________________
 
@@ -56,6 +110,16 @@ TYPE: rate
 
 DISTRIBUTION: Gamma distribution with parameters determined from expectation and spread values
 
+ESTIMATE: 0.00058
+
+SPREAD: 0.0001275
+
+LIMITS: No additional limits applied
+
+IMPLEMENTATION: From compartment late_latent to compartment active
+
+
+
 _____________________________________________________________
 
 TITLE: Untreated duration
@@ -63,6 +127,14 @@ TITLE: Untreated duration
 TYPE: timeperiod
 
 DISTRIBUTION: Gamma distribution with parameters determined from expectation and spread values
+
+ESTIMATE: 3
+
+SPREAD: 1.5
+
+LIMITS: No additional limits applied
+
+IMPLEMENTATION: Time spent in active disease (if not detected)
 
 _____________________________________________________________
 
@@ -72,6 +144,16 @@ TYPE: proportion
 
 DISTRIBUTION: Beta distribution with parameters determined from expectation and spread values
 
+ESTIMATE: 0.7
+
+SPREAD: 0.15
+
+LIMITS: No additional limits applied
+
+IMPLEMENTATION: Numerator is death and denominator is death and spontaneous recovery (if not detected)
+
+
+
 _____________________________________________________________
 
 TITLE: Relative fitness
@@ -80,6 +162,14 @@ TYPE: multiplier
 
 DISTRIBUTION: Beta distribution with parameters determined from expectation and spread values
 
+ESTIMATE: 0.6
+
+SPREAD: 0.25
+
+LIMITS: No additional limits applied
+
+IMPLEMENTATION: Parameter to be multiplied is force of infection
+
 _____________________________________________________________
 
 TITLE: BCG protection
@@ -87,4 +177,12 @@ TITLE: BCG protection
 TYPE: multiplier
 
 DISTRIBUTION: Beta distribution with parameters determined from expectation and spread values
+
+ESTIMATE: 0.49
+
+SPREAD: 0.09
+
+LIMITS: No additional limits applied
+
+IMPLEMENTATION: Parameter to be multiplied is force of infection parameter
 

@@ -8,7 +8,7 @@ Created on Sat Nov 28 12:01:25 2015
 
 from parameter_estimation import Parameter, Evidence
 
-#EVIDENCE______________________________________________________________________
+# EVIDENCE_____________________________________________________________________
 early_progression_trauer2016 \
     = Evidence('Early progression proportion', 0.125, [.096, 0.154],
                'Early progression proportion, Trauer et al. 2016',
@@ -169,13 +169,13 @@ untreated_casefatality_smearpos_tiemersma2011 \
                '70% case fatality for smear-positive patients',
                'Review of the pre-chemotherapy literature.')
 
-#PARAMETERS____________________________________________________________________
+# PARAMETERS___________________________________________________________________
 proportion_early_progression \
     = Parameter('Early progression proportion',
                 'proportion',
                 'beta_full_range',
                 early_progression_trauer2016.estimate,
-                early_progression_trauer2016.interval, 0,
+                early_progression_trauer2016.interval, [],
                 ['latent_early to active',
                  'latent_early to latent_late'])
 proportion_early_progression_child \
@@ -183,7 +183,7 @@ proportion_early_progression_child \
                 'proportion',
                 'beta_full_range',
                 early_progression_child_trauer2016.estimate,
-                early_progression_child_trauer2016.interval, 0,
+                early_progression_child_trauer2016.interval, [],
                 ['latent_early to active (children)',
                  'latent_early to latent_late (children)'])
 proportion_early_progression_adult \
@@ -191,7 +191,7 @@ proportion_early_progression_adult \
                 'proportion',
                 'beta_full_range',
                 early_progression_adult_trauer2016.estimate,
-                early_progression_adult_trauer2016.interval, 0,
+                early_progression_adult_trauer2016.interval, [],
                 ['latent_early to active (adults)',
                  'latent_early to latent_late (adults)'])
 
@@ -200,33 +200,30 @@ timeperiod_early_latent \
                 'timeperiod',
                 'gamma',
                 early_latent_duration_trauer2016.estimate,
-                early_latent_duration_trauer2016.interval, 0,
-                ['reciprocal of early_latent flows - early progression ' +
-                'and stabilisation'])
+                early_latent_duration_trauer2016.interval, [],
+                ['early_latent (if not reinfected)'])
 timeperiod_early_latent_child \
     = Parameter('Time spent in early latency - children',
                 'timeperiod',
                 'gamma',
                 early_latent_duration_child_trauer2016.estimate,
-                early_latent_duration_child_trauer2016.interval, 0,
-                ['reciprocal of early_latent flows - early progression ' +
-                'and stabilisation (children)'])
+                early_latent_duration_child_trauer2016.interval, [],
+                ['early_latent (children, if not reinfected)'])
 timeperiod_early_latent_adult \
     = Parameter('Time spent in early latency - adults',
                 'timeperiod',
                 'gamma',
                 early_latent_duration_adult_trauer2016.estimate,
-                early_latent_duration_adult_trauer2016.interval, 0,
-                ['reciprocal of early_latent flows - early progression ' +
-                'and stabilisation (adults)'])
+                early_latent_duration_adult_trauer2016.interval, [],
+                ['early_latent (adults, if not reinfected)'])
 
 rate_late_progression \
     = Parameter('Late progression rate',
                 'rate',
                 'gamma',
                 late_progression_rate_horsburgh2010.estimate,
-                late_progression_rate_horsburgh2010.interval, 0,
-                ['late_latent to active rate'])
+                late_progression_rate_horsburgh2010.interval, [],
+                ['late_latent', 'active'])
 
 timeperiod_activeuntreated \
     = Parameter('Untreated duration',
@@ -234,7 +231,7 @@ timeperiod_activeuntreated \
                 'gamma',
                 untreated_duration_tiemersma2011.estimate,
                 untreated_duration_tiemersma2011.interval, [],
-                ['reciprocal of active to late_latent or death total flows'])
+                ['active disease (if not detected)'])
 
 proportion_casefatality_active_untreated_smearpos \
     = Parameter('Untreated case fatality',
@@ -242,20 +239,20 @@ proportion_casefatality_active_untreated_smearpos \
                 'beta_full_range',
                 untreated_casefatality_smearpos_tiemersma2011.estimate,
                 untreated_casefatality_smearpos_tiemersma2011.interval, [],
-                ['proportion of flows other than detection out of active resulting in death'])
+                ['death', 'death and spontaneous recovery (if not detected)'])
 
 multiplier_relative_fitness_mdr \
     = Parameter('Relative fitness',
                 'multiplier',
                 'beta_full_range',
-                0.6, [0.25], 0,
-                ['multiplier for force of infection parameter'])
+                0.6, [0.25], [],
+                ['force of infection'])
 
 mutliplier_bcg_protection \
     = Parameter('BCG protection',
                 'multiplier',
                 'beta_full_range',
                 bcg_protection_colditz.estimate,
-                bcg_protection_colditz.interval, 0,
-                ['multiplier for force of infection parameter'])
+                bcg_protection_colditz.interval, [],
+                ['force of infection parameter'])
 

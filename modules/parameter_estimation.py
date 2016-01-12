@@ -71,6 +71,7 @@ class Evidence:
         file.write(self.text)
         file.close()
 
+#______________________________________________________________________________
 
 class AllParameters(type):
     def __iter__(parameterinstance):
@@ -86,11 +87,30 @@ class Parameter:
         self.parameter_register.append(self)
         self.parameter_name = parameter_name
         self.parameter_type = parameter_type
+        self.model_implementation = model_implementation
         available_types = ['proportion',
                            'rate',
                            'timeperiod',
                            'multiplier']
         assert self.parameter_type in available_types
+        if self.parameter_type == 'proportion':
+            assert len(self.model_implementation) == 2
+            self.implementation_description = ('Numerator is ' +
+            str(self.model_implementation[0]) + ' and denominator is ' +
+            str(self.model_implementation[1]) + '\n\n')
+        elif self.parameter_type == 'rate':
+            assert len(self.model_implementation) == 2
+            self.implementation_description = ('From compartment ' +
+            self.model_implementation[0] + ' to compartment ' +
+            self.model_implementation[1] + '\n\n')
+        elif self.parameter_type == 'timeperiod':
+            assert len(self.model_implementation) == 1
+            self.implementation_description = ('Time spent in ' +
+            self.model_implementation[0])
+        elif self.parameter_type == 'multiplier':
+            assert len(self.model_implementation) == 1
+            self.implementation_description = ('Parameter to be multiplied is ' +
+            self.model_implementation[0])
         self.distribution = distribution
         available_distributions = ['beta_symmetric_params2',
                                    'beta_full_range', 'gamma',
@@ -100,12 +120,27 @@ class Parameter:
             'Distribution not available'
         self.prior_estimate = prior_estimate
         if len(spread) == 0:
-            self.spread = prior_estimate / 2.
+            if self.parameter_type == 'proportion':
+                if self.prior_estimate < 0.5:
+                    self.spread = prior_estimate / 2.
+                else:
+                    self.spread = (1 - prior_estimate) / 2.
+            else:
+                 self.spread = prior_estimate / 2.
         elif len(spread) == 1:
             self.spread = spread[0]
         elif len(spread) == 2:
             self.spread = (spread[1] - spread[0]) / 4.
         self.limits = limits
+        assert len(self.limits) <= 2, 'Too many limits provided'
+        if len(self.limits) == 0:
+            self.limit_text = 'No additional limits applied'
+        elif len(self.limits) == 1:
+            self.limit_text = ('One additional limit set at ' +
+            str(self.limits[0]))
+        elif len(self.limits) == 2:
+            self.limit_text = ('Two additional limits set at ' +
+            str(self.limits[0]) + ' and ' + str(self.limit[1]))
 
     def calculate_prior(self):
         if self.distribution == 'beta_symmetric_params2':
@@ -321,12 +356,20 @@ class Parameter:
         matplotlib.pyplot.plot(self.xvalues, self.prior_pdf, 'r-')
         matplotlib.pyplot.plot(self.xvalues, self.prior_cdf, 'b-')
         matplotlib.pyplot.xlim(0., self.x_max_forgraph)
-        matplotlib.pyplot.show()
+        os.chdir('..')
+        os.chdir('graphs')
+        matplotlib.pyplot.savefig((self.parameter_name + '.png')) 
+        matplotlib.pyplot.close()
 
     def create_text(self):
         self.calculate_prior()
         self.text = ('\n\n' +
             'TITLE: ' + self.parameter_name + '\n\n' +
             'TYPE: ' + self.parameter_type + '\n\n' +
-            'DISTRIBUTION: ' + self.distribution_description + '\n\n')
+            'DISTRIBUTION: ' + self.distribution_description + '\n\n' +
+            'ESTIMATE: ' + str(self.prior_estimate) + '\n\n' +
+            'SPREAD: ' + str(self.spread) + '\n\n' +
+            'LIMITS: ' + str(self.limit_text) + '\n\n' +
+            'IMPLEMENTATION: ' + str(self.implementation_description) + '\n\n')
+
 

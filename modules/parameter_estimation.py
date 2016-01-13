@@ -140,7 +140,7 @@ class Parameter:
             str(self.limits[0]))
         elif len(self.limits) == 2:
             self.limit_text = ('Two additional limits set at ' +
-            str(self.limits[0]) + ' and ' + str(self.limit[1]))
+            str(self.limits[0]) + ' and ' + str(self.limits[1]))
 
     def calculate_prior(self):
         if self.distribution == 'beta_symmetric_params2':

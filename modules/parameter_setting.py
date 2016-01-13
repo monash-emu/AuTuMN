@@ -169,6 +169,25 @@ untreated_casefatality_smearpos_tiemersma2011 \
                '70% case fatality for smear-positive patients',
                'Review of the pre-chemotherapy literature.')
 
+treatment_duration_ds_who2011 \
+    = Evidence('Time under treatment for DS-TB', 6., [.5],
+               'Time to complete treatment for DS-TB based on WHO guidelines',
+               'treatmentguidelines_who2011.pdf',
+               'World Health Organization. Guidelines on the programmatic ' +
+               'management of drug-resistant tuberculosis. Available at: ' +
+               'http://apps.who.int/iris/bitstream/10665/44597/1/' +
+               '97892415101583_eng.pdf',
+               'Based on recommended treatment durations')
+treatment_duration_mdr_who2011 \
+    = Evidence('Time under treatment for DS-TB', 20., [6.],
+               'Time to complete treatment for DS-TB based on WHO guidelines',
+               'treatmentguidelines_who2011.pdf',
+               'World Health Organization. Guidelines on the programmatic ' +
+               'management of drug-resistant tuberculosis. Available at: ' +
+               'http://apps.who.int/iris/bitstream/10665/44597/1/' +
+               '97892415101583_eng.pdf',
+               'Based on recommended treatment durations')
+
 # PARAMETERS___________________________________________________________________
 proportion_early_progression \
     = Parameter('Early progression proportion',
@@ -255,4 +274,24 @@ mutliplier_bcg_protection \
                 bcg_protection_colditz.estimate,
                 bcg_protection_colditz.interval, [],
                 ['force of infection parameter'])
+
+timeperiod_treatment_ds \
+    = Parameter('Time under treatment for DS-TB',
+                'timeperiod',
+                'normal_truncated',
+                treatment_duration_ds_who2011.estimate,
+                treatment_duration_ds_who2011.interval,
+                [treatment_duration_ds_who2011.estimate, 1e3],
+                ['time under treatment for DS-TB (may span multiple compartments)'])
+timeperiod_treatment_mdr \
+    = Parameter('Time under treatment for MDR-TB',
+                'timeperiod',
+                'normal_truncated',
+                treatment_duration_mdr_who2011.estimate,
+                treatment_duration_mdr_who2011.interval,
+                [treatment_duration_mdr_who2011.estimate, 1e3],
+                ['time under treatment for MDR-TB (may span multiple compartments)'])
+
+
+
 

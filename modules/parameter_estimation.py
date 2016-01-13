@@ -170,7 +170,6 @@ class Parameter:
             self.normal_positive()
             self.x_max_forgraph = self.prior_estimate * 2.
         elif self.distribution == 'normal_truncated':
-            print(type(self.limits))
             assert isinstance(self.limits, list), 'List of two limits required'
             assert len(self.limits) == 2, 'List of two limits required'
             self.xvalues = numpy.arange(0., self.prior_estimate * 5, 1e-3)

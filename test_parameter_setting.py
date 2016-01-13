@@ -5,20 +5,13 @@ Created on Thu Jan 07 15:51:02 2016
 @author: James
 """
 import os
-#import win32com.client as win32
+import win32com.client as win32
 os.chdir('modules')
 import parameter_setting
 
 # A few possible examples follow - uncomment as required
-#%%
-parameter_setting.proportion_early_progression.graph_prior()
-
-#%%
-
-parameter_setting.proportion_casefatality_active_untreated_smearpos.spread
-
-
-#%%
+#parameter_setting.proportion_early_progression.graph_prior()
+#parameter_setting.proportion_casefatality_active_untreated_smearpos.spread
 #parameter_setting.late_progression.graph_prior()
 #parameter_setting.early_latent_duration_sloot2014.open_pdf()
 #parameter_setting.untreated_duration_tiemersma2011.open_pdf()
@@ -31,26 +24,24 @@ parameter_setting.proportion_casefatality_active_untreated_smearpos.spread
 
 os.chdir('..')
 os.chdir('evidence')
-#word = win32.gencache.EnsureDispatch('Word.Application')
-#word.Visible = False
-#all_evidence_ = word.Documents.Add()
-#all_evidence_.PageSetup.RightMargin = 20
-file = open('all_evidence.txt', 'w')
-file.write('CURRENT EVIDENCE OBJECTS AVAILABLE FOR USE IN MODEL \n\n')
+
+word = win32.Dispatch('Word.Application')
+word.Documents.Open(r'C:/Users/James/Desktop/AuTuMN/evidence/evidence.docx')
+word.Selection.TypeText('CURRENT EVIDENCE OBJECTS AVAILABLE FOR USE IN MODEL \n\n')
 for pieces_of_evidence in parameter_setting.Evidence:
-    file.write('_____________________________________________________________')
-    file.write(pieces_of_evidence.text)
-    print(pieces_of_evidence)
-file.close()
-
-file = open('all_parameters.txt', 'w')
-file.write('CURRENT BASELINE PARAMETER DISTRIBUTIONS BEING USED IN THE MODEL \n\n')
-for parameter_instances in parameter_setting.Parameter:
-    file.write('_____________________________________________________________')
-    parameter_instances.create_text()
-    file.write(parameter_instances.text)
-    print(parameter_instances)
-    parameter_instances.graph_prior()
-file.close()
-
+    word.Selection.TypeText('________________________________________________')
+    word.Selection.TypeText(pieces_of_evidence.text)
+word = None
 os.chdir('..')
+
+word = win32.Dispatch('Word.Application')
+word.Documents.Open(r'C:/Users/James/Desktop/AuTuMN/evidence/parameters.docx')
+word.Selection.TypeText('CURRENT BASELINE PARAMETER DISTRIBUTIONS BEING ' +
+    'USED IN THE MODEL \n\n')
+for parameter_instances in parameter_setting.Parameter:
+    parameter_instances.create_text()
+    word.Selection.TypeText('________________________________________________')
+    word.Selection.TypeText(parameter_instances.text)
+word = None
+os.chdir('..')
+

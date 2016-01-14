@@ -144,9 +144,12 @@ late_progression_rate_horsburgh2010 \
     = Evidence('Late progression rate', 0.00058, [0.00038, 0.00089],
                'Late progression rate, Horsburgh et al. 2010',
                'late_progression_horsburgh2010.pdf',
-               'Main finding is rate of reactivation of 0.04 per year',
-               'Community based estimate of rate of reactivation from ' +
-               'the US.')
+               'Main finding is rate of reactivation of 0.04 per year from ' +
+               'a community based estimate of rate of reactivation from ' +
+               'the US.',
+               'Horsburgh CR, O-Donnell M, Chamblee S, et al. ' +
+               'Revisiting Rates of Reactivation Tuberculosis. ' +
+               'Am J Respir Crit Care Med 182:420-425.')
 
 bcg_protection_colditz \
     = Evidence('BCG protection', 0.49, [0.34, 0.70],
@@ -166,27 +169,58 @@ untreated_casefatality_smearpos_tiemersma2011 \
     = Evidence('Untreated case fatality', .7, [],
                'Untreated case fatality, Tiemersma et al. 2011',
                'natural_history_tiemersma2011.pdf',
-               '70% case fatality for smear-positive patients',
-               'Review of the pre-chemotherapy literature.')
+               '70% case fatality for smear-positive patients from ' +
+               'Review of the pre-chemotherapy literature.',
+               'Tiemersma EW, van der Werf MJ, Borgdorff MW, et al. ' +
+               'Natural history of tuberculosis: duration and fatality of ' +
+               'untreated pulmonary tuberculosis in HIV negative patients: ' +
+               'a systematic review. PLoS One 6(4):e17601.')
 
 treatment_duration_ds_who2011 \
     = Evidence('Time under treatment for DS-TB', 6., [.5],
                'Time to complete treatment for DS-TB based on WHO guidelines',
                'treatmentguidelines_who2011.pdf',
+               'Based on recommended treatment durations',
                'World Health Organization. Guidelines on the programmatic ' +
                'management of drug-resistant tuberculosis. Available at: ' +
                'http://apps.who.int/iris/bitstream/10665/44597/1/' +
-               '97892415101583_eng.pdf',
-               'Based on recommended treatment durations')
+               '97892415101583_eng.pdf')
 treatment_duration_mdr_who2011 \
     = Evidence('Time under treatment for DS-TB', 20., [6.],
                'Time to complete treatment for DS-TB based on WHO guidelines',
                'treatmentguidelines_who2011.pdf',
+               'Based on recommended treatment durations',
                'World Health Organization. Guidelines on the programmatic ' +
                'management of drug-resistant tuberculosis. Available at: ' +
                'http://apps.who.int/iris/bitstream/10665/44597/1/' +
-               '97892415101583_eng.pdf',
-               'Based on recommended treatment durations')
+               '97892415101583_eng.pdf')
+
+smearneg_transmission_tostmann2008 \
+    = Evidence('Relative transmissibility of smear negative disease',
+               0.24, [0.2, 0.3],
+               'Chance of transmission for smear negatives compared to ' +
+               'smear positives',
+               'smearneg_transmission_tostmann2008.pdf',
+               'Well constructed study looking at exactly this parameter ' +
+               'and employing genotypic confirmation of transmission. '+
+               '(Possible ref for extrapulmonary not being transmissible.)',
+               'Tostmann A, Kik SV, Kaisvaart NA, et al. ' +
+               'Tuberculosis Transmission by Patients with Smear-Negative ' +
+               'Pulmonary Tuberculosis in a Large Cohort in the Netherlands. ' +
+               'Clin Infect Dis 2008;47:1135-1142.')
+
+undertreatment_transmission_ds_dhamardhikari2014 \
+    = Evidence('Relative transmissibility of treatment patients (DS-TB)',
+               0.02, [],
+               'Chance of transmission of treated patients compared to ' +
+               'untreated.',
+               'undertreatment_transmission_ds_dhamardhikari2014.pdf',
+               '50 times greater rate of guinea pig TST conversion for ' +
+               'untreated patients than treated (DS-TB)',
+               'Dhamardhikari AS, Mphahlele M, Venter K, et al. ' +
+               'Rapid impact of effective treatment on transmission of ' +
+               'multidrug-resistant tuberculosis. Int J Tuberc Lung Dis ' +
+               '2014;18(9):1019-1025.')
 
 # PARAMETERS___________________________________________________________________
 proportion_early_progression \
@@ -305,6 +339,13 @@ timeperiod_treatment_mdr \
                 [treatment_duration_mdr_who2011.estimate, 1e3],
                 ['time under treatment for MDR-TB (may span multiple compartments)'])
 
+multiplier_relative_infectiousness_smearneg \
+    = Parameter('multiplier_relative_infectiousness_smearneg',
+                'Relative infectiouness of smear negative disease',
+                'multiplier',
+                'beta_full_range',
+                smearneg_transmission_tostmann2008.estimate,
+                smearneg_transmission_tostmann2008.interval, [],
+                ['force of infection parameter'])
 
-
-
+# still doing the treatment transmission paper from South Africa

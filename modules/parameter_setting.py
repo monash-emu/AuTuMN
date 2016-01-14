@@ -190,7 +190,8 @@ treatment_duration_mdr_who2011 \
 
 # PARAMETERS___________________________________________________________________
 proportion_early_progression \
-    = Parameter('Early progression proportion',
+    = Parameter('proportion_early_progression',
+                'Early progression proportion',
                 'proportion',
                 'beta_full_range',
                 early_progression_trauer2016.estimate,
@@ -198,7 +199,8 @@ proportion_early_progression \
                 ['latent_early to active',
                  'latent_early to latent_late'])
 proportion_early_progression_child \
-    = Parameter('Early progression proportion in children',
+    = Parameter('proportion_early_progression_child',
+                'Early progression proportion in children',
                 'proportion',
                 'beta_full_range',
                 early_progression_child_trauer2016.estimate,
@@ -206,7 +208,8 @@ proportion_early_progression_child \
                 ['latent_early to active (children)',
                  'latent_early to latent_late (children)'])
 proportion_early_progression_adult \
-    = Parameter('Early progression proportion in adults',
+    = Parameter('proportion_early_progression_adult',
+                'Early progression proportion in adults',
                 'proportion',
                 'beta_full_range',
                 early_progression_adult_trauer2016.estimate,
@@ -215,21 +218,24 @@ proportion_early_progression_adult \
                  'latent_early to latent_late (adults)'])
 
 timeperiod_early_latent \
-    = Parameter('Time spent in early latency',
+    = Parameter('timeperiod_early_latent',
+                'Time spent in early latency',
                 'timeperiod',
                 'gamma',
                 early_latent_duration_trauer2016.estimate,
                 early_latent_duration_trauer2016.interval, [],
                 ['early_latent (if not reinfected)'])
 timeperiod_early_latent_child \
-    = Parameter('Time spent in early latency - children',
+    = Parameter('timeperiod_early_latent_child',
+                'Time spent in early latency - children',
                 'timeperiod',
                 'gamma',
                 early_latent_duration_child_trauer2016.estimate,
                 early_latent_duration_child_trauer2016.interval, [],
                 ['early_latent (children, if not reinfected)'])
 timeperiod_early_latent_adult \
-    = Parameter('Time spent in early latency - adults',
+    = Parameter('timeperiod_early_latent_adult',
+                'Time spent in early latency - adults',
                 'timeperiod',
                 'gamma',
                 early_latent_duration_adult_trauer2016.estimate,
@@ -237,7 +243,8 @@ timeperiod_early_latent_adult \
                 ['early_latent (adults, if not reinfected)'])
 
 rate_late_progression \
-    = Parameter('Late progression rate',
+    = Parameter('rate_late_progression',
+                'Late progression rate',
                 'rate',
                 'gamma',
                 late_progression_rate_horsburgh2010.estimate,
@@ -245,7 +252,8 @@ rate_late_progression \
                 ['late_latent', 'active'])
 
 timeperiod_activeuntreated \
-    = Parameter('Untreated duration',
+    = Parameter('timeperiod_activeuntreated',
+                'Untreated duration',
                 'timeperiod',
                 'gamma',
                 untreated_duration_tiemersma2011.estimate,
@@ -253,7 +261,8 @@ timeperiod_activeuntreated \
                 ['active disease (if not detected)'])
 
 proportion_casefatality_active_untreated_smearpos \
-    = Parameter('Untreated case fatality',
+    = Parameter('proportion_casefatality_active_untreated_smearpos',
+                'Untreated case fatality',
                 'proportion',
                 'beta_full_range',
                 untreated_casefatality_smearpos_tiemersma2011.estimate,
@@ -261,14 +270,16 @@ proportion_casefatality_active_untreated_smearpos \
                 ['death', 'death and spontaneous recovery (if not detected)'])
 
 multiplier_relative_fitness_mdr \
-    = Parameter('Relative fitness',
+    = Parameter('multiplier_relative_fitness_mdr',
+                'Relative fitness',
                 'multiplier',
                 'beta_full_range',
                 0.6, [0.25], [],
                 ['force of infection'])
 
 mutliplier_bcg_protection \
-    = Parameter('BCG protection',
+    = Parameter('mutliplier_bcg_protection',
+                'BCG protection',
                 'multiplier',
                 'beta_full_range',
                 bcg_protection_colditz.estimate,
@@ -276,7 +287,8 @@ mutliplier_bcg_protection \
                 ['force of infection parameter'])
 
 timeperiod_treatment_ds \
-    = Parameter('Time under treatment for DS-TB',
+    = Parameter('timeperiod_treatment_ds',
+                'Time under treatment for DS-TB',
                 'timeperiod',
                 'normal_truncated',
                 treatment_duration_ds_who2011.estimate,
@@ -284,7 +296,8 @@ timeperiod_treatment_ds \
                 [treatment_duration_ds_who2011.estimate, 1e3],
                 ['time under treatment for DS-TB (may span multiple compartments)'])
 timeperiod_treatment_mdr \
-    = Parameter('Time under treatment for MDR-TB',
+    = Parameter('timeperiod_treatment_mdr',
+                'Time under treatment for MDR-TB',
                 'timeperiod',
                 'normal_truncated',
                 treatment_duration_mdr_who2011.estimate,

@@ -45,12 +45,13 @@ class Evidence:
                str(self.interval[1]) + ')')
         elif len(confidence_interval) < 2:
             self.interval_text = 'No confidence interval available from study'
-        self.text = ('\n\n' +
-            'TITLE: ' + self.evidence_name + '\n\n' +
-            'REFERENCE: ' + self.reference + '\n\n' +
-            'POINT ESTIMATE: ' + str(self.estimate) + '\n\n' +
-            'CONFIDENCE INTERVAL: ' + self.interval_text + '\n\n' +
-            'EXPLANATION: ' + self.explanation + '\n\n')
+        self.text = {'Title': self.evidence_name,
+            'Reference': self.reference,
+            'Point estimate': str(self.estimate),
+            'Confidence interval': self.interval_text,
+            'Explanation': self.explanation}
+        self.attributes_ordered = ['Title', 'Point estimate',
+                                   'Confidence interval', 'Explanation']
 
     def __str__(self):
         return self.name
@@ -81,10 +82,11 @@ class Parameter:
     """"  Initialises parameters with distributions prior to model runs """
     __metaclass__ = AllParameters
     parameter_register = []
-    def __init__(self, parameter_name, parameter_type,
+    def __init__(self, name, parameter_name, parameter_type,
                  distribution, prior_estimate, spread, limits,
                  model_implementation):
         self.parameter_register.append(self)
+        self.name = name
         self.parameter_name = parameter_name
         self.parameter_type = parameter_type
         self.model_implementation = model_implementation
@@ -141,6 +143,14 @@ class Parameter:
         elif len(self.limits) == 2:
             self.limit_text = ('Two additional limits set at ' +
             str(self.limits[0]) + ' and ' + str(self.limits[1]))
+        self.text = {'Title': self.parameter_name,
+                     'Type': self.parameter_type,
+                     'Estimate': str(self.prior_estimate),
+                     'Spread': str(self.spread),
+                     'Limits': str(self.limit_text),
+                     'Implementation': str(self.implementation_description)}
+        self.attributes_ordered = ['Title', 'Type', 'Estimate', 'Spread',
+                                   'Limits', 'Implementation']
 
     def calculate_prior(self):
         if self.distribution == 'beta_symmetric_params2':
@@ -357,18 +367,5 @@ class Parameter:
         matplotlib.pyplot.xlim(0., self.x_max_forgraph)
         os.chdir('..')
         os.chdir('graphs')
-        matplotlib.pyplot.savefig((self.parameter_name + '.png')) 
+        matplotlib.pyplot.savefig((self.name + '.jpg'))
         matplotlib.pyplot.close()
-
-    def create_text(self):
-        self.calculate_prior()
-        self.text = ('\n\n' +
-            'TITLE: ' + self.parameter_name + '\n\n' +
-            'TYPE: ' + self.parameter_type + '\n\n' +
-            'DISTRIBUTION: ' + self.distribution_description + '\n\n' +
-            'ESTIMATE: ' + str(self.prior_estimate) + '\n\n' +
-            'SPREAD: ' + str(self.spread) + '\n\n' +
-            'LIMITS: ' + str(self.limit_text) + '\n\n' +
-            'IMPLEMENTATION: ' + str(self.implementation_description) + '\n\n')
-
-

@@ -14,10 +14,7 @@ Created on Thu Nov 12 13:45:23 2015
 import os
 import sys
 import numpy
-from scipy.stats import beta
-from scipy.stats import gamma
-from scipy.stats import norm
-from scipy.stats import truncnorm
+import scipy.stats
 import matplotlib
 
 
@@ -29,15 +26,14 @@ class Evidence:
     """ Object to summarise evidence for use in parameter estimation """
     __metaclass__ = AllEvidence
     evidence_register = []
-    def __init__(self, parameter_name, point_estimate, confidence_interval,
-                 evidence_name, location_evidence, explanation_evidence,
+    def __init__(self, source, parameter, point_estimate, confidence_interval,
+                 evidence_fullname, explanation_evidence,
                  reference):
         self.evidence_register.append(self)
-        self.name = parameter_name
         self.estimate = point_estimate
         self.interval = confidence_interval
-        self.location = location_evidence
-        self.evidence_name = evidence_name
+        self.name = source
+        self.fullname = evidence_fullname
         self.reference = reference
         self.explanation = explanation_evidence
         if len(confidence_interval) == 2:
@@ -45,7 +41,7 @@ class Evidence:
                str(self.interval[1]) + ')')
         elif len(confidence_interval) < 2:
             self.interval_text = 'No confidence interval available from study'
-        self.text = {'Title': self.evidence_name,
+        self.text = {'Title': self.fullname,
             'Reference': self.reference,
             'Point estimate': str(self.estimate),
             'Confidence interval': self.interval_text,
@@ -53,24 +49,11 @@ class Evidence:
         self.attributes_ordered = ['Title', 'Point estimate',
                                    'Confidence interval', 'Explanation']
 
-    def __str__(self):
-        return self.name
-
-    def goto_evidence_directory(self):
-        pyfile_string = sys.argv[0]
-        autumn_directory = pyfile_string[0: pyfile_string.rfind('/')]
-        self.evidence_directory = autumn_directory + '/evidence/'
-        os.chdir(self.evidence_directory)
-
     def open_pdf(self):
-        self.goto_evidence_directory()
-        os.startfile(self.location)
-
-    def write_explanation_document(self):
-        self.goto_evidence_directory()
-        file = open(self.evidence_name + '.txt', 'w')
-        file.write(self.text)
-        file.close()
+        os.chdir('..')
+        os.chdir('evidence')
+        location = (self.name + '.pdf')
+        os.startfile(location)
 
 #______________________________________________________________________________
 

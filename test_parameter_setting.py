@@ -6,20 +6,17 @@ Created on Thu Jan 07 15:51:02 2016
 """
 import os
 import win32com.client as win32
-os.chdir('modules')
+os.chdir('C:/Users/James/Desktop/AuTuMN/modules')
+import parameter_estimation
+reload(parameter_estimation)
 import parameter_setting
+reload(parameter_setting)
 
-# A few possible examples follow - uncomment as required
-#parameter_setting.proportion_early_progression.graph_prior()
-#parameter_setting.proportion_casefatality_active_untreated_smearpos.spread
-#parameter_setting.rate_late_progression.graph_prior()
-#parameter_setting.early_latent_duration_sloot2014.open_pdf()
-#parameter_setting.untreated_duration_tiemersma2011.open_pdf()
-#parameter_setting.early_progression.graph_prior()
-#parameter_setting.early_progression_child_trauer2016.write_explanation_document()
-#parameter_setting.multiplier_relative_fitness_mdr.graph_prior()
-#vars(parameter_setting.multiplier_relative_fitness_mdr)
-#parameter_setting.proportion_early_progression.limits
+#%%
+
+parameter_setting.early_progression_trauer2016.open_pdf()
+
+#%%
 
 vis = True
 

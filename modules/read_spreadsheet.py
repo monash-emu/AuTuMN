@@ -195,6 +195,77 @@ def get_input (filename, verbose=0):
             '15abov']        
         ]
    ]
+   
+   
+    testing_treatment = \
+   [
+        [
+        'testing_treatment', 'testtx', 
+        [
+          ['%testedactiveTB', 
+               ['04yr', 
+                '5_14yr', 
+                '15abov']], \
+          ['%testedlatentTB', 
+               ['04yr', 
+                '5_14yr', 
+                '15abov']],\
+          ['%testedsuscept',
+              ['04yr',
+              '5_14yr',
+              '15abov']],\
+          ['numberinittxactiveTB',
+               ['04yr_DSregimen',
+                '04yr_MDRregimen',
+                '04yr_XDRregimen',
+                '5_14yr_DSregimen',
+                '5_14yr_MDRregimen',
+                '5_14yr_XDRregimen',
+                '15abov_DSregimen',
+                '15abov_MDRregimen',
+                '15abov_XDRregimen']],\
+          ['numbercompletetxactiveTB',
+               ['04yr_DSregimen',
+                '04yr_MDRregimen',
+                '04yr_XDRregimen',
+                '5_14yr_DSregimen',
+                '5_14yr_MDRregimen',
+                '5_14yr_XDRregimen',
+                '15abov_DSregimen',
+                '15abov_MDRregimen',
+                '15abov_XDRregimen']],\
+          ['numberinittxlatentTB',
+               ['04yr',
+                '5_14yr',
+                '15abov']],\
+          ['numbercompletetxlatentTB',
+               ['04yr',
+                '5_14yr',
+                '15abov']]      
+        ]
+      ]
+   ]    
+ 
+    other_epidemiology = \
+   [
+        [
+        'other_epidemiology', 'otherepi', 
+        [
+          ['%died_nonTB', 
+               ['04yr', 
+                '5_14yr', 
+                '15abov']], \
+          ['%died_TBrelated', 
+               ['04yr', 
+                '5_14yr', 
+                '15abov']],\
+          ['birthrate',
+              ['birthrate']],\
+        ]
+      ]
+   ]    
+ 
+ 
     
     sheetstructure = dict()
     sheetstructure['constants'] = constants
@@ -204,6 +275,8 @@ def get_input (filename, verbose=0):
     sheetstructure['tbincidence'] = tbincidence
     sheetstructure['comorbidity'] = comorbidity
     sheetstructure['population_size'] = population_size
+    sheetstructure['testing_treatment'] = testing_treatment 
+    sheetstructure['other_epidemiology'] = other_epidemiology  
     
     
 
@@ -312,6 +385,18 @@ def get_input (filename, verbose=0):
                     if groupname == 'population_size':
                         thispar = subparlist[parcount] # Get the name of this parameter e.g. "0-4 years"
                         data[name][thispar] =[] # Need another structure 
+                        
+                    if groupname == 'testing_treatment':
+                        thispar = subparlist[parcount][0] # Get the name of this parameter e.g. "model_parameters"
+                        data[name][thispar] = dict() # Need another structure 
+#                        if verbose == 0:
+#                            print(thispar)
+                        
+                    if groupname == 'other_epidemiology':
+                        thispar = subparlist[parcount][0] # Get the name of this parameter e.g. "model_parameters"
+                        data[name][thispar] = dict() # Need another structure 
+#                        if verbose == 0:
+#                            print(thispar)
     
                 subparam = ''
 
@@ -330,6 +415,26 @@ def get_input (filename, verbose=0):
                             data[name][thispar][subpar] = thesedata # Store data
                             #if verbose == 0 :
                              #   print (thesedata)
+                    
+                        if groupname =='testing_treatment':
+                            thesedata = sheetdata.row_values(row, start_colx=2, end_colx=lastdatacol) # Data starts in 3rd column, finishes in 5th column
+                            thesedata = list(map(lambda val: None if val=='' else val, thesedata)) # Replace blanks with None, in case we don't have uncertainty range
+                            subpar = subparlist[parcount][1].pop(0) # Pop first entry of subparameter list
+                            #if verbose == 0: 
+                             #   print (subpar)
+                            data[name][thispar][subpar] = thesedata # Store data
+                            #if verbose == 0 :
+                             #   print (thesedata) 
+                            
+                        if groupname =='other_epidemiology':
+                            thesedata = sheetdata.row_values(row, start_colx=2, end_colx=lastdatacol) # Data starts in 3rd column, finishes in 5th column
+                            thesedata = list(map(lambda val: None if val=='' else val, thesedata)) # Replace blanks with None, in case we don't have uncertainty range
+                            subpar = subparlist[parcount][1].pop(0) # Pop first entry of subparameter list
+                            #if verbose == 0: 
+                             #   print (subpar)
+                            data[name][thispar][subpar] = thesedata # Store data
+                            #if verbose == 0 :
+                             #   print (thesedata) 
                     
                         if groupname == 'macroeconomics':
                             thesedata = sheetdata.row_values(row, start_colx=1, end_colx=lastdatacol) # Data starts in 2nd column

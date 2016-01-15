@@ -14,8 +14,8 @@ Created on Thu Nov 12 13:45:23 2015
 import os
 import sys
 import numpy
-import scipy.stats
-import matplotlib
+from scipy.stats import beta, gamma, norm, truncnorm
+import matplotlib.pyplot as pyplot
 
 
 class AllEvidence(type):
@@ -48,11 +48,10 @@ class Evidence:
             'Explanation': self.explanation}
         self.attributes_ordered = ['Title', 'Point estimate',
                                    'Confidence interval', 'Explanation']
-
     def open_pdf(self):
-        os.chdir('..')
-        os.chdir('evidence')
-        location = (self.name + '.pdf')
+        current_dir = os.path.dirname(__file__)
+        location = os.path.join(current_dir, '..', 'evidence',
+                                self.name + '.pdf')
         os.startfile(location)
 
 #______________________________________________________________________________
@@ -131,9 +130,11 @@ class Parameter:
                      'Estimate': str(self.prior_estimate),
                      'Spread': str(self.spread),
                      'Limits': str(self.limit_text),
-                     'Implementation': str(self.implementation_description)}
-        self.attributes_ordered = ['Title', 'Type', 'Estimate', 'Spread',
-                                   'Limits', 'Implementation']
+                     'Implementation': str(self.implementation_description),
+                     'Distribution': str(self.distribution)}
+        self.attributes_ordered = ['Title', 'Type', 'Distribution',
+                                   'Estimate', 'Spread', 'Limits',
+                                   'Implementation']
 
     def calculate_prior(self):
         if self.distribution == 'beta_symmetric_params2':
@@ -345,10 +346,13 @@ class Parameter:
 
     def graph_prior(self):
         self.calculate_prior()
-        matplotlib.pyplot.plot(self.xvalues, self.prior_pdf, 'r-')
-        matplotlib.pyplot.plot(self.xvalues, self.prior_cdf, 'b-')
-        matplotlib.pyplot.xlim(0., self.x_max_forgraph)
+        pyplot.plot(self.xvalues, self.prior_pdf, 'r-', label = 'PDF')
+        pyplot.plot(self.xvalues, self.prior_cdf, 'b-', label = 'CDF')
+        pyplot.xlim(0., self.x_max_forgraph)
+        pyplot.xlabel('Parameter value')
+        pyplot.ylabel('Probability density')
+        pyplot.legend()        
         os.chdir('..')
         os.chdir('graphs')
-        matplotlib.pyplot.savefig((self.name + '.jpg'))
-        matplotlib.pyplot.close()
+        pyplot.savefig((self.name + '.jpg'))
+        pyplot.close()

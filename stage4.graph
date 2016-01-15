@@ -1,0 +1,75 @@
+digraph {
+	graph [fontsize=16 label="Stage 5"]
+	node [fillcolor="#CCDDFF" fontname=Helvetica shape=box style=filled]
+	edge [arrowhead=open fontname=Courier fontsize=10 style=dotted]
+		susceptible_unvac
+		susceptible_vac
+		susceptible_treated
+		latent_early
+		latent_late
+		active_smearpospulm
+		detect_smearpospulm
+		faildetect_smearpospulm
+		treatment_infect_smearpospulm
+		treatment_noninfect_smearpospulm
+		active_smearnegpulm
+		detect_smearnegpulm
+		faildetect_smearnegpulm
+		treatment_infect_smearnegpulm
+		treatment_noninfect_smearnegpulm
+		active_extrapulm
+		detect_extrapulm
+		faildetect_extrapulm
+		treatment_infect_extrapulm
+		treatment_noninfect_extrapulm
+		tb_death
+			susceptible_unvac -> latent_early [label=rate_force]
+			susceptible_vac -> latent_early [label=rate_force_weak]
+			susceptible_treated -> latent_early [label=rate_force_weak]
+			latent_early -> latent_late [label=0.8]
+			latent_early -> active_smearpospulm [label=0.2]
+			latent_late -> active_smearpospulm [label=0.0005]
+			active_smearpospulm -> latent_late [label=0.15]
+			active_smearpospulm -> detect_smearpospulm [label=0.8]
+			active_smearpospulm -> faildetect_smearpospulm [label=0.2]
+			detect_smearpospulm -> treatment_infect_smearpospulm [label=26.0]
+			faildetect_smearpospulm -> active_smearpospulm [label=4.0]
+			treatment_infect_smearpospulm -> treatment_noninfect_smearpospulm [label=23.4]
+			treatment_infect_smearpospulm -> active_smearpospulm [label=1.3]
+			treatment_noninfect_smearpospulm -> active_smearpospulm [label=0.2]
+			treatment_noninfect_smearpospulm -> susceptible_treated [label=1.4]
+			latent_early -> active_smearnegpulm [label=0.2]
+			latent_late -> active_smearnegpulm [label=0.0005]
+			active_smearnegpulm -> latent_late [label=0.15]
+			active_smearnegpulm -> detect_smearnegpulm [label=0.8]
+			active_smearnegpulm -> faildetect_smearnegpulm [label=0.2]
+			detect_smearnegpulm -> treatment_infect_smearnegpulm [label=26.0]
+			faildetect_smearnegpulm -> active_smearnegpulm [label=4.0]
+			treatment_infect_smearnegpulm -> treatment_noninfect_smearnegpulm [label=23.4]
+			treatment_infect_smearnegpulm -> active_smearnegpulm [label=1.3]
+			treatment_noninfect_smearnegpulm -> active_smearnegpulm [label=0.2]
+			treatment_noninfect_smearnegpulm -> susceptible_treated [label=1.4]
+			latent_early -> active_extrapulm [label=0.2]
+			latent_late -> active_extrapulm [label=0.0005]
+			active_extrapulm -> latent_late [label=0.15]
+			active_extrapulm -> detect_extrapulm [label=0.8]
+			active_extrapulm -> faildetect_extrapulm [label=0.2]
+			detect_extrapulm -> treatment_infect_extrapulm [label=26.0]
+			faildetect_extrapulm -> active_extrapulm [label=4.0]
+			treatment_infect_extrapulm -> treatment_noninfect_extrapulm [label=23.4]
+			treatment_infect_extrapulm -> active_extrapulm [label=1.3]
+			treatment_noninfect_extrapulm -> active_extrapulm [label=0.2]
+			treatment_noninfect_extrapulm -> susceptible_treated [label=1.4]
+			active_smearpospulm -> tb_death [label=0.15]
+			detect_smearpospulm -> tb_death [label=0.15]
+			treatment_infect_smearpospulm -> tb_death [label=1.3]
+			treatment_noninfect_smearpospulm -> tb_death [label=0.2]
+			active_smearnegpulm -> tb_death [label=0.15]
+			detect_smearnegpulm -> tb_death [label=0.15]
+			treatment_infect_smearnegpulm -> tb_death [label=1.3]
+			treatment_noninfect_smearnegpulm -> tb_death [label=0.2]
+			active_extrapulm -> tb_death [label=0.15]
+			detect_extrapulm -> tb_death [label=0.15]
+			treatment_infect_extrapulm -> tb_death [label=1.3]
+			treatment_noninfect_extrapulm -> tb_death [label=0.2]
+}

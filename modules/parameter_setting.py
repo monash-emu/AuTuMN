@@ -201,7 +201,7 @@ smearneg_transmission_tostmann2008 \
                'Relative transmissibility of smear negative disease',
                0.24, [0.2, 0.3],
                'Chance of transmission for smear negatives compared to ' +
-               'smear positives',
+               'smear positives, Tostmann et al. 2008',
                'Well constructed study looking at exactly this parameter ' +
                'and employing genotypic confirmation of transmission. ' +
                '(Possible ref for extrapulmonary not being transmissible.)',
@@ -215,7 +215,7 @@ undertreatment_transmission_ds_dhamardhikari2014 \
                'Relative transmissibility of treatment patients (DS-TB)',
                2. / 100., [],
                'Chance of transmission of treated patients compared to ' +
-               'untreated.',
+               'untreated, Dhamardhikari et al. 2014',
                '50 times greater rate of guinea pig TST conversion for ' +
                'untreated patients than treated (DS-TB)',
                'Dhamardhikari AS, Mphahlele M, Venter K, et al. ' +
@@ -228,13 +228,62 @@ undertreatment_transmission_mdr_dhamardhikari2014 \
                'Relative transmissibility of treatment patients (MDR-TB)',
                2. / 28., [],
                'Chance of transmission of treated patients compared to ' +
-               'untreated.',
+               'untreated, Dhamardhikari et al. 2014',
                'Sixfold greater rate of guinea pig TST conversion for ' +
                'untreated patients than treated (MDR-TB)',
                'Dhamardhikari AS, Mphahlele M, Venter K, et al. ' +
                'Rapid impact of effective treatment on transmission of ' +
                'multidrug-resistant tuberculosis. Int J Tuberc Lung Dis ' +
                '2014;18(9):1019-1025.')
+
+amplificiation_tomdr_bonnet2011 \
+    = Evidence('amplification_tomdr_bonnet2011',
+               'Proportion of defaults resulting in amplification to MDR',
+               2. / 15., [],
+               'Proportion of defaults amplifying, Bonnet et al. 2011',
+               'Among 15 non-MDR-TB patients with negative treatment ' +
+               'outcomes, two amplified to MDR-TB.',
+               'Bonnet M, Pardini M, Meacci F, et al. ' +
+               'Treatment of Tuberculosis in a Region with High Drug ' +
+               'Resistance: Outcomes, Drug Resistance Amplification and ' +
+               'Re-Infection. PLoS One 2011;6(8):e23081.')
+
+negativeoutcome_retreatment_ds_espinal2000 \
+    = Evidence('negativeoutcome_retreatment_ds_espinal2000',
+               'Greater rate of negative outcomes in retreatment DS cases',
+               33. / 15., [],
+               'Proportionately greater rate of negative outcomes in ' +
+               'retreatment cases compared to new cases, for appropriately ' +
+               'treated DS-TB patients, Espinal et al. 2000',
+               '85% treatment success in pan-susceptible new TB patients, ' +
+               'compared to 67% success in pan-susceptible treatment patients',
+               'Espinal MA, Kim SJ, Suarez PG, et al. Standard Short-Course ' +
+               'Chemotherapy for Drug-Resistant Tuberculosis. ' +
+               'JAMA 2000;283(19):2537-45')
+
+inappropriatetreatment_new_mdr_espinal2000 \
+    = Evidence('negativeoutcome_retreatment_ds_espinal2000',
+               'Treatment success inappropriately treated new MDR',
+               0.52, [],
+               'Treatment success rate for inappropriately treated new ' +
+               'MDR cases, Espinal et al. 2000',
+               '52% treatment success in new MDR-TB cases treated with ' +
+               'a standard first line regimen',
+               'Espinal MA, Kim SJ, Suarez PG, et al. Standard Short-Course ' +
+               'Chemotherapy for Drug-Resistant Tuberculosis. ' +
+               'JAMA 2000;283(19):2537-45')
+
+inappropriatetreatment_retreatment_mdr_espinal2000 \
+    = Evidence('negativeoutcome_retreatment_ds_espinal2000',
+               'Treatment success inappropriately treated retreatment MDR',
+               0.29, [],
+               'Treatment success rate for inappropriately treated '
+               'retreatment MDR cases, Espinal et al. 2000',
+               '29% treatment success in new MDR-TB cases treated with ' +
+               'a standard first line regimen',
+               'Espinal MA, Kim SJ, Suarez PG, et al. Standard Short-Course ' +
+               'Chemotherapy for Drug-Resistant Tuberculosis. ' +
+               'JAMA 2000;283(19):2537-45')
 
 # PARAMETERS___________________________________________________________________
 proportion_early_progression \
@@ -368,6 +417,7 @@ mutlipler_relative_infectiousness_treatment_ds \
     = Parameter('multipler_relative_infectiousness_treatment_ds',
                 'Relative infectiousness of patients under treatment ' +
                 '(DS-TB)',
+                'multiplier',
                 'beta_full_range',
                 undertreatment_transmission_ds_dhamardhikari2014.estimate,
                 undertreatment_transmission_ds_dhamardhikari2014.interval, [],
@@ -377,7 +427,49 @@ mutlipler_relative_infectiousness_treatment_mdr \
     = Parameter('multipler_relative_infectiousness_treatment_mdr',
                 'Relative infectiousness of patients under treatment ' +
                 '(MDR-TB)',
+                'multiplier',
                 'beta_full_range',
                 undertreatment_transmission_mdr_dhamardhikari2014.estimate,
                 undertreatment_transmission_mdr_dhamardhikari2014.interval, [],
                 ['force of infection parameter'])
+
+proportion_amplification_tomdr \
+    = Parameter('proportion_amplification_tomdr',
+                'Proportion of DS-TB defaults amplifying to new MDR-TB',
+                'proportion',
+                'beta_full_range',
+                amplificiation_tomdr_bonnet2011.estimate,
+                amplificiation_tomdr_bonnet2011.interval, [],
+                ['defaults to active MDR-TB', 'all defaults from DS regimens'])
+                
+multiplier_negativeoutcome_retreatment_ds \
+    = Parameter('multiplier_negativeoutcome_retreatment_ds',
+                'Relative greater proportion with poor treatment outcomes ' +
+                'for retreatment cases compared to new in DS-TB',
+                'multiplier',
+                'gamma',
+                negativeoutcome_retreatment_ds_espinal2000.estimate,
+                negativeoutcome_retreatment_ds_espinal2000.interval, [],
+                ['defaults and deaths in retreatment DS-TB patients'])
+
+proportion_treatmentsuccess_inappropriate_new_mdr \
+    = Parameter('proportion_treatmentsuccess_inappropriate_new_mdr',
+                'Treatment success for inappropriately treated new MDR cases',
+                'proportion',
+                'beta_full_range',
+                inappropriatetreatment_new_mdr_espinal2000.estimate,
+                inappropriatetreatment_new_mdr_espinal2000.interval, [],
+                ['successful outcome', 'all new MDR patients treated with ' +
+                'inappropriate first line regimen'])
+
+proportion_treatmentsuccess_inappropriate_retreatment_mdr \
+    = Parameter('proportion_treatmentsuccess_inappropriate_retreatment_mdr',
+                'Treatment success for inappropriately treated retreatment ' +
+                'MDR cases',
+                'proportion',
+                'beta_full_range',
+                inappropriatetreatment_retreatment_mdr_espinal2000.estimate,
+                inappropriatetreatment_retreatment_mdr_espinal2000.interval, [],
+                ['successful outcome', 'all new MDR patients treated with ' +
+                'inappropriate first line regimen'])
+

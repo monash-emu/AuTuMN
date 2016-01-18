@@ -26,6 +26,7 @@ digraph {
 			susceptible_unvac -> latent_early [label=rate_force]
 			susceptible_vac -> latent_early [label=rate_force_weak]
 			susceptible_treated -> latent_early [label=rate_force_weak]
+			latent_late -> latent_early [label=rate_force_weak]
 			latent_early -> latent_late [label=0.8]
 			latent_early -> active_smearpospulm [label=0.2]
 			latent_late -> active_smearpospulm [label=0.0005]

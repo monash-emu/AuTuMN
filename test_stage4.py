@@ -44,7 +44,7 @@ class Stage4PopulationSystem(BasePopulationSystem):
         self.set_param("rate_birth", 20. / 1e3)
         self.set_param("rate_death", 1. / 65)
 
-        self.set_param("tb_n_contact", 30.)
+        self.set_param("tb_n_contact", 15.)
 
         self.set_param("tb_rate_early_active", .2)
         self.set_param("tb_rate_late_active", .0005 )
@@ -106,6 +106,8 @@ class Stage4PopulationSystem(BasePopulationSystem):
             "susceptible_vac", "latent_early", "rate_force_weak")
         self.set_var_transfer_rate_flow(
             "susceptible_treated", "latent_early", "rate_force_weak")
+        self.set_var_transfer_rate_flow(
+            "latent_late", "latent_early", "rate_force_weak")
 
         self.set_fixed_transfer_rate_flow(
             "latent_early", 

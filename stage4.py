@@ -1,15 +1,23 @@
 # -*- coding: utf-8 -*-
+
+
 """
-Test
-- implement Stage 18 model of the Dynamic Transmission Model
+# Stage 18 model of the Dynamic Transmission Model
+
+- latent early and latent late,
+- fail detect
+- two stage treatment
+- three pulmonary status
 """
+
 
 from modules.model import BasePopulationSystem, make_steps
 from modules.plotting import plot_fractions
 import pylab
 import os
-print __file__
-#%%
+
+
+
 class Stage4PopulationSystem(BasePopulationSystem):
 
     """
@@ -178,13 +186,14 @@ class Stage4PopulationSystem(BasePopulationSystem):
                 "program_rate_death_noninfect")
 
 
+if __name__ == "__main__":
 
-population = Stage4PopulationSystem()
-population.set_flows()
-population.make_graph('stage4.graph.png')
-population.integrate_scipy(make_steps(0, 50, 1))
-plot_fractions(population, population.labels[:])
-pylab.savefig('stage4.fraction.png', dpi=300)
+    population = Stage4PopulationSystem()
+    population.set_flows()
+    population.make_graph('stage4.graph.png')
+    population.integrate_scipy(make_steps(0, 50, 1))
+    plot_fractions(population, population.labels[:])
+    pylab.savefig('stage4.fraction.png', dpi=300)
 
-os.system('open -a "Google Chrome" stage4.graph.png stage4.fraction.png')
+    os.system('open -a "Google Chrome" stage4.graph.png stage4.fraction.png')
 

@@ -67,3 +67,21 @@ total population = 99,000,000 in 2014
 
 equilibrium 1% fractional change, for all active compartments over 5 years
 
+# cost
+
+rate_birth: rate_pop_birth
+rate_death: rate_pop_death
+
+program_prop_vac: vaccination program
+program_prop_unvac
+program_rate_detect
+program_rate_faildetect
+program_rate_start_treatment
+program_rate_sick_of_waiting
+program_rate_completion_infect: Outcome: rate of Tx completion (Spreadsheet: Cost_functions_Tan.xlxs)
+program_rate_default_infect
+program_rate_death_infect
+
+program_rate_completion_noninfect
+program_rate_default_noninfect
+program_rate_death_noninfect

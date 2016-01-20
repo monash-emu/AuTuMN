@@ -10,11 +10,11 @@ Version: 21 November 2015 by Tan Doan
 """
 """
 TO DO LIST 
-1. FIX OR ASSUMPTIONS 
-2. UNCERTAINTY RANGE 
-3. FIX MACROECONOMICS 
-4. ADD MORE WORKBOOKS 
-5. UPDATE EXCEL SPREADHSEET 
+1. UNCERTAINTY RANGE; only able to read the HIGH row for variables that have High, Best and Low inputs (Workbooks: population size,
+TB prevalence, TB incidence, comorbidity)
+2. FIX MACROECONOMICS workbook: not able to read any data in this workbook
+3. For empty Excell cells, replace those with "None"
+
 """
 def get_input (filename, verbose=0):
     

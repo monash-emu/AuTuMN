@@ -13,7 +13,6 @@ TO DO LIST
 1. UNCERTAINTY RANGE; only able to read the HIGH row for variables that have High, Best and Low inputs (Workbooks: population size,
 TB prevalence, TB incidence, comorbidity)
 2. FIX MACROECONOMICS workbook: not able to read any data in this workbook
-3. For empty Excell cells, replace those with "None"
 
 """
 def get_input (filename, verbose=0):
@@ -122,36 +121,6 @@ def get_input (filename, verbose=0):
       ]
    ]        
    
-#    comorbidity = \
-#    [
-#        [
-#        'comorbidity', 'comor', 
-#        [
-#          ['malnutriprev', 
-#               ['04yr', 
-#                '5_14yr', 
-#                '15abov',
-#                'aggregated']], \
-#          ['diabetesprev', 
-#               ['04yr', 
-#                '5_14yr', 
-#                '15abov',
-#                'aggregated']],\
-#          ['HIVprev',
-#              ['04yr_CD4_300',
-#              '04yr_CD4_200_300',
-#              '04yr_CD4_200',
-#              '04yr_aggregated',
-#              '5_14yr_CD4_300',
-#              '5_14yr_CD4_200_300',
-#              '5_14yr_CD4_200',
-#              '5_14yr_aggregated',
-#              '15abov_CD4_300',
-#              '15abov_CD4_200_300',
-#              '15abov_CD4_200']]
-#        ]
-#      ]
-#   ]        
     
     comorbidity = \
     [
@@ -185,8 +154,7 @@ def get_input (filename, verbose=0):
       ]
    ]        
     
-    #comorbidity =  [['comorbidity', 'comor', ['malnutrition', 'diabetes', 'HIV']]]
-    
+      
     population_size = \
    [
        ['population_size', 'popsize',
@@ -307,22 +275,10 @@ def get_input (filename, verbose=0):
             data[name] = dict() # Create structure for holding data
             sheetdata = workbook.sheet_by_name(sheetname) # Load this workbook
             parcount = -1 # Initialize the parameter count
-            #if verbose > 0:
-                #print('Loading "%s"...' % sheetname, 2, verbose)
-                
-                
+                            
            ## Calculate columns for which data are entered, and store the year ranges     
             
-            if groupname in ['macroeconomics']: # Need to gather year ranges for economic data
-                data['epiyears'] = [] # Initialize epidemiology data years
-                for col in range(sheetdata.ncols):
-                    thiscell = sheetdata.cell_value(0, col) # 0 is the 1st row which is where the year data should be
-                    if thiscell =='' and len(data['epiyears'])>0: #  We've gotten to the end
-                        lastdatacol = col # Store this column number
-                        break # Quit
-                    elif thiscell != '': # Nope, more years, keep going
-                        data['epiyears'].append(float(thiscell)) # Add this year            
-                   
+                               
             if name == 'macro': # Need to gather year ranges for economic data
                 data['epiyears'] = [] # Initialize epidemiology data years
                 for col in range(sheetdata.ncols):
@@ -334,7 +290,7 @@ def get_input (filename, verbose=0):
                         data['epiyears'].append(float(thiscell)) # Add this year
                         
                         
-            if name == 'tbprev' or name == 'tbinc' or name == 'comor': # Need to gather year ranges for economic data
+            if name == 'tbprev' or name == 'tbinc' or name == 'comor': # Need to gather year ranges for epidemiology data
                 data['epiyears'] = [] # Initialize epidemiology data years
                 for col in range(sheetdata.ncols):
                     thiscell = sheetdata.cell_value(0, col) # 0 is the 1st row which is where the year data should be
@@ -357,15 +313,11 @@ def get_input (filename, verbose=0):
                     if groupname == 'constants':
                         thispar = subparlist[parcount][0] # Get the name of this parameter e.g. "model_parameters"
                         data[name][thispar] = dict() # Need another structure 
-#                        if verbose == 0:
-#                            print(thispar)
-                    
+#                                            
                     if groupname == 'macroeconomics':
                         thispar = subparlist[parcount] # Get the name of this parameter e.g. "GDP"
                         data[name][thispar] = dict() # Need another structure
-                        #if verbose ==0:
-                         #   print(thispar)
-                            
+                                                    
                     if groupname == 'costcoverage':
                         data[name][subparlist[0]] = [] # Initialize coverage to an empty list -- i.e. data['costcov'].cov
                         data[name][subparlist[1]] = [] # Initialize cost to an empty list -- i.e. data['costcov']['cost']
@@ -373,15 +325,11 @@ def get_input (filename, verbose=0):
                     if groupname == 'tbprevalence' or groupname == 'tbincidence':
                           thispar = subparlist[parcount][0] # Get the name of this parameter, e.g. '0-4 years'
                           data[name][thispar] = dict() # Initialize to empty list 
-                          #if verbose == 0: 
-                           #   print (name, thispar)
-                          
+                                                    
                     if groupname == 'comorbidity':
                         thispar = subparlist[parcount][0] # Get the name of this parameter e.g. "Malnutrition prevalence"
                         data[name][thispar] = dict() # Need another structure 
-#                        if verbose == 0:
-#                            print(thispar)
-                        
+#                        
                     if groupname == 'population_size':
                         thispar = subparlist[parcount] # Get the name of this parameter e.g. "0-4 years"
                         data[name][thispar] =[] # Need another structure 
@@ -389,53 +337,37 @@ def get_input (filename, verbose=0):
                     if groupname == 'testing_treatment':
                         thispar = subparlist[parcount][0] # Get the name of this parameter e.g. "model_parameters"
                         data[name][thispar] = dict() # Need another structure 
-#                        if verbose == 0:
-#                            print(thispar)
-                        
+#                                                
                     if groupname == 'other_epidemiology':
                         thispar = subparlist[parcount][0] # Get the name of this parameter e.g. "model_parameters"
                         data[name][thispar] = dict() # Need another structure 
-#                        if verbose == 0:
-#                            print(thispar)
-    
+#                            
                 subparam = ''
 
                 if paramcategory == '': # The first column is blank: it's time for the data
                     subparam = sheetdata.cell_value(row, 1) # Get the name of a subparameter, e.g. "rate_pop_birth"
-                    #if verbose == 0 :
-                     #   print(subparam)
+                    
                     if subparam != '': # The subparameter name isn't blank, load something!
                        #create a new dictionary entry
                         if groupname =='constants':
                             thesedata = sheetdata.row_values(row, start_colx=2, end_colx=5) # Data starts in 3rd column, finishes in 5th column
                             thesedata = list(map(lambda val: None if val=='' else val, thesedata)) # Replace blanks with None, in case we don't have uncertainty range
                             subpar = subparlist[parcount][1].pop(0) # Pop first entry of subparameter list
-                            #if verbose == 0: 
-                             #   print (subpar)
                             data[name][thispar][subpar] = thesedata # Store data
-                            #if verbose == 0 :
-                             #   print (thesedata)
+                            
                     
                         if groupname =='testing_treatment':
                             thesedata = sheetdata.row_values(row, start_colx=2, end_colx=lastdatacol) # Data starts in 3rd column, finishes in 5th column
                             thesedata = list(map(lambda val: None if val=='' else val, thesedata)) # Replace blanks with None, in case we don't have uncertainty range
                             subpar = subparlist[parcount][1].pop(0) # Pop first entry of subparameter list
-                            #if verbose == 0: 
-                             #   print (subpar)
                             data[name][thispar][subpar] = thesedata # Store data
-                            #if verbose == 0 :
-                             #   print (thesedata) 
                             
                         if groupname =='other_epidemiology':
                             thesedata = sheetdata.row_values(row, start_colx=2, end_colx=lastdatacol) # Data starts in 3rd column, finishes in 5th column
                             thesedata = list(map(lambda val: None if val=='' else val, thesedata)) # Replace blanks with None, in case we don't have uncertainty range
                             subpar = subparlist[parcount][1].pop(0) # Pop first entry of subparameter list
-                            #if verbose == 0: 
-                             #   print (subpar)
                             data[name][thispar][subpar] = thesedata # Store data
-                            #if verbose == 0 :
-                             #   print (thesedata) 
-                    
+                                                
                         if groupname == 'macroeconomics':
                             thesedata = sheetdata.row_values(row, start_colx=1, end_colx=lastdatacol) # Data starts in 2nd column
                             thesedata = list(map(lambda val: nan if val=='' else val, thesedata)) # Replace blanks with nan
@@ -443,9 +375,9 @@ def get_input (filename, verbose=0):
 
                         if groupname=='costcoverage':
                             thesedata = sheetdata.row_values(row, start_colx=3, end_colx=lastdatacol) # Data starts in 4th column
-                            #thesedata = list(map(lambda val: nan if val=='' else val, thesedata)) # Replace blanks with nan
-                            #assumptiondata = sheetdata.cell_value(row, assumptioncol)
-                            #if assumptiondata != '': thesedata = [assumptiondata] # Replace the (presumably blank) data if a non-blank assumption has been entered
+                            thesedata = list(map(lambda val: nan if val=='' else val, thesedata)) # Replace blanks with nan
+                            assumptiondata = sheetdata.cell_value(row, assumptioncol)
+                            if assumptiondata != '': thesedata = [assumptiondata] # Replace the (presumably blank) data if a non-blank assumption has been entered
                             ccindices = {'Coverage':0, 'Cost':1} # Define best-low-high indices
                             cc = sheetdata.cell_value(row, 2) # Read in whether indicator is best, low, or high
                             data[name][subparlist[ccindices[cc]]].append(thesedata) # Actually append the data
@@ -463,10 +395,8 @@ def get_input (filename, verbose=0):
 #                                    print(x)
                                     
                             thesedata = sheetdata.row_values(row, start_colx=3, end_colx=lastdatacol) # Data starts in 4th column
-#                            #thesedata = list(map(lambda val: nan if val== '' else val, thesedata)) # Replace blanks with nan
+                            thesedata = list(map(lambda val: nan if val== '' else val, thesedata)) # Replace blanks with nan
                             subpar = subparlist[parcount][1].pop(0) # Pop first entry of subparameter list
-                            #if verbose == 0:
-                             #   print(data, thispar, subpar)
                             assumptiondata = sheetdata.cell_value(row, assumptioncol)
                             if assumptiondata != '': thesedata = [assumptiondata] # Replace the (presumably blank) data if a non-blank assumption has been entered
          #                   blhindices = {'Best':0, 'Low': 1, 'High': 2} # Define best-low-high indices
@@ -477,27 +407,13 @@ def get_input (filename, verbose=0):
    #                         data[name][thispar][subpar][blhindices[blh]].append(thesedata) # Actually append the data
                             data[name][thispar][subpar] = thesedata # Store data
                                                                                
-#                        if groupname =='comorbidity':
-#                            thesedata = sheetdata.row_values(row, start_colx=3, end_colx=lastdatacol) # Data starts in 4rd column
-#                            thesedata = list(map(lambda val: None if val=='' else val, thesedata)) # Replace blanks with None, in case we don't have uncertainty range
-#                            subpar = subparlist[parcount][1].pop(0) # Pop first entry of subparameter list
-#                            #if verbose == 0: 
-#                             #   print (subpar)
-#                            data[name][thispar][subpar] = thesedata # Store data
-#                            #if verbose == 0 :
-#                             #   print (thesedata)
-
                         if groupname == 'population_size':                            
                             thesedata = sheetdata.row_values(row, start_colx=3, end_colx=lastdatacol) # Data starts in 4th column
-                            #thesedata = list(map(lambda val: nan if val== '' else val, thesedata)) # Replace blanks with nan
+                            thesedata = list(map(lambda val: nan if val== '' else val, thesedata)) # Replace blanks with nan
                             #subpar = subparlist[parcount][1].pop(0) # Pop first entry of subparameter list
-                            #if verbose == 0:
-                             #   print(data, thispar, subpar)
-                            #assumptiondata = sheetdata.cell_value(row, assumptioncol)
-                            #if assumptiondata != '': thesedata = [assumptiondata] # Replace the (presumably blank) data if a non-blank assumption has been entered
-         #                   blhindices = {'Best':0, 'Low': 1, 'High': 2} # Define best-low-high indices
-                            #if verbose == 0: 
-                             #   print (blhindices)
+                            assumptiondata = sheetdata.cell_value(row, assumptioncol)
+                            if assumptiondata != '': thesedata = [assumptiondata] # Replace the (presumably blank) data if a non-blank assumption has been entered
+         #                   blhindices = {'Best':0, 'Low': 1, 'High': 2} # Define best-low-high indices                      
           #                  blh = sheetdata.cell_value(row, 2) # Read in whether indicator is best, low, or high
                                                       
    #                         data[name][thispar][subpar][blhindices[blh]].append(thesedata) # Actually append the data
@@ -511,7 +427,7 @@ def get_input (filename, verbose=0):
 
 
 if __name__ == "__main__":
-    data = get_input('input_3.xlsx', verbose=0)
+    data = get_input('data_input_3.xlsx', verbose=0)
     print(data)
 
             

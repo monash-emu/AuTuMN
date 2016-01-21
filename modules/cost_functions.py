@@ -4,13 +4,21 @@ Created on Wed Nov 11 18:07:45 2015
 
 @author: ntdoan
 
-Make cost coverage and cost outcome curve 
+Make cost coverage and cost outcome curve
+
+TO DO LIST
+
+1. MAKE IT PRODUCE GRAPHICAL CURVES
+2. WHEN HAVING A SPENDING AMOUNT, USE THE COST-COVERAGE CURVE TO GET THE CORRESPONDING COVERAGE LEVEL
+3. USE THE COVERAGE LEVEL VALUE FROM (2), USE THE COVERAGE-OUTCOME CURVE TO GET THE CORRESPONDING OUTCOME VALUE
+4. USE THE OUTCOME VALUE FROM 3 AND FEED IT INTO JAMES' TRANSMISSION DYNAMIC MODEL
+5. ADD MORE COMPLEXITY: MULTIPLE INTERVENTIONS, SAME INTERVENTIONS AFFECTING DIFFERENT OUTCOMES, COSTVERAGE LEVEL FOR EVERY GIVEN YEAR ETC.
 
 """
 
 from math import exp
 import numpy as np
-import pylab 
+
 
 ######## INPUT PARAMETERS ########
 
@@ -66,10 +74,9 @@ class input_parameters():
         
 class cost_coverage():
 
-    def cost_coverage_curve(self): #Sigmoid shape 
+    def cost_coverage_curve(self): #Sigmoid shape. Use either equation 1 or 2 depending on TB programs and available cost data
         
-        '''Returns coverage in a given year for a given spending amount.'''
-        
+
         ''' Well-established programs, when unit cost is important''' 
         
         y = ((2*self.input_parameters["saturation"])/
@@ -81,7 +88,7 @@ class cost_coverage():
         return y 
         
         
-        ''' Scale-up factor, no unit cost ''' 
+        ''' Scale-up factor, no unit cost available, suitable for new progams'''
         
         y = self.input_parameters["saturation"]/\
             (1 + (

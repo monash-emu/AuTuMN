@@ -21,7 +21,7 @@ import os
 class Stage4PopulationSystem(BasePopulationSystem):
 
     """
-    This is model lf most of James' thesis.
+    This model based on James' thesis
     """
 
     def __init__(self):

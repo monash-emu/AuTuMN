@@ -13,9 +13,6 @@
 
 from modules.model import BasePopulationSystem, make_steps
 from modules.plotting import plot_fractions
-import pylab
-import os
-
 
 
 class Stage4PopulationSystem(BasePopulationSystem):
@@ -49,12 +46,15 @@ class Stage4PopulationSystem(BasePopulationSystem):
             self.set_compartment("treatment_infect" + status, 0.)
             self.set_compartment("treatment_noninfect" + status, 0.)
 
-        self.set_param("rate_birth", 20. / 1e3)
+        self.set_param("rate_birth", 40. / 1e3)
         self.set_param("rate_death", 1. / 65)
 
         self.set_param("tb_n_contact", 15.)
 
-        self.set_param("tb_rate_early_active", .2)
+        self.set_param("tb_rate_early_active_smearpospulm", .6 * .2)
+        self.set_param("tb_rate_early_active_smearnegpulm", .6 * .2)
+        self.set_param("tb_rate_early_active_extrapulm", .2 * .2)
+
         self.set_param("tb_rate_late_active", .0005 )
         self.set_param("tb_rate_stabilise", .8)
         self.set_param("tb_rate_recover", .5 * .3)
@@ -126,7 +126,7 @@ class Stage4PopulationSystem(BasePopulationSystem):
             self.set_fixed_transfer_rate_flow(
                 "latent_early", 
                 "active" + status, 
-                "tb_rate_early_active")
+                "tb_rate_early_active" + status)
             self.set_fixed_transfer_rate_flow(
                 "latent_late", 
                 "active" + status, 
@@ -187,6 +187,9 @@ class Stage4PopulationSystem(BasePopulationSystem):
 
 
 if __name__ == "__main__":
+
+    import pylab
+    import os
 
     population = Stage4PopulationSystem()
     population.set_flows()

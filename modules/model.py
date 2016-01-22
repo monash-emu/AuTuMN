@@ -134,8 +134,6 @@ class BasePopulationSystem():
             self.compartments = self.convert_list_to_compartments(y)
             self.vars.clear()
             self.calculate_vars()
-            if len(self.fixed_transfer_rate_flows) == 0:
-                self.set_flows()
             self.calculate_flows()
             flow_vector = self.convert_compartments_to_list(self.flows)
             self.checks()
@@ -144,6 +142,7 @@ class BasePopulationSystem():
         return derivative_fn
 
     def integrate_scipy(self, times):
+        self.set_flows()
         self.times = times
         init_y = self.get_init_list()
         derivative = self.make_derivate_fn()
@@ -151,6 +150,8 @@ class BasePopulationSystem():
         self.calculate_fractions()
         
     def integrate_explicit(self, times):
+        self.set_flows()
+
         self.times = times
         y = self.get_init_list()
         n_component = len(y)

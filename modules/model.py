@@ -13,6 +13,7 @@ import os
 from scipy.integrate import odeint
 import numpy
 
+
 def make_steps(start, end, delta):
     steps = []
     step = start
@@ -20,6 +21,20 @@ def make_steps(start, end, delta):
         steps.append(step)
         step += delta
     return steps
+
+
+def add_unique_tuple_to_list(a_list, a_tuple):
+    """
+    Adds or modifies a list of tuples, compares only the items
+    before the last in the tuples, the last value in the tuple
+    is assumed to be a value.
+    """
+    for i, test_tuple in enumerate(a_list):
+        if test_tuple[:-1] == a_tuple[:-1]:
+            a_list[i] = a_tuple
+            break
+    else:
+        a_list.append(a_tuple)
 
 
 class BasePopulationSystem():
@@ -57,16 +72,24 @@ class BasePopulationSystem():
         self.death_rate = self.params[death_label]
 
     def set_death_rate_flow(self, label, param_label):
-        self.extra_death_rate_flows.append((label, self.params[param_label]))
+        add_unique_tuple_to_list(
+            self.extra_death_rate_flows,
+            (label, self.params[param_label]))
 
     def set_fixed_transfer_rate_flow(self, from_label, to_label, param_label):
-        self.fixed_transfer_rate_flows.append((from_label, to_label, self.params[param_label]))
+        add_unique_tuple_to_list(
+            self.fixed_transfer_rate_flows,
+            (from_label, to_label, self.params[param_label]))
 
     def set_var_transfer_rate_flow(self, from_label, to_label, vars_label):
-        self.var_transfer_rate_flows.append((from_label, to_label, vars_label))
+        add_unique_tuple_to_list(
+            self.var_transfer_rate_flows,
+            (from_label, to_label, vars_label))
 
     def set_var_flow(self, label, vars_label):
-        self.var_flows.append((label, vars_label))
+        add_unique_tuple_to_list(
+            self.var_flows,
+            (label, vars_label))
 
     def calculate_flows(self):
         for label in self.labels:
@@ -90,6 +113,7 @@ class BasePopulationSystem():
 
         # normal death flows
         self.vars["deaths"] = 0.0
+        self.vars["extra_deaths"] = 0.0
 
         for label in self.labels:
             val = self.compartments[label] * self.death_rate
@@ -100,6 +124,7 @@ class BasePopulationSystem():
         for label, rate in self.extra_death_rate_flows:
             val = self.compartments[label] * rate
             self.flows[label] -= val
+            self.vars["extra_deaths"] += val
             self.vars['deaths'] += val
 
     def make_derivate_fn(self):
@@ -119,16 +144,15 @@ class BasePopulationSystem():
         return derivative_fn
 
     def integrate_scipy(self, times):
-        derivative = self.make_derivate_fn()
         self.times = times
         init_y = self.get_init_list()
+        derivative = self.make_derivate_fn()
         self.soln_array = odeint(derivative, init_y, times)
         self.calculate_fractions()
         
     def integrate_explicit(self, times):
         self.times = times
         y = self.get_init_list()
-
         n_component = len(y)
         n_time = len(self.times)
         self.soln_array = numpy.zeros((n_time, n_component))
@@ -254,7 +278,6 @@ class BasePopulationSystem():
                 ('edges' in styles and styles['edges']) or {}
             )
             return graph
-
 
         self.graph = Digraph(format='png')
         for label in self.labels:

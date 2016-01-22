@@ -179,7 +179,7 @@ untreated_casefatality_smearpos_tiemersma2011 \
 
 treatment_duration_ds_who2011 \
     = Evidence('treatmentguidelines_who2011',
-               'Time under treatment for DS-TB', 6., [.5],
+               'Time under treatment for DS-TB', 6. / 12., [.5 / 12.],
                'Time to complete treatment for DS-TB based on WHO guidelines',
                'Based on recommended treatment durations',
                'World Health Organization. Guidelines on the programmatic ' +
@@ -188,7 +188,7 @@ treatment_duration_ds_who2011 \
                '97892415101583_eng.pdf')
 treatment_duration_mdr_who2011 \
     = Evidence('treatmentguidelines_who2011',
-               'Time under treatment for DS-TB', 20., [6.],
+               'Time under treatment for DS-TB', 20. / 12., [6. / 12.],
                'Time to complete treatment for DS-TB based on WHO guidelines',
                'Based on recommended treatment durations',
                'World Health Organization. Guidelines on the programmatic ' +
@@ -374,7 +374,7 @@ multiplier_relative_fitness_mdr \
                 0.6, [0.25], [],
                 ['force of infection'])
 
-mutliplier_bcg_protection \
+multiplier_bcg_protection \
     = Parameter('mutliplier_bcg_protection',
                 'BCG protection',
                 'multiplier',
@@ -404,7 +404,7 @@ timeperiod_treatment_mdr \
                 ['time under treatment for MDR-TB (may span multiple ' +
                  'compartments)'])
 
-multiplier_relative_infectiousness_smearneg \
+multiplier_force_smearneg \
     = Parameter('multiplier_relative_infectiousness_smearneg',
                 'Relative infectiouness of smear negative disease',
                 'multiplier',
@@ -413,7 +413,7 @@ multiplier_relative_infectiousness_smearneg \
                 smearneg_transmission_tostmann2008.interval, [],
                 ['force of infection parameter'])
 
-mutlipler_relative_infectiousness_treatment_ds \
+mutlipler_force_treatment_ds \
     = Parameter('multipler_relative_infectiousness_treatment_ds',
                 'Relative infectiousness of patients under treatment ' +
                 '(DS-TB)',
@@ -423,7 +423,7 @@ mutlipler_relative_infectiousness_treatment_ds \
                 undertreatment_transmission_ds_dhamardhikari2014.interval, [],
                 ['force of infection parameter'])
 
-mutlipler_relative_infectiousness_treatment_mdr \
+mutlipler_force_treatment_mdr \
     = Parameter('multipler_relative_infectiousness_treatment_mdr',
                 'Relative infectiousness of patients under treatment ' +
                 '(MDR-TB)',

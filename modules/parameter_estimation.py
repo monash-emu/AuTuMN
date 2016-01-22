@@ -26,6 +26,7 @@ class Evidence:
     """ Object to summarise evidence for use in parameter estimation """
     __metaclass__ = AllEvidence
     evidence_register = []
+
     def __init__(self, source, parameter, point_estimate, confidence_interval,
                  evidence_fullname, explanation_evidence,
                  reference):
@@ -180,9 +181,6 @@ class Parameter:
             'Spread greater than prior estimate, negative values will result'
         self.distribution_description = ('Symmetric beta distribution with ' +
             'alpha parameter = beta parameter = 2')
-        if self.spread == 0:
-            self.spread = self.prior_estimate / 2.
-            print('No spread given, so prior_estimate used for range')
         self.lower_limit = self.prior_estimate - self.spread
         self.upper_limit = self.prior_estimate + self.spread
         self.beta_param_alpha = 2
@@ -243,13 +241,18 @@ class Parameter:
                                        self.beta_param_beta)
         return beta_full_range_cdf
 
+    def beta_full_range_ppf(self, xvalue):
+        beta_full_range_ppf = beta.ppf(xvalue, self.beta_param_alpha,
+                                       self.beta_param_beta)
+        return beta_full_range_ppf
+
     def gamma(self):
         self.distribution_description = ('Gamma distribution with parameters ' +
             'determined from expectation and spread values')
         self.lower_limit = 0
         self.upper_limit = 'No upper limit'
         self.gamma_shape \
-            = self.prior_estimate ** 2 / self.spread ** 2
+            = self.prior_estimate ** 2 / self.spread ** 2  # Where self.spread is the standard deviation
         self.gamma_scale \
             = self.spread ** 2 / self.prior_estimate
         for i in range(len(self.xvalues)):
@@ -265,6 +268,11 @@ class Parameter:
         gamma_cdf = gamma.cdf(xvalue, self.gamma_shape, 0,
                               self.gamma_scale)
         return gamma_cdf
+
+    def gamma_ppf(self, xvalue):
+        gamma_ppf = gamma.ppf(xvalue, self.gamma_shape, 0,
+                              self.gamma_scale)
+        return gamma_ppf
         
     def normal_unlimited(self):
         self.distribution_description = ('Normal distribution (not ' +
@@ -272,7 +280,7 @@ class Parameter:
         self.lower_limit = 'No lower limit'
         self.upper_limit = 'No upper limit'
         for i in range(len(self.xvalues)):
-            self.prior_pdf[i] = self.normal_unlimited_pdf(self.xvalues[i])
+            self.prior_ppf[i] = self.normal_unlimited_pdf(self.xvalues[i])
             self.prior_cdf[i] = self.normal_unlimited_cdf(self.xvalues[i])
 
     def normal_unlimited_pdf(self, xvalue):
@@ -282,6 +290,10 @@ class Parameter:
     def normal_unlimited_cdf(self, xvalue):
         normal_unlimited_cdf = norm.cdf(xvalue, self.prior_estimate, self.spread)
         return normal_unlimited_cdf
+
+    def normal_unlimited_ppf(self, xvalue):
+        normal_unlimited_ppf = norm.ppf(xvalue, self.prior_estimate, self.spread)
+        return normal_unlimited_ppf
 
     def normal_positive(self):
         self.distribution_description = ('Normal distribution truncated ' +
@@ -326,10 +338,19 @@ class Parameter:
             = truncnorm.cdf(xvalue,
                             (self.lower_limit - self.prior_estimate) / self.spread,
                             (self.upper_limit - self.prior_estimate) / self.spread,
-                            loc = self.prior_estimate, scale = self.spread)
+                            loc=self.prior_estimate, scale=self.spread)
         return normal_truncated_cdf
 
+    def normal_truncated_ppf(self, xvalue):
+        normal_truncated_ppf \
+            = truncnorm.ppf(xvalue,
+                            (self.lower_limit - self.prior_estimate) / self.spread,
+                            (self.upper_limit - self.prior_estimate) / self.spread,
+                            loc=self.prior_estimate, scale=self.spread)
+        return normal_truncated_ppf
+
     def pdf(self, xvalue):
+        self.calculate_prior()
         if self.distribution == 'gamma':
             pdf = self.gamma_pdf(xvalue)
         elif self.distribution == 'beta_full_range':
@@ -344,10 +365,42 @@ class Parameter:
             pdf = self.normal_truncated_pdf(xvalue)
         return pdf
 
+    def cdf(self, xvalue):
+        self.calculate_prior()
+        if self.distribution == 'gamma':
+            cdf = self.gamma_cdf(xvalue)
+        elif self.distribution == 'beta_full_range':
+            cdf = self.beta_full_range_cdf(xvalue)
+        elif self.distribution == 'beta_symmetric_params2':
+            cdf = self.beta_symmetric_params2_cdf(xvalue)
+        elif self.distribution == 'normal_unlimited':
+            cdf = self.normal_unlimited_cdf(xvalue)
+        elif self.distribution == 'normal_positive':
+            cdf = self.normal_positive_cdf(xvalue)
+        elif self.distribution == 'normal_truncated':
+            cdf = self.normal_truncated_cdf(xvalue)
+        return cdf
+
+    def ppf(self, xvalue):
+        self.calculate_prior()
+        if self.distribution == 'gamma':
+            ppf = self.gamma_ppf(xvalue)
+        elif self.distribution == 'beta_full_range':
+            ppf = self.beta_full_range_ppf(xvalue)
+        elif self.distribution == 'beta_symmetric_params2':
+            ppf = self.beta_symmetric_params2_ppf(xvalue)
+        elif self.distribution == 'normal_unlimited':
+            ppf = self.normal_unlimited_ppf(xvalue)
+        elif self.distribution == 'normal_positive':
+            ppf = self.normal_positive_ppf(xvalue)
+        elif self.distribution == 'normal_truncated':
+            ppf = self.normal_truncated_ppf(xvalue)
+        return ppf
+
     def graph_prior(self):
         self.calculate_prior()
-        pyplot.plot(self.xvalues, self.prior_pdf, 'r-', label = 'PDF')
-        pyplot.plot(self.xvalues, self.prior_cdf, 'b-', label = 'CDF')
+        pyplot.plot(self.xvalues, self.prior_pdf, 'r-', label='PDF')
+        pyplot.plot(self.xvalues, self.prior_cdf, 'b-', label='CDF')
         pyplot.xlim(0., self.x_max_forgraph)
         pyplot.xlabel('Parameter value')
         pyplot.ylabel('Probability density')

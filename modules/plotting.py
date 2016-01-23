@@ -64,7 +64,7 @@ def plot_fractions(population, plot_labels, png=None):
     for i_plot, plot_label in enumerate(plot_labels):
         line_style = line_styles[i_plot % n_style]
         ax.plot(
-            population.times, 
+            population.steps,
             population.fractions[plot_label], 
             line_style,
             label=plot_label.title(), linewidth=2)

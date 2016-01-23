@@ -13,13 +13,7 @@ import os
 from scipy.integrate import odeint
 import numpy
 
-def make_steps(start, end, delta):
-    steps = []
-    step = start
-    while step <= end:
-        steps.append(step)
-        step += delta
-    return steps
+
 
 
 class BasePopulationSystem():
@@ -31,9 +25,19 @@ class BasePopulationSystem():
         self.vars = {}
         self.params = {}
         self.fixed_transfer_rate_flows = []
-        self.tb_death_rate_flows = []
+        self.infection_death_rate_flows = []
         self.var_transfer_rate_flows = []
         self.var_flows = []
+
+    def make_steps(self, start, end, delta):
+        self.steps = []
+        step = start
+        while step <= end:
+            self.steps.append(step)
+            if type(delta) is float:
+                step += delta
+            elif type(delta) is int:
+                step += (end - start) / float(delta)
 
     def set_compartment(self, label, init_val=0.0):
         if label not in self.labels:
@@ -57,7 +61,7 @@ class BasePopulationSystem():
         self.death_rate = self.params[death_label]
 
     def set_death_rate_flow(self, label, param_label):
-        self.tb_death_rate_flows.append((label, self.params[param_label]))
+        self.infection_death_rate_flows.append((label, self.params[param_label]))
 
     def set_fixed_transfer_rate_flow(self, from_label, to_label, param_label):
         self.fixed_transfer_rate_flows.append((from_label, to_label, self.params[param_label]))
@@ -97,7 +101,7 @@ class BasePopulationSystem():
             self.vars['deaths'] += val
 
         # extra death flows
-        for label, rate in self.tb_death_rate_flows:
+        for label, rate in self.infection_death_rate_flows:
             val = self.compartments[label] * rate
             self.flows[label] -= val
             self.vars['deaths'] += val
@@ -118,26 +122,25 @@ class BasePopulationSystem():
 
         return derivative_fn
 
-    def integrate_scipy(self, times):
+    def integrate_scipy(self):
         derivative = self.make_derivate_fn()
-        self.times = times
         init_y = self.get_init_list()
-        self.soln_array = odeint(derivative, init_y, times)
+        self.soln_array = odeint(derivative, init_y, self.steps)
         self.calculate_fractions()
         
-    def integrate_explicit(self, times, min_dt=0.05):
-        self.times = times
+    def integrate_explicit(self, steps, min_dt=0.05):
+        self.steps = steps
         y = self.get_init_list()
 
         n_component = len(y)
-        n_time = len(self.times)
+        n_time = len(self.steps)
         self.soln_array = numpy.zeros((n_time, n_component))
 
         derivative = self.make_derivate_fn()
-        time = self.times[0]
+        time = self.steps[0]
         self.soln_array[0, :] = y
 
-        for i_time, new_time in enumerate(self.times):
+        for i_time, new_time in enumerate(self.steps):
             while time < new_time:
                 f = derivative(y, time)
                 old_time = time
@@ -159,7 +162,7 @@ class BasePopulationSystem():
                 self.populations[label] = self.get_soln(label)
 
         self.total_population = []
-        n = len(self.times)
+        n = len(self.steps)
         for i in range(n):
             t = 0.0
             for label in self.labels:
@@ -181,7 +184,7 @@ class BasePopulationSystem():
         return self.soln_array[:, i_label]
 
     def load_state(self, i_time):
-        self.time = self.times[i_time]
+        self.time = self.steps[i_time]
         for i_label, label in enumerate(self.labels):
             self.compartments[label] = \
                 self.soln_array[i_time, i_label]
@@ -259,13 +262,13 @@ class BasePopulationSystem():
         self.graph = Digraph(format='png')
         for label in self.labels:
             self.graph.node(label)
-        self.graph.node("tb_death")
+        self.graph.node("infection_death")
         for from_label, to_label, var_label in self.var_transfer_rate_flows:
             self.graph.edge(from_label, to_label, label=var_label)
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
             self.graph.edge(from_label, to_label, label=str(rate))
-        for label, rate in self.tb_death_rate_flows:
-            self.graph.edge(label, "tb_death", label=str(rate))
+        for label, rate in self.infection_death_rate_flows:
+            self.graph.edge(label, "infection_death", label=str(rate))
         base, ext = os.path.splitext(png)
         if ext.lower() != '.png':
             base = png

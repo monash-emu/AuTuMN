@@ -128,8 +128,7 @@ class BasePopulationSystem():
         self.soln_array = odeint(derivative, init_y, self.steps)
         self.calculate_fractions()
         
-    def integrate_explicit(self, steps, min_dt=0.05):
-        self.steps = steps
+    def integrate_explicit(self, min_dt=0.05):
         y = self.get_init_list()
 
         n_component = len(y)
@@ -276,3 +275,158 @@ class BasePopulationSystem():
         self.graph = apply_styles(self.graph, styles)
 
         self.graph.render(base)
+
+class Stage6PopulationSystem(BasePopulationSystem):
+
+    """
+    This model based on James' thesis
+    """
+
+    def __init__(self, input_parameters, input_compartments):
+
+        BasePopulationSystem.__init__(self)
+
+        self.pulmonary_status = [
+            "_smearpos",
+            "_smearneg",
+            "_extrapul"]
+
+        for compartment in input_compartments:
+            if "susceptible" in compartment or "latent" in compartment:
+                self.set_compartment(
+                    compartment, input_compartments[compartment])
+            else:
+                for status in self.pulmonary_status:
+                    self.set_compartment(compartment + status,
+                                         input_compartments[compartment] / 3.)
+
+        for parameter in input_parameters:
+            self.set_param(
+                    parameter, input_parameters[parameter])
+
+        for status in self.pulmonary_status:
+            self.set_param("tb_rate_earlyprogress" + status,
+                           self.params["tb_proportion_early_progression"]
+                           / self.params["tb_timeperiod_early_latent"]
+                           * self.params["epi_proportion_cases" + status])
+            self.set_param("tb_rate_lateprogress" + status,
+                           self.params["tb_rate_late_progression"]
+                           * self.params["epi_proportion_cases" + status])
+
+        self.set_param("tb_rate_stabilise",
+                       (1 - self.params["tb_proportion_early_progression"])
+                       / self.params["tb_timeperiod_early_latent"])
+        self.set_param("tb_rate_recover",
+                       (1 - self.params["tb_proportion_casefatality_untreated_smearpos"])
+                       / self.params["tb_timeperiod_activeuntreated"])
+        self.set_param("tb_demo_rate_death",
+                       self.params["tb_proportion_casefatality_untreated_smearpos"]
+                       / self.params["tb_timeperiod_activeuntreated"])
+
+    def calculate_vars(self):
+        self.vars["population"] = sum(self.compartments.values())
+
+        self.vars["births"] = \
+            self.params["demo_rate_birth"] * self.vars["population"]
+        self.vars["births_unvac"] = \
+            self.params['program_prop_unvac'] * self.vars["births"]
+        self.vars["births_vac"] = \
+            self.params['program_prop_vac'] * self.vars["births"]
+
+        self.vars["infected_populaton"] = 0.0
+        for status in self.pulmonary_status:
+            for label in self.labels:
+                if status in label and "_noninfect" not in label:
+                    self.vars["infected_populaton"] += \
+                        self.params["tb_multiplier_force" + status] \
+                           * self.compartments[label]
+
+        self.vars["rate_force"] = \
+              self.params["tb_n_contact"] \
+            * self.vars["infected_populaton"] \
+            / self.vars["population"]
+
+        self.vars["rate_force_weak"] = \
+            self.params["tb_multiplier_bcg_protection"] \
+            * self.vars["rate_force"]
+
+    def set_flows(self):
+        self.set_var_flow(
+            "susceptible_fully", "births_unvac")
+        self.set_var_flow(
+            "susceptible_vac", "births_vac")
+
+        self.set_var_transfer_rate_flow(
+            "susceptible_fully", "latent_early", "rate_force")
+        self.set_var_transfer_rate_flow(
+            "susceptible_vac", "latent_early", "rate_force_weak")
+        self.set_var_transfer_rate_flow(
+            "susceptible_treated", "latent_early", "rate_force_weak")
+        self.set_var_transfer_rate_flow(
+            "latent_late", "latent_early", "rate_force_weak")
+
+        self.set_fixed_transfer_rate_flow(
+            "latent_early", "latent_late", "tb_rate_stabilise")
+
+        for status in self.pulmonary_status:
+            self.set_fixed_transfer_rate_flow(
+                "latent_early",
+                "active" + status,
+                "tb_rate_earlyprogress" + status)
+            self.set_fixed_transfer_rate_flow(
+                "latent_late",
+                "active" + status,
+                "tb_rate_lateprogress" + status)
+            self.set_fixed_transfer_rate_flow(
+                "active" + status,
+                "latent_late",
+                "tb_rate_recover")
+            self.set_fixed_transfer_rate_flow(
+                "active" + status,
+                "detect" + status,
+                "program_rate_detect")
+            self.set_fixed_transfer_rate_flow(
+                "active" + status,
+                "missed" + status,
+                "program_rate_missed")
+            self.set_fixed_transfer_rate_flow(
+                "detect" + status,
+                "treatment_infect" + status,
+                "program_rate_start_treatment")
+            self.set_fixed_transfer_rate_flow(
+                "missed" + status,
+                "active" + status,
+                "program_rate_giveup_waiting")
+            self.set_fixed_transfer_rate_flow(
+                "treatment_infect" + status,
+                "treatment_noninfect" + status,
+                "program_rate_completion_infect")
+            self.set_fixed_transfer_rate_flow(
+                "treatment_infect" + status,
+                "active" + status,
+                "program_rate_default_infect")
+            self.set_fixed_transfer_rate_flow(
+                "treatment_noninfect" + status,
+                "active" + status,
+                "program_rate_default_noninfect")
+            self.set_fixed_transfer_rate_flow(
+                "treatment_noninfect" + status,
+                "susceptible_treated",
+                "program_rate_completion_noninfect")
+
+        # death flows
+        self.set_population_death_rate("demo_rate_death")
+
+        for status in self.pulmonary_status:
+            self.set_death_rate_flow(
+                "active" + status,
+                "tb_demo_rate_death")
+            self.set_death_rate_flow(
+                "detect" + status,
+                "tb_demo_rate_death")
+            self.set_death_rate_flow(
+                "treatment_infect" + status,
+                "program_rate_death_infect")
+            self.set_death_rate_flow(
+                "treatment_noninfect" + status,
+                "program_rate_death_noninfect")

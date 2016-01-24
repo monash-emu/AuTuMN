@@ -57,14 +57,16 @@ class Evidence:
 
 #______________________________________________________________________________
 
+
 class AllParameters(type):
     def __iter__(parameterinstance):
-        return(iter(parameterinstance.parameter_register))
+        return iter(parameterinstance.parameter_register)
 
 class Parameter:
     """"  Initialises parameters with distributions prior to model runs """
     __metaclass__ = AllParameters
     parameter_register = []
+
     def __init__(self, name, parameter_name, parameter_type,
                  distribution, prior_estimate, spread, limits,
                  model_implementation):
@@ -81,21 +83,21 @@ class Parameter:
         if self.parameter_type == 'proportion':
             assert len(self.model_implementation) == 2
             self.implementation_description = ('Numerator is ' +
-            str(self.model_implementation[0]) + ' and denominator is ' +
-            str(self.model_implementation[1]) + '\n\n')
+                                               str(self.model_implementation[0]) + ' and denominator is ' +
+                                               str(self.model_implementation[1]) + '\n\n')
         elif self.parameter_type == 'rate':
             assert len(self.model_implementation) == 2
             self.implementation_description = ('From compartment ' +
-            self.model_implementation[0] + ' to compartment ' +
-            self.model_implementation[1] + '\n\n')
+                                               self.model_implementation[0] + ' to compartment ' +
+                                               self.model_implementation[1] + '\n\n')
         elif self.parameter_type == 'timeperiod':
             assert len(self.model_implementation) == 1
             self.implementation_description = ('Time spent in ' +
-            self.model_implementation[0])
+                                               self.model_implementation[0])
         elif self.parameter_type == 'multiplier':
             assert len(self.model_implementation) == 1
             self.implementation_description = ('Parameter to be multiplied is ' +
-            self.model_implementation[0])
+                                               self.model_implementation[0])
         self.distribution = distribution
         available_distributions = ['beta_symmetric_params2',
                                    'beta_full_range', 'gamma',
@@ -111,7 +113,7 @@ class Parameter:
                 else:
                     self.spread = (1 - prior_estimate) / 2.
             else:
-                 self.spread = prior_estimate / 2.
+                self.spread = prior_estimate / 2.
         elif len(spread) == 1:
             self.spread = spread[0]
         elif len(spread) == 2:
@@ -122,10 +124,10 @@ class Parameter:
             self.limit_text = 'No additional limits applied'
         elif len(self.limits) == 1:
             self.limit_text = ('One additional limit set at ' +
-            str(self.limits[0]))
+                               str(self.limits[0]))
         elif len(self.limits) == 2:
             self.limit_text = ('Two additional limits set at ' +
-            str(self.limits[0]) + ' and ' + str(self.limits[1]))
+                               str(self.limits[0]) + ' and ' + str(self.limits[1]))
         self.text = {'Title': self.parameter_name,
                      'Type': self.parameter_type,
                      'Estimate': str(self.prior_estimate),
@@ -136,49 +138,51 @@ class Parameter:
         self.attributes_ordered = ['Title', 'Type', 'Distribution',
                                    'Estimate', 'Spread', 'Limits',
                                    'Implementation']
-
-    def calculate_prior(self):
         if self.distribution == 'beta_symmetric_params2':
             self.xvalues = numpy.arange(0., 1., 1e-3)
-            self.initiate_distributions()
-            self.beta_symmetric_params2()
             self.x_max_forgraph = self.prior_estimate * 2.
         elif self.distribution == 'beta_full_range':
             self.xvalues = numpy.arange(0., 1., 1e-3)
-            self.initiate_distributions()
-            self.beta_full_range()
             self.x_max_forgraph = 1.
         elif self.distribution == 'gamma':
             self.xvalues = numpy.arange(0., self.prior_estimate * 3.,
                                         self.prior_estimate / 1e2)
-            self.initiate_distributions()
-            self.gamma()
             self.x_max_forgraph = self.prior_estimate * 3.
         elif self.distribution == 'normal_unlimited':
             self.xvalues = numpy.arange(0., self.prior_estimate * 5, 1e-3)
-            self.initiate_distributions()
-            self.normal_unlimited()
             self.x_max_forgraph = self.prior_estimate * 2.
         elif self.distribution == 'normal_positive':
             self.xvalues = numpy.arange(0., self.prior_estimate * 5, 1e-3)
-            self.initiate_distributions()
-            self.normal_positive()
             self.x_max_forgraph = self.prior_estimate * 2.
         elif self.distribution == 'normal_truncated':
             assert isinstance(self.limits, list), 'List of two limits required'
             assert len(self.limits) == 2, 'List of two limits required'
             self.xvalues = numpy.arange(0., self.prior_estimate * 5, 1e-3)
-            self.initiate_distributions()
-            self.normal_truncated()
             self.x_max_forgraph = self.prior_estimate * 2.
+
+    def calculate_prior(self):
+        self.initiate_distributions()
+        if self.distribution == 'beta_symmetric_params2':
+            self.beta_symmetric_params2()
+        elif self.distribution == 'beta_full_range':
+            self.beta_full_range()
+        elif self.distribution == 'gamma':
+            self.gamma()
+        elif self.distribution == 'normal_unlimited':
+            self.normal_unlimited()
+        elif self.distribution == 'normal_positive':
+            self.normal_positive()
+        elif self.distribution == 'normal_truncated':
+            self.normal_truncated()
 
     def initiate_distributions(self):
         self.prior_pdf = [0] * len(self.xvalues)
         self.prior_cdf = [0] * len(self.xvalues)
 
     def beta_symmetric_params2(self):
-        assert self.prior_estimate > self.spread, \
-            'Spread greater than prior estimate, negative values will result'
+        assert self.prior_estimate > self.spread and (1 - self.prior_estimate) > self.spread, \
+            'Values outside the range of zero to one will result from entered spread and ' + \
+            'prior estimate'
         self.distribution_description = ('Symmetric beta distribution with ' +
             'alpha parameter = beta parameter = 2')
         self.lower_limit = self.prior_estimate - self.spread
@@ -222,29 +226,23 @@ class Parameter:
         self.upper_limit = 1
         self.beta_param_alpha \
             = - self.prior_estimate \
-                * (self.spread ** 2 + self.prior_estimate ** 2 - self.prior_estimate) \
-                / (self.spread ** 2)
+              * (self.spread ** 2 + self.prior_estimate ** 2 - self.prior_estimate) \
+              / (self.spread ** 2)
         self.beta_param_beta \
-           = (self.spread ** 2 + self.prior_estimate ** 2 - self.prior_estimate) \
-               * (self.prior_estimate - 1) / (self.spread ** 2)
+            = (self.spread ** 2 + self.prior_estimate ** 2 - self.prior_estimate) \
+              * (self.prior_estimate - 1) / (self.spread ** 2)
         for i in range(len(self.xvalues)):
             self.prior_pdf[i] = self.beta_full_range_pdf(self.xvalues[i])
             self.prior_cdf[i] = self.beta_full_range_cdf(self.xvalues[i])
 
     def beta_full_range_pdf(self, xvalue):
-        beta_full_range_pdf = beta.pdf(xvalue, self.beta_param_alpha,
-                                       self.beta_param_beta)
-        return beta_full_range_pdf
+        return beta.pdf(xvalue, self.beta_param_alpha, self.beta_param_beta)
 
     def beta_full_range_cdf(self, xvalue):
-        beta_full_range_cdf = beta.cdf(xvalue, self.beta_param_alpha,
-                                       self.beta_param_beta)
-        return beta_full_range_cdf
+        return beta.cdf(xvalue, self.beta_param_alpha, self.beta_param_beta)
 
     def beta_full_range_ppf(self, xvalue):
-        beta_full_range_ppf = beta.ppf(xvalue, self.beta_param_alpha,
-                                       self.beta_param_beta)
-        return beta_full_range_ppf
+        return beta.ppf(xvalue, self.beta_param_alpha, self.beta_param_beta)
 
     def gamma(self):
         self.distribution_description = ('Gamma distribution with parameters ' +
@@ -260,19 +258,13 @@ class Parameter:
             self.prior_cdf[i] = self.gamma_cdf(self.xvalues[i])
 
     def gamma_pdf(self, xvalue):
-        gamma_pdf = gamma.pdf(xvalue, self.gamma_shape, 0,
-                              self.gamma_scale)
-        return gamma_pdf
+        return gamma.pdf(xvalue, self.gamma_shape, 0, self.gamma_scale)
 
     def gamma_cdf(self, xvalue):
-        gamma_cdf = gamma.cdf(xvalue, self.gamma_shape, 0,
-                              self.gamma_scale)
-        return gamma_cdf
+        return gamma.cdf(xvalue, self.gamma_shape, 0, self.gamma_scale)
 
     def gamma_ppf(self, xvalue):
-        gamma_ppf = gamma.ppf(xvalue, self.gamma_shape, 0,
-                              self.gamma_scale)
-        return gamma_ppf
+        return gamma.ppf(xvalue, self.gamma_shape, 0, self.gamma_scale)
         
     def normal_unlimited(self):
         self.distribution_description = ('Normal distribution (not ' +
@@ -284,16 +276,13 @@ class Parameter:
             self.prior_cdf[i] = self.normal_unlimited_cdf(self.xvalues[i])
 
     def normal_unlimited_pdf(self, xvalue):
-        normal_unlimited_pdf = norm.pdf(xvalue, self.prior_estimate, self.spread)
-        return normal_unlimited_pdf
+        return norm.pdf(xvalue, self.prior_estimate, self.spread)
 
     def normal_unlimited_cdf(self, xvalue):
-        normal_unlimited_cdf = norm.cdf(xvalue, self.prior_estimate, self.spread)
-        return normal_unlimited_cdf
+        return norm.cdf(xvalue, self.prior_estimate, self.spread)
 
     def normal_unlimited_ppf(self, xvalue):
-        normal_unlimited_ppf = norm.ppf(xvalue, self.prior_estimate, self.spread)
-        return normal_unlimited_ppf
+        return norm.ppf(xvalue, self.prior_estimate, self.spread)
 
     def normal_positive(self):
         self.distribution_description = ('Normal distribution truncated ' +
@@ -305,16 +294,12 @@ class Parameter:
             self.prior_cdf[i] = self.normal_positive_cdf(self.xvalues[i])
 
     def normal_positive_pdf(self, xvalue):
-        normal_positive_pdf \
-            = truncnorm.pdf(xvalue, - self.prior_estimate / self.spread, 1e10,
-                            loc = self.prior_estimate, scale = self.spread)
-        return normal_positive_pdf
+        return truncnorm.pdf(xvalue, - self.prior_estimate / self.spread, 1e10,
+                             loc=self.prior_estimate, scale=self.spread)
 
     def normal_positive_cdf(self, xvalue):
-        normal_positive_cdf \
-            = truncnorm.cdf(xvalue, - self.prior_estimate / self.spread, 1e10,
-                            loc = self.prior_estimate, scale = self.spread)
-        return normal_positive_cdf
+        return truncnorm.cdf(xvalue, - self.prior_estimate / self.spread, 1e10,
+                             loc=self.prior_estimate, scale=self.spread)
 
     def normal_truncated(self):
         self.distribution_description = ('Normal distribution truncated at ' +
@@ -326,76 +311,67 @@ class Parameter:
             self.prior_cdf[i] = self.normal_truncated_cdf(self.xvalues[i])
 
     def normal_truncated_pdf(self, xvalue):
-        normal_truncated_pdf \
-            = truncnorm.pdf(xvalue,
-                            (self.lower_limit - self.prior_estimate) / self.spread,
-                            (self.upper_limit - self.prior_estimate) / self.spread,
-                            loc = self.prior_estimate, scale = self.spread)
-        return normal_truncated_pdf
+        return truncnorm.pdf(xvalue,
+                             (self.lower_limit - self.prior_estimate) / self.spread,
+                             (self.upper_limit - self.prior_estimate) / self.spread,
+                             loc=self.prior_estimate, scale=self.spread)
 
     def normal_truncated_cdf(self, xvalue):
-        normal_truncated_cdf \
-            = truncnorm.cdf(xvalue,
-                            (self.lower_limit - self.prior_estimate) / self.spread,
-                            (self.upper_limit - self.prior_estimate) / self.spread,
-                            loc=self.prior_estimate, scale=self.spread)
-        return normal_truncated_cdf
+        return truncnorm.cdf(xvalue,
+                             (self.lower_limit - self.prior_estimate) / self.spread,
+                             (self.upper_limit - self.prior_estimate) / self.spread,
+                             loc=self.prior_estimate, scale=self.spread)
 
     def normal_truncated_ppf(self, xvalue):
-        normal_truncated_ppf \
-            = truncnorm.ppf(xvalue,
-                            (self.lower_limit - self.prior_estimate) / self.spread,
-                            (self.upper_limit - self.prior_estimate) / self.spread,
-                            loc=self.prior_estimate, scale=self.spread)
-        return normal_truncated_ppf
+        return truncnorm.ppf(xvalue,
+                             (self.lower_limit - self.prior_estimate) / self.spread,
+                             (self.upper_limit - self.prior_estimate) / self.spread,
+                             loc=self.prior_estimate, scale=self.spread)
 
     def pdf(self, xvalue):
         self.calculate_prior()
         if self.distribution == 'gamma':
-            pdf = self.gamma_pdf(xvalue)
+            return self.gamma_pdf(xvalue)
         elif self.distribution == 'beta_full_range':
-            pdf = self.beta_full_range_pdf(xvalue)
+            return self.beta_full_range_pdf(xvalue)
         elif self.distribution == 'beta_symmetric_params2':
-            pdf = self.beta_symmetric_params2_pdf(xvalue)
+            return self.beta_symmetric_params2_pdf(xvalue)
         elif self.distribution == 'normal_unlimited':
-            pdf = self.normal_unlimited_pdf(xvalue)
+            return self.normal_unlimited_pdf(xvalue)
         elif self.distribution == 'normal_positive':
-            pdf = self.normal_positive_pdf(xvalue)
+            return self.normal_positive_pdf(xvalue)
         elif self.distribution == 'normal_truncated':
-            pdf = self.normal_truncated_pdf(xvalue)
-        return pdf
+            return self.normal_truncated_pdf(xvalue)
 
     def cdf(self, xvalue):
         self.calculate_prior()
         if self.distribution == 'gamma':
-            cdf = self.gamma_cdf(xvalue)
+            return self.gamma_cdf(xvalue)
         elif self.distribution == 'beta_full_range':
-            cdf = self.beta_full_range_cdf(xvalue)
+            return self.beta_full_range_cdf(xvalue)
         elif self.distribution == 'beta_symmetric_params2':
-            cdf = self.beta_symmetric_params2_cdf(xvalue)
+            return self.beta_symmetric_params2_cdf(xvalue)
         elif self.distribution == 'normal_unlimited':
-            cdf = self.normal_unlimited_cdf(xvalue)
+            return self.normal_unlimited_cdf(xvalue)
         elif self.distribution == 'normal_positive':
-            cdf = self.normal_positive_cdf(xvalue)
+            return self.normal_positive_cdf(xvalue)
         elif self.distribution == 'normal_truncated':
-            cdf = self.normal_truncated_cdf(xvalue)
-        return cdf
+            return self.normal_truncated_cdf(xvalue)
 
     def ppf(self, xvalue):
         self.calculate_prior()
         if self.distribution == 'gamma':
-            ppf = self.gamma_ppf(xvalue)
+            return self.gamma_ppf(xvalue)
         elif self.distribution == 'beta_full_range':
-            ppf = self.beta_full_range_ppf(xvalue)
+            return self.beta_full_range_ppf(xvalue)
         elif self.distribution == 'beta_symmetric_params2':
-            ppf = self.beta_symmetric_params2_ppf(xvalue)
+            return self.beta_symmetric_params2_ppf(xvalue)
         elif self.distribution == 'normal_unlimited':
-            ppf = self.normal_unlimited_ppf(xvalue)
+            return self.normal_unlimited_ppf(xvalue)
         elif self.distribution == 'normal_positive':
-            ppf = self.normal_positive_ppf(xvalue)
+            return self.normal_positive_ppf(xvalue)
         elif self.distribution == 'normal_truncated':
-            ppf = self.normal_truncated_ppf(xvalue)
-        return ppf
+            return self.normal_truncated_ppf(xvalue)
 
     def graph_prior(self):
         self.calculate_prior()

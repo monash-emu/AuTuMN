@@ -228,7 +228,7 @@ class BasePopulationSystem():
 
         styles = {
             'graph': {
-                'label': 'Stage 5',
+                'label': 'Stage 6',
                 'fontsize': '16',
             },
             'nodes': {
@@ -286,19 +286,29 @@ class Stage6PopulationSystem(BasePopulationSystem):
 
         BasePopulationSystem.__init__(self)
 
+        compartment_list = ["susceptible_fully", "susceptible_vac", "susceptible_treated",
+         "latent_early", "latent_late", "active", "detect", "missed", "treatment_infect",
+         "treatment_noninfect"]
+
         self.pulmonary_status = [
             "_smearpos",
             "_smearneg",
             "_extrapul"]
 
-        for compartment in input_compartments:
-            if "susceptible" in compartment or "latent" in compartment:
-                self.set_compartment(
-                    compartment, input_compartments[compartment])
+        for compartment in compartment_list:
+            if compartment in input_compartments:
+                if "susceptible" in compartment or "latent" in compartment:
+                    self.set_compartment(compartment, input_compartments[compartment])
+                else:
+                    for status in self.pulmonary_status:
+                        self.set_compartment(compartment + status,
+                                             input_compartments[compartment] / 3.)
             else:
-                for status in self.pulmonary_status:
-                    self.set_compartment(compartment + status,
-                                         input_compartments[compartment] / 3.)
+                if "susceptible" in compartment or "latent" in compartment:
+                    self.set_compartment(compartment, 0.)
+                else:
+                    for status in self.pulmonary_status:
+                        self.set_compartment(compartment + status, 0.)
 
         for parameter in input_parameters:
             self.set_param(
@@ -329,11 +339,11 @@ class Stage6PopulationSystem(BasePopulationSystem):
         self.vars["births"] = \
             self.params["demo_rate_birth"] * self.vars["population"]
         self.vars["births_unvac"] = \
-            self.params['program_prop_unvac'] * self.vars["births"]
+            self.params["program_prop_unvac"] * self.vars["births"]
         self.vars["births_vac"] = \
-            self.params['program_prop_vac'] * self.vars["births"]
+            self.params["program_prop_vac"] * self.vars["births"]
 
-        self.vars["infected_populaton"] = 0.0
+        self.vars["infected_populaton"] = 0.
         for status in self.pulmonary_status:
             for label in self.labels:
                 if status in label and "_noninfect" not in label:

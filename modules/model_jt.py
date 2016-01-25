@@ -69,7 +69,7 @@ class BasePopulationSystem():
     def set_var_transfer_rate_flow(self, from_label, to_label, vars_label):
         self.var_transfer_rate_flows.append((from_label, to_label, vars_label))
 
-    def set_var_flow(self, label, vars_label):
+    def set_var_entry_rate_flow(self, label, vars_label):
         self.var_flows.append((label, vars_label))
 
     def calculate_flows(self):
@@ -311,8 +311,26 @@ class Stage6PopulationSystem(BasePopulationSystem):
                         self.set_compartment(compartment + status, 0.)
 
         for parameter in input_parameters:
-            self.set_param(
-                    parameter, input_parameters[parameter])
+            self.set_param(parameter, input_parameters[parameter])
+
+        self.set_param("tb_rate_stabilise",
+                       (1 - self.params["tb_proportion_early_progression"]) /
+                       self.params["tb_timeperiod_early_latent"])
+
+        if "tb_proportion_casefatality_untreated_extrapul" not in input_parameters:
+            self.set_param("tb_proportion_casefatality_untreated_extrapul",
+                            input_parameters["tb_proportion_casefatality_untreated_smearneg"])
+
+        self.set_param("program_rate_detect",
+                       1. / self.params["tb_timeperiod_activeuntreated"] /
+                       (1. - self.params["program_proportion_detect"]))
+        # Formula derived from CDR = (detection rate) / (detection rate and spontaneous resolution rates)
+
+        self.set_param("program_rate_missed",
+                       self.params["program_rate_detect"] *
+                       (1. - self.params["program_algorithm_sensitivity"]) /
+                       self.params["program_algorithm_sensitivity"])
+        # Formula derived from (algorithm sensitivity) = (detection rate) / (detection rate and miss rate)
 
         for status in self.pulmonary_status:
             self.set_param("tb_rate_earlyprogress" + status,
@@ -322,16 +340,14 @@ class Stage6PopulationSystem(BasePopulationSystem):
             self.set_param("tb_rate_lateprogress" + status,
                            self.params["tb_rate_late_progression"]
                            * self.params["epi_proportion_cases" + status])
+            self.set_param("tb_rate_recover" + status,
+                           (1 - self.params["tb_proportion_casefatality_untreated" + status])
+                           / self.params["tb_timeperiod_activeuntreated"])
+            self.set_param("tb_demo_rate_death" + status,
+                           self.params["tb_proportion_casefatality_untreated" + status]
+                           / self.params["tb_timeperiod_activeuntreated"])
 
-        self.set_param("tb_rate_stabilise",
-                       (1 - self.params["tb_proportion_early_progression"])
-                       / self.params["tb_timeperiod_early_latent"])
-        self.set_param("tb_rate_recover",
-                       (1 - self.params["tb_proportion_casefatality_untreated_smearpos"])
-                       / self.params["tb_timeperiod_activeuntreated"])
-        self.set_param("tb_demo_rate_death",
-                       self.params["tb_proportion_casefatality_untreated_smearpos"]
-                       / self.params["tb_timeperiod_activeuntreated"])
+
 
     def calculate_vars(self):
         self.vars["population"] = sum(self.compartments.values())
@@ -361,9 +377,9 @@ class Stage6PopulationSystem(BasePopulationSystem):
             * self.vars["rate_force"]
 
     def set_flows(self):
-        self.set_var_flow(
+        self.set_var_entry_rate_flow(
             "susceptible_fully", "births_unvac")
-        self.set_var_flow(
+        self.set_var_entry_rate_flow(
             "susceptible_vac", "births_vac")
 
         self.set_var_transfer_rate_flow(
@@ -390,7 +406,7 @@ class Stage6PopulationSystem(BasePopulationSystem):
             self.set_fixed_transfer_rate_flow(
                 "active" + status,
                 "latent_late",
-                "tb_rate_recover")
+                "tb_rate_recover" + status)
             self.set_fixed_transfer_rate_flow(
                 "active" + status,
                 "detect" + status,
@@ -407,6 +423,10 @@ class Stage6PopulationSystem(BasePopulationSystem):
                 "missed" + status,
                 "active" + status,
                 "program_rate_giveup_waiting")
+            self.set_fixed_transfer_rate_flow(
+                "missed" + status,
+                "latent_late",
+                "tb_rate_recover" + status)
             self.set_fixed_transfer_rate_flow(
                 "treatment_infect" + status,
                 "treatment_noninfect" + status,
@@ -430,10 +450,10 @@ class Stage6PopulationSystem(BasePopulationSystem):
         for status in self.pulmonary_status:
             self.set_death_rate_flow(
                 "active" + status,
-                "tb_demo_rate_death")
+                "tb_demo_rate_death" + status)
             self.set_death_rate_flow(
                 "detect" + status,
-                "tb_demo_rate_death")
+                "tb_demo_rate_death" + status)
             self.set_death_rate_flow(
                 "treatment_infect" + status,
                 "program_rate_death_infect")

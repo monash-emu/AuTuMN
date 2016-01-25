@@ -4,8 +4,6 @@ The following module provides the framework for setting parameter objects -
 both parameters to be used in the model itself, as well as references to
 evidence that can subsequently be used to determine these parameter
 distributions.
-Need to check variance calculations - e.g. whether the gamma variance
-calculation is based on the variance or the standard deviation.
 Created on Thu Nov 12 13:45:23 2015
 
 @author: JTrauer

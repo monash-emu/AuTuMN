@@ -15,11 +15,16 @@ from modules.model_jt import Stage6PopulationSystem
 from modules.plotting import plot_fractions
 import pylab
 import os
+import numpy
 from scipy.stats import uniform
-
 import modules.parameter_setting as parameter_setting
+import modules.philippines_parameters as philippines_parameters
 
 if __name__ == "__main__":
+    parameter_method = "ppf"
+    # ppf_value = uniform.rvs(size=10)
+    ppf_value = 0.5 * numpy.ones(11)
+
     input_parameters = \
         {"demo_rate_birth": 20. / 1e3,
          "demo_rate_death": 1. / 65,
@@ -28,27 +33,31 @@ if __name__ == "__main__":
          "epi_proportion_cases_extrapul": 0.2,
          "tb_multiplier_force_smearpos": 1.,
          "tb_multiplier_force_smearneg":
-            parameter_setting.multiplier_force_smearneg.prior_estimate,
+            getattr(parameter_setting.multiplier_force_smearneg, parameter_method)(ppf_value[0]),
          "tb_multiplier_force_extrapul": 0.0,
-         "tb_n_contact": 25.,
+         "tb_n_contact":
+            getattr(parameter_setting.tb_n_contact, parameter_method)(ppf_value[1]),
          "tb_proportion_early_progression":
-            parameter_setting.proportion_early_progression.prior_estimate,
+            getattr(parameter_setting.proportion_early_progression, parameter_method)(ppf_value[2]),
          "tb_timeperiod_early_latent":
-            parameter_setting.timeperiod_early_latent.prior_estimate,
+            getattr(parameter_setting.timeperiod_early_latent, parameter_method)(ppf_value[3]),
          "tb_rate_late_progression":
-            parameter_setting.rate_late_progression.prior_estimate,
+            getattr(parameter_setting.rate_late_progression, parameter_method)(ppf_value[4]),
          "tb_proportion_casefatality_untreated_smearpos":
-            parameter_setting.proportion_casefatality_active_untreated_smearpos.prior_estimate,
-         "tb_proportion_casefatality_untreated_smearpos":
-            parameter_setting.proportion_casefatality_active_untreated_smearpos.prior_estimate,
+            getattr(parameter_setting.proportion_casefatality_active_untreated_smearpos, parameter_method)(ppf_value[5]),
+         "tb_proportion_casefatality_untreated_smearneg":
+            getattr(parameter_setting.proportion_casefatality_active_untreated_smearneg, parameter_method)(ppf_value[6]),
          "tb_timeperiod_activeuntreated":
-            parameter_setting.timeperiod_activeuntreated.prior_estimate,
+            getattr(parameter_setting.timeperiod_activeuntreated, parameter_method)(ppf_value[7]),
          "tb_multiplier_bcg_protection":
-            parameter_setting.multiplier_bcg_protection.prior_estimate,
-         "program_prop_vac": .9,
-         "program_prop_unvac": .1,
-         "program_rate_detect": 0.8,
-         "program_rate_missed": 0.2,
+            getattr(parameter_setting.multiplier_bcg_protection, parameter_method)(ppf_value[8]),
+         "program_prop_vac":
+            getattr(philippines_parameters.bcg_coverage, parameter_method)(ppf_value[9]),
+         "program_prop_unvac":
+            1 - getattr(philippines_parameters.bcg_coverage, parameter_method)(ppf_value[9]),
+         "program_proportion_detect":
+            getattr(philippines_parameters.bcg_coverage, parameter_method)(ppf_value[10]),
+         "program_algorithm_sensitivity": 0.85,
          "program_rate_start_treatment": 26.,
          "program_rate_giveup_waiting": 4.,
          "program_rate_completion_infect": 26 * 0.9,

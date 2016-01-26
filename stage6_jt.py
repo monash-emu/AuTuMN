@@ -34,7 +34,7 @@ if __name__ == "__main__":
          "tb_multiplier_force_smearpos": 1.,
          "tb_multiplier_force_smearneg":
             getattr(parameter_setting.multiplier_force_smearneg, parameter_method)(ppf_value[0]),
-         "tb_multiplier_force_extrapul": 0.0,
+         "tb_multiplier_force_extrapul": 0.,
          "tb_n_contact":
             getattr(parameter_setting.tb_n_contact, parameter_method)(ppf_value[1]),
          "tb_proportion_early_progression":

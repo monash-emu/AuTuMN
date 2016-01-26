@@ -3,7 +3,6 @@ from parameter_estimation import Parameter, Evidence
 
 # EVIDENCE_____________________________________________________________________
 
-
 bcg_coverage_unicef2014 \
     = Evidence('bcg_coverage_unicef2014',
                'Coverage of BCG vaccination',
@@ -14,12 +13,7 @@ bcg_coverage_unicef2014 \
                'http://apps.who.int/immunization_monitoring/' +
                'globalsummary/timeseries/tswucoveragebcg.html')
 
-
-
-
-
 # PARAMETERS___________________________________________________________________
-
 
 bcg_coverage \
     = Parameter('program_prop_vac',
@@ -38,3 +32,27 @@ algorithm_sensitivity \
                 'beta_full_range',
                 0.85, [], [],  # Arbitrary at this point
                 ['program_rate_detect', 'program_rate_detect + program_rate_miss'])
+
+treatment_start_rate \
+    = Parameter('treatment_start_rate',
+                'Reciprocal of delay to treatment commencement after detection',
+                'timeperiod',
+                'gamma',
+                26., [], [],  # Also arbitrary
+                ['detect (by pulmonary_status)'])
+
+treatment_start_rate \
+    = Parameter('treatment_start_rate',
+                'Reciprocal of delay to treatment commencement after detection',
+                'timeperiod',
+                'gamma',
+                26., [], [],  # Also arbitrary
+                ['detect (by pulmonary_status)'])
+
+restart_presenting_rate \
+    = Parameter('restart_presenting_rate',
+                'Rate at which patients re-start presenting after failed diagnostic attempt',
+                'timeperiod',
+                'gamma',
+                4., [], [],  # Guess what - arbitrary
+                ['missed (by pulmonary status'])

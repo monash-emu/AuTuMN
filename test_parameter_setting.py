@@ -6,12 +6,11 @@ Created on Thu Jan 07 15:51:02 2016
 """
 
 import os
-import sys
 import win32com.client as win32
-import modules.parameter_estimation as parameter_estimation
-reload(parameter_estimation)
+import modules.parameter_estimation
 import modules.parameter_setting as parameter_setting
-reload(parameter_setting)
+import modules.philippines_parameters as philippines_parameters
+
 
 os.chdir(os.path.dirname(__file__))
 current_directory = os.path.dirname(__file__)
@@ -48,5 +47,24 @@ for parameter_instances in parameter_setting.Parameter:
                                            parameter_instances.name + '.jpg')
 parameters_document.SaveAs((current_directory + '/evidence/parameters.docx'))
 parameters_document.Close()
+word = None
+os.chdir('..')
+
+# Create parameters document
+word = win32.Dispatch('Word.Application')
+philippines_document = word.Documents.Add('')
+word.Visible = vis
+word.Selection.TypeText('COUNTRY-SPECIFIC PARAMETER OBJECTS FOR THE PHILIPPINES \n\n')
+for parameter_instances in philippines_parameters.Parameter:
+    parameter_instances.graph_prior()
+    word.Selection.TypeText('\n\n')
+    for attribute in parameter_instances.attributes_ordered:
+        word.Selection.TypeText(attribute + ': ')
+        word.Selection.TypeText(parameter_instances.text[attribute] + '\n\n')
+    word.Selection.TypeText('\n\n')
+    word.Selection.InlineShapes.AddPicture(current_directory + '/graphs/' +
+                                           parameter_instances.name + '.jpg')
+philippines_document.SaveAs((current_directory + '/evidence/philippines_parameters.docx'))
+philippines_document.Close()
 word = None
 os.chdir('..')

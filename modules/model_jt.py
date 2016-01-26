@@ -11,9 +11,8 @@ Implicit time unit: years
 
 import os
 from scipy.integrate import odeint
+from scipy import exp, log
 import numpy
-
-
 
 
 class BasePopulationSystem():
@@ -332,6 +331,32 @@ class Stage6PopulationSystem(BasePopulationSystem):
                        self.params["program_algorithm_sensitivity"])
         # Formula derived from (algorithm sensitivity) = (detection rate) / (detection rate and miss rate)
 
+        """ The following code block takes the programmatic parameters and determines the flow rates for the
+        treatment compartments. """
+        self.outcomes = ["_default", "_death", "_success"]
+        self.nonsuccess_outcomes = self.outcomes[0:2]
+        self.treatment_stages = ["_infect", "_noninfect"]
+        self.set_param("program_timeperiod_noninfect_ontreatment",  # Find the non-infectious period
+                       self.params["program_timeperiod_treatment"] -
+                       self.params["program_timeperiod_infect_ontreatment"])
+        for outcome in self.nonsuccess_outcomes:  # Find the proportion of deaths/defaults during infectious stage
+            self.set_param("program_proportion" + outcome + "_infect",
+                           1. - exp(log(1. - self.params["program_proportion" + outcome]) *
+                                    self.params["program_timeperiod_infect_ontreatment"] /
+                                    self.params["program_timeperiod_treatment"]))
+        for outcome in self.nonsuccess_outcomes:  # Find the proportion of deaths/defaults during non-infectious stage
+            self.set_param("program_proportion" + outcome + "_noninfect",
+                           self.params["program_proportion" + outcome] -
+                           self.params["program_proportion" + outcome + "_infect"])
+        for treatment_stage in self.treatment_stages:  # Find the success proportions
+            self.set_param("program_proportion_success" + treatment_stage,
+                           1. - self.params["program_proportion_default" + treatment_stage] -
+                           self.params["program_proportion_death" + treatment_stage])
+            for outcome in self.outcomes:  # Find the corresponding rates from the proportions
+                self.set_param("program_rate" + outcome + treatment_stage,
+                               1. / self.params["program_timeperiod" + treatment_stage + "_ontreatment"] *
+                               self.params["program_proportion" + outcome + treatment_stage])
+
         for status in self.pulmonary_status:
             self.set_param("tb_rate_earlyprogress" + status,
                            self.params["tb_proportion_early_progression"]
@@ -422,7 +447,7 @@ class Stage6PopulationSystem(BasePopulationSystem):
             self.set_fixed_transfer_rate_flow(
                 "missed" + status,
                 "active" + status,
-                "program_rate_giveup_waiting")
+                "program_rate_restart_presenting")
             self.set_fixed_transfer_rate_flow(
                 "missed" + status,
                 "latent_late",
@@ -430,7 +455,7 @@ class Stage6PopulationSystem(BasePopulationSystem):
             self.set_fixed_transfer_rate_flow(
                 "treatment_infect" + status,
                 "treatment_noninfect" + status,
-                "program_rate_completion_infect")
+                "program_rate_success_infect")
             self.set_fixed_transfer_rate_flow(
                 "treatment_infect" + status,
                 "active" + status,

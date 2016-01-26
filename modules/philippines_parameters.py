@@ -49,10 +49,35 @@ treatment_start_rate \
                 26., [], [],  # Also arbitrary
                 ['detect (by pulmonary_status)'])
 
-restart_presenting_rate \
-    = Parameter('restart_presenting_rate',
+timeperiod_norepresentation \
+    = Parameter('timeperiod_norepresentation',
                 'Rate at which patients re-start presenting after failed diagnostic attempt',
                 'timeperiod',
                 'gamma',
                 4., [], [],  # Guess what - arbitrary
                 ['missed (by pulmonary status'])
+
+proportion_default \
+    = Parameter('proportion_default',
+                'Proportion of patients defaulting from treatment ("default rate")',
+                'proportion',
+                'beta_full_range',
+                0.1, [], [],  # Arbitrary for now
+                ['Gets converted into flow in code within the __init__ method of the model object', ''])
+
+proportion_death \
+    = Parameter('proportion_death',
+                'Proportion of patients defaulting from treatment ("death rate")',
+                'proportion',
+                'beta_full_range',
+                0.1, [], [],  # Arbitrary for now
+                ['Gets converted into flow in code within the __init__ method of the model object', ''])
+
+program_timeperiod_delayto_treatment \
+    = Parameter('program_timeperiod_delayto_treatment',
+                'Time after diagnosis waiting for a regimen to become available',
+                'timeperiod',
+                'normal_truncated',
+                2. / 52., [], [0., 1e3],  #Arbitrary
+                ['Time in detect compartments'])
+

@@ -22,8 +22,8 @@ import modules.philippines_parameters as philippines_parameters
 
 if __name__ == "__main__":
     parameter_method = "ppf"
-    # ppf_value = uniform.rvs(size=10)
-    ppf_value = 0.5 * numpy.ones(11)
+    # ppf_value = uniform.rvs(size=12)
+    ppf_value = 0.5 * numpy.ones(18)
 
     input_parameters = \
         {"demo_rate_birth": 20. / 1e3,
@@ -57,15 +57,20 @@ if __name__ == "__main__":
             1 - getattr(philippines_parameters.bcg_coverage, parameter_method)(ppf_value[9]),
          "program_proportion_detect":
             getattr(philippines_parameters.bcg_coverage, parameter_method)(ppf_value[10]),
-         "program_algorithm_sensitivity": 0.85,
-         "program_rate_start_treatment": 26.,
-         "program_rate_giveup_waiting": 4.,
-         "program_rate_completion_infect": 26 * 0.9,
-         "program_rate_default_infect": 26 * 0.05,
-         "program_rate_death_infect": 26 * 0.05,
-         "program_rate_completion_noninfect": 2 * 0.7,
-         "program_rate_default_noninfect": 2 * 0.1,
-         "program_rate_death_noninfect": 2 * 0.1}
+         "program_algorithm_sensitivity":
+            getattr(philippines_parameters.algorithm_sensitivity, parameter_method)(ppf_value[11]),
+         "program_rate_start_treatment":
+             1. / getattr(philippines_parameters.program_timeperiod_delayto_treatment, parameter_method)(ppf_value[12]),
+         "tb_timeperiod_treatment":
+            getattr(parameter_setting.timeperiod_treatment_ds, parameter_method)(ppf_value[13]),
+         "tb_timeperiod_infect_ontreatment":
+            getattr(parameter_setting.timeperiod_infect_ontreatment, parameter_method)(ppf_value[14]),
+         "program_proportion_default":
+            getattr(philippines_parameters.proportion_default, parameter_method)(ppf_value[15]),
+         "program_proportion_death":
+            getattr(philippines_parameters.proportion_death, parameter_method)(ppf_value[16]),
+         "program_rate_restart_presenting":
+            1. / getattr(philippines_parameters.timeperiod_norepresentation, parameter_method)(ppf_value[17])}
 
     input_compartments = {"susceptible_fully": 1e6, "active": 3.}
 

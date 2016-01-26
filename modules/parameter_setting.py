@@ -501,3 +501,12 @@ tb_n_contact \
                 25.,
                 [20.], [],
                 ['rate_force'])
+
+timeperiod_infect_ontreatment \
+    = Parameter('timeperiod_infect_ontreatment',
+                'Duration of infectiousness while on treatment',
+                'timeperiod',
+                'gamma',
+                2. / 52.,
+                [], [],
+                ['Time in treatment_infect compartments before moving to treatment_infect'])

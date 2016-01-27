@@ -343,6 +343,28 @@ class BasePopulationSystem():
 
         self.graph.render(base)
 
+    def check_converged_compartment_fraction(
+            self, label, equil_time, test_fraction_diff):
+        is_converged = True
+        labels = self.labels
+        self.calculate_fractions()
+        times = self.times
+        fraction = self.fractions[label]
+        i = -2
+        max_fraction_diff = 0
+        time_diff = 0
+        while time_diff < equil_time:
+            i -= 1
+            if -i >= len(times):
+                is_converged = False
+                break
+            time_diff = abs(times[-1] - times[i])
+            frac_diff = (fraction[-1] - fraction[i])
+            if abs(frac_diff) > max_fraction_diff:
+                max_fraction_diff = frac_diff
+            if abs(frac_diff) > test_fraction_diff:
+                return False
+        return True
 
 
 class NaivePopulation(BasePopulationSystem):

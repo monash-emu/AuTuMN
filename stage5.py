@@ -45,8 +45,8 @@ class Model(BasePopulationSystem):
         self.infectous_labels.append("misdetect_drugres")
         self.infectous_labels.append("mistreat_drugres")
 
-        self.set_param("rate_birth", 20. / 1e3)
-        self.set_param("rate_death", 1. / 65)
+        self.set_param("rate_birth_per_capita", 20. / 1e3)
+        self.set_param("rate_death_per_capita", 1. / 65)
 
         self.set_param("tb_n_contact", 40.)
 
@@ -92,12 +92,12 @@ class Model(BasePopulationSystem):
         self.vars["rate_force_weak"] = \
             0.5 * self.vars["rate_force"]
 
-        self.vars["births"] = \
-            self.params["rate_birth"] * self.vars["population"]
+        self.vars["rate_birth"] = \
+            self.params["rate_birth_per_capita"] * self.vars["population"]
         self.vars["births_unvac"] = \
-            self.params['program_prop_unvac'] * self.vars["births"]
+            self.params['program_prop_unvac'] * self.vars["rate_birth"]
         self.vars["births_vac"] = \
-            self.params['program_prop_vac'] * self.vars["births"]
+            self.params['program_prop_vac'] * self.vars["rate_birth"]
 
     def set_flows(self):
         self.set_var_flow(
@@ -107,7 +107,7 @@ class Model(BasePopulationSystem):
             "suscept_vac",
             "births_vac" )
 
-        self.set_normal_death_rate("rate_death")
+        self.set_normal_death_rate("rate_death_per_capita")
 
         for strain in self.strains:
             self.set_var_transfer_rate_flow(

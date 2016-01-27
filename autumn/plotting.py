@@ -21,7 +21,7 @@ def make_time_plots_color(
         pylab.subplot(n_row, n_col, i_plot+1)
         pylab.plot(
             population.times, 
-            population.get_soln(plot_label), 
+            population.get_compartment_soln(plot_label),
             linewidth=2,
             color=colors[i_plot % len(colors)])
         pylab.ylabel(plot_label)
@@ -43,7 +43,7 @@ def make_time_plots_one_panel(
         for plot_label, line_style in zip(plot_labels, line_styles):
             pylab.plot(
                 population.times, 
-                population.get_soln(plot_label), 
+                population.get_compartment_soln(plot_label),
                 line_style,
                 label=plot_label.title(), linewidth=2)
         pylab.xlabel('Time')

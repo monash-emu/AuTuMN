@@ -4,7 +4,7 @@ Test
 - implement Stage 18 model of the Dynamic Transmission Model
 """
 
-from modules.model import BasePopulationSystem, make_steps
+from autumn.model import BasePopulationSystem, make_steps
 
 class Model(BasePopulationSystem):
 
@@ -77,7 +77,7 @@ class Model(BasePopulationSystem):
         self.set_param("program_rate_default_noninfect", 2 * 0.1)
         self.set_param("program_rate_death_noninfect", 2 * 0.1)
 
-    def calculate_vars(self):
+    def calculate_pre_vars(self):
         self.vars["population"] = sum(self.compartments.values())
 
         self.vars["infections"] = 0.0
@@ -225,7 +225,7 @@ class Model(BasePopulationSystem):
 if __name__ == "__main__":
     import pylab
     import os
-    from modules.plotting import plot_fractions
+    from autumn.plotting import plot_fractions
 
     population = Model()
     population.set_flows()

@@ -6,9 +6,9 @@ Created on Thu Jan 07 15:51:02 2016
 """
 import os
 import win32com.client as win32
-import modules.parameter_estimation as parameter_estimation
+import autumn.parameter_estimation as parameter_estimation
 reload(parameter_estimation)
-import modules.parameter_setting as parameter_setting
+import autumn.parameter_setting as parameter_setting
 reload(parameter_setting)
 
 #parameter_setting.proportion_early_progression.graph_prior()g

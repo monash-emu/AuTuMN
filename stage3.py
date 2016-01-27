@@ -58,7 +58,7 @@ class Stage3PopulationSystem(BasePopulationSystem):
         self.set_param("program_rate_default_noninfect", 2 * 0.1)
         self.set_param("program_rate_death_noninfect", 2 * 0.1)
 
-    def calculate_vars(self):
+    def calculate_pre_vars(self):
         self.vars["population"] = sum(self.compartments.values())
 
         self.vars["rate_force"] = \

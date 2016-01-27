@@ -37,6 +37,14 @@ def add_unique_tuple_to_list(a_list, a_tuple):
         a_list.append(a_tuple)
 
 
+def find_element_in_list(element, list_element):
+    try:
+        index_element = list_element.index(element)
+        return index_element
+    except ValueError:
+        return -1
+
+
 class BasePopulationSystem():
 
     def __init__(self):
@@ -44,6 +52,8 @@ class BasePopulationSystem():
         self.init_compartments = {}
         self.flows = {}
         self.vars = {}
+        self.vars_array = None
+        self.flows_array = None
         self.params = {}
         self.fixed_transfer_rate_flows = []
         self.extra_death_rate_flows = []
@@ -106,26 +116,52 @@ class BasePopulationSystem():
             self.flows[to_label] += val
 
         # fixed-rate flows
+        self.vars["rate_prevalence"] = 0.0
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
             val = self.compartments[from_label] * rate
             self.flows[from_label] -= val
             self.flows[to_label] += val
+            if 'latent' in from_label and 'active' in to_label:
+                self.vars["rate_prevalence"] += val
 
         # normal death flows
-        self.vars["deaths"] = 0.0
-        self.vars["extra_deaths"] = 0.0
+        self.vars["rate_death"] = 0.0
 
         for label in self.labels:
             val = self.compartments[label] * self.death_rate
             self.flows[label] -= val
-            self.vars['deaths'] += val
+            self.vars['rate_death'] += val
 
         # extra death flows
+        self.vars["rate_disease_death"] = 0.0
         for label, rate in self.extra_death_rate_flows:
             val = self.compartments[label] * rate
             self.flows[label] -= val
-            self.vars["extra_deaths"] += val
-            self.vars['deaths'] += val
+            self.vars["rate_disease_death"] += val
+
+    def save_vars_and_flows(self, t):
+        if self.vars_array is None:
+            self.var_labels = self.vars.keys()
+            n_label = len(self.var_labels)
+            n_time = len(self.times)
+            self.vars_array = numpy.zeros((n_time, n_label))
+        if self.flows_array is None:
+            n_label = len(self.labels)
+            n_time = len(self.times)
+            self.flows_array = numpy.zeros((n_time, n_label))
+        i_time = find_element_in_list(t, self.times)
+        if i_time < 0:
+            return
+        for i_label, label in enumerate(self.var_labels):
+            self.vars_array[i_time, i_label] = self.vars[label]
+        for i_label, label in enumerate(self.labels):
+            self.flows_array[i_time, i_label] = self.flows[label]
+
+    def calculate_pre_vars(self):
+        pass
+
+    def calculate_post_vars(self):
+        pass
 
     def make_derivate_fn(self):
 
@@ -133,8 +169,10 @@ class BasePopulationSystem():
             self.time = t
             self.compartments = self.convert_list_to_compartments(y)
             self.vars.clear()
-            self.calculate_vars()
+            self.calculate_pre_vars()
             self.calculate_flows()
+            self.calculate_post_vars()
+            self.save_vars_and_flows(t)
             flow_vector = self.convert_compartments_to_list(self.flows)
             self.checks()
             return flow_vector
@@ -172,7 +210,7 @@ class BasePopulationSystem():
                     dt = new_time - old_time
                     time = new_time
                 for i in range(n_component):
-                    y[i] = y[i] + dt*f[i]
+                    y[i] = y[i] + dt * f[i]
             if i_time < n_time - 1:
                 self.soln_array[i_time+1,:] = y
         self.calculate_fractions()
@@ -181,7 +219,7 @@ class BasePopulationSystem():
         self.populations = {}
         for label in self.labels:
             if label not in self.populations:
-                self.populations[label] = self.get_soln(label)
+                self.populations[label] = self.get_compartment_soln(label)
 
         self.total_population = []
         n = len(self.times)
@@ -201,23 +239,30 @@ class BasePopulationSystem():
                     )
             ]
 
-    def get_soln(self, label):
+    def get_compartment_soln(self, label):
         i_label = self.labels.index(label)
         return self.soln_array[:, i_label]
+
+    def get_var_soln(self, label):
+        i_label = self.var_labels.index(label)
+        return self.vars_array[:, i_label]
 
     def load_state(self, i_time):
         self.time = self.times[i_time]
         for i_label, label in enumerate(self.labels):
             self.compartments[label] = \
                 self.soln_array[i_time,i_label]
-        self.calculate_vars()
+        self.calculate_pre_vars()
     
     def checks(self):
         # Check all compartments are positive
         for label in self.labels:  
             assert self.compartments[label] >= 0.0
         # Check population is conserved across compartments
-        population_change = self.vars['births'] - self.vars['deaths']
+        population_change = \
+              self.vars['rate_birth'] \
+            - self.vars['rate_death'] \
+            - self.vars['rate_disease_death']
         assert abs(sum(self.flows.values()) - population_change )  < 0.1
 
     def make_graph(self, png):
@@ -329,16 +374,16 @@ class NaivePopulation(BasePopulationSystem):
         self.set_param("recov", 2.)
         self.set_param("test", 4.)
 
-    def calculate_vars(self):
+    def calculate_pre_vars(self):
         self.vars["population"] = sum(self.compartments.values())
-        self.vars["births"] = self.params["rate_birth"] * self.vars["population"]
+        self.vars["rate_birth"] = self.params["rate_birth"] * self.vars["population"]
         self.vars["force"] = \
               (self.compartments["active"] + self.compartments["detected"]) \
             / self.vars["population"] \
             * self.params['ncontacts']
 
     def set_flows(self):
-        self.set_var_flow("susceptible", "births")
+        self.set_var_flow("susceptible", "rate_birth")
 
         self.set_var_transfer_rate_flow("susceptible", "latent", "force")
 
@@ -386,10 +431,10 @@ class SingleComponentPopluationSystem(BasePopulationSystem):
         self.set_param("rate_program_default", .05 / time_treatment)
         self.set_param("rate_program_death", .05 / time_treatment)
 
-    def calculate_vars(self):
+    def calculate_pre_vars(self):
         self.vars["pop_total"] = sum(self.compartments.values())
 
-        self.vars["births"] = \
+        self.vars["rate_birth"] = \
             self.params["rate_birth"] * self.vars["pop_total"]
 
         self.vars["rate_force"] = \
@@ -398,7 +443,7 @@ class SingleComponentPopluationSystem(BasePopulationSystem):
               / self.vars["pop_total"]
 
     def set_flows(self):
-        self.set_var_flow("susceptible", "births")
+        self.set_var_flow("susceptible", "rate_birth")
 
         self.set_var_transfer_rate_flow(
             "susceptible", "latent_early", "rate_force")
@@ -464,9 +509,9 @@ class Stage2PopulationSystem(BasePopulationSystem):
         self.set_param("rate_program_default_noninfect", .05 / time_treatment)
         self.set_param("rate_program_death_noninfect", .05 / time_treatment)
 
-    def calculate_vars(self):
+    def calculate_pre_vars(self):
         self.vars["population"] = sum(self.compartments.values())
-        self.vars["births"] = \
+        self.vars["rate_birth"] = \
             self.params["rate_birth"] * self.vars["population"]
         self.vars["rate_force"] = \
                 self.params["n_tb_contact"] \
@@ -474,7 +519,7 @@ class Stage2PopulationSystem(BasePopulationSystem):
               / self.vars["population"]
 
     def set_flows(self):
-        self.set_var_flow("susceptible", "births")
+        self.set_var_flow("susceptible", "rate_birth")
 
         self.set_var_transfer_rate_flow(
             "susceptible", "latent_early", "rate_force")

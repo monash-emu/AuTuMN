@@ -11,8 +11,8 @@
 """
 
 
-from modules.model_jt import BasePopulationSystem, make_steps
-from modules.plotting import plot_fractions
+from autumn.model_jt import BasePopulationSystem, make_steps
+from autumn.plotting import plot_fractions
 import pylab
 import os
 
@@ -86,7 +86,7 @@ class Stage4PopulationSystem(BasePopulationSystem):
         self.set_param("program_rate_default_noninfect", 2 * 0.1)
         self.set_param("program_rate_death_noninfect", 2 * 0.1)
 
-    def calculate_vars(self):
+    def calculate_pre_vars(self):
         self.vars["population"] = sum(self.compartments.values())
 
         self.vars["births"] = \

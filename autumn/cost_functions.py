@@ -47,7 +47,7 @@ class input_parameters():
         self.input_parameters("coverage_upperlimit", 1)
         self.input_parameters("coverage_stepsize", 1)
     
-    def calculate_vars(self): 
+    def calculate_pre_vars(self): 
         
         ''' for cost-coverage curve ''' 
         

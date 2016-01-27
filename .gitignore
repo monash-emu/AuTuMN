@@ -1,4 +1,5 @@
 *.pyc
 */*.pyc
 .idea
-
+.spyderworkspace
+*png

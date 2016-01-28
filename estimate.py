@@ -46,14 +46,14 @@ def probability(params):
 
     n_tb_contact, init_pop = params
     prior = 1.0
-    prior *= norm.pdf((n_tb_contact-20)/2.)
+    prior *= norm.pdf((n_tb_contact-40)/20.)
     final_pop = population.vars["population"]
     mortality = population.vars["rate_disease_death"]/final_pop*1E5
     incidence = population.vars["incidence"]/final_pop*1E5
     prevalence = population.vars["rate_prevalence"]/final_pop*1E5
     likelihood = 0.0
-    likelihood += 99E6*norm(99E6, 10E6).pdf(final_pop)
-    likelihood += 417*norm(417, 200).pdf(prevalence)
+    likelihood += 10E6*norm(99E6, 10E6).pdf(final_pop)
+    likelihood += 400*norm(417, 30).pdf(prevalence)
     prob = prior * likelihood
 
     prints = [
@@ -83,54 +83,60 @@ n_walker = 4
 n_param = 2
 population = Stage4PopulationSystem()
 init_params = [20, 40E6]
+scales = [100., 100E6]
 titles_param = ["n_tb_contact", "init_population"]
 times = make_steps(1, 50, 1)
 
-minimimum = optimize.minimize( make_neg_fn(probability), init_params)
+scaled_init_params = [param/scale for param, scale in zip(init_params, scales)]
+def neg_scaled_fn(scaled_params):
+    params = [scale*scaled_param for scale, scaled_param in zip(scales, scaled_params)]
+    return -probability(params)
+
+minimimum = optimize.minimize( neg_scaled_fn, scaled_init_params)
 print minimimum
 
-sampler = emcee.EnsembleSampler(n_walker, n_param, ln_prob)
+# sampler = emcee.EnsembleSampler(n_walker, n_param, ln_prob)
 
 
-init_x_of_walkers = numpy.zeros((n_walker, n_param))
-for i_walker in range(n_walker):
-     for i_param, init_x in enumerate(init_params):
-          init_x_of_walkers[i_walker, i_param] = init_x + 1e-1 * init_x * numpy.random.uniform()
+# init_x_of_walkers = numpy.zeros((n_walker, n_param))
+# for i_walker in range(n_walker):
+#      for i_param, init_x in enumerate(init_params):
+#           init_x_of_walkers[i_walker, i_param] = init_x + 1e-1 * init_x * numpy.random.uniform()
 
-n_mcmc_step = 40
-sampler.run_mcmc(init_x_of_walkers, n_mcmc_step)
-for i_param in range(n_param):
-    pylab.clf()
-    pylab.plot(range(n_mcmc_step), sampler.chain[0,:,i_param])
-    pylab.ylim([0, 1.2*sampler.chain[:,:,i_param].max()])
+# n_mcmc_step = 40
+# sampler.run_mcmc(init_x_of_walkers, n_mcmc_step)
+# for i_param in range(n_param):
+#     pylab.clf()
+#     pylab.plot(range(n_mcmc_step), sampler.chain[0,:,i_param])
+#     pylab.ylim([0, 1.2*sampler.chain[:,:,i_param].max()])
 
-pylab.clf()
-final_pops = []
-for i_mcmc_step in range(n_mcmc_step):
-    params = sampler.chain[0, i_mcmc_step, :]
-    get_pop(params)
-    final_pops.append(population.vars["population"])
-pylab.plot(range(n_mcmc_step), final_pops)
-pylab.title("final_pops")
-pylab.savefig('sampler%d.png' % n_param)
+# pylab.clf()
+# final_pops = []
+# for i_mcmc_step in range(n_mcmc_step):
+#     params = sampler.chain[0, i_mcmc_step, :]
+#     get_pop(params)
+#     final_pops.append(population.vars["population"])
+# pylab.plot(range(n_mcmc_step), final_pops)
+# pylab.title("final_pops")
+# pylab.savefig('sampler%d.png' % n_param)
 
-pylab.clf()
-n_mcmc_burn_step = 10
-samples = sampler.chain[:, n_mcmc_burn_step:, :].reshape((-1, n_param))
-n_sample = samples.shape[0]
-for i_sample in numpy.random.randint(n_sample, size=20):
-    params = samples[i_sample, :]
-    get_pop(params)
-    population.calculate_fractions()
-    pylab.plot(times, population.total_population, color="k", alpha=0.1)
-get_pop(params)
-population.calculate_fractions()
-pylab.plot(times, population.get_var_soln("population"), color="r", alpha=0.8)
-pylab.plot(times, population.get_var_soln("infected_populaton"), color="b", alpha=0.8)
-pylab.xlabel('year')
-pylab.ylabel('population')
-pylab.savefig('population.png')
+# pylab.clf()
+# n_mcmc_burn_step = 10
+# samples = sampler.chain[:, n_mcmc_burn_step:, :].reshape((-1, n_param))
+# n_sample = samples.shape[0]
+# for i_sample in numpy.random.randint(n_sample, size=20):
+#     params = samples[i_sample, :]
+#     get_pop(params)
+#     population.calculate_fractions()
+#     pylab.plot(times, population.total_population, color="k", alpha=0.1)
+# get_pop(params)
+# population.calculate_fractions()
+# pylab.plot(times, population.get_var_soln("population"), color="r", alpha=0.8)
+# pylab.plot(times, population.get_var_soln("infected_populaton"), color="b", alpha=0.8)
+# pylab.xlabel('year')
+# pylab.ylabel('population')
+# pylab.savefig('population.png')
 
-# os.system('open sampler.png stage2_mcmc_latentearly.png')
+# # os.system('open sampler.png stage2_mcmc_latentearly.png')
 
 

@@ -81,7 +81,7 @@ class BasePopulationSystem():
     def set_normal_death_rate(self, death_label):
         self.death_rate = self.params[death_label]
 
-    def set_death_rate_flow(self, label, param_label):
+    def set_disease_death_rate_flow(self, label, param_label):
         add_unique_tuple_to_list(
             self.extra_death_rate_flows,
             (label, self.params[param_label]))
@@ -139,28 +139,7 @@ class BasePopulationSystem():
             self.flows[label] -= val
             self.vars["rate_disease_death"] += val
 
-    def save_vars_and_flows(self, t):
-        if self.vars_array is None:
-            self.var_labels = self.vars.keys()
-            n_label = len(self.var_labels)
-            n_time = len(self.times)
-            self.vars_array = numpy.zeros((n_time, n_label))
-        if self.flows_array is None:
-            n_label = len(self.labels)
-            n_time = len(self.times)
-            self.flows_array = numpy.zeros((n_time, n_label))
-        i_time = find_element_in_list(t, self.times)
-        if i_time < 0:
-            return
-        for i_label, label in enumerate(self.var_labels):
-            self.vars_array[i_time, i_label] = self.vars[label]
-        for i_label, label in enumerate(self.labels):
-            self.flows_array[i_time, i_label] = self.flows[label]
-
-    def calculate_pre_vars(self):
-        pass
-
-    def calculate_post_vars(self):
+    def calculate_vars(self):
         pass
 
     def make_derivate_fn(self):
@@ -169,10 +148,8 @@ class BasePopulationSystem():
             self.time = t
             self.compartments = self.convert_list_to_compartments(y)
             self.vars.clear()
-            self.calculate_pre_vars()
+            self.calculate_vars()
             self.calculate_flows()
-            self.calculate_post_vars()
-            self.save_vars_and_flows(t)
             flow_vector = self.convert_compartments_to_list(self.flows)
             self.checks()
             return flow_vector
@@ -252,7 +229,7 @@ class BasePopulationSystem():
         for i_label, label in enumerate(self.labels):
             self.compartments[label] = \
                 self.soln_array[i_time,i_label]
-        self.calculate_pre_vars()
+        self.calculate_vars()
     
     def checks(self):
         # Check all compartments are positive
@@ -367,6 +344,7 @@ class BasePopulationSystem():
         return True
 
 
+
 class NaivePopulation(BasePopulationSystem):
 
     """
@@ -396,7 +374,7 @@ class NaivePopulation(BasePopulationSystem):
         self.set_param("recov", 2.)
         self.set_param("test", 4.)
 
-    def calculate_pre_vars(self):
+    def calculate_vars(self):
         self.vars["population"] = sum(self.compartments.values())
         self.vars["rate_birth"] = self.params["rate_birth"] * self.vars["population"]
         self.vars["force"] = \
@@ -414,11 +392,13 @@ class NaivePopulation(BasePopulationSystem):
         self.set_fixed_transfer_rate_flow("detected", "treated", "treat")
         self.set_fixed_transfer_rate_flow("treated", "susceptible", "recov")
 
-        self.set_death_rate_flow("active", "tbdeath")
-        self.set_death_rate_flow("detected", "tbdeath")
-        self.set_death_rate_flow("treated", "treatdeath")
+        self.set_disease_death_rate_flow("active", "tbdeath")
+        self.set_disease_death_rate_flow("detected", "tbdeath")
+        self.set_disease_death_rate_flow("treated", "treatdeath")
 
         self.set_normal_death_rate("rate_death")
+
+
 
 class SingleComponentPopluationSystem(BasePopulationSystem):
 
@@ -453,7 +433,7 @@ class SingleComponentPopluationSystem(BasePopulationSystem):
         self.set_param("rate_program_default", .05 / time_treatment)
         self.set_param("rate_program_death", .05 / time_treatment)
 
-    def calculate_pre_vars(self):
+    def calculate_vars(self):
         self.vars["pop_total"] = sum(self.compartments.values())
 
         self.vars["rate_birth"] = \
@@ -489,8 +469,8 @@ class SingleComponentPopluationSystem(BasePopulationSystem):
             "undertreatment", "susceptible", "rate_program_completion")
 
         self.set_normal_death_rate("rate_death")
-        self.set_death_rate_flow("active", "rate_tb_death")
-        self.set_death_rate_flow("undertreatment", "rate_program_death")
+        self.set_disease_death_rate_flow("active", "rate_tb_death")
+        self.set_disease_death_rate_flow("undertreatment", "rate_program_death")
 
 
 
@@ -531,7 +511,7 @@ class Stage2PopulationSystem(BasePopulationSystem):
         self.set_param("rate_program_default_noninfect", .05 / time_treatment)
         self.set_param("rate_program_death_noninfect", .05 / time_treatment)
 
-    def calculate_pre_vars(self):
+    def calculate_vars(self):
         self.vars["population"] = sum(self.compartments.values())
         self.vars["rate_birth"] = \
             self.params["rate_birth"] * self.vars["population"]
@@ -570,11 +550,11 @@ class Stage2PopulationSystem(BasePopulationSystem):
             "treatment_noninfect", "active", "rate_program_default_noninfect")
 
         self.set_normal_death_rate("rate_death")
-        self.set_death_rate_flow(
+        self.set_disease_death_rate_flow(
             "active", "rate_tb_death")
-        self.set_death_rate_flow(
+        self.set_disease_death_rate_flow(
             "treatment_infect", "rate_program_death_infect")
-        self.set_death_rate_flow(
+        self.set_disease_death_rate_flow(
             "treatment_noninfect", "rate_program_death_noninfect")
 
 

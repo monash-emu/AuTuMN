@@ -58,7 +58,7 @@ class Stage3PopulationSystem(BasePopulationSystem):
         self.set_param("program_rate_default_noninfect", 2 * 0.1)
         self.set_param("program_rate_death_noninfect", 2 * 0.1)
 
-    def calculate_pre_vars(self):
+    def calculate_vars(self):
         self.vars["population"] = sum(self.compartments.values())
 
         self.vars["rate_force"] = \
@@ -120,13 +120,13 @@ class Stage3PopulationSystem(BasePopulationSystem):
             "treatment_noninfect", "susceptible_treated", "program_rate_completion_noninfect")
 
         self.set_normal_death_rate("rate_death")
-        self.set_death_rate_flow(
+        self.set_disease_death_rate_flow(
             "active", "tb_rate_death")
-        self.set_death_rate_flow(
+        self.set_disease_death_rate_flow(
             "detect", "tb_rate_death")
-        self.set_death_rate_flow(
+        self.set_disease_death_rate_flow(
             "treatment_infect", "program_rate_death_infect")
-        self.set_death_rate_flow(
+        self.set_disease_death_rate_flow(
             "treatment_noninfect", "program_rate_death_noninfect")
 
 

@@ -56,7 +56,7 @@ class BasePopulationSystem():
     def set_population_death_rate(self, death_label):
         self.death_rate = self.params[death_label]
 
-    def set_death_rate_flow(self, label, param_label):
+    def set_disease_death_rate_flow(self, label, param_label):
         self.tb_death_rate_flows.append((label, self.params[param_label]))
 
     def set_fixed_transfer_rate_flow(self, from_label, to_label, param_label):

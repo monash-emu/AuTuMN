@@ -177,6 +177,17 @@ untreated_casefatality_smearpos_tiemersma2011 \
                'untreated pulmonary tuberculosis in HIV negative patients: ' +
                'a systematic review. PLoS One 6(4):e17601.')
 
+untreated_casefatality_smearneg_tiemersma2011 \
+    = Evidence('natural_history_tiemersma2011',
+               'Untreated case fatality', .2, [],
+               'Untreated case fatality, Tiemersma et al. 2011',
+               '20% case fatality for smear-negative patients from ' +
+               'Review of the pre-chemotherapy literature.',
+               'Tiemersma EW, van der Werf MJ, Borgdorff MW, et al. ' +
+               'Natural history of tuberculosis: duration and fatality of ' +
+               'untreated pulmonary tuberculosis in HIV negative patients: ' +
+               'a systematic review. PLoS One 6(4):e17601.')
+
 treatment_duration_ds_who2011 \
     = Evidence('treatmentguidelines_who2011',
                'Time under treatment for DS-TB', 6. / 12., [.5 / 12.],
@@ -359,11 +370,20 @@ timeperiod_activeuntreated \
 
 proportion_casefatality_active_untreated_smearpos \
     = Parameter('proportion_casefatality_active_untreated_smearpos',
-                'Untreated case fatality',
+                'Untreated case fatality smear-positive disease',
                 'proportion',
                 'beta_full_range',
                 untreated_casefatality_smearpos_tiemersma2011.estimate,
                 untreated_casefatality_smearpos_tiemersma2011.interval, [],
+                ['death', 'death and spontaneous recovery (if not detected)'])
+
+proportion_casefatality_active_untreated_smearneg \
+    = Parameter('proportion_casefatality_active_untreated_smearneg',
+                'Untreated case fatality smear-negative disease',
+                'proportion',
+                'beta_full_range',
+                untreated_casefatality_smearneg_tiemersma2011.estimate,
+                untreated_casefatality_smearneg_tiemersma2011.interval, [],
                 ['death', 'death and spontaneous recovery (if not detected)'])
 
 multiplier_relative_fitness_mdr \
@@ -473,3 +493,20 @@ proportion_treatmentsuccess_inappropriate_retreatment_mdr \
                 ['successful outcome', 'all new MDR patients treated with ' +
                 'inappropriate first line regimen'])
 
+tb_n_contact \
+    = Parameter('tb_n_contact',
+                'Effective contact rate',
+                'multiplier',
+                'gamma',
+                25.,
+                [20.], [],
+                ['rate_force'])
+
+timeperiod_infect_ontreatment \
+    = Parameter('timeperiod_infect_ontreatment',
+                'Duration of infectiousness while on treatment',
+                'timeperiod',
+                'gamma',
+                2. / 52.,
+                [], [],
+                ['Time in treatment_infect compartments before moving to treatment_infect'])

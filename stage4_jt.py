@@ -11,7 +11,7 @@
 """
 
 
-from autumn.model_jt import BasePopulationSystem, make_steps
+from autumn.model_jt import BasePopulationSystem
 from autumn.plotting import plot_fractions
 import pylab
 import os
@@ -112,9 +112,9 @@ class Stage4PopulationSystem(BasePopulationSystem):
         self.vars["rate_force_weak"] = 0.5 * self.vars["rate_force"]
 
     def set_flows(self):
-        self.set_var_flow(
+        self.set_var_entry_rate_flow(
             "susceptible_fully", "births_unvac")
-        self.set_var_flow(
+        self.set_var_entry_rate_flow(
             "susceptible_vac", "births_vac")
 
         self.set_var_transfer_rate_flow(
@@ -179,16 +179,16 @@ class Stage4PopulationSystem(BasePopulationSystem):
         self.set_population_death_rate("rate_death")
 
         for status in self.pulmonary_status:
-            self.set_disease_death_rate_flow(
+            self.set_death_rate_flow(
                 "active" + status, 
                 "tb_rate_death")
-            self.set_disease_death_rate_flow(
+            self.set_death_rate_flow(
                 "detect" + status, 
                 "tb_rate_death")
-            self.set_disease_death_rate_flow(
+            self.set_death_rate_flow(
                 "treatment_infect" + status, 
                 "program_rate_death_infect")
-            self.set_disease_death_rate_flow(
+            self.set_death_rate_flow(
                 "treatment_noninfect" + status, 
                 "program_rate_death_noninfect")
 
@@ -198,7 +198,8 @@ if __name__ == "__main__":
     population = Stage4PopulationSystem()
     population.set_flows()
     population.make_graph('stage4.graph.png')
-    population.integrate_scipy(make_steps(0, 50, 1))
+    population.make_steps(0, 50, 1)
+    population.integrate_scipy()
 
     plot_fractions(population, population.labels[:])
     pylab.savefig('stage4.fraction.png', dpi=300)

@@ -230,7 +230,7 @@ if __name__ == "__main__":
     population = Model()
     population.set_flows()
 #    population.make_graph('stage5.graph.png')
-    population.integrate_scipy(make_steps(0, 100, 1))
+    population.integrate_scipy(make_steps(0, 50, 1))
     plot_fractions(population, population.labels)
     pylab.savefig('stage5.fraction.png', dpi=300)
 

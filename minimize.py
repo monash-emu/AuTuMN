@@ -50,8 +50,8 @@ def probability(params):
     prior *= norm.pdf((n_tb_contact-40)/20.)
     final_pop = population.vars["population"]
     mortality = population.vars["rate_infection_death"]/final_pop*1E5
-    incidence = population.vars["incidence"]/final_pop*1E5
-    prevalence = population.vars["rate_prevalence"]/final_pop*1E5
+    prevalence = population.vars["infected_populaton"]/final_pop*1E5
+    incidence = population.vars["rate_incidence"]/final_pop*1E5
     likelihood = 0.0
     likelihood += 10E6*norm(99E6, 10E6).pdf(final_pop)
     likelihood += 10E6*norm(417, 30).pdf(prevalence)

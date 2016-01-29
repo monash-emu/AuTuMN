@@ -59,7 +59,7 @@ def probability(params):
     final_pop = population.vars["population"]
     mortality = population.vars["rate_disease_death"]/final_pop*1E5
     incidence = population.vars["incidence"]/final_pop*1E5
-    prevalence = population.vars["rate_prevalence"]/final_pop*1E5
+    prevalence = population.vars["rate_incidence"]/final_pop*1E5
     likelihood = 0.0
     likelihood += 99E6*norm(99E6, 10E6).pdf(final_pop)
     likelihood += 417*norm(417, 200).pdf(prevalence)

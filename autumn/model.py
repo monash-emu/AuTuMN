@@ -129,13 +129,13 @@ class BasePopulationSystem():
             self.flows[to_label] += val
 
         # fixed-rate flows
-        self.vars["rate_prevalence"] = 0.0
+        self.vars["rate_incidence"] = 0.0
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
             val = self.compartments[from_label] * rate
             self.flows[from_label] -= val
             self.flows[to_label] += val
             if 'latent' in from_label and 'active' in to_label:
-                self.vars["rate_prevalence"] += val
+                self.vars["rate_incidence"] += val
 
         # normal death flows
         self.vars["rate_death"] = 0.0

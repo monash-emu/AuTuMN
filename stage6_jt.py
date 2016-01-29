@@ -12,7 +12,7 @@
 
 
 from autumn.model import Stage6PopulationSystem
-from autumn.plotting import plot_fractions
+from autumn.plotting import plot_fractions, plot_populations
 import pylab
 import os
 import numpy
@@ -83,6 +83,8 @@ if __name__ == "__main__":
     population.times = population.steps
     plot_fractions(population, population.labels[:])
     pylab.savefig('Stage6.fraction.png', dpi=300)
+    plot_populations(population, population.labels[:])
+    pylab.savefig('Stage6.population.png', dpi=300)
 
-    os.system('open -a "Google Chrome" Stage6.graph.png Stage6.fraction.png')
+    os.system('open -a "Google Chrome" Stage6.graph.png Stage6.fraction.png Stage6.population.png')
 

@@ -63,6 +63,7 @@ class BasePopulationSystem():
         self.times = None
 
     def make_steps(self, start, end, delta):
+        "Return steps with n or delta"
         self.steps = []
         step = start
         while step <= end:

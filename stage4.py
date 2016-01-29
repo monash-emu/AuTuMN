@@ -199,6 +199,7 @@ if __name__ == "__main__":
     population.set_flows()
     population.make_graph('stage4.graph.png')
     population.make_steps(0, 50, 1.)
+    print population.steps
     population.integrate_explicit()
 
     plot_fractions(population, population.labels[:])

@@ -1,5 +1,5 @@
 digraph {
-	graph [fontsize=16 label="Stage 6"]
+	graph [fontsize=16 label="Stage 5"]
 	node [fillcolor="#CCDDFF" fontname=Helvetica shape=box style=filled]
 	edge [arrowhead=open fontname=Courier fontsize=10 style=dotted]
 		susceptible_fully
@@ -22,7 +22,7 @@ digraph {
 		treatment_noninfect_smearpos
 		treatment_noninfect_smearneg
 		treatment_noninfect_extrapul
-		infection_death
+		tb_death
 			susceptible_fully -> latent_early [label=rate_force]
 			susceptible_vac -> latent_early [label=rate_force_weak]
 			susceptible_treated -> latent_early [label=rate_force_weak]
@@ -64,16 +64,16 @@ digraph {
 			treatment_infect_extrapul -> active_extrapul [label=0.182996874574]
 			treatment_noninfect_extrapul -> active_extrapul [label=0.174396406083]
 			treatment_noninfect_extrapul -> susceptible_treated [label=1.68044664874]
-			active_smearpos -> infection_death [label=0.260201067311]
-			detect_smearpos -> infection_death [label=0.260201067311]
-			treatment_infect_smearpos -> infection_death [label=0.182996874574]
-			treatment_noninfect_smearpos -> infection_death [label=0.174396406083]
-			active_smearneg -> infection_death [label=0.067709156734]
-			detect_smearneg -> infection_death [label=0.067709156734]
-			treatment_infect_smearneg -> infection_death [label=0.182996874574]
-			treatment_noninfect_smearneg -> infection_death [label=0.174396406083]
-			active_extrapul -> infection_death [label=0.067709156734]
-			detect_extrapul -> infection_death [label=0.067709156734]
-			treatment_infect_extrapul -> infection_death [label=0.182996874574]
-			treatment_noninfect_extrapul -> infection_death [label=0.174396406083]
+			active_smearpos -> tb_death [label=0.260201067311]
+			detect_smearpos -> tb_death [label=0.260201067311]
+			treatment_infect_smearpos -> tb_death [label=0.182996874574]
+			treatment_noninfect_smearpos -> tb_death [label=0.174396406083]
+			active_smearneg -> tb_death [label=0.067709156734]
+			detect_smearneg -> tb_death [label=0.067709156734]
+			treatment_infect_smearneg -> tb_death [label=0.182996874574]
+			treatment_noninfect_smearneg -> tb_death [label=0.174396406083]
+			active_extrapul -> tb_death [label=0.067709156734]
+			detect_extrapul -> tb_death [label=0.067709156734]
+			treatment_infect_extrapul -> tb_death [label=0.182996874574]
+			treatment_noninfect_extrapul -> tb_death [label=0.174396406083]
 }

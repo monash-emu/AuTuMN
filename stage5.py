@@ -45,7 +45,7 @@ class Model(BasePopulationSystem):
         self.infectous_labels.append("misdetect_drugres")
         self.infectous_labels.append("mistreat_drugres")
 
-        self.set_param("rate_birth_per_capita", 20. / 1e3)
+        self.set_param("rate_birth_per_capita", 40. / 1e3)
         self.set_param("rate_death_per_capita", 1. / 65)
 
         self.set_param("tb_n_contact", 40.)
@@ -100,14 +100,14 @@ class Model(BasePopulationSystem):
             self.params['program_prop_vac'] * self.vars["rate_birth"]
 
     def set_flows(self):
-        self.set_var_flow(
+        self.set_var_entry_rate_flow(
             "suscept_unvac",
             "births_unvac" )
-        self.set_var_flow(
+        self.set_var_entry_rate_flow(
             "suscept_vac",
             "births_vac" )
 
-        self.set_normal_death_rate("rate_death_per_capita")
+        self.set_population_death_rate("rate_death_per_capita")
 
         for strain in self.strains:
             self.set_var_transfer_rate_flow(
@@ -170,19 +170,19 @@ class Model(BasePopulationSystem):
                 "suscept_treated",
                 "program_rate_complete_noninfect")
 
-            self.set_disease_death_rate_flow(
+            self.set_infection_death_rate_flow(
                 "active" + strain,
                 "tb_rate_death")
-            self.set_disease_death_rate_flow(
+            self.set_infection_death_rate_flow(
                 "detect" + strain,
                 "tb_rate_death")
-            self.set_disease_death_rate_flow(
+            self.set_infection_death_rate_flow(
                 "faildetect" + strain,
                 "tb_rate_death")
-            self.set_disease_death_rate_flow(
+            self.set_infection_death_rate_flow(
                 "treat" + strain,
                 "program_rate_death")
-            self.set_disease_death_rate_flow(
+            self.set_infection_death_rate_flow(
                 "treat_noninfect" + strain,
                 "program_rate_death_noninfect")
 
@@ -214,10 +214,10 @@ class Model(BasePopulationSystem):
             "mistreat_drugres",
             "program_rate_start")
 
-        self.set_disease_death_rate_flow(
+        self.set_infection_death_rate_flow(
             "misdetect_drugres",
             "tb_rate_death")
-        self.set_disease_death_rate_flow(
+        self.set_infection_death_rate_flow(
             "mistreat_drugres",
             "tb_rate_death")
 
@@ -230,7 +230,8 @@ if __name__ == "__main__":
     population = Model()
     population.set_flows()
 #    population.make_graph('stage5.graph.png')
-    population.integrate_scipy(make_steps(0, 50, 1))
+    population.make_steps(0, 50, 1.)
+    population.integrate_explicit()
     plot_fractions(population, population.labels)
     pylab.savefig('stage5.fraction.png', dpi=300)
 

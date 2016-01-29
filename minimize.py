@@ -37,7 +37,8 @@ def get_pop(params):
           return 0.0
      population.set_param("n_tb_contact", n_tb_contact)
      population.set_compartment("susceptible_unvac", init_pop)
-     population.integrate_explicit(times)
+     population.make_steps(1, 50, 1)
+     population.integrate_explicit()
      population.calculate_fractions()
 
 
@@ -48,7 +49,7 @@ def probability(params):
     prior = 1.0
     prior *= norm.pdf((n_tb_contact-40)/20.)
     final_pop = population.vars["population"]
-    mortality = population.vars["rate_disease_death"]/final_pop*1E5
+    mortality = population.vars["rate_infection_death"]/final_pop*1E5
     incidence = population.vars["incidence"]/final_pop*1E5
     prevalence = population.vars["rate_prevalence"]/final_pop*1E5
     likelihood = 0.0

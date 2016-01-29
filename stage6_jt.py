@@ -11,7 +11,7 @@
 """
 
 
-from autumn.model_jt import Stage6PopulationSystem
+from autumn.model import Stage6PopulationSystem
 from autumn.plotting import plot_fractions
 import pylab
 import os
@@ -78,8 +78,9 @@ if __name__ == "__main__":
     population.set_flows()
     population.make_graph('Stage6.graph.png')
     population.make_steps(1950., 2015., 20)
-    population.integrate_scipy()
+    population.integrate_explicit()
 
+    population.times = population.steps
     plot_fractions(population, population.labels[:])
     pylab.savefig('Stage6.fraction.png', dpi=300)
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
+
 """
-Created on Wed Nov 25 16:00:29 2015
 Tests out the Parameter object in parameter_estimation.py (which is currently
 just a prior setting object) and the Evidence object (which isn't yet used
 within the Parameter object).
@@ -8,15 +8,15 @@ within the Parameter object).
 """
 
 import os
+
 import numpy
-from autumn.parameter_estimation import Parameter, Evidence
 import pylab
 import emcee
-import stage5
 import scipy.optimize as optimize
+from scipy.stats import beta, gamma, norm, truncnorm
+
 from autumn.model import make_steps
 from stage4 import Stage4PopulationSystem
-from scipy.stats import beta, gamma, norm, truncnorm
 
 
 

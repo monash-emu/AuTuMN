@@ -4,7 +4,9 @@ Test
 - implement Stage 18 model of the Dynamic Transmission Model
 """
 
-from autumn.model import BasePopulationSystem, make_steps
+
+from autumn.model import BasePopulationSystem
+
 
 class Model(BasePopulationSystem):
 
@@ -229,7 +231,7 @@ if __name__ == "__main__":
 
     population = Model()
     population.set_flows()
-#    population.make_graph('stage5.graph.png')
+    population.make_graph('stage5.graph.png')
     population.make_steps(0, 50, 1.)
     population.integrate_explicit()
     plot_fractions(population, population.labels)

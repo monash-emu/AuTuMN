@@ -15,15 +15,6 @@ from scipy import exp, log
 import numpy
 
 
-def make_steps(start, end, delta):
-    steps = []
-    step = start
-    while step <= end:
-        steps.append(step)
-        step += delta
-    return steps
-
-
 def add_unique_tuple_to_list(a_list, a_tuple):
     """
     Adds or modifies a list of tuples, compares only the items
@@ -68,10 +59,17 @@ class BasePopulationSystem():
         step = start
         while step <= end:
             self.steps.append(step)
-            if type(delta) is float:
-                step += delta
-            elif type(delta) is int:
-                step += (end - start) / float(delta)
+            step += delta
+        self.times = self.steps
+
+    def make_n_steps(self, start, end, n):
+        "Return steps with n or delta"
+        self.steps = []
+        step = start
+        delta = (end - start) / float(n)
+        while step <= end:
+            self.steps.append(step)
+            step += delta
         self.times = self.steps
 
     def set_compartment(self, label, init_val=0.0):
@@ -178,7 +176,7 @@ class BasePopulationSystem():
         self.soln_array = odeint(derivative, init_y, self.times)
         self.calculate_fractions()
         
-    def integrate_explicit(self):
+    def integrate_explicit(self, min_dt=0.05):
         self.set_flows()
         assert not self.times is None
         y = self.get_init_list()
@@ -189,7 +187,6 @@ class BasePopulationSystem():
         derivative = self.make_derivate_fn()
         time = self.times[0]
         self.soln_array[0,:] = y
-        min_dt = 0.05
         for i_time, new_time in enumerate(self.times):
             while time < new_time:
                 f = derivative(y, time)
@@ -254,7 +251,7 @@ class BasePopulationSystem():
               self.vars['rate_birth'] \
             - self.vars['rate_death'] \
             - self.vars['rate_infection_death']
-        assert abs(sum(self.flows.values()) - population_change )  < error_margin
+        assert abs(sum(self.flows.values()) - population_change ) < error_margin
 
     def make_graph(self, png):
         from graphviz import Digraph

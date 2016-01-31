@@ -22,8 +22,8 @@ import autumn.settings.philippines as philippines_parameters
 
 if __name__ == "__main__":
     parameter_method = "ppf"
-    # ppf_value = uniform.rvs(size=12)
-    ppf_value = 0.5 * numpy.ones(18)
+    ppf_value = uniform.rvs(size=18)
+    # ppf_value = 0.5 * numpy.ones(18)
 
     input_parameters = \
         {"demo_rate_birth": 20. / 1e3,
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     population = Stage6PopulationSystem(input_parameters, input_compartments)
     population.set_flows()
     population.make_graph('Stage6.graph.png')
-    population.make_steps(1950., 2015., 20)
+    population.make_n_steps(1950., 2015., 20)
     population.integrate_explicit()
 
     population.times = population.steps

@@ -12,7 +12,7 @@
 
 
 from autumn.model import BasePopulationSystem
-from autumn.plotting import plot_fractions
+from autumn.plotting import plot_fractions, plot_populations
 import pylab
 import os
 
@@ -42,22 +42,26 @@ class Stage4PopulationSystem(BasePopulationSystem):
         self.set_param("proportion_cases_smearpos", 0.6)
         self.set_param("proportion_cases_smearneg", 0.2)
         self.set_param("proportion_cases_extrapul", 0.2)
-        ''' Previously all flows that represented developing new TB were replicated
-        three times for each status, but should be shared between statuses'''
 
         self.set_param("tb_multiplier_force_smearpos", 1.)
         self.set_param("tb_multiplier_force_smearneg", .25)
         self.set_param("tb_multiplier_force_extrapul", 0.0)
+
+        self.set_param("tb_rate_earlyprogress", 0.2)
+
         for status in self.pulmonary_status:
             self.set_compartment("active" + status, 1.)
             self.set_compartment("detect" + status, 0.)
             self.set_compartment("missed" + status, 0.)
             self.set_compartment("treatment_infect" + status, 0.)
             self.set_compartment("treatment_noninfect" + status, 0.)
-            self.set_param("tb_rate_earlyprogress" + status,
-                            .2 * self.params["proportion_cases" + status])
-            self.set_param("tb_rate_lateprogress" + status,
-                            .0005 * self.params["proportion_cases" + status])
+            self.set_param(
+                "tb_rate_earlyprogress" + status,
+                self.params["tb_rate_earlyprogress"]
+                  * self.params["proportion_cases" + status])
+            self.set_param(
+                "tb_rate_lateprogress" + status,
+                .0005 * self.params["proportion_cases" + status])
 
         self.set_param("rate_birth", 40. / 1e3)
         self.set_param("rate_death", 1. / 65)
@@ -196,14 +200,16 @@ class Stage4PopulationSystem(BasePopulationSystem):
 if __name__ == "__main__":
 
     population = Stage4PopulationSystem()
-    population.set_flows()
-    population.make_graph('stage4.graph.png')
     population.make_steps(0, 50, 1.)
-    print population.steps
-    population.integrate_explicit()
+    population.integrate_scipy()
 
+    print population.init_
+    population.make_graph('stage4.graph.png')
     plot_fractions(population, population.labels[:])
     pylab.savefig('stage4.fraction.png', dpi=300)
-
-    os.system('open -a "Google Chrome" stage4.graph.png stage4.fraction.png')
+    plot_populations(population, population.labels[:])
+    pylab.savefig('stage4.pop.png', dpi=300)
+    # plot_populations(population.times, population.get_var_soln('rate_disease_death'))
+    # pylab.savefig('stage4.death.png', dpi=300)
+    os.system('open -a "Google Chrome" stage4*png')
 

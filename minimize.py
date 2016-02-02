@@ -20,15 +20,16 @@ from stage4 import Stage4PopulationSystem
 from autumn.plotting import plot_fractions, plot_populations
 
 
+
 def make_gamma_dist(mean, std):
     loc = 0
-    upper_limit = 'No upper limit'
     shape = mean ** 2 / std ** 2  
     scale = std ** 2 / mean
     return gamma(shape, loc, scale)
 
 
-class Sampler():
+
+class ModelRunner():
 
     def __init__(self):
         self.population = Stage4PopulationSystem()
@@ -51,7 +52,6 @@ class Sampler():
             },
         ]
         self.n_param = len(self.param_dict)
-        self.n_walker = 2 * self.n_param
 
     def run_with_params(self, params):
 
@@ -151,60 +151,70 @@ class Sampler():
         self.minimum.best = self.revert_scaled_params(self.minimum.x)
         return self.minimum
 
+    def mcmc(self):
+        self.n_walker = 2 * self.n_param
+        self.n_mcmc_step = 40
+        self.sampler = emcee.EnsembleSampler(
+            self.n_walker, 
+            self.n_param, 
+            lambda p: self.ln_overall(p))
+        init_walkers = numpy.zeros((self.n_walker, self.n_param))
+        init_params = [d['init'] for d in self.param_dict]
+        for i_walker in range(self.n_walker):
+             for i_param, init_x in enumerate(init_params):
+                  init_walkers[i_walker, i_param] = init_x + 1e-1 * init_x * numpy.random.uniform()
+        self.sampler.run_mcmc(init_walkers, self.n_mcmc_step)
 
-sam = Sampler()
-population = sam.population
-minimum = sam.minimize()
-print minimum.best
-sam.run_with_params(minimum.best)
-population.make_graph('stage4.graph.png')
-plot_fractions(population, population.labels[:])
-pylab.savefig('stage4.fraction.png', dpi=300)
-plot_populations(population, population.labels[:])
-pylab.savefig('stage4.pop.png', dpi=300)
 
-# sampler = emcee.EnsembleSampler(n_walker, n_param, ln_overall)
+def plot_params(sampler, base):
+    n_walker, n_mcmc_step, n_param = sampler.chain.shape
+    n_burn_step = 0
+    samples = sampler.chain[:, n_burn_step:, :].reshape((-1, n_param))
+    i_walker = 0
+    for i_param in range(n_param):
+        pylab.clf()
+        vals = samples[:,i_param]
+        pylab.plot(range(len(vals)), vals)
+        pylab.ylim([0, 1.2 * vals.max()])
+        pylab.savefig("%s.param%d.png" % (base, i_param))
 
 
-# init_x_of_walkers = numpy.zeros((n_walker, n_param))
-# for i_walker in range(n_walker):
-#      for i_param, init_x in enumerate(init_params):
-#           init_x_of_walkers[i_walker, i_param] = init_x + 1e-1 * init_x * numpy.random.uniform()
+model_runner = ModelRunner()
 
-# n_mcmc_step = 40
-# sampler.run_mcmc(init_x_of_walkers, n_mcmc_step)
-# for i_param in range(n_param):
-#     pylab.clf()
-#     pylab.plot(range(n_mcmc_step), sampler.chain[0,:,i_param])
-#     pylab.ylim([0, 1.2*sampler.chain[:,:,i_param].max()])
+# minimum = model_runner.minimize()
+# print minimum.best
 
-# pylab.clf()
-# final_pops = []
-# for i_mcmc_step in range(n_mcmc_step):
-#     params = sampler.chain[0, i_mcmc_step, :]
-#     self.run_with_params(params)
-#     final_pops.append(population.vars["population"])
-# pylab.plot(range(n_mcmc_step), final_pops)
-# pylab.title("final_pops")
-# pylab.savefig('sampler%d.png' % n_param)
+# population = model_runner.population
+# model_runner.run_with_params(minimum.best)
+# population.make_graph('stage4.graph.png')
+# plot_fractions(population, population.labels[:])
+# pylab.savefig('stage4.fraction.png', dpi=300)
+# plot_populations(population, population.labels[:])
+# pylab.savefig('stage4.pop.png', dpi=300)
 
-# pylab.clf()
-# n_mcmc_burn_step = 10
-# samples = sampler.chain[:, n_mcmc_burn_step:, :].reshape((-1, n_param))
-# n_sample = samples.shape[0]
-# for i_sample in numpy.random.randint(n_sample, size=20):
-#     params = samples[i_sample, :]
-#     self.run_with_params(params)
-#     population.calculate_fractions()
-#     pylab.plot(times, population.total_population, color="k", alpha=0.1)
-# self.run_with_params(params)
-# population.calculate_fractions()
-# pylab.plot(times, population.get_var_soln("population"), color="r", alpha=0.8)
-# pylab.plot(times, population.get_var_soln("infected_populaton"), color="b", alpha=0.8)
-# pylab.xlabel('year')
-# pylab.ylabel('population')
-# pylab.savefig('population.png')
+model_runner.mcmc()
+plot_params(model_runner.sampler, 'minimize')
 
-# # os.system('open sampler.png stage2_mcmc_latentearly.png')
+pylab.clf()
+n_mcmc_burn_step = 0
+chain = model_runner.sampler.chain[:, n_mcmc_burn_step:, :]
+n_param = chain.shape[-1]
+samples = chain.reshape((-1, n_param))
+n_sample = samples.shape[0]
+population = model_runner.population
+times = population.times
+for i_sample in numpy.random.randint(n_sample, size=20):
+    params = samples[i_sample, :]
+    model_runner.run_with_params(params)
+    population.calculate_fractions()
+    pylab.plot(times, population.total_population, color="k", alpha=0.1)
+model_runner.run_with_params(params)
+population.calculate_fractions()
+pylab.plot(times, population.get_var_soln("population"), color="r", alpha=0.8)
+pylab.plot(times, population.get_var_soln("infected_populaton"), color="b", alpha=0.8)
+pylab.xlabel('year')
+pylab.ylabel('population')
+pylab.savefig('population.png')
+
 
 

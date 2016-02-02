@@ -44,8 +44,8 @@ class BasePopulationSystem():
         self.init_compartments = {}
         self.flows = {}
         self.vars = {}
-        self.vars_array = None
-        self.flows_array = None
+        self.var_array = None
+        self.flow_array = None
         self.params = {}
         self.fixed_transfer_rate_flows = []
         self.infection_death_rate_flows = []
@@ -227,13 +227,28 @@ class BasePopulationSystem():
                 )
             ]
 
+        self.var_labels = self.vars.keys()
+        n = len(self.times)
+        self.var_array = numpy.zeros((n, len(self.var_labels)))
+        self.flow_array = numpy.zeros((n, len(self.labels)))
+        for i in range(n):
+            t = 0.0
+            for label in self.labels:
+                self.compartments[label] = self.populations[label][i]
+            self.calculate_vars()
+            for i_label, label in enumerate(self.var_labels):
+                self.var_array[i, i_label] = self.vars[label]
+            self.calculate_flows()
+            for i_label, label in enumerate(self.labels):
+                self.flow_array[i, i_label] = self.flows[label]
+
     def get_compartment_soln(self, label):
         i_label = self.labels.index(label)
         return self.soln_array[:, i_label]
 
     def get_var_soln(self, label):
         i_label = self.var_labels.index(label)
-        return self.vars_array[:, i_label]
+        return self.var_array[:, i_label]
 
     def load_state(self, i_time):
         self.time = self.times[i_time]

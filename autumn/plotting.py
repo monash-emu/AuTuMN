@@ -65,7 +65,7 @@ def plot_fractions(population, plot_labels, png=None):
         line_style = line_styles[i_plot % n_style]
         ax.plot(
             population.steps,
-            population.fractions[plot_label], 
+            population.fractions[plot_label],
             line_style,
             label=plot_label, linewidth=2)
     ax.set_xlabel('year')
@@ -73,6 +73,31 @@ def plot_fractions(population, plot_labels, png=None):
     ax.legend(
         bbox_to_anchor=(1.05, 1), 
         loc=2, borderaxespad=0., prop={'size':8})
+
+
+def plot_fractions_jt(population, plot_labels, png=None):
+    line_styles = []
+    for line in ["-", ":", "-.", "--"]:
+        for color in "rbmgk":
+            line_styles.append(line+color)
+    n_style = len(line_styles)
+    fig = pyplot.figure()
+    ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
+    fractions_to_plot = population.fractions_active
+    fractions_to_plot = population.fractions
+    for i_plot, plot_label in enumerate(plot_labels):
+        line_style = line_styles[i_plot % n_style]
+        ax.plot(
+            population.steps,
+            fractions_to_plot[plot_label],
+            line_style,
+            label=plot_label, linewidth=2)
+    ax.set_xlabel('year')
+    ax.set_ylabel('fraction of population')
+    ax.legend(
+        bbox_to_anchor=(1.05, 1),
+        loc=2, borderaxespad=0., prop={'size':8})
+
 
 
 def plot_populations(population, plot_labels, png=None):

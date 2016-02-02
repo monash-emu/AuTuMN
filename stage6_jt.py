@@ -12,18 +12,19 @@
 
 
 from autumn.model import Stage6PopulationSystem
-from autumn.plotting import plot_fractions, plot_populations
+from autumn.plotting import plot_fractions_jt, plot_populations
 import pylab
 import os
 import numpy
 from scipy.stats import uniform
 import autumn.settings.default as parameter_setting
 import autumn.settings.philippines as philippines_parameters
+from pprint import pprint
 
 if __name__ == "__main__":
     parameter_method = "ppf"
-    ppf_value = uniform.rvs(size=18)
-    # ppf_value = 0.5 * numpy.ones(18)
+    # ppf_value = uniform.rvs(size=18)
+    ppf_value = 0.5 * numpy.ones(18)
 
     input_parameters = \
         {"demo_rate_birth": 20. / 1e3,
@@ -80,8 +81,9 @@ if __name__ == "__main__":
     population.make_n_steps(1950., 2015., 20)
     population.integrate_explicit()
 
+
     population.times = population.steps
-    plot_fractions(population, population.labels[:])
+    plot_fractions_jt(population, population.labels_active[:])
     pylab.savefig('Stage6.fraction.png', dpi=300)
     plot_populations(population, population.labels[:])
     pylab.savefig('Stage6.population.png', dpi=300)

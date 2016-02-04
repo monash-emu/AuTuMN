@@ -202,7 +202,51 @@ class BasePopulationSystem():
             if i_time < n_time - 1:
                 self.soln_array[i_time+1,:] = y
         self.calculate_fractions()
+        self.restrict_labels()
+
+    def restrict_labels(self):
+        self.inclusions = {
+            "ever_infected": ["suscptible_treated", "latent", "active", "missed", "detect", "treatment"],
+            "infected": ["latent", "active", "missed", "detect", "treatment"],
+            "active": ["active", "missed", "detect", "treatment"],
+            "infectious": ["active", "missed", "detect", "treatment_infect"],
+            "identified": ["detect", "treatment"],
+            "treatment": ["treatment"]
+        }
+
+        for i in self.inclusions:
+            compartments_included = []
+            compartments_excluded = []
+            for label in self.labels:
+                for working_inclusion in self.inclusions[i]:
+                    if working_inclusion in label:
+                        compartments_included.append(label)
+            setattr(self, "labels_in_" + i, compartments_included)
+            for label in self.labels:
+                if label not in getattr(self, "labels_in_" + i):
+                    compartments_excluded.append(label)
+            setattr(self, "labels_not_in_" + i, compartments_excluded)
+
         self.calculate_fractions_jt()
+
+    def calculate_fractions_jt(self):
+        restriction = "active"
+        working_population = []
+
+        n = len(self.times)
+        for i in range(n):
+            t = 0.0
+            for label in getattr(self, "labels_in_" + restriction):
+                print(label)
+                t += self.populations[label][i]
+            working_population.append(t)
+
+        setattr(self, "population_in_" + restriction, working_population)
+
+        print(self.population_in_active)
+
+        print("nothing much")
+
 
     def calculate_fractions(self):
         self.populations = {}
@@ -228,51 +272,6 @@ class BasePopulationSystem():
                     self.total_population
                 )
             ]
-
-    def calculate_fractions_jt(self):
-        excluded = {
-            "active": ["susceptible", "latent"],
-        }
-
-        print(excluded)
-        print(type(excluded))
-
-        for key, comps in excluded:
-            exclusions = comps
-
-        print(exclusions)
-
-        self.populations_active = {}
-        for label in self.labels:
-            if label not in self.populations_active:
-                self.populations_active[label] = self.get_compartment_soln(label)
-
-
-        self.total_population_active = []
-        n = len(self.times)
-        for i in range(n):
-            t = 0.0
-            for label in self.labels:
-                if label not in excluded:
-                    t += self.populations[label][i]
-            self.total_population_active.append(t)
-
-        self.fractions_active = {}
-        self.labels_active = []
-
-        for label in self.labels:
-            if not any(j in label for j in excluded):
-                self.fractions_active[label] = [
-                    v/t
-                    for v, t in
-                    zip(
-                        self.populations[label],
-                        self.total_population_active
-                    )
-                ]
-                self.labels_active.append(label)
-
-
 
     def get_compartment_soln(self, label):
         i_label = self.labels.index(label)

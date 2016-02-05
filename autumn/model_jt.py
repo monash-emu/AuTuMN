@@ -230,23 +230,26 @@ class BasePopulationSystem():
         self.calculate_fractions_jt()
 
     def calculate_fractions_jt(self):
-        restriction = "active"
-        working_population = []
-
-        n = len(self.times)
-        for i in range(n):
-            t = 0.0
+        for restriction in self.inclusions:
+            working_population = []
+            n = len(self.times)
+            for i in range(n):
+                t = 0.0
+                for label in getattr(self, "labels_in_" + restriction):
+                    t += self.populations[label][i]
+                working_population.append(t)
+            setattr(self, "population_in_" + restriction, working_population)
+            fractions = {}
             for label in getattr(self, "labels_in_" + restriction):
-                print(label)
-                t += self.populations[label][i]
-            working_population.append(t)
-
-        setattr(self, "population_in_" + restriction, working_population)
-
-        print(self.population_in_active)
-
-        print("nothing much")
-
+                fractions[label] = [
+                    compartment / population
+                    for compartment, population in
+                    zip(
+                        self.populations[label],
+                        working_population
+                    )
+                ]
+            setattr(self, "fractions_in_" + restriction, fractions)
 
     def calculate_fractions(self):
         self.populations = {}

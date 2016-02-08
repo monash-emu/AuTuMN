@@ -127,7 +127,7 @@ def plot_populations(population, plot_labels, png=None):
         loc=2, borderaxespad=0., prop={'size':8})
 
 
-def plot_fraction_subgroups(population, subgroup, png=None):
+def plot_fraction_subgroups(population, subgroup_title, subgroup, png=None):
     labels = []
     for subgroup_tag in subgroup:
         for label in population.labels:
@@ -160,12 +160,13 @@ def plot_fraction_subgroups(population, subgroup, png=None):
             label=plot_label, linewidth=2)
     ax.set_xlabel('year')
     ax.set_ylabel('fraction of population')
+    ax.set_title(subgroup_title)
     ax.legend(
         bbox_to_anchor=(1.05, 1), 
         loc=2, borderaxespad=0., prop={'size':8})
 
 
-def plot_population_subgroups(population, subgroup, png=None):
+def plot_population_subgroups(population, subgroup_title, subgroup, png=None):
     labels = []
     for subgroup_tag in subgroup:
         for label in population.labels:
@@ -186,7 +187,7 @@ def plot_population_subgroups(population, subgroup, png=None):
         population.steps,
         total_population,
         'orange',
-        label="total", linewidth=2)
+        label=subgroup_title + "_total", linewidth=2)
     line_styles = []
     for line in ["-", ":", "-.", "--"]:
         for color in "rbmgk":
@@ -201,6 +202,7 @@ def plot_population_subgroups(population, subgroup, png=None):
             line_style,
             label=plot_label, linewidth=2)
     ax.set_xlabel('year')
+    ax.set_title(subgroup_title)
     ax.set_ylabel('population')
     ax.legend(
         bbox_to_anchor=(1.05, 1), 

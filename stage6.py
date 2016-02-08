@@ -75,9 +75,12 @@ if __name__ == "__main__":
 
     input_compartments = {"susceptible_fully": 1e6, "active": 3.}
 
+    if not os.path.isdir('Stage6'):
+        os.makedirs('Stage6')
+
     population = Stage6PopulationSystem(input_parameters, input_compartments)
     population.set_flows()
-    population.make_graph('Stage6.graph.png')
+    population.make_graph(os.path.join('Stage6', 'flow_chart.png'))
     population.make_n_steps(1950., 2015., 20)
     population.integrate_explicit()
 
@@ -93,18 +96,18 @@ if __name__ == "__main__":
     population.times = population.steps
 
     for key, subgroup in subgroups.items():
-        plotting.plot_population_subgroups(population, subgroups[key])
-        pylab.savefig('Stage6.population.%s.png' % key, dpi=300)
-        plotting.plot_fraction_subgroups(population, subgroups[key])
-        pylab.savefig('Stage6.fraction.%s.png' % key, dpi=300)
+        plotting.plot_population_subgroups(population, key, subgroups[key])
+        pylab.savefig(os.path.join('Stage6', 'population.%s.png' % key), dpi=300)
+        plotting.plot_fraction_subgroups(population, key, subgroups[key])
+        pylab.savefig(os.path.join('Stage6', 'fraction.%s.png' % key), dpi=300)
 
     plotting.plot_fractions(population, population.labels[:])
-    pylab.savefig('Stage6.fraction.png', dpi=300)
+    pylab.savefig(os.path.join('Stage6', 'fraction.png'), dpi=300)
     plotting.plot_populations(population, population.labels[:])
-    pylab.savefig('Stage6.population.png', dpi=300)
+    pylab.savefig(os.path.join('Stage6', 'population.png'), dpi=300)
 
     plotting.plot_vars(population, ['rate_incidence'])
-    pylab.savefig('Stage6.rate.png', dpi=300)
+    pylab.savefig(os.path.join('Stage6', 'rate.png'), dpi=300)
 
     import platform
     import subprocess
@@ -112,7 +115,7 @@ if __name__ == "__main__":
     import glob
     operating_system = platform.system()
     if 'Windows' in operating_system:
-        os.system("start " + " ".join(glob.glob("Stage6*png")))
+        os.system("start " + " ".join(glob.glob(os.path.join('Stage6', '*png'))))
     elif 'Darwin' in operating_system:
-        os.system('open Stage6.*.png')
+        os.system('open ' + os.path.join('Stage6', '*.png'))
 

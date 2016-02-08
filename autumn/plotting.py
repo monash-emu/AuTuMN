@@ -128,25 +128,22 @@ def plot_populations(population, plot_labels, png=None):
 
 
 def plot_fraction_subgroups(population, subgroup, png=None):
-    steps = population.steps
-    total_population = []
-    n_step = len(steps)
     labels = []
     for subgroup_tag in subgroup:
         for label in population.labels:
             if subgroup_tag in label and label not in labels:
                 labels.append(label)
-
     print labels
 
+    steps = population.steps
+    n_step = len(steps)
+
+    total_population = []
     for i in range(n_step):
-        for label in labels:
-            val = 0.0
-            val += population.populations[label]
-        total_population.append(i)
+        pops =[population.populations[label][i] for label in labels]
+        total_population.append(sum(pops))
     print total_population
     
-
     line_styles = []
     for line in ["-", ":", "-.", "--"]:
         for color in "rbmgk":

@@ -434,6 +434,7 @@ class NaivePopulation(BasePopulationSystem):
 
 
 
+
 class SingleComponentPopluationSystem(BasePopulationSystem):
 
     """
@@ -707,17 +708,17 @@ class Stage6PopulationSystem(BasePopulationSystem):
         self.vars["births_vac"] = \
             self.params["program_prop_vac"] * self.vars["rate_birth"]
 
-        self.vars["infected_populaton"] = 0.
+        self.vars["infectious_population"] = 0.
         for status in self.pulmonary_status:
             for label in self.labels:
                 if status in label and "_noninfect" not in label:
-                    self.vars["infected_populaton"] += \
+                    self.vars["infectious_population"] += \
                         self.params["tb_multiplier_force" + status] \
                            * self.compartments[label]
 
         self.vars["rate_force"] = \
               self.params["tb_n_contact"] \
-            * self.vars["infected_populaton"] \
+            * self.vars["infectious_population"] \
             / self.vars["population"]
 
         self.vars["rate_force_weak"] = \

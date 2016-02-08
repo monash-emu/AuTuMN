@@ -93,12 +93,13 @@ if __name__ == "__main__":
         "treatment": ["treatment"]
     }
 
+
     population.times = population.steps
 
     for key, subgroup in subgroups.items():
-        plotting.plot_population_subgroups(population, key, subgroups[key])
+        plotting.plot_population_subgroups(population, key, subgroup)
         pylab.savefig(os.path.join('Stage6', 'population.%s.png' % key), dpi=300)
-        plotting.plot_fraction_subgroups(population, key, subgroups[key])
+        plotting.plot_fraction_subgroups(population, key, subgroup)
         pylab.savefig(os.path.join('Stage6', 'fraction.%s.png' % key), dpi=300)
 
     plotting.plot_fractions(population, population.labels[:])
@@ -108,6 +109,9 @@ if __name__ == "__main__":
 
     plotting.plot_vars(population, ['rate_incidence'])
     pylab.savefig(os.path.join('Stage6', 'rate.png'), dpi=300)
+
+    plotting.plot_flows(population, ['latent_early'])
+    pylab.savefig(os.path.join('Stage6', 'latent_early.png'), dpi=300)
 
     import platform
     import subprocess

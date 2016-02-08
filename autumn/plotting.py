@@ -160,7 +160,7 @@ def plot_fraction_subgroups(population, subgroup_title, subgroup, png=None):
             label=plot_label, linewidth=2)
     ax.set_xlabel('year')
     ax.set_ylabel('fraction of population')
-    ax.set_title(subgroup_title)
+    ax.set_title(subgroup_title + ' fraction')
     ax.legend(
         bbox_to_anchor=(1.05, 1), 
         loc=2, borderaxespad=0., prop={'size':8})
@@ -202,7 +202,7 @@ def plot_population_subgroups(population, subgroup_title, subgroup, png=None):
             line_style,
             label=plot_label, linewidth=2)
     ax.set_xlabel('year')
-    ax.set_title(subgroup_title)
+    ax.set_title(subgroup_title + ' population')
     ax.set_ylabel('population')
     ax.legend(
         bbox_to_anchor=(1.05, 1), 

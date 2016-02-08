@@ -106,5 +106,10 @@ if __name__ == "__main__":
     plotting.plot_vars(population, ['rate_incidence'])
     pylab.savefig('Stage6.rate.png', dpi=300)
 
-    os.system('open -a "Google Chrome" Stage6.*.png')
+    import platform
+    operating_system = platform.system()
+    if 'Windows' in operating_system:
+        os.system('start Stage6.*.png')
+    elif 'Darwin' in operating_system:
+        os.system('open Stage6.*.png')
 

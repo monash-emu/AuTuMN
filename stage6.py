@@ -107,9 +107,12 @@ if __name__ == "__main__":
     pylab.savefig('Stage6.rate.png', dpi=300)
 
     import platform
+    import subprocess
+    import os
+    import glob
     operating_system = platform.system()
     if 'Windows' in operating_system:
-        os.system('start Stage6.*.png')
+        os.system("start " + " ".join(glob.glob("Stage6*png")))
     elif 'Darwin' in operating_system:
         os.system('open Stage6.*.png')
 

@@ -133,7 +133,6 @@ def plot_fraction_subgroups(population, subgroup, png=None):
         for label in population.labels:
             if subgroup_tag in label and label not in labels:
                 labels.append(label)
-    print labels
 
     steps = population.steps
     n_step = len(steps)
@@ -142,21 +141,14 @@ def plot_fraction_subgroups(population, subgroup, png=None):
     for i in range(n_step):
         pops =[population.populations[label][i] for label in labels]
         total_population.append(sum(pops))
-    print total_population
     
+    fig = pyplot.figure()
+    ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
     line_styles = []
     for line in ["-", ":", "-.", "--"]:
         for color in "rbmgk":
             line_styles.append(line+color)
     n_style = len(line_styles)
-    fig = pyplot.figure()
-    ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
-    # ax.plot(
-    #     population.steps,
-    #     total_population,
-    #     'orange',
-    #     label="total", linewidth=2)
-
     for i_plot, plot_label in enumerate(labels):
         line_style = line_styles[i_plot % n_style]
         vals = population.populations[plot_label]
@@ -167,7 +159,49 @@ def plot_fraction_subgroups(population, subgroup, png=None):
             line_style,
             label=plot_label, linewidth=2)
     ax.set_xlabel('year')
-    ax.set_ylabel('fraction')
+    ax.set_ylabel('fraction of population')
+    ax.legend(
+        bbox_to_anchor=(1.05, 1), 
+        loc=2, borderaxespad=0., prop={'size':8})
+
+
+def plot_population_subgroups(population, subgroup, png=None):
+    labels = []
+    for subgroup_tag in subgroup:
+        for label in population.labels:
+            if subgroup_tag in label and label not in labels:
+                labels.append(label)
+
+    steps = population.steps
+    n_step = len(steps)
+
+    total_population = []
+    for i in range(n_step):
+        pops =[population.populations[label][i] for label in labels]
+        total_population.append(sum(pops))
+    
+    fig = pyplot.figure()
+    ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
+    ax.plot(
+        population.steps,
+        total_population,
+        'orange',
+        label="total", linewidth=2)
+    line_styles = []
+    for line in ["-", ":", "-.", "--"]:
+        for color in "rbmgk":
+            line_styles.append(line+color)
+    n_style = len(line_styles)
+    for i_plot, plot_label in enumerate(labels):
+        line_style = line_styles[i_plot % n_style]
+        vals = population.populations[plot_label]
+        ax.plot(
+            population.steps,
+            vals, 
+            line_style,
+            label=plot_label, linewidth=2)
+    ax.set_xlabel('year')
+    ax.set_ylabel('population')
     ax.legend(
         bbox_to_anchor=(1.05, 1), 
         loc=2, borderaxespad=0., prop={'size':8})

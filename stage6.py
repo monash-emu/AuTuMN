@@ -91,14 +91,18 @@ if __name__ == "__main__":
     }
 
     population.times = population.steps
-    plotting.plot_fraction_subgroups(population, subgroups["active"])
-    pylab.savefig('Stage6.fraction.active.png', dpi=300)
-    plotting.plot_fraction_subgroups(population, subgroups["infectious"])
-    pylab.savefig('Stage6.fraction.infectious.png', dpi=300)
+
+    for key, subgroup in subgroups.items():
+        plotting.plot_population_subgroups(population, subgroups[key])
+        pylab.savefig('Stage6.population.%s.png' % key, dpi=300)
+        plotting.plot_fraction_subgroups(population, subgroups[key])
+        pylab.savefig('Stage6.fraction.%s.png' % key, dpi=300)
+
     plotting.plot_fractions(population, population.labels[:])
     pylab.savefig('Stage6.fraction.png', dpi=300)
     plotting.plot_populations(population, population.labels[:])
     pylab.savefig('Stage6.population.png', dpi=300)
+
     plotting.plot_vars(population, ['rate_incidence'])
     pylab.savefig('Stage6.rate.png', dpi=300)
 

@@ -127,6 +127,55 @@ def plot_populations(population, plot_labels, png=None):
         loc=2, borderaxespad=0., prop={'size':8})
 
 
+def plot_fraction_subgroups(population, subgroup, png=None):
+    steps = population.steps
+    total_population = []
+    n_step = len(steps)
+    labels = []
+    for subgroup_tag in subgroup:
+        for label in population.labels:
+            if subgroup_tag in label and label not in labels:
+                labels.append(label)
+
+    print labels
+
+    for i in range(n_step):
+        for label in labels:
+            val = 0.0
+            val += population.populations[label]
+        total_population.append(i)
+    print total_population
+    
+
+    line_styles = []
+    for line in ["-", ":", "-.", "--"]:
+        for color in "rbmgk":
+            line_styles.append(line+color)
+    n_style = len(line_styles)
+    fig = pyplot.figure()
+    ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
+    # ax.plot(
+    #     population.steps,
+    #     total_population,
+    #     'orange',
+    #     label="total", linewidth=2)
+
+    for i_plot, plot_label in enumerate(labels):
+        line_style = line_styles[i_plot % n_style]
+        vals = population.populations[plot_label]
+        vals = [v/t for v, t in zip(vals, total_population)]
+        ax.plot(
+            population.steps,
+            vals, 
+            line_style,
+            label=plot_label, linewidth=2)
+    ax.set_xlabel('year')
+    ax.set_ylabel('fraction')
+    ax.legend(
+        bbox_to_anchor=(1.05, 1), 
+        loc=2, borderaxespad=0., prop={'size':8})
+
+
 def plot_vars(population, labels, png=None):
     line_styles = []
     for line in ["-", ":", "-.", "--"]:

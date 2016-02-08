@@ -12,11 +12,7 @@
 
 
 from autumn.model import Stage6PopulationSystem
-<<<<<<< HEAD:stage6.py
 import autumn.plotting as plotting
-=======
-from autumn.plotting import plot_fractions_jt, plot_populations
->>>>>>> 8d4c471fddb4327c13a919398230d2b03f434ca0:stage6_jt.py
 import pylab
 import os
 import numpy
@@ -27,11 +23,7 @@ from pprint import pprint
 
 if __name__ == "__main__":
     parameter_method = "ppf"
-<<<<<<< HEAD:stage6.py
-    ppf_value = uniform.rvs(size=18)
-=======
     # ppf_value = uniform.rvs(size=18)
->>>>>>> 8d4c471fddb4327c13a919398230d2b03f434ca0:stage6_jt.py
     ppf_value = 0.5 * numpy.ones(18)
 
     input_parameters = \
@@ -89,13 +81,19 @@ if __name__ == "__main__":
     population.make_n_steps(1950., 2015., 20)
     population.integrate_explicit()
 
+    subgroups = {
+        "ever_infected": ["suscptible_treated", "latent", "active", "missed", "detect", "treatment"],
+        "infected": ["latent", "active", "missed", "detect", "treatment"],
+        "active": ["active", "missed", "detect", "treatment"],
+        "infectious": ["active", "missed", "detect", "treatment_infect"],
+        "identified": ["detect", "treatment"],
+        "treatment": ["treatment"]
+    }
 
     population.times = population.steps
-<<<<<<< HEAD:stage6.py
+    plotting.plot_fraction_subgroups(population, subgroups["active"])
+    pylab.savefig('Stage6.fraction.active.png', dpi=300)
     plotting.plot_fractions(population, population.labels[:])
-=======
-    plot_fractions_jt(population, population.labels_active[:])
->>>>>>> 8d4c471fddb4327c13a919398230d2b03f434ca0:stage6_jt.py
     pylab.savefig('Stage6.fraction.png', dpi=300)
     plotting.plot_populations(population, population.labels[:])
     pylab.savefig('Stage6.population.png', dpi=300)

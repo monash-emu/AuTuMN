@@ -246,9 +246,17 @@ class BasePopulationSystem():
         i_label = self.labels.index(label)
         return self.soln_array[:, i_label]
 
+    def get_compartment_soln(self, label):
+        i_label = self.labels.index(label)
+        return self.soln_array[:, i_label]
+
     def get_var_soln(self, label):
         i_label = self.var_labels.index(label)
         return self.var_array[:, i_label]
+
+    def get_flow_soln(self, label):
+        i_label = self.labels.index(label)
+        return self.flow_array[:, i_label]
 
     def load_state(self, i_time):
         self.time = self.times[i_time]

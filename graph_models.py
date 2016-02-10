@@ -1,37 +1,23 @@
-
-from autumn.model import \
-    SingleStrainSystem, \
-    ThreeStrainSystem, \
-    Stage6PopulationSystem
-from stage4 import ThreeStrainSystem
-
-from autumn.plotting import plot_fractions, plot_populations
-import pylab
-
 import os
+import autumn.model
+import autumn.plotting
 
 os.system('rm -rf models')
 os.makedirs('models')
 
-for name, ModelClass in [
-        ('single.strain', SingleStrainSystem),
-        ('three.strain', ThreeStrainSystem),
-        # ('stage6', Stage6PopulationSystem),
+for name, Model in [
+        ('single.strain', autumn.model.SingleStrainSystem),
+        ('three.strain', autumn.model.ThreeStrainSystem),
+        ('three.strain.identi', autumn.model.Stage6PopulationSystem),
     ]:
     print 'running', name
-
-    model = ModelClass()
-    model.set_flows()
-
     base = os.path.join('models', name)
+    model = Model()
+    model.set_flows()
     model.make_graph(base + '.workflow')
-
-    model.make_times(1700, 2050, 0.05)
+    model.make_times(1900, 2050, 0.05)
     model.integrate_explicit()
-
-    plot_fractions(model, model.labels, base + '.fraction.png')
-
-    plot_populations(model, model.labels, base + '.population.png')
-
+    autumn.plotting.plot_fractions(model, model.labels, base + '.fraction.png')
+    autumn.plotting.plot_populations(model, model.labels, base + '.population.png')
 
 os.system('open models/*png')

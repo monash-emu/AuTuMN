@@ -1,5 +1,5 @@
 
-from ..parameter import Parameter, Evidence
+from parameter import Parameter, Evidence
 
 # EVIDENCE_____________________________________________________________________
 

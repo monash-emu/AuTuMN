@@ -14,8 +14,8 @@ from scipy.integrate import odeint
 from scipy import exp, log
 import numpy
 
-import settings.default as parameter_setting
-import settings.philippines as philippines_parameters
+from settings import default
+from settings import philippines 
 
 
 def add_unique_tuple_to_list(a_list, a_tuple):
@@ -659,73 +659,80 @@ class ThreeStrainSystem(BasePopulationSystem):
 
 
 
-class Stage6PopulationSystem(BasePopulationSystem):
-
+class ThreeStrainFullTreatmentSystem(BasePopulationSystem):
     """
     This model based on James' thesis
     """
 
     def __init__(self, input_parameters=None, input_compartments=None):
+
+        BasePopulationSystem.__init__(self)
+
         if input_parameters is None:
-            parameter_method = "ppf"
-            # ppf_value = uniform.rvs(size=18)
-            ppf_value = 0.5 * numpy.ones(18)
 
-            input_parameters = \
-                {"demo_rate_birth": 20. / 1e3,
-                 "demo_rate_death": 1. / 65,
-                 "epi_proportion_cases_smearpos": 0.6,
-                 "epi_proportion_cases_smearneg": 0.2,
-                 "epi_proportion_cases_extrapul": 0.2,
-                 "tb_multiplier_force_smearpos": 1.,
-                 "tb_multiplier_force_smearneg":
-                    getattr(parameter_setting.multiplier_force_smearneg, parameter_method)(ppf_value[0]),
-                 "tb_multiplier_force_extrapul": 0.,
-                 "tb_n_contact":
-                    getattr(parameter_setting.tb_n_contact, parameter_method)(ppf_value[1]),
-                 "tb_proportion_early_progression":
-                    getattr(parameter_setting.proportion_early_progression, parameter_method)(ppf_value[2]),
-                 "tb_timeperiod_early_latent":
-                    getattr(parameter_setting.timeperiod_early_latent, parameter_method)(ppf_value[3]),
-                 "tb_rate_late_progression":
-                    getattr(parameter_setting.rate_late_progression, parameter_method)(ppf_value[4]),
-                 "tb_proportion_casefatality_untreated_smearpos":
-                    getattr(parameter_setting.proportion_casefatality_active_untreated_smearpos, parameter_method)(ppf_value[5]),
-                 "tb_proportion_casefatality_untreated_smearneg":
-                    getattr(parameter_setting.proportion_casefatality_active_untreated_smearneg, parameter_method)(ppf_value[6]),
-                 "tb_timeperiod_activeuntreated":
-                    getattr(parameter_setting.timeperiod_activeuntreated, parameter_method)(ppf_value[7]),
-                 "tb_multiplier_bcg_protection":
-                    getattr(parameter_setting.multiplier_bcg_protection, parameter_method)(ppf_value[8]),
-                 "program_prop_vac":
-                    getattr(philippines_parameters.bcg_coverage, parameter_method)(ppf_value[9]),
-                 "program_prop_unvac":
-                    1 - getattr(philippines_parameters.bcg_coverage, parameter_method)(ppf_value[9]),
-                 "program_proportion_detect":
-                    getattr(philippines_parameters.bcg_coverage, parameter_method)(ppf_value[10]),
-                 "program_algorithm_sensitivity":
-                    getattr(philippines_parameters.algorithm_sensitivity, parameter_method)(ppf_value[11]),
-                 "program_rate_start_treatment":
-                     1. / getattr(philippines_parameters.program_timeperiod_delayto_treatment, parameter_method)(ppf_value[12]),
-                 "tb_timeperiod_treatment":
-                    getattr(parameter_setting.timeperiod_treatment_ds, parameter_method)(ppf_value[13]),
-                 "tb_timeperiod_infect_ontreatment":
-                    getattr(parameter_setting.timeperiod_infect_ontreatment, parameter_method)(ppf_value[14]),
-                 "program_proportion_default":
-                    getattr(philippines_parameters.proportion_default, parameter_method)(ppf_value[15]),
-                 "program_proportion_death":
-                    getattr(philippines_parameters.proportion_death, parameter_method)(ppf_value[16]),
-                 "program_rate_restart_presenting":
-                    1. / getattr(philippines_parameters.timeperiod_norepresentation, parameter_method)(ppf_value[17])}
+            def get(param_set_name, param_name, prob=0.5):
+                param_set = globals()[param_set_name]
+                param = getattr(param_set, param_name)
+                ppf = getattr(param, "ppf")
+                return ppf(prob)
 
-        if input_compartments is None:
-            input_compartments = {"susceptible_fully": 1e6, "active": 3.}
+            input_parameters = {
+                "demo_rate_birth": 20. / 1e3,
+                "demo_rate_death": 1. / 65,
+                "epi_proportion_cases_smearpos": 0.6,
+                "epi_proportion_cases_smearneg": 0.2,
+                "epi_proportion_cases_extrapul": 0.2,
+                "tb_multiplier_force_smearpos": 1.,
+                "tb_multiplier_force_smearneg":
+                    get("default", "multiplier_force_smearneg"),
+                "tb_multiplier_force_extrapul": 0.,
+                "tb_n_contact":
+                    get("default", "tb_n_contact"),
+                "tb_proportion_early_progression":
+                    get("default", "proportion_early_progression"),
+                "tb_timeperiod_early_latent":
+                    get("default", "timeperiod_early_latent"),
+                "tb_rate_late_progression":
+                    get("default", "rate_late_progression"),
+                "tb_proportion_casefatality_untreated_smearpos":
+                    get("default", "proportion_casefatality_active_untreated_smearpos"),
+                "tb_proportion_casefatality_untreated_smearneg":
+                    get("default", "proportion_casefatality_active_untreated_smearneg"),
+                "tb_timeperiod_activeuntreated":
+                    get("default", "timeperiod_activeuntreated"),
+                "tb_multiplier_bcg_protection":
+                    get("default", "multiplier_bcg_protection"),
+                "program_prop_vac":
+                    get("philippines", "bcg_coverage"),
+                "program_prop_unvac":
+                    1. - get("philippines", "bcg_coverage"),
+                "program_proportion_detect":
+                    get("philippines", "bcg_coverage"),
+                "program_algorithm_sensitivity":
+                    get("philippines", "algorithm_sensitivity"),
+                "program_rate_start_treatment":
+                    1. / get("philippines", "program_timeperiod_delayto_treatment"),
+                "tb_timeperiod_treatment":
+                    get("default", "timeperiod_treatment_ds"),
+                "tb_timeperiod_infect_ontreatment":
+                    get("default", "timeperiod_infect_ontreatment"),
+                "program_proportion_default":
+                    get("philippines", "proportion_default"),
+                "program_proportion_death":
+                    get("philippines", "proportion_death"),
+                "program_rate_restart_presenting":
+                    1. / get("philippines", "timeperiod_norepresentation")
+            }
+
+         if input_compartments is None:
+            input_compartments = {
+                "susceptible_fully": 1e6,
+                "active": 3.
+            }
 
         self.set_input(input_parameters, input_compartments)
 
     def set_input(self, input_parameters, input_compartments):
-
-        BasePopulationSystem.__init__(self)
 
         compartment_list = [
             "susceptible_fully", 

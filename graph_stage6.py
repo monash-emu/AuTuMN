@@ -11,7 +11,7 @@
 """
 
 
-from autumn.model import Stage6PopulationSystem
+import autumn.model
 import autumn.plotting as plotting
 import pylab
 import os
@@ -20,15 +20,14 @@ from scipy.stats import uniform
 
 if __name__ == "__main__":
 
-
     if not os.path.isdir('stage6'):
         os.makedirs('stage6')
 
-    population = Stage6PopulationSystem()
-    population.set_flows()
-    population.make_graph(os.path.join('stage6', 'flow_chart.png'))
-    population.make_times_with_n_step(1950., 2015., 20)
-    population.integrate_explicit()
+    model = autumn.model.ThreeStrainFullTreatmentSystem()
+    model.set_flows()
+    model.make_graph(os.path.join('stage6', 'flow_chart.png'))
+    model.make_times_with_n_step(1950., 2015., 20)
+    model.integrate_explicit()
 
     groups = {
         "ever_infected": ["suscptible_treated", "latent", "active", "missed", "detect", "treatment"],
@@ -39,20 +38,20 @@ if __name__ == "__main__":
         "treatment": ["treatment"]
     }
     for title, tags in groups.items():
-        plotting.plot_population_group(population, title, tags)
-        pylab.savefig(os.path.join('stage6', '%s.population.png' % title), dpi=300)
-        plotting.plot_fraction_group(population, title, tags)
+        plotting.plot_population_group(model, title, tags)
+        pylab.savefig(os.path.join('stage6', '%s.model.png' % title), dpi=300)
+        plotting.plot_fraction_group(model, title, tags)
         pylab.savefig(os.path.join('stage6', '%s.fraction.png' % title), dpi=300)
 
-    plotting.plot_fractions(population, population.labels[:])
+    plotting.plot_fractions(model, model.labels[:])
     pylab.savefig(os.path.join('stage6', 'fraction.png'), dpi=300)
-    plotting.plot_populations(population, population.labels[:])
-    pylab.savefig(os.path.join('stage6', 'population.png'), dpi=300)
+    plotting.plot_populations(model, model.labels[:])
+    pylab.savefig(os.path.join('stage6', 'model.png'), dpi=300)
 
-    plotting.plot_vars(population, ['incidence', 'prevalence', 'mortality'])
+    plotting.plot_vars(model, ['incidence', 'prevalence', 'mortality'])
     pylab.savefig(os.path.join('stage6', 'rates.png'), dpi=300)
 
-    plotting.plot_flows(population, ['latent_early'])
+    plotting.plot_flows(model, ['latent_early'])
     pylab.savefig(os.path.join('stage6', 'flows.png'), dpi=300)
 
     import platform

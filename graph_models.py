@@ -8,7 +8,7 @@ os.makedirs('models')
 for name, Model in [
         ('single.strain', autumn.model.SingleStrainSystem),
         ('three.strain', autumn.model.ThreeStrainSystem),
-        ('three.strain.identi', autumn.model.Stage6PopulationSystem),
+        ('three.strain.identi', autumn.model.ThreeStrainFullTreatmentSystem),
     ]:
     print 'running', name
     base = os.path.join('models', name)

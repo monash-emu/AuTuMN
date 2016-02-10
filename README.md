@@ -93,7 +93,7 @@ mortality - sum(flows to tb_death) / population * 100,000
 
 
 
-# Phillipines test set (2014)
+# Philippines test set (2014)
 
 - 2013 - 98 million susceptible
 - active 0.4% 400 in 100,000

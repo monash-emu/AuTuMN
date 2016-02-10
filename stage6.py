@@ -19,7 +19,6 @@ import numpy
 from scipy.stats import uniform
 import autumn.settings.default as parameter_setting
 import autumn.settings.philippines as philippines_parameters
-from pprint import pprint
 
 if __name__ == "__main__":
     parameter_method = "ppf"
@@ -75,16 +74,16 @@ if __name__ == "__main__":
 
     input_compartments = {"susceptible_fully": 1e6, "active": 3.}
 
-    if not os.path.isdir('Stage6'):
-        os.makedirs('Stage6')
+    if not os.path.isdir('stage6'):
+        os.makedirs('stage6')
 
     population = Stage6PopulationSystem(input_parameters, input_compartments)
     population.set_flows()
-    population.make_graph(os.path.join('Stage6', 'flow_chart.png'))
-    population.make_n_steps(1950., 2015., 20)
+    population.make_graph(os.path.join('stage6', 'flow_chart.png'))
+    population.make_times_with_n_step(1950., 2015., 20)
     population.integrate_explicit()
 
-    subgroups = {
+    groups = {
         "ever_infected": ["suscptible_treated", "latent", "active", "missed", "detect", "treatment"],
         "infected": ["latent", "active", "missed", "detect", "treatment"],
         "active": ["active", "missed", "detect", "treatment"],
@@ -93,33 +92,29 @@ if __name__ == "__main__":
         "treatment": ["treatment"]
     }
 
-
-    population.times = population.steps
-
-    for key, subgroup in subgroups.items():
-        plotting.plot_population_subgroups(population, key, subgroup)
-        pylab.savefig(os.path.join('Stage6', 'population.%s.png' % key), dpi=300)
-        plotting.plot_fraction_subgroups(population, key, subgroup)
-        pylab.savefig(os.path.join('Stage6', 'fraction.%s.png' % key), dpi=300)
+    for title, tags in groups.items():
+        plotting.plot_population_group(population, title, tags)
+        pylab.savefig(os.path.join('stage6', '%s.population.png' % title), dpi=300)
+        plotting.plot_fraction_group(population, title, tags)
+        pylab.savefig(os.path.join('stage6', '%s.fraction.png' % title), dpi=300)
 
     plotting.plot_fractions(population, population.labels[:])
-    pylab.savefig(os.path.join('Stage6', 'fraction.png'), dpi=300)
+    pylab.savefig(os.path.join('stage6', 'fraction.png'), dpi=300)
     plotting.plot_populations(population, population.labels[:])
-    pylab.savefig(os.path.join('Stage6', 'population.png'), dpi=300)
+    pylab.savefig(os.path.join('stage6', 'population.png'), dpi=300)
 
-    plotting.plot_vars(population, ['rate_incidence'])
-    pylab.savefig(os.path.join('Stage6', 'rate.png'), dpi=300)
+    plotting.plot_vars(population, ['incidence', 'prevalence', 'mortality'])
+    pylab.savefig(os.path.join('stage6', 'rates.png'), dpi=300)
 
     plotting.plot_flows(population, ['latent_early'])
-    pylab.savefig(os.path.join('Stage6', 'latent_early.png'), dpi=300)
+    pylab.savefig(os.path.join('stage6', 'flows.png'), dpi=300)
 
     import platform
-    import subprocess
     import os
     import glob
     operating_system = platform.system()
     if 'Windows' in operating_system:
-        os.system("start " + " ".join(glob.glob(os.path.join('Stage6', '*png'))))
+        os.system("start " + " ".join(glob.glob(os.path.join('stage6', '*png'))))
     elif 'Darwin' in operating_system:
-        os.system('open ' + os.path.join('Stage6', '*.png'))
+        os.system('open ' + os.path.join('stage6', '*.png'))
 

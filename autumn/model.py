@@ -42,35 +42,38 @@ class BasePopulationSystem():
     def __init__(self):
         self.labels = []
         self.init_compartments = {}
-        self.flows = {}
+        self.params = {}
+        self.times = None
+
         self.vars = {}
+
+        self.soln_array = None
+        self.var_labels = None
         self.var_array = None
         self.flow_array = None
-        self.params = {}
+
+        self.flows = {}
         self.fixed_transfer_rate_flows = []
         self.infection_death_rate_flows = []
         self.var_transfer_rate_flows = []
         self.var_flows = []
-        self.times = None
 
-    def make_steps(self, start, end, delta):
+    def make_times(self, start, end, delta):
         "Return steps with n or delta"
-        self.steps = []
+        self.times = []
         step = start
         while step <= end:
-            self.steps.append(step)
+            self.times.append(step)
             step += delta
-        self.times = self.steps
 
-    def make_n_steps(self, start, end, n):
+    def make_times_with_n_step(self, start, end, n):
         "Return steps with n or delta"
-        self.steps = []
+        self.times = []
         step = start
         delta = (end - start) / float(n)
         while step <= end:
-            self.steps.append(step)
+            self.times.append(step)
             step += delta
-        self.times = self.steps
 
     def set_compartment(self, label, init_val=0.0):
         if label not in self.labels:
@@ -113,7 +116,17 @@ class BasePopulationSystem():
             self.var_flows,
             (label, vars_label))
 
+    def calculate_vars(self):
+        """
+        Calculate self.vars that only depend on compartment values
+        """
+        pass
+
     def calculate_flows(self):
+        """
+        Calculate flows, which should only depend on compartment values
+        and self.vars calculated in calculate_vars.
+        """
         for label in self.labels:
             self.flows[label] = 0.0
 
@@ -128,17 +141,13 @@ class BasePopulationSystem():
             self.flows[to_label] += val
 
         # fixed-rate flows
-        self.vars["rate_incidence"] = 0.0
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
             val = self.compartments[from_label] * rate
             self.flows[from_label] -= val
             self.flows[to_label] += val
-            if 'latent' in from_label and 'active' in to_label:
-                self.vars["rate_incidence"] += val
 
         # normal death flows
         self.vars["rate_death"] = 0.0
-
         for label in self.labels:
             val = self.compartments[label] * self.death_rate
             self.flows[label] -= val
@@ -150,9 +159,6 @@ class BasePopulationSystem():
             val = self.compartments[label] * rate
             self.flows[label] -= val
             self.vars["rate_infection_death"] += val
-
-    def calculate_vars(self):
-        pass
 
     def make_derivate_fn(self):
 
@@ -168,17 +174,25 @@ class BasePopulationSystem():
 
         return derivative_fn
 
-    def integrate_scipy(self):
+    def init_run(self):
         self.set_flows()
-        assert not self.times is None
+        self.var_labels = None
+        self.soln_array = None
+        self.var_array = None
+        self.flow_array = None
+
+    def integrate_scipy(self):
+        self.init_run()
+        assert not self.times is None, "Haven't set times yet"
         init_y = self.get_init_list()
         derivative = self.make_derivate_fn()
         self.soln_array = odeint(derivative, init_y, self.times)
-        self.calculate_fractions()
+
+        self.calculate_diagnostics()
         
     def integrate_explicit(self, min_dt=0.05):
-        self.set_flows()
-        assert not self.times is None
+        self.init_run()
+        assert not self.times is None, "Haven't set times yet"
         y = self.get_init_list()
         n_component = len(y)
         n_time = len(self.times)
@@ -200,61 +214,77 @@ class BasePopulationSystem():
                     y[i] = y[i] + dt * f[i]
             if i_time < n_time - 1:
                 self.soln_array[i_time+1,:] = y
-        self.calculate_fractions()
 
-    def calculate_fractions(self):
-        self.populations = {}
+        self.calculate_diagnostics()
+
+    def calculate_diagnostic_vars(self):
+        """
+        Calculate diagnostic vars that can depend on self.flows as
+        well as self.vars calculated in calculate_vars
+        """
+        pass
+        
+    def calculate_diagnostics(self):
+        self.population_soln = {}
         for label in self.labels:
-            if label not in self.populations:
-                self.populations[label] = self.get_compartment_soln(label)
+            if label in self.population_soln:
+                continue
+            self.population_soln[label] = self.get_compartment_soln(label)
 
-        self.total_population = []
-        n = len(self.times)
-        for i in range(n):
+        self.total_population_soln = []
+        n_time = len(self.times)
+        for i in range(n_time):
             t = 0.0
             for label in self.labels:
-                t += self.populations[label][i]
-            self.total_population.append(t)
+                t += self.population_soln[label][i]
+            self.total_population_soln.append(t)
 
-        self.fractions = {}
+        self.fraction_soln = {}
         for label in self.labels:
-            self.fractions[label] = [
+            self.fraction_soln[label] = [
                 v/t 
                 for v, t in 
                 zip(
-                    self.populations[label], 
-                    self.total_population
+                    self.population_soln[label],
+                    self.total_population_soln
                 )
             ]
 
-        self.var_labels = self.vars.keys()
-        n = len(self.times)
-        self.var_array = numpy.zeros((n, len(self.var_labels)))
-        self.flow_array = numpy.zeros((n, len(self.labels)))
-        for i in range(n):
-            t = 0.0
+        n_time = len(self.times)
+        for i in range(n_time):
+
             for label in self.labels:
-                self.compartments[label] = self.populations[label][i]
+                self.compartments[label] = self.population_soln[label][i]
+
             self.calculate_vars()
+            self.calculate_flows()
+            self.calculate_diagnostic_vars()
+
+            # only set after self.calculate_diagnostic_vars is
+            # run so that we have all var_labels, including
+            # the ones in calculate_diagnostic_vars
+            if self.var_labels is None:
+                self.var_labels = self.vars.keys()
+                self.var_array = numpy.zeros((n_time, len(self.var_labels)))
+                self.flow_array = numpy.zeros((n_time, len(self.labels)))
+
             for i_label, label in enumerate(self.var_labels):
                 self.var_array[i, i_label] = self.vars[label]
-            self.calculate_flows()
             for i_label, label in enumerate(self.labels):
                 self.flow_array[i, i_label] = self.flows[label]
 
     def get_compartment_soln(self, label):
-        i_label = self.labels.index(label)
-        return self.soln_array[:, i_label]
-
-    def get_compartment_soln(self, label):
+        assert self.soln_array is not None, "calculate_diagnostics has not been run"
         i_label = self.labels.index(label)
         return self.soln_array[:, i_label]
 
     def get_var_soln(self, label):
+        assert self.var_array is not None, "calculate_diagnostics has not been run"
         i_label = self.var_labels.index(label)
         return self.var_array[:, i_label]
 
     def get_flow_soln(self, label):
+        assert self.flow_array is not None, "calculate_diagnostics has not been run"
         i_label = self.labels.index(label)
         return self.flow_array[:, i_label]
 
@@ -266,6 +296,16 @@ class BasePopulationSystem():
         self.calculate_vars()
     
     def checks(self, error_margin=0.1):
+        """
+        Assertion run during the simulation, should be overriden
+        for each model.
+
+        Args:
+            error_margin: acceptable difference between target invariants
+
+        Returns:
+
+        """
         # Check all compartments are positive
         for label in self.labels:  
             assert self.compartments[label] >= 0.0
@@ -278,32 +318,6 @@ class BasePopulationSystem():
 
     def make_graph(self, png):
         from graphviz import Digraph
-
-        styles = {
-            'graph': {
-                # 'label': 'A Fancy Graph',
-                'fontsize': '16',
-                'fontcolor': 'white',
-                'bgcolor': '#333333',
-                'rankdir': 'BT',
-            },
-            'nodes': {
-                'fontname': 'Helvetica',
-                'shape': 'box',
-                'fontcolor': 'white',
-                'color': 'white',
-                'style': 'filled',
-                'fillcolor': '#006699',
-            },
-            'edges': {
-                'style': 'dashed',
-                'color': 'white',
-                'arrowhead': 'open',
-                'fontname': 'Courier',
-                'fontsize': '12',
-                'fontcolor': 'white',
-            }
-        }
 
         styles = {
             'graph': {
@@ -358,9 +372,9 @@ class BasePopulationSystem():
             self, label, equil_time, test_fraction_diff):
         is_converged = True
         labels = self.labels
-        self.calculate_fractions()
+        self.calculate_diagnostics()
         times = self.times
-        fraction = self.fractions[label]
+        fraction = self.fraction_soln[label]
         i = -2
         max_fraction_diff = 0
         time_diff = 0
@@ -810,6 +824,23 @@ class Stage6PopulationSystem(BasePopulationSystem):
                 "treatment_noninfect" + status,
                 "program_rate_death_noninfect")
 
+    def calculate_diagnostic_vars(self):
 
+        rate_incidence = 0.0
+        for from_label, to_label, rate in self.fixed_transfer_rate_flows:
+            if 'latent' in from_label and 'active' in to_label:
+                val = self.compartments[from_label] * rate
+                rate_incidence += val
 
+        self.vars["incidence"] = \
+              rate_incidence \
+            / self.vars["population"] * 1E5
+
+        self.vars["mortality"] = \
+              self.vars["rate_infection_death"] \
+            / self.vars["population"] * 1E5
+
+        self.vars["prevalence"] = \
+              self.vars["infectious_population"] \
+            / self.vars["population"] * 1E5
 

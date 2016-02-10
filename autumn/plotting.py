@@ -11,245 +11,157 @@ Module for plotting population systems
 """
 
 
-def make_time_plots_color(
-        population, plot_labels, png=None):
-
-    n_row = int(math.ceil(len(plot_labels) / 2.))
-    n_col=2
-    colors = ('r', 'b', 'm', 'g', 'k') 
-    for i_plot, plot_label in enumerate(plot_labels):
-        pylab.subplot(n_row, n_col, i_plot+1)
-        pylab.plot(
-            population.times, 
-            population.get_compartment_soln(plot_label),
-            linewidth=2,
-            color=colors[i_plot % len(colors)])
-        pylab.ylabel(plot_label)
-        pylab.xlabel('time')
-        pylab.tight_layout()
-    
-    if png is None:
-        pylab.show()
-    else:
-        pylab.savefig(png)
-
-
-def make_time_plots_one_panel(
-        population, plot_labels0, plot_labels1, png=None):
-
-    line_styles = ['-r', '-b', '-m', '-g', '-k']
-    for subplot_index, plot_labels in [(210, plot_labels0), (211, plot_labels1)]:
-        pylab.subplot(subplot_index)
-        for plot_label, line_style in zip(plot_labels, line_styles):
-            pylab.plot(
-                population.times, 
-                population.get_compartment_soln(plot_label),
-                line_style,
-                label=plot_label.title(), linewidth=2)
-        pylab.xlabel('Time')
-        pylab.ylabel('Number of patients')
-        pylab.legend(loc=0)
-    pylab.show()
-
-
-
-def plot_fractions(population, plot_labels, png=None):
+def make_default_line_styles():
     line_styles = []
     for line in ["-", ":", "-.", "--"]:
         for color in "rbmgk":
-            line_styles.append(line+color)
-    n_style = len(line_styles)
+            line_styles.append(line + color)
+    return line_styles
+
+
+def make_axes_with_room_for_legend():
     fig = pyplot.figure()
     ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
-    for i_plot, plot_label in enumerate(plot_labels):
+    return ax
+
+
+def set_axes_props(
+        ax, xlabel=None, ylabel=None, title=None, is_legend=True):
+    if xlabel is not None:
+        ax.set_xlabel(xlabel)
+    if ylabel is not None:
+        ax.set_ylabel(ylabel)
+    if is_legend:
+        ax.legend(
+            bbox_to_anchor=(1.05, 1),
+            loc=2, borderaxespad=0., prop={'size':8})
+    if title is not None:
+        ax.set_title(title)
+
+
+def plot_fractions(model, labels, png=None):
+    ax = make_axes_with_room_for_legend()
+    line_styles = make_default_line_styles()
+    n_style = len(line_styles)
+    for i_plot, plot_label in enumerate(labels):
         line_style = line_styles[i_plot % n_style]
         ax.plot(
-            population.steps,
-            population.fractions[plot_label],
+            model.times,
+            model.fraction_soln[plot_label],
             line_style,
             label=plot_label, linewidth=2)
-    ax.set_xlabel('year')
-    ax.set_ylabel('fraction of population')
-    ax.legend(
-        bbox_to_anchor=(1.05, 1), 
-        loc=2, borderaxespad=0., prop={'size':8})
+    set_axes_props(ax, 'year', 'fraction')
 
 
-def plot_fractions_jt(population, plot_labels, png=None):
-    line_styles = []
-    for line in ["-", ":", "-.", "--"]:
-        for color in "rbmgk":
-            line_styles.append(line+color)
+def plot_populations(model, labels, png=None):
+    line_styles = make_default_line_styles()
     n_style = len(line_styles)
-    fig = pyplot.figure()
-    ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
-    fractions_to_plot = population.fractions_active
-    fractions_to_plot = population.fractions
-    for i_plot, plot_label in enumerate(plot_labels):
-        line_style = line_styles[i_plot % n_style]
-        ax.plot(
-            population.steps,
-            fractions_to_plot[plot_label],
-            line_style,
-            label=plot_label, linewidth=2)
-    ax.set_xlabel('year')
-    ax.set_ylabel('fraction of population')
-    ax.legend(
-        bbox_to_anchor=(1.05, 1),
-        loc=2, borderaxespad=0., prop={'size':8})
-
-
-
-def plot_populations(population, plot_labels, png=None):
-    line_styles = []
-    for line in ["-", ":", "-.", "--"]:
-        for color in "rbmgk":
-            line_styles.append(line+color)
-    n_style = len(line_styles)
-    fig = pyplot.figure()
-    ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
+    ax = make_axes_with_room_for_legend()
     ax.plot(
-        population.steps,
-        population.total_population,
+        model.times,
+        model.total_population_soln,
         'orange',
         label="total", linewidth=2)
-    for i_plot, plot_label in enumerate(plot_labels):
+    for i_plot, plot_label in enumerate(labels):
         line_style = line_styles[i_plot % n_style]
         ax.plot(
-            population.steps,
-            population.populations[plot_label], 
+            model.times,
+            model.population_soln[plot_label],
             line_style,
             label=plot_label, linewidth=2)
-    ax.set_xlabel('year')
-    ax.set_ylabel('population')
-    ax.legend(
-        bbox_to_anchor=(1.05, 1), 
-        loc=2, borderaxespad=0., prop={'size':8})
+    set_axes_props(ax, 'year', 'population')
 
 
-def plot_fraction_subgroups(population, subgroup_title, subgroup, png=None):
+def plot_fraction_group(model, title, tags, png=None):
     labels = []
-    for subgroup_tag in subgroup:
-        for label in population.labels:
-            if subgroup_tag in label and label not in labels:
+    for tag in tags:
+        for label in model.labels:
+            if tag in label and label not in labels:
                 labels.append(label)
 
-    steps = population.steps
-    n_step = len(steps)
-
-    total_population = []
-    for i in range(n_step):
-        pops =[population.populations[label][i] for label in labels]
-        total_population.append(sum(pops))
+    group_population_soln = []
+    for i, time in enumerate(model.times):
+        pops =[model.population_soln[label][i] for label in labels]
+        group_population_soln.append(sum(pops))
     
-    fig = pyplot.figure()
-    ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
-    line_styles = []
-    for line in ["-", ":", "-.", "--"]:
-        for color in "rbmgk":
-            line_styles.append(line+color)
+    ax = make_axes_with_room_for_legend()
+    line_styles = make_default_line_styles()
     n_style = len(line_styles)
     for i_plot, plot_label in enumerate(labels):
         line_style = line_styles[i_plot % n_style]
-        vals = population.populations[plot_label]
-        vals = [v/t for v, t in zip(vals, total_population)]
+        vals = [
+            v/t for v, t in
+            zip(
+                model.population_soln[plot_label],
+                group_population_soln)]
         ax.plot(
-            population.steps,
-            vals, 
+            model.times,
+            vals,
             line_style,
             label=plot_label, linewidth=2)
-    ax.set_xlabel('year')
-    ax.set_ylabel('fraction of population')
-    ax.set_title(subgroup_title + ' fraction')
-    ax.legend(
-        bbox_to_anchor=(1.05, 1), 
-        loc=2, borderaxespad=0., prop={'size':8})
+    set_axes_props(
+        ax, 'year', 'fraction of population',
+        title + ' fraction')
 
 
-def plot_population_subgroups(population, subgroup_title, subgroup, png=None, linestyles=None):
+def plot_population_group(model, title, tags, png=None, linestyles=None):
     labels = []
-    for subgroup_tag in subgroup:
-        for label in population.labels:
-            if subgroup_tag in label and label not in labels:
+    for tag in tags:
+        for label in model.labels:
+            if tag in label and label not in labels:
                 labels.append(label)
 
-    steps = population.steps
-    n_step = len(steps)
-
-    total_population = []
-    for i in range(n_step):
-        pops =[population.populations[label][i] for label in labels]
-        total_population.append(sum(pops))
+    group_population_soln = []
+    for i, time in enumerate(model.times):
+        pops =[model.population_soln[label][i] for label in labels]
+        group_population_soln.append(sum(pops))
     
-    fig = pyplot.figure()
-    ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
+    ax = make_axes_with_room_for_legend()
     ax.plot(
-        population.steps,
-        total_population,
+        model.times,
+        group_population_soln,
         'orange',
-        label=subgroup_title + "_total", linewidth=2)
-    line_styles = []
-    for line in ["-", ":", "-.", "--"]:
-        for color in "rbmgk":
-            line_styles.append(line+color)
-    print line_styles
+        label=title + "_total", linewidth=2)
+
+    line_styles = make_default_line_styles()
     n_style = len(line_styles)
     for i_plot, plot_label in enumerate(labels):
         line_style = line_styles[i_plot % n_style]
-        vals = population.populations[plot_label]
         ax.plot(
-            population.steps,
-            vals, 
+            model.times,
+            model.population_soln[plot_label],
             line_style,
             label=plot_label, linewidth=2)
-    ax.set_xlabel('year')
-    ax.set_title(subgroup_title + ' population')
-    ax.set_ylabel('population')
-    ax.legend(
-        bbox_to_anchor=(1.05, 1), 
-        loc=2, borderaxespad=0., prop={'size':8})
+
+    set_axes_props(
+        ax, 'year', 'population',title + ' population')
 
 
-def plot_vars(population, labels, png=None):
-    line_styles = []
-    for line in ["-", ":", "-.", "--"]:
-        for color in "rbmgk":
-            line_styles.append(line+color)
+def plot_vars(model, labels, png=None):
+    line_styles = make_default_line_styles()
     n_style = len(line_styles)
-    fig = pyplot.figure()
-    ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
+    ax = make_axes_with_room_for_legend()
     for i_plot, var_label in enumerate(labels):
         line_style = line_styles[i_plot % n_style]
         ax.plot(
-            population.steps,
-            population.get_var_soln(var_label), 
+            model.times,
+            model.get_var_soln(var_label),
             line_style,
             label=var_label, linewidth=2)
-    ax.set_xlabel('year')
-    ax.set_ylabel('value')
-    ax.legend(
-        bbox_to_anchor=(1.05, 1), 
-        loc=2, borderaxespad=0., prop={'size':8})
+    set_axes_props(ax, 'year', 'value')
 
 
-def plot_flows(population, labels, png=None):
-    line_styles = []
-    for line in ["-", ":", "-.", "--"]:
-        for color in "rbmgk":
-            line_styles.append(line+color)
+def plot_flows(model, labels, png=None):
+    line_styles = make_default_line_styles()
     n_style = len(line_styles)
-    fig = pyplot.figure()
-    ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
+    ax = make_axes_with_room_for_legend()
     for i_plot, label in enumerate(labels):
         line_style = line_styles[i_plot % n_style]
         ax.plot(
-            population.steps,
-            population.get_flow_soln(label),
+            model.times,
+            model.get_flow_soln(label),
             line_style,
             label=label, linewidth=2)
-    ax.set_xlabel('year')
-    ax.set_ylabel('value')
-    ax.legend(
-        bbox_to_anchor=(1.05, 1),
-        loc=2, borderaxespad=0., prop={'size':8})
+    set_axes_props(ax, 'year', 'change / year', 'flows')
+
 

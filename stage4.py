@@ -200,7 +200,7 @@ class Stage4PopulationSystem(BasePopulationSystem):
 if __name__ == "__main__":
 
     population = Stage4PopulationSystem()
-    population.make_steps(0, 50, 1.)
+    population.make_times(0, 50, 1.)
     population.integrate_scipy()
 
     print population.init_

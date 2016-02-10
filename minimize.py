@@ -33,7 +33,7 @@ class ModelRunner():
 
     def __init__(self):
         self.population = Stage4PopulationSystem()
-        self.population.make_steps(0, 100, 1.)
+        self.population.make_times(0, 100, 1.)
         self.param_dict = [
             { 
                 'init': 40,
@@ -90,7 +90,7 @@ class ModelRunner():
         final_pop = self.population.vars["population"]
         prevalence = self.population.vars["infected_populaton"]/final_pop*1E5
         mortality = self.population.vars["rate_infection_death"]/final_pop*1E5
-        incidence = self.population.vars["rate_incidence"]/final_pop*1E5
+        incidence = self.population.vars["incidence"]
 
         ln_prior = 0.0
         ln_prior += make_gamma_dist(40, 20).logpdf(n_tb_contact)
@@ -206,10 +206,10 @@ times = population.times
 for i_sample in numpy.random.randint(n_sample, size=20):
     params = samples[i_sample, :]
     model_runner.run_with_params(params)
-    population.calculate_fractions()
-    pylab.plot(times, population.total_population, color="k", alpha=0.1)
+    population.calculate_diagnostics()
+    pylab.plot(times, population.total_population_soln, color="k", alpha=0.1)
 model_runner.run_with_params(params)
-population.calculate_fractions()
+population.calculate_diagnostics()
 pylab.plot(times, population.get_var_soln("population"), color="r", alpha=0.8)
 pylab.plot(times, population.get_var_soln("infected_populaton"), color="b", alpha=0.8)
 pylab.xlabel('year')

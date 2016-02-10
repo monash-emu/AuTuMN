@@ -16,7 +16,7 @@ import scipy.optimize as optimize
 from numpy import isfinite
 from scipy.stats import beta, gamma, norm, truncnorm
 
-from stage4 import Stage4PopulationSystem
+from stage4 import ThreeStrainSystem
 from autumn.plotting import plot_fractions, plot_populations
 
 
@@ -32,7 +32,7 @@ def make_gamma_dist(mean, std):
 class ModelRunner():
 
     def __init__(self):
-        self.population = Stage4PopulationSystem()
+        self.population = ThreeStrainSystem()
         self.population.make_times(0, 100, 1.)
         self.param_dict = [
             { 

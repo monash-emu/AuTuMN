@@ -51,6 +51,8 @@ def plot_fractions(model, labels, png=None):
             line_style,
             label=plot_label, linewidth=2)
     set_axes_props(ax, 'year', 'fraction')
+    if png is not None:
+        pylab.savefig(png, dpi=300)
 
 
 def plot_populations(model, labels, png=None):
@@ -70,6 +72,8 @@ def plot_populations(model, labels, png=None):
             line_style,
             label=plot_label, linewidth=2)
     set_axes_props(ax, 'year', 'population')
+    if png is not None:
+        pylab.savefig(png, dpi=300)
 
 
 def plot_fraction_group(model, title, tags, png=None):
@@ -102,6 +106,8 @@ def plot_fraction_group(model, title, tags, png=None):
     set_axes_props(
         ax, 'year', 'fraction of population',
         title + ' fraction')
+    if png is not None:
+        pylab.savefig(png, dpi=300)
 
 
 def plot_population_group(model, title, tags, png=None, linestyles=None):
@@ -135,6 +141,8 @@ def plot_population_group(model, title, tags, png=None, linestyles=None):
 
     set_axes_props(
         ax, 'year', 'population',title + ' population')
+    if png is not None:
+        pylab.savefig(png, dpi=300)
 
 
 def plot_vars(model, labels, png=None):
@@ -149,6 +157,8 @@ def plot_vars(model, labels, png=None):
             line_style,
             label=var_label, linewidth=2)
     set_axes_props(ax, 'year', 'value')
+    if png is not None:
+        pylab.savefig(png, dpi=300)
 
 
 def plot_flows(model, labels, png=None):
@@ -163,5 +173,7 @@ def plot_flows(model, labels, png=None):
             line_style,
             label=label, linewidth=2)
     set_axes_props(ax, 'year', 'change / year', 'flows')
+    if png is not None:
+        pylab.savefig(png, dpi=300)
 
 

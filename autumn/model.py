@@ -724,7 +724,7 @@ class ThreeStrainFullTreatmentSystem(BasePopulationSystem):
                     1. / get("philippines", "timeperiod_norepresentation")
             }
 
-         if input_compartments is None:
+        if input_compartments is None:
             input_compartments = {
                 "susceptible_fully": 1e6,
                 "active": 3.
@@ -758,8 +758,9 @@ class ThreeStrainFullTreatmentSystem(BasePopulationSystem):
                     self.set_compartment(compartment, input_compartments[compartment])
                 else:
                     for status in self.pulmonary_status:
-                        self.set_compartment(compartment + status,
-                                             input_compartments[compartment] / 3.)
+                        self.set_compartment(
+                            compartment + status,
+                            input_compartments[compartment] / 3.)
             else:
                 if "susceptible" in compartment or "latent" in compartment:
                     self.set_compartment(compartment, 0.)
@@ -770,64 +771,76 @@ class ThreeStrainFullTreatmentSystem(BasePopulationSystem):
         for parameter in input_parameters:
             self.set_param(parameter, input_parameters[parameter])
 
-        self.set_param("tb_rate_stabilise",
-                       (1 - self.params["tb_proportion_early_progression"]) /
-                       self.params["tb_timeperiod_early_latent"])
+        self.set_param(
+            "tb_rate_stabilise",
+            (1 - self.params["tb_proportion_early_progression"]) /
+                 self.params["tb_timeperiod_early_latent"])
 
         if "tb_proportion_casefatality_untreated_extrapul" not in input_parameters:
             self.set_param("tb_proportion_casefatality_untreated_extrapul",
                             input_parameters["tb_proportion_casefatality_untreated_smearneg"])
 
-        self.set_param("program_rate_detect",
-                       1. / self.params["tb_timeperiod_activeuntreated"] /
-                       (1. - self.params["program_proportion_detect"]))
+        self.set_param(
+            "program_rate_detect",
+            1. / self.params["tb_timeperiod_activeuntreated"] /
+              (1. - self.params["program_proportion_detect"]))
         # Formula derived from CDR = (detection rate) / (detection rate and spontaneous resolution rates)
 
-        self.set_param("program_rate_missed",
-                       self.params["program_rate_detect"] *
-                       (1. - self.params["program_algorithm_sensitivity"]) /
-                       self.params["program_algorithm_sensitivity"])
+        self.set_param(
+            "program_rate_missed",
+            self.params["program_rate_detect"] *
+            (1. - self.params["program_algorithm_sensitivity"]) /
+                  self.params["program_algorithm_sensitivity"])
         # Formula derived from (algorithm sensitivity) = (detection rate) / (detection rate and miss rate)
 
         # Code to determines the treatment flow rates from the input parameters
         self.outcomes = ["_success", "_death", "_default"]
         self.nonsuccess_outcomes = self.outcomes[1:3]
         self.treatment_stages = ["_infect", "_noninfect"]
-        self.set_param("tb_timeperiod_noninfect_ontreatment",  # Find the non-infectious period
-                       self.params["tb_timeperiod_treatment"] -
-                       self.params["tb_timeperiod_infect_ontreatment"])
+        self.set_param(
+            "tb_timeperiod_noninfect_ontreatment",  # Find the non-infectious period
+            self.params["tb_timeperiod_treatment"] -
+            self.params["tb_timeperiod_infect_ontreatment"])
         for outcome in self.nonsuccess_outcomes:  # Find the proportion of deaths/defaults during infectious stage
-            self.set_param("program_proportion" + outcome + "_infect",
-                           1. - exp(log(1. - self.params["program_proportion" + outcome]) *
+            self.set_param(
+                "program_proportion" + outcome + "_infect",
+                1. - exp(log(1. - self.params["program_proportion" + outcome]) *
                                     self.params["tb_timeperiod_infect_ontreatment"] /
                                     self.params["tb_timeperiod_treatment"]))
         for outcome in self.nonsuccess_outcomes:  # Find the proportion of deaths/defaults during non-infectious stage
-            self.set_param("program_proportion" + outcome + "_noninfect",
-                           self.params["program_proportion" + outcome] -
-                           self.params["program_proportion" + outcome + "_infect"])
+            self.set_param(
+                "program_proportion" + outcome + "_noninfect",
+                self.params["program_proportion" + outcome] -
+                self.params["program_proportion" + outcome + "_infect"])
         for treatment_stage in self.treatment_stages:  # Find the success proportions
-            self.set_param("program_proportion_success" + treatment_stage,
-                           1. - self.params["program_proportion_default" + treatment_stage] -
-                           self.params["program_proportion_death" + treatment_stage])
+            self.set_param(
+                "program_proportion_success" + treatment_stage,
+                1. - self.params["program_proportion_default" + treatment_stage] -
+                self.params["program_proportion_death" + treatment_stage])
             for outcome in self.outcomes:  # Find the corresponding rates from the proportions
-                self.set_param("program_rate" + outcome + treatment_stage,
-                               1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment"] *
-                               self.params["program_proportion" + outcome + treatment_stage])
+                self.set_param(
+                    "program_rate" + outcome + treatment_stage,
+                    1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment"] *
+                      self.params["program_proportion" + outcome + treatment_stage])
 
         for status in self.pulmonary_status:
-            self.set_param("tb_rate_earlyprogress" + status,
-                           self.params["tb_proportion_early_progression"]
-                           / self.params["tb_timeperiod_early_latent"]
-                           * self.params["epi_proportion_cases" + status])
-            self.set_param("tb_rate_lateprogress" + status,
-                           self.params["tb_rate_late_progression"]
-                           * self.params["epi_proportion_cases" + status])
-            self.set_param("tb_rate_recover" + status,
-                           (1 - self.params["tb_proportion_casefatality_untreated" + status])
-                           / self.params["tb_timeperiod_activeuntreated"])
-            self.set_param("tb_demo_rate_death" + status,
-                           self.params["tb_proportion_casefatality_untreated" + status]
-                           / self.params["tb_timeperiod_activeuntreated"])
+            self.set_param(
+                "tb_rate_earlyprogress" + status,
+                self.params["tb_proportion_early_progression"]
+                / self.params["tb_timeperiod_early_latent"]
+                * self.params["epi_proportion_cases" + status])
+            self.set_param(
+                "tb_rate_lateprogress" + status,
+                self.params["tb_rate_late_progression"]
+                * self.params["epi_proportion_cases" + status])
+            self.set_param(
+                "tb_rate_recover" + status,
+                (1 - self.params["tb_proportion_casefatality_untreated" + status])
+                  / self.params["tb_timeperiod_activeuntreated"])
+            self.set_param(
+                "tb_demo_rate_death" + status,
+                self.params["tb_proportion_casefatality_untreated" + status]
+                  / self.params["tb_timeperiod_activeuntreated"])
 
         self.infectious_tags = ["active", "missed", "detect", "treatment_infect"]
 

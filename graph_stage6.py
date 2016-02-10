@@ -24,10 +24,10 @@ if __name__ == "__main__":
         os.makedirs('stage6')
 
     model = autumn.model.ThreeStrainFullTreatmentSystem()
-    model.set_flows()
-    model.make_graph(os.path.join('stage6', 'flow_chart.png'))
     model.make_times_with_n_step(1950., 2015., 20)
     model.integrate_explicit()
+
+    model.make_graph(os.path.join('stage6', 'flow_chart.png'))
 
     groups = {
         "ever_infected": ["suscptible_treated", "latent", "active", "missed", "detect", "treatment"],

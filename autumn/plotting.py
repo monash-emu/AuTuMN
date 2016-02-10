@@ -39,20 +39,23 @@ def set_axes_props(
         ax.set_title(title)
 
 
+def save_png(png):
+    if png is not None:
+        pylab.savefig(png, dpi=300)
+
+
 def plot_fractions(model, labels, png=None):
     ax = make_axes_with_room_for_legend()
     line_styles = make_default_line_styles()
     n_style = len(line_styles)
     for i_plot, plot_label in enumerate(labels):
-        line_style = line_styles[i_plot % n_style]
         ax.plot(
             model.times,
             model.fraction_soln[plot_label],
-            line_style,
+            line_styles[i_plot % n_style],
             label=plot_label, linewidth=2)
     set_axes_props(ax, 'year', 'fraction')
-    if png is not None:
-        pylab.savefig(png, dpi=300)
+    save_png(png)
 
 
 def plot_populations(model, labels, png=None):
@@ -65,15 +68,13 @@ def plot_populations(model, labels, png=None):
         'orange',
         label="total", linewidth=2)
     for i_plot, plot_label in enumerate(labels):
-        line_style = line_styles[i_plot % n_style]
         ax.plot(
             model.times,
             model.population_soln[plot_label],
-            line_style,
+            line_styles[i_plot % n_style],
             label=plot_label, linewidth=2)
     set_axes_props(ax, 'year', 'population')
-    if png is not None:
-        pylab.savefig(png, dpi=300)
+    save_png(png)
 
 
 def plot_fraction_group(model, title, tags, png=None):
@@ -92,7 +93,6 @@ def plot_fraction_group(model, title, tags, png=None):
     line_styles = make_default_line_styles()
     n_style = len(line_styles)
     for i_plot, plot_label in enumerate(labels):
-        line_style = line_styles[i_plot % n_style]
         vals = [
             v/t for v, t in
             zip(
@@ -101,13 +101,12 @@ def plot_fraction_group(model, title, tags, png=None):
         ax.plot(
             model.times,
             vals,
-            line_style,
+            line_styles[i_plot % n_style],
             label=plot_label, linewidth=2)
     set_axes_props(
         ax, 'year', 'fraction of population',
         title + ' fraction')
-    if png is not None:
-        pylab.savefig(png, dpi=300)
+    save_png(png)
 
 
 def plot_population_group(model, title, tags, png=None, linestyles=None):
@@ -132,17 +131,15 @@ def plot_population_group(model, title, tags, png=None, linestyles=None):
     line_styles = make_default_line_styles()
     n_style = len(line_styles)
     for i_plot, plot_label in enumerate(labels):
-        line_style = line_styles[i_plot % n_style]
         ax.plot(
             model.times,
             model.population_soln[plot_label],
-            line_style,
+            line_styles[i_plot % n_style],
             label=plot_label, linewidth=2)
 
     set_axes_props(
         ax, 'year', 'population',title + ' population')
-    if png is not None:
-        pylab.savefig(png, dpi=300)
+    save_png(png)
 
 
 def plot_vars(model, labels, png=None):
@@ -150,15 +147,13 @@ def plot_vars(model, labels, png=None):
     n_style = len(line_styles)
     ax = make_axes_with_room_for_legend()
     for i_plot, var_label in enumerate(labels):
-        line_style = line_styles[i_plot % n_style]
         ax.plot(
             model.times,
             model.get_var_soln(var_label),
-            line_style,
+            line_styles[i_plot % n_style],
             label=var_label, linewidth=2)
     set_axes_props(ax, 'year', 'value')
-    if png is not None:
-        pylab.savefig(png, dpi=300)
+    save_png(png)
 
 
 def plot_flows(model, labels, png=None):
@@ -166,14 +161,12 @@ def plot_flows(model, labels, png=None):
     n_style = len(line_styles)
     ax = make_axes_with_room_for_legend()
     for i_plot, label in enumerate(labels):
-        line_style = line_styles[i_plot % n_style]
         ax.plot(
             model.times,
             model.get_flow_soln(label),
-            line_style,
+            line_styles[i_plot % n_style],
             label=label, linewidth=2)
     set_axes_props(ax, 'year', 'change / year', 'flows')
-    if png is not None:
-        pylab.savefig(png, dpi=300)
+    save_png(png)
 
 

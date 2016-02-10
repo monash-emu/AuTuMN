@@ -164,6 +164,8 @@ class ModelRunner():
              for i_param, init_x in enumerate(init_params):
                   init_walkers[i_walker, i_param] = init_x + 1e-1 * init_x * numpy.random.uniform()
         self.sampler.run_mcmc(init_walkers, self.n_mcmc_step)
+        # Emma cautions here that if the step size is proportional to the parameter value,
+        # then detailed balance will not be present.
 
 
 def plot_params(sampler, base):

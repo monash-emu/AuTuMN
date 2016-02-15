@@ -159,6 +159,36 @@ def plot_populations(model, labels, png=None):
     save_png(png)
 
 
+def plot_populations_jt(model, labels, png=None):
+    colours, patterns, compartment_full_names\
+        = make_related_line_styles(model, labels)
+    ax = make_axes_with_room_for_legend()
+    axis_labels = []
+    total_pop_millions = []
+    for i in range(len(model.total_population_soln)):
+        total_pop_millions.append(model.total_population_soln[i] / 1e6)
+    ax.plot(
+        model.times,
+        total_pop_millions,
+        'k',
+        label="total", linewidth=2)
+    axis_labels.append("Total population")
+    for i_plot, plot_label in enumerate(labels):
+        ax.plot(
+            model.times,
+            model.population_soln[plot_label] / 1e6,
+            label=plot_label, linewidth=1,
+            color=colours[plot_label],
+            linestyle=patterns[plot_label])
+        axis_labels.append(compartment_full_names[plot_label])
+    handles, labels = ax.get_legend_handles_labels()
+    set_axes_props(ax, 'Year', 'Million persons',
+                   'Absolute population', False)
+    ax.legend(handles, axis_labels, bbox_to_anchor=(1.05, 1),
+              loc=2, borderaxespad=0., prop={'size': 7})
+    save_png(png)
+
+
 def plot_fraction_group(model, title, tags, png=None):
     labels = []
     for tag in tags:

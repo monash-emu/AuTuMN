@@ -18,6 +18,7 @@ def make_default_line_styles():
             line_styles.append(line + color)
     return line_styles
 
+
 def make_related_line_styles(model, labels):
     colours = {}
     patterns = {}
@@ -60,7 +61,7 @@ def make_related_line_styles(model, labels):
         elif "latent_late" in label:
             compartment_full_names[label] = "Late latency"
         elif "active" in label:
-            compartment_full_names[label] = "Active TB, "
+            compartment_full_names[label] = "Active, yet to present, "
         elif "detect" in label:
             compartment_full_names[label] = "Detected, "
         elif "missed" in label:
@@ -119,6 +120,28 @@ def plot_fractions(model, labels, png=None):
     save_png(png)
 
 
+def find_divisor(total_population_vector):
+    if max(total_population_vector) < 1e3:
+        yaxis_divisor = 1.
+        yaxis_divisor_text = ""
+    elif max(total_population_vector) >= 1e3\
+            and max(total_population_vector) < 1e6:
+        yaxis_divisor = 1e3
+        yaxis_divisor_text = "Thousand"
+    elif max(total_population_vector) >= 1e6:
+        yaxis_divisor = 1e6
+        yaxis_divisor_text = "Million"
+    else:
+        yaxis_divisor = 1.
+        yaxis_divisor_text = ""
+    total_population_vector_toplot = []
+    for i in range(len(total_population_vector)):
+        total_population_vector_toplot.append(total_population_vector[i]
+                                              / yaxis_divisor)
+    return yaxis_divisor, yaxis_divisor_text,\
+           total_population_vector_toplot
+
+
 def plot_fractions_jt(model, labels, png=None):
     colours, patterns, compartment_full_names\
         = make_related_line_styles(model, labels)
@@ -134,7 +157,7 @@ def plot_fractions_jt(model, labels, png=None):
         axis_labels.append(compartment_full_names[plot_label])
     handles, labels = ax.get_legend_handles_labels()
     set_axes_props(ax, 'Year', 'Proportion of population',
-        'Total population by subgroups', False)
+        'Subgroups of total population', False)
     ax.legend(handles, axis_labels, bbox_to_anchor=(1.05, 1),
         loc=2, borderaxespad=0., prop={'size': 7})
     save_png(png)
@@ -164,26 +187,25 @@ def plot_populations_jt(model, labels, png=None):
         = make_related_line_styles(model, labels)
     ax = make_axes_with_room_for_legend()
     axis_labels = []
-    total_pop_millions = []
-    for i in range(len(model.total_population_soln)):
-        total_pop_millions.append(model.total_population_soln[i] / 1e6)
+    yaxis_divisor, yaxis_divisor_text, total_pop_toplot\
+        = find_divisor(model.total_population_soln)
     ax.plot(
         model.times,
-        total_pop_millions,
+        total_pop_toplot,
         'k',
         label="total", linewidth=2)
     axis_labels.append("Total population")
     for i_plot, plot_label in enumerate(labels):
         ax.plot(
             model.times,
-            model.population_soln[plot_label] / 1e6,
+            model.population_soln[plot_label] / yaxis_divisor,
             label=plot_label, linewidth=1,
             color=colours[plot_label],
             linestyle=patterns[plot_label])
         axis_labels.append(compartment_full_names[plot_label])
     handles, labels = ax.get_legend_handles_labels()
     set_axes_props(ax, 'Year', 'Million persons',
-                   'Absolute population', False)
+                   'Subgroups of total population', False)
     ax.legend(handles, axis_labels, bbox_to_anchor=(1.05, 1),
               loc=2, borderaxespad=0., prop={'size': 7})
     save_png(png)
@@ -221,6 +243,44 @@ def plot_fraction_group(model, title, tags, png=None):
     save_png(png)
 
 
+def plot_fraction_group_jt(model, title, tags, png=None):
+    labels = []
+    for tag in tags:
+        for label in model.labels:
+            if tag in label and label not in labels:
+                labels.append(label)
+    colours, patterns, compartment_full_names\
+        = make_related_line_styles(model, labels)
+    group_population_soln = []
+    for i, time in enumerate(model.times):
+        pops = [model.population_soln[label][i] for label in labels]
+        group_population_soln.append(sum(pops))
+    ax = make_axes_with_room_for_legend()
+    axis_labels = []
+    for i_plot, plot_label in enumerate(labels):
+        vals = [
+            v/t for v, t in
+            zip(
+                model.population_soln[plot_label],
+                group_population_soln)]
+        ax.plot(
+            model.times,
+            vals,
+            label=plot_label, linewidth=1,
+            color=colours[plot_label],
+            linestyle=patterns[plot_label])
+        axis_labels.append(compartment_full_names[plot_label])
+    handles, labels = ax.get_legend_handles_labels()
+    if title == "ever_infected":
+        title = "ever infected"
+    set_axes_props(
+        ax, 'Year', 'Fraction of population',
+        'Subgroups within ' + title + ' (proportions)')
+    ax.legend(handles, axis_labels, bbox_to_anchor=(1.05, 1),
+              loc=2, borderaxespad=0., prop={'size': 7})
+    save_png(png)
+
+
 def plot_population_group(model, title, tags, png=None, linestyles=None):
     labels = []
     for tag in tags:
@@ -251,6 +311,46 @@ def plot_population_group(model, title, tags, png=None, linestyles=None):
 
     set_axes_props(
         ax, 'year', 'population',title + ' population')
+    save_png(png)
+
+
+def plot_population_group_jt(model, title, tags, png=None, linestyles=None):
+    labels = []
+    for tag in tags:
+        for label in model.labels:
+            if tag in label and label not in labels:
+                labels.append(label)
+    colours, patterns, compartment_full_names\
+        = make_related_line_styles(model, labels)
+    group_population_soln = []
+    for i, time in enumerate(model.times):
+        pops = [model.population_soln[label][i] for label in labels]
+        group_population_soln.append(sum(pops))
+    yaxis_divisor, yaxis_divisor_text, group_population_soln_toplot \
+        = find_divisor(group_population_soln)
+    ax = make_axes_with_room_for_legend()
+    axis_labels = []
+    ax.plot(
+        model.times,
+        group_population_soln_toplot,
+        'k',
+        label=title + "_total", linewidth=2)
+    axis_labels.append("Total " + title)
+    for i_plot, plot_label in enumerate(labels):
+        ax.plot(
+            model.times,
+            model.population_soln[plot_label] / yaxis_divisor,
+            label=plot_label, linewidth=1,
+            color=colours[plot_label],
+            linestyle=patterns[plot_label])
+        axis_labels.append(compartment_full_names[plot_label])
+    handles, labels = ax.get_legend_handles_labels()
+    if title == "ever_infected":
+        title = "ever infected"
+    set_axes_props(ax, 'Year', yaxis_divisor_text + ' persons',
+                   'Subgroups within ' + title + ' (absolute)', False)
+    ax.legend(handles, axis_labels, bbox_to_anchor=(1.05, 1),
+              loc=2, borderaxespad=0., prop={'size': 7})
     save_png(png)
 
 

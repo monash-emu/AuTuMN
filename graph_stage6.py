@@ -43,7 +43,7 @@ if __name__ == "__main__":
         plotting.plot_fraction_group(model, title, tags)
         pylab.savefig(os.path.join('stage6', '%s.fraction.png' % title), dpi=300)
 
-    plotting.plot_fractions(model, model.labels[:])
+    plotting.plot_fractions_jt(model, model.labels[:])
     pylab.savefig(os.path.join('stage6', 'fraction.png'), dpi=300)
     plotting.plot_populations(model, model.labels[:])
     pylab.savefig(os.path.join('stage6', 'model.png'), dpi=300)

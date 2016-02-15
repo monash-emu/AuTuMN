@@ -686,8 +686,8 @@ class ThreeStrainFullTreatmentSystem(BasePopulationSystem):
                 "tb_multiplier_force_smearneg":
                     get("default", "multiplier_force_smearneg"),
                 "tb_multiplier_force_extrapul": 0.,
-                "tb_n_contact":
-                    get("default", "tb_n_contact"),
+                "tb_n_contact": 30, # Temporarily increasing to get TB going a bit
+                    # get("default", "tb_n_contact"),
                 "tb_proportion_early_progression":
                     get("default", "proportion_early_progression"),
                 "tb_timeperiod_early_latent":
@@ -723,6 +723,7 @@ class ThreeStrainFullTreatmentSystem(BasePopulationSystem):
                 "program_rate_restart_presenting":
                     1. / get("philippines", "timeperiod_norepresentation")
             }
+            # print(input_parameters["tb_n_contact"])
 
         if input_compartments is None:
             input_compartments = {
@@ -793,7 +794,7 @@ class ThreeStrainFullTreatmentSystem(BasePopulationSystem):
                   self.params["program_algorithm_sensitivity"])
         # Formula derived from (algorithm sensitivity) = (detection rate) / (detection rate and miss rate)
 
-        # Code to determines the treatment flow rates from the input parameters
+        # Code to determine the treatment flow rates from the input parameters
         self.outcomes = ["_success", "_death", "_default"]
         self.nonsuccess_outcomes = self.outcomes[1:3]
         self.treatment_stages = ["_infect", "_noninfect"]

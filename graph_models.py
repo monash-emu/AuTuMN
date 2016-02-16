@@ -6,9 +6,9 @@ if not os.path.isdir('models'):
     os.makedirs('models')
 
 for name, Model in [
-        ('single.strain', autumn.model.SingleStrainSystem),
-        ('three.strain', autumn.model.ThreeStrainSystem),
-        ('three.strain.identi', autumn.model.ThreeStrainFullTreatmentSystem),
+        ('single.strain', autumn.model.SimpleFeedbackModel),
+        ('three.strain', autumn.model.NaiveSingleStrainModel),
+        ('three.strain.identi', autumn.model.SingleStrainTreatmentModel),
     ]:
     print 'running', name
     base = os.path.join('models', name)

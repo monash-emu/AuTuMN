@@ -23,7 +23,7 @@ if __name__ == "__main__":
     if not os.path.isdir('stage6'):
         os.makedirs('stage6')
 
-    model = autumn.model.ThreeStrainFullTreatmentSystem()
+    model = autumn.model.SingleStrainTreatmentModel()
     model.make_times_with_n_step(1950., 2015., 20)
     model.integrate_explicit()
 

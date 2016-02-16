@@ -39,7 +39,7 @@ def label_intersects_tags(label, tags):
     return False
 
 
-class BasePopulationSystem():
+class BaseModel():
 
     def __init__(self):
         self.labels = []
@@ -233,25 +233,6 @@ class BasePopulationSystem():
                 continue
             self.population_soln[label] = self.get_compartment_soln(label)
 
-        self.total_population_soln = []
-        n_time = len(self.times)
-        for i in range(n_time):
-            t = 0.0
-            for label in self.labels:
-                t += self.population_soln[label][i]
-            self.total_population_soln.append(t)
-
-        self.fraction_soln = {}
-        for label in self.labels:
-            self.fraction_soln[label] = [
-                v / t 
-                for v, t in 
-                zip(
-                    self.population_soln[label],
-                    self.total_population_soln
-                )
-            ]
-
         n_time = len(self.times)
         for i in range(n_time):
 
@@ -274,6 +255,25 @@ class BasePopulationSystem():
                 self.var_array[i, i_label] = self.vars[label]
             for i_label, label in enumerate(self.labels):
                 self.flow_array[i, i_label] = self.flows[label]
+
+        self.total_population_soln = []
+        n_time = len(self.times)
+        for i in range(n_time):
+            t = 0.0
+            for label in self.labels:
+                t += self.population_soln[label][i]
+            self.total_population_soln.append(t)
+
+        self.fraction_soln = {}
+        for label in self.labels:
+            self.fraction_soln[label] = [
+                v / t
+                for v, t in
+                zip(
+                    self.population_soln[label],
+                    self.total_population_soln
+                )
+            ]
 
     def get_compartment_soln(self, label):
         assert self.soln_array is not None, "calculate_diagnostics has not been run"
@@ -395,7 +395,7 @@ class BasePopulationSystem():
 
 
 
-class SingleStrainSystem(BasePopulationSystem):
+class SimpleFeedbackModel(BaseModel):
 
     """
     Initial Autumn model designed by James
@@ -403,7 +403,7 @@ class SingleStrainSystem(BasePopulationSystem):
 
     def __init__(self):
 
-        BasePopulationSystem.__init__(self)
+        BaseModel.__init__(self)
 
         self.set_compartment("susceptible", 1e6)
         self.set_compartment("latent_early", 0.)
@@ -479,7 +479,7 @@ class SingleStrainSystem(BasePopulationSystem):
             "treatment_noninfect", "rate_program_death_noninfect")
 
 
-class ThreeStrainSystem(BasePopulationSystem):
+class NaiveSingleStrainModel(BaseModel):
 
     """
     Includes pulmonary strains
@@ -487,7 +487,7 @@ class ThreeStrainSystem(BasePopulationSystem):
 
     def __init__(self):
 
-        BasePopulationSystem.__init__(self)
+        BaseModel.__init__(self)
 
         self.set_compartment("susceptible_fully", 1e6)
         self.set_compartment("susceptible_vac", 0.)
@@ -659,14 +659,14 @@ class ThreeStrainSystem(BasePopulationSystem):
 
 
 
-class ThreeStrainFullTreatmentSystem(BasePopulationSystem):
+class SingleStrainTreatmentModel(BaseModel):
     """
     This model based on James' thesis
     """
 
     def __init__(self, input_parameters=None, input_compartments=None):
 
-        BasePopulationSystem.__init__(self)
+        BaseModel.__init__(self)
 
         if input_parameters is None:
 

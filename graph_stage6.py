@@ -38,9 +38,9 @@ if __name__ == "__main__":
         "treatment": ["treatment"]
     }
     for title, tags in groups.items():
-        plotting.plot_population_group(model, title, tags)
+        plotting.plot_population_group_jt(model, title, tags)
         pylab.savefig(os.path.join('stage6', '%s.model.png' % title), dpi=300)
-        plotting.plot_fraction_group(model, title, tags)
+        plotting.plot_fraction_group_jt(model, title, tags)
         pylab.savefig(os.path.join('stage6', '%s.fraction.png' % title), dpi=300)
 
     plotting.plot_fractions(model, model.labels[:])

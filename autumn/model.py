@@ -244,7 +244,7 @@ class BasePopulationSystem():
         self.fraction_soln = {}
         for label in self.labels:
             self.fraction_soln[label] = [
-                v/t 
+                v / t 
                 for v, t in 
                 zip(
                     self.population_soln[label],
@@ -773,8 +773,8 @@ class ThreeStrainFullTreatmentSystem(BasePopulationSystem):
 
         self.set_param(
             "tb_rate_stabilise",
-            (1 - self.params["tb_proportion_early_progression"]) /
-                 self.params["tb_timeperiod_early_latent"])
+            (1 - self.params["tb_proportion_early_progression"]) 
+              / self.params["tb_timeperiod_early_latent"])
 
         if "tb_proportion_casefatality_untreated_extrapul" not in input_parameters:
             self.set_param("tb_proportion_casefatality_untreated_extrapul",
@@ -782,15 +782,15 @@ class ThreeStrainFullTreatmentSystem(BasePopulationSystem):
 
         self.set_param(
             "program_rate_detect",
-            1. / self.params["tb_timeperiod_activeuntreated"] /
-              (1. - self.params["program_proportion_detect"]))
+            1. / self.params["tb_timeperiod_activeuntreated"] 
+               / (1. - self.params["program_proportion_detect"]))
         # Formula derived from CDR = (detection rate) / (detection rate and spontaneous resolution rates)
 
         self.set_param(
             "program_rate_missed",
             self.params["program_rate_detect"] *
-            (1. - self.params["program_algorithm_sensitivity"]) /
-                  self.params["program_algorithm_sensitivity"])
+            (1. - self.params["program_algorithm_sensitivity"]) 
+              / self.params["program_algorithm_sensitivity"])
         # Formula derived from (algorithm sensitivity) = (detection rate) / (detection rate and miss rate)
 
         # Code to determines the treatment flow rates from the input parameters
@@ -804,31 +804,34 @@ class ThreeStrainFullTreatmentSystem(BasePopulationSystem):
         for outcome in self.nonsuccess_outcomes:  # Find the proportion of deaths/defaults during infectious stage
             self.set_param(
                 "program_proportion" + outcome + "_infect",
-                1. - exp(log(1. - self.params["program_proportion" + outcome]) *
-                                    self.params["tb_timeperiod_infect_ontreatment"] /
-                                    self.params["tb_timeperiod_treatment"]))
+                1. - exp(
+                        log(1. - self.params["program_proportion" + outcome]) 
+                          * self.params["tb_timeperiod_infect_ontreatment"] 
+                          / self.params["tb_timeperiod_treatment"]
+                     )
+            )
         for outcome in self.nonsuccess_outcomes:  # Find the proportion of deaths/defaults during non-infectious stage
             self.set_param(
                 "program_proportion" + outcome + "_noninfect",
-                self.params["program_proportion" + outcome] -
-                self.params["program_proportion" + outcome + "_infect"])
+                self.params["program_proportion" + outcome] 
+                  - self.params["program_proportion" + outcome + "_infect"])
         for treatment_stage in self.treatment_stages:  # Find the success proportions
             self.set_param(
                 "program_proportion_success" + treatment_stage,
-                1. - self.params["program_proportion_default" + treatment_stage] -
-                self.params["program_proportion_death" + treatment_stage])
+                1. - self.params["program_proportion_default" + treatment_stage] 
+                   - self.params["program_proportion_death" + treatment_stage])
             for outcome in self.outcomes:  # Find the corresponding rates from the proportions
                 self.set_param(
                     "program_rate" + outcome + treatment_stage,
-                    1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment"] *
-                      self.params["program_proportion" + outcome + treatment_stage])
+                    1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment"] 
+                       * self.params["program_proportion" + outcome + treatment_stage])
 
         for status in self.pulmonary_status:
             self.set_param(
                 "tb_rate_earlyprogress" + status,
                 self.params["tb_proportion_early_progression"]
-                / self.params["tb_timeperiod_early_latent"]
-                * self.params["epi_proportion_cases" + status])
+                  / self.params["tb_timeperiod_early_latent"]
+                  * self.params["epi_proportion_cases" + status])
             self.set_param(
                 "tb_rate_lateprogress" + status,
                 self.params["tb_rate_late_progression"]
@@ -866,13 +869,13 @@ class ThreeStrainFullTreatmentSystem(BasePopulationSystem):
                        * self.compartments[label]
 
         self.vars["rate_force"] = \
-              self.params["tb_n_contact"] \
-            * self.vars["infectious_population"] \
-            / self.vars["population"]
+            self.params["tb_n_contact"] \
+              * self.vars["infectious_population"] \
+              / self.vars["population"]
 
         self.vars["rate_force_weak"] = \
             self.params["tb_multiplier_bcg_protection"] \
-            * self.vars["rate_force"]
+              * self.vars["rate_force"]
 
     def set_flows(self):
         self.set_var_entry_rate_flow(

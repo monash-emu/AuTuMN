@@ -28,12 +28,15 @@ def make_gamma_dist(mean, std):
     return gamma(shape, loc, scale)
 
 
+def is_positive_definite(v):
+    return not isfinite(v) and v > 0.0
+
 
 class ModelRunner():
 
     def __init__(self):
         self.model = SingleStrainFullModel()
-        self.model.make_times(0, 100, 1.)
+        self.model.make_times(1950, 2030, 1.)
         self.is_last_run_sucess = False
         self.param_dict = [
             { 
@@ -51,26 +54,21 @@ class ModelRunner():
     def convert_param_list_to_dict(self, param_list):
         params = {}
         for val, param_dict in zip(param_list, self.param_dict):
-            key = param_dict['key']
-            params[key] = val
+            params[param_dict['key']] = val
         return params
 
-    def run_with_params(self, param_list):
-        params = self.convert_param_list_to_dict(param_list)
-
-        if params['init_population'] < 0 or \
-                not isfinite(params['init_population']):
-            self.is_last_run_sucess = False
-            return
-
+    def set_model_with_params(self, params):
         self.model.set_param(
-            "tb_n_contact",
-            params["n_tb_contact"])
-
+            "tb_n_contact", params["n_tb_contact"])
         self.model.set_compartment(
-            "susceptible_fully",
-            params['init_population'])
+            "susceptible_fully", params['init_population'])
 
+    def run_with_params(self, param_list):
+        for param in param_list:
+            if not is_positive_definite(param):
+                self.is_last_run_sucess = False
+                return
+        set_model_with_params(self.convert_param_list_to_dict(param_list))
         self.is_last_run_sucess = True
         try:
             self.model.integrate_explicit()
@@ -93,8 +91,8 @@ class ModelRunner():
         ln_prior += make_gamma_dist(40, 20).logpdf(params['n_tb_contact'])
 
         ln_posterior = 0.0
-        ln_posterior += 5*norm(99E6, 10E6).logpdf(final_pop)
-        ln_posterior += norm(417, 100).logpdf(prevalence)
+        ln_posterior += norm(99E6, 5E6).logpdf(final_pop)
+        ln_posterior += norm(417, 10).logpdf(prevalence)
         # ln_posterior += norm(288, 50).logpdf(incidence)
         # ln_posterior += norm(10, 10).logpdf(mortality)
 
@@ -170,12 +168,13 @@ def plot_mcmc_params(model_runner, base, n_burn_step=0):
     samples = sampler.chain[:, n_burn_step:, :].reshape((-1, n_param))
     for i_param in range(n_param):
         pylab.clf()
-        vals = samples[:,i_param]
-        pylab.plot(range(len(vals)), vals)
-        pylab.ylim([0, 1.2 * vals.max()])
+        for i_walker in range(n_walker):
+            vals = sampler.chain[i_walker, n_burn_step:, i_param]
+            pylab.plot(range(len(vals)), vals)
+        pylab.ylim([0, 1.2 * samples[:, i_param].max()])
         key = model_runner.param_dict[i_param]['key']
         pylab.title("parameter: " + key)
-        pylab.xlabel("MCMC with %d walkers over %d steps each" % (n_walker, n_mcmc_step))
+        pylab.xlabel("MCMC steps")
         pylab.savefig("%s.param.%s.png" % (base, key))
 
 
@@ -208,25 +207,26 @@ def plot_mcmc_var(model_runner, var, base, n_burn_step=0, n_model_show=40):
     pylab.savefig(base + '.' + var + '.png')
 
 
-model_runner = ModelRunner()
-
-# minimum = model_runner.minimize()
-# print minimum.best
-
-# population = model_runner.population
-# model_runner.run_with_params(minimum.best)
-# population.make_graph('stage4.graph.png')
-# plot_fractions(population, population.labels[:])
-# pylab.savefig('stage4.fraction.png', dpi=300)
-# plot_populations(population, population.labels[:]180)
-# pylab.savefig('stage4.pop.png', dpi=300)
 
 out_dir = "explore_model"
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
-model_runner.mcmc(n_mcmc_step=100)
+model_runner = ModelRunner()
 
+minimum = model_runner.minimize()
+print minimum.best
+model_runner.run_with_params(minimum.best)
+model = model_runner.model
+base = os.path.join(out_dir, 'minimize')
+plot_fractions(model, model.labels[:])
+pylab.savefig(base + '.fraction.png')
+plot_populations(model, model.labels[:])
+pylab.savefig(base + '.population.png')
+
+model_runner.mcmc(n_mcmc_step=100)
 base = os.path.join(out_dir, 'mcmc')
 plot_mcmc_params(model_runner, base, n_burn_step=0)
-plot_mcmc_var(model_runner, 'population', base, n_burn_step=50)
+plot_mcmc_var(model_runner, 'population', base, n_burn_step=40, n_model_show=40)
+
+

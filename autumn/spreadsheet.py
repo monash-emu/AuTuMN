@@ -232,12 +232,14 @@ def read_xls_with_sheet_readers(filename, sheet_readers=[]):
         workbook = open_workbook(filename) 
     except: 
         raise Exception('Failed to load spreadsheet: file "%s" not found!' % filename)
+    result = {}
     for reader in sheet_readers:
         print("Reading sheet \"{}\"".format(reader.name))
         sheet = workbook.sheet_by_name(reader.name)
         for i_row in range(sheet.nrows):
             reader.parse_row(sheet.row_values(i_row))                
-    return { reader.key: reader.get_data() for reader in sheet_readers }
+        result[reader.key] = reader.get_data()
+    return result
 
 
 

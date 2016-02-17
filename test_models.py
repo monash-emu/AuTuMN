@@ -23,5 +23,6 @@ for name, Model in [
         model, model.labels, base + '.fraction.png')
     autumn.plotting.plot_populations(
         model, model.labels, base + '.population.png')
+
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)

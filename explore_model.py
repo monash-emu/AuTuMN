@@ -197,8 +197,8 @@ def plot_mcmc_var(model_runner, var, base, n_burn_step=0, n_model_show=40):
         model.calculate_diagnostics()
         pylab.plot(times, model.get_var_soln(var), color="k", alpha=0.1)
 
-    init_params = [d['init'] for d in model_runner.param_dict]
-    model_runner.run_with_params(init_params)
+    avg_params = numpy.average(samples, 0)
+    model_runner.run_with_params(avg_params)
     model.calculate_diagnostics()
     pylab.plot(times, model.get_var_soln(var), color="r", alpha=0.8)
 

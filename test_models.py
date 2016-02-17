@@ -16,10 +16,9 @@ for name, Model in [
     print 'running', name
     base = os.path.join(out_dir, name)
     model = Model()
-    model.set_flows()
-    model.make_graph(base + '.workflow')
     model.make_times(1900, 2050, 0.05)
     model.integrate_explicit()
+    model.make_graph(base + '.workflow')
     autumn.plotting.plot_fractions(
         model, model.labels, base + '.fraction.png')
     autumn.plotting.plot_populations(

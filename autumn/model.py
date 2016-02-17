@@ -965,13 +965,42 @@ class SingleStrainTreatmentModel(BaseModel):
     def calculate_diagnostic_vars(self):
 
         rate_incidence = 0.0
+        rate_infection = 0.0
+        rate_notification = 0.0
+        rate_missed = 0.0
+        rate_death_ontreatment = 0.0
+        rate_default = 0.0
+        rate_success = 0.0
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
             if 'latent' in from_label and 'active' in to_label:
                 val = self.compartments[from_label] * rate
                 rate_incidence += val
+            elif 'susceptible' in from_label and 'latent' in to_label:
+                val = self.compartments[from_label] * rate
+                rate_infection += val
+            elif 'active' in from_label and 'detect' in to_label:
+                val = self.compartments[from_label] * rate
+                rate_notification += val
+            elif 'active' in from_label and 'missed' in to_label:
+                val = self.compartments[from_label] * rate
+                rate_missed += val
+            elif 'treatment' in from_label and 'death' in to_label:
+                val = self.compartments[from_label] * rate
+                rate_death_ontreatment += val
+            elif 'treatment' in from_label and 'active' in to_label:
+                val = self.compartments[from_label] * rate
+                rate_default += val
+            elif 'treatment' in from_label and 'susceptible_treated' in to_label:
+                val = self.compartments[from_label] * rate
+                rate_success += val
 
+        # Main epidemiological indicators - note that denominator is not individuals
         self.vars["incidence"] = \
               rate_incidence \
+            / self.vars["population"] * 1E5
+
+        self.vars["notification"] = \
+              rate_notification \
             / self.vars["population"] * 1E5
 
         self.vars["mortality"] = \
@@ -981,4 +1010,25 @@ class SingleStrainTreatmentModel(BaseModel):
         self.vars["prevalence"] = \
               self.vars["infectious_population"] \
             / self.vars["population"] * 1E5
+
+        """ More commonly termed "annual risk of infection", but really a rate
+        and annual is implicit"""
+        self.vars["infection"] = \
+              rate_infection \
+            / self.vars["population"]
+
+        """ Better term may be failed diagnosis, but using missed for
+        consistency with the compartment name for now"""
+        self.vars["missed"] = \
+              rate_missed \
+            / self.vars["population"]
+
+        self.vars["death_ontreatment"] = \
+              rate_death_ontreatment \
+            / self.vars["population"]
+
+        self.vars["default"] = \
+              rate_default \
+            / self.vars["population"]
+
 

@@ -40,9 +40,9 @@ groups = {
     "treatment": ["treatment"]
 }
 for title, tags in groups.items():
-    plotting.plot_population_group_jt(model, title, tags)
+    plotting.plot_population_group(model, title, tags)
     pylab.savefig(os.path.join(out_dir, '%s.model.png' % title), dpi=300)
-    plotting.plot_fraction_group_jt(model, title, tags)
+    plotting.plot_fraction_group(model, title, tags)
     pylab.savefig(os.path.join(out_dir, '%s.fraction.png' % title), dpi=300)
 
 plotting.plot_fractions(model, model.labels[:])

@@ -243,7 +243,10 @@ def read_xls_with_sheet_readers(filename, sheet_readers=[]):
 
 
 
-def read_xls(filename):
+def read_input_data_xls(filename):
+
+    sheet_readers = []
+
     population_sheet_reader = NestedParamWithRangeSheetReader()
     population_sheet_reader.name = 'population_size'
     population_sheet_reader.key = 'popsize'
@@ -255,6 +258,7 @@ def read_xls(filename):
             ]
         ]        
     ]
+    sheet_readers.append(population_sheet_reader)
 
     tb_prevalence_sheet_reader = NestedParamWithRangeSheetReader()
     tb_prevalence_sheet_reader.name = 'TB prevalence'
@@ -279,6 +283,7 @@ def read_xls(filename):
             ]
         ]
     ]
+    sheet_readers.append(tb_prevalence_sheet_reader)
 
     tb_incidence_sheet_reader = NestedParamWithRangeSheetReader()
     tb_incidence_sheet_reader.name = 'TB incidence'
@@ -303,6 +308,7 @@ def read_xls(filename):
             ]
         ]
     ]        
+    sheet_readers.append(tb_incidence_sheet_reader)
    
     comorbidity_sheet_reader = NestedParamWithRangeSheetReader()
     comorbidity_sheet_reader.name = 'comorbidity'
@@ -338,6 +344,7 @@ def read_xls(filename):
             ]
         ]
     ]
+    sheet_readers.append(comorbidity_sheet_reader)
 
     cost_coverage_sheet_reader = NestedParamWithRangeSheetReader()
     cost_coverage_sheet_reader.name = 'cost and coverage'
@@ -356,6 +363,7 @@ def read_xls(filename):
             ]
         ]
     ]
+    sheet_readers.append(cost_coverage_sheet_reader)
 
     testing_treatment_sheet_reader = NestedParamSheetReader()
     testing_treatment_sheet_reader.name = 'testing_treatment'
@@ -402,6 +410,7 @@ def read_xls(filename):
                 '5_14yr',
                 '15abov']]      
     ]
+    sheet_readers.append(testing_treatment_sheet_reader)
    
     other_epidemiology_sheet_reader = NestedParamSheetReader()
     other_epidemiology_sheet_reader.name = 'other_epidemiology'
@@ -423,33 +432,19 @@ def read_xls(filename):
             [   'birthrate']
         ],
     ]
+    sheet_readers.append(other_epidemiology_sheet_reader)
 
-    constants_sheet_reader = ConstantsSheetReader()
+    sheet_readers.append(ConstantsSheetReader())
 
-    macroeconomics_sheet_reader = MacroeconomicsSheetReader()
+    sheet_readers.append(MacroeconomicsSheetReader())
     
-    data = read_xls_with_sheet_readers(
-        filename, 
-        [
-            tb_prevalence_sheet_reader, 
-            tb_incidence_sheet_reader,
-            population_sheet_reader,
-            comorbidity_sheet_reader,
-            testing_treatment_sheet_reader,
-            other_epidemiology_sheet_reader,
-            cost_coverage_sheet_reader,
-            constants_sheet_reader,
-            macroeconomics_sheet_reader,
-        ]
-    )
-
-    return data
+    return read_xls_with_sheet_readers(filename, sheet_readers)
 
 
 if __name__ == "__main__":
     import json
-    data = read_xls('xls/data_input_3.xlsx')
-    open('params.txt', 'w').write(json.dumps(data, indent=2))
+    data = read_input_data_xls('xls/data_input_3.xlsx')
+    open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
 
 
             

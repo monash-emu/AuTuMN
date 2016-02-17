@@ -24,9 +24,9 @@ def make_related_line_styles(model, labels):
     patterns = {}
     compartment_full_names = {}
     for label in labels:
-        if "susceptible_fully" in label:
+        if "susceptible" in label:  # susceptible_unvac can remain black
             colours[label] = (0, 0, 0)
-        elif "susceptible_vac" in label:
+        if "susceptible_vac" in label:
             colours[label] = (0.3, 0.3, 0.3)
         elif "susceptible_treated" in label:
             colours[label] = (0.6, 0.6, 0.6)
@@ -50,6 +50,8 @@ def make_related_line_styles(model, labels):
             patterns[label] = ":"
         else:
             patterns[label] = "-"
+        if "susceptible" in label:
+            compartment_full_names[label] = "Susceptible"
         if "susceptible_fully" in label:
             compartment_full_names[label] = "Fully susceptible"
         elif "susceptible_vac" in label:
@@ -61,23 +63,23 @@ def make_related_line_styles(model, labels):
         elif "latent_late" in label:
             compartment_full_names[label] = "Late latency"
         elif "active" in label:
-            compartment_full_names[label] = "Active, yet to present, "
+            compartment_full_names[label] = "Active, yet to present"
         elif "detect" in label:
-            compartment_full_names[label] = "Detected, "
+            compartment_full_names[label] = "Detected"
         elif "missed" in label:
-            compartment_full_names[label] = "Missed, "
+            compartment_full_names[label] = "Missed"
         elif "treatment_infect" in label:
-            compartment_full_names[label] = "Infectious under treatment, "
+            compartment_full_names[label] = "Infectious under treatment"
         elif "treatment_noninfect" in label:
-            compartment_full_names[label] = "Non-infectious under treatment, "
+            compartment_full_names[label] = "Non-infectious under treatment"
         else:
             compartment_full_names[label] = compartment_full_names[label]
         if "smearpos" in label:
-            compartment_full_names[label] = compartment_full_names[label] + "\n" + "smear-positive"
+            compartment_full_names[label] = compartment_full_names[label] + ", \nsmear-positive"
         elif "smearneg" in label:
-            compartment_full_names[label] = compartment_full_names[label] + "\n" + "smear-negative"
+            compartment_full_names[label] = compartment_full_names[label] + ", \nsmear-negative"
         elif "extrapul" in label:
-            compartment_full_names[label] = compartment_full_names[label] + "\n" + "extrapulmonary"
+            compartment_full_names[label] = compartment_full_names[label] + ", \nextrapulmonary"
     return colours, patterns, compartment_full_names
 
 

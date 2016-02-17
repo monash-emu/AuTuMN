@@ -9,9 +9,9 @@ if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
 for name, Model in [
-        ('simple', autumn.model.NoOrganStatusSingleStrainSimplifiedModel),
-        ('naive', autumn.model.SingleStrainSimplifiedModel),
-        ('basic', autumn.model.SingleStrainFullModel),
+        ('no_organ_status', autumn.model.NoOrganStatusSingleStrainSimplifiedModel),
+        ('simple', autumn.model.SingleStrainSimplifiedModel),
+        ('full', autumn.model.SingleStrainFullModel),
     ]:
     print 'running', name
     base = os.path.join(out_dir, name)
@@ -19,10 +19,15 @@ for name, Model in [
     model.make_times(1900, 2050, 0.05)
     model.integrate_explicit()
     model.make_graph(base + '.workflow')
-    autumn.plotting.plot_fractions(
+# if name == 'full':
+    autumn.plotting.plot_fractions_jt(
         model, model.labels, base + '.fraction.png')
-    autumn.plotting.plot_populations(
+    autumn.plotting.plot_populations_jt(
         model, model.labels, base + '.population.png')
-
+    # else:
+    #     autumn.plotting.plot_fractions(
+    #         model, model.labels, base + '.fraction.png')
+    #     autumn.plotting.plot_populations(
+    #         model, model.labels, base + '.population.png')
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)

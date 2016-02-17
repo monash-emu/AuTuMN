@@ -1,4 +1,6 @@
 import os
+import glob
+
 import autumn.model
 import autumn.plotting
 

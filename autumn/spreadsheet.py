@@ -2,19 +2,12 @@
 
 from __future__ import print_function
 from xlrd import open_workbook # For opening Excel workbooks
-from numpy import nan, zeros, isnan, array, logical_or, nonzero # For reading in empty values
+from numpy import nan
 import copy
+
 
 """
 Import model inputs from Excel spreadsheet 
-Version: 21 November 2015 by Tan Doan 
-"""
-"""
-TO DO LIST 
-1. UNCERTAINTY RANGE; only able to read the HIGH row for variables that have High, Best and Low inputs (Workbooks: population size,
-TB prevalence, TB incidence, comorbidity)
-2. FIX MACROECONOMICS workbook: not able to read any data in this workbook
-
 """
 
 
@@ -66,8 +59,8 @@ class MacroeconomicsSheetReader:
         ]  
 
     def parse_row(self, row):
-        par = row[0]
-        if par == "":
+        raw_par = row[0]
+        if raw_par == "":
             return
         self.i_par += 1
         self.par = self.parlist[self.i_par]
@@ -90,7 +83,7 @@ class ConstantsSheetReader:
         self.i_subpar = -1
         self.name = 'constants'
         self.key = 'const'
-        self.parlist =  [
+        self.nested_parlist =  [
             [   'model_parameters', 
                 [   'rate_pop_birth', 
                     'rate_pop_death', 
@@ -119,10 +112,10 @@ class ConstantsSheetReader:
         ]  
 
     def parse_row(self, row):
-        par, raw_subpar = row[0:2]
-        if par != "":
+        raw_par, raw_subpar = row[0:2]
+        if raw_par != "":
             self.i_par += 1
-            self.par, self.subparlist = self.parlist[self.i_par]
+            self.par, self.subparlist = self.nested_parlist[self.i_par]
             self.i_subpar = -1
             self.subpar = None
             self.data[self.par] = {}
@@ -131,15 +124,14 @@ class ConstantsSheetReader:
             self.i_subpar += 1
             self.raw_subpar = raw_subpar
             self.subpar = self.subparlist[self.i_subpar]
-        if par == "" and raw_subpar == "":
+        if raw_par == "" and raw_subpar == "":
             return
-        these_data = replace_blanks(row[2:5], nan)
-        these_data = {
-            'Best': these_data[0],
-            'Low': these_data[1],
-            'High': these_data[2]
-        }
-        self.data[self.par][self.subpar] = these_data 
+        best, low, high = replace_blanks(row[2:5], nan)
+        self.data[self.par][self.subpar] = {
+            'Best': best,
+            'Low': low, 
+            'High': high
+        } 
 
     def get_data(self):
         return self.data
@@ -158,7 +150,7 @@ class NestedParamSheetReader:
         self.i_subpar = -1
         self.name = 'XLS Sheet Name'
         self.key = 'data_key'
-        self.parlist = [
+        self.nested_parlist = [
             [   'par0', 
                 [   'subpar0', 
                     'subpar1'
@@ -167,10 +159,10 @@ class NestedParamSheetReader:
         ]
 
     def parse_row(self, row):
-        par, raw_subpar = row[0:2]
-        if par != "":
+        raw_par, raw_subpar = row[0:2]
+        if raw_par != "":
             self.i_par += 1
-            self.par, self.subparlist = self.parlist[self.i_par]
+            self.par, self.subparlist = self.nested_parlist[self.i_par]
             self.i_subpar = -1
             self.subpar = None
             self.data[self.par] = {}
@@ -179,7 +171,7 @@ class NestedParamSheetReader:
             self.i_subpar += 1
             self.raw_subpar = raw_subpar
             self.subpar = self.subparlist[self.i_subpar]
-        if par == "" and raw_subpar == "":
+        if raw_par == "" and raw_subpar == "":
             return
         self.data[self.par][self.subpar] = parse_year_data(row[3:])
 
@@ -195,14 +187,13 @@ class NestedParamWithRangeSheetReader:
         self.data = {}
         self.subpar = None
         self.raw_subpar = None
-        self.par = None
+        self.raw_par = None
         self.i_par = -1
         self.i_subpar = -1
         self.name = 'XLS Sheet Name'
         self.key = 'data_key'
         self.range = { 'Best':[], 'High':[], 'Low':[] }
-
-        self.parlist = [
+        self.nested_parlist = [
             [
                 'par0', 
                 [
@@ -213,11 +204,11 @@ class NestedParamWithRangeSheetReader:
         ]
 
     def parse_row(self, row):
-        par, raw_subpar, blh = row[0:3]
+        raw_par, raw_subpar, blh = row[0:3]
         blh = str(blh)
-        if par != "":
+        if raw_par != "":
             self.i_par += 1
-            self.par, self.subparlist = self.parlist[self.i_par]
+            self.par, self.subparlist = self.nested_parlist[self.i_par]
             self.i_subpar = -1
             self.subpar = None
             self.data[self.par] = {}
@@ -242,7 +233,7 @@ def read_xls_with_sheet_readers(filename, sheet_readers=[]):
     except: 
         raise Exception('Failed to load spreadsheet: file "%s" not found!' % filename)
     for reader in sheet_readers:
-        print(reader.name)
+        print("Reading sheet \"{}\"".format(reader.name))
         sheet = workbook.sheet_by_name(reader.name)
         for i_row in range(sheet.nrows):
             reader.parse_row(sheet.row_values(i_row))                
@@ -254,7 +245,7 @@ def read_xls(filename):
     population_sheet_reader = NestedParamWithRangeSheetReader()
     population_sheet_reader.name = 'population_size'
     population_sheet_reader.key = 'popsize'
-    population_sheet_reader.parlist =  [
+    population_sheet_reader.nested_parlist =  [
         [   'Population size',
             [   '04yr',
                 '5_14yr',
@@ -266,7 +257,7 @@ def read_xls(filename):
     tb_prevalence_sheet_reader = NestedParamWithRangeSheetReader()
     tb_prevalence_sheet_reader.name = 'TB prevalence'
     tb_prevalence_sheet_reader.key = 'tbprev'
-    tb_prevalence_sheet_reader.parlist =  [
+    tb_prevalence_sheet_reader.nested_parlist =  [
         [   '0_4yr', 
             [   'ds_04yr', 
                 'mdr_04yr', 
@@ -290,7 +281,7 @@ def read_xls(filename):
     tb_incidence_sheet_reader = NestedParamWithRangeSheetReader()
     tb_incidence_sheet_reader.name = 'TB incidence'
     tb_incidence_sheet_reader.key = 'tbinc'
-    tb_incidence_sheet_reader.parlist =  [
+    tb_incidence_sheet_reader.nested_parlist =  [
         [   '0_4yr', 
             [   'ds_04yr', 
                 'mdr_04yr', 
@@ -314,7 +305,7 @@ def read_xls(filename):
     comorbidity_sheet_reader = NestedParamWithRangeSheetReader()
     comorbidity_sheet_reader.name = 'comorbidity'
     comorbidity_sheet_reader.key = 'comor'
-    comorbidity_sheet_reader.parlist =  [
+    comorbidity_sheet_reader.nested_parlist =  [
         [   'malnutrition', 
             [   '04yr', 
                 '5_14yr', 
@@ -350,7 +341,7 @@ def read_xls(filename):
     cost_coverage_sheet_reader.name = 'cost and coverage'
     cost_coverage_sheet_reader.key = 'costcov'
     cost_coverage_sheet_reader.range = {'Coverage':[], 'Cost':[]}
-    cost_coverage_sheet_reader.parlist =  [
+    cost_coverage_sheet_reader.nested_parlist =  [
         [   'Cost and coverage',
             [   'Active and intensified case finding', 
                 'Treatment of active TB', 
@@ -367,7 +358,7 @@ def read_xls(filename):
     testing_treatment_sheet_reader = NestedParamSheetReader()
     testing_treatment_sheet_reader.name = 'testing_treatment'
     testing_treatment_sheet_reader.key = 'testtx'
-    testing_treatment_sheet_reader.parlist =  [
+    testing_treatment_sheet_reader.nested_parlist =  [
         [   '%testedactiveTB', 
             [   '04yr', 
                 '5_14yr', 
@@ -413,7 +404,7 @@ def read_xls(filename):
     other_epidemiology_sheet_reader = NestedParamSheetReader()
     other_epidemiology_sheet_reader.name = 'other_epidemiology'
     other_epidemiology_sheet_reader.key = 'otherepi'
-    other_epidemiology_sheet_reader.parlist = [
+    other_epidemiology_sheet_reader.nested_parlist = [
         [   '%died_nonTB', 
             [   '04yr', 
                 '5_14yr', 
@@ -431,6 +422,10 @@ def read_xls(filename):
         ],
     ]
 
+    constants_sheet_reader = ConstantsSheetReader()
+
+    macroeconomics_sheet_reader = MacroeconomicsSheetReader()
+    
     data = read_xls_with_sheet_readers(
         filename, 
         [
@@ -441,8 +436,8 @@ def read_xls(filename):
             testing_treatment_sheet_reader,
             other_epidemiology_sheet_reader,
             cost_coverage_sheet_reader,
-            ConstantsSheetReader(),
-            MacroeconomicsSheetReader(),
+            constants_sheet_reader,
+            macroeconomics_sheet_reader,
         ]
     )
 

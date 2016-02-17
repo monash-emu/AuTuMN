@@ -381,4 +381,13 @@ def plot_flows(model, labels, png=None):
     set_axes_props(ax, 'year', 'change / year', 'flows')
     save_png(png)
 
+def open_pngs(pngs):
+    import platform
+    import os
+    operating_system = platform.system()
+    if 'Windows' in operating_system:
+        os.system("start " + " ".join(pngs))
+    elif 'Darwin' in operating_system:
+        os.system('open ' + " ".join(pngs))
+
 

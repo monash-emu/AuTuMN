@@ -21,28 +21,31 @@ from math import exp
 import numpy
 
 
-def make_sigmoidal_fn(y_lo=0, y_hi=1.0, x_inf=0.5, multiplier=1.):
+def make_sigmoidal_fn(y_low=0, y_high=1.0, x_inflect=0.5, multiplier=1.):
     """
     Args:
-        y_lo: lowest y value
-        y_hi: highest y value
-        x_inf: inflection point of graph along the x-axis
-        multiplier: if 1, slope at x_inf goes to (0, y_lo)
+        y_low: lowest y value
+        y_high: highest y value
+        x_inflect: inflection point of graph along the x-axis
+        multiplier: if 1, slope at x_inflect goes to (0, y_low), larger
+                    values makes it steeper
 
     Returns:
-        function that increases sigmoidally from 0 y_lo to y_hi
-        the halfway point is at x_inf on the x-axis and the slope
-        at x_inf goes to (0, y_lo) if the multiplier is 1.
+        function that increases sigmoidally from 0 y_low to y_high
+        the halfway point is at x_inflect on the x-axis and the slope
+        at x_inflect goes to (0, y_low) if the multiplier is 1.
     """
 
-    saturation = y_hi - y_lo
-    slope_at_inf = multiplier * 0.5 * saturation / x_inf
-    b = 4. * slope_at_inf / saturation
+    amplitude = y_high - y_low
+    slope_at_inflection = multiplier * 0.5 * amplitude / x_inflect
+    b = 4. * slope_at_inflection / amplitude
+
     def fn(x):
-        arg = b * ( x_inf - x )
+        arg = b * ( x_inflect - x )
+        # check for large values that will blow out exp
         if arg > 10.0:
-            return y_lo
-        return saturation / ( 1. + exp( arg ) ) + y_lo
+            return y_low
+        return amplitude / ( 1. + exp( arg ) ) + y_low
 
     return fn
 
@@ -50,7 +53,7 @@ def make_sigmoidal_fn(y_lo=0, y_hi=1.0, x_inf=0.5, multiplier=1.):
 if __name__ == "__main__":
     import pylab
     x_big = 4000.
-    fn = make_sigmoidal_fn(y_hi=.9, y_lo=.2, x_inf=x_big/2., multiplier=4)
+    fn = make_sigmoidal_fn(y_high=.9, y_low=.2, x_inflect=0.5*x_big, multiplier=4)
     x_vals = numpy.linspace(0, x_big, 50)
     pylab.plot(x_vals, map(fn, x_vals))
     pylab.xlim(0, x_big)

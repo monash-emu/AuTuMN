@@ -2,16 +2,17 @@ import os
 import autumn.model
 import autumn.plotting
 
-if not os.path.isdir('models'):
-    os.makedirs('models')
+out_dir = 'test_model_graphs'
+if not os.path.isdir(out_dir):
+    os.makedirs(out_dir)
 
 for name, Model in [
-        ('single.strain', autumn.model.SimpleFeedbackModel),
-        ('three.strain', autumn.model.NaiveSingleStrainModel),
-        ('three.strain.identi', autumn.model.SingleStrainTreatmentModel),
+        ('simple', autumn.model.SimpleFeedbackModel),
+        ('naive', autumn.model.NaiveSingleStrainModel),
+        ('basic', autumn.model.SingleStrainTreatmentModel),
     ]:
     print 'running', name
-    base = os.path.join('models', name)
+    base = os.path.join(out_dir, name)
     model = Model()
     model.set_flows()
     model.make_graph(base + '.workflow')
@@ -22,4 +23,5 @@ for name, Model in [
     autumn.plotting.plot_populations(
         model, model.labels, base + '.population.png')
 
-os.system('open models/*png')
+pngs = glob.glob(os.path.join(out_dir, '*png'))
+autumn.plotting.open_pngs(pngs)

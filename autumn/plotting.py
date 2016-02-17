@@ -41,9 +41,9 @@ def make_related_line_styles(model, labels):
         elif "missed" in label:
             colours[label] = (0.5, 0, 0.5)
         elif "treatment_infect" in label:
-            colours[label] = (1, 1, 0)
-        elif "treatment_noninfect" in label:
             colours[label] = (1, 0.5, 0)
+        elif "treatment_noninfect" in label:
+            colours[label] = (1, 1, 0)
         if "smearneg" in label:
             patterns[label] = "-."
         elif "extrapul" in label:

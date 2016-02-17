@@ -41,14 +41,14 @@ groups = {
 }
 for title, tags in groups.items():
     plotting.plot_population_group(model, title, tags)
-    pylab.savefig(os.path.join(out_dir, '%s.model.png' % title), dpi=300)
+    pylab.savefig(os.path.join(out_dir, '%s.population.png' % title), dpi=300)
     plotting.plot_fraction_group(model, title, tags)
     pylab.savefig(os.path.join(out_dir, '%s.fraction.png' % title), dpi=300)
 
 plotting.plot_fractions(model, model.labels[:])
 pylab.savefig(os.path.join(out_dir, 'fraction.png'), dpi=300)
 plotting.plot_populations(model, model.labels[:])
-pylab.savefig(os.path.join(out_dir, 'model.png'), dpi=300)
+pylab.savefig(os.path.join(out_dir, 'population.png'), dpi=300)
 
 plotting.plot_vars(model, ['incidence', 'prevalence', 'mortality'])
 pylab.savefig(os.path.join(out_dir, 'rates.png'), dpi=300)

@@ -394,8 +394,7 @@ class BaseModel():
         return True
 
 
-
-class SimpleFeedbackModel(BaseModel):
+class NoOrganStatusSingleStrainSimplifiedModel(BaseModel):
 
     """
     Initial Autumn model designed by James
@@ -479,7 +478,7 @@ class SimpleFeedbackModel(BaseModel):
             "treatment_noninfect", "rate_program_death_noninfect")
 
 
-class NaiveSingleStrainModel(BaseModel):
+class SingleStrainSimplifiedModel(BaseModel):
 
     """
     Includes pulmonary strains
@@ -658,8 +657,7 @@ class NaiveSingleStrainModel(BaseModel):
                 "program_rate_death_noninfect")
 
 
-
-class SingleStrainTreatmentModel(BaseModel):
+class SingleStrainFullModel(BaseModel):
     """
     This model based on James' thesis
     """

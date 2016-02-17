@@ -16,7 +16,7 @@ import scipy.optimize as optimize
 from numpy import isfinite
 from scipy.stats import beta, gamma, norm, truncnorm
 
-from autumn.model import SingleStrainTreatmentModel
+from autumn.model import SingleStrainFullModel
 from autumn.plotting import plot_fractions, plot_populations
 
 
@@ -32,7 +32,7 @@ def make_gamma_dist(mean, std):
 class ModelRunner():
 
     def __init__(self):
-        self.model = SingleStrainTreatmentModel()
+        self.model = SingleStrainFullModel()
         self.model.make_times(0, 100, 1.)
         self.is_last_run_sucess = False
         self.param_dict = [

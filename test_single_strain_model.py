@@ -25,7 +25,7 @@ out_dir = 'single_strain_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
-model = autumn.model.SingleStrainTreatmentModel()
+model = autumn.model.SingleStrainFullModel()
 model.make_times_with_n_step(1950., 2015., 20)
 model.integrate_explicit()
 

@@ -298,7 +298,7 @@ class BaseModel():
             self.compartments[label] = \
                 self.soln_array[i_time, i_label]
         self.calculate_vars()
-    
+
     def checks(self, error_margin=0.1):
         """
         Assertion run during the simulation, should be overriden
@@ -311,7 +311,7 @@ class BaseModel():
 
         """
         # Check all compartments are positive
-        for label in self.labels:  
+        for label in self.labels:
             assert self.compartments[label] >= 0.0
         # Check population is conserved across compartments
         population_change = \
@@ -735,15 +735,15 @@ class SingleStrainFullModel(BaseModel):
     def set_input(self, input_parameters, input_compartments):
 
         compartment_list = [
-            "susceptible_fully", 
-            "susceptible_vac", 
+            "susceptible_fully",
+            "susceptible_vac",
             "susceptible_treated",
-            "latent_early", 
-            "latent_late", 
-            "active", 
-            "detect", 
-            "missed", 
-            "treatment_infect", 
+            "latent_early",
+            "latent_late",
+            "active",
+            "detect",
+            "missed",
+            "treatment_infect",
             "treatment_noninfect"
         ]
 
@@ -773,7 +773,7 @@ class SingleStrainFullModel(BaseModel):
 
         self.set_param(
             "tb_rate_stabilise",
-            (1 - self.params["tb_proportion_early_progression"]) 
+            (1 - self.params["tb_proportion_early_progression"])
               / self.params["tb_timeperiod_early_latent"])
 
         if "tb_proportion_casefatality_untreated_extrapul" not in input_parameters:
@@ -782,14 +782,14 @@ class SingleStrainFullModel(BaseModel):
 
         self.set_param(
             "program_rate_detect",
-            1. / self.params["tb_timeperiod_activeuntreated"] 
+            1. / self.params["tb_timeperiod_activeuntreated"]
                / (1. - self.params["program_proportion_detect"]))
         # Formula derived from CDR = (detection rate) / (detection rate and spontaneous resolution rates)
 
         self.set_param(
             "program_rate_missed",
             self.params["program_rate_detect"] *
-            (1. - self.params["program_algorithm_sensitivity"]) 
+            (1. - self.params["program_algorithm_sensitivity"])
               / self.params["program_algorithm_sensitivity"])
         # Formula derived from (algorithm sensitivity) = (detection rate) / (detection rate and miss rate)
 
@@ -805,25 +805,25 @@ class SingleStrainFullModel(BaseModel):
             self.set_param(
                 "program_proportion" + outcome + "_infect",
                 1. - exp(
-                        log(1. - self.params["program_proportion" + outcome]) 
-                          * self.params["tb_timeperiod_infect_ontreatment"] 
+                        log(1. - self.params["program_proportion" + outcome])
+                          * self.params["tb_timeperiod_infect_ontreatment"]
                           / self.params["tb_timeperiod_treatment"]
                      )
             )
         for outcome in self.nonsuccess_outcomes:  # Find the proportion of deaths/defaults during non-infectious stage
             self.set_param(
                 "program_proportion" + outcome + "_noninfect",
-                self.params["program_proportion" + outcome] 
+                self.params["program_proportion" + outcome]
                   - self.params["program_proportion" + outcome + "_infect"])
         for treatment_stage in self.treatment_stages:  # Find the success proportions
             self.set_param(
                 "program_proportion_success" + treatment_stage,
-                1. - self.params["program_proportion_default" + treatment_stage] 
+                1. - self.params["program_proportion_default" + treatment_stage]
                    - self.params["program_proportion_death" + treatment_stage])
             for outcome in self.outcomes:  # Find the corresponding rates from the proportions
                 self.set_param(
                     "program_rate" + outcome + treatment_stage,
-                    1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment"] 
+                    1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment"]
                        * self.params["program_proportion" + outcome + treatment_stage])
 
         for status in self.pulmonary_status:

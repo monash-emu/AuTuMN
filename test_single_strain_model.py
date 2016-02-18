@@ -50,10 +50,12 @@ pylab.savefig(os.path.join(out_dir, 'fraction.png'), dpi=300)
 plotting.plot_populations(model, model.labels[:])
 pylab.savefig(os.path.join(out_dir, 'population.png'), dpi=300)
 
-plotting.plot_vars(model, ['incidence', 'prevalence', 'mortality'])
+plotting.plot_vars(model, ['incidence', 'notification', 'mortality'])
 pylab.savefig(os.path.join(out_dir, 'rates.png'), dpi=300)
+plotting.plot_vars(model, ['prevalence'])
+pylab.savefig(os.path.join(out_dir, 'prevalence.png'), dpi=300)
 
-plotting.plot_flows(model, ['latent_early'])
+plotting.plot_flows(model, model.labels[:])
 pylab.savefig(os.path.join(out_dir, 'flows.png'), dpi=300)
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))

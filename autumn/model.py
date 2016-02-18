@@ -965,7 +965,6 @@ class SingleStrainFullModel(BaseModel):
     def calculate_diagnostic_vars(self):
 
         rate_incidence = 0.0
-        rate_infection = 0.0
         rate_notification = 0.0
         rate_missed = 0.0
         rate_death_ontreatment = 0.0
@@ -1027,11 +1026,9 @@ class SingleStrainFullModel(BaseModel):
             / self.vars["population"]
 
 
-
-
-class SingleStrainStratifiedModel(BaseModel):
+class FullModel(BaseModel):
     """
-    This model based on James' thesis
+    This model extends SingleStrainFullModel to three strains
     """
 
     def __init__(self, input_parameters=None, input_compartments=None):
@@ -1122,21 +1119,38 @@ class SingleStrainStratifiedModel(BaseModel):
             "_smearneg",
             "_extrapul"]
 
+        self.strains = [
+            "_ds",
+            "_mdr",
+            "_xdr"]
+
+        # Compartment initialisation
         for compartment in compartment_list:
             if compartment in input_compartments:
-                if "susceptible" in compartment or "latent" in compartment:
+                if "susceptible" in compartment:
                     self.set_compartment(compartment, input_compartments[compartment])
+                elif "latent" in compartment:
+                    for strain in self.strains:
+                        self.set_compartment(compartment + strain, input_compartments[compartment])
                 else:
-                    for status in self.pulmonary_status:
-                        self.set_compartment(
-                            compartment + status,
-                            input_compartments[compartment] / 3.)
+                    for strain in self.strains:
+                        for status in self.pulmonary_status:
+                            # Assign all the starting infectious persons to DS-TB
+                            if strain == "_ds":
+                                self.set_compartment(compartment + status + strain,
+                                                     input_compartments[compartment] / 3.)
+                            else:
+                                self.set_compartment(compartment + status + strain, 0.)
             else:
-                if "susceptible" in compartment or "latent" in compartment:
+                if "susceptible" in compartment:
                     self.set_compartment(compartment, 0.)
+                elif "latent" in compartment:
+                    for strain in self.strains:
+                        self.set_compartment(compartment + strain, 0.)
                 else:
-                    for status in self.pulmonary_status:
-                        self.set_compartment(compartment + status, 0.)
+                    for strain in self.strains:
+                        for status in self.pulmonary_status:
+                            self.set_compartment(compartment + status + strain, 0.)
 
         for parameter in input_parameters:
             self.set_param(parameter, input_parameters[parameter])
@@ -1168,6 +1182,7 @@ class SingleStrainStratifiedModel(BaseModel):
         self.outcomes = ["_success", "_death", "_default"]
         self.nonsuccess_outcomes = self.outcomes[1:3]
         self.treatment_stages = ["_infect", "_noninfect"]
+
         self.set_param(
             "tb_timeperiod_noninfect_ontreatment",  # Find the non-infectious period
             self.params["tb_timeperiod_treatment"]
@@ -1180,6 +1195,7 @@ class SingleStrainStratifiedModel(BaseModel):
                             / self.params["tb_timeperiod_treatment"]
                         )
             )
+
         for outcome in self.nonsuccess_outcomes:  # Find the proportion of deaths/defaults during non-infectious stage
             self.set_param(
                 "program_proportion" + outcome + "_noninfect",
@@ -1195,6 +1211,17 @@ class SingleStrainStratifiedModel(BaseModel):
                     "program_rate" + outcome + treatment_stage,
                     1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment"]
                        * self.params["program_proportion" + outcome + treatment_stage])
+
+        # The following block of code is temporary and has to be changed *****
+        for strain in self.strains:
+            for treatment_stage in self.treatment_stages:
+                for outcome in self.outcomes:
+                    self.set_param("program_rate" + outcome + treatment_stage + strain,
+                                   self.params["program_rate" + outcome + treatment_stage])
+            self.set_param("program_rate_detect" + strain, self.params["program_rate_detect"])
+            self.set_param("program_rate_missed" + strain, self.params["program_rate_missed"])
+            self.set_param("program_rate_start_treatment" + strain, self.params["program_rate_start_treatment"])
+            self.set_param("program_rate_restart_presenting" + strain, self.params["program_rate_restart_presenting"])
 
         for status in self.pulmonary_status:
             self.set_param(
@@ -1227,25 +1254,25 @@ class SingleStrainStratifiedModel(BaseModel):
         self.vars["births_vac"] = \
             self.params["program_prop_vac"] * self.vars["rate_birth"]
 
-        self.vars["infectious_population"] = 0.0
-        for status in self.pulmonary_status:
-            for label in self.labels:
-                if status not in label:
-                    continue
-                if not label_intersects_tags(label, self.infectious_tags):
-                    continue
-                self.vars["infectious_population"] += \
-                    self.params["tb_multiplier_force" + status] \
-                       * self.compartments[label]
-
-        self.vars["rate_force"] = \
-            self.params["tb_n_contact"] \
-              * self.vars["infectious_population"] \
-              / self.vars["population"]
-
-        self.vars["rate_force_weak"] = \
-            self.params["tb_multiplier_bcg_protection"] \
-              * self.vars["rate_force"]
+        # Come back to this bit
+        for strain in self.strains:
+            self.vars["infectious_population" + strain] = 0.0
+            for status in self.pulmonary_status:
+                for label in self.labels:
+                    if status not in label:
+                        continue
+                    if not label_intersects_tags(label, self.infectious_tags):
+                        continue
+                    self.vars["infectious_population" + strain] += \
+                        self.params["tb_multiplier_force" + status] \
+                           * self.compartments[label]
+            self.vars["rate_force" + strain] = \
+                self.params["tb_n_contact"] \
+                  * self.vars["infectious_population" + strain] \
+                  / self.vars["population"]
+            self.vars["rate_force_weak" + strain] = \
+                self.params["tb_multiplier_bcg_protection"] \
+                  * self.vars["rate_force" + strain]
 
     def set_flows(self):
         self.set_var_entry_rate_flow(
@@ -1253,89 +1280,93 @@ class SingleStrainStratifiedModel(BaseModel):
         self.set_var_entry_rate_flow(
             "susceptible_vac", "births_vac")
 
-        self.set_var_transfer_rate_flow(
-            "susceptible_fully", "latent_early", "rate_force")
-        self.set_var_transfer_rate_flow(
-            "susceptible_vac", "latent_early", "rate_force_weak")
-        self.set_var_transfer_rate_flow(
-            "susceptible_treated", "latent_early", "rate_force_weak")
-        self.set_var_transfer_rate_flow(
-            "latent_late", "latent_early", "rate_force_weak")
+        for strain in self.strains:
+            self.set_var_transfer_rate_flow(
+                "susceptible_fully", "latent_early" + strain, "rate_force" + strain)
+            self.set_var_transfer_rate_flow(
+                "susceptible_vac", "latent_early" + strain, "rate_force_weak" + strain)
+            self.set_var_transfer_rate_flow(
+                "susceptible_treated", "latent_early" + strain, "rate_force_weak" + strain)
+            self.set_var_transfer_rate_flow(
+                "latent_late" + strain, "latent_early" + strain, "rate_force_weak" + strain)
 
-        self.set_fixed_transfer_rate_flow(
-            "latent_early", "latent_late", "tb_rate_stabilise")
+            self.set_fixed_transfer_rate_flow(
+                "latent_early" + strain, "latent_late" + strain, "tb_rate_stabilise")
 
-        for status in self.pulmonary_status:
-            self.set_fixed_transfer_rate_flow(
-                "latent_early",
-                "active" + status,
-                "tb_rate_earlyprogress" + status)
-            self.set_fixed_transfer_rate_flow(
-                "latent_late",
-                "active" + status,
-                "tb_rate_lateprogress" + status)
-            self.set_fixed_transfer_rate_flow(
-                "active" + status,
-                "latent_late",
-                "tb_rate_recover" + status)
-            self.set_fixed_transfer_rate_flow(
-                "active" + status,
-                "detect" + status,
-                "program_rate_detect")
-            self.set_fixed_transfer_rate_flow(
-                "active" + status,
-                "missed" + status,
-                "program_rate_missed")
-            self.set_fixed_transfer_rate_flow(
-                "detect" + status,
-                "treatment_infect" + status,
-                "program_rate_start_treatment")
-            self.set_fixed_transfer_rate_flow(
-                "missed" + status,
-                "active" + status,
-                "program_rate_restart_presenting")
-            self.set_fixed_transfer_rate_flow(
-                "missed" + status,
-                "latent_late",
-                "tb_rate_recover" + status)
-            self.set_fixed_transfer_rate_flow(
-                "treatment_infect" + status,
-                "treatment_noninfect" + status,
-                "program_rate_success_infect")
-            self.set_fixed_transfer_rate_flow(
-                "treatment_infect" + status,
-                "active" + status,
-                "program_rate_default_infect")
-            self.set_fixed_transfer_rate_flow(
-                "treatment_noninfect" + status,
-                "active" + status,
-                "program_rate_default_noninfect")
-            self.set_fixed_transfer_rate_flow(
-                "treatment_noninfect" + status,
-                "susceptible_treated",
-                "program_rate_success_noninfect")
+        for strain in self.strains:
+            for status in self.pulmonary_status:
+                self.set_fixed_transfer_rate_flow(
+                    "latent_early" + strain,
+                    "active" + status + strain,
+                    "tb_rate_earlyprogress" + status)
+                self.set_fixed_transfer_rate_flow(
+                    "latent_late" + strain,
+                    "active" + status + strain,
+                    "tb_rate_lateprogress" + status)
+                self.set_fixed_transfer_rate_flow(
+                    "active" + status + strain,
+                    "latent_late" + strain,
+                    "tb_rate_recover" + status)
+
+                self.set_fixed_transfer_rate_flow(
+                    "active" + status + strain,
+                    "detect" + status + strain,
+                    "program_rate_detect" + strain)
+                self.set_fixed_transfer_rate_flow(
+                    "active" + status + strain,
+                    "missed" + status + strain,
+                    "program_rate_missed" + strain)
+                self.set_fixed_transfer_rate_flow(
+                    "detect" + status + strain,
+                    "treatment_infect" + status + strain,
+                    "program_rate_start_treatment" + strain)
+                self.set_fixed_transfer_rate_flow(
+                    "missed" + status + strain,
+                    "active" + status + strain,
+                    "program_rate_restart_presenting" + strain)
+
+                self.set_fixed_transfer_rate_flow(
+                    "missed" + status + strain,
+                    "latent_late" + strain,
+                    "tb_rate_recover" + status)
+                self.set_fixed_transfer_rate_flow(
+                    "treatment_infect" + status + strain,
+                    "treatment_noninfect" + status + strain,
+                    "program_rate_success_infect" + strain)
+                self.set_fixed_transfer_rate_flow(
+                    "treatment_infect" + status + strain,
+                    "active" + status + strain,
+                    "program_rate_default_infect" + strain)
+                self.set_fixed_transfer_rate_flow(
+                    "treatment_noninfect" + status + strain,
+                    "active" + status + strain,
+                    "program_rate_default_noninfect" + strain)
+                self.set_fixed_transfer_rate_flow(
+                    "treatment_noninfect" + status + strain,
+                    "susceptible_treated",
+                    "program_rate_success_noninfect" + strain)
 
         # death flows
         self.set_population_death_rate("demo_rate_death")
 
-        for status in self.pulmonary_status:
-            self.set_infection_death_rate_flow(
-                "active" + status,
-                "tb_demo_rate_death" + status)
-            self.set_infection_death_rate_flow(
-                "detect" + status,
-                "tb_demo_rate_death" + status)
-            self.set_infection_death_rate_flow(
-                "treatment_infect" + status,
-                "program_rate_death_infect")
-            self.set_infection_death_rate_flow(
-                "treatment_noninfect" + status,
-                "program_rate_death_noninfect")
+        for strain in self.strains:
+            for status in self.pulmonary_status:
+                self.set_infection_death_rate_flow(
+                    "active" + status + strain,
+                    "tb_demo_rate_death" + status)
+                self.set_infection_death_rate_flow(
+                    "detect" + status + strain,
+                    "tb_demo_rate_death" + status)
+                self.set_infection_death_rate_flow(
+                    "treatment_infect" + status + strain,
+                    "program_rate_death_infect" + strain)
+                self.set_infection_death_rate_flow(
+                    "treatment_noninfect" + status + strain,
+                    "program_rate_death_noninfect" + strain)
 
     def calculate_diagnostic_vars(self):
 
         rate_incidence = 0.0
-        rate_infection = 0.0
         rate_notification = 0.0
         rate_missed = 0.0
         rate_death_ontreatment = 0.0
@@ -1345,9 +1376,6 @@ class SingleStrainStratifiedModel(BaseModel):
             if 'latent' in from_label and 'active' in to_label:
                 val = self.compartments[from_label] * rate
                 rate_incidence += val
-            elif 'susceptible' in from_label and 'latent' in to_label:
-                val = self.compartments[from_label] * rate
-                rate_infection += val
             elif 'active' in from_label and 'detect' in to_label:
                 val = self.compartments[from_label] * rate
                 rate_notification += val
@@ -1377,20 +1405,18 @@ class SingleStrainStratifiedModel(BaseModel):
               self.vars["rate_infection_death"] \
             / self.vars["population"] * 1E5
 
-        self.vars["prevalence"] = \
-              self.vars["infectious_population"] \
-            / self.vars["population"] * 1E5
-
-        """ More commonly termed "annual risk of infection", but really a rate
-        and annual is implicit"""
-        self.vars["infection"] = \
-              rate_infection \
-            / self.vars["population"]
+        # self.vars["prevalence"] = \
+        #       self.vars["infectious_population"] \
+        #     / self.vars["population"] * 1E5
 
         """ Better term may be failed diagnosis, but using missed for
         consistency with the compartment name for now"""
         self.vars["missed"] = \
               rate_missed \
+            / self.vars["population"]
+
+        self.vars["success"] = \
+              rate_success \
             / self.vars["population"]
 
         self.vars["death_ontreatment"] = \
@@ -1400,3 +1426,4 @@ class SingleStrainStratifiedModel(BaseModel):
         self.vars["default"] = \
               rate_default \
             / self.vars["population"]
+

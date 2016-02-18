@@ -20,12 +20,12 @@ import pylab
 import autumn.model
 import autumn.plotting as plotting
 
-out_dir = 'single_strain_graphs'
+out_dir = 'three_strain_graphs'
 
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
-model = autumn.model.SingleStrainFullModel()
+model = autumn.model.FullModel()
 model.make_times_with_n_step(1950., 2015., 20)
 model.integrate_explicit()
 
@@ -52,8 +52,8 @@ pylab.savefig(os.path.join(out_dir, 'population.png'), dpi=300)
 
 plotting.plot_vars(model, ['incidence', 'notification', 'mortality'])
 pylab.savefig(os.path.join(out_dir, 'rates.png'), dpi=300)
-plotting.plot_vars(model, ['prevalence'])
-pylab.savefig(os.path.join(out_dir, 'prevalence.png'), dpi=300)
+# plotting.plot_vars(model, ['prevalence'])
+# pylab.savefig(os.path.join(out_dir, 'prevalence.png'), dpi=300)
 
 plotting.plot_flows(model, model.labels[:])
 pylab.savefig(os.path.join(out_dir, 'flows.png'), dpi=300)

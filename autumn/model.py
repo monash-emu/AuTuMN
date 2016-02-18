@@ -975,9 +975,6 @@ class SingleStrainFullModel(BaseModel):
             if 'latent' in from_label and 'active' in to_label:
                 val = self.compartments[from_label] * rate
                 rate_incidence += val
-            elif 'susceptible' in from_label and 'latent' in to_label:
-                val = self.compartments[from_label] * rate
-                rate_infection += val
             elif 'active' in from_label and 'detect' in to_label:
                 val = self.compartments[from_label] * rate
                 rate_notification += val
@@ -1011,16 +1008,14 @@ class SingleStrainFullModel(BaseModel):
               self.vars["infectious_population"] \
             / self.vars["population"] * 1E5
 
-        """ More commonly termed "annual risk of infection", but really a rate
-        and annual is implicit"""
-        self.vars["infection"] = \
-              rate_infection \
-            / self.vars["population"]
-
         """ Better term may be failed diagnosis, but using missed for
         consistency with the compartment name for now"""
         self.vars["missed"] = \
               rate_missed \
+            / self.vars["population"]
+
+        self.vars["success"] = \
+              rate_success \
             / self.vars["population"]
 
         self.vars["death_ontreatment"] = \

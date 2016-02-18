@@ -1101,7 +1101,7 @@ class FullModel(BaseModel):
 
     def set_input(self, input_parameters, input_compartments):
 
-        compartment_list = [
+        self.compartment_list = [
             "susceptible_fully",
             "susceptible_vac",
             "susceptible_treated",
@@ -1111,8 +1111,7 @@ class FullModel(BaseModel):
             "detect",
             "missed",
             "treatment_infect",
-            "treatment_noninfect"
-        ]
+            "treatment_noninfect"]
 
         self.pulmonary_status = [
             "_smearpos",
@@ -1121,81 +1120,46 @@ class FullModel(BaseModel):
 
         self.strains = [
             "_ds",
-            "_mdr",
-            "_xdr"]
+            "_mdr"]
 
-        # Compartment initialisation
-        for compartment in compartment_list:
-            if compartment in input_compartments:
-                if "susceptible" in compartment:
-                    self.set_compartment(compartment, input_compartments[compartment])
-                elif "latent" in compartment:
-                    for strain in self.strains:
-                        self.set_compartment(compartment + strain, input_compartments[compartment])
-                else:
-                    for strain in self.strains:
-                        for status in self.pulmonary_status:
-                            # Assign all the starting infectious persons to DS-TB
-                            if strain == "_ds":
-                                self.set_compartment(compartment + status + strain,
-                                                     input_compartments[compartment] / 3.)
-                            else:
-                                self.set_compartment(compartment + status + strain, 0.)
-            else:
-                if "susceptible" in compartment:
-                    self.set_compartment(compartment, 0.)
-                elif "latent" in compartment:
-                    for strain in self.strains:
-                        self.set_compartment(compartment + strain, 0.)
-                else:
-                    for strain in self.strains:
-                        for status in self.pulmonary_status:
-                            self.set_compartment(compartment + status + strain, 0.)
+        self.infectious_tags = ["active", "missed", "detect", "treatment_infect"]
 
-        for parameter in input_parameters:
+        self.initialise_compartments(input_compartments)
+
+        for parameter in input_parameters:  # Set parameters from parameter module
             self.set_param(parameter, input_parameters[parameter])
 
-        self.set_param(
-            "tb_rate_stabilise",
-            (1 - self.params["tb_proportion_early_progression"])
-              / self.params["tb_timeperiod_early_latent"])
+        self.set_param("tb_rate_stabilise",  # Calculate stabilisation rate
+                       (1 - self.params["tb_proportion_early_progression"])
+                       / self.params["tb_timeperiod_early_latent"])
 
         if "tb_proportion_casefatality_untreated_extrapul" not in input_parameters:
-            self.set_param(
-                "tb_proportion_casefatality_untreated_extrapul",
-                input_parameters["tb_proportion_casefatality_untreated_smearneg"])
+            self.set_param("tb_proportion_casefatality_untreated_extrapul",
+                           input_parameters["tb_proportion_casefatality_untreated_smearneg"])
 
-        self.set_param(
-            "program_rate_detect",
-            1. / self.params["tb_timeperiod_activeuntreated"]
-               / (1. - self.params["program_proportion_detect"]))
+        self.set_param("program_rate_detect",
+                       1. / self.params["tb_timeperiod_activeuntreated"]
+                       / (1. - self.params["program_proportion_detect"]))
         # Formula derived from CDR = (detection rate) / (detection rate and spontaneous resolution rates)
 
-        self.set_param(
-            "program_rate_missed",
-            self.params["program_rate_detect"]
-              * (1. - self.params["program_algorithm_sensitivity"])
-              / self.params["program_algorithm_sensitivity"])
+        self.set_param("program_rate_missed",
+                       self.params["program_rate_detect"]
+                       * (1. - self.params["program_algorithm_sensitivity"])
+                       / self.params["program_algorithm_sensitivity"])
         # Formula derived from (algorithm sensitivity) = (detection rate) / (detection rate and miss rate)
 
-        # Code to determines the treatment flow rates from the input parameters
+        # Code to determine the treatment flow rates from the input parameters
         self.outcomes = ["_success", "_death", "_default"]
         self.nonsuccess_outcomes = self.outcomes[1:3]
         self.treatment_stages = ["_infect", "_noninfect"]
-
-        self.set_param(
-            "tb_timeperiod_noninfect_ontreatment",  # Find the non-infectious period
-            self.params["tb_timeperiod_treatment"]
-              - self.params["tb_timeperiod_infect_ontreatment"])
+        self.set_param("tb_timeperiod_noninfect_ontreatment",  # Find the non-infectious period
+                       self.params["tb_timeperiod_treatment"]
+                       - self.params["tb_timeperiod_infect_ontreatment"])
         for outcome in self.nonsuccess_outcomes:  # Find the proportion of deaths/defaults during infectious stage
-            self.set_param(
-                "program_proportion" + outcome + "_infect",
-                1. - exp( log(1. - self.params["program_proportion" + outcome])
-                            * self.params["tb_timeperiod_infect_ontreatment"]
-                            / self.params["tb_timeperiod_treatment"]
-                        )
-            )
-
+            self.set_param("program_proportion" + outcome + "_infect",
+                           1. - exp( log(1. - self.params["program_proportion" + outcome])
+                                     * self.params["tb_timeperiod_infect_ontreatment"]
+                                     / self.params["tb_timeperiod_treatment"]))
         for outcome in self.nonsuccess_outcomes:  # Find the proportion of deaths/defaults during non-infectious stage
             self.set_param(
                 "program_proportion" + outcome + "_noninfect",
@@ -1242,7 +1206,32 @@ class FullModel(BaseModel):
                 self.params["tb_proportion_casefatality_untreated" + status]
                   / self.params["tb_timeperiod_activeuntreated"])
 
-        self.infectious_tags = ["active", "missed", "detect", "treatment_infect"]
+    def initialise_compartments(self, input_compartments):
+        for compartment in self.compartment_list:
+            if compartment in input_compartments:  # If a non-zero start
+                if "susceptible" in compartment:  # Don't replicate
+                    self.set_compartment(compartment, input_compartments[compartment])
+                elif "latent" in compartment:  # Replicate only for strains
+                    for strain in self.strains:
+                        self.set_compartment(compartment + strain, input_compartments[compartment])
+                else:
+                    for strain in self.strains:  # Replicate for strain and pulmonary status
+                        for status in self.pulmonary_status:  # Assign all the starting active TB to DS
+                            if strain == "_ds":
+                                self.set_compartment(compartment + status + strain,
+                                                     input_compartments[compartment] / 3.)
+                            else:
+                                self.set_compartment(compartment + status + strain, 0.)
+            else:  # If starting from zero
+                if "susceptible" in compartment:  # Don't replicate
+                    self.set_compartment(compartment, 0.)
+                elif "latent" in compartment:  # Replicate only for strains
+                    for strain in self.strains:
+                        self.set_compartment(compartment + strain, 0.)
+                else:  # Replicate for strains and pulmonary status
+                    for strain in self.strains:
+                        for status in self.pulmonary_status:
+                            self.set_compartment(compartment + status + strain, 0.)
 
     def calculate_vars(self):
         self.vars["population"] = sum(self.compartments.values())

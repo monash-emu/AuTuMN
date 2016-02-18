@@ -192,7 +192,11 @@ class NestedParamWithRangeSheetReader:
         self.i_subpar = -1
         self.name = 'XLS Sheet Name'
         self.key = 'data_key'
-        self.range = { 'Best':[], 'High':[], 'Low':[] }
+        self.range = {
+            'Best': [],
+            'High': [],
+            'Low': []
+        }
         self.nested_parlist = [
             [
                 'par0', 
@@ -231,7 +235,7 @@ def read_xls_with_sheet_readers(filename, sheet_readers=[]):
     try: 
         workbook = open_workbook(filename) 
     except: 
-        raise Exception('Failed to load spreadsheet: file "%s" not found!' % filename)
+        raise Exception('Failed to open spreadsheet: %s' % filename)
     result = {}
     for reader in sheet_readers:
         print("Reading sheet \"{}\"".format(reader.name))

@@ -20,7 +20,7 @@ import pylab
 import autumn.model_strata
 import autumn.plotting as plotting
 
-out_dir = 'three_strain_graphs'
+out_dir = 'strata_graphs'
 
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)

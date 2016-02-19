@@ -50,9 +50,9 @@ class ModelRunner():
                 'key': 'init_population',
             },
             { 
-                'init': 3,
-                'scale': 1,
-                'key': 'tb_timeperiod_activeuntreated',
+                'init': .15,
+                'scale': .1,
+                'key': 'tb_death_rate',
             },
         ]
 
@@ -64,8 +64,8 @@ class ModelRunner():
         for status in self.model.pulmonary_status:
             self.model.set_param(
                 "tb_demo_rate_death" + status,
-                self.model.params["tb_proportion_casefatality_untreated" + status]
-                  / param_dict["tb_timeperiod_activeuntreated"])
+                param_dict["tb_death_rate"] 
+                  * self.model.params["tb_proportion_casefatality_untreated" + status])
             self.model.set_infection_death_rate_flow(
                 "active" + status,
                 "tb_demo_rate_death" + status)
@@ -117,7 +117,7 @@ class ModelRunner():
         prints = [
            ("n={:.0f}", param_dict['n_tb_contact']),
            ("start_pop={:0.0f}", param_dict['init_population']),
-           ("t_death={:0.2f}", param_dict['tb_timeperiod_activeuntreated']),
+           ("t_death={:0.4f}", param_dict['tb_death_rate']),
            ("final_pop={:0.0f}", final_pop),
            ("prev={:0.0f}", prevalence),
            ("inci={:0.0f}", incidence),
@@ -184,9 +184,9 @@ class ModelRunner():
     def plot_mcmc_params(self, base, n_burn_step=0):
         sampler = self.sampler
         n_walker, n_mcmc_step, n_param = sampler.chain.shape
-        max_val = 0.0
         for i_param in range(n_param):
             pylab.clf()
+            max_val = 0.0
             for i_walker in range(n_walker):
                 vals = sampler.chain[i_walker, n_burn_step:, i_param]
                 pylab.plot(range(len(vals)), vals)
@@ -225,21 +225,21 @@ class ModelRunner():
         pylab.savefig(base + '.' + var + '.png')
 
 
-out_dir = "explore_model"
+out_dir = "mcmc_graphs"
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
 model_runner = ModelRunner()
 
-base = os.path.join(out_dir, 'minimize')
-minimum = model_runner.minimize()
-print minimum.best_params
-model_runner.run_with_params(minimum.best_params)
-model = model_runner.model
-plot_fractions(model, model.labels[:])
-pylab.savefig(base + '.fraction.png')
-plot_populations(model, model.labels[:])
-pylab.savefig(base + '.population.png')
+# base = os.path.join(out_dir, 'minimize')
+# minimum = model_runner.minimize()
+# print minimum.best_params
+# model_runner.run_with_params(minimum.best_params)
+# model = model_runner.model
+# plot_fractions(model, model.labels[:])
+# pylab.savefig(base + '.fraction.png')
+# plot_populations(model, model.labels[:])
+# pylab.savefig(base + '.population.png')
 
 base = os.path.join(out_dir, 'mcmc')
 model_runner.mcmc(n_mcmc_step=100)

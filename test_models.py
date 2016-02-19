@@ -4,7 +4,7 @@ import glob
 import autumn.model
 import autumn.plotting
 
-out_dir = 'test_model_graphs'
+out_dir = 'model_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 

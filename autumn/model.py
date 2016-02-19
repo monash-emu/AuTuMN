@@ -1255,18 +1255,20 @@ class FullModel(BaseModel):
         self.vars["births_vac"] = \
             self.params["program_prop_vac"] * self.vars["rate_birth"]
 
-        # Come back to this bit
+        # Force of infection calculation
         for strain in self.strains:
             self.vars["infectious_population" + strain] = 0.0
             for status in self.pulmonary_status:
                 for label in self.labels:
+                    if strain not in label:
+                        continue
                     if status not in label:
                         continue
                     if not label_intersects_tags(label, self.infectious_tags):
                         continue
                     self.vars["infectious_population" + strain] += \
                         self.params["tb_multiplier_force" + status] \
-                           * self.compartments[label]
+                        * self.compartments[label]
             self.vars["rate_force" + strain] = \
                 self.params["tb_n_contact"] \
                   * self.vars["infectious_population" + strain] \
@@ -1350,6 +1352,7 @@ class FullModel(BaseModel):
         # death flows
         self.set_population_death_rate("demo_rate_death")
 
+        # Also will need changing
         for strain in self.strains:
             for status in self.pulmonary_status:
                 self.set_infection_death_rate_flow(

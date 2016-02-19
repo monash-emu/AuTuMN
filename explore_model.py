@@ -49,19 +49,35 @@ class ModelRunner():
                 'scale': 10E6,
                 'key': 'init_population',
             },
+            { 
+                'init': 3,
+                'scale': 1,
+                'key': 'tb_timeperiod_activeuntreated',
+            },
         ]
-
-    def convert_param_list_to_dict(self, params):
-        param_dict = {}
-        for val, props in zip(params, self.param_props_list):
-            param_dict[props['key']] = val
-        return param_dict
 
     def set_model_with_params(self, param_dict):
         self.model.set_param(
             "tb_n_contact", param_dict["n_tb_contact"])
         self.model.set_compartment(
             "susceptible_fully", param_dict['init_population'])
+        for status in self.model.pulmonary_status:
+            self.model.set_param(
+                "tb_demo_rate_death" + status,
+                self.model.params["tb_proportion_casefatality_untreated" + status]
+                  / param_dict["tb_timeperiod_activeuntreated"])
+            self.model.set_infection_death_rate_flow(
+                "active" + status,
+                "tb_demo_rate_death" + status)
+            self.model.set_infection_death_rate_flow(
+                "detect" + status,
+                "tb_demo_rate_death" + status)
+
+    def convert_param_list_to_dict(self, params):
+        param_dict = {}
+        for val, props in zip(params, self.param_props_list):
+            param_dict[props['key']] = val
+        return param_dict
 
     def run_with_params(self, params):
         if not is_positive_definite(params[1]):
@@ -94,13 +110,14 @@ class ModelRunner():
         ln_posterior += norm(99E6, 5E6).logpdf(final_pop)
         ln_posterior += norm(417, 10).logpdf(prevalence)
         # ln_posterior += norm(288, 50).logpdf(incidence)
-        # ln_posterior += norm(10, 10).logpdf(mortality)
+        ln_posterior += norm(10, 2).logpdf(mortality)
 
         ln_overall = ln_prior + ln_posterior
 
         prints = [
            ("n={:.0f}", param_dict['n_tb_contact']),
            ("start_pop={:0.0f}", param_dict['init_population']),
+           ("t_death={:0.2f}", param_dict['tb_timeperiod_activeuntreated']),
            ("final_pop={:0.0f}", final_pop),
            ("prev={:0.0f}", prevalence),
            ("inci={:0.0f}", incidence),
@@ -214,15 +231,15 @@ if not os.path.isdir(out_dir):
 
 model_runner = ModelRunner()
 
-# base = os.path.join(out_dir, 'minimize')
-# minimum = model_runner.minimize()
-# print minimum.best_params
-# model_runner.run_with_params(minimum.best_params)
-# model = model_runner.model
-# plot_fractions(model, model.labels[:])
-# pylab.savefig(base + '.fraction.png')
-# plot_populations(model, model.labels[:])
-# pylab.savefig(base + '.population.png')
+base = os.path.join(out_dir, 'minimize')
+minimum = model_runner.minimize()
+print minimum.best_params
+model_runner.run_with_params(minimum.best_params)
+model = model_runner.model
+plot_fractions(model, model.labels[:])
+pylab.savefig(base + '.fraction.png')
+plot_populations(model, model.labels[:])
+pylab.savefig(base + '.population.png')
 
 base = os.path.join(out_dir, 'mcmc')
 model_runner.mcmc(n_mcmc_step=100)

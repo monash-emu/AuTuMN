@@ -11,9 +11,7 @@ This is a set of Python models that modularizes the development of population tr
 
 - model.py: Underlying transmission dynamic model. Running this won't show you anything in the console window 
 - plotting.py: plotting results of the model
-- read_spreadsheet.py: This reads data in input.xlsx and import into model.py. Again it will needed to reflect the changes we will make to model.py and consequently input.xlsx; and I am happy to do this as well. 
-- execution.py: This links all the above modules together and give model outputs. We will need to run this file to see the results. 
-
+- spreadsheet.py: This reads data in input.xlsx and import into model.py. Again it will needed to reflect the changes we will make to model.py and consequently input.xlsx; and I am happy to do this as well. 
 
 # TODO
 

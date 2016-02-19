@@ -270,8 +270,8 @@ class BaseModel():
         for label in self.labels:
             self.fraction_soln[label] = [
                 v / t
-                for v, t in
-                zip(
+                for v, t 
+                in zip(
                     self.population_soln[label],
                     self.total_population_soln
                 )

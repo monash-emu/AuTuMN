@@ -1112,7 +1112,8 @@ class FullModel(BaseModel):
 
         self.strains = [
             "_ds",
-            "_mdr"]
+            "_mdr",
+            "_xdr"]
 
         self.infectious_tags = ["active", "missed", "detect", "treatment_infect"]
 
@@ -1252,15 +1253,11 @@ class FullModel(BaseModel):
             self.vars["infectious_population" + strain] = 0.0
             for status in self.pulmonary_status:
                 for label in self.labels:
-                    if strain not in label:
-                        continue
-                    if status not in label:
-                        continue
-                    if not label_intersects_tags(label, self.infectious_tags):
-                        continue
-                    self.vars["infectious_population" + strain] += \
-                        self.params["tb_multiplier_force" + status] \
-                        * self.compartments[label]
+                    if strain in label and status in label \
+                        and label_intersects_tags(label, self.infectious_tags):
+                        self.vars["infectious_population" + strain] += \
+                            self.params["tb_multiplier_force" + status] \
+                            * self.compartments[label]
             self.vars["rate_force" + strain] = \
                 self.params["tb_n_contact"] \
                   * self.vars["infectious_population" + strain] \

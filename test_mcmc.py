@@ -54,6 +54,11 @@ class ModelRunner():
                 'scale': .1,
                 'key': 'tb_death_rate',
             },
+            { 
+                'init': .1,
+                'scale': .1,
+                'key': 'tb_recover_rate',
+            },
         ]
 
     def set_model_with_params(self, param_dict):
@@ -72,6 +77,15 @@ class ModelRunner():
             self.model.set_infection_death_rate_flow(
                 "detect" + status,
                 "tb_demo_rate_death" + status)
+
+            self.model.set_param(
+                "tb_rate_recover" + status,
+                param_dict["tb_recover_rate"] 
+                  * (1 - self.model.params["tb_proportion_casefatality_untreated" + status]))
+            self.model.set_fixed_transfer_rate_flow(
+                "active" + status,
+                "latent_late",
+                "tb_rate_recover" + status)
 
     def convert_param_list_to_dict(self, params):
         param_dict = {}
@@ -107,9 +121,9 @@ class ModelRunner():
         ln_prior += make_gamma_dist(40, 20).logpdf(param_dict['n_tb_contact'])
 
         ln_posterior = 0.0
-        ln_posterior += norm(99E6, 5E6).logpdf(final_pop)
+        ln_posterior += 5*norm(99E6, 5E6).logpdf(final_pop)
         ln_posterior += norm(417, 10).logpdf(prevalence)
-        # ln_posterior += norm(288, 50).logpdf(incidence)
+        ln_posterior += norm(288, 10).logpdf(incidence)
         ln_posterior += norm(10, 2).logpdf(mortality)
 
         ln_overall = ln_prior + ln_posterior
@@ -117,7 +131,8 @@ class ModelRunner():
         prints = [
            ("n={:.0f}", param_dict['n_tb_contact']),
            ("start_pop={:0.0f}", param_dict['init_population']),
-           ("t_death={:0.4f}", param_dict['tb_death_rate']),
+           ("tb_death={:0.4f}", param_dict['tb_death_rate']),
+           ("tb_recover={:0.4f}", param_dict['tb_recover_rate']),
            ("final_pop={:0.0f}", final_pop),
            ("prev={:0.0f}", prevalence),
            ("inci={:0.0f}", incidence),

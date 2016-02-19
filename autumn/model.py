@@ -258,14 +258,6 @@ class BaseModel():
             for i_label, label in enumerate(self.labels):
                 self.flow_array[i, i_label] = self.flows[label]
 
-        self.total_population_soln = []
-        n_time = len(self.times)
-        for i in range(n_time):
-            t = 0.0
-            for label in self.labels:
-                t += self.population_soln[label][i]
-            self.total_population_soln.append(t)
-
         self.fraction_soln = {}
         for label in self.labels:
             self.fraction_soln[label] = [
@@ -273,7 +265,7 @@ class BaseModel():
                 for v, t 
                 in zip(
                     self.population_soln[label],
-                    self.total_population_soln
+                    self.get_var_soln("population")
                 )
             ]
 

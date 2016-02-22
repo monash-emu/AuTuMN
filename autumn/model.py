@@ -475,7 +475,7 @@ class ToyModel(BaseModel):
 class SimpleStrainModel(BaseModel):
 
     """
-    Includes pulmonary strains
+    Includes organ strains
     """
 
     def __init__(self):
@@ -488,7 +488,7 @@ class SimpleStrainModel(BaseModel):
         self.set_compartment("latent_early", 0.)
         self.set_compartment("latent_late", 0.)
 
-        self.pulmonary_status = [
+        self.organ_status = [
             "_smearpos",
             "_smearneg",
             "_extrapul"]
@@ -503,7 +503,7 @@ class SimpleStrainModel(BaseModel):
 
         self.set_param("tb_rate_earlyprogress", 0.2)
 
-        for status in self.pulmonary_status:
+        for status in self.organ_status:
             self.set_compartment("active" + status, 1.)
             self.set_compartment("detect" + status, 0.)
             self.set_compartment("missed" + status, 0.)
@@ -555,7 +555,7 @@ class SimpleStrainModel(BaseModel):
             self.params['program_prop_vac'] * self.vars["rate_birth"]
 
         self.vars["infected_populaton"] = 0.0
-        for status in self.pulmonary_status:
+        for status in self.organ_status:
             for label in self.labels:
                 if status in label and "_noninfect" not in label:
                     self.vars["infected_populaton"] += \
@@ -587,7 +587,7 @@ class SimpleStrainModel(BaseModel):
         self.set_fixed_transfer_rate_flow(
             "latent_early", "latent_late", "tb_rate_stabilise")
 
-        for status in self.pulmonary_status:
+        for status in self.organ_status:
             self.set_fixed_transfer_rate_flow(
                 "latent_early",
                 "active" + status,
@@ -636,7 +636,7 @@ class SimpleStrainModel(BaseModel):
         # death flows
         self.set_population_death_rate("rate_death")
 
-        for status in self.pulmonary_status:
+        for status in self.organ_status:
             self.set_infection_death_rate_flow(
                 "active" + status,
                 "tb_rate_death")
@@ -729,11 +729,10 @@ class FullModel(BaseModel):
 
     def strata_iterator(self):
         for strain in self.strains:
-            for pulmonary in self.pulmonaries:
-                # for morbidity in self.morbidities:
-                    yield strain, pulmonary
-                # for comorbidity in self.comorbidities:
-                #     yield pulmonary, strain, morbidity
+            for organ in self.organs:
+                # yield strain, organ
+                for morbidity in self.morbidities:
+                    yield strain, organ, morbidity
 
     def set_input(self, input_parameters, input_compartments):
 
@@ -750,7 +749,7 @@ class FullModel(BaseModel):
             "treatment_noninfect"]
 
         # WARNING: make sure names aren't subset of each other
-        self.pulmonaries = [
+        self.organs = [
             "_smearpos",
             "_smearneg",
             "_extrapul"]
@@ -763,7 +762,7 @@ class FullModel(BaseModel):
         self.morbidities = [
             "_hiv",
             "_diabetes",
-            "_other"]
+            "_nocomor"]
 
         self.infectious_tags = ["active", "missed", "detect", "treatment_infect"]
 
@@ -811,26 +810,27 @@ class FullModel(BaseModel):
                 "program_rate_restart_presenting" + strain,
                 self.params["program_rate_restart_presenting"])
 
-        for pulmonary in self.pulmonaries:
+        for organ in self.organs:
             self.set_param(
-                "tb_rate_earlyprogress" + pulmonary,
+                "tb_rate_earlyprogress" + organ,
                 self.params["tb_proportion_early_progression"]
                   / self.params["tb_timeperiod_early_latent"]
-                  * self.params["epi_proportion_cases" + pulmonary])
+                  * self.params["epi_proportion_cases" + organ])
             self.set_param(
-                "tb_rate_lateprogress" + pulmonary,
+                "tb_rate_lateprogress" + organ,
                 self.params["tb_rate_late_progression"]
-                * self.params["epi_proportion_cases" + pulmonary])
+                * self.params["epi_proportion_cases" + organ])
             self.set_param(
-                "tb_rate_recover" + pulmonary,
-                (1 - self.params["tb_proportion_casefatality_untreated" + pulmonary])
+                "tb_rate_recover" + organ,
+                (1 - self.params["tb_proportion_casefatality_untreated" + organ])
                   / self.params["tb_timeperiod_activeuntreated"])
             self.set_param(
-                "tb_demo_rate_death" + pulmonary,
-                self.params["tb_proportion_casefatality_untreated" + pulmonary]
+                "tb_demo_rate_death" + organ,
+                self.params["tb_proportion_casefatality_untreated" + organ]
                   / self.params["tb_timeperiod_activeuntreated"])
 
     def initialise_compartments(self, input_compartments):
+
         # initialize to 0
         for compartment in self.compartment_list:
             if "susceptible" in compartment:  # Don't replicate
@@ -838,8 +838,9 @@ class FullModel(BaseModel):
             elif "latent" in compartment:  # Replicate only for strains
                 for strain in self.strains:
                     self.set_compartment(compartment + strain, 0.)
-            else:  # Replicate for strains and pulmonary status
+            else:  # Replicate for strains and organ status
                 for strata in self.strata_iterator():
+                    print compartment, strata, self.make_strata_label(compartment, strata)
                     self.set_compartment(
                         self.make_strata_label(compartment, strata),
                         0.)
@@ -932,16 +933,16 @@ class FullModel(BaseModel):
         # Force of infection calculation
         for strain in self.strains:
             self.vars["infectious_population" + strain] = 0.0
-            for pulmonary in self.pulmonaries:
+            for organ in self.organs:
                 for label in self.labels:
                     if strain not in label:
                         continue
-                    if pulmonary not in label:
+                    if organ not in label:
                         continue
                     if not label_intersects_tags(label, self.infectious_tags):
                         continue
                     self.vars["infectious_population" + strain] += \
-                        self.params["tb_multiplier_force" + pulmonary] \
+                        self.params["tb_multiplier_force" + organ] \
                         * self.compartments[label]
             self.vars["rate_force" + strain] = \
                 self.params["tb_n_contact"] \
@@ -981,19 +982,19 @@ class FullModel(BaseModel):
                 "tb_rate_stabilise")
 
         for strata in self.strata_iterator():
-            strain, pulmonary = strata[0:2]
+            strain, organ = strata[0:2]
             self.set_fixed_transfer_rate_flow(
                 "latent_early" + strain,
                 self.make_strata_label("active", strata),
-                "tb_rate_earlyprogress" + pulmonary)
+                "tb_rate_earlyprogress" + organ)
             self.set_fixed_transfer_rate_flow(
                 "latent_late" + strain,
                 self.make_strata_label("active", strata),
-                "tb_rate_lateprogress" + pulmonary)
+                "tb_rate_lateprogress" + organ)
             self.set_fixed_transfer_rate_flow(
                 self.make_strata_label("active", strata),
                 "latent_late" + strain,
-                "tb_rate_recover" + pulmonary)
+                "tb_rate_recover" + organ)
 
             self.set_fixed_transfer_rate_flow(
                 self.make_strata_label("active", strata),
@@ -1015,7 +1016,7 @@ class FullModel(BaseModel):
             self.set_fixed_transfer_rate_flow(
                 self.make_strata_label("missed", strata),
                 "latent_late" + strain,
-                "tb_rate_recover" + pulmonary)
+                "tb_rate_recover" + organ)
             self.set_fixed_transfer_rate_flow(
                 self.make_strata_label("treatment_infect", strata),
                 self.make_strata_label("treatment_noninfect", strata),
@@ -1038,13 +1039,13 @@ class FullModel(BaseModel):
 
         # Also will need changing
         for strata in self.strata_iterator():
-            strain, pulmonary = strata[0:2]
+            strain, organ = strata[0:2]
             self.set_infection_death_rate_flow(
                 self.make_strata_label("active", strata),
-                "tb_demo_rate_death" + pulmonary)
+                "tb_demo_rate_death" + organ)
             self.set_infection_death_rate_flow(
                 self.make_strata_label("detect", strata),
-                "tb_demo_rate_death" + pulmonary)
+                "tb_demo_rate_death" + organ)
             self.set_infection_death_rate_flow(
                 self.make_strata_label("treatment_infect", strata),
                 "program_rate_death_infect" + strain)

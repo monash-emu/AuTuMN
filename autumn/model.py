@@ -730,10 +730,10 @@ class FullModel(BaseModel):
     def strata_iterator(self):
         for strain in self.strains:
             for pulmonary in self.pulmonaries:
-                for morbidity in self.morbidities:
-                    yield strain, pulmonary, morbidity
+                # for morbidity in self.morbidities:
+                    yield strain, pulmonary
                 # for comorbidity in self.comorbidities:
-                #     yield pulmonary, strain, comorbidity
+                #     yield pulmonary, strain, morbidity
 
     def set_input(self, input_parameters, input_compartments):
 

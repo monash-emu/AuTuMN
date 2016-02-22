@@ -92,23 +92,54 @@ def make_axes_with_room_for_legend():
 def set_axes_props(
         ax, xlabel=None, ylabel=None, title=None, is_legend=True,
         axis_labels=None):
+    frame_color = "grey"
+
+    # hide top and right border of plot
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
+
     if xlabel is not None:
         ax.set_xlabel(xlabel)
+
     if ylabel is not None:
         ax.set_ylabel(ylabel)
+
     if is_legend:
         if axis_labels:
             handles, labels = ax.get_legend_handles_labels()
-            ax.legend(
-                handles, axis_labels,
+            leg = ax.legend(
+                handles, 
+                axis_labels,
                 bbox_to_anchor=(1.05, 1),
-                loc=2, borderaxespad=0., prop={'size':7})
+                loc=2, 
+                borderaxespad=0., 
+                frameon=False,
+                prop={'size':7})
         else:
-            ax.legend(
+            leg = ax.legend(
                 bbox_to_anchor=(1.05, 1),
-                loc=2, borderaxespad=0., prop={'size':7})
+                loc=2, 
+                borderaxespad=0., 
+                frameon=False,
+                prop={'size':7})
+        for text in leg.get_texts():
+            text.set_color(frame_color)
+
     if title is not None:
-        ax.set_title(title)
+        t = ax.set_title(title)
+        t.set_color(frame_color)
+
+    for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+        label.set_fontname('Arial')
+        label.set_fontsize(8)
+
+    ax.tick_params(color=frame_color, labelcolor=frame_color)
+    for spine in ax.spines.values():
+        spine.set_edgecolor(frame_color)
+    ax.xaxis.label.set_color(frame_color)
+    ax.yaxis.label.set_color(frame_color)
 
 
 def save_png(png):

@@ -16,8 +16,8 @@ import scipy.optimize as optimize
 from numpy import isfinite
 from scipy.stats import beta, gamma, norm, truncnorm
 
-from autumn.model import SingleStrainFullModel
-from autumn.plotting import plot_fractions, plot_populations
+import autumn.model
+from autumn.plotting import plot_fractions, plot_populations, humanize_y_ticks
 
 
 
@@ -35,7 +35,7 @@ def is_positive_definite(v):
 class ModelRunner():
 
     def __init__(self):
-        self.model = SingleStrainFullModel()
+        self.model = autumn.model.FullModel()
         self.model.make_times(1950, 2030, 1.)
         self.is_last_run_sucess = False
         self.param_props_list = [
@@ -66,26 +66,27 @@ class ModelRunner():
             "tb_n_contact", param_dict["n_tb_contact"])
         self.model.set_compartment(
             "susceptible_fully", param_dict['init_population'])
-        for status in self.model.pulmonary_status:
+        for strata in self.model.strata_iterator():
+            strain, pulmonary = strata[0:2]
             self.model.set_param(
-                "tb_demo_rate_death" + status,
+                "tb_demo_rate_death" + pulmonary,
                 param_dict["tb_death_rate"] 
-                  * self.model.params["tb_proportion_casefatality_untreated" + status])
+                  * self.model.params["tb_proportion_casefatality_untreated" + pulmonary])
             self.model.set_infection_death_rate_flow(
-                "active" + status,
-                "tb_demo_rate_death" + status)
+                self.model.make_strata_label("active", strata),
+                "tb_demo_rate_death" + pulmonary)
             self.model.set_infection_death_rate_flow(
-                "detect" + status,
-                "tb_demo_rate_death" + status)
+                self.model.make_strata_label("detect", strata),
+                "tb_demo_rate_death" + pulmonary)
 
             self.model.set_param(
-                "tb_rate_recover" + status,
+                "tb_rate_recover" + pulmonary,
                 param_dict["tb_recover_rate"] 
-                  * (1 - self.model.params["tb_proportion_casefatality_untreated" + status]))
+                  * (1 - self.model.params["tb_proportion_casefatality_untreated" + pulmonary]))
             self.model.set_fixed_transfer_rate_flow(
-                "active" + status,
-                "latent_late",
-                "tb_rate_recover" + status)
+                self.model.make_strata_label("active", strata),
+                "latent_late" + strain,
+                "tb_rate_recover" + pulmonary)
 
     def convert_param_list_to_dict(self, params):
         param_dict = {}
@@ -100,9 +101,11 @@ class ModelRunner():
             return
         self.set_model_with_params(self.convert_param_list_to_dict(params))
         self.is_last_run_sucess = True
+        # self.model.integrate_explicit()
         try:
             self.model.integrate_explicit()
         except:
+            print "Warning: parameters=%f failed with model" % params
             self.is_last_run_sucess = False
 
     def ln_overall(self, params):
@@ -113,7 +116,7 @@ class ModelRunner():
         param_dict = self.convert_param_list_to_dict(params)
 
         final_pop = self.model.vars["population"]
-        prevalence = self.model.vars["infectious_population"] / final_pop * 1E5
+        # prevalence = self.model.vars["infectious_population"] / final_pop * 1E5
         mortality = self.model.vars["rate_infection_death"] / final_pop * 1E5
         incidence = self.model.vars["incidence"]
 
@@ -122,7 +125,7 @@ class ModelRunner():
 
         ln_posterior = 0.0
         ln_posterior += 5*norm(99E6, 5E6).logpdf(final_pop)
-        ln_posterior += norm(417, 10).logpdf(prevalence)
+        # ln_posterior += norm(417, 10).logpdf(prevalence)
         ln_posterior += norm(288, 10).logpdf(incidence)
         ln_posterior += norm(10, 2).logpdf(mortality)
 
@@ -134,7 +137,7 @@ class ModelRunner():
            ("tb_death={:0.4f}", param_dict['tb_death_rate']),
            ("tb_recover={:0.4f}", param_dict['tb_recover_rate']),
            ("final_pop={:0.0f}", final_pop),
-           ("prev={:0.0f}", prevalence),
+           # ("prev={:0.0f}", prevalence),
            ("inci={:0.0f}", incidence),
            ("mort={:0.0f}", mortality),
            ("-lnprob={:0.2f}", -ln_overall),
@@ -236,6 +239,7 @@ class ModelRunner():
 
         pylab.xlabel('year')
         pylab.ylabel(var)
+        humanize_y_ticks()
         pylab.title('Modelled %s for selection of MCMC parameters' % var)
         pylab.savefig(base + '.' + var + '.png')
 
@@ -257,9 +261,12 @@ model_runner = ModelRunner()
 # pylab.savefig(base + '.population.png')
 
 base = os.path.join(out_dir, 'mcmc')
-model_runner.mcmc(n_mcmc_step=100)
+model_runner.mcmc(n_mcmc_step=20)
 model_runner.plot_mcmc_params(base, n_burn_step=0)
 model_runner.plot_mcmc_var(
-        'population', base, n_burn_step=40, n_model_show=100)
+        'population', 
+        base, 
+        n_burn_step=0, 
+        n_model_show=20)
 
 

@@ -727,7 +727,7 @@ class FullModel(BaseModel):
     def make_strata_label(self, base, stratas):
         return base + "".join(stratas)
 
-    def stratum_iterator(self):
+    def strata_iterator(self):
         for strain in self.strains:
             for pulmonary in self.pulmonaries:
                 for morbidity in self.morbidities:
@@ -839,7 +839,7 @@ class FullModel(BaseModel):
                 for strain in self.strains:
                     self.set_compartment(compartment + strain, 0.)
             else:  # Replicate for strains and pulmonary status
-                for strata in self.stratum_iterator():
+                for strata in self.strata_iterator():
                     self.set_compartment(
                         self.make_strata_label(compartment, strata),
                         0.)
@@ -857,7 +857,7 @@ class FullModel(BaseModel):
                         compartment + strain,
                         input_compartments[compartment])
             else:
-                for strata in self.stratum_iterator():
+                for strata in self.strata_iterator():
                     strain = strata[0]
                     if strain == "_ds":
                         self.set_compartment(
@@ -980,7 +980,7 @@ class FullModel(BaseModel):
                 "latent_late" + strain,
                 "tb_rate_stabilise")
 
-        for strata in self.stratum_iterator():
+        for strata in self.strata_iterator():
             strain, pulmonary = strata[0:2]
             self.set_fixed_transfer_rate_flow(
                 "latent_early" + strain,
@@ -1037,7 +1037,7 @@ class FullModel(BaseModel):
         self.set_population_death_rate("demo_rate_death")
 
         # Also will need changing
-        for strata in self.stratum_iterator():
+        for strata in self.strata_iterator():
             strain, pulmonary = strata[0:2]
             self.set_infection_death_rate_flow(
                 self.make_strata_label("active", strata),
@@ -1061,23 +1061,18 @@ class FullModel(BaseModel):
         rate_default = 0.0
         rate_success = 0.0
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
+            val = self.compartments[from_label] * rate
             if 'latent' in from_label and 'active' in to_label:
-                val = self.compartments[from_label] * rate
                 rate_incidence += val
             elif 'active' in from_label and 'detect' in to_label:
-                val = self.compartments[from_label] * rate
                 rate_notification += val
             elif 'active' in from_label and 'missed' in to_label:
-                val = self.compartments[from_label] * rate
                 rate_missed += val
             elif 'treatment' in from_label and 'death' in to_label:
-                val = self.compartments[from_label] * rate
                 rate_death_ontreatment += val
             elif 'treatment' in from_label and 'active' in to_label:
-                val = self.compartments[from_label] * rate
                 rate_default += val
             elif 'treatment' in from_label and 'susceptible_treated' in to_label:
-                val = self.compartments[from_label] * rate
                 rate_success += val
 
         # Main epidemiological indicators - note that denominator is not individuals

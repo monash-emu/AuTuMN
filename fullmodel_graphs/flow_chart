@@ -1,0 +1,219 @@
+digraph {
+	graph [fontsize=16 label="Dynamic Transmission Model"]
+	node [fillcolor="#CCDDFF" fontname=Helvetica shape=box style=filled]
+	edge [arrowhead=open fontname=Courier fontsize=10 style=dotted]
+		susceptible_fully
+		susceptible_vac
+		susceptible_treated
+		latent_early_ds
+		latent_early_mdr
+		latent_early_xdr
+		latent_late_ds
+		latent_late_mdr
+		latent_late_xdr
+		active_ds_smearpos
+		active_ds_smearneg
+		active_ds_extrapul
+		active_mdr_smearpos
+		active_mdr_smearneg
+		active_mdr_extrapul
+		active_xdr_smearpos
+		active_xdr_smearneg
+		active_xdr_extrapul
+		detect_ds_smearpos
+		detect_ds_smearneg
+		detect_ds_extrapul
+		detect_mdr_smearpos
+		detect_mdr_smearneg
+		detect_mdr_extrapul
+		detect_xdr_smearpos
+		detect_xdr_smearneg
+		detect_xdr_extrapul
+		missed_ds_smearpos
+		missed_ds_smearneg
+		missed_ds_extrapul
+		missed_mdr_smearpos
+		missed_mdr_smearneg
+		missed_mdr_extrapul
+		missed_xdr_smearpos
+		missed_xdr_smearneg
+		missed_xdr_extrapul
+		treatment_infect_ds_smearpos
+		treatment_infect_ds_smearneg
+		treatment_infect_ds_extrapul
+		treatment_infect_mdr_smearpos
+		treatment_infect_mdr_smearneg
+		treatment_infect_mdr_extrapul
+		treatment_infect_xdr_smearpos
+		treatment_infect_xdr_smearneg
+		treatment_infect_xdr_extrapul
+		treatment_noninfect_ds_smearpos
+		treatment_noninfect_ds_smearneg
+		treatment_noninfect_ds_extrapul
+		treatment_noninfect_mdr_smearpos
+		treatment_noninfect_mdr_smearneg
+		treatment_noninfect_mdr_extrapul
+		treatment_noninfect_xdr_smearpos
+		treatment_noninfect_xdr_smearneg
+		treatment_noninfect_xdr_extrapul
+		tb_death
+			susceptible_fully -> latent_early_ds [label=rate_force_ds]
+			susceptible_vac -> latent_early_ds [label=rate_force_weak_ds]
+			susceptible_treated -> latent_early_ds [label=rate_force_weak_ds]
+			latent_late_ds -> latent_early_ds [label=rate_force_weak_ds]
+			susceptible_fully -> latent_early_mdr [label=rate_force_mdr]
+			susceptible_vac -> latent_early_mdr [label=rate_force_weak_mdr]
+			susceptible_treated -> latent_early_mdr [label=rate_force_weak_mdr]
+			latent_late_mdr -> latent_early_mdr [label=rate_force_weak_mdr]
+			susceptible_fully -> latent_early_xdr [label=rate_force_xdr]
+			susceptible_vac -> latent_early_xdr [label=rate_force_weak_xdr]
+			susceptible_treated -> latent_early_xdr [label=rate_force_weak_xdr]
+			latent_late_xdr -> latent_early_xdr [label=rate_force_weak_xdr]
+			latent_early_ds -> latent_late_ds [label=2.28880287212]
+			latent_early_mdr -> latent_late_mdr [label=2.28880287212]
+			latent_early_xdr -> latent_late_xdr [label=2.28880287212]
+			latent_early_ds -> active_ds_smearpos [label=0.19531977707]
+			latent_late_ds -> active_ds_smearpos [label=0.000342410733387]
+			active_ds_smearpos -> latent_late_ds [label=0.102901131842]
+			active_ds_smearpos -> detect_ds_smearpos [label=2.9323181296]
+			active_ds_smearpos -> missed_ds_smearpos [label=0.474087159231]
+			detect_ds_smearpos -> treatment_infect_ds_smearpos [label=25.6344915432]
+			missed_ds_smearpos -> active_ds_smearpos [label=0.272326649365]
+			missed_ds_smearpos -> latent_late_ds [label=0.102901131842]
+			treatment_infect_ds_smearpos -> treatment_noninfect_ds_smearpos [label=27.9559777848]
+			treatment_infect_ds_smearpos -> active_ds_smearpos [label=0.182996874574]
+			treatment_noninfect_ds_smearpos -> active_ds_smearpos [label=0.174396406083]
+			treatment_noninfect_ds_smearpos -> susceptible_treated [label=1.68044664874]
+			latent_early_ds -> active_ds_smearneg [label=0.0651065923565]
+			latent_late_ds -> active_ds_smearneg [label=0.000114136911129]
+			active_ds_smearneg -> latent_late_ds [label=0.29539304242]
+			active_ds_smearneg -> detect_ds_smearneg [label=2.9323181296]
+			active_ds_smearneg -> missed_ds_smearneg [label=0.474087159231]
+			detect_ds_smearneg -> treatment_infect_ds_smearneg [label=25.6344915432]
+			missed_ds_smearneg -> active_ds_smearneg [label=0.272326649365]
+			missed_ds_smearneg -> latent_late_ds [label=0.29539304242]
+			treatment_infect_ds_smearneg -> treatment_noninfect_ds_smearneg [label=27.9559777848]
+			treatment_infect_ds_smearneg -> active_ds_smearneg [label=0.182996874574]
+			treatment_noninfect_ds_smearneg -> active_ds_smearneg [label=0.174396406083]
+			treatment_noninfect_ds_smearneg -> susceptible_treated [label=1.68044664874]
+			latent_early_ds -> active_ds_extrapul [label=0.0651065923565]
+			latent_late_ds -> active_ds_extrapul [label=0.000114136911129]
+			active_ds_extrapul -> latent_late_ds [label=0.29539304242]
+			active_ds_extrapul -> detect_ds_extrapul [label=2.9323181296]
+			active_ds_extrapul -> missed_ds_extrapul [label=0.474087159231]
+			detect_ds_extrapul -> treatment_infect_ds_extrapul [label=25.6344915432]
+			missed_ds_extrapul -> active_ds_extrapul [label=0.272326649365]
+			missed_ds_extrapul -> latent_late_ds [label=0.29539304242]
+			treatment_infect_ds_extrapul -> treatment_noninfect_ds_extrapul [label=27.9559777848]
+			treatment_infect_ds_extrapul -> active_ds_extrapul [label=0.182996874574]
+			treatment_noninfect_ds_extrapul -> active_ds_extrapul [label=0.174396406083]
+			treatment_noninfect_ds_extrapul -> susceptible_treated [label=1.68044664874]
+			latent_early_mdr -> active_mdr_smearpos [label=0.19531977707]
+			latent_late_mdr -> active_mdr_smearpos [label=0.000342410733387]
+			active_mdr_smearpos -> latent_late_mdr [label=0.102901131842]
+			active_mdr_smearpos -> detect_mdr_smearpos [label=2.9323181296]
+			active_mdr_smearpos -> missed_mdr_smearpos [label=0.474087159231]
+			detect_mdr_smearpos -> treatment_infect_mdr_smearpos [label=25.6344915432]
+			missed_mdr_smearpos -> active_mdr_smearpos [label=0.272326649365]
+			missed_mdr_smearpos -> latent_late_mdr [label=0.102901131842]
+			treatment_infect_mdr_smearpos -> treatment_noninfect_mdr_smearpos [label=27.9559777848]
+			treatment_infect_mdr_smearpos -> active_mdr_smearpos [label=0.182996874574]
+			treatment_noninfect_mdr_smearpos -> active_mdr_smearpos [label=0.174396406083]
+			treatment_noninfect_mdr_smearpos -> susceptible_treated [label=1.68044664874]
+			latent_early_mdr -> active_mdr_smearneg [label=0.0651065923565]
+			latent_late_mdr -> active_mdr_smearneg [label=0.000114136911129]
+			active_mdr_smearneg -> latent_late_mdr [label=0.29539304242]
+			active_mdr_smearneg -> detect_mdr_smearneg [label=2.9323181296]
+			active_mdr_smearneg -> missed_mdr_smearneg [label=0.474087159231]
+			detect_mdr_smearneg -> treatment_infect_mdr_smearneg [label=25.6344915432]
+			missed_mdr_smearneg -> active_mdr_smearneg [label=0.272326649365]
+			missed_mdr_smearneg -> latent_late_mdr [label=0.29539304242]
+			treatment_infect_mdr_smearneg -> treatment_noninfect_mdr_smearneg [label=27.9559777848]
+			treatment_infect_mdr_smearneg -> active_mdr_smearneg [label=0.182996874574]
+			treatment_noninfect_mdr_smearneg -> active_mdr_smearneg [label=0.174396406083]
+			treatment_noninfect_mdr_smearneg -> susceptible_treated [label=1.68044664874]
+			latent_early_mdr -> active_mdr_extrapul [label=0.0651065923565]
+			latent_late_mdr -> active_mdr_extrapul [label=0.000114136911129]
+			active_mdr_extrapul -> latent_late_mdr [label=0.29539304242]
+			active_mdr_extrapul -> detect_mdr_extrapul [label=2.9323181296]
+			active_mdr_extrapul -> missed_mdr_extrapul [label=0.474087159231]
+			detect_mdr_extrapul -> treatment_infect_mdr_extrapul [label=25.6344915432]
+			missed_mdr_extrapul -> active_mdr_extrapul [label=0.272326649365]
+			missed_mdr_extrapul -> latent_late_mdr [label=0.29539304242]
+			treatment_infect_mdr_extrapul -> treatment_noninfect_mdr_extrapul [label=27.9559777848]
+			treatment_infect_mdr_extrapul -> active_mdr_extrapul [label=0.182996874574]
+			treatment_noninfect_mdr_extrapul -> active_mdr_extrapul [label=0.174396406083]
+			treatment_noninfect_mdr_extrapul -> susceptible_treated [label=1.68044664874]
+			latent_early_xdr -> active_xdr_smearpos [label=0.19531977707]
+			latent_late_xdr -> active_xdr_smearpos [label=0.000342410733387]
+			active_xdr_smearpos -> latent_late_xdr [label=0.102901131842]
+			active_xdr_smearpos -> detect_xdr_smearpos [label=2.9323181296]
+			active_xdr_smearpos -> missed_xdr_smearpos [label=0.474087159231]
+			detect_xdr_smearpos -> treatment_infect_xdr_smearpos [label=25.6344915432]
+			missed_xdr_smearpos -> active_xdr_smearpos [label=0.272326649365]
+			missed_xdr_smearpos -> latent_late_xdr [label=0.102901131842]
+			treatment_infect_xdr_smearpos -> treatment_noninfect_xdr_smearpos [label=27.9559777848]
+			treatment_infect_xdr_smearpos -> active_xdr_smearpos [label=0.182996874574]
+			treatment_noninfect_xdr_smearpos -> active_xdr_smearpos [label=0.174396406083]
+			treatment_noninfect_xdr_smearpos -> susceptible_treated [label=1.68044664874]
+			latent_early_xdr -> active_xdr_smearneg [label=0.0651065923565]
+			latent_late_xdr -> active_xdr_smearneg [label=0.000114136911129]
+			active_xdr_smearneg -> latent_late_xdr [label=0.29539304242]
+			active_xdr_smearneg -> detect_xdr_smearneg [label=2.9323181296]
+			active_xdr_smearneg -> missed_xdr_smearneg [label=0.474087159231]
+			detect_xdr_smearneg -> treatment_infect_xdr_smearneg [label=25.6344915432]
+			missed_xdr_smearneg -> active_xdr_smearneg [label=0.272326649365]
+			missed_xdr_smearneg -> latent_late_xdr [label=0.29539304242]
+			treatment_infect_xdr_smearneg -> treatment_noninfect_xdr_smearneg [label=27.9559777848]
+			treatment_infect_xdr_smearneg -> active_xdr_smearneg [label=0.182996874574]
+			treatment_noninfect_xdr_smearneg -> active_xdr_smearneg [label=0.174396406083]
+			treatment_noninfect_xdr_smearneg -> susceptible_treated [label=1.68044664874]
+			latent_early_xdr -> active_xdr_extrapul [label=0.0651065923565]
+			latent_late_xdr -> active_xdr_extrapul [label=0.000114136911129]
+			active_xdr_extrapul -> latent_late_xdr [label=0.29539304242]
+			active_xdr_extrapul -> detect_xdr_extrapul [label=2.9323181296]
+			active_xdr_extrapul -> missed_xdr_extrapul [label=0.474087159231]
+			detect_xdr_extrapul -> treatment_infect_xdr_extrapul [label=25.6344915432]
+			missed_xdr_extrapul -> active_xdr_extrapul [label=0.272326649365]
+			missed_xdr_extrapul -> latent_late_xdr [label=0.29539304242]
+			treatment_infect_xdr_extrapul -> treatment_noninfect_xdr_extrapul [label=27.9559777848]
+			treatment_infect_xdr_extrapul -> active_xdr_extrapul [label=0.182996874574]
+			treatment_noninfect_xdr_extrapul -> active_xdr_extrapul [label=0.174396406083]
+			treatment_noninfect_xdr_extrapul -> susceptible_treated [label=1.68044664874]
+			active_ds_smearpos -> tb_death [label=0.260201067311]
+			detect_ds_smearpos -> tb_death [label=0.260201067311]
+			treatment_infect_ds_smearpos -> tb_death [label=0.182996874574]
+			treatment_noninfect_ds_smearpos -> tb_death [label=0.174396406083]
+			active_ds_smearneg -> tb_death [label=0.067709156734]
+			detect_ds_smearneg -> tb_death [label=0.067709156734]
+			treatment_infect_ds_smearneg -> tb_death [label=0.182996874574]
+			treatment_noninfect_ds_smearneg -> tb_death [label=0.174396406083]
+			active_ds_extrapul -> tb_death [label=0.067709156734]
+			detect_ds_extrapul -> tb_death [label=0.067709156734]
+			treatment_infect_ds_extrapul -> tb_death [label=0.182996874574]
+			treatment_noninfect_ds_extrapul -> tb_death [label=0.174396406083]
+			active_mdr_smearpos -> tb_death [label=0.260201067311]
+			detect_mdr_smearpos -> tb_death [label=0.260201067311]
+			treatment_infect_mdr_smearpos -> tb_death [label=0.182996874574]
+			treatment_noninfect_mdr_smearpos -> tb_death [label=0.174396406083]
+			active_mdr_smearneg -> tb_death [label=0.067709156734]
+			detect_mdr_smearneg -> tb_death [label=0.067709156734]
+			treatment_infect_mdr_smearneg -> tb_death [label=0.182996874574]
+			treatment_noninfect_mdr_smearneg -> tb_death [label=0.174396406083]
+			active_mdr_extrapul -> tb_death [label=0.067709156734]
+			detect_mdr_extrapul -> tb_death [label=0.067709156734]
+			treatment_infect_mdr_extrapul -> tb_death [label=0.182996874574]
+			treatment_noninfect_mdr_extrapul -> tb_death [label=0.174396406083]
+			active_xdr_smearpos -> tb_death [label=0.260201067311]
+			detect_xdr_smearpos -> tb_death [label=0.260201067311]
+			treatment_infect_xdr_smearpos -> tb_death [label=0.182996874574]
+			treatment_noninfect_xdr_smearpos -> tb_death [label=0.174396406083]
+			active_xdr_smearneg -> tb_death [label=0.067709156734]
+			detect_xdr_smearneg -> tb_death [label=0.067709156734]
+			treatment_infect_xdr_smearneg -> tb_death [label=0.182996874574]
+			treatment_noninfect_xdr_smearneg -> tb_death [label=0.174396406083]
+			active_xdr_extrapul -> tb_death [label=0.067709156734]
+			detect_xdr_extrapul -> tb_death [label=0.067709156734]
+			treatment_infect_xdr_extrapul -> tb_death [label=0.182996874574]
+			treatment_noninfect_xdr_extrapul -> tb_death [label=0.174396406083]
+}

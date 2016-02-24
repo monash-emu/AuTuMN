@@ -8,6 +8,7 @@ within the Parameter object).
 """
 
 import os
+import collections
 
 import numpy
 import pylab
@@ -45,7 +46,7 @@ class ModelRunner():
                 'key': 'n_tb_contact',
             },
             { 
-                'init': 80E6,
+                'init': 60E6,
                 'scale': 10E6,
                 'key': 'init_population',
             },
@@ -120,8 +121,8 @@ class ModelRunner():
 
         final_pop = self.model.vars["population"]
         # prevalence = self.model.vars["infectious_population"] / final_pop * 1E5
-        mortality = self.model.vars["rate_infection_death"] / final_pop * 1E5
         incidence = self.model.vars["incidence"]
+        mortality = self.model.vars["rate_infection_death"] / final_pop * 1E5
 
         ln_prior = 0.0
         ln_prior += make_gamma_dist(40, 20).logpdf(param_dict['n_tb_contact'])
@@ -134,19 +135,16 @@ class ModelRunner():
 
         ln_overall = ln_prior + ln_posterior
 
-        prints = [
-           ("n={:.0f}", param_dict['n_tb_contact']),
-           ("start_pop={:0.0f}", param_dict['init_population']),
-           ("tb_death={:0.4f}", param_dict['tb_death_rate']),
-           ("tb_recover={:0.4f}", param_dict['tb_recover_rate']),
-           ("final_pop={:0.0f}", final_pop),
-           # ("prev={:0.0f}", prevalence),
-           ("inci={:0.0f}", incidence),
-           ("mort={:0.0f}", mortality),
-           ("-lnprob={:0.2f}", -ln_overall),
-        ]
-        s = " ".join(p[0] for p in prints)
-        print s.format(*[p[1] for p in prints])
+        print_dict = collections.OrderedDict()
+        print_dict["n"] = "{:<2.0f}".format(param_dict['n_tb_contact'])
+        print_dict["pop0"] = "{:<4}".format("{:.0f}M".format(param_dict['init_population']/1E6))
+        print_dict["pop1"] = "{:<4}".format("{:.0f}M".format(final_pop/1E6))
+        print_dict["tb_death"] = "{:<4.2f}".format(param_dict['tb_death_rate'])
+        print_dict["tb_recov"] = "{:<4.2f}".format(param_dict['tb_recover_rate'])
+        print_dict["inci"] = "{:<4.0f}".format(incidence)
+        print_dict["mort"] = "{:<4.0f}".format(mortality)
+        print_dict["-lnprob"] = "{:.0f}".format(-ln_overall)
+        print " ".join("%s=%s" % (k,v) for k,v in print_dict.items())
 
         return ln_overall
 
@@ -215,7 +213,9 @@ class ModelRunner():
             pylab.ylim([0, 1.2 * max_val])
             key = self.param_props_list[i_param]['key']
             set_axes_props(
-                pylab.gca(), 'MCMC steps', '', 
+                pylab.gca(), 
+                'MCMC steps', 
+                '', 
                 "Parameter: " + key, 
                 False)
             pylab.savefig("%s.param.%s.png" % (base, key))
@@ -243,9 +243,11 @@ class ModelRunner():
         pylab.plot(times, model.get_var_soln(var), color="r", alpha=0.8)
 
         set_axes_props(
-            pylab.gca(), 'year', var, 
-            'Modelled %s for selection of MCMC parameters' % var, False)
-
+            pylab.gca(), 
+            'year', 
+            var, 
+            'Modelled %s for selection of MCMC parameters' % var, 
+            False)
         pylab.savefig(base + '.' + var + '.png')
 
 
@@ -266,12 +268,12 @@ model_runner = ModelRunner()
 # pylab.savefig(base + '.population.png')
 
 base = os.path.join(out_dir, 'mcmc')
-model_runner.mcmc(n_mcmc_step=20)
+model_runner.mcmc(n_mcmc_step=100)
 model_runner.plot_mcmc_params(base, n_burn_step=0)
 model_runner.plot_mcmc_var(
         'population', 
         base, 
-        n_burn_step=5,
-        n_model_show=40)
+        n_burn_step=40,
+        n_model_show=100)
 
 

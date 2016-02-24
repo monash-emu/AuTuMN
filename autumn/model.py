@@ -517,7 +517,7 @@ class SimpleStrainModel(BaseModel):
                 "tb_rate_lateprogress" + organ,
                 .0005 * self.params["proportion_cases" + organ])
 
-        self.set_param("rate_birth", 40. / 1e3)
+        self.set_param("rate_birth", 20. / 1e3)
         self.set_param("rate_death", 1. / 65)
 
         self.set_param("tb_n_contact", 15.)

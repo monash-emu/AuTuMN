@@ -17,7 +17,7 @@ from numpy import isfinite
 from scipy.stats import beta, gamma, norm, truncnorm
 
 import autumn.model
-from autumn.plotting import plot_fractions, plot_populations, humanize_y_ticks
+from autumn.plotting import plot_fractions, plot_populations, set_axes_props
 
 
 
@@ -35,12 +35,12 @@ def is_positive_definite(v):
 class ModelRunner():
 
     def __init__(self):
-        self.model = autumn.model.FullModel()
-        self.model.make_times(1950, 2030, 1.)
+        self.model = autumn.model.SimpleStrainModel()
+        self.model.make_times(1950, 2015, 1.)
         self.is_last_run_sucess = False
         self.param_props_list = [
             { 
-                'init': 40,
+                'init': 15,
                 'scale': 10.,
                 'key': 'n_tb_contact',
             },
@@ -55,38 +55,39 @@ class ModelRunner():
                 'key': 'tb_death_rate',
             },
             { 
-                'init': .1,
+                'init': .15,
                 'scale': .1,
                 'key': 'tb_recover_rate',
             },
         ]
 
     def set_model_with_params(self, param_dict):
+
         self.model.set_param(
             "tb_n_contact", param_dict["n_tb_contact"])
+
         self.model.set_compartment(
             "susceptible_fully", param_dict['init_population'])
-        for strata in self.model.strata_iterator():
-            strain, pulmonary = strata[0:2]
-            self.model.set_param(
-                "tb_demo_rate_death" + pulmonary,
-                param_dict["tb_death_rate"] 
-                  * self.model.params["tb_proportion_casefatality_untreated" + pulmonary])
-            self.model.set_infection_death_rate_flow(
-                self.model.make_strata_label("active", strata),
-                "tb_demo_rate_death" + pulmonary)
-            self.model.set_infection_death_rate_flow(
-                self.model.make_strata_label("detect", strata),
-                "tb_demo_rate_death" + pulmonary)
+
+        for organ in self.model.organ_status:
 
             self.model.set_param(
-                "tb_rate_recover" + pulmonary,
-                param_dict["tb_recover_rate"] 
-                  * (1 - self.model.params["tb_proportion_casefatality_untreated" + pulmonary]))
+                "tb_rate_death",
+                param_dict["tb_death_rate"])
+            self.model.set_infection_death_rate_flow(
+                "active" + organ,
+                "tb_rate_death")
+            self.model.set_infection_death_rate_flow(
+                "detect" + organ,
+                "tb_rate_death")
+
+            self.model.set_param(
+                "tb_rate_recover",
+                param_dict["tb_recover_rate"])
             self.model.set_fixed_transfer_rate_flow(
-                self.model.make_strata_label("active", strata),
-                "latent_late" + strain,
-                "tb_rate_recover" + pulmonary)
+                "active" + organ,
+                "latent_late",
+                "tb_rate_recover")
 
     def convert_param_list_to_dict(self, params):
         param_dict = {}
@@ -95,18 +96,20 @@ class ModelRunner():
         return param_dict
 
     def run_with_params(self, params):
-        if not is_positive_definite(params[1]):
-            print "Warning: parameter=%f is invalid for model" % params[1]
-            self.is_last_run_sucess = False
-            return
-        self.set_model_with_params(self.convert_param_list_to_dict(params))
+        for i, p in enumerate(params):
+            if not is_positive_definite(p):
+                print "Warning: parameter%d=%f is invalid for model" % (i, p)
+                self.is_last_run_sucess = False
+                return
+        param_dict = self.convert_param_list_to_dict(params)
+        self.set_model_with_params(param_dict)
         self.is_last_run_sucess = True
-        # self.model.integrate_explicit()
-        try:
-            self.model.integrate_explicit()
-        except:
-            print "Warning: parameters=%f failed with model" % params
-            self.is_last_run_sucess = False
+        self.model.integrate_explicit()
+        # try:
+        #     self.model.integrate_explicit()
+        # except:
+        #     print "Warning: parameters=%s failed with model" % params
+        #     self.is_last_run_sucess = False
 
     def ln_overall(self, params):
         self.run_with_params(params)
@@ -124,7 +127,7 @@ class ModelRunner():
         ln_prior += make_gamma_dist(40, 20).logpdf(param_dict['n_tb_contact'])
 
         ln_posterior = 0.0
-        ln_posterior += 5*norm(99E6, 5E6).logpdf(final_pop)
+        ln_posterior += norm(99E6, 5E6).logpdf(final_pop)
         # ln_posterior += norm(417, 10).logpdf(prevalence)
         ln_posterior += norm(288, 10).logpdf(incidence)
         ln_posterior += norm(10, 2).logpdf(mortality)
@@ -211,8 +214,10 @@ class ModelRunner():
                 max_val = max(vals.max(), max_val)
             pylab.ylim([0, 1.2 * max_val])
             key = self.param_props_list[i_param]['key']
-            pylab.title("parameter: " + key)
-            pylab.xlabel("MCMC steps")
+            set_axes_props(
+                pylab.gca(), 'MCMC steps', '', 
+                "Parameter: " + key, 
+                False)
             pylab.savefig("%s.param.%s.png" % (base, key))
 
     def plot_mcmc_var(self, var, base, n_burn_step=0, n_model_show=40):
@@ -237,10 +242,10 @@ class ModelRunner():
         model.calculate_diagnostics()
         pylab.plot(times, model.get_var_soln(var), color="r", alpha=0.8)
 
-        pylab.xlabel('year')
-        pylab.ylabel(var)
-        humanize_y_ticks()
-        pylab.title('Modelled %s for selection of MCMC parameters' % var)
+        set_axes_props(
+            pylab.gca(), 'year', var, 
+            'Modelled %s for selection of MCMC parameters' % var, False)
+
         pylab.savefig(base + '.' + var + '.png')
 
 
@@ -266,7 +271,7 @@ model_runner.plot_mcmc_params(base, n_burn_step=0)
 model_runner.plot_mcmc_var(
         'population', 
         base, 
-        n_burn_step=0, 
-        n_model_show=20)
+        n_burn_step=5,
+        n_model_show=40)
 
 

@@ -2,6 +2,7 @@
 
 import math
 import pylab
+import numpy
 from matplotlib import pyplot
 
 """
@@ -19,67 +20,82 @@ def make_default_line_styles():
     return line_styles
 
 
-def make_related_line_styles(model, labels):
+def get_line_style(label):
+    if "susceptible" in label:  # susceptible_unvac can remain black
+        colour = (0, 0, 0)
+    if "susceptible_vac" in label:
+        colour = (0.3, 0.3, 0.3)
+    elif "susceptible_treated" in label:
+        colour = (0.6, 0.6, 0.6)
+    elif "latent_early" in label:
+        colour = (0, 0.4, 0.8)
+    elif "latent_late" in label:
+        colour = (0, 0.2, 0.4)
+    elif "active" in label:
+        colour = (0.9, 0, 0)
+    elif "detect" in label:
+        colour = (0, 0.5, 0)
+    elif "missed" in label:
+        colour = (0.5, 0, 0.5)
+    elif "treatment_infect" in label:
+        colour = (1, 0.5, 0)
+    elif "treatment_noninfect" in label:
+        colour = (1, 1, 0)
+    else:
+        colour = (0.5, 0.5, 0.5)
+
+    if "smearneg" in label:
+        pattern = "-."
+    elif "extrapul" in label:
+        pattern = ":"
+    else:
+        pattern = "-"
+
+    if "susceptible" in label:
+        compartment_full_name = "Susceptible"
+
+    if "susceptible_fully" in label:
+        compartment_full_name = "Fully susceptible"
+    elif "susceptible_vac" in label:
+        compartment_full_name = "BCG vaccinated, susceptible"
+    elif "susceptible_treated" in label:
+        compartment_full_name = "Previously treated, susceptible"
+    elif "latent_early" in label:
+        compartment_full_name = "Early latency"
+    elif "latent_late" in label:
+        compartment_full_name = "Late latency"
+    elif "active" in label:
+        compartment_full_name = "Active, yet to present"
+    elif "detect" in label:
+        compartment_full_name = "Detected"
+    elif "missed" in label:
+        compartment_full_name = "Missed"
+    elif "treatment_infect" in label:
+        compartment_full_name = "Infectious under treatment"
+    elif "treatment_noninfect" in label:
+        compartment_full_name = "Non-infectious under treatment"
+    else:
+        compartment_full_name = label
+
+    if "smearpos" in label:
+        compartment_full_name += ", \nsmear-positive"
+    elif "smearneg" in label:
+        compartment_full_name += ", \nsmear-negative"
+    elif "extrapul" in label:
+        compartment_full_name += ", \nextrapulmonary"
+
+    return colour, pattern, compartment_full_name
+
+
+def make_related_line_styles(labels):
     colours = {}
     patterns = {}
     compartment_full_names = {}
     for label in labels:
-        if "susceptible" in label:  # susceptible_unvac can remain black
-            colours[label] = (0, 0, 0)
-        if "susceptible_vac" in label:
-            colours[label] = (0.3, 0.3, 0.3)
-        elif "susceptible_treated" in label:
-            colours[label] = (0.6, 0.6, 0.6)
-        elif "latent_early" in label:
-            colours[label] = (0, 0.4, 0.8)
-        elif "latent_late" in label:
-            colours[label] = (0, 0.2, 0.4)
-        elif "active" in label:
-            colours[label] = (0.9, 0, 0)
-        elif "detect" in label:
-            colours[label] = (0, 0.5, 0)
-        elif "missed" in label:
-            colours[label] = (0.5, 0, 0.5)
-        elif "treatment_infect" in label:
-            colours[label] = (1, 0.5, 0)
-        elif "treatment_noninfect" in label:
-            colours[label] = (1, 1, 0)
-        if "smearneg" in label:
-            patterns[label] = "-."
-        elif "extrapul" in label:
-            patterns[label] = ":"
-        else:
-            patterns[label] = "-"
-        if "susceptible" in label:
-            compartment_full_names[label] = "Susceptible"
-        if "susceptible_fully" in label:
-            compartment_full_names[label] = "Fully susceptible"
-        elif "susceptible_vac" in label:
-            compartment_full_names[label] = "BCG vaccinated, susceptible"
-        elif "susceptible_treated" in label:
-            compartment_full_names[label] = "Previously treated, susceptible"
-        elif "latent_early" in label:
-            compartment_full_names[label] = "Early latency"
-        elif "latent_late" in label:
-            compartment_full_names[label] = "Late latency"
-        elif "active" in label:
-            compartment_full_names[label] = "Active, yet to present"
-        elif "detect" in label:
-            compartment_full_names[label] = "Detected"
-        elif "missed" in label:
-            compartment_full_names[label] = "Missed"
-        elif "treatment_infect" in label:
-            compartment_full_names[label] = "Infectious under treatment"
-        elif "treatment_noninfect" in label:
-            compartment_full_names[label] = "Non-infectious under treatment"
-        else:
-            compartment_full_names[label] = compartment_full_names[label]
-        if "smearpos" in label:
-            compartment_full_names[label] = compartment_full_names[label] + ", \nsmear-positive"
-        elif "smearneg" in label:
-            compartment_full_names[label] = compartment_full_names[label] + ", \nsmear-negative"
-        elif "extrapul" in label:
-            compartment_full_names[label] = compartment_full_names[label] + ", \nextrapulmonary"
+        colour, pattern, compartment_full_name = get_line_style(label)
+        colours[label] = colour
+        patterns[label] = pattern
+        compartment_full_names[label] = compartment_full_name
     return colours, patterns, compartment_full_names
 
 
@@ -87,6 +103,26 @@ def make_axes_with_room_for_legend():
     fig = pyplot.figure()
     ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
     return ax
+
+
+def humanize_y_ticks(ax):
+    vals = list(ax.get_yticks())
+    max_val = max([abs(v) for v in vals])
+    if max_val < 1e3:
+        return map(str, vals)
+    if max_val >= 1e3 and max_val < 1e6:
+        labels = ["%.1fK" % (v/1e3) for v in vals]
+    elif max_val >= 1e6 and max_val < 1e9:
+        labels = ["%.1fM" % (v/1e6) for v in vals]
+    elif max_val >= 1e9:
+        labels = ["%.1fB" % (v/1e9) for v in vals]
+    is_fraction = False
+    for label in labels:
+        if label[-3:-1] != ".0":
+            is_fraction = True
+    if not is_fraction:
+        labels = [l[:-3] + l[-1] for l in labels]
+    ax.set_yticklabels(labels)
 
 
 def set_axes_props(
@@ -141,35 +177,17 @@ def set_axes_props(
     ax.xaxis.label.set_color(frame_color)
     ax.yaxis.label.set_color(frame_color)
 
+    humanize_y_ticks(ax)
+
 
 def save_png(png):
     if png is not None:
         pylab.savefig(png, dpi=300)
 
 
-def humanize_y_ticks(ax):
-    vals = list(ax.get_yticks())
-    max_val = max([abs(v) for v in vals])
-    if max_val < 1e3:
-        return map(str, vals)
-    if max_val >= 1e3 and max_val < 1e6:
-        labels = ["%.1fK" % (v/1e3) for v in vals]
-    elif max_val >= 1e6 and max_val < 1e9:
-        labels = ["%.1fM" % (v/1e6) for v in vals]
-    elif max_val >= 1e9:
-        labels = ["%.1fB" % (v/1e9) for v in vals]
-    is_fraction = False
-    for label in labels:
-        if label[-3:-1] != ".0":
-            is_fraction = True
-    if not is_fraction:
-        labels = [l[:-3] + l[-1] for l in labels]
-    ax.set_yticklabels(labels)
-
-
 def plot_populations(model, labels, png=None):
     colours, patterns, compartment_full_names\
-        = make_related_line_styles(model, labels)
+        = make_related_line_styles(labels)
     ax = make_axes_with_room_for_legend()
     axis_labels = []
     ax.plot(
@@ -186,7 +204,6 @@ def plot_populations(model, labels, png=None):
             color=colours[plot_label],
             linestyle=patterns[plot_label])
         axis_labels.append(compartment_full_names[plot_label])
-    humanize_y_ticks(ax)
     set_axes_props(ax, 'Year', 'Persons',
                    'Subgroups of total population', True,
                    axis_labels)
@@ -194,45 +211,54 @@ def plot_populations(model, labels, png=None):
 
 
 def plot_population_group(model, title, tags, png=None, linestyles=None):
-    labels = []
+    subgroup_solns = {}
     for tag in tags:
-        for label in model.labels:
-            if tag in label and label not in labels:
-                labels.append(label)
-    colours, patterns, compartment_full_names\
-        = make_related_line_styles(model, labels)
-    group_population_soln = []
-    for i, time in enumerate(model.times):
-        pops = [model.population_soln[label][i] for label in labels]
-        group_population_soln.append(sum(pops))
+        labels = [l for l in model.labels if tag in l]
+        labels = list(set(labels))
+        if len(labels) == 0:
+            continue
+        sub_group_soln = None
+        for l in labels:
+            vals = numpy.array(model.population_soln[l])
+            if sub_group_soln is None:
+                sub_group_soln = vals
+            else:
+                sub_group_soln = vals + sub_group_soln
+        subgroup_solns[tag] = sub_group_soln
+
+    group_soln = sum(subgroup_solns.values())
+
     ax = make_axes_with_room_for_legend()
-    axis_labels = []
-    ax.plot(
-        model.times,
-        group_population_soln,
-        'k',
-        label=title + "_total", linewidth=2)
-    axis_labels.append("Total " + title)
-    for i_plot, plot_label in enumerate(labels):
+    # ax.plot(
+    #     model.times,
+    #     group_soln,
+    #     'k',
+    #     label='total ' + title,
+    #     linewidth=2)
+    for tag, soln in subgroup_solns.items():
+        colour, pattern, full_name = get_line_style(tag)
         ax.plot(
             model.times,
-            model.population_soln[plot_label],
-            label=plot_label, linewidth=1,
-            color=colours[plot_label],
-            linestyle=patterns[plot_label])
-        axis_labels.append(compartment_full_names[plot_label])
-    humanize_y_ticks(ax)
-    if title == "ever_infected":
-        title = "ever infected"
-    set_axes_props(ax, 'Year', 'Persons',
-                   'Subgroups within ' + title + ' (absolute)', True,
-                   axis_labels)
+            soln,
+            linewidth=1,
+            color=colour,
+            linestyle=pattern,
+            label=full_name
+        )
+
+    set_axes_props(
+        ax, 
+        'Year', 
+        'Persons',
+        'Subgroups within ' + title + ' (absolute)', 
+        True)
+
     save_png(png)
 
 
 def plot_fractions(model, labels, png=None):
     colours, patterns, compartment_full_names\
-        = make_related_line_styles(model, labels)
+        = make_related_line_styles(labels)
     ax = make_axes_with_room_for_legend()
     axis_labels = []
     for i_plot, plot_label in enumerate(labels):
@@ -249,38 +275,42 @@ def plot_fractions(model, labels, png=None):
 
 
 def plot_fraction_group(model, title, tags, png=None):
-    labels = []
+    subgroup_solns = {}
     for tag in tags:
-        for label in model.labels:
-            if tag in label and label not in labels:
-                labels.append(label)
-    colours, patterns, compartment_full_names\
-        = make_related_line_styles(model, labels)
-    group_population_soln = []
-    for i, time in enumerate(model.times):
-        pops = [model.population_soln[label][i] for label in labels]
-        group_population_soln.append(sum(pops))
+        labels = [l for l in model.labels if tag in l]
+        labels = list(set(labels))
+        if len(labels) == 0:
+            continue
+        sub_group_soln = None
+        for l in labels:
+            vals = numpy.array(model.population_soln[l])
+            if sub_group_soln is None:
+                sub_group_soln = vals
+            else:
+                sub_group_soln = vals + sub_group_soln
+        subgroup_solns[tag] = sub_group_soln
+
+    group_soln = sum(subgroup_solns.values())
+
     ax = make_axes_with_room_for_legend()
-    axis_labels = []
-    for i_plot, plot_label in enumerate(labels):
-        vals = [
-            v/t for v, t in
-            zip(
-                model.population_soln[plot_label],
-                group_population_soln)]
+    for tag, soln in subgroup_solns.items():
+        colour, pattern, full_name = get_line_style(tag)
         ax.plot(
             model.times,
-            vals,
-            label=plot_label, linewidth=1,
-            color=colours[plot_label],
-            linestyle=patterns[plot_label])
-        axis_labels.append(compartment_full_names[plot_label])
-    if title == "ever_infected":
-        title = "ever infected"
+            [v/t for v, t in zip(soln, group_soln)],
+            linewidth=1,
+            color=colour,
+            linestyle=pattern,
+            label=full_name
+        )
+
     set_axes_props(
-        ax, 'Year', 'Fraction of population',
-        'Subgroups within ' + title + ' (proportions)', 
-        True, axis_labels)
+        ax, 
+        'Year', 
+        'Proportion of Population',
+        'Subgroups within ' + title + ' (proportion)', 
+        True)
+
     save_png(png)
 
 
@@ -320,7 +350,7 @@ def plot_vars(model, labels, png=None):
 
 def plot_flows(model, labels, png=None):
     colours, patterns, compartment_full_names\
-        = make_related_line_styles(model, labels)
+        = make_related_line_styles(labels)
     ax = make_axes_with_room_for_legend()
     axis_labels = []
     for i_plot, plot_label in enumerate(labels):

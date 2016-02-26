@@ -366,7 +366,6 @@ class BaseModel():
 
     def check_converged_compartment_fraction(
             self, label, equil_time, test_fraction_diff):
-        is_converged = True
         labels = self.labels
         self.calculate_diagnostics()
         times = self.times
@@ -377,7 +376,6 @@ class BaseModel():
         while time_diff < equil_time:
             i -= 1
             if -i >= len(times):
-                is_converged = False
                 break
             time_diff = abs(times[-1] - times[i])
             frac_diff = (fraction[-1] - fraction[i])

@@ -15,8 +15,8 @@ This is a set of Python models that modularizes the development of dynamic trans
   
 # TODO  
   
-- Link to minimisation algorithm written by UNSW Optima  
-- Run code for example country  
+- link to optima optimization
+- run code for example country  
 - Link to macroeconomic model  
 - Write reports   
 - Write scientific papers   
@@ -87,16 +87,15 @@ program_rate_death_noninfect %country
 ## Auxiliary variables  
   
 equilibrium - 1% fractional for active compartments over 5 years  
-incidence - sum(latent -> active*) / population * 100,000  
 prevalence - sum(not(susceptible and latent)) / population * 100,000  
+incidence - sum(latent -> active*) / population * 100,000  
 mortality - sum(flows to tb_death) / population * 100,000  
   
 ## Philippines test set   
-- population 2014 = 99,000,000  
+- population 2014 = 99M
 - guesstimates  
-    - active = 0.4%, 400 in 100,000  
     - latent = 30%  
-    - n_tbfixed_contact = 10-60  
+    - n_contact = 10-60  
 - who data: http://www.who.int/tb/country/data/download/en/  
     - incidence 2014 = 288 (254–324)  
     - prevalence 2014 = 417 (367–471)  

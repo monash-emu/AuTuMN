@@ -19,8 +19,7 @@ def is_all_same_value(a_list, test_val):
 
 
 def replace_blanks(a_list, new_val):
-    new_list = [new_val if val == '' else val for val in a_list]
-    return new_list
+    return [new_val if val == '' else val for val in a_list]
 
 
 def parse_year_data(these_data):

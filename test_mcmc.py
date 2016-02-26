@@ -9,6 +9,7 @@ within the Parameter object).
 
 import os
 import collections
+import shutil
 
 import numpy
 import pylab
@@ -18,7 +19,7 @@ from numpy import isfinite
 from scipy.stats import beta, gamma, norm, truncnorm
 
 import autumn.model
-from autumn.plotting import plot_fractions, plot_populations, set_axes_props
+import autumn.plotting as plotting
 
 
 
@@ -36,59 +37,67 @@ def is_positive_definite(v):
 class ModelRunner():
 
     def __init__(self):
-        self.model = autumn.model.SimpleStrainModel()
-        self.model.make_times(1950, 2015, 1.)
+        self.model = autumn.model.ToyModel()
+        self.model.make_times(1950, 2014, 1.)
         self.is_last_run_sucess = False
         self.param_props_list = [
             { 
-                'init': 15,
+                'init': 20,
                 'scale': 10.,
-                'key': 'n_tb_contact',
+                'key': 'tb_n_contact',
             },
             { 
-                'init': 60E6,
+                'init': 80E6,
                 'scale': 10E6,
                 'key': 'init_population',
             },
             { 
-                'init': .15,
-                'scale': .1,
-                'key': 'tb_death_rate',
+                'init': .14,
+                'scale': 5,
+                'key': 'tb_rate_death',
             },
             { 
-                'init': .15,
-                'scale': .1,
-                'key': 'tb_recover_rate',
+                'init': .12,
+                'scale': 1,
+                'key': 'tb_rate_earlyprogress',
+            },
+            { 
+                'init': 4.,
+                'scale': 1,
+                'key': 'program_rate_detect',
             },
         ]
 
     def set_model_with_params(self, param_dict):
 
         self.model.set_param(
-            "tb_n_contact", param_dict["n_tb_contact"])
+            "tb_n_contact", param_dict["tb_n_contact"])
 
         self.model.set_compartment(
-            "susceptible_fully", param_dict['init_population'])
+            "susceptible", param_dict['init_population'])
 
-        for organ in self.model.organ_status:
+        self.model.set_param(
+            "tb_rate_death",
+            param_dict["tb_rate_death"])
+        self.model.set_infection_death_rate_flow(
+            "active",
+            "tb_rate_death")
 
-            self.model.set_param(
-                "tb_rate_death",
-                param_dict["tb_death_rate"])
-            self.model.set_infection_death_rate_flow(
-                "active" + organ,
-                "tb_rate_death")
-            self.model.set_infection_death_rate_flow(
-                "detect" + organ,
-                "tb_rate_death")
+        self.model.set_param(
+            "tb_rate_earlyprogress",
+            param_dict["tb_rate_earlyprogress"])
+        self.model.set_fixed_transfer_rate_flow(
+            "latent_early",
+            "active",
+            "tb_rate_earlyprogress")
 
-            self.model.set_param(
-                "tb_rate_recover",
-                param_dict["tb_recover_rate"])
-            self.model.set_fixed_transfer_rate_flow(
-                "active" + organ,
-                "latent_late",
-                "tb_rate_recover")
+        self.model.set_param(
+            "program_rate_detect",
+            param_dict["program_rate_detect"])
+        self.model.set_fixed_transfer_rate_flow(
+            "active",
+            "treatment_infect",
+            "program_rate_detect")
 
     def convert_param_list_to_dict(self, params):
         param_dict = {}
@@ -120,27 +129,37 @@ class ModelRunner():
         param_dict = self.convert_param_list_to_dict(params)
 
         final_pop = self.model.vars["population"]
-        # prevalence = self.model.vars["infectious_population"] / final_pop * 1E5
+        prevalence = self.model.vars["infectious_population"] / final_pop * 1E5
         incidence = self.model.vars["incidence"]
         mortality = self.model.vars["rate_infection_death"] / final_pop * 1E5
+        latent = 0.0
+        for label in self.model.labels:
+            if "latent" in label:
+                latent += (self.model.compartments[label] / final_pop * 1E5)
 
         ln_prior = 0.0
-        ln_prior += make_gamma_dist(40, 20).logpdf(param_dict['n_tb_contact'])
+        ln_prior += make_gamma_dist(40, 20).logpdf(param_dict['tb_n_contact'])
 
         ln_posterior = 0.0
         ln_posterior += norm(99E6, 5E6).logpdf(final_pop)
-        # ln_posterior += norm(417, 10).logpdf(prevalence)
-        ln_posterior += norm(288, 10).logpdf(incidence)
-        ln_posterior += norm(10, 2).logpdf(mortality)
+        ln_posterior += norm(30000, 100).logpdf(latent)
+        ln_posterior += norm(417, 5).logpdf(prevalence)
+        ln_posterior += norm(280, 5).logpdf(incidence)
+        ln_posterior += norm(10, 1).logpdf(mortality)
+        # ln_posterior += 0.5*norm(280/417., 0.05).logpdf(incidence/prevalence)
+        # ln_posterior += 0.5*norm(10/417, .005).logpdf(mortality/prevalence)
 
         ln_overall = ln_prior + ln_posterior
 
         print_dict = collections.OrderedDict()
-        print_dict["n"] = "{:<2.0f}".format(param_dict['n_tb_contact'])
+        print_dict["n"] = "{:<4.1f}".format(param_dict['tb_n_contact'])
         print_dict["pop0"] = "{:<4}".format("{:.0f}M".format(param_dict['init_population']/1E6))
+        print_dict["death"] = "{:<6.4f}".format(param_dict['tb_rate_death'])
+        print_dict["progress"] = "{:<6.4f}".format(param_dict['tb_rate_earlyprogress'])
+        print_dict["detect"] = "{:<5.3f}".format(param_dict['program_rate_detect'])
         print_dict["pop1"] = "{:<4}".format("{:.0f}M".format(final_pop/1E6))
-        print_dict["tb_death"] = "{:<4.2f}".format(param_dict['tb_death_rate'])
-        print_dict["tb_recov"] = "{:<4.2f}".format(param_dict['tb_recover_rate'])
+        print_dict["latent"] = "{:2.0f}%".format(latent/1E5*1E2)
+        print_dict["prev"] = "{:<4.0f}".format(prevalence)
         print_dict["inci"] = "{:<4.0f}".format(incidence)
         print_dict["mort"] = "{:<4.0f}".format(mortality)
         print_dict["-lnprob"] = "{:.0f}".format(-ln_overall)
@@ -212,7 +231,7 @@ class ModelRunner():
                 max_val = max(vals.max(), max_val)
             pylab.ylim([0, 1.2 * max_val])
             key = self.param_props_list[i_param]['key']
-            set_axes_props(
+            plotting.set_axes_props(
                 pylab.gca(), 
                 'MCMC steps', 
                 '', 
@@ -242,7 +261,7 @@ class ModelRunner():
         model.calculate_diagnostics()
         pylab.plot(times, model.get_var_soln(var), color="r", alpha=0.8)
 
-        set_axes_props(
+        plotting.set_axes_props(
             pylab.gca(), 
             'year', 
             var, 
@@ -252,8 +271,9 @@ class ModelRunner():
 
 
 out_dir = "mcmc_graphs"
-if not os.path.isdir(out_dir):
-    os.makedirs(out_dir)
+if os.path.isdir(out_dir):
+    shutil.rmtree(out_dir)
+os.makedirs(out_dir)
 
 model_runner = ModelRunner()
 
@@ -262,18 +282,19 @@ model_runner = ModelRunner()
 # print minimum.best_params
 # model_runner.run_with_params(minimum.best_params)
 # model = model_runner.model
-# plot_fractions(model, model.labels[:])
+# plotting.plot_fractions(model, model.labels[:])
 # pylab.savefig(base + '.fraction.png')
-# plot_populations(model, model.labels[:])
+# plotting.plot_populations(model, model.labels[:])
 # pylab.savefig(base + '.population.png')
 
 base = os.path.join(out_dir, 'mcmc')
-model_runner.mcmc(n_mcmc_step=100)
+model_runner.mcmc(n_mcmc_step=80)
 model_runner.plot_mcmc_params(base, n_burn_step=0)
+model_runner.model.make_graph(os.path.join(out_dir, 'workflow.png'))
 model_runner.plot_mcmc_var(
-        'population', 
-        base, 
-        n_burn_step=40,
-        n_model_show=100)
+    'population', 
+    base, 
+    n_burn_step=30,
+    n_model_show=200)
 
 

@@ -36,7 +36,7 @@ def is_positive_definite(v):
 class ModelRunner():
 
     def __init__(self):
-        self.model = autumn.model.SimpleStrainModel()
+        self.model = autumn.model.SingleStrainModel()
         self.model.make_times(1950, 2015, 1.)
         self.is_last_run_sucess = False
         self.param_props_list = [

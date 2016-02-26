@@ -388,7 +388,7 @@ class BaseModel():
         return True
 
 
-class ToyModel(BaseModel):
+class SimplifiedModel(BaseModel):
 
     """
     Initial Autumn model designed by James
@@ -472,7 +472,7 @@ class ToyModel(BaseModel):
             "treatment_noninfect", "rate_program_death_noninfect")
 
 
-class SimpleStrainModel(BaseModel):
+class SingleStrainModel(BaseModel):
 
     """
     Includes organ strains

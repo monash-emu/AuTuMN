@@ -815,13 +815,12 @@ class FullModel(BaseTbModel):
 
         self.strains = [
             "_ds",
-            "_mdr",
-            "_xdr"]
+            "_mdr"]
 
-        self.morbidities = [
+        self.comorbidities = [
             "_hiv",
             "_diabetes",
-            "_nocomor"]
+            "_nocomorb"]
 
         self.infectious_tags = ["active", "missed", "detect", "treatment_infect"]
 

@@ -390,6 +390,51 @@ class BaseTbModel(BaseModel):
     def __init__(self):
         BaseModel.__init__(self)
 
+    def find_treatment_flow_rates(self):
+        outcomes = ["_success", "_death", "_default"]
+        non_success_outcomes = outcomes[1:3]
+        treatment_stages = ["_infect", "_noninfect"]
+
+        # Find the non-infectious period
+        self.set_param(
+            "tb_timeperiod_noninfect_ontreatment",
+            self.params["tb_timeperiod_treatment"]
+              - self.params["tb_timeperiod_infect_ontreatment"])
+
+        # Find the proportion of deaths/defaults during the infectious and non-infectious stages
+        for outcome in non_success_outcomes:
+            early_proportion, late_proportion = self.find_flow_proportions_in_early_period(
+                self.params["program_proportion" + outcome],
+                self.params["tb_timeperiod_infect_ontreatment"],
+                self.params["tb_timeperiod_treatment"])
+            self.set_param(
+                "program_proportion" + outcome + "_infect",
+                early_proportion)
+            self.set_param(
+                "program_proportion" + outcome + "_noninfect",
+                late_proportion)
+
+        # Find the success proportions
+        for treatment_stage in treatment_stages:
+            self.set_param(
+                "program_proportion_success" + treatment_stage,
+                1. - self.params["program_proportion_default" + treatment_stage]
+                  - self.params["program_proportion_death" + treatment_stage])
+            # Find the corresponding rates from the proportions
+            for outcome in outcomes:
+                self.set_param(
+                    "program_rate" + outcome + treatment_stage,
+                    1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment"]
+                      * self.params["program_proportion" + outcome + treatment_stage])
+
+        # Temporary code assigning non-DS strains the same outcomes *****
+        for strain in self.strains:
+            for treatment_stage in treatment_stages:
+                for outcome in outcomes:
+                    self.set_param(
+                        "program_rate" + outcome + treatment_stage + strain,
+                        self.params["program_rate" + outcome + treatment_stage])
+
     def calculate_diagnostic_vars(self):
 
         rate_incidence = 0.0
@@ -923,51 +968,6 @@ class FullModel(BaseTbModel):
                         self.set_compartment(
                             self.make_strata_label(compartment, strata),
                             0.)
-
-    def find_treatment_flow_rates(self):
-        outcomes = ["_success", "_death", "_default"]
-        non_success_outcomes = outcomes[1:3]
-        treatment_stages = ["_infect", "_noninfect"]
-
-        # Find the non-infectious period
-        self.set_param(
-            "tb_timeperiod_noninfect_ontreatment",
-            self.params["tb_timeperiod_treatment"]
-              - self.params["tb_timeperiod_infect_ontreatment"])
-
-        # Find the proportion of deaths/defaults during the infectious and non-infectious stages
-        for outcome in non_success_outcomes:
-            early_proportion, late_proportion = self.find_flow_proportions_in_early_period(
-                self.params["program_proportion" + outcome],
-                self.params["tb_timeperiod_infect_ontreatment"],
-                self.params["tb_timeperiod_treatment"])
-            self.set_param(
-                "program_proportion" + outcome + "_infect",
-                early_proportion)
-            self.set_param(
-                "program_proportion" + outcome + "_noninfect",
-                late_proportion)
-
-        # Find the success proportions
-        for treatment_stage in treatment_stages:
-            self.set_param(
-                "program_proportion_success" + treatment_stage,
-                1. - self.params["program_proportion_default" + treatment_stage]
-                  - self.params["program_proportion_death" + treatment_stage])
-            # Find the corresponding rates from the proportions
-            for outcome in outcomes:
-                self.set_param(
-                    "program_rate" + outcome + treatment_stage,
-                    1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment"]
-                      * self.params["program_proportion" + outcome + treatment_stage])
-
-        # Temporary code assigning non-DS strains the same outcomes *****
-        for strain in self.strains:
-            for treatment_stage in treatment_stages:
-                for outcome in outcomes:
-                    self.set_param(
-                        "program_rate" + outcome + treatment_stage + strain,
-                        self.params["program_rate" + outcome + treatment_stage])
 
     def find_flow_proportions_in_early_period(
             self, proportion, early_period, total_period):

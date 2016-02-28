@@ -826,8 +826,8 @@ class FullModel(BaseTbModel):
 
         self.set_input(input_parameters, input_compartments)
 
-    def make_strata_label(self, base, stratas):
-        return base + "".join(stratas)
+    def make_strata_label(self, base, strata):
+        return base + "".join(strata)
 
     def strata_iterator(self):
         for strain in self.strains:

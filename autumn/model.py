@@ -390,6 +390,12 @@ class BaseTbModel(BaseModel):
     def __init__(self):
         BaseModel.__init__(self)
 
+    def find_flow_proportions_in_early_period(
+            self, proportion, early_period, total_period):
+        early_proportion = 1. - exp( log(1. - proportion) * early_period / total_period)
+        late_proportion = proportion - early_proportion
+        return early_proportion, late_proportion
+
     def find_treatment_flow_rates(self):
         outcomes = ["_success", "_death", "_default"]
         non_success_outcomes = outcomes[1:3]
@@ -968,12 +974,6 @@ class FullModel(BaseTbModel):
                         self.set_compartment(
                             self.make_strata_label(compartment, strata),
                             0.)
-
-    def find_flow_proportions_in_early_period(
-            self, proportion, early_period, total_period):
-        early_proportion = 1. - exp( log(1. - proportion) * early_period / total_period)
-        late_proportion = proportion - early_proportion
-        return early_proportion, late_proportion
 
     def calculate_vars(self):
         self.vars["population"] = sum(self.compartments.values())

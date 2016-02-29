@@ -10,7 +10,7 @@ if not os.path.isdir(out_dir):
 
 for name, Model in [
         ('simplified', autumn.model.SimplifiedModel),
-        ('single', autumn.model.SingleStrainModel),
+        # ('single', autumn.model.SingleStrainModel),
         ('new', autumn.model.NewFullModel)
     ]:
     print 'running', name

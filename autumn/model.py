@@ -933,7 +933,7 @@ class SingleStrainModel(BaseTbModel):
             / self.vars["population"] * 1E5
 
 
-class NewFullModel(BaseTbModel):
+class FlexibleModel(BaseTbModel):
 
     """
     Trying to create a harmonised model that can run any number of strains
@@ -968,14 +968,11 @@ class NewFullModel(BaseTbModel):
 
         # To remove strains, set self.strains to [""]
         self.strains = [
-            "_ds",
-            "_mdr"]
+            ""]
 
         # To remove organ status, set self.organ_status to ["_smearpos"]
         self.organ_status = [
-            "_smearpos",
-            "_smearneg",
-            "_extrapul"]
+            "_smearpos"]
 
         self.initialise_compartments(input_compartments)
 

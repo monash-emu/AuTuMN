@@ -314,7 +314,7 @@ class BaseModel():
               self.vars['rate_birth'] \
             - self.vars['rate_death'] \
             - self.vars['rate_infection_death']
-        assert abs(sum(self.flows.values()) - population_change ) < error_margin
+        # assert abs(sum(self.flows.values()) - population_change ) < error_margin
 
     def make_graph(self, png):
         from graphviz import Digraph
@@ -940,7 +940,12 @@ class FlexibleModel(BaseTbModel):
     and organ statuses
     """
 
-    def __init__(self, input_parameters=None, input_compartments=None):
+    def __init__(self,
+                 number_of_organs=3,
+                 number_of_strains=1,
+                 number_of_comorbidities=1,
+                 input_parameters=None,
+                 input_compartments=None):
 
         BaseTbModel.__init__(self)
 
@@ -963,16 +968,24 @@ class FlexibleModel(BaseTbModel):
             }
 
         # To remove comorbidities, set self.comorbidities to [""]
-        self.comorbidities = [
-            ""]
+        available_comorbidities = [
+            "_nocomorbidities",
+            "_hiv",
+            "_diabetes"]
+        self.comorbidities = available_comorbidities[0: number_of_comorbidities]
 
         # To remove strains, set self.strains to [""]
-        self.strains = [
-            ""]
+        available_strains = [
+            "_ds",
+            "_mdr"]
+        self.strains = available_strains[0: number_of_strains]
 
         # To remove organ status, set self.organ_status to ["_smearpos"]
-        self.organ_status = [
-            "_smearpos"]
+        available_organs = [
+            "_smearpos",
+            "_smearneg",
+            "_extrapul"]
+        self.organ_status = available_organs[0: number_of_organs]
 
         self.initialise_compartments(input_compartments)
 

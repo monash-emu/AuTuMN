@@ -9,13 +9,13 @@ if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
 for name, Model in [
-        ('simplified', autumn.model.SimplifiedModel),
+        # ('simplified', autumn.model.SimplifiedModel),
         # ('single', autumn.model.SingleStrainModel),
         ('new', autumn.model.FlexibleModel)
     ]:
     print 'running', name
     base = os.path.join(out_dir, name)
-    model = Model()
+    model = Model(3, 1, 1)
     model.make_times(1900, 2050, 0.05)
     model.integrate_explicit()
     model.make_graph(base + '.workflow')

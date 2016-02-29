@@ -453,7 +453,6 @@ class BaseTbModel(BaseModel):
                                                          / len(self.organ_status))
 
     def calculate_force_infection(self):
-        # Force of infection calculation
         for strain in self.strains:
             self.vars["infectious_population" + strain] = 0.0
             for organ in self.organ_status:
@@ -969,7 +968,8 @@ class NewFullModel(BaseTbModel):
 
         # To remove strains, set self.strains to [""]
         self.strains = [
-            ""]
+            "_ds",
+            "_mdr"]
 
         # To remove organ status, set self.organ_status to ["_smearpos"]
         self.organ_status = [
@@ -1136,7 +1136,7 @@ class NewFullModel(BaseTbModel):
                     "latent_early" + strain + comorbidity,
                     "rate_force_weak" + strain)
                 self.set_var_transfer_rate_flow(
-                    "latent_late" + comorbidity,
+                    "latent_late" + strain + comorbidity,
                     "latent_early" + strain + comorbidity,
                     "rate_force_weak" + strain)
 
@@ -1206,8 +1206,6 @@ class NewFullModel(BaseTbModel):
 
         # death flows
         self.set_population_death_rate("demo_rate_death")
-
-
 
 
 class FullModel(BaseTbModel):

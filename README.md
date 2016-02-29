@@ -16,23 +16,10 @@ This is a set of Python models that modularizes the development of dynamic trans
 # TODO  
   
 - link to optima optimization
-- run code for example country  
+- fit to Phillippines output
 - Link to macroeconomic model  
-- Write reports   
-- Write scientific papers   
 - make cost-coverage curves from data  
 - feed cost-coverage curves into model  
-- add more complexity  
-  
-- introduction to Github - @done  
-- convert to object-oriented code @done  
-- start transmission model @done  
-- simple model @done  
-- Link transmission model to Excel inputs spreadsheet @done  
-- Link to minimisation algorithm - will have some sub-sections @done  
-- produce graphical curves @done  
-  
-  
   
 # Current TB dynamic transmission model  
   

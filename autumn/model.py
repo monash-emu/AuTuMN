@@ -214,6 +214,9 @@ class BaseModel():
                     time = new_time
                 for i in range(n_component):
                     y[i] = y[i] + dt * f[i]
+                    # hack to avoid errors due to time-step
+                    if y[i] < 0.0:
+                        y[i] = 0.0
             if i_time < n_time - 1:
                 self.soln_array[i_time+1,:] = y
 
@@ -455,6 +458,7 @@ class ToyModel(BaseModel):
             if 'active' in label or '_infect' in label:
                 self.vars["infectious_population"] += \
                     self.compartments[label]
+
         self.vars["rate_force"] = \
                 self.params["tb_n_contact"] \
               * self.vars["infectious_population"] \

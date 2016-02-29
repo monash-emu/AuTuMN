@@ -42,39 +42,49 @@ class ModelRunner():
         self.is_last_run_sucess = False
         self.param_props_list = [
             { 
-                'init': 20,
+                'init': 18,
                 'scale': 10.,
                 'key': 'tb_n_contact',
+                'short': 'n',
+                'format': lambda v: "%.0f" % v
             },
             { 
-                'init': 80E6,
+                'init': 89E6,
                 'scale': 10E6,
                 'key': 'init_population',
+                'short': 'pop0',
+                'format': lambda v: "%.0fM" % (v/1E6)
             },
             { 
-                'init': .14,
+                'init': .174,
                 'scale': 5,
                 'key': 'tb_rate_death',
+                'short': 'death',
+                'format': lambda v: "%.4f" % v
             },
             { 
-                'init': .12,
+                'init': .064,
                 'scale': 1,
                 'key': 'tb_rate_earlyprogress',
+                'short': 'early',
+                'format': lambda v: "%.4f" % v
             },
             { 
-                'init': 4.,
+                'init': .6648,
                 'scale': 1,
                 'key': 'program_rate_detect',
+                'short': 'detect',
+                'format': lambda v: "%.4f" % v
             },
         ]
 
     def set_model_with_params(self, param_dict):
 
-        self.model.set_param(
-            "tb_n_contact", param_dict["tb_n_contact"])
-
         self.model.set_compartment(
             "susceptible", param_dict['init_population'])
+
+        self.model.set_param(
+            "tb_n_contact", param_dict["tb_n_contact"])
 
         self.model.set_param(
             "tb_rate_death",
@@ -144,19 +154,18 @@ class ModelRunner():
         ln_posterior += norm(99E6, 5E6).logpdf(final_pop)
         ln_posterior += norm(30000, 100).logpdf(latent)
         ln_posterior += norm(417, 5).logpdf(prevalence)
-        ln_posterior += norm(280, 5).logpdf(incidence)
-        ln_posterior += norm(10, 1).logpdf(mortality)
+        ln_posterior += norm(280/417, .01).logpdf(incidence/prevalence)
+        # ln_posterior += norm(10, 1).logpdf(mortality)
         # ln_posterior += 0.5*norm(280/417., 0.05).logpdf(incidence/prevalence)
         # ln_posterior += 0.5*norm(10/417, .005).logpdf(mortality/prevalence)
 
         ln_overall = ln_prior + ln_posterior
 
         print_dict = collections.OrderedDict()
-        print_dict["n"] = "{:<4.1f}".format(param_dict['tb_n_contact'])
-        print_dict["pop0"] = "{:<4}".format("{:.0f}M".format(param_dict['init_population']/1E6))
-        print_dict["death"] = "{:<6.4f}".format(param_dict['tb_rate_death'])
-        print_dict["progress"] = "{:<6.4f}".format(param_dict['tb_rate_earlyprogress'])
-        print_dict["detect"] = "{:<5.3f}".format(param_dict['program_rate_detect'])
+        for props in self.param_props_list:
+            val = param_dict[props["key"]]
+            print_dict[props["short"]] = props["format"](val)
+        print_dict["="] = "=="
         print_dict["pop1"] = "{:<4}".format("{:.0f}M".format(final_pop/1E6))
         print_dict["latent"] = "{:2.0f}%".format(latent/1E5*1E2)
         print_dict["prev"] = "{:<4.0f}".format(prevalence)

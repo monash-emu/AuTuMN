@@ -458,6 +458,9 @@ class BaseTbModel(BaseModel):
                 # for morbidity in self.morbidities:
                 #     yield strain, organ, morbidity
 
+    def make_strata_label(self, base, strata):
+        return base + "".join(strata)
+
     def find_flow_proportions_in_early_period(
             self, proportion, early_period, total_period):
         early_proportion = 1. - exp( log(1. - proportion) * early_period / total_period)
@@ -1182,9 +1185,6 @@ class FullModel(BaseTbModel):
             }
 
         self.set_input(input_parameters, input_compartments)
-
-    def make_strata_label(self, base, strata):
-        return base + "".join(strata)
 
     def set_input(self, input_parameters, input_compartments):
 

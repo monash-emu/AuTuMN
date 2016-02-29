@@ -17,6 +17,7 @@ import numpy
 from settings import default
 from settings import philippines 
 
+from curve import make_sigmoidal_curve
 
 def add_unique_tuple_to_list(a_list, a_tuple):
     """
@@ -556,6 +557,10 @@ class SimplifiedModel(BaseTbModel):
         self.set_param("program_rate_default_noninfect", .05 / time_treatment)
         self.set_param("program_rate_death_noninfect", .05 / time_treatment)
 
+        curve1 = make_sigmoidal_curve(y_high=2, y_low=0, x_start=1950, x_inflect=1970, multiplier=4)
+        curve2 = make_sigmoidal_curve(y_high=4, y_low=2, x_start=1995, x_inflect=2003, multiplier=3)
+        self.test_curve = lambda x: curve1(x) if x < 1990 else curve2(x)
+
     def calculate_vars(self):
         self.vars["population"] = sum(self.compartments.values())
         self.vars["rate_birth"] = \
@@ -571,6 +576,8 @@ class SimplifiedModel(BaseTbModel):
                 self.params["tb_n_contact"] \
               * self.vars["infectious_population"] \
               / self.vars["population"]
+
+        self.vars["program_rate_detect"] = self.test_curve(self.time)
 
     def set_flows(self):
         self.set_var_entry_rate_flow("susceptible", "rate_birth")
@@ -588,7 +595,8 @@ class SimplifiedModel(BaseTbModel):
 
         self.set_fixed_transfer_rate_flow(
             "active", "latent_late", "tb_rate_recover")
-        self.set_fixed_transfer_rate_flow(
+
+        self.set_var_transfer_rate_flow(
             "active", "treatment_infect", "program_rate_detect")
 
         self.set_fixed_transfer_rate_flow(
@@ -618,6 +626,10 @@ class SimplifiedModel(BaseTbModel):
                 rate_incidence += val
 
         # Main epidemiological indicators - note that denominator is not individuals
+        self.vars["prevalence"] = \
+              self.vars["infectious_population"] \
+            / self.vars["population"] * 1E5
+
         self.vars["incidence"] = \
               rate_incidence \
             / self.vars["population"] * 1E5
@@ -626,6 +638,12 @@ class SimplifiedModel(BaseTbModel):
               self.vars["rate_infection_death"] \
             / self.vars["population"] * 1E5
 
+        self.vars["latent"] = 0.0
+        for label in self.labels:
+            if "latent" in label:
+                self.vars["latent"] += (
+                    self.compartments[label] 
+                     / self.vars["population"] * 1E5)
 
 
 

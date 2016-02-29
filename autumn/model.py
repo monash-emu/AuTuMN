@@ -915,12 +915,15 @@ class NewFullModel(BaseTbModel):
                 "active": 3.
             }
 
+        # To remove comorbidities, set self.comorbidities to [""]
         self.comorbidities = [
             ""]
 
+        # To remove strains, set self.strains to [""]
         self.strains = [
             ""]
 
+        # To remove organ status, set self.organ_status to [""]
         self.organ_status = [
             "_smearpos",
             "_smearneg",
@@ -985,56 +988,59 @@ class NewFullModel(BaseTbModel):
                 "program_rate_restart_presenting":
                     1. / get("philippines", "timeperiod_norepresentation")
             }
-        
-        for parameter in input_parameters:  # Set parameters from parameter module
+
+        # Now actually set the imported parameters
+        for parameter in input_parameters:
             self.set_param(parameter, input_parameters[parameter])
 
-        self.set_param("tb_rate_earlyprogress",
+        # If extrapulmonary case fatality not stated
+        if "tb_proportion_casefatality_untreated_extrapul" not in input_parameters:
+            self.set_param(
+                "tb_proportion_casefatality_untreated_extrapul",
+                input_parameters["tb_proportion_casefatality_untreated_smearneg"])
+
+        # Progression and stabilisation rates
+        self.set_param("tb_rate_early_progression",  # Overall
                        self.params["tb_proportion_early_progression"]
                        / self.params["tb_timeperiod_early_latent"])
-
+        self.set_param(
+            "tb_rate_stabilise",  # Stabilisation rate
+            (1 - self.params["tb_proportion_early_progression"])
+            / self.params["tb_timeperiod_early_latent"])
         for organ in self.organ_status:
             self.set_param(
-                "tb_rate_earlyprogress" + organ,
-                self.params["tb_rate_earlyprogress"]
+                "tb_rate_early_progression" + organ,
+                self.params["tb_proportion_early_progression"]
+                  / self.params["tb_timeperiod_early_latent"]
                   * self.params["epi_proportion_cases" + organ])
             self.set_param(
-                "tb_rate_lateprogress" + organ,
-                .0005 * self.params["epi_proportion_cases" + organ])
-
-        self.set_param(
-            "tb_rate_stabilise",  # Calculate stabilisation rate
-            (1 - self.params["tb_proportion_early_progression"])
-            / self.params["tb_timeperiod_early_latent"])
-
-        if "tb_proportion_casefatality_untreated_extrapul" not in input_parameters:
+                "tb_rate_late_progression" + organ,
+                self.params["tb_rate_late_progression"]
+                * self.params["epi_proportion_cases" + organ])
             self.set_param(
-                "tb_proportion_casefatality_untreated_extrapul",
-                input_parameters["tb_proportion_casefatality_untreated_smearneg"])
-        self.set_param(
-            "tb_rate_stabilise",  # Calculate stabilisation rate
-            (1 - self.params["tb_proportion_early_progression"])
-            / self.params["tb_timeperiod_early_latent"])
-
-        if "tb_proportion_casefatality_untreated_extrapul" not in input_parameters:
+                "tb_rate_recover" + organ,
+                (1 - self.params["tb_proportion_casefatality_untreated" + organ])
+                  / self.params["tb_timeperiod_activeuntreated"])
             self.set_param(
-                "tb_proportion_casefatality_untreated_extrapul",
-                input_parameters["tb_proportion_casefatality_untreated_smearneg"])
+                "tb_rate_death" + organ,
+                self.params["tb_proportion_casefatality_untreated" + organ]
+                  / self.params["tb_timeperiod_activeuntreated"])
 
+        # Rates of detection and failure of detection
         self.set_param(
             "program_rate_detect",
             1. / self.params["tb_timeperiod_activeuntreated"]
             / (1. - self.params["program_proportion_detect"]))
-        # Formula derived from CDR = (detection rate) / (detection rate and spontaneous resolution rates)
-
+        # ( formula derived from CDR = (detection rate) / (detection rate and spontaneous resolution rates) )
         self.set_param(
             "program_rate_missed",
             self.params["program_rate_detect"]
             * (1. - self.params["program_algorithm_sensitivity"])
             / self.params["program_algorithm_sensitivity"])
-        # Formula derived from (algorithm sensitivity) = (detection rate) / (detection rate and miss rate)
+        # ( formula derived from (algorithm sensitivity) = (detection rate) / (detection rate and miss rate) )
 
-        for strain in self.strains:  # Temporary, has to be changed
+        # Temporarily set programmatic rates equal for all strains
+        for strain in self.strains:
             self.set_param(
                 "program_rate_detect" + strain,
                 self.params["program_rate_detect"])
@@ -1047,25 +1053,6 @@ class NewFullModel(BaseTbModel):
             self.set_param(
                 "program_rate_restart_presenting" + strain,
                 self.params["program_rate_restart_presenting"])
-
-        for organ in self.organ_status:
-            self.set_param(
-                "tb_rate_earlyprogress" + organ,
-                self.params["tb_proportion_early_progression"]
-                  / self.params["tb_timeperiod_early_latent"]
-                  * self.params["epi_proportion_cases" + organ])
-            self.set_param(
-                "tb_rate_lateprogress" + organ,
-                self.params["tb_rate_late_progression"]
-                * self.params["epi_proportion_cases" + organ])
-            self.set_param(
-                "tb_rate_recover" + organ,
-                (1 - self.params["tb_proportion_casefatality_untreated" + organ])
-                  / self.params["tb_timeperiod_activeuntreated"])
-            self.set_param(
-                "tb_rate_death" + organ,
-                self.params["tb_proportion_casefatality_untreated" + organ]
-                  / self.params["tb_timeperiod_activeuntreated"])
 
         self.find_treatment_flow_rates()
 
@@ -1124,11 +1111,11 @@ class NewFullModel(BaseTbModel):
             self.set_fixed_transfer_rate_flow(
                 "latent_early",
                 "active" + organ,
-                "tb_rate_earlyprogress" + organ)
+                "tb_rate_early_progression" + organ)
             self.set_fixed_transfer_rate_flow(
                 "latent_late",
                 "active" + organ,
-                "tb_rate_lateprogress" + organ)
+                "tb_rate_late_progression" + organ)
             self.set_fixed_transfer_rate_flow(
                 "active" + organ,
                 "latent_late",

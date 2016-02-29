@@ -50,7 +50,7 @@ class ModelRunner():
                 'format': lambda v: "%-2.0f" % v
             },
             { 
-                'init': 70E6,
+                'init': 50E6,
                 'scale': 10E6,
                 'key': 'init_population',
                 'short': 'pop0',

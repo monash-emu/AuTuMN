@@ -971,7 +971,7 @@ class NewFullModel(BaseTbModel):
         self.strains = [
             ""]
 
-        # To remove organ status, set self.organ_status to [""]
+        # To remove organ status, set self.organ_status to ["_smearpos"]
         self.organ_status = [
             "_smearpos",
             "_smearneg",

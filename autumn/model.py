@@ -414,6 +414,54 @@ class BaseTbModel(BaseModel):
     def __init__(self):
         BaseModel.__init__(self)
 
+    def initialise_compartments(self, input_compartments):
+
+        # Initialise to zero
+        for compartment in self.compartment_list:
+            for comorbidity in self.comorbidities:
+                if "susceptible" in compartment:  # Replicate for comorbidities only
+                    self.set_compartment(compartment + comorbidity, 0.)
+                elif "latent" in compartment:  # Replicate for comorbidities and strains
+                    for strain in self.strains:
+                        self.set_compartment(compartment + strain + comorbidity, 0.)
+                else:
+                    for strain in self.strains:
+                        for organ in self.organ_status:
+                            self.set_compartment(compartment + organ + strain + comorbidity, 0.)
+            for compartment in self.compartment_list:
+                if compartment in input_compartments:
+                    if "susceptible" in compartment:
+                        for comorbidity in self.comorbidities:
+                            self.set_compartment(compartment + comorbidity,
+                                                 input_compartments[compartment]
+                                                 / len(self.comorbidities))
+                    elif "latent" in compartment:
+                        for comorbidity in self.comorbidities:
+                            for strain in self.strains:
+                                self.set_compartment(compartment + strain + comorbidity,
+                                                     input_compartments[compartment]
+                                                     / len(self.comorbidities)
+                                                     / len(self.strains))
+                    else:
+                        for comorbidity in self.comorbidities:
+                            for strain in self.strains:
+                                for organ in self.organ_status:
+                                    self.set_compartment(compartment + organ + strain + comorbidity,
+                                                         input_compartments[compartment]
+                                                         / len(self.comorbidities)
+                                                         / len(self.strains)
+                                                         / len(self.organ_status))
+
+    def strata_iterator(self):
+        for strain in self.strains:
+            for organ in self.organs:
+                yield strain, organ
+                # for morbidity in self.morbidities:
+                #     yield strain, organ, morbidity
+
+    def make_strata_label(self, base, strata):
+        return base + "".join(strata)
+
     def find_flow_proportions_in_early_period(
             self, proportion, early_period, total_period):
         early_proportion = 1. - exp( log(1. - proportion) * early_period / total_period)
@@ -645,8 +693,6 @@ class SimplifiedModel(BaseTbModel):
                     self.compartments[label] 
                      / self.vars["population"] * 1E5)
 
-
-
 class SingleStrainModel(BaseTbModel):
 
     """
@@ -655,7 +701,7 @@ class SingleStrainModel(BaseTbModel):
 
     def __init__(self):
 
-        BaseModel.__init__(self)
+        BaseTbModel.__init__(self)
 
         self.set_compartment("susceptible_fully", 1e6)
         self.set_compartment("susceptible_vac", 0.)
@@ -858,8 +904,289 @@ class SingleStrainModel(BaseTbModel):
             / self.vars["population"] * 1E5
 
 
+class NewFullModel(BaseTbModel):
 
+    """
+    Trying to create a harmonised model that can run any number of strains
+    and organ statuses
+    """
 
+    def __init__(self, input_parameters=None, input_compartments=None):
+
+        BaseTbModel.__init__(self)
+
+        self.compartment_list = [
+            "susceptible_fully",
+            "susceptible_vac",
+            "susceptible_treated",
+            "latent_early",
+            "latent_late",
+            "active",
+            "detect",
+            "missed",
+            "treatment_infect",
+            "treatment_noninfect"]
+
+        if input_compartments is None:
+            input_compartments = {
+                "susceptible_fully": 1e6,
+                "active": 3.
+            }
+
+        # To remove comorbidities, set self.comorbidities to [""]
+        self.comorbidities = [
+            ""]
+
+        # To remove strains, set self.strains to [""]
+        self.strains = [
+            ""]
+
+        # To remove organ status, set self.organ_status to [""]
+        self.organ_status = [
+            "_smearpos",
+            "_smearneg",
+            "_extrapul"]
+
+        self.initialise_compartments(input_compartments)
+
+        self.infectious_tags = ["active", "missed", "detect", "treatment_infect"]
+
+        if input_parameters is None:
+
+            def get(param_set_name, param_name, prob=0.5):
+                param_set = globals()[param_set_name]
+                param = getattr(param_set, param_name)
+                ppf = getattr(param, "ppf")
+                return ppf(prob)
+
+            input_parameters = {
+                "demo_rate_birth": 20. / 1e3,
+                "demo_rate_death": 1. / 65,
+                "epi_proportion_cases_smearpos": 0.6,
+                "epi_proportion_cases_smearneg": 0.2,
+                "epi_proportion_cases_extrapul": 0.2,
+                "tb_multiplier_force_smearpos": 1.,
+                "tb_multiplier_force_smearneg":
+                    get("default", "multiplier_force_smearneg"),
+                "tb_multiplier_force_extrapul": 0.,
+                "tb_n_contact":
+                    get("default", "tb_n_contact"),
+                "tb_proportion_early_progression":
+                    get("default", "proportion_early_progression"),
+                "tb_timeperiod_early_latent":
+                    get("default", "timeperiod_early_latent"),
+                "tb_rate_late_progression":
+                    get("default", "rate_late_progression"),
+                "tb_proportion_casefatality_untreated_smearpos":
+                    get("default", "proportion_casefatality_active_untreated_smearpos"),
+                "tb_proportion_casefatality_untreated_smearneg":
+                    get("default", "proportion_casefatality_active_untreated_smearneg"),
+                "tb_timeperiod_activeuntreated":
+                    get("default", "timeperiod_activeuntreated"),
+                "tb_multiplier_bcg_protection":
+                    get("default", "multiplier_bcg_protection"),
+                "program_prop_vac":
+                    get("philippines", "bcg_coverage"),
+                "program_prop_unvac":
+                    1. - get("philippines", "bcg_coverage"),
+                "program_proportion_detect":
+                    get("philippines", "bcg_coverage"),
+                "program_algorithm_sensitivity":
+                    get("philippines", "algorithm_sensitivity"),
+                "program_rate_start_treatment":
+                    1. / get("philippines", "program_timeperiod_delayto_treatment"),
+                "tb_timeperiod_treatment":
+                    get("default", "timeperiod_treatment_ds"),
+                "tb_timeperiod_infect_ontreatment":
+                    get("default", "timeperiod_infect_ontreatment"),
+                "program_proportion_default":
+                    get("philippines", "proportion_default"),
+                "program_proportion_death":
+                    get("philippines", "proportion_death"),
+                "program_rate_restart_presenting":
+                    1. / get("philippines", "timeperiod_norepresentation")
+            }
+
+        # Now actually set the imported parameters
+        for parameter in input_parameters:
+            self.set_param(parameter, input_parameters[parameter])
+
+        # If extrapulmonary case fatality not stated
+        if "tb_proportion_casefatality_untreated_extrapul" not in input_parameters:
+            self.set_param(
+                "tb_proportion_casefatality_untreated_extrapul",
+                input_parameters["tb_proportion_casefatality_untreated_smearneg"])
+
+        # Progression and stabilisation rates
+        self.set_param("tb_rate_early_progression",  # Overall
+                       self.params["tb_proportion_early_progression"]
+                       / self.params["tb_timeperiod_early_latent"])
+        self.set_param(
+            "tb_rate_stabilise",  # Stabilisation rate
+            (1 - self.params["tb_proportion_early_progression"])
+            / self.params["tb_timeperiod_early_latent"])
+        for organ in self.organ_status:
+            self.set_param(
+                "tb_rate_early_progression" + organ,
+                self.params["tb_proportion_early_progression"]
+                  / self.params["tb_timeperiod_early_latent"]
+                  * self.params["epi_proportion_cases" + organ])
+            self.set_param(
+                "tb_rate_late_progression" + organ,
+                self.params["tb_rate_late_progression"]
+                * self.params["epi_proportion_cases" + organ])
+            self.set_param(
+                "tb_rate_recover" + organ,
+                (1 - self.params["tb_proportion_casefatality_untreated" + organ])
+                  / self.params["tb_timeperiod_activeuntreated"])
+            self.set_param(
+                "tb_rate_death" + organ,
+                self.params["tb_proportion_casefatality_untreated" + organ]
+                  / self.params["tb_timeperiod_activeuntreated"])
+
+        # Rates of detection and failure of detection
+        self.set_param(
+            "program_rate_detect",
+            1. / self.params["tb_timeperiod_activeuntreated"]
+            / (1. - self.params["program_proportion_detect"]))
+        # ( formula derived from CDR = (detection rate) / (detection rate and spontaneous resolution rates) )
+        self.set_param(
+            "program_rate_missed",
+            self.params["program_rate_detect"]
+            * (1. - self.params["program_algorithm_sensitivity"])
+            / self.params["program_algorithm_sensitivity"])
+        # ( formula derived from (algorithm sensitivity) = (detection rate) / (detection rate and miss rate) )
+
+        # Temporarily set programmatic rates equal for all strains
+        for strain in self.strains:
+            self.set_param(
+                "program_rate_detect" + strain,
+                self.params["program_rate_detect"])
+            self.set_param(
+                "program_rate_missed" + strain,
+                self.params["program_rate_missed"])
+            self.set_param(
+                "program_rate_start_treatment" + strain,
+                self.params["program_rate_start_treatment"])
+            self.set_param(
+                "program_rate_restart_presenting" + strain,
+                self.params["program_rate_restart_presenting"])
+
+        self.find_treatment_flow_rates()
+
+    def get_organ(self, label):
+        for organ in self.organ_status:
+            if organ in label:
+                return organ
+        return None
+
+    def calculate_vars(self):
+        self.vars["population"] = sum(self.compartments.values())
+
+        self.vars["rate_birth"] = \
+            self.params["demo_rate_birth"] * self.vars["population"]
+        self.vars["births_unvac"] = \
+            self.params['program_prop_unvac'] * self.vars["rate_birth"]
+        self.vars["births_vac"] = \
+            self.params['program_prop_vac'] * self.vars["rate_birth"]
+
+        self.vars["infectious_population"] = 0.0
+        self.vars["rate_force"] = 0.0
+        for label in self.labels:
+            if 'noninfect' in label:
+                continue
+            for organ in self.organ_status:
+                if organ not in label:
+                    continue
+                self.vars["infectious_population"] += self.compartments[label]
+                self.vars["rate_force"] += (
+                    self.compartments[label]
+                      / self.vars["population"]
+                      * self.params["tb_multiplier_force" + organ]
+                      * self.params["tb_n_contact"])
+
+        self.vars["rate_force_weak"] = 0.5 * self.vars["rate_force"]
+
+    def set_flows(self):
+        self.set_var_entry_rate_flow(
+            "susceptible_fully", "births_unvac")
+        self.set_var_entry_rate_flow(
+            "susceptible_vac", "births_vac")
+
+        self.set_var_transfer_rate_flow(
+            "susceptible_fully", "latent_early", "rate_force")
+        self.set_var_transfer_rate_flow(
+            "susceptible_vac", "latent_early", "rate_force_weak")
+        self.set_var_transfer_rate_flow(
+            "susceptible_treated", "latent_early", "rate_force_weak")
+        self.set_var_transfer_rate_flow(
+            "latent_late", "latent_early", "rate_force_weak")
+
+        self.set_fixed_transfer_rate_flow(
+            "latent_early", "latent_late", "tb_rate_stabilise")
+
+        for organ in self.organ_status:
+            self.set_fixed_transfer_rate_flow(
+                "latent_early",
+                "active" + organ,
+                "tb_rate_early_progression" + organ)
+            self.set_fixed_transfer_rate_flow(
+                "latent_late",
+                "active" + organ,
+                "tb_rate_late_progression" + organ)
+            self.set_fixed_transfer_rate_flow(
+                "active" + organ,
+                "latent_late",
+                "tb_rate_recover" + organ)
+            self.set_fixed_transfer_rate_flow(
+                "active" + organ,
+                "detect" + organ,
+                "program_rate_detect")
+            self.set_fixed_transfer_rate_flow(
+                "active" + organ,
+                "missed" + organ,
+                "program_rate_missed")
+            self.set_fixed_transfer_rate_flow(
+                "detect" + organ,
+                "treatment_infect" + organ,
+                "program_rate_start_treatment")
+            self.set_fixed_transfer_rate_flow(
+                "missed" + organ,
+                "active" + organ,
+                "program_rate_restart_presenting")
+            self.set_fixed_transfer_rate_flow(
+                "treatment_infect" + organ,
+                "treatment_noninfect" + organ,
+                "program_rate_success_infect")
+            self.set_fixed_transfer_rate_flow(
+                "treatment_infect" + organ,
+                "active" + organ,
+                "program_rate_default_infect")
+            self.set_fixed_transfer_rate_flow(
+                "treatment_noninfect" + organ,
+                "active" + organ,
+                "program_rate_default_noninfect")
+            self.set_fixed_transfer_rate_flow(
+                "treatment_noninfect" + organ,
+                "susceptible_treated",
+                "program_rate_success_noninfect")
+
+        # death flows
+        self.set_population_death_rate("demo_rate_death")
+
+        for organ in self.organ_status:
+            self.set_infection_death_rate_flow(
+                "active" + organ,
+                "tb_rate_death" + organ)
+            self.set_infection_death_rate_flow(
+                "detect" + organ,
+                "tb_rate_death" + organ)
+            self.set_infection_death_rate_flow(
+                "treatment_infect" + organ,
+                "program_rate_death_infect")
+            self.set_infection_death_rate_flow(
+                "treatment_noninfect" + organ,
+                "program_rate_death_noninfect")
 
 
 class FullModel(BaseTbModel):
@@ -934,16 +1261,6 @@ class FullModel(BaseTbModel):
             }
 
         self.set_input(input_parameters, input_compartments)
-
-    def make_strata_label(self, base, strata):
-        return base + "".join(strata)
-
-    def strata_iterator(self):
-        for strain in self.strains:
-            for organ in self.organs:
-                yield strain, organ
-                # for morbidity in self.morbidities:
-                #     yield strain, organ, morbidity
 
     def set_input(self, input_parameters, input_compartments):
 

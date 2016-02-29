@@ -412,6 +412,13 @@ class BaseModel():
 class BaseTbModel(BaseModel):
     def __init__(self):
         BaseModel.__init__(self)
+        
+    def strata_iterator(self):
+        for strain in self.strains:
+            for organ in self.organs:
+                yield strain, organ
+                # for morbidity in self.morbidities:
+                #     yield strain, organ, morbidity
 
     def find_flow_proportions_in_early_period(
             self, proportion, early_period, total_period):
@@ -919,13 +926,6 @@ class FullModel(BaseTbModel):
 
     def make_strata_label(self, base, strata):
         return base + "".join(strata)
-
-    def strata_iterator(self):
-        for strain in self.strains:
-            for organ in self.organs:
-                yield strain, organ
-                # for morbidity in self.morbidities:
-                #     yield strain, organ, morbidity
 
     def set_input(self, input_parameters, input_compartments):
 

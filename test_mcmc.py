@@ -37,40 +37,40 @@ def is_positive_definite(v):
 class ModelRunner():
 
     def __init__(self):
-        self.model = autumn.model.ToyModel()
-        self.model.make_times(1950, 2014, 1.)
+        self.model = autumn.model.SimplifiedModel()
+        self.model.make_times(1950, 2015, 1.)
         self.is_last_run_sucess = False
         self.param_props_list = [
             { 
-                'init': 18,
+                'init': 24,
                 'scale': 10.,
                 'key': 'tb_n_contact',
                 'short': 'n',
-                'format': lambda v: "%.0f" % v
+                'format': lambda v: "%-2.0f" % v
             },
             { 
-                'init': 89E6,
+                'init': 80E6,
                 'scale': 10E6,
                 'key': 'init_population',
                 'short': 'pop0',
-                'format': lambda v: "%.0fM" % (v/1E6)
+                'format': lambda v: "%3.0fM" % (v/1E6)
             },
             { 
-                'init': .174,
+                'init': .2192,
                 'scale': 5,
                 'key': 'tb_rate_death',
                 'short': 'death',
                 'format': lambda v: "%.4f" % v
             },
             { 
-                'init': .064,
+                'init': .0800,
                 'scale': 1,
                 'key': 'tb_rate_earlyprogress',
                 'short': 'early',
                 'format': lambda v: "%.4f" % v
             },
             { 
-                'init': .6648,
+                'init': .6803,
                 'scale': 1,
                 'key': 'program_rate_detect',
                 'short': 'detect',

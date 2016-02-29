@@ -389,7 +389,6 @@ class BaseModel():
 
     def check_converged_compartment_fraction(
             self, label, equil_time, test_fraction_diff):
-        is_converged = True
         labels = self.labels
         self.calculate_diagnostics()
         times = self.times
@@ -400,7 +399,6 @@ class BaseModel():
         while time_diff < equil_time:
             i -= 1
             if -i >= len(times):
-                is_converged = False
                 break
             time_diff = abs(times[-1] - times[i])
             frac_diff = (fraction[-1] - fraction[i])
@@ -411,7 +409,117 @@ class BaseModel():
         return True
 
 
-class ToyModel(BaseModel):
+class BaseTbModel(BaseModel):
+    def __init__(self):
+        BaseModel.__init__(self)
+
+    def find_flow_proportions_in_early_period(
+            self, proportion, early_period, total_period):
+        early_proportion = 1. - exp( log(1. - proportion) * early_period / total_period)
+        late_proportion = proportion - early_proportion
+        return early_proportion, late_proportion
+
+    def find_treatment_flow_rates(self):
+        outcomes = ["_success", "_death", "_default"]
+        non_success_outcomes = outcomes[1:3]
+        treatment_stages = ["_infect", "_noninfect"]
+
+        # Find the non-infectious period
+        self.set_param(
+            "tb_timeperiod_noninfect_ontreatment",
+            self.params["tb_timeperiod_treatment"]
+              - self.params["tb_timeperiod_infect_ontreatment"])
+
+        # Find the proportion of deaths/defaults during the infectious and non-infectious stages
+        for outcome in non_success_outcomes:
+            early_proportion, late_proportion = self.find_flow_proportions_in_early_period(
+                self.params["program_proportion" + outcome],
+                self.params["tb_timeperiod_infect_ontreatment"],
+                self.params["tb_timeperiod_treatment"])
+            self.set_param(
+                "program_proportion" + outcome + "_infect",
+                early_proportion)
+            self.set_param(
+                "program_proportion" + outcome + "_noninfect",
+                late_proportion)
+
+        # Find the success proportions
+        for treatment_stage in treatment_stages:
+            self.set_param(
+                "program_proportion_success" + treatment_stage,
+                1. - self.params["program_proportion_default" + treatment_stage]
+                  - self.params["program_proportion_death" + treatment_stage])
+            # Find the corresponding rates from the proportions
+            for outcome in outcomes:
+                self.set_param(
+                    "program_rate" + outcome + treatment_stage,
+                    1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment"]
+                      * self.params["program_proportion" + outcome + treatment_stage])
+
+        # Temporary code assigning non-DS strains the same outcomes *****
+        for strain in self.strains:
+            for treatment_stage in treatment_stages:
+                for outcome in outcomes:
+                    self.set_param(
+                        "program_rate" + outcome + treatment_stage + strain,
+                        self.params["program_rate" + outcome + treatment_stage])
+
+    def calculate_diagnostic_vars(self):
+
+        rate_incidence = 0.0
+        rate_notification = 0.0
+        rate_missed = 0.0
+        rate_death_ontreatment = 0.0
+        rate_default = 0.0
+        rate_success = 0.0
+        for from_label, to_label, rate in self.fixed_transfer_rate_flows:
+            val = self.compartments[from_label] * rate
+            if 'latent' in from_label and 'active' in to_label:
+                rate_incidence += val
+            elif 'active' in from_label and 'detect' in to_label:
+                rate_notification += val
+            elif 'active' in from_label and 'missed' in to_label:
+                rate_missed += val
+            elif 'treatment' in from_label and 'death' in to_label:
+                rate_death_ontreatment += val
+            elif 'treatment' in from_label and 'active' in to_label:
+                rate_default += val
+            elif 'treatment' in from_label and 'susceptible_treated' in to_label:
+                rate_success += val
+
+        # Main epidemiological indicators - note that denominator is not individuals
+        self.vars["incidence"] = \
+              rate_incidence \
+            / self.vars["population"] * 1E5
+
+        self.vars["notification"] = \
+              rate_notification \
+            / self.vars["population"] * 1E5
+
+        self.vars["mortality"] = \
+              self.vars["rate_infection_death"] \
+            / self.vars["population"] * 1E5
+
+        # Better term may be failed diagnosis, but using missed for
+        # consistency with the compartment name for now
+        self.vars["missed"] = \
+              rate_missed \
+            / self.vars["population"]
+
+        self.vars["success"] = \
+              rate_success \
+            / self.vars["population"]
+
+        self.vars["death_ontreatment"] = \
+              rate_death_ontreatment \
+            / self.vars["population"]
+
+        self.vars["default"] = \
+              rate_default \
+            / self.vars["population"]
+
+
+class SimplifiedModel(BaseTbModel):
 
     """
     Initial Autumn model designed by James
@@ -521,10 +629,10 @@ class ToyModel(BaseModel):
 
 
 
-class SimpleStrainModel(BaseModel):
+class SingleStrainModel(BaseTbModel):
 
     """
-    Includes organ strains
+    Includes organ status
     """
 
     def __init__(self):
@@ -707,8 +815,8 @@ class SimpleStrainModel(BaseModel):
                 "treatment_noninfect" + organ,
                 "program_rate_death_noninfect")
 
-    def calculate_diagnostic_vars(self):
 
+    def calculate_diagnostic_vars(self):
         rate_incidence = 0.0
         rate_notification = 0.0
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
@@ -736,7 +844,7 @@ class SimpleStrainModel(BaseModel):
 
 
 
-class FullModel(BaseModel):
+class FullModel(BaseTbModel):
     """
     Current model
     """
@@ -809,8 +917,8 @@ class FullModel(BaseModel):
 
         self.set_input(input_parameters, input_compartments)
 
-    def make_strata_label(self, base, stratas):
-        return base + "".join(stratas)
+    def make_strata_label(self, base, strata):
+        return base + "".join(strata)
 
     def strata_iterator(self):
         for strain in self.strains:
@@ -841,13 +949,12 @@ class FullModel(BaseModel):
 
         self.strains = [
             "_ds",
-            "_mdr",
-            "_xdr"]
+            "_mdr"]
 
-        self.morbidities = [
+        self.comorbidities = [
             "_hiv",
             "_diabetes",
-            "_nocomor"]
+            "_nocomorb"]
 
         self.infectious_tags = ["active", "missed", "detect", "treatment_infect"]
 
@@ -952,57 +1059,6 @@ class FullModel(BaseModel):
                         self.set_compartment(
                             self.make_strata_label(compartment, strata),
                             0.)
-
-    def find_treatment_flow_rates(self):
-        outcomes = ["_success", "_death", "_default"]
-        non_success_outcomes = outcomes[1:3]
-        treatment_stages = ["_infect", "_noninfect"]
-
-        # Find the non-infectious period
-        self.set_param(
-            "tb_timeperiod_noninfect_ontreatment",
-            self.params["tb_timeperiod_treatment"]
-              - self.params["tb_timeperiod_infect_ontreatment"])
-
-        # Find the proportion of deaths/defaults during the infectious and non-infectious stages
-        for outcome in non_success_outcomes:
-            early_proportion, late_proportion = self.find_flow_proportions_in_early_period(
-                self.params["program_proportion" + outcome],
-                self.params["tb_timeperiod_infect_ontreatment"],
-                self.params["tb_timeperiod_treatment"])
-            self.set_param(
-                "program_proportion" + outcome + "_infect",
-                early_proportion)
-            self.set_param(
-                "program_proportion" + outcome + "_noninfect",
-                late_proportion)
-
-        # Find the success proportions
-        for treatment_stage in treatment_stages:
-            self.set_param(
-                "program_proportion_success" + treatment_stage,
-                1. - self.params["program_proportion_default" + treatment_stage]
-                  - self.params["program_proportion_death" + treatment_stage])
-            # Find the corresponding rates from the proportions
-            for outcome in outcomes:
-                self.set_param(
-                    "program_rate" + outcome + treatment_stage,
-                    1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment"]
-                      * self.params["program_proportion" + outcome + treatment_stage])
-
-        # Temporary code assigning non-DS strains the same outcomes *****
-        for strain in self.strains:
-            for treatment_stage in treatment_stages:
-                for outcome in outcomes:
-                    self.set_param(
-                        "program_rate" + outcome + treatment_stage + strain,
-                        self.params["program_rate" + outcome + treatment_stage])
-
-    def find_flow_proportions_in_early_period(
-            self, proportion, early_period, total_period):
-        early_proportion = 1. - exp( log(1. - proportion) * early_period / total_period)
-        late_proportion = proportion - early_proportion
-        return early_proportion, late_proportion
 
     def calculate_vars(self):
         self.vars["population"] = sum(self.compartments.values())
@@ -1136,58 +1192,4 @@ class FullModel(BaseModel):
             self.set_infection_death_rate_flow(
                 self.make_strata_label("treatment_noninfect", strata),
                 "program_rate_death_noninfect" + strain)
-
-    def calculate_diagnostic_vars(self):
-
-        rate_incidence = 0.0
-        rate_notification = 0.0
-        rate_missed = 0.0
-        rate_death_ontreatment = 0.0
-        rate_default = 0.0
-        rate_success = 0.0
-        for from_label, to_label, rate in self.fixed_transfer_rate_flows:
-            val = self.compartments[from_label] * rate
-            if 'latent' in from_label and 'active' in to_label:
-                rate_incidence += val
-            elif 'active' in from_label and 'detect' in to_label:
-                rate_notification += val
-            elif 'active' in from_label and 'missed' in to_label:
-                rate_missed += val
-            elif 'treatment' in from_label and 'death' in to_label:
-                rate_death_ontreatment += val
-            elif 'treatment' in from_label and 'active' in to_label:
-                rate_default += val
-            elif 'treatment' in from_label and 'susceptible_treated' in to_label:
-                rate_success += val
-
-        # Main epidemiological indicators - note that denominator is not individuals
-        self.vars["incidence"] = \
-              rate_incidence \
-            / self.vars["population"] * 1E5
-
-        self.vars["notification"] = \
-              rate_notification \
-            / self.vars["population"] * 1E5
-
-        self.vars["mortality"] = \
-              self.vars["rate_infection_death"] \
-            / self.vars["population"] * 1E5
-
-        # Better term may be failed diagnosis, but using missed for
-        # consistency with the compartment name for now
-        self.vars["missed"] = \
-              rate_missed \
-            / self.vars["population"]
-
-        self.vars["success"] = \
-              rate_success \
-            / self.vars["population"]
-
-        self.vars["death_ontreatment"] = \
-              rate_death_ontreatment \
-            / self.vars["population"]
-
-        self.vars["default"] = \
-              rate_default \
-            / self.vars["population"]
 

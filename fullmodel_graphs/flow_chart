@@ -7,55 +7,38 @@ digraph {
 		susceptible_treated
 		latent_early_ds
 		latent_early_mdr
-		latent_early_xdr
 		latent_late_ds
 		latent_late_mdr
-		latent_late_xdr
 		active_ds_smearpos
 		active_ds_smearneg
 		active_ds_extrapul
 		active_mdr_smearpos
 		active_mdr_smearneg
 		active_mdr_extrapul
-		active_xdr_smearpos
-		active_xdr_smearneg
-		active_xdr_extrapul
 		detect_ds_smearpos
 		detect_ds_smearneg
 		detect_ds_extrapul
 		detect_mdr_smearpos
 		detect_mdr_smearneg
 		detect_mdr_extrapul
-		detect_xdr_smearpos
-		detect_xdr_smearneg
-		detect_xdr_extrapul
 		missed_ds_smearpos
 		missed_ds_smearneg
 		missed_ds_extrapul
 		missed_mdr_smearpos
 		missed_mdr_smearneg
 		missed_mdr_extrapul
-		missed_xdr_smearpos
-		missed_xdr_smearneg
-		missed_xdr_extrapul
 		treatment_infect_ds_smearpos
 		treatment_infect_ds_smearneg
 		treatment_infect_ds_extrapul
 		treatment_infect_mdr_smearpos
 		treatment_infect_mdr_smearneg
 		treatment_infect_mdr_extrapul
-		treatment_infect_xdr_smearpos
-		treatment_infect_xdr_smearneg
-		treatment_infect_xdr_extrapul
 		treatment_noninfect_ds_smearpos
 		treatment_noninfect_ds_smearneg
 		treatment_noninfect_ds_extrapul
 		treatment_noninfect_mdr_smearpos
 		treatment_noninfect_mdr_smearneg
 		treatment_noninfect_mdr_extrapul
-		treatment_noninfect_xdr_smearpos
-		treatment_noninfect_xdr_smearneg
-		treatment_noninfect_xdr_extrapul
 		tb_death
 			susceptible_fully -> latent_early_ds [label=rate_force_ds]
 			susceptible_vac -> latent_early_ds [label=rate_force_weak_ds]
@@ -65,13 +48,8 @@ digraph {
 			susceptible_vac -> latent_early_mdr [label=rate_force_weak_mdr]
 			susceptible_treated -> latent_early_mdr [label=rate_force_weak_mdr]
 			latent_late_mdr -> latent_early_mdr [label=rate_force_weak_mdr]
-			susceptible_fully -> latent_early_xdr [label=rate_force_xdr]
-			susceptible_vac -> latent_early_xdr [label=rate_force_weak_xdr]
-			susceptible_treated -> latent_early_xdr [label=rate_force_weak_xdr]
-			latent_late_xdr -> latent_early_xdr [label=rate_force_weak_xdr]
 			latent_early_ds -> latent_late_ds [label=2.3]
 			latent_early_mdr -> latent_late_mdr [label=2.3]
-			latent_early_xdr -> latent_late_xdr [label=2.3]
 			latent_early_ds -> active_ds_smearpos [label=0.20]
 			latent_late_ds -> active_ds_smearpos [label=0.000342]
 			active_ds_smearpos -> latent_late_ds [label=0.10]
@@ -144,42 +122,6 @@ digraph {
 			treatment_infect_mdr_extrapul -> active_mdr_extrapul [label=0.18]
 			treatment_noninfect_mdr_extrapul -> active_mdr_extrapul [label=0.17]
 			treatment_noninfect_mdr_extrapul -> susceptible_treated [label=1.7]
-			latent_early_xdr -> active_xdr_smearpos [label=0.20]
-			latent_late_xdr -> active_xdr_smearpos [label=0.000342]
-			active_xdr_smearpos -> latent_late_xdr [label=0.10]
-			active_xdr_smearpos -> detect_xdr_smearpos [label=2.9]
-			active_xdr_smearpos -> missed_xdr_smearpos [label=0.47]
-			detect_xdr_smearpos -> treatment_infect_xdr_smearpos [label=25.6]
-			missed_xdr_smearpos -> active_xdr_smearpos [label=0.27]
-			missed_xdr_smearpos -> latent_late_xdr [label=0.10]
-			treatment_infect_xdr_smearpos -> treatment_noninfect_xdr_smearpos [label=28.0]
-			treatment_infect_xdr_smearpos -> active_xdr_smearpos [label=0.18]
-			treatment_noninfect_xdr_smearpos -> active_xdr_smearpos [label=0.17]
-			treatment_noninfect_xdr_smearpos -> susceptible_treated [label=1.7]
-			latent_early_xdr -> active_xdr_smearneg [label=0.07]
-			latent_late_xdr -> active_xdr_smearneg [label=0.000114]
-			active_xdr_smearneg -> latent_late_xdr [label=0.30]
-			active_xdr_smearneg -> detect_xdr_smearneg [label=2.9]
-			active_xdr_smearneg -> missed_xdr_smearneg [label=0.47]
-			detect_xdr_smearneg -> treatment_infect_xdr_smearneg [label=25.6]
-			missed_xdr_smearneg -> active_xdr_smearneg [label=0.27]
-			missed_xdr_smearneg -> latent_late_xdr [label=0.30]
-			treatment_infect_xdr_smearneg -> treatment_noninfect_xdr_smearneg [label=28.0]
-			treatment_infect_xdr_smearneg -> active_xdr_smearneg [label=0.18]
-			treatment_noninfect_xdr_smearneg -> active_xdr_smearneg [label=0.17]
-			treatment_noninfect_xdr_smearneg -> susceptible_treated [label=1.7]
-			latent_early_xdr -> active_xdr_extrapul [label=0.07]
-			latent_late_xdr -> active_xdr_extrapul [label=0.000114]
-			active_xdr_extrapul -> latent_late_xdr [label=0.30]
-			active_xdr_extrapul -> detect_xdr_extrapul [label=2.9]
-			active_xdr_extrapul -> missed_xdr_extrapul [label=0.47]
-			detect_xdr_extrapul -> treatment_infect_xdr_extrapul [label=25.6]
-			missed_xdr_extrapul -> active_xdr_extrapul [label=0.27]
-			missed_xdr_extrapul -> latent_late_xdr [label=0.30]
-			treatment_infect_xdr_extrapul -> treatment_noninfect_xdr_extrapul [label=28.0]
-			treatment_infect_xdr_extrapul -> active_xdr_extrapul [label=0.18]
-			treatment_noninfect_xdr_extrapul -> active_xdr_extrapul [label=0.17]
-			treatment_noninfect_xdr_extrapul -> susceptible_treated [label=1.7]
 			active_ds_smearpos -> tb_death [label=0.26]
 			detect_ds_smearpos -> tb_death [label=0.26]
 			treatment_infect_ds_smearpos -> tb_death [label=0.18]
@@ -204,16 +146,4 @@ digraph {
 			detect_mdr_extrapul -> tb_death [label=0.07]
 			treatment_infect_mdr_extrapul -> tb_death [label=0.18]
 			treatment_noninfect_mdr_extrapul -> tb_death [label=0.17]
-			active_xdr_smearpos -> tb_death [label=0.26]
-			detect_xdr_smearpos -> tb_death [label=0.26]
-			treatment_infect_xdr_smearpos -> tb_death [label=0.18]
-			treatment_noninfect_xdr_smearpos -> tb_death [label=0.17]
-			active_xdr_smearneg -> tb_death [label=0.07]
-			detect_xdr_smearneg -> tb_death [label=0.07]
-			treatment_infect_xdr_smearneg -> tb_death [label=0.18]
-			treatment_noninfect_xdr_smearneg -> tb_death [label=0.17]
-			active_xdr_extrapul -> tb_death [label=0.07]
-			detect_xdr_extrapul -> tb_death [label=0.07]
-			treatment_infect_xdr_extrapul -> tb_death [label=0.18]
-			treatment_noninfect_xdr_extrapul -> tb_death [label=0.17]
 }

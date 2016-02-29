@@ -25,7 +25,7 @@ out_dir = 'fullmodel_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
-model = autumn.model.FullModel()
+model = autumn.model.FlexibleModel(3, 2, 1)
 model.make_times(1950., 2015., .1)
 model.integrate_explicit()
 

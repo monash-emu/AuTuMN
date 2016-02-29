@@ -452,15 +452,21 @@ class BaseTbModel(BaseModel):
                                                          / len(self.strains)
                                                          / len(self.organ_status))
 
-    def strata_iterator(self):
+    def strata_iterator(self):  # Inactive
         for strain in self.strains:
             for organ in self.organs:
                 yield strain, organ
                 # for morbidity in self.morbidities:
                 #     yield strain, organ, morbidity
 
-    def make_strata_label(self, base, strata):
+    def make_strata_label(self, base, strata):  # Inactive
         return base + "".join(strata)
+
+    def get_organ(self, label):  # Inactive
+        for organ in self.organ_status:
+            if organ in label:
+                return organ
+        return None
 
     def find_flow_proportions_in_early_period(
             self, proportion, early_period, total_period):
@@ -468,7 +474,7 @@ class BaseTbModel(BaseModel):
         late_proportion = proportion - early_proportion
         return early_proportion, late_proportion
 
-    def find_treatment_flow_rates(self):
+    def set_treatment_flow_rates(self):
         outcomes = ["_success", "_death", "_default"]
         non_success_outcomes = outcomes[1:3]
         treatment_stages = ["_infect", "_noninfect"]
@@ -692,6 +698,7 @@ class SimplifiedModel(BaseTbModel):
                 self.vars["latent"] += (
                     self.compartments[label] 
                      / self.vars["population"] * 1E5)
+
 
 class SingleStrainModel(BaseTbModel):
 
@@ -1011,7 +1018,7 @@ class NewFullModel(BaseTbModel):
         for parameter in input_parameters:
             self.set_param(parameter, input_parameters[parameter])
 
-        # If extrapulmonary case fatality not stated
+        # If extrapulmonary case-fatality not stated
         if "tb_proportion_casefatality_untreated_extrapul" not in input_parameters:
             self.set_param(
                 "tb_proportion_casefatality_untreated_extrapul",
@@ -1021,10 +1028,9 @@ class NewFullModel(BaseTbModel):
         self.set_param("tb_rate_early_progression",  # Overall
                        self.params["tb_proportion_early_progression"]
                        / self.params["tb_timeperiod_early_latent"])
-        self.set_param(
-            "tb_rate_stabilise",  # Stabilisation rate
-            (1 - self.params["tb_proportion_early_progression"])
-            / self.params["tb_timeperiod_early_latent"])
+        self.set_param("tb_rate_stabilise", # Stabilisation rate
+                       (1 - self.params["tb_proportion_early_progression"])
+                       / self.params["tb_timeperiod_early_latent"])
         for organ in self.organ_status:
             self.set_param(
                 "tb_rate_early_progression" + organ,
@@ -1036,13 +1042,13 @@ class NewFullModel(BaseTbModel):
                 self.params["tb_rate_late_progression"]
                 * self.params["epi_proportion_cases" + organ])
             self.set_param(
-                "tb_rate_recover" + organ,
-                (1 - self.params["tb_proportion_casefatality_untreated" + organ])
-                  / self.params["tb_timeperiod_activeuntreated"])
-            self.set_param(
                 "tb_rate_death" + organ,
                 self.params["tb_proportion_casefatality_untreated" + organ]
-                  / self.params["tb_timeperiod_activeuntreated"])
+                / self.params["tb_timeperiod_activeuntreated"])
+            self.set_param(
+                "tb_rate_recover" + organ,
+                (1 - self.params["tb_proportion_casefatality_untreated" + organ])
+                / self.params["tb_timeperiod_activeuntreated"])
 
         # Rates of detection and failure of detection
         self.set_param(
@@ -1072,13 +1078,7 @@ class NewFullModel(BaseTbModel):
                 "program_rate_restart_presenting" + strain,
                 self.params["program_rate_restart_presenting"])
 
-        self.find_treatment_flow_rates()
-
-    def get_organ(self, label):
-        for organ in self.organ_status:
-            if organ in label:
-                return organ
-        return None
+        self.set_treatment_flow_rates()
 
     def calculate_vars(self):
         self.vars["population"] = sum(self.compartments.values())
@@ -1298,7 +1298,7 @@ class FullModel(BaseTbModel):
         for parameter in input_parameters:  # Set parameters from parameter module
             self.set_param(parameter, input_parameters[parameter])
 
-        self.find_treatment_flow_rates()
+        self.set_treatment_flow_rates()
 
         self.set_param(
             "tb_rate_stabilise",  # Calculate stabilisation rate

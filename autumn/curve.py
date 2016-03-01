@@ -41,6 +41,31 @@ def make_sigmoidal_curve(y_low=0, y_high=1.0, x_start=0, x_inflect=0.5, multipli
     return curve
 
 
+def make_two_step_curve(
+    y_low, y_med, y_high, x_start, x_med, x_end):
+
+    curve1 = make_sigmoidal_curve(
+        y_high=y_med, y_low=y_low, 
+        x_start=x_start, x_inflect=(x_med-x_start)*0.5 + x_start, 
+        multiplier=4)
+
+    curve2 = make_sigmoidal_curve(
+        y_high=y_high, y_low=y_med, 
+        x_start=x_med, x_inflect=(x_end-x_med)*0.5 + x_med, 
+        multiplier=4)
+
+    def curve(x):
+        if x < x_start:
+            return y_low
+        if x < x_med:
+            return curve1(x)
+        if x < x_end:
+            return curve2(x)
+        return y_high
+
+    return curve
+
+
 if __name__ == "__main__":
 
     import pylab
@@ -53,18 +78,9 @@ if __name__ == "__main__":
     # pylab.ylim(0, 5)
     # pylab.show()
 
-    curve1 = make_sigmoidal_curve(y_high=2, y_low=0, x_start=1950, x_inflect=1970, multiplier=4)
-    curve2 = make_sigmoidal_curve(y_high=4, y_low=2, x_start=1995, x_inflect=2003, multiplier=3)
-    curve = lambda x: curve1(x) if x < 1990 else curve2(x)
-
-    def curve(x):
-        if x < 1990:
-            return curve1(x)
-        elif x < 1995:
-            return 2
-        else:
-            return curve2(x)
-
+    y_high = 3
+    y_med = 0.5 * y_high
+    curve = make_two_step_curve(0, y_med, y_high, 1950, 1995, 2015)
     x_vals = numpy.linspace(1950, 2050, 150)
     pylab.plot(x_vals, map(curve, x_vals))
     pylab.xlim(1950, 2020)

@@ -43,24 +43,38 @@ class ModelRunner():
         self.is_last_run_sucess = False
         self.param_props_list = [
             { 
-                'init': 24,
+                'init': 40,
                 'scale': 10.,
                 'key': 'tb_n_contact',
                 'short': 'n',
                 'format': lambda v: "%-2.0f" % v
             },
-            { 
-                'init': 50E6,
-                'scale': 10E6,
-                'key': 'init_population',
-                'short': 'pop0',
-                'format': lambda v: "%3.0fM" % (v/1E6)
-            },
+            # { 
+            #     'init': 50E6,
+            #     'scale': 10E6,
+            #     'key': 'init_population',
+            #     'short': 'pop0',
+            #     'format': lambda v: "%3.0fM" % (v/1E6)
+            # },
             { 
                 'init': .2192,
                 'scale': 5,
                 'key': 'tb_rate_death',
                 'short': 'death',
+                'format': lambda v: "%.4f" % v
+            },
+            { 
+                'init': .2,
+                'scale': 5,
+                'key': 'tb_rate_recover',
+                'short': 'recov',
+                'format': lambda v: "%.4f" % v
+            },
+            { 
+                'init': 0.001,
+                'scale': 5,
+                'key': 'tb_rate_lateprogress',
+                'short': 'late',
                 'format': lambda v: "%.4f" % v
             },
             { 
@@ -77,56 +91,53 @@ class ModelRunner():
                 'short': 'detect',
                 'format': lambda v: "%.4f" % v
             },
-            { 
-                'init': .6803,
-                'scale': 1,
-                'key': 'program_rate_completion_noninfect',
-                'short': 'complete',
-                'format': lambda v: "%.4f" % v
-            },
+            # { 
+            #     'init': .6803,
+            #     'scale': 1,
+            #     'key': 'program_rate_completion_noninfect',
+            #     'short': 'complete',
+            #     'format': lambda v: "%.4f" % v
+            # },
         ]
 
     def set_model_with_params(self, param_dict):
 
-        # self.model.set_compartment(
-        #     "susceptible", 60E6)
-
         self.model.set_compartment(
-            "susceptible", param_dict["init_population"])
+            "susceptible", 50E6)
+
+        # self.model.set_compartment(
+        #     "susceptible", param_dict["init_population"])
 
         self.model.set_param(
             "tb_n_contact", param_dict["tb_n_contact"])
 
         self.model.set_param(
+            "tb_rate_recover",
+            param_dict["tb_rate_recover"])
+
+        self.model.set_param(
+            "tb_rate_lateprogress",
+            param_dict["tb_rate_lateprogress"])
+
+        self.model.set_param(
             "tb_rate_death",
             param_dict["tb_rate_death"])
-        self.model.set_infection_death_rate_flow(
-            "active",
-            "tb_rate_death")
 
         self.model.set_param(
             "tb_rate_earlyprogress",
             param_dict["tb_rate_earlyprogress"])
-        self.model.set_fixed_transfer_rate_flow(
-            "latent_early",
-            "active",
-            "tb_rate_earlyprogress")
 
         self.model.set_param(
             "program_rate_detect",
             param_dict["program_rate_detect"])
-        self.model.set_fixed_transfer_rate_flow(
-            "active",
-            "treatment_infect",
-            "program_rate_detect")
 
-        self.model.set_param(
-            "program_rate_completion_noninfect", 
-            param_dict["program_rate_completion_noninfect"])
-        self.model.set_fixed_transfer_rate_flow(
-            "treatment_noninfect",
-            "susceptible",
-            "program_rate_completion_noninfect")
+        # self.model.set_param(
+        #     "program_rate_completion_noninfect", 
+        #     param_dict["program_rate_completion_noninfect"])
+        # self.model.set_fixed_transfer_rate_flow(
+        #     "treatment_noninfect",
+        #     "susceptible",
+        #     "program_rate_completion_noninfect")
 
     def convert_param_list_to_dict(self, params):
         param_dict = {}
@@ -150,19 +161,21 @@ class ModelRunner():
         #     print "Warning: parameters=%s failed with model" % params
         #     self.is_last_run_sucess = False
 
-    def get_diff_fraction_at_time(self, label, test_time):
-        times = self.model.times
+    def get_fraction_between_times(self, label, time0, time1):
         fraction = self.model.fraction_soln[label]
-        i = len(times) - 1
-        last_val = fraction[i]
-        last_time = times[i]
-        while i > 0:
-            i -= 1
-            time = times[i]
-            val = fraction[i]
-            if abs(last_time - time) > test_time:
-                return abs(val - last_val)
-        return abs(val - last_val)
+        times = self.model.times
+
+        def fraction_at_time(test_t):
+            best_i = 0
+            best_diff = abs(times[best_i] - test_t)
+            for i, t in enumerate(times):
+                diff = abs(t - test_t)
+                if diff < best_diff:
+                    best_diff = diff
+                    best_i = i
+            return fraction[best_i]
+
+        return abs(fraction_at_time(time0) - fraction_at_time(time1))
 
     def ln_overall(self, params):
         self.run_with_params(params)
@@ -177,14 +190,14 @@ class ModelRunner():
         mortality = self.model.vars["mortality"]
         latent = self.model.vars["latent"]
 
-        fr_at_equil = self.get_diff_fraction_at_time('latent_late', 5)
+        fr_at_equil = self.get_fraction_between_times('latent_late', 1945, 1950)
 
         ln_prior = 0.0
-        ln_prior += make_gamma_dist(40, 20).logpdf(param_dict['tb_n_contact'])
+        # ln_prior += make_gamma_dist(40, 20).logpdf(param_dict['tb_n_contact'])
 
         ln_posterior = 0.0
-        ln_posterior += - 1E8 * max(fr_at_equil - 0.05, 0.0)
-        ln_posterior += norm(99E6, 5E6).logpdf(final_pop)
+        ln_posterior += - 1E6 * max(fr_at_equil - 0.05, 0.0)
+        # ln_posterior += norm(99E6, 5E6).logpdf(final_pop)
         ln_posterior += norm(30000, 100).logpdf(latent)
         ln_posterior += norm(417, 5).logpdf(prevalence)
         ln_posterior += norm(280, 0.01).logpdf(incidence)
@@ -353,7 +366,7 @@ model_runner = ModelRunner()
 # plotting.plot_populations(model, model.labels[:])
 # pylab.savefig(base + '.population.png')
 
-n_step = 80
+n_step = 40
 n_burn_step = .5 * n_step
 n_model = .5 * n_step
 base = os.path.join(out_dir, 'mcmc')

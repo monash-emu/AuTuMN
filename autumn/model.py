@@ -281,11 +281,41 @@ class BaseModel():
             for i_label, label in enumerate(self.labels):
                 self.flow_array[i, i_label] = self.flows[label]
 
+        # The following section creates attributes of the model object
+        # that sum over the compartment types
+        self.compartments_summed = {}
+        self.broad_compartments_summed = {}
+        broad_compartment_types\
+            = ["susceptible", "latent", "active", "missed", "treatment"]
+        for compartment_type in self.compartment_list:
+            # Need to make the following line more generalisable - not sure how
+            self.compartments_summed[compartment_type]\
+                = [0] * len(self.population_soln["susceptible_fully_nocomorbidities"])
+            for label in self.labels:
+                if compartment_type in label:
+                    self.compartments_summed[compartment_type] = [
+                        a + b
+                        for a, b
+                        in zip(
+                            self.compartments_summed[compartment_type],
+                            self.population_soln[label])]
+        for compartment_type in broad_compartment_types:
+            self.broad_compartments_summed[compartment_type]\
+                = [0] * len(self.population_soln["susceptible_fully_nocomorbidities"])
+            for label in self.labels:
+                if compartment_type in label:
+                    self.broad_compartments_summed[compartment_type] = [
+                        a + b
+                        for a, b
+                        in zip(
+                            self.broad_compartments_summed[compartment_type],
+                            self.population_soln[label])]
+
         self.fraction_soln = {}
         for label in self.labels:
             self.fraction_soln[label] = [
                 v / t
-                for v, t 
+                for v, t
                 in zip(
                     self.population_soln[label],
                     self.get_var_soln("population")
@@ -408,8 +438,6 @@ class BaseModel():
         self.graph = apply_styles(self.graph, styles)
 
         self.graph.render(base)
-
-
 
 
 class BaseTbModel(BaseModel):
@@ -560,7 +588,6 @@ class BaseTbModel(BaseModel):
             self.params["program_prop_unvac"] * self.vars["rate_birth"]
         self.vars["births_vac"] = \
             self.params["program_prop_vac"] * self.vars["rate_birth"]
-
 
 
 class SimplifiedModel(BaseTbModel):

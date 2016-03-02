@@ -158,7 +158,7 @@ class BaseModel():
             self.flows[from_label] -= val
             self.flows[to_label] += val
 
-        # fixed-rate flows
+        # scaleup flows
         for from_label, to_label, scaleup_label in self.scaleup_transfer_rate_flows:
             fn = self.scaleup_fns[scaleup_label]
             val = self.compartments[from_label] * fn(self.time)
@@ -390,6 +390,8 @@ class BaseModel():
         for label in self.labels:
             self.graph.node(label)
         self.graph.node("tb_death")
+        for from_label, to_label, scaleup_label in self.scaleup_transfer_rate_flows:
+            self.graph.edge(from_label, to_label, label=scaleup_label)
         for from_label, to_label, var_label in self.var_transfer_rate_flows:
             self.graph.edge(from_label, to_label, label=var_label)
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
@@ -619,6 +621,8 @@ class SimplifiedModel(BaseTbModel):
         self.set_param("tb_rate_recover", .6 / 3.)
         self.set_param("tb_rate_death", .4 / 3.)
 
+        self.set_param("tb_bcg_multiplier", .5)
+
         self.set_param("program_rate_detect", 1.)
         time_treatment = .5
         self.set_param("program_time_treatment", time_treatment)
@@ -650,6 +654,10 @@ class SimplifiedModel(BaseTbModel):
               * self.vars["infectious_population"] \
               / self.vars["population"]
 
+        self.vars["rate_force_weak"] = (
+            self.params["tb_bcg_multiplier"]
+              * self.vars["rate_force"])
+
     def set_flows(self):
         self.set_var_entry_rate_flow("susceptible", "rate_birth")
 
@@ -663,6 +671,8 @@ class SimplifiedModel(BaseTbModel):
 
         self.set_fixed_transfer_rate_flow(
             "latent_late", "active", "tb_rate_lateprogress")
+        # self.set_var_transfer_rate_flow(
+        #     "latent_late", "latent_early", "rate_force_weak")
 
         self.set_fixed_transfer_rate_flow(
             "active", "latent_late", "tb_rate_recover")

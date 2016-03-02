@@ -40,10 +40,12 @@ class ModelRunner():
     def __init__(self):
         self.model = autumn.model.SimplifiedModel()
         self.model.make_times(1900, 2015, 1.)
+        self.model.set_compartment(
+            "susceptible", 50E6)
         self.is_last_run_sucess = False
         self.param_props_list = [
             { 
-                'init': 40,
+                'init': 30,
                 'scale': 10.,
                 'key': 'tb_n_contact',
                 'short': 'n',
@@ -56,88 +58,64 @@ class ModelRunner():
             #     'short': 'pop0',
             #     'format': lambda v: "%3.0fM" % (v/1E6)
             # },
-            { 
-                'init': .2192,
-                'scale': 5,
-                'key': 'tb_rate_death',
-                'short': 'death',
-                'format': lambda v: "%.4f" % v
-            },
+            # { 
+            #     'init': 0.5,
+            #     'scale': 5,
+            #     'key': 'tb_bcg_multiplier',
+            #     'short': 'bcg',
+            #     'format': lambda v: "%.4f" % v
+            # },
             { 
                 'init': .2,
-                'scale': 5,
-                'key': 'tb_rate_recover',
-                'short': 'recov',
-                'format': lambda v: "%.4f" % v
-            },
-            { 
-                'init': 0.001,
-                'scale': 5,
-                'key': 'tb_rate_lateprogress',
-                'short': 'late',
-                'format': lambda v: "%.4f" % v
-            },
-            { 
-                'init': .0800,
                 'scale': 1,
                 'key': 'tb_rate_earlyprogress',
                 'short': 'early',
                 'format': lambda v: "%.4f" % v
             },
             { 
-                'init': .6803,
-                'scale': 1,
-                'key': 'program_rate_detect',
-                'short': 'detect',
+                'init': 1.8,
+                'scale': 5,
+                'key': 'tb_rate_stabilise',
+                'short': 'stab',
+                'format': lambda v: "%.4f" % v
+            },
+            { 
+                'init': .27,
+                'scale': 5,
+                'key': 'tb_rate_recover',
+                'short': 'recov',
+                'format': lambda v: "%.4f" % v
+            },
+            { 
+                'init': 0.05,
+                'scale': 5,
+                'key': 'tb_rate_lateprogress',
+                'short': 'late',
+                'format': lambda v: "%.4f" % v
+            },
+            { 
+                'init': .01,
+                'scale': 5,
+                'key': 'tb_rate_death',
+                'short': 'death',
                 'format': lambda v: "%.4f" % v
             },
             # { 
-            #     'init': .6803,
+            #     'init': .9,
             #     'scale': 1,
-            #     'key': 'program_rate_completion_noninfect',
-            #     'short': 'complete',
+            #     'key': 'program_rate_detect',
+            #     'short': 'detect',
             #     'format': lambda v: "%.4f" % v
             # },
         ]
 
     def set_model_with_params(self, param_dict):
-
-        self.model.set_compartment(
-            "susceptible", 50E6)
-
-        # self.model.set_compartment(
-        #     "susceptible", param_dict["init_population"])
-
-        self.model.set_param(
-            "tb_n_contact", param_dict["tb_n_contact"])
-
-        self.model.set_param(
-            "tb_rate_recover",
-            param_dict["tb_rate_recover"])
-
-        self.model.set_param(
-            "tb_rate_lateprogress",
-            param_dict["tb_rate_lateprogress"])
-
-        self.model.set_param(
-            "tb_rate_death",
-            param_dict["tb_rate_death"])
-
-        self.model.set_param(
-            "tb_rate_earlyprogress",
-            param_dict["tb_rate_earlyprogress"])
-
-        self.model.set_param(
-            "program_rate_detect",
-            param_dict["program_rate_detect"])
-
-        # self.model.set_param(
-        #     "program_rate_completion_noninfect", 
-        #     param_dict["program_rate_completion_noninfect"])
-        # self.model.set_fixed_transfer_rate_flow(
-        #     "treatment_noninfect",
-        #     "susceptible",
-        #     "program_rate_completion_noninfect")
+        n_set = 0
+        for key in param_dict:
+            if key in self.model.params:
+                n_set += 1
+                self.model.set_param(key, param_dict[key])
+        assert n_set == len(param_dict), "Not all params apply to model"
 
     def convert_param_list_to_dict(self, params):
         param_dict = {}
@@ -188,20 +166,23 @@ class ModelRunner():
         prevalence = self.model.vars["prevalence"]
         incidence = self.model.vars["incidence"]
         mortality = self.model.vars["mortality"]
-        latent = self.model.vars["latent"]
+        latent = (
+            self.model.compartments["latent_late"]
+             / self.model.vars["population"]
+             * 1E5)
 
         fr_at_equil = self.get_fraction_between_times('latent_late', 1945, 1950)
 
         ln_prior = 0.0
-        # ln_prior += make_gamma_dist(40, 20).logpdf(param_dict['tb_n_contact'])
+        ln_prior += make_gamma_dist(40, 20).logpdf(param_dict['tb_n_contact'])
 
         ln_posterior = 0.0
-        ln_posterior += - 1E6 * max(fr_at_equil - 0.05, 0.0)
-        # ln_posterior += norm(99E6, 5E6).logpdf(final_pop)
+        ln_posterior += - 1E8 * max(fr_at_equil - 0.05, 0.0)
+        ln_posterior += norm(99E6, 5E6).logpdf(final_pop)
         ln_posterior += norm(30000, 100).logpdf(latent)
         ln_posterior += norm(417, 5).logpdf(prevalence)
-        ln_posterior += norm(280, 0.01).logpdf(incidence)
-        ln_posterior += norm(10, 1).logpdf(mortality)
+        # ln_posterior += norm(280, 0.01).logpdf(incidence)
+        # ln_posterior += norm(10, 1).logpdf(mortality)
 
         ln_overall = ln_prior + ln_posterior
 
@@ -211,7 +192,7 @@ class ModelRunner():
             print_dict[props["short"]] = props["format"](val)
         print_dict["="] = "=="
         print_dict["pop1"] = "{:<4}".format("{:.0f}M".format(final_pop/1E6))
-        print_dict["latent"] = "{:2.0f}%".format(latent/1E5*1E2)
+        print_dict["latent"] = "{:2.0f}%".format(latent/1E5*100.)
         print_dict["prev"] = "{:<4.0f}".format(prevalence)
         print_dict["inci"] = "{:<4.0f}".format(incidence)
         print_dict["mort"] = "{:<4.0f}".format(mortality)
@@ -373,7 +354,7 @@ base = os.path.join(out_dir, 'mcmc')
 model_runner.mcmc(n_mcmc_step=n_step)
 model_runner.plot_mcmc_params(base)
 model_runner.model.make_graph(os.path.join(out_dir, 'workflow.png'))
-for var in ['population', 'incidence', 'mortality', 'latent']:
+for var in ['population', 'incidence', 'prevalence', 'mortality', 'latent']:
     model_runner.plot_mcmc_var(
         var, base, n_burn_step=n_burn_step, n_model_show=n_model)
 for label in ['latent_early', 'latent_late']:

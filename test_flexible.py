@@ -4,7 +4,7 @@ import glob
 import autumn.model
 import autumn.plotting
 
-out_dir = 'simple_model_graphs'
+out_dir = 'flexible_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
@@ -13,7 +13,7 @@ models_to_run = [[3, 1, 1, "three organs, one strain"],
                  [1, 1, 1, "one organ, one strain"]]
 
 for running_model in range(len(models_to_run)):
-    name = 'flexible_model'
+    name = 'model%d' % running_model
     base = os.path.join(out_dir, name)
     model = autumn.model.FlexibleModel(models_to_run[running_model][0],
                                        models_to_run[running_model][1],

@@ -318,9 +318,23 @@ class BaseModel():
                 for v, t
                 in zip(
                     self.population_soln[label],
-                    self.get_var_soln("population")
-                )
-            ]
+                    self.get_var_soln("population"))]
+        self.summed_fraction_soln = {}
+        for compartment_type in self.compartment_list:
+            self.summed_fraction_soln[compartment_type] = [
+                v / t
+                for v, t
+                in zip(
+                    self.compartments_summed[compartment_type],
+                    self.get_var_soln("population"))]
+        self.broad_fraction_soln = {}
+        for compartment_type in broad_compartment_types:
+            self.broad_fraction_soln[compartment_type] = [
+                v / t
+                for v, t
+                in zip(
+                    self.broad_compartments_summed[compartment_type],
+                    self.get_var_soln("population"))]
 
     def get_compartment_soln(self, label):
         assert self.soln_array is not None, "calculate_diagnostics has not been run"

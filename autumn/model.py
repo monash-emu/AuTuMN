@@ -231,9 +231,12 @@ class BaseModel():
                     time = new_time
                 for i in range(n_component):
                     y[i] = y[i] + dt * f[i]
-                    # hack to avoid errors due to time-step
+
+                    ######################################
+                    # HACK to avoid errors due to time-step
                     if y[i] < 0.0:
                         y[i] = 0.0
+
             if i_time < n_time - 1:
                 self.soln_array[i_time+1,:] = y
 
@@ -323,14 +326,14 @@ class BaseModel():
 
         """
         # # Check all compartments are positive
-        # for label in self.labels:
-        #     assert self.compartments[label] >= 0.0
+        for label in self.labels:
+            assert self.compartments[label] >= 0.0
         # Check population is conserved across compartments
         population_change = \
               self.vars['rate_birth'] \
             - self.vars['rate_death'] \
             - self.vars['rate_infection_death']
-        # assert abs(sum(self.flows.values()) - population_change ) < error_margin
+        assert abs(sum(self.flows.values()) - population_change ) < error_margin
 
     def make_graph(self, png):
         from graphviz import Digraph
@@ -406,26 +409,7 @@ class BaseModel():
 
         self.graph.render(base)
 
-    def check_converged_compartment_fraction(
-            self, label, equil_time, test_fraction_diff):
-        labels = self.labels
-        self.calculate_diagnostics()
-        times = self.times
-        fraction = self.fraction_soln[label]
-        i = -2
-        max_fraction_diff = 0
-        time_diff = 0
-        while time_diff < equil_time:
-            i -= 1
-            if -i >= len(times):
-                break
-            time_diff = abs(times[-1] - times[i])
-            frac_diff = (fraction[-1] - fraction[i])
-            if abs(frac_diff) > max_fraction_diff:
-                max_fraction_diff = frac_diff
-            if abs(frac_diff) > test_fraction_diff:
-                return False
-        return True
+
 
 
 class BaseTbModel(BaseModel):
@@ -577,21 +561,6 @@ class BaseTbModel(BaseModel):
         self.vars["births_vac"] = \
             self.params["program_prop_vac"] * self.vars["rate_birth"]
 
-    def strata_iterator(self):  # Inactive
-        for strain in self.strains:
-            for organ in self.organs:
-                yield strain, organ
-                # for morbidity in self.morbidities:
-                #     yield strain, organ, morbidity
-
-    def make_strata_label(self, base, strata):  # Inactive
-        return base + "".join(strata)
-
-    def get_organ(self, label):  # Inactive
-        for organ in self.organ_status:
-            if organ in label:
-                return organ
-        return None
 
 
 class SimplifiedModel(BaseTbModel):
@@ -632,10 +601,6 @@ class SimplifiedModel(BaseTbModel):
         self.set_param("program_rate_completion_noninfect", .9 / time_treatment)
         self.set_param("program_rate_default_noninfect", .05 / time_treatment)
         self.set_param("program_rate_death_noninfect", .05 / time_treatment)
-
-        curve1 = make_sigmoidal_curve(y_high=2, y_low=0, x_start=1950, x_inflect=1970, multiplier=4)
-        curve2 = make_sigmoidal_curve(y_high=4, y_low=2, x_start=1995, x_inflect=2003, multiplier=3)
-        self.test_curve = lambda x: curve1(x) if x < 1990 else curve2(x)
 
     def calculate_variable_rates(self):
 
@@ -776,6 +741,8 @@ class FlexibleModel(BaseTbModel):
         self.infectious_tags\
             = ["active", "missed", "detect", "treatment_infect"]
 
+        # Extract default parameters from our database
+        # of parameters in settings 
         if input_parameters is None:
 
             def get(param_set_name, param_name, prob=0.5):
@@ -900,7 +867,7 @@ class FlexibleModel(BaseTbModel):
 
     def initialise_compartments(self, input_compartments):
 
-        # Initialise to zero
+        # Initialise all compartments to zero
         for compartment in self.compartment_list:
             for comorbidity in self.comorbidities:
                 if "susceptible" in compartment:  # Replicate for comorbidities only
@@ -912,29 +879,31 @@ class FlexibleModel(BaseTbModel):
                     for strain in self.strains:
                         for organ in self.organ_status:
                             self.set_compartment(compartment + organ + strain + comorbidity, 0.)
-            for compartment in self.compartment_list:
-                if compartment in input_compartments:
-                    if "susceptible" in compartment:
-                        for comorbidity in self.comorbidities:
-                            self.set_compartment(compartment + comorbidity,
+
+        # Put in values from input_compartments
+        for compartment in self.compartment_list:
+            if compartment in input_compartments:
+                if "susceptible" in compartment:
+                    for comorbidity in self.comorbidities:
+                        self.set_compartment(compartment + comorbidity,
+                                             input_compartments[compartment]
+                                             / len(self.comorbidities))
+                elif "latent" in compartment:
+                    for comorbidity in self.comorbidities:
+                        for strain in self.strains:
+                            self.set_compartment(compartment + strain + comorbidity,
                                                  input_compartments[compartment]
-                                                 / len(self.comorbidities))
-                    elif "latent" in compartment:
-                        for comorbidity in self.comorbidities:
-                            for strain in self.strains:
-                                self.set_compartment(compartment + strain + comorbidity,
+                                                 / len(self.comorbidities)
+                                                 / len(self.strains))
+                else:
+                    for comorbidity in self.comorbidities:
+                        for strain in self.strains:
+                            for organ in self.organ_status:
+                                self.set_compartment(compartment + organ + strain + comorbidity,
                                                      input_compartments[compartment]
                                                      / len(self.comorbidities)
-                                                     / len(self.strains))
-                    else:
-                        for comorbidity in self.comorbidities:
-                            for strain in self.strains:
-                                for organ in self.organ_status:
-                                    self.set_compartment(compartment + organ + strain + comorbidity,
-                                                         input_compartments[compartment]
-                                                         / len(self.comorbidities)
-                                                         / len(self.strains)
-                                                         / len(self.organ_status))
+                                                     / len(self.strains)
+                                                     / len(self.organ_status))
 
     def set_birth_flows(self):
 

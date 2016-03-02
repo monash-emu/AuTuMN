@@ -42,7 +42,7 @@ class ModelRunner():
         self.model.make_times(1900, 2015, 1.)
         self.model.set_compartment(
             "susceptible", 50E6)
-        self.is_last_run_sucess = False
+        self.is_last_run_success = False
         self.param_props_list = [
             { 
                 'init': 30,
@@ -66,7 +66,7 @@ class ModelRunner():
             #     'format': lambda v: "%.4f" % v
             # },
             { 
-                'init': .2,
+                'init': .18,
                 'scale': 1,
                 'key': 'tb_rate_earlyprogress',
                 'short': 'early',
@@ -80,14 +80,14 @@ class ModelRunner():
                 'format': lambda v: "%.4f" % v
             },
             { 
-                'init': .27,
+                'init': .2,
                 'scale': 5,
                 'key': 'tb_rate_recover',
                 'short': 'recov',
                 'format': lambda v: "%.4f" % v
             },
             { 
-                'init': 0.05,
+                'init': 0.001,
                 'scale': 5,
                 'key': 'tb_rate_lateprogress',
                 'short': 'late',
@@ -127,17 +127,17 @@ class ModelRunner():
         for i, p in enumerate(params):
             if not is_positive_definite(p):
                 print "Warning: parameter%d=%f is invalid for model" % (i, p)
-                self.is_last_run_sucess = False
+                self.is_last_run_success = False
                 return
         param_dict = self.convert_param_list_to_dict(params)
         self.set_model_with_params(param_dict)
-        self.is_last_run_sucess = True
+        self.is_last_run_success = True
         self.model.integrate_explicit()
         # try:
         #     self.model.integrate_explicit()
         # except:
         #     print "Warning: parameters=%s failed with model" % params
-        #     self.is_last_run_sucess = False
+        #     self.is_last_run_success = False
 
     def get_fraction_between_times(self, label, time0, time1):
         fraction = self.model.fraction_soln[label]
@@ -157,7 +157,7 @@ class ModelRunner():
 
     def ln_overall(self, params):
         self.run_with_params(params)
-        if not self.is_last_run_sucess:
+        if not self.is_last_run_success:
             return -numpy.inf
 
         param_dict = self.convert_param_list_to_dict(params)

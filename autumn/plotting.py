@@ -314,7 +314,7 @@ def plot_fraction_group(model, title, tags, png=None):
     save_png(png)
 
 
-def plot_vars(model, labels, png=None):
+def plot_outputs(model, labels, png=None):
     colours = {}
     full_names = {}
     axis_labels = []

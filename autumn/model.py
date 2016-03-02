@@ -713,8 +713,10 @@ class FlexibleModel(BaseTbModel):
 
         if input_compartments is None:
             input_compartments = {
-                "susceptible_fully": 1e6,
-                "active": 3.}
+                "susceptible_fully":
+                    4.5e7,
+                "active":
+                    3.}
 
         available_organs = [
             "_smearpos",
@@ -752,15 +754,22 @@ class FlexibleModel(BaseTbModel):
                 return ppf(prob)
 
             input_parameters = {
-                "demo_rate_birth": 20. / 1e3,
-                "demo_rate_death": 1. / 65,
-                "epi_proportion_cases_smearpos": 0.6,
-                "epi_proportion_cases_smearneg": 0.2,
-                "epi_proportion_cases_extrapul": 0.2,
-                "tb_multiplier_force_smearpos": 1.,
+                "demo_rate_birth":
+                    20. / 1e3,
+                "demo_rate_death":
+                    1. / 65,
+                "epi_proportion_cases_smearpos":
+                    0.6,
+                "epi_proportion_cases_smearneg":
+                    0.2,
+                "epi_proportion_cases_extrapul":
+                    0.2,
+                "tb_multiplier_force_smearpos":
+                    1.,
                 "tb_multiplier_force_smearneg":
                     get("default", "multiplier_force_smearneg"),
-                "tb_multiplier_force_extrapul": 0.,
+                "tb_multiplier_force_extrapul":
+                    0.,
                 "tb_n_contact":
                     get("default", "tb_n_contact"),
                 "tb_proportion_early_progression":
@@ -768,7 +777,7 @@ class FlexibleModel(BaseTbModel):
                 "tb_timeperiod_early_latent":
                     get("default", "timeperiod_early_latent"),
                 "tb_rate_late_progression":
-                    get("default", "rate_late_progression"),
+                    0.007,
                 "tb_proportion_casefatality_untreated_smearpos":
                     get("default", "proportion_casefatality_active_untreated_smearpos"),
                 "tb_proportion_casefatality_untreated_smearneg":

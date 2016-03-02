@@ -50,7 +50,7 @@ pylab.savefig(os.path.join(out_dir, 'fraction.png'), dpi=300)
 plotting.plot_populations(model, model.labels[:])
 pylab.savefig(os.path.join(out_dir, 'population.png'), dpi=300)
 
-plotting.plot_vars(model, ['incidence', 'notification', 'mortality'])
+plotting.plot_outputs(model, ['incidence', 'notification', 'mortality'])
 pylab.savefig(os.path.join(out_dir, 'rates.png'), dpi=300)
 
 

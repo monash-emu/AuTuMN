@@ -9,7 +9,7 @@ if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
 models_to_run = [[3, 1, 1, "three organs, one strain"],
-                 [2, 2, 1, "two organs, two strains"],
+                 # [2, 2, 1, "two organs, two strains"],
                  [1, 1, 1, "one organ, one strain"]]
 
 for running_model in range(len(models_to_run)):

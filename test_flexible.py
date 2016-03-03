@@ -11,7 +11,7 @@ if not os.path.isdir(out_dir):
 models_to_run = [\
     # [3, 1, 1, "three organs, one strain"],
     # [2, 2, 1, "two organs, two strains"],
-    [1, 1, 1, "one organ, one strain"]]
+    [3, 1, 1, "one organ, one strain"]]
 
 for running_model in range(len(models_to_run)):
     name = 'model%d' % running_model
@@ -25,8 +25,10 @@ for running_model in range(len(models_to_run)):
     model.make_graph(base + '.workflow')
     autumn.plotting.plot_fractions(
         model, model.labels, base + '.fraction.png')
-    autumn.plotting.plot_populations(
-        model, model.labels, base + '.population.png')
+    autumn.plotting.plot_summed_fractions(
+        model, model.compartment_list, base + '.summed_fraction.png')
+    autumn.plotting.plot_broad_fractions(
+        model, model.broad_compartment_types, base + '.population.png')
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)

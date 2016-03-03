@@ -21,28 +21,25 @@ def make_default_line_styles():
 
 
 def get_line_style(label):
-    if "susceptible" in label:  # susceptible_unvac can remain black
-        colour = (0, 0, 0)
+    colour = (0, 0, 0)  # susceptible_unvac and unassigned remain black
     if "susceptible_vac" in label:
         colour = (0.3, 0.3, 0.3)
     elif "susceptible_treated" in label:
         colour = (0.6, 0.6, 0.6)
-    elif "latent_early" in label:
+    if "latent" in label:
         colour = (0, 0.4, 0.8)
-    elif "latent_late" in label:
+    if "latent_late" in label:
         colour = (0, 0.2, 0.4)
-    elif "active" in label:
+    if "active" in label:
         colour = (0.9, 0, 0)
     elif "detect" in label:
         colour = (0, 0.5, 0)
     elif "missed" in label:
         colour = (0.5, 0, 0.5)
-    elif "treatment_infect" in label:
+    if "treatment" in label:
         colour = (1, 0.5, 0)
-    elif "treatment_noninfect" in label:
+    if "treatment_noninfect" in label:
         colour = (1, 1, 0)
-    else:
-        colour = (0.5, 0.5, 0.5)
 
     if "smearneg" in label:
         pattern = "-."
@@ -53,29 +50,30 @@ def get_line_style(label):
 
     if "susceptible" in label:
         compartment_full_name = "Susceptible"
-
     if "susceptible_fully" in label:
         compartment_full_name = "Fully susceptible"
     elif "susceptible_vac" in label:
         compartment_full_name = "BCG vaccinated, susceptible"
     elif "susceptible_treated" in label:
         compartment_full_name = "Previously treated, susceptible"
-    elif "latent_early" in label:
-        compartment_full_name = "Early latency"
+    if "latent" in label:
+        compartment_full_name = "Latent"
+    if "latent_early" in label:
+        compartment_full_name = "Early latent"
     elif "latent_late" in label:
-        compartment_full_name = "Late latency"
-    elif "active" in label:
+        compartment_full_name = "Late latent"
+    if "active" in label:
         compartment_full_name = "Active, yet to present"
     elif "detect" in label:
         compartment_full_name = "Detected"
     elif "missed" in label:
         compartment_full_name = "Missed"
-    elif "treatment_infect" in label:
+    if "treatment" in label:
+        compartment_full_name = "Under treatment"
+    if "treatment_infect" in label:
         compartment_full_name = "Infectious under treatment"
     elif "treatment_noninfect" in label:
         compartment_full_name = "Non-infectious under treatment"
-    else:
-        compartment_full_name = label
 
     if "smearpos" in label:
         compartment_full_name += ", \nsmear-positive"
@@ -271,6 +269,42 @@ def plot_fractions(model, labels, png=None):
         axis_labels.append(compartment_full_names[plot_label])
     set_axes_props(ax, 'Year', 'Proportion of population',
         'Subgroups of total population', True, axis_labels)
+    save_png(png)
+
+
+def plot_summed_fractions(model, labels, png=None):
+    colours, patterns, compartment_full_names\
+        = make_related_line_styles(labels)
+    ax = make_axes_with_room_for_legend()
+    axis_labels = []
+    for i_plot, plot_label in enumerate(labels):
+        ax.plot(
+            model.times,
+            model.summed_fraction_soln[plot_label],
+            label=plot_label, linewidth=1,
+            color=colours[plot_label],
+            linestyle=patterns[plot_label])
+        axis_labels.append(compartment_full_names[plot_label])
+    set_axes_props(ax, 'Year', 'Proportion of population',
+        'Summed compartments of total population', True, axis_labels)
+    save_png(png)
+
+
+def plot_broad_fractions(model, labels, png=None):
+    colours, patterns, compartment_full_names\
+        = make_related_line_styles(labels)
+    ax = make_axes_with_room_for_legend()
+    axis_labels = []
+    for i_plot, plot_label in enumerate(labels):
+        ax.plot(
+            model.times,
+            model.broad_compartments_summed[plot_label],
+            label=plot_label, linewidth=1,
+            color=colours[plot_label],
+            linestyle=patterns[plot_label])
+        axis_labels.append(compartment_full_names[plot_label])
+    set_axes_props(ax, 'Year', 'Proportion of population',
+        'Broad subgroups of total population', True, axis_labels)
     save_png(png)
 
 

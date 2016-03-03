@@ -25,16 +25,16 @@ for running_model in range(len(models_to_run)):
     autumn.plotting.plot_fractions(
         model, model.labels, model.fraction_soln, base + '.fraction.png')
     autumn.plotting.plot_fractions(
-        model, model.compartment_list, model.summed_fraction_soln, base + '.summed_fraction.png')
+        model, model.compartment_types, model.summed_fraction_soln, base + '.summed_fraction.png')
     autumn.plotting.plot_fractions(
         model, model.broad_compartment_types, model.broad_fraction_soln, base + '.broad_fraction.png')
 
     autumn.plotting.plot_populations(
-        model, model.labels, model.population_soln, base + '.population.png')
+        model, model.labels, model.compartment_soln, base + '.population.png')
     autumn.plotting.plot_populations(
-        model, model.compartment_list, model.compartments_summed, base + '.summed_population.png')
+        model, model.compartment_types, model.summed_compartment_soln, base + '.summed_population.png')
     autumn.plotting.plot_populations(
-        model, model.broad_compartment_types, model.broad_compartments_summed, base + '.broad_population.png')
+        model, model.broad_compartment_types, model.broad_compartment_soln, base + '.broad_population.png')
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)

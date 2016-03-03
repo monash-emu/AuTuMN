@@ -8,10 +8,7 @@ out_dir = 'flexible_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
-models_to_run = [\
-    # [3, 1, 1, "three organs, one strain"],
-    # [2, 2, 1, "two organs, two strains"],
-    [3, 1, 1, "one organ, one strain"]]
+models_to_run = [[3, 1, 1]]
 
 for running_model in range(len(models_to_run)):
     name = 'model%d' % running_model
@@ -19,7 +16,9 @@ for running_model in range(len(models_to_run)):
     model = autumn.model.FlexibleModel(models_to_run[running_model][0],
                                        models_to_run[running_model][1],
                                        models_to_run[running_model][2])
-    print(models_to_run[running_model][3])
+    print((str(models_to_run[running_model][0]) + " organ(s), " +
+          str(models_to_run[running_model][1]) + " strain(s), " +
+          str(models_to_run[running_model][2]) + " comorbidity(ies)"))
     model.make_times(1850, 2050, 0.05)
     model.integrate_explicit()
     model.make_graph(base + '.workflow')

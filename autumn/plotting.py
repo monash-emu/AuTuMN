@@ -45,12 +45,11 @@ def get_line_style(label):
     if "treatment_noninfect" in label:
         colour = (1, 1, 0)
 
+    pattern = "-"  # Default filled line
     if "smearneg" in label:
         pattern = "-."
     elif "extrapul" in label:
         pattern = ":"
-    else:
-        pattern = "-"
 
     if "susceptible" in label:
         category_full_name = "Susceptible"

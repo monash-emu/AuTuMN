@@ -281,36 +281,6 @@ class BaseModel():
             for i_label, label in enumerate(self.labels):
                 self.flow_array[i, i_label] = self.flows[label]
 
-        # The following section creates attributes of the model object
-        # that sum over the compartment types
-        self.compartments_summed = {}
-        self.broad_compartments_summed = {}
-        broad_compartment_types\
-            = ["susceptible", "latent", "active", "missed", "treatment"]
-        for compartment_type in self.compartment_list:
-            # Need to make the following line more generalisable - not sure how
-            self.compartments_summed[compartment_type]\
-                = [0] * len(self.population_soln["susceptible_fully_nocomorbidities"])
-            for label in self.labels:
-                if compartment_type in label:
-                    self.compartments_summed[compartment_type] = [
-                        a + b
-                        for a, b
-                        in zip(
-                            self.compartments_summed[compartment_type],
-                            self.population_soln[label])]
-        for compartment_type in broad_compartment_types:
-            self.broad_compartments_summed[compartment_type]\
-                = [0] * len(self.population_soln["susceptible_fully_nocomorbidities"])
-            for label in self.labels:
-                if compartment_type in label:
-                    self.broad_compartments_summed[compartment_type] = [
-                        a + b
-                        for a, b
-                        in zip(
-                            self.broad_compartments_summed[compartment_type],
-                            self.population_soln[label])]
-
         self.fraction_soln = {}
         for label in self.labels:
             self.fraction_soln[label] = [
@@ -318,22 +288,6 @@ class BaseModel():
                 for v, t
                 in zip(
                     self.population_soln[label],
-                    self.get_var_soln("population"))]
-        self.summed_fraction_soln = {}
-        for compartment_type in self.compartment_list:
-            self.summed_fraction_soln[compartment_type] = [
-                v / t
-                for v, t
-                in zip(
-                    self.compartments_summed[compartment_type],
-                    self.get_var_soln("population"))]
-        self.broad_fraction_soln = {}
-        for compartment_type in broad_compartment_types:
-            self.broad_fraction_soln[compartment_type] = [
-                v / t
-                for v, t
-                in zip(
-                    self.broad_compartments_summed[compartment_type],
                     self.get_var_soln("population"))]
 
     def get_compartment_soln(self, label):
@@ -377,7 +331,7 @@ class BaseModel():
               self.vars['rate_birth'] \
             - self.vars['rate_death'] \
             - self.vars['rate_infection_death']
-        assert abs(sum(self.flows.values()) - population_change ) < error_margin
+        # assert abs(sum(self.flows.values()) - population_change ) < error_margin
 
     def make_graph(self, png):
         from graphviz import Digraph
@@ -768,7 +722,8 @@ class FlexibleModel(BaseTbModel):
 
         available_strains = [
             "_ds",
-            "_mdr"]
+            "_mdr",
+            "_xdr"]
         self.strains\
             = available_strains[0: number_of_strains]
 
@@ -1076,3 +1031,89 @@ class FlexibleModel(BaseTbModel):
 
         self.set_population_death_rate("demo_rate_death")
 
+    def calculate_diagnostics(self):
+        self.population_soln = {}
+        for label in self.labels:
+            if label in self.population_soln:
+                continue
+            self.population_soln[label] = self.get_compartment_soln(label)
+
+        n_time = len(self.times)
+        for i in range(n_time):
+
+            self.time = self.times[i]
+
+            for label in self.labels:
+                self.compartments[label] = self.population_soln[label][i]
+
+            self.calculate_variable_rates()
+            self.calculate_flows()
+            self.calculate_outputs()
+
+            # only set after self.calculate_diagnostic_vars is
+            # run so that we have all var_labels, including
+            # the ones in calculate_diagnostic_vars
+            if self.var_labels is None:
+                self.var_labels = self.vars.keys()
+                self.var_array = numpy.zeros((n_time, len(self.var_labels)))
+                self.flow_array = numpy.zeros((n_time, len(self.labels)))
+
+            for i_label, label in enumerate(self.var_labels):
+                self.var_array[i, i_label] = self.vars[label]
+            for i_label, label in enumerate(self.labels):
+                self.flow_array[i, i_label] = self.flows[label]
+
+        # The following section creates attributes of the model object
+        # that sum over the compartment types
+        self.compartments_summed = {}
+        self.broad_compartments_summed = {}
+        self.broad_compartment_types\
+            = ["susceptible", "latent", "active", "missed", "treatment"]
+        for compartment_type in self.compartment_list:
+            # Need to make the following line more generalisable - not sure how
+            self.compartments_summed[compartment_type]\
+                = [0] * len(self.population_soln["susceptible_fully_nocomorbidities"])
+            for label in self.labels:
+                if compartment_type in label:
+                    self.compartments_summed[compartment_type] = [
+                        a + b
+                        for a, b
+                        in zip(
+                            self.compartments_summed[compartment_type],
+                            self.population_soln[label])]
+        for compartment_type in self.broad_compartment_types:
+            self.broad_compartments_summed[compartment_type]\
+                = [0] * len(self.population_soln["susceptible_fully_nocomorbidities"])
+            for label in self.labels:
+                if compartment_type in label:
+                    self.broad_compartments_summed[compartment_type] = [
+                        a + b
+                        for a, b
+                        in zip(
+                            self.broad_compartments_summed[compartment_type],
+                            self.population_soln[label])]
+
+        self.fraction_soln = {}
+        for label in self.labels:
+            self.fraction_soln[label] = [
+                v / t
+                for v, t
+                in zip(
+                    self.population_soln[label],
+                    self.get_var_soln("population"))]
+        self.summed_fraction_soln = {}
+        for compartment_type in self.compartment_list:
+            self.summed_fraction_soln[compartment_type] = [
+                v / t
+                for v, t
+                in zip(
+                    self.compartments_summed[compartment_type],
+                    self.get_var_soln("population"))]
+        self.broad_fraction_soln = {}
+        for compartment_type in self.broad_compartment_types:
+            self.broad_fraction_soln[compartment_type] = [
+                v / t
+                for v, t
+                in zip(
+                    self.broad_compartments_summed[compartment_type],
+                    self.get_var_soln("population"))]

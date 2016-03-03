@@ -250,11 +250,11 @@ class BaseModel():
         pass
 
     def calculate_diagnostics(self):
-        self.population_soln = {}
+        self.compartment_soln = {}
         for label in self.labels:
-            if label in self.population_soln:
+            if label in self.compartment_soln:
                 continue
-            self.population_soln[label] = self.get_compartment_soln(label)
+            self.compartment_soln[label] = self.get_compartment_soln(label)
 
         n_time = len(self.times)
         for i in range(n_time):
@@ -262,7 +262,7 @@ class BaseModel():
             self.time = self.times[i]
 
             for label in self.labels:
-                self.compartments[label] = self.population_soln[label][i]
+                self.compartments[label] = self.compartment_soln[label][i]
 
             self.calculate_variable_rates()
             self.calculate_flows()
@@ -287,7 +287,7 @@ class BaseModel():
                 v / t
                 for v, t
                 in zip(
-                    self.population_soln[label],
+                    self.compartment_soln[label],
                     self.get_var_soln("population"))]
 
     def get_compartment_soln(self, label):
@@ -694,7 +694,7 @@ class FlexibleModel(BaseTbModel):
 
         BaseTbModel.__init__(self)
 
-        self.compartment_list = [
+        self.compartment_types = [
             "susceptible_fully",
             "susceptible_vac",
             "susceptible_treated",
@@ -873,7 +873,7 @@ class FlexibleModel(BaseTbModel):
     def initialise_compartments(self, input_compartments):
 
         # Initialise all compartments to zero
-        for compartment in self.compartment_list:
+        for compartment in self.compartment_types:
             for comorbidity in self.comorbidities:
                 if "susceptible" in compartment:  # Replicate for comorbidities only
                     self.set_compartment(compartment + comorbidity, 0.)
@@ -886,7 +886,7 @@ class FlexibleModel(BaseTbModel):
                             self.set_compartment(compartment + organ + strain + comorbidity, 0.)
 
         # Put in values from input_compartments
-        for compartment in self.compartment_list:
+        for compartment in self.compartment_types:
             if compartment in input_compartments:
                 if "susceptible" in compartment:
                     for comorbidity in self.comorbidities:
@@ -1032,11 +1032,11 @@ class FlexibleModel(BaseTbModel):
         self.set_population_death_rate("demo_rate_death")
 
     def calculate_diagnostics(self):
-        self.population_soln = {}
+        self.compartment_soln = {}
         for label in self.labels:
-            if label in self.population_soln:
+            if label in self.compartment_soln:
                 continue
-            self.population_soln[label] = self.get_compartment_soln(label)
+            self.compartment_soln[label] = self.get_compartment_soln(label)
 
         n_time = len(self.times)
         for i in range(n_time):
@@ -1044,7 +1044,7 @@ class FlexibleModel(BaseTbModel):
             self.time = self.times[i]
 
             for label in self.labels:
-                self.compartments[label] = self.population_soln[label][i]
+                self.compartments[label] = self.compartment_soln[label][i]
 
             self.calculate_variable_rates()
             self.calculate_flows()
@@ -1065,33 +1065,33 @@ class FlexibleModel(BaseTbModel):
 
         # The following section creates attributes of the model object
         # that sum over the compartment types
-        self.compartments_summed = {}
-        self.broad_compartments_summed = {}
+        self.summed_compartment_soln = {}
+        self.broad_compartment_soln = {}
         self.broad_compartment_types\
             = ["susceptible", "latent", "active", "missed", "treatment"]
-        for compartment_type in self.compartment_list:
+        for compartment_type in self.compartment_types:
             # Need to make the following line more generalisable - not sure how
-            self.compartments_summed[compartment_type]\
-                = [0] * len(self.population_soln["susceptible_fully_nocomorbs"])
+            self.summed_compartment_soln[compartment_type]\
+                = [0] * len(self.compartment_soln["susceptible_fully_nocomorbs"])
             for label in self.labels:
                 if compartment_type in label:
-                    self.compartments_summed[compartment_type] = [
+                    self.summed_compartment_soln[compartment_type] = [
                         a + b
                         for a, b
                         in zip(
-                            self.compartments_summed[compartment_type],
-                            self.population_soln[label])]
+                            self.summed_compartment_soln[compartment_type],
+                            self.compartment_soln[label])]
         for compartment_type in self.broad_compartment_types:
-            self.broad_compartments_summed[compartment_type]\
-                = [0] * len(self.population_soln["susceptible_fully_nocomorbs"])
+            self.broad_compartment_soln[compartment_type]\
+                = [0] * len(self.compartment_soln["susceptible_fully_nocomorbs"])
             for label in self.labels:
                 if compartment_type in label:
-                    self.broad_compartments_summed[compartment_type] = [
+                    self.broad_compartment_soln[compartment_type] = [
                         a + b
                         for a, b
                         in zip(
-                            self.broad_compartments_summed[compartment_type],
-                            self.population_soln[label])]
+                            self.broad_compartment_soln[compartment_type],
+                            self.compartment_soln[label])]
 
         self.fraction_soln = {}
         for label in self.labels:
@@ -1099,15 +1099,15 @@ class FlexibleModel(BaseTbModel):
                 v / t
                 for v, t
                 in zip(
-                    self.population_soln[label],
+                    self.compartment_soln[label],
                     self.get_var_soln("population"))]
         self.summed_fraction_soln = {}
-        for compartment_type in self.compartment_list:
+        for compartment_type in self.compartment_types:
             self.summed_fraction_soln[compartment_type] = [
                 v / t
                 for v, t
                 in zip(
-                    self.compartments_summed[compartment_type],
+                    self.summed_compartment_soln[compartment_type],
                     self.get_var_soln("population"))]
         self.broad_fraction_soln = {}
         for compartment_type in self.broad_compartment_types:
@@ -1115,5 +1115,5 @@ class FlexibleModel(BaseTbModel):
                 v / t
                 for v, t
                 in zip(
-                    self.broad_compartments_summed[compartment_type],
+                    self.broad_compartment_soln[compartment_type],
                     self.get_var_soln("population"))]

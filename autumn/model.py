@@ -728,7 +728,7 @@ class FlexibleModel(BaseTbModel):
             = available_strains[0: number_of_strains]
 
         available_comorbidities = [
-            "_nocomorbidities",
+            "_nocomorbs",
             "_hiv",
             "_diabetes"]
         self.comorbidities\
@@ -1072,7 +1072,7 @@ class FlexibleModel(BaseTbModel):
         for compartment_type in self.compartment_list:
             # Need to make the following line more generalisable - not sure how
             self.compartments_summed[compartment_type]\
-                = [0] * len(self.population_soln["susceptible_fully_nocomorbidities"])
+                = [0] * len(self.population_soln["susceptible_fully_nocomorbs"])
             for label in self.labels:
                 if compartment_type in label:
                     self.compartments_summed[compartment_type] = [
@@ -1083,7 +1083,7 @@ class FlexibleModel(BaseTbModel):
                             self.population_soln[label])]
         for compartment_type in self.broad_compartment_types:
             self.broad_compartments_summed[compartment_type]\
-                = [0] * len(self.population_soln["susceptible_fully_nocomorbidities"])
+                = [0] * len(self.population_soln["susceptible_fully_nocomorbs"])
             for label in self.labels:
                 if compartment_type in label:
                     self.broad_compartments_summed[compartment_type] = [

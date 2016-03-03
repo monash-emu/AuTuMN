@@ -85,19 +85,33 @@ def get_line_style(label):
     elif "extrapul" in label:
         category_full_name += ", \nextrapulmonary"
 
-    return colour, pattern, category_full_name
+    if "_ds" in label:
+        category_full_name += ", \nDS-TB"
+        marker = ''
+    elif "_mdr" in label:
+        category_full_name += ", \nMDR-TB"
+        marker = '|'
+    elif "_xdr" in label:
+        category_full_name += ", \nXDR-TB"
+        marker = '.'
+    else:
+        marker = ''
+
+    return colour, pattern, category_full_name, marker
 
 
 def make_related_line_styles(labels):
     colours = {}
     patterns = {}
     compartment_full_names = {}
+    markers = {}
     for label in labels:
-        colour, pattern, compartment_full_name = get_line_style(label)
+        colour, pattern, compartment_full_name, marker = get_line_style(label)
         colours[label] = colour
         patterns[label] = pattern
         compartment_full_names[label] = compartment_full_name
-    return colours, patterns, compartment_full_names
+        markers[label] = marker
+    return colours, patterns, compartment_full_names, markers
 
 
 def make_axes_with_room_for_legend():
@@ -186,8 +200,8 @@ def save_png(png):
         pylab.savefig(png, dpi=300)
 
 
-def plot_populations(model, labels, png=None):
-    colours, patterns, compartment_full_names\
+def plot_populations(model, labels, values, png=None):
+    colours, patterns, compartment_full_names, markers\
         = make_related_line_styles(labels)
     ax = make_axes_with_room_for_legend()
     axis_labels = []
@@ -200,18 +214,22 @@ def plot_populations(model, labels, png=None):
     for i_plot, plot_label in enumerate(labels):
         ax.plot(
             model.times,
-            model.population_soln[plot_label],
+            values[plot_label],
             label=plot_label, linewidth=1,
             color=colours[plot_label],
+            marker=markers[plot_label],
             linestyle=patterns[plot_label])
         axis_labels.append(compartment_full_names[plot_label])
     set_axes_props(ax, 'Year', 'Persons',
-                   'Subgroups of total population', True,
+                   'Total populations', True,
                    axis_labels)
     save_png(png)
 
 
 def plot_population_group(model, title, tags, png=None, linestyles=None):
+    """
+    Inactive?
+    """
     subgroup_solns = {}
     for tag in tags:
         labels = [l for l in model.labels if tag in l]
@@ -258,7 +276,7 @@ def plot_population_group(model, title, tags, png=None, linestyles=None):
 
 
 def plot_fractions(model, labels, values, png=None):
-    colours, patterns, compartment_full_names\
+    colours, patterns, compartment_full_names, markers\
         = make_related_line_styles(labels)
     ax = make_axes_with_room_for_legend()
     axis_labels = []
@@ -268,6 +286,7 @@ def plot_fractions(model, labels, values, png=None):
             values[plot_label],
             label=plot_label, linewidth=1,
             color=colours[plot_label],
+            marker=markers[plot_label],
             linestyle=patterns[plot_label])
         axis_labels.append(compartment_full_names[plot_label])
     set_axes_props(ax, 'Year', 'Proportion of population',
@@ -276,6 +295,9 @@ def plot_fractions(model, labels, values, png=None):
 
 
 def plot_fraction_group(model, title, tags, png=None):
+    """
+    Inactive I think
+    """
     subgroup_solns = {}
     for tag in tags:
         labels = [l for l in model.labels if tag in l]

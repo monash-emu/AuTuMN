@@ -1064,35 +1064,13 @@ class FlexibleModel(BaseTbModel):
             for i_label, label in enumerate(self.labels):
                 self.flow_array[i, i_label] = self.flows[label]
 
-        # The following section creates attributes of the model object
-        # that sum over the compartment types
-        self.summed_compartment_soln = {}
         self.broad_compartment_soln = {}
         self.broad_compartment_types\
             = ["susceptible", "latent", "active", "missed", "treatment"]
-        for compartment_type in self.compartment_types:
-
-            self.summed_compartment_soln[compartment_type]\
-                = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
-            for label in self.labels:
-                if compartment_type in label:
-                    self.summed_compartment_soln[compartment_type] = [
-                        a + b
-                        for a, b
-                        in zip(
-                            self.summed_compartment_soln[compartment_type],
-                            self.compartment_soln[label])]
-        for compartment_type in self.broad_compartment_types:
-            self.broad_compartment_soln[compartment_type]\
-                = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
-            for label in self.labels:
-                if compartment_type in label:
-                    self.broad_compartment_soln[compartment_type] = [
-                        a + b
-                        for a, b
-                        in zip(
-                            self.broad_compartment_soln[compartment_type],
-                            self.compartment_soln[label])]
+        self.summed_compartment_soln\
+            = self.sum_over_compartments(self.compartment_types)
+        self.broad_compartment_soln\
+            = self.sum_over_compartments(self.broad_compartment_types)
 
         self.fraction_soln\
             = self.get_fraction_soln(
@@ -1121,3 +1099,17 @@ class FlexibleModel(BaseTbModel):
                     denominator)]
         return fraction
 
+    def sum_over_compartments(self, compartment_types):
+        summed_soln = {}
+        for compartment_type in compartment_types:
+            summed_soln[compartment_type]\
+                = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
+            for label in self.labels:
+                if compartment_type in label:
+                    summed_soln[compartment_type] = [
+                        a + b
+                        for a, b
+                        in zip(
+                            summed_soln[compartment_type],
+                            self.compartment_soln[label])]
+        return summed_soln

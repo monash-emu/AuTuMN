@@ -1093,27 +1093,30 @@ class FlexibleModel(BaseTbModel):
                             self.broad_compartment_soln[compartment_type],
                             self.compartment_soln[label])]
 
-        self.fraction_soln = {}
-        for label in self.labels:
-            self.fraction_soln[label] = [
+        self.fraction_soln\
+            = self.get_fraction_soln(
+            self.labels,
+            self.compartment_soln,
+            self.get_var_soln("population"))
+        self.summed_fraction_soln\
+            = self.get_fraction_soln(
+            self.compartment_types,
+            self.summed_compartment_soln,
+            self.get_var_soln("population"))
+        self.broad_fraction_soln\
+            = self.get_fraction_soln(
+            self.broad_compartment_types,
+            self.broad_compartment_soln,
+            self.get_var_soln("population"))
+
+    def get_fraction_soln(self, numerator_labels, numerators, denominator):
+        fraction = {}
+        for label in numerator_labels:
+            fraction[label] = [
                 v / t
                 for v, t
                 in zip(
-                    self.compartment_soln[label],
-                    self.get_var_soln("population"))]
-        self.summed_fraction_soln = {}
-        for compartment_type in self.compartment_types:
-            self.summed_fraction_soln[compartment_type] = [
-                v / t
-                for v, t
-                in zip(
-                    self.summed_compartment_soln[compartment_type],
-                    self.get_var_soln("population"))]
-        self.broad_fraction_soln = {}
-        for compartment_type in self.broad_compartment_types:
-            self.broad_fraction_soln[compartment_type] = [
-                v / t
-                for v, t
-                in zip(
-                    self.broad_compartment_soln[compartment_type],
-                    self.get_var_soln("population"))]
+                    numerators[label],
+                    denominator)]
+        return fraction
+

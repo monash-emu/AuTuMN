@@ -558,6 +558,32 @@ class BaseTbModel(BaseModel):
         self.vars["births_vac"] = \
             self.params["program_prop_vac"] * self.vars["rate_birth"]
 
+    def get_fraction_soln(self, numerator_labels, numerators, denominator):
+        fraction = {}
+        for label in numerator_labels:
+            fraction[label] = [
+                v / t
+                for v, t
+                in zip(
+                    numerators[label],
+                    denominator)]
+        return fraction
+
+    def sum_over_compartments(self, compartment_types):
+        summed_soln = {}
+        for compartment_type in compartment_types:
+            summed_soln[compartment_type]\
+                = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
+            for label in self.labels:
+                if compartment_type in label:
+                    summed_soln[compartment_type] = [
+                        a + b
+                        for a, b
+                        in zip(
+                            summed_soln[compartment_type],
+                            self.compartment_soln[label])]
+        return summed_soln
+
 
 class SimplifiedModel(BaseTbModel):
 
@@ -1088,28 +1114,3 @@ class FlexibleModel(BaseTbModel):
             self.broad_compartment_soln,
             self.get_var_soln("population"))
 
-    def get_fraction_soln(self, numerator_labels, numerators, denominator):
-        fraction = {}
-        for label in numerator_labels:
-            fraction[label] = [
-                v / t
-                for v, t
-                in zip(
-                    numerators[label],
-                    denominator)]
-        return fraction
-
-    def sum_over_compartments(self, compartment_types):
-        summed_soln = {}
-        for compartment_type in compartment_types:
-            summed_soln[compartment_type]\
-                = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
-            for label in self.labels:
-                if compartment_type in label:
-                    summed_soln[compartment_type] = [
-                        a + b
-                        for a, b
-                        in zip(
-                            summed_soln[compartment_type],
-                            self.compartment_soln[label])]
-        return summed_soln

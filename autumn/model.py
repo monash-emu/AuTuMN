@@ -13,6 +13,7 @@ import os
 from scipy.integrate import odeint
 from scipy import exp, log
 import numpy
+import random
 
 from settings import default
 from settings import philippines 
@@ -1070,9 +1071,9 @@ class FlexibleModel(BaseTbModel):
         self.broad_compartment_types\
             = ["susceptible", "latent", "active", "missed", "treatment"]
         for compartment_type in self.compartment_types:
-            # Need to make the following line more generalisable - not sure how
+
             self.summed_compartment_soln[compartment_type]\
-                = [0] * len(self.compartment_soln["susceptible_fully_nocomorbs"])
+                = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
             for label in self.labels:
                 if compartment_type in label:
                     self.summed_compartment_soln[compartment_type] = [
@@ -1083,7 +1084,7 @@ class FlexibleModel(BaseTbModel):
                             self.compartment_soln[label])]
         for compartment_type in self.broad_compartment_types:
             self.broad_compartment_soln[compartment_type]\
-                = [0] * len(self.compartment_soln["susceptible_fully_nocomorbs"])
+                = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
             for label in self.labels:
                 if compartment_type in label:
                     self.broad_compartment_soln[compartment_type] = [

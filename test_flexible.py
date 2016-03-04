@@ -22,17 +22,17 @@ for running_model in range(len(models_to_run)):
     model.make_times(1850, 2050, 0.05)
     model.integrate_explicit()
     model.make_graph(base + '.workflow')
-    autumn.plotting.plot_fractions(
-        model, model.labels, model.fraction_soln, base + '.fraction.png')
-    autumn.plotting.plot_fractions(
-        model, model.compartment_types, model.summed_fraction_soln, base + '.summed_fraction.png')
+    # autumn.plotting.plot_fractions(
+    #     model, model.labels, model.fraction_soln, base + '.fraction.png')
+    # autumn.plotting.plot_fractions(
+    #     model, model.compartment_types, model.summed_fraction_soln, base + '.summed_fraction.png')
     autumn.plotting.plot_fractions(
         model, model.broad_compartment_types, model.broad_fraction_soln, base + '.broad_fraction.png')
 
-    autumn.plotting.plot_populations(
-        model, model.labels, model.compartment_soln, base + '.population.png')
-    autumn.plotting.plot_populations(
-        model, model.compartment_types, model.summed_compartment_soln, base + '.summed_population.png')
+    # autumn.plotting.plot_populations(
+    #     model, model.labels, model.compartment_soln, base + '.population.png')
+    # autumn.plotting.plot_populations(
+    #     model, model.compartment_types, model.summed_compartment_soln, base + '.summed_population.png')
     autumn.plotting.plot_populations(
         model, model.broad_compartment_types, model.broad_compartment_soln, base + '.broad_population.png')
 

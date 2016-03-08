@@ -571,6 +571,8 @@ class BaseTbModel(BaseModel):
 
     def sum_over_compartments(self, compartment_types):
         summed_soln = {}
+        summed_denominator\
+            = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
         for compartment_type in compartment_types:
             summed_soln[compartment_type]\
                 = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
@@ -582,7 +584,8 @@ class BaseTbModel(BaseModel):
                         in zip(
                             summed_soln[compartment_type],
                             self.compartment_soln[label])]
-        return summed_soln
+                    summed_denominator += self.compartment_soln[label]
+        return summed_soln, summed_denominator
 
 
 class SimplifiedModel(BaseTbModel):
@@ -1090,27 +1093,76 @@ class FlexibleModel(BaseTbModel):
             for i_label, label in enumerate(self.labels):
                 self.flow_array[i, i_label] = self.flows[label]
 
-        self.broad_compartment_soln = {}
         self.broad_compartment_types\
             = ["susceptible", "latent", "active", "missed", "treatment"]
-        self.summed_compartment_soln\
+        self.groups = {
+            "ever_infected": ["susceptible_treated", "latent", "active", "missed", "detect", "treatment"],
+            "infected": ["latent", "active", "missed", "detect", "treatment"],
+            "active": ["active", "missed", "detect", "treatment"],
+            "infectious": ["active", "missed", "detect", "treatment_infect"],
+            "identified": ["detect", "treatment"],
+            "treatment": ["treatment"]}
+
+        self.summed_compartment_soln, self.summed_compartment_denominator\
             = self.sum_over_compartments(self.compartment_types)
-        self.broad_compartment_soln\
+        self.broad_compartment_soln, _\
             = self.sum_over_compartments(self.broad_compartment_types)
+        self.ever_infected_compartment_soln, self.ever_infected_compartment_denominator\
+            = self.sum_over_compartments(self.groups["ever_infected"])
+        self.infected_compartment_soln, self.infected_compartment_denominator\
+            = self.sum_over_compartments(self.groups["infected"])
+        self.active_compartment_soln, self.active_compartment_denominator\
+            = self.sum_over_compartments(self.groups["active"])
+        self.infectious_compartment_soln, self.infectious_compartment_denominator\
+            = self.sum_over_compartments(self.groups["infectious"])
+        self.identified_compartment_soln, self.identified_compartment_denominator\
+            = self.sum_over_compartments(self.groups["identified"])
+        self.treatment_compartment_soln, self.treatment_compartment_denominator\
+            = self.sum_over_compartments(self.groups["treatment"])
 
         self.fraction_soln\
             = self.get_fraction_soln(
-            self.labels,
-            self.compartment_soln,
-            self.get_var_soln("population"))
+            self.labels,  # Subgroups to sum over - numerator labels
+            self.compartment_soln,  # Numerators as a dictionary
+            self.get_var_soln("population"))  # Denominator
         self.summed_fraction_soln\
             = self.get_fraction_soln(
             self.compartment_types,
             self.summed_compartment_soln,
-            self.get_var_soln("population"))
+            self.summed_compartment_denominator)
         self.broad_fraction_soln\
             = self.get_fraction_soln(
             self.broad_compartment_types,
             self.broad_compartment_soln,
             self.get_var_soln("population"))
+        self.ever_infected_fraction_soln\
+            = self.get_fraction_soln(
+            self.groups["ever_infected"],
+            self.ever_infected_compartment_soln,
+            self.ever_infected_compartment_denominator)
+        self.infected_fraction_soln\
+            = self.get_fraction_soln(
+            self.groups["infected"],
+            self.infected_compartment_soln,
+            self.infected_compartment_denominator)
+        self.active_fraction_soln\
+            = self.get_fraction_soln(
+            self.groups["active"],
+            self.active_compartment_soln,
+            self.active_compartment_denominator)
+        self.infectious_fraction_soln\
+            = self.get_fraction_soln(
+            self.groups["infectious"],
+            self.infectious_compartment_soln,
+            self.infectious_compartment_denominator)
+        self.identified_fraction_soln\
+            = self.get_fraction_soln(
+            self.groups["identified"],
+            self.identified_compartment_soln,
+            self.identified_compartment_denominator)
+        self.treatment_fraction_soln\
+            = self.get_fraction_soln(
+            self.groups["treatment"],
+            self.treatment_compartment_soln,
+            self.treatment_compartment_denominator)
 

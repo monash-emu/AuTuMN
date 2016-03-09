@@ -289,10 +289,19 @@ def plot_fractions(model, labels, values, png=None):
             marker=markers[plot_label],
             linestyle=patterns[plot_label])
         axis_labels.append(compartment_full_names[plot_label])
+    title = make_plot_title(model, labels)
     set_axes_props(ax, 'Year', 'Proportion of population',
-        'Proportions of total population', True, axis_labels)
+        'Population distribution within ' + title, True, axis_labels)
     save_png(png)
 
+def make_plot_title(model, labels):
+    if labels is model.broad_compartment_types:
+        title = "broad compartment types"
+    elif labels is model.groups["infected"]:
+        title = "infected compartments"
+    else:
+        title = "not sure"
+    return title
 
 def plot_fraction_group(model, title, tags, png=None):
     """

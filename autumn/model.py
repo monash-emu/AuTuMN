@@ -1092,7 +1092,7 @@ class FlexibleModel(BaseTbModel):
             "active": ["active", "missed", "detect", "treatment"],
             "infectious": ["active", "missed", "detect", "treatment_infect"],
             "identified": ["detect", "treatment"],
-            "treatment": ["treatment"]}
+            "treatment": ["treatment_infect", "treatment_noninfect"]}
         for key in self.groups:
             compartment_soln, compartment_denominator\
                 = self.sum_over_compartments(self.groups[key])

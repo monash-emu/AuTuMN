@@ -291,6 +291,11 @@ class BaseModel():
                     self.compartment_soln[label],
                     self.get_var_soln("population"))]
 
+        self.additional_diagnostics()
+
+    def addtional_diagnostics(self):
+        pass
+
     def get_compartment_soln(self, label):
         assert self.soln_array is not None, "calculate_diagnostics has not been run"
         i_label = self.labels.index(label)
@@ -1061,46 +1066,7 @@ class FlexibleModel(BaseTbModel):
 
         self.set_population_death_rate("demo_rate_death")
 
-    def calculate_diagnostics(self):
-        self.compartment_soln = {}
-        for label in self.labels:
-            if label in self.compartment_soln:
-                continue
-            self.compartment_soln[label] = self.get_compartment_soln(label)
-
-        n_time = len(self.times)
-        for i in range(n_time):
-
-            self.time = self.times[i]
-
-            for label in self.labels:
-                self.compartments[label] = self.compartment_soln[label][i]
-
-            self.calculate_variable_rates()
-            self.calculate_flows()
-            self.calculate_outputs()
-
-            # only set after self.calculate_diagnostic_vars is
-            # run so that we have all var_labels, including
-            # the ones in calculate_diagnostic_vars
-            if self.var_labels is None:
-                self.var_labels = self.vars.keys()
-                self.var_array = numpy.zeros((n_time, len(self.var_labels)))
-                self.flow_array = numpy.zeros((n_time, len(self.labels)))
-
-            for i_label, label in enumerate(self.var_labels):
-                self.var_array[i, i_label] = self.vars[label]
-            for i_label, label in enumerate(self.labels):
-                self.flow_array[i, i_label] = self.flows[label]
-
-        self.fraction_soln = {}
-        for label in self.labels:
-            self.fraction_soln[label] = [
-                v / t
-                for v, t
-                in zip(
-                    self.compartment_soln[label],
-                    self.get_var_soln("population"))]
+    def additional_diagnostics(self):
 
         self.broad_compartment_types\
             = ["susceptible", "latent", "active", "missed", "treatment"]

@@ -210,7 +210,7 @@ def plot_populations(model, labels, values, png=None):
         model.get_var_soln("population"),
         'k',
         label="total", linewidth=2)
-    axis_labels.append("Total population")
+    axis_labels.append("Number of persons")
     for i_plot, plot_label in enumerate(labels):
         ax.plot(
             model.times,
@@ -220,8 +220,11 @@ def plot_populations(model, labels, values, png=None):
             marker=markers[plot_label],
             linestyle=patterns[plot_label])
         axis_labels.append(compartment_full_names[plot_label])
+
+    title = make_plot_title(model, labels)
+
     set_axes_props(ax, 'Year', 'Persons',
-                   'Total populations', True,
+                   'Population, by ' + title, True,
                    axis_labels)
     save_png(png)
 
@@ -291,12 +294,13 @@ def plot_fractions(model, labels, values, png=None):
         axis_labels.append(compartment_full_names[plot_label])
     title = make_plot_title(model, labels)
     set_axes_props(ax, 'Year', 'Proportion of population',
-        'Population distribution within ' + title, True, axis_labels)
+        'Population, by ' + title, True, axis_labels)
     save_png(png)
+
 
 def make_plot_title(model, labels):
     if labels is model.labels:
-        title = "all individual compartments"
+        title = "each individual compartment"
     elif labels is model.compartment_types:
         title = "types of compartments"
     elif labels is model.broad_compartment_types:
@@ -306,6 +310,7 @@ def make_plot_title(model, labels):
     else:
         title = "not sure"
     return title
+
 
 def plot_fraction_group(model, title, tags, png=None):
     """

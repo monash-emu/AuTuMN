@@ -1093,6 +1093,15 @@ class FlexibleModel(BaseTbModel):
             for i_label, label in enumerate(self.labels):
                 self.flow_array[i, i_label] = self.flows[label]
 
+        self.fraction_soln = {}
+        for label in self.labels:
+            self.fraction_soln[label] = [
+                v / t
+                for v, t
+                in zip(
+                    self.compartment_soln[label],
+                    self.get_var_soln("population"))]
+
         self.broad_compartment_types\
             = ["susceptible", "latent", "active", "missed", "treatment"]
         self.broad_compartment_soln, _\
@@ -1101,6 +1110,14 @@ class FlexibleModel(BaseTbModel):
             = self.get_fraction_soln(
             self.broad_compartment_types,
             self.broad_compartment_soln,
+            self.get_var_soln("population"))
+
+        self.compartment_type_soln, _\
+            = self.sum_over_compartments(self.compartment_types)
+        self.compartment_type_fraction_soln\
+            = self.get_fraction_soln(
+            self.compartment_types,
+            self.compartment_type_soln,
             self.get_var_soln("population"))
         
         self.groups = {

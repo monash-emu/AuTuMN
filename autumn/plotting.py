@@ -295,8 +295,12 @@ def plot_fractions(model, labels, values, png=None):
     save_png(png)
 
 def make_plot_title(model, labels):
-    if labels is model.broad_compartment_types:
-        title = "broad compartment types"
+    if labels is model.labels:
+        title = "all individual compartments"
+    elif labels is model.compartment_types:
+        title = "types of compartments"
+    elif labels is model.broad_compartment_types:
+        title = "broad types of compartments"
     elif labels is model.groups["infected"]:
         title = "infected compartments"
     else:

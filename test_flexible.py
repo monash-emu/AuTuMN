@@ -30,6 +30,8 @@ for running_model in range(len(models_to_run)):
         model, model.broad_compartment_types, model.broad_fraction_soln, base + '.broad_fraction.png')
     autumn.plotting.plot_fractions(
         model, model.groups["infected"], model.infected_fraction_soln, base + '.ever_infected.png')
+    autumn.plotting.plot_fractions(
+        model, model.groups["infectious"], model.infectious_fraction_soln, base + '.infectious.png')
 
     autumn.plotting.plot_populations(
         model, model.labels, model.compartment_soln, base + '.population.png')

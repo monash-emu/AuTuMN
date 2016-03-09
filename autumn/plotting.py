@@ -294,19 +294,29 @@ def plot_fractions(model, labels, values, png=None):
         axis_labels.append(compartment_full_names[plot_label])
     title = make_plot_title(model, labels)
     set_axes_props(ax, 'Year', 'Proportion of population',
-        'Population, by ' + title, True, axis_labels)
+        'Population, ' + title, True, axis_labels)
     save_png(png)
 
 
 def make_plot_title(model, labels):
     if labels is model.labels:
-        title = "each individual compartment"
+        title = "by each individual compartment"
     elif labels is model.compartment_types:
-        title = "types of compartments"
+        title = "by types of compartments"
     elif labels is model.broad_compartment_types:
-        title = "broad types of compartments"
+        title = "by broad types of compartments"
+    elif labels is model.groups["ever_infected"]:
+        title = "within ever infected compartments"
     elif labels is model.groups["infected"]:
-        title = "infected compartments"
+        title = "within infected compartments"
+    elif labels is model.groups["active"]:
+        title = "within active disease compartments"
+    elif labels is model.groups["infectious"]:
+        title = "within infectious compartments"
+    elif labels is model.groups["identified"]:
+        title = "within identified compartments"
+    elif labels is model.groups["treatment"]:
+        title = "within treatment compartments"
     else:
         title = "not sure"
     return title

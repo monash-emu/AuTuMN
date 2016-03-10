@@ -750,7 +750,7 @@ class FlexibleModel(BaseTbModel):
         if input_compartments is None:
             input_compartments = {
                 "susceptible_fully":
-                    8e6,
+                    6e4,
                 "active":
                     3.}
 
@@ -809,7 +809,7 @@ class FlexibleModel(BaseTbModel):
                 "tb_multiplier_force_extrapul":
                     0.,
                 "tb_n_contact":
-                    12.,
+                    15.,
                 "tb_proportion_early_progression":
                     get("default", "proportion_early_progression"),
                 "tb_timeperiod_early_latent":
@@ -908,7 +908,7 @@ class FlexibleModel(BaseTbModel):
         )
         # Derived from original formulas of:
         #   algorithm sensitivity = detection rate / (detection rate + missed rate)
-        #   and
+        #   - and -
         #   detection proportion = detection rate / (detection rate + missed rate + spont recover rate + death rate)
         # Temporarily set programmatic rates equal for all strains
 

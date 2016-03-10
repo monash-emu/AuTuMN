@@ -19,7 +19,7 @@ for running_model in range(len(models_to_run)):
     print((str(models_to_run[running_model][0]) + " organ(s), " +
           str(models_to_run[running_model][1]) + " strain(s), " +
           str(models_to_run[running_model][2]) + " comorbidity(ies)"))
-    model.make_times(1750, 2015, 0.05)
+    model.make_times(1200, 2015, 0.05)
     model.integrate_explicit()
     model.make_graph(base + '.workflow')
     # autumn.plotting.plot_fractions(

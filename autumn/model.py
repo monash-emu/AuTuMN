@@ -831,7 +831,7 @@ class FlexibleModel(BaseTbModel):
                 "program_proportion_detect":
                     0.85,
                 "program_algorithm_sensitivity":
-                    get("philippines", "algorithm_sensitivity"),
+                    0.95,
                 "program_rate_start_treatment":
                     1. / get("philippines", "program_timeperiod_delayto_treatment"),
                 "tb_timeperiod_treatment":
@@ -895,17 +895,23 @@ class FlexibleModel(BaseTbModel):
         # Rates of detection and failure of detection
         self.set_param(
             "program_rate_detect",
-            1. / self.params["tb_timeperiod_activeuntreated"]
-            / (1. - self.params["program_proportion_detect"]))
-        # ( formula derived from CDR = (detection rate) / (detection rate and spontaneous resolution rates) )
+            input_parameters["program_proportion_detect"]
+            * (self.params["tb_rate_recover_smearpos"] + self.params["tb_rate_death_smearpos"])
+            / (1. - input_parameters["program_proportion_detect"]
+               * (1. + (1. - input_parameters["program_algorithm_sensitivity"])
+                       / input_parameters["program_algorithm_sensitivity"])))
         self.set_param(
             "program_rate_missed",
             self.params["program_rate_detect"]
-            * (1. - self.params["program_algorithm_sensitivity"])
-            / self.params["program_algorithm_sensitivity"])
-        # ( formula derived from (algorithm sensitivity) = (detection rate) / (detection rate and miss rate) )
-
+            * (1. - input_parameters["program_algorithm_sensitivity"])
+            / input_parameters["program_algorithm_sensitivity"]
+        )
+        # Derived from original formulas of:
+        #   algorithm sensitivity = detection rate / (detection rate + missed rate)
+        #   and
+        #   detection proportion = detection rate / (detection rate + missed rate + spont recover rate + death rate)
         # Temporarily set programmatic rates equal for all strains
+
         for strain in self.strains:
             self.set_param(
                 "program_rate_detect" + strain,
@@ -921,7 +927,6 @@ class FlexibleModel(BaseTbModel):
                 self.params["program_rate_restart_presenting"])
 
         self.find_treatment_rates()
-
 
     def initialise_compartments(self, input_compartments):
 

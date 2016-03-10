@@ -322,49 +322,6 @@ def make_plot_title(model, labels):
     return title
 
 
-def plot_fraction_group(model, title, tags, png=None):
-    """
-    Inactive I think
-    """
-    subgroup_solns = {}
-    for tag in tags:
-        labels = [l for l in model.labels if tag in l]
-        labels = list(set(labels))
-        if len(labels) == 0:
-            continue
-        sub_group_soln = None
-        for l in labels:
-            vals = numpy.array(model.population_soln[l])
-            if sub_group_soln is None:
-                sub_group_soln = vals
-            else:
-                sub_group_soln = vals + sub_group_soln
-        subgroup_solns[tag] = sub_group_soln
-
-    group_soln = sum(subgroup_solns.values())
-
-    ax = make_axes_with_room_for_legend()
-    for tag, soln in subgroup_solns.items():
-        colour, pattern, full_name = get_line_style(tag)
-        ax.plot(
-            model.times,
-            [v/t for v, t in zip(soln, group_soln)],
-            linewidth=1,
-            color=colour,
-            linestyle=pattern,
-            label=full_name
-        )
-
-    set_axes_props(
-        ax, 
-        'Year', 
-        'Proportion of Population',
-        'Subgroups within ' + title + ' (proportion)', 
-        True)
-
-    save_png(png)
-
-
 def plot_outputs(model, labels, png=None):
     colours = {}
     full_names = {}
@@ -387,6 +344,7 @@ def plot_outputs(model, labels, png=None):
             title = "Main proportion output"
             yaxis_label = "Per 100,000"
     ax = make_axes_with_room_for_legend()
+
     for i_plot, var_label in enumerate(labels):
         ax.plot(
             model.times,

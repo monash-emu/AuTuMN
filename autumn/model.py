@@ -515,18 +515,24 @@ class BaseTbModel(BaseModel):
             elif 'treatment' in from_label and 'susceptible_treated' in to_label:
                 rate_success += val
 
-        # Main epidemiological indicators - note that denominator is not individuals
+        # Main epidemiological indicators
+        # Note that denominator is not individuals
         self.vars["incidence"] = \
               rate_incidence \
             / self.vars["population"] * 1E5
-
         self.vars["notification"] = \
               rate_notification \
             / self.vars["population"] * 1E5
-
         self.vars["mortality"] = \
               self.vars["rate_infection_death"] \
             / self.vars["population"] * 1E5
+
+        self.vars["prevalence"] = 0.0
+        for label in self.labels:
+            if "susceptible" not in label and "latent" not in label:
+                self.vars["prevalence"] += (
+                    self.compartments[label]
+                     / self.vars["population"] * 1E5)
 
         # Better term may be failed diagnosis, but using missed for
         # consistency with the compartment name for now
@@ -744,7 +750,7 @@ class FlexibleModel(BaseTbModel):
         if input_compartments is None:
             input_compartments = {
                 "susceptible_fully":
-                    4.5e7,
+                    8e6,
                 "active":
                     3.}
 
@@ -786,15 +792,15 @@ class FlexibleModel(BaseTbModel):
 
             input_parameters = {
                 "demo_rate_birth":
-                    20. / 1e3,
+                    24. / 1e3,
                 "demo_rate_death":
-                    1. / 65,
+                    1. / 69.,
                 "epi_proportion_cases_smearpos":
-                    0.6,
+                    (92991. + 6277.) / 243379.,  # Total bacteriologically confirmed
                 "epi_proportion_cases_smearneg":
-                    0.2,
+                    139950. / 243379.,  # Clinically diagnosed
                 "epi_proportion_cases_extrapul":
-                    0.2,
+                    4161. / 243379.,  # Bacteriologically confirmed
                 "tb_multiplier_force_smearpos":
                     1.,
                 "tb_multiplier_force_smearneg":
@@ -802,7 +808,7 @@ class FlexibleModel(BaseTbModel):
                 "tb_multiplier_force_extrapul":
                     0.,
                 "tb_n_contact":
-                    get("default", "tb_n_contact"),
+                    25.,
                 "tb_proportion_early_progression":
                     get("default", "proportion_early_progression"),
                 "tb_timeperiod_early_latent":
@@ -838,6 +844,7 @@ class FlexibleModel(BaseTbModel):
                 "program_rate_restart_presenting":
                     1. / get("philippines", "timeperiod_norepresentation")
             }
+        print(input_parameters["tb_n_contact"])
 
         # Now actually set the imported parameters
         for parameter in input_parameters:

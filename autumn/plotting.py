@@ -200,21 +200,27 @@ def save_png(png):
         pylab.savefig(png, dpi=300)
 
 
-def plot_populations(model, labels, values, png=None):
+def plot_populations(model, labels, values, right_xlimit, png=None):
+    right_xlimit_index = len(model.times) - 1
+    for i in range(len(model.times)):
+        if model.times[i] > right_xlimit:
+            left_xlimit_index = i
+            break
     colours, patterns, compartment_full_names, markers\
         = make_related_line_styles(labels)
     ax = make_axes_with_room_for_legend()
     axis_labels = []
     ax.plot(
-        model.times,
-        model.get_var_soln("population"),
+        model.times[left_xlimit_index: right_xlimit_index],
+        model.get_var_soln("population")[left_xlimit_index: right_xlimit_index],
         'k',
         label="total", linewidth=2)
     axis_labels.append("Number of persons")
+
     for i_plot, plot_label in enumerate(labels):
         ax.plot(
-            model.times,
-            values[plot_label],
+            model.times[left_xlimit_index: right_xlimit_index],
+            values[plot_label][left_xlimit_index: right_xlimit_index],
             label=plot_label, linewidth=1,
             color=colours[plot_label],
             marker=markers[plot_label],
@@ -330,7 +336,6 @@ def plot_outputs(model, labels, png=None):
         if "incidence" in label:
             colours[label] = (0, 0, 0)
             full_names[label] = "Incidence"
-            title = "Main rate outputs"
             yaxis_label = "Per 100,000 per year"
         elif "notification" in label:
             colours[label] = (0, 0, 1)
@@ -341,7 +346,6 @@ def plot_outputs(model, labels, png=None):
         elif "prevalence" in label:
             colours[label] = (0, 0.5, 0)
             full_names[label] = "Prevalence"
-            title = "Main proportion output"
             yaxis_label = "Per 100,000"
     ax = make_axes_with_room_for_legend()
 
@@ -352,7 +356,7 @@ def plot_outputs(model, labels, png=None):
             color=colours[var_label],
             label=var_label, linewidth=1)
         axis_labels.append(full_names[var_label])
-    set_axes_props(ax, 'Year', yaxis_label, title, True,
+    set_axes_props(ax, 'Year', yaxis_label, "Main epidemiological outputs", True,
         axis_labels)
     save_png(png)
 

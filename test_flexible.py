@@ -34,11 +34,11 @@ for running_model in range(len(models_to_run)):
     #     model, model.groups["identified"], model.identified_fraction_soln, base + '.identified.png')
     #
     autumn.plotting.plot_populations(
-        model, model.labels, model.compartment_soln, base + '.population.png')
-    # autumn.plotting.plot_populations(
-    #     model, model.compartment_types, model.compartment_type_soln, base + '.summed_population.png')
-    # autumn.plotting.plot_populations(
-    #     model, model.broad_compartment_types, model.broad_compartment_soln, base + '.broad_population.png')
+        model, model.labels, model.compartment_soln, 1950, base + '.population.png')
+    autumn.plotting.plot_populations(
+        model, model.compartment_types, model.compartment_type_soln, 1950, base + '.summed_population.png')
+    autumn.plotting.plot_populations(
+        model, model.broad_compartment_types, model.broad_compartment_soln, 1950, base + '.broad_population.png')
 
     autumn.plotting.plot_outputs(
         model, ["incidence", "mortality", "notification", "prevalence"], base + '.rate_outputs.png')

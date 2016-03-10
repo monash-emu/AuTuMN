@@ -952,6 +952,17 @@ class FlexibleModel(BaseTbModel):
                                                      / len(self.strains)
                                                      / len(self.organ_status))
 
+    def calculate_birth_rates(self):
+
+        self.vars["rate_birth"] = \
+            self.params["demo_rate_birth"] * self.vars["population"]
+        self.vars["births_unvac"] = \
+            self.params["program_prop_unvac"] * self.vars["rate_birth"]\
+            / len(self.comorbidities)
+        self.vars["births_vac"] = \
+            self.params["program_prop_vac"] * self.vars["rate_birth"]\
+            / len(self.comorbidities)
+
     def set_birth_flows(self):
 
         for comorbidity in self.comorbidities:

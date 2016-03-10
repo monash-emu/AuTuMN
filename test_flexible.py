@@ -8,7 +8,7 @@ out_dir = 'flexible_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
-models_to_run = [[1, 1, 1]]
+models_to_run = [[1, 1, 2]]
 
 for running_model in range(len(models_to_run)):
     name = 'model%d' % running_model
@@ -33,8 +33,8 @@ for running_model in range(len(models_to_run)):
     # autumn.plotting.plot_fractions(
     #     model, model.groups["identified"], model.identified_fraction_soln, base + '.identified.png')
     #
-    # autumn.plotting.plot_populations(
-    #     model, model.labels, model.compartment_soln, base + '.population.png')
+    autumn.plotting.plot_populations(
+        model, model.labels, model.compartment_soln, base + '.population.png')
     # autumn.plotting.plot_populations(
     #     model, model.compartment_types, model.compartment_type_soln, base + '.summed_population.png')
     # autumn.plotting.plot_populations(

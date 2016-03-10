@@ -201,6 +201,7 @@ def save_png(png):
 
 
 def plot_populations(model, labels, values, right_xlimit, png=None):
+    # Never going to argue that the following code is the most elegant way to to this
     right_xlimit_index = len(model.times) - 1
     for i in range(len(model.times)):
         if model.times[i] > right_xlimit:
@@ -235,64 +236,20 @@ def plot_populations(model, labels, values, right_xlimit, png=None):
     save_png(png)
 
 
-def plot_population_group(model, title, tags, png=None, linestyles=None):
-    """
-    Inactive?
-    """
-    subgroup_solns = {}
-    for tag in tags:
-        labels = [l for l in model.labels if tag in l]
-        labels = list(set(labels))
-        if len(labels) == 0:
-            continue
-        sub_group_soln = None
-        for l in labels:
-            vals = numpy.array(model.population_soln[l])
-            if sub_group_soln is None:
-                sub_group_soln = vals
-            else:
-                sub_group_soln = vals + sub_group_soln
-        subgroup_solns[tag] = sub_group_soln
-
-    group_soln = sum(subgroup_solns.values())
-
-    ax = make_axes_with_room_for_legend()
-    # ax.plot(
-    #     model.times,
-    #     group_soln,
-    #     'k',
-    #     label='total ' + title,
-    #     linewidth=2)
-    for tag, soln in subgroup_solns.items():
-        colour, pattern, full_name = get_line_style(tag)
-        ax.plot(
-            model.times,
-            soln,
-            linewidth=1,
-            color=colour,
-            linestyle=pattern,
-            label=full_name
-        )
-
-    set_axes_props(
-        ax, 
-        'Year', 
-        'Persons',
-        'Subgroups within ' + title + ' (absolute)', 
-        True)
-
-    save_png(png)
-
-
-def plot_fractions(model, labels, values, png=None):
+def plot_fractions(model, labels, values, right_xlimit, png=None):
+    right_xlimit_index = len(model.times) - 1
+    for i in range(len(model.times)):
+        if model.times[i] > right_xlimit:
+            left_xlimit_index = i
+            break
     colours, patterns, compartment_full_names, markers\
         = make_related_line_styles(labels)
     ax = make_axes_with_room_for_legend()
     axis_labels = []
     for i_plot, plot_label in enumerate(labels):
         ax.plot(
-            model.times,
-            values[plot_label],
+            model.times[left_xlimit_index: right_xlimit_index],
+            values[plot_label][left_xlimit_index: right_xlimit_index],
             label=plot_label, linewidth=1,
             color=colours[plot_label],
             marker=markers[plot_label],
@@ -328,7 +285,12 @@ def make_plot_title(model, labels):
     return title
 
 
-def plot_outputs(model, labels, png=None):
+def plot_outputs(model, labels, right_xlimit, png=None):
+    right_xlimit_index = len(model.times) - 1
+    for i in range(len(model.times)):
+        if model.times[i] > right_xlimit:
+            left_xlimit_index = i
+            break
     colours = {}
     full_names = {}
     axis_labels = []
@@ -351,8 +313,8 @@ def plot_outputs(model, labels, png=None):
 
     for i_plot, var_label in enumerate(labels):
         ax.plot(
-            model.times,
-            model.get_var_soln(var_label),
+            model.times[left_xlimit_index: right_xlimit_index],
+            model.get_var_soln(var_label)[left_xlimit_index: right_xlimit_index],
             color=colours[var_label],
             label=var_label, linewidth=1)
         axis_labels.append(full_names[var_label])

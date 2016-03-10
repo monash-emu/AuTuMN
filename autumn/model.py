@@ -790,6 +790,7 @@ class FlexibleModel(BaseTbModel):
                 ppf = getattr(param, "ppf")
                 return ppf(prob)
 
+            # Estimate some parameters
             input_parameters = {
                 "demo_rate_birth":
                     24. / 1e3,
@@ -808,7 +809,7 @@ class FlexibleModel(BaseTbModel):
                 "tb_multiplier_force_extrapul":
                     0.,
                 "tb_n_contact":
-                    25.,
+                    12.,
                 "tb_proportion_early_progression":
                     get("default", "proportion_early_progression"),
                 "tb_timeperiod_early_latent":
@@ -828,7 +829,7 @@ class FlexibleModel(BaseTbModel):
                 "program_prop_unvac":
                     1. - get("philippines", "bcg_coverage"),
                 "program_proportion_detect":
-                    get("philippines", "bcg_coverage"),
+                    0.85,
                 "program_algorithm_sensitivity":
                     get("philippines", "algorithm_sensitivity"),
                 "program_rate_start_treatment":
@@ -837,14 +838,23 @@ class FlexibleModel(BaseTbModel):
                     get("default", "timeperiod_treatment_ds"),
                 "tb_timeperiod_infect_ontreatment":
                     get("default", "timeperiod_infect_ontreatment"),
-                "program_proportion_default":
-                    get("philippines", "proportion_default"),
-                "program_proportion_death":
-                    get("philippines", "proportion_death"),
+                "program_proportion_success":
+                    0.9,
                 "program_rate_restart_presenting":
                     1. / get("philippines", "timeperiod_norepresentation")
             }
-        print(input_parameters["tb_n_contact"])
+        input_parameters["program_proportion_default"] =\
+            (1. - input_parameters["program_proportion_success"]) * 0.75
+        input_parameters["program_proportion_death"] =\
+            (1. - input_parameters["program_proportion_success"]) * 0.25
+
+        # Make sure all progressions go somewhere, regardless of number of organ statuses
+        if len(self.organ_status) == 1:
+            input_parameters["epi_proportion_cases_smearpos"] = 1.
+        elif len(self.organ_status) == 2:
+            input_parameters["epi_proportion_cases_smearneg"] = \
+                input_compartments["epi_proportion_cases_smearneg"] \
+                + input_compartments["epi_proportion_cases_extrapul"]
 
         # Now actually set the imported parameters
         for parameter in input_parameters:
@@ -911,6 +921,7 @@ class FlexibleModel(BaseTbModel):
                 self.params["program_rate_restart_presenting"])
 
         self.find_treatment_rates()
+
 
     def initialise_compartments(self, input_compartments):
 

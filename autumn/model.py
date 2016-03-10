@@ -1029,11 +1029,22 @@ class FlexibleModel(BaseTbModel):
                         "active" + organ + strain + comorbidity,
                         "latent_late" + strain + comorbidity,
                         "tb_rate_recover" + organ)
+                    self.set_fixed_transfer_rate_flow(
+                        "detect" + organ + strain + comorbidity,
+                        "latent_late" + strain + comorbidity,
+                        "tb_rate_recover" + organ)
+                    self.set_fixed_transfer_rate_flow(
+                        "missed" + organ + strain + comorbidity,
+                        "latent_late" + strain + comorbidity,
+                        "tb_rate_recover" + organ)
                     self.set_infection_death_rate_flow(
                         "active" + organ + strain + comorbidity,
                         "tb_rate_death" + organ)
                     self.set_infection_death_rate_flow(
                         "detect" + organ + strain + comorbidity,
+                        "tb_rate_death" + organ)
+                    self.set_infection_death_rate_flow(
+                        "missed" + organ + strain + comorbidity,
                         "tb_rate_death" + organ)
 
     def set_programmatic_flows(self):

@@ -750,7 +750,7 @@ class FlexibleModel(BaseTbModel):
         if input_compartments is None:
             input_compartments = {
                 "susceptible_fully":
-                    2e5,
+                    2e7,
                 "active":
                     3.}
 
@@ -809,7 +809,7 @@ class FlexibleModel(BaseTbModel):
                 "tb_multiplier_force_extrapul":
                     0.,
                 "tb_n_contact":
-                    4.,
+                    12.,
                 "tb_proportion_early_progression":
                     get("default", "proportion_early_progression"),
                 "tb_timeperiod_early_latent":
@@ -841,7 +841,7 @@ class FlexibleModel(BaseTbModel):
                 "program_proportion_success":
                     0.9,
                 "program_rate_restart_presenting":
-                    1. / get("philippines", "timeperiod_norepresentation")
+                    4,
             }
         input_parameters["program_proportion_default"] =\
             (1. - input_parameters["program_proportion_success"]) * 0.75

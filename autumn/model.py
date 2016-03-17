@@ -504,8 +504,6 @@ class BaseTbModel(BaseModel):
             val = self.compartments[from_label] * rate
             if 'latent' in from_label and 'active' in to_label:
                 rate_incidence += val
-            elif 'active' in from_label and 'detect' in to_label:
-                rate_notification += val
             elif 'active' in from_label and 'missed' in to_label:
                 rate_missed += val
             elif 'treatment' in from_label and 'death' in to_label:
@@ -519,9 +517,6 @@ class BaseTbModel(BaseModel):
         # Note that denominator is not individuals
         self.vars["incidence"] = \
               rate_incidence \
-            / self.vars["population"] * 1E5
-        self.vars["notification"] = \
-              rate_notification \
             / self.vars["population"] * 1E5
         self.vars["mortality"] = \
               self.vars["rate_infection_death"] \

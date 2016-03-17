@@ -45,9 +45,9 @@ for running_model in range(len(models_to_run)):
         model, model.broad_compartment_types, model.broad_compartment_soln, recent_time, base + '.broad_population.png')
 
     autumn.plotting.plot_outputs(
-        model, ["incidence", "mortality", "notification", "prevalence"], recent_time, base + '.recent_rate_outputs.png')
+        model, ["incidence", "mortality", "prevalence"], recent_time, base + '.recent_rate_outputs.png')
     autumn.plotting.plot_outputs(
-        model, ["incidence", "mortality", "notification", "prevalence"], start_time, base + '.rate_outputs.png')
+        model, ["incidence", "mortality", "prevalence"], start_time, base + '.rate_outputs.png')
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)

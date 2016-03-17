@@ -804,7 +804,7 @@ class FlexibleModel(BaseTbModel):
                 "tb_multiplier_force_extrapul":
                     0.,
                 "tb_n_contact":
-                    12.,
+                    6.,
                 "tb_proportion_early_progression":
                     get("default", "proportion_early_progression"),
                 "tb_timeperiod_early_latent":
@@ -816,7 +816,7 @@ class FlexibleModel(BaseTbModel):
                 "tb_proportion_casefatality_untreated_smearneg":
                     get("default", "proportion_casefatality_active_untreated_smearneg"),
                 "tb_timeperiod_activeuntreated":
-                    get("default", "timeperiod_activeuntreated"),
+                    4.,
                 "tb_multiplier_bcg_protection":
                     get("default", "multiplier_bcg_protection"),
                 "program_prop_vac":
@@ -824,9 +824,9 @@ class FlexibleModel(BaseTbModel):
                 "program_prop_unvac":
                     1. - get("philippines", "bcg_coverage"),
                 "program_proportion_detect":
-                    0.85,
+                    0.7,
                 "program_algorithm_sensitivity":
-                    0.95,
+                    0.9,
                 "program_rate_start_treatment":
                     1. / get("philippines", "program_timeperiod_delayto_treatment"),
                 "tb_timeperiod_treatment":
@@ -836,7 +836,7 @@ class FlexibleModel(BaseTbModel):
                 "program_proportion_success":
                     0.9,
                 "program_rate_restart_presenting":
-                    4,
+                    4.,
             }
         input_parameters["program_proportion_default"] =\
             (1. - input_parameters["program_proportion_success"]) * 0.75
@@ -854,6 +854,8 @@ class FlexibleModel(BaseTbModel):
         # Now actually set the imported parameters
         for parameter in input_parameters:
             self.set_param(parameter, input_parameters[parameter])
+
+        print(self.params["tb_timeperiod_activeuntreated"])
 
         # If extrapulmonary case-fatality not stated
         if "tb_proportion_casefatality_untreated_extrapul" not in input_parameters:
@@ -1050,7 +1052,7 @@ class FlexibleModel(BaseTbModel):
         pretreatment_available_propoortion = 0.2
         dots_start_date = 1995
         dots_start_proportion = 0.5
-        finish_scaleup_date = 2015
+        finish_scaleup_date = 2010
         self.scaleup_fns["program_rate_detect"]\
             = make_two_step_curve(
             pretreatment_available_propoortion, dots_start_proportion * final_detect_rate, final_detect_rate,

@@ -874,7 +874,7 @@ class FlexibleModel(BaseTbModel):
                 "program_rate_restart_presenting":
                     4.,
                 "proportion_amplification":
-                    0.
+                    1. / 15.
             }
         input_parameters["program_proportion_default"] =\
             (1. - input_parameters["program_proportion_success"]) * 0.75
@@ -1171,6 +1171,12 @@ class FlexibleModel(BaseTbModel):
                     self.set_param("program_rate_default_infect_amplify",
                                    self.params["program_rate_default_infect"]
                                    * self.params["proportion_amplification"])
+                    self.scaleup_fns["program_rate_default_infect_amplify"] = make_two_step_curve(
+                        0.,
+                        self.params["program_rate_default_infect_amplify"] / 2.,
+                        self.params["program_rate_default_infect_amplify"],
+                        1960., 1963., 1966.
+                    )
                     self.set_param("program_rate_default_noninfect_noamplify",
                                    self.params["program_rate_default_noninfect"]
                                    * (1 - self.params["proportion_amplification"]))
@@ -1197,7 +1203,7 @@ class FlexibleModel(BaseTbModel):
                             "treatment_noninfect" + organ + strain + comorbidity,
                             "active" + organ + strain + comorbidity,
                             "program_rate_default_noninfect_noamplify")
-                        self.set_fixed_transfer_rate_flow(
+                        self.set_scaleup_transfer_rate_flow(
                             "treatment_infect" + organ + strain + comorbidity,
                             "active" + organ + amplify_to_strain + comorbidity,
                             "program_rate_default_infect_amplify")

@@ -45,11 +45,7 @@ def get_line_style(label):
     if "treatment_noninfect" in label:
         colour = (1, 1, 0)
 
-    pattern = "-"  # Default filled line
-    if "smearneg" in label:
-        pattern = "-."
-    elif "extrapul" in label:
-        pattern = ":"
+    pattern = make_line_pattern(label)
 
     if "susceptible" in label:
         category_full_name = "Susceptible"
@@ -87,17 +83,29 @@ def get_line_style(label):
 
     if "_ds" in label:
         category_full_name += ", \nDS-TB"
-        marker = ''
     elif "_mdr" in label:
         category_full_name += ", \nMDR-TB"
-        marker = '|'
     elif "_xdr" in label:
         category_full_name += ", \nXDR-TB"
-        marker = '.'
-    else:
-        marker = ''
+
+    marker = ""
 
     return colour, pattern, category_full_name, marker
+
+
+def make_line_pattern(label):
+    pattern = "-"  # Default filled line
+    # if "smearneg" in label:
+    #     pattern = "-."
+    # elif "extrapul" in label:
+    #     pattern = ":"
+
+    if "_mdr" in label:
+        pattern = '-.'
+    elif "_xdr" in label:
+        pattern = '.'
+
+    return pattern
 
 
 def make_related_line_styles(labels):
@@ -231,7 +239,7 @@ def plot_populations(model, labels, values, right_xlimit, png=None):
     title = make_plot_title(model, labels)
 
     set_axes_props(ax, 'Year', 'Persons',
-                   'Population, by ' + title, True,
+                   'Population, ' + title, True,
                    axis_labels)
     save_png(png)
 

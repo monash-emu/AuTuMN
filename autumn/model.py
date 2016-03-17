@@ -593,6 +593,42 @@ class BaseTbModel(BaseModel):
                     summed_denominator += self.compartment_soln[label]
         return summed_soln, summed_denominator
 
+    def sum_over_compartments_bystrain(self, compartment_types):
+        summed_soln = {}
+        summed_denominator\
+            = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
+        compartment_types_bystrain = []
+        for compartment_type in compartment_types:
+            if "susceptible" in compartment_type:
+                summed_soln[compartment_type]\
+                    = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
+                for label in self.labels:
+                    if compartment_type in label:
+                        summed_soln[compartment_type] = [
+                            a + b
+                            for a, b
+                            in zip(
+                                summed_soln[compartment_type],
+                                self.compartment_soln[label])]
+                        summed_denominator += self.compartment_soln[label]
+                        compartment_types_bystrain.append(compartment_type)
+            else:
+                for strain in self.strains:
+                    compartment_types_bystrain.append(compartment_type + strain)
+                    summed_soln[compartment_type + strain]\
+                        = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
+                    for label in self.labels:
+                        if compartment_type in label and strain in label:
+                            summed_soln[compartment_type + strain] = [
+                                a + b
+                                for a, b
+                                in zip(
+                                    summed_soln[compartment_type + strain],
+                                    self.compartment_soln[label])]
+                            summed_denominator += self.compartment_soln[label]
+
+        return summed_soln, summed_denominator, compartment_types_bystrain
+
 
 class SimplifiedModel(BaseTbModel):
 
@@ -838,7 +874,7 @@ class FlexibleModel(BaseTbModel):
                 "program_rate_restart_presenting":
                     4.,
                 "proportion_amplification":
-                    1. / 15.
+                    0.
             }
         input_parameters["program_proportion_default"] =\
             (1. - input_parameters["program_proportion_success"]) * 0.75
@@ -1203,7 +1239,15 @@ class FlexibleModel(BaseTbModel):
             self.compartment_types,
             self.compartment_type_soln,
             self.get_var_soln("population"))
-        
+
+        self.compartment_type_bystrain_soln, _, self.compartment_types_bystrain\
+            = self.sum_over_compartments_bystrain(self.compartment_types)
+        self.compartment_type_bystrain_fraction_soln\
+            = self.get_fraction_soln(
+            self.compartment_types_bystrain,
+            self.compartment_type_bystrain_soln,
+            self.get_var_soln("population"))
+
         self.groups = {
             "ever_infected": ["susceptible_treated", "latent", "active", "missed", "detect", "treatment"],
             "infected": ["latent", "active", "missed", "detect", "treatment"],

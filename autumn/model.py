@@ -1082,7 +1082,35 @@ class FlexibleModel(BaseTbModel):
                         "active" + organ + strain + comorbidity,
                         "program_rate_restart_presenting")
 
-    def set_treatment_flows(self):
+    def set_treatment_flows_noamplification(self):
+
+        for comorbidity in self.comorbidities:
+            for strain in self.strains:
+                for organ in self.organ_status:
+                    self.set_fixed_transfer_rate_flow(
+                        "treatment_infect" + organ + strain + comorbidity,
+                        "treatment_noninfect" + organ + strain + comorbidity,
+                        "program_rate_success_infect")
+                    self.set_fixed_transfer_rate_flow(
+                        "treatment_noninfect" + organ + strain + comorbidity,
+                        "susceptible_treated" + comorbidity,
+                        "program_rate_success_noninfect")
+                    self.set_infection_death_rate_flow(
+                        "treatment_infect" + organ + strain + comorbidity,
+                        "program_rate_death_infect")
+                    self.set_infection_death_rate_flow(
+                        "treatment_noninfect" + organ + strain + comorbidity,
+                        "program_rate_death_noninfect")
+                    self.set_fixed_transfer_rate_flow(
+                        "treatment_infect" + organ + strain + comorbidity,
+                        "active" + organ + strain + comorbidity,
+                        "program_rate_default_infect")
+                    self.set_fixed_transfer_rate_flow(
+                        "treatment_noninfect" + organ + strain + comorbidity,
+                        "active" + organ + strain + comorbidity,
+                        "program_rate_default_noninfect")
+
+    def set_treatment_flows_amplification(self):
 
         for comorbidity in self.comorbidities:
             for organ in self.organ_status:
@@ -1155,7 +1183,7 @@ class FlexibleModel(BaseTbModel):
 
         self.set_programmatic_flows()
 
-        self.set_treatment_flows()
+        self.set_treatment_flows_amplification()
 
         self.set_population_death_rate("demo_rate_death")
 

@@ -837,6 +837,8 @@ class FlexibleModel(BaseTbModel):
                     0.9,
                 "program_rate_restart_presenting":
                     4.,
+                "proportion_amplification":
+                    1. / 15.
             }
         input_parameters["program_proportion_default"] =\
             (1. - input_parameters["program_proportion_success"]) * 0.75
@@ -854,8 +856,6 @@ class FlexibleModel(BaseTbModel):
         # Now actually set the imported parameters
         for parameter in input_parameters:
             self.set_param(parameter, input_parameters[parameter])
-
-        print(self.params["tb_timeperiod_activeuntreated"])
 
         # If extrapulmonary case-fatality not stated
         if "tb_proportion_casefatality_untreated_extrapul" not in input_parameters:
@@ -1085,20 +1085,13 @@ class FlexibleModel(BaseTbModel):
     def set_treatment_flows(self):
 
         for comorbidity in self.comorbidities:
-            for strain in self.strains:
-                for organ in self.organ_status:
+            for organ in self.organ_status:
+                for i in range(len(self.strains)):
+                    strain = self.strains[i]
                     self.set_fixed_transfer_rate_flow(
                         "treatment_infect" + organ + strain + comorbidity,
                         "treatment_noninfect" + organ + strain + comorbidity,
                         "program_rate_success_infect")
-                    self.set_fixed_transfer_rate_flow(
-                        "treatment_infect" + organ + strain + comorbidity,
-                        "active" + organ + strain + comorbidity,
-                        "program_rate_default_infect")
-                    self.set_fixed_transfer_rate_flow(
-                        "treatment_noninfect" + organ + strain + comorbidity,
-                        "active" + organ + strain + comorbidity,
-                        "program_rate_default_noninfect")
                     self.set_fixed_transfer_rate_flow(
                         "treatment_noninfect" + organ + strain + comorbidity,
                         "susceptible_treated" + comorbidity,
@@ -1109,6 +1102,48 @@ class FlexibleModel(BaseTbModel):
                     self.set_infection_death_rate_flow(
                         "treatment_noninfect" + organ + strain + comorbidity,
                         "program_rate_death_noninfect")
+
+                    # Split default rates into amplification and non-amplification proportions
+                    self.set_param("program_rate_default_infect_noamplify",
+                                   self.params["program_rate_default_infect"]
+                                   * (1 - self.params["proportion_amplification"]))
+                    self.set_param("program_rate_default_infect_amplify",
+                                   self.params["program_rate_default_infect"]
+                                   * self.params["proportion_amplification"])
+                    self.set_param("program_rate_default_noninfect_noamplify",
+                                   self.params["program_rate_default_noninfect"]
+                                   * (1 - self.params["proportion_amplification"]))
+                    self.set_param("program_rate_default_noninfect_amplify",
+                                   self.params["program_rate_default_noninfect"]
+                                   * self.params["proportion_amplification"])
+
+                    if i == len(self.strains) - 1:  # If it's the most resistant strain
+                        self.set_fixed_transfer_rate_flow(
+                            "treatment_infect" + organ + strain + comorbidity,
+                            "active" + organ + strain + comorbidity,
+                            "program_rate_default_infect")
+                        self.set_fixed_transfer_rate_flow(
+                            "treatment_noninfect" + organ + strain + comorbidity,
+                            "active" + organ + strain + comorbidity,
+                            "program_rate_default_noninfect")
+                    else:  # Otherwise, there is a more resistant strain available
+                        amplify_to_strain = self.strains[i + 1]  # Is the more resistant strain
+                        self.set_fixed_transfer_rate_flow(
+                            "treatment_infect" + organ + strain + comorbidity,
+                            "active" + organ + strain + comorbidity,
+                            "program_rate_default_infect_noamplify")
+                        self.set_fixed_transfer_rate_flow(
+                            "treatment_noninfect" + organ + strain + comorbidity,
+                            "active" + organ + strain + comorbidity,
+                            "program_rate_default_noninfect_noamplify")
+                        self.set_fixed_transfer_rate_flow(
+                            "treatment_infect" + organ + strain + comorbidity,
+                            "active" + organ + amplify_to_strain + comorbidity,
+                            "program_rate_default_infect_amplify")
+                        self.set_fixed_transfer_rate_flow(
+                            "treatment_noninfect" + organ + strain + comorbidity,
+                            "active" + organ + amplify_to_strain + comorbidity,
+                            "program_rate_default_noninfect_amplify")
 
     def set_flows(self):
 

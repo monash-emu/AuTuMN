@@ -940,7 +940,7 @@ class FlexibleModel(BaseTbModel):
                         for organ in self.organ_status:
                             self.set_compartment(compartment + organ + strain + comorbidity, 0.)
 
-        # Put in values from input_compartments
+        # Put in values from input_compartments - now initialise to DS-TB only
         for compartment in self.compartment_types:
             if compartment in input_compartments:
                 if "susceptible" in compartment:
@@ -950,20 +950,17 @@ class FlexibleModel(BaseTbModel):
                                              / len(self.comorbidities))
                 elif "latent" in compartment:
                     for comorbidity in self.comorbidities:
-                        for strain in self.strains:
-                            self.set_compartment(compartment + strain + comorbidity,
-                                                 input_compartments[compartment]
-                                                 / len(self.comorbidities)
-                                                 / len(self.strains))
+                        self.set_compartment(compartment + "_ds" + comorbidity,
+                                             input_compartments[compartment]
+                                             / len(self.comorbidities))
                 else:
                     for comorbidity in self.comorbidities:
-                        for strain in self.strains:
-                            for organ in self.organ_status:
-                                self.set_compartment(compartment + organ + strain + comorbidity,
-                                                     input_compartments[compartment]
-                                                     / len(self.comorbidities)
-                                                     / len(self.strains)
-                                                     / len(self.organ_status))
+                        for organ in self.organ_status:
+                            self.set_compartment(compartment + organ + "_ds" + comorbidity,
+                                                 input_compartments[compartment]
+                                                 / len(self.comorbidities)
+                                                 / len(self.strains)
+                                                 / len(self.organ_status))
 
     def calculate_birth_rates(self):
 

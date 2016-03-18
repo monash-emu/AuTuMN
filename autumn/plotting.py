@@ -92,6 +92,16 @@ def humanise_y_ticks(ax):
     ax.set_yticklabels(labels)
 
 
+def truncate_data(model, left_xlimit):
+    # Not going to argue that the following code is the most elegant approach
+    right_xlimit_index = len(model.times) - 1
+    for i in range(len(model.times)):
+        if model.times[i] > left_xlimit:
+            left_xlimit_index = i
+            break
+    return right_xlimit_index, left_xlimit_index
+
+
 def make_default_line_styles():
     """
     Now inactive
@@ -229,13 +239,8 @@ def make_plot_title(model, labels):
     return title
 
 
-def plot_populations(model, labels, values, right_xlimit, strain_or_organ, png=None):
-    # Not going to argue that the following code is the most elegant approach
-    right_xlimit_index = len(model.times) - 1
-    for i in range(len(model.times)):
-        if model.times[i] > right_xlimit:
-            left_xlimit_index = i
-            break
+def plot_populations(model, labels, values, left_xlimit, strain_or_organ, png=None):
+    right_xlimit_index, left_xlimit_index = truncate_data(model, left_xlimit)
     colours, patterns, compartment_full_names, markers\
         = make_related_line_styles(labels, strain_or_organ)
     ax = make_axes_with_room_for_legend()
@@ -265,12 +270,8 @@ def plot_populations(model, labels, values, right_xlimit, strain_or_organ, png=N
     save_png(png)
 
 
-def plot_fractions(model, labels, values, right_xlimit, strain_or_organ, png=None):
-    right_xlimit_index = len(model.times) - 1
-    for i in range(len(model.times)):
-        if model.times[i] > right_xlimit:
-            left_xlimit_index = i
-            break
+def plot_fractions(model, labels, values, left_xlimit, strain_or_organ, png=None):
+    right_xlimit_index, left_xlimit_index = truncate_data(model, left_xlimit)
     colours, patterns, compartment_full_names, markers\
         = make_related_line_styles(labels, strain_or_organ)
     ax = make_axes_with_room_for_legend()
@@ -290,12 +291,8 @@ def plot_fractions(model, labels, values, right_xlimit, strain_or_organ, png=Non
     save_png(png)
 
 
-def plot_outputs(model, labels, right_xlimit, png=None):
-    right_xlimit_index = len(model.times) - 1
-    for i in range(len(model.times)):
-        if model.times[i] > right_xlimit:
-            left_xlimit_index = i
-            break
+def plot_outputs(model, labels, left_xlimit, png=None):
+    right_xlimit_index, left_xlimit_index = truncate_data(model, left_xlimit)
     colours = {}
     full_names = {}
     axis_labels = []

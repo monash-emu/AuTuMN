@@ -218,7 +218,8 @@ def get_line_pattern(label, strain_or_organ):
 def make_plot_title(model, labels):
     if labels is model.labels:
         title = "by each individual compartment"
-    elif labels is model.compartment_types:
+    elif labels is model.compartment_types \
+            or labels is model.compartment_types_bystrain:
         title = "by types of compartments"
     elif labels is model.broad_compartment_types:
         title = "by broad types of compartments"

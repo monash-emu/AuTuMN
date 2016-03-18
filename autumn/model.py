@@ -1165,17 +1165,23 @@ class FlexibleModel(BaseTbModel):
                         "program_rate_death_noninfect")
 
                     # Split default rates into amplification and non-amplification proportions
+                    time_introduce_mdr = 1960.
                     self.set_param("program_rate_default_infect_noamplify",
                                    self.params["program_rate_default_infect"]
                                    * (1 - self.params["proportion_amplification"]))
                     self.set_param("program_rate_default_infect_amplify",
                                    self.params["program_rate_default_infect"]
                                    * self.params["proportion_amplification"])
-                    self.scaleup_fns["program_rate_default_infect_amplify"] = make_two_step_curve(
+                    self.scaleup_fns["program_rate_default_infect_noamplify"] = make_sigmoidal_curve(
+                        self.params["program_rate_default_infect_noamplify"],
+                        self.params["program_rate_default_infect_noamplify"]
+                        - self.params["program_rate_default_infect_amplify"],
+                        time_introduce_mdr, time_introduce_mdr + 3.
+                    )
+                    self.scaleup_fns["program_rate_default_infect_amplify"] = make_sigmoidal_curve(
                         0.,
-                        self.params["program_rate_default_infect_amplify"] / 2.,
                         self.params["program_rate_default_infect_amplify"],
-                        1960., 1963., 1966.
+                        time_introduce_mdr, time_introduce_mdr + 3.
                     )
                     self.set_param("program_rate_default_noninfect_noamplify",
                                    self.params["program_rate_default_noninfect"]
@@ -1183,6 +1189,17 @@ class FlexibleModel(BaseTbModel):
                     self.set_param("program_rate_default_noninfect_amplify",
                                    self.params["program_rate_default_noninfect"]
                                    * self.params["proportion_amplification"])
+                    self.scaleup_fns["program_rate_default_noninfect_noamplify"] = make_sigmoidal_curve(
+                        self.params["program_rate_default_noninfect_noamplify"],
+                        self.params["program_rate_default_noninfect_noamplify"]
+                        - self.params["program_rate_default_noninfect_amplify"],
+                        time_introduce_mdr, time_introduce_mdr + 3.
+                    )
+                    self.scaleup_fns["program_rate_default_noninfect_amplify"] = make_sigmoidal_curve(
+                        0.,
+                        self.params["program_rate_default_noninfect_amplify"],
+                        time_introduce_mdr, time_introduce_mdr + 3.
+                    )
 
                     if i == len(self.strains) - 1:  # If it's the most resistant strain
                         self.set_fixed_transfer_rate_flow(

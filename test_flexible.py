@@ -61,7 +61,11 @@ for running_model in range(len(models_to_run)):
                                       "program_rate_default_infect_amplify",
                                       "program_rate_default_noninfect_noamplify",
                                       "program_rate_default_noninfect_amplify"],
-                                     base + '.scaleup_fns.png')
+                                     base + '.scaleup_amplification.png')
+    autumn.plotting.plot_scaleup_fns(model,
+                                     ["program_rate_detect",
+                                      "program_rate_missed"],
+                                     base + '.scaleup_detection.png')
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)

@@ -347,7 +347,7 @@ def plot_flows(model, labels, png=None):
 
 def plot_scaleup_fns(model, functions, png=None):
     if "program_rate_default_infect_noamplify" in functions:
-        start_time = model.params["timepoint_introduce_mdr"] - 10.
+        start_time = model.params["timepoint_introduce_mdr"] - 5.
         end_time = model.params["timepoint_introduce_mdr"] + 10.
     else:
         start_time = 1950.
@@ -357,7 +357,8 @@ def plot_scaleup_fns(model, functions, png=None):
     for function in functions:
         ax.plot(x_vals,
                 map(model.scaleup_fns[function],
-                    x_vals))
+                    x_vals),
+                label=function)
     set_axes_props(ax, 'Year', 'Flow rate (per year)',
                    'Scaling parameter values', True, functions)
     save_png(png)

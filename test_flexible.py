@@ -2,9 +2,12 @@
 
 import os
 import glob
+import datetime
 
 import autumn.model
 import autumn.plotting
+
+start_realtime = datetime.datetime.now()
 
 out_dir = 'flexible_graphs'
 if not os.path.isdir(out_dir):
@@ -53,5 +56,14 @@ for running_model in range(len(models_to_run)):
     autumn.plotting.plot_outputs(
         model, ["incidence", "mortality", "prevalence"], start_time, base + '.rate_outputs.png')
 
+    autumn.plotting.plot_scaleup_fns(model,
+                                     ["program_rate_default_infect_noamplify",
+                                      "program_rate_default_infect_amplify",
+                                      "program_rate_default_noninfect_noamplify",
+                                      "program_rate_default_noninfect_amplify"],
+                                     base + '.scaleup_fns.png')
+
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)
+
+print("Time elapsed in running script is " + str(datetime.datetime.now() - start_realtime))

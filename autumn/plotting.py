@@ -345,6 +345,24 @@ def plot_flows(model, labels, png=None):
     save_png(png)
 
 
+def plot_scaleup_fns(model, functions, png=None):
+    if "program_rate_default_infect_noamplify" in functions:
+        start_time = model.params["timepoint_introduce_mdr"] - 10.
+        end_time = model.params["timepoint_introduce_mdr"] + 10.
+    else:
+        start_time = 1950.
+        end_time = 2015.
+    x_vals = numpy.linspace(start_time, end_time, 1E2)
+    ax = make_axes_with_room_for_legend()
+    for function in functions:
+        ax.plot(x_vals,
+                map(model.scaleup_fns[function],
+                    x_vals))
+    set_axes_props(ax, 'Year', 'Flow rate (per year)',
+                   'Scaling parameter values', True, functions)
+    save_png(png)
+
+
 def save_png(png):
     if png is not None:
         pylab.savefig(png, dpi=300)

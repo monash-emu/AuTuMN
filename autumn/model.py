@@ -874,7 +874,9 @@ class FlexibleModel(BaseTbModel):
                 "program_rate_restart_presenting":
                     4.,
                 "proportion_amplification":
-                    1. / 15.
+                    1. / 15.,
+                "timepoint_introduce_mdr":
+                    1960.,
             }
         input_parameters["program_proportion_default"] =\
             (1. - input_parameters["program_proportion_success"]) * 0.75
@@ -1165,7 +1167,6 @@ class FlexibleModel(BaseTbModel):
                         "program_rate_death_noninfect")
 
                     # Split default rates into amplification and non-amplification proportions
-                    time_introduce_mdr = 1960.
                     self.set_param("program_rate_default_infect_noamplify",
                                    self.params["program_rate_default_infect"]
                                    * (1 - self.params["proportion_amplification"]))
@@ -1176,12 +1177,12 @@ class FlexibleModel(BaseTbModel):
                         self.params["program_rate_default_infect_noamplify"],
                         self.params["program_rate_default_infect_noamplify"]
                         - self.params["program_rate_default_infect_amplify"],
-                        time_introduce_mdr, time_introduce_mdr + 3.
+                        self.params["timepoint_introduce_mdr"], self.params["timepoint_introduce_mdr"] + 3.
                     )
                     self.scaleup_fns["program_rate_default_infect_amplify"] = make_sigmoidal_curve(
                         0.,
                         self.params["program_rate_default_infect_amplify"],
-                        time_introduce_mdr, time_introduce_mdr + 3.
+                        self.params["timepoint_introduce_mdr"], self.params["timepoint_introduce_mdr"] + 3.
                     )
                     self.set_param("program_rate_default_noninfect_noamplify",
                                    self.params["program_rate_default_noninfect"]
@@ -1193,12 +1194,12 @@ class FlexibleModel(BaseTbModel):
                         self.params["program_rate_default_noninfect_noamplify"],
                         self.params["program_rate_default_noninfect_noamplify"]
                         - self.params["program_rate_default_noninfect_amplify"],
-                        time_introduce_mdr, time_introduce_mdr + 3.
+                        self.params["timepoint_introduce_mdr"], self.params["timepoint_introduce_mdr"] + 3.
                     )
                     self.scaleup_fns["program_rate_default_noninfect_amplify"] = make_sigmoidal_curve(
                         0.,
                         self.params["program_rate_default_noninfect_amplify"],
-                        time_introduce_mdr, time_introduce_mdr + 3.
+                        self.params["timepoint_introduce_mdr"], self.params["timepoint_introduce_mdr"] + 3.
                     )
 
                     if i == len(self.strains) - 1:  # If it's the most resistant strain

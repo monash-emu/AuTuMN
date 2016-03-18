@@ -1090,11 +1090,15 @@ class FlexibleModel(BaseTbModel):
         finish_scaleup_date = 2010
         self.scaleup_fns["program_rate_detect"]\
             = make_two_step_curve(
-            pretreatment_available_proportion, dots_start_proportion * final_detect_rate, final_detect_rate,
+            pretreatment_available_proportion * final_detect_rate,
+            dots_start_proportion * final_detect_rate,
+            final_detect_rate,
             treatment_available_date, dots_start_date, finish_scaleup_date)
         self.scaleup_fns["program_rate_missed"]\
             = make_two_step_curve(
-            pretreatment_available_proportion, dots_start_proportion * final_missed_rate, final_missed_rate,
+            pretreatment_available_proportion * final_missed_rate,
+            dots_start_proportion * final_missed_rate,
+            final_missed_rate,
             treatment_available_date, dots_start_date, finish_scaleup_date)
 
         for comorbidity in self.comorbidities:

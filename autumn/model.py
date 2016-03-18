@@ -1084,17 +1084,17 @@ class FlexibleModel(BaseTbModel):
         final_detect_rate = self.params["program_rate_detect"]
         final_missed_rate = self.params["program_rate_missed"]
         treatment_available_date = 1950
-        pretreatment_available_propoortion = 0.2
+        pretreatment_available_proportion = 0.2
         dots_start_date = 1995
         dots_start_proportion = 0.5
         finish_scaleup_date = 2010
         self.scaleup_fns["program_rate_detect"]\
             = make_two_step_curve(
-            pretreatment_available_propoortion, dots_start_proportion * final_detect_rate, final_detect_rate,
+            pretreatment_available_proportion, dots_start_proportion * final_detect_rate, final_detect_rate,
             treatment_available_date, dots_start_date, finish_scaleup_date)
         self.scaleup_fns["program_rate_missed"]\
             = make_two_step_curve(
-            pretreatment_available_propoortion, dots_start_proportion * final_missed_rate, final_missed_rate,
+            pretreatment_available_proportion, dots_start_proportion * final_missed_rate, final_missed_rate,
             treatment_available_date, dots_start_date, finish_scaleup_date)
 
         for comorbidity in self.comorbidities:

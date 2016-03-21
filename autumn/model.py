@@ -1268,6 +1268,14 @@ class FlexibleModel(BaseTbModel):
             self.compartment_type_soln,
             self.get_var_soln("population"))
 
+        self.broad_compartment_type_bystrain_soln, _, self.broad_compartment_types_bystrain\
+            = self.sum_over_compartments_bystrain(self.broad_compartment_types)
+        self.broad_compartment_type_bystrain_fraction_soln\
+            = self.get_fraction_soln(
+            self.broad_compartment_types_bystrain,
+            self.broad_compartment_type_bystrain_soln,
+            self.get_var_soln("population"))
+
         self.compartment_type_bystrain_soln, _, self.compartment_types_bystrain\
             = self.sum_over_compartments_bystrain(self.compartment_types)
         self.compartment_type_bystrain_fraction_soln\

@@ -64,8 +64,6 @@ class BaseModel():
         self.var_flows = []
 
         self.scaleup_fns = {}
-        self.scaleup_transfer_rate_flows = []
-        self.scaleup_transfer_rate_flows = []
 
     def make_times(self, start, end, delta):
         "Return steps with n or delta"
@@ -120,10 +118,8 @@ class BaseModel():
             self.var_transfer_rate_flows,
             (from_label, to_label, vars_label))
 
-    def set_scaleup_transfer_rate_flow(self, from_label, to_label, scaleup_label):
-        add_unique_tuple_to_list(
-            self.scaleup_transfer_rate_flows,
-            (from_label, to_label, scaleup_label))
+    def set_scaleup_var(self, label, fn):
+        self.scaleup_fns[label] = fn
 
     def set_var_entry_rate_flow(self, label, vars_label):
         add_unique_tuple_to_list(
@@ -148,6 +144,10 @@ class BaseModel():
         for label, vars_label in self.var_flows:
             self.flows[label] += self.vars[vars_label]
 
+        # scaleup flows
+        for label, fn in self.scaleup_fns.iteritems():
+            self.vars[label] = fn(self.time)
+
         # dynamic transmission flows
         for from_label, to_label, vars_label in self.var_transfer_rate_flows:
             val = self.compartments[from_label] * self.vars[vars_label]
@@ -157,13 +157,6 @@ class BaseModel():
         # fixed-rate flows
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
             val = self.compartments[from_label] * rate
-            self.flows[from_label] -= val
-            self.flows[to_label] += val
-
-        # scaleup flows
-        for from_label, to_label, scaleup_label in self.scaleup_transfer_rate_flows:
-            fn = self.scaleup_fns[scaleup_label]
-            val = self.compartments[from_label] * fn(self.time)
             self.flows[from_label] -= val
             self.flows[to_label] += val
 
@@ -398,8 +391,6 @@ class BaseModel():
         for label in self.labels:
             self.graph.node(label)
         self.graph.node("tb_death")
-        for from_label, to_label, scaleup_label in self.scaleup_transfer_rate_flows:
-            self.graph.edge(from_label, to_label, label=scaleup_label)
         for from_label, to_label, var_label in self.var_transfer_rate_flows:
             self.graph.edge(from_label, to_label, label=var_label)
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
@@ -495,9 +486,10 @@ class SimplifiedModel(BaseModel):
             "active", "latent_late", "tb_rate_recover")
 
         y = self.params["program_rate_detect"]
-        self.scaleup_fns["program_rate_detect"] = make_two_step_curve(
-            0, 0.5*y, y, 1950, 1995, 2015)
-        self.set_scaleup_transfer_rate_flow(
+        self.set_scaleup_var(
+            "program_rate_detect",
+            make_two_step_curve(0, 0.5*y, y, 1950, 1995, 2015))
+        self.set_var_transfer_rate_flow(
             "active", "treatment_infect", "program_rate_detect")
 
         self.set_fixed_transfer_rate_flow(
@@ -1089,27 +1081,29 @@ class FlexibleModel(BaseTbModel):
         dots_start_date = 1995
         dots_start_proportion = 0.5
         finish_scaleup_date = 2010
-        self.scaleup_fns["program_rate_detect"]\
-            = make_two_step_curve(
-            pretreatment_available_proportion * final_detect_rate,
-            dots_start_proportion * final_detect_rate,
-            final_detect_rate,
-            treatment_available_date, dots_start_date, finish_scaleup_date)
-        self.scaleup_fns["program_rate_missed"]\
-            = make_two_step_curve(
-            pretreatment_available_proportion * final_missed_rate,
-            dots_start_proportion * final_missed_rate,
-            final_missed_rate,
-            treatment_available_date, dots_start_date, finish_scaleup_date)
+        self.set_scaleup_var(
+            "program_rate_detect",
+            make_two_step_curve(
+                pretreatment_available_proportion * final_detect_rate,
+                dots_start_proportion * final_detect_rate,
+                final_detect_rate,
+                treatment_available_date, dots_start_date, finish_scaleup_date))
+        self.set_scaleup_var(
+            "program_rate_missed",
+            make_two_step_curve(
+                pretreatment_available_proportion * final_missed_rate,
+                dots_start_proportion * final_missed_rate,
+                final_missed_rate,
+                treatment_available_date, dots_start_date, finish_scaleup_date))
 
         for comorbidity in self.comorbidities:
             for strain in self.strains:
                 for organ in self.organ_status:
-                    self.set_scaleup_transfer_rate_flow(
+                    self.set_var_transfer_rate_flow(
                         "active" + organ + strain + comorbidity,
                         "detect" + organ + strain + comorbidity,
                         "program_rate_detect")
-                    self.set_scaleup_transfer_rate_flow(
+                    self.set_var_transfer_rate_flow(
                         "active" + organ + strain + comorbidity,
                         "missed" + organ + strain + comorbidity,
                         "program_rate_missed")
@@ -1178,16 +1172,22 @@ class FlexibleModel(BaseTbModel):
                     self.set_param("program_rate_default_infect_amplify",
                                    self.params["program_rate_default_infect"]
                                    * self.params["proportion_amplification"])
-                    self.scaleup_fns["program_rate_default_infect_noamplify"] = make_sigmoidal_curve(
-                        self.params["program_rate_default_infect_noamplify"],
-                        self.params["program_rate_default_infect_noamplify"]
-                        - self.params["program_rate_default_infect_amplify"],
-                        self.params["timepoint_introduce_mdr"], self.params["timepoint_introduce_mdr"] + 3.
+                    self.set_scaleup_var(
+                        "program_rate_default_infect_noamplify",
+                        make_sigmoidal_curve(
+                            self.params["program_rate_default_infect_noamplify"],
+                            self.params["program_rate_default_infect_noamplify"]
+                            - self.params["program_rate_default_infect_amplify"],
+                            self.params["timepoint_introduce_mdr"], self.params["timepoint_introduce_mdr"] + 3.
+                        )
                     )
-                    self.scaleup_fns["program_rate_default_infect_amplify"] = make_sigmoidal_curve(
-                        0.,
-                        self.params["program_rate_default_infect_amplify"],
-                        self.params["timepoint_introduce_mdr"], self.params["timepoint_introduce_mdr"] + 3.
+                    self.set_scaleup_var(
+                        "program_rate_default_infect_amplify",
+                        make_sigmoidal_curve(
+                            0.,
+                            self.params["program_rate_default_infect_amplify"],
+                            self.params["timepoint_introduce_mdr"], self.params["timepoint_introduce_mdr"] + 3.
+                        )
                     )
                     self.set_param("program_rate_default_noninfect_noamplify",
                                    self.params["program_rate_default_noninfect"]
@@ -1195,16 +1195,22 @@ class FlexibleModel(BaseTbModel):
                     self.set_param("program_rate_default_noninfect_amplify",
                                    self.params["program_rate_default_noninfect"]
                                    * self.params["proportion_amplification"])
-                    self.scaleup_fns["program_rate_default_noninfect_noamplify"] = make_sigmoidal_curve(
-                        self.params["program_rate_default_noninfect_noamplify"],
-                        self.params["program_rate_default_noninfect_noamplify"]
-                        - self.params["program_rate_default_noninfect_amplify"],
-                        self.params["timepoint_introduce_mdr"], self.params["timepoint_introduce_mdr"] + 3.
+                    self.set_scaleup_var(
+                        "program_rate_default_noninfect_noamplify",
+                        make_sigmoidal_curve(
+                            self.params["program_rate_default_noninfect_noamplify"],
+                            self.params["program_rate_default_noninfect_noamplify"]
+                            - self.params["program_rate_default_noninfect_amplify"],
+                            self.params["timepoint_introduce_mdr"], self.params["timepoint_introduce_mdr"] + 3.
+                        )
                     )
-                    self.scaleup_fns["program_rate_default_noninfect_amplify"] = make_sigmoidal_curve(
-                        0.,
-                        self.params["program_rate_default_noninfect_amplify"],
-                        self.params["timepoint_introduce_mdr"], self.params["timepoint_introduce_mdr"] + 3.
+                    self.set_scaleup_var(
+                        "program_rate_default_noninfect_amplify",
+                        make_sigmoidal_curve(
+                            0.,
+                            self.params["program_rate_default_noninfect_amplify"],
+                            self.params["timepoint_introduce_mdr"], self.params["timepoint_introduce_mdr"] + 3.
+                        )
                     )
 
                     if i == len(self.strains) - 1:  # If it's the most resistant strain
@@ -1226,11 +1232,11 @@ class FlexibleModel(BaseTbModel):
                             "treatment_noninfect" + organ + strain + comorbidity,
                             "active" + organ + strain + comorbidity,
                             "program_rate_default_noninfect_noamplify")
-                        self.set_scaleup_transfer_rate_flow(
+                        self.set_var_transfer_rate_flow(
                             "treatment_infect" + organ + strain + comorbidity,
                             "active" + organ + amplify_to_strain + comorbidity,
                             "program_rate_default_infect_amplify")
-                        self.set_fixed_transfer_rate_flow(
+                        self.set_var_transfer_rate_flow(
                             "treatment_noninfect" + organ + strain + comorbidity,
                             "active" + organ + amplify_to_strain + comorbidity,
                             "program_rate_default_noninfect_amplify")

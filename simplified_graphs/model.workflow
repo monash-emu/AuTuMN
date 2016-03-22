@@ -9,8 +9,8 @@ digraph {
 		treatment_infect
 		treatment_noninfect
 		tb_death
-			active -> treatment_infect [label=program_rate_detect]
 			susceptible -> latent_early [label=rate_force]
+			active -> treatment_infect [label=program_rate_detect]
 			latent_early -> active [label=0.20]
 			latent_early -> latent_late [label=1.8]
 			latent_late -> active [label=0.0010]

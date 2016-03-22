@@ -1259,37 +1259,39 @@ class FlexibleModel(BaseTbModel):
 
         self.broad_compartment_types\
             = ["susceptible", "latent", "active", "missed", "treatment"]
-        self.broad_compartment_soln, _\
+        self.broad_compartment_soln, broad_compartment_denominator\
             = self.sum_over_compartments(self.broad_compartment_types)
         self.broad_fraction_soln\
             = self.get_fraction_soln(
             self.broad_compartment_types,
             self.broad_compartment_soln,
-            self.get_var_soln("population"))
+            broad_compartment_denominator)
 
-        self.compartment_type_soln, _\
+        self.compartment_type_soln, compartment_type_denominator\
             = self.sum_over_compartments(self.compartment_types)
         self.compartment_type_fraction_soln\
             = self.get_fraction_soln(
             self.compartment_types,
             self.compartment_type_soln,
-            self.get_var_soln("population"))
+            compartment_type_denominator)
 
-        self.broad_compartment_type_bystrain_soln, _, self.broad_compartment_types_bystrain\
+        self.broad_compartment_type_bystrain_soln, broad_compartment_type_bystrain_denominator,\
+        self.broad_compartment_types_bystrain\
             = self.sum_over_compartments_bystrain(self.broad_compartment_types)
         self.broad_compartment_type_bystrain_fraction_soln\
             = self.get_fraction_soln(
             self.broad_compartment_types_bystrain,
             self.broad_compartment_type_bystrain_soln,
-            self.get_var_soln("population"))
+            broad_compartment_type_bystrain_denominator)
 
-        self.compartment_type_bystrain_soln, _, self.compartment_types_bystrain\
+        self.compartment_type_bystrain_soln, compartment_type_bystrain_denominator,\
+        self.compartment_types_bystrain\
             = self.sum_over_compartments_bystrain(self.compartment_types)
         self.compartment_type_bystrain_fraction_soln\
             = self.get_fraction_soln(
             self.compartment_types_bystrain,
             self.compartment_type_bystrain_soln,
-            self.get_var_soln("population"))
+            compartment_type_bystrain_denominator)
 
         self.groups = {
             "ever_infected": ["susceptible_treated", "latent", "active", "missed", "detect", "treatment"],

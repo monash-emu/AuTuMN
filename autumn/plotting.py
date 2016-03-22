@@ -95,7 +95,6 @@ def humanise_y_ticks(ax):
 def truncate_data(model, left_xlimit):
     # Not going to argue that the following code is the most elegant approach
     right_xlimit_index = len(model.times) - 1
-    left_xlimit = model.times[0]
     left_xlimit_index = 0
     for i in range(len(model.times)):
         if model.times[i] > left_xlimit:

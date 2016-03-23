@@ -1363,12 +1363,13 @@ class FlexibleModel(BaseTbModel):
             rate_death_ontreatment[strain] \
             / self.vars["population"] * 1E5
 
-        self.vars["prevalence"] = 0.0
-        for label in self.labels:
-            if "susceptible" not in label and "latent" not in label:
-                self.vars["prevalence"] += (
-                    self.compartments[label]
-                     / self.vars["population"] * 1E5)
+        for strain in self.strains:
+            self.vars["prevalence" + strain] = 0.
+            for label in self.labels:
+                if "susceptible" not in label and "latent" not in label and strain in label:
+                    self.vars["prevalence" + strain] += (
+                        self.compartments[label]
+                         / self.vars["population"] * 1E5)
 
 
 

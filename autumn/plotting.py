@@ -299,9 +299,11 @@ def plot_fractions(model, labels, values, left_xlimit, strain_or_organ, png=None
 def plot_outputs(model, labels, left_xlimit, png=None):
     right_xlimit_index, left_xlimit_index = truncate_data(model, left_xlimit)
     colours = {}
+    patterns = {}
     full_names = {}
     axis_labels = []
     for label in labels:
+        patterns[label] = get_line_pattern(label, "strain")
         if "incidence" in label:
             colours[label] = (0, 0, 0)
             full_names[label] = "Incidence"
@@ -316,6 +318,10 @@ def plot_outputs(model, labels, left_xlimit, png=None):
             colours[label] = (0, 0.5, 0)
             full_names[label] = "Prevalence"
             yaxis_label = "Per 100,000"
+        if "_ds" in label:
+            full_names[label] += ", DS-TB"
+        elif "_mdr" in label:
+            full_names[label] += ", MDR-TB"
     ax = make_axes_with_room_for_legend()
 
     for i_plot, var_label in enumerate(labels):
@@ -323,7 +329,8 @@ def plot_outputs(model, labels, left_xlimit, png=None):
             model.times[left_xlimit_index: right_xlimit_index],
             model.get_var_soln(var_label)[left_xlimit_index: right_xlimit_index],
             color=colours[var_label],
-            label=var_label, linewidth=1)
+            label=var_label, linewidth=1, linestyle=patterns[var_label]
+        )
         axis_labels.append(full_names[var_label])
     set_axes_props(ax, 'Year', yaxis_label, "Main epidemiological outputs", True,
         axis_labels)

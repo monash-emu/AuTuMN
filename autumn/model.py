@@ -1340,28 +1340,27 @@ class FlexibleModel(BaseTbModel):
 
     def calculate_outputs(self):
 
+        # Now by strain
+        
         rate_incidence = {}
-        rate_death_ontreatment = {}
+        rate_mortality = {}
         for strain in self.strains:
             rate_incidence[strain] = 0.
-            rate_death_ontreatment[strain] = 0.
+            rate_mortality[strain] = 0.
             for from_label, to_label, rate in self.fixed_transfer_rate_flows:
                 val = self.compartments[from_label] * rate
                 if 'latent' in from_label and 'active' in to_label and strain in to_label:
                     rate_incidence[strain] += val
-                elif 'treatment' in from_label and 'death' in to_label and strain in from_label:
-                    rate_death_ontreatment[strain] += val
-            self.vars["incidence" + strain] = \
-                  rate_incidence[strain] \
+            for from_label, rate in self.infection_death_rate_flows:
+                val = self.compartments[from_label] * rate
+                if strain in from_label:
+                    rate_mortality[strain] += val
+            self.vars["incidence" + strain] \
+                = rate_incidence[strain] \
                 / self.vars["population"] * 1E5
-
-        self.vars["mortality"] = \
-            (self.vars["rate_infection_death"]
-            / self.vars["population"] * 1E5)
-        for strain in self.strains:  # Had been fogetting to add treatment deaths on
-            self.vars["mortality"] += \
-            rate_death_ontreatment[strain] \
-            / self.vars["population"] * 1E5
+            self.vars["mortality" + strain] \
+                = rate_mortality[strain] \
+                / self.vars["population"] * 1E5
 
         for strain in self.strains:
             self.vars["prevalence" + strain] = 0.
@@ -1370,6 +1369,4 @@ class FlexibleModel(BaseTbModel):
                     self.vars["prevalence" + strain] += (
                         self.compartments[label]
                          / self.vars["population"] * 1E5)
-
-
 

@@ -718,7 +718,11 @@ class BaseTbModel(BaseModel):
             = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
         compartment_types_bycategory = []
         # HELP BOSCO
-        # I think there is probably a more elegant way to do the following, but perhaps not:
+        # I think there is probably a more elegant way to do the following, but perhaps not.
+        # Also, it could possibly be better generalised. That is, rather than insisting that
+        # strain applies to all compartments except for the susceptible, it might be possible
+        # to say that strain applies to all compartments except for those that have any
+        # strain in their label.
         if categories == "strain":
             working_categories = self.strains
         elif categories == "organ":
@@ -1348,28 +1352,23 @@ class FlexibleModel(BaseTbModel):
 
     def calculate_outputs(self):
 
-        # HELP BOSCO
-        # Hi mate, want to do the same thing here for notifications as we're currently doing
-        # for incidence, which is transitions from active to detected. The code that is
-        # commented out should explain, but it doesn't work.
-
         # Now by strain:
         rate_incidence = {}
         rate_mortality = {}
-        # rate_notifications = {}
+        rate_notifications = {}
 
         for strain in self.strains:
             rate_incidence[strain] = 0.
             rate_mortality[strain] = 0.
-            # rate_notifications[strain] = 0.
+            rate_notifications[strain] = 0.
             for from_label, to_label, rate in self.fixed_transfer_rate_flows:
                 if 'latent' in from_label and 'active' in to_label and strain in to_label:
                     rate_incidence[strain] \
                         += self.compartments[from_label] * rate
-            # for from_label, to_label, rate in self.var_transfer_rate_flows:
-                # if 'active' in from_label and 'detect' in to_label and strain in from_label:
-                    # rate_notifications[strain] \
-                        # += self.compartments[from_label] * rate
+            for from_label, to_label, rate in self.var_transfer_rate_flows:
+                if 'active' in from_label and 'detect' in to_label and strain in from_label:
+                    rate_notifications[strain] \
+                        += self.compartments[from_label] * self.vars[rate]
             for from_label, rate in self.infection_death_rate_flows:
                 if strain in from_label:
                     rate_mortality[strain] \
@@ -1380,9 +1379,9 @@ class FlexibleModel(BaseTbModel):
             self.vars["mortality" + strain] \
                 = rate_mortality[strain] \
                 / self.vars["population"] * 1E5
-            # self.vars["notifications" + strain] \
-                # = rate_notifications[strain] \
-                # / self.vars["population"] * 1E5
+            self.vars["notifications" + strain] \
+                = rate_notifications[strain] \
+                / self.vars["population"] * 1E5
 
         for strain in self.strains:
             self.vars["prevalence" + strain] = 0.

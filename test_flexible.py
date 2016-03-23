@@ -71,10 +71,12 @@ for running_model in range(len(models_to_run)):
         "", base + '.identified.png')
     # OUTPUT RATES
     autumn.plotting.plot_outputs(
-        model, ["incidence_ds", "incidence_mdr", "mortality_ds", "mortality_mdr", "prevalence_ds", "prevalence_mdr"],
+        model, ["incidence_ds", "incidence_mdr", "mortality_ds", "mortality_mdr", "prevalence_ds", "prevalence_mdr",
+                "notifications_ds", "notifications_mdr"],
         start_time, base + '.rate_outputs.png')
     autumn.plotting.plot_outputs(
-        model, ["incidence_ds", "incidence_mdr", "mortality_ds", "mortality_mdr", "prevalence_ds", "prevalence_mdr"],
+        model, ["incidence_ds", "incidence_mdr", "mortality_ds", "mortality_mdr", "prevalence_ds", "prevalence_mdr",
+                "notifications_ds", "notifications_mdr"],
         recent_time, base + '.rate_outputs_recent.png')
     autumn.plotting.plot_scaleup_fns(model,
                                      ["program_rate_default_infect_noamplify",

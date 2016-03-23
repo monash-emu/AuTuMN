@@ -79,10 +79,10 @@ for running_model in range(len(models_to_run)):
                 "notifications_ds", "notifications_mdr"],
         recent_time, base + '.rate_outputs_recent.png')
     autumn.plotting.plot_scaleup_fns(model,
-                                     ["program_rate_default_infect_noamplify",
-                                      "program_rate_default_infect_amplify",
-                                      "program_rate_default_noninfect_noamplify",
-                                      "program_rate_default_noninfect_amplify"],
+                                     ["program_rate_default_infect_noamplify_ds",
+                                      "program_rate_default_infect_amplify_ds",
+                                      "program_rate_default_noninfect_noamplify_ds",
+                                      "program_rate_default_noninfect_amplify_ds"],
                                      base + '.scaleup_amplification.png')
     autumn.plotting.plot_scaleup_fns(model,
                                      ["program_rate_detect",

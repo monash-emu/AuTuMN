@@ -560,8 +560,10 @@ class BaseTbModel(BaseModel):
 
     def find_flow_proportions_by_period(
             self, proportion, early_period, total_period):
-        early_proportion = 1. - exp( log(1. - proportion) * early_period / total_period)
-        late_proportion = proportion - early_proportion
+        early_proportion\
+            = 1. - exp( log(1. - proportion) * early_period / total_period)
+        late_proportion\
+            = proportion - early_proportion
         return early_proportion, late_proportion
 
     def find_treatment_rates(self):
@@ -885,12 +887,18 @@ class FlexibleModel(BaseTbModel):
                     0.9,
                 "program_rate_start_treatment":
                     1. / get("philippines", "program_timeperiod_delayto_treatment"),
-                "tb_timeperiod_treatment":
-                    get("default", "timeperiod_treatment_ds"),
-                "tb_timeperiod_infect_ontreatment":
+                "tb_timeperiod_treatment_ds":
+                    0.5,
+                "tb_timeperiod_treatment_mdr":
+                    2,
+                "tb_timeperiod_infect_ontreatment_ds":
                     get("default", "timeperiod_infect_ontreatment"),
-                "program_proportion_success":
+                "tb_timeperiod_infect_ontreatment_mdr":
+                    1. / 12.,
+                "program_proportion_success_ds":
                     0.9,
+                "program_proportion_success_mdr":
+                    0.6,
                 "program_rate_restart_presenting":
                     4.,
                 "proportion_amplification":
@@ -898,10 +906,14 @@ class FlexibleModel(BaseTbModel):
                 "timepoint_introduce_mdr":
                     1960.,
             }
-        input_parameters["program_proportion_default"] =\
-            (1. - input_parameters["program_proportion_success"]) * 0.75
-        input_parameters["program_proportion_death"] =\
-            (1. - input_parameters["program_proportion_success"]) * 0.25
+
+        # Temporary code
+        # to define default and death proportions
+        for strain in self.strains:
+            input_parameters["program_proportion_default" + strain] =\
+                (1. - input_parameters["program_proportion_success" + strain]) * 0.75
+            input_parameters["program_proportion_death" + strain] =\
+                (1. - input_parameters["program_proportion_success" + strain]) * 0.25
 
         # Make sure all progressions go somewhere, regardless of number of organ statuses
         if len(self.organ_status) == 1:
@@ -965,8 +977,8 @@ class FlexibleModel(BaseTbModel):
         #   algorithm sensitivity = detection rate / (detection rate + missed rate)
         #   - and -
         #   detection proportion = detection rate / (detection rate + missed rate + spont recover rate + death rate)
-        # Temporarily set programmatic rates equal for all strains
 
+        # Temporarily set programmatic rates equal for all strains
         for strain in self.strains:
             self.set_param(
                 "program_rate_detect" + strain,
@@ -1144,6 +1156,52 @@ class FlexibleModel(BaseTbModel):
                         "active" + organ + strain + comorbidity,
                         "program_rate_restart_presenting")
 
+    def find_treatment_rates(self):
+        outcomes = ["_success", "_death", "_default"]
+        non_success_outcomes = outcomes[1: 3]
+        treatment_stages = ["_infect", "_noninfect"]
+
+        for strain in self.strains:
+            # Find the non-infectious period
+            self.set_param(
+                "tb_timeperiod_noninfect_ontreatment" + strain,
+                self.params["tb_timeperiod_treatment" + strain]
+                  - self.params["tb_timeperiod_infect_ontreatment" + strain])
+
+            # Find the proportion of deaths/defaults during the infectious and non-infectious stages
+            for outcome in non_success_outcomes:
+                early_proportion, late_proportion = self.find_flow_proportions_by_period(
+                    self.params["program_proportion" + outcome + strain],
+                    self.params["tb_timeperiod_infect_ontreatment" + strain],
+                    self.params["tb_timeperiod_treatment" + strain])
+                self.set_param(
+                    "program_proportion" + outcome + "_infect" + strain,
+                    early_proportion)
+                self.set_param(
+                    "program_proportion" + outcome + "_noninfect" + strain,
+                    late_proportion)
+
+            # Find the success proportions
+            for treatment_stage in treatment_stages:
+                self.set_param(
+                    "program_proportion_success" + treatment_stage + strain,
+                    1. - self.params["program_proportion_default" + treatment_stage + strain]
+                      - self.params["program_proportion_death" + treatment_stage + strain])
+                # Find the corresponding rates from the proportions
+                for outcome in outcomes:
+                    self.set_param(
+                        "program_rate" + outcome + treatment_stage + strain,
+                        1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment" + strain]
+                          * self.params["program_proportion" + outcome + treatment_stage + strain])
+
+        # Temporary code assigning non-DS strains the same outcomes *****
+        # for strain in self.strains:
+        #     for treatment_stage in treatment_stages:
+        #         for outcome in outcomes:
+        #             self.set_param(
+        #                 "program_rate" + outcome + treatment_stage + strain,
+        #                 self.params["program_rate" + outcome + treatment_stage])
+
     def set_treatment_flows_noamplification(self):
 
         for comorbidity in self.comorbidities:
@@ -1178,65 +1236,66 @@ class FlexibleModel(BaseTbModel):
             for organ in self.organ_status:
                 for i in range(len(self.strains)):
                     strain = self.strains[i]
+                    # Set treatment success and death flows (unaffected by amplification)
                     self.set_fixed_transfer_rate_flow(
                         "treatment_infect" + organ + strain + comorbidity,
                         "treatment_noninfect" + organ + strain + comorbidity,
-                        "program_rate_success_infect")
+                        "program_rate_success_infect" + strain)
                     self.set_fixed_transfer_rate_flow(
                         "treatment_noninfect" + organ + strain + comorbidity,
                         "susceptible_treated" + comorbidity,
-                        "program_rate_success_noninfect")
+                        "program_rate_success_noninfect" + strain)
                     self.set_infection_death_rate_flow(
                         "treatment_infect" + organ + strain + comorbidity,
-                        "program_rate_death_infect")
+                        "program_rate_death_infect" + strain)
                     self.set_infection_death_rate_flow(
                         "treatment_noninfect" + organ + strain + comorbidity,
-                        "program_rate_death_noninfect")
+                        "program_rate_death_noninfect" + strain)
 
                     # Split default rates into amplification and non-amplification proportions
-                    self.set_param("program_rate_default_infect_noamplify",
-                                   self.params["program_rate_default_infect"]
+                    self.set_param("program_rate_default_infect_noamplify" + strain,
+                                   self.params["program_rate_default_infect" + strain]
                                    * (1 - self.params["proportion_amplification"]))
-                    self.set_param("program_rate_default_infect_amplify",
-                                   self.params["program_rate_default_infect"]
+                    self.set_param("program_rate_default_infect_amplify" + strain,
+                                   self.params["program_rate_default_infect" + strain]
                                    * self.params["proportion_amplification"])
                     self.set_scaleup_var(
-                        "program_rate_default_infect_noamplify",
+                        "program_rate_default_infect_noamplify" + strain,
                         make_sigmoidal_curve(
-                            self.params["program_rate_default_infect_noamplify"],
-                            self.params["program_rate_default_infect_noamplify"]
-                            - self.params["program_rate_default_infect_amplify"],
+                            self.params["program_rate_default_infect_noamplify" + strain],
+                            self.params["program_rate_default_infect_noamplify" + strain]
+                            - self.params["program_rate_default_infect_amplify" + strain],
                             self.params["timepoint_introduce_mdr"], self.params["timepoint_introduce_mdr"] + 3.
                         )
                     )
                     self.set_scaleup_var(
-                        "program_rate_default_infect_amplify",
+                        "program_rate_default_infect_amplify" + strain,
                         make_sigmoidal_curve(
                             0.,
-                            self.params["program_rate_default_infect_amplify"],
+                            self.params["program_rate_default_infect_amplify" + strain],
                             self.params["timepoint_introduce_mdr"], self.params["timepoint_introduce_mdr"] + 3.
                         )
                     )
-                    self.set_param("program_rate_default_noninfect_noamplify",
-                                   self.params["program_rate_default_noninfect"]
+                    self.set_param("program_rate_default_noninfect_noamplify" + strain,
+                                   self.params["program_rate_default_noninfect" + strain]
                                    * (1 - self.params["proportion_amplification"]))
-                    self.set_param("program_rate_default_noninfect_amplify",
-                                   self.params["program_rate_default_noninfect"]
+                    self.set_param("program_rate_default_noninfect_amplify" + strain,
+                                   self.params["program_rate_default_noninfect" + strain]
                                    * self.params["proportion_amplification"])
                     self.set_scaleup_var(
-                        "program_rate_default_noninfect_noamplify",
+                        "program_rate_default_noninfect_noamplify" + strain,
                         make_sigmoidal_curve(
-                            self.params["program_rate_default_noninfect_noamplify"],
-                            self.params["program_rate_default_noninfect_noamplify"]
-                            - self.params["program_rate_default_noninfect_amplify"],
+                            self.params["program_rate_default_noninfect_noamplify" + strain],
+                            self.params["program_rate_default_noninfect_noamplify" + strain]
+                            - self.params["program_rate_default_noninfect_amplify" + strain],
                             self.params["timepoint_introduce_mdr"], self.params["timepoint_introduce_mdr"] + 3.
                         )
                     )
                     self.set_scaleup_var(
-                        "program_rate_default_noninfect_amplify",
+                        "program_rate_default_noninfect_amplify" + strain,
                         make_sigmoidal_curve(
                             0.,
-                            self.params["program_rate_default_noninfect_amplify"],
+                            self.params["program_rate_default_noninfect_amplify" + strain],
                             self.params["timepoint_introduce_mdr"], self.params["timepoint_introduce_mdr"] + 3.
                         )
                     )
@@ -1245,29 +1304,29 @@ class FlexibleModel(BaseTbModel):
                         self.set_fixed_transfer_rate_flow(
                             "treatment_infect" + organ + strain + comorbidity,
                             "active" + organ + strain + comorbidity,
-                            "program_rate_default_infect")
+                            "program_rate_default_infect" + strain)
                         self.set_fixed_transfer_rate_flow(
                             "treatment_noninfect" + organ + strain + comorbidity,
                             "active" + organ + strain + comorbidity,
-                            "program_rate_default_noninfect")
+                            "program_rate_default_noninfect" + strain)
                     else:  # Otherwise, there is a more resistant strain available
                         amplify_to_strain = self.strains[i + 1]  # Is the more resistant strain
-                        self.set_fixed_transfer_rate_flow(
+                        self.set_var_transfer_rate_flow(
                             "treatment_infect" + organ + strain + comorbidity,
                             "active" + organ + strain + comorbidity,
-                            "program_rate_default_infect_noamplify")
-                        self.set_fixed_transfer_rate_flow(
+                            "program_rate_default_infect_noamplify" + strain)
+                        self.set_var_transfer_rate_flow(
                             "treatment_noninfect" + organ + strain + comorbidity,
                             "active" + organ + strain + comorbidity,
-                            "program_rate_default_noninfect_noamplify")
+                            "program_rate_default_noninfect_noamplify" + strain)
                         self.set_var_transfer_rate_flow(
                             "treatment_infect" + organ + strain + comorbidity,
                             "active" + organ + amplify_to_strain + comorbidity,
-                            "program_rate_default_infect_amplify")
+                            "program_rate_default_infect_amplify" + strain)
                         self.set_var_transfer_rate_flow(
                             "treatment_noninfect" + organ + strain + comorbidity,
                             "active" + organ + amplify_to_strain + comorbidity,
-                            "program_rate_default_noninfect_amplify")
+                            "program_rate_default_noninfect_amplify" + strain)
 
     def set_flows(self):
 

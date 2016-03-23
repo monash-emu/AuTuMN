@@ -229,6 +229,10 @@ class BaseModel():
 
                     ######################################
                     # HACK to avoid errors due to time-step
+                    # COMMENT FOR BOSCO:
+                    # I'm a bit concerned about this on reflection,
+                    # as this could mean that the system is no longer closed.
+                    # We might be better off without this.
                     if y[i] < 0.0:
                         y[i] = 0.0
 
@@ -708,9 +712,13 @@ class BaseTbModel(BaseModel):
 
     def sum_over_compartments_bycategory(self, compartment_types, categories):
         summed_soln = {}
+        # HELP BOSCO
+        # The following line of code works, but I'm sure this isn't the best approach:
         summed_denominator\
             = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
         compartment_types_bycategory = []
+        # HELP BOSCO
+        # I think there is probably a more elegant way to do the following, but perhaps not:
         if categories == "strain":
             working_categories = self.strains
         elif categories == "organ":
@@ -1077,6 +1085,7 @@ class FlexibleModel(BaseTbModel):
                         "missed" + organ + strain + comorbidity,
                         "latent_late" + strain + comorbidity,
                         "tb_rate_recover" + organ)
+
                     self.set_infection_death_rate_flow(
                         "active" + organ + strain + comorbidity,
                         "tb_rate_death" + organ)
@@ -1315,7 +1324,6 @@ class FlexibleModel(BaseTbModel):
             self.compartment_type_bystrain_soln,
             compartment_type_bystrain_denominator)
 
-        # Disable to save a couple of seconds (and not currently being used in test function)
         self.subgroup_diagnostics()
 
     def subgroup_diagnostics(self):
@@ -1340,27 +1348,41 @@ class FlexibleModel(BaseTbModel):
 
     def calculate_outputs(self):
 
-        # Now by strain
-        
+        # HELP BOSCO
+        # Hi mate, want to do the same thing here for notifications as we're currently doing
+        # for incidence, which is transitions from active to detected. The code that is
+        # commented out should explain, but it doesn't work.
+
+        # Now by strain:
         rate_incidence = {}
         rate_mortality = {}
+        # rate_notifications = {}
+
         for strain in self.strains:
             rate_incidence[strain] = 0.
             rate_mortality[strain] = 0.
+            # rate_notifications[strain] = 0.
             for from_label, to_label, rate in self.fixed_transfer_rate_flows:
-                val = self.compartments[from_label] * rate
                 if 'latent' in from_label and 'active' in to_label and strain in to_label:
-                    rate_incidence[strain] += val
+                    rate_incidence[strain] \
+                        += self.compartments[from_label] * rate
+            # for from_label, to_label, rate in self.var_transfer_rate_flows:
+                # if 'active' in from_label and 'detect' in to_label and strain in from_label:
+                    # rate_notifications[strain] \
+                        # += self.compartments[from_label] * rate
             for from_label, rate in self.infection_death_rate_flows:
-                val = self.compartments[from_label] * rate
                 if strain in from_label:
-                    rate_mortality[strain] += val
+                    rate_mortality[strain] \
+                        += self.compartments[from_label] * rate
             self.vars["incidence" + strain] \
                 = rate_incidence[strain] \
                 / self.vars["population"] * 1E5
             self.vars["mortality" + strain] \
                 = rate_mortality[strain] \
                 / self.vars["population"] * 1E5
+            # self.vars["notifications" + strain] \
+                # = rate_notifications[strain] \
+                # / self.vars["population"] * 1E5
 
         for strain in self.strains:
             self.vars["prevalence" + strain] = 0.

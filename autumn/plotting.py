@@ -307,7 +307,6 @@ def plot_outputs(model, labels, left_xlimit, png=None):
         if "incidence" in label:
             colours[label] = (0, 0, 0)
             full_names[label] = "Incidence"
-            yaxis_label = "Per 100,000 per year"
         elif "notification" in label:
             colours[label] = (0, 0, 1)
             full_names[label] = "Notifications"
@@ -317,12 +316,12 @@ def plot_outputs(model, labels, left_xlimit, png=None):
         elif "prevalence" in label:
             colours[label] = (0, 0.5, 0)
             full_names[label] = "Prevalence"
-            yaxis_label = "Per 100,000"
         if "_ds" in label:
             full_names[label] += ", DS-TB"
         elif "_mdr" in label:
             full_names[label] += ", MDR-TB"
     ax = make_axes_with_room_for_legend()
+    yaxis_label = "Per 100,000 (per year as applicable)"
 
     for i_plot, var_label in enumerate(labels):
         ax.plot(

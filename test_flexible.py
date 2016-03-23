@@ -29,33 +29,51 @@ for running_model in range(len(models_to_run)):
     model.make_times(start_time, 2015., 0.05)
     model.integrate_explicit()
     model.make_graph(base + '.workflow')
+    # INDIVIDUAL COMPARTMENTS
     autumn.plotting.plot_fractions(
-        model, model.labels, model.fraction_soln, recent_time, "strain", base + '.fraction.png')
+        model, model.labels, model.compartment_soln, recent_time,
+        "strain", base + '.individ_total_bystrain.png')
     autumn.plotting.plot_fractions(
-        model, model.compartment_types, model.compartment_type_fraction_soln, recent_time, "strain", base + '.type_fraction.png')
+        model, model.labels, model.compartment_soln, recent_time,
+        "organ", base + '.individ_total_byorgan.png')
     autumn.plotting.plot_fractions(
-        model, model.broad_compartment_types, model.broad_fraction_soln, recent_time, "strain", base + '.broad_fraction.png')
+        model, model.labels, model.fraction_soln, recent_time,
+        "strain", base + '.individ_fraction_bystrain.png')
     autumn.plotting.plot_fractions(
-        model, model.compartment_types_bystrain, model.compartment_type_bystrain_fraction_soln, recent_time, "strain", base + '.bystrain_fraction.png')
-    # autumn.plotting.plot_fractions(
-    #     model, model.groups["treatment"], model.treatment_fraction_soln, base + '.treatment.png')
-    # autumn.plotting.plot_fractions(
-    #     model, model.groups["identified"], model.identified_fraction_soln, base + '.identified.png')
-    #
-    # autumn.plotting.plot_populations(
-    #     model, model.labels, model.compartment_soln, recent_time, base + '.population.png')
-    autumn.plotting.plot_populations(
-        model, model.compartment_types, model.compartment_type_soln, recent_time, "strain", base + '.summed_population.png')
-    autumn.plotting.plot_populations(
-        model, model.compartment_types_bystrain, model.compartment_type_bystrain_soln, recent_time, "strain", base + '.summed_population.png')
-    autumn.plotting.plot_populations(
-        model, model.broad_compartment_types, model.broad_compartment_soln, recent_time, "strain", base + '.broad_population.png')
-
+        model, model.labels, model.fraction_soln, recent_time,
+        "organ", base + '.individ_fraction_byorgan.png')
+    # COMPARTMENT TYPES
+    autumn.plotting.plot_fractions(
+        model, model.compartment_types, model.compartment_type_fraction_soln, recent_time,
+        "", base + '.types_fraction.png')
+    autumn.plotting.plot_fractions(
+        model, model.compartment_types, model.compartment_type_soln, recent_time,
+        "", base + '.types_total.png')
+    autumn.plotting.plot_fractions(
+        model, model.compartment_types_bystrain, model.compartment_type_bystrain_fraction_soln, recent_time,
+        "strain", base + '.types_fraction_bystrain.png')
+    # BROAD COMPARTMENT TYPES
+    autumn.plotting.plot_fractions(
+        model, model.broad_compartment_types, model.broad_fraction_soln, recent_time,
+        "", base + '.broad_fraction.png')
+    autumn.plotting.plot_fractions(
+        model, model.broad_compartment_types_bystrain, model.broad_compartment_type_bystrain_fraction_soln, recent_time,
+        "strain", base + '.broadtypes_fraction_bystrain.png')
+    autumn.plotting.plot_fractions(
+        model, model.broad_compartment_types_byorgan, model.broad_compartment_type_byorgan_fraction_soln, recent_time,
+        "organ", base + '.broadtypes_fraction_byorgan.png')
+    # SUBGROUPS
+    autumn.plotting.plot_fractions(
+        model, model.groups["treatment"], model.treatment_fraction_soln, recent_time,
+        "", base + '.treatment_fraction.png')
+    autumn.plotting.plot_fractions(
+        model, model.groups["identified"], model.identified_fraction_soln, recent_time,
+        "", base + '.identified.png')
+    # OUTPUT RATES
     autumn.plotting.plot_outputs(
-        model, ["incidence", "mortality", "prevalence"], recent_time, base + '.recent_rate_outputs.png')
+        model, ["incidence", "mortality", "prevalence"], recent_time, base + '.rate_outputs_recent.png')
     autumn.plotting.plot_outputs(
         model, ["incidence", "mortality", "prevalence"], start_time, base + '.rate_outputs.png')
-
     autumn.plotting.plot_scaleup_fns(model,
                                      ["program_rate_default_infect_noamplify",
                                       "program_rate_default_infect_amplify",

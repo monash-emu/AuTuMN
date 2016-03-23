@@ -1290,12 +1290,21 @@ class FlexibleModel(BaseTbModel):
 
         self.broad_compartment_type_bystrain_soln, broad_compartment_type_bystrain_denominator,\
         self.broad_compartment_types_bystrain\
-            = self.sum_over_compartments_bycategory(self.broad_compartment_types, "organ")
+            = self.sum_over_compartments_bycategory(self.broad_compartment_types, "strain")
         self.broad_compartment_type_bystrain_fraction_soln\
             = self.get_fraction_soln(
             self.broad_compartment_types_bystrain,
             self.broad_compartment_type_bystrain_soln,
             broad_compartment_type_bystrain_denominator)
+
+        self.broad_compartment_type_byorgan_soln, broad_compartment_type_byorgan_denominator,\
+        self.broad_compartment_types_byorgan\
+            = self.sum_over_compartments_bycategory(self.broad_compartment_types, "organ")
+        self.broad_compartment_type_byorgan_fraction_soln\
+            = self.get_fraction_soln(
+            self.broad_compartment_types_byorgan,
+            self.broad_compartment_type_byorgan_soln,
+            broad_compartment_type_byorgan_denominator)
 
         self.compartment_type_bystrain_soln, compartment_type_bystrain_denominator,\
         self.compartment_types_bystrain\
@@ -1307,7 +1316,7 @@ class FlexibleModel(BaseTbModel):
             compartment_type_bystrain_denominator)
 
         # Disable to save a couple of seconds (and not currently being used in test function)
-        # self.subgroup_diagnostics()
+        self.subgroup_diagnostics()
 
 
     def subgroup_diagnostics(self):

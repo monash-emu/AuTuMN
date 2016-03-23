@@ -222,7 +222,10 @@ def make_plot_title(model, labels):
     elif labels is model.compartment_types \
             or labels is model.compartment_types_bystrain:
         title = "by types of compartments"
-    elif labels is model.broad_compartment_types:
+    elif labels is model.broad_compartment_types_byorgan:
+        title = "by organ involvement"
+    elif labels is model.broad_compartment_types \
+            or labels is model.broad_compartment_types_bystrain:
         title = "by broad types of compartments"
     elif labels is model.groups["ever_infected"]:
         title = "within ever infected compartments"

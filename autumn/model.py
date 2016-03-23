@@ -706,13 +706,19 @@ class BaseTbModel(BaseModel):
                     summed_denominator += self.compartment_soln[label]
         return summed_soln, summed_denominator
 
-    def sum_over_compartments_bystrain(self, compartment_types):
+    def sum_over_compartments_bycategory(self, compartment_types, categories):
         summed_soln = {}
         summed_denominator\
             = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
-        compartment_types_bystrain = []
+        compartment_types_bycategory = []
+        if categories == "strain":
+            working_categories = self.strains
+        elif categories == "organ":
+            working_categories = self.organ_status
         for compartment_type in compartment_types:
-            if "susceptible" in compartment_type:
+            if (categories == "strain" and "susceptible" in compartment_type) \
+                    or (categories == "organ" and \
+                            ("susceptible" in compartment_type or "latent" in compartment_type)):
                 summed_soln[compartment_type]\
                     = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
                 for label in self.labels:
@@ -724,23 +730,25 @@ class BaseTbModel(BaseModel):
                                 summed_soln[compartment_type],
                                 self.compartment_soln[label])]
                         summed_denominator += self.compartment_soln[label]
-                        compartment_types_bystrain.append(compartment_type)
+                    if compartment_type in label \
+                            and compartment_type not in compartment_types_bycategory:
+                        compartment_types_bycategory.append(compartment_type)
             else:
-                for strain in self.strains:
-                    compartment_types_bystrain.append(compartment_type + strain)
-                    summed_soln[compartment_type + strain]\
+                for working_category in working_categories:
+                    compartment_types_bycategory.append(compartment_type + working_category)
+                    summed_soln[compartment_type + working_category]\
                         = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
                     for label in self.labels:
-                        if compartment_type in label and strain in label:
-                            summed_soln[compartment_type + strain] = [
+                        if compartment_type in label and working_category in label:
+                            summed_soln[compartment_type + working_category] = [
                                 a + b
                                 for a, b
                                 in zip(
-                                    summed_soln[compartment_type + strain],
+                                    summed_soln[compartment_type + working_category],
                                     self.compartment_soln[label])]
                             summed_denominator += self.compartment_soln[label]
 
-        return summed_soln, summed_denominator, compartment_types_bystrain
+        return summed_soln, summed_denominator, compartment_types_bycategory
 
 
 class FlexibleModel(BaseTbModel):
@@ -770,6 +778,13 @@ class FlexibleModel(BaseTbModel):
             "missed",
             "treatment_infect",
             "treatment_noninfect"]
+
+        self.broad_compartment_types = [
+            "susceptible",
+            "latent",
+            "active",
+            "missed",
+            "treatment"]
 
         if input_compartments is None:
             input_compartments = {
@@ -1257,8 +1272,6 @@ class FlexibleModel(BaseTbModel):
 
     def additional_diagnostics(self):
 
-        self.broad_compartment_types\
-            = ["susceptible", "latent", "active", "missed", "treatment"]
         self.broad_compartment_soln, broad_compartment_denominator\
             = self.sum_over_compartments(self.broad_compartment_types)
         self.broad_fraction_soln\
@@ -1277,7 +1290,7 @@ class FlexibleModel(BaseTbModel):
 
         self.broad_compartment_type_bystrain_soln, broad_compartment_type_bystrain_denominator,\
         self.broad_compartment_types_bystrain\
-            = self.sum_over_compartments_bystrain(self.broad_compartment_types)
+            = self.sum_over_compartments_bycategory(self.broad_compartment_types, "organ")
         self.broad_compartment_type_bystrain_fraction_soln\
             = self.get_fraction_soln(
             self.broad_compartment_types_bystrain,
@@ -1286,12 +1299,18 @@ class FlexibleModel(BaseTbModel):
 
         self.compartment_type_bystrain_soln, compartment_type_bystrain_denominator,\
         self.compartment_types_bystrain\
-            = self.sum_over_compartments_bystrain(self.compartment_types)
+            = self.sum_over_compartments_bycategory(self.compartment_types, "strain")
         self.compartment_type_bystrain_fraction_soln\
             = self.get_fraction_soln(
             self.compartment_types_bystrain,
             self.compartment_type_bystrain_soln,
             compartment_type_bystrain_denominator)
+
+        # Disable to save a couple of seconds (and not currently being used in test function)
+        # self.subgroup_diagnostics()
+
+
+    def subgroup_diagnostics(self):
 
         self.groups = {
             "ever_infected": ["susceptible_treated", "latent", "active", "missed", "detect", "treatment"],
@@ -1310,3 +1329,4 @@ class FlexibleModel(BaseTbModel):
                         self.groups[key],
                         compartment_soln,
                         compartment_denominator))
+

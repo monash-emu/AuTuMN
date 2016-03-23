@@ -24,7 +24,6 @@ This is a set of Python models that modularizes the development of dynamic trans
 # James TODO:
 - detection differences by strain
 - detection through private health system
-- change treatment outcomes for MDR-TB
 
 
 # Current TB dynamic transmission model  

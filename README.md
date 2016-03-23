@@ -19,8 +19,12 @@ This is a set of Python models that modularizes the development of dynamic trans
 - fit to Phillippines output
 - Link to macroeconomic model  
 - make cost-coverage curves from data  
-- feed cost-coverage curves into model  
-  
+- feed cost-coverage curves into model
+
+# James TODO:
+- notifications output
+- outputs by strain (as well as possibly organ involvement)
+
 # Current TB dynamic transmission model  
   
 ## Compartments  

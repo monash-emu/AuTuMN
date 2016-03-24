@@ -970,6 +970,9 @@ class FlexibleModel(BaseTbModel):
             / (1. - input_parameters["program_proportion_detect"]
                * (1. + (1. - input_parameters["program_algorithm_sensitivity"])
                        / input_parameters["program_algorithm_sensitivity"])))
+
+        # Temporary for running misassignment code
+        self.set_param("program_rate_misassign", 0.)
         self.set_param(
             "program_rate_missed",
             self.params["program_rate_detect"]
@@ -1238,7 +1241,7 @@ class FlexibleModel(BaseTbModel):
                             self.set_fixed_transfer_rate_flow(
                                 "active" + organ + strain + comorbidity,
                                 "detect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
-                                0.)
+                                "program_rate_misassign")
                         self.set_var_transfer_rate_flow(
                             "active" + organ + strain + comorbidity,
                             "missed" + organ + strain + comorbidity,

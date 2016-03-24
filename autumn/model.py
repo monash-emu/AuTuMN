@@ -1049,11 +1049,11 @@ class FlexibleModel(BaseTbModel):
                     for strain in self.strains:
                         for organ in self.organ_status:
                             self.set_compartment(compartment + organ + strain + comorbidity, 0.)
-                else:
+                else:  # Mis-assignment by strain
                     for strain in self.strains:
                         for organ in self.organ_status:
-                            for diagnosed_strain in self.strains:
-                                self.set_compartment(compartment + organ + strain + "_as"+diagnosed_strain[1:] + comorbidity, 0.)
+                            for assigned_strain in self.strains:
+                                self.set_compartment(compartment + organ + strain + "_as"+assigned_strain[1:] + comorbidity, 0.)
 
         # Put in values from input_compartments - now initialise to DS-TB only
         for compartment in self.compartment_types:
@@ -1183,6 +1183,7 @@ class FlexibleModel(BaseTbModel):
         for comorbidity in self.comorbidities:
             for strain in self.strains:
                 for organ in self.organ_status:
+
                     self.set_var_transfer_rate_flow(
                         "active" + organ + strain + comorbidity,
                         "detect" + organ + strain + comorbidity,
@@ -1199,6 +1200,57 @@ class FlexibleModel(BaseTbModel):
                         "missed" + organ + strain + comorbidity,
                         "active" + organ + strain + comorbidity,
                         "program_rate_restart_presenting")
+
+    def set_programmatic_flows_misassignment(self):
+
+        final_detect_rate = self.params["program_rate_detect"]
+        final_missed_rate = self.params["program_rate_missed"]
+        treatment_available_date = 1950
+        pretreatment_available_proportion = 0.2
+        dots_start_date = 1995
+        dots_start_proportion = 0.5
+        finish_scaleup_date = 2010
+        self.set_scaleup_var(
+            "program_rate_detect",
+            make_two_step_curve(
+                pretreatment_available_proportion * final_detect_rate,
+                dots_start_proportion * final_detect_rate,
+                final_detect_rate,
+                treatment_available_date, dots_start_date, finish_scaleup_date))
+        self.set_scaleup_var(
+            "program_rate_missed",
+            make_two_step_curve(
+                pretreatment_available_proportion * final_missed_rate,
+                dots_start_proportion * final_missed_rate,
+                final_missed_rate,
+                treatment_available_date, dots_start_date, finish_scaleup_date))
+
+        for comorbidity in self.comorbidities:
+            for strain in self.strains:
+                for organ in self.organ_status:
+                    for assigned_strain in self.strains:
+                        if strain == assigned_strain:
+                            self.set_var_transfer_rate_flow(
+                                "active" + organ + strain + comorbidity,
+                                "detect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
+                                "program_rate_detect")
+                        else:
+                            self.set_fixed_transfer_rate_flow(
+                                "active" + organ + strain + comorbidity,
+                                "detect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
+                                0.)
+                        self.set_var_transfer_rate_flow(
+                            "active" + organ + strain + comorbidity,
+                            "missed" + organ + strain + comorbidity,
+                            "program_rate_missed")
+                        self.set_fixed_transfer_rate_flow(
+                            "detect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
+                            "treatment_infect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
+                            "program_rate_start_treatment")
+                        self.set_fixed_transfer_rate_flow(
+                            "missed" + organ + strain + comorbidity,
+                            "active" + organ + strain + comorbidity,
+                            "program_rate_restart_presenting")
 
     def find_treatment_rates(self):
         outcomes = ["_success", "_death", "_default"]

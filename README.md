@@ -22,8 +22,9 @@ This is a set of Python models that modularizes the development of dynamic trans
 - feed cost-coverage curves into model
 
 # James TODO:
-- notifications output
-- outputs by strain (as well as possibly organ involvement)
+- detection differences by strain
+- detection through private health system
+
 
 # Current TB dynamic transmission model  
   

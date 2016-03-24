@@ -76,7 +76,7 @@ def humanise_y_ticks(ax):
     vals = list(ax.get_yticks())
     max_val = max([abs(v) for v in vals])
     if max_val < 1e3:
-        return map(str, vals)
+        return
     if max_val >= 1e3 and max_val < 1e6:
         labels = ["%.1fK" % (v/1e3) for v in vals]
     elif max_val >= 1e6 and max_val < 1e9:
@@ -153,6 +153,7 @@ def get_line_style(label, strain_or_organ):
 
     pattern = get_line_pattern(label, strain_or_organ)
 
+    category_full_name = label
     if "susceptible" in label:
         category_full_name = "Susceptible"
     if "susceptible_fully" in label:
@@ -217,31 +218,34 @@ def get_line_pattern(label, strain_or_organ):
 
 
 def make_plot_title(model, labels):
-    if labels is model.labels:
-        title = "by each individual compartment"
-    elif labels is model.compartment_types \
-            or labels is model.compartment_types_bystrain:
-        title = "by types of compartments"
-    elif labels is model.broad_compartment_types_byorgan:
-        title = "by organ involvement"
-    elif labels is model.broad_compartment_types \
-            or labels is model.broad_compartment_types_bystrain:
-        title = "by broad types of compartments"
-    elif labels is model.groups["ever_infected"]:
-        title = "within ever infected compartments"
-    elif labels is model.groups["infected"]:
-        title = "within infected compartments"
-    elif labels is model.groups["active"]:
-        title = "within active disease compartments"
-    elif labels is model.groups["infectious"]:
-        title = "within infectious compartments"
-    elif labels is model.groups["identified"]:
-        title = "within identified compartments"
-    elif labels is model.groups["treatment"]:
-        title = "within treatment compartments"
-    else:
-        title = "not sure"
-    return title
+    try:
+        if labels is model.labels:
+            title = "by each individual compartment"
+        elif labels is model.compartment_types \
+                or labels is model.compartment_types_bystrain:
+            title = "by types of compartments"
+        elif labels is model.broad_compartment_types_byorgan:
+            title = "by organ involvement"
+        elif labels is model.broad_compartment_types \
+                or labels is model.broad_compartment_types_bystrain:
+            title = "by broad types of compartments"
+        elif labels is model.groups["ever_infected"]:
+            title = "within ever infected compartments"
+        elif labels is model.groups["infected"]:
+            title = "within infected compartments"
+        elif labels is model.groups["active"]:
+            title = "within active disease compartments"
+        elif labels is model.groups["infectious"]:
+            title = "within infectious compartments"
+        elif labels is model.groups["identified"]:
+            title = "within identified compartments"
+        elif labels is model.groups["treatment"]:
+            title = "within treatment compartments"
+        else:
+            title = "not sure"
+        return title
+    except:
+        return ""
 
 
 def plot_populations(model, labels, values, left_xlimit, strain_or_organ, png=None):

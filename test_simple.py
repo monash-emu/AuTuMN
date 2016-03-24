@@ -9,14 +9,26 @@ if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
 base = os.path.join(out_dir, 'model')
+
 model = autumn.model.SimplifiedModel()
-model.make_times(1900, 2050, 0.05)
+model.make_times(1600, 2050, 0.05)
 model.integrate_explicit()
 model.make_graph(base + '.workflow')
+
 autumn.plotting.plot_fractions(
-    model, model.labels, model.fraction_soln, base + '.fraction.png', '')
+    model,
+    model.labels,
+    model.fraction_soln,
+    1800,
+    '',
+    base + '.fraction.png')
+
 autumn.plotting.plot_populations(
-    model, model.labels, model.compartment_soln, base + '.population.png', '')
+    model, model.labels, model.compartment_soln, 1800, '', base + '.population.png')
+
+autumn.plotting.plot_outputs(
+    model, ["incidence", "prevalence", "mortality"],
+    1800, base + '.rate_outputs.png')
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)

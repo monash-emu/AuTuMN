@@ -97,6 +97,9 @@ class BaseModel():
     def convert_compartments_to_list(self, compartments):
         return [compartments[l] for l in self.labels]
 
+    def process_params(self):
+        pass
+
     def get_init_list(self):
         return self.convert_compartments_to_list(self.init_compartments)
 
@@ -189,15 +192,16 @@ class BaseModel():
         return derivative_fn
 
     def init_run(self):
+        self.process_params()
         self.set_flows()
         self.var_labels = None
         self.soln_array = None
         self.var_array = None
         self.flow_array = None
+        assert not self.times is None, "Haven't set times yet"
 
     def integrate_scipy(self):
         self.init_run()
-        assert not self.times is None, "Haven't set times yet"
         init_y = self.get_init_list()
         derivative = self.make_derivate_fn()
         self.soln_array = odeint(derivative, init_y, self.times)
@@ -206,7 +210,6 @@ class BaseModel():
         
     def integrate_explicit(self, min_dt=0.05):
         self.init_run()
-        assert not self.times is None, "Haven't set times yet"
         y = self.get_init_list()
         n_component = len(y)
         n_time = len(self.times)
@@ -421,27 +424,39 @@ class SimplifiedModel(BaseModel):
         BaseModel.__init__(self)
 
         self.set_compartment("susceptible", 1e6)
+        self.set_compartment("susceptible_vac", 1e6)
         self.set_compartment("latent_early", 0.)
         self.set_compartment("latent_late", 0.)
         self.set_compartment("active", 1.)
         self.set_compartment("treatment_infect", 0.)
         self.set_compartment("treatment_noninfect", 0.)
 
+        self.set_param("total_population", 1E6)
         self.set_param("demo_rate_birth", 20. / 1e3)
         self.set_param("demo_rate_death", 1. / 65)
 
-        self.set_param("tb_n_contact", 40.)
-        self.set_param("tb_rate_earlyprogress", .1 / .5)
-        self.set_param("tb_rate_lateprogress", .1 / 100.)
-        self.set_param("tb_rate_stabilise", .9 / .5)
-        self.set_param("tb_rate_recover", .6 / 3.)
-        self.set_param("tb_rate_death", .4 / 3.)
+        self.set_param("tb_n_contact", 20.)
+        self.set_param("tb_rate_earlyprogress", .2)
+        self.set_param("tb_rate_lateprogress", .0001)
+        self.set_param("tb_rate_stabilise", 2.3)
+        self.set_param("tb_rate_recover", .3)
+        self.set_param("tb_rate_death", .07)
 
         self.set_param("tb_bcg_multiplier", .5)
 
+        self.set_param("program_prop_vac", 0.4)
         self.set_param("program_rate_detect", 1.)
-        time_treatment = .5
-        self.set_param("program_time_treatment", time_treatment)
+        self.set_param("program_time_treatment", .5)
+
+    def process_params(self):
+        prop = self.params["program_prop_vac"]
+        self.set_compartment(
+            "susceptible_vac",
+            prop * self.params["total_population"])
+        self.set_compartment(
+            "susceptible",
+            (1 - prop) * self.params["total_population"])
+        time_treatment = self.params["program_time_treatment"]
         self.set_param("program_rate_completion_infect", .9 / time_treatment)
         self.set_param("program_rate_default_infect", .05 / time_treatment)
         self.set_param("program_rate_death_infect", .05 / time_treatment)
@@ -452,8 +467,12 @@ class SimplifiedModel(BaseModel):
     def calculate_variable_rates(self):
 
         self.vars["population"] = sum(self.compartments.values())
+
+        prop = self.params["program_prop_vac"]
         self.vars["rate_birth"] = \
-            self.params["demo_rate_birth"] * self.vars["population"]
+            (1 - prop) * self.params["demo_rate_birth"] * self.vars["population"]
+        self.vars["rate_birth_vac"] = \
+            prop * self.params["demo_rate_birth"] * self.vars["population"]
 
         self.vars["infectious_population"] = 0.0
         for label in self.labels:
@@ -472,9 +491,13 @@ class SimplifiedModel(BaseModel):
 
     def set_flows(self):
         self.set_var_entry_rate_flow("susceptible", "rate_birth")
+        self.set_var_entry_rate_flow("susceptible_vac", "rate_birth_vac")
 
         self.set_var_transfer_rate_flow(
             "susceptible", "latent_early", "rate_force")
+
+        self.set_var_transfer_rate_flow(
+            "susceptible_vac", "latent_early", "rate_force_weak")
 
         self.set_fixed_transfer_rate_flow(
             "latent_early", "active", "tb_rate_earlyprogress")
@@ -502,7 +525,7 @@ class SimplifiedModel(BaseModel):
             "treatment_infect", "active", "program_rate_default_infect")
 
         self.set_fixed_transfer_rate_flow(
-            "treatment_noninfect", "susceptible", "program_rate_completion_noninfect")
+            "treatment_noninfect", "susceptible_vac", "program_rate_completion_noninfect")
         self.set_fixed_transfer_rate_flow(
             "treatment_noninfect", "active", "program_rate_default_noninfect")
 
@@ -518,6 +541,9 @@ class SimplifiedModel(BaseModel):
 
         BaseModel.calculate_outputs(self)
 
+        # Main epidemiological indicators
+        # Note that denominator is not individuals
+
         self.vars["latent"] = 0.0
         self.vars["prevalence"] = 0.0
         for label in self.labels:
@@ -529,6 +555,23 @@ class SimplifiedModel(BaseModel):
                 self.vars["prevalence"] += (
                     self.compartments[label]
                      / self.vars["population"] * 1E5)
+
+        rate_incidence = 0.0
+        for from_label, to_label, rate in self.fixed_transfer_rate_flows:
+            val = self.compartments[from_label] * rate
+            if 'latent' in from_label and 'active' in to_label:
+                rate_incidence += val
+        self.vars["incidence"] = \
+              rate_incidence \
+            / self.vars["population"] * 1E5
+
+        self.vars["mortality"] = \
+              self.vars["rate_infection_death"] \
+            / self.vars["population"] * 1E5
+
+
+
+
 
 
 class BaseTbModel(BaseModel):

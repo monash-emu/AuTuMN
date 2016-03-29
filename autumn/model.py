@@ -570,10 +570,6 @@ class SimplifiedModel(BaseModel):
             / self.vars["population"] * 1E5
 
 
-
-
-
-
 class BaseTbModel(BaseModel):
 
     def __init__(self):
@@ -872,7 +868,7 @@ class FlexibleModel(BaseTbModel):
 
         self.treatment_stages = ["_infect", "_noninfect"]
 
-        self.initialise_compartments(input_compartments)
+        self.initialise_compartments_misassignment(input_compartments)
 
         self.infectious_tags\
             = ["active", "missed", "detect", "treatment_infect"]
@@ -1184,23 +1180,65 @@ class FlexibleModel(BaseTbModel):
                         "latent_late" + strain + comorbidity,
                         "tb_rate_recover" + organ)
                     self.set_fixed_transfer_rate_flow(
+                        "missed" + organ + strain + comorbidity,
+                        "latent_late" + strain + comorbidity,
+                        "tb_rate_recover" + organ)
+                    self.set_infection_death_rate_flow(
+                        "active" + organ + strain + comorbidity,
+                        "tb_rate_death" + organ)
+                    self.set_infection_death_rate_flow(
+                        "missed" + organ + strain + comorbidity,
+                        "tb_rate_death" + organ)
+
+                    self.set_fixed_transfer_rate_flow(
                         "detect" + organ + strain + comorbidity,
+                        "latent_late" + strain + comorbidity,
+                        "tb_rate_recover" + organ)
+                    self.set_infection_death_rate_flow(
+                        "detect" + organ + strain + comorbidity,
+                        "tb_rate_death" + organ)
+
+
+    def set_natural_history_flows_misassign(self):
+
+        for comorbidity in self.comorbidities:
+            for strain in self.strains:
+                self.set_fixed_transfer_rate_flow(
+                    "latent_early" + strain + comorbidity,
+                    "latent_late" + strain + comorbidity,
+                    "tb_rate_stabilise")
+                for organ in self.organ_status:
+                    self.set_fixed_transfer_rate_flow(
+                        "latent_early" + strain + comorbidity,
+                        "active" + organ + strain + comorbidity,
+                        "tb_rate_early_progression" + organ)
+                    self.set_fixed_transfer_rate_flow(
+                        "latent_late" + strain + comorbidity,
+                        "active" + organ + strain + comorbidity,
+                        "tb_rate_late_progression" + organ)
+                    self.set_fixed_transfer_rate_flow(
+                        "active" + organ + strain + comorbidity,
                         "latent_late" + strain + comorbidity,
                         "tb_rate_recover" + organ)
                     self.set_fixed_transfer_rate_flow(
                         "missed" + organ + strain + comorbidity,
                         "latent_late" + strain + comorbidity,
                         "tb_rate_recover" + organ)
-
                     self.set_infection_death_rate_flow(
                         "active" + organ + strain + comorbidity,
                         "tb_rate_death" + organ)
                     self.set_infection_death_rate_flow(
-                        "detect" + organ + strain + comorbidity,
-                        "tb_rate_death" + organ)
-                    self.set_infection_death_rate_flow(
                         "missed" + organ + strain + comorbidity,
                         "tb_rate_death" + organ)
+
+                    for assigned_strain in self.strains:
+                        self.set_infection_death_rate_flow(
+                            "detect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
+                            "tb_rate_death" + organ)
+                        self.set_fixed_transfer_rate_flow(
+                            "detect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
+                            "latent_late" + strain + comorbidity,
+                            "tb_rate_recover" + organ)
 
     def set_programmatic_flows(self):
 
@@ -1520,11 +1558,11 @@ class FlexibleModel(BaseTbModel):
 
         self.set_infection_flows()
 
-        self.set_natural_history_flows()
+        self.set_natural_history_flows_misassign()
 
-        self.set_programmatic_flows()
+        self.set_programmatic_flows_misassignment()
 
-        self.set_treatment_flows_amplification()
+        self.set_treatment_flows_amplification_misassignment()
 
         self.set_population_death_rate("demo_rate_death")
 

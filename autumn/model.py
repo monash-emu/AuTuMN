@@ -1240,42 +1240,11 @@ class FlexibleModel(BaseTbModel):
                         1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment" + strain]
                           * self.params["program_proportion" + outcome + treatment_stage + strain])
 
-    def set_treatment_flows_noamplification(self):
+    def set_treatment_flows(self):
 
         for comorbidity in self.comorbidities:
             for strain in self.strains:
                 for organ in self.organ_status:
-                    self.set_fixed_transfer_rate_flow(
-                        "treatment_infect" + organ + strain + comorbidity,
-                        "treatment_noninfect" + organ + strain + comorbidity,
-                        "program_rate_success_infect")
-                    self.set_fixed_transfer_rate_flow(
-                        "treatment_noninfect" + organ + strain + comorbidity,
-                        "susceptible_treated" + comorbidity,
-                        "program_rate_success_noninfect")
-                    self.set_infection_death_rate_flow(
-                        "treatment_infect" + organ + strain + comorbidity,
-                        "program_rate_death_infect")
-                    self.set_infection_death_rate_flow(
-                        "treatment_noninfect" + organ + strain + comorbidity,
-                        "program_rate_death_noninfect")
-                    self.set_fixed_transfer_rate_flow(
-                        "treatment_infect" + organ + strain + comorbidity,
-                        "active" + organ + strain + comorbidity,
-                        "program_rate_default_infect")
-                    self.set_fixed_transfer_rate_flow(
-                        "treatment_noninfect" + organ + strain + comorbidity,
-                        "active" + organ + strain + comorbidity,
-                        "program_rate_default_noninfect")
-
-    def set_treatment_flows_amplification(self):
-
-        for comorbidity in self.comorbidities:
-            for organ in self.organ_status:
-                for i in range(len(self.strains)):
-                    strain = self.strains[i]
-
-                    # Set treatment success and death flows (unaffected by amplification)
                     self.set_fixed_transfer_rate_flow(
                         "treatment_infect" + organ + strain + comorbidity,
                         "treatment_noninfect" + organ + strain + comorbidity,
@@ -1290,58 +1259,14 @@ class FlexibleModel(BaseTbModel):
                     self.set_infection_death_rate_flow(
                         "treatment_noninfect" + organ + strain + comorbidity,
                         "program_rate_death_noninfect" + strain)
-
-                    # If it's the most resistant strain
-                    if i == len(self.strains) - 1:
-                        self.set_fixed_transfer_rate_flow(
-                            "treatment_infect" + organ + strain + comorbidity,
-                            "active" + organ + strain + comorbidity,
-                            "program_rate_default_infect" + strain)
-                        self.set_fixed_transfer_rate_flow(
-                            "treatment_noninfect" + organ + strain + comorbidity,
-                            "active" + organ + strain + comorbidity,
-                            "program_rate_default_noninfect" + strain)
-                    else:  # Otherwise, there is a more resistant strain available
-                        amplify_to_strain = self.strains[i + 1]  # Is the more resistant strain
-                        # Split default rates into amplification and non-amplification proportions
-                        for treatment_stage in self.treatment_stages:
-                            # Calculate amplification proportion
-                            self.set_param("program_rate_default" + treatment_stage + "_noamplify" + strain,
-                                           self.params["program_rate_default" + treatment_stage + strain]
-                                           * (1 - self.params["proportion_amplification"]))
-                            # Calculate non-amplification proportion
-                            self.set_param("program_rate_default" + treatment_stage + "_amplify" + strain,
-                                           self.params["program_rate_default" + treatment_stage + strain]
-                                           * self.params["proportion_amplification"])
-                            # Calculate equivalent functions
-                            self.set_scaleup_var(
-                                "program_rate_default" + treatment_stage + "_noamplify" + strain,
-                                make_sigmoidal_curve(
-                                    self.params["program_rate_default" + treatment_stage + "_noamplify" + strain],
-                                    self.params["program_rate_default" + treatment_stage + "_noamplify" + strain]
-                                    - self.params["program_rate_default" + treatment_stage + "_amplify" + strain],
-                                    self.params["timepoint_introduce" + amplify_to_strain],
-                                    self.params["timepoint_introduce" + amplify_to_strain] + 3.
-                                )
-                            )
-                            self.set_scaleup_var(
-                                "program_rate_default" + treatment_stage + "_amplify" + strain,
-                                make_sigmoidal_curve(
-                                    0.,
-                                    self.params["program_rate_default" + treatment_stage + "_amplify" + strain],
-                                    self.params["timepoint_introduce" + amplify_to_strain],
-                                    self.params["timepoint_introduce" + amplify_to_strain] + 3.
-                                )
-                            )
-                            # Actually set the flows
-                            self.set_var_transfer_rate_flow(
-                                "treatment_infect" + organ + strain + comorbidity,
-                                "active" + organ + strain + comorbidity,
-                                "program_rate_default" + treatment_stage + "_noamplify" + strain)
-                            self.set_var_transfer_rate_flow(
-                                "treatment_infect" + organ + strain + comorbidity,
-                                "active" + organ + amplify_to_strain + comorbidity,
-                                "program_rate_default" + treatment_stage + "_amplify" + strain)
+                    self.set_fixed_transfer_rate_flow(
+                        "treatment_infect" + organ + strain + comorbidity,
+                        "active" + organ + strain + comorbidity,
+                        "program_rate_default_infect" + strain)
+                    self.set_fixed_transfer_rate_flow(
+                        "treatment_noninfect" + organ + strain + comorbidity,
+                        "active" + organ + strain + comorbidity,
+                        "program_rate_default_noninfect" + strain)
 
     def set_flows(self):
 
@@ -1353,7 +1278,7 @@ class FlexibleModel(BaseTbModel):
 
         self.set_programmatic_flows()
 
-        self.set_treatment_flows_amplification()
+        self.set_treatment_flows()
 
         self.set_population_death_rate("demo_rate_death")
 
@@ -1466,7 +1391,85 @@ class FlexibleModel(BaseTbModel):
                          / self.vars["population"] * 1E5)
 
 
-class FlexibleWithMisassignment(FlexibleModel):
+class FlexibleWithAmplification(FlexibleModel):
+
+    def set_treatment_flows(self):
+
+        for comorbidity in self.comorbidities:
+            for organ in self.organ_status:
+                for i in range(len(self.strains)):
+                    strain = self.strains[i]
+
+                    # Set treatment success and death flows (unaffected by amplification)
+                    self.set_fixed_transfer_rate_flow(
+                        "treatment_infect" + organ + strain + comorbidity,
+                        "treatment_noninfect" + organ + strain + comorbidity,
+                        "program_rate_success_infect" + strain)
+                    self.set_fixed_transfer_rate_flow(
+                        "treatment_noninfect" + organ + strain + comorbidity,
+                        "susceptible_treated" + comorbidity,
+                        "program_rate_success_noninfect" + strain)
+                    self.set_infection_death_rate_flow(
+                        "treatment_infect" + organ + strain + comorbidity,
+                        "program_rate_death_infect" + strain)
+                    self.set_infection_death_rate_flow(
+                        "treatment_noninfect" + organ + strain + comorbidity,
+                        "program_rate_death_noninfect" + strain)
+
+                    # If it's the most resistant strain
+                    if i == len(self.strains) - 1:
+                        self.set_fixed_transfer_rate_flow(
+                            "treatment_infect" + organ + strain + comorbidity,
+                            "active" + organ + strain + comorbidity,
+                            "program_rate_default_infect" + strain)
+                        self.set_fixed_transfer_rate_flow(
+                            "treatment_noninfect" + organ + strain + comorbidity,
+                            "active" + organ + strain + comorbidity,
+                            "program_rate_default_noninfect" + strain)
+                    else:  # Otherwise, there is a more resistant strain available
+                        amplify_to_strain = self.strains[i + 1]  # Is the more resistant strain
+                        # Split default rates into amplification and non-amplification proportions
+                        for treatment_stage in self.treatment_stages:
+                            # Calculate amplification proportion
+                            self.set_param("program_rate_default" + treatment_stage + "_noamplify" + strain,
+                                           self.params["program_rate_default" + treatment_stage + strain]
+                                           * (1 - self.params["proportion_amplification"]))
+                            # Calculate non-amplification proportion
+                            self.set_param("program_rate_default" + treatment_stage + "_amplify" + strain,
+                                           self.params["program_rate_default" + treatment_stage + strain]
+                                           * self.params["proportion_amplification"])
+                            # Calculate equivalent functions
+                            self.set_scaleup_var(
+                                "program_rate_default" + treatment_stage + "_noamplify" + strain,
+                                make_sigmoidal_curve(
+                                    self.params["program_rate_default" + treatment_stage + "_noamplify" + strain],
+                                    self.params["program_rate_default" + treatment_stage + "_noamplify" + strain]
+                                    - self.params["program_rate_default" + treatment_stage + "_amplify" + strain],
+                                    self.params["timepoint_introduce" + amplify_to_strain],
+                                    self.params["timepoint_introduce" + amplify_to_strain] + 3.
+                                )
+                            )
+                            self.set_scaleup_var(
+                                "program_rate_default" + treatment_stage + "_amplify" + strain,
+                                make_sigmoidal_curve(
+                                    0.,
+                                    self.params["program_rate_default" + treatment_stage + "_amplify" + strain],
+                                    self.params["timepoint_introduce" + amplify_to_strain],
+                                    self.params["timepoint_introduce" + amplify_to_strain] + 3.
+                                )
+                            )
+                            # Actually set the flows
+                            self.set_var_transfer_rate_flow(
+                                "treatment_infect" + organ + strain + comorbidity,
+                                "active" + organ + strain + comorbidity,
+                                "program_rate_default" + treatment_stage + "_noamplify" + strain)
+                            self.set_var_transfer_rate_flow(
+                                "treatment_infect" + organ + strain + comorbidity,
+                                "active" + organ + amplify_to_strain + comorbidity,
+                                "program_rate_default" + treatment_stage + "_amplify" + strain)
+
+
+class FlexibleWithMisassignment(FlexibleWithAmplification):
 
     def initialise_compartments(self, input_compartments):
 
@@ -1601,7 +1604,7 @@ class FlexibleWithMisassignment(FlexibleModel):
                             "active" + organ + strain + comorbidity,
                             "program_rate_restart_presenting")
 
-    def set_treatment_flows_amplification(self):
+    def set_treatment_flows(self):
 
         for comorbidity in self.comorbidities:
             for organ in self.organ_status:

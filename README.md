@@ -22,7 +22,6 @@ This is a set of Python models that modularizes the development of dynamic trans
 - feed cost-coverage curves into model
 
 # James TODO:
-- detection differences by strain
 - detection through private health system
 
 

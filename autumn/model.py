@@ -847,15 +847,21 @@ class StratifiedModel(BaseTbModel):
                 "tb_timeperiod_treatment_ds":
                     0.5,
                 "tb_timeperiod_treatment_mdr":
-                    2,
+                    2.,
+                "tb_timeperiod_treatment_xdr":
+                    3.,
                 "tb_timeperiod_infect_ontreatment_ds":
                     get("default", "timeperiod_infect_ontreatment"),
                 "tb_timeperiod_infect_ontreatment_mdr":
                     1. / 12.,
+                "tb_timeperiod_infect_ontreatment_xdr":
+                    2. / 12.,
                 "program_proportion_success_ds":
                     0.9,
                 "program_proportion_success_mdr":
                     0.6,
+                "program_proportion_success_xdr":
+                    0.4,
                 "program_rate_restart_presenting":
                     4.,
                 "proportion_amplification":
@@ -879,8 +885,8 @@ class StratifiedModel(BaseTbModel):
             input_parameters["epi_proportion_cases_smearpos"] = 1.
         elif len(self.organ_status) == 2:
             input_parameters["epi_proportion_cases_smearneg"] = \
-                input_compartments["epi_proportion_cases_smearneg"] \
-                + input_compartments["epi_proportion_cases_extrapul"]
+                input_parameters["epi_proportion_cases_smearneg"] \
+                + input_parameters["epi_proportion_cases_extrapul"]
 
         # Now actually set the imported parameters
         for parameter in input_parameters:

@@ -22,7 +22,9 @@ This is a set of Python models that modularizes the development of dynamic trans
 - feed cost-coverage curves into model
 
 # James TODO:
+- incorporate workable parameters into misassignment code
 - detection through private health system
+- work out an approach to allowing a lower case detection rate and higher force of infection
 
 
 # Current TB dynamic transmission model  

@@ -18,7 +18,7 @@ models_to_run = [[3, 2, 1]]
 for running_model in range(len(models_to_run)):
     name = 'model%d' % running_model
     base = os.path.join(out_dir, name)
-    model = autumn.model.FlexibleModel(models_to_run[running_model][0],
+    model = autumn.model.FlexibleWithMisassignment(models_to_run[running_model][0],
                                        models_to_run[running_model][1],
                                        models_to_run[running_model][2])
     print((str(models_to_run[running_model][0]) + " organ(s), " +
@@ -78,6 +78,7 @@ for running_model in range(len(models_to_run)):
         model, ["incidence_ds", "incidence_mdr", "mortality_ds", "mortality_mdr", "prevalence_ds", "prevalence_mdr",
                 "notifications_ds", "notifications_mdr"],
         recent_time, base + '.rate_outputs_recent.png')
+    # Comment out the following 11 lines if running FlexibleModel, as it doesn't have the scale up stuff in it
     autumn.plotting.plot_scaleup_fns(model,
                                      ["program_rate_default_infect_noamplify_ds",
                                       "program_rate_default_infect_amplify_ds",

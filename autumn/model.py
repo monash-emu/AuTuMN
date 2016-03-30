@@ -941,8 +941,6 @@ class StratifiedModel(BaseTbModel):
                * (1. + (1. - input_parameters["program_algorithm_sensitivity"])
                        / input_parameters["program_algorithm_sensitivity"])))
 
-        # Temporary for running misassignment code
-        self.set_param("program_rate_misassign", 0.)
         self.set_param(
             "program_rate_missed",
             self.params["program_rate_detect"]
@@ -1514,13 +1512,33 @@ class StratifiedWithMisassignment(StratifiedWithAmplification):
         dots_start_date = 1995
         dots_start_proportion = 0.5
         finish_scaleup_date = 2010
-        self.set_scaleup_var(
-            "program_rate_detect",
-            make_two_step_curve(
-                pretreatment_available_proportion * final_detect_rate,
-                dots_start_proportion * final_detect_rate,
-                final_detect_rate,
-                treatment_available_date, dots_start_date, finish_scaleup_date))
+
+        self.set_param("program_prop_assign_ds", .9)
+        self.set_param("program_prop_assign_mdr", .6)
+
+        for strain in self.strains:
+            for assigned_strain in self.strains:
+                if strain == assigned_strain:
+                    self.set_scaleup_var(
+                        "program_rate_detect" + strain + "_as"+assigned_strain[1:],
+                        make_two_step_curve(
+                            pretreatment_available_proportion * final_detect_rate
+                            * self.params["program_prop_assign" + strain],
+                            dots_start_proportion  * final_detect_rate
+                            * self.params["program_prop_assign" + strain],
+                            final_detect_rate * self.params["program_prop_assign" + strain],
+                            treatment_available_date, dots_start_date, finish_scaleup_date))
+                else:
+                    self.set_scaleup_var(
+                        "program_rate_detect" + strain + "_as"+assigned_strain[1:],
+                        make_two_step_curve(
+                            pretreatment_available_proportion * final_detect_rate
+                            * (1. - self.params["program_prop_assign" + strain]),
+                            dots_start_proportion  * final_detect_rate
+                            * (1. - self.params["program_prop_assign" + strain]),
+                            final_detect_rate * self.params["program_prop_assign" + strain],
+                            treatment_available_date, dots_start_date, finish_scaleup_date))
+
         self.set_scaleup_var(
             "program_rate_missed",
             make_two_step_curve(
@@ -1533,16 +1551,10 @@ class StratifiedWithMisassignment(StratifiedWithAmplification):
             for strain in self.strains:
                 for organ in self.organ_status:
                     for assigned_strain in self.strains:
-                        if strain == assigned_strain:
-                            self.set_var_transfer_rate_flow(
-                                "active" + organ + strain + comorbidity,
-                                "detect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
-                                "program_rate_detect")
-                        else:
-                            self.set_fixed_transfer_rate_flow(
-                                "active" + organ + strain + comorbidity,
-                                "detect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
-                                "program_rate_misassign")
+                        self.set_var_transfer_rate_flow(
+                            "active" + organ + strain + comorbidity,
+                            "detect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
+                            "program_rate_detect" + strain + "_as"+assigned_strain[1:])
                         self.set_var_transfer_rate_flow(
                             "active" + organ + strain + comorbidity,
                             "missed" + organ + strain + comorbidity,

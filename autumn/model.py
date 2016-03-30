@@ -594,13 +594,19 @@ class BaseTbModel(BaseModel):
 
         rate_incidence = 0.
         rate_mortality = 0.
+        rate_notifications = 0.
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
-            val = self.compartments[from_label] * rate
             if 'latent' in from_label and 'active' in to_label:
-                rate_incidence += val
+                rate_incidence += self.compartments[from_label] * rate
         self.vars["incidence"] = \
             rate_incidence \
             / self.vars["population"] * 1E5
+        for from_label, to_label, rate in self.var_transfer_rate_flows:
+            if 'active' in from_label and\
+                    ('detect' in to_label or 'treatment_infect' in to_label):
+                rate_notifications += self.compartments[from_label] * self.vars[rate]
+        self.vars["notifications"] = \
+            rate_notifications / self.vars["population"] * 1E5
         for from_label, rate in self.infection_death_rate_flows:
             rate_mortality \
                 += self.compartments[from_label] * rate

@@ -27,7 +27,7 @@ autumn.plotting.plot_populations(
     model, model.labels, model.compartment_soln, 1800, '', base + '.population.png')
 
 autumn.plotting.plot_outputs(
-    model, ["incidence", "prevalence", "mortality"],
+    model, ["incidence", "prevalence", "notifications", "mortality"],
     1800, base + '.rate_outputs.png')
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))

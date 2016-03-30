@@ -592,30 +592,28 @@ class BaseTbModel(BaseModel):
 
     def calculate_outputs(self):
 
-        self.vars["latent"] = 0.0
-        self.vars["prevalence"] = 0.0
-        for label in self.labels:
-            if "latent" in label:
-                self.vars["latent"] += (
-                    self.compartments[label]
-                     / self.vars["population"] * 1E5)
-            if "susceptible" not in label and "latent" not in label:
-                self.vars["prevalence"] += (
-                    self.compartments[label]
-                     / self.vars["population"] * 1E5)
-
-        rate_incidence = 0.0
+        rate_incidence = 0.
+        rate_mortality = 0.
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
             val = self.compartments[from_label] * rate
             if 'latent' in from_label and 'active' in to_label:
                 rate_incidence += val
         self.vars["incidence"] = \
-              rate_incidence \
+            rate_incidence \
+            / self.vars["population"] * 1E5
+        for from_label, rate in self.infection_death_rate_flows:
+            rate_mortality \
+                += self.compartments[from_label] * rate
+        self.vars["mortality"] = \
+            rate_mortality \
             / self.vars["population"] * 1E5
 
-        self.vars["mortality"] = \
-              self.vars["rate_infection_death"] \
-            / self.vars["population"] * 1E5
+        self.vars["prevalence"] = 0.0
+        for label in self.labels:
+            if "susceptible" not in label and "latent" not in label:
+                self.vars["prevalence"] += (
+                    self.compartments[label]
+                     / self.vars["population"] * 1E5)
 
 
 class SimplifiedModel(BaseTbModel):

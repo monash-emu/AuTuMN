@@ -251,6 +251,9 @@ class BaseModel():
         """
         pass
 
+    def calculate_outputs_bystrain(self):
+        pass
+
     def calculate_diagnostics(self):
         self.compartment_soln = {}
         for label in self.labels:
@@ -269,6 +272,7 @@ class BaseModel():
             self.calculate_variable_rates()
             self.calculate_flows()
             self.calculate_outputs()
+            self.calculate_outputs_bystrain()
 
             # only set after self.calculate_diagnostic_vars is
             # run so that we have all var_labels, including
@@ -1297,7 +1301,7 @@ class StratifiedModel(BaseTbModel):
                         compartment_soln,
                         compartment_denominator))
 
-    def calculate_outputs(self):
+    def calculate_outputs_bystrain(self):
 
         # Now by strain:
         rate_incidence = {}

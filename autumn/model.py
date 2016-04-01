@@ -1513,31 +1513,71 @@ class StratifiedWithMisassignment(StratifiedWithAmplification):
         dots_start_proportion = 0.5
         finish_scaleup_date = 2010
 
-        self.set_param("program_prop_assign_ds", .9)
         self.set_param("program_prop_assign_mdr", .6)
+        self.set_param("program_prop_assign_xdr", .4)
 
-        for strain in self.strains:
-            for assigned_strain in self.strains:
-                if strain == assigned_strain:
-                    self.set_scaleup_var(
-                        "program_rate_detect" + strain + "_as"+assigned_strain[1:],
-                        make_two_step_curve(
-                            pretreatment_available_proportion * final_detect_rate
-                            * self.params["program_prop_assign" + strain],
-                            dots_start_proportion  * final_detect_rate
-                            * self.params["program_prop_assign" + strain],
-                            final_detect_rate * self.params["program_prop_assign" + strain],
-                            treatment_available_date, dots_start_date, finish_scaleup_date))
+        for i in range(len(self.strains)):
+            strain = self.strains[i]
+            for j in range(len(self.strains)):
+                assigned_strain = self.strains[j]
+                # Chance of being assigned to the strain two levels less resistant (XDR to DS)
+                if i == j+2:
+                    next_strain = self.strains[i - 1]
+                    assignment_probability =\
+                        (1. - self.params["program_prop_assign" + next_strain])
+                # Chance of being assigned to the next less resistant strain
+                # if there are two less resistant strains available (XDR to MDR)
+                elif i == 2 and j == 1:
+                    next_strain = self.strains[i - 1]
+                    assignment_probability =\
+                        (1. - self.params["program_prop_assign" + strain]) * self.params["program_prop_assign" + next_strain]
+                # Chance of being assigned to the next less resistant strain
+                # if the assigned strain is the least resistant one (MDR to DS)
+                elif i == j+1 and j == 0:
+                    assignment_probability =\
+                        (1. - self.params["program_prop_assign" + strain])
+                # Chance of being assigned to the correct strain, DS-TB
+                elif i == 0 and j == 0:
+                    assignment_probability = 1.
+                # Chance of being assigned to the correct strain, MDR-TB
+                elif i == 1 and j == 1:
+                    assignment_probability =\
+                        self.params["program_prop_assign" + strain]
+                # Chance of being assigned to the correct strain, XDR-TB
+                elif i == 2 and j == 2:
+                    next_strain = self.strains[i - 1]
+                    assignment_probability =\
+                        self.params["program_prop_assign" + strain] * self.params["program_prop_assign" + next_strain]
+                # Can't be assigned to a more resistant strain than you have (currently)
+                elif i < j:
+                    assignment_probability = 0.
+                # Set the parameter values
+                if assignment_probability == 0.:
+                    self.set_param("program_rate_detect" + strain + "_as"+assigned_strain[1:], assignment_probability)
+                    for comorbidity in self.comorbidities:
+                        for organ in self.organ_status:
+                            self.set_fixed_transfer_rate_flow(
+                                "active" + organ + strain + comorbidity,
+                                "detect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
+                                "program_rate_detect" + strain + "_as"+assigned_strain[1:])
                 else:
                     self.set_scaleup_var(
                         "program_rate_detect" + strain + "_as"+assigned_strain[1:],
                         make_two_step_curve(
-                            pretreatment_available_proportion * final_detect_rate
-                            * (1. - self.params["program_prop_assign" + strain]),
-                            dots_start_proportion  * final_detect_rate
-                            * (1. - self.params["program_prop_assign" + strain]),
-                            final_detect_rate * self.params["program_prop_assign" + strain],
+                            pretreatment_available_proportion * final_detect_rate * assignment_probability,
+                            dots_start_proportion  * final_detect_rate * assignment_probability,
+                            final_detect_rate * assignment_probability,
                             treatment_available_date, dots_start_date, finish_scaleup_date))
+                    for comorbidity in self.comorbidities:
+                        for organ in self.organ_status:
+                            self.set_var_transfer_rate_flow(
+                                "active" + organ + strain + comorbidity,
+                                "detect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
+                                "program_rate_detect" + strain + "_as"+assigned_strain[1:])
+                print('\n')
+                print(strain)
+                print(assigned_strain)
+                print(assignment_probability)
 
         self.set_scaleup_var(
             "program_rate_missed",
@@ -1550,23 +1590,19 @@ class StratifiedWithMisassignment(StratifiedWithAmplification):
         for comorbidity in self.comorbidities:
             for strain in self.strains:
                 for organ in self.organ_status:
+                    self.set_var_transfer_rate_flow(
+                        "active" + organ + strain + comorbidity,
+                        "missed" + organ + strain + comorbidity,
+                        "program_rate_missed")
+                    self.set_fixed_transfer_rate_flow(
+                        "missed" + organ + strain + comorbidity,
+                        "active" + organ + strain + comorbidity,
+                        "program_rate_restart_presenting")
                     for assigned_strain in self.strains:
-                        self.set_var_transfer_rate_flow(
-                            "active" + organ + strain + comorbidity,
-                            "detect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
-                            "program_rate_detect" + strain + "_as"+assigned_strain[1:])
-                        self.set_var_transfer_rate_flow(
-                            "active" + organ + strain + comorbidity,
-                            "missed" + organ + strain + comorbidity,
-                            "program_rate_missed")
                         self.set_fixed_transfer_rate_flow(
                             "detect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
                             "treatment_infect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
                             "program_rate_start_treatment")
-                        self.set_fixed_transfer_rate_flow(
-                            "missed" + organ + strain + comorbidity,
-                            "active" + organ + strain + comorbidity,
-                            "program_rate_restart_presenting")
 
     def set_treatment_flows(self):
 

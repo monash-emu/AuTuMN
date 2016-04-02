@@ -883,7 +883,23 @@ class StratifiedModel(BaseTbModel):
                 "timepoint_introduce_mdr":
                     1960.,
                 "timepoint_introduce_xdr":
-                    2050.
+                    2050.,
+                "treatment_available_date":
+                    1950.,
+                "pretreatment_available_proportion":
+                    0.2,
+                "dots_start_date":
+                    1995,
+                "dots_start_proportion":
+                    0.5,
+                "finish_scaleup_date":
+                    2010,
+                "pretreatment_available_proportion":
+                    0.2,
+                "program_prop_assign_mdr":
+                    0.6,
+                "program_prop_assign_xdr":
+                    .4
             }
 
         # Temporary code
@@ -1120,27 +1136,20 @@ class StratifiedModel(BaseTbModel):
 
     def set_programmatic_flows(self):
 
-        final_detect_rate = self.params["program_rate_detect"]
-        final_missed_rate = self.params["program_rate_missed"]
-        treatment_available_date = 1950
-        pretreatment_available_proportion = 0.2
-        dots_start_date = 1995
-        dots_start_proportion = 0.5
-        finish_scaleup_date = 2010
         self.set_scaleup_var(
             "program_rate_detect",
             make_two_step_curve(
-                pretreatment_available_proportion * final_detect_rate,
-                dots_start_proportion * final_detect_rate,
-                final_detect_rate,
-                treatment_available_date, dots_start_date, finish_scaleup_date))
+                self.params["pretreatment_available_proportion"] * self.params["program_rate_detect"],
+                self.params["dots_start_proportion"] * self.params["program_rate_detect"],
+                self.params["program_rate_detect"],
+                self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
         self.set_scaleup_var(
             "program_rate_missed",
             make_two_step_curve(
-                pretreatment_available_proportion * final_missed_rate,
-                dots_start_proportion * final_missed_rate,
-                final_missed_rate,
-                treatment_available_date, dots_start_date, finish_scaleup_date))
+                self.params["pretreatment_available_proportion"] * self.params["program_rate_missed"],
+                self.params["dots_start_proportion"] * self.params["program_rate_missed"],
+                self.params["program_rate_missed"],
+                self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
 
         for comorbidity in self.comorbidities:
             for strain in self.strains:
@@ -1515,17 +1524,6 @@ class StratifiedWithMisassignment(StratifiedWithAmplification):
 
     def set_programmatic_flows(self):
 
-        final_detect_rate = self.params["program_rate_detect"]
-        final_missed_rate = self.params["program_rate_missed"]
-        treatment_available_date = 1950
-        pretreatment_available_proportion = 0.2
-        dots_start_date = 1995
-        dots_start_proportion = 0.5
-        finish_scaleup_date = 2010
-
-        self.set_param("program_prop_assign_mdr", .6)
-        self.set_param("program_prop_assign_xdr", .4)
-
         for i in range(len(self.strains)):
             strain = self.strains[i]
             for j in range(len(self.strains)):
@@ -1574,10 +1572,10 @@ class StratifiedWithMisassignment(StratifiedWithAmplification):
                     self.set_scaleup_var(
                         "program_rate_detect" + strain + "_as"+assigned_strain[1:],
                         make_two_step_curve(
-                            pretreatment_available_proportion * final_detect_rate * assignment_probability,
-                            dots_start_proportion  * final_detect_rate * assignment_probability,
-                            final_detect_rate * assignment_probability,
-                            treatment_available_date, dots_start_date, finish_scaleup_date))
+                            self.params["pretreatment_available_proportion"] * self.params["program_rate_detect"] * assignment_probability,
+                            self.params["dots_start_proportion"]  * self.params["program_rate_detect"] * assignment_probability,
+                            self.params["program_rate_detect"] * assignment_probability,
+                            self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
                     for comorbidity in self.comorbidities:
                         for organ in self.organ_status:
                             self.set_var_transfer_rate_flow(
@@ -1592,10 +1590,10 @@ class StratifiedWithMisassignment(StratifiedWithAmplification):
         self.set_scaleup_var(
             "program_rate_missed",
             make_two_step_curve(
-                pretreatment_available_proportion * final_missed_rate,
-                dots_start_proportion * final_missed_rate,
-                final_missed_rate,
-                treatment_available_date, dots_start_date, finish_scaleup_date))
+                self.params["pretreatment_available_proportion"] * self.params["program_rate_missed"],
+                self.params["dots_start_proportion"] * self.params["program_rate_missed"],
+                self.params["program_rate_missed"],
+                self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
 
         for comorbidity in self.comorbidities:
             for strain in self.strains:

@@ -716,6 +716,552 @@ class SimplifiedModel(BaseTbModel):
             "treatment_noninfect", "program_rate_death_noninfect")
 
 
+class MultiOrganStatusModel(BaseTbModel):
+
+    """
+    A harmonised model that can run any number of strains
+    and organ statuses
+    """
+
+    def __init__(self,
+                 number_of_organs=3,
+                 input_parameters=None,
+                 input_compartments=None):
+
+        BaseTbModel.__init__(self)
+
+        self.define_model_structure(number_of_organs)
+
+        self.initialise_compartments(input_compartments)
+
+        self.set_parameters(input_parameters)
+
+        self.split_default_death_proportions()
+
+        self.ensure_all_progressions_go_somewhere()
+
+        self.find_natural_history_flows()
+
+        self.find_detection_rates()
+
+        self.find_treatment_rates()
+
+    def define_model_structure(self, number_of_organs):
+
+        self.compartment_types = [
+            "susceptible_fully",
+            "susceptible_vac",
+            "susceptible_treated",
+            "latent_early",
+            "latent_late",
+            "active",
+            "detect",
+            "missed",
+            "treatment_infect",
+            "treatment_noninfect"]
+
+        self.broad_compartment_types = [
+            "susceptible",
+            "latent",
+            "active",
+            "missed",
+            "treatment"]
+
+        available_organs = [
+            "_smearpos",
+            "_smearneg",
+            "_extrapul"]
+        self.organ_status =\
+            available_organs[0: number_of_organs]
+
+        self.treatment_stages = [
+            "_infect",
+            "_noninfect"]
+
+        self.infectious_tags = [
+            "active",
+            "missed",
+            "detect",
+            "treatment_infect"]
+
+    def initialise_compartments(self, input_compartments):
+
+        if input_compartments is None:
+            input_compartments = {
+                "susceptible_fully":
+                    2e7,
+                "active":
+                    3.}
+
+        # Initialise all compartments to zero
+        for compartment in self.compartment_types:
+            if "susceptible" in compartment:
+                self.set_compartment(compartment, 0.)
+            elif "latent" in compartment:
+                self.set_compartment(compartment, 0.)
+            else:
+                for organ in self.organ_status:
+                    self.set_compartment(compartment + organ, 0.)
+
+        # Put in values from input_compartments - now initialise to DS-TB only
+        for compartment in self.compartment_types:
+            if compartment in input_compartments:
+                if "susceptible" in compartment:
+                    self.set_compartment(compartment,
+                                         input_compartments[compartment])
+                elif "latent" in compartment:
+                    self.set_compartment(compartment,
+                                         input_compartments[compartment])
+                else:
+                    for organ in self.organ_status:
+                        self.set_compartment(compartment + organ,
+                                             input_compartments[compartment]
+                                             / len(self.organ_status))
+
+    def set_parameters(self, input_parameters):
+
+        # Extract default parameters from our database
+        # of parameters in settings
+        if input_parameters is None:
+
+            def get(param_set_name, param_name, prob=0.5):
+                param_set = globals()[param_set_name]
+                param = getattr(param_set, param_name)
+                ppf = getattr(param, "ppf")
+                return ppf(prob)
+
+            # Estimate some parameters
+            input_parameters = {
+                "demo_rate_birth":
+                    24. / 1e3,
+                "demo_rate_death":
+                    1. / 69.,
+                "epi_proportion_cases_smearpos":
+                    (92991. + 6277.) / 243379.,  # Total bacteriologically confirmed
+                "epi_proportion_cases_smearneg":
+                    139950. / 243379.,  # Clinically diagnosed
+                "epi_proportion_cases_extrapul":
+                    4161. / 243379.,  # Bacteriologically confirmed
+                "tb_multiplier_force_smearpos":
+                    1.,
+                "tb_multiplier_force_smearneg":
+                    get("default", "multiplier_force_smearneg"),
+                "tb_multiplier_force_extrapul":
+                    0.,
+                "tb_n_contact":
+                    6.,
+                "tb_proportion_early_progression":
+                    get("default", "proportion_early_progression"),
+                "tb_timeperiod_early_latent":
+                    get("default", "timeperiod_early_latent"),
+                "tb_rate_late_progression":
+                    0.007,
+                "tb_proportion_casefatality_untreated_smearpos":
+                    get("default", "proportion_casefatality_active_untreated_smearpos"),
+                "tb_proportion_casefatality_untreated_smearneg":
+                    get("default", "proportion_casefatality_active_untreated_smearneg"),
+                "tb_timeperiod_activeuntreated":
+                    4.,
+                "tb_multiplier_bcg_protection":
+                    get("default", "multiplier_bcg_protection"),
+                "program_prop_vac":
+                    get("philippines", "bcg_coverage"),
+                "program_prop_unvac":
+                    1. - get("philippines", "bcg_coverage"),
+                "program_proportion_detect":
+                    0.7,
+                "program_algorithm_sensitivity":
+                    0.9,
+                "program_rate_start_treatment":
+                    1. / get("philippines", "program_timeperiod_delayto_treatment"),
+                "tb_timeperiod_treatment_ds":
+                    0.5,
+                "tb_timeperiod_treatment_mdr":
+                    2.,
+                "tb_timeperiod_treatment_xdr":
+                    3.,
+                "tb_timeperiod_treatment_inappropriate":
+                    2.,
+                "tb_timeperiod_infect_ontreatment_ds":
+                    get("default", "timeperiod_infect_ontreatment"),
+                "tb_timeperiod_infect_ontreatment_mdr":
+                    1. / 12.,
+                "tb_timeperiod_infect_ontreatment_xdr":
+                    2. / 12.,
+                "tb_timeperiod_infect_ontreatment_inappropriate":
+                    1.9,
+                "program_proportion_success_ds":
+                    0.9,
+                "program_proportion_success_mdr":
+                    0.6,
+                "program_proportion_success_xdr":
+                    0.4,
+                "program_proportion_success_inappropriate":
+                    0.3,
+                "program_rate_restart_presenting":
+                    4.,
+                "proportion_amplification":
+                    1. / 15.,
+                "timepoint_introduce_mdr":
+                    1960.,
+                "timepoint_introduce_xdr":
+                    2050.,
+                "treatment_available_date":
+                    1950.,
+                "pretreatment_available_proportion":
+                    0.2,
+                "dots_start_date":
+                    1995,
+                "dots_start_proportion":
+                    0.5,
+                "finish_scaleup_date":
+                    2010,
+                "pretreatment_available_proportion":
+                    0.2,
+                "program_prop_assign_mdr":
+                    0.6,
+                "program_prop_assign_xdr":
+                    .4,
+                "program_prop_nonsuccessoutcomes_death":
+                    0.25
+            }
+
+        # Now actually set the imported parameters
+        for parameter in input_parameters:
+            self.set_param(parameter, input_parameters[parameter])
+
+    def calculate_birth_rates(self):
+
+        self.vars["rate_birth"] = \
+            self.params["demo_rate_birth"] * self.vars["population"]
+        self.vars["births_unvac"] = \
+            self.params["program_prop_unvac"] * self.vars["rate_birth"]
+        self.vars["births_vac"] = \
+            self.params["program_prop_vac"] * self.vars["rate_birth"]
+
+    def set_birth_flows(self):
+
+        self.set_var_entry_rate_flow(
+            "susceptible_fully", "births_unvac")
+        self.set_var_entry_rate_flow(
+            "susceptible_vac", "births_vac")
+
+    def calculate_force_infection(self):
+
+        self.vars["infectious_population"] = 0.0
+        for organ in self.organ_status:
+            for label in self.labels:
+                if organ not in label:
+                    continue
+                if not label_intersects_tags(label, self.infectious_tags):
+                    continue
+                self.vars["infectious_population"] += \
+                    self.params["tb_multiplier_force" + organ] \
+                    * self.compartments[label]
+        self.vars["rate_force"] = \
+            self.params["tb_n_contact"] \
+              * self.vars["infectious_population"] \
+              / self.vars["population"]
+        self.vars["rate_force_weak"] = \
+            self.params["tb_multiplier_bcg_protection"] \
+              * self.vars["rate_force"]
+
+    def set_infection_flows(self):
+
+        self.set_var_transfer_rate_flow(
+            "susceptible_fully",
+            "latent_early",
+            "rate_force")
+        self.set_var_transfer_rate_flow(
+            "susceptible_vac",
+            "latent_early",
+            "rate_force_weak")
+        self.set_var_transfer_rate_flow(
+            "susceptible_treated",
+            "latent_early",
+            "rate_force_weak")
+        self.set_var_transfer_rate_flow(
+            "latent_late",
+            "latent_early",
+            "rate_force_weak")
+
+    def find_natural_history_flows(self):
+
+        # If extrapulmonary case-fatality not stated
+        if "tb_proportion_casefatality_untreated_extrapul" not in self.params:
+            self.set_param(
+                "tb_proportion_casefatality_untreated_extrapul",
+                self.params["tb_proportion_casefatality_untreated_smearneg"])
+
+        # Progression and stabilisation rates
+        self.set_param("tb_rate_early_progression",  # Overall
+                       self.params["tb_proportion_early_progression"]
+                       / self.params["tb_timeperiod_early_latent"])
+        self.set_param("tb_rate_stabilise",  # Stabilisation rate
+                       (1 - self.params["tb_proportion_early_progression"])
+                       / self.params["tb_timeperiod_early_latent"])
+        for organ in self.organ_status:
+            self.set_param(
+                "tb_rate_early_progression" + organ,
+                self.params["tb_proportion_early_progression"]
+                  / self.params["tb_timeperiod_early_latent"]
+                  * self.params["epi_proportion_cases" + organ])
+            self.set_param(
+                "tb_rate_late_progression" + organ,
+                self.params["tb_rate_late_progression"]
+                * self.params["epi_proportion_cases" + organ])
+            self.set_param(
+                "tb_rate_death" + organ,
+                self.params["tb_proportion_casefatality_untreated" + organ]
+                / self.params["tb_timeperiod_activeuntreated"])
+            self.set_param(
+                "tb_rate_recover" + organ,
+                (1 - self.params["tb_proportion_casefatality_untreated" + organ])
+                / self.params["tb_timeperiod_activeuntreated"])
+
+    def set_natural_history_flows(self):
+
+        self.set_fixed_transfer_rate_flow(
+            "latent_early",
+            "latent_late",
+            "tb_rate_stabilise")
+        for organ in self.organ_status:
+            self.set_fixed_transfer_rate_flow(
+                "latent_early",
+                "active" + organ,
+                "tb_rate_early_progression" + organ)
+            self.set_fixed_transfer_rate_flow(
+                "latent_late",
+                "active" + organ,
+                "tb_rate_late_progression" + organ)
+            self.set_fixed_transfer_rate_flow(
+                "active" + organ,
+                "latent_late",
+                "tb_rate_recover" + organ)
+            self.set_fixed_transfer_rate_flow(
+                "missed" + organ,
+                "latent_late",
+                "tb_rate_recover" + organ)
+            self.set_infection_death_rate_flow(
+                "active" + organ,
+                "tb_rate_death" + organ)
+            self.set_infection_death_rate_flow(
+                "missed" + organ,
+                "tb_rate_death" + organ)
+
+            self.set_fixed_transfer_rate_flow(
+                "detect" + organ,
+                "latent_late",
+                "tb_rate_recover" + organ)
+            self.set_infection_death_rate_flow(
+                "detect" + organ,
+                "tb_rate_death" + organ)
+
+    def ensure_all_progressions_go_somewhere(self):
+
+        # Make sure all progressions go somewhere, regardless of number of organ statuses
+        if len(self.organ_status) == 1:
+            self.params["epi_proportion_cases_smearpos"] = 1.
+        elif len(self.organ_status) == 2:
+            self.params["epi_proportion_cases_smearneg"] = \
+                self.params["epi_proportion_cases_smearneg"] \
+                + self.params["epi_proportion_cases_extrapul"]
+
+    def find_detection_rates(self):
+
+        # Rates of detection and failure of detection
+        self.set_param(
+            "program_rate_detect",
+            self.params["program_proportion_detect"]
+            * (self.params["tb_rate_recover_smearpos"] + self.params["tb_rate_death_smearpos"])
+            / (1. - self.params["program_proportion_detect"]
+               * (1. + (1. - self.params["program_algorithm_sensitivity"])
+                       / self.params["program_algorithm_sensitivity"])))
+
+        self.set_param(
+            "program_rate_missed",
+            self.params["program_rate_detect"]
+            * (1. - self.params["program_algorithm_sensitivity"])
+            / self.params["program_algorithm_sensitivity"]
+        )
+        # Derived from original formulas of:
+        #   algorithm sensitivity = detection rate / (detection rate + missed rate)
+        #   - and -
+        #   detection proportion = detection rate / (detection rate + missed rate + spont recover rate + death rate)
+
+    def set_programmatic_flows(self):
+
+        self.set_scaleup_var(
+            "program_rate_detect",
+            make_two_step_curve(
+                self.params["pretreatment_available_proportion"] * self.params["program_rate_detect"],
+                self.params["dots_start_proportion"] * self.params["program_rate_detect"],
+                self.params["program_rate_detect"],
+                self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
+        self.set_scaleup_var(
+            "program_rate_missed",
+            make_two_step_curve(
+                self.params["pretreatment_available_proportion"] * self.params["program_rate_missed"],
+                self.params["dots_start_proportion"] * self.params["program_rate_missed"],
+                self.params["program_rate_missed"],
+                self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
+
+        for organ in self.organ_status:
+            self.set_var_transfer_rate_flow(
+                "active" + organ,
+                "detect" + organ,
+                "program_rate_detect")
+            self.set_var_transfer_rate_flow(
+                "active" + organ,
+                "missed" + organ,
+                "program_rate_missed")
+            self.set_fixed_transfer_rate_flow(
+                "detect" + organ,
+                "treatment_infect" + organ,
+                "program_rate_start_treatment")
+            self.set_fixed_transfer_rate_flow(
+                "missed" + organ,
+                "active" + organ,
+                "program_rate_restart_presenting")
+
+    def split_default_death_proportions(self):
+
+        # Temporary code
+        # to define default and death proportions
+        self.params["program_proportion_default"] =\
+            (1. - self.params["program_proportion_success_ds"])\
+            * (1. - self.params["program_prop_nonsuccessoutcomes_death"])
+        self.params["program_proportion_death"] =\
+            (1. - self.params["program_proportion_success_ds"])\
+            * self.params["program_prop_nonsuccessoutcomes_death"]
+
+    def find_treatment_rates(self):
+
+        outcomes = ["_success", "_death", "_default"]
+        non_success_outcomes = outcomes[1: 3]
+
+        # Find the non-infectious period
+        self.set_param(
+            "tb_timeperiod_noninfect_ontreatment_ds",
+            self.params["tb_timeperiod_treatment_ds"]
+              - self.params["tb_timeperiod_infect_ontreatment_ds"])
+
+        # Find the proportion of deaths/defaults during the infectious and non-infectious stages
+        for outcome in non_success_outcomes:
+            early_proportion, late_proportion = self.find_flow_proportions_by_period(
+                self.params["program_proportion" + outcome],
+                self.params["tb_timeperiod_infect_ontreatment_ds"],
+                self.params["tb_timeperiod_treatment_ds"])
+            self.set_param(
+                "program_proportion" + outcome + "_infect",
+                early_proportion)
+            self.set_param(
+                "program_proportion" + outcome + "_noninfect",
+                late_proportion)
+
+        # Find the success proportions
+        for treatment_stage in self.treatment_stages:
+            self.set_param(
+                "program_proportion_success" + treatment_stage,
+                1. - self.params["program_proportion_default" + treatment_stage]
+                  - self.params["program_proportion_death" + treatment_stage])
+            # Find the corresponding rates from the proportions
+            for outcome in outcomes:
+                self.set_param(
+                    "program_rate" + outcome + treatment_stage,
+                    1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment_ds"]
+                    * self.params["program_proportion" + outcome + treatment_stage])
+
+    def set_treatment_flows(self):
+
+        for organ in self.organ_status:
+            self.set_fixed_transfer_rate_flow(
+                "treatment_infect" + organ,
+                "treatment_noninfect" + organ,
+                "program_rate_success_infect")
+            self.set_fixed_transfer_rate_flow(
+                "treatment_noninfect" + organ,
+                "susceptible_treated",
+                "program_rate_success_noninfect")
+            self.set_infection_death_rate_flow(
+                "treatment_infect" + organ,
+                "program_rate_death_infect")
+            self.set_infection_death_rate_flow(
+                "treatment_noninfect" + organ,
+                "program_rate_death_noninfect")
+            self.set_fixed_transfer_rate_flow(
+                "treatment_infect" + organ,
+                "active" + organ,
+                "program_rate_default_infect")
+            self.set_fixed_transfer_rate_flow(
+                "treatment_noninfect" + organ,
+                "active" + organ,
+                "program_rate_default_noninfect")
+
+    def set_flows(self):
+
+        self.set_birth_flows()
+
+        self.set_infection_flows()
+
+        self.set_natural_history_flows()
+
+        self.set_programmatic_flows()
+
+        self.set_treatment_flows()
+
+        self.set_population_death_rate("demo_rate_death")
+
+    def additional_diagnostics(self):
+
+        self.broad_compartment_soln, broad_compartment_denominator\
+            = self.sum_over_compartments(self.broad_compartment_types)
+        self.broad_fraction_soln\
+            = self.get_fraction_soln(
+            self.broad_compartment_types,
+            self.broad_compartment_soln,
+            broad_compartment_denominator)
+
+        self.compartment_type_soln, compartment_type_denominator\
+            = self.sum_over_compartments(self.compartment_types)
+        self.compartment_type_fraction_soln\
+            = self.get_fraction_soln(
+            self.compartment_types,
+            self.compartment_type_soln,
+            compartment_type_denominator)
+
+        self.broad_compartment_type_byorgan_soln, broad_compartment_type_byorgan_denominator,\
+        self.broad_compartment_types_byorgan\
+            = self.sum_over_compartments_bycategory(self.broad_compartment_types, "organ")
+        self.broad_compartment_type_byorgan_fraction_soln\
+            = self.get_fraction_soln(
+            self.broad_compartment_types_byorgan,
+            self.broad_compartment_type_byorgan_soln,
+            broad_compartment_type_byorgan_denominator)
+
+        self.subgroup_diagnostics()
+
+    def subgroup_diagnostics(self):
+
+        self.groups = {
+            "ever_infected": ["susceptible_treated", "latent", "active", "missed", "detect", "treatment"],
+            "infected": ["latent", "active", "missed", "detect", "treatment"],
+            "active": ["active", "missed", "detect", "treatment"],
+            "infectious": ["active", "missed", "detect", "treatment_infect"],
+            "identified": ["detect", "treatment"],
+            "treatment": ["treatment_infect", "treatment_noninfect"]}
+        for key in self.groups:
+            compartment_soln, compartment_denominator\
+                = self.sum_over_compartments(self.groups[key])
+            setattr(self, key + "_compartment_soln", compartment_soln)
+            setattr(self, key + "_compartment_denominator", compartment_denominator)
+            setattr(self, key + "_fraction_soln",
+                    self.get_fraction_soln(
+                        self.groups[key],
+                        compartment_soln,
+                        compartment_denominator))
+
+
 class MultistrainModel(BaseTbModel):
 
     """

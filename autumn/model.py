@@ -2235,7 +2235,7 @@ class StratifiedWithMisassignmentAndLowQuality(StratifiedWithMisassignment):
                  input_parameters=None,
                  input_compartments=None):
 
-        BaseTbModel.__init__(self)
+        BaseModel.__init__(self)
 
         self.define_model_structure(number_of_organs, number_of_strains, number_of_comorbidities)
 

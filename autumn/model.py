@@ -744,6 +744,26 @@ class StratifiedModel(BaseTbModel):
 
         BaseTbModel.__init__(self)
 
+        self.define_model_structure(number_of_organs, number_of_strains, number_of_comorbidities)
+
+        self.initialise_compartments(input_compartments)
+
+        self.set_parameters(input_parameters)
+
+        self.split_default_death_proportions()
+
+        self.ensure_all_progressions_go_somewhere()
+
+        self.find_natural_history_flows()
+
+        self.find_detection_rates()
+
+        self.find_equal_detection_rates()
+
+        self.find_treatment_rates()
+
+    def define_model_structure(self, number_of_organs, number_of_strains, number_of_comorbidities):
+
         self.compartment_types = [
             "susceptible_fully",
             "susceptible_vac",
@@ -762,13 +782,6 @@ class StratifiedModel(BaseTbModel):
             "active",
             "missed",
             "treatment"]
-
-        if input_compartments is None:
-            input_compartments = {
-                "susceptible_fully":
-                    2e7,
-                "active":
-                    3.}
 
         available_organs = [
             "_smearpos",
@@ -791,15 +804,64 @@ class StratifiedModel(BaseTbModel):
         self.comorbidities\
             = available_comorbidities[0: number_of_comorbidities]
 
-        self.treatment_stages = ["_infect", "_noninfect"]
+        self.treatment_stages = [
+            "_infect",
+            "_noninfect"]
 
-        self.initialise_compartments(input_compartments)
+        self.infectious_tags = [
+            "active",
+            "missed",
+            "detect",
+            "treatment_infect"]
 
-        self.infectious_tags\
-            = ["active", "missed", "detect", "treatment_infect"]
+    def initialise_compartments(self, input_compartments):
+
+        if input_compartments is None:
+            input_compartments = {
+                "susceptible_fully":
+                    2e7,
+                "active":
+                    3.}
+
+        # Initialise all compartments to zero
+        for compartment in self.compartment_types:
+            for comorbidity in self.comorbidities:
+                if "susceptible" in compartment:  # Replicate for comorbidities only
+                    self.set_compartment(compartment + comorbidity, 0.)
+                elif "latent" in compartment:  # Replicate for comorbidities and strains
+                    for strain in self.strains:
+                        self.set_compartment(compartment + strain + comorbidity, 0.)
+                else:
+                    for strain in self.strains:
+                        for organ in self.organ_status:
+                            self.set_compartment(compartment + organ + strain + comorbidity, 0.)
+
+        # Put in values from input_compartments - now initialise to DS-TB only
+        for compartment in self.compartment_types:
+            if compartment in input_compartments:
+                if "susceptible" in compartment:
+                    for comorbidity in self.comorbidities:
+                        self.set_compartment(compartment + comorbidity,
+                                             input_compartments[compartment]
+                                             / len(self.comorbidities))
+                elif "latent" in compartment:
+                    for comorbidity in self.comorbidities:
+                        self.set_compartment(compartment + "_ds" + comorbidity,
+                                             input_compartments[compartment]
+                                             / len(self.comorbidities))
+                else:
+                    for comorbidity in self.comorbidities:
+                        for organ in self.organ_status:
+                            self.set_compartment(compartment + organ + "_ds" + comorbidity,
+                                                 input_compartments[compartment]
+                                                 / len(self.comorbidities)
+                                                 / len(self.strains)
+                                                 / len(self.organ_status))
+
+    def set_parameters(self, input_parameters):
 
         # Extract default parameters from our database
-        # of parameters in settings 
+        # of parameters in settings
         if input_parameters is None:
 
             def get(param_set_name, param_name, prob=0.5):
@@ -899,138 +961,14 @@ class StratifiedModel(BaseTbModel):
                 "program_prop_assign_mdr":
                     0.6,
                 "program_prop_assign_xdr":
-                    .4
+                    .4,
+                "program_prop_nonsuccessoutcomes_death":
+                    0.25
             }
-
-        # Temporary code
-        # to define default and death proportions
-        for strain in self.strains:
-            input_parameters["program_proportion_default" + strain] =\
-                (1. - input_parameters["program_proportion_success" + strain]) * 0.75
-            input_parameters["program_proportion_death" + strain] =\
-                (1. - input_parameters["program_proportion_success" + strain]) * 0.25
-        input_parameters["program_proportion_default_inappropriate"] =\
-            (1. - input_parameters["program_proportion_success_inappropriate"]) * 0.75
-        input_parameters["program_proportion_death_inappropriate"] = \
-            (1. - input_parameters["program_proportion_success_inappropriate"]) * 0.25
-
-        # Make sure all progressions go somewhere, regardless of number of organ statuses
-        if len(self.organ_status) == 1:
-            input_parameters["epi_proportion_cases_smearpos"] = 1.
-        elif len(self.organ_status) == 2:
-            input_parameters["epi_proportion_cases_smearneg"] = \
-                input_parameters["epi_proportion_cases_smearneg"] \
-                + input_parameters["epi_proportion_cases_extrapul"]
 
         # Now actually set the imported parameters
         for parameter in input_parameters:
             self.set_param(parameter, input_parameters[parameter])
-
-        # If extrapulmonary case-fatality not stated
-        if "tb_proportion_casefatality_untreated_extrapul" not in input_parameters:
-            self.set_param(
-                "tb_proportion_casefatality_untreated_extrapul",
-                input_parameters["tb_proportion_casefatality_untreated_smearneg"])
-
-        # Progression and stabilisation rates
-        self.set_param("tb_rate_early_progression",  # Overall
-                       self.params["tb_proportion_early_progression"]
-                       / self.params["tb_timeperiod_early_latent"])
-        self.set_param("tb_rate_stabilise",  # Stabilisation rate
-                       (1 - self.params["tb_proportion_early_progression"])
-                       / self.params["tb_timeperiod_early_latent"])
-        for organ in self.organ_status:
-            self.set_param(
-                "tb_rate_early_progression" + organ,
-                self.params["tb_proportion_early_progression"]
-                  / self.params["tb_timeperiod_early_latent"]
-                  * self.params["epi_proportion_cases" + organ])
-            self.set_param(
-                "tb_rate_late_progression" + organ,
-                self.params["tb_rate_late_progression"]
-                * self.params["epi_proportion_cases" + organ])
-            self.set_param(
-                "tb_rate_death" + organ,
-                self.params["tb_proportion_casefatality_untreated" + organ]
-                / self.params["tb_timeperiod_activeuntreated"])
-            self.set_param(
-                "tb_rate_recover" + organ,
-                (1 - self.params["tb_proportion_casefatality_untreated" + organ])
-                / self.params["tb_timeperiod_activeuntreated"])
-
-        # Rates of detection and failure of detection
-        self.set_param(
-            "program_rate_detect",
-            input_parameters["program_proportion_detect"]
-            * (self.params["tb_rate_recover_smearpos"] + self.params["tb_rate_death_smearpos"])
-            / (1. - input_parameters["program_proportion_detect"]
-               * (1. + (1. - input_parameters["program_algorithm_sensitivity"])
-                       / input_parameters["program_algorithm_sensitivity"])))
-
-        self.set_param(
-            "program_rate_missed",
-            self.params["program_rate_detect"]
-            * (1. - input_parameters["program_algorithm_sensitivity"])
-            / input_parameters["program_algorithm_sensitivity"]
-        )
-        # Derived from original formulas of:
-        #   algorithm sensitivity = detection rate / (detection rate + missed rate)
-        #   - and -
-        #   detection proportion = detection rate / (detection rate + missed rate + spont recover rate + death rate)
-
-        # Temporarily set programmatic rates equal for all strains
-        for strain in self.strains:
-            self.set_param(
-                "program_rate_detect" + strain,
-                self.params["program_rate_detect"])
-            self.set_param(
-                "program_rate_missed" + strain,
-                self.params["program_rate_missed"])
-            self.set_param(
-                "program_rate_start_treatment" + strain,
-                self.params["program_rate_start_treatment"])
-            self.set_param(
-                "program_rate_restart_presenting" + strain,
-                self.params["program_rate_restart_presenting"])
-
-        self.find_treatment_rates()
-
-    def initialise_compartments(self, input_compartments):
-
-        # Initialise all compartments to zero
-        for compartment in self.compartment_types:
-            for comorbidity in self.comorbidities:
-                if "susceptible" in compartment:  # Replicate for comorbidities only
-                    self.set_compartment(compartment + comorbidity, 0.)
-                elif "latent" in compartment:  # Replicate for comorbidities and strains
-                    for strain in self.strains:
-                        self.set_compartment(compartment + strain + comorbidity, 0.)
-                else:
-                    for strain in self.strains:
-                        for organ in self.organ_status:
-                            self.set_compartment(compartment + organ + strain + comorbidity, 0.)
-
-        # Put in values from input_compartments - now initialise to DS-TB only
-        for compartment in self.compartment_types:
-            if compartment in input_compartments:
-                if "susceptible" in compartment:
-                    for comorbidity in self.comorbidities:
-                        self.set_compartment(compartment + comorbidity,
-                                             input_compartments[compartment]
-                                             / len(self.comorbidities))
-                elif "latent" in compartment:
-                    for comorbidity in self.comorbidities:
-                        self.set_compartment(compartment + "_ds" + comorbidity,
-                                             input_compartments[compartment]
-                                             / len(self.comorbidities))
-                else:
-                    for comorbidity in self.comorbidities:
-                        for organ in self.organ_status:
-                            self.set_compartment(compartment + organ + "_ds" + comorbidity,
-                                                 input_compartments[compartment]
-                                                 / len(self.comorbidities)
-                                                 / len(self.strains)
-                                                 / len(self.organ_status))
 
     def calculate_birth_rates(self):
 
@@ -1094,6 +1032,40 @@ class StratifiedModel(BaseTbModel):
                     "latent_early" + strain + comorbidity,
                     "rate_force_weak" + strain)
 
+    def find_natural_history_flows(self):
+
+        # If extrapulmonary case-fatality not stated
+        if "tb_proportion_casefatality_untreated_extrapul" not in self.params:
+            self.set_param(
+                "tb_proportion_casefatality_untreated_extrapul",
+                self.params["tb_proportion_casefatality_untreated_smearneg"])
+
+        # Progression and stabilisation rates
+        self.set_param("tb_rate_early_progression",  # Overall
+                       self.params["tb_proportion_early_progression"]
+                       / self.params["tb_timeperiod_early_latent"])
+        self.set_param("tb_rate_stabilise",  # Stabilisation rate
+                       (1 - self.params["tb_proportion_early_progression"])
+                       / self.params["tb_timeperiod_early_latent"])
+        for organ in self.organ_status:
+            self.set_param(
+                "tb_rate_early_progression" + organ,
+                self.params["tb_proportion_early_progression"]
+                  / self.params["tb_timeperiod_early_latent"]
+                  * self.params["epi_proportion_cases" + organ])
+            self.set_param(
+                "tb_rate_late_progression" + organ,
+                self.params["tb_rate_late_progression"]
+                * self.params["epi_proportion_cases" + organ])
+            self.set_param(
+                "tb_rate_death" + organ,
+                self.params["tb_proportion_casefatality_untreated" + organ]
+                / self.params["tb_timeperiod_activeuntreated"])
+            self.set_param(
+                "tb_rate_recover" + organ,
+                (1 - self.params["tb_proportion_casefatality_untreated" + organ])
+                / self.params["tb_timeperiod_activeuntreated"])
+
     def set_natural_history_flows(self):
 
         for comorbidity in self.comorbidities:
@@ -1134,6 +1106,55 @@ class StratifiedModel(BaseTbModel):
                         "detect" + organ + strain + comorbidity,
                         "tb_rate_death" + organ)
 
+    def ensure_all_progressions_go_somewhere(self):
+
+        # Make sure all progressions go somewhere, regardless of number of organ statuses
+        if len(self.organ_status) == 1:
+            self.params["epi_proportion_cases_smearpos"] = 1.
+        elif len(self.organ_status) == 2:
+            self.params["epi_proportion_cases_smearneg"] = \
+                self.params["epi_proportion_cases_smearneg"] \
+                + self.params["epi_proportion_cases_extrapul"]
+
+    def find_detection_rates(self):
+
+        # Rates of detection and failure of detection
+        self.set_param(
+            "program_rate_detect",
+            self.params["program_proportion_detect"]
+            * (self.params["tb_rate_recover_smearpos"] + self.params["tb_rate_death_smearpos"])
+            / (1. - self.params["program_proportion_detect"]
+               * (1. + (1. - self.params["program_algorithm_sensitivity"])
+                       / self.params["program_algorithm_sensitivity"])))
+
+        self.set_param(
+            "program_rate_missed",
+            self.params["program_rate_detect"]
+            * (1. - self.params["program_algorithm_sensitivity"])
+            / self.params["program_algorithm_sensitivity"]
+        )
+        # Derived from original formulas of:
+        #   algorithm sensitivity = detection rate / (detection rate + missed rate)
+        #   - and -
+        #   detection proportion = detection rate / (detection rate + missed rate + spont recover rate + death rate)
+
+    def find_equal_detection_rates(self):
+
+        # Set detection rates equal for all strains (probably temporary)
+        for strain in self.strains:
+            self.set_param(
+                "program_rate_detect" + strain,
+                self.params["program_rate_detect"])
+            self.set_param(
+                "program_rate_missed" + strain,
+                self.params["program_rate_missed"])
+            self.set_param(
+                "program_rate_start_treatment" + strain,
+                self.params["program_rate_start_treatment"])
+            self.set_param(
+                "program_rate_restart_presenting" + strain,
+                self.params["program_rate_restart_presenting"])
+
     def set_programmatic_flows(self):
 
         self.set_scaleup_var(
@@ -1171,6 +1192,24 @@ class StratifiedModel(BaseTbModel):
                         "missed" + organ + strain + comorbidity,
                         "active" + organ + strain + comorbidity,
                         "program_rate_restart_presenting")
+
+    def split_default_death_proportions(self):
+
+        # Temporary code
+        # to define default and death proportions
+        for strain in self.strains:
+            self.params["program_proportion_default" + strain] =\
+                (1. - self.params["program_proportion_success" + strain])\
+                * (1. - self.params["program_prop_nonsuccessoutcomes_death"])
+            self.params["program_proportion_death" + strain] =\
+                (1. - self.params["program_proportion_success" + strain])\
+                * self.params["program_prop_nonsuccessoutcomes_death"]
+        self.params["program_proportion_default_inappropriate"] =\
+            (1. - self.params["program_proportion_success_inappropriate"])\
+            * (1. - self.params["program_prop_nonsuccessoutcomes_death"])
+        self.params["program_proportion_death_inappropriate"] = \
+            (1. - self.params["program_proportion_success_inappropriate"])\
+            * self.params["program_prop_nonsuccessoutcomes_death"]
 
     def find_treatment_rates(self):
         outcomes = ["_success", "_death", "_default"]
@@ -1705,6 +1744,28 @@ class StratifiedWithMisassignmentAndLowQuality(StratifiedWithMisassignment):
 
         BaseTbModel.__init__(self)
 
+        self.define_model_structure(number_of_organs, number_of_strains, number_of_comorbidities)
+
+        self.initialise_compartments(input_compartments)
+
+        self.set_parameters(input_parameters)
+
+        self.split_default_death_proportions()
+
+        self.ensure_all_progressions_go_somewhere()
+
+        self.find_natural_history_flows()
+
+        self.find_detection_rates()
+
+        self.find_equal_detection_rates()
+
+        self.find_lowquality_detections()
+
+        self.find_treatment_rates()
+
+    def define_model_structure(self, number_of_organs, number_of_strains, number_of_comorbidities):
+
         self.compartment_types = [
             "susceptible_fully",
             "susceptible_vac",
@@ -1724,13 +1785,6 @@ class StratifiedWithMisassignmentAndLowQuality(StratifiedWithMisassignment):
             "active",
             "missed",
             "treatment"]
-
-        if input_compartments is None:
-            input_compartments = {
-                "susceptible_fully":
-                    2e7,
-                "active":
-                    3.}
 
         available_organs = [
             "_smearpos",
@@ -1753,14 +1807,66 @@ class StratifiedWithMisassignmentAndLowQuality(StratifiedWithMisassignment):
         self.comorbidities\
             = available_comorbidities[0: number_of_comorbidities]
 
-        self.treatment_stages = ["_infect", "_noninfect"]
+        self.treatment_stages = [
+            "_infect",
+            "_noninfect"]
 
-        self.initialise_compartments(input_compartments)
+        self.infectious_tags = [
+            "active",
+            "missed",
+            "detect",
+            "treatment_infect"]
 
-        self.infectious_tags\
-            = ["active", "missed", "detect", "treatment_infect"]
+    def initialise_compartments(self, input_compartments):
 
-        # Extract default parameters from our database
+        if input_compartments is None:
+            input_compartments = {
+                "susceptible_fully":
+                    2e7,
+                "active":
+                    3.}
+
+        # Initialise all compartments to zero
+        for compartment in self.compartment_types:
+            for comorbidity in self.comorbidities:
+                if "susceptible" in compartment:  # Replicate for comorbidities only
+                    self.set_compartment(compartment + comorbidity, 0.)
+                elif "latent" in compartment:  # Replicate for comorbidities and strains
+                    for strain in self.strains:
+                        self.set_compartment(compartment + strain + comorbidity, 0.)
+                elif "active" in compartment or "missed" in compartment or "lowquality" in compartment:
+                    for strain in self.strains:
+                        for organ in self.organ_status:
+                            self.set_compartment(compartment + organ + strain + comorbidity, 0.)
+                else:  # Mis-assignment by strain
+                    for strain in self.strains:
+                        for organ in self.organ_status:
+                            for assigned_strain in self.strains:
+                                self.set_compartment(compartment + organ + strain + "_as"+assigned_strain[1:] + comorbidity, 0.)
+
+        # Put in values from input_compartments - now initialise to DS-TB only
+        for compartment in self.compartment_types:
+            if compartment in input_compartments:
+                if "susceptible" in compartment:
+                    for comorbidity in self.comorbidities:
+                        self.set_compartment(compartment + comorbidity,
+                                             input_compartments[compartment]
+                                             / len(self.comorbidities))
+                elif "latent" in compartment:
+                    for comorbidity in self.comorbidities:
+                        self.set_compartment(compartment + "_ds" + comorbidity,
+                                             input_compartments[compartment]
+                                             / len(self.comorbidities))
+                else:
+                    for comorbidity in self.comorbidities:
+                        for organ in self.organ_status:
+                            self.set_compartment(compartment + organ + "_ds" + comorbidity,
+                                                 input_compartments[compartment]
+                                                 / len(self.comorbidities)
+                                                 / len(self.organ_status))
+
+    def set_parameters(self, input_parameters):
+                # Extract default parameters from our database
         # of parameters in settings
         if input_parameters is None:
 
@@ -1865,148 +1971,22 @@ class StratifiedWithMisassignmentAndLowQuality(StratifiedWithMisassignment):
                 "program_prop_lowquality":
                     0.5,
                 "program_rate_leavelowquality":
-                    2.
+                    2.,
+                "program_prop_nonsuccessoutcomes_death":
+                    0.25
             }
-
-        # Temporary code
-        # to define default and death proportions
-        for strain in self.strains:
-            input_parameters["program_proportion_default" + strain] =\
-                (1. - input_parameters["program_proportion_success" + strain]) * 0.75
-            input_parameters["program_proportion_death" + strain] =\
-                (1. - input_parameters["program_proportion_success" + strain]) * 0.25
-        input_parameters["program_proportion_default_inappropriate"] =\
-            (1. - input_parameters["program_proportion_success_inappropriate"]) * 0.75
-        input_parameters["program_proportion_death_inappropriate"] = \
-            (1. - input_parameters["program_proportion_success_inappropriate"]) * 0.25
-
-        # Make sure all progressions go somewhere, regardless of number of organ statuses
-        if len(self.organ_status) == 1:
-            input_parameters["epi_proportion_cases_smearpos"] = 1.
-        elif len(self.organ_status) == 2:
-            input_parameters["epi_proportion_cases_smearneg"] = \
-                input_parameters["epi_proportion_cases_smearneg"] \
-                + input_parameters["epi_proportion_cases_extrapul"]
 
         # Now actually set the imported parameters
         for parameter in input_parameters:
             self.set_param(parameter, input_parameters[parameter])
 
-        # If extrapulmonary case-fatality not stated
-        if "tb_proportion_casefatality_untreated_extrapul" not in input_parameters:
-            self.set_param(
-                "tb_proportion_casefatality_untreated_extrapul",
-                input_parameters["tb_proportion_casefatality_untreated_smearneg"])
-
-        # Progression and stabilisation rates
-        self.set_param("tb_rate_early_progression",  # Overall
-                       self.params["tb_proportion_early_progression"]
-                       / self.params["tb_timeperiod_early_latent"])
-        self.set_param("tb_rate_stabilise",  # Stabilisation rate
-                       (1 - self.params["tb_proportion_early_progression"])
-                       / self.params["tb_timeperiod_early_latent"])
-        for organ in self.organ_status:
-            self.set_param(
-                "tb_rate_early_progression" + organ,
-                self.params["tb_proportion_early_progression"]
-                  / self.params["tb_timeperiod_early_latent"]
-                  * self.params["epi_proportion_cases" + organ])
-            self.set_param(
-                "tb_rate_late_progression" + organ,
-                self.params["tb_rate_late_progression"]
-                * self.params["epi_proportion_cases" + organ])
-            self.set_param(
-                "tb_rate_death" + organ,
-                self.params["tb_proportion_casefatality_untreated" + organ]
-                / self.params["tb_timeperiod_activeuntreated"])
-            self.set_param(
-                "tb_rate_recover" + organ,
-                (1 - self.params["tb_proportion_casefatality_untreated" + organ])
-                / self.params["tb_timeperiod_activeuntreated"])
-
-        # Rates of detection and failure of detection
-        self.set_param(
-            "program_rate_detect",
-            input_parameters["program_proportion_detect"]
-            * (self.params["tb_rate_recover_smearpos"] + self.params["tb_rate_death_smearpos"])
-            / (1. - input_parameters["program_proportion_detect"]
-               * (1. + (1. - input_parameters["program_algorithm_sensitivity"])
-                       / input_parameters["program_algorithm_sensitivity"])))
-
-        self.set_param(
-            "program_rate_missed",
-            self.params["program_rate_detect"]
-            * (1. - input_parameters["program_algorithm_sensitivity"])
-            / input_parameters["program_algorithm_sensitivity"]
-        )
-        # Derived from original formulas of:
-        #   algorithm sensitivity = detection rate / (detection rate + missed rate)
-        #   - and -
-        #   detection proportion = detection rate / (detection rate + missed rate + spont recover rate + death rate)
-
-        # Temporarily set programmatic rates equal for all strains
-        for strain in self.strains:
-            self.set_param(
-                "program_rate_detect" + strain,
-                self.params["program_rate_detect"])
-            self.set_param(
-                "program_rate_missed" + strain,
-                self.params["program_rate_missed"])
-            self.set_param(
-                "program_rate_start_treatment" + strain,
-                self.params["program_rate_start_treatment"])
-            self.set_param(
-                "program_rate_restart_presenting" + strain,
-                self.params["program_rate_restart_presenting"])
+    def find_lowquality_detections(self):
 
         self.set_param(
             "program_rate_enterlowquality",
             self.params["program_rate_detect"]\
             * self.params["program_prop_lowquality"]\
             / (1. - self.params["program_prop_lowquality"]))
-
-        self.find_treatment_rates()
-
-    def initialise_compartments(self, input_compartments):
-
-        # Initialise all compartments to zero
-        for compartment in self.compartment_types:
-            for comorbidity in self.comorbidities:
-                if "susceptible" in compartment:  # Replicate for comorbidities only
-                    self.set_compartment(compartment + comorbidity, 0.)
-                elif "latent" in compartment:  # Replicate for comorbidities and strains
-                    for strain in self.strains:
-                        self.set_compartment(compartment + strain + comorbidity, 0.)
-                elif "active" in compartment or "missed" in compartment or "lowquality" in compartment:
-                    for strain in self.strains:
-                        for organ in self.organ_status:
-                            self.set_compartment(compartment + organ + strain + comorbidity, 0.)
-                else:  # Mis-assignment by strain
-                    for strain in self.strains:
-                        for organ in self.organ_status:
-                            for assigned_strain in self.strains:
-                                self.set_compartment(compartment + organ + strain + "_as"+assigned_strain[1:] + comorbidity, 0.)
-
-        # Put in values from input_compartments - now initialise to DS-TB only
-        for compartment in self.compartment_types:
-            if compartment in input_compartments:
-                if "susceptible" in compartment:
-                    for comorbidity in self.comorbidities:
-                        self.set_compartment(compartment + comorbidity,
-                                             input_compartments[compartment]
-                                             / len(self.comorbidities))
-                elif "latent" in compartment:
-                    for comorbidity in self.comorbidities:
-                        self.set_compartment(compartment + "_ds" + comorbidity,
-                                             input_compartments[compartment]
-                                             / len(self.comorbidities))
-                else:
-                    for comorbidity in self.comorbidities:
-                        for organ in self.organ_status:
-                            self.set_compartment(compartment + organ + "_ds" + comorbidity,
-                                                 input_compartments[compartment]
-                                                 / len(self.comorbidities)
-                                                 / len(self.organ_status))
 
     def set_natural_history_flows(self):
 

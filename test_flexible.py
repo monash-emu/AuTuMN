@@ -18,7 +18,7 @@ models_to_run = [[3, 2, 1]]
 for running_model in range(len(models_to_run)):
     name = 'model%d' % running_model
     base = os.path.join(out_dir, name)
-    model = autumn.model.FlexibleWithMisassignment(models_to_run[running_model][0],
+    model = autumn.model.StratifiedWithAmplification(models_to_run[running_model][0],
                                        models_to_run[running_model][1],
                                        models_to_run[running_model][2])
     print((str(models_to_run[running_model][0]) + " organ(s), " +

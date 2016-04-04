@@ -1620,6 +1620,7 @@ class StratifiedWithMisassignment(StratifiedWithAmplification):
                     strain = self.strains[i]
                     for j in range(len(self.strains)):
                         assigned_strain = self.strains[j]
+                        # Which treatment parameters to use - for the strain or for inappropriate treatment
                         if i <= j:
                             strain_or_inappropriate = strain
                         else:
@@ -1664,7 +1665,7 @@ class StratifiedWithMisassignment(StratifiedWithAmplification):
                                                * self.params["proportion_amplification"])
                                 # Calculate equivalent functions
                                 self.set_scaleup_var(
-                                    "program_rate_default" + treatment_stage + "_noamplify" + strain,
+                                    "program_rate_default" + treatment_stage + "_noamplify" + strain_or_inappropriate,
                                     make_sigmoidal_curve(
                                         self.params["program_rate_default" + treatment_stage + "_noamplify" + strain_or_inappropriate],
                                         self.params["program_rate_default" + treatment_stage + "_noamplify" + strain_or_inappropriate]
@@ -1682,7 +1683,7 @@ class StratifiedWithMisassignment(StratifiedWithAmplification):
                                         self.params["timepoint_introduce" + amplify_to_strain] + 3.
                                     )
                                 )
-                                # Actually set the flows
+                                # Set the flows
                                 self.set_var_transfer_rate_flow(
                                     "treatment_infect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
                                     "active" + organ + strain + comorbidity,

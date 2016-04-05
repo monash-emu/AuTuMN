@@ -20,6 +20,7 @@ class BaseModel():
         self.var_labels = None
         self.var_array = None
         self.flow_array = None
+        self.fraction_array = None
 
         self.flows = {}
         self.fixed_transfer_rate_flows = []
@@ -162,6 +163,7 @@ class BaseModel():
         self.soln_array = None
         self.var_array = None
         self.flow_array = None
+        self.fraction_array = None
         assert not self.times is None, "Haven't set times yet"
 
     def integrate_scipy(self):
@@ -251,14 +253,16 @@ class BaseModel():
             for i_label, label in enumerate(self.labels):
                 self.flow_array[i, i_label] = self.flows[label]
 
+        self.fraction_array = numpy.zeros((n_time, len(self.labels)))
         self.fraction_soln = {}
-        for label in self.labels:
+        for i_label, label in enumerate(self.labels):
             self.fraction_soln[label] = [
                 v / t
                 for v, t
                 in zip(
                     self.compartment_soln[label],
                     self.get_var_soln("population"))]
+            self.fraction_array[:, i_label] = self.fraction_soln[label]
 
         self.additional_diagnostics()
 

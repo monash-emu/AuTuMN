@@ -275,7 +275,7 @@ class ModelRunner():
                 False)
             pylab.savefig("%s.param.%s.png" % (base, key))
 
-    def plot_mcmc_var(self, var, base, n_burn_step=0, n_model_show=40):
+    def gather_runs(self, n_burn_step=0, n_model_show=40):
         model = self.model
         sampler = self.sampler
         times = model.times
@@ -283,51 +283,51 @@ class ModelRunner():
         chain = sampler.chain[:, n_burn_step:, :]
         n_param = chain.shape[-1]
         samples = chain.reshape((-1, n_param))
+        self.average_params = numpy.average(samples, axis=0)
+
+        self.runs = []
         n_sample = samples.shape[0]
-
-        pylab.clf()
-
         for i_sample in numpy.random.randint(n_sample, size=n_model_show):
             params = samples[i_sample, :]
             self.run_with_params(params)
-            pylab.plot(times, model.get_var_soln(var), color="k", alpha=0.1)
+            self.runs.append({
+                'compartments': model.soln_array,
+                'flow': model.flow_array,
+                'fraction': model.fraction_array,
+                'var': model.var_array,
+            })
 
-        self.run_with_params(numpy.average(samples, axis=0))
-        pylab.plot(times, model.get_var_soln(var), color="r", alpha=0.8)
-
+    def plot_var(self, label, base):
+        times = self.model.times
+        i_label = self.model.var_labels.index(label)
+        pylab.clf()
+        for i_run, run in enumerate(self.runs):
+            vals = run['var'][:, i_label]
+            pylab.plot(times, vals, color="k", alpha=0.1)
+        self.run_with_params(self.average_params)
+        pylab.plot(times, self.model.get_var_soln(label), color="r", alpha=0.8)
         plotting.set_axes_props(
             pylab.gca(), 
             'year', 
-            var, 
-            'Modelled %s for selection of MCMC parameters' % var, 
+            label,
+            'Modelled %s for selection of MCMC parameters' % label,
             False)
-        pylab.savefig(base + '.var.' + var + '.png')
+        pylab.savefig(base + '.var.' + label + '.png')
 
-    def plot_mcmc_fraction(self, label, base, n_burn_step=0, n_model_show=40):
-        model = self.model
-        sampler = self.sampler
-        times = model.times
-
-        chain = sampler.chain[:, n_burn_step:, :]
-        n_param = chain.shape[-1]
-        samples = chain.reshape((-1, n_param))
-        n_sample = samples.shape[0]
-
+    def plot_fraction(self, label, base):
+        times = self.model.times
+        i_label = self.model.labels.index(label)
         pylab.clf()
-
-        for i_sample in numpy.random.randint(n_sample, size=n_model_show):
-            params = samples[i_sample, :]
-            self.run_with_params(params)
-            pylab.plot(times, model.fraction_soln[label], color="k", alpha=0.1)
-
-        self.run_with_params(numpy.average(samples, axis=0))
-        pylab.plot(times, model.fraction_soln[label], color="r", alpha=0.8)
-
+        for i_run, run in enumerate(self.runs):
+            vals = run['fraction'][:, i_label]
+            pylab.plot(times, vals, color="k", alpha=0.1)
+        self.run_with_params(self.average_params)
+        pylab.plot(times, self.model.fraction_soln[label], color="r", alpha=0.8)
         plotting.set_axes_props(
-            pylab.gca(), 
-            'year', 
-            label, 
-            'Modelled %s for selection of MCMC parameters' % var, 
+            pylab.gca(),
+            'year',
+            label,
+            'Modelled %s for selection of MCMC parameters' % label,
             False)
         pylab.savefig(base + '.fraction.' + label + '.png')
 
@@ -338,29 +338,19 @@ os.makedirs(out_dir)
 
 model_runner = ModelRunner()
 
-# base = os.path.join(out_dir, 'minimize')
-# minimum = model_runner.minimize()
-# print minimum.best_params
-# model_runner.run_with_params(minimum.best_params)
-# model = model_runner.model
-# plotting.plot_fractions(model, model.labels[:])
-# pylab.savefig(base + '.fraction.png')
-# plotting.plot_populations(model, model.labels[:])
-# pylab.savefig(base + '.population.png')
-
 n_step = 40
-n_burn_step = .5 * n_step
-n_model = .5 * n_step
 base = os.path.join(out_dir, 'mcmc')
 model_runner.mcmc(n_mcmc_step=n_step)
-model_runner.plot_mcmc_params(base)
 model_runner.model.make_graph(os.path.join(out_dir, 'workflow.png'))
+model_runner.plot_mcmc_params(base)
+
+n_burn_step = .5 * n_step
+n_model = .5 * n_step
+model_runner.gather_runs(n_burn_step=n_burn_step, n_model_show=n_model)
 for var in ['population', 'incidence', 'prevalence', 'mortality']:
-    model_runner.plot_mcmc_var(
-        var, base, n_burn_step=n_burn_step, n_model_show=n_model)
+    model_runner.plot_var(var, base)
 for label in ['latent_early', 'latent_late']:
-    model_runner.plot_mcmc_fraction(
-        label, base, n_burn_step=n_burn_step, n_model_show=n_model)
+    model_runner.plot_fraction(label, base)
 
 
 

@@ -19,6 +19,7 @@ from numpy import isfinite
 from scipy.stats import beta, gamma, norm, truncnorm
 import math
 
+import autumn.base
 import autumn.model
 import autumn.plotting as plotting
 import autumn.curve
@@ -38,7 +39,7 @@ def is_positive_definite(v):
 class ModelRunner():
 
     def __init__(self):
-        self.model = autumn.model.SimplifiedModel()
+        self.model = autumn.base.SimpleModel()
         self.model.make_times(1900, 2015, 1.)
         self.model.set_compartment(
             "susceptible", 50E6)
@@ -354,7 +355,7 @@ base = os.path.join(out_dir, 'mcmc')
 model_runner.mcmc(n_mcmc_step=n_step)
 model_runner.plot_mcmc_params(base)
 model_runner.model.make_graph(os.path.join(out_dir, 'workflow.png'))
-for var in ['population', 'incidence', 'prevalence', 'mortality', 'latent']:
+for var in ['population', 'incidence', 'prevalence', 'mortality']:
     model_runner.plot_mcmc_var(
         var, base, n_burn_step=n_burn_step, n_model_show=n_model)
 for label in ['latent_early', 'latent_late']:

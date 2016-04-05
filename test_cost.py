@@ -4,6 +4,7 @@ import datetime
 
 import numpy
 
+import autumn.base
 import autumn.model
 import autumn.plotting
 
@@ -100,7 +101,7 @@ class ModelOptimizer():
         print "Optimized budget %s -> %s" % (budgetvecnew, fval)
 
 
-model = autumn.model.SimplifiedModel()
+model = autumn.base.SimpleModel()
 model.make_times(1990, 2020, 1)
 model_optimizer = ModelOptimizer(model)
 model_optimizer.add_program(

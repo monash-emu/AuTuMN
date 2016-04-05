@@ -1,6 +1,7 @@
 import os
 import glob
 
+import autumn.base
 import autumn.model
 import autumn.plotting
 
@@ -10,7 +11,7 @@ if not os.path.isdir(out_dir):
 
 base = os.path.join(out_dir, 'model')
 
-model = autumn.model.SimplifiedModel()
+model = autumn.base.SimpleModel()
 model.make_times(1600, 2050, 0.05)
 model.integrate_explicit()
 model.make_graph(base + '.workflow')

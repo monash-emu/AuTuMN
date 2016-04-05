@@ -12,6 +12,7 @@ digraph {
 		tb_death
 			susceptible -> latent_early [label=rate_force]
 			susceptible_vac -> latent_early [label=rate_force_weak]
+			latent_late -> latent_early [label=rate_force_weak]
 			active -> treatment_infect [label=program_rate_detect]
 			latent_early -> active [label=0.20]
 			latent_early -> latent_late [label=2.3]

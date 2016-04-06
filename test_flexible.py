@@ -18,7 +18,7 @@ models_to_run = [[3, 2, 1]]
 for running_model in range(len(models_to_run)):
     name = 'model%d' % running_model
     base = os.path.join(out_dir, name)
-    model = autumn.model.StratifiedModel()
+    model = autumn.model.StratifiedWithAmplification(1, 2, 1)
     print()
     start_time = 1000.
     recent_time = 1990.

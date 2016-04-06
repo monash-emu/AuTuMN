@@ -1749,6 +1749,13 @@ class StratifiedWithMisassignment(StratifiedWithAmplification):
 
     def initialise_compartments(self, input_compartments):
 
+        if input_compartments is None:
+            input_compartments = {
+                "susceptible_fully":
+                    2e7,
+                "active":
+                    3.}
+
         # Initialise all compartments to zero
         for compartment in self.compartment_types:
             for comorbidity in self.comorbidities:

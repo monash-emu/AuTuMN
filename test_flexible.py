@@ -18,8 +18,12 @@ models_to_run = [[3, 2, 1]]
 for running_model in range(len(models_to_run)):
     name = 'model%d' % running_model
     base = os.path.join(out_dir, name)
-    model = autumn.model.StratifiedWithAmplification(1, 2, 1)
-    print()
+    model = autumn.model.StratifiedWithAmplification(models_to_run[running_model][0],
+                                                     models_to_run[running_model][1],
+                                                     models_to_run[running_model][2])
+    print((str(models_to_run[running_model][0]) + " organ(s), " +
+           str(models_to_run[running_model][1]) + " strain(s), " +
+           str(models_to_run[running_model][2]) + " comorbidity(ies)"))
     start_time = 1000.
     recent_time = 1990.
     model.make_times(start_time, 2015., 0.05)

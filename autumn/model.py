@@ -223,6 +223,10 @@ class UnstratifiedModel(BaseModel):
                     0.6,
                 "program_prop_assign_xdr":
                     .4,
+                "program_prop_lowquality":
+                    0.5,
+                "program_rate_leavelowquality":
+                    2.,
                 "program_prop_nonsuccessoutcomes_death":
                     0.25
             }
@@ -2140,122 +2144,6 @@ class StratifiedWithMisassignmentAndLowQuality(StratifiedWithMisassignment):
                                                  input_compartments[compartment]
                                                  / len(self.comorbidities)
                                                  / len(self.organ_status))
-
-    def set_parameters(self, input_parameters):
-                # Extract default parameters from our database
-        # of parameters in settings
-        if input_parameters is None:
-
-            def get(param_set_name, param_name, prob=0.5):
-                param_set_dict = {'default': default, 'philippines': philippines}
-                param_set = param_set_dict[param_set_name]
-                param = getattr(param_set, param_name)
-                ppf = getattr(param, "ppf")
-                return ppf(prob)
-
-            # Estimate some parameters
-            input_parameters = {
-                "demo_rate_birth":
-                    24. / 1e3,
-                "demo_rate_death":
-                    1. / 69.,
-                "epi_proportion_cases_smearpos":
-                    (92991. + 6277.) / 243379.,  # Total bacteriologically confirmed
-                "epi_proportion_cases_smearneg":
-                    139950. / 243379.,  # Clinically diagnosed
-                "epi_proportion_cases_extrapul":
-                    4161. / 243379.,  # Bacteriologically confirmed
-                "tb_multiplier_force_smearpos":
-                    1.,
-                "tb_multiplier_force_smearneg":
-                    get("default", "multiplier_force_smearneg"),
-                "tb_multiplier_force_extrapul":
-                    0.,
-                "tb_n_contact":
-                    6.,
-                "tb_proportion_early_progression":
-                    get("default", "proportion_early_progression"),
-                "tb_timeperiod_early_latent":
-                    get("default", "timeperiod_early_latent"),
-                "tb_rate_late_progression":
-                    0.007,
-                "tb_proportion_casefatality_untreated_smearpos":
-                    get("default", "proportion_casefatality_active_untreated_smearpos"),
-                "tb_proportion_casefatality_untreated_smearneg":
-                    get("default", "proportion_casefatality_active_untreated_smearneg"),
-                "tb_timeperiod_activeuntreated":
-                    4.,
-                "tb_multiplier_bcg_protection":
-                    get("default", "multiplier_bcg_protection"),
-                "program_prop_vac":
-                    get("philippines", "bcg_coverage"),
-                "program_prop_unvac":
-                    1. - get("philippines", "bcg_coverage"),
-                "program_proportion_detect":
-                    0.7,
-                "program_algorithm_sensitivity":
-                    0.9,
-                "program_rate_start_treatment":
-                    1. / get("philippines", "program_timeperiod_delayto_treatment"),
-                "tb_timeperiod_treatment_ds":
-                    0.5,
-                "tb_timeperiod_treatment_mdr":
-                    2.,
-                "tb_timeperiod_treatment_xdr":
-                    3.,
-                "tb_timeperiod_treatment_inappropriate":
-                    2.,
-                "tb_timeperiod_infect_ontreatment_ds":
-                    get("default", "timeperiod_infect_ontreatment"),
-                "tb_timeperiod_infect_ontreatment_mdr":
-                    1. / 12.,
-                "tb_timeperiod_infect_ontreatment_xdr":
-                    2. / 12.,
-                "tb_timeperiod_infect_ontreatment_inappropriate":
-                    1.9,
-                "program_proportion_success_ds":
-                    0.9,
-                "program_proportion_success_mdr":
-                    0.6,
-                "program_proportion_success_xdr":
-                    0.4,
-                "program_proportion_success_inappropriate":
-                    0.3,
-                "program_rate_restart_presenting":
-                    4.,
-                "proportion_amplification":
-                    1. / 15.,
-                "timepoint_introduce_mdr":
-                    1960.,
-                "timepoint_introduce_xdr":
-                    2050.,
-                "treatment_available_date":
-                    1950.,
-                "pretreatment_available_proportion":
-                    0.2,
-                "dots_start_date":
-                    1995,
-                "dots_start_proportion":
-                    0.5,
-                "finish_scaleup_date":
-                    2010,
-                "pretreatment_available_proportion":
-                    0.2,
-                "program_prop_assign_mdr":
-                    0.6,
-                "program_prop_assign_xdr":
-                    .4,
-                "program_prop_lowquality":
-                    0.5,
-                "program_rate_leavelowquality":
-                    2.,
-                "program_prop_nonsuccessoutcomes_death":
-                    0.25
-            }
-
-        # Now actually set the imported parameters
-        for parameter in input_parameters:
-            self.set_param(parameter, input_parameters[parameter])
 
     def find_lowquality_detections(self):
 

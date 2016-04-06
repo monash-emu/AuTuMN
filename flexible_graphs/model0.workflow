@@ -2,38 +2,84 @@ digraph {
 	graph [fontsize=16 label="Dynamic Transmission Model"]
 	node [fillcolor="#CCDDFF" fontname=Helvetica shape=box style=filled]
 	edge [arrowhead=open fontname=Courier fontsize=10 style=dotted]
-		susceptible_fully
-		susceptible_vac
-		susceptible_treated
-		latent_early
-		latent_late
-		active
-		detect
-		missed
-		treatment_infect
-		treatment_noninfect
+		susceptible_fully_nocomorbs
+		susceptible_vac_nocomorbs
+		susceptible_treated_nocomorbs
+		latent_early_ds_nocomorbs
+		latent_late_ds_nocomorbs
+		active_smearpos_ds_nocomorbs
+		active_smearneg_ds_nocomorbs
+		active_extrapul_ds_nocomorbs
+		detect_smearpos_ds_nocomorbs
+		detect_smearneg_ds_nocomorbs
+		detect_extrapul_ds_nocomorbs
+		missed_smearpos_ds_nocomorbs
+		missed_smearneg_ds_nocomorbs
+		missed_extrapul_ds_nocomorbs
+		treatment_infect_smearpos_ds_nocomorbs
+		treatment_infect_smearneg_ds_nocomorbs
+		treatment_infect_extrapul_ds_nocomorbs
+		treatment_noninfect_smearpos_ds_nocomorbs
+		treatment_noninfect_smearneg_ds_nocomorbs
+		treatment_noninfect_extrapul_ds_nocomorbs
 		tb_death
-			susceptible_fully -> latent_early [label=rate_force]
-			susceptible_vac -> latent_early [label=rate_force_weak]
-			susceptible_treated -> latent_early [label=rate_force_weak]
-			latent_late -> latent_early [label=rate_force_weak]
-			active -> detect [label=program_rate_detect]
-			active -> missed [label=program_rate_missed]
-			latent_early -> latent_late [label=2.3]
-			latent_early -> active [label=0.33]
-			latent_late -> active [label=0.0070]
-			active -> latent_late [label=0.15]
-			missed -> latent_late [label=0.15]
-			detect -> latent_late [label=0.15]
-			detect -> treatment_infect [label=25.6]
-			missed -> active [label=4.0]
-			treatment_infect -> treatment_noninfect [label=28.1]
-			treatment_noninfect -> susceptible_treated [label=2.0]
-			treatment_infect -> active [label=0.16]
-			treatment_noninfect -> active [label=0.15]
-			active -> tb_death [label=0.10]
-			missed -> tb_death [label=0.10]
-			detect -> tb_death [label=0.10]
-			treatment_infect -> tb_death [label=0.05]
-			treatment_noninfect -> tb_death [label=0.0500]
+			susceptible_fully_nocomorbs -> latent_early_ds_nocomorbs [label=rate_force_ds]
+			susceptible_vac_nocomorbs -> latent_early_ds_nocomorbs [label=rate_force_weak_ds]
+			susceptible_treated_nocomorbs -> latent_early_ds_nocomorbs [label=rate_force_weak_ds]
+			latent_late_ds_nocomorbs -> latent_early_ds_nocomorbs [label=rate_force_weak_ds]
+			active_smearpos_ds_nocomorbs -> detect_smearpos_ds_nocomorbs [label=program_rate_detect]
+			active_smearpos_ds_nocomorbs -> missed_smearpos_ds_nocomorbs [label=program_rate_missed]
+			active_smearneg_ds_nocomorbs -> detect_smearneg_ds_nocomorbs [label=program_rate_detect]
+			active_smearneg_ds_nocomorbs -> missed_smearneg_ds_nocomorbs [label=program_rate_missed]
+			active_extrapul_ds_nocomorbs -> detect_extrapul_ds_nocomorbs [label=program_rate_detect]
+			active_extrapul_ds_nocomorbs -> missed_extrapul_ds_nocomorbs [label=program_rate_missed]
+			latent_early_ds_nocomorbs -> latent_late_ds_nocomorbs [label=2.3]
+			latent_early_ds_nocomorbs -> active_smearpos_ds_nocomorbs [label=0.13]
+			latent_late_ds_nocomorbs -> active_smearpos_ds_nocomorbs [label=0.0029]
+			active_smearpos_ds_nocomorbs -> latent_late_ds_nocomorbs [label=0.07]
+			missed_smearpos_ds_nocomorbs -> latent_late_ds_nocomorbs [label=0.07]
+			detect_smearpos_ds_nocomorbs -> latent_late_ds_nocomorbs [label=0.07]
+			latent_early_ds_nocomorbs -> active_smearneg_ds_nocomorbs [label=0.19]
+			latent_late_ds_nocomorbs -> active_smearneg_ds_nocomorbs [label=0.0040]
+			active_smearneg_ds_nocomorbs -> latent_late_ds_nocomorbs [label=0.20]
+			missed_smearneg_ds_nocomorbs -> latent_late_ds_nocomorbs [label=0.20]
+			detect_smearneg_ds_nocomorbs -> latent_late_ds_nocomorbs [label=0.20]
+			latent_early_ds_nocomorbs -> active_extrapul_ds_nocomorbs [label=0.0056]
+			latent_late_ds_nocomorbs -> active_extrapul_ds_nocomorbs [label=0.000120]
+			active_extrapul_ds_nocomorbs -> latent_late_ds_nocomorbs [label=0.20]
+			missed_extrapul_ds_nocomorbs -> latent_late_ds_nocomorbs [label=0.20]
+			detect_extrapul_ds_nocomorbs -> latent_late_ds_nocomorbs [label=0.20]
+			detect_smearpos_ds_nocomorbs -> treatment_infect_smearpos_ds_nocomorbs [label=25.6]
+			missed_smearpos_ds_nocomorbs -> active_smearpos_ds_nocomorbs [label=4.0]
+			detect_smearneg_ds_nocomorbs -> treatment_infect_smearneg_ds_nocomorbs [label=25.6]
+			missed_smearneg_ds_nocomorbs -> active_smearneg_ds_nocomorbs [label=4.0]
+			detect_extrapul_ds_nocomorbs -> treatment_infect_extrapul_ds_nocomorbs [label=25.6]
+			missed_extrapul_ds_nocomorbs -> active_extrapul_ds_nocomorbs [label=4.0]
+			treatment_infect_smearpos_ds_nocomorbs -> treatment_noninfect_smearpos_ds_nocomorbs [label=28.1]
+			treatment_noninfect_smearpos_ds_nocomorbs -> susceptible_treated_nocomorbs [label=2.0]
+			treatment_infect_smearpos_ds_nocomorbs -> active_smearpos_ds_nocomorbs [label=0.16]
+			treatment_noninfect_smearpos_ds_nocomorbs -> active_smearpos_ds_nocomorbs [label=0.15]
+			treatment_infect_smearneg_ds_nocomorbs -> treatment_noninfect_smearneg_ds_nocomorbs [label=28.1]
+			treatment_noninfect_smearneg_ds_nocomorbs -> susceptible_treated_nocomorbs [label=2.0]
+			treatment_infect_smearneg_ds_nocomorbs -> active_smearneg_ds_nocomorbs [label=0.16]
+			treatment_noninfect_smearneg_ds_nocomorbs -> active_smearneg_ds_nocomorbs [label=0.15]
+			treatment_infect_extrapul_ds_nocomorbs -> treatment_noninfect_extrapul_ds_nocomorbs [label=28.1]
+			treatment_noninfect_extrapul_ds_nocomorbs -> susceptible_treated_nocomorbs [label=2.0]
+			treatment_infect_extrapul_ds_nocomorbs -> active_extrapul_ds_nocomorbs [label=0.16]
+			treatment_noninfect_extrapul_ds_nocomorbs -> active_extrapul_ds_nocomorbs [label=0.15]
+			active_smearpos_ds_nocomorbs -> tb_death [label=0.18]
+			missed_smearpos_ds_nocomorbs -> tb_death [label=0.18]
+			detect_smearpos_ds_nocomorbs -> tb_death [label=0.18]
+			active_smearneg_ds_nocomorbs -> tb_death [label=0.0466]
+			missed_smearneg_ds_nocomorbs -> tb_death [label=0.0466]
+			detect_smearneg_ds_nocomorbs -> tb_death [label=0.0466]
+			active_extrapul_ds_nocomorbs -> tb_death [label=0.0466]
+			missed_extrapul_ds_nocomorbs -> tb_death [label=0.0466]
+			detect_extrapul_ds_nocomorbs -> tb_death [label=0.0466]
+			treatment_infect_smearpos_ds_nocomorbs -> tb_death [label=0.05]
+			treatment_noninfect_smearpos_ds_nocomorbs -> tb_death [label=0.0500]
+			treatment_infect_smearneg_ds_nocomorbs -> tb_death [label=0.05]
+			treatment_noninfect_smearneg_ds_nocomorbs -> tb_death [label=0.0500]
+			treatment_infect_extrapul_ds_nocomorbs -> tb_death [label=0.05]
+			treatment_noninfect_extrapul_ds_nocomorbs -> tb_death [label=0.0500]
 }

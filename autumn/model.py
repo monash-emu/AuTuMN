@@ -968,9 +968,6 @@ class MultiOrganStatusModel(UnstratifiedModel):
         return early_proportion, late_proportion
 
 
-
-
-
 class MultistrainModel(MultiOrganStatusModel):
 
     """
@@ -2086,6 +2083,7 @@ class StratifiedWithMisassignmentAndLowQuality(StratifiedWithMisassignment):
             "active",
             "missed",
             "detect",
+            "lowquality",
             "treatment_infect"]
 
     def initialise_compartments(self, input_compartments):
@@ -2417,5 +2415,3 @@ class StratifiedWithMisassignmentAndLowQuality(StratifiedWithMisassignment):
                             "treatment_infect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
                             "program_rate_start_treatment")
 
-
-#  Test Romain, again

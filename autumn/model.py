@@ -44,16 +44,6 @@ class UnstratifiedModel(BaseModel):
 
         self.set_parameters(input_parameters)
 
-        self.split_default_death_proportions()
-
-        self.find_natural_history_flows()
-
-        self.find_detection_rates()
-
-        self.find_programmatic_rates()
-
-        self.find_treatment_rates()
-
     def define_model_structure(self):
 
         self.compartment_types = [
@@ -226,6 +216,18 @@ class UnstratifiedModel(BaseModel):
 
         for parameter in input_parameters:
             self.set_param(parameter, input_parameters[parameter])
+
+    def process_params(self):
+        
+        self.split_default_death_proportions()
+
+        self.find_natural_history_flows()
+
+        self.find_detection_rates()
+
+        self.find_programmatic_rates()
+
+        self.find_treatment_rates()
 
     def calculate_birth_rates(self):
 

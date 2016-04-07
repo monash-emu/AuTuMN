@@ -39,14 +39,14 @@ def is_positive_definite(v):
 class ModelRunner():
 
     def __init__(self):
-        self.model = autumn.base.SimpleModel()
+        self.model = autumn.model.UnstratifiedModel()
         self.model.make_times(1900, 2015, 1.)
         self.model.set_compartment(
-            "susceptible", 50E6)
+            "susceptible_fully", 50E6)
         self.is_last_run_success = False
         self.param_props_list = [
             { 
-                'init': 30,
+                'init': 6,
                 'scale': 10.,
                 'key': 'tb_n_contact',
                 'short': 'n',
@@ -59,55 +59,34 @@ class ModelRunner():
             #     'short': 'pop0',
             #     'format': lambda v: "%3.0fM" % (v/1E6)
             # },
-            # { 
-            #     'init': 0.5,
-            #     'scale': 5,
-            #     'key': 'tb_bcg_multiplier',
-            #     'short': 'bcg',
-            #     'format': lambda v: "%.4f" % v
-            # },
+            { 
+                'init': 0.5,
+                'scale': 5,
+                'key': 'tb_multiplier_bcg_protection',
+                'short': 'bcg',
+                'format': lambda v: "%.4f" % v
+            },
             { 
                 'init': .18,
                 'scale': 1,
-                'key': 'tb_rate_earlyprogress',
+                'key': 'tb_proportion_early_progression',
                 'short': 'early',
-                'format': lambda v: "%.4f" % v
-            },
-            { 
-                'init': 1.8,
-                'scale': 5,
-                'key': 'tb_rate_stabilise',
-                'short': 'stab',
-                'format': lambda v: "%.4f" % v
-            },
-            { 
-                'init': .2,
-                'scale': 5,
-                'key': 'tb_rate_recover',
-                'short': 'recov',
                 'format': lambda v: "%.4f" % v
             },
             { 
                 'init': 0.001,
                 'scale': 5,
-                'key': 'tb_rate_lateprogress',
+                'key': 'tb_rate_late_progression',
                 'short': 'late',
                 'format': lambda v: "%.4f" % v
             },
-            { 
-                'init': .01,
-                'scale': 5,
-                'key': 'tb_rate_death',
-                'short': 'death',
+            {
+                'init': .7,
+                'scale': 1,
+                'key': 'program_proportion_detect',
+                'short': 'detect',
                 'format': lambda v: "%.4f" % v
             },
-            # { 
-            #     'init': .9,
-            #     'scale': 1,
-            #     'key': 'program_rate_detect',
-            #     'short': 'detect',
-            #     'format': lambda v: "%.4f" % v
-            # },
         ]
 
     def set_model_with_params(self, param_dict):
@@ -116,7 +95,8 @@ class ModelRunner():
             if key in self.model.params:
                 n_set += 1
                 self.model.set_param(key, param_dict[key])
-        assert n_set == len(param_dict), "Not all params apply to model"
+            else:
+                raise ValueError("%s not in model params" % key)
 
     def convert_param_list_to_dict(self, params):
         param_dict = {}
@@ -331,7 +311,8 @@ class ModelRunner():
             False)
         pylab.savefig(base + '.fraction.' + label + '.png')
 
-out_dir = "mcmc_graphs"
+
+out_dir = "calibration_graph"
 if os.path.isdir(out_dir):
     shutil.rmtree(out_dir)
 os.makedirs(out_dir)

@@ -50,6 +50,8 @@ class UnstratifiedModel(BaseModel):
 
         self.find_detection_rates()
 
+        self.find_programmatic_rates()
+
         self.find_treatment_rates()
 
     def define_model_structure(self):
@@ -375,7 +377,7 @@ class UnstratifiedModel(BaseModel):
         #   - and -
         #   detection proportion = detection rate / (detection rate + missed rate + spont recover rate + death rate)
 
-    def set_programmatic_flows(self):
+    def find_programmatic_rates(self):
 
         for detect_or_missed in ["_detect", "_missed"]:
             self.set_scaleup_var(
@@ -385,6 +387,8 @@ class UnstratifiedModel(BaseModel):
                     self.params["dots_start_proportion"] * self.params["program_rate" + detect_or_missed],
                     self.params["program_rate" + detect_or_missed],
                     self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
+
+    def set_programmatic_flows(self):
 
         self.set_var_transfer_rate_flow(
             "active",
@@ -687,6 +691,8 @@ class MultiOrganStatusModel(UnstratifiedModel):
 
         self.find_detection_rates()
 
+        self.find_programmatic_rates()
+
         self.find_treatment_rates()
 
     def define_model_structure(self, number_of_organs):
@@ -867,15 +873,6 @@ class MultiOrganStatusModel(UnstratifiedModel):
 
     def set_programmatic_flows(self):
 
-        for detect_or_missed in ["_detect", "_missed"]:
-            self.set_scaleup_var(
-                "program_rate" + detect_or_missed,
-                make_two_step_curve(
-                    self.params["pretreatment_available_proportion"] * self.params["program_rate" + detect_or_missed],
-                    self.params["dots_start_proportion"] * self.params["program_rate" + detect_or_missed],
-                    self.params["program_rate" + detect_or_missed],
-                    self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
-
         for organ in self.organ_status:
             self.set_var_transfer_rate_flow(
                 "active" + organ,
@@ -988,6 +985,8 @@ class MultiOrganStatusLowQualityModel(MultiOrganStatusModel):
 
         self.find_lowquality_detections()
 
+        self.find_programmatic_rates()
+
         self.find_treatment_rates()
 
     def define_model_structure(self, number_of_organs):
@@ -1083,7 +1082,7 @@ class MultiOrganStatusLowQualityModel(MultiOrganStatusModel):
             * self.params["program_prop_lowquality"] \
             / (1. - self.params["program_prop_lowquality"]))
 
-    def set_programmatic_flows(self):
+    def find_programmatic_rates(self):
 
         for detect_or_missed in ["_detect", "_missed", "_enterlowquality"]:
             self.set_scaleup_var(
@@ -1094,6 +1093,8 @@ class MultiOrganStatusLowQualityModel(MultiOrganStatusModel):
                     self.params["program_rate" + detect_or_missed],
                     self.params["treatment_available_date"], self.params["dots_start_date"],
                     self.params["finish_scaleup_date"]))
+
+    def set_programmatic_flows(self):
 
         for organ in self.organ_status:
             self.set_var_transfer_rate_flow(
@@ -1150,6 +1151,8 @@ class MultistrainModel(MultiOrganStatusModel):
         self.find_natural_history_flows()
 
         self.find_detection_rates()
+
+        self.find_programmatic_rates()
 
         self.find_equal_detection_rates()
 
@@ -1337,15 +1340,6 @@ class MultistrainModel(MultiOrganStatusModel):
                 self.params["program_rate_restart_presenting"])
 
     def set_programmatic_flows(self):
-
-        for detect_or_missed in ["_detect", "_missed"]:
-            self.set_scaleup_var(
-                "program_rate" + detect_or_missed,
-                make_two_step_curve(
-                    self.params["pretreatment_available_proportion"] * self.params["program_rate" + detect_or_missed],
-                    self.params["dots_start_proportion"] * self.params["program_rate" + detect_or_missed],
-                    self.params["program_rate" + detect_or_missed],
-                    self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
 
         for strain in self.strains:
             for organ in self.organ_status:
@@ -1568,6 +1562,8 @@ class StratifiedModel(MultistrainModel):
 
         self.find_detection_rates()
 
+        self.find_programmatic_rates()
+
         self.find_equal_detection_rates()
 
         self.find_treatment_rates()
@@ -1749,15 +1745,6 @@ class StratifiedModel(MultistrainModel):
                         "tb_rate_death" + organ)
 
     def set_programmatic_flows(self):
-
-        for detect_or_missed in ["_detect", "_missed"]:
-            self.set_scaleup_var(
-                "program_rate" + detect_or_missed,
-                make_two_step_curve(
-                    self.params["pretreatment_available_proportion"] * self.params["program_rate" + detect_or_missed],
-                    self.params["dots_start_proportion"] * self.params["program_rate" + detect_or_missed],
-                    self.params["program_rate" + detect_or_missed],
-                    self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
 
         for comorbidity in self.comorbidities:
             for strain in self.strains:
@@ -2403,23 +2390,16 @@ class StratifiedWithMisassignmentAndLowQuality(StratifiedWithMisassignment):
                                 "detect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
                                 "program_rate_detect" + strain + "_as"+assigned_strain[1:])
 
-        # Find the rate of entry to low quality care - no strain assignment process here
-        self.set_scaleup_var(
-            "program_rate_enterlowquality",
-            make_two_step_curve(
-                self.params["pretreatment_available_proportion"] * self.params["program_rate_enterlowquality"],
-                self.params["dots_start_proportion"] * self.params["program_rate_enterlowquality"],
-                self.params["program_rate_enterlowquality"],
-                self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
-
-        # Find the rate of missed diagnoses
-        self.set_scaleup_var(
-            "program_rate_missed",
-            make_two_step_curve(
-                self.params["pretreatment_available_proportion"] * self.params["program_rate_missed"],
-                self.params["dots_start_proportion"] * self.params["program_rate_missed"],
-                self.params["program_rate_missed"],
-                self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
+        for missed_or_lowquality in ["_missed", "_enterlowquality"]:
+            self.set_scaleup_var(
+                "program_rate" + missed_or_lowquality,
+                make_two_step_curve(
+                    self.params["pretreatment_available_proportion"] * self.params[
+                        "program_rate" + missed_or_lowquality],
+                    self.params["dots_start_proportion"] * self.params["program_rate" + missed_or_lowquality],
+                    self.params["program_rate" + missed_or_lowquality],
+                    self.params["treatment_available_date"], self.params["dots_start_date"],
+                    self.params["finish_scaleup_date"]))
 
         for comorbidity in self.comorbidities:
             for strain in self.strains:

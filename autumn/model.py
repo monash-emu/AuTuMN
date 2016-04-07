@@ -122,13 +122,6 @@ class UnstratifiedModel(BaseModel):
         # of parameters in settings
         if input_parameters is None:
 
-            def get(param_set_name, param_name, prob=0.5):
-                param_set_dict = {'default': default, 'philippines': philippines}
-                param_set = param_set_dict[param_set_name]
-                param = getattr(param_set, param_name)
-                ppf = getattr(param, "ppf")
-                return ppf(prob)
-
             # Estimate some parameters
             input_parameters = {
                 "demo_rate_birth":
@@ -144,7 +137,7 @@ class UnstratifiedModel(BaseModel):
                 "tb_multiplier_force_smearpos":
                     1.,
                 "tb_multiplier_force_smearneg":
-                    get("default", "multiplier_force_smearneg"),
+                    0.24,
                 "tb_multiplier_force_extrapul":
                     0.,
                 "tb_multiplier_force":
@@ -152,31 +145,31 @@ class UnstratifiedModel(BaseModel):
                 "tb_n_contact":
                     9.,
                 "tb_proportion_early_progression":
-                    get("default", "proportion_early_progression"),
+                    0.12,
                 "tb_timeperiod_early_latent":
-                    get("default", "timeperiod_early_latent"),
+                    0.4,
                 "tb_rate_late_progression":
                     0.007,
                 "tb_proportion_casefatality_untreated_smearpos":
-                    get("default", "proportion_casefatality_active_untreated_smearpos"),
+                    0.7,
                 "tb_proportion_casefatality_untreated_smearneg":
-                    get("default", "proportion_casefatality_active_untreated_smearneg"),
+                    0.2,
                 "tb_proportion_casefatality_untreated":
                     0.4,
                 "tb_timeperiod_activeuntreated":
                     4.,
                 "tb_multiplier_bcg_protection":
-                    get("default", "multiplier_bcg_protection"),
+                    0.5,
                 "program_prop_vac":
-                    get("philippines", "bcg_coverage"),
+                    0.88,
                 "program_prop_unvac":
-                    1. - get("philippines", "bcg_coverage"),
+                    1. - 0.88,
                 "program_proportion_detect":
                     0.7,
                 "program_algorithm_sensitivity":
                     0.9,
                 "program_rate_start_treatment":
-                    1. / get("philippines", "program_timeperiod_delayto_treatment"),
+                    26.,
                 "tb_timeperiod_treatment_ds":
                     0.5,
                 "tb_timeperiod_treatment_mdr":
@@ -186,7 +179,7 @@ class UnstratifiedModel(BaseModel):
                 "tb_timeperiod_treatment_inappropriate":
                     2.,
                 "tb_timeperiod_infect_ontreatment_ds":
-                    get("default", "timeperiod_infect_ontreatment"),
+                    0.035,
                 "tb_timeperiod_infect_ontreatment_mdr":
                     1. / 12.,
                 "tb_timeperiod_infect_ontreatment_xdr":
@@ -231,7 +224,6 @@ class UnstratifiedModel(BaseModel):
                     0.25
             }
 
-        # Now actually set the imported parameters
         for parameter in input_parameters:
             self.set_param(parameter, input_parameters[parameter])
 

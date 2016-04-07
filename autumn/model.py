@@ -377,20 +377,14 @@ class UnstratifiedModel(BaseModel):
 
     def set_programmatic_flows(self):
 
-        self.set_scaleup_var(
-            "program_rate_detect",
-            make_two_step_curve(
-                self.params["pretreatment_available_proportion"] * self.params["program_rate_detect"],
-                self.params["dots_start_proportion"] * self.params["program_rate_detect"],
-                self.params["program_rate_detect"],
-                self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
-        self.set_scaleup_var(
-            "program_rate_missed",
-            make_two_step_curve(
-                self.params["pretreatment_available_proportion"] * self.params["program_rate_missed"],
-                self.params["dots_start_proportion"] * self.params["program_rate_missed"],
-                self.params["program_rate_missed"],
-                self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
+        for detect_or_missed in ["_detect", "_missed"]:
+            self.set_scaleup_var(
+                "program_rate" + detect_or_missed,
+                make_two_step_curve(
+                    self.params["pretreatment_available_proportion"] * self.params["program_rate" + detect_or_missed],
+                    self.params["dots_start_proportion"] * self.params["program_rate" + detect_or_missed],
+                    self.params["program_rate" + detect_or_missed],
+                    self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
 
         self.set_var_transfer_rate_flow(
             "active",

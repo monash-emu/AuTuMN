@@ -148,7 +148,7 @@ class UnstratifiedModel(BaseModel):
                 "tb_multiplier_force":
                     1.,
                 "tb_n_contact":
-                    6.,
+                    9.,
                 "tb_proportion_early_progression":
                     get("default", "proportion_early_progression"),
                 "tb_timeperiod_early_latent":
@@ -208,23 +208,21 @@ class UnstratifiedModel(BaseModel):
                 "timepoint_introduce_xdr":
                     2050.,
                 "treatment_available_date":
-                    1950.,
-                "pretreatment_available_proportion":
-                    0.2,
+                    1940.,
                 "dots_start_date":
-                    1995,
-                "dots_start_proportion":
-                    0.5,
+                    1990,
                 "finish_scaleup_date":
                     2010,
                 "pretreatment_available_proportion":
-                    0.2,
+                    0.6,
+                "dots_start_proportion":
+                    0.85,
                 "program_prop_assign_mdr":
                     0.6,
                 "program_prop_assign_xdr":
                     .4,
                 "program_prop_lowquality":
-                    0.5,
+                    0.1,
                 "program_rate_leavelowquality":
                     2.,
                 "program_prop_nonsuccessoutcomes_death":
@@ -970,6 +968,182 @@ class MultiOrganStatusModel(UnstratifiedModel):
         late_proportion\
             = proportion - early_proportion
         return early_proportion, late_proportion
+
+
+class MultiOrganStatusLowQualityModel(MultiOrganStatusModel):
+
+    """
+    A harmonised model that can run any number of strains
+    and organ statuses
+    """
+
+    def __init__(self,
+                 number_of_organs=3,
+                 input_parameters=None,
+                 input_compartments=None):
+
+        BaseModel.__init__(self)
+
+        self.define_model_structure(number_of_organs)
+
+        self.initialise_compartments(input_compartments)
+
+        self.set_parameters(input_parameters)
+
+        self.split_default_death_proportions()
+
+        self.ensure_all_progressions_go_somewhere()
+
+        self.find_natural_history_flows()
+
+        self.find_detection_rates()
+
+        self.find_lowquality_detections()
+
+        self.find_treatment_rates()
+
+    def define_model_structure(self, number_of_organs):
+
+        self.compartment_types = [
+            "susceptible_fully",
+            "susceptible_vac",
+            "susceptible_treated",
+            "latent_early",
+            "latent_late",
+            "active",
+            "detect",
+            "missed",
+            "lowquality",
+            "treatment_infect",
+            "treatment_noninfect"]
+
+        self.broad_compartment_types = [
+            "susceptible",
+            "latent",
+            "active",
+            "missed",
+            "treatment"]
+
+        available_organs = [
+            "_smearpos",
+            "_smearneg",
+            "_extrapul"]
+        self.organ_status =\
+            available_organs[0: number_of_organs]
+
+        self.treatment_stages = [
+            "_infect",
+            "_noninfect"]
+
+        self.infectious_tags = [
+            "active",
+            "missed",
+            "detect",
+            "lowquality",
+            "treatment_infect"]
+
+    def set_natural_history_flows(self):
+
+        self.set_fixed_transfer_rate_flow(
+            "latent_early",
+            "latent_late",
+            "tb_rate_stabilise")
+        for organ in self.organ_status:
+            self.set_fixed_transfer_rate_flow(
+                "latent_early",
+                "active" + organ,
+                "tb_rate_early_progression" + organ)
+            self.set_fixed_transfer_rate_flow(
+                "latent_late",
+                "active" + organ,
+                "tb_rate_late_progression" + organ)
+            self.set_fixed_transfer_rate_flow(
+                "active" + organ,
+                "latent_late",
+                "tb_rate_recover" + organ)
+            self.set_fixed_transfer_rate_flow(
+                "missed" + organ,
+                "latent_late",
+                "tb_rate_recover" + organ)
+            self.set_infection_death_rate_flow(
+                "active" + organ,
+                "tb_rate_death" + organ)
+            self.set_infection_death_rate_flow(
+                "missed" + organ,
+                "tb_rate_death" + organ)
+
+            self.set_fixed_transfer_rate_flow(
+                "lowquality" + organ,
+                "latent_late",
+                "tb_rate_recover" + organ)
+            self.set_infection_death_rate_flow(
+                "lowquality" + organ,
+                "tb_rate_death" + organ)
+
+            self.set_fixed_transfer_rate_flow(
+                "detect" + organ,
+                "latent_late",
+                "tb_rate_recover" + organ)
+            self.set_infection_death_rate_flow(
+                "detect" + organ,
+                "tb_rate_death" + organ)
+
+    def find_lowquality_detections(self):
+        self.set_param(
+            "program_rate_enterlowquality",
+            self.params["program_rate_detect"] \
+            * self.params["program_prop_lowquality"] \
+            / (1. - self.params["program_prop_lowquality"]))
+
+    def set_programmatic_flows(self):
+
+        self.set_scaleup_var(
+            "program_rate_detect",
+            make_two_step_curve(
+                self.params["pretreatment_available_proportion"] * self.params["program_rate_detect"],
+                self.params["dots_start_proportion"] * self.params["program_rate_detect"],
+                self.params["program_rate_detect"],
+                self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
+        self.set_scaleup_var(
+            "program_rate_missed",
+            make_two_step_curve(
+                self.params["pretreatment_available_proportion"] * self.params["program_rate_missed"],
+                self.params["dots_start_proportion"] * self.params["program_rate_missed"],
+                self.params["program_rate_missed"],
+                self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
+        self.set_scaleup_var(
+            "program_rate_enterlowquality",
+            make_two_step_curve(
+                self.params["pretreatment_available_proportion"] * self.params["program_rate_enterlowquality"],
+                self.params["dots_start_proportion"] * self.params["program_rate_enterlowquality"],
+                self.params["program_rate_enterlowquality"],
+                self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
+
+        for organ in self.organ_status:
+            self.set_var_transfer_rate_flow(
+                "active" + organ,
+                "detect" + organ,
+                "program_rate_detect")
+            self.set_var_transfer_rate_flow(
+                "active" + organ,
+                "missed" + organ,
+                "program_rate_missed")
+            self.set_fixed_transfer_rate_flow(
+                "detect" + organ,
+                "treatment_infect" + organ,
+                "program_rate_start_treatment")
+            self.set_fixed_transfer_rate_flow(
+                "missed" + organ,
+                "active" + organ,
+                "program_rate_restart_presenting")
+            self.set_var_transfer_rate_flow(
+                "active" + organ,
+                "lowquality" + organ,
+                "program_rate_enterlowquality")
+            self.set_fixed_transfer_rate_flow(
+                "lowquality" + organ,
+                "active" + organ,
+                "program_rate_leavelowquality")
 
 
 class MultistrainModel(MultiOrganStatusModel):
@@ -2301,8 +2475,7 @@ class StratifiedWithMisassignmentAndLowQuality(StratifiedWithMisassignment):
                     self.set_fixed_transfer_rate_flow(
                         "lowquality" + organ + strain + comorbidity,
                         "active" + organ + strain + comorbidity,
-                        "program_rate_leavelowquality"
-                    )
+                        "program_rate_leavelowquality")
 
                     for assigned_strain in self.strains:
                         self.set_fixed_transfer_rate_flow(

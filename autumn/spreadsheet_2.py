@@ -266,7 +266,7 @@ def read_xls_with_sheet_readers(filename, sheet_readers=[]):
         raise Exception('Failed to open spreadsheet: %s' % filename)
     result = {}
     for reader in sheet_readers:
-        print("Reading sheet \"{}\"".format(reader.name))
+        #print("Reading sheet \"{}\"".format(reader.name))
         sheet = workbook.sheet_by_name(reader.name)
         for i_row in range(sheet.nrows):
             reader.parse_row(sheet.row_values(i_row))                

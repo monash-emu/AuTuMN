@@ -75,8 +75,9 @@ class UnstratifiedModel(BaseModel):
             "detect",
             "treatment_infect"]
 
-        self.comorbidities = [
-            ""]
+        self.organ_status = [""]
+
+        self.comorbidities = [""]
 
     def initialise_compartments(self, input_compartments):
 
@@ -94,7 +95,8 @@ class UnstratifiedModel(BaseModel):
             elif "latent" in compartment:
                 self.set_compartment(compartment, 0.)
             else:
-                self.set_compartment(compartment, 0.)
+                for organ in self.organ_status:
+                    self.set_compartment(compartment + organ, 0.)
 
         # Put in values from input_compartments - now initialise to DS-TB only
         for compartment in self.compartment_types:
@@ -106,8 +108,10 @@ class UnstratifiedModel(BaseModel):
                     self.set_compartment(compartment,
                                          input_compartments[compartment])
                 else:
-                    self.set_compartment(compartment,
-                                         input_compartments[compartment])
+                    for organ in self.organ_status:
+                        self.set_compartment(compartment + organ,
+                                             input_compartments[compartment]
+                                             / len(self.organ_status))
 
     def set_parameters(self, input_parameters):
 
@@ -127,6 +131,8 @@ class UnstratifiedModel(BaseModel):
                     139950. / 243379.,  # Clinically diagnosed
                 "epi_proportion_cases_extrapul":
                     4161. / 243379.,  # Bacteriologically confirmed
+                "epi_proportion_cases":  # If no organ status in model
+                    1.,
                 "tb_multiplier_force_smearpos":
                     1.,
                 "tb_multiplier_force_smearneg":
@@ -300,21 +306,24 @@ class UnstratifiedModel(BaseModel):
         self.set_param("tb_rate_stabilise",  # Stabilisation rate
                        (1 - self.params["tb_proportion_early_progression"])
                        / self.params["tb_timeperiod_early_latent"])
-        self.set_param(
-            "tb_rate_early_progression",
-            self.params["tb_proportion_early_progression"]
-              / self.params["tb_timeperiod_early_latent"])
-        self.set_param(
-            "tb_rate_late_progression",
-            self.params["tb_rate_late_progression"])
-        self.set_param(
-            "tb_rate_death",
-            self.params["tb_proportion_casefatality_untreated"]
-            / self.params["tb_timeperiod_activeuntreated"])
-        self.set_param(
-            "tb_rate_recover",
-            (1 - self.params["tb_proportion_casefatality_untreated"])
-            / self.params["tb_timeperiod_activeuntreated"])
+        for organ in self.organ_status:
+            self.set_param(
+                "tb_rate_early_progression" + organ,
+                self.params["tb_proportion_early_progression"]
+                / self.params["tb_timeperiod_early_latent"]
+                * self.params["epi_proportion_cases" + organ])
+            self.set_param(
+                "tb_rate_late_progression" + organ,
+                self.params["tb_rate_late_progression"]
+                * self.params["epi_proportion_cases" + organ])
+            self.set_param(
+                "tb_rate_death" + organ,
+                self.params["tb_proportion_casefatality_untreated" + organ]
+                / self.params["tb_timeperiod_activeuntreated"])
+            self.set_param(
+                "tb_rate_recover" + organ,
+                (1 - self.params["tb_proportion_casefatality_untreated" + organ])
+                / self.params["tb_timeperiod_activeuntreated"])
 
     def set_natural_history_flows(self):
 
@@ -322,36 +331,37 @@ class UnstratifiedModel(BaseModel):
             "latent_early",
             "latent_late",
             "tb_rate_stabilise")
-        self.set_fixed_transfer_rate_flow(
-            "latent_early",
-            "active",
-            "tb_rate_early_progression")
-        self.set_fixed_transfer_rate_flow(
-            "latent_late",
-            "active",
-            "tb_rate_late_progression")
-        self.set_fixed_transfer_rate_flow(
-            "active",
-            "latent_late",
-            "tb_rate_recover")
-        self.set_fixed_transfer_rate_flow(
-            "missed",
-            "latent_late",
-            "tb_rate_recover")
-        self.set_infection_death_rate_flow(
-            "active",
-            "tb_rate_death")
-        self.set_infection_death_rate_flow(
-            "missed",
-            "tb_rate_death")
+        for organ in self.organ_status:
+            self.set_fixed_transfer_rate_flow(
+                "latent_early",
+                "active" + organ,
+                "tb_rate_early_progression" + organ)
+            self.set_fixed_transfer_rate_flow(
+                "latent_late",
+                "active" + organ,
+                "tb_rate_late_progression" + organ)
+            self.set_fixed_transfer_rate_flow(
+                "active" + organ,
+                "latent_late",
+                "tb_rate_recover" + organ)
+            self.set_fixed_transfer_rate_flow(
+                "missed" + organ,
+                "latent_late",
+                "tb_rate_recover" + organ)
+            self.set_infection_death_rate_flow(
+                "active" + organ,
+                "tb_rate_death" + organ)
+            self.set_infection_death_rate_flow(
+                "missed" + organ,
+                "tb_rate_death" + organ)
 
-        self.set_fixed_transfer_rate_flow(
-            "detect",
-            "latent_late",
-            "tb_rate_recover")
-        self.set_infection_death_rate_flow(
-            "detect",
-            "tb_rate_death")
+            self.set_fixed_transfer_rate_flow(
+                "detect" + organ,
+                "latent_late",
+                "tb_rate_recover" + organ)
+            self.set_infection_death_rate_flow(
+                "detect" + organ,
+                "tb_rate_death" + organ)
 
     def find_detection_rates(self):
 
@@ -388,22 +398,23 @@ class UnstratifiedModel(BaseModel):
 
     def set_programmatic_flows(self):
 
-        self.set_var_transfer_rate_flow(
-            "active",
-            "detect",
-            "program_rate_detect")
-        self.set_var_transfer_rate_flow(
-            "active",
-            "missed",
-            "program_rate_missed")
-        self.set_fixed_transfer_rate_flow(
-            "detect",
-            "treatment_infect",
-            "program_rate_start_treatment")
-        self.set_fixed_transfer_rate_flow(
-            "missed",
-            "active",
-            "program_rate_restart_presenting")
+        for organ in self.organ_status:
+            self.set_var_transfer_rate_flow(
+                "active" + organ,
+                "detect" + organ,
+                "program_rate_detect")
+            self.set_var_transfer_rate_flow(
+                "active" + organ,
+                "missed" + organ,
+                "program_rate_missed")
+            self.set_fixed_transfer_rate_flow(
+                "detect" + organ,
+                "treatment_infect" + organ,
+                "program_rate_start_treatment")
+            self.set_fixed_transfer_rate_flow(
+                "missed" + organ,
+                "active" + organ,
+                "program_rate_restart_presenting")
 
     def split_default_death_proportions(self):
 
@@ -455,28 +466,29 @@ class UnstratifiedModel(BaseModel):
 
     def set_treatment_flows(self):
 
-        self.set_fixed_transfer_rate_flow(
-            "treatment_infect",
-            "treatment_noninfect",
-            "program_rate_success_infect")
-        self.set_fixed_transfer_rate_flow(
-            "treatment_noninfect",
-            "susceptible_treated",
-            "program_rate_success_noninfect")
-        self.set_infection_death_rate_flow(
-            "treatment_infect",
-            "program_rate_death_infect")
-        self.set_infection_death_rate_flow(
-            "treatment_noninfect",
-            "program_rate_death_noninfect")
-        self.set_fixed_transfer_rate_flow(
-            "treatment_infect",
-            "active",
-            "program_rate_default_infect")
-        self.set_fixed_transfer_rate_flow(
-            "treatment_noninfect",
-            "active",
-            "program_rate_default_noninfect")
+        for organ in self.organ_status:
+            self.set_fixed_transfer_rate_flow(
+                "treatment_infect" + organ,
+                "treatment_noninfect" + organ,
+                "program_rate_success_infect")
+            self.set_fixed_transfer_rate_flow(
+                "treatment_noninfect" + organ,
+                "susceptible_treated",
+                "program_rate_success_noninfect")
+            self.set_infection_death_rate_flow(
+                "treatment_infect" + organ,
+                "program_rate_death_infect")
+            self.set_infection_death_rate_flow(
+                "treatment_noninfect" + organ,
+                "program_rate_death_noninfect")
+            self.set_fixed_transfer_rate_flow(
+                "treatment_infect" + organ,
+                "active" + organ,
+                "program_rate_default_infect")
+            self.set_fixed_transfer_rate_flow(
+                "treatment_noninfect" + organ,
+                "active" + organ,
+                "program_rate_default_noninfect")
 
     def set_flows(self):
 
@@ -734,40 +746,6 @@ class MultiOrganStatusModel(UnstratifiedModel):
         self.comorbidities = [
             ""]
 
-    def initialise_compartments(self, input_compartments):
-
-        if input_compartments is None:
-            input_compartments = {
-                "susceptible_fully":
-                    2e7,
-                "active":
-                    3.}
-
-        # Initialise all compartments to zero
-        for compartment in self.compartment_types:
-            if "susceptible" in compartment:
-                self.set_compartment(compartment, 0.)
-            elif "latent" in compartment:
-                self.set_compartment(compartment, 0.)
-            else:
-                for organ in self.organ_status:
-                    self.set_compartment(compartment + organ, 0.)
-
-        # Put in values from input_compartments - now initialise to DS-TB only
-        for compartment in self.compartment_types:
-            if compartment in input_compartments:
-                if "susceptible" in compartment:
-                    self.set_compartment(compartment,
-                                         input_compartments[compartment])
-                elif "latent" in compartment:
-                    self.set_compartment(compartment,
-                                         input_compartments[compartment])
-                else:
-                    for organ in self.organ_status:
-                        self.set_compartment(compartment + organ,
-                                             input_compartments[compartment]
-                                             / len(self.organ_status))
-
     def ensure_all_progressions_go_somewhere(self):
 
         # Make sure all progressions go somewhere, regardless of number of organ statuses
@@ -777,78 +755,6 @@ class MultiOrganStatusModel(UnstratifiedModel):
             self.params["epi_proportion_cases_smearneg"] = \
                 self.params["epi_proportion_cases_smearneg"] \
                 + self.params["epi_proportion_cases_extrapul"]
-
-    def find_natural_history_flows(self):
-
-        # If extrapulmonary case-fatality not stated
-        if "tb_proportion_casefatality_untreated_extrapul" not in self.params:
-            self.set_param(
-                "tb_proportion_casefatality_untreated_extrapul",
-                self.params["tb_proportion_casefatality_untreated_smearneg"])
-
-        # Progression and stabilisation rates
-        self.set_param("tb_rate_early_progression",  # Overall
-                       self.params["tb_proportion_early_progression"]
-                       / self.params["tb_timeperiod_early_latent"])
-        self.set_param("tb_rate_stabilise",  # Stabilisation rate
-                       (1 - self.params["tb_proportion_early_progression"])
-                       / self.params["tb_timeperiod_early_latent"])
-        for organ in self.organ_status:
-            self.set_param(
-                "tb_rate_early_progression" + organ,
-                self.params["tb_proportion_early_progression"]
-                  / self.params["tb_timeperiod_early_latent"]
-                  * self.params["epi_proportion_cases" + organ])
-            self.set_param(
-                "tb_rate_late_progression" + organ,
-                self.params["tb_rate_late_progression"]
-                * self.params["epi_proportion_cases" + organ])
-            self.set_param(
-                "tb_rate_death" + organ,
-                self.params["tb_proportion_casefatality_untreated" + organ]
-                / self.params["tb_timeperiod_activeuntreated"])
-            self.set_param(
-                "tb_rate_recover" + organ,
-                (1 - self.params["tb_proportion_casefatality_untreated" + organ])
-                / self.params["tb_timeperiod_activeuntreated"])
-
-    def set_natural_history_flows(self):
-
-        self.set_fixed_transfer_rate_flow(
-            "latent_early",
-            "latent_late",
-            "tb_rate_stabilise")
-        for organ in self.organ_status:
-            self.set_fixed_transfer_rate_flow(
-                "latent_early",
-                "active" + organ,
-                "tb_rate_early_progression" + organ)
-            self.set_fixed_transfer_rate_flow(
-                "latent_late",
-                "active" + organ,
-                "tb_rate_late_progression" + organ)
-            self.set_fixed_transfer_rate_flow(
-                "active" + organ,
-                "latent_late",
-                "tb_rate_recover" + organ)
-            self.set_fixed_transfer_rate_flow(
-                "missed" + organ,
-                "latent_late",
-                "tb_rate_recover" + organ)
-            self.set_infection_death_rate_flow(
-                "active" + organ,
-                "tb_rate_death" + organ)
-            self.set_infection_death_rate_flow(
-                "missed" + organ,
-                "tb_rate_death" + organ)
-
-            self.set_fixed_transfer_rate_flow(
-                "detect" + organ,
-                "latent_late",
-                "tb_rate_recover" + organ)
-            self.set_infection_death_rate_flow(
-                "detect" + organ,
-                "tb_rate_death" + organ)
 
     def find_detection_rates(self):
 
@@ -871,52 +777,6 @@ class MultiOrganStatusModel(UnstratifiedModel):
         #   algorithm sensitivity = detection rate / (detection rate + missed rate)
         #   - and -
         #   detection proportion = detection rate / (detection rate + missed rate + spont recover rate + death rate)
-
-    def set_programmatic_flows(self):
-
-        for organ in self.organ_status:
-            self.set_var_transfer_rate_flow(
-                "active" + organ,
-                "detect" + organ,
-                "program_rate_detect")
-            self.set_var_transfer_rate_flow(
-                "active" + organ,
-                "missed" + organ,
-                "program_rate_missed")
-            self.set_fixed_transfer_rate_flow(
-                "detect" + organ,
-                "treatment_infect" + organ,
-                "program_rate_start_treatment")
-            self.set_fixed_transfer_rate_flow(
-                "missed" + organ,
-                "active" + organ,
-                "program_rate_restart_presenting")
-
-    def set_treatment_flows(self):
-
-        for organ in self.organ_status:
-            self.set_fixed_transfer_rate_flow(
-                "treatment_infect" + organ,
-                "treatment_noninfect" + organ,
-                "program_rate_success_infect")
-            self.set_fixed_transfer_rate_flow(
-                "treatment_noninfect" + organ,
-                "susceptible_treated",
-                "program_rate_success_noninfect")
-            self.set_infection_death_rate_flow(
-                "treatment_infect" + organ,
-                "program_rate_death_infect")
-            self.set_infection_death_rate_flow(
-                "treatment_noninfect" + organ,
-                "program_rate_death_noninfect")
-            self.set_fixed_transfer_rate_flow(
-                "treatment_infect" + organ,
-                "active" + organ,
-                "program_rate_default_infect")
-            self.set_fixed_transfer_rate_flow(
-                "treatment_noninfect" + organ,
-                "active" + organ,
-                "program_rate_default_noninfect")
 
     def additional_diagnostics(self):
 
@@ -946,14 +806,6 @@ class MultiOrganStatusModel(UnstratifiedModel):
             broad_compartment_type_byorgan_denominator)
 
         self.subgroup_diagnostics()
-
-    def find_flow_proportions_by_period(
-            self, proportion, early_period, total_period):
-        early_proportion\
-            = 1. - exp( log(1. - proportion) * early_period / total_period)
-        late_proportion\
-            = proportion - early_proportion
-        return early_proportion, late_proportion
 
 
 class MultiOrganStatusLowQualityModel(MultiOrganStatusModel):

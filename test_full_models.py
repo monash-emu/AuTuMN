@@ -9,26 +9,6 @@ import autumn.plotting
 from autumn.spreadsheet_2 import read_input_data_xls
 from autumn.model import UnstratifiedModel
 
-population = UnstratifiedModel()
-
-import_params = read_input_data_xls('xls/data_input_4.xlsx')
-#pprint(import_params)
-
-initials = import_params['const']['initials_for_compartments']
-#print(initials)
-
-parameters = import_params['const']['model_parameters']
-#print(parameters)
-
-for key, value in parameters.items():
-    #print(key)
-    #print(value)
-    print(key,value)
-    #print(key, ['Best'])
-    #print("dict['best']:")
-    #population.set_parameters(key, val[2])
-    #print(population.input_parameters[key])
-
 start_realtime = datetime.datetime.now()
 
 out_dir = 'flexible_graphs'
@@ -40,12 +20,13 @@ models_to_run = [[3, 2, 1]]
 for running_model in range(len(models_to_run)):
     name = 'model%d' % running_model
     base = os.path.join(out_dir, name)
-    model = autumn.model.StratifiedWithAmplification(models_to_run[running_model][0],
-                                                     models_to_run[running_model][1],
-                                                     models_to_run[running_model][2])
-    print((str(models_to_run[running_model][0]) + " organ(s), " +
-           str(models_to_run[running_model][1]) + " strain(s), " +
-           str(models_to_run[running_model][2]) + " comorbidity(ies)"))
+    model = autumn.model.MultiOrganStatusModel(
+        models_to_run[running_model][0])
+        # models_to_run[running_model][1],
+        # models_to_run[running_model][2])
+    # print((str(models_to_run[running_model][0]) + " organ(s), " +
+    #        str(models_to_run[running_model][1]) + " strain(s), " +
+    #        str(models_to_run[running_model][2]) + " comorbidity(ies)"))
     start_time = 1000.
     recent_time = 1990.
     model.make_times(start_time, 2015., 0.05)

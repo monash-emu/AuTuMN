@@ -75,6 +75,9 @@ class UnstratifiedModel(BaseModel):
             "detect",
             "treatment_infect"]
 
+        self.comorbidities = [
+            ""]
+
     def initialise_compartments(self, input_compartments):
 
         if input_compartments is None:
@@ -240,10 +243,11 @@ class UnstratifiedModel(BaseModel):
 
     def set_birth_flows(self):
 
-        self.set_var_entry_rate_flow(
-            "susceptible_fully", "births_unvac")
-        self.set_var_entry_rate_flow(
-            "susceptible_vac", "births_vac")
+        for comorbidity in self.comorbidities:
+            self.set_var_entry_rate_flow(
+                "susceptible_fully" + comorbidity, "births_unvac")
+            self.set_var_entry_rate_flow(
+                "susceptible_vac" + comorbidity, "births_vac")
 
     def calculate_force_infection(self):
 
@@ -727,6 +731,9 @@ class MultiOrganStatusModel(UnstratifiedModel):
             "detect",
             "treatment_infect"]
 
+        self.comorbidities = [
+            ""]
+
     def initialise_compartments(self, input_compartments):
 
         if input_compartments is None:
@@ -1023,6 +1030,9 @@ class MultiOrganStatusLowQualityModel(MultiOrganStatusModel):
             "lowquality",
             "treatment_infect"]
 
+        self.comorbidities = [
+            ""]
+
     def set_natural_history_flows(self):
 
         self.set_fixed_transfer_rate_flow(
@@ -1196,6 +1206,9 @@ class MultistrainModel(MultiOrganStatusModel):
             "missed",
             "detect",
             "treatment_infect"]
+
+        self.comorbidities = [
+            ""]
 
     def initialise_compartments(self, input_compartments):
 
@@ -1668,14 +1681,6 @@ class StratifiedModel(MultistrainModel):
         self.vars["births_vac"] = \
             self.params["program_prop_vac"] * self.vars["rate_birth"]\
             / len(self.comorbidities)
-
-    def set_birth_flows(self):
-
-        for comorbidity in self.comorbidities:
-            self.set_var_entry_rate_flow(
-                "susceptible_fully" + comorbidity, "births_unvac")
-            self.set_var_entry_rate_flow(
-                "susceptible_vac" + comorbidity, "births_vac")
 
     def set_infection_flows(self):
 

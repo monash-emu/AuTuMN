@@ -3,9 +3,31 @@
 import os
 import glob
 import datetime
-
+from pprint import pprint
 import autumn.model
 import autumn.plotting
+from autumn.spreadsheet_2 import read_input_data_xls
+from autumn.model import UnstratifiedModel
+
+population = UnstratifiedModel()
+
+import_params = read_input_data_xls('xls/data_input_4.xlsx')
+#pprint(import_params)
+
+initials = import_params['const']['initials_for_compartments']
+#print(initials)
+
+parameters = import_params['const']['model_parameters']
+#print(parameters)
+
+for key, value in parameters.items():
+    #print(key)
+    #print(value)
+    print(key,value)
+    #print(key, ['Best'])
+    #print("dict['best']:")
+    #population.set_parameters(key, val[2])
+    #print(population.input_parameters[key])
 
 start_realtime = datetime.datetime.now()
 

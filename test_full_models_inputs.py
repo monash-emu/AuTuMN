@@ -7,9 +7,9 @@ from pprint import pprint
 import autumn.model
 import autumn.plotting
 from autumn.spreadsheet_2 import read_input_data_xls
-from autumn.model import UnstratifiedModel
+from autumn.model import MultiOrganStatusModel
 
-population = UnstratifiedModel()
+population = MultiOrganStatusModel()
 import_params = read_input_data_xls('xls/data_input_4.xlsx')
 initials = import_params['const']['initials_for_compartments']
 parameters = import_params['const']['model_parameters']

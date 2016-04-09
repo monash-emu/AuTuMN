@@ -39,7 +39,7 @@ def is_positive_definite(v):
 class ModelRunner():
 
     def __init__(self):
-        self.model = autumn.model.UnstratifiedModel()
+        self.model = autumn.model.MultiOrganStatusModel()
         self.model.make_times(1900, 2015, 1.)
         self.model.set_compartment(
             "susceptible_fully", 50E6)

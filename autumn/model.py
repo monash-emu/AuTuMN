@@ -25,7 +25,7 @@ def label_intersects_tags(label, tags):
     return False
 
 
-class UnstratifiedModel(BaseModel):
+class MultiOrganStatusModel(BaseModel):
 
     """
     A harmonised model that can run any number of strains
@@ -33,18 +33,32 @@ class UnstratifiedModel(BaseModel):
     """
 
     def __init__(self,
+                 number_of_organs=0,
                  input_parameters=None,
                  input_compartments=None):
 
         BaseModel.__init__(self)
 
-        self.define_model_structure()
+        self.define_model_structure(number_of_organs)
 
         self.initialise_compartments(input_compartments)
 
         self.set_parameters(input_parameters)
 
-    def define_model_structure(self):
+        self.split_default_death_proportions()
+
+        if number_of_organs > 0:
+            self.ensure_all_progressions_go_somewhere()
+
+        self.find_natural_history_flows()
+
+        self.find_detection_rates()
+
+        self.find_programmatic_rates()
+
+        self.find_treatment_rates()
+
+    def define_model_structure(self, number_of_organs):
 
         self.compartment_types = [
             "susceptible_fully",
@@ -75,7 +89,15 @@ class UnstratifiedModel(BaseModel):
             "detect",
             "treatment_infect"]
 
-        self.organ_status = [""]
+        if number_of_organs == 0:
+            self.organ_status = [""]
+        else:
+            available_organs = [
+                "_smearpos",
+                "_smearneg",
+                "_extrapul"]
+            self.organ_status = \
+                available_organs[0: number_of_organs]
 
         self.comorbidities = [""]
 
@@ -156,7 +178,7 @@ class UnstratifiedModel(BaseModel):
                 "tb_proportion_casefatality_untreated":
                     0.4,
                 "tb_timeperiod_activeuntreated":
-                    4.,
+                    3.,
                 "tb_multiplier_bcg_protection":
                     0.5,
                 "program_prop_vac":
@@ -225,18 +247,6 @@ class UnstratifiedModel(BaseModel):
 
         for parameter in input_parameters:
             self.set_param(parameter, input_parameters[parameter])
-
-    def process_params(self):
-        
-        self.split_default_death_proportions()
-
-        self.find_natural_history_flows()
-
-        self.find_detection_rates()
-
-        self.find_programmatic_rates()
-
-        self.find_treatment_rates()
 
     def calculate_birth_rates(self):
 
@@ -325,6 +335,15 @@ class UnstratifiedModel(BaseModel):
                 (1 - self.params["tb_proportion_casefatality_untreated" + organ])
                 / self.params["tb_timeperiod_activeuntreated"])
 
+    def ensure_all_progressions_go_somewhere(self):
+        # Make sure all progressions go somewhere, regardless of number of organ statuses
+        if len(self.organ_status) == 1:
+            self.params["epi_proportion_cases_smearpos"] = 1.
+        elif len(self.organ_status) == 2:
+            self.params["epi_proportion_cases_smearneg"] = \
+                self.params["epi_proportion_cases_smearneg"] \
+                + self.params["epi_proportion_cases_extrapul"]
+
     def set_natural_history_flows(self):
 
         self.set_fixed_transfer_rate_flow(
@@ -365,14 +384,15 @@ class UnstratifiedModel(BaseModel):
 
     def find_detection_rates(self):
 
+
         # Rates of detection and failure of detection
         self.set_param(
             "program_rate_detect",
             self.params["program_proportion_detect"]
-            * (self.params["tb_rate_recover"] + self.params["tb_rate_death"])
+            * (self.params["tb_rate_recover" + self.organ_status[0]] + self.params["tb_rate_death" + self.organ_status[0]])
             / (1. - self.params["program_proportion_detect"]
                * (1. + (1. - self.params["program_algorithm_sensitivity"])
-                       / self.params["program_algorithm_sensitivity"])))
+                  / self.params["program_algorithm_sensitivity"])))
 
         self.set_param(
             "program_rate_missed",
@@ -506,21 +526,30 @@ class UnstratifiedModel(BaseModel):
 
     def additional_diagnostics(self):
 
-        self.broad_compartment_soln, broad_compartment_denominator\
+        self.broad_compartment_soln, broad_compartment_denominator \
             = self.sum_over_compartments(self.broad_compartment_types)
-        self.broad_fraction_soln\
+        self.broad_fraction_soln \
             = self.get_fraction_soln(
             self.broad_compartment_types,
             self.broad_compartment_soln,
             broad_compartment_denominator)
 
-        self.compartment_type_soln, compartment_type_denominator\
+        self.compartment_type_soln, compartment_type_denominator \
             = self.sum_over_compartments(self.compartment_types)
-        self.compartment_type_fraction_soln\
+        self.compartment_type_fraction_soln \
             = self.get_fraction_soln(
             self.compartment_types,
             self.compartment_type_soln,
             compartment_type_denominator)
+
+        self.broad_compartment_type_byorgan_soln, broad_compartment_type_byorgan_denominator, \
+        self.broad_compartment_types_byorgan \
+            = self.sum_over_compartments_bycategory(self.broad_compartment_types, "organ")
+        self.broad_compartment_type_byorgan_fraction_soln \
+            = self.get_fraction_soln(
+            self.broad_compartment_types_byorgan,
+            self.broad_compartment_type_byorgan_soln,
+            broad_compartment_type_byorgan_denominator)
 
         self.subgroup_diagnostics()
 
@@ -671,141 +700,6 @@ class UnstratifiedModel(BaseModel):
                 self.vars["prevalence"] += (
                     self.compartments[label]
                      / self.vars["population"] * 1E5)
-
-
-class MultiOrganStatusModel(UnstratifiedModel):
-
-    """
-    A harmonised model that can run any number of strains
-    and organ statuses
-    """
-
-    def __init__(self,
-                 number_of_organs=3,
-                 input_parameters=None,
-                 input_compartments=None):
-
-        BaseModel.__init__(self)
-
-        self.define_model_structure(number_of_organs)
-
-        self.initialise_compartments(input_compartments)
-
-        self.set_parameters(input_parameters)
-
-        self.split_default_death_proportions()
-
-        self.ensure_all_progressions_go_somewhere()
-
-        self.find_natural_history_flows()
-
-        self.find_detection_rates()
-
-        self.find_programmatic_rates()
-
-        self.find_treatment_rates()
-
-    def define_model_structure(self, number_of_organs):
-
-        self.compartment_types = [
-            "susceptible_fully",
-            "susceptible_vac",
-            "susceptible_treated",
-            "latent_early",
-            "latent_late",
-            "active",
-            "detect",
-            "missed",
-            "treatment_infect",
-            "treatment_noninfect"]
-
-        self.broad_compartment_types = [
-            "susceptible",
-            "latent",
-            "active",
-            "missed",
-            "treatment"]
-
-        available_organs = [
-            "_smearpos",
-            "_smearneg",
-            "_extrapul"]
-        self.organ_status =\
-            available_organs[0: number_of_organs]
-
-        self.treatment_stages = [
-            "_infect",
-            "_noninfect"]
-
-        self.infectious_tags = [
-            "active",
-            "missed",
-            "detect",
-            "treatment_infect"]
-
-        self.comorbidities = [
-            ""]
-
-    def ensure_all_progressions_go_somewhere(self):
-
-        # Make sure all progressions go somewhere, regardless of number of organ statuses
-        if len(self.organ_status) == 1:
-            self.params["epi_proportion_cases_smearpos"] = 1.
-        elif len(self.organ_status) == 2:
-            self.params["epi_proportion_cases_smearneg"] = \
-                self.params["epi_proportion_cases_smearneg"] \
-                + self.params["epi_proportion_cases_extrapul"]
-
-    def find_detection_rates(self):
-
-        # Rates of detection and failure of detection
-        self.set_param(
-            "program_rate_detect",
-            self.params["program_proportion_detect"]
-            * (self.params["tb_rate_recover_smearpos"] + self.params["tb_rate_death_smearpos"])
-            / (1. - self.params["program_proportion_detect"]
-               * (1. + (1. - self.params["program_algorithm_sensitivity"])
-                       / self.params["program_algorithm_sensitivity"])))
-
-        self.set_param(
-            "program_rate_missed",
-            self.params["program_rate_detect"]
-            * (1. - self.params["program_algorithm_sensitivity"])
-            / self.params["program_algorithm_sensitivity"]
-        )
-        # Derived from original formulas of:
-        #   algorithm sensitivity = detection rate / (detection rate + missed rate)
-        #   - and -
-        #   detection proportion = detection rate / (detection rate + missed rate + spont recover rate + death rate)
-
-    def additional_diagnostics(self):
-
-        self.broad_compartment_soln, broad_compartment_denominator\
-            = self.sum_over_compartments(self.broad_compartment_types)
-        self.broad_fraction_soln\
-            = self.get_fraction_soln(
-            self.broad_compartment_types,
-            self.broad_compartment_soln,
-            broad_compartment_denominator)
-
-        self.compartment_type_soln, compartment_type_denominator\
-            = self.sum_over_compartments(self.compartment_types)
-        self.compartment_type_fraction_soln\
-            = self.get_fraction_soln(
-            self.compartment_types,
-            self.compartment_type_soln,
-            compartment_type_denominator)
-
-        self.broad_compartment_type_byorgan_soln, broad_compartment_type_byorgan_denominator,\
-        self.broad_compartment_types_byorgan\
-            = self.sum_over_compartments_bycategory(self.broad_compartment_types, "organ")
-        self.broad_compartment_type_byorgan_fraction_soln\
-            = self.get_fraction_soln(
-            self.broad_compartment_types_byorgan,
-            self.broad_compartment_type_byorgan_soln,
-            broad_compartment_type_byorgan_denominator)
-
-        self.subgroup_diagnostics()
 
 
 class MultiOrganStatusLowQualityModel(MultiOrganStatusModel):

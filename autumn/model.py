@@ -34,7 +34,7 @@ class MultiOrganStatusModel(BaseModel):
 
     def __init__(self,
                  number_of_organs=0,
-                 input_parameters=None,
+                 number_of_strains=0,
                  input_compartments=None,
                  lowquality=False):
 
@@ -42,11 +42,11 @@ class MultiOrganStatusModel(BaseModel):
 
         self.lowquality = lowquality
 
-        self.define_model_structure(number_of_organs)
+        self.define_model_structure(number_of_organs, number_of_strains)
 
         self.initialise_compartments(input_compartments)
 
-        self.set_parameters(input_parameters)
+        self.set_parameters()
 
         self.split_default_death_proportions()
 
@@ -60,11 +60,13 @@ class MultiOrganStatusModel(BaseModel):
         if self.lowquality == True:
             self.find_lowquality_detections()
 
+        self.find_equal_detection_rates()
+
         self.find_programmatic_rates()
 
         self.find_treatment_rates()
 
-    def define_model_structure(self, number_of_organs):
+    def define_model_structure(self, number_of_organs, number_of_strains):
 
         self.compartment_types = [
             "susceptible_fully",
@@ -115,6 +117,16 @@ class MultiOrganStatusModel(BaseModel):
             self.infectious_tags\
                 = self.infectious_tags + ["lowquality"]
 
+        if number_of_strains == 0:
+            self.strains = [""]
+        else:
+            available_strains = [
+                "_ds",
+                "_mdr",
+                "_xdr"]
+            self.strains\
+                = available_strains[0: number_of_strains]
+
     def initialise_compartments(self, input_compartments):
 
         if input_compartments is None:
@@ -126,138 +138,140 @@ class MultiOrganStatusModel(BaseModel):
 
         # Initialise all compartments to zero
         for compartment in self.compartment_types:
-            if "susceptible" in compartment:
+            if "susceptible" in compartment:  # Replicate for comorbidities only
                 self.set_compartment(compartment, 0.)
-            elif "latent" in compartment:
-                self.set_compartment(compartment, 0.)
+            elif "latent" in compartment:  # Replicate for comorbidities and strains
+                for strain in self.strains:
+                    self.set_compartment(compartment + strain, 0.)
             else:
-                for organ in self.organ_status:
-                    self.set_compartment(compartment + organ, 0.)
+                for strain in self.strains:
+                    for organ in self.organ_status:
+                        self.set_compartment(compartment + organ + strain, 0.)
 
         # Put in values from input_compartments - now initialise to DS-TB only
+        default_start_strain = "_ds"
+        if self.strains == [""]:
+            default_start_strain = ""
         for compartment in self.compartment_types:
             if compartment in input_compartments:
                 if "susceptible" in compartment:
                     self.set_compartment(compartment,
                                          input_compartments[compartment])
                 elif "latent" in compartment:
-                    self.set_compartment(compartment,
+                    self.set_compartment(compartment + default_start_strain,
                                          input_compartments[compartment])
                 else:
                     for organ in self.organ_status:
-                        self.set_compartment(compartment + organ,
+                        self.set_compartment(compartment + organ + default_start_strain,
                                              input_compartments[compartment]
+                                             / len(self.strains)
                                              / len(self.organ_status))
 
-    def set_parameters(self, input_parameters):
+    def set_parameters(self):
 
-        # Extract default parameters from our database
-        # of parameters in settings
-        if input_parameters is None:
-
-            # Estimate some parameters
-            input_parameters = {
-                "demo_rate_birth":
-                    24. / 1e3,
-                "demo_rate_death":
-                    1. / 69.,
-                "epi_proportion_cases_smearpos":
-                    (92991. + 6277.) / 243379.,  # Total bacteriologically confirmed
-                "epi_proportion_cases_smearneg":
-                    139950. / 243379.,  # Clinically diagnosed
-                "epi_proportion_cases_extrapul":
-                    4161. / 243379.,  # Bacteriologically confirmed
-                "epi_proportion_cases":  # If no organ status in model
-                    1.,
-                "tb_multiplier_force_smearpos":
-                    1.,
-                "tb_multiplier_force_smearneg":
-                    0.24,
-                "tb_multiplier_force_extrapul":
-                    0.,
-                "tb_multiplier_force":
-                    1.,
-                "tb_n_contact":
-                    9.,
-                "tb_proportion_early_progression":
-                    0.12,
-                "tb_timeperiod_early_latent":
-                    0.4,
-                "tb_rate_late_progression":
-                    0.007,
-                "tb_proportion_casefatality_untreated_smearpos":
-                    0.7,
-                "tb_proportion_casefatality_untreated_smearneg":
-                    0.2,
-                "tb_proportion_casefatality_untreated":
-                    0.4,
-                "tb_timeperiod_activeuntreated":
-                    3.,
-                "tb_multiplier_bcg_protection":
-                    0.5,
-                "program_prop_vac":
-                    0.88,
-                "program_prop_unvac":
-                    1. - 0.88,
-                "program_proportion_detect":
-                    0.7,
-                "program_algorithm_sensitivity":
-                    0.9,
-                "program_rate_start_treatment":
-                    26.,
-                "tb_timeperiod_treatment_ds":
-                    0.5,
-                "tb_timeperiod_treatment_mdr":
-                    2.,
-                "tb_timeperiod_treatment_xdr":
-                    3.,
-                "tb_timeperiod_treatment_inappropriate":
-                    2.,
-                "tb_timeperiod_infect_ontreatment_ds":
-                    0.035,
-                "tb_timeperiod_infect_ontreatment_mdr":
-                    1. / 12.,
-                "tb_timeperiod_infect_ontreatment_xdr":
-                    2. / 12.,
-                "tb_timeperiod_infect_ontreatment_inappropriate":
-                    1.9,
-                "program_proportion_success_ds":
-                    0.9,
-                "program_proportion_success_mdr":
-                    0.6,
-                "program_proportion_success_xdr":
-                    0.4,
-                "program_proportion_success_inappropriate":
-                    0.3,
-                "program_rate_restart_presenting":
-                    4.,
-                "proportion_amplification":
-                    1. / 15.,
-                "timepoint_introduce_mdr":
-                    1960.,
-                "timepoint_introduce_xdr":
-                    2050.,
-                "treatment_available_date":
-                    1940.,
-                "dots_start_date":
-                    1990,
-                "finish_scaleup_date":
-                    2010,
-                "pretreatment_available_proportion":
-                    0.6,
-                "dots_start_proportion":
-                    0.85,
-                "program_prop_assign_mdr":
-                    0.6,
-                "program_prop_assign_xdr":
-                    .4,
-                "program_prop_lowquality":
-                    0.1,
-                "program_rate_leavelowquality":
-                    2.,
-                "program_prop_nonsuccessoutcomes_death":
-                    0.25
-            }
+        # Estimate some parameters
+        input_parameters = {
+            "demo_rate_birth":
+                24. / 1e3,
+            "demo_rate_death":
+                1. / 69.,
+            "epi_proportion_cases_smearpos":
+                (92991. + 6277.) / 243379.,  # Total bacteriologically confirmed
+            "epi_proportion_cases_smearneg":
+                139950. / 243379.,  # Clinically diagnosed
+            "epi_proportion_cases_extrapul":
+                4161. / 243379.,  # Bacteriologically confirmed
+            "epi_proportion_cases":  # If no organ status in model
+                1.,
+            "tb_multiplier_force_smearpos":
+                1.,
+            "tb_multiplier_force_smearneg":
+                0.24,
+            "tb_multiplier_force_extrapul":
+                0.,
+            "tb_multiplier_force":
+                1.,
+            "tb_n_contact":
+                9.,
+            "tb_proportion_early_progression":
+                0.12,
+            "tb_timeperiod_early_latent":
+                0.4,
+            "tb_rate_late_progression":
+                0.007,
+            "tb_proportion_casefatality_untreated_smearpos":
+                0.7,
+            "tb_proportion_casefatality_untreated_smearneg":
+                0.2,
+            "tb_proportion_casefatality_untreated":
+                0.4,
+            "tb_timeperiod_activeuntreated":
+                3.,
+            "tb_multiplier_bcg_protection":
+                0.5,
+            "program_prop_vac":
+                0.88,
+            "program_prop_unvac":
+                1. - 0.88,
+            "program_proportion_detect":
+                0.7,
+            "program_algorithm_sensitivity":
+                0.9,
+            "program_rate_start_treatment":
+                26.,
+            "tb_timeperiod_treatment_ds":
+                0.5,
+            "tb_timeperiod_treatment_mdr":
+                2.,
+            "tb_timeperiod_treatment_xdr":
+                3.,
+            "tb_timeperiod_treatment_inappropriate":
+                2.,
+            "tb_timeperiod_infect_ontreatment_ds":
+                0.035,
+            "tb_timeperiod_infect_ontreatment_mdr":
+                1. / 12.,
+            "tb_timeperiod_infect_ontreatment_xdr":
+                2. / 12.,
+            "tb_timeperiod_infect_ontreatment_inappropriate":
+                1.9,
+            "program_proportion_success_ds":
+                0.9,
+            "program_proportion_success_mdr":
+                0.6,
+            "program_proportion_success_xdr":
+                0.4,
+            "program_proportion_success_inappropriate":
+                0.3,
+            "program_rate_restart_presenting":
+                4.,
+            "proportion_amplification":
+                1. / 15.,
+            "timepoint_introduce_mdr":
+                1960.,
+            "timepoint_introduce_xdr":
+                2050.,
+            "treatment_available_date":
+                1940.,
+            "dots_start_date":
+                1990,
+            "finish_scaleup_date":
+                2010,
+            "pretreatment_available_proportion":
+                0.6,
+            "dots_start_proportion":
+                0.85,
+            "program_prop_assign_mdr":
+                0.6,
+            "program_prop_assign_xdr":
+                .4,
+            "program_prop_lowquality":
+                0.1,
+            "program_rate_leavelowquality":
+                2.,
+            "program_prop_nonsuccessoutcomes_death":
+                0.25
+        }
 
         for parameter in input_parameters:
             self.set_param(parameter, input_parameters[parameter])
@@ -281,20 +295,24 @@ class MultiOrganStatusModel(BaseModel):
 
     def calculate_force_infection(self):
 
-        self.vars["infectious_population"] = 0.0
-        for label in self.labels:
-            if not label_intersects_tags(label, self.infectious_tags):
-                continue
-            self.vars["infectious_population"] += \
-                self.params["tb_multiplier_force"] \
-                * self.compartments[label]
-        self.vars["rate_force"] = \
-            self.params["tb_n_contact"] \
-              * self.vars["infectious_population"] \
-              / self.vars["population"]
-        self.vars["rate_force_weak"] = \
-            self.params["tb_multiplier_bcg_protection"] \
-              * self.vars["rate_force"]
+        for strain in self.strains:
+            self.vars["infectious_population" + strain] = 0.0
+            for organ in self.organ_status:
+                for label in self.labels:
+                    if organ not in label and organ != "":
+                        continue
+                    if not label_intersects_tags(label, self.infectious_tags):
+                        continue
+                    self.vars["infectious_population" + strain] += \
+                        self.params["tb_multiplier_force" + organ] \
+                        * self.compartments[label]
+            self.vars["rate_force" + strain] = \
+                self.params["tb_n_contact"] \
+                * self.vars["infectious_population" + strain] \
+                / self.vars["population"]
+            self.vars["rate_force_weak" + strain] = \
+                self.params["tb_multiplier_bcg_protection"] \
+                * self.vars["rate_force" + strain]
 
     def set_infection_flows(self):
 
@@ -745,149 +763,10 @@ class MultiOrganStatusModel(BaseModel):
             * self.params["program_prop_lowquality"] \
             / (1. - self.params["program_prop_lowquality"]))
 
+    def find_equal_detection_rates(self):
+        pass
 
 class MultistrainModel(MultiOrganStatusModel):
-
-    """
-    A harmonised model that can run any number of strains
-    and organ statuses
-    """
-
-    def __init__(self,
-                 number_of_organs=3,
-                 number_of_strains=1,
-                 input_parameters=None,
-                 input_compartments=None):
-
-        BaseModel.__init__(self)
-
-        self.define_model_structure(number_of_organs, number_of_strains)
-
-        self.initialise_compartments(input_compartments)
-
-        self.set_parameters(input_parameters)
-
-        self.split_default_death_proportions()
-
-        self.ensure_all_progressions_go_somewhere()
-
-        self.find_natural_history_flows()
-
-        self.find_detection_rates()
-
-        self.find_programmatic_rates()
-
-        self.find_equal_detection_rates()
-
-        self.find_treatment_rates()
-
-    def define_model_structure(self, number_of_organs, number_of_strains):
-
-        self.compartment_types = [
-            "susceptible_fully",
-            "susceptible_vac",
-            "susceptible_treated",
-            "latent_early",
-            "latent_late",
-            "active",
-            "detect",
-            "missed",
-            "treatment_infect",
-            "treatment_noninfect"]
-
-        self.broad_compartment_types = [
-            "susceptible",
-            "latent",
-            "active",
-            "missed",
-            "treatment"]
-
-        available_organs = [
-            "_smearpos",
-            "_smearneg",
-            "_extrapul"]
-        self.organ_status =\
-            available_organs[0: number_of_organs]
-
-        available_strains = [
-            "_ds",
-            "_mdr",
-            "_xdr"]
-        self.strains\
-            = available_strains[0: number_of_strains]
-
-        self.treatment_stages = [
-            "_infect",
-            "_noninfect"]
-
-        self.infectious_tags = [
-            "active",
-            "missed",
-            "detect",
-            "treatment_infect"]
-
-        self.comorbidities = [
-            ""]
-
-    def initialise_compartments(self, input_compartments):
-
-        if input_compartments is None:
-            input_compartments = {
-                "susceptible_fully":
-                    2e7,
-                "active":
-                    3.}
-
-        # Initialise all compartments to zero
-        for compartment in self.compartment_types:
-            if "susceptible" in compartment:  # Replicate for comorbidities only
-                self.set_compartment(compartment, 0.)
-            elif "latent" in compartment:  # Replicate for comorbidities and strains
-                for strain in self.strains:
-                    self.set_compartment(compartment + strain, 0.)
-            else:
-                for strain in self.strains:
-                    for organ in self.organ_status:
-                        self.set_compartment(compartment + organ + strain, 0.)
-
-        # Put in values from input_compartments - now initialise to DS-TB only
-        for compartment in self.compartment_types:
-            if compartment in input_compartments:
-                if "susceptible" in compartment:
-                    self.set_compartment(compartment,
-                                         input_compartments[compartment])
-                elif "latent" in compartment:
-                    self.set_compartment(compartment + "_ds",
-                                         input_compartments[compartment])
-                else:
-                    for organ in self.organ_status:
-                        self.set_compartment(compartment + organ + "_ds",
-                                             input_compartments[compartment]
-                                             / len(self.strains)
-                                             / len(self.organ_status))
-
-    def calculate_force_infection(self):
-
-        for strain in self.strains:
-            self.vars["infectious_population" + strain] = 0.0
-            for organ in self.organ_status:
-                for label in self.labels:
-                    if strain not in label:
-                        continue
-                    if organ not in label:
-                        continue
-                    if not label_intersects_tags(label, self.infectious_tags):
-                        continue
-                    self.vars["infectious_population" + strain] += \
-                        self.params["tb_multiplier_force" + organ] \
-                        * self.compartments[label]
-            self.vars["rate_force" + strain] = \
-                self.params["tb_n_contact"] \
-                  * self.vars["infectious_population" + strain] \
-                  / self.vars["population"]
-            self.vars["rate_force_weak" + strain] = \
-                self.params["tb_multiplier_bcg_protection"] \
-                  * self.vars["rate_force" + strain]
 
     def set_infection_flows(self):
 

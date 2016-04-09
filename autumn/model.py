@@ -758,12 +758,15 @@ class MultiOrganStatusLowQualityModel(MultiOrganStatusModel):
             "missed",
             "treatment"]
 
-        available_organs = [
-            "_smearpos",
-            "_smearneg",
-            "_extrapul"]
-        self.organ_status =\
-            available_organs[0: number_of_organs]
+        if number_of_organs == 0:
+            self.organ_status = [""]
+        else:
+            available_organs = [
+                "_smearpos",
+                "_smearneg",
+                "_extrapul"]
+            self.organ_status = \
+                available_organs[0: number_of_organs]
 
         self.treatment_stages = [
             "_infect",
@@ -776,8 +779,7 @@ class MultiOrganStatusLowQualityModel(MultiOrganStatusModel):
             "lowquality",
             "treatment_infect"]
 
-        self.comorbidities = [
-            ""]
+        self.comorbidities = [""]
 
     def set_natural_history_flows(self):
 

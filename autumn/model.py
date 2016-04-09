@@ -25,7 +25,7 @@ def label_intersects_tags(label, tags):
     return False
 
 
-class MultiOrganStatusModel(BaseModel):
+class ConsolidatedModel(BaseModel):
 
     """
     A harmonised model that can run any number of strains
@@ -316,22 +316,23 @@ class MultiOrganStatusModel(BaseModel):
 
     def set_infection_flows(self):
 
-        self.set_var_transfer_rate_flow(
-            "susceptible_fully",
-            "latent_early",
-            "rate_force")
-        self.set_var_transfer_rate_flow(
-            "susceptible_vac",
-            "latent_early",
-            "rate_force_weak")
-        self.set_var_transfer_rate_flow(
-            "susceptible_treated",
-            "latent_early",
-            "rate_force_weak")
-        self.set_var_transfer_rate_flow(
-            "latent_late",
-            "latent_early",
-            "rate_force_weak")
+        for strain in self.strains:
+            self.set_var_transfer_rate_flow(
+                "susceptible_fully",
+                "latent_early" + strain,
+                "rate_force" + strain)
+            self.set_var_transfer_rate_flow(
+                "susceptible_vac",
+                "latent_early" + strain,
+                "rate_force_weak" + strain)
+            self.set_var_transfer_rate_flow(
+                "susceptible_treated",
+                "latent_early" + strain,
+                "rate_force_weak" + strain)
+            self.set_var_transfer_rate_flow(
+                "latent_late" + strain,
+                "latent_early" + strain,
+                "rate_force_weak" + strain)
 
     def find_natural_history_flows(self):
 
@@ -378,50 +379,49 @@ class MultiOrganStatusModel(BaseModel):
 
     def set_natural_history_flows(self):
 
-        self.set_fixed_transfer_rate_flow(
-            "latent_early",
-            "latent_late",
-            "tb_rate_stabilise")
-        for organ in self.organ_status:
+        for strain in self.strains:
             self.set_fixed_transfer_rate_flow(
-                "latent_early",
-                "active" + organ,
-                "tb_rate_early_progression" + organ)
-            self.set_fixed_transfer_rate_flow(
-                "latent_late",
-                "active" + organ,
-                "tb_rate_late_progression" + organ)
-            self.set_fixed_transfer_rate_flow(
-                "active" + organ,
-                "latent_late",
-                "tb_rate_recover" + organ)
-            self.set_fixed_transfer_rate_flow(
-                "missed" + organ,
-                "latent_late",
-                "tb_rate_recover" + organ)
-            self.set_infection_death_rate_flow(
-                "active" + organ,
-                "tb_rate_death" + organ)
-            self.set_infection_death_rate_flow(
-                "missed" + organ,
-                "tb_rate_death" + organ)
-
-            self.set_fixed_transfer_rate_flow(
-                "detect" + organ,
-                "latent_late",
-                "tb_rate_recover" + organ)
-            self.set_infection_death_rate_flow(
-                "detect" + organ,
-                "tb_rate_death" + organ)
-
-            if self.lowquality == True:
+                "latent_early" + strain,
+                "latent_late" + strain,
+                "tb_rate_stabilise")
+            for organ in self.organ_status:
                 self.set_fixed_transfer_rate_flow(
-                    "lowquality" + organ,
-                    "latent_late",
+                    "latent_early" + strain,
+                    "active" + organ + strain,
+                    "tb_rate_early_progression" + organ)
+                self.set_fixed_transfer_rate_flow(
+                    "latent_late" + strain,
+                    "active" + organ + strain,
+                    "tb_rate_late_progression" + organ)
+                self.set_fixed_transfer_rate_flow(
+                    "active" + organ + strain,
+                    "latent_late" + strain,
+                    "tb_rate_recover" + organ)
+                self.set_fixed_transfer_rate_flow(
+                    "missed" + organ + strain,
+                    "latent_late" + strain,
                     "tb_rate_recover" + organ)
                 self.set_infection_death_rate_flow(
-                    "lowquality" + organ,
+                    "active" + organ + strain,
                     "tb_rate_death" + organ)
+                self.set_infection_death_rate_flow(
+                    "missed" + organ + strain,
+                    "tb_rate_death" + organ)
+                self.set_fixed_transfer_rate_flow(
+                    "detect" + organ + strain,
+                    "latent_late" + strain,
+                    "tb_rate_recover" + organ)
+                self.set_infection_death_rate_flow(
+                    "detect" + organ + strain,
+                    "tb_rate_death" + organ)
+                if self.lowquality == True:
+                    self.set_fixed_transfer_rate_flow(
+                        "lowquality" + organ + strain,
+                        "latent_late" + strain,
+                        "tb_rate_recover" + organ)
+                    self.set_infection_death_rate_flow(
+                        "lowquality" + organ + strain,
+                        "tb_rate_death" + organ)
 
     def find_detection_rates(self):
 
@@ -766,66 +766,7 @@ class MultiOrganStatusModel(BaseModel):
     def find_equal_detection_rates(self):
         pass
 
-class MultistrainModel(MultiOrganStatusModel):
-
-    def set_infection_flows(self):
-
-        for strain in self.strains:
-            self.set_var_transfer_rate_flow(
-                "susceptible_fully",
-                "latent_early" + strain,
-                "rate_force" + strain)
-            self.set_var_transfer_rate_flow(
-                "susceptible_vac",
-                "latent_early" + strain,
-                "rate_force_weak" + strain)
-            self.set_var_transfer_rate_flow(
-                "susceptible_treated",
-                "latent_early" + strain,
-                "rate_force_weak" + strain)
-            self.set_var_transfer_rate_flow(
-                "latent_late" + strain,
-                "latent_early" + strain,
-                "rate_force_weak" + strain)
-
-    def set_natural_history_flows(self):
-
-        for strain in self.strains:
-            self.set_fixed_transfer_rate_flow(
-                "latent_early" + strain,
-                "latent_late" + strain,
-                "tb_rate_stabilise")
-            for organ in self.organ_status:
-                self.set_fixed_transfer_rate_flow(
-                    "latent_early" + strain,
-                    "active" + organ + strain,
-                    "tb_rate_early_progression" + organ)
-                self.set_fixed_transfer_rate_flow(
-                    "latent_late" + strain,
-                    "active" + organ + strain,
-                    "tb_rate_late_progression" + organ)
-                self.set_fixed_transfer_rate_flow(
-                    "active" + organ + strain,
-                    "latent_late" + strain,
-                    "tb_rate_recover" + organ)
-                self.set_fixed_transfer_rate_flow(
-                    "missed" + organ + strain,
-                    "latent_late" + strain,
-                    "tb_rate_recover" + organ)
-                self.set_infection_death_rate_flow(
-                    "active" + organ + strain,
-                    "tb_rate_death" + organ)
-                self.set_infection_death_rate_flow(
-                    "missed" + organ + strain,
-                    "tb_rate_death" + organ)
-
-                self.set_fixed_transfer_rate_flow(
-                    "detect" + organ + strain,
-                    "latent_late" + strain,
-                    "tb_rate_recover" + organ)
-                self.set_infection_death_rate_flow(
-                    "detect" + organ + strain,
-                    "tb_rate_death" + organ)
+class MultistrainModel(ConsolidatedModel):
 
     def find_equal_detection_rates(self):
 

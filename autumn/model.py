@@ -35,9 +35,12 @@ class MultiOrganStatusModel(BaseModel):
     def __init__(self,
                  number_of_organs=0,
                  input_parameters=None,
-                 input_compartments=None):
+                 input_compartments=None,
+                 lowquality=False):
 
         BaseModel.__init__(self)
+
+        self.lowquality = lowquality
 
         self.define_model_structure(number_of_organs)
 
@@ -53,6 +56,9 @@ class MultiOrganStatusModel(BaseModel):
         self.find_natural_history_flows()
 
         self.find_detection_rates()
+
+        if self.lowquality == True:
+            self.find_lowquality_detections()
 
         self.find_programmatic_rates()
 
@@ -100,6 +106,14 @@ class MultiOrganStatusModel(BaseModel):
                 available_organs[0: number_of_organs]
 
         self.comorbidities = [""]
+
+        if self.lowquality == True:
+            self.compartment_types\
+                = self.compartment_types + ["lowquality"]
+            self.broad_compartment_types\
+                = self.broad_compartment_types + ["lowquality"]
+            self.infectious_tags\
+                = self.infectious_tags + ["lowquality"]
 
     def initialise_compartments(self, input_compartments):
 
@@ -382,8 +396,16 @@ class MultiOrganStatusModel(BaseModel):
                 "detect" + organ,
                 "tb_rate_death" + organ)
 
-    def find_detection_rates(self):
+            if self.lowquality == True:
+                self.set_fixed_transfer_rate_flow(
+                    "lowquality" + organ,
+                    "latent_late",
+                    "tb_rate_recover" + organ)
+                self.set_infection_death_rate_flow(
+                    "lowquality" + organ,
+                    "tb_rate_death" + organ)
 
+    def find_detection_rates(self):
 
         # Rates of detection and failure of detection
         self.set_param(
@@ -407,13 +429,19 @@ class MultiOrganStatusModel(BaseModel):
 
     def find_programmatic_rates(self):
 
-        for detect_or_missed in ["_detect", "_missed"]:
+        destinations_from_active = ["_detect", "_missed"]
+
+        if self.lowquality == True:
+            destinations_from_active =\
+                destinations_from_active + ["_enterlowquality"]
+
+        for destination in destinations_from_active:
             self.set_scaleup_var(
-                "program_rate" + detect_or_missed,
+                "program_rate" + destination,
                 make_two_step_curve(
-                    self.params["pretreatment_available_proportion"] * self.params["program_rate" + detect_or_missed],
-                    self.params["dots_start_proportion"] * self.params["program_rate" + detect_or_missed],
-                    self.params["program_rate" + detect_or_missed],
+                    self.params["pretreatment_available_proportion"] * self.params["program_rate" + destination],
+                    self.params["dots_start_proportion"] * self.params["program_rate" + destination],
+                    self.params["program_rate" + destination],
                     self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
 
     def set_programmatic_flows(self):
@@ -435,6 +463,15 @@ class MultiOrganStatusModel(BaseModel):
                 "missed" + organ,
                 "active" + organ,
                 "program_rate_restart_presenting")
+            if self.lowquality == True:
+                self.set_var_transfer_rate_flow(
+                    "active" + organ,
+                    "lowquality" + organ,
+                    "program_rate_enterlowquality")
+                self.set_fixed_transfer_rate_flow(
+                    "lowquality" + organ,
+                    "active" + organ,
+                    "program_rate_leavelowquality")
 
     def split_default_death_proportions(self):
 
@@ -701,178 +738,12 @@ class MultiOrganStatusModel(BaseModel):
                     self.compartments[label]
                      / self.vars["population"] * 1E5)
 
-
-class MultiOrganStatusLowQualityModel(MultiOrganStatusModel):
-
-    """
-    A harmonised model that can run any number of strains
-    and organ statuses
-    """
-
-    def __init__(self,
-                 number_of_organs=3,
-                 input_parameters=None,
-                 input_compartments=None):
-
-        BaseModel.__init__(self)
-
-        self.define_model_structure(number_of_organs)
-
-        self.initialise_compartments(input_compartments)
-
-        self.set_parameters(input_parameters)
-
-        self.split_default_death_proportions()
-
-        self.ensure_all_progressions_go_somewhere()
-
-        self.find_natural_history_flows()
-
-        self.find_detection_rates()
-
-        self.find_lowquality_detections()
-
-        self.find_programmatic_rates()
-
-        self.find_treatment_rates()
-
-    def define_model_structure(self, number_of_organs):
-
-        self.compartment_types = [
-            "susceptible_fully",
-            "susceptible_vac",
-            "susceptible_treated",
-            "latent_early",
-            "latent_late",
-            "active",
-            "detect",
-            "missed",
-            "lowquality",
-            "treatment_infect",
-            "treatment_noninfect"]
-
-        self.broad_compartment_types = [
-            "susceptible",
-            "latent",
-            "active",
-            "missed",
-            "treatment"]
-
-        if number_of_organs == 0:
-            self.organ_status = [""]
-        else:
-            available_organs = [
-                "_smearpos",
-                "_smearneg",
-                "_extrapul"]
-            self.organ_status = \
-                available_organs[0: number_of_organs]
-
-        self.treatment_stages = [
-            "_infect",
-            "_noninfect"]
-
-        self.infectious_tags = [
-            "active",
-            "missed",
-            "detect",
-            "lowquality",
-            "treatment_infect"]
-
-        self.comorbidities = [""]
-
-    def set_natural_history_flows(self):
-
-        self.set_fixed_transfer_rate_flow(
-            "latent_early",
-            "latent_late",
-            "tb_rate_stabilise")
-        for organ in self.organ_status:
-            self.set_fixed_transfer_rate_flow(
-                "latent_early",
-                "active" + organ,
-                "tb_rate_early_progression" + organ)
-            self.set_fixed_transfer_rate_flow(
-                "latent_late",
-                "active" + organ,
-                "tb_rate_late_progression" + organ)
-            self.set_fixed_transfer_rate_flow(
-                "active" + organ,
-                "latent_late",
-                "tb_rate_recover" + organ)
-            self.set_fixed_transfer_rate_flow(
-                "missed" + organ,
-                "latent_late",
-                "tb_rate_recover" + organ)
-            self.set_infection_death_rate_flow(
-                "active" + organ,
-                "tb_rate_death" + organ)
-            self.set_infection_death_rate_flow(
-                "missed" + organ,
-                "tb_rate_death" + organ)
-
-            self.set_fixed_transfer_rate_flow(
-                "lowquality" + organ,
-                "latent_late",
-                "tb_rate_recover" + organ)
-            self.set_infection_death_rate_flow(
-                "lowquality" + organ,
-                "tb_rate_death" + organ)
-
-            self.set_fixed_transfer_rate_flow(
-                "detect" + organ,
-                "latent_late",
-                "tb_rate_recover" + organ)
-            self.set_infection_death_rate_flow(
-                "detect" + organ,
-                "tb_rate_death" + organ)
-
     def find_lowquality_detections(self):
         self.set_param(
             "program_rate_enterlowquality",
             self.params["program_rate_detect"] \
             * self.params["program_prop_lowquality"] \
             / (1. - self.params["program_prop_lowquality"]))
-
-    def find_programmatic_rates(self):
-
-        for detect_or_missed in ["_detect", "_missed", "_enterlowquality"]:
-            self.set_scaleup_var(
-                "program_rate" + detect_or_missed,
-                make_two_step_curve(
-                    self.params["pretreatment_available_proportion"] * self.params["program_rate" + detect_or_missed],
-                    self.params["dots_start_proportion"] * self.params["program_rate" + detect_or_missed],
-                    self.params["program_rate" + detect_or_missed],
-                    self.params["treatment_available_date"], self.params["dots_start_date"],
-                    self.params["finish_scaleup_date"]))
-
-    def set_programmatic_flows(self):
-
-        for organ in self.organ_status:
-            self.set_var_transfer_rate_flow(
-                "active" + organ,
-                "detect" + organ,
-                "program_rate_detect")
-            self.set_var_transfer_rate_flow(
-                "active" + organ,
-                "missed" + organ,
-                "program_rate_missed")
-            self.set_fixed_transfer_rate_flow(
-                "detect" + organ,
-                "treatment_infect" + organ,
-                "program_rate_start_treatment")
-            self.set_fixed_transfer_rate_flow(
-                "missed" + organ,
-                "active" + organ,
-                "program_rate_restart_presenting")
-            self.set_var_transfer_rate_flow(
-                "active" + organ,
-                "lowquality" + organ,
-                "program_rate_enterlowquality")
-            self.set_fixed_transfer_rate_flow(
-                "lowquality" + organ,
-                "active" + organ,
-                "program_rate_leavelowquality")
 
 
 class MultistrainModel(MultiOrganStatusModel):

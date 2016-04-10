@@ -198,7 +198,6 @@ class ConsolidatedModel(BaseModel):
                         for organ in self.organ_status:
                             self.set_compartment(compartment + organ + default_start_strain + comorbidity,
                                                  input_compartments[compartment]
-                                                 / len(self.strains)
                                                  / len(self.organ_status)
                                                  / len(self.comorbidities))
 
@@ -338,6 +337,8 @@ class ConsolidatedModel(BaseModel):
                 for label in self.labels:
                     if organ not in label and organ != "":
                         continue
+                    if strain not in label and strain != "":
+                        continue
                     if not label_intersects_tags(label, self.infectious_tags):
                         continue
                     self.vars["infectious_population" + strain] += \
@@ -407,6 +408,7 @@ class ConsolidatedModel(BaseModel):
                 / self.params["tb_timeperiod_activeuntreated"])
 
     def ensure_all_progressions_go_somewhere(self):
+
         # Make sure all progressions go somewhere, regardless of number of organ statuses
         if len(self.organ_status) == 1:
             self.params["epi_proportion_cases_smearpos"] = 1.
@@ -471,7 +473,6 @@ class ConsolidatedModel(BaseModel):
                             self.set_infection_death_rate_flow(
                                 "detect" + organ + strain + comorbidity,
                                 "tb_rate_death" + organ)
-
 
     def find_detection_rates(self):
 

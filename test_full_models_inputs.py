@@ -17,7 +17,6 @@ parameters = import_params['const']['model_parameters']
 for key, value in parameters.items():
     print(key,value)
     population.set_parameters(key, value[2])
-    #print(population.input_parameters[key])
 
 start_realtime = datetime.datetime.now()
 
@@ -25,17 +24,21 @@ out_dir = 'flexible_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
-models_to_run = [[3, 2, 1]]
+models_to_run = [[3, 2, 2, True, True, True]]
 
 for running_model in range(len(models_to_run)):
     name = 'model%d' % running_model
     base = os.path.join(out_dir, name)
-    model = autumn.model.StratifiedWithAmplification(models_to_run[running_model][0],
-                                                     models_to_run[running_model][1],
-                                                     models_to_run[running_model][2])
-    print((str(models_to_run[running_model][0]) + " organ(s), " +
-           str(models_to_run[running_model][1]) + " strain(s), " +
-           str(models_to_run[running_model][2]) + " comorbidity(ies)"))
+    model = autumn.model.ConsolidatedModel(
+        models_to_run[running_model][0],
+        models_to_run[running_model][1],
+        models_to_run[running_model][2],
+        models_to_run[running_model][3],
+        models_to_run[running_model][4],
+        models_to_run[running_model][5])
+    # print((str(models_to_run[running_model][0]) + " organ(s), " +
+    #        str(models_to_run[running_model][1]) + " strain(s), " +
+    #        str(models_to_run[running_model][2]) + " comorbidity(ies)"))
     start_time = 1000.
     recent_time = 1990.
     model.make_times(start_time, 2015., 0.05)

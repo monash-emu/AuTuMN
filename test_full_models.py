@@ -7,7 +7,6 @@ from pprint import pprint
 import autumn.model
 import autumn.plotting
 from autumn.spreadsheet_2 import read_input_data_xls
-from autumn.model import UnstratifiedModel
 
 start_realtime = datetime.datetime.now()
 
@@ -15,15 +14,18 @@ out_dir = 'flexible_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
-models_to_run = [[3, 2, 1]]
+models_to_run = [[3, 3, 3, True, True, True]]
 
 for running_model in range(len(models_to_run)):
     name = 'model%d' % running_model
     base = os.path.join(out_dir, name)
-    model = autumn.model.MultiOrganStatusModel(
-        models_to_run[running_model][0])
-        # models_to_run[running_model][1],
-        # models_to_run[running_model][2])
+    model = autumn.model.ConsolidatedModel(
+        models_to_run[running_model][0],
+        models_to_run[running_model][1],
+        models_to_run[running_model][2],
+        models_to_run[running_model][3],
+        models_to_run[running_model][4],
+        models_to_run[running_model][5])
     # print((str(models_to_run[running_model][0]) + " organ(s), " +
     #        str(models_to_run[running_model][1]) + " strain(s), " +
     #        str(models_to_run[running_model][2]) + " comorbidity(ies)"))

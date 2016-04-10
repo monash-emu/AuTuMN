@@ -16,7 +16,8 @@ parameters = import_params['const']['model_parameters']
 
 for key, value in parameters.items():
     print(key,value)
-    population.set_parameters(key, value[2])
+    #population.set_parameters(key, value[2])
+    #print(key, value,population.params[key])
 
 start_realtime = datetime.datetime.now()
 

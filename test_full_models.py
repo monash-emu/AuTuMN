@@ -5,8 +5,12 @@ import glob
 import datetime
 from pprint import pprint
 import autumn.model
+import numpy
 import autumn.plotting
 from autumn.spreadsheet_2 import read_input_data_xls
+
+def indices(a, func):
+    return [i for (i, val) in enumerate(a) if func(val)]
 
 start_realtime = datetime.datetime.now()
 
@@ -36,7 +40,7 @@ for running_model in range(len(models_to_run)):
     #        str(models_to_run[running_model][2]) + " comorbidity(ies)"))
     start_time = 1850.
     recent_time = 1990.
-    model.make_times(start_time, 2015., 0.05)
+    model.make_times(start_time, 2015.1, 0.1)
     model.integrate_explicit()
     model.make_graph(base + '.workflow')
     # INDIVIDUAL COMPARTMENTS
@@ -116,7 +120,26 @@ for running_model in range(len(models_to_run)):
     #                                   "program_rate_detect_mdr_asds"],
     #                                  base + '.scaleup_detection.png')
 
+    year = indices(model.times, lambda x: x >= 2015.)[0]
+    print("2015 incidence is: ")
+    print(model.get_var_soln("incidence")[year])
+    print("2015 prevalence is: ")
+    print(model.get_var_soln("prevalence")[year])
+    print("2015 proportion MDR-TB is: ")
+    print(model.get_var_soln("proportion_mdr")[year])
+    print("2015 mortality is: ")
+    print(model.get_var_soln("mortality")[year])
+
+
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)
 
 print("Time elapsed in running script is " + str(datetime.datetime.now() - start_realtime))
+
+
+# def indices(a, func):
+#     return [i for (i, val) in enumerate(a) if func(val)]
+#
+# inds = indices(model.times, lambda x: x > 2014.)
+#
+# print(inds[0])

@@ -31,6 +31,10 @@ def make_gamma_dist(mean, std):
     scale = std ** 2 / mean
     return gamma(shape, loc, scale)
 
+# Following function likely to be needed later as we have calibration inputs
+# at multiple time points
+def indices(a, func):
+    return [i for (i, val) in enumerate(a) if func(val)]
 
 def is_positive_definite(v):
     return isfinite(v) and v > 0.0
@@ -39,33 +43,33 @@ def is_positive_definite(v):
 class ModelRunner():
 
     def __init__(self):
-        self.model = autumn.model.ConsolidatedModel()
-        self.model.make_times(1900, 2015, 1.)
-        self.model.set_compartment(
-            "susceptible_fully", 50E6)
+        self.model = autumn.model.ConsolidatedModel(3, 3, 3, False, False, False)
+        self.model.make_times(1900, 2015.1, 1.)
+        # self.model.set_compartment(
+        #     "susceptible_fully", 50E6)
         self.is_last_run_success = False
         self.param_props_list = [
             { 
-                'init': 6,
+                'init': 14.,
                 'scale': 10.,
                 'key': 'tb_n_contact',
                 'short': 'n',
                 'format': lambda v: "%-2.0f" % v
             },
-            # { 
+            # {
             #     'init': 50E6,
             #     'scale': 10E6,
             #     'key': 'init_population',
             #     'short': 'pop0',
             #     'format': lambda v: "%3.0fM" % (v/1E6)
             # },
-            { 
-                'init': 0.5,
-                'scale': 5,
-                'key': 'tb_multiplier_bcg_protection',
-                'short': 'bcg',
-                'format': lambda v: "%.4f" % v
-            },
+            # {
+            #     'init': 0.5,
+            #     'scale': 5,
+            #     'key': 'tb_multiplier_bcg_protection',
+            #     'short': 'bcg',
+            #     'format': lambda v: "%.4f" % v
+            # },
             { 
                 'init': .18,
                 'scale': 1,
@@ -81,7 +85,7 @@ class ModelRunner():
                 'format': lambda v: "%.4f" % v
             },
             {
-                'init': .7,
+                'init': .8,
                 'scale': 1,
                 'key': 'program_proportion_detect',
                 'short': 'detect',
@@ -144,26 +148,32 @@ class ModelRunner():
         param_dict = self.convert_param_list_to_dict(params)
 
         final_pop = self.model.vars["population"]
-        prevalence = self.model.vars["prevalence"]
-        incidence = self.model.vars["incidence"]
-        mortality = self.model.vars["mortality"]
-        latent = (
-            self.model.compartments["latent_late"]
-             / self.model.vars["population"]
-             * 1E5)
 
-        fr_at_equil = self.get_fraction_between_times('latent_late', 1945, 1950)
+        year_2015 = indices(self.model.times, lambda x: x >= 2015.)[0]
+        year_1940 = indices(self.model.times, lambda x: x >= 2015.)[0]
+
+        prev_2015 = self.model.get_var_soln("prevalence")[year_2015]
+        inc_2015 = self.model.get_var_soln("incidence")[year_2015]
+        mort_2015 = self.model.get_var_soln("mortality")[year_2015]
+        # latent = (
+        #     self.model.compartments["latent_late"]
+        #      / self.model.vars["population"]
+        #      * 1E5)
+        latent_2015 = self.model.broad_fraction_soln["latent"][year_2015] * 1E2
+        latent_1940 = self.model.broad_fraction_soln["latent"][year_1940] * 1E2
+
+        # fr_at_equil = self.get_fraction_between_times('latent_late', 1945, 1950)
 
         ln_prior = 0.0
         ln_prior += make_gamma_dist(40, 20).logpdf(param_dict['tb_n_contact'])
 
         ln_posterior = 0.0
-        ln_posterior += - 1E8 * max(fr_at_equil - 0.05, 0.0)
+        # ln_posterior += - 1E8 * max(fr_at_equil - 0.05, 0.0)
         ln_posterior += norm(99E6, 5E6).logpdf(final_pop)
-        ln_posterior += norm(30000, 100).logpdf(latent)
-        ln_posterior += norm(417, 5).logpdf(prevalence)
+        ln_posterior += norm(30., 10.).logpdf(latent_2015)
+        ln_posterior += norm(417, 5).logpdf(prev_2015)
         # ln_posterior += norm(280, 0.01).logpdf(incidence)
-        # ln_posterior += norm(10, 1).logpdf(mortality)
+        # ln_posterior += norm(10, 1).logpdf(mort_2015)
 
         ln_overall = ln_prior + ln_posterior
 
@@ -173,12 +183,12 @@ class ModelRunner():
             print_dict[props["short"]] = props["format"](val)
         print_dict["="] = "=="
         print_dict["pop1"] = "{:<4}".format("{:.0f}M".format(final_pop/1E6))
-        print_dict["latent"] = "{:2.0f}%".format(latent/1E5*100.)
-        print_dict["prev"] = "{:<4.0f}".format(prevalence)
-        print_dict["inci"] = "{:<4.0f}".format(incidence)
-        print_dict["mort"] = "{:<4.0f}".format(mortality)
+        print_dict["latent"] = "{:2.0f}%".format(latent_2015/1E5*100.)
+        print_dict["prev"] = "{:<4.0f}".format(prev_2015)
+        print_dict["inci"] = "{:<4.0f}".format(inc_2015)
+        print_dict["mort"] = "{:<4.0f}".format(mort_2015)
         print_dict["-lnprob"] = "{:7.0f}".format(-ln_overall)
-        print_dict["fr_at_eq"] = "{:2.0f}%".format(fr_at_equil*100.0)
+        print_dict["fr_at_eq"] = "{:2.0f}%".format(latent_1940*100.0)
         print " ".join("%s=%s" % (k,v) for k,v in print_dict.items())
 
         return ln_overall

@@ -10,14 +10,19 @@ from autumn.spreadsheet_2 import read_input_data_xls
 from autumn.model import ConsolidatedModel
 
 population = ConsolidatedModel()
+
 import_params = read_input_data_xls('xls/data_input_4.xlsx')
 initials = import_params['const']['initials_for_compartments']
 parameters = import_params['const']['model_parameters']
 
 for key, value in parameters.items():
     print(key,value)
-    #population.set_parameters(key, value[2])
-    #print(key, value,population.params[key])
+    population.set_param(key, value["Best"])
+
+for key, value in initials.items():
+    print(key,value)
+    population.set_compartment(key, value["Best"])
+
 
 start_realtime = datetime.datetime.now()
 

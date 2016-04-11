@@ -38,7 +38,8 @@ class ConsolidatedModel(BaseModel):
                  number_of_comorbidities=0,
                  lowquality=False,
                  amplification=False,
-                 misassignment=False):
+                 misassignment=False,
+                 parameters=None):
 
         BaseModel.__init__(self)
 
@@ -52,7 +53,11 @@ class ConsolidatedModel(BaseModel):
 
         self.initialise_compartments()
 
-        self.set_parameters()
+        if parameters is None:
+            self.set_parameters()
+        else:
+            for key, value in parameters.items():
+                self.set_param(key, value["Best"])
 
         self.split_default_death_proportions()
 

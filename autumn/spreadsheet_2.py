@@ -89,19 +89,30 @@ class ConstantsSheetReader:
                     'epi_proportion_cases_smearpos',
                     'epi_proportion_cases_smearneg',
                     'epi_proportion_cases_extrapul',
+                    'epi_proportion_cases',
                     'tb_multiplier_force_smearpos',
+                    'tb_multiplier_force_smearneg',
                     'tb_multiplier_force_extrapul',
                     'tb_multiplier_force',
                     'tb_n_contact',
+                    'tb_proportion_early_progression',
+                    'tb_timeperiod_early_latent',
                     'tb_rate_late_progression',
+                    'tb_proportion_casefatality_untreated_smearpos',
+                    'tb_proportion_casefatality_untreated_smearneg',
                     'tb_proportion_casefatality_untreated',
                     'tb_timeperiod_activeuntreated',
+                    'tb_multiplier_bcg_protection',
+                    'program_prop_vac',
+                    'program_prop_unvac',
                     'program_proportion_detect',
                     'program_algorithm_sensitivity',
+                    'program_rate_start_treatment',
                     'tb_timeperiod_treatment_ds',
                     'tb_timeperiod_treatment_mdr',
                     'tb_timeperiod_treatment_xdr',
                     'tb_timeperiod_treatment_inappropriate',
+                    'tb_timeperiod_infect_ontreatment_ds',
                     'tb_timeperiod_infect_ontreatment_mdr',
                     'tb_timeperiod_infect_ontreatment_xdr',
                     'tb_timeperiod_infect_ontreatment_inappropriate',
@@ -114,13 +125,14 @@ class ConstantsSheetReader:
                     'timepoint_introduce_mdr',
                     'timepoint_introduce_xdr',
                     'treatment_available_date',
-                    'pretreatment_available_proportion',
                     'dots_start_date',
-                    'dots_start_proportion',
                     'finish_scaleup_date',
                     'pretreatment_available_proportion',
+                    'dots_start_proportion',
                     'program_prop_assign_mdr',
                     'program_prop_assign_xdr',
+                    'program_prop_lowquality',
+                    'program_rate_leavelowquality',
                     'program_prop_nonsuccessoutcomes_death']], \
             [   'initials_for_compartments', 
                 [   'susceptible_fully',
@@ -477,6 +489,7 @@ if __name__ == "__main__":
     import json
     data = read_input_data_xls('xls/data_input_4.xlsx')
     open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
+    print(data)
 
 
             

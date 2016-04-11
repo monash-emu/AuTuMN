@@ -306,6 +306,7 @@ def plot_outputs(model, labels, left_xlimit, png=None):
     patterns = {}
     full_names = {}
     axis_labels = []
+    yaxis_label = "Per 100,000 (per year as applicable)"
     for label in labels:
         patterns[label] = get_line_pattern(label, "strain")
         if "incidence" in label:
@@ -320,12 +321,16 @@ def plot_outputs(model, labels, left_xlimit, png=None):
         elif "prevalence" in label:
             colours[label] = (0, 0.5, 0)
             full_names[label] = "Prevalence"
+        elif "proportion" in label:
+            colours[label] = (0, 0, 0)
+            full_names[label] = "Proportion"
+            yaxis_label = "Percentage"
+
         if "_ds" in label:
             full_names[label] += ", DS-TB"
         elif "_mdr" in label:
             full_names[label] += ", MDR-TB"
     ax = make_axes_with_room_for_legend()
-    yaxis_label = "Per 100,000 (per year as applicable)"
 
     for i_plot, var_label in enumerate(labels):
         ax.plot(
@@ -364,7 +369,7 @@ def plot_scaleup_fns(model, functions, png=None):
         start_time = model.params["timepoint_introduce_mdr"] - 5.
         end_time = model.params["timepoint_introduce_mdr"] + 10.
     else:
-        start_time = 1950.
+        start_time = 1900.
         end_time = 2015.
     x_vals = numpy.linspace(start_time, end_time, 1E2)
     ax = make_axes_with_room_for_legend()

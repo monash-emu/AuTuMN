@@ -226,7 +226,7 @@ class ConsolidatedModel(BaseModel):
             "tb_multiplier_force":
                 1.,
             "tb_n_contact":
-                12.,
+                14.,
             "tb_proportion_early_progression":
                 0.12,
             "tb_timeperiod_early_latent":
@@ -234,7 +234,7 @@ class ConsolidatedModel(BaseModel):
             "tb_rate_late_progression":
                 0.007,
             "tb_proportion_casefatality_untreated_smearpos":
-                0.7,
+                0.6,
             "tb_proportion_casefatality_untreated_smearneg":
                 0.2,
             "tb_proportion_casefatality_untreated":
@@ -282,7 +282,7 @@ class ConsolidatedModel(BaseModel):
             "proportion_amplification":
                 1. / 15.,
             "timepoint_introduce_mdr":
-                1950.,
+                1940.,
             "timepoint_introduce_xdr":
                 2050.,
             "treatment_available_date":
@@ -300,7 +300,7 @@ class ConsolidatedModel(BaseModel):
             "program_prop_assign_xdr":
                 .4,
             "program_prop_lowquality":
-                0.4,
+                0.05,
             "program_rate_leavelowquality":
                 2.,
             "program_prop_nonsuccessoutcomes_death":
@@ -904,6 +904,7 @@ class ConsolidatedModel(BaseModel):
             self.vars["incidence" + strain] \
                 = rate_incidence[strain] \
                   / self.vars["population"] * 1E5
+
             self.vars["mortality" + strain] \
                 = rate_mortality[strain] \
                   / self.vars["population"] * 1E5
@@ -918,6 +919,18 @@ class ConsolidatedModel(BaseModel):
                     self.vars["prevalence" + strain] += (
                         self.compartments[label]
                         / self.vars["population"] * 1E5)
+
+        rate_incidence["all_mdr_strains"] = 0.
+        if len(self.strains) > 1:
+            for i in range(len(self.strains)):
+                strain = self.strains[i]
+                if i > 0:
+                    rate_incidence["all_mdr_strains"] \
+                        += rate_incidence[strain]
+        self.vars["all_mdr_strains"] \
+            = rate_incidence["all_mdr_strains"] / self.vars["population"] * 1E5
+        self.vars["proportion_mdr"] \
+            = self.vars["all_mdr_strains"] / self.vars["incidence"] * 1E2
 
     def set_treatment_flows_with_amplification(self):
 

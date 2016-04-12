@@ -4,7 +4,7 @@ import os
 import glob
 import datetime
 from pprint import pprint
-import autumn.model
+#import autumn.model
 import autumn.plotting
 from autumn.spreadsheet_2 import read_input_data_xls
 from autumn.model import ConsolidatedModel
@@ -16,13 +16,13 @@ initials = import_params['const']['initials_for_compartments']
 parameters = import_params['const']['model_parameters']
 
 for key, value in parameters.items():
-    print(key,value)
+    #print(key,value)
     population.set_parameter(key, value["Best"])
+    print(key,value,population.params[key])
 
 for key, value in initials.items():
-    print(key,value)
+    #print(key,value)
     population.set_compartment(key, value["Best"])
-
 
 start_realtime = datetime.datetime.now()
 

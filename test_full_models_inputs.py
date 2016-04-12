@@ -20,9 +20,9 @@ for key, value in parameters.items():
     population.set_parameter(key, value["Best"])
     print(key,value,population.params[key])
 
-for key, value in initials.items():
+#for key, value in initials.items():
     #print(key,value)
-    population.set_compartment(key, value["Best"])
+ #   population.set_compartment(key, value["Best"])
 
 start_realtime = datetime.datetime.now()
 

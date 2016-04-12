@@ -17,7 +17,7 @@ parameters = import_params['const']['model_parameters']
 
 for key, value in parameters.items():
     print(key,value)
-    population.set_param(key, value["Best"])
+    population.set_parameter(key, value["Best"])
 
 for key, value in initials.items():
     print(key,value)
@@ -26,7 +26,7 @@ for key, value in initials.items():
 
 start_realtime = datetime.datetime.now()
 
-out_dir = 'flexible_graphs'
+out_dir = 'fullmodel_inputs_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 

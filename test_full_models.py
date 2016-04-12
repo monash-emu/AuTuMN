@@ -18,7 +18,7 @@ import_params = read_input_data_xls('xls/data_input_4.xlsx')
 initials = import_params['const']['initials_for_compartments']
 parameters = import_params['const']['model_parameters']
 
-out_dir = 'flexible_graphs'
+out_dir = 'fullmodel_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 

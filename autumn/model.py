@@ -41,42 +41,35 @@ class ConsolidatedModel(BaseModel):
                  misassignment=False,
                  parameters=None):
 
+        """
+        Args:
+            number_of_organs: pulmonary states: smearpos, smearneg, extrapulm
+            number_of_strains: strains - ds - drug susceptible,
+                                         mdr - multiple drug resistance,
+                                         xdr -
+            number_of_comorbidities:
+            lowquality:
+            amplification:
+            misassignment:
+            parameters: is a dictionary of parameters to be overwritten { param: value }
+
+        """
         BaseModel.__init__(self)
 
-        self.lowquality = lowquality
-        self.amplification = amplification
-        self.misassignment = misassignment
+        self.is_lowquality = lowquality
+        self.is_amplification = amplification
+        self.is_misassignment = misassignment
 
-        self.define_model_structure(number_of_organs,
-                                    number_of_strains,
-                                    number_of_comorbidities)
+        self.n_organ = number_of_organs
+        self.n_strain = number_of_strains
+        self.n_comorbidity = number_of_comorbidities
+
+        self.define_model_structure(
+            self.n_organ, self.n_strain, self.n_comorbidity)
 
         self.initialise_compartments()
 
-        if parameters is None:
-            self.set_parameters()
-        else:
-            for key, value in parameters.items():
-                self.set_param(key, value["Best"])
-
-        self.split_default_death_proportions()
-
-        if number_of_organs > 0:
-            self.ensure_all_progressions_go_somewhere()
-
-        self.find_natural_history_flows()
-
-        self.find_detection_rates()
-
-        if self.lowquality == True:
-            self.find_lowquality_detections()
-
-        if number_of_strains > 0:
-            self.find_equal_detection_rates()
-
-        self.find_programmatic_rates()
-
-        self.find_treatment_rates()
+        self.set_parameters(parameters)
 
     def define_model_structure(self,
                                number_of_organs,
@@ -124,7 +117,7 @@ class ConsolidatedModel(BaseModel):
 
         self.comorbidities = [""]
 
-        if self.lowquality == True:
+        if self.is_lowquality == True:
             self.compartment_types \
                 = self.compartment_types + ["lowquality"]
             self.broad_compartment_types \
@@ -152,13 +145,7 @@ class ConsolidatedModel(BaseModel):
             self.comorbidities\
                 = available_comorbidities[0: number_of_comorbidities]
 
-    def initialise_compartments(self):
-
-        input_compartments = {
-            "susceptible_fully":
-                2e7,
-            "active":
-                3.}
+    def initialise_compartments(self, compartment_dict=None):
 
         # Initialise all compartments to zero
         for compartment in self.compartment_types:
@@ -175,7 +162,7 @@ class ConsolidatedModel(BaseModel):
                 else:  # Mis-assignment by strain
                     for strain in self.strains:
                         for organ in self.organ_status:
-                            if self.misassignment == True:
+                            if self.is_misassignment == True:
                                 for assigned_strain in self.strains:
                                     self.set_compartment(compartment + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
                                                          0.)
@@ -183,137 +170,175 @@ class ConsolidatedModel(BaseModel):
                                 self.set_compartment(compartment + organ + strain + comorbidity, 0.)
 
         # Put in values from input_compartments - now initialise to DS-TB only
+
+        # Some useful defaults if None given
+        if compartment_dict is None:
+            compartment_dict = {
+                "susceptible_fully":
+                    2e7,
+                "active":
+                    3.
+            }
+
         default_start_strain = "_ds"
         if self.strains == [""]:
             default_start_strain = ""
         for compartment in self.compartment_types:
-            if compartment in input_compartments:
+            if compartment in compartment_dict:
                 if "susceptible" in compartment:
                     for comorbidity in self.comorbidities:
                         self.set_compartment(compartment + comorbidity,
-                                             input_compartments[compartment]
+                                             compartment_dict[compartment]
                                              / len(self.comorbidities))
                 elif "latent" in compartment:
                     for comorbidity in self.comorbidities:
                         self.set_compartment(compartment + default_start_strain + comorbidity,
-                                             input_compartments[compartment]
+                                             compartment_dict[compartment]
                                              / len(self.comorbidities))
                 else:
                     for comorbidity in self.comorbidities:
                         for organ in self.organ_status:
                             self.set_compartment(compartment + organ + default_start_strain + comorbidity,
-                                                 input_compartments[compartment]
+                                                 compartment_dict[compartment]
                                                  / len(self.organ_status)
                                                  / len(self.comorbidities))
 
-    def set_parameters(self):
+    def set_parameters(self, paramater_dict=None):
+        """
+        Sets useful parameters of the model
 
-        # Estimate some parameters
-        input_parameters = {
-            "demo_rate_birth":
-                24. / 1e3,
-            "demo_rate_death":
-                1. / 69.,
-            "epi_proportion_cases_smearpos":
-                (92991. + 6277.) / 243379.,  # Total bacteriologically confirmed
-            "epi_proportion_cases_smearneg":
-                139950. / 243379.,  # Clinically diagnosed
-            "epi_proportion_cases_extrapul":
-                4161. / 243379.,  # Bacteriologically confirmed
-            "epi_proportion_cases":  # If no organ status in model
-                1.,
-            "tb_multiplier_force_smearpos":
-                1.,
-            "tb_multiplier_force_smearneg":
-                0.24,
-            "tb_multiplier_force_extrapul":
-                0.,
-            "tb_multiplier_force":
-                1.,
-            "tb_n_contact":
-                14.,
-            "tb_proportion_early_progression":
-                0.12,
-            "tb_timeperiod_early_latent":
-                0.4,
-            "tb_rate_late_progression":
-                0.007,
-            "tb_proportion_casefatality_untreated_smearpos":
-                0.6,
-            "tb_proportion_casefatality_untreated_smearneg":
-                0.2,
-            "tb_proportion_casefatality_untreated":
-                0.4,
-            "tb_timeperiod_activeuntreated":
-                3.,
-            "tb_multiplier_bcg_protection":
-                0.5,
-            "program_prop_vac":
-                0.88,
-            "program_prop_unvac":
-                1. - 0.88,
-            "program_proportion_detect":
-                0.8,
-            "program_algorithm_sensitivity":
-                0.9,
-            "program_rate_start_treatment":
-                26.,
-            "tb_timeperiod_treatment_ds":
-                0.5,
-            "tb_timeperiod_treatment_mdr":
-                2.,
-            "tb_timeperiod_treatment_xdr":
-                3.,
-            "tb_timeperiod_treatment_inappropriate":
-                3.,
-            "tb_timeperiod_infect_ontreatment_ds":
-                0.035,
-            "tb_timeperiod_infect_ontreatment_mdr":
-                1. / 12.,
-            "tb_timeperiod_infect_ontreatment_xdr":
-                2. / 12.,
-            "tb_timeperiod_infect_ontreatment_inappropriate":
-                2.,
-            "program_proportion_success_ds":
-                0.9,
-            "program_proportion_success_mdr":
-                0.6,
-            "program_proportion_success_xdr":
-                0.4,
-            "program_proportion_success_inappropriate":
-                0.25,
-            "program_rate_restart_presenting":
-                4.,
-            "proportion_amplification":
-                1. / 15.,
-            "timepoint_introduce_mdr":
-                1940.,
-            "timepoint_introduce_xdr":
-                2050.,
-            "treatment_available_date":
-                1940.,
-            "dots_start_date":
-                1990,
-            "finish_scaleup_date":
-                2010,
-            "pretreatment_available_proportion":
-                0.,
-            "dots_start_proportion":
-                0.85,
-            "program_prop_assign_mdr":
-                0.6,
-            "program_prop_assign_xdr":
-                .4,
-            "program_prop_lowquality":
-                0.05,
-            "program_rate_leavelowquality":
-                2.,
-            "program_prop_nonsuccessoutcomes_death":
-                0.25
-        }
+        Args:
+            paramater_dict: a key-value dictionary where typically key
+                              is a string for a param name and value is a float
+        """
 
-        for parameter in input_parameters:
-            self.set_param(parameter, input_parameters[parameter])
+        # Set up some handy defaults for testing
+        if paramater_dict is None:
+            paramater_dict = {
+                "demo_rate_birth":
+                    24. / 1e3,
+                "demo_rate_death":
+                    1. / 69.,
+                "epi_proportion_cases_smearpos":
+                    (92991. + 6277.) / 243379.,  # Total bacteriologically confirmed
+                "epi_proportion_cases_smearneg":
+                    139950. / 243379.,  # Clinically diagnosed
+                "epi_proportion_cases_extrapul":
+                    4161. / 243379.,  # Bacteriologically confirmed
+                "epi_proportion_cases":  # If no organ status in model
+                    1.,
+                "tb_multiplier_force_smearpos":
+                    1.,
+                "tb_multiplier_force_smearneg":
+                    0.24,
+                "tb_multiplier_force_extrapul":
+                    0.,
+                "tb_multiplier_force":
+                    1.,
+                "tb_n_contact":
+                    14.,
+                "tb_proportion_early_progression":
+                    0.12,
+                "tb_timeperiod_early_latent":
+                    0.4,
+                "tb_rate_late_progression":
+                    0.007,
+                "tb_proportion_casefatality_untreated_smearpos":
+                    0.6,
+                "tb_proportion_casefatality_untreated_smearneg":
+                    0.2,
+                "tb_proportion_casefatality_untreated":
+                    0.4,
+                "tb_timeperiod_activeuntreated":
+                    3.,
+                "tb_multiplier_bcg_protection":
+                    0.5,
+                "program_prop_vac":
+                    0.88,
+                "program_prop_unvac":
+                    1. - 0.88,
+                "program_proportion_detect":
+                    0.8,
+                "program_algorithm_sensitivity":
+                    0.9,
+                "program_rate_start_treatment":
+                    26.,
+                "tb_timeperiod_treatment_ds":
+                    0.5,
+                "tb_timeperiod_treatment_mdr":
+                    2.,
+                "tb_timeperiod_treatment_xdr":
+                    3.,
+                "tb_timeperiod_treatment_inappropriate":
+                    3.,
+                "tb_timeperiod_infect_ontreatment_ds":
+                    0.035,
+                "tb_timeperiod_infect_ontreatment_mdr":
+                    1. / 12.,
+                "tb_timeperiod_infect_ontreatment_xdr":
+                    2. / 12.,
+                "tb_timeperiod_infect_ontreatment_inappropriate":
+                    2.,
+                "program_proportion_success_ds":
+                    0.9,
+                "program_proportion_success_mdr":
+                    0.6,
+                "program_proportion_success_xdr":
+                    0.4,
+                "program_proportion_success_inappropriate":
+                    0.25,
+                "program_rate_restart_presenting":
+                    4.,
+                "proportion_amplification":
+                    1. / 15.,
+                "timepoint_introduce_mdr":
+                    1940.,
+                "timepoint_introduce_xdr":
+                    2050.,
+                "treatment_available_date":
+                    1940.,
+                "dots_start_date":
+                    1990,
+                "finish_scaleup_date":
+                    2010,
+                "pretreatment_available_proportion":
+                    0.,
+                "dots_start_proportion":
+                    0.85,
+                "program_prop_assign_mdr":
+                    0.6,
+                "program_prop_assign_xdr":
+                    .4,
+                "program_prop_lowquality":
+                    0.05,
+                "program_rate_leavelowquality":
+                    2.,
+                "program_prop_nonsuccessoutcomes_death":
+                    0.25
+            }
+
+        for parameter in paramater_dict:
+            self.set_parameter(parameter, paramater_dict[parameter])
+
+    def process_parameters(self):
+        self.split_default_death_proportions()
+
+        if self.n_organ > 0:
+            self.ensure_all_progressions_go_somewhere()
+
+        self.find_natural_history_flows()
+
+        self.find_detection_rates()
+
+        if self.is_lowquality == True:
+            self.find_lowquality_detections()
+
+        if self.n_strain > 0:
+            self.find_equal_detection_rates()
+
+        self.find_programmatic_rates()
+
+        self.find_treatment_rates()
 
     def calculate_birth_rates(self):
 
@@ -382,32 +407,32 @@ class ConsolidatedModel(BaseModel):
 
         # If extrapulmonary case-fatality not stated
         if "tb_proportion_casefatality_untreated_extrapul" not in self.params:
-            self.set_param(
+            self.set_parameter(
                 "tb_proportion_casefatality_untreated_extrapul",
                 self.params["tb_proportion_casefatality_untreated_smearneg"])
 
         # Progression and stabilisation rates
-        self.set_param("tb_rate_early_progression",  # Overall
+        self.set_parameter("tb_rate_early_progression",  # Overall
                        self.params["tb_proportion_early_progression"]
-                       / self.params["tb_timeperiod_early_latent"])
-        self.set_param("tb_rate_stabilise",  # Stabilisation rate
+                           / self.params["tb_timeperiod_early_latent"])
+        self.set_parameter("tb_rate_stabilise",  # Stabilisation rate
                        (1 - self.params["tb_proportion_early_progression"])
-                       / self.params["tb_timeperiod_early_latent"])
+                           / self.params["tb_timeperiod_early_latent"])
         for organ in self.organ_status:
-            self.set_param(
+            self.set_parameter(
                 "tb_rate_early_progression" + organ,
                 self.params["tb_proportion_early_progression"]
                 / self.params["tb_timeperiod_early_latent"]
                 * self.params["epi_proportion_cases" + organ])
-            self.set_param(
+            self.set_parameter(
                 "tb_rate_late_progression" + organ,
                 self.params["tb_rate_late_progression"]
                 * self.params["epi_proportion_cases" + organ])
-            self.set_param(
+            self.set_parameter(
                 "tb_rate_death" + organ,
                 self.params["tb_proportion_casefatality_untreated" + organ]
                 / self.params["tb_timeperiod_activeuntreated"])
-            self.set_param(
+            self.set_parameter(
                 "tb_rate_recover" + organ,
                 (1 - self.params["tb_proportion_casefatality_untreated" + organ])
                 / self.params["tb_timeperiod_activeuntreated"])
@@ -453,7 +478,7 @@ class ConsolidatedModel(BaseModel):
                         self.set_infection_death_rate_flow(
                             "missed" + organ + strain + comorbidity,
                             "tb_rate_death" + organ)
-                        if self.lowquality == True:
+                        if self.is_lowquality == True:
                             self.set_fixed_transfer_rate_flow(
                                 "lowquality" + organ + strain + comorbidity,
                                 "latent_late" + strain + comorbidity,
@@ -461,7 +486,7 @@ class ConsolidatedModel(BaseModel):
                             self.set_infection_death_rate_flow(
                                 "lowquality" + organ + strain + comorbidity,
                                 "tb_rate_death" + organ)
-                        if self.misassignment == True:
+                        if self.is_misassignment == True:
                             for assigned_strain in self.strains:
                                 self.set_infection_death_rate_flow(
                                     "detect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
@@ -482,7 +507,7 @@ class ConsolidatedModel(BaseModel):
     def find_detection_rates(self):
 
         # Rates of detection and failure of detection
-        self.set_param(
+        self.set_parameter(
             "program_rate_detect",
             self.params["program_proportion_detect"]
             * (self.params["tb_rate_recover" + self.organ_status[0]] + self.params["tb_rate_death" + self.organ_status[0]])
@@ -490,7 +515,7 @@ class ConsolidatedModel(BaseModel):
                * (1. + (1. - self.params["program_algorithm_sensitivity"])
                   / self.params["program_algorithm_sensitivity"])))
 
-        self.set_param(
+        self.set_parameter(
             "program_rate_missed",
             self.params["program_rate_detect"]
             * (1. - self.params["program_algorithm_sensitivity"])
@@ -505,7 +530,7 @@ class ConsolidatedModel(BaseModel):
 
         destinations_from_active = ["_detect", "_missed"]
 
-        if self.lowquality == True:
+        if self.is_lowquality == True:
             destinations_from_active =\
                 destinations_from_active + ["_enterlowquality"]
 
@@ -539,7 +564,7 @@ class ConsolidatedModel(BaseModel):
                         "missed" + organ + strain + comorbidity,
                         "active" + organ + strain + comorbidity,
                         "program_rate_restart_presenting")
-                    if self.lowquality == True:
+                    if self.is_lowquality == True:
                         self.set_var_transfer_rate_flow(
                             "active" + organ + strain + comorbidity,
                             "lowquality" + organ + strain + comorbidity,
@@ -584,7 +609,7 @@ class ConsolidatedModel(BaseModel):
 
         for strain in self.strains + ["_inappropriate"]:
             # Find the non-infectious period
-            self.set_param(
+            self.set_parameter(
                 "tb_timeperiod_noninfect_ontreatment" + strain,
                 self.params["tb_timeperiod_treatment" + strain]
                 - self.params["tb_timeperiod_infect_ontreatment" + strain])
@@ -595,22 +620,22 @@ class ConsolidatedModel(BaseModel):
                     self.params["program_proportion" + outcome + strain],
                     self.params["tb_timeperiod_infect_ontreatment" + strain],
                     self.params["tb_timeperiod_treatment" + strain])
-                self.set_param(
+                self.set_parameter(
                     "program_proportion" + outcome + "_infect" + strain,
                     early_proportion)
-                self.set_param(
+                self.set_parameter(
                     "program_proportion" + outcome + "_noninfect" + strain,
                     late_proportion)
 
             # Find the success proportions
             for treatment_stage in self.treatment_stages:
-                self.set_param(
+                self.set_parameter(
                     "program_proportion_success" + treatment_stage + strain,
                     1. - self.params["program_proportion_default" + treatment_stage + strain]
                     - self.params["program_proportion_death" + treatment_stage + strain])
                 # Find the corresponding rates from the proportions
                 for outcome in outcomes:
-                    self.set_param(
+                    self.set_parameter(
                         "program_rate" + outcome + treatment_stage + strain,
                         1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment" + strain]
                         * self.params["program_proportion" + outcome + treatment_stage + strain])
@@ -651,21 +676,21 @@ class ConsolidatedModel(BaseModel):
 
         self.set_natural_history_flows()
 
-        if self.misassignment is False:
+        if self.is_misassignment is False:
             self.set_programmatic_flows()
         else:
             self.set_programmatic_flows_with_misassignment()
 
-        if self.amplification is False:
+        if self.is_amplification is False:
             self.set_treatment_flows()
-        elif self.amplification and self.misassignment is False:
+        elif self.is_amplification and self.is_misassignment is False:
             self.set_treatment_flows_with_amplification()
-        elif self.amplification and self.misassignment:
+        elif self.is_amplification and self.is_misassignment:
             self.set_treatment_flows_with_misassignment()
 
         self.set_population_death_rate("demo_rate_death")
 
-    def additional_diagnostics(self):
+    def calculate_additional_diagnostics(self):
 
         self.broad_compartment_soln, broad_compartment_denominator \
             = self.sum_over_compartments(self.broad_compartment_types)
@@ -710,9 +735,9 @@ class ConsolidatedModel(BaseModel):
             self.compartment_type_bystrain_soln,
             compartment_type_bystrain_denominator)
 
-        self.subgroup_diagnostics()
+        self.calculate_subgroup_diagnostics()
 
-    def subgroup_diagnostics(self):
+    def calculate_subgroup_diagnostics(self):
 
         self.groups = {
             "ever_infected": ["susceptible_treated", "latent", "active", "missed", "detect", "treatment"],
@@ -861,7 +886,7 @@ class ConsolidatedModel(BaseModel):
                      / self.vars["population"] * 1E5)
 
     def find_lowquality_detections(self):
-        self.set_param(
+        self.set_parameter(
             "program_rate_enterlowquality",
             self.params["program_rate_detect"] \
             * self.params["program_prop_lowquality"] \
@@ -871,16 +896,16 @@ class ConsolidatedModel(BaseModel):
 
         # Set detection rates equal for all strains (probably temporary)
         for strain in self.strains:
-            self.set_param(
+            self.set_parameter(
                 "program_rate_detect" + strain,
                 self.params["program_rate_detect"])
-            self.set_param(
+            self.set_parameter(
                 "program_rate_missed" + strain,
                 self.params["program_rate_missed"])
-            self.set_param(
+            self.set_parameter(
                 "program_rate_start_treatment" + strain,
                 self.params["program_rate_start_treatment"])
-            self.set_param(
+            self.set_parameter(
                 "program_rate_restart_presenting" + strain,
                 self.params["program_rate_restart_presenting"])
 
@@ -1041,7 +1066,7 @@ class ConsolidatedModel(BaseModel):
                     assignment_probability = 0.
                 # Set the parameter values
                 if assignment_probability == 0.:
-                    self.set_param("program_rate_detect" + strain + "_as"+assigned_strain[1:], assignment_probability)
+                    self.set_parameter("program_rate_detect" + strain + "_as" + assigned_strain[1:], assignment_probability)
                     for comorbidity in self.comorbidities:
                         for organ in self.organ_status:
                             self.set_fixed_transfer_rate_flow(

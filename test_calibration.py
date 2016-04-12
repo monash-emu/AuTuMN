@@ -14,10 +14,8 @@ import shutil
 import numpy
 import pylab
 import emcee
-import scipy.optimize as optimize
 from numpy import isfinite
 from scipy.stats import beta, gamma, norm, truncnorm
-import math
 
 import autumn.base
 import autumn.model
@@ -54,13 +52,6 @@ class ModelRunner():
                 'short': 'n',
                 'format': lambda v: "%-2.0f" % v
             },
-            # {
-            #     'init': 50E6,
-            #     'scale': 10E6,
-            #     'key': 'init_population',
-            #     'short': 'pop0',
-            #     'format': lambda v: "%3.0fM" % (v/1E6)
-            # },
             {
                 'init': .12,
                 'scale': 1,
@@ -96,7 +87,7 @@ class ModelRunner():
         for key in param_dict:
             if key in self.model.params:
                 n_set += 1
-                self.model.set_param(key, param_dict[key])
+                self.model.set_parameter(key, param_dict[key])
             else:
                 raise ValueError("%s not in model params" % key)
 
@@ -115,12 +106,12 @@ class ModelRunner():
         param_dict = self.convert_param_list_to_dict(params)
         self.set_model_with_params(param_dict)
         self.is_last_run_success = True
-        self.model.integrate_explicit()
-        # try:
-        #     self.model.integrate_explicit()
-        # except:
-        #     print "Warning: parameters=%s failed with model" % params
-        #     self.is_last_run_success = False
+        # self.model.integrate_explicit()
+        try:
+            self.model.integrate_explicit()
+        except:
+            print "Warning: parameters=%s failed with model" % params
+            self.is_last_run_success = False
 
     def get_fraction_between_times(self, label, time0, time1):
         fraction = self.model.fraction_soln[label]
@@ -196,26 +187,6 @@ class ModelRunner():
             scaled_param * prop['scale']
             for scaled_param, prop
             in zip(scaled_params, self.param_props_list)]
-
-    def minimize(self):
-
-        def scaled_min_fn(scaled_params):
-            params = self.revert_scaled_params(scaled_params)
-            return -self.ln_overall(params)
-        
-        n_param = len(self.param_props_list)
-        init_params = [d['init'] for d in self.param_props_list]
-        scaled_init_params = self.scale_params(init_params)
-
-        # select the TNC method which is a basic method that
-        # allows bouns in the search
-        bnds = [(0, None) for i in range(n_param)]
-        self.minimum = optimize.minimize(
-            scaled_min_fn, scaled_init_params, 
-            method='TNC', bounds=bnds)
-
-        self.minimum.best_params = self.revert_scaled_params(self.minimum.x)
-        return self.minimum
 
     def get_init_params(self):
         return [props['init'] for props in self.param_props_list]
@@ -314,7 +285,7 @@ class ModelRunner():
         pylab.savefig(base + '.fraction.' + label + '.png')
 
 
-out_dir = "calibration_graph"
+out_dir = "calibration_graphs"
 if os.path.isdir(out_dir):
     shutil.rmtree(out_dir)
 os.makedirs(out_dir)

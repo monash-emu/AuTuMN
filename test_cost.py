@@ -81,7 +81,7 @@ class ModelOptimizer():
         popsize = sum(self.model.init_compartments.values())
         for budget, program in zip(budgetvec, self.programs):
             key, val = program.get_param_val(budget, popsize)
-            self.model.set_param(key, val)
+            self.model.set_parameter(key, val)
         self.model.integrate_explicit()
         fval = self.model.vars['mortality']
         print " %s -> %s" % (budgetvec, fval)

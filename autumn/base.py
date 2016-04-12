@@ -31,7 +31,7 @@ class BaseModel():
         self.scaleup_fns = {}
 
     def make_times(self, start, end, delta):
-        "Return steps with n or delta"
+        "Return steps between start and end every delta"
         self.times = []
         step = start
         while step <= end:
@@ -39,7 +39,7 @@ class BaseModel():
             step += delta
 
     def make_times_with_n_step(self, start, end, n):
-        "Return steps with n or delta"
+        "Return steps between start and in n increments"
         self.times = []
         step = start
         delta = (end - start) / float(n)
@@ -53,7 +53,7 @@ class BaseModel():
         self.init_compartments[label] = init_val
         assert init_val >= 0, 'Start with negative compartment not permitted'
 
-    def set_param(self, label, val):
+    def set_parameter(self, label, val):
         self.params[label] = val
 
     def convert_list_to_compartments(self, vec):
@@ -62,7 +62,11 @@ class BaseModel():
     def convert_compartments_to_list(self, compartments):
         return [compartments[l] for l in self.labels]
 
-    def process_params(self):
+    def process_parameters(self):
+        """
+        To be overridden: calculates derived parameters from an initial set
+        of raw parameters.
+        """
         pass
 
     def get_init_list(self):
@@ -157,7 +161,7 @@ class BaseModel():
         return derivative_fn
 
     def init_run(self):
-        self.process_params()
+        self.process_parameters()
         self.set_flows()
         self.var_labels = None
         self.soln_array = None
@@ -264,9 +268,9 @@ class BaseModel():
                     self.get_var_soln("population"))]
             self.fraction_array[:, i_label] = self.fraction_soln[label]
 
-        self.additional_diagnostics()
+        self.calculate_additional_diagnostics()
 
-    def additional_diagnostics(self):
+    def calculate_additional_diagnostics(self):
         pass
 
     def get_compartment_soln(self, label):
@@ -417,26 +421,26 @@ class SimpleModel(BaseModel):
         self.set_compartment("treatment_infect", 0.)
         self.set_compartment("treatment_noninfect", 0.)
 
-        self.set_param("total_population", 1E6)
-        self.set_param("demo_rate_birth", 20. / 1e3)
-        self.set_param("demo_rate_death", 1. / 65)
+        self.set_parameter("total_population", 1E6)
+        self.set_parameter("demo_rate_birth", 20. / 1e3)
+        self.set_parameter("demo_rate_death", 1. / 65)
 
-        self.set_param("tb_n_contact", 20.)
-        self.set_param("tb_rate_earlyprogress", .2)
-        self.set_param("tb_rate_lateprogress", .0001)
-        self.set_param("tb_rate_stabilise", 2.3)
-        self.set_param("tb_rate_recover", .3)
-        self.set_param("tb_rate_death", .07)
+        self.set_parameter("tb_n_contact", 20.)
+        self.set_parameter("tb_rate_earlyprogress", .2)
+        self.set_parameter("tb_rate_lateprogress", .0001)
+        self.set_parameter("tb_rate_stabilise", 2.3)
+        self.set_parameter("tb_rate_recover", .3)
+        self.set_parameter("tb_rate_death", .07)
 
-        self.set_param("tb_bcg_multiplier", .5)
+        self.set_parameter("tb_bcg_multiplier", .5)
 
-        self.set_param("program_prop_vac", 0.4)
-        self.set_param("program_prop_unvac",
-                       1 - self.params["program_prop_vac"])
-        self.set_param("program_rate_detect", 1.)
-        self.set_param("program_time_treatment", .5)
+        self.set_parameter("program_prop_vac", 0.4)
+        self.set_parameter("program_prop_unvac",
+                           1 - self.params["program_prop_vac"])
+        self.set_parameter("program_rate_detect", 1.)
+        self.set_parameter("program_time_treatment", .5)
 
-    def process_params(self):
+    def process_parameters(self):
         prop = self.params["program_prop_vac"]
         self.set_compartment(
             "susceptible_vac",
@@ -445,12 +449,12 @@ class SimpleModel(BaseModel):
             "susceptible",
             (1 - prop) * self.params["total_population"])
         time_treatment = self.params["program_time_treatment"]
-        self.set_param("program_rate_completion_infect", .9 / time_treatment)
-        self.set_param("program_rate_default_infect", .05 / time_treatment)
-        self.set_param("program_rate_death_infect", .05 / time_treatment)
-        self.set_param("program_rate_completion_noninfect", .9 / time_treatment)
-        self.set_param("program_rate_default_noninfect", .05 / time_treatment)
-        self.set_param("program_rate_death_noninfect", .05 / time_treatment)
+        self.set_parameter("program_rate_completion_infect", .9 / time_treatment)
+        self.set_parameter("program_rate_default_infect", .05 / time_treatment)
+        self.set_parameter("program_rate_death_infect", .05 / time_treatment)
+        self.set_parameter("program_rate_completion_noninfect", .9 / time_treatment)
+        self.set_parameter("program_rate_default_noninfect", .05 / time_treatment)
+        self.set_parameter("program_rate_death_noninfect", .05 / time_treatment)
 
     def set_flows(self):
         self.set_var_entry_rate_flow("susceptible", "births_unvac")

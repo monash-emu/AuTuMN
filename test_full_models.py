@@ -7,16 +7,12 @@ from pprint import pprint
 import autumn.model
 import numpy
 import autumn.plotting
-from autumn.spreadsheet_2 import read_input_data_xls
+from autumn.spreadsheet import read_input_data_xls
 
 def indices(a, func):
     return [i for (i, val) in enumerate(a) if func(val)]
 
 start_realtime = datetime.datetime.now()
-
-import_params = read_input_data_xls('xls/data_input_4.xlsx')
-initials = import_params['const']['initials_for_compartments']
-parameters = import_params['const']['model_parameters']
 
 out_dir = 'fullmodel_graphs'
 if not os.path.isdir(out_dir):
@@ -44,6 +40,14 @@ for running_model in range(len(models_to_run)):
     # print((str(models_to_run[running_model][0]) + " organ(s), " +
     #        str(models_to_run[running_model][1]) + " strain(s), " +
     #        str(models_to_run[running_model][2]) + " comorbidity(ies)"))
+
+    import_params = read_input_data_xls('xls/data_input.xlsx') #C:\Users\ntdoan\Github\AuTuMN\xls
+    initials = import_params['const']['initials_for_compartments'] #not yet in use
+    parameters = import_params['const']['model_parameters']
+    for key, value in parameters.items():
+        model.set_parameter(key, value["Best"])
+        print(key,value,model.params[key])
+
     start_time = 1850.
     recent_time = 1990.
     model.make_times(start_time, 2015.1, 0.1)

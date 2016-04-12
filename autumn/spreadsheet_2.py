@@ -489,7 +489,7 @@ if __name__ == "__main__":
     import json
     data = read_input_data_xls('xls/data_input_4.xlsx')
     open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
-    print(data)
+    #print(data)
 
 
             

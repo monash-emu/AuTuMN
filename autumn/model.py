@@ -38,8 +38,7 @@ class ConsolidatedModel(BaseModel):
                  number_of_comorbidities=0,
                  lowquality=False,
                  amplification=False,
-                 misassignment=False,
-                 parameters=None):
+                 misassignment=False):
 
         """
         Args:
@@ -69,7 +68,7 @@ class ConsolidatedModel(BaseModel):
 
         self.initialise_compartments()
 
-        self.set_parameters(parameters)
+        self.set_parameters()
 
     def define_model_structure(self,
                                number_of_organs,

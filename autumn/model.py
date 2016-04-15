@@ -345,6 +345,7 @@ class ConsolidatedModel(BaseModel):
             self.set_parameter(parameter, paramater_dict[parameter])
 
     def process_parameters(self):
+
         self.split_default_death_proportions()
 
         if self.n_organ > 0:
@@ -783,8 +784,9 @@ class ConsolidatedModel(BaseModel):
 
     def find_flow_proportions_by_period(
             self, proportion, early_period, total_period):
+
         early_proportion\
-            = 1. - exp( log(1. - proportion) * early_period / total_period)
+            = 1. - exp(log(1. - proportion) * early_period / total_period)
         late_proportion\
             = proportion - early_proportion
         return early_proportion, late_proportion
@@ -798,6 +800,7 @@ class ConsolidatedModel(BaseModel):
         self.calculate_force_infection()
 
     def get_fraction_soln(self, numerator_labels, numerators, denominator):
+
         fraction = {}
         for label in numerator_labels:
             fraction[label] = [
@@ -809,6 +812,7 @@ class ConsolidatedModel(BaseModel):
         return fraction
 
     def sum_over_compartments(self, compartment_types):
+
         summed_soln = {}
         summed_denominator\
             = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
@@ -827,6 +831,7 @@ class ConsolidatedModel(BaseModel):
         return summed_soln, summed_denominator
 
     def sum_over_compartments_bycategory(self, compartment_types, categories):
+
         summed_soln = {}
         # HELP BOSCO
         # The following line of code works, but I'm sure this isn't the best approach:
@@ -910,6 +915,7 @@ class ConsolidatedModel(BaseModel):
                      / self.vars["population"] * 1E5)
 
     def find_lowquality_detections(self):
+
         self.set_parameter(
             "program_rate_enterlowquality",
             self.params["program_rate_detect"] \
@@ -918,7 +924,7 @@ class ConsolidatedModel(BaseModel):
 
     def find_equal_detection_rates(self):
 
-        # Set detection rates equal for all strains (probably temporary)
+        # Set detection rates equal for all strains
         for strain in self.strains:
             self.set_parameter(
                 "program_rate_detect" + strain,
@@ -934,6 +940,7 @@ class ConsolidatedModel(BaseModel):
                 self.params["program_rate_restart_presenting"])
 
     def calculate_outputs_bystrain(self):
+
         # Now by strain:
         rate_incidence = {}
         rate_mortality = {}

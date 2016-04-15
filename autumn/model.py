@@ -91,6 +91,11 @@ class ConsolidatedModel(BaseModel):
                                number_of_strains,
                                number_of_comorbidities):
 
+        """
+        Args:
+            All arguments are set through __init__
+            Please refer to __init__ method comments above
+        """
         self.compartment_types = [
             "susceptible_fully",
             "susceptible_vac",
@@ -121,8 +126,10 @@ class ConsolidatedModel(BaseModel):
             "treatment_infect"]
 
         if number_of_organs == 0:
+            # Need an empty list to be iterable for methods iterating by organ status
             self.organ_status = [""]
         else:
+            # Select number of organ statuses
             available_organs = [
                 "_smearpos",
                 "_smearneg",
@@ -130,9 +137,7 @@ class ConsolidatedModel(BaseModel):
             self.organ_status = \
                 available_organs[0: number_of_organs]
 
-        self.comorbidities = [""]
-
-        if self.is_lowquality == True:
+        if self.is_lowquality == True:  # Add low quality detection compartment
             self.compartment_types \
                 = self.compartment_types + ["lowquality"]
             self.broad_compartment_types \
@@ -141,8 +146,10 @@ class ConsolidatedModel(BaseModel):
                 = self.infectious_tags + ["lowquality"]
 
         if number_of_strains == 0:
+            # Need an empty list to be iterable for methods iterating by strain
             self.strains = [""]
         else:
+            # Select number of strains
             available_strains = [
                 "_ds",
                 "_mdr",
@@ -151,8 +158,10 @@ class ConsolidatedModel(BaseModel):
                 = available_strains[0: number_of_strains]
 
         if number_of_comorbidities == 0:
+            # Need an empty list to be iterable for methods iterating by risk group
             self.comorbidities = [""]
         else:
+            # Select number of risk groups
             available_comorbidities = [
                 "_nocomorbs",
                 "_hiv",

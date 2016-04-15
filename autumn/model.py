@@ -28,8 +28,10 @@ def label_intersects_tags(label, tags):
 class ConsolidatedModel(BaseModel):
 
     """
-    A harmonised model that can run any number of strains
-    and organ statuses
+    The transmission dynamic model to underpin all AuTuMN analyses
+    Inherits from BaseModel, which is intended to be general to any infectious disease
+    All TB-specific methods and structures are contained in this model
+    Methods are written to be adaptable to any model structure selected through the __init__ arguments
     """
 
     def __init__(self,
@@ -42,15 +44,29 @@ class ConsolidatedModel(BaseModel):
 
         """
         Args:
-            number_of_organs: pulmonary states: smearpos, smearneg, extrapulm
-            number_of_strains: strains - ds - drug susceptible,
-                                         mdr - multiple drug resistance,
-                                         xdr -
-            number_of_comorbidities:
-            lowquality:
-            amplification:
-            misassignment:
-            parameters: is a dictionary of parameters to be overwritten { param: value }
+            n_organ: whether pulmonary status and smear-positive/smear-negative status
+                can be included in the model (which applies to all compartments representing active disease)
+                0. No subdivision
+                1. All patients are smear-positive pulmonary (avoid selecting this)
+                2. All patients are pulmonary, but smear status can be selected (i.e. smear-pos/smear-neg)
+                3. Full stratification into smear-positive, smear-negative and extra-pulmonary
+            n_strain: number of types of drug-resistance included in the model (not strains in the phylogenetic sense)
+                0. No strains included
+                1. All TB is DS-TB (avoid selecting this)
+                2. DS-TB and MDR-TB
+                3. DS-TB, MDR-TB and XDR-TB
+                N.B. this may change in future models, which may include isoniazid mono-resistance, etc.
+            n_comorbidity: number of whole population stratifications, except for age
+                0. No population stratification
+                1. Entire population is not at increased risk (avoid selecting this)
+                2. No increased risk or HIV
+                3. No increased risk, HIV or diabetes
+            lowquality: Boolean of whether to include detections through the private sector
+            amplification: Boolean of whether to include resistance amplification through treatment default
+            misassignment: Boolean of whether also to incorporate misclassification of patients with drug-resistance
+                    to the wrong strain by the health system
+                Avoid amplification=False but misassignment=True (the model should run with both
+                amplificaiton and misassignment, but this combination doesn't make sense)
 
         """
         BaseModel.__init__(self)

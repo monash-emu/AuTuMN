@@ -39,12 +39,16 @@ for running_model in range(len(models_to_run)):
     #        str(models_to_run[running_model][1]) + " strain(s), " +
     #        str(models_to_run[running_model][2]) + " comorbidity(ies)"))
 
-    import_params = read_input_data_xls('xls/data_input.xlsx')  #C:\Users\ntdoan\Github\AuTuMN\xls
-    initials = import_params['const']['initials_for_compartments']  #not yet in use
+    import_params = read_input_data_xls('xls/data_input.xlsx')  #\Github\AuTuMN\xls
+    initials = import_params['const']['initials_for_compartments']
     parameters = import_params['const']['model_parameters']
     for key, value in parameters.items():
         model.set_parameter(key, value["Best"])
         print(key, value, model.params[key])
+
+    for key, value in initials.items():
+        model.set_compartment(key, value["Best"])
+        print(key, value)
 
     start_time = 1850.
     recent_time = 1990.

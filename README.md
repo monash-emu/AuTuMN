@@ -23,6 +23,8 @@ This is a set of Python models that modularizes the development of dynamic trans
 
 # Bosco TODO:
 - change set_scaleup_var to set_scaleup_param to allow complex combination of scaleups
+- curve fitting to data
+- search for BOSCO comments in the source code
 
 # James TODO:
 - work out an approach to allowing a lower case detection rate and higher force of infection

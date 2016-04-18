@@ -21,6 +21,9 @@ This is a set of Python models that modularizes the development of dynamic trans
 - make cost-coverage curves from data  
 - feed cost-coverage curves into model
 
+# Bosco TODO:
+- change set_scaleup_var to set_scaleup_param to allow complex combination of scaleups
+
 # James TODO:
 - work out an approach to allowing a lower case detection rate and higher force of infection
 - scale-up BCG vaccination (entry flow)

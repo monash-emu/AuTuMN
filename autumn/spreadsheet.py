@@ -69,7 +69,6 @@ class MacroeconomicsSheetReader:
         return self.data
 
 
-
 class ConstantsSheetReader:
 
     def __init__(self):
@@ -152,6 +151,7 @@ class ConstantsSheetReader:
         ]  
 
     def parse_row(self, row):
+
         raw_par, raw_subpar = row[0:2]
         if raw_par != "":
             self.i_par += 1
@@ -175,7 +175,6 @@ class ConstantsSheetReader:
 
     def get_data(self):
         return self.data
-
 
 
 class NestedParamSheetReader:
@@ -217,7 +216,6 @@ class NestedParamSheetReader:
 
     def get_data(self):
         return self.data
-
 
 
 class NestedParamWithRangeSheetReader:
@@ -270,6 +268,28 @@ class NestedParamWithRangeSheetReader:
         return self.data
 
 
+class BcgCoverageSheetReader():
+
+    def __init__(self):
+        self.data = {}
+        self.par = None
+        self.i_par = -1
+        self.name = 'BCG'
+        self.key = 'bcg'
+        self.parlist = []
+
+    def parse_row(self, row):
+
+        raw_par = row[0]
+        if raw_par == "Region":
+            return
+        self.i_par += 1
+        self.par = self.parlist[self.i_par]
+        self.data[self.par] = parse_year_data(row[4:])
+
+    def get_data(self):
+        return self.data
+
 
 def read_xls_with_sheet_readers(filename, sheet_readers=[]):
     try: 
@@ -280,11 +300,13 @@ def read_xls_with_sheet_readers(filename, sheet_readers=[]):
     for reader in sheet_readers:
         #print("Reading sheet \"{}\"".format(reader.name))
         sheet = workbook.sheet_by_name(reader.name)
+        if filename == 'xls/who_unicef_bcg_coverage.xlsx':
+            for i_row in range(1, sheet.nrows):
+                reader.parlist += [sheet.row_values(i_row)[2]]
         for i_row in range(sheet.nrows):
             reader.parse_row(sheet.row_values(i_row))                
         result[reader.key] = reader.get_data()
     return result
-
 
 
 def read_input_data_xls(filename):
@@ -481,15 +503,15 @@ def read_input_data_xls(filename):
     sheet_readers.append(ConstantsSheetReader())
 
     sheet_readers.append(MacroeconomicsSheetReader())
-    
+
     return read_xls_with_sheet_readers(filename, sheet_readers)
 
 
 if __name__ == "__main__":
     import json
-    data = read_input_data_xls('xls/data_input_4.xlsx') # C:\Users\ntdoan\Github\AuTuMN\autumn\xls
+    data = read_input_data_xls('xls/data_input_4.xlsx')  # C:\Users\ntdoan\Github\AuTuMN\autumn\xls
     open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
+    # print(data)
+    bcg_coverage_sheet_reader = BcgCoverageSheetReader()
+    data['bcg'] = read_xls_with_sheet_readers('xls/who_unicef_bcg_coverage.xlsx', [bcg_coverage_sheet_reader])['bcg']
     print(data)
-
-
-            

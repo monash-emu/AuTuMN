@@ -18,12 +18,12 @@ def is_all_same_value(a_list, test_val):
     return True
 
 
-def replace_blanks(a_list, new_val):
-    return [new_val if val == '' else val for val in a_list]
+def replace_blanks(a_list, new_val, blank):
+    return [new_val if val == blank else val for val in a_list]
 
 
-def parse_year_data(these_data):
-    these_data = replace_blanks(these_data, nan)
+def parse_year_data(these_data, blank):
+    these_data = replace_blanks(these_data, nan, blank)
     assumption_val = these_data[-1]
     year_vals = these_data[:-2] 
     if is_all_same_value(year_vals, nan):
@@ -64,7 +64,7 @@ class MacroeconomicsSheetReader:
             return
         self.i_par += 1
         self.par = self.parlist[self.i_par]
-        self.data[self.par] = parse_year_data(row[1:])
+        self.data[self.par] = parse_year_data(row[1:], '')
 
     def get_data(self):
         return self.data
@@ -168,7 +168,7 @@ class ConstantsSheetReader:
             self.subpar = self.subparlist[self.i_subpar]
         if raw_par == "" and raw_subpar == "":
             return
-        best, low, high = replace_blanks(row[2:5], nan)
+        best, low, high = replace_blanks(row[2:5], nan, '')
         self.data[self.par][self.subpar] = {
             'Best': best,
             'Low': low, 
@@ -215,7 +215,7 @@ class NestedParamSheetReader:
             self.subpar = self.subparlist[self.i_subpar]
         if raw_par == "" and raw_subpar == "":
             return
-        self.data[self.par][self.subpar] = parse_year_data(row[3:])
+        self.data[self.par][self.subpar] = parse_year_data(row[3:], '')
 
     def get_data(self):
         return self.data
@@ -266,7 +266,7 @@ class NestedParamWithRangeSheetReader:
             self.data[self.par][self.subpar] = copy.deepcopy(self.range)
         if blh == "":
             return
-        self.data[self.par][self.subpar][blh] = parse_year_data(row[3:])
+        self.data[self.par][self.subpar][blh] = parse_year_data(row[3:], '')
 
     def get_data(self):
         return self.data
@@ -293,9 +293,38 @@ class BcgCoverageSheetReader():
                 self.data[self.par] += [int(row[i])]
         else:  # Data
             self.data[self.par] =\
-                parse_year_data(row[4:])
-        # This sheet goes from 2014 backwards to 1980 from left to right
+                parse_year_data(row[4:], '')
+        # This sheet goes from 2014 backwards to 1980 from left to right, so:
         self.data[self.par] = list(reversed(self.data[self.par]))
+
+    def get_data(self):
+        return self.data
+
+
+class BirthRateReader():
+
+    def __init__(self):
+        self.data = {}
+        self.par = None
+        self.i_par = -1
+        self.name = 'Data'
+        self.key = 'birth_rate'
+        self.parlist = []
+        self.filename = 'xls/world_bank_crude_birth_rate.xlsx'
+
+    def parse_row(self, row):
+
+        self.i_par += 1
+        self.par = self.parlist[self.i_par]
+        if row[2] == u'Country Name':  # Year
+            self.data[self.par] = []
+            for i in range(4, len(row)):
+                self.data[self.par] += [int(row[i][:4])]
+        elif row[2] == '':  # Blank lines at the end
+            return
+        else:  # Data
+            self.data[self.par] =\
+                parse_year_data(row[4:], u'..')
 
     def get_data(self):
         return self.data
@@ -312,10 +341,12 @@ def read_xls_with_sheet_readers(sheet_readers=[]):
         #print("Reading sheet \"{}\"".format(reader.name))
         sheet = workbook.sheet_by_name(reader.name)
         for i_row in range(sheet.nrows):
-            if reader.filename == 'xls/who_unicef_bcg_coverage.xlsx':
+            if reader.filename == 'xls/who_unicef_bcg_coverage.xlsx'\
+                    or reader.filename == 'xls/world_bank_crude_birth_rate.xlsx':
                 key = [sheet.row_values(i_row)[2]]
                 # print(key)
-                if key == [u'Cname']:
+                if key == [u'Cname']\
+                        or key == [u'Country Name']:
                     key = [u'year']
                 reader.parlist += key
             reader.parse_row(sheet.row_values(i_row))
@@ -519,6 +550,8 @@ def read_input_data_xls():
     sheet_readers.append(MacroeconomicsSheetReader())
 
     sheet_readers.append(BcgCoverageSheetReader())
+
+    sheet_readers.append(BirthRateReader())
 
     return read_xls_with_sheet_readers(sheet_readers)
 

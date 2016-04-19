@@ -57,6 +57,8 @@ class MacroeconomicsSheetReader:
             'socialmitigcost'
         ]
         self.filename = 'xls/data_input_4.xlsx'
+        self.start_row = 0
+        self.create_parlist = False
 
     def parse_row(self, row):
         raw_par = row[0]
@@ -151,6 +153,8 @@ class ConstantsSheetReader:
                     'disutitxlatentnohiv']]
         ]
         self.filename = 'xls/data_input_4.xlsx'
+        self.start_row = 0
+        self.create_parlist = False
 
     def parse_row(self, row):
 
@@ -199,6 +203,8 @@ class NestedParamSheetReader:
             ], 
         ]
         self.filename = 'xls/data_input_4.xlsx'
+        self.start_row = 0
+        self.create_parlist = False
 
     def parse_row(self, row):
         raw_par, raw_subpar = row[0:2]
@@ -248,6 +254,8 @@ class NestedParamWithRangeSheetReader:
             ], 
         ]
         self.filename = 'xls/data_input_4.xlsx'
+        self.start_row = 0
+        self.create_parlist = False
 
     def parse_row(self, row):
         raw_par, raw_subpar, blh = row[0:3]
@@ -282,6 +290,9 @@ class BcgCoverageSheetReader():
         self.key = 'bcg'
         self.parlist = []
         self.filename = 'xls/who_unicef_bcg_coverage.xlsx'
+        self.start_row = 0
+        self.create_parlist = True
+        self.column_for_keys = 2
 
     def parse_row(self, row):
 
@@ -311,6 +322,9 @@ class BirthRateReader():
         self.key = 'birth_rate'
         self.parlist = []
         self.filename = 'xls/world_bank_crude_birth_rate.xlsx'
+        self.start_row = 0
+        self.create_parlist = True
+        self.column_for_keys = 2
 
     def parse_row(self, row):
 
@@ -330,6 +344,36 @@ class BirthRateReader():
         return self.data
 
 
+class LifeExpectancyReader():
+
+    def __init__(self):
+        self.data = {}
+        self.par = None
+        self.i_par = -1
+        self.name = 'Data'
+        self.key = 'life_expectancy'
+        self.parlist = []
+        self.filename = 'xls/world_bank_life_expectancy.xlsx'
+        self.start_row = 3
+        self.create_parlist = True
+        self.column_for_keys = 0
+
+    def parse_row(self, row):
+
+        self.i_par += 1
+        self.par = self.parlist[self.i_par]
+        if row[0] == u'Country Name':  # Year
+            self.data[self.par] = []
+            for i in range(4, len(row)):
+                self.data[self.par] += [int(row[i])]
+        else:  # Data
+            self.data[self.par] =\
+                parse_year_data(row[4:], u'')
+
+    def get_data(self):
+        return self.data
+
+
 def read_xls_with_sheet_readers(sheet_readers=[]):
 
     result = {}
@@ -340,13 +384,10 @@ def read_xls_with_sheet_readers(sheet_readers=[]):
             raise Exception('Failed to open spreadsheet: %s' % reader.filename)
         #print("Reading sheet \"{}\"".format(reader.name))
         sheet = workbook.sheet_by_name(reader.name)
-        for i_row in range(sheet.nrows):
-            if reader.filename == 'xls/who_unicef_bcg_coverage.xlsx'\
-                    or reader.filename == 'xls/world_bank_crude_birth_rate.xlsx':
-                key = [sheet.row_values(i_row)[2]]
-                # print(key)
-                if key == [u'Cname']\
-                        or key == [u'Country Name']:
+        for i_row in range(reader.start_row, sheet.nrows):
+            if reader.create_parlist:
+                key = [sheet.row_values(i_row)[reader.column_for_keys]]
+                if key == [u'Cname'] or key == [u'Country Name']:
                     key = [u'year']
                 reader.parlist += key
             reader.parse_row(sheet.row_values(i_row))
@@ -552,6 +593,8 @@ def read_input_data_xls():
     sheet_readers.append(BcgCoverageSheetReader())
 
     sheet_readers.append(BirthRateReader())
+
+    sheet_readers.append(LifeExpectancyReader())
 
     return read_xls_with_sheet_readers(sheet_readers)
 

@@ -39,7 +39,7 @@ class MacroeconomicsSheetReader:
         self.data = {}
         self.par = None
         self.i_par = -1
-        self.name = 'macroeconomics'
+        self.tab_name = 'macroeconomics'
         self.key = 'macro'
         self.parlist =  [
             'cpi',
@@ -83,7 +83,7 @@ class ConstantsSheetReader:
         self.par = None
         self.i_par = -1
         self.i_subpar = -1
-        self.name = 'constants'
+        self.tab_name = 'constants'
         self.key = 'const'
         self.nested_parlist =  [
             [   'model_parameters', 
@@ -195,7 +195,7 @@ class NestedParamSheetReader:
         self.par = None
         self.i_par = -1
         self.i_subpar = -1
-        self.name = 'XLS Sheet Name'
+        self.tab_name = 'XLS Sheet Name'
         self.key = 'data_key'
         self.nested_parlist = [
             [   'par0', 
@@ -240,7 +240,7 @@ class NestedParamWithRangeSheetReader:
         self.raw_par = None
         self.i_par = -1
         self.i_subpar = -1
-        self.name = 'XLS Sheet Name'
+        self.tab_name = 'XLS Sheet Name'
         self.key = 'data_key'
         self.range = {
             'Best': [],
@@ -290,7 +290,7 @@ class BcgCoverageSheetReader():
         self.data = {}
         self.par = None
         self.i_par = -1
-        self.name = 'BCG'
+        self.tab_name = 'BCG'
         self.key = 'bcg'
         self.parlist = []
         self.filename = 'xls/who_unicef_bcg_coverage.xlsx'
@@ -323,7 +323,7 @@ class BirthRateReader():
         self.data = {}
         self.par = None
         self.i_par = -1
-        self.name = 'Data'
+        self.tab_name = 'Data'
         self.key = 'birth_rate'
         self.parlist = []
         self.filename = 'xls/world_bank_crude_birth_rate.xlsx'
@@ -356,7 +356,7 @@ class LifeExpectancyReader():
         self.data = {}
         self.par = None
         self.i_par = -1
-        self.name = 'Data'
+        self.tab_name = 'Data'
         self.key = 'life_expectancy'
         self.parlist = []
         self.filename = 'xls/world_bank_life_expectancy.xlsx'
@@ -387,7 +387,7 @@ class GlobalTbReportReader():
         self.data = {}
         self.par = None
         self.i_par = -1
-        self.name = 'TB_burden_countries_2016-04-19'
+        self.tab_name = 'TB_burden_countries_2016-04-19'
         self.key = 'tb'
         self.parlist = []
         self.filename = 'xls/TB_burden_countries_2016-04-19.xlsx'
@@ -427,7 +427,7 @@ class MdrReportReader():
         self.data = []
         self.par = None
         self.i_par = -1
-        self.name = 'MDR-TB_burden_estimates_2016-04'
+        self.tab_name = 'MDR-TB_burden_estimates_2016-04'
         self.key = 'mdr'
         self.parlist = []
         self.filename = 'xls/MDR-TB_burden_estimates_2016-04-20.xlsx'
@@ -470,8 +470,8 @@ def read_xls_with_sheet_readers(sheet_readers=[]):
             workbook = open_workbook(reader.filename)
         except:
             raise Exception('Failed to open spreadsheet: %s' % reader.filename)
-        #print("Reading sheet \"{}\"".format(reader.name))
-        sheet = workbook.sheet_by_name(reader.name)
+        #print("Reading sheet \"{}\"".format(reader.tab_name))
+        sheet = workbook.sheet_by_name(reader.tab_name)
         if reader.horizontal:
             for i_row in range(reader.start_row, sheet.nrows):
                 if reader.create_parlist:
@@ -491,198 +491,198 @@ def read_input_data_xls():
 
     sheet_readers = []
 
-    # population_sheet_reader = NestedParamWithRangeSheetReader()
-    # population_sheet_reader.name = 'population_size'
-    # population_sheet_reader.key = 'popsize'
-    # population_sheet_reader.nested_parlist =  [
-    #     [   'Population size',
-    #         [   '04yr',
-    #             '5_14yr',
-    #             '15abov'
-    #         ]
-    #     ]
-    # ]
-    # sheet_readers.append(population_sheet_reader)
+    population_sheet_reader = NestedParamWithRangeSheetReader()
+    population_sheet_reader.tab_name = 'population_size'
+    population_sheet_reader.key = 'popsize'
+    population_sheet_reader.nested_parlist =  [
+        [   'Population size',
+            [   '04yr',
+                '5_14yr',
+                '15abov'
+            ]
+        ]
+    ]
+    sheet_readers.append(population_sheet_reader)
 
-    # tb_prevalence_sheet_reader = NestedParamWithRangeSheetReader()
-    # tb_prevalence_sheet_reader.name = 'TB prevalence'
-    # tb_prevalence_sheet_reader.key = 'tbprev'
-    # tb_prevalence_sheet_reader.nested_parlist =  [
-    #     [   '0_4yr',
-    #         [   'ds_04yr',
-    #             'mdr_04yr',
-    #             'xdr_04yr'
-    #         ]
-    #     ],
-    #     [   '5_14yr',
-    #         [   'ds_514yr',
-    #             'mdr_514yr',
-    #             'xdr_514yr'
-    #         ]
-    #     ],
-    #     [   '15abov',
-    #         [   'ds_15abov',
-    #             'mdr_15abov',
-    #             'xdr_15abov'
-    #         ]
-    #     ]
-    # ]
-    # sheet_readers.append(tb_prevalence_sheet_reader)
-    #
-    # tb_incidence_sheet_reader = NestedParamWithRangeSheetReader()
-    # tb_incidence_sheet_reader.name = 'TB incidence'
-    # tb_incidence_sheet_reader.key = 'tbinc'
-    # tb_incidence_sheet_reader.nested_parlist =  [
-    #     [   '0_4yr',
-    #         [   'ds_04yr',
-    #             'mdr_04yr',
-    #             'xdr_04yr'
-    #         ]
-    #     ],
-    #     [   '5_14yr',
-    #         [   'ds_514yr',
-    #             'mdr_514yr',
-    #             'xdr_514yr'
-    #         ]
-    #     ],
-    #     [   '15abov',
-    #         [   'ds_15abov',
-    #             'mdr_15abov',
-    #             'xdr_15abov'
-    #         ]
-    #     ]
-    # ]
-    # sheet_readers.append(tb_incidence_sheet_reader)
-    #
-    # comorbidity_sheet_reader = NestedParamWithRangeSheetReader()
-    # comorbidity_sheet_reader.name = 'comorbidity'
-    # comorbidity_sheet_reader.key = 'comor'
-    # comorbidity_sheet_reader.nested_parlist =  [
-    #     [   'malnutrition',
-    #         [   '04yr',
-    #             '5_14yr',
-    #             '15abov',
-    #             'aggregate'
-    #         ]
-    #     ],
-    #     [   'diabetes',
-    #         [  '04yr',
-    #             '5_14yr',
-    #             '15abov',
-    #             'aggregate'
-    #         ]
-    #     ],
-    #     [   'HIV',
-    #         [   '04yr_CD4_300',
-    #             '04yr_CD4_200_300',
-    #             '04yr_CD4_200',
-    #             '04yr_aggregate',
-    #             '5_14yr_CD4_300',
-    #             '5_14yr_CD4_200_300',
-    #             '5_14yr_CD4_200',
-    #             '5_14yr_aggregate',
-    #             '15abov_CD4_300',
-    #             '15abov_CD4_200_300',
-    #             '15abov_CD4_200',
-    #             '15abov_aggregate'
-    #         ]
-    #     ]
-    # ]
-    # sheet_readers.append(comorbidity_sheet_reader)
-    #
-    # cost_coverage_sheet_reader = NestedParamWithRangeSheetReader()
-    # cost_coverage_sheet_reader.name = 'cost and coverage'
-    # cost_coverage_sheet_reader.key = 'costcov'
-    # cost_coverage_sheet_reader.range = {'Coverage':[], 'Cost':[]}
-    # cost_coverage_sheet_reader.nested_parlist =  [
-    #     [   'Cost and coverage',
-    #         [   'Active and intensified case finding',
-    #             'Treatment of active TB',
-    #             'Preventive therapy for latent TB',
-    #             'Vaccination',
-    #             'Patient isolation',
-    #             'Drug susceptibility testing',
-    #             'Preventive therapy for patients with HIV co-infection',
-    #             'Infection control in healthcare facilities',
-    #         ]
-    #     ]
-    # ]
-    # sheet_readers.append(cost_coverage_sheet_reader)
-    #
-    # testing_treatment_sheet_reader = NestedParamSheetReader()
-    # testing_treatment_sheet_reader.name = 'testing_treatment'
-    # testing_treatment_sheet_reader.key = 'testtx'
-    # testing_treatment_sheet_reader.nested_parlist =  [
-    #     [   '%testedactiveTB',
-    #         [   '04yr',
-    #             '5_14yr',
-    #             '15abov']], \
-    #     [   '%testedlatentTB',
-    #         [   '04yr',
-    #             '5_14yr',
-    #             '15abov']],\
-    #     [   '%testedsuscept',
-    #         [   '04yr',
-    #             '5_14yr',
-    #             '15abov']],\
-    #     [   'numberinittxactiveTB',
-    #         [   '04yr_DSregimen',
-    #             '04yr_MDRregimen',
-    #             '04yr_XDRregimen',
-    #             '5_14yr_DSregimen',
-    #             '5_14yr_MDRregimen',
-    #             '5_14yr_XDRregimen',
-    #             '15abov_DSregimen',
-    #             '15abov_MDRregimen',
-    #             '15abov_XDRregimen']],\
-    #     [   'numbercompletetxactiveTB',
-    #         [   '04yr_DSregimen',
-    #             '04yr_MDRregimen',
-    #             '04yr_XDRregimen',
-    #             '5_14yr_DSregimen',
-    #             '5_14yr_MDRregimen',
-    #             '5_14yr_XDRregimen',
-    #             '15abov_DSregimen',
-    #             '15abov_MDRregimen',
-    #             '15abov_XDRregimen']],\
-    #     [   'numberinittxlatentTB',
-    #         [   '04yr',
-    #             '5_14yr',
-    #             '15abov']],\
-    #     ['numbercompletetxlatentTB',
-    #         [   '04yr',
-    #             '5_14yr',
-    #             '15abov']]
-    # ]
-    # sheet_readers.append(testing_treatment_sheet_reader)
-    #
-    # other_epidemiology_sheet_reader = NestedParamSheetReader()
-    # other_epidemiology_sheet_reader.name = 'other_epidemiology'
-    # other_epidemiology_sheet_reader.key = 'otherepi'
-    # other_epidemiology_sheet_reader.nested_parlist = [
-    #     [   '%died_nonTB',
-    #         [   '04yr',
-    #             '5_14yr',
-    #             '15abov'
-    #         ]
-    #     ],
-    #     [   '%died_TBrelated',
-    #         [   '04yr',
-    #             '5_14yr',
-    #             '15abov'
-    #         ]
-    #     ],
-    #     [   'birthrate',
-    #         [   'birthrate']
-    #     ],
-    # ]
-    #
-    # sheet_readers.append(other_epidemiology_sheet_reader)
-    # sheet_readers.append(ConstantsSheetReader())
-    # sheet_readers.append(MacroeconomicsSheetReader())
-    # sheet_readers.append(BcgCoverageSheetReader())
-    # sheet_readers.append(BirthRateReader())
-    # sheet_readers.append(LifeExpectancyReader())
+    tb_prevalence_sheet_reader = NestedParamWithRangeSheetReader()
+    tb_prevalence_sheet_reader.tab_name = 'TB prevalence'
+    tb_prevalence_sheet_reader.key = 'tbprev'
+    tb_prevalence_sheet_reader.nested_parlist =  [
+        [   '0_4yr',
+            [   'ds_04yr',
+                'mdr_04yr',
+                'xdr_04yr'
+            ]
+        ],
+        [   '5_14yr',
+            [   'ds_514yr',
+                'mdr_514yr',
+                'xdr_514yr'
+            ]
+        ],
+        [   '15abov',
+            [   'ds_15abov',
+                'mdr_15abov',
+                'xdr_15abov'
+            ]
+        ]
+    ]
+    sheet_readers.append(tb_prevalence_sheet_reader)
+
+    tb_incidence_sheet_reader = NestedParamWithRangeSheetReader()
+    tb_incidence_sheet_reader.tab_name = 'TB incidence'
+    tb_incidence_sheet_reader.key = 'tbinc'
+    tb_incidence_sheet_reader.nested_parlist =  [
+        [   '0_4yr',
+            [   'ds_04yr',
+                'mdr_04yr',
+                'xdr_04yr'
+            ]
+        ],
+        [   '5_14yr',
+            [   'ds_514yr',
+                'mdr_514yr',
+                'xdr_514yr'
+            ]
+        ],
+        [   '15abov',
+            [   'ds_15abov',
+                'mdr_15abov',
+                'xdr_15abov'
+            ]
+        ]
+    ]
+    sheet_readers.append(tb_incidence_sheet_reader)
+
+    comorbidity_sheet_reader = NestedParamWithRangeSheetReader()
+    comorbidity_sheet_reader.tab_name = 'comorbidity'
+    comorbidity_sheet_reader.key = 'comor'
+    comorbidity_sheet_reader.nested_parlist =  [
+        [   'malnutrition',
+            [   '04yr',
+                '5_14yr',
+                '15abov',
+                'aggregate'
+            ]
+        ],
+        [   'diabetes',
+            [  '04yr',
+                '5_14yr',
+                '15abov',
+                'aggregate'
+            ]
+        ],
+        [   'HIV',
+            [   '04yr_CD4_300',
+                '04yr_CD4_200_300',
+                '04yr_CD4_200',
+                '04yr_aggregate',
+                '5_14yr_CD4_300',
+                '5_14yr_CD4_200_300',
+                '5_14yr_CD4_200',
+                '5_14yr_aggregate',
+                '15abov_CD4_300',
+                '15abov_CD4_200_300',
+                '15abov_CD4_200',
+                '15abov_aggregate'
+            ]
+        ]
+    ]
+    sheet_readers.append(comorbidity_sheet_reader)
+
+    cost_coverage_sheet_reader = NestedParamWithRangeSheetReader()
+    cost_coverage_sheet_reader.tab_name = 'cost and coverage'
+    cost_coverage_sheet_reader.key = 'costcov'
+    cost_coverage_sheet_reader.range = {'Coverage':[], 'Cost':[]}
+    cost_coverage_sheet_reader.nested_parlist =  [
+        [   'Cost and coverage',
+            [   'Active and intensified case finding',
+                'Treatment of active TB',
+                'Preventive therapy for latent TB',
+                'Vaccination',
+                'Patient isolation',
+                'Drug susceptibility testing',
+                'Preventive therapy for patients with HIV co-infection',
+                'Infection control in healthcare facilities',
+            ]
+        ]
+    ]
+    sheet_readers.append(cost_coverage_sheet_reader)
+
+    testing_treatment_sheet_reader = NestedParamSheetReader()
+    testing_treatment_sheet_reader.tab_name = 'testing_treatment'
+    testing_treatment_sheet_reader.key = 'testtx'
+    testing_treatment_sheet_reader.nested_parlist =  [
+        [   '%testedactiveTB',
+            [   '04yr',
+                '5_14yr',
+                '15abov']], \
+        [   '%testedlatentTB',
+            [   '04yr',
+                '5_14yr',
+                '15abov']],\
+        [   '%testedsuscept',
+            [   '04yr',
+                '5_14yr',
+                '15abov']],\
+        [   'numberinittxactiveTB',
+            [   '04yr_DSregimen',
+                '04yr_MDRregimen',
+                '04yr_XDRregimen',
+                '5_14yr_DSregimen',
+                '5_14yr_MDRregimen',
+                '5_14yr_XDRregimen',
+                '15abov_DSregimen',
+                '15abov_MDRregimen',
+                '15abov_XDRregimen']],\
+        [   'numbercompletetxactiveTB',
+            [   '04yr_DSregimen',
+                '04yr_MDRregimen',
+                '04yr_XDRregimen',
+                '5_14yr_DSregimen',
+                '5_14yr_MDRregimen',
+                '5_14yr_XDRregimen',
+                '15abov_DSregimen',
+                '15abov_MDRregimen',
+                '15abov_XDRregimen']],\
+        [   'numberinittxlatentTB',
+            [   '04yr',
+                '5_14yr',
+                '15abov']],\
+        ['numbercompletetxlatentTB',
+            [   '04yr',
+                '5_14yr',
+                '15abov']]
+    ]
+    sheet_readers.append(testing_treatment_sheet_reader)
+
+    other_epidemiology_sheet_reader = NestedParamSheetReader()
+    other_epidemiology_sheet_reader.tab_name = 'other_epidemiology'
+    other_epidemiology_sheet_reader.key = 'otherepi'
+    other_epidemiology_sheet_reader.nested_parlist = [
+        [   '%died_nonTB',
+            [   '04yr',
+                '5_14yr',
+                '15abov'
+            ]
+        ],
+        [   '%died_TBrelated',
+            [   '04yr',
+                '5_14yr',
+                '15abov'
+            ]
+        ],
+        [   'birthrate',
+            [   'birthrate']
+        ],
+    ]
+
+    sheet_readers.append(other_epidemiology_sheet_reader)
+    sheet_readers.append(ConstantsSheetReader())
+    sheet_readers.append(MacroeconomicsSheetReader())
+    sheet_readers.append(BcgCoverageSheetReader())
+    sheet_readers.append(BirthRateReader())
+    sheet_readers.append(LifeExpectancyReader())
     sheet_readers.append(GlobalTbReportReader())
 
     sheet_readers.append(MdrReportReader())
@@ -694,5 +694,5 @@ if __name__ == "__main__":
     import json
     data = read_input_data_xls()  # C:\Users\ntdoan\Github\AuTuMN\autumn\xls
     open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
-    print(data)
+    # print(data)
 

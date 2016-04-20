@@ -421,6 +421,47 @@ class GlobalTbReportReader():
         return self.data
 
 
+class MdrReportReader():
+
+    def __init__(self):
+        self.data = []
+        self.par = None
+        self.i_par = -1
+        self.name = 'MDR-TB_burden_estimates_2016-04'
+        self.key = 'mdr'
+        self.parlist = []
+        self.filename = 'xls/MDR-TB_burden_estimates_2016-04-20.xlsx'
+        self.start_row = 0
+        self.create_parlist = True
+        self.column_for_keys = 0
+        self.horizontal = True
+        self.country_dictionary_keys = []
+
+    def parse_row(self, row):
+
+        self.i_par += 1
+        self.par = self.parlist[self.i_par]
+
+        if row[0] == u'country':
+            for i in range(len(row)):
+                self.country_dictionary_keys += [row[i]]
+        else:
+            self.data += [{}]
+            for i in range(len(row)):
+                # print(self.country_dictionary_keys[i])
+                # print(row[i])
+                # print(self.data[i])
+                # print(type(self.data[i]))
+                # self.data[i]
+                self.data[self.i_par - 1][self.country_dictionary_keys[i]] = row[i]
+
+    def get_data(self):
+        return self.data
+
+
+
+
+
 def read_xls_with_sheet_readers(sheet_readers=[]):
 
     result = {}
@@ -643,6 +684,8 @@ def read_input_data_xls():
     # sheet_readers.append(BirthRateReader())
     # sheet_readers.append(LifeExpectancyReader())
     sheet_readers.append(GlobalTbReportReader())
+
+    sheet_readers.append(MdrReportReader())
 
     return read_xls_with_sheet_readers(sheet_readers)
 

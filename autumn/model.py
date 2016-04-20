@@ -535,7 +535,7 @@ class ConsolidatedModel(BaseModel):
                 destinations_from_active + ["_enterlowquality"]
 
         for destination in destinations_from_active:
-            self.set_scaleup_var(
+            self.set_scaleup_fn(
                 "program_rate" + destination,
                 make_two_step_curve(
                     self.params["pretreatment_available_proportion"] * self.params["program_rate" + destination],
@@ -1003,14 +1003,14 @@ class ConsolidatedModel(BaseModel):
                                 self.params["program_rate_default" + treatment_stage + strain]\
                                 * self.params["proportion_amplification"]
                             # Calculate equivalent functions
-                            self.set_scaleup_var(
+                            self.set_scaleup_fn(
                                 "program_rate_default" + treatment_stage + "_noamplify" + strain,
                                 make_sigmoidal_curve(
                                     end_rate_default_noamplify + end_rate_default_amplify,
                                     end_rate_default_noamplify,
                                     self.params["timepoint_introduce" + amplify_to_strain],
                                     self.params["timepoint_introduce" + amplify_to_strain] + 3.))
-                            self.set_scaleup_var(
+                            self.set_scaleup_fn(
                                 "program_rate_default" + treatment_stage + "_amplify" + strain,
                                 make_sigmoidal_curve(
                                     0.,
@@ -1074,7 +1074,7 @@ class ConsolidatedModel(BaseModel):
                                 "detect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
                                 "program_rate_detect" + strain + "_as"+assigned_strain[1:])
                 else:
-                    self.set_scaleup_var(
+                    self.set_scaleup_fn(
                         "program_rate_detect" + strain + "_as"+assigned_strain[1:],
                         make_two_step_curve(
                             self.params["pretreatment_available_proportion"] * self.params["program_rate_detect"] * assignment_probability,
@@ -1088,7 +1088,7 @@ class ConsolidatedModel(BaseModel):
                                 "detect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
                                 "program_rate_detect" + strain + "_as"+assigned_strain[1:])
 
-        self.set_scaleup_var(
+        self.set_scaleup_fn(
             "program_rate_missed",
             make_two_step_curve(
                 self.params["pretreatment_available_proportion"] * self.params["program_rate_missed"],
@@ -1163,14 +1163,14 @@ class ConsolidatedModel(BaseModel):
                                     self.params["program_rate_default" + treatment_stage + strain] \
                                     * self.params["proportion_amplification"]
                                 # Calculate equivalent functions
-                                self.set_scaleup_var(
+                                self.set_scaleup_fn(
                                     "program_rate_default" + treatment_stage + "_noamplify" + strain_or_inappropriate,
                                     make_sigmoidal_curve(
                                         end_rate_default_noamplify + end_rate_default_amplify,
                                         end_rate_default_noamplify,
                                         self.params["timepoint_introduce" + amplify_to_strain],
                                         self.params["timepoint_introduce" + amplify_to_strain] + 3.))
-                                self.set_scaleup_var(
+                                self.set_scaleup_fn(
                                     "program_rate_default" + treatment_stage + "_amplify" + strain_or_inappropriate,
                                     make_sigmoidal_curve(
                                         0.,

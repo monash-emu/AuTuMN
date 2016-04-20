@@ -14,6 +14,8 @@ class BaseModel():
         self.params = {}
         self.times = None
 
+        self.scaleup_fns = {}
+        self.scaleup_vars = {}
         self.vars = {}
 
         self.soln_array = None
@@ -28,7 +30,6 @@ class BaseModel():
         self.var_transfer_rate_flows = []
         self.var_flows = []
 
-        self.scaleup_fns = {}
 
     def make_times(self, start, end, delta):
         "Return steps between start and end every delta"
@@ -90,13 +91,17 @@ class BaseModel():
             self.var_transfer_rate_flows,
             (from_label, to_label, vars_label))
 
-    def set_scaleup_var(self, label, fn):
+    def set_scaleup_fn(self, label, fn):
         self.scaleup_fns[label] = fn
 
     def set_var_entry_rate_flow(self, label, vars_label):
         add_unique_tuple_to_list(
             self.var_flows,
             (label, vars_label))
+
+    def calculate_scaleup_vars(self):
+        for label, fn in self.scaleup_fns.iteritems():
+            self.scaleup_vars[label] = fn(self.time)
 
     def calculate_variable_rates(self):
         """
@@ -115,10 +120,6 @@ class BaseModel():
         # birth flows
         for label, vars_label in self.var_flows:
             self.flows[label] += self.vars[vars_label]
-
-        # scaleup flows
-        for label, fn in self.scaleup_fns.iteritems():
-            self.vars[label] = fn(self.time)
 
         # dynamic transmission flows
         for from_label, to_label, vars_label in self.var_transfer_rate_flows:
@@ -152,6 +153,7 @@ class BaseModel():
             self.time = t
             self.compartments = self.convert_list_to_compartments(y)
             self.vars.clear()
+            self.calculate_scaleup_vars()
             self.calculate_variable_rates()
             self.calculate_flows()
             flow_vector = self.convert_compartments_to_list(self.flows)
@@ -389,6 +391,7 @@ class BaseModel():
         self.graph.render(base)
 
 
+
 def add_unique_tuple_to_list(a_list, a_tuple):
     """
     Adds or modifies a list of tuples, compares only the items
@@ -456,6 +459,13 @@ class SimpleModel(BaseModel):
         self.set_parameter("program_rate_default_noninfect", .05 / time_treatment)
         self.set_parameter("program_rate_death_noninfect", .05 / time_treatment)
 
+        self.set_scaleup_fn(
+            "program_rate_detect",
+            make_two_step_curve(0, 0.5 * y, y, 1950, 1995, 2015))
+
+    def calculate_variable_rates(self):
+        self.vars["program_rate_detect"] = self.scaleup_vars["program_rate_detect"]
+
     def set_flows(self):
         self.set_var_entry_rate_flow("susceptible", "births_unvac")
         self.set_var_entry_rate_flow("susceptible_vac", "births_vac")
@@ -480,9 +490,6 @@ class SimpleModel(BaseModel):
             "active", "latent_late", "tb_rate_recover")
 
         y = self.params["program_rate_detect"]
-        self.set_scaleup_var(
-            "program_rate_detect",
-            make_two_step_curve(0, 0.5*y, y, 1950, 1995, 2015))
         self.set_var_transfer_rate_flow(
             "active", "treatment_infect", "program_rate_detect")
 

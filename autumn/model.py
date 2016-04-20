@@ -28,8 +28,10 @@ def label_intersects_tags(label, tags):
 class ConsolidatedModel(BaseModel):
 
     """
-    A harmonised model that can run any number of strains
-    and organ statuses
+    The transmission dynamic model to underpin all AuTuMN analyses
+    Inherits from BaseModel, which is intended to be general to any infectious disease
+    All TB-specific methods and structures are contained in this model
+    Methods are written to be adaptable to any model structure selected through the __init__ arguments
     """
 
     def __init__(self,
@@ -38,20 +40,33 @@ class ConsolidatedModel(BaseModel):
                  number_of_comorbidities=0,
                  lowquality=False,
                  amplification=False,
-                 misassignment=False,
-                 parameters=None):
+                 misassignment=False):
 
         """
         Args:
-            number_of_organs: pulmonary states: smearpos, smearneg, extrapulm
-            number_of_strains: strains - ds - drug susceptible,
-                                         mdr - multiple drug resistance,
-                                         xdr -
-            number_of_comorbidities:
-            lowquality:
-            amplification:
-            misassignment:
-            parameters: is a dictionary of parameters to be overwritten { param: value }
+            n_organ: whether pulmonary status and smear-positive/smear-negative status
+                can be included in the model (which applies to all compartments representing active disease)
+                0. No subdivision
+                1. All patients are smear-positive pulmonary (avoid selecting this)
+                2. All patients are pulmonary, but smear status can be selected (i.e. smear-pos/smear-neg)
+                3. Full stratification into smear-positive, smear-negative and extra-pulmonary
+            n_strain: number of types of drug-resistance included in the model (not strains in the phylogenetic sense)
+                0. No strains included
+                1. All TB is DS-TB (avoid selecting this)
+                2. DS-TB and MDR-TB
+                3. DS-TB, MDR-TB and XDR-TB
+                N.B. this may change in future models, which may include isoniazid mono-resistance, etc.
+            n_comorbidity: number of whole population stratifications, except for age
+                0. No population stratification
+                1. Entire population is not at increased risk (avoid selecting this)
+                2. No increased risk or HIV
+                3. No increased risk, HIV or diabetes
+            lowquality: Boolean of whether to include detections through the private sector
+            amplification: Boolean of whether to include resistance amplification through treatment default
+            misassignment: Boolean of whether also to incorporate misclassification of patients with drug-resistance
+                    to the wrong strain by the health system
+                Avoid amplification=False but misassignment=True (the model should run with both
+                amplificaiton and misassignment, but this combination doesn't make sense)
 
         """
         BaseModel.__init__(self)
@@ -69,13 +84,18 @@ class ConsolidatedModel(BaseModel):
 
         self.initialise_compartments()
 
-        self.set_parameters(parameters)
+        self.set_parameters()
 
     def define_model_structure(self,
                                number_of_organs,
                                number_of_strains,
                                number_of_comorbidities):
 
+        """
+        Args:
+            All arguments are set through __init__
+            Please refer to __init__ method comments above
+        """
         self.compartment_types = [
             "susceptible_fully",
             "susceptible_vac",
@@ -106,8 +126,10 @@ class ConsolidatedModel(BaseModel):
             "treatment_infect"]
 
         if number_of_organs == 0:
+            # Need an empty list to be iterable for methods iterating by organ status
             self.organ_status = [""]
         else:
+            # Select number of organ statuses
             available_organs = [
                 "_smearpos",
                 "_smearneg",
@@ -115,9 +137,7 @@ class ConsolidatedModel(BaseModel):
             self.organ_status = \
                 available_organs[0: number_of_organs]
 
-        self.comorbidities = [""]
-
-        if self.is_lowquality == True:
+        if self.is_lowquality == True:  # Add low quality detection compartment
             self.compartment_types \
                 = self.compartment_types + ["lowquality"]
             self.broad_compartment_types \
@@ -126,8 +146,10 @@ class ConsolidatedModel(BaseModel):
                 = self.infectious_tags + ["lowquality"]
 
         if number_of_strains == 0:
+            # Need an empty list to be iterable for methods iterating by strain
             self.strains = [""]
         else:
+            # Select number of strains
             available_strains = [
                 "_ds",
                 "_mdr",
@@ -136,8 +158,10 @@ class ConsolidatedModel(BaseModel):
                 = available_strains[0: number_of_strains]
 
         if number_of_comorbidities == 0:
+            # Need an empty list to be iterable for methods iterating by risk group
             self.comorbidities = [""]
         else:
+            # Select number of risk groups
             available_comorbidities = [
                 "_nocomorbs",
                 "_hiv",
@@ -321,6 +345,7 @@ class ConsolidatedModel(BaseModel):
             self.set_parameter(parameter, paramater_dict[parameter])
 
     def process_parameters(self):
+
         self.split_default_death_proportions()
 
         if self.n_organ > 0:
@@ -759,8 +784,9 @@ class ConsolidatedModel(BaseModel):
 
     def find_flow_proportions_by_period(
             self, proportion, early_period, total_period):
+
         early_proportion\
-            = 1. - exp( log(1. - proportion) * early_period / total_period)
+            = 1. - exp(log(1. - proportion) * early_period / total_period)
         late_proportion\
             = proportion - early_proportion
         return early_proportion, late_proportion
@@ -774,6 +800,7 @@ class ConsolidatedModel(BaseModel):
         self.calculate_force_infection()
 
     def get_fraction_soln(self, numerator_labels, numerators, denominator):
+
         fraction = {}
         for label in numerator_labels:
             fraction[label] = [
@@ -785,6 +812,7 @@ class ConsolidatedModel(BaseModel):
         return fraction
 
     def sum_over_compartments(self, compartment_types):
+
         summed_soln = {}
         summed_denominator\
             = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
@@ -803,6 +831,7 @@ class ConsolidatedModel(BaseModel):
         return summed_soln, summed_denominator
 
     def sum_over_compartments_bycategory(self, compartment_types, categories):
+
         summed_soln = {}
         # HELP BOSCO
         # The following line of code works, but I'm sure this isn't the best approach:
@@ -886,6 +915,7 @@ class ConsolidatedModel(BaseModel):
                      / self.vars["population"] * 1E5)
 
     def find_lowquality_detections(self):
+
         self.set_parameter(
             "program_rate_enterlowquality",
             self.params["program_rate_detect"] \
@@ -894,7 +924,7 @@ class ConsolidatedModel(BaseModel):
 
     def find_equal_detection_rates(self):
 
-        # Set detection rates equal for all strains (probably temporary)
+        # Set detection rates equal for all strains
         for strain in self.strains:
             self.set_parameter(
                 "program_rate_detect" + strain,
@@ -910,6 +940,7 @@ class ConsolidatedModel(BaseModel):
                 self.params["program_rate_restart_presenting"])
 
     def calculate_outputs_bystrain(self):
+
         # Now by strain:
         rate_incidence = {}
         rate_mortality = {}

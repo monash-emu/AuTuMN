@@ -392,7 +392,7 @@ class GlobalTbReportReader():
         self.parlist = []
         self.filename = 'xls/TB_burden_countries_2016-04-19.xlsx'
         self.start_row = 1
-        self.creat_parlist = True
+        self.create_parlist = True
         self.horizontal = False
         self.start_column = 0
         self.start_row = 1
@@ -448,18 +448,28 @@ class MdrReportReader():
         else:
             self.data += [{}]
             for i in range(len(row)):
-                # print(self.country_dictionary_keys[i])
-                # print(row[i])
-                # print(self.data[i])
-                # print(type(self.data[i]))
-                # self.data[i]
                 self.data[self.i_par - 1][self.country_dictionary_keys[i]] = row[i]
 
     def get_data(self):
         return self.data
 
 
+class NotificationsReader(GlobalTbReportReader):
 
+    def __init__(self):
+        self.data = {}
+        self.par = None
+        self.i_par = -1
+        self.tab_name = 'TB_notifications_2016-04-20'
+        self.key = 'notifications'
+        self.parlist = []
+        self.filename = 'xls/TB_notifications_2016-04-20.xlsx'
+        self.start_row = 1
+        self.create_parlist = True
+        self.horizontal = False
+        self.start_column = 0
+        self.start_row = 1
+        self.indices = {}
 
 
 def read_xls_with_sheet_readers(sheet_readers=[]):
@@ -684,8 +694,8 @@ def read_input_data_xls():
     sheet_readers.append(BirthRateReader())
     sheet_readers.append(LifeExpectancyReader())
     sheet_readers.append(GlobalTbReportReader())
-
     sheet_readers.append(MdrReportReader())
+    sheet_readers.append(NotificationsReader())
 
     return read_xls_with_sheet_readers(sheet_readers)
 
@@ -694,5 +704,5 @@ if __name__ == "__main__":
     import json
     data = read_input_data_xls()  # C:\Users\ntdoan\Github\AuTuMN\autumn\xls
     open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
-    # print(data)
+    print(data)
 

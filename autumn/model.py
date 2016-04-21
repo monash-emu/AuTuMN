@@ -49,12 +49,12 @@ class ConsolidatedModel(BaseModel):
     """
 
     def __init__(self,
-                 number_of_organs=0,
-                 number_of_strains=0,
-                 number_of_comorbidities=0,
-                 lowquality=False,
-                 amplification=False,
-                 misassignment=False):
+                 n_organ=0,
+                 n_strain=0,
+                 n_comorbidity=0,
+                 is_lowquality=False,
+                 is_amplification=False,
+                 is_misassignment=False):
 
         """
         Args:
@@ -83,21 +83,21 @@ class ConsolidatedModel(BaseModel):
                 amplificaiton and misassignment, but this combination doesn't make sense)
 
         """
+
         BaseModel.__init__(self)
 
-        self.is_lowquality = lowquality
-        self.is_amplification = amplification
-        self.is_misassignment = misassignment
+        # Convert inputs to attributes
+        self.is_lowquality = is_lowquality
+        self.is_amplification = is_amplification
+        self.is_misassignment = is_misassignment
+        self.n_organ = n_organ
+        self.n_strain = n_strain
+        self.n_comorbidity = n_comorbidity
 
-        self.n_organ = number_of_organs
-        self.n_strain = number_of_strains
-        self.n_comorbidity = number_of_comorbidities
-
+        # Initialise model compartmental structure and set un-processed parameters
         self.define_model_structure(
             self.n_organ, self.n_strain, self.n_comorbidity)
-
         self.initialise_compartments()
-
         self.set_parameters()
 
     def define_model_structure(self,
@@ -110,6 +110,8 @@ class ConsolidatedModel(BaseModel):
             All arguments are set through __init__
             Please refer to __init__ method comments above
         """
+
+        # All compartmental disease stages
         self.compartment_types = [
             "susceptible_fully",
             "susceptible_vac",
@@ -121,67 +123,62 @@ class ConsolidatedModel(BaseModel):
             "missed",
             "treatment_infect",
             "treatment_noninfect"]
+        if self.is_lowquality: self.compartment_types += ["lowquality"]
 
+        # Broader stages for calculating outputs later
         self.broad_compartment_types = [
             "susceptible",
             "latent",
             "active",
             "missed",
             "treatment"]
+        if self.is_lowquality: self.broad_compartment_types += ["lowquality"]
 
+        # Stages in progression through treatment
         self.treatment_stages = [
             "_infect",
             "_noninfect"]
 
+        # Compartments that contribute to force of infection calculations
         self.infectious_tags = [
             "active",
             "missed",
             "detect",
             "treatment_infect"]
+        if self.is_lowquality: self.infectious_tags += ["lowquality"]
 
+        # Select number of organ statuses
+        available_organs = [
+            "_smearpos",
+            "_smearneg",
+            "_extrapul"]
         if number_of_organs == 0:
-            # Need an empty list to be iterable for methods iterating by organ status
+            # Need a list of an empty string to be iterable for methods iterating by organ status
             self.organ_status = [""]
         else:
-            # Select number of organ statuses
-            available_organs = [
-                "_smearpos",
-                "_smearneg",
-                "_extrapul"]
-            self.organ_status = \
-                available_organs[0: number_of_organs]
+            self.organ_status = available_organs[:number_of_organs]
 
-        if self.is_lowquality == True:  # Add low quality detection compartment
-            self.compartment_types \
-                = self.compartment_types + ["lowquality"]
-            self.broad_compartment_types \
-                = self.broad_compartment_types + ["lowquality"]
-            self.infectious_tags \
-                = self.infectious_tags + ["lowquality"]
-
+        # Select number of strains
+        available_strains = [
+            "_ds",
+            "_mdr",
+            "_xdr"]
         if number_of_strains == 0:
-            # Need an empty list to be iterable for methods iterating by strain
+            # Need a list of an empty string to be iterable for methods iterating by strain
             self.strains = [""]
         else:
-            # Select number of strains
-            available_strains = [
-                "_ds",
-                "_mdr",
-                "_xdr"]
-            self.strains\
-                = available_strains[0: number_of_strains]
+            self.strains = available_strains[:number_of_strains]
 
+        # Select number of risk groups
+        available_comorbidities = [
+            "_nocomorbs",
+            "_hiv",
+            "_diabetes"]
         if number_of_comorbidities == 0:
-            # Need an empty list to be iterable for methods iterating by risk group
+            # Need a list of an empty string to be iterable for methods iterating by risk group
             self.comorbidities = [""]
         else:
-            # Select number of risk groups
-            available_comorbidities = [
-                "_nocomorbs",
-                "_hiv",
-                "_diabetes"]
-            self.comorbidities\
-                = available_comorbidities[0: number_of_comorbidities]
+            self.comorbidities = available_comorbidities[:number_of_comorbidities]
 
     def initialise_compartments(self, compartment_dict=None):
 
@@ -193,21 +190,19 @@ class ConsolidatedModel(BaseModel):
                 elif "latent" in compartment:  # Replicate for comorbidities and strains
                     for strain in self.strains:
                         self.set_compartment(compartment + strain + comorbidity, 0.)
-                elif "active" in compartment or "missed" in compartment or "lowquality" in compartment:
+                elif "active" in compartment or "missed" in compartment or "lowquality" in compartment: # Replicate for everything
                     for strain in self.strains:
                         for organ in self.organ_status:
                             self.set_compartment(compartment + organ + strain + comorbidity, 0.)
-                else:  # Mis-assignment by strain
+                else:
                     for strain in self.strains:
                         for organ in self.organ_status:
-                            if self.is_misassignment == True:
+                            if self.is_misassignment:  # Mis-assignment by strain
                                 for assigned_strain in self.strains:
-                                    self.set_compartment(compartment + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
-                                                         0.)
+                                    self.set_compartment(
+                                        compartment + organ + strain + "_as" + assigned_strain[1:] + comorbidity, 0.)
                             else:
                                 self.set_compartment(compartment + organ + strain + comorbidity, 0.)
-
-        # Put in values from input_compartments - now initialise to DS-TB only
 
         # Some useful defaults if None given
         if compartment_dict is None:
@@ -218,39 +213,43 @@ class ConsolidatedModel(BaseModel):
                     3.
             }
 
+        # Populate input_compartments
+        # Initialise to DS-TB or no strain if single-strain model
         default_start_strain = "_ds"
-        if self.strains == [""]:
-            default_start_strain = ""
+        if self.strains == [""]: default_start_strain = ""
+
+        # The equal splits will need to be adjusted
         for compartment in self.compartment_types:
             if compartment in compartment_dict:
-                if "susceptible" in compartment:
+                if "susceptible" in compartment:  # Split equally by comorbidities
                     for comorbidity in self.comorbidities:
                         self.set_compartment(compartment + comorbidity,
                                              compartment_dict[compartment]
                                              / len(self.comorbidities))
                 elif "latent" in compartment:
-                    for comorbidity in self.comorbidities:
+                    for comorbidity in self.comorbidities:  # Split equally by comorbidities
                         self.set_compartment(compartment + default_start_strain + comorbidity,
                                              compartment_dict[compartment]
                                              / len(self.comorbidities))
                 else:
-                    for comorbidity in self.comorbidities:
-                        for organ in self.organ_status:
+                    for comorbidity in self.comorbidities:  # Split equally by comorbidities
+                        for organ in self.organ_status:  # Split equally by organ statuses
                             self.set_compartment(compartment + organ + default_start_strain + comorbidity,
                                                  compartment_dict[compartment]
                                                  / len(self.organ_status)
                                                  / len(self.comorbidities))
 
     def set_parameters(self, paramater_dict=None):
+
         """
-        Sets useful parameters of the model
+        Sets model parameters
 
         Args:
             paramater_dict: a key-value dictionary where typically key
                               is a string for a param name and value is a float
         """
 
-        # Set up some handy defaults for testing
+        # Set defaults for testing
         if paramater_dict is None:
             paramater_dict = {
                 "demo_rate_birth":
@@ -359,28 +358,27 @@ class ConsolidatedModel(BaseModel):
             self.set_parameter(parameter, paramater_dict[parameter])
 
     ##################################################################
-    # Methods that derive extra parameters and scaleup functions
+    # Methods that derive additional parameters and scale-up functions
     # from existing parameters
 
     def process_parameters(self):
+
         """
-        Calls all the methods to sets parameters and scaleup fnctions
+        Calls all the methods to set parameters and scale-up functions
+        The order in which these methods is run is often important
         """
 
         self.split_default_death_proportions_params()
 
-        if self.n_organ > 0:
-            self.ensure_all_progressions_go_somewhere_params()
+        if self.n_organ > 0: self.ensure_all_progressions_go_somewhere_params()
 
         self.find_natural_history_flows()
 
         self.find_detection_rates_params()
 
-        if self.is_lowquality == True:
-            self.find_lowquality_detection_params()
+        if self.is_lowquality: self.find_lowquality_detection_params()
 
-        if self.n_strain > 0:
-            self.find_equal_detection_rates_params()
+        if self.n_strain > 0: self.find_equal_detection_rates_params()
 
         self.find_programmatic_rates_params()
 
@@ -394,31 +392,6 @@ class ConsolidatedModel(BaseModel):
 
         self.set_population_death_rate("demo_rate_death")
 
-    def find_lowquality_detection_params(self):
-
-        self.set_parameter(
-            "program_rate_enterlowquality",
-            self.params["program_rate_detect"] \
-            * self.params["program_prop_lowquality"] \
-            / (1. - self.params["program_prop_lowquality"]))
-
-    def find_equal_detection_rates_params(self):
-
-        # Set detection rates equal for all strains
-        for strain in self.strains:
-            self.set_parameter(
-                "program_rate_detect" + strain,
-                self.params["program_rate_detect"])
-            self.set_parameter(
-                "program_rate_missed" + strain,
-                self.params["program_rate_missed"])
-            self.set_parameter(
-                "program_rate_start_treatment" + strain,
-                self.params["program_rate_start_treatment"])
-            self.set_parameter(
-                "program_rate_restart_presenting" + strain,
-                self.params["program_rate_restart_presenting"])
-
     def find_detection_rates_params(self):
 
         # Rates of detection and failure of detection
@@ -426,7 +399,8 @@ class ConsolidatedModel(BaseModel):
             "program_rate_detect",
             self.params["program_proportion_detect"]
             * (
-            self.params["tb_rate_recover" + self.organ_status[0]] + self.params["tb_rate_death" + self.organ_status[0]])
+                self.params["tb_rate_recover" + self.organ_status[0]] + self.params[
+                    "tb_rate_death" + self.organ_status[0]])
             / (1. - self.params["program_proportion_detect"]
                * (1. + (1. - self.params["program_algorithm_sensitivity"])
                   / self.params["program_algorithm_sensitivity"])))
@@ -442,13 +416,38 @@ class ConsolidatedModel(BaseModel):
         #   - and -
         #   detection proportion = detection rate / (detection rate + missed rate + spont recover rate + death rate)
 
+    def find_lowquality_detection_params(self):
+
+        # Calculate rate of entry to low-quality care,
+        # based on proportion of treatment administered in low-quality sector
+        self.set_parameter(
+            "program_rate_enterlowquality",
+            self.params["program_rate_detect"]
+            * self.params["program_prop_lowquality"]
+            / (1. - self.params["program_prop_lowquality"]))
+
+    def find_equal_detection_rates_params(self):
+
+        # Replicate programmatic rates to be equal for each strain
+        # Most of these rates probably will remain equal for each strain
+        for strain in self.strains:
+            self.set_parameter(
+                "program_rate_detect" + strain,
+                self.params["program_rate_detect"])
+            self.set_parameter(
+                "program_rate_missed" + strain,
+                self.params["program_rate_missed"])
+            self.set_parameter(
+                "program_rate_start_treatment" + strain,
+                self.params["program_rate_start_treatment"])
+            self.set_parameter(
+                "program_rate_restart_presenting" + strain,
+                self.params["program_rate_restart_presenting"])
+
     def find_programmatic_rates_params(self):
 
         destinations_from_active = ["_detect", "_missed"]
-
-        if self.is_lowquality == True:
-            destinations_from_active = \
-                destinations_from_active + ["_enterlowquality"]
+        if self.is_lowquality: destinations_from_active += ["_enterlowquality"]
 
         for destination in destinations_from_active:
             self.set_scaleup_fn(

@@ -367,34 +367,34 @@ class ConsolidatedModel(BaseModel):
         Calls all the methods to sets parameters and scaleup fnctions
         """
 
-        self.split_default_death_proportions()
+        self.split_default_death_proportions_params()
 
         if self.n_organ > 0:
-            self.ensure_all_progressions_go_somewhere()
+            self.ensure_all_progressions_go_somewhere_params()
 
         self.find_natural_history_flows()
 
-        self.find_detection_rates()
+        self.find_detection_rates_params()
 
         if self.is_lowquality == True:
-            self.find_lowquality_detections()
+            self.find_lowquality_detection_params()
 
         if self.n_strain > 0:
-            self.find_equal_detection_rates()
+            self.find_equal_detection_rates_params()
 
-        self.find_programmatic_rates()
+        self.find_programmatic_rates_params()
 
-        self.find_treatment_rates()
+        self.find_treatment_rates_params()
 
-        self.set_programmatic_with_misassignment_scaleups()
+        self.find_programmatic_with_misassignment_params()
 
-        self.set_treatment_with_misassignment_scaleups()
+        self.find_treatment_with_misassignment_params()
 
-        self.set_treatment_with_amplification_scaleups()
+        self.find_treatment_with_amplification_params()
 
         self.set_population_death_rate("demo_rate_death")
 
-    def find_lowquality_detections(self):
+    def find_lowquality_detection_params(self):
 
         self.set_parameter(
             "program_rate_enterlowquality",
@@ -402,7 +402,7 @@ class ConsolidatedModel(BaseModel):
             * self.params["program_prop_lowquality"] \
             / (1. - self.params["program_prop_lowquality"]))
 
-    def find_equal_detection_rates(self):
+    def find_equal_detection_rates_params(self):
 
         # Set detection rates equal for all strains
         for strain in self.strains:
@@ -419,7 +419,7 @@ class ConsolidatedModel(BaseModel):
                 "program_rate_restart_presenting" + strain,
                 self.params["program_rate_restart_presenting"])
 
-    def find_detection_rates(self):
+    def find_detection_rates_params(self):
 
         # Rates of detection and failure of detection
         self.set_parameter(
@@ -442,7 +442,7 @@ class ConsolidatedModel(BaseModel):
         #   - and -
         #   detection proportion = detection rate / (detection rate + missed rate + spont recover rate + death rate)
 
-    def find_programmatic_rates(self):
+    def find_programmatic_rates_params(self):
 
         destinations_from_active = ["_detect", "_missed"]
 
@@ -460,7 +460,7 @@ class ConsolidatedModel(BaseModel):
                     self.params["treatment_available_date"], self.params["dots_start_date"],
                     self.params["finish_scaleup_date"]))
 
-    def ensure_all_progressions_go_somewhere(self):
+    def ensure_all_progressions_go_somewhere_params(self):
 
         # Make sure all progressions go somewhere, regardless of number of organ statuses
         if len(self.organ_status) == 1:
@@ -470,7 +470,7 @@ class ConsolidatedModel(BaseModel):
                 self.params["epi_proportion_cases_smearneg"] \
                 + self.params["epi_proportion_cases_extrapul"]
 
-    def split_default_death_proportions(self):
+    def split_default_death_proportions_params(self):
 
         if self.strains == [""]:
             self.params["program_proportion_success"] \
@@ -492,7 +492,7 @@ class ConsolidatedModel(BaseModel):
             (1. - self.params["program_proportion_success_inappropriate"]) \
             * self.params["program_prop_nonsuccessoutcomes_death"]
 
-    def find_treatment_rates(self):
+    def find_treatment_rates_params(self):
 
         if self.strains == [""]:
             self.params["tb_timeperiod_infect_ontreatment"] \
@@ -536,7 +536,7 @@ class ConsolidatedModel(BaseModel):
                         1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment" + strain]
                         * self.params["program_proportion" + outcome + treatment_stage + strain])
 
-    def set_treatment_with_amplification_scaleups(self):
+    def find_treatment_with_amplification_params(self):
 
         for i in range(len(self.strains)):
             strain = self.strains[i]
@@ -572,7 +572,7 @@ class ConsolidatedModel(BaseModel):
                             self.params["timepoint_introduce" + amplify_to_strain],
                             self.params["timepoint_introduce" + amplify_to_strain] + 3.))
 
-    def set_programmatic_with_misassignment_scaleups(self):
+    def find_programmatic_with_misassignment_params(self):
 
         for i in range(len(self.strains)):
             strain = self.strains[i]
@@ -627,7 +627,7 @@ class ConsolidatedModel(BaseModel):
                             self.params["treatment_available_date"], self.params["dots_start_date"],
                             self.params["finish_scaleup_date"]))
 
-    def set_treatment_with_misassignment_scaleups(self):
+    def find_treatment_with_misassignment_params(self):
         for i in range(len(self.strains)):
             strain = self.strains[i]
             if i != len(self.strains) - 1:
@@ -656,8 +656,6 @@ class ConsolidatedModel(BaseModel):
                             end_rate_default_amplify,
                             self.params["timepoint_introduce" + amplify_to_strain],
                             self.params["timepoint_introduce" + amplify_to_strain] + 3.))
-
-
 
     ##################################################################
     # Methods that calculate variables to be used in calculating flows

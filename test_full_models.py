@@ -25,6 +25,9 @@ models_to_run = [[0,  # Organ statuses
                   False,   # Add amplification
                   False]]  # Add misassignment
 
+# Select the datasets you want to import from the spreadsheet module
+import_data = read_input_data_xls(True, ['bcg', 'tb', 'input_data'])  # \Github\AuTuMN\autumn\xls
+
 for running_model in range(len(models_to_run)):
     name = 'model%d' % running_model
     base = os.path.join(out_dir, name)
@@ -39,14 +42,13 @@ for running_model in range(len(models_to_run)):
     #        str(models_to_run[running_model][1]) + " strain(s), " +
     #        str(models_to_run[running_model][2]) + " comorbidity(ies)"))
 
-    import_params = read_input_data_xls(True)  #\Github\AuTuMN\xls
-    # initials = import_params['const']['initials_for_compartments']
-    # parameters = import_params['const']['model_parameters']
-    # vac_cover = import_params['costcov']['Cost and coverage']['Vaccination']
-    #
-    # for key, value in parameters.items():
-    #     model.set_parameter(key, value["Best"])
-    #     print(key, value, model.params[key])
+    # initials = import_data['const']['initials_for_compartments']
+    parameters = import_data['const']['model_parameters']
+    # vac_cover = import_data['costcov']['Cost and coverage']['Vaccination']
+
+    for key, value in parameters.items():
+        model.set_parameter(key, value["Best"])
+        print(key, value, model.params[key])
     #
     # for key, value in initials.items():
     #     model.set_compartment(key, value["Best"])

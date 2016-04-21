@@ -15,7 +15,6 @@ class BaseModel():
         self.times = None
 
         self.scaleup_fns = {}
-        self.scaleup_vars = {}
         self.vars = {}
 
         self.soln_array = None
@@ -99,11 +98,11 @@ class BaseModel():
             self.var_flows,
             (label, vars_label))
 
-    def calculate_scaleup_vars(self):
+    def calculate_vars_of_scaleup_fns(self):
         for label, fn in self.scaleup_fns.iteritems():
-            self.scaleup_vars[label] = fn(self.time)
+            self.vars[label] = fn(self.time)
 
-    def calculate_variable_rates(self):
+    def calculate_vars(self):
         """
         Calculate self.vars that only depend on compartment values
         """
@@ -153,8 +152,8 @@ class BaseModel():
             self.time = t
             self.compartments = self.convert_list_to_compartments(y)
             self.vars.clear()
-            self.calculate_scaleup_vars()
-            self.calculate_variable_rates()
+            self.calculate_vars_of_scaleup_fns()
+            self.calculate_vars()
             self.calculate_flows()
             flow_vector = self.convert_compartments_to_list(self.flows)
             self.checks()
@@ -216,14 +215,11 @@ class BaseModel():
 
         self.calculate_diagnostics()
 
-    def calculate_outputs(self):
+    def calculate_output_vars(self):
         """
         Calculate diagnostic vars that can depend on self.flows as
         well as self.vars calculated in calculate_vars
         """
-        pass
-
-    def calculate_outputs_bystrain(self):
         pass
 
     def calculate_diagnostics(self):
@@ -241,10 +237,9 @@ class BaseModel():
             for label in self.labels:
                 self.compartments[label] = self.compartment_soln[label][i]
 
-            self.calculate_variable_rates()
+            self.calculate_vars()
             self.calculate_flows()
-            self.calculate_outputs()
-            self.calculate_outputs_bystrain()
+            self.calculate_output_vars()
 
             # only set after self.calculate_diagnostic_vars is
             # run so that we have all var_labels, including
@@ -295,7 +290,7 @@ class BaseModel():
         for i_label, label in enumerate(self.labels):
             self.compartments[label] = \
                 self.soln_array[i_time, i_label]
-        self.calculate_variable_rates()
+        self.calculate_vars()
 
     def checks(self, error_margin=0.1):
         """
@@ -459,12 +454,11 @@ class SimpleModel(BaseModel):
         self.set_parameter("program_rate_default_noninfect", .05 / time_treatment)
         self.set_parameter("program_rate_death_noninfect", .05 / time_treatment)
 
+        y = 4
         self.set_scaleup_fn(
             "program_rate_detect",
             make_two_step_curve(0, 0.5 * y, y, 1950, 1995, 2015))
 
-    def calculate_variable_rates(self):
-        self.vars["program_rate_detect"] = self.scaleup_vars["program_rate_detect"]
 
     def set_flows(self):
         self.set_var_entry_rate_flow("susceptible", "births_unvac")
@@ -511,7 +505,7 @@ class SimpleModel(BaseModel):
         self.set_infection_death_rate_flow(
             "treatment_noninfect", "program_rate_death_noninfect")
 
-    def calculate_variable_rates(self):
+    def calculate_vars(self):
 
         self.vars["population"] = sum(self.compartments.values())
 
@@ -535,7 +529,7 @@ class SimpleModel(BaseModel):
             self.params["tb_bcg_multiplier"] \
               * self.vars["rate_force"]
 
-    def calculate_outputs(self):
+    def calculate_output_vars(self):
 
         rate_incidence = 0.
         rate_mortality = 0.

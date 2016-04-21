@@ -32,6 +32,20 @@ class ConsolidatedModel(BaseModel):
     Inherits from BaseModel, which is intended to be general to any infectious disease
     All TB-specific methods and structures are contained in this model
     Methods are written to be adaptable to any model structure selected through the __init__ arguments
+
+    The work-flow of the simulation is structured into several parts:
+         1. reading params
+         2. setting initial compartments and values
+         3. calculating derived params
+         4. calculating scaleup functions
+         5. main loop over simulation time points
+             1. extracting scaleup-vars
+             2. calculating vars from compartments, params and scaleup-vars
+             3. assigning flows from either params or vars
+             4. calculating diagnostic vars from compartments, rates,
+                vars, params, and scaleup-vars
+         6. calculating diagnostic solns
+
     """
 
     def __init__(self,
@@ -344,7 +358,14 @@ class ConsolidatedModel(BaseModel):
         for parameter in paramater_dict:
             self.set_parameter(parameter, paramater_dict[parameter])
 
+    ##################################################################
+    # Methods that derive extra parameters and scaleup functions
+    # from existing parameters
+
     def process_parameters(self):
+        """
+        Calls all the methods to sets parameters and scaleup fnctions
+        """
 
         self.split_default_death_proportions()
 
@@ -365,6 +386,251 @@ class ConsolidatedModel(BaseModel):
 
         self.find_treatment_rates()
 
+        self.set_treatment_with_misassignment_scaleup_fns()
+
+        self.set_treatment_with_amplification_scaleup_fns()
+
+        self.set_population_death_rate("demo_rate_death")
+
+    def find_lowquality_detections(self):
+
+        self.set_parameter(
+            "program_rate_enterlowquality",
+            self.params["program_rate_detect"] \
+            * self.params["program_prop_lowquality"] \
+            / (1. - self.params["program_prop_lowquality"]))
+
+    def find_equal_detection_rates(self):
+
+        # Set detection rates equal for all strains
+        for strain in self.strains:
+            self.set_parameter(
+                "program_rate_detect" + strain,
+                self.params["program_rate_detect"])
+            self.set_parameter(
+                "program_rate_missed" + strain,
+                self.params["program_rate_missed"])
+            self.set_parameter(
+                "program_rate_start_treatment" + strain,
+                self.params["program_rate_start_treatment"])
+            self.set_parameter(
+                "program_rate_restart_presenting" + strain,
+                self.params["program_rate_restart_presenting"])
+
+    def find_detection_rates(self):
+
+        # Rates of detection and failure of detection
+        self.set_parameter(
+            "program_rate_detect",
+            self.params["program_proportion_detect"]
+            * (
+            self.params["tb_rate_recover" + self.organ_status[0]] + self.params["tb_rate_death" + self.organ_status[0]])
+            / (1. - self.params["program_proportion_detect"]
+               * (1. + (1. - self.params["program_algorithm_sensitivity"])
+                  / self.params["program_algorithm_sensitivity"])))
+
+        self.set_parameter(
+            "program_rate_missed",
+            self.params["program_rate_detect"]
+            * (1. - self.params["program_algorithm_sensitivity"])
+            / self.params["program_algorithm_sensitivity"]
+        )
+        # Derived from original formulas of:
+        #   algorithm sensitivity = detection rate / (detection rate + missed rate)
+        #   - and -
+        #   detection proportion = detection rate / (detection rate + missed rate + spont recover rate + death rate)
+
+    def find_programmatic_rates(self):
+
+        destinations_from_active = ["_detect", "_missed"]
+
+        if self.is_lowquality == True:
+            destinations_from_active = \
+                destinations_from_active + ["_enterlowquality"]
+
+        for destination in destinations_from_active:
+            self.set_scaleup_fn(
+                "program_rate" + destination,
+                make_two_step_curve(
+                    self.params["pretreatment_available_proportion"] * self.params["program_rate" + destination],
+                    self.params["dots_start_proportion"] * self.params["program_rate" + destination],
+                    self.params["program_rate" + destination],
+                    self.params["treatment_available_date"], self.params["dots_start_date"],
+                    self.params["finish_scaleup_date"]))
+
+    def ensure_all_progressions_go_somewhere(self):
+
+        # Make sure all progressions go somewhere, regardless of number of organ statuses
+        if len(self.organ_status) == 1:
+            self.params["epi_proportion_cases_smearpos"] = 1.
+        elif len(self.organ_status) == 2:
+            self.params["epi_proportion_cases_smearneg"] = \
+                self.params["epi_proportion_cases_smearneg"] \
+                + self.params["epi_proportion_cases_extrapul"]
+
+    def split_default_death_proportions(self):
+
+        if self.strains == [""]:
+            self.params["program_proportion_success"] \
+                = self.params["program_proportion_success_ds"]
+
+        # Temporary code
+        # to define default and death proportions
+        for strain in self.strains:
+            self.params["program_proportion_default" + strain] = \
+                (1. - self.params["program_proportion_success" + strain]) \
+                * (1. - self.params["program_prop_nonsuccessoutcomes_death"])
+            self.params["program_proportion_death" + strain] = \
+                (1. - self.params["program_proportion_success" + strain]) \
+                * self.params["program_prop_nonsuccessoutcomes_death"]
+        self.params["program_proportion_default_inappropriate"] = \
+            (1. - self.params["program_proportion_success_inappropriate"]) \
+            * (1. - self.params["program_prop_nonsuccessoutcomes_death"])
+        self.params["program_proportion_death_inappropriate"] = \
+            (1. - self.params["program_proportion_success_inappropriate"]) \
+            * self.params["program_prop_nonsuccessoutcomes_death"]
+
+    def find_treatment_rates(self):
+
+        if self.strains == [""]:
+            self.params["tb_timeperiod_infect_ontreatment"] \
+                = self.params["tb_timeperiod_infect_ontreatment_ds"]
+            self.params["tb_timeperiod_treatment"] \
+                = self.params["tb_timeperiod_treatment_ds"]
+
+        outcomes = ["_success", "_death", "_default"]
+        non_success_outcomes = outcomes[1: 3]
+
+        for strain in self.strains + ["_inappropriate"]:
+            # Find the non-infectious period
+            self.set_parameter(
+                "tb_timeperiod_noninfect_ontreatment" + strain,
+                self.params["tb_timeperiod_treatment" + strain]
+                - self.params["tb_timeperiod_infect_ontreatment" + strain])
+
+            # Find the proportion of deaths/defaults during the infectious and non-infectious stages
+            for outcome in non_success_outcomes:
+                early_proportion, late_proportion = self.find_flow_proportions_by_period(
+                    self.params["program_proportion" + outcome + strain],
+                    self.params["tb_timeperiod_infect_ontreatment" + strain],
+                    self.params["tb_timeperiod_treatment" + strain])
+                self.set_parameter(
+                    "program_proportion" + outcome + "_infect" + strain,
+                    early_proportion)
+                self.set_parameter(
+                    "program_proportion" + outcome + "_noninfect" + strain,
+                    late_proportion)
+
+            # Find the success proportions
+            for treatment_stage in self.treatment_stages:
+                self.set_parameter(
+                    "program_proportion_success" + treatment_stage + strain,
+                    1. - self.params["program_proportion_default" + treatment_stage + strain]
+                    - self.params["program_proportion_death" + treatment_stage + strain])
+                # Find the corresponding rates from the proportions
+                for outcome in outcomes:
+                    self.set_parameter(
+                        "program_rate" + outcome + treatment_stage + strain,
+                        1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment" + strain]
+                        * self.params["program_proportion" + outcome + treatment_stage + strain])
+
+    def set_treatment_with_misassignment_scaleup_fns(self):
+        for i in range(len(self.strains)):
+            strain = self.strains[i]
+            if i != len(self.strains) - 1:
+                amplify_to_strain = self.strains[i + 1]  # Is the more resistant strain
+                # Split default rates into amplification and non-amplification proportions
+                for treatment_stage in self.treatment_stages:
+                    # Calculate amplification and non-amplification target proportions:
+                    end_rate_default_noamplify = \
+                        self.params["program_rate_default" + treatment_stage + strain] \
+                        * (1. - self.params["proportion_amplification"])
+                    end_rate_default_amplify = \
+                        self.params["program_rate_default" + treatment_stage + strain] \
+                        * self.params["proportion_amplification"]
+                    # Calculate equivalent functions
+                    self.set_scaleup_fn(
+                        "program_rate_default" + treatment_stage + "_noamplify" + strain,
+                        make_sigmoidal_curve(
+                            end_rate_default_noamplify + end_rate_default_amplify,
+                            end_rate_default_noamplify,
+                            self.params["timepoint_introduce" + amplify_to_strain],
+                            self.params["timepoint_introduce" + amplify_to_strain] + 3.))
+                    self.set_scaleup_fn(
+                        "program_rate_default" + treatment_stage + "_amplify" + strain,
+                        make_sigmoidal_curve(
+                            0.,
+                            end_rate_default_amplify,
+                            self.params["timepoint_introduce" + amplify_to_strain],
+                            self.params["timepoint_introduce" + amplify_to_strain] + 3.))
+
+    def set_treatment_with_amplification_scaleup_fns(self):
+
+        for i in range(len(self.strains)):
+            strain = self.strains[i]
+            for j in range(len(self.strains)):
+                assigned_strain = self.strains[j]
+                # Chance of being assigned to the strain two levels less resistant (XDR to DS)
+                if i == j + 2:
+                    next_strain = self.strains[i - 1]
+                    assignment_probability = \
+                        (1. - self.params["program_prop_assign" + next_strain])
+                # Chance of being assigned to the next less resistant strain
+                # if there are two less resistant strains available (XDR to MDR)
+                elif i == 2 and j == 1:
+                    next_strain = self.strains[i - 1]
+                    assignment_probability = \
+                        (1. - self.params["program_prop_assign" + strain]) * self.params[
+                            "program_prop_assign" + next_strain]
+                # Chance of being assigned to the next less resistant strain
+                # if the assigned strain is the least resistant one (MDR to DS)
+                elif i == j + 1 and j == 0:
+                    assignment_probability = \
+                        (1. - self.params["program_prop_assign" + strain])
+                # Chance of being assigned to the correct strain, DS-TB
+                elif i == 0 and j == 0:
+                    assignment_probability = 1.
+                # Chance of being assigned to the correct strain, MDR-TB
+                elif i == 1 and j == 1:
+                    assignment_probability = \
+                        self.params["program_prop_assign" + strain]
+                # Chance of being assigned to the correct strain, XDR-TB
+                elif i == 2 and j == 2:
+                    next_strain = self.strains[i - 1]
+                    assignment_probability = \
+                        self.params["program_prop_assign" + strain] * self.params["program_prop_assign" + next_strain]
+                # Can't be assigned to a more resistant strain than you have (currently)
+                elif i < j:
+                    assignment_probability = 0.
+
+                # Set the parameter values
+                self.set_parameter("program_rate_detect" + strain + "_as" + assigned_strain[1:], assignment_probability)
+
+                if assignment_probability != 0.:
+                    self.set_scaleup_fn(
+                        "program_rate_detect" + strain + "_as" + assigned_strain[1:],
+                        make_two_step_curve(
+                            self.params["pretreatment_available_proportion"] * self.params[
+                                "program_rate_detect"] * assignment_probability,
+                            self.params["dots_start_proportion"] * self.params[
+                                "program_rate_detect"] * assignment_probability,
+                            self.params["program_rate_detect"] * assignment_probability,
+                            self.params["treatment_available_date"], self.params["dots_start_date"],
+                            self.params["finish_scaleup_date"]))
+
+    ##################################################################
+    # Methods that calculate variables to be used in calculating flows
+    # Note: all scaleup_fns are calculated and put into self.vars before
+    # this step
+
+    def calculate_vars(self):
+
+        self.vars["population"] = sum(self.compartments.values())
+
+        self.calculate_birth_rates()
+
+        self.calculate_force_infection()
+
     def calculate_birth_rates(self):
 
         self.vars["rate_birth"] = \
@@ -375,14 +641,6 @@ class ConsolidatedModel(BaseModel):
         self.vars["births_vac"] = \
             self.params["program_prop_vac"] * self.vars["rate_birth"] \
             / len(self.comorbidities)
-
-    def set_birth_flows(self):
-
-        for comorbidity in self.comorbidities:
-            self.set_var_entry_rate_flow(
-                "susceptible_fully" + comorbidity, "births_unvac")
-            self.set_var_entry_rate_flow(
-                "susceptible_vac" + comorbidity, "births_vac")
 
     def calculate_force_infection(self):
 
@@ -406,6 +664,38 @@ class ConsolidatedModel(BaseModel):
             self.vars["rate_force_weak" + strain] = \
                 self.params["tb_multiplier_bcg_protection"] \
                 * self.vars["rate_force" + strain]
+
+    ##################################################################
+    # Methods that calculate the flows of all the compartments
+
+    def set_flows(self):
+
+        self.set_birth_flows()
+
+        self.set_infection_flows()
+
+        self.set_natural_history_flows()
+
+        if self.is_misassignment is False:
+            self.set_programmatic_flows()
+        else:
+            self.set_programmatic_flows_with_misassignment()
+
+        if self.is_amplification is False:
+            self.set_treatment_flows()
+        elif self.is_amplification and self.is_misassignment is False:
+            self.set_treatment_flows_with_amplification()
+        elif self.is_amplification and self.is_misassignment:
+            self.set_treatment_flows_with_misassignment()
+
+
+    def set_birth_flows(self):
+
+        for comorbidity in self.comorbidities:
+            self.set_var_entry_rate_flow(
+                "susceptible_fully" + comorbidity, "births_unvac")
+            self.set_var_entry_rate_flow(
+                "susceptible_vac" + comorbidity, "births_vac")
 
     def set_infection_flows(self):
 
@@ -461,16 +751,6 @@ class ConsolidatedModel(BaseModel):
                 "tb_rate_recover" + organ,
                 (1 - self.params["tb_proportion_casefatality_untreated" + organ])
                 / self.params["tb_timeperiod_activeuntreated"])
-
-    def ensure_all_progressions_go_somewhere(self):
-
-        # Make sure all progressions go somewhere, regardless of number of organ statuses
-        if len(self.organ_status) == 1:
-            self.params["epi_proportion_cases_smearpos"] = 1.
-        elif len(self.organ_status) == 2:
-            self.params["epi_proportion_cases_smearneg"] = \
-                self.params["epi_proportion_cases_smearneg"] \
-                + self.params["epi_proportion_cases_extrapul"]
 
     def set_natural_history_flows(self):
 
@@ -529,55 +809,16 @@ class ConsolidatedModel(BaseModel):
                                 "detect" + organ + strain + comorbidity,
                                 "tb_rate_death" + organ)
 
-    def find_detection_rates(self):
-
-        # Rates of detection and failure of detection
-        self.set_parameter(
-            "program_rate_detect",
-            self.params["program_proportion_detect"]
-            * (self.params["tb_rate_recover" + self.organ_status[0]] + self.params["tb_rate_death" + self.organ_status[0]])
-            / (1. - self.params["program_proportion_detect"]
-               * (1. + (1. - self.params["program_algorithm_sensitivity"])
-                  / self.params["program_algorithm_sensitivity"])))
-
-        self.set_parameter(
-            "program_rate_missed",
-            self.params["program_rate_detect"]
-            * (1. - self.params["program_algorithm_sensitivity"])
-            / self.params["program_algorithm_sensitivity"]
-        )
-        # Derived from original formulas of:
-        #   algorithm sensitivity = detection rate / (detection rate + missed rate)
-        #   - and -
-        #   detection proportion = detection rate / (detection rate + missed rate + spont recover rate + death rate)
-
-    def find_programmatic_rates(self):
-
-        destinations_from_active = ["_detect", "_missed"]
-
-        if self.is_lowquality == True:
-            destinations_from_active =\
-                destinations_from_active + ["_enterlowquality"]
-
-        for destination in destinations_from_active:
-            self.set_scaleup_fn(
-                "program_rate" + destination,
-                make_two_step_curve(
-                    self.params["pretreatment_available_proportion"] * self.params["program_rate" + destination],
-                    self.params["dots_start_proportion"] * self.params["program_rate" + destination],
-                    self.params["program_rate" + destination],
-                    self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
-
     def set_programmatic_flows(self):
 
         for strain in self.strains:
             for organ in self.organ_status:
                 for comorbidity in self.comorbidities:
-                    self.set_var_transfer_rate_flow(
+                    self.set_fixed_transfer_rate_flow(
                         "active" + organ + strain + comorbidity,
                         "detect" + organ + strain + comorbidity,
                         "program_rate_detect")
-                    self.set_var_transfer_rate_flow(
+                    self.set_fixed_transfer_rate_flow(
                         "active" + organ + strain + comorbidity,
                         "missed" + organ + strain + comorbidity,
                         "program_rate_missed")
@@ -598,72 +839,6 @@ class ConsolidatedModel(BaseModel):
                             "lowquality" + organ + strain + comorbidity,
                             "active" + organ + strain + comorbidity,
                             "program_rate_leavelowquality")
-
-    def split_default_death_proportions(self):
-
-        if self.strains == [""]:
-            self.params["program_proportion_success"]\
-                = self.params["program_proportion_success_ds"]
-
-        # Temporary code
-        # to define default and death proportions
-        for strain in self.strains:
-            self.params["program_proportion_default" + strain] =\
-                (1. - self.params["program_proportion_success" + strain])\
-                * (1. - self.params["program_prop_nonsuccessoutcomes_death"])
-            self.params["program_proportion_death" + strain] =\
-                (1. - self.params["program_proportion_success" + strain])\
-                * self.params["program_prop_nonsuccessoutcomes_death"]
-        self.params["program_proportion_default_inappropriate"] =\
-            (1. - self.params["program_proportion_success_inappropriate"])\
-            * (1. - self.params["program_prop_nonsuccessoutcomes_death"])
-        self.params["program_proportion_death_inappropriate"] = \
-            (1. - self.params["program_proportion_success_inappropriate"])\
-            * self.params["program_prop_nonsuccessoutcomes_death"]
-
-    def find_treatment_rates(self):
-
-        if self.strains == [""]:
-            self.params["tb_timeperiod_infect_ontreatment"] \
-                = self.params["tb_timeperiod_infect_ontreatment_ds"]
-            self.params["tb_timeperiod_treatment"] \
-                = self.params["tb_timeperiod_treatment_ds"]
-
-        outcomes = ["_success", "_death", "_default"]
-        non_success_outcomes = outcomes[1: 3]
-
-        for strain in self.strains + ["_inappropriate"]:
-            # Find the non-infectious period
-            self.set_parameter(
-                "tb_timeperiod_noninfect_ontreatment" + strain,
-                self.params["tb_timeperiod_treatment" + strain]
-                - self.params["tb_timeperiod_infect_ontreatment" + strain])
-
-            # Find the proportion of deaths/defaults during the infectious and non-infectious stages
-            for outcome in non_success_outcomes:
-                early_proportion, late_proportion = self.find_flow_proportions_by_period(
-                    self.params["program_proportion" + outcome + strain],
-                    self.params["tb_timeperiod_infect_ontreatment" + strain],
-                    self.params["tb_timeperiod_treatment" + strain])
-                self.set_parameter(
-                    "program_proportion" + outcome + "_infect" + strain,
-                    early_proportion)
-                self.set_parameter(
-                    "program_proportion" + outcome + "_noninfect" + strain,
-                    late_proportion)
-
-            # Find the success proportions
-            for treatment_stage in self.treatment_stages:
-                self.set_parameter(
-                    "program_proportion_success" + treatment_stage + strain,
-                    1. - self.params["program_proportion_default" + treatment_stage + strain]
-                    - self.params["program_proportion_death" + treatment_stage + strain])
-                # Find the corresponding rates from the proportions
-                for outcome in outcomes:
-                    self.set_parameter(
-                        "program_rate" + outcome + treatment_stage + strain,
-                        1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment" + strain]
-                        * self.params["program_proportion" + outcome + treatment_stage + strain])
 
     def set_treatment_flows(self):
 
@@ -693,439 +868,27 @@ class ConsolidatedModel(BaseModel):
                         "active" + organ + strain + comorbidity,
                         "program_rate_default_noninfect" + strain)
 
-    def set_flows(self):
-
-        self.set_birth_flows()
-
-        self.set_infection_flows()
-
-        self.set_natural_history_flows()
-
-        if self.is_misassignment is False:
-            self.set_programmatic_flows()
-        else:
-            self.set_programmatic_flows_with_misassignment()
-
-        if self.is_amplification is False:
-            self.set_treatment_flows()
-        elif self.is_amplification and self.is_misassignment is False:
-            self.set_treatment_flows_with_amplification()
-        elif self.is_amplification and self.is_misassignment:
-            self.set_treatment_flows_with_misassignment()
-
-        self.set_population_death_rate("demo_rate_death")
-
-    def calculate_additional_diagnostics(self):
-
-        self.broad_compartment_soln, broad_compartment_denominator \
-            = self.sum_over_compartments(self.broad_compartment_types)
-        self.broad_fraction_soln \
-            = self.get_fraction_soln(
-            self.broad_compartment_types,
-            self.broad_compartment_soln,
-            broad_compartment_denominator)
-
-        self.compartment_type_soln, compartment_type_denominator \
-            = self.sum_over_compartments(self.compartment_types)
-        self.compartment_type_fraction_soln \
-            = self.get_fraction_soln(
-            self.compartment_types,
-            self.compartment_type_soln,
-            compartment_type_denominator)
-
-        self.broad_compartment_type_bystrain_soln, broad_compartment_type_bystrain_denominator, \
-        self.broad_compartment_types_bystrain \
-            = self.sum_over_compartments_bycategory(self.broad_compartment_types, "strain")
-        self.broad_compartment_type_bystrain_fraction_soln \
-            = self.get_fraction_soln(
-            self.broad_compartment_types_bystrain,
-            self.broad_compartment_type_bystrain_soln,
-            broad_compartment_type_bystrain_denominator)
-
-        self.broad_compartment_type_byorgan_soln, broad_compartment_type_byorgan_denominator, \
-        self.broad_compartment_types_byorgan \
-            = self.sum_over_compartments_bycategory(self.broad_compartment_types, "organ")
-        self.broad_compartment_type_byorgan_fraction_soln \
-            = self.get_fraction_soln(
-            self.broad_compartment_types_byorgan,
-            self.broad_compartment_type_byorgan_soln,
-            broad_compartment_type_byorgan_denominator)
-
-        self.compartment_type_bystrain_soln, compartment_type_bystrain_denominator, \
-        self.compartment_types_bystrain \
-            = self.sum_over_compartments_bycategory(self.compartment_types, "strain")
-        self.compartment_type_bystrain_fraction_soln \
-            = self.get_fraction_soln(
-            self.compartment_types_bystrain,
-            self.compartment_type_bystrain_soln,
-            compartment_type_bystrain_denominator)
-
-        self.calculate_subgroup_diagnostics()
-
-    def calculate_subgroup_diagnostics(self):
-
-        self.groups = {
-            "ever_infected": ["susceptible_treated", "latent", "active", "missed", "detect", "treatment"],
-            "infected": ["latent", "active", "missed", "detect", "treatment"],
-            "active": ["active", "missed", "detect", "treatment"],
-            "infectious": ["active", "missed", "detect", "treatment_infect"],
-            "identified": ["detect", "treatment"],
-            "treatment": ["treatment_infect", "treatment_noninfect"]}
-        for key in self.groups:
-            compartment_soln, compartment_denominator\
-                = self.sum_over_compartments(self.groups[key])
-            setattr(self, key + "_compartment_soln", compartment_soln)
-            setattr(self, key + "_compartment_denominator", compartment_denominator)
-            setattr(self, key + "_fraction_soln",
-                    self.get_fraction_soln(
-                        self.groups[key],
-                        compartment_soln,
-                        compartment_denominator))
-
-    def find_flow_proportions_by_period(
-            self, proportion, early_period, total_period):
-
-        early_proportion\
-            = 1. - exp(log(1. - proportion) * early_period / total_period)
-        late_proportion\
-            = proportion - early_proportion
-        return early_proportion, late_proportion
-
-    def calculate_variable_rates(self):
-
-        self.vars["population"] = sum(self.compartments.values())
-
-        self.calculate_birth_rates()
-
-        self.calculate_force_infection()
-
-    def get_fraction_soln(self, numerator_labels, numerators, denominator):
-
-        fraction = {}
-        for label in numerator_labels:
-            fraction[label] = [
-                v / t
-                for v, t
-                in zip(
-                    numerators[label],
-                    denominator)]
-        return fraction
-
-    def sum_over_compartments(self, compartment_types):
-
-        summed_soln = {}
-        summed_denominator\
-            = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
-        for compartment_type in compartment_types:
-            summed_soln[compartment_type]\
-                = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
-            for label in self.labels:
-                if compartment_type in label:
-                    summed_soln[compartment_type] = [
-                        a + b
-                        for a, b
-                        in zip(
-                            summed_soln[compartment_type],
-                            self.compartment_soln[label])]
-                    summed_denominator += self.compartment_soln[label]
-        return summed_soln, summed_denominator
-
-    def sum_over_compartments_bycategory(self, compartment_types, categories):
-
-        summed_soln = {}
-        # HELP BOSCO
-        # The following line of code works, but I'm sure this isn't the best approach:
-        summed_denominator\
-            = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
-        compartment_types_bycategory = []
-        # HELP BOSCO
-        # I think there is probably a more elegant way to do the following, but perhaps not.
-        # Also, it could possibly be better generalised. That is, rather than insisting that
-        # strain applies to all compartments except for the susceptible, it might be possible
-        # to say that strain applies to all compartments except for those that have any
-        # strain in their label.
-        if categories == "strain":
-            working_categories = self.strains
-        elif categories == "organ":
-            working_categories = self.organ_status
-        for compartment_type in compartment_types:
-            if (categories == "strain" and "susceptible" in compartment_type) \
-                    or (categories == "organ" and \
-                            ("susceptible" in compartment_type or "latent" in compartment_type)):
-                summed_soln[compartment_type]\
-                    = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
-                for label in self.labels:
-                    if compartment_type in label:
-                        summed_soln[compartment_type] = [
-                            a + b
-                            for a, b
-                            in zip(
-                                summed_soln[compartment_type],
-                                self.compartment_soln[label])]
-                        summed_denominator += self.compartment_soln[label]
-                    if compartment_type in label \
-                            and compartment_type not in compartment_types_bycategory:
-                        compartment_types_bycategory.append(compartment_type)
-            else:
-                for working_category in working_categories:
-                    compartment_types_bycategory.append(compartment_type + working_category)
-                    summed_soln[compartment_type + working_category]\
-                        = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
-                    for label in self.labels:
-                        if compartment_type in label and working_category in label:
-                            summed_soln[compartment_type + working_category] = [
-                                a + b
-                                for a, b
-                                in zip(
-                                    summed_soln[compartment_type + working_category],
-                                    self.compartment_soln[label])]
-                            summed_denominator += self.compartment_soln[label]
-
-        return summed_soln, summed_denominator, compartment_types_bycategory
-
-    def calculate_outputs(self):
-
-        rate_incidence = 0.
-        rate_mortality = 0.
-        rate_notifications = 0.
-        for from_label, to_label, rate in self.fixed_transfer_rate_flows:
-            if 'latent' in from_label and 'active' in to_label:
-                rate_incidence += self.compartments[from_label] * rate
-        self.vars["incidence"] = \
-            rate_incidence \
-            / self.vars["population"] * 1E5
-        for from_label, to_label, rate in self.var_transfer_rate_flows:
-            if 'active' in from_label and\
-                    ('detect' in to_label or 'treatment_infect' in to_label):
-                rate_notifications += self.compartments[from_label] * self.vars[rate]
-        self.vars["notifications"] = \
-            rate_notifications / self.vars["population"] * 1E5
-        for from_label, rate in self.infection_death_rate_flows:
-            rate_mortality \
-                += self.compartments[from_label] * rate
-        self.vars["mortality"] = \
-            rate_mortality \
-            / self.vars["population"] * 1E5
-
-        self.vars["prevalence"] = 0.0
-        for label in self.labels:
-            if "susceptible" not in label and "latent" not in label:
-                self.vars["prevalence"] += (
-                    self.compartments[label]
-                     / self.vars["population"] * 1E5)
-
-    def find_lowquality_detections(self):
-
-        self.set_parameter(
-            "program_rate_enterlowquality",
-            self.params["program_rate_detect"] \
-            * self.params["program_prop_lowquality"] \
-            / (1. - self.params["program_prop_lowquality"]))
-
-    def find_equal_detection_rates(self):
-
-        # Set detection rates equal for all strains
-        for strain in self.strains:
-            self.set_parameter(
-                "program_rate_detect" + strain,
-                self.params["program_rate_detect"])
-            self.set_parameter(
-                "program_rate_missed" + strain,
-                self.params["program_rate_missed"])
-            self.set_parameter(
-                "program_rate_start_treatment" + strain,
-                self.params["program_rate_start_treatment"])
-            self.set_parameter(
-                "program_rate_restart_presenting" + strain,
-                self.params["program_rate_restart_presenting"])
-
-    def calculate_outputs_bystrain(self):
-
-        # Now by strain:
-        rate_incidence = {}
-        rate_mortality = {}
-        rate_notifications = {}
-
-        for strain in self.strains:
-            rate_incidence[strain] = 0.
-            rate_mortality[strain] = 0.
-            rate_notifications[strain] = 0.
-            for from_label, to_label, rate in self.fixed_transfer_rate_flows:
-                if 'latent' in from_label and 'active' in to_label and strain in to_label:
-                    rate_incidence[strain] \
-                        += self.compartments[from_label] * rate
-            for from_label, to_label, rate in self.var_transfer_rate_flows:
-                if 'active' in from_label and 'detect' in to_label and strain in from_label:
-                    rate_notifications[strain] \
-                        += self.compartments[from_label] * self.vars[rate]
-            for from_label, rate in self.infection_death_rate_flows:
-                if strain in from_label:
-                    rate_mortality[strain] \
-                        += self.compartments[from_label] * rate
-            self.vars["incidence" + strain] \
-                = rate_incidence[strain] \
-                  / self.vars["population"] * 1E5
-
-            self.vars["mortality" + strain] \
-                = rate_mortality[strain] \
-                  / self.vars["population"] * 1E5
-            self.vars["notifications" + strain] \
-                = rate_notifications[strain] \
-                  / self.vars["population"] * 1E5
-
-        for strain in self.strains:
-            self.vars["prevalence" + strain] = 0.
-            for label in self.labels:
-                if "susceptible" not in label and "latent" not in label and strain in label:
-                    self.vars["prevalence" + strain] += (
-                        self.compartments[label]
-                        / self.vars["population"] * 1E5)
-
-        rate_incidence["all_mdr_strains"] = 0.
-        if len(self.strains) > 1:
-            for i in range(len(self.strains)):
-                strain = self.strains[i]
-                if i > 0:
-                    rate_incidence["all_mdr_strains"] \
-                        += rate_incidence[strain]
-        self.vars["all_mdr_strains"] \
-            = rate_incidence["all_mdr_strains"] / self.vars["population"] * 1E5
-        self.vars["proportion_mdr"] \
-            = self.vars["all_mdr_strains"] / self.vars["incidence"] * 1E2
-
-    def set_treatment_flows_with_amplification(self):
-
-        for comorbidity in self.comorbidities:
-            for organ in self.organ_status:
-                for i in range(len(self.strains)):
-                    strain = self.strains[i]
-
-                    # Set treatment success and death flows (unaffected by amplification)
-                    self.set_fixed_transfer_rate_flow(
-                        "treatment_infect" + organ + strain + comorbidity,
-                        "treatment_noninfect" + organ + strain + comorbidity,
-                        "program_rate_success_infect" + strain)
-                    self.set_fixed_transfer_rate_flow(
-                        "treatment_noninfect" + organ + strain + comorbidity,
-                        "susceptible_treated" + comorbidity,
-                        "program_rate_success_noninfect" + strain)
-                    for treatment_stage in self.treatment_stages:
-                        self.set_infection_death_rate_flow(
-                            "treatment" + treatment_stage + organ + strain + comorbidity,
-                            "program_rate_death" + treatment_stage + strain)
-
-                    # If it's the most resistant strain
-                    if i == len(self.strains) - 1:
-                        for treatment_stage in self.treatment_stages:
-                            self.set_fixed_transfer_rate_flow(
-                                "treatment" + treatment_stage + organ + strain + comorbidity,
-                                "active" + organ + strain + comorbidity,
-                                "program_rate_default" + treatment_stage + strain)
-                    # Otherwise, there is a more resistant strain available
-                    else:
-                        amplify_to_strain = self.strains[i + 1]  # Is the more resistant strain
-                        # Split default rates into amplification and non-amplification proportions
-                        for treatment_stage in self.treatment_stages:
-                            # Calculate amplification and non-amplification target proportions:
-                            end_rate_default_noamplify = \
-                                self.params["program_rate_default" + treatment_stage + strain]\
-                                * (1. - self.params["proportion_amplification"])
-                            end_rate_default_amplify = \
-                                self.params["program_rate_default" + treatment_stage + strain]\
-                                * self.params["proportion_amplification"]
-                            # Calculate equivalent functions
-                            self.set_scaleup_fn(
-                                "program_rate_default" + treatment_stage + "_noamplify" + strain,
-                                make_sigmoidal_curve(
-                                    end_rate_default_noamplify + end_rate_default_amplify,
-                                    end_rate_default_noamplify,
-                                    self.params["timepoint_introduce" + amplify_to_strain],
-                                    self.params["timepoint_introduce" + amplify_to_strain] + 3.))
-                            self.set_scaleup_fn(
-                                "program_rate_default" + treatment_stage + "_amplify" + strain,
-                                make_sigmoidal_curve(
-                                    0.,
-                                    end_rate_default_amplify,
-                                    self.params["timepoint_introduce" + amplify_to_strain],
-                                    self.params["timepoint_introduce" + amplify_to_strain] + 3.))
-                            # Actually set the flows
-                            self.set_var_transfer_rate_flow(
-                                "treatment" + treatment_stage + organ + strain + comorbidity,
-                                "active" + organ + strain + comorbidity,
-                                "program_rate_default" + treatment_stage + "_noamplify" + strain)
-                            self.set_var_transfer_rate_flow(
-                                "treatment" + treatment_stage + organ + strain + comorbidity,
-                                "active" + organ + amplify_to_strain + comorbidity,
-                                "program_rate_default" + treatment_stage + "_amplify" + strain)
-
     def set_programmatic_flows_with_misassignment(self):
 
         for i in range(len(self.strains)):
             strain = self.strains[i]
             for j in range(len(self.strains)):
                 assigned_strain = self.strains[j]
-                # Chance of being assigned to the strain two levels less resistant (XDR to DS)
-                if i == j+2:
-                    next_strain = self.strains[i - 1]
-                    assignment_probability =\
-                        (1. - self.params["program_prop_assign" + next_strain])
-                # Chance of being assigned to the next less resistant strain
-                # if there are two less resistant strains available (XDR to MDR)
-                elif i == 2 and j == 1:
-                    next_strain = self.strains[i - 1]
-                    assignment_probability =\
-                        (1. - self.params["program_prop_assign" + strain]) * self.params["program_prop_assign" + next_strain]
-                # Chance of being assigned to the next less resistant strain
-                # if the assigned strain is the least resistant one (MDR to DS)
-                elif i == j+1 and j == 0:
-                    assignment_probability =\
-                        (1. - self.params["program_prop_assign" + strain])
-                # Chance of being assigned to the correct strain, DS-TB
-                elif i == 0 and j == 0:
-                    assignment_probability = 1.
-                # Chance of being assigned to the correct strain, MDR-TB
-                elif i == 1 and j == 1:
-                    assignment_probability =\
-                        self.params["program_prop_assign" + strain]
-                # Chance of being assigned to the correct strain, XDR-TB
-                elif i == 2 and j == 2:
-                    next_strain = self.strains[i - 1]
-                    assignment_probability =\
-                        self.params["program_prop_assign" + strain] * self.params["program_prop_assign" + next_strain]
-                # Can't be assigned to a more resistant strain than you have (currently)
-                elif i < j:
-                    assignment_probability = 0.
-                # Set the parameter values
+                assignment_probability = self.params["program_rate_detect" + strain + "_as" + assigned_strain[1:]]
                 if assignment_probability == 0.:
-                    self.set_parameter("program_rate_detect" + strain + "_as" + assigned_strain[1:], assignment_probability)
                     for comorbidity in self.comorbidities:
                         for organ in self.organ_status:
                             self.set_fixed_transfer_rate_flow(
                                 "active" + organ + strain + comorbidity,
-                                "detect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
-                                "program_rate_detect" + strain + "_as"+assigned_strain[1:])
+                                "detect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
+                                "program_rate_detect" + strain + "_as" + assigned_strain[1:])
                 else:
-                    self.set_scaleup_fn(
-                        "program_rate_detect" + strain + "_as"+assigned_strain[1:],
-                        make_two_step_curve(
-                            self.params["pretreatment_available_proportion"] * self.params["program_rate_detect"] * assignment_probability,
-                            self.params["dots_start_proportion"]  * self.params["program_rate_detect"] * assignment_probability,
-                            self.params["program_rate_detect"] * assignment_probability,
-                            self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
                     for comorbidity in self.comorbidities:
                         for organ in self.organ_status:
                             self.set_var_transfer_rate_flow(
                                 "active" + organ + strain + comorbidity,
-                                "detect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
+                                "detect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
                                 "program_rate_detect" + strain + "_as"+assigned_strain[1:])
-
-        self.set_scaleup_fn(
-            "program_rate_missed",
-            make_two_step_curve(
-                self.params["pretreatment_available_proportion"] * self.params["program_rate_missed"],
-                self.params["dots_start_proportion"] * self.params["program_rate_missed"],
-                self.params["program_rate_missed"],
-                self.params["treatment_available_date"], self.params["dots_start_date"], self.params["finish_scaleup_date"]))
 
         for comorbidity in self.comorbidities:
             for strain in self.strains:
@@ -1186,29 +949,6 @@ class ConsolidatedModel(BaseModel):
                             amplify_to_strain = self.strains[i + 1]  # Is the more resistant strain
                             # Split default rates into amplification and non-amplification proportions
                             for treatment_stage in self.treatment_stages:
-                                # Calculate amplification and non-amplification target proportions:
-                                end_rate_default_noamplify = \
-                                    self.params["program_rate_default" + treatment_stage + strain] \
-                                    * (1 - self.params["proportion_amplification"])
-                                end_rate_default_amplify = \
-                                    self.params["program_rate_default" + treatment_stage + strain] \
-                                    * self.params["proportion_amplification"]
-                                # Calculate equivalent functions
-                                self.set_scaleup_fn(
-                                    "program_rate_default" + treatment_stage + "_noamplify" + strain_or_inappropriate,
-                                    make_sigmoidal_curve(
-                                        end_rate_default_noamplify + end_rate_default_amplify,
-                                        end_rate_default_noamplify,
-                                        self.params["timepoint_introduce" + amplify_to_strain],
-                                        self.params["timepoint_introduce" + amplify_to_strain] + 3.))
-                                self.set_scaleup_fn(
-                                    "program_rate_default" + treatment_stage + "_amplify" + strain_or_inappropriate,
-                                    make_sigmoidal_curve(
-                                        0.,
-                                        end_rate_default_amplify,
-                                        self.params["timepoint_introduce" + amplify_to_strain],
-                                        self.params["timepoint_introduce" + amplify_to_strain] + 3.))
-                                # Set the flows
                                 self.set_var_transfer_rate_flow(
                                     "treatment_infect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
                                     "active" + organ + strain + comorbidity,
@@ -1217,3 +957,325 @@ class ConsolidatedModel(BaseModel):
                                     "treatment_infect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
                                     "active" + organ + amplify_to_strain + comorbidity,
                                     "program_rate_default" + treatment_stage + "_amplify" + strain_or_inappropriate)
+
+    def set_treatment_flows_with_amplification(self):
+        for comorbidity in self.comorbidities:
+            for organ in self.organ_status:
+                for i in range(len(self.strains)):
+                    strain = self.strains[i]
+
+                    # Set treatment success and death flows (unaffected by amplification)
+                    self.set_fixed_transfer_rate_flow(
+                        "treatment_infect" + organ + strain + comorbidity,
+                        "treatment_noninfect" + organ + strain + comorbidity,
+                        "program_rate_success_infect" + strain)
+                    self.set_fixed_transfer_rate_flow(
+                        "treatment_noninfect" + organ + strain + comorbidity,
+                        "susceptible_treated" + comorbidity,
+                        "program_rate_success_noninfect" + strain)
+                    for treatment_stage in self.treatment_stages:
+                        self.set_infection_death_rate_flow(
+                            "treatment" + treatment_stage + organ + strain + comorbidity,
+                            "program_rate_death" + treatment_stage + strain)
+
+                    # If it's the most resistant strain
+                    if i == len(self.strains) - 1:
+                        for treatment_stage in self.treatment_stages:
+                            self.set_fixed_transfer_rate_flow(
+                                "treatment" + treatment_stage + organ + strain + comorbidity,
+                                "active" + organ + strain + comorbidity,
+                                "program_rate_default" + treatment_stage + strain)
+                    # Otherwise, there is a more resistant strain available
+                    else:
+                        amplify_to_strain = self.strains[
+                            i + 1]  # Is the more resistant strain
+                        # Split default rates into amplification and non-amplification proportions
+                        for treatment_stage in self.treatment_stages:
+                            # Calculate amplification and non-amplification target proportions:
+                            end_rate_default_noamplify = \
+                                self.params[
+                                    "program_rate_default" + treatment_stage + strain] \
+                                * (1. - self.params["proportion_amplification"])
+                            end_rate_default_amplify = \
+                                self.params[
+                                    "program_rate_default" + treatment_stage + strain] \
+                                * self.params["proportion_amplification"]
+                            # Calculate equivalent functions
+                            self.set_scaleup_fn(
+                                "program_rate_default" + treatment_stage + "_noamplify" + strain,
+                                make_sigmoidal_curve(
+                                    end_rate_default_noamplify + end_rate_default_amplify,
+                                    end_rate_default_noamplify,
+                                    self.params["timepoint_introduce" + amplify_to_strain],
+                                    self.params[
+                                        "timepoint_introduce" + amplify_to_strain] + 3.))
+                            self.set_scaleup_fn(
+                                "program_rate_default" + treatment_stage + "_amplify" + strain,
+                                make_sigmoidal_curve(
+                                    0.,
+                                    end_rate_default_amplify,
+                                    self.params["timepoint_introduce" + amplify_to_strain],
+                                    self.params[
+                                        "timepoint_introduce" + amplify_to_strain] + 3.))
+                            # Actually set the flows
+                            self.set_var_transfer_rate_flow(
+                                "treatment" + treatment_stage + organ + strain + comorbidity,
+                                "active" + organ + strain + comorbidity,
+                                "program_rate_default" + treatment_stage + "_noamplify" + strain)
+                            self.set_var_transfer_rate_flow(
+                                "treatment" + treatment_stage + organ + strain + comorbidity,
+                                "active" + organ + amplify_to_strain + comorbidity,
+                                "program_rate_default" + treatment_stage + "_amplify" + strain)
+
+    ##################################################################
+    # Methods that calculate the output vars and diagnostic properties
+
+    def calculate_output_vars(self):
+        """
+        Outputs are calculated as vars per time-step
+        """
+        rate_incidence = 0.
+        rate_mortality = 0.
+        rate_notifications = 0.
+        for from_label, to_label, rate in self.fixed_transfer_rate_flows:
+            if 'latent' in from_label and 'active' in to_label:
+                rate_incidence += self.compartments[from_label] * rate
+        self.vars["incidence"] = \
+            rate_incidence \
+            / self.vars["population"] * 1E5
+        for from_label, to_label, rate in self.var_transfer_rate_flows:
+            if 'active' in from_label and \
+                    ('detect' in to_label or 'treatment_infect' in to_label):
+                rate_notifications += self.compartments[from_label] * self.vars[rate]
+        self.vars["notifications"] = \
+            rate_notifications / self.vars["population"] * 1E5
+        for from_label, rate in self.infection_death_rate_flows:
+            rate_mortality \
+                += self.compartments[from_label] * rate
+        self.vars["mortality"] = \
+            rate_mortality \
+            / self.vars["population"] * 1E5
+
+        self.vars["prevalence"] = 0.0
+        for label in self.labels:
+            if "susceptible" not in label and "latent" not in label:
+                self.vars["prevalence"] += (
+                    self.compartments[label]
+                    / self.vars["population"] * 1E5)
+
+        self.calculate_outputs_bystrain()
+
+    def calculate_outputs_bystrain(self):
+        # Now by strain:
+        rate_incidence = {}
+        rate_mortality = {}
+        rate_notifications = {}
+
+        for strain in self.strains:
+            rate_incidence[strain] = 0.
+            rate_mortality[strain] = 0.
+            rate_notifications[strain] = 0.
+            for from_label, to_label, rate in self.fixed_transfer_rate_flows:
+                if 'latent' in from_label and 'active' in to_label and strain in to_label:
+                    rate_incidence[strain] \
+                        += self.compartments[from_label] * rate
+            for from_label, to_label, rate in self.var_transfer_rate_flows:
+                if 'active' in from_label and 'detect' in to_label and strain in from_label:
+                    rate_notifications[strain] \
+                        += self.compartments[from_label] * self.vars[rate]
+            for from_label, rate in self.infection_death_rate_flows:
+                if strain in from_label:
+                    rate_mortality[strain] \
+                        += self.compartments[from_label] * rate
+            self.vars["incidence" + strain] \
+                = rate_incidence[strain] \
+                  / self.vars["population"] * 1E5
+
+            self.vars["mortality" + strain] \
+                = rate_mortality[strain] \
+                  / self.vars["population"] * 1E5
+            self.vars["notifications" + strain] \
+                = rate_notifications[strain] \
+                  / self.vars["population"] * 1E5
+
+        for strain in self.strains:
+            self.vars["prevalence" + strain] = 0.
+            for label in self.labels:
+                if "susceptible" not in label and "latent" not in label and strain in label:
+                    self.vars["prevalence" + strain] += (
+                        self.compartments[label]
+                        / self.vars["population"] * 1E5)
+
+        rate_incidence["all_mdr_strains"] = 0.
+        if len(self.strains) > 1:
+            for i in range(len(self.strains)):
+                strain = self.strains[i]
+                if i > 0:
+                    rate_incidence["all_mdr_strains"] \
+                        += rate_incidence[strain]
+        self.vars["all_mdr_strains"] \
+            = rate_incidence["all_mdr_strains"] / self.vars["population"] * 1E5
+        self.vars["proportion_mdr"] \
+            = self.vars["all_mdr_strains"] / self.vars["incidence"] * 1E2
+
+    def calculate_additional_diagnostics(self):
+        """
+        Diagnostics calculates data structures after a simulation is run to
+        do further processing/analysis.
+        """
+        self.broad_compartment_soln, broad_compartment_denominator \
+            = self.sum_over_compartments(self.broad_compartment_types)
+        self.broad_fraction_soln \
+            = self.get_fraction_soln(
+            self.broad_compartment_types,
+            self.broad_compartment_soln,
+            broad_compartment_denominator)
+
+        self.compartment_type_soln, compartment_type_denominator \
+            = self.sum_over_compartments(self.compartment_types)
+        self.compartment_type_fraction_soln \
+            = self.get_fraction_soln(
+            self.compartment_types,
+            self.compartment_type_soln,
+            compartment_type_denominator)
+
+        self.broad_compartment_type_bystrain_soln, broad_compartment_type_bystrain_denominator, \
+        self.broad_compartment_types_bystrain \
+            = self.sum_over_compartments_bycategory(self.broad_compartment_types, "strain")
+        self.broad_compartment_type_bystrain_fraction_soln \
+            = self.get_fraction_soln(
+            self.broad_compartment_types_bystrain,
+            self.broad_compartment_type_bystrain_soln,
+            broad_compartment_type_bystrain_denominator)
+
+        self.broad_compartment_type_byorgan_soln, broad_compartment_type_byorgan_denominator, \
+        self.broad_compartment_types_byorgan \
+            = self.sum_over_compartments_bycategory(self.broad_compartment_types, "organ")
+        self.broad_compartment_type_byorgan_fraction_soln \
+            = self.get_fraction_soln(
+            self.broad_compartment_types_byorgan,
+            self.broad_compartment_type_byorgan_soln,
+            broad_compartment_type_byorgan_denominator)
+
+        self.compartment_type_bystrain_soln, compartment_type_bystrain_denominator, \
+        self.compartment_types_bystrain \
+            = self.sum_over_compartments_bycategory(self.compartment_types, "strain")
+        self.compartment_type_bystrain_fraction_soln \
+            = self.get_fraction_soln(
+            self.compartment_types_bystrain,
+            self.compartment_type_bystrain_soln,
+            compartment_type_bystrain_denominator)
+
+        self.calculate_subgroup_diagnostics()
+
+
+    def calculate_subgroup_diagnostics(self):
+        self.groups = {
+            "ever_infected": ["susceptible_treated", "latent", "active", "missed", "detect", "treatment"],
+            "infected": ["latent", "active", "missed", "detect", "treatment"],
+            "active": ["active", "missed", "detect", "treatment"],
+            "infectious": ["active", "missed", "detect", "treatment_infect"],
+            "identified": ["detect", "treatment"],
+            "treatment": ["treatment_infect", "treatment_noninfect"]}
+        for key in self.groups:
+            compartment_soln, compartment_denominator \
+                = self.sum_over_compartments(self.groups[key])
+            setattr(self, key + "_compartment_soln", compartment_soln)
+            setattr(self, key + "_compartment_denominator", compartment_denominator)
+            setattr(self, key + "_fraction_soln",
+                    self.get_fraction_soln(
+                        self.groups[key],
+                        compartment_soln,
+                        compartment_denominator))
+
+
+    def find_flow_proportions_by_period(
+            self, proportion, early_period, total_period):
+        early_proportion \
+            = 1. - exp(log(1. - proportion) * early_period / total_period)
+        late_proportion \
+            = proportion - early_proportion
+        return early_proportion, late_proportion
+
+
+    def get_fraction_soln(self, numerator_labels, numerators, denominator):
+        fraction = {}
+        for label in numerator_labels:
+            fraction[label] = [
+                v / t
+                for v, t
+                in zip(
+                    numerators[label],
+                    denominator)]
+        return fraction
+
+    def sum_over_compartments(self, compartment_types):
+        summed_soln = {}
+        summed_denominator \
+            = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
+        for compartment_type in compartment_types:
+            summed_soln[compartment_type] \
+                = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
+            for label in self.labels:
+                if compartment_type in label:
+                    summed_soln[compartment_type] = [
+                        a + b
+                        for a, b
+                        in zip(
+                            summed_soln[compartment_type],
+                            self.compartment_soln[label])]
+                    summed_denominator += self.compartment_soln[label]
+        return summed_soln, summed_denominator
+
+
+    def sum_over_compartments_bycategory(self, compartment_types, categories):
+        summed_soln = {}
+        # HELP BOSCO
+        # The following line of code works, but I'm sure this isn't the best approach:
+        summed_denominator \
+            = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
+        compartment_types_bycategory = []
+        # HELP BOSCO
+        # I think there is probably a more elegant way to do the following, but perhaps not.
+        # Also, it could possibly be better generalised. That is, rather than insisting that
+        # strain applies to all compartments except for the susceptible, it might be possible
+        # to say that strain applies to all compartments except for those that have any
+        # strain in their label.
+        if categories == "strain":
+            working_categories = self.strains
+        elif categories == "organ":
+            working_categories = self.organ_status
+        for compartment_type in compartment_types:
+            if (categories == "strain" and "susceptible" in compartment_type) \
+                    or (categories == "organ" and \
+                                ("susceptible" in compartment_type or "latent" in compartment_type)):
+                summed_soln[compartment_type] \
+                    = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
+                for label in self.labels:
+                    if compartment_type in label:
+                        summed_soln[compartment_type] = [
+                            a + b
+                            for a, b
+                            in zip(
+                                summed_soln[compartment_type],
+                                self.compartment_soln[label])]
+                        summed_denominator += self.compartment_soln[label]
+                    if compartment_type in label \
+                            and compartment_type not in compartment_types_bycategory:
+                        compartment_types_bycategory.append(compartment_type)
+            else:
+                for working_category in working_categories:
+                    compartment_types_bycategory.append(compartment_type + working_category)
+                    summed_soln[compartment_type + working_category] \
+                        = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
+                    for label in self.labels:
+                        if compartment_type in label and working_category in label:
+                            summed_soln[compartment_type + working_category] = [
+                                a + b
+                                for a, b
+                                in zip(
+                                    summed_soln[compartment_type + working_category],
+                                    self.compartment_soln[label])]
+                            summed_denominator += self.compartment_soln[label]
+
+        return summed_soln, summed_denominator, compartment_types_bycategory

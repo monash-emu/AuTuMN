@@ -4,7 +4,9 @@ from __future__ import print_function
 from xlrd import open_workbook # For opening Excel workbooks
 from numpy import nan
 import copy
+import os
 
+print(os.getcwd())
 
 """
 Import model inputs from Excel spreadsheet 
@@ -195,7 +197,7 @@ class NestedParamSheetReader:
         self.par = None
         self.i_par = -1
         self.i_subpar = -1
-        self.tab_name = 'XLS Sheet Name'
+        # self.tab_name = 'XLS Sheet Name'
         self.key = 'data_key'
         self.nested_parlist = [
             [   'par0', 
@@ -550,7 +552,7 @@ def read_xls_with_sheet_readers(sheet_readers=[]):
     return result
 
 
-def read_input_data_xls():
+def read_input_data_xls(from_test):
 
     sheet_readers = []
 
@@ -739,10 +741,10 @@ def read_input_data_xls():
             [   'birthrate']
         ],
     ]
-
     sheet_readers.append(other_epidemiology_sheet_reader)
     sheet_readers.append(ConstantsSheetReader())
     sheet_readers.append(MacroeconomicsSheetReader())
+
     sheet_readers.append(BcgCoverageSheetReader())
     sheet_readers.append(BirthRateReader())
     sheet_readers.append(LifeExpectancyReader())
@@ -753,13 +755,18 @@ def read_input_data_xls():
     sheet_readers.append(TreatmentOutcomesReader())
     sheet_readers.append(StrategyReader())
 
+    if from_test:
+        for reader in sheet_readers:
+            reader.filename = 'autumn/' + reader.filename
+
     return read_xls_with_sheet_readers(sheet_readers)
 
 
 if __name__ == "__main__":
     import json
-    data = read_input_data_xls()  # C:\Users\ntdoan\Github\AuTuMN\autumn\xls
+    from_test = False
+    data = read_input_data_xls(from_test)  # C:\Users\ntdoan\Github\AuTuMN\autumn\xls
     open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
-    print(data['laboratories']['Afghanistan'])
+    # print(data)
 
 

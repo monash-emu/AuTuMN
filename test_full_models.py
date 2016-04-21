@@ -39,7 +39,7 @@ for running_model in range(len(models_to_run)):
     #        str(models_to_run[running_model][1]) + " strain(s), " +
     #        str(models_to_run[running_model][2]) + " comorbidity(ies)"))
 
-    # import_params = read_input_data_xls('xls/data_input.xlsx')  #\Github\AuTuMN\xls
+    import_params = read_input_data_xls(True)  #\Github\AuTuMN\xls
     # initials = import_params['const']['initials_for_compartments']
     # parameters = import_params['const']['model_parameters']
     # vac_cover = import_params['costcov']['Cost and coverage']['Vaccination']

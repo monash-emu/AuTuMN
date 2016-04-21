@@ -472,6 +472,59 @@ class NotificationsReader(GlobalTbReportReader):
         self.indices = {}
 
 
+class LaboratoriesReader(GlobalTbReportReader):
+
+    def __init__(self):
+        self.data = {}
+        self.par = None
+        self.i_par = -1
+        self.tab_name = 'TB_laboratories_2016-04-21'
+        self.key = 'laboratories'
+        self.parlist = []
+        self.filename = 'xls/TB_laboratories_2016-04-21.xlsx'
+        self.start_row = 1
+        self.create_parlist = True
+        self.horizontal = False
+        self.start_column = 0
+        self.start_row = 1
+        self.indices = {}
+
+
+class TreatmentOutcomesReader(GlobalTbReportReader):
+
+    def __init__(self):
+        self.data = {}
+        self.par = None
+        self.i_par = -1
+        self.tab_name = 'TB_outcomes_2016-04-21'
+        self.key = 'outcomes'
+        self.parlist = []
+        self.filename = 'xls/TB_outcomes_2016-04-21.xlsx'
+        self.start_row = 1
+        self.create_parlist = True
+        self.horizontal = False
+        self.start_column = 0
+        self.start_row = 1
+        self.indices = {}
+
+
+class StrategyReader(MdrReportReader):
+
+    def __init__(self):
+        self.data = []
+        self.par = None
+        self.i_par = -1
+        self.tab_name = 'TB_strategy_2016-04-21'
+        self.key = 'strategy'
+        self.parlist = []
+        self.filename = 'xls/TB_strategy_2016-04-21.xlsx'
+        self.start_row = 0
+        self.create_parlist = True
+        self.column_for_keys = 0
+        self.horizontal = True
+        self.country_dictionary_keys = []
+
+
 def read_xls_with_sheet_readers(sheet_readers=[]):
 
     result = {}
@@ -696,6 +749,9 @@ def read_input_data_xls():
     sheet_readers.append(GlobalTbReportReader())
     sheet_readers.append(MdrReportReader())
     sheet_readers.append(NotificationsReader())
+    sheet_readers.append(LaboratoriesReader())
+    sheet_readers.append(TreatmentOutcomesReader())
+    sheet_readers.append(StrategyReader())
 
     return read_xls_with_sheet_readers(sheet_readers)
 
@@ -704,5 +760,6 @@ if __name__ == "__main__":
     import json
     data = read_input_data_xls()  # C:\Users\ntdoan\Github\AuTuMN\autumn\xls
     open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
-    print(data)
+    print(data['laboratories']['Afghanistan'])
+
 

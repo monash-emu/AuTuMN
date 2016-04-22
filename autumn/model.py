@@ -693,47 +693,43 @@ class ConsolidatedModel(BaseModel):
 
     def find_treatment_with_misassignment_params(self):
 
-        for comorbidity in self.comorbidities:
-            for organ in self.organ_status:
-                for i in range(len(self.strains)):
-                    strain = self.strains[i]
-                    for j in range(len(self.strains)):
-                        assigned_strain = self.strains[j]
+        for i in range(len(self.strains)):
+            strain = self.strains[i]
+            for j in range(len(self.strains)):
+                assigned_strain = self.strains[j]
 
-                        # Which treatment parameters to use - for the strain or for inappropriate treatment
-                        if i > j:
-                            strain_or_inappropriate = "_inappropriate"
-                        else:
-                            strain_or_inappropriate = assigned_strain
+                # Which treatment parameters to use - for the strain or for inappropriate treatment
+                if i > j:
+                    strain_or_inappropriate = "_inappropriate"
+                else:
+                    strain_or_inappropriate = assigned_strain
 
-                        if i != len(self.strains) - 1:
-                            amplify_to_strain = self.strains[i + 1]  # Is the more resistant strain
-                            # Split default rates into amplification and non-amplification proportions
-                            for treatment_stage in self.treatment_stages:
-                                # Calculate amplification and non-amplification target proportions:
-                                end_rate_default_noamplify = \
-                                    self.params["program_rate_default" + treatment_stage + strain] \
-                                    * (1. - self.params["proportion_amplification"])
-                                end_rate_default_amplify = \
-                                    self.params["program_rate_default" + treatment_stage + strain] \
-                                    * self.params["proportion_amplification"]
-                                # Calculate equivalent functions
-                                print("I got here params", i, strain,
-                                      strain_or_inappropriate, "program_rate_default" + treatment_stage + "_noamplify" + strain)
-                                self.set_scaleup_fn(
-                                    "program_rate_default" + treatment_stage + "_noamplify" + strain_or_inappropriate,
-                                    make_sigmoidal_curve(
-                                        end_rate_default_noamplify + end_rate_default_amplify,
-                                        end_rate_default_noamplify,
-                                        self.params["timepoint_introduce" + amplify_to_strain],
-                                        self.params["timepoint_introduce" + amplify_to_strain] + 3.))
-                                self.set_scaleup_fn(
-                                    "program_rate_default" + treatment_stage + "_amplify" + strain_or_inappropriate,
-                                    make_sigmoidal_curve(
-                                        0.,
-                                        end_rate_default_amplify,
-                                        self.params["timepoint_introduce" + amplify_to_strain],
-                                        self.params["timepoint_introduce" + amplify_to_strain] + 3.))
+                if i != len(self.strains) - 1:
+                    amplify_to_strain = self.strains[i + 1]  # Is the more resistant strain
+                    # Split default rates into amplification and non-amplification proportions
+                    for treatment_stage in self.treatment_stages:
+                        # Calculate amplification and non-amplification target proportions:
+                        end_rate_default_noamplify = \
+                            self.params["program_rate_default" + treatment_stage + strain] \
+                            * (1 - self.params["proportion_amplification"])
+                        end_rate_default_amplify = \
+                            self.params["program_rate_default" + treatment_stage + strain] \
+                            * self.params["proportion_amplification"]
+                        # Calculate equivalent functions
+                        self.set_scaleup_fn(
+                            "program_rate_default" + treatment_stage + "_noamplify" + strain_or_inappropriate,
+                            make_sigmoidal_curve(
+                                end_rate_default_noamplify + end_rate_default_amplify,
+                                end_rate_default_noamplify,
+                                self.params["timepoint_introduce" + amplify_to_strain],
+                                self.params["timepoint_introduce" + amplify_to_strain] + 3.))
+                        self.set_scaleup_fn(
+                            "program_rate_default" + treatment_stage + "_amplify" + strain_or_inappropriate,
+                            make_sigmoidal_curve(
+                                0.,
+                                end_rate_default_amplify,
+                                self.params["timepoint_introduce" + amplify_to_strain],
+                                self.params["timepoint_introduce" + amplify_to_strain] + 3.))
 
     ##################################################################
     # Methods that calculate variables to be used in calculating flows
@@ -1225,7 +1221,6 @@ class ConsolidatedModel(BaseModel):
 
         self.calculate_subgroup_diagnostics()
 
-
     def calculate_subgroup_diagnostics(self):
         self.groups = {
             "ever_infected": ["susceptible_treated", "latent", "active", "missed", "detect", "treatment"],
@@ -1245,7 +1240,6 @@ class ConsolidatedModel(BaseModel):
                         compartment_soln,
                         compartment_denominator))
 
-
     def find_flow_proportions_by_period(
             self, proportion, early_period, total_period):
         early_proportion \
@@ -1253,7 +1247,6 @@ class ConsolidatedModel(BaseModel):
         late_proportion \
             = proportion - early_proportion
         return early_proportion, late_proportion
-
 
     def get_fraction_soln(self, numerator_labels, numerators, denominator):
         fraction = {}
@@ -1283,7 +1276,6 @@ class ConsolidatedModel(BaseModel):
                             self.compartment_soln[label])]
                     summed_denominator += self.compartment_soln[label]
         return summed_soln, summed_denominator
-
 
     def sum_over_compartments_bycategory(self, compartment_types, categories):
         summed_soln = {}

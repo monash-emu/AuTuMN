@@ -766,15 +766,14 @@ def read_input_data_xls(from_test, sheets_to_read):
 
     if from_test:
         for reader in sheet_readers:
-            reader.filename = 'autumn/' + reader.filename
+            reader.filename = os.path.join('autumn/', reader.filename)
 
     return read_xls_with_sheet_readers(sheet_readers)
 
 
 if __name__ == "__main__":
     import json
-    from_test = False
-    data = read_input_data_xls(from_test, ['bcg', 'tb'])  # C:\Users\ntdoan\Github\AuTuMN\autumn\xls
+    data = read_input_data_xls(False, ['bcg', 'tb'])  # C:\Users\ntdoan\Github\AuTuMN\autumn\xls
     open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
 
 

@@ -394,12 +394,21 @@ class ConsolidatedModel(BaseModel):
 
     def find_detection_rates_params(self):
 
-        # Rates of detection and failure of detection
+        """"
+        Calculate rates of detection and failure of detection
+        from the programmatic report of the case detection "rate"
+        (which is actually a proportion and referred to as program_proportion_detect here)
+
+        Derived from original formulas of by solving simultaneous equations:
+          algorithm sensitivity = detection rate / (detection rate + missed rate)
+          - and -
+          detection proportion = detection rate / (detection rate + missed rate + spont recover rate + death rate)
+        """
+
         self.set_parameter(
             "program_rate_detect",
             self.params["program_proportion_detect"]
-            * (
-                self.params["tb_rate_recover" + self.organ_status[0]] + self.params[
+            * (self.params["tb_rate_recover" + self.organ_status[0]] + self.params[
                     "tb_rate_death" + self.organ_status[0]])
             / (1. - self.params["program_proportion_detect"]
                * (1. + (1. - self.params["program_algorithm_sensitivity"])
@@ -411,15 +420,18 @@ class ConsolidatedModel(BaseModel):
             * (1. - self.params["program_algorithm_sensitivity"])
             / self.params["program_algorithm_sensitivity"]
         )
-        # Derived from original formulas of:
-        #   algorithm sensitivity = detection rate / (detection rate + missed rate)
-        #   - and -
-        #   detection proportion = detection rate / (detection rate + missed rate + spont recover rate + death rate)
 
     def find_lowquality_detection_params(self):
 
-        # Calculate rate of entry to low-quality care,
-        # based on proportion of treatment administered in low-quality sector
+        """
+        Calculate rate of entry to low-quality care,
+        form the proportion of treatment administered in low-quality sector
+
+        Note that this now means that the case detection proportion only
+        applies to those with access to care and so that proportion of all
+        cases isn't actually detected
+        """
+
         self.set_parameter(
             "program_rate_enterlowquality",
             self.params["program_rate_detect"]
@@ -428,8 +440,12 @@ class ConsolidatedModel(BaseModel):
 
     def find_equal_detection_rates_params(self):
 
-        # Replicate programmatic rates to be equal for each strain
-        # Most of these rates probably will remain equal for each strain
+        """
+        Replicate programmatic rates to be equal for each strain
+        Most of these rates probably will remain equal for each strain,
+        as misassignment by strain is considered separately
+        """
+
         for strain in self.strains:
             self.set_parameter(
                 "program_rate_detect" + strain,
@@ -446,6 +462,14 @@ class ConsolidatedModel(BaseModel):
 
     def find_programmatic_rates_params(self):
 
+        """
+        Possibly a misnomer, as there are other programmatic rates
+        These are the rates of being dealt with by a health system
+        for patients with active disease
+        Determine the destinations and then allow all these programmatic rates
+        to scale up over time
+        """
+
         destinations_from_active = ["_detect", "_missed"]
         if self.is_lowquality: destinations_from_active += ["_enterlowquality"]
 
@@ -461,22 +485,29 @@ class ConsolidatedModel(BaseModel):
 
     def ensure_all_progressions_go_somewhere_params(self):
 
-        # Make sure all progressions go somewhere, regardless of number of organ statuses
-        if len(self.organ_status) == 1:
+        """
+        If fewer than three organ statuses are available, ensure that all detected patients
+        go somewhere
+        """
+
+        if len(self.organ_status) == 1:  # One organ status shouldn't really be used, but in case it is
             self.params["epi_proportion_cases_smearpos"] = 1.
-        elif len(self.organ_status) == 2:
+        elif len(self.organ_status) == 2:  # Extrapuls go to smearneg (arguably should be the other way round)
             self.params["epi_proportion_cases_smearneg"] = \
                 self.params["epi_proportion_cases_smearneg"] \
                 + self.params["epi_proportion_cases_extrapul"]
 
     def split_default_death_proportions_params(self):
 
+        """
+        Code for the temporary situation in which the proportion of
+        non-success outcomes is consistently split between default and death
+        """
+
         if self.strains == [""]:
             self.params["program_proportion_success"] \
                 = self.params["program_proportion_success_ds"]
 
-        # Temporary code
-        # to define default and death proportions
         for strain in self.strains:
             self.params["program_proportion_default" + strain] = \
                 (1. - self.params["program_proportion_success" + strain]) \
@@ -493,6 +524,11 @@ class ConsolidatedModel(BaseModel):
 
     def find_treatment_rates_params(self):
 
+        """
+        Calculate treatment rates from the treatment outcome proportions
+        Has to be done for each strain separately and for those on inappropriate treatment
+        """
+
         if self.strains == [""]:
             self.params["tb_timeperiod_infect_ontreatment"] \
                 = self.params["tb_timeperiod_infect_ontreatment_ds"]
@@ -508,7 +544,6 @@ class ConsolidatedModel(BaseModel):
                 "tb_timeperiod_noninfect_ontreatment" + strain,
                 self.params["tb_timeperiod_treatment" + strain]
                 - self.params["tb_timeperiod_infect_ontreatment" + strain])
-
             # Find the proportion of deaths/defaults during the infectious and non-infectious stages
             for outcome in non_success_outcomes:
                 early_proportion, late_proportion = self.find_flow_proportions_by_period(
@@ -521,7 +556,6 @@ class ConsolidatedModel(BaseModel):
                 self.set_parameter(
                     "program_proportion" + outcome + "_noninfect" + strain,
                     late_proportion)
-
             # Find the success proportions
             for treatment_stage in self.treatment_stages:
                 self.set_parameter(
@@ -556,14 +590,14 @@ class ConsolidatedModel(BaseModel):
                         self.params["program_rate_default" + treatment_stage + strain] \
                         * self.params["proportion_amplification"]
                     # Calculate equivalent functions
-                    self.set_scaleup_var(
+                    self.set_scaleup_fn(
                         "program_rate_default" + treatment_stage + "_noamplify" + strain,
                         make_sigmoidal_curve(
                             end_rate_default_noamplify + end_rate_default_amplify,
                             end_rate_default_noamplify,
                             self.params["timepoint_introduce" + amplify_to_strain],
                             self.params["timepoint_introduce" + amplify_to_strain] + 3.))
-                    self.set_scaleup_var(
+                    self.set_scaleup_fn(
                         "program_rate_default" + treatment_stage + "_amplify" + strain,
                         make_sigmoidal_curve(
                             0.,

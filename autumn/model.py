@@ -927,11 +927,11 @@ class ConsolidatedModel(BaseModel):
         for strain in self.strains:
             for organ in self.organ_status:
                 for comorbidity in self.comorbidities:
-                    self.set_fixed_transfer_rate_flow(
+                    self.set_var_transfer_rate_flow(
                         "active" + organ + strain + comorbidity,
                         "detect" + organ + strain + comorbidity,
                         "program_rate_detect")
-                    self.set_fixed_transfer_rate_flow(
+                    self.set_var_transfer_rate_flow(
                         "active" + organ + strain + comorbidity,
                         "missed" + organ + strain + comorbidity,
                         "program_rate_missed")

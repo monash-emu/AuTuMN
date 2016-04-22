@@ -372,6 +372,8 @@ class ConsolidatedModel(BaseModel):
 
         if self.n_organ > 0: self.ensure_all_progressions_go_somewhere_params()
 
+        self.find_vaccination_rates_params()
+
         self.find_natural_history_params()
 
         self.find_detection_rates_params()
@@ -780,15 +782,16 @@ class ConsolidatedModel(BaseModel):
 
     def calculate_birth_rates_vars(self):
 
-        self.vars["rate_birth"] = \
-            self.params["demo_rate_birth"] * self.vars["population"]
         self.vars["births_unvac"] = \
-            self.params["program_prop_unvac"] * self.vars["rate_birth"] \
+            (1. - self.vars["vaccination"]) \
+            * self.params["demo_rate_birth"] \
+            * self.vars["population"] \
             / len(self.comorbidities)
         self.vars["births_vac"] = \
-            self.params["program_prop_vac"] * self.vars["rate_birth"] \
+            self.vars["vaccination"] \
+            * self.params["demo_rate_birth"] \
+            * self.vars["population"] \
             / len(self.comorbidities)
-
 
     def calculate_force_infection_vars(self):
 

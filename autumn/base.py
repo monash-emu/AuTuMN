@@ -308,7 +308,8 @@ class BaseModel():
             assert self.compartments[label] >= 0.0
         # Check population is conserved across compartments
         population_change = \
-              self.vars['rate_birth'] \
+              self.vars['births_vac'] \
+            - self.vars['births_unvac'] \
             - self.vars['rate_death'] \
             - self.vars['rate_infection_death']
         # assert abs(sum(self.flows.values()) - population_change ) < error_margin

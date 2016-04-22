@@ -34,8 +34,8 @@ class ConsolidatedModel(BaseModel):
     Methods are written to be adaptable to any model structure selected through the __init__ arguments
 
     The work-flow of the simulation is structured into several parts:
-         1. reading params
-         2. setting initial compartments and values
+         1. setting initial compartments and values
+         2. reading params
          3. calculating derived params
          4. calculating scaleup functions
          5. assigning flows from either params or vars
@@ -435,7 +435,7 @@ class ConsolidatedModel(BaseModel):
         from the programmatic report of the case detection "rate"
         (which is actually a proportion and referred to as program_proportion_detect here)
 
-        Derived from original formulas of by solving simultaneous equations:
+        Derived from original formulas of by solving the simultaneous equations:
           algorithm sensitivity = detection rate / (detection rate + missed rate)
           - and -
           detection proportion = detection rate / (detection rate + missed rate + spont recover rate + death rate)
@@ -454,8 +454,7 @@ class ConsolidatedModel(BaseModel):
             "program_rate_missed",
             self.params["program_rate_detect"]
             * (1. - self.params["program_algorithm_sensitivity"])
-            / self.params["program_algorithm_sensitivity"]
-        )
+            / self.params["program_algorithm_sensitivity"])
 
     def find_natural_history_params(self):
 
@@ -502,21 +501,11 @@ class ConsolidatedModel(BaseModel):
         cases isn't actually detected
         """
 
-        self.set_scaleup_fn(
-            "lowquality_prop",
-            make_two_step_curve(
-                0.3,
-                0.4,
-                0.5,
-                1980.,
-                1990.,
-                2000.))
-
         self.set_parameter(
             "program_rate_enterlowquality",
             self.params["program_rate_detect"]
-            * self.vars["lowquality_prop"]
-            / (1. - self.vars["lowquality_prop"]))
+            * self.params["program_prop_lowquality"]
+            / (1. - self.params["program_prop_lowquality"]))
 
     def find_equal_detection_rates_params(self):
 
@@ -527,18 +516,10 @@ class ConsolidatedModel(BaseModel):
         """
 
         for strain in self.strains:
-            self.set_parameter(
-                "program_rate_detect" + strain,
-                self.params["program_rate_detect"])
-            self.set_parameter(
-                "program_rate_missed" + strain,
-                self.params["program_rate_missed"])
-            self.set_parameter(
-                "program_rate_start_treatment" + strain,
-                self.params["program_rate_start_treatment"])
-            self.set_parameter(
-                "program_rate_restart_presenting" + strain,
-                self.params["program_rate_restart_presenting"])
+            for programmatic_rate in ["_detect", "_missed", "_start_treatment", "_restart_presenting"]:
+                self.set_parameter(
+                    "program_rate" + programmatic_rate + strain,
+                    self.params["program_rate" + programmatic_rate])
 
     def find_programmatic_rates_params(self):
 

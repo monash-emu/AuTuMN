@@ -392,6 +392,40 @@ class ConsolidatedModel(BaseModel):
 
         self.set_population_death_rate("demo_rate_death")
 
+    def find_outcome_proportions_by_period(
+            self, proportion, early_period, total_period):
+
+        """
+        Split one outcome proportion (e.g. default, death) over multiple
+        periods
+        Args:
+            proportion: Total proportion to be split
+            early_period: Early time period
+            total_period: Late time period
+
+        Returns:
+            early_proportion: Proportion allocated to early time period
+            late_proportion: Proportion allocated to late time period
+        """
+
+        early_proportion \
+            = 1. - exp(log(1. - proportion) * early_period / total_period)
+        late_proportion \
+            = proportion - early_proportion
+        return early_proportion, late_proportion
+
+    def find_vaccination_rates_params(self):
+
+        self.set_scaleup_fn(
+            "vaccination",
+            make_two_step_curve(
+                0.,
+                0.6,
+                0.8,
+                1950,
+                1980,
+                2000))
+
     def find_detection_rates_params(self):
 
         """"
@@ -580,7 +614,7 @@ class ConsolidatedModel(BaseModel):
                 - self.params["tb_timeperiod_infect_ontreatment" + strain])
             # Find the proportion of deaths/defaults during the infectious and non-infectious stages
             for outcome in non_success_outcomes:
-                early_proportion, late_proportion = self.find_flow_proportions_by_period(
+                early_proportion, late_proportion = self.find_outcome_proportions_by_period(
                     self.params["program_proportion" + outcome + strain],
                     self.params["tb_timeperiod_infect_ontreatment" + strain],
                     self.params["tb_timeperiod_treatment" + strain])
@@ -754,6 +788,7 @@ class ConsolidatedModel(BaseModel):
         self.vars["births_vac"] = \
             self.params["program_prop_vac"] * self.vars["rate_birth"] \
             / len(self.comorbidities)
+
 
     def calculate_force_infection_vars(self):
 
@@ -1070,7 +1105,6 @@ class ConsolidatedModel(BaseModel):
                             amplify_to_strain = self.strains[i + 1]  # is the more resistant strain
                             # Split default rates into amplification and non-amplification proportions
                             for treatment_stage in self.treatment_stages:
-                                print("I got here flows", i, "program_rate_default" + treatment_stage + "_noamplify" + strain_or_inappropriate)
                                 self.set_var_transfer_rate_flow(
                                     "treatment" + treatment_stage + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
                                     "active" + organ + strain + comorbidity,
@@ -1239,14 +1273,6 @@ class ConsolidatedModel(BaseModel):
                         self.groups[key],
                         compartment_soln,
                         compartment_denominator))
-
-    def find_flow_proportions_by_period(
-            self, proportion, early_period, total_period):
-        early_proportion \
-            = 1. - exp(log(1. - proportion) * early_period / total_period)
-        late_proportion \
-            = proportion - early_proportion
-        return early_proportion, late_proportion
 
     def get_fraction_soln(self, numerator_labels, numerators, denominator):
         fraction = {}

@@ -424,9 +424,9 @@ class ConsolidatedModel(BaseModel):
                 0.,
                 0.6,
                 0.8,
-                1950,
-                1980,
-                2000))
+                1950.,
+                1980.,
+                2000.))
 
     def find_detection_rates_params(self):
 
@@ -502,11 +502,21 @@ class ConsolidatedModel(BaseModel):
         cases isn't actually detected
         """
 
+        self.set_scaleup_fn(
+            "lowquality_prop",
+            make_two_step_curve(
+                0.3,
+                0.4,
+                0.5,
+                1980.,
+                1990.,
+                2000.))
+
         self.set_parameter(
             "program_rate_enterlowquality",
             self.params["program_rate_detect"]
-            * self.params["program_prop_lowquality"]
-            / (1. - self.params["program_prop_lowquality"]))
+            * self.vars["lowquality_prop"]
+            / (1. - self.vars["lowquality_prop"]))
 
     def find_equal_detection_rates_params(self):
 

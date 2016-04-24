@@ -544,6 +544,61 @@ class ConsolidatedModel(BaseModel):
                     self.params["treatment_available_date"], self.params["dots_start_date"],
                     self.params["finish_scaleup_date"]))
 
+    def find_programmatic_with_misassignment_params(self):
+
+        for i in range(len(self.strains)):
+            strain = self.strains[i]
+            for j in range(len(self.strains)):
+                assigned_strain = self.strains[j]
+                # Chance of being assigned to the strain two levels less resistant (XDR to DS)
+                if i == j + 2:
+                    next_strain = self.strains[i - 1]
+                    assignment_probability = \
+                        (1. - self.params["program_prop_assign" + next_strain])
+                # Chance of being assigned to the next less resistant strain
+                # if there are two less resistant strains available (XDR to MDR)
+                elif i == 2 and j == 1:
+                    next_strain = self.strains[i - 1]
+                    assignment_probability = \
+                        (1. - self.params["program_prop_assign" + strain]) * self.params[
+                            "program_prop_assign" + next_strain]
+                # Chance of being assigned to the next less resistant strain
+                # if the assigned strain is the least resistant one (MDR to DS)
+                elif i == j + 1 and j == 0:
+                    assignment_probability = \
+                        (1. - self.params["program_prop_assign" + strain])
+                # Chance of being assigned to the correct strain, DS-TB
+                elif i == 0 and j == 0:
+                    assignment_probability = 1.
+                # Chance of being assigned to the correct strain, MDR-TB
+                elif i == 1 and j == 1:
+                    assignment_probability = \
+                        self.params["program_prop_assign" + strain]
+                # Chance of being assigned to the correct strain, XDR-TB
+                elif i == 2 and j == 2:
+                    next_strain = self.strains[i - 1]
+                    assignment_probability = \
+                        self.params["program_prop_assign" + strain] * self.params[
+                            "program_prop_assign" + next_strain]
+                # Can't be assigned to a more resistant strain than you have (currently)
+                elif i < j:
+                    assignment_probability = 0.
+                # Set the parameter values
+                self.set_parameter("program_rate_detect" + strain + "_as" + assigned_strain[1:],
+                                   assignment_probability)
+                if assignment_probability != 0.:
+                    self.set_scaleup_fn(
+                        "program_rate_detect" + strain + "_as" + assigned_strain[1:],
+                        make_two_step_curve(
+                            self.params["pretreatment_available_proportion"] * self.params[
+                                "program_rate_detect"] * assignment_probability,
+                            self.params["dots_start_proportion"] * self.params[
+                                "program_rate_detect"] * assignment_probability,
+                            self.params["program_rate_detect"] * assignment_probability,
+                            self.params["treatment_available_date"],
+                            self.params["dots_start_date"],
+                            self.params["finish_scaleup_date"]))
+
     def ensure_all_progressions_go_somewhere_params(self):
 
         """
@@ -663,6 +718,16 @@ class ConsolidatedModel(BaseModel):
                             self.params["timepoint_introduce" + amplify_to_strain],
                             self.params["timepoint_introduce" + amplify_to_strain] + 3.))
 
+
+    def calculate_stupid_vars(self):
+
+        # Completely non-sensical code, but proof of concept of what I'm trying to do
+        self.set_scaleup_fn("assign_mdr_asds", make_two_step_curve(0., 0.6, 0.8, 1950., 1980., 2000.))
+        self.set_scaleup_fn("detection", make_two_step_curve(0., 0.6, 0.8, 1950., 1980., 2000.))
+        self.vars["mdr_detection"] = self.scaleup_fns["detection"](1990.) \
+                                     * self.scaleup_fns["assign_mdr_asds"](1990.)
+        print(self.vars["mdr_detection"])
+
     def find_treatment_with_misassignment_params(self):
 
         for i in range(len(self.strains)):
@@ -718,6 +783,8 @@ class ConsolidatedModel(BaseModel):
 
         self.calculate_force_infection_vars()
 
+        # self.calculate_stupid_vars()
+
     def calculate_birth_rates_vars(self):
 
         self.vars["births_unvac"] = \
@@ -766,7 +833,8 @@ class ConsolidatedModel(BaseModel):
         self.set_natural_history_flows()
 
         if not self.is_misassignment:
-            self.set_programmatic_flows()
+            self.set_fixed_programmatic_flows()
+            self.set_variable_programmatic_flows()
         else:
             self.set_programmatic_with_misassignment_flows()
 
@@ -863,7 +931,26 @@ class ConsolidatedModel(BaseModel):
                                 "detect" + organ + strain + comorbidity,
                                 "tb_rate_death" + organ)
 
-    def set_programmatic_flows(self):
+    def set_fixed_programmatic_flows(self):
+
+        for strain in self.strains:
+            for organ in self.organ_status:
+                for comorbidity in self.comorbidities:
+                    self.set_fixed_transfer_rate_flow(
+                        "missed" + organ + strain + comorbidity,
+                        "active" + organ + strain + comorbidity,
+                        "program_rate_restart_presenting")
+                    self.set_fixed_transfer_rate_flow(
+                        "detect" + organ + strain + comorbidity,
+                        "treatment_infect" + organ + strain + comorbidity,
+                        "program_rate_start_treatment")
+                    if self.is_lowquality:
+                        self.set_fixed_transfer_rate_flow(
+                            "lowquality" + organ + strain + comorbidity,
+                            "active" + organ + strain + comorbidity,
+                            "program_rate_leavelowquality")
+
+    def set_variable_programmatic_flows(self):
 
         for strain in self.strains:
             for organ in self.organ_status:
@@ -876,23 +963,11 @@ class ConsolidatedModel(BaseModel):
                         "active" + organ + strain + comorbidity,
                         "missed" + organ + strain + comorbidity,
                         "program_rate_missed")
-                    self.set_fixed_transfer_rate_flow(
-                        "detect" + organ + strain + comorbidity,
-                        "treatment_infect" + organ + strain + comorbidity,
-                        "program_rate_start_treatment")
-                    self.set_fixed_transfer_rate_flow(
-                        "missed" + organ + strain + comorbidity,
-                        "active" + organ + strain + comorbidity,
-                        "program_rate_restart_presenting")
-                    if self.is_lowquality == True:
+                    if self.is_lowquality:
                         self.set_var_transfer_rate_flow(
                             "active" + organ + strain + comorbidity,
                             "lowquality" + organ + strain + comorbidity,
                             "program_rate_enterlowquality")
-                        self.set_fixed_transfer_rate_flow(
-                            "lowquality" + organ + strain + comorbidity,
-                            "active" + organ + strain + comorbidity,
-                            "program_rate_leavelowquality")
 
     def set_programmatic_with_misassignment_flows(self):
 
@@ -919,14 +994,10 @@ class ConsolidatedModel(BaseModel):
         for comorbidity in self.comorbidities:
             for strain in self.strains:
                 for organ in self.organ_status:
-                    self.set_var_transfer_rate_flow(
-                        "active" + organ + strain + comorbidity,
-                        "missed" + organ + strain + comorbidity,
-                        "program_rate_missed")
-                    self.set_fixed_transfer_rate_flow(
-                        "missed" + organ + strain + comorbidity,
-                        "active" + organ + strain + comorbidity,
-                        "program_rate_restart_presenting")
+                    # self.set_var_transfer_rate_flow(
+                    #     "active" + organ + strain + comorbidity,
+                    #     "missed" + organ + strain + comorbidity,
+                    #     "program_rate_missed")
                     for assigned_strain in self.strains:
                         self.set_fixed_transfer_rate_flow(
                             "detect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,

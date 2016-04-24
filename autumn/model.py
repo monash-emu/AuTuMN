@@ -724,8 +724,8 @@ class ConsolidatedModel(BaseModel):
         self.set_scaleup_fn("something_else_silly", make_two_step_curve(0., 0.6, 0.8, 1950., 1980., 2000.))
         self.vars["stupid_flow"] = self.scaleup_fns["something_silly"](self.time) \
                                      * self.scaleup_fns["something_else_silly"](self.time)
-        print(self.vars["stupid_flow"])
-        print()
+        # print(self.vars["stupid_flow"])
+        # print()
 
     def find_treatment_with_misassignment_params(self):
 
@@ -831,11 +831,12 @@ class ConsolidatedModel(BaseModel):
 
         self.set_natural_history_flows()
 
-        if not self.is_misassignment:
-            self.set_fixed_programmatic_flows()
-            self.set_variable_programmatic_flows()
-        else:
-            self.set_programmatic_with_misassignment_flows()
+        self.set_fixed_programmatic_flows()
+
+        # if not self.is_misassignment:
+        self.set_variable_programmatic_flows()
+        # else:
+        #     self.set_variable_programmatic_with_misassignment_flows()
 
         if not self.is_amplification:
             self.set_treatment_flows()
@@ -939,25 +940,29 @@ class ConsolidatedModel(BaseModel):
                         "missed" + organ + strain + comorbidity,
                         "active" + organ + strain + comorbidity,
                         "program_rate_restart_presenting")
-                    self.set_fixed_transfer_rate_flow(
-                        "detect" + organ + strain + comorbidity,
-                        "treatment_infect" + organ + strain + comorbidity,
-                        "program_rate_start_treatment")
                     if self.is_lowquality:
                         self.set_fixed_transfer_rate_flow(
                             "lowquality" + organ + strain + comorbidity,
                             "active" + organ + strain + comorbidity,
                             "program_rate_leavelowquality")
+                        if not self.is_misassignment:
+                            self.set_fixed_transfer_rate_flow(
+                                "detect" + organ + strain + comorbidity,
+                                "treatment_infect" + organ + strain + comorbidity,
+                                "program_rate_start_treatment")
+                        else:
+                            for assigned_strain in self.strains:
+                                self.set_fixed_transfer_rate_flow(
+                                    "detect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
+                                    "treatment_infect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
+                                    "program_rate_start_treatment")
 
     def set_variable_programmatic_flows(self):
 
-        for strain in self.strains:
+        for i in range(len(self.strains)):
+            strain = self.strains[i]
             for organ in self.organ_status:
                 for comorbidity in self.comorbidities:
-                    self.set_var_transfer_rate_flow(
-                        "active" + organ + strain + comorbidity,
-                        "detect" + organ + strain + comorbidity,
-                        "program_rate_detect")
                     self.set_var_transfer_rate_flow(
                         "active" + organ + strain + comorbidity,
                         "missed" + organ + strain + comorbidity,
@@ -967,41 +972,32 @@ class ConsolidatedModel(BaseModel):
                             "active" + organ + strain + comorbidity,
                             "lowquality" + organ + strain + comorbidity,
                             "program_rate_enterlowquality")
-
-    def set_programmatic_with_misassignment_flows(self):
-
-        for i in range(len(self.strains)):
-            strain = self.strains[i]
-            for j in range(len(self.strains)):
-                assigned_strain = self.strains[j]
-                assignment_probability = self.params["program_rate_detect" + strain + "_as" + assigned_strain[1:]]
-                if assignment_probability == 0.:
-                    for comorbidity in self.comorbidities:
-                        for organ in self.organ_status:
-                            self.set_fixed_transfer_rate_flow(
-                                "active" + organ + strain + comorbidity,
-                                "detect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
-                                "program_rate_detect" + strain + "_as" + assigned_strain[1:])
-                else:
-                    for comorbidity in self.comorbidities:
-                        for organ in self.organ_status:
+                    if not self.is_misassignment:
+                        self.set_var_transfer_rate_flow(
+                            "active" + organ + strain + comorbidity,
+                            "detect" + organ + strain + comorbidity,
+                            "program_rate_detect")
+                    else:
+                        for j in range(len(self.strains)):
+                            assigned_strain = self.strains[j]
                             self.set_var_transfer_rate_flow(
                                 "active" + organ + strain + comorbidity,
                                 "detect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
                                 "program_rate_detect" + strain + "_as" + assigned_strain[1:])
 
-        for comorbidity in self.comorbidities:
-            for strain in self.strains:
-                for organ in self.organ_status:
-                    for assigned_strain in self.strains:
-                        self.set_fixed_transfer_rate_flow(
-                            "detect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
-                            "treatment_infect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
-                            "program_rate_start_treatment")
 
-                        # # Completely non-sensical code, but proof of concept of what I'm trying to do
-                        # self.set_var_transfer_rate_flow('active_ds', 'active_mdr', 'mdr_detection')
-                        # print()
+    # def set_variable_programmatic_with_misassignment_flows(self):
+    #
+    #     for i in range(len(self.strains)):
+    #         strain = self.strains[i]
+    #         for j in range(len(self.strains)):
+    #             assigned_strain = self.strains[j]
+    #             for comorbidity in self.comorbidities:
+    #                 for organ in self.organ_status:
+    #                     self.set_var_transfer_rate_flow(
+    #                         "active" + organ + strain + comorbidity,
+    #                         "detect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
+    #                         "program_rate_detect" + strain + "_as" + assigned_strain[1:])
 
     def set_treatment_flows(self):
 

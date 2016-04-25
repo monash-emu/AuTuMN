@@ -27,7 +27,7 @@ true_false = [True, False]
 
 # To select models
 strata_to_run = [2]
-true_false = [True]
+true_false = [False]
 
 # Note that it takes about one hour to run all of the possible model structures
 for n_organs in strata_to_run:

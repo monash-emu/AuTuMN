@@ -11,9 +11,7 @@ Compartment unit throughout: patients
 """
 
 import random
-
 from scipy import exp, log
-
 from autumn.base import BaseModel
 from curve import make_sigmoidal_curve, make_two_step_curve
 
@@ -99,6 +97,9 @@ class ConsolidatedModel(BaseModel):
             self.n_organ, self.n_strain, self.n_comorbidity)
         self.initialise_compartments()
         self.set_parameters()
+
+        self.outcomes = ["_success", "_death", "_default"]
+        self.non_success_outcomes = self.outcomes[1: 3]
 
     def define_model_structure(self,
                                number_of_organs,
@@ -411,7 +412,7 @@ class ConsolidatedModel(BaseModel):
 
         if self.is_amplification: self.find_treatment_with_amplification_params()
 
-        self.find_treatment_with_misassignment_params()
+        if self.is_misassignment: self.find_treatment_with_misassignment_params()
 
         self.set_population_death_rate("demo_rate_death")
 
@@ -531,39 +532,21 @@ class ConsolidatedModel(BaseModel):
             self.params["tb_timeperiod_treatment"] \
                 = self.params["tb_timeperiod_treatment_ds"]
 
-        outcomes = ["_success", "_death", "_default"]
-        non_success_outcomes = outcomes[1: 3]
-
         for strain in self.strains + ["_inappropriate"]:
-            # Find the non-infectious period
+            # Find the non-infectious periods
             self.set_parameter(
                 "tb_timeperiod_noninfect_ontreatment" + strain,
                 self.params["tb_timeperiod_treatment" + strain]
                 - self.params["tb_timeperiod_infect_ontreatment" + strain])
-            # Find the proportion of deaths/defaults during the infectious and non-infectious stages
-            for outcome in non_success_outcomes:
-                early_proportion, late_proportion = self.find_outcome_proportions_by_period(
-                    self.params["program_proportion" + outcome + strain],
-                    self.params["tb_timeperiod_infect_ontreatment" + strain],
-                    self.params["tb_timeperiod_treatment" + strain])
-                self.set_parameter(
-                    "program_proportion" + outcome + "_infect" + strain,
-                    early_proportion)
-                self.set_parameter(
-                    "program_proportion" + outcome + "_noninfect" + strain,
-                    late_proportion)
-            # Find the success proportions
-            for treatment_stage in self.treatment_stages:
-                self.set_parameter(
-                    "program_proportion_success" + treatment_stage + strain,
-                    1. - self.params["program_proportion_default" + treatment_stage + strain]
-                    - self.params["program_proportion_death" + treatment_stage + strain])
-                # Find the corresponding rates from the proportions
-                for outcome in outcomes:
-                    self.set_parameter(
-                        "program_rate" + outcome + treatment_stage + strain,
-                        1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment" + strain]
-                        * self.params["program_proportion" + outcome + treatment_stage + strain])
+            # TEMPORARY, of course
+            self.set_scaleup_fn(
+                "program_proportion_success" + strain,
+                make_two_step_curve(0.6, 0.8, 1., 1980., 1990., 2000.))
+            for outcome in self.non_success_outcomes:
+                self.set_scaleup_fn(
+                    "program_proportion" + outcome + strain,
+                    make_two_step_curve(0.2, 0.1, 0., 1980., 1990., 2000.))
+
 
     def find_treatment_with_amplification_params(self):
 
@@ -658,6 +641,8 @@ class ConsolidatedModel(BaseModel):
         self.calculate_proportionate_detection_vars()
 
         if self.is_lowquality: self.calculate_lowquality_detection_vars()
+
+        self.calculate_treatment_rates_params()
 
     def calculate_birth_rates_vars(self):
 
@@ -785,6 +770,28 @@ class ConsolidatedModel(BaseModel):
                 self.vars["program_rate_detect" + strain + "_as" + strain[1:]] = \
                     self.vars["program_rate_detect"]
 
+    def calculate_treatment_rates_params(self):
+
+        for strain in self.strains + ["_inappropriate"]:
+            # Find the proportion of deaths/defaults during the infectious and non-infectious stages
+            for outcome in self.non_success_outcomes:
+                early_proportion, late_proportion = self.find_outcome_proportions_by_period(
+                    self.vars["program_proportion" + outcome + strain],
+                    self.params["tb_timeperiod_infect_ontreatment" + strain],
+                    self.params["tb_timeperiod_treatment" + strain])
+                self.vars["program_proportion" + outcome + "_infect" + strain] = early_proportion
+                self.vars["program_proportion" + outcome + "_noninfect" + strain] = late_proportion
+            # Find the success proportions
+            for treatment_stage in self.treatment_stages:
+                self.vars["program_proportion_success" + treatment_stage + strain] = \
+                    1. - self.vars["program_proportion_default" + treatment_stage + strain] \
+                    - self.vars["program_proportion_death" + treatment_stage + strain]
+                # Find the corresponding rates from the proportions
+                for outcome in self.outcomes:
+                    self.vars["program_rate" + outcome + treatment_stage + strain] = \
+                        1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment" + strain] \
+                        * self.vars["program_proportion" + outcome + treatment_stage + strain]
+
     ##################################################################
     # Methods that calculate the flows of all the compartments
 
@@ -863,10 +870,10 @@ class ConsolidatedModel(BaseModel):
                             "missed" + organ + strain + comorbidity,
                             "latent_late" + strain + comorbidity,
                             "tb_rate_recover" + organ)
-                        self.set_infection_death_rate_flow(
+                        self.set_fixed_infection_death_rate_flow(
                             "active" + organ + strain + comorbidity,
                             "tb_rate_death" + organ)
-                        self.set_infection_death_rate_flow(
+                        self.set_fixed_infection_death_rate_flow(
                             "missed" + organ + strain + comorbidity,
                             "tb_rate_death" + organ)
                         if self.is_lowquality == True:
@@ -874,12 +881,12 @@ class ConsolidatedModel(BaseModel):
                                 "lowquality" + organ + strain + comorbidity,
                                 "latent_late" + strain + comorbidity,
                                 "tb_rate_recover" + organ)
-                            self.set_infection_death_rate_flow(
+                            self.set_fixed_infection_death_rate_flow(
                                 "lowquality" + organ + strain + comorbidity,
                                 "tb_rate_death" + organ)
                         if self.is_misassignment == True:
                             for assigned_strain in self.strains:
-                                self.set_infection_death_rate_flow(
+                                self.set_fixed_infection_death_rate_flow(
                                     "detect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
                                     "tb_rate_death" + organ)
                                 self.set_fixed_transfer_rate_flow(
@@ -891,7 +898,7 @@ class ConsolidatedModel(BaseModel):
                                 "detect" + organ + strain + comorbidity,
                                 "latent_late" + strain + comorbidity,
                                 "tb_rate_recover" + organ)
-                            self.set_infection_death_rate_flow(
+                            self.set_fixed_infection_death_rate_flow(
                                 "detect" + organ + strain + comorbidity,
                                 "tb_rate_death" + organ)
 
@@ -967,25 +974,25 @@ class ConsolidatedModel(BaseModel):
         for comorbidity in self.comorbidities:
             for strain in self.strains:
                 for organ in self.organ_status:
-                    self.set_fixed_transfer_rate_flow(
+                    self.set_var_transfer_rate_flow(
                         "treatment_infect" + organ + strain + comorbidity,
                         "treatment_noninfect" + organ + strain + comorbidity,
                         "program_rate_success_infect" + strain)
-                    self.set_fixed_transfer_rate_flow(
+                    self.set_var_transfer_rate_flow(
                         "treatment_noninfect" + organ + strain + comorbidity,
                         "susceptible_treated" + comorbidity,
                         "program_rate_success_noninfect" + strain)
-                    self.set_infection_death_rate_flow(
+                    self.set_var_infection_death_rate_flow(
                         "treatment_infect" + organ + strain + comorbidity,
                         "program_rate_death_infect" + strain)
-                    self.set_infection_death_rate_flow(
+                    self.set_var_infection_death_rate_flow(
                         "treatment_noninfect" + organ + strain + comorbidity,
                         "program_rate_death_noninfect" + strain)
-                    self.set_fixed_transfer_rate_flow(
+                    self.set_var_transfer_rate_flow(
                         "treatment_infect" + organ + strain + comorbidity,
                         "active" + organ + strain + comorbidity,
                         "program_rate_default_infect" + strain)
-                    self.set_fixed_transfer_rate_flow(
+                    self.set_var_transfer_rate_flow(
                         "treatment_noninfect" + organ + strain + comorbidity,
                         "active" + organ + strain + comorbidity,
                         "program_rate_default_noninfect" + strain)
@@ -1007,7 +1014,7 @@ class ConsolidatedModel(BaseModel):
                         "susceptible_treated" + comorbidity,
                         "program_rate_success_noninfect" + strain)
                     for treatment_stage in self.treatment_stages:
-                        self.set_infection_death_rate_flow(
+                        self.set_fixed_infection_death_rate_flow(
                             "treatment" + treatment_stage + organ + strain + comorbidity,
                             "program_rate_death" + treatment_stage + strain)
 
@@ -1059,7 +1066,7 @@ class ConsolidatedModel(BaseModel):
                             "susceptible_treated" + comorbidity,
                             "program_rate_success_noninfect" + strain_or_inappropriate)
                         for treatment_stage in self.treatment_stages:
-                            self.set_infection_death_rate_flow(
+                            self.set_fixed_infection_death_rate_flow(
                                 "treatment" + treatment_stage + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
                                 "program_rate_death" + treatment_stage + strain_or_inappropriate)
 
@@ -1107,9 +1114,13 @@ class ConsolidatedModel(BaseModel):
                 rate_notifications += self.compartments[from_label] * self.vars[rate]
         self.vars["notifications"] = \
             rate_notifications / self.vars["population"] * 1E5
-        for from_label, rate in self.infection_death_rate_flows:
+        for from_label, rate in self.fixed_infection_death_rate_flows:
             rate_mortality \
                 += self.compartments[from_label] * rate
+        for from_label, rate in self.var_infection_death_rate_flows:
+            rate_mortality \
+                += self.compartments[from_label] * self.vars[rate]
+
         self.vars["mortality"] = \
             rate_mortality \
             / self.vars["population"] * 1E5
@@ -1124,6 +1135,7 @@ class ConsolidatedModel(BaseModel):
         self.calculate_bystrain_output_vars()
 
     def calculate_bystrain_output_vars(self):
+
         # Now by strain:
         rate_incidence = {}
         rate_mortality = {}
@@ -1141,10 +1153,15 @@ class ConsolidatedModel(BaseModel):
                 if 'active' in from_label and 'detect' in to_label and strain in from_label:
                     rate_notifications[strain] \
                         += self.compartments[from_label] * self.vars[rate]
-            for from_label, rate in self.infection_death_rate_flows:
+            for from_label, rate in self.fixed_infection_death_rate_flows:
                 if strain in from_label:
                     rate_mortality[strain] \
                         += self.compartments[from_label] * rate
+            for from_label, rate in self.var_infection_death_rate_flows:
+                if strain in from_label:
+                    rate_mortality[strain] \
+                        += self.compartments[from_label] * self.vars[rate]
+
             self.vars["incidence" + strain] \
                 = rate_incidence[strain] \
                   / self.vars["population"] * 1E5

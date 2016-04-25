@@ -25,9 +25,10 @@ class BaseModel():
 
         self.flows = {}
         self.fixed_transfer_rate_flows = []
-        self.infection_death_rate_flows = []
+        self.fixed_infection_death_rate_flows = []
         self.var_transfer_rate_flows = []
         self.var_flows = []
+        self.var_infection_death_rate_flows = []
 
 
     def make_times(self, start, end, delta):
@@ -75,10 +76,15 @@ class BaseModel():
     def set_population_death_rate(self, death_label):
         self.death_rate = self.params[death_label]
 
-    def set_infection_death_rate_flow(self, label, param_label):
+    def set_fixed_infection_death_rate_flow(self, label, param_label):
         add_unique_tuple_to_list(
-            self.infection_death_rate_flows,
+            self.fixed_infection_death_rate_flows,
             (label, self.params[param_label]))
+
+    def set_var_infection_death_rate_flow(self, label, vars_label):
+        add_unique_tuple_to_list(
+            self.var_infection_death_rate_flows,
+            (label, vars_label))
 
     def set_fixed_transfer_rate_flow(self, from_label, to_label, param_label):
         add_unique_tuple_to_list(
@@ -141,8 +147,12 @@ class BaseModel():
 
         # extra death flows
         self.vars["rate_infection_death"] = 0.0
-        for label, rate in self.infection_death_rate_flows:
+        for label, rate in self.fixed_infection_death_rate_flows:
             val = self.compartments[label] * rate
+            self.flows[label] -= val
+            self.vars["rate_infection_death"] += val
+        for label, rate in self.var_infection_death_rate_flows:
+            val = self.compartments[label] * self.vars[vars_label]
             self.flows[label] -= val
             self.vars["rate_infection_death"] += val
 
@@ -376,7 +386,9 @@ class BaseModel():
             self.graph.edge(from_label, to_label, label=var_label)
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
             self.graph.edge(from_label, to_label, label=num_str(rate))
-        for label, rate in self.infection_death_rate_flows:
+        for label, rate in self.fixed_infection_death_rate_flows:
+            self.graph.edge(label, "tb_death", label=num_str(rate))
+        for label, rate in self.var_infection_death_rate_flows:
             self.graph.edge(label, "tb_death", label=num_str(rate))
         base, ext = os.path.splitext(png)
         if ext.lower() != '.png':

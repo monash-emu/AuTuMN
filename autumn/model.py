@@ -386,6 +386,8 @@ class ConsolidatedModel(BaseModel):
 
         if self.is_misassignment: self.find_programmatic_with_misassignment_params()
 
+        if self.is_misassignment: self.find_programmatic_with_misassignment_scaleups()
+
         self.find_treatment_rates_params()
 
         if self.is_amplification: self.find_treatment_with_amplification_params()
@@ -543,6 +545,16 @@ class ConsolidatedModel(BaseModel):
                     self.params["program_rate" + destination],
                     self.params["treatment_available_date"], self.params["dots_start_date"],
                     self.params["finish_scaleup_date"]))
+
+    def find_programmatic_with_misassignment_scaleups(self):
+
+        self.set_scaleup_fn(
+            "program_prop_firstline_dst",
+            make_two_step_curve(0., 0.5, 0.7, 1980., 1990., 2000.))
+
+        self.set_scaleup_fn(
+            "program_prop_secondline_dst",
+            make_two_step_curve(0., 0.5, 0.7, 1985., 1995., 2000.))
 
     def find_programmatic_with_misassignment_params(self):
 
@@ -784,6 +796,8 @@ class ConsolidatedModel(BaseModel):
 
         self.calculate_stupid_vars()
 
+        self.calculate_detection_vars()
+
     def calculate_birth_rates_vars(self):
 
         self.vars["births_unvac"] = \
@@ -820,6 +834,39 @@ class ConsolidatedModel(BaseModel):
                 self.params["tb_multiplier_bcg_protection"] \
                 * self.vars["rate_force" + strain]
 
+    def calculate_detection_vars(self):
+
+        # Calculate the proportions of patients assigned to each strain
+        # Note that second-line DST availability refers to the proportion
+        # of those with first-line DST who also have second-line DST available
+        # DS-TB
+        self.vars["program_rate_detect_ds_asds"] = \
+            self.vars["program_rate_detect"]
+        # self.vars["program_rate_detect_ds_asmdr"] = 0.
+        # self.vars["program_rate_detect_ds_asxdr"] = 0.
+
+        # MDR-TB
+        self.vars["program_rate_detect_mdr_asds"] = \
+            (1. - self.vars["program_prop_firstline_dst"]) \
+            * self.vars["program_rate_detect"]
+        self.vars["program_rate_detect_mdr_asmdr"] = \
+            self.vars["program_prop_firstline_dst"] \
+            * self.vars["program_rate_detect"]
+        # self.vars["program_rate_detect_mdr_asxdr"] = 0.
+
+        # XDR-TB
+        self.vars["program_rate_detect_xdr_asds"] = \
+            (1. - self.vars["program_prop_firstline_dst"]) \
+             * self.vars["program_rate_detect"]
+        self.vars["program_rate_detect_xdr_asmdr"] = \
+            self.vars["program_prop_firstline_dst"] \
+            * (1. - self.vars["program_prop_secondline_dst"])\
+            * self.vars["program_rate_detect"]
+        self.vars["program_rate_detect_xdr_asxdr"] = \
+            self.vars["program_prop_firstline_dst"] \
+            * self.vars["program_prop_secondline_dst"] \
+            * self.vars["program_rate_detect"]
+
     ##################################################################
     # Methods that calculate the flows of all the compartments
 
@@ -833,10 +880,9 @@ class ConsolidatedModel(BaseModel):
 
         self.set_fixed_programmatic_flows()
 
-        # if not self.is_misassignment:
         self.set_variable_programmatic_flows()
-        # else:
-        #     self.set_variable_programmatic_with_misassignment_flows()
+
+        self.set_detection_vars()
 
         if not self.is_amplification:
             self.set_treatment_flows()
@@ -957,6 +1003,29 @@ class ConsolidatedModel(BaseModel):
                                     "treatment_infect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
                                     "program_rate_start_treatment")
 
+    def set_detection_vars(self):
+
+        # Set previously calculated detection rates
+        # Either assuming everyone is correctly identified if misassignment not permitted
+        # or with proportional misassignment
+        for organ in self.organ_status:
+            for comorbidity in self.comorbidities:
+                for i in range(len(self.strains)):
+                    strain = self.strains[i]
+                    if self.is_misassignment:
+                        for j in range(len(self.strains)):
+                            assigned_strain = self.strains[j]
+                            if j >= i:  # If the assigned strain is equally or more resistant
+                                self.set_var_transfer_rate_flow(
+                                    "active" + organ + strain + comorbidity,
+                                    "detect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
+                                    "program_rate_detect" + strain + "_as" + assigned_strain[1:])
+                    else:
+                        self.set_var_transfer_rate_flow(
+                            "active" + organ + strain + comorbidity,
+                            "detect" + organ + strain + comorbidity,
+                            "program_rate_detect")
+
     def set_variable_programmatic_flows(self):
 
         for i in range(len(self.strains)):
@@ -972,32 +1041,6 @@ class ConsolidatedModel(BaseModel):
                             "active" + organ + strain + comorbidity,
                             "lowquality" + organ + strain + comorbidity,
                             "program_rate_enterlowquality")
-                    if not self.is_misassignment:
-                        self.set_var_transfer_rate_flow(
-                            "active" + organ + strain + comorbidity,
-                            "detect" + organ + strain + comorbidity,
-                            "program_rate_detect")
-                    else:
-                        for j in range(len(self.strains)):
-                            assigned_strain = self.strains[j]
-                            self.set_var_transfer_rate_flow(
-                                "active" + organ + strain + comorbidity,
-                                "detect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
-                                "program_rate_detect" + strain + "_as" + assigned_strain[1:])
-
-
-    # def set_variable_programmatic_with_misassignment_flows(self):
-    #
-    #     for i in range(len(self.strains)):
-    #         strain = self.strains[i]
-    #         for j in range(len(self.strains)):
-    #             assigned_strain = self.strains[j]
-    #             for comorbidity in self.comorbidities:
-    #                 for organ in self.organ_status:
-    #                     self.set_var_transfer_rate_flow(
-    #                         "active" + organ + strain + comorbidity,
-    #                         "detect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
-    #                         "program_rate_detect" + strain + "_as" + assigned_strain[1:])
 
     def set_treatment_flows(self):
 

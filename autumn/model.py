@@ -384,7 +384,7 @@ class ConsolidatedModel(BaseModel):
 
         self.find_programmatic_rates_params()
 
-        if self.is_misassignment: self.find_programmatic_with_misassignment_params()
+        # if self.is_misassignment: self.find_programmatic_with_misassignment_params()
 
         self.find_programmatic_with_misassignment_scaleups()
 
@@ -543,60 +543,6 @@ class ConsolidatedModel(BaseModel):
         self.set_scaleup_fn(
             "program_prop_secondline_dst",
             make_two_step_curve(0., 0.5, 0.7, 1985., 1995., 2000.))
-
-    def find_programmatic_with_misassignment_params(self):
-
-        for i in range(len(self.strains)):
-            strain = self.strains[i]
-            for j in range(len(self.strains)):
-                assigned_strain = self.strains[j]
-                # Chance of being assigned to the strain two levels less resistant (XDR to DS)
-                if i == j + 2:
-                    next_strain = self.strains[i - 1]
-                    assignment_probability = \
-                        (1. - self.params["program_prop_assign" + next_strain])
-                # Chance of being assigned to the next less resistant strain
-                # if there are two less resistant strains available (XDR to MDR)
-                elif i == 2 and j == 1:
-                    next_strain = self.strains[i - 1]
-                    assignment_probability = \
-                        (1. - self.params["program_prop_assign" + strain]) * self.params[
-                            "program_prop_assign" + next_strain]
-                # Chance of being assigned to the next less resistant strain
-                # if the assigned strain is the least resistant one (MDR to DS)
-                elif i == j + 1 and j == 0:
-                    assignment_probability = \
-                        (1. - self.params["program_prop_assign" + strain])
-                # Chance of being assigned to the correct strain, DS-TB
-                elif i == 0 and j == 0:
-                    assignment_probability = 1.
-                # Chance of being assigned to the correct strain, MDR-TB
-                elif i == 1 and j == 1:
-                    assignment_probability = \
-                        self.params["program_prop_assign" + strain]
-                # Chance of being assigned to the correct strain, XDR-TB
-                elif i == 2 and j == 2:
-                    next_strain = self.strains[i - 1]
-                    assignment_probability = \
-                        self.params["program_prop_assign" + strain] * self.params[
-                            "program_prop_assign" + next_strain]
-                # Can't be assigned to a more resistant strain than you have (currently)
-                elif i < j:
-                    assignment_probability = 0.01
-                # Set the parameter values
-                self.set_parameter("program_rate_detect" + strain + "_as" + assigned_strain[1:],
-                                   assignment_probability)
-                self.set_scaleup_fn(
-                    "program_rate_detect" + strain + "_as" + assigned_strain[1:],
-                    make_two_step_curve(
-                        self.params["pretreatment_available_proportion"] * self.params[
-                            "program_rate_detect"] * assignment_probability,
-                        self.params["dots_start_proportion"] * self.params[
-                            "program_rate_detect"] * assignment_probability,
-                        self.params["program_rate_detect"] * assignment_probability,
-                        self.params["treatment_available_date"],
-                        self.params["dots_start_date"],
-                        self.params["finish_scaleup_date"]))
 
     def ensure_all_progressions_go_somewhere_params(self):
 
@@ -824,8 +770,8 @@ class ConsolidatedModel(BaseModel):
             # Flows that should be zero currently commented out
             self.vars["program_rate_detect_ds_asds"] = \
                 self.vars["program_rate_detect"]
-            # self.vars["program_rate_detect_ds_asmdr"] = 0.
-            # self.vars["program_rate_detect_ds_asxdr"] = 0.
+            self.vars["program_rate_detect_ds_asmdr"] = 0.
+            self.vars["program_rate_detect_ds_asxdr"] = 0.
 
             # MDR-TB
             self.vars["program_rate_detect_mdr_asds"] = \
@@ -834,7 +780,7 @@ class ConsolidatedModel(BaseModel):
             self.vars["program_rate_detect_mdr_asmdr"] = \
                 self.vars["program_prop_firstline_dst"] \
                 * self.vars["program_rate_detect"]
-            # self.vars["program_rate_detect_mdr_asxdr"] = 0.
+            self.vars["program_rate_detect_mdr_asxdr"] = 0.
 
             # XDR-TB
             self.vars["program_rate_detect_xdr_asds"] = \

@@ -91,6 +91,8 @@ class ConsolidatedModel(BaseModel):
         self.n_organ = n_organ
         self.n_strain = n_strain
         self.n_comorbidity = n_comorbidity
+        if self.is_misassignment:
+            assert self.is_amplification, "Misassignment requested without amplification"
 
         # Initialise model compartmental structure and set un-processed parameters
         self.define_model_structure(

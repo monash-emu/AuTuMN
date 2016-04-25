@@ -3,9 +3,10 @@
 
 """
 
-Base Population Model to handle different type of models.
+The TB-specific model, or models, should be coded in this file
 
-Implicit time unit: years
+Time unit throughout: years
+Compartment unit throughout: patients
 
 """
 
@@ -14,7 +15,6 @@ import random
 from scipy import exp, log
 
 from autumn.base import BaseModel
-from autumn.settings import default, philippines
 from curve import make_sigmoidal_curve, make_two_step_curve
 
 
@@ -500,6 +500,8 @@ class ConsolidatedModel(BaseModel):
 
         self.set_scaleup_fn("program_proportion_detect",
                             make_two_step_curve(0.2, 0.7, 0.8, 1920., 1980., 2000.))
+        self.set_scaleup_fn("program_proportion_algorithm_sensitivity",
+                            make_two_step_curve(0.7, 0.8, 0.9, 1920., 1980., 2000.))
 
     def find_lowquality_proportion(self):
 
@@ -511,7 +513,6 @@ class ConsolidatedModel(BaseModel):
         self.set_scaleup_fn(
             "program_prop_firstline_dst",
             make_two_step_curve(0., 0.5, 0.7, 1980., 1990., 2000.))
-
         self.set_scaleup_fn(
             "program_prop_secondline_dst",
             make_two_step_curve(0., 0.5, 0.7, 1985., 1995., 2000.))
@@ -711,13 +712,13 @@ class ConsolidatedModel(BaseModel):
             * (self.params["tb_rate_recover" + self.organ_status[0]] + self.params[
                 "tb_rate_death" + self.organ_status[0]]) \
             / (1. - self.vars["program_proportion_detect"] \
-               * (1. + (1. - self.params["program_algorithm_sensitivity"]) \
-                  / self.params["program_algorithm_sensitivity"]))
+               * (1. + (1. - self.vars["program_proportion_algorithm_sensitivity"]) \
+                  / self.vars["program_proportion_algorithm_sensitivity"]))
 
         self.vars["program_rate_missed"] = \
             self.vars["program_rate_detect"] \
-            * (1. - self.params["program_algorithm_sensitivity"]) \
-            / self.params["program_algorithm_sensitivity"]
+            * (1. - self. vars["program_proportion_algorithm_sensitivity"]) \
+            / self.vars["program_proportion_algorithm_sensitivity"]
 
         for strain in self.strains:
             for programmatic_rate in ["_detect", "_missed"]:

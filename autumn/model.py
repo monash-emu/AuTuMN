@@ -36,16 +36,14 @@ class ConsolidatedModel(BaseModel):
     The work-flow of the simulation is structured into several parts:
          1. setting initial compartments and values
          2. reading params
-         3. calculating derived params
-         4. calculating scaleup functions
-         5. assigning flows from either params or vars
-         6. main loop over simulation time points
+         3. calculating derived params and scaleup functions
+         4. assigning flows from either params or vars
+         5. main loop over simulation time points
              1. extracting scaleup-vars
              2. calculating vars from compartments, params and scaleup-vars
              3. calculating diagnostic vars from compartments, rates,
                 vars, params, and scaleup-vars
-         7. calculating diagnostic solns
-
+         6. calculating diagnostic solns
     """
 
     def __init__(self,
@@ -357,44 +355,8 @@ class ConsolidatedModel(BaseModel):
         for parameter in paramater_dict:
             self.set_parameter(parameter, paramater_dict[parameter])
 
-    ##################################################################
-    # Methods that derive additional parameters and scale-up functions
-    # from existing parameters
-
-    def process_parameters(self):
-
-        """
-        Calls all the methods to set parameters and scale-up functions
-        The order in which these methods is run is often important
-        """
-
-        self.split_default_death_proportions_params()
-
-        if self.n_organ > 0: self.ensure_all_progressions_go_somewhere_params()
-
-        self.find_vaccination_rates_params()
-
-        self.find_natural_history_params()
-
-        self.find_detection_rates_params()
-
-        if self.is_lowquality: self.find_lowquality_proportion()
-
-        if self.n_strain > 0: self.find_equal_detection_rates_params()
-
-        self.find_programmatic_rates_params()
-
-        # if self.is_misassignment: self.find_programmatic_with_misassignment_params()
-
-        self.find_programmatic_with_misassignment_scaleups()
-
-        self.find_treatment_rates_params()
-
-        if self.is_amplification: self.find_treatment_with_amplification_params()
-
-        self.find_treatment_with_misassignment_params()
-
-        self.set_population_death_rate("demo_rate_death")
+    ############################################################
+    # General underlying methods for use by other methods
 
     def find_outcome_proportions_by_period(
             self, proportion, early_period, total_period):
@@ -418,50 +380,85 @@ class ConsolidatedModel(BaseModel):
             = proportion - early_proportion
         return early_proportion, late_proportion
 
-    def find_vaccination_rates_params(self):
+    ##################################################################
+    # The main parameter processing and scale-up setting method
 
-        self.set_scaleup_fn(
-            "vaccination",
-            make_two_step_curve(
-                0.,
-                0.6,
-                0.8,
-                1950.,
-                1980.,
-                2000.))
+    def process_parameters(self):
 
-    def find_detection_rates_params(self):
-
-        """"
-        Calculate rates of detection and failure of detection
-        from the programmatic report of the case detection "rate"
-        (which is actually a proportion and referred to as program_proportion_detect here)
-
-        Derived from original formulas of by solving the simultaneous equations:
-          algorithm sensitivity = detection rate / (detection rate + missed rate)
-          - and -
-          detection proportion = detection rate / (detection rate + missed rate + spont recover rate + death rate)
+        """
+        Calls all the methods to set parameters and scale-up functions
+        The order in which these methods is run is often important
         """
 
-        self.set_parameter(
-            "program_rate_detect",
-            self.params["program_proportion_detect"]
-            * (self.params["tb_rate_recover" + self.organ_status[0]] + self.params[
-                    "tb_rate_death" + self.organ_status[0]])
-            / (1. - self.params["program_proportion_detect"]
-               * (1. + (1. - self.params["program_algorithm_sensitivity"])
-                  / self.params["program_algorithm_sensitivity"])))
+        self.split_default_death_proportions_params()
 
-        self.set_parameter(
-            "program_rate_missed",
-            self.params["program_rate_detect"]
-            * (1. - self.params["program_algorithm_sensitivity"])
-            / self.params["program_algorithm_sensitivity"])
+        if self.n_organ > 0: self.ensure_all_progressions_go_somewhere_params()
 
-    def find_lowquality_proportion(self):
+        self.find_vaccination_rates_scaleups()
 
-        self.set_scaleup_fn("program_prop_lowquality",
-                            make_two_step_curve(.3, .4, .5, 1980., 1990., 2000.))
+        self.find_natural_history_params()
+
+        self.find_detection_rates_params()
+
+        if self.is_lowquality: self.find_lowquality_proportion()
+
+        self.find_programmatic_with_misassignment_scaleups()
+
+        self.find_treatment_rates_params()
+
+        if self.is_amplification: self.find_treatment_with_amplification_params()
+
+        self.find_treatment_with_misassignment_params()
+
+        self.set_population_death_rate("demo_rate_death")
+
+    ##################################################################
+    # The methods that process_parameters calls to set parameters and
+    # scale-up functions
+
+    def split_default_death_proportions_params(self):
+
+        """
+        Code for the temporary situation in which the proportion of
+        non-success outcomes is consistently split between default and death
+        """
+
+        if self.strains == [""]:
+            self.params["program_proportion_success"] \
+                = self.params["program_proportion_success_ds"]
+
+        for strain in self.strains:
+            self.params["program_proportion_default" + strain] = \
+                (1. - self.params["program_proportion_success" + strain]) \
+                * (1. - self.params["program_prop_nonsuccessoutcomes_death"])
+            self.params["program_proportion_death" + strain] = \
+                (1. - self.params["program_proportion_success" + strain]) \
+                * self.params["program_prop_nonsuccessoutcomes_death"]
+        self.params["program_proportion_default_inappropriate"] = \
+            (1. - self.params["program_proportion_success_inappropriate"]) \
+            * (1. - self.params["program_prop_nonsuccessoutcomes_death"])
+        self.params["program_proportion_death_inappropriate"] = \
+            (1. - self.params["program_proportion_success_inappropriate"]) \
+            * self.params["program_prop_nonsuccessoutcomes_death"]
+
+    def ensure_all_progressions_go_somewhere_params(self):
+
+        """
+        If fewer than three organ statuses are available, ensure that all detected patients
+        go somewhere
+        """
+
+        if len(self.organ_status) == 1:  # One organ status shouldn't really be used, but in case it is
+            self.params["epi_proportion_cases_smearpos"] = 1.
+        elif len(self.organ_status) == 2:  # Extrapuls go to smearneg (arguably should be the other way round)
+            self.params["epi_proportion_cases_smearneg"] = \
+                self.params["epi_proportion_cases_smearneg"] \
+                + self.params["epi_proportion_cases_extrapul"]
+
+    def find_vaccination_rates_scaleups(self):
+
+        self.set_scaleup_fn("vaccination",
+                            make_two_step_curve(0., 0.6, 0.8, 1950., 1980., 2000.))
 
     def find_natural_history_params(self):
 
@@ -497,42 +494,15 @@ class ConsolidatedModel(BaseModel):
                 (1 - self.params["tb_proportion_casefatality_untreated" + organ])
                 / self.params["tb_timeperiod_activeuntreated"])
 
-    def find_equal_detection_rates_params(self):
+    def find_detection_rates_params(self):
 
-        """
-        Replicate programmatic rates to be equal for each strain
-        Most of these rates probably will remain equal for each strain,
-        as misassignment by strain is considered separately
-        """
+        self.set_scaleup_fn("program_proportion_detect",
+                            make_two_step_curve(0.2, 0.7, 0.8, 1920., 1980., 2000.))
 
-        for strain in self.strains:
-            for programmatic_rate in ["_detect", "_missed", "_start_treatment", "_restart_presenting"]:
-                self.set_parameter(
-                    "program_rate" + programmatic_rate + strain,
-                    self.params["program_rate" + programmatic_rate])
+    def find_lowquality_proportion(self):
 
-    def find_programmatic_rates_params(self):
-
-        """
-        Possibly a misnomer, as there are other programmatic rates
-        These are the rates of being dealt with by a health system
-        for patients with active disease
-        Determine the destinations and then allow all these programmatic rates
-        to scale up over time
-        """
-
-        destinations_from_active = ["_detect", "_missed"]
-        # if self.is_lowquality: destinations_from_active += ["_enterlowquality"]
-
-        for destination in destinations_from_active:
-            self.set_scaleup_fn(
-                "program_rate" + destination,
-                make_two_step_curve(
-                    self.params["pretreatment_available_proportion"] * self.params["program_rate" + destination],
-                    self.params["dots_start_proportion"] * self.params["program_rate" + destination],
-                    self.params["program_rate" + destination],
-                    self.params["treatment_available_date"], self.params["dots_start_date"],
-                    self.params["finish_scaleup_date"]))
+        self.set_scaleup_fn("program_prop_lowquality",
+                            make_two_step_curve(.3, .4, .5, 1980., 1990., 2000.))
 
     def find_programmatic_with_misassignment_scaleups(self):
 
@@ -543,45 +513,6 @@ class ConsolidatedModel(BaseModel):
         self.set_scaleup_fn(
             "program_prop_secondline_dst",
             make_two_step_curve(0., 0.5, 0.7, 1985., 1995., 2000.))
-
-    def ensure_all_progressions_go_somewhere_params(self):
-
-        """
-        If fewer than three organ statuses are available, ensure that all detected patients
-        go somewhere
-        """
-
-        if len(self.organ_status) == 1:  # One organ status shouldn't really be used, but in case it is
-            self.params["epi_proportion_cases_smearpos"] = 1.
-        elif len(self.organ_status) == 2:  # Extrapuls go to smearneg (arguably should be the other way round)
-            self.params["epi_proportion_cases_smearneg"] = \
-                self.params["epi_proportion_cases_smearneg"] \
-                + self.params["epi_proportion_cases_extrapul"]
-
-    def split_default_death_proportions_params(self):
-
-        """
-        Code for the temporary situation in which the proportion of
-        non-success outcomes is consistently split between default and death
-        """
-
-        if self.strains == [""]:
-            self.params["program_proportion_success"] \
-                = self.params["program_proportion_success_ds"]
-
-        for strain in self.strains:
-            self.params["program_proportion_default" + strain] = \
-                (1. - self.params["program_proportion_success" + strain]) \
-                * (1. - self.params["program_prop_nonsuccessoutcomes_death"])
-            self.params["program_proportion_death" + strain] = \
-                (1. - self.params["program_proportion_success" + strain]) \
-                * self.params["program_prop_nonsuccessoutcomes_death"]
-        self.params["program_proportion_default_inappropriate"] = \
-            (1. - self.params["program_proportion_success_inappropriate"]) \
-            * (1. - self.params["program_prop_nonsuccessoutcomes_death"])
-        self.params["program_proportion_death_inappropriate"] = \
-            (1. - self.params["program_proportion_success_inappropriate"]) \
-            * self.params["program_prop_nonsuccessoutcomes_death"]
 
     def find_treatment_rates_params(self):
 
@@ -718,7 +649,9 @@ class ConsolidatedModel(BaseModel):
 
         self.calculate_force_infection_vars()
 
-        self.calculate_detection_vars()
+        self.calculate_detect_missed_vars()
+
+        self.calculate_proportionate_detection_vars()
 
         if self.is_lowquality: self.calculate_lowquality_detection_vars()
 
@@ -758,7 +691,54 @@ class ConsolidatedModel(BaseModel):
                 self.params["tb_multiplier_bcg_protection"] \
                 * self.vars["rate_force" + strain]
 
-    def calculate_detection_vars(self):
+    def calculate_detect_missed_vars(self):
+
+        """"
+        Calculate rates of detection and failure of detection
+        from the programmatic report of the case detection "rate"
+        (which is actually a proportion and referred to as program_proportion_detect here)
+
+        Derived from original formulas of by solving the simultaneous equations:
+          algorithm sensitivity = detection rate / (detection rate + missed rate)
+          - and -
+          detection proportion = detection rate / (detection rate + missed rate + spont recover rate + death rate)
+        """
+
+        self.vars["program_rate_detect"] = \
+            self.vars["program_proportion_detect"] \
+            * (self.params["tb_rate_recover" + self.organ_status[0]] + self.params[
+                "tb_rate_death" + self.organ_status[0]]) \
+            / (1. - self.vars["program_proportion_detect"] \
+               * (1. + (1. - self.params["program_algorithm_sensitivity"]) \
+                  / self.params["program_algorithm_sensitivity"]))
+
+        self.vars["program_rate_missed"] = \
+            self.vars["program_rate_detect"] \
+            * (1. - self.params["program_algorithm_sensitivity"]) \
+            / self.params["program_algorithm_sensitivity"]
+
+        for strain in self.strains:
+            for programmatic_rate in ["_detect", "_missed"]:
+                self.vars["program_rate" + programmatic_rate + strain] = \
+                    self.vars["program_rate" + programmatic_rate]
+
+    def calculate_lowquality_detection_vars(self):
+
+        """
+        Calculate rate of entry to low-quality care,
+        form the proportion of treatment administered in low-quality sector
+
+        Note that this now means that the case detection proportion only
+        applies to those with access to care and so that proportion of all
+        cases isn't actually detected
+        """
+
+        self.vars["program_rate_enterlowquality"] = \
+            self.vars["program_rate_detect"] \
+            * self.vars["program_prop_lowquality"] \
+            / (1. - self.vars["program_prop_lowquality"])
+
+    def calculate_proportionate_detection_vars(self):
 
         # Calculate the proportions of patients assigned to each strain
 
@@ -801,22 +781,6 @@ class ConsolidatedModel(BaseModel):
                 self.vars["program_rate_detect" + strain + "_as" + strain[1:]] = \
                     self.vars["program_rate_detect"]
 
-    def calculate_lowquality_detection_vars(self):
-
-        """
-        Calculate rate of entry to low-quality care,
-        form the proportion of treatment administered in low-quality sector
-
-        Note that this now means that the case detection proportion only
-        applies to those with access to care and so that proportion of all
-        cases isn't actually detected
-        """
-
-        self.vars["program_rate_enterlowquality"] = \
-            self.vars["program_rate_detect"] \
-            * self.vars["program_prop_lowquality"] \
-            / (1. - self.vars["program_prop_lowquality"])
-
     ##################################################################
     # Methods that calculate the flows of all the compartments
 
@@ -832,7 +796,7 @@ class ConsolidatedModel(BaseModel):
 
         self.set_variable_programmatic_flows()
 
-        self.set_detection_vars()
+        self.set_detection_flows()
 
         if not self.is_amplification:
             self.set_treatment_flows()
@@ -953,7 +917,7 @@ class ConsolidatedModel(BaseModel):
                                     "treatment_infect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
                                     "program_rate_start_treatment")
 
-    def set_detection_vars(self):
+    def set_detection_flows(self):
 
         # Set previously calculated detection rates
         # Either assuming everyone is correctly identified if misassignment not permitted

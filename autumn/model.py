@@ -195,10 +195,12 @@ class ConsolidatedModel(BaseModel):
                         for organ in self.organ_status:
                             self.set_compartment(compartment + organ + strain + comorbidity, 0.)
                 else:
-                    for strain in self.strains:
+                    for i in range(len(self.strains)):
+                        strain = self.strains[i]
                         for organ in self.organ_status:
                             if self.is_misassignment:  # Mis-assignment by strain
-                                for assigned_strain in self.strains:
+                                for j in range(len(self.strains)):
+                                    assigned_strain = self.strains[j]
                                     self.set_compartment(
                                         compartment + organ + strain + "_as" + assigned_strain[1:] + comorbidity, 0.)
                             else:
@@ -210,8 +212,7 @@ class ConsolidatedModel(BaseModel):
                 "susceptible_fully":
                     2e7,
                 "active":
-                    3.
-            }
+                    3.}
 
         # Populate input_compartments
         # Initialise to DS-TB or no strain if single-strain model
@@ -933,7 +934,7 @@ class ConsolidatedModel(BaseModel):
                     if self.is_misassignment:
                         for j in range(len(self.strains)):
                             assigned_strain = self.strains[j]
-                            if j >= i:  # If the assigned strain is equally or more resistant
+                            if i >= j:  # If the strain is equally or more resistant than its assignment
                                 self.set_var_transfer_rate_flow(
                                     "active" + organ + strain + comorbidity,
                                     "detect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,

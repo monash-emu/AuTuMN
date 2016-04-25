@@ -378,7 +378,7 @@ class ConsolidatedModel(BaseModel):
 
         self.find_detection_rates_params()
 
-        if self.is_lowquality: self.find_lowquality_detection_params()
+        if self.is_lowquality: self.find_lowquality_proportion()
 
         if self.n_strain > 0: self.find_equal_detection_rates_params()
 
@@ -386,7 +386,7 @@ class ConsolidatedModel(BaseModel):
 
         if self.is_misassignment: self.find_programmatic_with_misassignment_params()
 
-        if self.is_misassignment: self.find_programmatic_with_misassignment_scaleups()
+        self.find_programmatic_with_misassignment_scaleups()
 
         self.find_treatment_rates_params()
 
@@ -458,6 +458,11 @@ class ConsolidatedModel(BaseModel):
             * (1. - self.params["program_algorithm_sensitivity"])
             / self.params["program_algorithm_sensitivity"])
 
+    def find_lowquality_proportion(self):
+
+        self.set_scaleup_fn("program_prop_lowquality",
+                            make_two_step_curve(.3, .4, .5, 1980., 1990., 2000.))
+
     def find_natural_history_params(self):
 
         # If extrapulmonary case-fatality not stated
@@ -492,23 +497,6 @@ class ConsolidatedModel(BaseModel):
                 (1 - self.params["tb_proportion_casefatality_untreated" + organ])
                 / self.params["tb_timeperiod_activeuntreated"])
 
-    def find_lowquality_detection_params(self):
-
-        """
-        Calculate rate of entry to low-quality care,
-        form the proportion of treatment administered in low-quality sector
-
-        Note that this now means that the case detection proportion only
-        applies to those with access to care and so that proportion of all
-        cases isn't actually detected
-        """
-
-        self.set_parameter(
-            "program_rate_enterlowquality",
-            self.params["program_rate_detect"]
-            * self.params["program_prop_lowquality"]
-            / (1. - self.params["program_prop_lowquality"]))
-
     def find_equal_detection_rates_params(self):
 
         """
@@ -534,7 +522,7 @@ class ConsolidatedModel(BaseModel):
         """
 
         destinations_from_active = ["_detect", "_missed"]
-        if self.is_lowquality: destinations_from_active += ["_enterlowquality"]
+        # if self.is_lowquality: destinations_from_active += ["_enterlowquality"]
 
         for destination in destinations_from_active:
             self.set_scaleup_fn(
@@ -729,16 +717,6 @@ class ConsolidatedModel(BaseModel):
                             self.params["timepoint_introduce" + amplify_to_strain],
                             self.params["timepoint_introduce" + amplify_to_strain] + 3.))
 
-    def calculate_stupid_vars(self):
-
-        # Completely non-sensical code, but proof of concept of what I'm trying to do
-        self.set_scaleup_fn("something_silly", make_two_step_curve(0., 0.6, 0.8, 1950., 1980., 2000.))
-        self.set_scaleup_fn("something_else_silly", make_two_step_curve(0., 0.6, 0.8, 1950., 1980., 2000.))
-        self.vars["stupid_flow"] = self.scaleup_fns["something_silly"](self.time) \
-                                     * self.scaleup_fns["something_else_silly"](self.time)
-        # print(self.vars["stupid_flow"])
-        # print()
-
     def find_treatment_with_misassignment_params(self):
 
         for i in range(len(self.strains)):
@@ -794,9 +772,9 @@ class ConsolidatedModel(BaseModel):
 
         self.calculate_force_infection_vars()
 
-        self.calculate_stupid_vars()
-
         self.calculate_detection_vars()
+
+        if self.is_lowquality: self.calculate_lowquality_detection_vars()
 
     def calculate_birth_rates_vars(self):
 
@@ -837,35 +815,61 @@ class ConsolidatedModel(BaseModel):
     def calculate_detection_vars(self):
 
         # Calculate the proportions of patients assigned to each strain
+
+        # With misassignment:
         # Note that second-line DST availability refers to the proportion
         # of those with first-line DST who also have second-line DST available
-        # DS-TB
-        self.vars["program_rate_detect_ds_asds"] = \
-            self.vars["program_rate_detect"]
-        # self.vars["program_rate_detect_ds_asmdr"] = 0.
-        # self.vars["program_rate_detect_ds_asxdr"] = 0.
+        if self.is_misassignment:
+            # DS-TB
+            # Flows that should be zero currently commented out
+            self.vars["program_rate_detect_ds_asds"] = \
+                self.vars["program_rate_detect"]
+            # self.vars["program_rate_detect_ds_asmdr"] = 0.
+            # self.vars["program_rate_detect_ds_asxdr"] = 0.
 
-        # MDR-TB
-        self.vars["program_rate_detect_mdr_asds"] = \
-            (1. - self.vars["program_prop_firstline_dst"]) \
-            * self.vars["program_rate_detect"]
-        self.vars["program_rate_detect_mdr_asmdr"] = \
-            self.vars["program_prop_firstline_dst"] \
-            * self.vars["program_rate_detect"]
-        # self.vars["program_rate_detect_mdr_asxdr"] = 0.
+            # MDR-TB
+            self.vars["program_rate_detect_mdr_asds"] = \
+                (1. - self.vars["program_prop_firstline_dst"]) \
+                * self.vars["program_rate_detect"]
+            self.vars["program_rate_detect_mdr_asmdr"] = \
+                self.vars["program_prop_firstline_dst"] \
+                * self.vars["program_rate_detect"]
+            # self.vars["program_rate_detect_mdr_asxdr"] = 0.
 
-        # XDR-TB
-        self.vars["program_rate_detect_xdr_asds"] = \
-            (1. - self.vars["program_prop_firstline_dst"]) \
-             * self.vars["program_rate_detect"]
-        self.vars["program_rate_detect_xdr_asmdr"] = \
-            self.vars["program_prop_firstline_dst"] \
-            * (1. - self.vars["program_prop_secondline_dst"])\
-            * self.vars["program_rate_detect"]
-        self.vars["program_rate_detect_xdr_asxdr"] = \
-            self.vars["program_prop_firstline_dst"] \
-            * self.vars["program_prop_secondline_dst"] \
-            * self.vars["program_rate_detect"]
+            # XDR-TB
+            self.vars["program_rate_detect_xdr_asds"] = \
+                (1. - self.vars["program_prop_firstline_dst"]) \
+                 * self.vars["program_rate_detect"]
+            self.vars["program_rate_detect_xdr_asmdr"] = \
+                self.vars["program_prop_firstline_dst"] \
+                * (1. - self.vars["program_prop_secondline_dst"])\
+                * self.vars["program_rate_detect"]
+            self.vars["program_rate_detect_xdr_asxdr"] = \
+                self.vars["program_prop_firstline_dst"] \
+                * self.vars["program_prop_secondline_dst"] \
+                * self.vars["program_rate_detect"]
+
+        # Without misassignment:
+        else:
+            for strain in self.strains:
+                self.vars["program_rate_detect" + strain + "_as" + strain[1:]] = \
+                    self.vars["program_rate_detect"]
+
+    def calculate_lowquality_detection_vars(self):
+
+        """
+        Calculate rate of entry to low-quality care,
+        form the proportion of treatment administered in low-quality sector
+
+        Note that this now means that the case detection proportion only
+        applies to those with access to care and so that proportion of all
+        cases isn't actually detected
+        """
+
+        self.vars["program_rate_enterlowquality"] = \
+            self.vars["program_rate_detect"] \
+            * self.vars["program_prop_lowquality"] \
+            / (1. - self.vars["program_prop_lowquality"])
 
     ##################################################################
     # Methods that calculate the flows of all the compartments
@@ -1012,6 +1016,7 @@ class ConsolidatedModel(BaseModel):
             for comorbidity in self.comorbidities:
                 for i in range(len(self.strains)):
                     strain = self.strains[i]
+                    # With misassignment
                     if self.is_misassignment:
                         for j in range(len(self.strains)):
                             assigned_strain = self.strains[j]
@@ -1020,6 +1025,7 @@ class ConsolidatedModel(BaseModel):
                                     "active" + organ + strain + comorbidity,
                                     "detect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
                                     "program_rate_detect" + strain + "_as" + assigned_strain[1:])
+                    # Without misassignment - everyone is correctly identified by strain
                     else:
                         self.set_var_transfer_rate_flow(
                             "active" + organ + strain + comorbidity,

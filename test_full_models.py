@@ -26,12 +26,12 @@ strata_to_run = [0, 2, 3]
 true_false = [True, False]
 
 # Note that it takes about one hour to run all of the possible model structures
-for n_organs in [0]:
-    for n_strains in [2]:
-        for n_comorbidities in [0]:
-            for is_quality in [False]:
-                for is_amplification in [True]:
-                    for is_misassignment in [False]:
+for n_organs in strata_to_run:
+    for n_strains in strata_to_run:
+        for n_comorbidities in strata_to_run:
+            for is_quality in true_false:
+                for is_amplification in true_false:
+                    for is_misassignment in true_false:
                         if (is_misassignment and not is_amplification)\
                                 or (n_strains <= 1 and (is_amplification or is_misassignment)):
                             pass

@@ -389,7 +389,7 @@ class BaseModel():
         for label, rate in self.fixed_infection_death_rate_flows:
             self.graph.edge(label, "tb_death", label=num_str(rate))
         for label, rate in self.var_infection_death_rate_flows:
-            self.graph.edge(label, "tb_death", label=num_str(rate))
+            self.graph.edge(label, "tb_death", label=var_label)
         base, ext = os.path.splitext(png)
         if ext.lower() != '.png':
             base = png

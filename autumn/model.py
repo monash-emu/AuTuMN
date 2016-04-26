@@ -889,17 +889,17 @@ class ConsolidatedModel(BaseModel):
                             "lowquality" + organ + strain + comorbidity,
                             "active" + organ + strain + comorbidity,
                             "program_rate_leavelowquality")
-                        if not self.is_misassignment:
+                    if not self.is_misassignment:
+                        self.set_fixed_transfer_rate_flow(
+                            "detect" + organ + strain + comorbidity,
+                            "treatment_infect" + organ + strain + comorbidity,
+                            "program_rate_start_treatment")
+                    else:
+                        for assigned_strain in self.strains:
                             self.set_fixed_transfer_rate_flow(
-                                "detect" + organ + strain + comorbidity,
-                                "treatment_infect" + organ + strain + comorbidity,
+                                "detect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
+                                "treatment_infect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
                                 "program_rate_start_treatment")
-                        else:
-                            for assigned_strain in self.strains:
-                                self.set_fixed_transfer_rate_flow(
-                                    "detect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
-                                    "treatment_infect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
-                                    "program_rate_start_treatment")
 
     def set_detection_flows(self):
 

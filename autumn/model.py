@@ -31,17 +31,19 @@ class ConsolidatedModel(BaseModel):
     All TB-specific methods and structures are contained in this model
     Methods are written to be adaptable to any model structure selected through the __init__ arguments
 
-    The work-flow of the simulation is structured into several parts:
-         1. setting initial compartments and values
-         2. reading params
-         3. calculating derived params and scaleup functions
-         4. assigning flows from either params or vars
-         5. main loop over simulation time points
-             1. extracting scaleup-vars
-             2. calculating vars from compartments, params and scaleup-vars
-             3. calculating diagnostic vars from compartments, rates,
-                vars, params, and scaleup-vars
-         6. calculating diagnostic solns
+    The work-flow of the simulation is structured into the following parts:
+        1. Defining the model structure
+        2. Initialising the compartments
+        3. Setting parameters (needs a lot more work)
+        4. Calculating derived parameters and setting scale-up functions
+        5. Assigning flows from either parameters or functions
+        6. Main loop over simulation time-points:
+                a. Extracting scale-up variables
+                b. Calculating variable flow rates
+                c. Calculating diagnostic variables
+                    (b. and  c. can be calculated from a compartment values,
+                    parameters, scale-up functions or a combination of these)
+        7. Calculating the diagnostic solutions
     """
 
     def __init__(self,
@@ -55,29 +57,28 @@ class ConsolidatedModel(BaseModel):
         """
         Args:
             n_organ: whether pulmonary status and smear-positive/smear-negative status
-                can be included in the model (which applies to all compartments representing active disease)
+                can be included in the model (which apply to all compartments representing active disease)
                 0. No subdivision
-                1. All patients are smear-positive pulmonary (avoid selecting this)
+                1. All patients are smear-positive pulmonary (avoid)
                 2. All patients are pulmonary, but smear status can be selected (i.e. smear-pos/smear-neg)
                 3. Full stratification into smear-positive, smear-negative and extra-pulmonary
-            n_strain: number of types of drug-resistance included in the model (not strains in the phylogenetic sense)
+            n_strain: number of types of drug-resistance included (not strains in the strict phylogenetic sense)
                 0. No strains included
-                1. All TB is DS-TB (avoid selecting this)
+                1. All TB is DS-TB (avoid)
                 2. DS-TB and MDR-TB
                 3. DS-TB, MDR-TB and XDR-TB
-                N.B. this may change in future models, which may include isoniazid mono-resistance, etc.
-            n_comorbidity: number of whole population stratifications, except for age
+                (N.B. this may change in future models, which may include isoniazid mono-resistance, etc.)
+            n_comorbidity: number of whole-population stratifications, other than age
                 0. No population stratification
-                1. Entire population is not at increased risk (avoid selecting this)
-                2. No increased risk or HIV
-                3. No increased risk, HIV or diabetes
-            lowquality: Boolean of whether to include detections through the private sector
-            amplification: Boolean of whether to include resistance amplification through treatment default
-            misassignment: Boolean of whether also to incorporate misclassification of patients with drug-resistance
-                    to the wrong strain by the health system
+                1. Entire population is not at increased risk (avoid)
+                2. No additional risk factor or HIV
+                3. No additional risk factor, HIV or diabetes
+            is_lowquality: Boolean of whether to include detections through the private/low-quality sector
+            is_amplification: Boolean of whether to include resistance amplification through treatment default
+            is_misassignment: Boolean of whether also to incorporate misclassification of patients with drug-resistance
+                    to the wrong strain by the high-quality health system
                 Avoid amplification=False but misassignment=True (the model should run with both
-                amplificaiton and misassignment, but this combination doesn't make sense)
-
+                amplification and misassignment, but this combination doesn't make sense)
         """
 
         BaseModel.__init__(self)
@@ -93,11 +94,14 @@ class ConsolidatedModel(BaseModel):
             assert self.is_amplification, "Misassignment requested without amplification"
 
         # Initialise model compartmental structure and set un-processed parameters
-        self.define_model_structure(
-            self.n_organ, self.n_strain, self.n_comorbidity)
+        self.define_model_structure(self.n_organ, self.n_strain, self.n_comorbidity)
         self.initialise_compartments()
         self.set_parameters()
 
+        # Treatment outcomes that will be universal to all models
+        # Global TB outcomes of "completion" and "cure" can be considered "_success",
+        # "death" is "_death" (of course), "failure" and "default" are considered "_default"
+        # and "transfer out" is removed from denominator calculations.
         self.outcomes = ["_success", "_death", "_default"]
         self.non_success_outcomes = self.outcomes[1: 3]
 
@@ -183,31 +187,35 @@ class ConsolidatedModel(BaseModel):
 
     def initialise_compartments(self, compartment_dict=None):
 
-        # Initialise all compartments to zero
+        # First initialise all compartments to zero
         for compartment in self.compartment_types:
             for comorbidity in self.comorbidities:
-                if "susceptible" in compartment:  # Replicate for comorbidities only
+                # Replicate susceptible for comorbidities only
+                if "susceptible" in compartment:
                     self.set_compartment(compartment + comorbidity, 0.)
-                elif "latent" in compartment:  # Replicate for comorbidities and strains
+                # Replicate latent classes for comorbidities and strains
+                elif "latent" in compartment:
                     for strain in self.strains:
                         self.set_compartment(compartment + strain + comorbidity, 0.)
-                elif "active" in compartment or "missed" in compartment or "lowquality" in compartment: # Replicate for everything
+                # Replicate active classes for comorbidities, strains and organ status
+                elif "active" in compartment or "missed" in compartment or "lowquality" in compartment:
                     for strain in self.strains:
                         for organ in self.organ_status:
                             self.set_compartment(compartment + organ + strain + comorbidity, 0.)
+                # Replicate treatment classes for comorbidities, strains, organ status and assigned strain
                 else:
-                    for i in range(len(self.strains)):
-                        strain = self.strains[i]
+                    for actual_strain_number in range(len(self.strains)):
+                        strain = self.strains[actual_strain_number]
                         for organ in self.organ_status:
-                            if self.is_misassignment:  # Mis-assignment by strain
-                                for j in range(len(self.strains)):
-                                    assigned_strain = self.strains[j]
+                            if self.is_misassignment:
+                                for assigned_strain_number in range(len(self.strains)):
+                                    as_assigned_strain = "_as" + self.strains[assigned_strain_number][1:]
                                     self.set_compartment(
-                                        compartment + organ + strain + "_as" + assigned_strain[1:] + comorbidity, 0.)
+                                        compartment + organ + strain + as_assigned_strain + comorbidity, 0.)
                             else:
                                 self.set_compartment(compartment + organ + strain + comorbidity, 0.)
 
-        # Some useful defaults if None given
+        # Some defaults initial compartment defaults if None given as the compartment dictionary
         if compartment_dict is None:
             compartment_dict = {
                 "susceptible_fully":
@@ -220,7 +228,8 @@ class ConsolidatedModel(BaseModel):
         default_start_strain = "_ds"
         if self.strains == [""]: default_start_strain = ""
 
-        # The equal splits will need to be adjusted
+        # The equal splits may need to be adjusted, but the important thing is not to
+        # initialise multiple strains too early, so that MDR-TB doesn't overtake the model
         for compartment in self.compartment_types:
             if compartment in compartment_dict:
                 if "susceptible" in compartment:  # Split equally by comorbidities
@@ -244,7 +253,8 @@ class ConsolidatedModel(BaseModel):
     def set_parameters(self, paramater_dict=None):
 
         """
-        Sets model parameters
+        Sets some default model parameters for testing when required
+        These will be set externally through the spreadsheets in all real world applications
 
         Args:
             paramater_dict: a key-value dictionary where typically key
@@ -356,6 +366,7 @@ class ConsolidatedModel(BaseModel):
                     0.25
             }
 
+        # Populate parameters into model
         for parameter in paramater_dict:
             self.set_parameter(parameter, paramater_dict[parameter])
 
@@ -372,7 +383,6 @@ class ConsolidatedModel(BaseModel):
             proportion: Total proportion to be split
             early_period: Early time period
             total_period: Late time period
-
         Returns:
             early_proportion: Proportion allocated to early time period
             late_proportion: Proportion allocated to late time period
@@ -380,12 +390,11 @@ class ConsolidatedModel(BaseModel):
 
         early_proportion \
             = 1. - exp(log(1. - proportion) * early_period / total_period)
-        late_proportion \
-            = proportion - early_proportion
+        late_proportion = proportion - early_proportion
         return early_proportion, late_proportion
 
     ##################################################################
-    # The main parameter processing and scale-up setting method
+    # The master parameter processing and scale-up setting method
 
     def process_parameters(self):
 
@@ -393,8 +402,6 @@ class ConsolidatedModel(BaseModel):
         Calls all the methods to set parameters and scale-up functions
         The order in which these methods is run is often important
         """
-
-        self.split_default_death_proportions_params()
 
         if self.n_organ > 0: self.ensure_all_progressions_go_somewhere_params()
 
@@ -410,73 +417,52 @@ class ConsolidatedModel(BaseModel):
 
         self.find_treatment_rates_params()
 
-        # if self.is_misassignment: self.find_treatment_with_misassignment_params()
-
         self.set_population_death_rate("demo_rate_death")
 
     ##################################################################
     # The methods that process_parameters calls to set parameters and
     # scale-up functions
 
-    def split_default_death_proportions_params(self):
-
-        """
-        Code for the temporary situation in which the proportion of
-        non-success outcomes is consistently split between default and death
-        """
-
-        if self.strains == [""]:
-            self.params["program_proportion_success"] \
-                = self.params["program_proportion_success_ds"]
-
-        for strain in self.strains:
-            self.params["program_proportion_default" + strain] = \
-                (1. - self.params["program_proportion_success" + strain]) \
-                * (1. - self.params["program_prop_nonsuccessoutcomes_death"])
-            self.params["program_proportion_death" + strain] = \
-                (1. - self.params["program_proportion_success" + strain]) \
-                * self.params["program_prop_nonsuccessoutcomes_death"]
-        self.params["program_proportion_default_inappropriate"] = \
-            (1. - self.params["program_proportion_success_inappropriate"]) \
-            * (1. - self.params["program_prop_nonsuccessoutcomes_death"])
-        self.params["program_proportion_death_inappropriate"] = \
-            (1. - self.params["program_proportion_success_inappropriate"]) \
-            * self.params["program_prop_nonsuccessoutcomes_death"]
-
     def ensure_all_progressions_go_somewhere_params(self):
 
         """
-        If fewer than three organ statuses are available, ensure that all detected patients
-        go somewhere
+        If fewer than three organ statuses are available,
+        ensure that all detected patients go somewhere
         """
 
-        if len(self.organ_status) == 1:  # One organ status shouldn't really be used, but in case it is
+        # One organ status shouldn't really be used, but in case it is
+        if len(self.organ_status) == 1:
             self.params["epi_proportion_cases_smearpos"] = 1.
-        elif len(self.organ_status) == 2:  # Extrapuls go to smearneg (arguably should be the other way round)
+        # Extrapuls go to smearneg (arguably should be the other way round)
+        elif len(self.organ_status) == 2:
             self.params["epi_proportion_cases_smearneg"] = \
                 self.params["epi_proportion_cases_smearneg"] \
                 + self.params["epi_proportion_cases_extrapul"]
 
     def find_vaccination_rates_scaleups(self):
 
+        # Temporary vaccination scale-up function
+        # Will be imported externally in applications (probably from UNICEF data)
         self.set_scaleup_fn("vaccination",
                             make_two_step_curve(0., 0.6, 0.8, 1950., 1980., 2000.))
 
     def find_natural_history_params(self):
 
-        # If extrapulmonary case-fatality not stated
+        # If extrapulmonary case-fatality not stated, use smear-negative case-fatality
         if "tb_proportion_casefatality_untreated_extrapul" not in self.params:
             self.set_parameter(
                 "tb_proportion_casefatality_untreated_extrapul",
                 self.params["tb_proportion_casefatality_untreated_smearneg"])
 
-        # Progression and stabilisation rates
-        self.set_parameter("tb_rate_early_progression",  # Overall
+        # Overall progression and stabilisation rates
+        self.set_parameter("tb_rate_early_progression",
                            self.params["tb_proportion_early_progression"]
                            / self.params["tb_timeperiod_early_latent"])
-        self.set_parameter("tb_rate_stabilise",  # Stabilisation rate
-                           (1 - self.params["tb_proportion_early_progression"])
+        self.set_parameter("tb_rate_stabilise",
+                           (1. - self.params["tb_proportion_early_progression"])
                            / self.params["tb_timeperiod_early_latent"])
+
+        # Adjust overall rates by organ status
         for organ in self.organ_status:
             self.set_parameter(
                 "tb_rate_early_progression" + organ,
@@ -498,6 +484,7 @@ class ConsolidatedModel(BaseModel):
 
     def find_detection_rates_params(self):
 
+        # Temporary scale-up functions to be populated from spreadsheets later
         self.set_scaleup_fn("program_proportion_detect",
                             make_two_step_curve(0.2, 0.7, 0.8, 1920., 1980., 2000.))
         self.set_scaleup_fn("program_proportion_algorithm_sensitivity",
@@ -505,11 +492,13 @@ class ConsolidatedModel(BaseModel):
 
     def find_lowquality_proportion(self):
 
+        # Temporary scale-up function to be populated from spreadsheets later
         self.set_scaleup_fn("program_prop_lowquality",
                             make_two_step_curve(.3, .4, .5, 1980., 1990., 2000.))
 
     def find_detection_misassignment_scaleups(self):
 
+        # Temporary scale-up functions to be populated from spreadsheets later
         self.set_scaleup_fn(
             "program_prop_firstline_dst",
             make_two_step_curve(0., 0.5, 0.7, 1980., 1990., 2000.))
@@ -521,7 +510,7 @@ class ConsolidatedModel(BaseModel):
 
         """
         Calculate treatment rates from the treatment outcome proportions
-        Has to be done for each strain separately and for those on inappropriate treatment
+        Has to be done for each strain separately and also for those on inappropriate treatment
         """
 
         # If the model isn't stratified by strain, use DS-TB time periods for the single strain
@@ -532,13 +521,14 @@ class ConsolidatedModel(BaseModel):
                 = self.params["tb_timeperiod_treatment_ds"]
 
         for strain in self.strains + ["_inappropriate"]:
+
             # Find the non-infectious periods
             self.set_parameter(
                 "tb_timeperiod_noninfect_ontreatment" + strain,
                 self.params["tb_timeperiod_treatment" + strain]
                 - self.params["tb_timeperiod_infect_ontreatment" + strain])
 
-            # Temporarily set some treatment outcomes
+            # Temporarily set some treatment outcomes, to be populated from spreadsheets later
             self.set_scaleup_fn(
                 "program_proportion_success" + strain,
                 make_two_step_curve(0.6, 0.8, 1., 1980., 1990., 2000.))
@@ -547,50 +537,10 @@ class ConsolidatedModel(BaseModel):
                     "program_proportion" + outcome + strain,
                     make_two_step_curve(0.2, 0.1, 0., 1980., 1990., 2000.))
 
-        # Set amplification scale-up function
+        # Set the amplification scale-up function
         self.set_scaleup_fn(
             "tb_proportion_amplification",
             make_two_step_curve(0., 1./15., 2./15., 1950., 1960., 1970.))
-
-    def find_treatment_with_misassignment_params(self):
-
-        for i in range(len(self.strains)):
-            strain = self.strains[i]
-            for j in range(len(self.strains)):
-                assigned_strain = self.strains[j]
-
-                # Which treatment parameters to use - for the strain or for inappropriate treatment
-                if i > j:
-                    strain_or_inappropriate = "_inappropriate"
-                else:
-                    strain_or_inappropriate = assigned_strain
-
-                if i != len(self.strains) - 1:
-                    amplify_to_strain = self.strains[i + 1]  # Is the more resistant strain
-                    # Split default rates into amplification and non-amplification proportions
-                    for treatment_stage in self.treatment_stages:
-                        # Calculate amplification and non-amplification target proportions:
-                        end_rate_default_noamplify = \
-                            self.params["program_rate_default" + treatment_stage + strain] \
-                            * (1 - self.params["proportion_amplification"])
-                        end_rate_default_amplify = \
-                            self.params["program_rate_default" + treatment_stage + strain] \
-                            * self.params["proportion_amplification"]
-                        # Calculate equivalent functions
-                        self.set_scaleup_fn(
-                            "program_rate_default" + treatment_stage + "_noamplify" + strain_or_inappropriate,
-                            make_sigmoidal_curve(
-                                end_rate_default_noamplify + end_rate_default_amplify,
-                                end_rate_default_noamplify,
-                                self.params["timepoint_introduce" + amplify_to_strain],
-                                self.params["timepoint_introduce" + amplify_to_strain] + 3.))
-                        self.set_scaleup_fn(
-                            "program_rate_default" + treatment_stage + "_amplify" + strain_or_inappropriate,
-                            make_sigmoidal_curve(
-                                0.,
-                                end_rate_default_amplify,
-                                self.params["timepoint_introduce" + amplify_to_strain],
-                                self.params["timepoint_introduce" + amplify_to_strain] + 3.))
 
     ##################################################################
     # Methods that calculate variables to be used in calculating flows
@@ -600,6 +550,11 @@ class ConsolidatedModel(BaseModel):
     # into this section
 
     def calculate_vars(self):
+
+        """
+        The master method that calls all the other methods for the calculations of
+        variable rates
+        """
 
         self.vars["population"] = sum(self.compartments.values())
 
@@ -617,6 +572,9 @@ class ConsolidatedModel(BaseModel):
 
     def calculate_birth_rates_vars(self):
 
+        # Calculate vaccinated and unvaccinated birth rates
+        # Rates are dependent upon two variables, i.e. the total population
+        # and the scale-up function of BCG vaccination coverage
         self.vars["births_unvac"] = \
             (1. - self.vars["vaccination"]) \
             * self.params["demo_rate_birth"] \
@@ -630,8 +588,10 @@ class ConsolidatedModel(BaseModel):
 
     def calculate_force_infection_vars(self):
 
+        # Calculate force of infection by strain,
+        # incorporating partial immunity and infectiousness
         for strain in self.strains:
-            self.vars["infectious_population" + strain] = 0.0
+            self.vars["infectious_population" + strain] = 0.
             for organ in self.organ_status:
                 for label in self.labels:
                     if organ not in label and organ != "":

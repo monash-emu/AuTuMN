@@ -787,10 +787,7 @@ class ConsolidatedModel(BaseModel):
 
         self.set_detection_flows()
 
-        if self.is_misassignment:
-            self.set_treatment_misassignment_flows()
-        else:
-            self.set_treatment_flows()
+        self.set_treatment_flows()
 
     def set_birth_flows(self):
 
@@ -949,81 +946,52 @@ class ConsolidatedModel(BaseModel):
 
         for comorbidity in self.comorbidities:
             for organ in self.organ_status:
-                for i in range(len(self.strains)):
-                    strain = self.strains[i]
-                    self.set_var_transfer_rate_flow(
-                        "treatment_infect" + organ + strain + comorbidity,
-                        "treatment_noninfect" + organ + strain + comorbidity,
-                        "program_rate_success_infect" + strain)
-                    self.set_var_transfer_rate_flow(
-                        "treatment_noninfect" + organ + strain + comorbidity,
-                        "susceptible_treated" + comorbidity,
-                        "program_rate_success_noninfect" + strain)
-                    for treatment_stage in self.treatment_stages:
-                        self.set_var_infection_death_rate_flow(
-                            "treatment" + treatment_stage + organ + strain + comorbidity,
-                            "program_rate_death" + treatment_stage + strain)
-                    for treatment_stage in self.treatment_stages:
-                        # If it's the most resistant strain or amplification not on:
-                        if not self.is_amplification or i == len(self.strains) - 1:
-                            self.set_var_transfer_rate_flow(
-                                "treatment" + treatment_stage + organ + strain + comorbidity,
-                                "active" + organ + strain + comorbidity,
-                                "program_rate_default" + treatment_stage + strain)
-                        else:
-                            amplify_to_strain = self.strains[
-                                i + 1]  # Is the more resistant strain
-                            self.set_var_transfer_rate_flow(
-                                "treatment" + treatment_stage + organ + strain + comorbidity,
-                                "active" + organ + strain + comorbidity,
-                                "program_rate_default" + treatment_stage + "_noamplify" + strain)
-                            self.set_var_transfer_rate_flow(
-                                "treatment" + treatment_stage + organ + strain + comorbidity,
-                                "active" + organ + amplify_to_strain + comorbidity,
-                                "program_rate_default" + treatment_stage + "_amplify" + strain)
 
-    def set_treatment_misassignment_flows(self):
-
-        for comorbidity in self.comorbidities:
-            for organ in self.organ_status:
-                for i in range(len(self.strains)):
-                    strain = self.strains[i]
-                    for j in range(len(self.strains)):
-                        assigned_strain = self.strains[j]
-                        # Which treatment parameters to use - for the strain or for inappropriate treatment
-                        if i > j:
-                            strain_or_inappropriate = "_inappropriate"
+                for actual_strain_number in range(len(self.strains)):
+                    strain = self.strains[actual_strain_number]
+                    if self.is_misassignment:
+                        assignment_strains = range(len(self.strains))
+                    else:
+                        assignment_strains = [""]
+                    for assigned_strain_number in assignment_strains:
+                        if self.is_misassignment:
+                            as_assigned_strain = "_as" + self.strains[assigned_strain_number][1:]
+                            # Which treatment parameters to use - for the strain or for inappropriate treatment
+                            if actual_strain_number > assigned_strain_number:
+                                strain_or_inappropriate = "_inappropriate"
+                            else:
+                                strain_or_inappropriate = self.strains[assigned_strain_number]
                         else:
-                            strain_or_inappropriate = assigned_strain
+                            as_assigned_strain = ""
+                            strain_or_inappropriate = self.strains[actual_strain_number]
 
                         self.set_var_transfer_rate_flow(
-                            "treatment_infect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
-                            "treatment_noninfect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
+                            "treatment_infect" + organ + strain + as_assigned_strain + comorbidity,
+                            "treatment_noninfect" + organ + strain + as_assigned_strain + comorbidity,
                             "program_rate_success_infect" + strain_or_inappropriate)
                         self.set_var_transfer_rate_flow(
-                            "treatment_noninfect" + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
+                            "treatment_noninfect" + organ + strain + as_assigned_strain + comorbidity,
                             "susceptible_treated" + comorbidity,
                             "program_rate_success_noninfect" + strain_or_inappropriate)
                         for treatment_stage in self.treatment_stages:
                             self.set_var_infection_death_rate_flow(
-                                "treatment" + treatment_stage + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
+                                "treatment" + treatment_stage + organ + strain + as_assigned_strain + comorbidity,
                                 "program_rate_death" + treatment_stage + strain_or_inappropriate)
                         for treatment_stage in self.treatment_stages:
                             # If it's the most resistant strain or amplification not on:
-                            if not self.is_amplification or i == len(self.strains) - 1:
+                            if not self.is_amplification or actual_strain_number == len(self.strains) - 1:
                                 self.set_var_transfer_rate_flow(
-                                    "treatment" + treatment_stage + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
+                                    "treatment" + treatment_stage + organ + strain + as_assigned_strain + comorbidity,
                                     "active" + organ + strain + comorbidity,
                                     "program_rate_default" + treatment_stage + strain_or_inappropriate)
                             else:
-                                amplify_to_strain = self.strains[
-                                    i + 1]  # Is the more resistant strain
+                                amplify_to_strain = self.strains[actual_strain_number + 1]  # Is the more resistant strain
                                 self.set_var_transfer_rate_flow(
-                                    "treatment" + treatment_stage + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
+                                    "treatment" + treatment_stage + organ + strain + as_assigned_strain + comorbidity,
                                     "active" + organ + strain + comorbidity,
                                     "program_rate_default" + treatment_stage + "_noamplify" + strain_or_inappropriate)
                                 self.set_var_transfer_rate_flow(
-                                    "treatment" + treatment_stage + organ + strain + "_as"+assigned_strain[1:] + comorbidity,
+                                    "treatment" + treatment_stage + organ + strain + as_assigned_strain + comorbidity,
                                     "active" + organ + amplify_to_strain + comorbidity,
                                     "program_rate_default" + treatment_stage + "_amplify" + strain_or_inappropriate)
 

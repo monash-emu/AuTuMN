@@ -383,13 +383,13 @@ class BaseModel():
             self.graph.node(label)
         self.graph.node("tb_death")
         for from_label, to_label, var_label in self.var_transfer_rate_flows:
-            self.graph.edge(from_label, to_label, label=var_label)
+            self.graph.edge(from_label, to_label, label=var_label[:4])
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
             self.graph.edge(from_label, to_label, label=num_str(rate))
         for label, rate in self.fixed_infection_death_rate_flows:
             self.graph.edge(label, "tb_death", label=num_str(rate))
         for label, rate in self.var_infection_death_rate_flows:
-            self.graph.edge(label, "tb_death", label=var_label)
+            self.graph.edge(label, "tb_death", label=var_label[:4])
         base, ext = os.path.splitext(png)
         if ext.lower() != '.png':
             base = png

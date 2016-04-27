@@ -26,13 +26,13 @@ strata_to_run = [0, 2, 3]
 true_false = [True, False]
 
 # Note that it takes about one hour to run all of the possible model structures
-for n_organs in strata_to_run:
-    for n_strains in strata_to_run:
-        for n_comorbidities in strata_to_run:
-            for is_quality in true_false:
-                for is_amplification in true_false:
-                    for is_misassignment in true_false:
-                        if (is_misassignment and not is_amplification)\
+for n_organs in [3]:
+    for n_strains in [3]:
+        for n_comorbidities in [2]:
+            for is_quality in [False]:
+                for is_amplification in [True]:
+                    for is_misassignment in [True]:
+                        if (is_misassignment and not is_amplification) \
                                 or (n_strains <= 1 and (is_amplification or is_misassignment)):
                             pass
                         else:
@@ -61,7 +61,7 @@ for n_organs in strata_to_run:
                             recent_time = 1990.
                             model.make_times(start_time, 2015.1, 0.1)
                             model.integrate_explicit()
-                            if n_organs + n_strains + n_comorbidities <= 2:
+                            if n_organs + n_strains + n_comorbidities <= 3:
                                 model.make_graph(base + '.workflow')
 
                             # INDIVIDUAL COMPARTMENTS

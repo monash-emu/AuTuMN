@@ -306,7 +306,7 @@ class ConsolidatedModel(BaseModel):
                     0.88,
                 "program_prop_unvac":
                     1. - 0.88,
-                "program_proportion_detect":
+                "program_prop_detect":
                     0.8,
                 "program_algorithm_sensitivity":
                     0.9,
@@ -405,17 +405,13 @@ class ConsolidatedModel(BaseModel):
 
         if self.n_organ > 0: self.ensure_all_progressions_go_somewhere_params()
 
-        self.find_vaccination_rates_scaleups()
-
         self.find_natural_history_params()
 
-        self.find_detection_rates_params()
+        self.find_nontreatment_rates_params()
 
-        if self.is_lowquality: self.find_lowquality_proportion()
+        self.find_treatment_rates_scaleups()
 
-        self.find_detection_misassignment_scaleups()
-
-        self.find_treatment_rates_params()
+        self.find_amplification_scaleup()
 
         self.set_population_death_rate("demo_rate_death")
 
@@ -438,13 +434,6 @@ class ConsolidatedModel(BaseModel):
             self.params["epi_proportion_cases_smearneg"] = \
                 self.params["epi_proportion_cases_smearneg"] \
                 + self.params["epi_proportion_cases_extrapul"]
-
-    def find_vaccination_rates_scaleups(self):
-
-        # Temporary vaccination scale-up function
-        # Will be imported externally in applications (probably from UNICEF data)
-        self.set_scaleup_fn("vaccination",
-                            make_two_step_curve(0., 0.6, 0.8, 1950., 1980., 2000.))
 
     def find_natural_history_params(self):
 
@@ -482,31 +471,31 @@ class ConsolidatedModel(BaseModel):
                 (1 - self.params["tb_proportion_casefatality_untreated" + organ])
                 / self.params["tb_timeperiod_activeuntreated"])
 
-    def find_detection_rates_params(self):
+    def find_amplification_scaleup(self):
 
-        # Temporary scale-up functions to be populated from spreadsheets later
-        self.set_scaleup_fn("program_proportion_detect",
+        # Set the amplification scale-up function
+        self.set_scaleup_fn(
+            "tb_proportion_amplification",
+            make_two_step_curve(0., 1. / 15., 2. / 15., 1950., 1960., 1970.))
+
+    def find_nontreatment_rates_params(self):
+
+        # Temporary scale-up functions to be populated from spreadsheets
+        # as the next thing we need to do
+        self.set_scaleup_fn("program_prop_vaccination",
+                            make_two_step_curve(0., 0.6, 0.8, 1950., 1980., 2000.))
+        self.set_scaleup_fn("program_prop_detect",
                             make_two_step_curve(0.2, 0.7, 0.8, 1920., 1980., 2000.))
-        self.set_scaleup_fn("program_proportion_algorithm_sensitivity",
+        self.set_scaleup_fn("program_prop_algorithm_sensitivity",
                             make_two_step_curve(0.7, 0.8, 0.9, 1920., 1980., 2000.))
-
-    def find_lowquality_proportion(self):
-
-        # Temporary scale-up function to be populated from spreadsheets later
         self.set_scaleup_fn("program_prop_lowquality",
                             make_two_step_curve(.3, .4, .5, 1980., 1990., 2000.))
+        self.set_scaleup_fn("program_prop_firstline_dst",
+                            make_two_step_curve(0., 0.5, 0.7, 1980., 1990., 2000.))
+        self.set_scaleup_fn("program_prop_secondline_dst",
+                            make_two_step_curve(0., 0.5, 0.7, 1985., 1995., 2000.))
 
-    def find_detection_misassignment_scaleups(self):
-
-        # Temporary scale-up functions to be populated from spreadsheets later
-        self.set_scaleup_fn(
-            "program_prop_firstline_dst",
-            make_two_step_curve(0., 0.5, 0.7, 1980., 1990., 2000.))
-        self.set_scaleup_fn(
-            "program_prop_secondline_dst",
-            make_two_step_curve(0., 0.5, 0.7, 1985., 1995., 2000.))
-
-    def find_treatment_rates_params(self):
+    def find_treatment_rates_scaleups(self):
 
         """
         Calculate treatment rates from the treatment outcome proportions
@@ -536,11 +525,6 @@ class ConsolidatedModel(BaseModel):
                 self.set_scaleup_fn(
                     "program_proportion" + outcome + strain,
                     make_two_step_curve(0.2, 0.1, 0., 1980., 1990., 2000.))
-
-        # Set the amplification scale-up function
-        self.set_scaleup_fn(
-            "tb_proportion_amplification",
-            make_two_step_curve(0., 1./15., 2./15., 1950., 1960., 1970.))
 
     ##################################################################
     # Methods that calculate variables to be used in calculating flows
@@ -576,12 +560,12 @@ class ConsolidatedModel(BaseModel):
         # Rates are dependent upon two variables, i.e. the total population
         # and the scale-up function of BCG vaccination coverage
         self.vars["births_unvac"] = \
-            (1. - self.vars["vaccination"]) \
+            (1. - self.vars["program_prop_vaccination"]) \
             * self.params["demo_rate_birth"] \
             * self.vars["population"] \
             / len(self.comorbidities)
         self.vars["births_vac"] = \
-            self.vars["vaccination"] \
+            self.vars["program_prop_vaccination"] \
             * self.params["demo_rate_birth"] \
             * self.vars["population"] \
             / len(self.comorbidities)
@@ -616,7 +600,7 @@ class ConsolidatedModel(BaseModel):
         """"
         Calculate rates of detection and failure of detection
         from the programmatic report of the case detection "rate"
-        (which is actually a proportion and referred to as program_proportion_detect here)
+        (which is actually a proportion and referred to as program_prop_detect here)
 
         Derived from original formulas of by solving the simultaneous equations:
           algorithm sensitivity = detection rate / (detection rate + missed rate)
@@ -628,18 +612,18 @@ class ConsolidatedModel(BaseModel):
         # Note that all organ types are assumed to have the same untreated active
         # sojourn time, so any organ status can be arbitrarily selected (here the first, or smear-positive)
         self.vars["program_rate_detect"] = \
-            self.vars["program_proportion_detect"] \
+            self.vars["program_prop_detect"] \
             * (self.params["tb_rate_recover" + self.organ_status[0]] + self.params[
                 "tb_rate_death" + self.organ_status[0]]) \
-            / (1. - self.vars["program_proportion_detect"] \
-               * (1. + (1. - self.vars["program_proportion_algorithm_sensitivity"]) \
-                  / self.vars["program_proportion_algorithm_sensitivity"]))
+            / (1. - self.vars["program_prop_detect"] \
+               * (1. + (1. - self.vars["program_prop_algorithm_sensitivity"]) \
+                  / self.vars["program_prop_algorithm_sensitivity"]))
 
         # Missed
         self.vars["program_rate_missed"] = \
             self.vars["program_rate_detect"] \
-            * (1. - self. vars["program_proportion_algorithm_sensitivity"]) \
-            / self.vars["program_proportion_algorithm_sensitivity"]
+            * (1. - self. vars["program_prop_algorithm_sensitivity"]) \
+            / self.vars["program_prop_algorithm_sensitivity"]
 
         # Repeat for each strain
         for strain in self.strains:

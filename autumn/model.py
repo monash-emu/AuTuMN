@@ -186,17 +186,7 @@ class ConsolidatedModel(BaseModel):
         else:
             self.comorbidities = available_comorbidities[:self.n_comorbidity]
 
-        # Work out age-groups from list of breakpoints
-        self.agegroups = []
-        if len(self.age_breakpoints) > 0:
-            for i in range(len(self.age_breakpoints)):
-                if i == 0:
-                    self.agegroups += ["_age0to" + str(self.age_breakpoints[i])]
-                else:
-                    self.agegroups += ["_age" + str(self.age_breakpoints[i - 1]) + "to" + str(self.age_breakpoints[i])]
-            self.agegroups += ["_age" + str(self.age_breakpoints[len(self.age_breakpoints) - 1]) + "up"]
-        else:
-            self.agegroups += [""]
+        self.define_age_structure()
 
     def initialise_compartments(self, compartment_dict=None):
 
@@ -464,15 +454,6 @@ class ConsolidatedModel(BaseModel):
             self.params["epi_proportion_cases_smearneg"] = \
                 self.params["epi_proportion_cases_smearneg"] \
                 + self.params["epi_proportion_cases_extrapul"]
-
-    def find_ageing_rates(self):
-
-        # Calculate ageing rates as the reciprocal of the width of the age bracket
-        for agegroup in self.agegroups:
-            if "up" not in agegroup:
-                self.set_parameter("ageing_rate" + agegroup, 1. / (
-                    float(agegroup[agegroup.find("to") + 2:]) -
-                    float(agegroup[agegroup.find("age") + 3: agegroup.find("to")])))
 
     def find_natural_history_params(self):
 
@@ -801,16 +782,6 @@ class ConsolidatedModel(BaseModel):
                 "susceptible_fully" + comorbidity + self.agegroups[0], "births_unvac")
             self.set_var_entry_rate_flow(
                 "susceptible_vac" + comorbidity + self.agegroups[0], "births_vac")
-
-    def set_ageing_flows(self):
-
-        # Set simple ageing flows for two age strata
-        for label in self.labels:
-            for number_agegroup in range(len(self.agegroups)):
-                if self.agegroups[number_agegroup] in label and number_agegroup < len(self.agegroups) - 1:
-                    self.set_fixed_transfer_rate_flow(
-                        label, label[0: label.find("_age")] + self.agegroups[number_agegroup + 1],
-                        "ageing_rate" + self.agegroups[number_agegroup])
 
     def set_infection_flows(self):
 

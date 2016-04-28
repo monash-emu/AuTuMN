@@ -26,7 +26,7 @@ strata_to_run = [0, 2, 3]
 true_false = [True, False]
 
 # To run a single simple example
-strata_to_run = [2]
+strata_to_run = [0]
 true_false = [False]
 
 # Note that it takes about one hour to run all of the possible model structures
@@ -46,7 +46,7 @@ for n_comorbidities in strata_to_run:
                                 n_organs,
                                 n_strains,
                                 n_comorbidities,
-                                [],  # List of breakpoints for age stratification (or empty list for no stratification)
+                                [5, 15, 65],  # List of breakpoints for age stratification (or empty list for no stratification)
                                 is_quality,  # Low quality care
                                 is_amplification,  # Amplification
                                 is_misassignment)  # Misassignment by strain

@@ -50,6 +50,7 @@ class ConsolidatedModel(BaseModel):
                  n_organ=0,
                  n_strain=0,
                  n_comorbidity=0,
+                 n_agegroups=0,
                  is_lowquality=False,
                  is_amplification=False,
                  is_misassignment=False):
@@ -84,17 +85,20 @@ class ConsolidatedModel(BaseModel):
         BaseModel.__init__(self)
 
         # Convert inputs to attributes
-        self.is_lowquality = is_lowquality
-        self.is_amplification = is_amplification
-        self.is_misassignment = is_misassignment
         self.n_organ = n_organ
         self.n_strain = n_strain
         self.n_comorbidity = n_comorbidity
+        self.n_agegroups = n_agegroups
+
+        self.is_lowquality = is_lowquality
+        self.is_amplification = is_amplification
+        self.is_misassignment = is_misassignment
+
         if self.is_misassignment:
             assert self.is_amplification, "Misassignment requested without amplification"
 
         # Initialise model compartmental structure and set un-processed parameters
-        self.define_model_structure(self.n_organ, self.n_strain, self.n_comorbidity)
+        self.define_model_structure()
         self.initialise_compartments()
         self.set_parameters()
 
@@ -105,10 +109,7 @@ class ConsolidatedModel(BaseModel):
         self.outcomes = ["_success", "_death", "_default"]
         self.non_success_outcomes = self.outcomes[1: 3]
 
-    def define_model_structure(self,
-                               number_of_organs,
-                               number_of_strains,
-                               number_of_comorbidities):
+    def define_model_structure(self):
 
         """
         Args:
@@ -157,63 +158,81 @@ class ConsolidatedModel(BaseModel):
             "_smearpos",
             "_smearneg",
             "_extrapul"]
-        if number_of_organs == 0:
+        if self.n_organ == 0:
             # Need a list of an empty string to be iterable for methods iterating by organ status
             self.organ_status = [""]
         else:
-            self.organ_status = available_organs[:number_of_organs]
+            self.organ_status = available_organs[:self.n_organ]
 
         # Select number of strains
         available_strains = [
             "_ds",
             "_mdr",
             "_xdr"]
-        if number_of_strains == 0:
+        if self.n_strain == 0:
             # Need a list of an empty string to be iterable for methods iterating by strain
             self.strains = [""]
         else:
-            self.strains = available_strains[:number_of_strains]
+            self.strains = available_strains[:self.n_strain]
 
         # Select number of risk groups
         available_comorbidities = [
             "_nocomorbs",
             "_hiv",
             "_diabetes"]
-        if number_of_comorbidities == 0:
+        if self.n_comorbidity == 0:
             # Need a list of an empty string to be iterable for methods iterating by risk group
             self.comorbidities = [""]
         else:
-            self.comorbidities = available_comorbidities[:number_of_comorbidities]
+            self.comorbidities = available_comorbidities[:self.n_comorbidity]
+
+        # Select number of age groups
+        available_agegroups = [
+            "_child",
+            "_adult"]
+        if self.n_agegroups == 0:
+            # Need a list of an empty string to be iterable for methods iterating by risk group
+            self.agegroups = [""]
+        else:
+            self.agegroups = available_agegroups[:self.n_agegroups]
 
     def initialise_compartments(self, compartment_dict=None):
 
         # First initialise all compartments to zero
-        for compartment in self.compartment_types:
+        for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
-                # Replicate susceptible for comorbidities only
-                if "susceptible" in compartment:
-                    self.set_compartment(compartment + comorbidity, 0.)
-                # Replicate latent classes for comorbidities and strains
-                elif "latent" in compartment:
-                    for strain in self.strains:
-                        self.set_compartment(compartment + strain + comorbidity, 0.)
-                # Replicate active classes for comorbidities, strains and organ status
-                elif "active" in compartment or "missed" in compartment or "lowquality" in compartment:
-                    for strain in self.strains:
-                        for organ in self.organ_status:
-                            self.set_compartment(compartment + organ + strain + comorbidity, 0.)
-                # Replicate treatment classes for comorbidities, strains, organ status and assigned strain
-                else:
-                    for actual_strain_number in range(len(self.strains)):
-                        strain = self.strains[actual_strain_number]
-                        for organ in self.organ_status:
-                            if self.is_misassignment:
-                                for assigned_strain_number in range(len(self.strains)):
-                                    self.set_compartment(
-                                        compartment + organ + strain +
-                                        "_as" + self.strains[assigned_strain_number][1:] + comorbidity, 0.)
-                            else:
-                                self.set_compartment(compartment + organ + strain + comorbidity, 0.)
+                for compartment in self.compartment_types:
+
+                    # Replicate susceptible for age-groups and comorbidities
+                    if "susceptible" in compartment:
+                        self.set_compartment(compartment + comorbidity + agegroup, 0.)
+
+                    # Replicate latent classes for age-groups, comorbidities and strains
+                    elif "latent" in compartment:
+                        for strain in self.strains:
+                            self.set_compartment(compartment + strain + comorbidity + agegroup, 0.)
+
+                    # Replicate active classes for age-groups, comorbidities, strains and organ status
+                    elif "active" in compartment or "missed" in compartment or "lowquality" in compartment:
+                        for strain in self.strains:
+                            for organ in self.organ_status:
+                                self.set_compartment(compartment + organ + strain + comorbidity + agegroup, 0.)
+
+                    # Replicate treatment classes for
+                    # age-groups, comorbidities, strains, organ status and assigned strain
+                    else:
+                        for actual_strain_number in range(len(self.strains)):
+                            strain = self.strains[actual_strain_number]
+                            for organ in self.organ_status:
+                                if self.is_misassignment:
+                                    for assigned_strain_number in range(len(self.strains)):
+                                        self.set_compartment(
+                                            compartment + organ + strain +
+                                            "_as" + self.strains[assigned_strain_number][1:] +
+                                            comorbidity + agegroup, 0.)
+                                else:
+                                    self.set_compartment(compartment +
+                                                         organ + strain + comorbidity + agegroup, 0.)
 
         # Some defaults initial compartment defaults if None given as the compartment dictionary
         if compartment_dict is None:
@@ -232,21 +251,28 @@ class ConsolidatedModel(BaseModel):
         # initialise multiple strains too early, so that MDR-TB doesn't overtake the model
         for compartment in self.compartment_types:
             if compartment in compartment_dict:
-                for comorbidity in self.comorbidities:
-                    if "susceptible_fully" in compartment:
-                        self.set_compartment(compartment + comorbidity,
-                                             compartment_dict[compartment]
-                                             / len(self.comorbidities))  # Split equally by comorbidities
-                    elif "latent" in compartment:  # Assign all to DS-TB
-                        self.set_compartment(compartment + default_start_strain + comorbidity,
-                                             compartment_dict[compartment]
-                                             / len(self.comorbidities))  # Split equally by comorbidities
-                    else:
-                        for organ in self.organ_status:
-                            self.set_compartment(compartment + organ + default_start_strain + comorbidity,
+                for agegroup in self.agegroups:
+                    for comorbidity in self.comorbidities:
+                        if "susceptible_fully" in compartment:
+                            # Split equally by comorbidities and age-groups
+                            self.set_compartment(compartment + comorbidity + agegroup,
                                                  compartment_dict[compartment]
-                                                 / len(self.organ_status)  # Split equally by organ statuses
-                                                 / len(self.comorbidities))  # and split equally by comorbidities
+                                                 / len(self.comorbidities)
+                                                 / len(self.agegroups))
+                        elif "latent" in compartment:
+                            # Assign all to DS-TB, split equally by comorbidities and age-groups
+                            self.set_compartment(compartment + default_start_strain + comorbidity + agegroup,
+                                                 compartment_dict[compartment]
+                                                 / len(self.comorbidities)
+                                                 / len(self.agegroups))
+                        else:
+                            for organ in self.organ_status:
+                                self.set_compartment(compartment +
+                                                     organ + default_start_strain + comorbidity + agegroup,
+                                                     compartment_dict[compartment]
+                                                     / len(self.organ_status)  # Split equally by organ statuses,
+                                                     / len(self.comorbidities)  # split equally by comorbidities
+                                                     / len(self.agegroups))  # and split equally by age-groups
 
     def set_parameters(self, paramater_dict=None):
 
@@ -500,7 +526,7 @@ class ConsolidatedModel(BaseModel):
         Has to be done for each strain separately and also for those on inappropriate treatment
         """
 
-        # If the model isn't stratified by strain, use DS-TB time periods for the single strain
+        # If the model isn't stratified by strain, use DS-TB time-periods for the single strain
         if self.strains == [""]:
             self.params["tb_timeperiod_infect_ontreatment"] \
                 = self.params["tb_timeperiod_infect_ontreatment_ds"]
@@ -563,12 +589,14 @@ class ConsolidatedModel(BaseModel):
             (1. - self.vars["program_prop_vaccination"]) \
             * self.params["demo_rate_birth"] \
             * self.vars["population"] \
-            / len(self.comorbidities)
+            / len(self.comorbidities) \
+            / len(self.agegroups)  # Temporary, while sorting age-group structure
         self.vars["births_vac"] = \
             self.vars["program_prop_vaccination"] \
             * self.params["demo_rate_birth"] \
             * self.vars["population"] \
-            / len(self.comorbidities)
+            / len(self.comorbidities) \
+            / len(self.agegroups)  # Temporary too
 
     def calculate_force_infection_vars(self):
 
@@ -753,142 +781,150 @@ class ConsolidatedModel(BaseModel):
     def set_birth_flows(self):
 
         # Set birth flows (currently evenly distributed between comorbidities)
-        for comorbidity in self.comorbidities:
-            self.set_var_entry_rate_flow(
-                "susceptible_fully" + comorbidity, "births_unvac")
-            self.set_var_entry_rate_flow(
-                "susceptible_vac" + comorbidity, "births_vac")
+        for agegroup in self.agegroups:
+            for comorbidity in self.comorbidities:
+                self.set_var_entry_rate_flow(
+                    "susceptible_fully" + comorbidity + agegroup, "births_unvac")
+                self.set_var_entry_rate_flow(
+                    "susceptible_vac" + comorbidity + agegroup, "births_vac")
 
     def set_infection_flows(self):
 
         # Set force of infection flows
-        for comorbidity in self.comorbidities:
-            for strain in self.strains:
+        for agegroup in self.agegroups:
+            for comorbidity in self.comorbidities:
+                for strain in self.strains:
 
-                # Fully susceptible
-                self.set_var_transfer_rate_flow(
-                    "susceptible_fully" + comorbidity,
-                    "latent_early" + strain + comorbidity,
-                    "rate_force" + strain)
+                    # Fully susceptible
+                    self.set_var_transfer_rate_flow(
+                        "susceptible_fully" + comorbidity + agegroup,
+                        "latent_early" + strain + comorbidity + agegroup,
+                        "rate_force" + strain)
 
-                # Partially immune
-                self.set_var_transfer_rate_flow(
-                    "susceptible_vac" + comorbidity,
-                    "latent_early" + strain + comorbidity,
-                    "rate_force_weak" + strain)
-                self.set_var_transfer_rate_flow(
-                    "susceptible_treated" + comorbidity,
-                    "latent_early" + strain + comorbidity,
-                    "rate_force_weak" + strain)
-                self.set_var_transfer_rate_flow(
-                    "latent_late" + strain + comorbidity,
-                    "latent_early" + strain + comorbidity,
-                    "rate_force_weak" + strain)
+                    # Partially immune
+                    self.set_var_transfer_rate_flow(
+                        "susceptible_vac" + comorbidity + agegroup,
+                        "latent_early" + strain + comorbidity + agegroup,
+                        "rate_force_weak" + strain)
+                    self.set_var_transfer_rate_flow(
+                        "susceptible_treated" + comorbidity + agegroup,
+                        "latent_early" + strain + comorbidity + agegroup,
+                        "rate_force_weak" + strain)
+                    self.set_var_transfer_rate_flow(
+                        "latent_late" + strain + comorbidity + agegroup,
+                        "latent_early" + strain + comorbidity + agegroup,
+                        "rate_force_weak" + strain)
 
     def set_natural_history_flows(self):
 
-        for comorbidity in self.comorbidities:
-            for strain in self.strains:
+        for agegroup in self.agegroups:
+            for comorbidity in self.comorbidities:
+                for strain in self.strains:
 
-                    # Stabilisation
-                    self.set_fixed_transfer_rate_flow(
-                        "latent_early" + strain + comorbidity,
-                        "latent_late" + strain + comorbidity,
-                        "tb_rate_stabilise")
-                    for organ in self.organ_status:
-
-                        # Early progression
+                        # Stabilisation
                         self.set_fixed_transfer_rate_flow(
-                            "latent_early" + strain + comorbidity,
-                            "active" + organ + strain + comorbidity,
-                            "tb_rate_early_progression" + organ)
+                            "latent_early" + strain + comorbidity + agegroup,
+                            "latent_late" + strain + comorbidity + agegroup,
+                            "tb_rate_stabilise")
+                        for organ in self.organ_status:
 
-                        # Late progression
-                        self.set_fixed_transfer_rate_flow(
-                            "latent_late" + strain + comorbidity,
-                            "active" + organ + strain + comorbidity,
-                            "tb_rate_late_progression" + organ)
-
-                        # Recovery, base compartments
-                        self.set_fixed_transfer_rate_flow(
-                            "active" + organ + strain + comorbidity,
-                            "latent_late" + strain + comorbidity,
-                            "tb_rate_recover" + organ)
-                        self.set_fixed_transfer_rate_flow(
-                            "missed" + organ + strain + comorbidity,
-                            "latent_late" + strain + comorbidity,
-                            "tb_rate_recover" + organ)
-
-                        # Death, base compartments
-                        self.set_fixed_infection_death_rate_flow(
-                            "active" + organ + strain + comorbidity,
-                            "tb_rate_death" + organ)
-                        self.set_fixed_infection_death_rate_flow(
-                            "missed" + organ + strain + comorbidity,
-                            "tb_rate_death" + organ)
-
-                        # Extra low-quality compartments
-                        if self.is_lowquality:
+                            # Early progression
                             self.set_fixed_transfer_rate_flow(
-                                "lowquality" + organ + strain + comorbidity,
-                                "latent_late" + strain + comorbidity,
+                                "latent_early" + strain + comorbidity + agegroup,
+                                "active" + organ + strain + comorbidity + agegroup,
+                                "tb_rate_early_progression" + organ)
+
+                            # Late progression
+                            self.set_fixed_transfer_rate_flow(
+                                "latent_late" + strain + comorbidity + agegroup,
+                                "active" + organ + strain + comorbidity + agegroup,
+                                "tb_rate_late_progression" + organ)
+
+                            # Recovery, base compartments
+                            self.set_fixed_transfer_rate_flow(
+                                "active" + organ + strain + comorbidity + agegroup,
+                                "latent_late" + strain + comorbidity + agegroup,
                                 "tb_rate_recover" + organ)
+                            self.set_fixed_transfer_rate_flow(
+                                "missed" + organ + strain + comorbidity + agegroup,
+                                "latent_late" + strain + comorbidity + agegroup,
+                                "tb_rate_recover" + organ)
+
+                            # Death, base compartments
                             self.set_fixed_infection_death_rate_flow(
-                                "lowquality" + organ + strain + comorbidity,
+                                "active" + organ + strain + comorbidity + agegroup,
+                                "tb_rate_death" + organ)
+                            self.set_fixed_infection_death_rate_flow(
+                                "missed" + organ + strain + comorbidity + agegroup,
                                 "tb_rate_death" + organ)
 
-                        # Detected, with misassignment
-                        if self.is_misassignment:
-                            for assigned_strain in self.strains:
-                                self.set_fixed_infection_death_rate_flow(
-                                    "detect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
-                                    "tb_rate_death" + organ)
+                            # Extra low-quality compartments
+                            if self.is_lowquality:
                                 self.set_fixed_transfer_rate_flow(
-                                    "detect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
-                                    "latent_late" + strain + comorbidity,
+                                    "lowquality" + organ + strain + comorbidity + agegroup,
+                                    "latent_late" + strain + comorbidity + agegroup,
                                     "tb_rate_recover" + organ)
+                                self.set_fixed_infection_death_rate_flow(
+                                    "lowquality" + organ + strain + comorbidity + agegroup,
+                                    "tb_rate_death" + organ)
 
-                        # Detected, without misassignment
-                        else:
-                            self.set_fixed_transfer_rate_flow(
-                                "detect" + organ + strain + comorbidity,
-                                "latent_late" + strain + comorbidity,
-                                "tb_rate_recover" + organ)
-                            self.set_fixed_infection_death_rate_flow(
-                                "detect" + organ + strain + comorbidity,
-                                "tb_rate_death" + organ)
+                            # Detected, with misassignment
+                            if self.is_misassignment:
+                                for assigned_strain in self.strains:
+                                    self.set_fixed_infection_death_rate_flow(
+                                        "detect" +
+                                        organ + strain + "_as" + assigned_strain[1:] + comorbidity + agegroup,
+                                        "tb_rate_death" + organ)
+                                    self.set_fixed_transfer_rate_flow(
+                                        "detect" +
+                                        organ + strain + "_as" + assigned_strain[1:] + comorbidity + agegroup,
+                                        "latent_late" + strain + comorbidity + agegroup,
+                                        "tb_rate_recover" + organ)
+
+                            # Detected, without misassignment
+                            else:
+                                self.set_fixed_transfer_rate_flow(
+                                    "detect" + organ + strain + comorbidity + agegroup,
+                                    "latent_late" + strain + comorbidity + agegroup,
+                                    "tb_rate_recover" + organ)
+                                self.set_fixed_infection_death_rate_flow(
+                                    "detect" + organ + strain + comorbidity + agegroup,
+                                    "tb_rate_death" + organ)
 
     def set_fixed_programmatic_flows(self):
 
-        for comorbidity in self.comorbidities:
-            for strain in self.strains:
-                for organ in self.organ_status:
+        for agegroup in self.agegroups:
+            for comorbidity in self.comorbidities:
+                for strain in self.strains:
+                    for organ in self.organ_status:
 
-                    # Re-start presenting after a missed diagnosis
-                    self.set_fixed_transfer_rate_flow(
-                        "missed" + organ + strain + comorbidity,
-                        "active" + organ + strain + comorbidity,
-                        "program_rate_restart_presenting")
-
-                    # Give up on the hopeless low-quality health system
-                    if self.is_lowquality:
+                        # Re-start presenting after a missed diagnosis
                         self.set_fixed_transfer_rate_flow(
-                            "lowquality" + organ + strain + comorbidity,
-                            "active" + organ + strain + comorbidity,
-                            "program_rate_leavelowquality")
+                            "missed" + organ + strain + comorbidity + agegroup,
+                            "active" + organ + strain + comorbidity + agegroup,
+                            "program_rate_restart_presenting")
 
-                    # Detection, with and without misassignment
-                    if self.is_misassignment:
-                        for assigned_strain in self.strains:
+                        # Give up on the hopeless low-quality health system
+                        if self.is_lowquality:
                             self.set_fixed_transfer_rate_flow(
-                                "detect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
-                                "treatment_infect" + organ + strain + "_as" + assigned_strain[1:] + comorbidity,
+                                "lowquality" + organ + strain + comorbidity + agegroup,
+                                "active" + organ + strain + comorbidity + agegroup,
+                                "program_rate_leavelowquality")
+
+                        # Detection, with and without misassignment
+                        if self.is_misassignment:
+                            for assigned_strain in self.strains:
+                                self.set_fixed_transfer_rate_flow(
+                                    "detect" +
+                                    organ + strain + "_as" + assigned_strain[1:] + comorbidity + agegroup,
+                                    "treatment_infect" +
+                                    organ + strain + "_as" + assigned_strain[1:] + comorbidity + agegroup,
+                                    "program_rate_start_treatment")
+                        else:
+                            self.set_fixed_transfer_rate_flow(
+                                "detect" + organ + strain + comorbidity + agegroup,
+                                "treatment_infect" + organ + strain + comorbidity + agegroup,
                                 "program_rate_start_treatment")
-                    else:
-                        self.set_fixed_transfer_rate_flow(
-                            "detect" + organ + strain + comorbidity,
-                            "treatment_infect" + organ + strain + comorbidity,
-                            "program_rate_start_treatment")
 
     def set_detection_flows(self):
 
@@ -898,44 +934,46 @@ class ConsolidatedModel(BaseModel):
         or with proportional misassignment
         """
 
-        for comorbidity in self.comorbidities:
-            for organ in self.organ_status:
-                for actual_strain_number in range(len(self.strains)):
-                    strain = self.strains[actual_strain_number]
+        for agegroup in self.agegroups:
+            for comorbidity in self.comorbidities:
+                for organ in self.organ_status:
+                    for actual_strain_number in range(len(self.strains)):
+                        strain = self.strains[actual_strain_number]
 
-                    # With misassignment
-                    if self.is_misassignment:
-                        for assigned_strain_number in range(len(self.strains)):
-                            as_assigned_strain = "_as" + self.strains[assigned_strain_number][1:]
-                            # If the strain is equally or more resistant than its assignment
-                            if actual_strain_number >= assigned_strain_number:
-                                self.set_var_transfer_rate_flow(
-                                    "active" + organ + strain + comorbidity,
-                                    "detect" + organ + strain + as_assigned_strain + comorbidity,
-                                    "program_rate_detect" + strain + as_assigned_strain)
+                        # With misassignment
+                        if self.is_misassignment:
+                            for assigned_strain_number in range(len(self.strains)):
+                                as_assigned_strain = "_as" + self.strains[assigned_strain_number][1:]
+                                # If the strain is equally or more resistant than its assignment
+                                if actual_strain_number >= assigned_strain_number:
+                                    self.set_var_transfer_rate_flow(
+                                        "active" + organ + strain + comorbidity + agegroup,
+                                        "detect" + organ + strain + as_assigned_strain + comorbidity + agegroup,
+                                        "program_rate_detect" + strain + as_assigned_strain)
 
-                    # Without misassignment - everyone is correctly identified by strain
-                    else:
-                        self.set_var_transfer_rate_flow(
-                            "active" + organ + strain + comorbidity,
-                            "detect" + organ + strain + comorbidity,
-                            "program_rate_detect")
+                        # Without misassignment - everyone is correctly identified by strain
+                        else:
+                            self.set_var_transfer_rate_flow(
+                                "active" + organ + strain + comorbidity + agegroup,
+                                "detect" + organ + strain + comorbidity + agegroup,
+                                "program_rate_detect")
 
     def set_variable_programmatic_flows(self):
 
         # Set rate of missed diagnoses and entry to low-quality health care
-        for comorbidity in self.comorbidities:
-            for strain in self.strains:
-                for organ in self.organ_status:
-                    self.set_var_transfer_rate_flow(
-                        "active" + organ + strain + comorbidity,
-                        "missed" + organ + strain + comorbidity,
-                        "program_rate_missed")
-                    if self.is_lowquality:
+        for agegroup in self.agegroups:
+            for comorbidity in self.comorbidities:
+                for strain in self.strains:
+                    for organ in self.organ_status:
                         self.set_var_transfer_rate_flow(
-                            "active" + organ + strain + comorbidity,
-                            "lowquality" + organ + strain + comorbidity,
-                            "program_rate_enterlowquality")
+                            "active" + organ + strain + comorbidity + agegroup,
+                            "missed" + organ + strain + comorbidity + agegroup,
+                            "program_rate_missed")
+                        if self.is_lowquality:
+                            self.set_var_transfer_rate_flow(
+                                "active" + organ + strain + comorbidity + agegroup,
+                                "lowquality" + organ + strain + comorbidity + agegroup,
+                                "program_rate_enterlowquality")
 
     def set_treatment_flows(self):
 
@@ -943,63 +981,68 @@ class ConsolidatedModel(BaseModel):
         Set rates of progression through treatment stages
         Accommodates with and without amplification and with and without misassignment
         """
-        for comorbidity in self.comorbidities:
-            for organ in self.organ_status:
+        for agegroup in self.agegroups:
+            for comorbidity in self.comorbidities:
+                for organ in self.organ_status:
 
-                for actual_strain_number in range(len(self.strains)):
-                    strain = self.strains[actual_strain_number]
-                    if self.is_misassignment:
-                        assignment_strains = range(len(self.strains))
-                    else:
-                        assignment_strains = [""]
-                    for assigned_strain_number in assignment_strains:
+                    for actual_strain_number in range(len(self.strains)):
+                        strain = self.strains[actual_strain_number]
                         if self.is_misassignment:
-                            as_assigned_strain = "_as" + self.strains[assigned_strain_number][1:]
-                            # Which treatment parameters to use - for the strain or for inappropriate treatment
-                            if actual_strain_number > assigned_strain_number:
-                                strain_or_inappropriate = "_inappropriate"
-                            else:
-                                strain_or_inappropriate = self.strains[assigned_strain_number]
+                            assignment_strains = range(len(self.strains))
                         else:
-                            as_assigned_strain = ""
-                            strain_or_inappropriate = self.strains[actual_strain_number]
-
-                        # Success at either treatment stage
-                        self.set_var_transfer_rate_flow(
-                            "treatment_infect" + organ + strain + as_assigned_strain + comorbidity,
-                            "treatment_noninfect" + organ + strain + as_assigned_strain + comorbidity,
-                            "program_rate_success_infect" + strain_or_inappropriate)
-                        self.set_var_transfer_rate_flow(
-                            "treatment_noninfect" + organ + strain + as_assigned_strain + comorbidity,
-                            "susceptible_treated" + comorbidity,
-                            "program_rate_success_noninfect" + strain_or_inappropriate)
-
-                        # Rates of death on treatment
-                        for treatment_stage in self.treatment_stages:
-                            self.set_var_infection_death_rate_flow(
-                                "treatment" + treatment_stage + organ + strain + as_assigned_strain + comorbidity,
-                                "program_rate_death" + treatment_stage + strain_or_inappropriate)
-
-                        # Default
-                        for treatment_stage in self.treatment_stages:
-                            # If it's either the most resistant strain available or amplification is not active:
-                            if actual_strain_number == len(self.strains) - 1 or not self.is_amplification:
-                                self.set_var_transfer_rate_flow(
-                                    "treatment" + treatment_stage + organ + strain + as_assigned_strain + comorbidity,
-                                    "active" + organ + strain + comorbidity,
-                                    "program_rate_default" + treatment_stage + strain_or_inappropriate)
-
-                            # Otherwise
+                            assignment_strains = [""]
+                        for assigned_strain_number in assignment_strains:
+                            if self.is_misassignment:
+                                as_assigned_strain = "_as" + self.strains[assigned_strain_number][1:]
+                                # Which treatment parameters to use - for the strain or for inappropriate treatment
+                                if actual_strain_number > assigned_strain_number:
+                                    strain_or_inappropriate = "_inappropriate"
+                                else:
+                                    strain_or_inappropriate = self.strains[assigned_strain_number]
                             else:
-                                amplify_to_strain = self.strains[actual_strain_number + 1]
-                                self.set_var_transfer_rate_flow(
-                                    "treatment" + treatment_stage + organ + strain + as_assigned_strain + comorbidity,
-                                    "active" + organ + strain + comorbidity,
-                                    "program_rate_default" + treatment_stage + "_noamplify" + strain_or_inappropriate)
-                                self.set_var_transfer_rate_flow(
-                                    "treatment" + treatment_stage + organ + strain + as_assigned_strain + comorbidity,
-                                    "active" + organ + amplify_to_strain + comorbidity,
-                                    "program_rate_default" + treatment_stage + "_amplify" + strain_or_inappropriate)
+                                as_assigned_strain = ""
+                                strain_or_inappropriate = self.strains[actual_strain_number]
+
+                            # Success at either treatment stage
+                            self.set_var_transfer_rate_flow(
+                                "treatment_infect" + organ + strain + as_assigned_strain + comorbidity + agegroup,
+                                "treatment_noninfect" + organ + strain + as_assigned_strain + comorbidity + agegroup,
+                                "program_rate_success_infect" + strain_or_inappropriate)
+                            self.set_var_transfer_rate_flow(
+                                "treatment_noninfect" + organ + strain + as_assigned_strain + comorbidity + agegroup,
+                                "susceptible_treated" + comorbidity + agegroup,
+                                "program_rate_success_noninfect" + strain_or_inappropriate)
+
+                            # Rates of death on treatment
+                            for treatment_stage in self.treatment_stages:
+                                self.set_var_infection_death_rate_flow(
+                                    "treatment" +
+                                    treatment_stage + organ + strain + as_assigned_strain + comorbidity + agegroup,
+                                    "program_rate_death" + treatment_stage + strain_or_inappropriate)
+
+                            # Default
+                            for treatment_stage in self.treatment_stages:
+                                # If it's either the most resistant strain available or amplification is not active:
+                                if actual_strain_number == len(self.strains) - 1 or not self.is_amplification:
+                                    self.set_var_transfer_rate_flow(
+                                        "treatment" +
+                                        treatment_stage + organ + strain + as_assigned_strain + comorbidity + agegroup,
+                                        "active" + organ + strain + comorbidity + agegroup,
+                                        "program_rate_default" + treatment_stage + strain_or_inappropriate)
+
+                                # Otherwise
+                                else:
+                                    amplify_to_strain = self.strains[actual_strain_number + 1]
+                                    self.set_var_transfer_rate_flow(
+                                        "treatment" +
+                                        treatment_stage + organ + strain + as_assigned_strain + comorbidity + agegroup,
+                                        "active" + organ + strain + comorbidity + agegroup,
+                                        "program_rate_default" + treatment_stage + "_noamplify" + strain_or_inappropriate)
+                                    self.set_var_transfer_rate_flow(
+                                        "treatment" +
+                                        treatment_stage + organ + strain + as_assigned_strain + comorbidity + agegroup,
+                                        "active" + organ + amplify_to_strain + comorbidity + agegroup,
+                                        "program_rate_default" + treatment_stage + "_amplify" + strain_or_inappropriate)
 
     ##################################################################
     # Methods that calculate the output vars and diagnostic properties

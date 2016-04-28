@@ -387,7 +387,9 @@ class ConsolidatedModel(BaseModel):
                 "program_rate_leavelowquality":
                     2.,
                 "program_prop_nonsuccessoutcomes_death":
-                    0.25
+                    0.25,
+                "ageing_rate":
+                    1. / 5.
             }
 
         # Populate parameters into model
@@ -589,14 +591,12 @@ class ConsolidatedModel(BaseModel):
             (1. - self.vars["program_prop_vaccination"]) \
             * self.params["demo_rate_birth"] \
             * self.vars["population"] \
-            / len(self.comorbidities) \
-            / len(self.agegroups)  # Temporary, while sorting age-group structure
+            / len(self.comorbidities)
         self.vars["births_vac"] = \
             self.vars["program_prop_vaccination"] \
             * self.params["demo_rate_birth"] \
             * self.vars["population"] \
-            / len(self.comorbidities) \
-            / len(self.agegroups)  # Temporary too
+            / len(self.comorbidities)
 
     def calculate_force_infection_vars(self):
 
@@ -766,6 +766,8 @@ class ConsolidatedModel(BaseModel):
 
         self.set_birth_flows()
 
+        self.set_ageing_flows()
+
         self.set_infection_flows()
 
         self.set_natural_history_flows()
@@ -781,12 +783,20 @@ class ConsolidatedModel(BaseModel):
     def set_birth_flows(self):
 
         # Set birth flows (currently evenly distributed between comorbidities)
-        for agegroup in self.agegroups:
-            for comorbidity in self.comorbidities:
-                self.set_var_entry_rate_flow(
-                    "susceptible_fully" + comorbidity + agegroup, "births_unvac")
-                self.set_var_entry_rate_flow(
-                    "susceptible_vac" + comorbidity + agegroup, "births_vac")
+        for comorbidity in self.comorbidities:
+            self.set_var_entry_rate_flow(
+                "susceptible_fully" + comorbidity + "_child", "births_unvac")
+            self.set_var_entry_rate_flow(
+                "susceptible_vac" + comorbidity + "_child", "births_vac")
+
+    def set_ageing_flows(self):
+
+        # Set simple ageing flows for two age strata
+        for label in self.labels:
+            if "_child" in label:
+                self.set_fixed_transfer_rate_flow(
+                    label, label[0: label.find("_child")] + "_adult",
+                    "ageing_rate")
 
     def set_infection_flows(self):
 

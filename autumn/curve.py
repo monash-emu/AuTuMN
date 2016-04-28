@@ -9,6 +9,8 @@ input curves.
 
 
 from math import exp
+from numpy import array
+from scipy import interpolate
 
 
 def make_sigmoidal_curve(y_low=0, y_high=1.0, x_start=0, x_inflect=0.5, multiplier=1.):
@@ -66,6 +68,34 @@ def make_two_step_curve(
     return curve
 
 
+def make_n_step_curve(x, y):
+    """"
+        Create an interpolation function passing by all the points defined by x and y
+        using sigmoidal curves
+        This is a generalisation of the function make_two_step_curve
+        Args:
+            x and y are arrays containing the coordinates of the points by which the curve has to pass
+
+        Returns the interpolation function
+    """
+
+    def curve(t):
+        print(x)
+        if t <= min(x):  # t is before the range defined by x
+            return y[0]
+        elif t >= max(x): # t is after the range defined by x
+            return y[-1]
+        else: # t is in the range defined by x
+            array_x = array(x)
+            index_low = len(array_x[array_x <= t])-1
+            func = make_sigmoidal_curve(
+                y_high=y[index_low+1], y_low=y[index_low],
+                x_start=array_x[index_low], x_inflect= 0.5*(array_x[index_low]+array_x[index_low+1]),
+                multiplier=4)
+            return func(t)
+    return curve
+
+
 if __name__ == "__main__":
 
     import pylab
@@ -78,12 +108,22 @@ if __name__ == "__main__":
     # pylab.ylim(0, 5)
     # pylab.show()
 
-    y_high = 3
-    y_med = 0.5 * y_high
-    curve = make_two_step_curve(0, y_med, y_high, 1950, 1995, 2015)
-    x_vals = numpy.linspace(1950, 2050, 150)
-    pylab.plot(x_vals, map(curve, x_vals))
-    pylab.xlim(1950, 2020)
-    pylab.ylim(0, 5)
-    pylab.show()
+    # y_high = 3
+    # y_med = 0.5 * y_high
+    # curve = make_two_step_curve(0, y_med, y_high, 1950, 1995, 2015)
+    # x_vals = numpy.linspace(1950, 2050, 150)
+    # pylab.plot(x_vals, map(curve, x_vals))
+    # pylab.xlim(1950, 2020)
+    # pylab.ylim(0, 5)
+    # pylab.show()
 
+    x = (1960, 1965, 1975, 1976, 1980, 1985, 1990, 1997, 2000)
+    y = (2, 6, 3, 1, 5, 0, 9, 4, 12)
+    curve = make_n_step_curve(x, y)
+
+    x_vals = numpy.linspace(1950, 2010, 1000)
+    pylab.plot(x_vals, map(curve, x_vals))
+    pylab.plot(x, y, 'ro')
+    pylab.xlim(1950, 2010)
+    pylab.ylim(-1, 13)
+    pylab.show()

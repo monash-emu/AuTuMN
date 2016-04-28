@@ -79,11 +79,12 @@ def make_n_step_curve(x, y):
         Returns the interpolation function
     """
 
+    assert len(x) == len(y), "x and y must have the same length"
+
     def curve(t):
-        print(x)
-        if t <= min(x):  # t is before the range defined by x
+        if t <= min(x):  # t is before the range defined by x -> takes the initial value
             return y[0]
-        elif t >= max(x): # t is after the range defined by x
+        elif t >= max(x): # t is after the range defined by x -> takes the last value
             return y[-1]
         else: # t is in the range defined by x
             array_x = array(x)

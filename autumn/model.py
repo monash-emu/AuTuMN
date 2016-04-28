@@ -50,7 +50,7 @@ class ConsolidatedModel(BaseModel):
                  n_organ=0,
                  n_strain=0,
                  n_comorbidity=0,
-                 n_agegroups=0,
+                 age_breakpoints=[],
                  is_lowquality=False,
                  is_amplification=False,
                  is_misassignment=False):
@@ -88,7 +88,7 @@ class ConsolidatedModel(BaseModel):
         self.n_organ = n_organ
         self.n_strain = n_strain
         self.n_comorbidity = n_comorbidity
-        self.n_agegroups = n_agegroups
+        self.age_breakpoints = age_breakpoints
 
         self.is_lowquality = is_lowquality
         self.is_amplification = is_amplification
@@ -186,15 +186,7 @@ class ConsolidatedModel(BaseModel):
         else:
             self.comorbidities = available_comorbidities[:self.n_comorbidity]
 
-        # Select number of age groups
-        available_agegroups = [
-            "_child",
-            "_adult"]
-        if self.n_agegroups == 0:
-            # Need a list of an empty string to be iterable for methods iterating by risk group
-            self.agegroups = [""]
-        else:
-            self.agegroups = available_agegroups[:self.n_agegroups]
+        self.define_age_structure()
 
     def initialise_compartments(self, compartment_dict=None):
 
@@ -387,7 +379,9 @@ class ConsolidatedModel(BaseModel):
                 "program_rate_leavelowquality":
                     2.,
                 "program_prop_nonsuccessoutcomes_death":
-                    0.25
+                    0.25,
+                "ageing_rate":
+                    1. / 5.
             }
 
         # Populate parameters into model
@@ -428,6 +422,8 @@ class ConsolidatedModel(BaseModel):
         """
 
         if self.n_organ > 0: self.ensure_all_progressions_go_somewhere_params()
+
+        if len(self.agegroups) > 1: self.find_ageing_rates()
 
         self.find_natural_history_params()
 
@@ -589,14 +585,12 @@ class ConsolidatedModel(BaseModel):
             (1. - self.vars["program_prop_vaccination"]) \
             * self.params["demo_rate_birth"] \
             * self.vars["population"] \
-            / len(self.comorbidities) \
-            / len(self.agegroups)  # Temporary, while sorting age-group structure
+            / len(self.comorbidities)
         self.vars["births_vac"] = \
             self.vars["program_prop_vaccination"] \
             * self.params["demo_rate_birth"] \
             * self.vars["population"] \
-            / len(self.comorbidities) \
-            / len(self.agegroups)  # Temporary too
+            / len(self.comorbidities)
 
     def calculate_force_infection_vars(self):
 
@@ -766,6 +760,8 @@ class ConsolidatedModel(BaseModel):
 
         self.set_birth_flows()
 
+        if len(self.agegroups) > 0: self.set_ageing_flows()
+
         self.set_infection_flows()
 
         self.set_natural_history_flows()
@@ -781,12 +777,11 @@ class ConsolidatedModel(BaseModel):
     def set_birth_flows(self):
 
         # Set birth flows (currently evenly distributed between comorbidities)
-        for agegroup in self.agegroups:
-            for comorbidity in self.comorbidities:
-                self.set_var_entry_rate_flow(
-                    "susceptible_fully" + comorbidity + agegroup, "births_unvac")
-                self.set_var_entry_rate_flow(
-                    "susceptible_vac" + comorbidity + agegroup, "births_vac")
+        for comorbidity in self.comorbidities:
+            self.set_var_entry_rate_flow(
+                "susceptible_fully" + comorbidity + self.agegroups[0], "births_unvac")
+            self.set_var_entry_rate_flow(
+                "susceptible_vac" + comorbidity + self.agegroups[0], "births_vac")
 
     def set_infection_flows(self):
 

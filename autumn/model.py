@@ -209,9 +209,9 @@ class ConsolidatedModel(BaseModel):
                         for organ in self.organ_status:
                             if self.is_misassignment:
                                 for assigned_strain_number in range(len(self.strains)):
-                                    as_assigned_strain = "_as" + self.strains[assigned_strain_number][1:]
                                     self.set_compartment(
-                                        compartment + organ + strain + as_assigned_strain + comorbidity, 0.)
+                                        compartment + organ + strain +
+                                        "_as" + self.strains[assigned_strain_number][1:] + comorbidity, 0.)
                             else:
                                 self.set_compartment(compartment + organ + strain + comorbidity, 0.)
 
@@ -232,23 +232,21 @@ class ConsolidatedModel(BaseModel):
         # initialise multiple strains too early, so that MDR-TB doesn't overtake the model
         for compartment in self.compartment_types:
             if compartment in compartment_dict:
-                if "susceptible" in compartment:  # Split equally by comorbidities
-                    for comorbidity in self.comorbidities:
+                for comorbidity in self.comorbidities:
+                    if "susceptible_fully" in compartment:
                         self.set_compartment(compartment + comorbidity,
                                              compartment_dict[compartment]
-                                             / len(self.comorbidities))
-                elif "latent" in compartment:
-                    for comorbidity in self.comorbidities:  # Split equally by comorbidities
+                                             / len(self.comorbidities))  # Split equally by comorbidities
+                    elif "latent" in compartment:  # Assign all to DS-TB
                         self.set_compartment(compartment + default_start_strain + comorbidity,
                                              compartment_dict[compartment]
-                                             / len(self.comorbidities))
-                else:
-                    for comorbidity in self.comorbidities:  # Split equally by comorbidities
-                        for organ in self.organ_status:  # Split equally by organ statuses
+                                             / len(self.comorbidities))  # Split equally by comorbidities
+                    else:
+                        for organ in self.organ_status:
                             self.set_compartment(compartment + organ + default_start_strain + comorbidity,
                                                  compartment_dict[compartment]
-                                                 / len(self.organ_status)
-                                                 / len(self.comorbidities))
+                                                 / len(self.organ_status)  # Split equally by organ statuses
+                                                 / len(self.comorbidities))  # and split equally by comorbidities
 
     def set_parameters(self, paramater_dict=None):
 
@@ -521,6 +519,8 @@ class ConsolidatedModel(BaseModel):
             self.set_scaleup_fn(
                 "program_proportion_success" + strain,
                 make_two_step_curve(0.6, 0.8, 1., 1980., 1990., 2000.))
+
+            # This should be changed to 1. - the success proportions when defined
             for outcome in self.non_success_outcomes:
                 self.set_scaleup_fn(
                     "program_proportion" + outcome + strain,
@@ -860,9 +860,9 @@ class ConsolidatedModel(BaseModel):
 
     def set_fixed_programmatic_flows(self):
 
-        for strain in self.strains:
-            for organ in self.organ_status:
-                for comorbidity in self.comorbidities:
+        for comorbidity in self.comorbidities:
+            for strain in self.strains:
+                for organ in self.organ_status:
 
                     # Re-start presenting after a missed diagnosis
                     self.set_fixed_transfer_rate_flow(
@@ -898,8 +898,8 @@ class ConsolidatedModel(BaseModel):
         or with proportional misassignment
         """
 
-        for organ in self.organ_status:
-            for comorbidity in self.comorbidities:
+        for comorbidity in self.comorbidities:
+            for organ in self.organ_status:
                 for actual_strain_number in range(len(self.strains)):
                     strain = self.strains[actual_strain_number]
 
@@ -924,9 +924,9 @@ class ConsolidatedModel(BaseModel):
     def set_variable_programmatic_flows(self):
 
         # Set rate of missed diagnoses and entry to low-quality health care
-        for strain in self.strains:
-            for organ in self.organ_status:
-                for comorbidity in self.comorbidities:
+        for comorbidity in self.comorbidities:
+            for strain in self.strains:
+                for organ in self.organ_status:
                     self.set_var_transfer_rate_flow(
                         "active" + organ + strain + comorbidity,
                         "missed" + organ + strain + comorbidity,
@@ -988,6 +988,7 @@ class ConsolidatedModel(BaseModel):
                                     "treatment" + treatment_stage + organ + strain + as_assigned_strain + comorbidity,
                                     "active" + organ + strain + comorbidity,
                                     "program_rate_default" + treatment_stage + strain_or_inappropriate)
+
                             # Otherwise
                             else:
                                 amplify_to_strain = self.strains[actual_strain_number + 1]
@@ -1116,7 +1117,7 @@ class ConsolidatedModel(BaseModel):
                         += rate_incidence[strain]
         self.vars["all_mdr_strains"] \
             = rate_incidence["all_mdr_strains"] / self.vars["population"] * 1E5
-        # Make a percentage
+        # Convert to percentage
         self.vars["proportion_mdr"] \
             = self.vars["all_mdr_strains"] / self.vars["incidence"] * 1E2
 

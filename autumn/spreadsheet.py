@@ -57,7 +57,7 @@ class MacroeconomicsSheetReader:
             'tbrelatedhealthcost',
             'socialmitigcost'
         ]
-        self.filename = 'xls/data_input_4.xlsx'
+        self.filename = 'xls/TB_generalepi_macro_constants.xlsx'
         self.start_row = 0
         self.create_parlist = False
         self.horizontal = True
@@ -154,7 +154,7 @@ class ConstantsSheetReader:
                     'disutitxlatenthiv',
                     'disutitxlatentnohiv']]
         ]
-        self.filename = 'xls/data_input_4.xlsx'
+        self.filename = 'xls/TB_generalepi_macro_constants.xlsx'
         self.start_row = 0
         self.create_parlist = False
         self.horizontal = True
@@ -205,7 +205,7 @@ class NestedParamSheetReader:
                 ]
             ], 
         ]
-        self.filename = 'xls/data_input_4.xlsx'
+        self.filename = 'xls/TB_generalepi_macro_constants.xlsx'
         self.start_row = 0
         self.create_parlist = False
         self.horizontal = True
@@ -257,7 +257,7 @@ class NestedParamWithRangeSheetReader:
                 ]
             ], 
         ]
-        self.filename = 'xls/data_input_4.xlsx'
+        self.filename = 'xls/TB_generalepi_macro_constants.xlsx'
         self.start_row = 0
         self.create_parlist = False
         self.horizontal = True
@@ -773,7 +773,8 @@ def read_input_data_xls(from_test, sheets_to_read):
 
 if __name__ == "__main__":
     import json
-    data = read_input_data_xls(False, ['bcg', 'tb'])  # C:\Users\ntdoan\Github\AuTuMN\autumn\xls
+    data = read_input_data_xls(False, ['bcg', 'tb'])
     open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
+    #print(data)
 
 

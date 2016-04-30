@@ -548,6 +548,8 @@ def read_xls_with_sheet_readers(sheet_readers=[]):
             for i_col in range(reader.start_column, sheet.ncols):
                 reader.parse_col(sheet.col_values(i_col))
         result[reader.key] = reader.get_data()
+
+        # A line of code that might help with syncing Excel files through GitHub
         workbook.release_resources()
     return result
 
@@ -775,7 +777,9 @@ def read_input_data_xls(from_test, sheets_to_read):
 if __name__ == "__main__":
     import json
     data = read_input_data_xls(False, ['input_data'])
+    # I suspect the next line of code was causing the problems with GitHub desktop
+    # failing to create commits, so currently commented out:
     # open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
-    print(data)
+    # print(data)
 
 

@@ -774,8 +774,8 @@ def read_input_data_xls(from_test, sheets_to_read):
 
 if __name__ == "__main__":
     import json
-    data = read_input_data_xls(False, ['bcg', 'tb'])
+    data = read_input_data_xls(False, ['input_data'])
     # open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
-    #print(data)
+    print(data)
 
 

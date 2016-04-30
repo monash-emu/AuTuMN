@@ -43,10 +43,10 @@ for n_comorbidities in strata_to_run:
                             name = 'model%d' % n_organs
                             base = os.path.join(out_dir, name)
                             model = autumn.model.ConsolidatedModel(
+                                [5, 15, 65],  # List of breakpoints for age stratification (or empty list for no stratification)
                                 n_organs,
                                 n_strains,
                                 n_comorbidities,
-                                [5, 15, 65],  # List of breakpoints for age stratification (or empty list for no stratification)
                                 is_quality,  # Low quality care
                                 is_amplification,  # Amplification
                                 is_misassignment)  # Misassignment by strain

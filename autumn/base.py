@@ -36,14 +36,29 @@ class BaseModel():
 
         # Work out age-groups from list of breakpoints
         self.agegroups = []
+
+        # If age-group breakpoints are supplied
         if len(self.age_breakpoints) > 0:
             for i in range(len(self.age_breakpoints)):
                 if i == 0:
-                    self.agegroups += ["_age0to" + str(self.age_breakpoints[i])]
+
+                    # The first age-group
+                    self.agegroups +=\
+                        ["_age0to" + str(self.age_breakpoints[i])]
                 else:
-                    self.agegroups += ["_age" + str(self.age_breakpoints[i - 1]) + "to" + str(self.age_breakpoints[i])]
+
+                    # Middle age-groups
+                    self.agegroups +=\
+                        ["_age" + str(self.age_breakpoints[i - 1]) +
+                         "to" + str(self.age_breakpoints[i])]
+
+            # Last age-group
             self.agegroups += ["_age" + str(self.age_breakpoints[len(self.age_breakpoints) - 1]) + "up"]
+
+        # Otherwise
         else:
+            # List consisting of one empty string required
+            # for the methods that iterate over strains
             self.agegroups += [""]
 
     def find_ageing_rates(self):

@@ -47,10 +47,10 @@ class ConsolidatedModel(BaseModel):
     """
 
     def __init__(self,
+                 age_breakpoints=[],
                  n_organ=0,
                  n_strain=0,
                  n_comorbidity=0,
-                 age_breakpoints=[],
                  is_lowquality=False,
                  is_amplification=False,
                  is_misassignment=False):
@@ -85,10 +85,10 @@ class ConsolidatedModel(BaseModel):
         BaseModel.__init__(self)
 
         # Convert inputs to attributes
+        self.age_breakpoints = age_breakpoints
         self.n_organ = n_organ
         self.n_strain = n_strain
         self.n_comorbidity = n_comorbidity
-        self.age_breakpoints = age_breakpoints
 
         self.is_lowquality = is_lowquality
         self.is_amplification = is_amplification

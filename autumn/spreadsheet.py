@@ -310,7 +310,7 @@ class BcgCoverageSheetReader():
                 self.data[self.par] += [int(row[i])]
         else:  # Data
             self.data[self.par] =\
-                parse_year_data(row[4:], '', -1)
+                parse_year_data(row[4:], '', len(row))
         # This sheet goes from 2014 backwards to 1980 from left to right, so:
         self.data[self.par] = list(reversed(self.data[self.par]))
 
@@ -776,8 +776,9 @@ def read_input_data_xls(from_test, sheets_to_read):
 
 if __name__ == "__main__":
     import json
-    data = read_input_data_xls(False, ['input_data', 'bcg', 'birth_rate', 'life_expectancy',
-                                       'tb', 'mdr', 'notifications', 'lab', 'outcomes', 'strategy'])
+    data = read_input_data_xls(False, ['input_data', 'bcg'])
+                                       # 'birth_rate', 'life_expectancy',
+                                       # 'tb', 'mdr', 'notifications', 'lab', 'outcomes', 'strategy'])
     # I suspect the next line of code was causing the problems with GitHub desktop
     # failing to create commits, so currently commented out:
     # open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))

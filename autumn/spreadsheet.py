@@ -23,10 +23,10 @@ def replace_blanks(a_list, new_val, blank):
     return [new_val if val == blank else val for val in a_list]
 
 
-def parse_year_data(these_data, blank):
+def parse_year_data(these_data, blank, endcolumn):
     these_data = replace_blanks(these_data, nan, blank)
     assumption_val = these_data[-1]
-    year_vals = these_data[:-2] 
+    year_vals = these_data[: endcolumn]
     if is_all_same_value(year_vals, nan):
         return [assumption_val] 
     else:
@@ -68,7 +68,7 @@ class MacroeconomicsSheetReader:
             return
         self.i_par += 1
         self.par = self.parlist[self.i_par]
-        self.data[self.par] = parse_year_data(row[1:], '')
+        self.data[self.par] = parse_year_data(row[1:], '', -2)
 
     def get_data(self):
         return self.data
@@ -225,7 +225,7 @@ class NestedParamSheetReader:
             self.subpar = self.subparlist[self.i_subpar]
         if raw_par == "" and raw_subpar == "":
             return
-        self.data[self.par][self.subpar] = parse_year_data(row[3:], '')
+        self.data[self.par][self.subpar] = parse_year_data(row[3:], '', -2)
 
     def get_data(self):
         return self.data
@@ -279,7 +279,7 @@ class NestedParamWithRangeSheetReader:
             self.data[self.par][self.subpar] = copy.deepcopy(self.range)
         if blh == "":
             return
-        self.data[self.par][self.subpar][blh] = parse_year_data(row[3:], '')
+        self.data[self.par][self.subpar][blh] = parse_year_data(row[3:], '', -2)
 
     def get_data(self):
         return self.data
@@ -310,7 +310,7 @@ class BcgCoverageSheetReader():
                 self.data[self.par] += [int(row[i])]
         else:  # Data
             self.data[self.par] =\
-                parse_year_data(row[4:], '')
+                parse_year_data(row[4:], '', -1)
         # This sheet goes from 2014 backwards to 1980 from left to right, so:
         self.data[self.par] = list(reversed(self.data[self.par]))
 
@@ -345,7 +345,7 @@ class BirthRateReader():
             return
         else:  # Data
             self.data[self.par] =\
-                parse_year_data(row[4:], u'..')
+                parse_year_data(row[4:], u'..', -1)
 
     def get_data(self):
         return self.data
@@ -376,7 +376,7 @@ class LifeExpectancyReader():
                 self.data[self.par] += [int(row[i])]
         else:  # Data
             self.data[self.par] =\
-                parse_year_data(row[4:], u'')
+                parse_year_data(row[4:], u'', -1)
 
     def get_data(self):
         return self.data
@@ -776,10 +776,11 @@ def read_input_data_xls(from_test, sheets_to_read):
 
 if __name__ == "__main__":
     import json
-    data = read_input_data_xls(False, ['input_data'])
+    data = read_input_data_xls(False, ['input_data', 'bcg', 'birth_rate', 'life_expectancy',
+                                       'tb', 'mdr', 'notifications', 'lab', 'outcomes', 'strategy'])
     # I suspect the next line of code was causing the problems with GitHub desktop
     # failing to create commits, so currently commented out:
     # open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
-    # print(data)
+    print(data)
 
 

@@ -774,14 +774,30 @@ def read_input_data_xls(from_test, sheets_to_read):
     return read_xls_with_sheet_readers(sheet_readers)
 
 
+def get_country_data(data, data_item, country):
+
+    adjusted_country_name = country
+    if country == u'Philippines' and data_item == 'bcg':
+        adjusted_country_name = country + u' (the)'
+    country_data_field = {}
+    for i in range(len(data[data_item][adjusted_country_name])):
+        country_data_field[data[data_item]['year'][i]] = data[data_item][adjusted_country_name][i]
+    return country_data_field
+
+
 if __name__ == "__main__":
     import json
-    data = read_input_data_xls(False, ['input_data', 'bcg'])
-                                       # 'birth_rate', 'life_expectancy',
-                                       # 'tb', 'mdr', 'notifications', 'lab', 'outcomes', 'strategy'])
+    data = read_input_data_xls(False, ['input_data', 'bcg',
+                                       'birth_rate', 'life_expectancy',
+                                       'tb', 'mdr', 'notifications', 'lab', 'outcomes', 'strategy'])
     # I suspect the next line of code was causing the problems with GitHub desktop
     # failing to create commits, so currently commented out:
     # open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
-    print(data)
+    country_data = {}
+    country = u'Fiji'
+    for field in ['birth_rate', 'life_expectancy', 'bcg']:
+        country_data[field] = get_country_data(data, field, country)
+
+    print(country_data)
 
 

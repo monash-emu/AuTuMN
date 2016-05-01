@@ -7,7 +7,7 @@ from pprint import pprint
 import autumn.model
 import numpy
 import autumn.plotting
-from autumn.spreadsheet import read_input_data_xls
+from autumn.spreadsheet import read_input_data_xls, get_country_data
 
 def indices(a, func):
     return [i for (i, val) in enumerate(a) if func(val)]
@@ -18,26 +18,16 @@ out_dir = 'fullmodel_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
-# Select the datasets you want to import from the spreadsheet module
-import_data = read_input_data_xls(True,
-                                  ['bcg', 'input_data', 'birth_rate', 'life_expectancy'])  # \Github\AuTuMN\autumn\xls
+# Select the datasets and country you want to import from the spreadsheet module
+fields = ['bcg', 'birth_rate', 'life_expectancy']
+country = u'Fiji'
+import_data = read_input_data_xls(True, fields + ['input_data'])  # \Github\AuTuMN\autumn\xls
 
 parameters = import_data['const']['model_parameters']
 
-country = u'Fiji'
-
-def get_country_data(data_item, country):
-    adjusted_country_name = country
-    if country == u'Philippines' and data_item == 'bcg':
-        adjusted_country_name = country + u' (the)'
-    country_data_field = {}
-    for i in range(len(import_data[data_item][adjusted_country_name])):
-        country_data_field[import_data[data_item]['year'][i]] = import_data[data_item][adjusted_country_name][i]
-    return country_data_field
-
 country_data = {}
-for field in ['birth_rate', 'life_expectancy', 'bcg']:
-    country_data[field] = get_country_data(field, country)
+for field in fields:
+    country_data[field] = get_country_data(import_data, field, country)
 
 # To run all possible models
 strata_to_run = [0, 2, 3]
@@ -74,8 +64,6 @@ for n_comorbidities in strata_to_run:
                                   "Low quality? " + str(is_quality) + ",   " +
                                   "Amplification? " + str(is_amplification) + ",   " +
                                   "Misassignment? " + str(is_misassignment) + ".")
-
-                            print(birth_rate)
 
                             for key, value in parameters.items():
                                 model.set_parameter(key, value["Best"])

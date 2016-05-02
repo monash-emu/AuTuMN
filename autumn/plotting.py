@@ -349,23 +349,38 @@ def plot_outputs(model, labels, left_xlimit, png=None):
         axis_labels)
     save_png(png)
 
-def plot_outputs_against_gtb(model, label, left_xlimit, png=None, country_output=None):
-
-    # Truncate data to what you want to look at (rather than going back to the dawn of time)
-    right_xlimit_index, left_xlimit_index = truncate_data(model, left_xlimit)
-    colours = {}
-    axis_labels = []
-    yaxis_label = "Per 100,000 (per year as applicable)"
+def plot_outputs_against_gtb(model, label, left_xlimit, png=None, country_data=None):
 
     # Sort out the plotting patterns
     if label == "incidence":
-        colours[label] = (0, 0, 0)
+        colour = (0, 0, 0)
+        index = 'e_inc'
     elif label == "notification":
-        colours[label] = (0, 0, 1)
+        colour = (0, 0, 1)
     elif label == "mortality":
-        colours[label] = (1, 0, 0)
+        colour = (1, 0, 0)
     elif label == "prevalence":
-        colours[label] = (0, 0.5, 0)
+        colour = (0, 0.5, 0)
+        index = 'e_prev'
+
+    # Create a colour half-way between the line colour and white
+    patch_colour = []
+    for i in range(len(colour)):
+        patch_colour += [1. - (1. - colour[i]) / 2.]
+
+    plotting_data = {}
+    for i in country_data:
+        if index in i and '_lo' in i:
+            plotting_data['lower_limit'] = country_data[i]
+        elif index in i and '_hi' in i:
+            plotting_data['upper_limit'] = country_data[i]
+        elif index in i:
+            plotting_data['point_estimate'] = country_data[i]
+
+    # Truncate data to what you want to look at (rather than going back to the dawn of time)
+    right_xlimit_index, left_xlimit_index = truncate_data(model, left_xlimit)
+    axis_labels = []
+    yaxis_label = "Per 100,000 (per year as applicable)"
 
     # Prepare axes
     ax = make_axes_with_room_for_legend()
@@ -374,7 +389,7 @@ def plot_outputs_against_gtb(model, label, left_xlimit, png=None, country_output
     ax.plot(
         model.times[left_xlimit_index: right_xlimit_index],
         model.get_var_soln(label)[left_xlimit_index: right_xlimit_index],
-        color=colours[label],
+        color=colour,
         label=label, linewidth=1.5
     )
     axis_labels.append("Modelled " + label)
@@ -382,20 +397,20 @@ def plot_outputs_against_gtb(model, label, left_xlimit, png=None, country_output
     # Plot the GTB data
 
     # Central point-estimate
-    ax.plot(country_output[1].keys(), country_output[1].values(),
-            label=label, color=colours[label], linewidth=0.5)
+    ax.plot(plotting_data['point_estimate'].keys(), plotting_data['point_estimate'].values(),
+            label=label, color=colour, linewidth=0.5)
     axis_labels.append("Reported " + label)
 
     # Patch for range
     # Create the patch array
-    patch_array = numpy.zeros(shape=(len(country_output[0]) * 2, 2))
-    for i in range(len(country_output[0])):
-        patch_array[i][0] = country_output[0].keys()[i]
-        patch_array[-(i+1)][0] = country_output[0].keys()[i]
-        patch_array[i][1] = country_output[0].values()[i]
-        patch_array[-(i+1)][1] = country_output[2].values()[i]
+    patch_array = numpy.zeros(shape=(len(plotting_data['lower_limit']) * 2, 2))
+    for i in range(len(plotting_data['lower_limit'])):
+        patch_array[i][0] = plotting_data['lower_limit'].keys()[i]
+        patch_array[-(i+1)][0] = plotting_data['lower_limit'].keys()[i]
+        patch_array[i][1] = plotting_data['lower_limit'].values()[i]
+        patch_array[-(i+1)][1] = plotting_data['upper_limit'].values()[i]
     # Create the patch image
-    patch = patches.Polygon(patch_array, color=(0.5, 0.5, 0.5))
+    patch = patches.Polygon(patch_array, color=patch_colour)
 
     # Plot it
     ax.add_patch(patch)

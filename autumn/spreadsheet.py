@@ -792,14 +792,20 @@ def get_country_data(data, data_item, country_name):
     # Call function to adjust country name
     adjusted_country_name = adjust_country_name(country_name, data_item)
 
+    # Initialise an empty dictionary for the data field being extracted
     country_data_field = {}
-    if data_item in [u'c_cdr', u'e_prev_100k']:
+
+    # If it's a Global TB Report data field
+    if data_item in data['tb'][adjusted_country_name]:
         for i in range(len(data['tb'][adjusted_country_name][u'year'])):
             country_data_field[data['tb'][adjusted_country_name][u'year'][i]] = \
                 data['tb'][adjusted_country_name][data_item][i]
+
+    # For the other spreadsheets
     else:
         for i in range(len(data[data_item][adjusted_country_name])):
             country_data_field[data[data_item]['year'][i]] = data[data_item][adjusted_country_name][i]
+
     return country_data_field
 
 

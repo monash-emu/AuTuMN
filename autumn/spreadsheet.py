@@ -795,8 +795,8 @@ def get_country_data(data, data_item, country_name):
     # Initialise an empty dictionary for the data field being extracted
     country_data_field = {}
 
-    # If it's a Global TB Report data field
-    if data_item in data['tb'][adjusted_country_name]:
+    # If it's a Global TB Report data field (Afghanistan is arbitrary)
+    if data_item in data['tb'][u'Afghanistan']:
         for i in range(len(data['tb'][adjusted_country_name][u'year'])):
             country_data_field[data['tb'][adjusted_country_name][u'year'][i]] = \
                 data['tb'][adjusted_country_name][data_item][i]

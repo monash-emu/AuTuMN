@@ -25,8 +25,9 @@ import_data = read_input_data_xls(True, fields + ['input_data', 'tb'])  # \Githu
 
 parameters = import_data['const']['model_parameters']
 
+# You can now list as many fields as you like from the Global TB Report
 country_data = {}
-for field in fields + [u'c_cdr', u'e_prev_100k']:
+for field in fields + [u'c_cdr', u'e_prev_100k', u'e_prev_100k_lo', u'e_prev_100k_hi']:
     country_data[field] = get_country_data(import_data, field, country)
 
 # To run all possible models

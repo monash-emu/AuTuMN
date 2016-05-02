@@ -25,6 +25,11 @@ def make_sigmoidal_curve(y_low=0, y_high=1.0, x_start=0, x_inflect=0.5, multipli
     """
 
     amplitude = y_high - y_low
+    if amplitude == 0:
+        def curve(x):
+            return y_low
+        return curve
+
     x_delta = x_inflect - x_start
     slope_at_inflection = multiplier * 0.5 * amplitude / x_delta
     b = 4. * slope_at_inflection / amplitude

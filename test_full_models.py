@@ -28,7 +28,8 @@ parameters = import_data['const']['model_parameters']
 # You can now list as many fields as you like from the Global TB Report
 country_data = {}
 for field in fields + [u'c_cdr', u'e_inc_100k', u'e_inc_100k_lo', u'e_inc_100k_hi',
-                       u'e_prev_100k', u'e_prev_100k_lo', u'e_prev_100k_hi']:
+                       u'e_prev_100k', u'e_prev_100k_lo', u'e_prev_100k_hi',
+                       u'e_mort_exc_tbhiv_100k', u'e_mort_exc_tbhiv_100k_lo', u'e_mort_exc_tbhiv_100k_hi']:
     country_data[field] = get_country_data(import_data, field, country)
 
 # To run all possible models
@@ -127,7 +128,7 @@ for n_comorbidities in strata_to_run:
                             #     model, ["incidence", "mortality", "prevalence", "notifications"],
                             #     start_time, base + '.rate_outputs.png')
                             autumn.plotting.plot_outputs_against_gtb(
-                                model, "prevalence",
+                                model, "mortality",
                                 recent_time, base + '.rate_outputs_gtb.png',
                                 country_data)
                             # if n_strains >= 2:

@@ -396,26 +396,39 @@ class GlobalTbReportReader():
         self.create_parlist = True
         self.horizontal = False
         self.start_column = 0
-        self.start_row = 1
         self.indices = {}
 
     def parse_col(self, col):
 
+        # If it's the country column (the first one)
         if col[0] == u'country':
+
+            # Cycle through the rest of the country column
             for i in range(1, len(col)):
+
+                # Create a list of indices for the countries
+                # when parsing the first column
                 self.indices[i] = col[i]
+
+                # Add a dictionary for that country
                 if col[i] not in self.data:
                     self.data[col[i]] = {}
+
+        # All other columns
         else:
+
+            # Ignore the first row
             for i in range(1, len(col)):
-                if col[0] == u'year' or col[0] == u'iso_numeric':
-                    item_to_add = int(col[i])
-                else:
-                    item_to_add = col[i]
+
+                # The data item
+                item_to_add = col[i]
+
+                # Add a dictionary key if that country hasn't encountered the field yet
                 if col[0] not in self.data[self.indices[i]]:
                     self.data[self.indices[i]][col[0]] = []
-                else:
-                    self.data[self.indices[i]][col[0]] += [item_to_add]
+
+                # Add the item to the dictionary
+                self.data[self.indices[i]][col[0]] += [item_to_add]
 
     def get_data(self):
 
@@ -780,8 +793,13 @@ def get_country_data(data, data_item, country):
     if country == u'Philippines' and data_item == 'bcg':
         adjusted_country_name = country + u' (the)'
     country_data_field = {}
-    for i in range(len(data[data_item][adjusted_country_name])):
-        country_data_field[data[data_item]['year'][i]] = data[data_item][adjusted_country_name][i]
+    if data_item == u'c_cdr':
+        for i in range(len(data['tb'][adjusted_country_name][u'year'])):
+            country_data_field[data['tb'][adjusted_country_name][u'year'][i]] = \
+                data['tb'][adjusted_country_name][data_item][i]
+    else:
+        for i in range(len(data[data_item][adjusted_country_name])):
+            country_data_field[data[data_item]['year'][i]] = data[data_item][adjusted_country_name][i]
     return country_data_field
 
 
@@ -789,15 +807,15 @@ if __name__ == "__main__":
     import json
     data = read_input_data_xls(False, ['input_data', 'bcg',
                                        'birth_rate', 'life_expectancy',
-                                       'tb', 'mdr', 'notifications', 'lab', 'outcomes', 'strategy'])
+                                       'tb'])
+                               # , 'mdr', 'notifications', 'lab', 'outcomes', 'strategy'])
     # I suspect the next line of code was causing the problems with GitHub desktop
     # failing to create commits, so currently commented out:
     # open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
     country_data = {}
     country = u'Fiji'
-    for field in ['birth_rate', 'life_expectancy', 'bcg']:
+    for field in ['birth_rate', 'life_expectancy', 'bcg', u'c_cdr']:
         country_data[field] = get_country_data(data, field, country)
 
     print(country_data)
-
 

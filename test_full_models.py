@@ -20,13 +20,13 @@ if not os.path.isdir(out_dir):
 
 # Select the datasets and country you want to import from the spreadsheet module
 fields = ['bcg', 'birth_rate', 'life_expectancy']
-country = u'Fiji'
-import_data = read_input_data_xls(True, fields + ['input_data'])  # \Github\AuTuMN\autumn\xls
+country = u'Philippines'
+import_data = read_input_data_xls(True, fields + ['input_data', 'tb'])  # \Github\AuTuMN\autumn\xls
 
 parameters = import_data['const']['model_parameters']
 
 country_data = {}
-for field in fields:
+for field in fields + [u'c_cdr']:
     country_data[field] = get_country_data(import_data, field, country)
 
 # To run all possible models

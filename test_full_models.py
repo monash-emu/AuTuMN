@@ -52,7 +52,7 @@ for n_comorbidities in strata_to_run:
                             name = 'model%d' % n_organs
                             base = os.path.join(out_dir, name)
                             model = autumn.model.ConsolidatedModel(
-                                [5, 15, 65],  # List of breakpoints for age stratification (or empty list for no stratification)
+                                [],  # List of breakpoints for age stratification (or empty list for no stratification)
                                 n_organs,
                                 n_strains,
                                 n_comorbidities,
@@ -125,6 +125,10 @@ for n_comorbidities in strata_to_run:
                             # autumn.plotting.plot_outputs(
                             #     model, ["incidence", "mortality", "prevalence", "notifications"],
                             #     start_time, base + '.rate_outputs.png')
+                            autumn.plotting.plot_outputs_against_gtb(
+                                model, "incidence",
+                                recent_time, base + '.rate_outputs_gtb.png',
+                                [country_data[u'e_prev_100k_lo'], country_data[u'e_prev_100k'], country_data[u'e_prev_100k_hi']])
                             # if n_strains >= 2:
                             #     autumn.plotting.plot_outputs(
                             #         model, ["incidence_ds", "incidence_mdr", "mortality_ds", "mortality_mdr", "prevalence_ds", "prevalence_mdr",

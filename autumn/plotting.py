@@ -301,12 +301,16 @@ def plot_fractions(model, labels, values, left_xlimit, strain_or_organ, png=None
 
 
 def plot_outputs(model, labels, left_xlimit, png=None):
+
+    # Truncate data to what you want to look at (rather than going back to the dawn of time)
     right_xlimit_index, left_xlimit_index = truncate_data(model, left_xlimit)
     colours = {}
     patterns = {}
     full_names = {}
     axis_labels = []
     yaxis_label = "Per 100,000 (per year as applicable)"
+
+    # Sort out the plotting patterns
     for label in labels:
         patterns[label] = get_line_pattern(label, "strain")
         if "incidence" in label:
@@ -340,6 +344,48 @@ def plot_outputs(model, labels, left_xlimit, png=None):
             label=var_label, linewidth=1, linestyle=patterns[var_label]
         )
         axis_labels.append(full_names[var_label])
+
+    set_axes_props(ax, 'Year', yaxis_label, "Main epidemiological outputs", True,
+        axis_labels)
+    save_png(png)
+
+def plot_outputs_against_gtb(model, label, left_xlimit, png=None, country_output=None):
+
+    # Truncate data to what you want to look at (rather than going back to the dawn of time)
+    right_xlimit_index, left_xlimit_index = truncate_data(model, left_xlimit)
+    colours = {}
+    axis_labels = []
+    yaxis_label = "Per 100,000 (per year as applicable)"
+
+    # Sort out the plotting patterns
+    if label == "incidence":
+        colours[label] = (0, 0, 0)
+    elif label == "notification":
+        colours[label] = (0, 0, 1)
+    elif label == "mortality":
+        colours[label] = (1, 0, 0)
+    elif label == "prevalence":
+        colours[label] = (0, 0.5, 0)
+
+    # Prepare axes
+    ax = make_axes_with_room_for_legend()
+
+    # Plot the modelled data
+    ax.plot(
+        model.times[left_xlimit_index: right_xlimit_index],
+        model.get_var_soln(label)[left_xlimit_index: right_xlimit_index],
+        color=colours[label],
+        label=label, linewidth=1.5
+    )
+    axis_labels.append("Modelled " + label)
+
+    # Plot the GTB data
+    for i_plot in range(len(country_output)):
+        ax.plot(country_output[i_plot].keys(), country_output[i_plot].values(),
+                label=label, color=colours[label], linewidth=0.5)
+    axis_labels.append("Reported " + label)
+
+    # Set axes
     set_axes_props(ax, 'Year', yaxis_label, "Main epidemiological outputs", True,
         axis_labels)
     save_png(png)

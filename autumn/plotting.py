@@ -453,7 +453,7 @@ def plot_scaleup_fns(model, functions, png=None):
     else:
         start_time = 1900.
         end_time = 2015.
-    x_vals = numpy.linspace(start_time, end_time, 1E2)
+    x_vals = numpy.linspace(start_time, end_time, 1E3)
     ax = make_axes_with_room_for_legend()
     for function in functions:
         ax.plot(x_vals,

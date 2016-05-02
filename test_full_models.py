@@ -60,7 +60,8 @@ for n_comorbidities in strata_to_run:
                                 n_comorbidities,
                                 is_quality,  # Low quality care
                                 is_amplification,  # Amplification
-                                is_misassignment)  # Misassignment by strain
+                                is_misassignment,  # Misassignment by strain
+                                country_data)
                             print(str(n_organs) + " organ(s),   " +
                                   str(n_strains) + " strain(s),   " +
                                   str(n_comorbidities) + " comorbidity(ies),   " +
@@ -128,7 +129,7 @@ for n_comorbidities in strata_to_run:
                             #     model, ["incidence", "mortality", "prevalence", "notifications"],
                             #     start_time, base + '.rate_outputs.png')
                             autumn.plotting.plot_outputs_against_gtb(
-                                model, "mortality",
+                                model, "incidence",
                                 recent_time, base + '.rate_outputs_gtb.png',
                                 country_data)
                             # if n_strains >= 2:
@@ -150,12 +151,10 @@ for n_comorbidities in strata_to_run:
                             #         model, ["proportion_mdr"],
                             #         start_time, base + '.mdr_proportion_recent.png')
                             #
-                            #     autumn.plotting.plot_scaleup_fns(model,
-                            #                                      ["program_rate_default_infect_noamplify_ds",
-                            #                                       "program_rate_default_infect_amplify_ds",
-                            #                                       "program_rate_default_noninfect_noamplify_ds",
-                            #                                       "program_rate_default_noninfect_amplify_ds"],
-                            #                                      base + '.scaleup_amplification.png')
+                            autumn.plotting.plot_scaleup_fns(model,
+                                                             ["program_prop_algorithm_sensitivity",
+                                                              "program_prop_detect"],
+                                                             base + '.scaleups.png')
                             #     year = indices(model.times, lambda x: x >= 2015.)[0]
                             #     print("2015 incidence is: ")
                             #     print(model.get_var_soln("incidence")[year])

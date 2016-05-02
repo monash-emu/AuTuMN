@@ -13,7 +13,9 @@ Compartment unit throughout: patients
 import random
 from scipy import exp, log
 from autumn.base import BaseModel
-from curve import make_sigmoidal_curve, make_two_step_curve
+from curve import make_sigmoidal_curve, make_two_step_curve, scale_up_function
+import numpy
+import pylab
 
 
 def label_intersects_tags(label, tags):
@@ -53,7 +55,8 @@ class ConsolidatedModel(BaseModel):
                  n_comorbidity=0,
                  is_lowquality=False,
                  is_amplification=False,
-                 is_misassignment=False):
+                 is_misassignment=False,
+                 country_data=None):
 
         """
         Args:
@@ -93,6 +96,8 @@ class ConsolidatedModel(BaseModel):
         self.is_lowquality = is_lowquality
         self.is_amplification = is_amplification
         self.is_misassignment = is_misassignment
+
+        self.country_data = country_data
 
         if self.is_misassignment:
             assert self.is_amplification, "Misassignment requested without amplification"
@@ -427,6 +432,8 @@ class ConsolidatedModel(BaseModel):
 
         self.find_natural_history_params()
 
+        self.prepare_detection_data()
+
         self.find_nontreatment_rates_params()
 
         self.find_treatment_rates_scaleups()
@@ -498,14 +505,35 @@ class ConsolidatedModel(BaseModel):
             "tb_proportion_amplification",
             make_two_step_curve(0., 1. / 15., 2. / 15., 1950., 1960., 1970.))
 
+    def prepare_detection_data(self):
+
+        # Create a case detection attribute for
+        #  the model instance
+        self.case_detection_rates = self.country_data[u'c_cdr']
+
+        upper_limit_believable_cdr = 90.
+
+        # Make sure no case detection rates are greater than 100%
+        for i in self.case_detection_rates:
+            if self.case_detection_rates[i] > upper_limit_believable_cdr:
+                self.case_detection_rates[i] = upper_limit_believable_cdr
+            # Divide through by 100 because they are percentages
+            self.case_detection_rates[i] = \
+                self.case_detection_rates[i] / 100.
+        # Then add a starting point
+        self.case_detection_rates[1950.] = 0.
+
     def find_nontreatment_rates_params(self):
 
         # Temporary scale-up functions to be populated from spreadsheets
         # as the next thing we need to do
         self.set_scaleup_fn("program_prop_vaccination",
                             make_two_step_curve(0., 0.6, 0.8, 1950., 1980., 2000.))
+
         self.set_scaleup_fn("program_prop_detect",
-                            make_two_step_curve(0.2, 0.7, 0.8, 1920., 1980., 2000.))
+                            scale_up_function(self.case_detection_rates.keys(),
+                                              self.case_detection_rates.values()))
+
         self.set_scaleup_fn("program_prop_algorithm_sensitivity",
                             make_two_step_curve(0.7, 0.8, 0.9, 1920., 1980., 2000.))
         self.set_scaleup_fn("program_prop_lowquality",

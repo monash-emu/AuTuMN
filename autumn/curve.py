@@ -8,6 +8,7 @@ input curves.
 """
 
 from math import exp
+import numpy
 
 def make_sigmoidal_curve(y_low=0, y_high=1.0, x_start=0, x_inflect=0.5, multiplier=1.):
     """

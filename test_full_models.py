@@ -26,7 +26,7 @@ import_data = read_input_data_xls(True, fields + ['input_data', 'tb'])  # \Githu
 parameters = import_data['const']['model_parameters']
 
 country_data = {}
-for field in fields + [u'c_cdr']:
+for field in fields + [u'c_cdr', u'e_prev_100k']:
     country_data[field] = get_country_data(import_data, field, country)
 
 # To run all possible models

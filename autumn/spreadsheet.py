@@ -563,7 +563,7 @@ def read_xls_with_sheet_readers(sheet_readers=[]):
         result[reader.key] = reader.get_data()
 
         # A line of code that might help with syncing Excel files through GitHub
-        workbook.release_resources()
+        # workbook.release_resources()
     return result
 
 
@@ -787,13 +787,13 @@ def read_input_data_xls(from_test, sheets_to_read):
     return read_xls_with_sheet_readers(sheet_readers)
 
 
-def get_country_data(data, data_item, country):
+def get_country_data(data, data_item, country_name):
 
-    adjusted_country_name = country
-    if country == u'Philippines' and data_item == 'bcg':
-        adjusted_country_name = country + u' (the)'
+    # Call function to adjust country name
+    adjusted_country_name = adjust_country_name(country_name, data_item)
+
     country_data_field = {}
-    if data_item == u'c_cdr':
+    if data_item in [u'c_cdr', u'e_prev_100k']:
         for i in range(len(data['tb'][adjusted_country_name][u'year'])):
             country_data_field[data['tb'][adjusted_country_name][u'year'][i]] = \
                 data['tb'][adjusted_country_name][data_item][i]
@@ -801,6 +801,14 @@ def get_country_data(data, data_item, country):
         for i in range(len(data[data_item][adjusted_country_name])):
             country_data_field[data[data_item]['year'][i]] = data[data_item][adjusted_country_name][i]
     return country_data_field
+
+
+def adjust_country_name(country_name, data_item):
+
+    adjusted_country_name = country_name
+    if country_name == u'Philippines' and data_item == 'bcg':
+        adjusted_country_name = country_name + u' (the)'
+    return adjusted_country_name
 
 
 if __name__ == "__main__":

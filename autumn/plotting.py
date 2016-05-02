@@ -3,7 +3,7 @@
 import math
 import pylab
 import numpy
-from matplotlib import pyplot
+from matplotlib import pyplot, patches
 
 """
 
@@ -380,10 +380,25 @@ def plot_outputs_against_gtb(model, label, left_xlimit, png=None, country_output
     axis_labels.append("Modelled " + label)
 
     # Plot the GTB data
-    for i_plot in range(len(country_output)):
-        ax.plot(country_output[i_plot].keys(), country_output[i_plot].values(),
-                label=label, color=colours[label], linewidth=0.5)
+
+    # Central point-estimate
+    ax.plot(country_output[1].keys(), country_output[1].values(),
+            label=label, color=colours[label], linewidth=0.5)
     axis_labels.append("Reported " + label)
+
+    # Patch for range
+    # Create the patch array
+    patch_array = numpy.zeros(shape=(len(country_output[0]) * 2, 2))
+    for i in range(len(country_output[0])):
+        patch_array[i][0] = country_output[0].keys()[i]
+        patch_array[-(i+1)][0] = country_output[0].keys()[i]
+        patch_array[i][1] = country_output[0].values()[i]
+        patch_array[-(i+1)][1] = country_output[2].values()[i]
+    # Create the patch image
+    patch = patches.Polygon(patch_array, color=(0.5, 0.5, 0.5))
+
+    # Plot it
+    ax.add_patch(patch)
 
     # Set axes
     set_axes_props(ax, 'Year', yaxis_label, "Main epidemiological outputs", True,

@@ -432,7 +432,8 @@ class ConsolidatedModel(BaseModel):
 
         self.find_natural_history_params()
 
-        self.prepare_detection_data()
+        self.case_detection_rates = \
+            self.prepare_data(self.country_data[u'c_cdr'], 90., True, 1950.)
 
         self.find_nontreatment_rates_params()
 
@@ -505,23 +506,36 @@ class ConsolidatedModel(BaseModel):
             "tb_proportion_amplification",
             make_two_step_curve(0., 1. / 15., 2. / 15., 1950., 1960., 1970.))
 
-    def prepare_detection_data(self):
+    def prepare_data(self, data, upper_limit_believable, percentage=True, zero_start_point=None):
 
-        # Create a case detection attribute for
-        #  the model instance
-        self.case_detection_rates = self.country_data[u'c_cdr']
+        """
+        Method intended for preparation of country data
+        Args:
+            data: An element of country_data
+            upper_limit_believable: The highest believable value (for example, this should
+             always be at most 100. for case detection)
+            percentage: Boolean of whether the input is a percentage
+            zero_start_point: A historical time-point to go back to zero at if required
 
-        upper_limit_believable_cdr = 90.
+        Returns:
+            prepared_data: The data field modified as described
+        """
 
-        # Make sure no case detection rates are greater than 100%
-        for i in self.case_detection_rates:
-            if self.case_detection_rates[i] > upper_limit_believable_cdr:
-                self.case_detection_rates[i] = upper_limit_believable_cdr
-            # Divide through by 100 because they are percentages
-            self.case_detection_rates[i] = \
-                self.case_detection_rates[i] / 100.
-        # Then add a starting point
-        self.case_detection_rates[1950.] = 0.
+        prepared_data = data
+        for i in prepared_data:
+            # Make sure no case detection rates are greater than 100%
+            if prepared_data[i] > upper_limit_believable:
+                prepared_data[i] = upper_limit_believable
+
+            # Divide through by 100 if they are percentages
+            if percentage:
+                prepared_data[i] /= 100.
+
+        # Add a zero starting point
+        if zero_start_point is not None:
+            prepared_data[zero_start_point] = 0.
+
+        return prepared_data
 
     def find_nontreatment_rates_params(self):
 

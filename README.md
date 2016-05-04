@@ -27,11 +27,11 @@ This is a set of Python models that modularizes the development of dynamic trans
 - search for BOSCO comments in the source code
 
 # James TODO:
+- work out why there are lots of notifications before case detection starts
+- write some code to start programmatic scale-ups from the minimum value reported in the Global TB Report
 - work out an approach to allowing a lower case detection rate and higher force of infection
-- scale-up BCG vaccination (entry flow)
 - MCMC incorporation
 - new/retreatment stratification
-- age stratification
 
 # Current TB dynamic transmission model  
   

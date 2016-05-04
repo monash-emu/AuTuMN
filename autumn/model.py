@@ -56,7 +56,8 @@ class ConsolidatedModel(BaseModel):
                  is_lowquality=False,
                  is_amplification=False,
                  is_misassignment=False,
-                 country_data=None):
+                 country_data=None,
+                 start_time=1500.):
 
         """
         Args:
@@ -92,6 +93,7 @@ class ConsolidatedModel(BaseModel):
         self.n_organ = n_organ
         self.n_strain = n_strain
         self.n_comorbidity = n_comorbidity
+        self.start_time = start_time
 
         self.is_lowquality = is_lowquality
         self.is_amplification = is_amplification
@@ -505,7 +507,8 @@ class ConsolidatedModel(BaseModel):
             "tb_proportion_amplification",
             make_two_step_curve(0., 1. / 15., 2. / 15., 1950., 1960., 1970.))
 
-    def prepare_data(self, data, upper_limit_believable, percentage=True, zero_start_point=None):
+    def prepare_data(self, data, upper_limit_believable,
+                     percentage=True, zero_start_point=None):
 
         """
         Method intended for preparation of country data
@@ -538,11 +541,14 @@ class ConsolidatedModel(BaseModel):
         if zero_start_point is not None:
             prepared_data[zero_start_point] = 0.
 
+        # Add a zero starting point at the start of the model run time
+        prepared_data[self.start_time] = 0.
+
         xvalues = []
         yvalues = []
         for i in sorted(prepared_data.keys()):
-            xvalues += [i]
-            yvalues += [prepared_data[i]]
+            xvalues += [float(i)]
+            yvalues += [prepared_data[float(i)]]
 
         return xvalues, yvalues
 
@@ -570,18 +576,28 @@ class ConsolidatedModel(BaseModel):
         # Currently using method 4 in the following scale-up to prevent negative values
         self.set_scaleup_fn("program_prop_vaccination",
                             scale_up_function(self.bcg_vaccination_xvalues,
-                                              self.bcg_vaccination_yvalues, method=4))
+                                              self.bcg_vaccination_yvalues, method = 4))
+
+        # First few values for the Philippines are very high - temporary code
+        self.case_detection_yvalues[2] = 0.5
+        self.case_detection_yvalues[3] = 0.5
+        self.case_detection_yvalues[4] = 0.5
+
         self.set_scaleup_fn("program_prop_detect",
                             scale_up_function(self.case_detection_xvalues,
-                                              self.case_detection_yvalues))
+                                              self.case_detection_yvalues, method = 4))
         self.set_scaleup_fn("program_prop_algorithm_sensitivity",
-                            scale_up_function([1920., 1980., 2000.], [0.7, 0.8, 0.9]))
+                            scale_up_function([self.start_time, 1920., 1980., 2000.],
+                                              [0.7, 0.7, 0.8, 0.9]))
         self.set_scaleup_fn("program_prop_lowquality",
-                            scale_up_function([1980., 1990., 2000.], [0.3, 0.4, 0.5]))
+                            scale_up_function([self.start_time, 1980., 1990., 2000.],
+                                              [0.3, 0.3, 0.4, 0.5]))
         self.set_scaleup_fn("program_prop_firstline_dst",
-                            scale_up_function([1980., 1990., 2000.], [0., 0.5, 0.7]))
+                            scale_up_function([self.start_time, 1980., 1990., 2000.],
+                                              [0., 0., 0.5, 0.7]))
         self.set_scaleup_fn("program_prop_secondline_dst",
-                            scale_up_function([1985., 1995., 2000.], [0., 0.5, 0.7]))
+                            scale_up_function([self.start_time, 1985., 1995., 2000.],
+                                              [0., 0., 0.5, 0.7]))
 
     def find_treatment_rates_scaleups(self):
 

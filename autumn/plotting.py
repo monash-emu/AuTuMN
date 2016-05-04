@@ -349,6 +349,7 @@ def plot_outputs(model, labels, left_xlimit, png=None):
         axis_labels)
     save_png(png)
 
+
 def plot_outputs_against_gtb(model, label, left_xlimit, png=None, country_data=None):
 
     # Sort out the plotting patterns
@@ -446,13 +447,9 @@ def plot_flows(model, labels, png=None):
     save_png(png)
 
 
-def plot_scaleup_fns(model, functions, png=None):
-    if "program_rate_default_infect_noamplify" in functions:
-        start_time = model.params["timepoint_introduce_mdr"] - 5.
-        end_time = model.params["timepoint_introduce_mdr"] + 10.
-    else:
-        start_time = 1900.
-        end_time = 2015.
+def plot_scaleup_fns(model, functions, png=None, start_time=1900.):
+
+    end_time = 2015.
     x_vals = numpy.linspace(start_time, end_time, 1E3)
     ax = make_axes_with_room_for_legend()
     for function in functions:

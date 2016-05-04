@@ -54,6 +54,9 @@ for n_comorbidities in strata_to_run:
                         else:
                             name = 'model%d' % n_organs
                             base = os.path.join(out_dir, name)
+                            start_time = 1850.
+                            recent_time = 1990.
+
                             model = autumn.model.ConsolidatedModel(
                                 [],  # List of breakpoints for age stratification (or empty list for no stratification)
                                 n_organs,
@@ -62,7 +65,8 @@ for n_comorbidities in strata_to_run:
                                 is_quality,  # Low quality care
                                 is_amplification,  # Amplification
                                 is_misassignment,  # Misassignment by strain
-                                country_data)
+                                country_data,
+                                start_time)
                             print(str(n_organs) + " organ(s),   " +
                                   str(n_strains) + " strain(s),   " +
                                   str(n_comorbidities) + " comorbidity(ies),   " +
@@ -73,8 +77,6 @@ for n_comorbidities in strata_to_run:
                             for key, value in parameters.items():
                                 model.set_parameter(key, value["Best"])
 
-                            start_time = 1850.
-                            recent_time = 1990.
                             model.make_times(start_time, 2015.1, 0.1)
                             model.integrate_explicit()
                             if n_organs + n_strains + n_comorbidities <= 5:
@@ -126,9 +128,9 @@ for n_comorbidities in strata_to_run:
                             #         model, ["incidence_ds", "incidence_mdr", "mortality_ds", "mortality_mdr", "prevalence_ds", "prevalence_mdr",
                             #                 "notifications_ds", "notifications_mdr"],
                             #         start_time, base + '.rate_bystrain_outputs.png')
-                            # autumn.plotting.plot_outputs(
-                            #     model, ["incidence", "mortality", "prevalence", "notifications"],
-                            #     start_time, base + '.rate_outputs.png')
+                            autumn.plotting.plot_outputs(
+                                model, ["incidence", "mortality", "prevalence", "notifications"],
+                                start_time, base + '.rate_outputs.png')
                             autumn.plotting.plot_outputs_against_gtb(
                                 model, "incidence",
                                 recent_time, base + '.rate_outputs_gtb.png',
@@ -154,15 +156,15 @@ for n_comorbidities in strata_to_run:
                             #
                             autumn.plotting.plot_scaleup_fns(model,
                                                              ["program_prop_algorithm_sensitivity",
-                                                              # "program_prop_detect",
-                                                              # "program_prop_vaccination",
-                                                              # "program_prop_lowquality",
-                                                              # "program_prop_firstline_dst",
-                                                              # "program_prop_secondline_dst",
+                                                              "program_prop_detect",
+                                                              "program_prop_vaccination",
+                                                              "program_prop_lowquality",
+                                                              "program_prop_firstline_dst",
+                                                              "program_prop_secondline_dst",
                                                               "program_proportion_success",
                                                               "program_proportion_default",
                                                               "program_proportion_death"],
-                                                             base + '.scaleups.png')
+                                                             base + '.scaleups.png', start_time)
                             #     year = indices(model.times, lambda x: x >= 2015.)[0]
                             #     print("2015 incidence is: ")
                             #     print(model.get_var_soln("incidence")[year])

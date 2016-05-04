@@ -432,8 +432,7 @@ class ConsolidatedModel(BaseModel):
 
         self.find_natural_history_params()
 
-        self.case_detection_rates = \
-            self.prepare_data(self.country_data[u'c_cdr'], 90., True, 1950.)
+        self.process_country_data()
 
         self.find_nontreatment_rates_params()
 
@@ -518,12 +517,16 @@ class ConsolidatedModel(BaseModel):
             zero_start_point: A historical time-point to go back to zero at if required
 
         Returns:
-            prepared_data: The data field modified as described
+            xvalues: List of xvalues (i.e. time-points) for functions to calculate scale-ups
+            yvales: List of yvales (i.e. data) for functions to calculate scale-ups
         """
 
         prepared_data = data
         for i in prepared_data:
-            # Make sure no case detection rates are greater than 100%
+
+            prepared_data[int(i)] = prepared_data.pop(i)
+
+            # e.g. make sure no case detection rates are greater than 100%
             if prepared_data[i] > upper_limit_believable:
                 prepared_data[i] = upper_limit_believable
 
@@ -535,27 +538,50 @@ class ConsolidatedModel(BaseModel):
         if zero_start_point is not None:
             prepared_data[zero_start_point] = 0.
 
-        return prepared_data
+        xvalues = []
+        yvalues = []
+        for i in sorted(prepared_data.keys()):
+            xvalues += [i]
+            yvalues += [prepared_data[i]]
+
+        return xvalues, yvalues
+
+    def process_country_data(self):
+
+        self.case_detection_xvalues, self.case_detection_yvalues = \
+            self.prepare_data(self.country_data[u'c_cdr'], 90., True, 1950.)
+        self.bcg_vaccination_xvalues, self.bcg_vaccination_yvalues = \
+            self.prepare_data(self.country_data['bcg'], 95., True, 1930.)
+        self.treatment_success_xvalues, self.treatment_success_yvalues = \
+            self.prepare_data(self.country_data[u'c_new_tsr'], 95., True, 1950.)
+        self.treatment_default_yvalues = []
+        self.treatment_death_yvalues = []
+        for i in range(len(self.treatment_success_yvalues)):
+            self.treatment_death_yvalues += \
+                [(1. - self.treatment_success_yvalues[i]) * self.params["program_prop_nonsuccessoutcomes_death"]]
+            self.treatment_default_yvalues += \
+                [1. - self.treatment_success_yvalues[i] - self.treatment_death_yvalues[i]]
 
     def find_nontreatment_rates_params(self):
 
         # Temporary scale-up functions to be populated from spreadsheets
         # as the next thing we need to do
+
+        # Currently using method 4 in the following scale-up to prevent negative values
         self.set_scaleup_fn("program_prop_vaccination",
-                            make_two_step_curve(0., 0.6, 0.8, 1950., 1980., 2000.))
-
+                            scale_up_function(self.bcg_vaccination_xvalues,
+                                              self.bcg_vaccination_yvalues, method=4))
         self.set_scaleup_fn("program_prop_detect",
-                            scale_up_function(self.case_detection_rates.keys(),
-                                              self.case_detection_rates.values()))
-
+                            scale_up_function(self.case_detection_xvalues,
+                                              self.case_detection_yvalues))
         self.set_scaleup_fn("program_prop_algorithm_sensitivity",
-                            make_two_step_curve(0.7, 0.8, 0.9, 1920., 1980., 2000.))
+                            scale_up_function([1920., 1980., 2000.], [0.7, 0.8, 0.9]))
         self.set_scaleup_fn("program_prop_lowquality",
-                            make_two_step_curve(.3, .4, .5, 1980., 1990., 2000.))
+                            scale_up_function([1980., 1990., 2000.], [0.3, 0.4, 0.5]))
         self.set_scaleup_fn("program_prop_firstline_dst",
-                            make_two_step_curve(0., 0.5, 0.7, 1980., 1990., 2000.))
+                            scale_up_function([1980., 1990., 2000.], [0., 0.5, 0.7]))
         self.set_scaleup_fn("program_prop_secondline_dst",
-                            make_two_step_curve(0., 0.5, 0.7, 1985., 1995., 2000.))
+                            scale_up_function([1985., 1995., 2000.], [0., 0.5, 0.7]))
 
     def find_treatment_rates_scaleups(self):
 
@@ -579,16 +605,19 @@ class ConsolidatedModel(BaseModel):
                 self.params["tb_timeperiod_treatment" + strain]
                 - self.params["tb_timeperiod_infect_ontreatment" + strain])
 
-            # Temporarily set some treatment outcomes, to be populated from spreadsheets later
+            # Populate treatment outcomes from previously calculated functions
             self.set_scaleup_fn(
                 "program_proportion_success" + strain,
-                make_two_step_curve(0.6, 0.8, 1., 1980., 1990., 2000.))
-
-            # This should be changed to 1. - the success proportions when defined
-            for outcome in self.non_success_outcomes:
-                self.set_scaleup_fn(
-                    "program_proportion" + outcome + strain,
-                    make_two_step_curve(0.2, 0.1, 0., 1980., 1990., 2000.))
+                scale_up_function(self.treatment_success_xvalues,
+                                  self.treatment_success_yvalues))
+            self.set_scaleup_fn(
+                "program_proportion_default" + strain,
+                scale_up_function(self.treatment_success_xvalues,
+                                  self.treatment_default_yvalues))
+            self.set_scaleup_fn(
+                "program_proportion_death" + strain,
+                scale_up_function(self.treatment_success_xvalues,
+                                  self.treatment_death_yvalues))
 
     ##################################################################
     # Methods that calculate variables to be used in calculating flows

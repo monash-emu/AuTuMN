@@ -20,16 +20,17 @@ if not os.path.isdir(out_dir):
 
 # Select the datasets and country you want to import from the spreadsheet module
 fields = ['bcg', 'birth_rate', 'life_expectancy']
+gtb_fields = [u'c_cdr', u'c_new_tsr', u'e_inc_100k', u'e_inc_100k_lo', u'e_inc_100k_hi',
+              u'e_prev_100k', u'e_prev_100k_lo', u'e_prev_100k_hi',
+              u'e_mort_exc_tbhiv_100k', u'e_mort_exc_tbhiv_100k_lo', u'e_mort_exc_tbhiv_100k_hi']
 country = u'Philippines'
-import_data = read_input_data_xls(True, fields + ['input_data', 'tb'])  # \Github\AuTuMN\autumn\xls
+import_data = read_input_data_xls(True, fields + ['input_data', 'tb', 'outcomes'])  # \Github\AuTuMN\autumn\xls
 
 parameters = import_data['const']['model_parameters']
 
 # You can now list as many fields as you like from the Global TB Report
 country_data = {}
-for field in fields + [u'c_cdr', u'e_inc_100k', u'e_inc_100k_lo', u'e_inc_100k_hi',
-                       u'e_prev_100k', u'e_prev_100k_lo', u'e_prev_100k_hi',
-                       u'e_mort_exc_tbhiv_100k', u'e_mort_exc_tbhiv_100k_lo', u'e_mort_exc_tbhiv_100k_hi']:
+for field in fields + gtb_fields:
     country_data[field] = get_country_data(import_data, field, country)
 
 # To run all possible models
@@ -153,7 +154,14 @@ for n_comorbidities in strata_to_run:
                             #
                             autumn.plotting.plot_scaleup_fns(model,
                                                              ["program_prop_algorithm_sensitivity",
-                                                              "program_prop_detect"],
+                                                              # "program_prop_detect",
+                                                              # "program_prop_vaccination",
+                                                              # "program_prop_lowquality",
+                                                              # "program_prop_firstline_dst",
+                                                              # "program_prop_secondline_dst",
+                                                              "program_proportion_success",
+                                                              "program_proportion_default",
+                                                              "program_proportion_death"],
                                                              base + '.scaleups.png')
                             #     year = indices(model.times, lambda x: x >= 2015.)[0]
                             #     print("2015 incidence is: ")

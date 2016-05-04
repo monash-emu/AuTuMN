@@ -796,10 +796,15 @@ def get_country_data(data, data_item, country_name):
     country_data_field = {}
 
     # If it's a Global TB Report data field (Afghanistan is arbitrary)
-    if data_item in data['tb'][u'Afghanistan']:
-        for i in range(len(data['tb'][adjusted_country_name][u'year'])):
-            country_data_field[data['tb'][adjusted_country_name][u'year'][i]] = \
-                data['tb'][adjusted_country_name][data_item][i]
+    if data_item in data['tb'][u'Afghanistan'] or data_item in data['outcomes'][u'Afghanistan']:
+        if data_item in data['tb'][u'Afghanistan']:
+            gtb_sheet = 'tb'
+        elif data_item in data['outcomes'][u'Afghanistan']:
+            gtb_sheet = 'outcomes'
+
+        for i in range(len(data[gtb_sheet][adjusted_country_name][u'year'])):
+            country_data_field[data[gtb_sheet][adjusted_country_name][u'year'][i]] = \
+                data[gtb_sheet][adjusted_country_name][data_item][i]
 
     # For the other spreadsheets
     else:
@@ -821,14 +826,14 @@ if __name__ == "__main__":
     import json
     data = read_input_data_xls(False, ['input_data', 'bcg',
                                        'birth_rate', 'life_expectancy',
-                                       'tb'])
-                               # , 'mdr', 'notifications', 'lab', 'outcomes', 'strategy'])
+                                       'tb', 'outcomes'])
+                               # , 'mdr', 'lab', 'notifications', 'strategy'])
     # I suspect the next line of code was causing the problems with GitHub desktop
     # failing to create commits, so currently commented out:
     # open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
     country_data = {}
     country = u'Fiji'
-    for field in ['birth_rate', 'life_expectancy', 'bcg', u'c_cdr']:
+    for field in ['birth_rate', 'life_expectancy', 'bcg', u'c_cdr', u'c_new_tsr']:
         country_data[field] = get_country_data(data, field, country)
 
     print(country_data)

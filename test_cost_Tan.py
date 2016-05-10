@@ -3,10 +3,11 @@ import glob
 import datetime
 
 import numpy
+import pylab
 
-import autumn.base
-import autumn.model
-import autumn.plotting
+import autumn.base_totestcost
+import autumn.model_totestcost
+import autumn.plotting_totestcost
 
 import optima.programs 
 import optima
@@ -40,6 +41,7 @@ class Program():
 
         self.costcovfn = optima.programs.Costcov()
         unitcost = calc_unitcost(19E6, 0.5, 160E6)
+        #print(unitcost)
         self.costcovfn.addccopar({
             'saturation': (0.75, 0.85),
             't': 2013.0,
@@ -57,6 +59,9 @@ class Program():
             popsize=popsize, 
             bounds=None, 
             toplot=False)
+        #print(budget,coverages)
+        #pylab.plot(budget,coverages)
+        #pylab.show()
         return coverages[0]
 
     def get_param_val(self, budget, popsize):
@@ -69,8 +74,8 @@ class Program():
 
 class ModelOptimizer():
     
-    def __init__(self, model):
-        self.model = model
+    def __init__(self, model_totestcost):
+        self.model = model_totestcost
         self.programs = []
 
     def add_program(self, name, param_key, by_type):
@@ -84,8 +89,10 @@ class ModelOptimizer():
             self.model.set_parameter(key, val)
         self.model.integrate_explicit()
         fval = self.model.vars['mortality']
+        #print(budget)
         print " %s -> %s" % (budgetvec, fval)
         return fval
+
 
     def optimize_outcome(self):
         constrainedbudgetvec = numpy.array([60E6, 70E6])
@@ -101,13 +108,44 @@ class ModelOptimizer():
         print "Optimized budget %s -> %s" % (budgetvecnew, fval)
 
 
-model = autumn.base.SimpleModel()
+model = autumn.base_totestcost.SimpleModel()
 model.make_times(1990, 2020, 1)
 model_optimizer = ModelOptimizer(model)
+
+"""
 model_optimizer.add_program(
     "prog1", "program_rate_detect", "by_fraction")
 model_optimizer.add_program(
     "prog2", "program_prop_vac", "by_fraction")
+"""
+
+model_optimizer.add_program(
+    "pmdt", "program_proportion_success_mdr", "by_fraction")
+model_optimizer.add_program(
+    "pmdt", "program_proportion_success_xdr", "by_fraction")
+model_optimizer.add_program(
+    "pmdt", "program_rate_detect_mdr_asmdr", "by_fraction")
+model_optimizer.add_program(
+    "pmdt", "program_rate_detect_xdr_asxdr", "by_fraction")
+
+model_optimizer.add_program(
+    "gene_xpert", "program_rate_detect", "by_fraction")
+
+model_optimizer.add_program(
+    "improved_dx", "program_prop_algorithm_sensitivity", "by_fraction")
+model_optimizer.add_program(
+    "improved_dx", "program_rate_detect", "by_fraction")
+
+model_optimizer.add_program(
+    "shortcourse_mdr", "tb_timeperiod_treatment_mdr", "by_fraction")
+
+model_optimizer.add_program(
+    "universal_dst", "program_rate_detect_ds_asds", "by_fraction")
+model_optimizer.add_program(
+    "universal_dst", "program_rate_detect_mdr_asmdr", "by_fraction")
+model_optimizer.add_program(
+    "universal_dst", "program_rate_detect_xdr_asxdr", "by_fraction")
+
 model_optimizer.optimize_outcome()
 
 

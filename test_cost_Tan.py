@@ -78,8 +78,8 @@ class Program():
             fraction = val / popsize
             val = fraction
             print(budget,val)
-            #plt.plot(budget,val,"ro")
-            #plt.show()
+            plt.plot(budget,val,"ro")
+            plt.show()
         return self.param_key, val
 
 

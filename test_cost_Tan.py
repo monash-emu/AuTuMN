@@ -4,6 +4,10 @@ import datetime
 
 import numpy
 import pylab
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+
 
 import autumn.base_totestcost
 import autumn.model_totestcost
@@ -62,6 +66,10 @@ class Program():
         #print(budget,coverages)
         #pylab.plot(budget,coverages)
         #pylab.show()
+        #plt.plot(budget,coverages,"ro")
+        #plt.xlabel('Budget')
+        #plt.ylabel('Coverage')
+        #plt.show()
         return coverages[0]
 
     def get_param_val(self, budget, popsize):
@@ -69,7 +77,11 @@ class Program():
         if self.by_type == "by_fraction":
             fraction = val / popsize
             val = fraction
-        return self.param_key, val 
+            print(budget,val)
+            #plt.plot(budget,val,"ro")
+            #plt.show()
+        return self.param_key, val
+
 
 
 class ModelOptimizer():
@@ -90,7 +102,7 @@ class ModelOptimizer():
         self.model.integrate_explicit()
         fval = self.model.vars['mortality']
         #print(budget)
-        print " %s -> %s" % (budgetvec, fval)
+        #print " %s -> %s" % (budgetvec, fval)
         return fval
 
 
@@ -105,7 +117,8 @@ class ModelOptimizer():
               timelimit=None, 
               MaxIter=500, 
               verbose=None)
-        print "Optimized budget %s -> %s" % (budgetvecnew, fval)
+        #print "Optimized budget %s -> %s" % (budgetvecnew, fval)
+
 
 
 model = autumn.base_totestcost.SimpleModel()
@@ -147,6 +160,7 @@ model_optimizer.add_program(
     "universal_dst", "program_rate_detect_xdr_asxdr", "by_fraction")
 
 model_optimizer.optimize_outcome()
+
 
 
 #Program 3. Programmatic management of MDR-TB.

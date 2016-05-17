@@ -108,7 +108,7 @@ class ConsolidatedModel(BaseModel):
         self.define_model_structure()
         self.initialise_compartments()
         self.set_fixed_parameters()
-        self.set_fixed_epi_parameters()
+        self.set_fixed_demo_parameters()
         self.set_parameters()
 
         # Treatment outcomes that will be universal to all models
@@ -295,7 +295,7 @@ class ConsolidatedModel(BaseModel):
         for parameter in fixed_parameters:
             self.set_parameter(parameter, fixed_parameters[parameter])
 
-    def set_fixed_epi_parameters(self):
+    def set_fixed_demo_parameters(self):
 
         """
         Temporary code to set birth and death rates to the most recent ones recorded in the

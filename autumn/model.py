@@ -284,6 +284,18 @@ class ConsolidatedModel(BaseModel):
                               is a string for a param name and value is a float
         """
 
+        # Set parameters that should never be changed in any situation
+        fixed_parameters = {
+            "epi_proportion_cases":
+                1.,  # Proportion infectious if only one organ-status running
+            "tb_multiplier_force":
+                1.,  # Infectiousness multiplier if only one organ-status running
+            "tb_multiplier_force_smearpos":
+                1.,  # Proporiton of smear-positive patients infectious
+            "tb_multiplier_force_extrapul":
+                0.
+        }
+
         # Set defaults for testing
         if paramater_dict is None:
             paramater_dict = {
@@ -297,16 +309,8 @@ class ConsolidatedModel(BaseModel):
                     139950. / 243379.,  # Clinically diagnosed
                 "epi_proportion_cases_extrapul":
                     4161. / 243379.,  # Bacteriologically confirmed
-                "epi_proportion_cases":  # If no organ status in model
-                    1.,
-                "tb_multiplier_force_smearpos":
-                    1.,
                 "tb_multiplier_force_smearneg":
                     0.24,
-                "tb_multiplier_force_extrapul":
-                    0.,
-                "tb_multiplier_force":
-                    1.,
                 "tb_n_contact":
                     14.,
                 "tb_proportion_early_progression":
@@ -386,14 +390,15 @@ class ConsolidatedModel(BaseModel):
                 "program_rate_leavelowquality":
                     2.,
                 "program_prop_nonsuccessoutcomes_death":
-                    0.25,
-                "ageing_rate":
-                    1. / 5.
+                    0.25
             }
 
         # Populate parameters into model
         for parameter in paramater_dict:
             self.set_parameter(parameter, paramater_dict[parameter])
+
+        for parameter in fixed_parameters:
+            self.set_parameter(parameter, fixed_parameters[parameter])
 
     ############################################################
     # General underlying methods for use by other methods

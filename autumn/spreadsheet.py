@@ -3,6 +3,7 @@
 from __future__ import print_function
 from xlrd import open_workbook # For opening Excel workbooks
 from numpy import nan
+import numpy
 import copy
 import os
 
@@ -809,7 +810,8 @@ def get_country_data(data, data_item, country_name):
     # For the other spreadsheets
     else:
         for i in range(len(data[data_item][adjusted_country_name])):
-            country_data_field[data[data_item]['year'][i]] = data[data_item][adjusted_country_name][i]
+            if not numpy.isnan(data[data_item][adjusted_country_name][i]):
+                country_data_field[data[data_item]['year'][i]] = data[data_item][adjusted_country_name][i]
 
     return country_data_field
 
@@ -832,9 +834,9 @@ if __name__ == "__main__":
     # failing to create commits, so currently commented out:
     # open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
     country_data = {}
-    country = u'Fiji'
-    for field in ['birth_rate', 'life_expectancy', 'bcg', u'c_cdr', u'c_new_tsr']:
-        country_data[field] = get_country_data(data, field, country)
+    country = u'Belarus'
+    for data_item in ['birth_rate', 'life_expectancy', 'bcg', u'c_cdr', u'c_new_tsr']:
+        country_data[data_item] = get_country_data(data, data_item, country)
 
     print(country_data)
 

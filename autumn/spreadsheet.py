@@ -782,7 +782,7 @@ def read_input_data_xls(from_test, sheets_to_read):
     return read_xls_with_sheet_readers(sheet_readers)
 
 
-def get_country_data(data, data_item, country_name):
+def get_country_data(spreadsheet, data, data_item, country_name):
 
     # Call function to adjust country name
     adjusted_country_name = adjust_country_name(country_name, data_item)
@@ -791,9 +791,9 @@ def get_country_data(data, data_item, country_name):
     country_data_field = {}
 
     # If it's a Global TB Report data field (Afghanistan is arbitrary)
-    if data_item in data['tb'][u'Afghanistan'] or data_item in data['outcomes'][u'Afghanistan']:
-        if data_item in data['tb'][u'Afghanistan']:
-            gtb_sheet = 'tb'
+    if data_item in data[spreadsheet][u'Afghanistan'] or data_item in data['outcomes'][u'Afghanistan']:
+        if data_item in data[spreadsheet][u'Afghanistan']:
+            gtb_sheet = spreadsheet
         elif data_item in data['outcomes'][u'Afghanistan']:
             gtb_sheet = 'outcomes'
 
@@ -822,15 +822,17 @@ if __name__ == "__main__":
     import json
     data = read_input_data_xls(False, ['input_data', 'bcg',
                                        'birth_rate', 'life_expectancy',
-                                       'tb', 'outcomes'])
-                               # , 'mdr', 'lab', 'notifications', 'strategy'])
+                                       'tb', 'outcomes', 'notifications'])
+                               # , 'mdr', 'lab', 'strategy'])
     # I suspect the next line of code was causing the problems with GitHub desktop
     # failing to create commits, so currently commented out:
     # open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
     country_data = {}
-    country = u'Belarus'
+    country = u'Fiji'
     for data_item in ['birth_rate', 'life_expectancy', 'bcg', u'c_cdr', u'c_new_tsr']:
-        country_data[data_item] = get_country_data(data, data_item, country)
+        country_data[data_item] = get_country_data('tb', data, data_item, country)
+    for data_item in [u'new_sp', u'new_sn', u'new_ep']:
+        country_data[data_item] = get_country_data('notifications', data, data_item, country)
 
     print(country_data)
 

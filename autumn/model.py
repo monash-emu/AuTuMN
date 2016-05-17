@@ -107,6 +107,8 @@ class ConsolidatedModel(BaseModel):
         # Initialise model compartmental structure and set un-processed parameters
         self.define_model_structure()
         self.initialise_compartments()
+        self.set_fixed_parameters()
+        self.set_fixed_epi_parameters()
         self.set_parameters()
 
         # Treatment outcomes that will be universal to all models
@@ -273,6 +275,40 @@ class ConsolidatedModel(BaseModel):
                                                      / len(self.comorbidities)  # split equally by comorbidities
                                                      / len(self.agegroups))  # and split equally by age-groups
 
+    def set_fixed_parameters(self):
+
+        """
+        Sets parameters that should never be changed in any situation,
+        i.e. "by definition" parameters
+        """
+
+        fixed_parameters = {
+            "epi_proportion_cases":
+                1.,  # Proportion infectious if only one organ-status running
+            "tb_multiplier_force":
+                1.,  # Infectiousness multiplier if only one organ-status running
+            "tb_multiplier_force_smearpos":
+                1.,  # Proporiton of smear-positive patients infectious
+            "tb_multiplier_force_extrapul":
+                0.
+        }
+        for parameter in fixed_parameters:
+            self.set_parameter(parameter, fixed_parameters[parameter])
+
+    def set_fixed_epi_parameters(self):
+
+        """
+        Temporary code to set birth and death rates to the most recent ones recorded in the
+        country-specific spreadsheets being read in.
+        """
+
+        self.set_parameter('demo_rate_birth',
+                           self.country_data['birth_rate'][max(self.country_data['birth_rate'])]
+                           / 1e3)
+        self.set_parameter('demo_rate_death',
+                           1.
+                           / self.country_data['life_expectancy'][max(self.country_data['life_expectancy'])])
+
     def set_parameters(self, paramater_dict=None):
 
         """
@@ -284,25 +320,9 @@ class ConsolidatedModel(BaseModel):
                               is a string for a param name and value is a float
         """
 
-        # Set parameters that should never be changed in any situation
-        fixed_parameters = {
-            "epi_proportion_cases":
-                1.,  # Proportion infectious if only one organ-status running
-            "tb_multiplier_force":
-                1.,  # Infectiousness multiplier if only one organ-status running
-            "tb_multiplier_force_smearpos":
-                1.,  # Proporiton of smear-positive patients infectious
-            "tb_multiplier_force_extrapul":
-                0.
-        }
-
         # Set defaults for testing
         if paramater_dict is None:
             paramater_dict = {
-                "demo_rate_birth":
-                    24. / 1e3,
-                "demo_rate_death":
-                    1. / 69.,
                 "epi_proportion_cases_smearpos":
                     (92991. + 6277.) / 243379.,  # Total bacteriologically confirmed
                 "epi_proportion_cases_smearneg":
@@ -396,9 +416,6 @@ class ConsolidatedModel(BaseModel):
         # Populate parameters into model
         for parameter in paramater_dict:
             self.set_parameter(parameter, paramater_dict[parameter])
-
-        for parameter in fixed_parameters:
-            self.set_parameter(parameter, fixed_parameters[parameter])
 
     ############################################################
     # General underlying methods for use by other methods

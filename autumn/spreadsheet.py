@@ -89,9 +89,7 @@ class ConstantsSheetReader:
         self.key = 'const'
         self.nested_parlist =  [
             [   'model_parameters', 
-                [   'demo_rate_birth',
-                    'demo_rate_death',
-                    'epi_proportion_cases_smearpos',
+                [   'epi_proportion_cases_smearpos',
                     'epi_proportion_cases_smearneg',
                     'epi_proportion_cases_extrapul',
                     'tb_multiplier_force_smearneg',

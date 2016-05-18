@@ -364,10 +364,6 @@ class ConsolidatedModel(BaseModel):
                     3.,
                 "tb_multiplier_bcg_protection":
                     0.5,
-                "program_prop_vac":
-                    0.88,
-                "program_prop_unvac":
-                    1. - 0.88,
                 "program_prop_detect":
                     0.8,
                 "program_algorithm_sensitivity":

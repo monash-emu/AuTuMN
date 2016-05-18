@@ -103,8 +103,6 @@ class ConstantsSheetReader:
                     'tb_proportion_casefatality_untreated',
                     'tb_timeperiod_activeuntreated',
                     'tb_multiplier_bcg_protection',
-                    'program_prop_vac',
-                    'program_prop_unvac',
                     'program_proportion_detect',
                     'program_algorithm_sensitivity',
                     'program_rate_start_treatment',

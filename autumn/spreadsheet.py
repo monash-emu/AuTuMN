@@ -567,68 +567,6 @@ def read_input_data_xls(from_test, sheets_to_read):
     sheet_readers = []
 
     if 'input_data' in sheets_to_read:
-        population_sheet_reader = NestedParamWithRangeSheetReader()
-        population_sheet_reader.tab_name = 'population_size'
-        population_sheet_reader.key = 'popsize'
-        population_sheet_reader.nested_parlist =  [
-            [   'Population size',
-                [   '04yr',
-                    '5_14yr',
-                    '15abov'
-                ]
-            ]
-        ]
-        sheet_readers.append(population_sheet_reader)
-
-        tb_prevalence_sheet_reader = NestedParamWithRangeSheetReader()
-        tb_prevalence_sheet_reader.tab_name = 'TB prevalence'
-        tb_prevalence_sheet_reader.key = 'tbprev'
-        tb_prevalence_sheet_reader.nested_parlist =  [
-            [   '0_4yr',
-                [   'ds_04yr',
-                    'mdr_04yr',
-                    'xdr_04yr'
-                ]
-            ],
-            [   '5_14yr',
-                [   'ds_514yr',
-                    'mdr_514yr',
-                    'xdr_514yr'
-                ]
-            ],
-            [   '15abov',
-                [   'ds_15abov',
-                    'mdr_15abov',
-                    'xdr_15abov'
-                ]
-            ]
-        ]
-        sheet_readers.append(tb_prevalence_sheet_reader)
-
-        tb_incidence_sheet_reader = NestedParamWithRangeSheetReader()
-        tb_incidence_sheet_reader.tab_name = 'TB incidence'
-        tb_incidence_sheet_reader.key = 'tbinc'
-        tb_incidence_sheet_reader.nested_parlist =  [
-            [   '0_4yr',
-                [   'ds_04yr',
-                    'mdr_04yr',
-                    'xdr_04yr'
-                ]
-            ],
-            [   '5_14yr',
-                [   'ds_514yr',
-                    'mdr_514yr',
-                    'xdr_514yr'
-                ]
-            ],
-            [   '15abov',
-                [   'ds_15abov',
-                    'mdr_15abov',
-                    'xdr_15abov'
-                ]
-            ]
-        ]
-        sheet_readers.append(tb_incidence_sheet_reader)
 
         comorbidity_sheet_reader = NestedParamWithRangeSheetReader()
         comorbidity_sheet_reader.tab_name = 'comorbidity'
@@ -732,27 +670,6 @@ def read_input_data_xls(from_test, sheets_to_read):
         ]
         sheet_readers.append(testing_treatment_sheet_reader)
 
-        other_epidemiology_sheet_reader = NestedParamSheetReader()
-        other_epidemiology_sheet_reader.tab_name = 'other_epidemiology'
-        other_epidemiology_sheet_reader.key = 'otherepi'
-        other_epidemiology_sheet_reader.nested_parlist = [
-            [   '%died_nonTB',
-                [   '04yr',
-                    '5_14yr',
-                    '15abov'
-                ]
-            ],
-            [   '%died_TBrelated',
-                [   '04yr',
-                    '5_14yr',
-                    '15abov'
-                ]
-            ],
-            [   'birthrate',
-                [   'birthrate']
-            ],
-        ]
-        sheet_readers.append(other_epidemiology_sheet_reader)
         sheet_readers.append(ConstantsSheetReader())
         sheet_readers.append(MacroeconomicsSheetReader())
 

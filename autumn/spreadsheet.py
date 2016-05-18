@@ -93,9 +93,7 @@ class ConstantsSheetReader:
         self.key = 'const'
         self.nested_parlist =  [
             [   'model_parameters', 
-                [   'epi_proportion_cases_smearneg',
-                    'epi_proportion_cases_extrapul',
-                    'tb_multiplier_force_smearneg',
+                [   'tb_multiplier_force_smearneg',
                     'tb_n_contact',
                     'tb_proportion_early_progression',
                     'tb_timeperiod_early_latent',
@@ -842,9 +840,11 @@ def calculate_proportion(country_data, numerator, denominators):
         total = 0
         for j in denominators:
             total += country_data[j][i]
-        proportion[i] = \
-            country_data[numerator][i] / total
+        result = country_data[numerator][i] / total
+        if not numpy.isnan(result):
+            proportion[i] = result
     return proportion
+
 
 if __name__ == "__main__":
     import json

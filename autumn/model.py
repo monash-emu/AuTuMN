@@ -109,6 +109,7 @@ class ConsolidatedModel(BaseModel):
         self.initialise_compartments()
         self.set_fixed_parameters()
         self.set_fixed_demo_parameters()
+        self.set_fixed_epi_parameters()
         self.set_parameters()
 
         # Treatment outcomes that will be universal to all models
@@ -309,6 +310,26 @@ class ConsolidatedModel(BaseModel):
                            1.
                            / self.country_data['life_expectancy'][max(self.country_data['life_expectancy'])])
 
+    def set_fixed_epi_parameters(self):
+
+        """
+        Sets fixed proportions smear-positive, smear-negative and extra-pulmonary based on the
+        most recent proportions available from GTB notifications for the country being simulated.
+        """
+
+        if self.n_organ > 1:
+            self.set_parameter('epi_proportion_cases_smearpos',
+                               self.country_data[u'prop_new_sp'][max(self.country_data[u'prop_new_sp'])])
+        if self.n_organ > 2:
+            self.set_parameter('epi_proportion_cases_smearneg',
+                               self.country_data[u'prop_new_sn'][max(self.country_data[u'prop_new_sn'])])
+            self.set_parameter('epi_proportion_cases_extrapul',
+                               self.country_data[u'prop_new_ep'][max(self.country_data[u'prop_new_ep'])])
+        elif self.n_organ == 2:
+            self.set_parameter('epi_proportion_cases_smearneg',
+                               self.country_data[u'prop_new_sn'][max(self.country_data[u'prop_new_sn'])]
+                               + self.country_data[u'prop_new_ep'][max(self.country_data[u'prop_new_ep'])])
+
     def set_parameters(self, paramater_dict=None):
 
         """
@@ -323,12 +344,6 @@ class ConsolidatedModel(BaseModel):
         # Set defaults for testing
         if paramater_dict is None:
             paramater_dict = {
-                "epi_proportion_cases_smearpos":
-                    (92991. + 6277.) / 243379.,  # Total bacteriologically confirmed
-                "epi_proportion_cases_smearneg":
-                    139950. / 243379.,  # Clinically diagnosed
-                "epi_proportion_cases_extrapul":
-                    4161. / 243379.,  # Bacteriologically confirmed
                 "tb_multiplier_force_smearneg":
                     0.24,
                 "tb_n_contact":
@@ -450,8 +465,6 @@ class ConsolidatedModel(BaseModel):
         The order in which these methods is run is often important
         """
 
-        if self.n_organ > 0: self.ensure_all_progressions_go_somewhere_params()
-
         if len(self.agegroups) > 1: self.find_ageing_rates()
 
         self.find_natural_history_params()
@@ -469,22 +482,6 @@ class ConsolidatedModel(BaseModel):
     ##################################################################
     # The methods that process_parameters calls to set parameters and
     # scale-up functions
-
-    def ensure_all_progressions_go_somewhere_params(self):
-
-        """
-        If fewer than three organ statuses are available,
-        ensure that all detected patients go somewhere
-        """
-
-        # One organ status shouldn't really be used, but in case it is
-        if len(self.organ_status) == 1:
-            self.params["epi_proportion_cases_smearpos"] = 1.
-        # Extrapuls go to smearneg (arguably should be the other way round)
-        elif len(self.organ_status) == 2:
-            self.params["epi_proportion_cases_smearneg"] = \
-                self.params["epi_proportion_cases_smearneg"] \
-                + self.params["epi_proportion_cases_extrapul"]
 
     def find_natural_history_params(self):
 

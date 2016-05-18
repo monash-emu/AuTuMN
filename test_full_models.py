@@ -7,7 +7,7 @@ from pprint import pprint
 import autumn.model
 import numpy
 import autumn.plotting
-from autumn.spreadsheet import read_input_data_xls, get_country_data
+from autumn.spreadsheet import read_input_data_xls, get_country_data, calculate_proportion
 
 def indices(a, func):
     return [i for (i, val) in enumerate(a) if func(val)]
@@ -23,15 +23,26 @@ fields = ['bcg', 'birth_rate', 'life_expectancy']
 gtb_fields = [u'c_cdr', u'c_new_tsr', u'e_inc_100k', u'e_inc_100k_lo', u'e_inc_100k_hi',
               u'e_prev_100k', u'e_prev_100k_lo', u'e_prev_100k_hi',
               u'e_mort_exc_tbhiv_100k', u'e_mort_exc_tbhiv_100k_lo', u'e_mort_exc_tbhiv_100k_hi']
-country = u'Philippines'
-import_data = read_input_data_xls(True, fields + ['input_data', 'tb', 'outcomes'])  # \Github\AuTuMN\autumn\xls
+notification_fields = [u'new_sp', u'new_sn', u'new_ep']
+
+country = u'Fiji'
+import_data = read_input_data_xls(True, fields + [
+    'input_data', 'tb', 'outcomes', 'notifications'])  # \Github\AuTuMN\autumn\xls
 
 parameters = import_data['const']['model_parameters']
 
 # You can now list as many fields as you like from the Global TB Report
 country_data = {}
 for field in fields + gtb_fields:
-    country_data[field] = get_country_data(import_data, field, country)
+    country_data[field] = get_country_data('tb', import_data, field, country)
+for field in notification_fields:
+    country_data[field] = get_country_data('notifications', import_data, field, country)
+
+# Calculate proportions that are smear-positive, smear-negative or extra-pulmonary
+organs = [u'new_sp', u'new_sn', u'new_ep']
+for organ in organs:
+    country_data[u'prop_' + organ] = \
+        calculate_proportion(country_data, organ, organs)
 
 # To run all possible models
 strata_to_run = [0, 2, 3]

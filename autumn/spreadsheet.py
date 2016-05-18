@@ -6,6 +6,10 @@ from numpy import nan
 import numpy
 import copy
 import os
+import datetime
+
+
+spreadsheet_start_realtime = datetime.datetime.now()
 
 
 """
@@ -89,8 +93,7 @@ class ConstantsSheetReader:
         self.key = 'const'
         self.nested_parlist =  [
             [   'model_parameters', 
-                [   'epi_proportion_cases_smearpos',
-                    'epi_proportion_cases_smearneg',
+                [   'epi_proportion_cases_smearneg',
                     'epi_proportion_cases_extrapul',
                     'tb_multiplier_force_smearneg',
                     'tb_n_contact',
@@ -395,6 +398,9 @@ class GlobalTbReportReader():
 
     def parse_col(self, col):
 
+        if self.key == 'notifications':
+            col = replace_blanks(col, nan, '')
+
         # If it's the country column (the first one)
         if col[0] == u'country':
 
@@ -557,8 +563,6 @@ def read_xls_with_sheet_readers(sheet_readers=[]):
                 reader.parse_col(sheet.col_values(i_col))
         result[reader.key] = reader.get_data()
 
-        # A line of code that might help with syncing Excel files through GitHub
-        # workbook.release_resources()
     return result
 
 
@@ -818,6 +822,30 @@ def adjust_country_name(country_name, data_item):
     return adjusted_country_name
 
 
+def calculate_proportion(country_data, numerator, denominators):
+
+    """
+
+    Calculate the proportions of patients within subgroups
+
+    Args:
+        country_data: The main data structure containing all the data for that country
+        numerator: The key indexing the current working numerator dictionary, whose proportion is to be found
+        denominators: All keys of all the dictionaries that contribute to the denominator
+
+    Returns:
+        proportion: A dictionary containing the proportions contained within the current numerator dictionary
+
+    """
+    proportion = {}
+    for i in country_data[numerator]:
+        total = 0
+        for j in denominators:
+            total += country_data[j][i]
+        proportion[i] = \
+            country_data[numerator][i] / total
+    return proportion
+
 if __name__ == "__main__":
     import json
     data = read_input_data_xls(False, ['input_data', 'bcg',
@@ -825,7 +853,7 @@ if __name__ == "__main__":
                                        'tb', 'outcomes', 'notifications'])
                                # , 'mdr', 'lab', 'strategy'])
     # I suspect the next line of code was causing the problems with GitHub desktop
-    # failing to create commits, so currently commented out:
+    # failing to create commits, so commented out:
     # open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
     country_data = {}
     country = u'Fiji'
@@ -834,5 +862,11 @@ if __name__ == "__main__":
     for data_item in [u'new_sp', u'new_sn', u'new_ep']:
         country_data[data_item] = get_country_data('notifications', data, data_item, country)
 
-    print(country_data)
+    # Calculate proportions that are smear-positive, smear-negative or extra-pulmonary
+    organs = [u'new_sp', u'new_sn', u'new_ep']
+    for organ in organs:
+        country_data[u'prop_' + organ] =\
+            calculate_proportion(country_data, organ, organs)
 
+    print(country_data)
+    print("Time elapsed in running script is " + str(datetime.datetime.now() - spreadsheet_start_realtime))

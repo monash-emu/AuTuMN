@@ -396,8 +396,6 @@ class ConsolidatedModel(BaseModel):
                     0.25,
                 "program_rate_restart_presenting":
                     4.,
-                "proportion_amplification":
-                    1. / 15.,
                 "timepoint_introduce_mdr":
                     1940.,
                 "timepoint_introduce_xdr":
@@ -518,9 +516,9 @@ class ConsolidatedModel(BaseModel):
     def find_amplification_scaleup(self):
 
         # Set the amplification scale-up function
-        self.set_scaleup_fn(
-            "tb_proportion_amplification",
-            make_two_step_curve(0., 1. / 15., 2. / 15., 1950., 1960., 1970.))
+        self.set_scaleup_fn("tb_proportion_amplification",
+                            scale_up_function([self.start_time, 1950., 1960.],
+                                              [0., 0., self.params['tb_proportion_amplification']]))
 
     def prepare_data(self, data, upper_limit_believable,
                      percentage=True, zero_start_point=None):

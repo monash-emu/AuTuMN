@@ -177,7 +177,8 @@ for n_comorbidities in strata_to_run:
                                                               "program_prop_secondline_dst",
                                                               "program_proportion_success",
                                                               "program_proportion_default",
-                                                              "program_proportion_death"],
+                                                              "program_proportion_death",
+                                                              "tb_proportion_amplification"],
                                                              base + '.scaleups.png', start_time)
                             #     year = indices(model.times, lambda x: x >= 2015.)[0]
                             #     print("2015 incidence is: ")

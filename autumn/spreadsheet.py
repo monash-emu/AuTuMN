@@ -39,246 +39,6 @@ def parse_year_data(these_data, blank, endcolumn):
         return year_vals
 
 
-class MacroeconomicsSheetReader:
-
-    def __init__(self):
-        self.data = {}
-        self.par = None
-        self.i_par = -1
-        self.tab_name = 'macroeconomics'
-        self.key = 'macro'
-        self.parlist =  [
-            'cpi',
-            'ppp',
-            'gdp',
-            'govrevenue',
-            'govexpen',
-            'totdomesintlexpen',
-            'totgovexpend',
-            'domestbspend',
-            'gftbcommit',
-            'otherintltbcommit',
-            'privatetbspend',
-            'tbrelatedhealthcost',
-            'socialmitigcost'
-        ]
-        self.filename = 'xls/TB_generalepi_macro_constants.xlsx'
-        self.start_row = 0
-        self.create_parlist = False
-        self.horizontal = True
-
-    def parse_row(self, row):
-        raw_par = row[0]
-        if raw_par == "":
-            return
-        self.i_par += 1
-        self.par = self.parlist[self.i_par]
-        self.data[self.par] = parse_year_data(row[1:], '', -2)
-
-    def get_data(self):
-        return self.data
-
-
-class ConstantsSheetReader:
-
-    def __init__(self):
-        self.subparlist = []
-        self.data = {}
-        self.subpar = None
-        self.raw_subpar = None
-        self.par = None
-        self.i_par = -1
-        self.i_subpar = -1
-        self.tab_name = 'constants'
-        self.key = 'const'
-        self.nested_parlist =  [
-            [   'model_parameters', 
-                [   'tb_multiplier_force_smearneg',
-                    'tb_n_contact',
-                    'tb_proportion_early_progression',
-                    'tb_timeperiod_early_latent',
-                    'tb_rate_late_progression',
-                    'tb_proportion_casefatality_untreated_smearpos',
-                    'tb_proportion_casefatality_untreated_smearneg',
-                    'tb_proportion_casefatality_untreated',
-                    'tb_timeperiod_activeuntreated',
-                    'tb_multiplier_bcg_protection',
-                    'program_proportion_detect',
-                    'program_algorithm_sensitivity',
-                    'program_rate_start_treatment',
-                    'tb_timeperiod_treatment_ds',
-                    'tb_timeperiod_treatment_mdr',
-                    'tb_timeperiod_treatment_xdr',
-                    'tb_timeperiod_treatment_inappropriate',
-                    'tb_timeperiod_infect_ontreatment_ds',
-                    'tb_timeperiod_infect_ontreatment_mdr',
-                    'tb_timeperiod_infect_ontreatment_xdr',
-                    'tb_timeperiod_infect_ontreatment_inappropriate',
-                    'program_proportion_success_ds',
-                    'program_proportion_success_mdr',
-                    'program_proportion_success_xdr',
-                    'program_proportion_success_inappropriate',
-                    'program_rate_restart_presenting',
-                    'proportion_amplification',
-                    'timepoint_introduce_mdr',
-                    'timepoint_introduce_xdr',
-                    'treatment_available_date',
-                    'dots_start_date',
-                    'finish_scaleup_date',
-                    'pretreatment_available_proportion',
-                    'dots_start_proportion',
-                    'program_prop_assign_mdr',
-                    'program_prop_assign_xdr',
-                    'program_prop_lowquality',
-                    'program_rate_leavelowquality',
-                    'program_prop_nonsuccessoutcomes_death']], \
-            [   'initials_for_compartments', 
-                [   'susceptible_fully',
-                    'latent_early', 
-                    'latent_late', 
-                    'active', 
-                    'undertreatment']],\
-            [   'disutility weights',
-                [   'disutiuntxactivehiv',
-                    'disutiuntxactivenohiv',
-                    'disutitxactivehiv',
-                    'disutitxactivehiv',
-                    'disutiuntxlatenthiv',
-                    'disutiuntxlatentnohiv',
-                    'disutitxlatenthiv',
-                    'disutitxlatentnohiv']]
-        ]
-        self.filename = 'xls/TB_generalepi_macro_constants.xlsx'
-        self.start_row = 0
-        self.create_parlist = False
-        self.horizontal = True
-
-    def parse_row(self, row):
-
-        raw_par, raw_subpar = row[0:2]
-        if raw_par != "":
-            self.i_par += 1
-            self.par, self.subparlist = self.nested_parlist[self.i_par]
-            self.i_subpar = -1
-            self.subpar = None
-            self.data[self.par] = {}
-            return
-        if raw_subpar != "" and raw_subpar != self.raw_subpar:
-            self.i_subpar += 1
-            self.raw_subpar = raw_subpar
-            self.subpar = self.subparlist[self.i_subpar]
-        if raw_par == "" and raw_subpar == "":
-            return
-        best, low, high = replace_blanks(row[2:5], nan, '')
-        self.data[self.par][self.subpar] = {
-            'Best': best,
-            'Low': low, 
-            'High': high
-        } 
-
-    def get_data(self):
-        return self.data
-
-
-class NestedParamSheetReader:
-
-    def __init__(self):
-        self.subparlist = []
-        self.data = {}
-        self.subpar = None
-        self.raw_subpar = None
-        self.par = None
-        self.i_par = -1
-        self.i_subpar = -1
-        # self.tab_name = 'XLS Sheet Name'
-        self.key = 'data_key'
-        self.nested_parlist = [
-            [   'par0', 
-                [   'subpar0', 
-                    'subpar1'
-                ]
-            ], 
-        ]
-        self.filename = 'xls/TB_generalepi_macro_constants.xlsx'
-        self.start_row = 0
-        self.create_parlist = False
-        self.horizontal = True
-
-    def parse_row(self, row):
-        raw_par, raw_subpar = row[0:2]
-        if raw_par != "":
-            self.i_par += 1
-            self.par, self.subparlist = self.nested_parlist[self.i_par]
-            self.i_subpar = -1
-            self.subpar = None
-            self.data[self.par] = {}
-            return
-        if raw_subpar != "" and raw_subpar != self.raw_subpar:
-            self.i_subpar += 1
-            self.raw_subpar = raw_subpar
-            self.subpar = self.subparlist[self.i_subpar]
-        if raw_par == "" and raw_subpar == "":
-            return
-        self.data[self.par][self.subpar] = parse_year_data(row[3:], '', -2)
-
-    def get_data(self):
-        return self.data
-
-
-class NestedParamWithRangeSheetReader:
-
-    def __init__(self):
-        self.subparlist = []
-        self.data = {}
-        self.subpar = None
-        self.raw_subpar = None
-        self.raw_par = None
-        self.i_par = -1
-        self.i_subpar = -1
-        self.tab_name = 'XLS Sheet Name'
-        self.key = ''
-        self.range = {
-            'Best': [],
-            'High': [],
-            'Low': []
-        }
-        self.nested_parlist = [
-            [
-                'par0', 
-                [
-                    'subpar0', 
-                    'subpar1'
-                ]
-            ], 
-        ]
-        self.filename = 'xls/TB_generalepi_macro_constants.xlsx'
-        self.start_row = 0
-        self.create_parlist = False
-        self.horizontal = True
-
-    def parse_row(self, row):
-        raw_par, raw_subpar, blh = row[0:3]
-        blh = str(blh)
-        if raw_par != "":
-            self.i_par += 1
-            self.par, self.subparlist = self.nested_parlist[self.i_par]
-            self.i_subpar = -1
-            self.subpar = None
-            self.data[self.par] = {}
-            return
-        if raw_subpar != "" and raw_subpar != self.raw_subpar:
-            self.i_subpar += 1
-            self.raw_subpar = raw_subpar
-            self.subpar = self.subparlist[self.i_subpar]
-            self.data[self.par][self.subpar] = copy.deepcopy(self.range)
-        if blh == "":
-            return
-        self.data[self.par][self.subpar][blh] = parse_year_data(row[3:], '', -2)
-
-    def get_data(self):
-        return self.data
-
-
 class BcgCoverageSheetReader():
 
     def __init__(self):
@@ -374,6 +134,51 @@ class LifeExpectancyReader():
 
     def get_data(self):
         return self.data
+
+
+class FixedParametersReader():
+
+    def __init__(self):
+        self.data = {}
+        self.par = None
+        self.i_par = -1
+        self.tab_name = 'fixed_params'
+        self.key = 'params'
+        self.parlist = []
+        self.filename = 'xls/universal_constants.xlsx'
+        self.start_row = 0
+        self.create_parlist = True
+        self.column_for_keys = 0
+        self.horizontal = True
+        self.parameter_dictionary_keys = []
+
+    def parse_row(self, row):
+
+        self.i_par += 1
+        self.par = self.parlist[self.i_par]
+
+        if self.i_par > 0:
+            self.data[row[0]] = row[1]
+
+    def get_data(self):
+        return self.data
+
+
+class ParametersReader(FixedParametersReader):
+
+    def __init__(self):
+        self.data = {}
+        self.par = None
+        self.i_par = -1
+        self.tab_name = 'miscellaneous_constants'
+        self.key = 'miscellaneous'
+        self.parlist = []
+        self.filename = 'xls/programs_fiji.xlsx'
+        self.start_row = 0
+        self.create_parlist = True
+        self.column_for_keys = 0
+        self.horizontal = True
+        self.parameter_dictionary_keys = []
 
 
 class GlobalTbReportReader():
@@ -566,113 +371,10 @@ def read_input_data_xls(from_test, sheets_to_read):
 
     sheet_readers = []
 
-    if 'input_data' in sheets_to_read:
-
-        comorbidity_sheet_reader = NestedParamWithRangeSheetReader()
-        comorbidity_sheet_reader.tab_name = 'comorbidity'
-        comorbidity_sheet_reader.key = 'comor'
-        comorbidity_sheet_reader.nested_parlist =  [
-            [   'malnutrition',
-                [   '04yr',
-                    '5_14yr',
-                    '15abov',
-                    'aggregate'
-                ]
-            ],
-            [   'diabetes',
-                [  '04yr',
-                    '5_14yr',
-                    '15abov',
-                    'aggregate'
-                ]
-            ],
-            [   'HIV',
-                [   '04yr_CD4_300',
-                    '04yr_CD4_200_300',
-                    '04yr_CD4_200',
-                    '04yr_aggregate',
-                    '5_14yr_CD4_300',
-                    '5_14yr_CD4_200_300',
-                    '5_14yr_CD4_200',
-                    '5_14yr_aggregate',
-                    '15abov_CD4_300',
-                    '15abov_CD4_200_300',
-                    '15abov_CD4_200',
-                    '15abov_aggregate'
-                ]
-            ]
-        ]
-        sheet_readers.append(comorbidity_sheet_reader)
-
-        cost_coverage_sheet_reader = NestedParamWithRangeSheetReader()
-        cost_coverage_sheet_reader.tab_name = 'cost and coverage'
-        cost_coverage_sheet_reader.key = 'costcov'
-        cost_coverage_sheet_reader.range = {'Coverage':[], 'Cost':[]}
-        cost_coverage_sheet_reader.nested_parlist =  [
-            [   'Cost and coverage',
-                [   'Active and intensified case finding',
-                    'Treatment of active TB',
-                    'Preventive therapy for latent TB',
-                    'Vaccination',
-                    'Patient isolation',
-                    'Drug susceptibility testing',
-                    'Preventive therapy for patients with HIV co-infection',
-                    'Infection control in healthcare facilities',
-                ]
-            ]
-        ]
-        sheet_readers.append(cost_coverage_sheet_reader)
-
-        testing_treatment_sheet_reader = NestedParamSheetReader()
-        testing_treatment_sheet_reader.tab_name = 'testing_treatment'
-        testing_treatment_sheet_reader.key = 'testtx'
-        testing_treatment_sheet_reader.nested_parlist =  [
-            [   '%testedactiveTB',
-                [   '04yr',
-                    '5_14yr',
-                    '15abov']], \
-            [   '%testedlatentTB',
-                [   '04yr',
-                    '5_14yr',
-                    '15abov']],\
-            [   '%testedsuscept',
-                [   '04yr',
-                    '5_14yr',
-                    '15abov']],\
-            [   'numberinittxactiveTB',
-                [   '04yr_DSregimen',
-                    '04yr_MDRregimen',
-                    '04yr_XDRregimen',
-                    '5_14yr_DSregimen',
-                    '5_14yr_MDRregimen',
-                    '5_14yr_XDRregimen',
-                    '15abov_DSregimen',
-                    '15abov_MDRregimen',
-                    '15abov_XDRregimen']],\
-            [   'numbercompletetxactiveTB',
-                [   '04yr_DSregimen',
-                    '04yr_MDRregimen',
-                    '04yr_XDRregimen',
-                    '5_14yr_DSregimen',
-                    '5_14yr_MDRregimen',
-                    '5_14yr_XDRregimen',
-                    '15abov_DSregimen',
-                    '15abov_MDRregimen',
-                    '15abov_XDRregimen']],\
-            [   'numberinittxlatentTB',
-                [   '04yr',
-                    '5_14yr',
-                    '15abov']],\
-            ['numbercompletetxlatentTB',
-                [   '04yr',
-                    '5_14yr',
-                    '15abov']]
-        ]
-        sheet_readers.append(testing_treatment_sheet_reader)
-
-        sheet_readers.append(ConstantsSheetReader())
-        sheet_readers.append(MacroeconomicsSheetReader())
-
+    if 'parameters' in sheets_to_read:
+        sheet_readers.append(FixedParametersReader())
+    if 'miscellaneous' in sheets_to_read:
+        sheet_readers.append(ParametersReader())
     if 'bcg' in sheets_to_read:
         sheet_readers.append(BcgCoverageSheetReader())
     if 'birth_rate' in sheets_to_read:
@@ -763,9 +465,10 @@ def calculate_proportion(country_data, numerator, denominators):
 
 if __name__ == "__main__":
     import json
-    data = read_input_data_xls(False, ['input_data', 'bcg',
+    data = read_input_data_xls(False, ['bcg',
                                        'birth_rate', 'life_expectancy',
-                                       'tb', 'outcomes', 'notifications'])
+                                       'tb', 'outcomes', 'notifications',
+                                       'parameters', 'miscellaneous'])
                                # , 'mdr', 'lab', 'strategy'])
     # I suspect the next line of code was causing the problems with GitHub desktop
     # failing to create commits, so commented out:

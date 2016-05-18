@@ -27,9 +27,10 @@ notification_fields = [u'new_sp', u'new_sn', u'new_ep']
 
 country = u'Fiji'
 import_data = read_input_data_xls(True, fields + [
-    'input_data', 'tb', 'outcomes', 'notifications'])  # \Github\AuTuMN\autumn\xls
+    'input_data', 'tb', 'outcomes', 'notifications', 'parameters', 'miscellaneous'])  # \Github\AuTuMN\autumn\xls
 
-parameters = import_data['const']['model_parameters']
+fixed_parameters = import_data['params']
+miscellaneous_parameters = import_data['miscellaneous']
 
 # You can now list as many fields as you like from the Global TB Report
 country_data = {}
@@ -85,8 +86,10 @@ for n_comorbidities in strata_to_run:
                                   "Amplification? " + str(is_amplification) + ",   " +
                                   "Misassignment? " + str(is_misassignment) + ".")
 
-                            for key, value in parameters.items():
-                                model.set_parameter(key, value["Best"])
+                            for key, value in fixed_parameters.items():
+                                model.set_parameter(key, value)
+                            for key, value in miscellaneous_parameters.items():
+                                model.set_parameter(key, value)
 
                             model.make_times(start_time, 2015.1, 0.1)
                             model.integrate_explicit()

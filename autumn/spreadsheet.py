@@ -86,28 +86,28 @@ class BcgCoverageSheetReader():
     for BCG coverage over
     """
 
-    def __init__(self, country):
-        self.data = {}
+    def __init__(self, country_to_find):
+        self.data = {}  # Empty dictionary to contain the data that is read
         self.par = None
-        self.i_par = -1
-        self.tab_name = 'BCG'
-        self.key = 'bcg'
-        self.parlist = []
-        self.filename = 'xls/who_unicef_bcg_coverage.xlsx'
-        self.start_row = 0
-        self.create_parlist = False
-        self.column_for_keys = 2
-        self.horizontal = True
-        self.country = country
+        self.i_par = -1  # Starting row
+        self.tab_name = 'BCG'  # Tab of spreadsheet to be read
+        self.key = 'bcg'  # String that defines the data type in this file
+        self.parlist = []  # To be populated with list of keys
+        self.filename = 'xls/who_unicef_bcg_coverage.xlsx'  # Filename
+        self.start_row = 0  # First row to be read in
+        self.create_parlist = False  # Whether necessary to create a list of keys
+        self.column_for_keys = 2  # Column that keys come from
+        self.horizontal = True  # Orientation of spreadsheet
+        self.country_to_find = country_to_find  # Country being read
 
     def parse_row(self, row):
 
         self.i_par += 1
-        if row[2] == u'Cname':
+        if row[0] == u'Region':
             self.parlist += \
                 parse_year_data(row, '', len(row))
-        elif row[2] == self.country:
-            for i in range(4, len(row[4:])):
+        elif row[self.column_for_keys] == self.country_to_find:
+            for i in range(4, len(row)):
                 if type(row[i]) == float:
                     self.data[self.parlist[i]] = \
                         row[i]
@@ -118,7 +118,12 @@ class BcgCoverageSheetReader():
 
 class BirthRateReader():
 
-    def __init__(self):
+    """
+    Reader for the WHO/UNICEF BCG coverage data
+    Same structure and approach as for BcgCoverageSheetReader above
+    """
+
+    def __init__(self, country_to_find):
         self.data = {}
         self.par = None
         self.i_par = -1
@@ -127,23 +132,23 @@ class BirthRateReader():
         self.parlist = []
         self.filename = 'xls/world_bank_crude_birth_rate.xlsx'
         self.start_row = 0
-        self.create_parlist = True
+        self.create_parlist = False
         self.column_for_keys = 2
         self.horizontal = True
+        self.country_to_find = country_to_find
 
     def parse_row(self, row):
 
         self.i_par += 1
-        self.par = self.parlist[self.i_par]
-        if row[2] == u'Country Name':  # Year
-            self.data[self.par] = []
+        if row[0] == u'Series Name':
+            for i in range(len(row)):
+                self.parlist += \
+                    [row[i][:4]]
+        elif row[2] == self.country_to_find:
             for i in range(4, len(row)):
-                self.data[self.par] += [int(row[i][:4])]
-        elif row[2] == '':  # Blank lines at the end
-            return
-        else:  # Data
-            self.data[self.par] =\
-                parse_year_data(row[4:], u'..', -1)
+                if type(row[i]) == float:
+                    self.data[self.parlist[i]] = \
+                        row[i]
 
     def get_data(self):
         return self.data
@@ -168,7 +173,7 @@ class LifeExpectancyReader():
 
         self.i_par += 1
         self.par = self.parlist[self.i_par]
-        if row[0] == u'Country Name':  # Year
+        if row[0] == u'Country Name':
             self.data[self.par] = []
             for i in range(4, len(row)):
                 self.data[self.par] += [int(row[i])]
@@ -426,7 +431,7 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     if 'bcg' in sheets_to_read:
         sheet_readers.append(BcgCoverageSheetReader(country))
     if 'birth_rate' in sheets_to_read:
-        sheet_readers.append(BirthRateReader())
+        sheet_readers.append(BirthRateReader(country))
     if 'life_expectancy' in sheets_to_read:
         sheet_readers.append(LifeExpectancyReader())
     if 'tb' in sheets_to_read:
@@ -468,7 +473,7 @@ def get_country_data(spreadsheet, data, data_item, country_name):
             country_data_field[data[gtb_sheet][adjusted_country_name][u'year'][i]] = \
                 data[gtb_sheet][adjusted_country_name][data_item][i]
 
-    elif data_item == 'bcg':
+    elif data_item in ['bcg', 'birth_rate']:
         country_data_field[data_item] = data[data_item]
 
     # For the other spreadsheets

@@ -88,11 +88,9 @@ class BcgCoverageSheetReader():
 
     def __init__(self, country_to_find):
         self.data = {}  # Empty dictionary to contain the data that is read
-        self.par = None
-        self.i_par = -1  # Starting row
+        self.i_par = -1  # Row before the starting row
         self.tab_name = 'BCG'  # Tab of spreadsheet to be read
         self.key = 'bcg'  # String that defines the data type in this file
-        self.parlist = []  # To be populated with list of keys
         self.filename = 'xls/who_unicef_bcg_coverage.xlsx'  # Filename
         self.start_row = 0  # First row to be read in
         self.create_parlist = False  # Whether necessary to create a list of keys
@@ -104,8 +102,7 @@ class BcgCoverageSheetReader():
 
         self.i_par += 1
         if row[0] == u'Region':
-            self.parlist += \
-                parse_year_data(row, '', len(row))
+            self.parlist = parse_year_data(row, '', len(row))
         elif row[self.column_for_keys] == self.country_to_find:
             for i in range(4, len(row)):
                 if type(row[i]) == float:
@@ -125,7 +122,6 @@ class BirthRateReader():
 
     def __init__(self, country_to_find):
         self.data = {}
-        self.par = None
         self.i_par = -1
         self.tab_name = 'Data'
         self.key = 'birth_rate'
@@ -158,7 +154,6 @@ class LifeExpectancyReader():
 
     def __init__(self, country_to_find):
         self.data = {}
-        self.par = None
         self.i_par = -1
         self.tab_name = 'Data'
         self.key = 'life_expectancy'
@@ -189,13 +184,12 @@ class FixedParametersReader():
 
     def __init__(self):
         self.data = {}
-        self.par = None
         self.i_par = -1
         self.tab_name = 'fixed_params'
         self.key = 'params'
         self.parlist = []
         self.filename = 'xls/universal_constants.xlsx'
-        self.start_row = 0
+        self.start_row = 1
         self.create_parlist = True
         self.column_for_keys = 0
         self.horizontal = True
@@ -204,10 +198,7 @@ class FixedParametersReader():
     def parse_row(self, row):
 
         self.i_par += 1
-        self.par = self.parlist[self.i_par]
-
-        if self.i_par > 0:
-            self.data[row[0]] = row[1]
+        self.data[row[0]] = row[1]
 
     def get_data(self):
         return self.data
@@ -215,15 +206,14 @@ class FixedParametersReader():
 
 class ParametersReader(FixedParametersReader):
 
-    def __init__(self):
+    def __init__(self, country_to_read):
         self.data = {}
-        self.par = None
         self.i_par = -1
         self.tab_name = 'miscellaneous_constants'
         self.key = 'miscellaneous'
         self.parlist = []
-        self.filename = 'xls/programs_fiji.xlsx'
-        self.start_row = 0
+        self.filename = 'xls/programs_' + country_to_read.lower() + '.xlsx'
+        self.start_row = 1
         self.create_parlist = True
         self.column_for_keys = 0
         self.horizontal = True
@@ -282,7 +272,6 @@ class GlobalTbReportReader():
                 self.data[self.indices[i]][col[0]] += [item_to_add]
 
     def get_data(self):
-
         return self.data
 
 
@@ -427,7 +416,7 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     if 'parameters' in sheets_to_read:
         sheet_readers.append(FixedParametersReader())
     if 'miscellaneous' in sheets_to_read:
-        sheet_readers.append(ParametersReader())
+        sheet_readers.append(ParametersReader(country))
     if 'bcg' in sheets_to_read:
         sheet_readers.append(BcgCoverageSheetReader(country))
     if 'birth_rate' in sheets_to_read:
@@ -490,7 +479,7 @@ def get_country_data(spreadsheet, data, data_item, country_name):
 
 if __name__ == "__main__":
     import json
-    country = u'Algeria'
+    country = u'Fiji'
     data = read_input_data_xls(False, ['bcg',
                                        'birth_rate', 'life_expectancy',
                                        'tb', 'outcomes', 'notifications',

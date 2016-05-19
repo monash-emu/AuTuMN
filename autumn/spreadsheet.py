@@ -260,9 +260,9 @@ class GlobalTbReportReader():
 
 class MdrReportReader():
 
-    def __init__(self):
-        self.data = []
-        self.i_par = -1
+    def __init__(self, country_to_read):
+        self.data = {}
+        self.i_par = 0
         self.tab_name = 'MDR-TB_burden_estimates_2016-04'
         self.key = 'mdr'
         self.parlist = []
@@ -271,20 +271,20 @@ class MdrReportReader():
         self.create_parlist = True
         self.column_for_keys = 0
         self.horizontal = True
-        self.country_dictionary_keys = []
+        self.dictionary_keys = []
+        self.country_to_read = country_to_read
 
     def parse_row(self, row):
 
-        self.i_par += 1
-        self.par = self.parlist[self.i_par]
-
+        # Create the list to turn in to dictionary keys later
         if row[0] == u'country':
-            for i in range(len(row)):
-                self.country_dictionary_keys += [row[i]]
-        else:
-            self.data += [{}]
-            for i in range(len(row)):
-                self.data[self.i_par - 1][self.country_dictionary_keys[i]] = row[i]
+            self.dictionary_keys += row
+
+        # Populate when country to read is encountered
+        elif row[0] == self.country_to_read:
+            for i in range(len(self.dictionary_keys)):
+                self.data[self.dictionary_keys[i]] = row[i]
+        self.i_par += 1
 
     def get_data(self):
         return self.data
@@ -408,7 +408,7 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     if 'tb' in sheets_to_read:
         sheet_readers.append(GlobalTbReportReader(country))
     if 'mdr' in sheets_to_read:
-        sheet_readers.append(MdrReportReader())
+        sheet_readers.append(MdrReportReader(country))
     # if 'notifications' in sheets_to_read:
     #     sheet_readers.append(NotificationsReader())
     # if 'lab' in sheets_to_read:
@@ -426,12 +426,12 @@ def read_input_data_xls(from_test, sheets_to_read, country):
 
 if __name__ == "__main__":
     import json
-    country = u'Fiji'
+    country = u'Peru'
     data = read_input_data_xls(False, ['bcg',
                                        'birth_rate', 'life_expectancy',
                                        'tb', 'outcomes', 'mdr',
                                        #'notifications',
-                                       'parameters', 'miscellaneous'],
+                                       'parameters'],
                                country)
                                # , 'mdr', 'lab', 'strategy'])
     # I suspect the next line of code was causing the problems with GitHub desktop

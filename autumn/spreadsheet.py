@@ -186,7 +186,7 @@ class FixedParametersReader():
         self.data = {}
         self.i_par = 0
         self.tab_name = 'fixed_params'
-        self.key = 'params'
+        self.key = 'parameters'
         self.parlist = []
         self.filename = 'xls/universal_constants.xlsx'
         self.start_row = 1
@@ -237,7 +237,7 @@ class GlobalTbReportReader():
 
     def parse_col(self, col):
 
-        if self.key == 'notifications':
+        if self.key in ['notifications', 'laboratories']:
             col = replace_blanks(col, nan, '')
 
         # If it's the country column (the first one)
@@ -309,20 +309,18 @@ class NotificationsReader(GlobalTbReportReader):
 
 class LaboratoriesReader(GlobalTbReportReader):
 
-    def __init__(self):
+    def __init__(self, country_to_read):
         self.data = {}
-        self.par = None
-        self.i_par = -1
         self.tab_name = 'TB_laboratories_2016-04-21'
         self.key = 'laboratories'
         self.parlist = []
-        self.filename = 'xls/TB_laboratories_2016-04-21.xlsx'
+        self.filename = 'xls/laboratories_data.xlsx'
         self.start_row = 1
         self.create_parlist = True
         self.horizontal = False
         self.start_column = 0
-        self.start_row = 1
-        self.indices = {}
+        self.indices = []
+        self.country_to_read = country_to_read
 
 
 class TreatmentOutcomesReader(GlobalTbReportReader):
@@ -410,8 +408,8 @@ def read_input_data_xls(from_test, sheets_to_read, country):
         sheet_readers.append(MdrReportReader(country))
     if 'notifications' in sheets_to_read:
         sheet_readers.append(NotificationsReader(country))
-    # if 'lab' in sheets_to_read:
-    #     sheet_readers.append(LaboratoriesReader())
+    if 'laboratories' in sheets_to_read:
+        sheet_readers.append(LaboratoriesReader(country))
     # if 'outcomes' in sheets_to_read:
     #     sheet_readers.append(TreatmentOutcomesReader())
     if 'strategy' in sheets_to_read:
@@ -430,7 +428,8 @@ if __name__ == "__main__":
                                        'birth_rate', 'life_expectancy',
                                        'tb', 'outcomes', 'mdr',
                                        'notifications',
-                                       'parameters'],
+                                       'parameters',
+                                       'laboratories'],
                                country)
                                # , 'mdr', 'lab', 'strategy'])
     # I suspect the next line of code was causing the problems with GitHub desktop

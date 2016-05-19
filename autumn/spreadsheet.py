@@ -17,7 +17,7 @@ Import model inputs from Excel spreadsheet
 """
 
 ###############################################################
-#  General functions
+#  General functions for use by readers below
 
 def is_all_same_value(a_list, test_val):
     for val in a_list:
@@ -237,7 +237,7 @@ class GlobalTbReportReader():
 
     def parse_col(self, col):
 
-        if self.key in ['notifications', 'laboratories']:
+        if self.key in ['notifications', 'laboratories', 'outcomes']:
             col = replace_blanks(col, nan, '')
 
         # If it's the country column (the first one)
@@ -325,37 +325,37 @@ class LaboratoriesReader(GlobalTbReportReader):
 
 class TreatmentOutcomesReader(GlobalTbReportReader):
 
-    def __init__(self):
+    def __init__(self, country_to_read):
         self.data = {}
-        self.par = None
         self.i_par = -1
         self.tab_name = 'TB_outcomes_2016-04-21'
         self.key = 'outcomes'
         self.parlist = []
-        self.filename = 'xls/TB_outcomes_2016-04-21.xlsx'
+        self.filename = 'xls/outcome_data.xlsx'
         self.start_row = 1
         self.create_parlist = True
         self.horizontal = False
         self.start_column = 0
         self.start_row = 1
-        self.indices = {}
+        self.indices = []
+        self.country_to_read = country_to_read
 
 
 class StrategyReader(MdrReportReader):
 
-    def __init__(self):
-        self.data = []
-        self.par = None
-        self.i_par = -1
+    def __init__(self, country_to_read):
+        self.data = {}
+        self.i_par = 0
         self.tab_name = 'TB_strategy_2016-04-21'
         self.key = 'strategy'
         self.parlist = []
-        self.filename = 'xls/TB_strategy_2016-04-21.xlsx'
+        self.filename = 'xls/strategy_data.xlsx'
         self.start_row = 0
         self.create_parlist = True
         self.column_for_keys = 0
         self.horizontal = True
-        self.country_dictionary_keys = []
+        self.dictionary_keys = []
+        self.country_to_read = country_to_read
 
 
 ###############################################################
@@ -390,6 +390,19 @@ def read_xls_with_sheet_readers(sheet_readers=[]):
 
 def read_input_data_xls(from_test, sheets_to_read, country):
 
+    """
+    Compile sheet readers into a list according to which ones have
+    been selected
+
+    Args:
+        from_test:
+        sheets_to_read:
+        country:
+
+    Returns:
+
+    """
+
     sheet_readers = []
 
     if 'parameters' in sheets_to_read:
@@ -410,10 +423,10 @@ def read_input_data_xls(from_test, sheets_to_read, country):
         sheet_readers.append(NotificationsReader(country))
     if 'laboratories' in sheets_to_read:
         sheet_readers.append(LaboratoriesReader(country))
-    # if 'outcomes' in sheets_to_read:
-    #     sheet_readers.append(TreatmentOutcomesReader())
+    if 'outcomes' in sheets_to_read:
+        sheet_readers.append(TreatmentOutcomesReader(country))
     if 'strategy' in sheets_to_read:
-        sheet_readers.append(StrategyReader())
+        sheet_readers.append(StrategyReader(country))
 
     if from_test:
         for reader in sheet_readers:
@@ -422,19 +435,22 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     return read_xls_with_sheet_readers(sheet_readers)
 
 if __name__ == "__main__":
-    import json
+
     country = u'Peru'
-    data = read_input_data_xls(False, ['bcg',
-                                       'birth_rate', 'life_expectancy',
-                                       'tb', 'outcomes', 'mdr',
-                                       'notifications',
-                                       'parameters',
-                                       'laboratories'],
-                               country)
-                               # , 'mdr', 'lab', 'strategy'])
-    # I suspect the next line of code was causing the problems with GitHub desktop
-    # failing to create commits, so commented out:
-    # open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
+
+    tags_of_sheets_to_read = [
+        'bcg',
+        'birth_rate',
+        'life_expectancy',
+        'tb',
+        'mdr',
+        'notifications',
+        'outcomes',
+        'parameters',
+        'laboratories',
+        'strategy']
+
+    data = read_input_data_xls(False, tags_of_sheets_to_read, country)
 
     # Calculate proportions that are smear-positive, smear-negative or extra-pulmonary
     organs = [u'new_sp', u'new_sn', u'new_ep']

@@ -243,7 +243,7 @@ class ProgramReader():
         self.horizontal = True
         self.country_to_read = country_to_read
         self.start_col = 1
-        self.first_cell = u'year'
+        self.first_cell = u'program'
 
     def parse_row(self, row):
 
@@ -252,9 +252,13 @@ class ProgramReader():
         else:
             self.data[row[0]] = {}
             for i in range(self.start_col, len(row)):
-                if type(row[i]) == float:
+                if i == 1:
+                    self.data[row[0]][self.parlist[i]] = \
+                        row[i]
+                elif type(row[i]) == float:
                     self.data[row[0]][int(self.parlist[i])] = \
                         row[i]
+
         self.i_par += 1
 
     def get_data(self):
@@ -510,6 +514,11 @@ if __name__ == "__main__":
     # and add them to the data object
     organs = [u'new_sp', u'new_sn', u'new_ep']
     data['notifications'].update(calculate_proportion(data['notifications'], organs))
+
+    if data['programs']['program_prop_vaccination'][u'load_data'] == 'yes':
+        data['programs']['program_prop_vaccination'].update(data['bcg'])
+
+    del data['programs']['program_prop_vaccination'][u'load_data']
 
     print("Time elapsed in running script is " + str(datetime.datetime.now() - spreadsheet_start_realtime))
 

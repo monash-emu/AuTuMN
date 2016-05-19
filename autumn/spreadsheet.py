@@ -16,6 +16,8 @@ spreadsheet_start_realtime = datetime.datetime.now()
 Import model inputs from Excel spreadsheet 
 """
 
+###############################################################
+#  General functions
 
 def is_all_same_value(a_list, test_val):
     for val in a_list:
@@ -39,7 +41,50 @@ def parse_year_data(these_data, blank, endcolumn):
         return year_vals
 
 
+def adjust_country_name(country_name, data_item):
+
+    adjusted_country_name = country_name
+    if country_name == u'Philippines' and data_item == 'bcg':
+        adjusted_country_name = country_name + u' (the)'
+    return adjusted_country_name
+
+
+def calculate_proportion(country_data, numerator, denominators):
+
+    """
+
+    Calculate the proportions of patients within subgroups
+
+    Args:
+        country_data: The main data structure containing all the data for that country
+        numerator: The key indexing the current working numerator dictionary, whose proportion is to be found
+        denominators: All keys of all the dictionaries that contribute to the denominator
+
+    Returns:
+        proportion: A dictionary containing the proportions contained within the current numerator dictionary
+
+    """
+    proportion = {}
+    for i in country_data[numerator]:
+        total = 0
+        for j in denominators:
+            total += country_data[j][i]
+        result = country_data[numerator][i] / total
+        if not numpy.isnan(result):
+            proportion[i] = result
+    return proportion
+
+###############################################################
+#  Readers
+
 class BcgCoverageSheetReader():
+
+    """
+    Reader for the WHO/UNICEF BCG coverage data
+    Now only reads the rows relevant to the country in question to speed things up
+    Therefore, creates a single dictionary with years keys and coverage as a float
+    for BCG coverage over
+    """
 
     def __init__(self, country):
         self.data = {}
@@ -340,6 +385,10 @@ class StrategyReader(MdrReportReader):
         self.country_dictionary_keys = []
 
 
+###############################################################
+#  Master scripts
+
+
 def read_xls_with_sheet_readers(sheet_readers=[]):
 
     result = {}
@@ -431,38 +480,7 @@ def get_country_data(spreadsheet, data, data_item, country_name):
     return country_data_field
 
 
-def adjust_country_name(country_name, data_item):
 
-    adjusted_country_name = country_name
-    if country_name == u'Philippines' and data_item == 'bcg':
-        adjusted_country_name = country_name + u' (the)'
-    return adjusted_country_name
-
-
-def calculate_proportion(country_data, numerator, denominators):
-
-    """
-
-    Calculate the proportions of patients within subgroups
-
-    Args:
-        country_data: The main data structure containing all the data for that country
-        numerator: The key indexing the current working numerator dictionary, whose proportion is to be found
-        denominators: All keys of all the dictionaries that contribute to the denominator
-
-    Returns:
-        proportion: A dictionary containing the proportions contained within the current numerator dictionary
-
-    """
-    proportion = {}
-    for i in country_data[numerator]:
-        total = 0
-        for j in denominators:
-            total += country_data[j][i]
-        result = country_data[numerator][i] / total
-        if not numpy.isnan(result):
-            proportion[i] = result
-    return proportion
 
 
 if __name__ == "__main__":

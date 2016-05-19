@@ -88,7 +88,7 @@ class BcgCoverageSheetReader():
 
     def __init__(self, country_to_find):
         self.data = {}  # Empty dictionary to contain the data that is read
-        self.i_par = -1  # Row before the starting row
+        self.i_par = 0  # Starting row
         self.tab_name = 'BCG'  # Tab of spreadsheet to be read
         self.key = 'bcg'  # String that defines the data type in this file
         self.filename = 'xls/who_unicef_bcg_coverage.xlsx'  # Filename
@@ -100,7 +100,6 @@ class BcgCoverageSheetReader():
 
     def parse_row(self, row):
 
-        self.i_par += 1
         if row[0] == u'Region':
             self.parlist = parse_year_data(row, '', len(row))
         elif row[self.column_for_keys] == self.country_to_find:
@@ -108,6 +107,7 @@ class BcgCoverageSheetReader():
                 if type(row[i]) == float:
                     self.data[int(self.parlist[i])] = \
                         row[i]
+        self.i_par += 1
 
     def get_data(self):
         return self.data
@@ -122,7 +122,7 @@ class BirthRateReader():
 
     def __init__(self, country_to_find):
         self.data = {}
-        self.i_par = -1
+        self.i_par = 0
         self.tab_name = 'Data'
         self.key = 'birth_rate'
         self.parlist = []
@@ -135,7 +135,6 @@ class BirthRateReader():
 
     def parse_row(self, row):
 
-        self.i_par += 1
         if row[0] == u'Series Name':
             for i in range(len(row)):
                 self.parlist += \
@@ -145,6 +144,7 @@ class BirthRateReader():
                 if type(row[i]) == float:
                     self.data[int(self.parlist[i])] = \
                         row[i]
+        self.i_par += 1
 
     def get_data(self):
         return self.data
@@ -154,7 +154,7 @@ class LifeExpectancyReader():
 
     def __init__(self, country_to_find):
         self.data = {}
-        self.i_par = -1
+        self.i_par = 0
         self.tab_name = 'Data'
         self.key = 'life_expectancy'
         self.parlist = []
@@ -167,7 +167,6 @@ class LifeExpectancyReader():
 
     def parse_row(self, row):
 
-        self.i_par += 1
         if row[0] == u'Country Name':
             self.parlist += row
         elif row[self.column_for_keys] == self.country_to_find:
@@ -175,6 +174,7 @@ class LifeExpectancyReader():
                 if type(row[i]) == float:
                     self.data[int(self.parlist[i])] = \
                         row[i]
+        self.i_par += 1
 
     def get_data(self):
         return self.data
@@ -184,7 +184,7 @@ class FixedParametersReader():
 
     def __init__(self):
         self.data = {}
-        self.i_par = -1
+        self.i_par = 0
         self.tab_name = 'fixed_params'
         self.key = 'params'
         self.parlist = []
@@ -197,8 +197,8 @@ class FixedParametersReader():
 
     def parse_row(self, row):
 
-        self.i_par += 1
         self.data[row[0]] = row[1]
+        self.i_par += 1
 
     def get_data(self):
         return self.data
@@ -208,7 +208,7 @@ class ParametersReader(FixedParametersReader):
 
     def __init__(self, country_to_read):
         self.data = {}
-        self.i_par = -1
+        self.i_par = 0
         self.tab_name = 'miscellaneous_constants'
         self.key = 'miscellaneous'
         self.parlist = []
@@ -224,7 +224,6 @@ class GlobalTbReportReader():
 
     def __init__(self, country_to_read):
         self.data = {}
-        self.i_par = -1
         self.tab_name = 'TB_burden_countries_2016-04-19'
         self.key = 'tb'
         self.parlist = []
@@ -263,12 +262,11 @@ class MdrReportReader():
 
     def __init__(self):
         self.data = []
-        self.par = None
         self.i_par = -1
         self.tab_name = 'MDR-TB_burden_estimates_2016-04'
         self.key = 'mdr'
         self.parlist = []
-        self.filename = 'xls/MDR-TB_burden_estimates_2016-04-20.xlsx'
+        self.filename = 'xls/mdr_data.xlsx'
         self.start_row = 0
         self.create_parlist = True
         self.column_for_keys = 0
@@ -431,7 +429,7 @@ if __name__ == "__main__":
     country = u'Fiji'
     data = read_input_data_xls(False, ['bcg',
                                        'birth_rate', 'life_expectancy',
-                                       'tb', 'outcomes',
+                                       'tb', 'outcomes', 'mdr',
                                        #'notifications',
                                        'parameters', 'miscellaneous'],
                                country)

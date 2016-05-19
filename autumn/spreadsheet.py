@@ -41,7 +41,7 @@ def parse_year_data(these_data, blank, endcolumn):
 
 class BcgCoverageSheetReader():
 
-    def __init__(self):
+    def __init__(self, country):
         self.data = {}
         self.par = None
         self.i_par = -1
@@ -50,23 +50,22 @@ class BcgCoverageSheetReader():
         self.parlist = []
         self.filename = 'xls/who_unicef_bcg_coverage.xlsx'
         self.start_row = 0
-        self.create_parlist = True
+        self.create_parlist = False
         self.column_for_keys = 2
         self.horizontal = True
+        self.country = country
 
     def parse_row(self, row):
 
         self.i_par += 1
-        self.par = self.parlist[self.i_par]
-        if row[2] == u'Cname':  # Year
-            self.data[self.par] = []
-            for i in range(4, len(row)):
-                self.data[self.par] += [int(row[i])]
-        else:  # Data
-            self.data[self.par] =\
-                parse_year_data(row[4:], '', len(row))
-        # This sheet goes from 2014 backwards to 1980 from left to right, so:
-        self.data[self.par] = list(reversed(self.data[self.par]))
+        if row[2] == u'Cname':
+            self.parlist += \
+                parse_year_data(row, '', len(row))
+        elif row[2] == self.country:
+            for i in range(4, len(row[4:])):
+                if type(row[i]) == float:
+                    self.data[self.parlist[i]] = \
+                        row[i]
 
     def get_data(self):
         return self.data
@@ -367,7 +366,7 @@ def read_xls_with_sheet_readers(sheet_readers=[]):
     return result
 
 
-def read_input_data_xls(from_test, sheets_to_read):
+def read_input_data_xls(from_test, sheets_to_read, country):
 
     sheet_readers = []
 
@@ -376,7 +375,7 @@ def read_input_data_xls(from_test, sheets_to_read):
     if 'miscellaneous' in sheets_to_read:
         sheet_readers.append(ParametersReader())
     if 'bcg' in sheets_to_read:
-        sheet_readers.append(BcgCoverageSheetReader())
+        sheet_readers.append(BcgCoverageSheetReader(country))
     if 'birth_rate' in sheets_to_read:
         sheet_readers.append(BirthRateReader())
     if 'life_expectancy' in sheets_to_read:
@@ -419,6 +418,9 @@ def get_country_data(spreadsheet, data, data_item, country_name):
         for i in range(len(data[gtb_sheet][adjusted_country_name][u'year'])):
             country_data_field[data[gtb_sheet][adjusted_country_name][u'year'][i]] = \
                 data[gtb_sheet][adjusted_country_name][data_item][i]
+
+    elif data_item == 'bcg':
+        country_data_field[data_item] = data[data_item]
 
     # For the other spreadsheets
     else:
@@ -465,16 +467,17 @@ def calculate_proportion(country_data, numerator, denominators):
 
 if __name__ == "__main__":
     import json
+    country = u'Algeria'
     data = read_input_data_xls(False, ['bcg',
                                        'birth_rate', 'life_expectancy',
                                        'tb', 'outcomes', 'notifications',
-                                       'parameters', 'miscellaneous'])
+                                       'parameters', 'miscellaneous'],
+                               country)
                                # , 'mdr', 'lab', 'strategy'])
     # I suspect the next line of code was causing the problems with GitHub desktop
     # failing to create commits, so commented out:
     # open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
     country_data = {}
-    country = u'Fiji'
     for data_item in ['birth_rate', 'life_expectancy', 'bcg', u'c_cdr', u'c_new_tsr']:
         country_data[data_item] = get_country_data('tb', data, data_item, country)
     for data_item in [u'new_sp', u'new_sn', u'new_ep']:

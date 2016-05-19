@@ -7,7 +7,7 @@ from pprint import pprint
 import autumn.model
 import numpy
 import autumn.plotting
-from autumn.spreadsheet import read_input_data_xls, get_country_data, calculate_proportion
+from autumn.spreadsheet import read_input_data_xls, calculate_proportion
 
 def indices(a, func):
     return [i for (i, val) in enumerate(a) if func(val)]
@@ -18,32 +18,25 @@ out_dir = 'fullmodel_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
-# Select the datasets and country you want to import from the spreadsheet module
-fields = ['bcg', 'birth_rate', 'life_expectancy']
-gtb_fields = [u'c_cdr', u'c_new_tsr', u'e_inc_100k', u'e_inc_100k_lo', u'e_inc_100k_hi',
-              u'e_prev_100k', u'e_prev_100k_lo', u'e_prev_100k_hi',
-              u'e_mort_exc_tbhiv_100k', u'e_mort_exc_tbhiv_100k_lo', u'e_mort_exc_tbhiv_100k_hi']
-notification_fields = [u'new_sp', u'new_sn', u'new_ep']
-
 country = u'Fiji'
-import_data = read_input_data_xls(True, fields + [
-    'input_data', 'tb', 'outcomes', 'notifications', 'parameters', 'miscellaneous'])  # \Github\AuTuMN\autumn\xls
 
-fixed_parameters = import_data['params']
-miscellaneous_parameters = import_data['miscellaneous']
+keys_of_sheets_to_read = [
+    'bcg',
+    'birth_rate',
+    'life_expectancy',
+    'parameters',
+    'miscellaneous',
+    'tb',
+    'notifications']
 
-# You can now list as many fields as you like from the Global TB Report
-country_data = {}
-for field in fields + gtb_fields:
-    country_data[field] = get_country_data('tb', import_data, field, country)
-for field in notification_fields:
-    country_data[field] = get_country_data('notifications', import_data, field, country)
+data = read_input_data_xls(True, keys_of_sheets_to_read, country)
 
-# Calculate proportions that are smear-positive, smear-negative or extra-pulmonary
+fixed_parameters = data['parameters']
+miscellaneous_parameters = data['miscellaneous']
+
 organs = [u'new_sp', u'new_sn', u'new_ep']
-for organ in organs:
-    country_data[u'prop_' + organ] = \
-        calculate_proportion(country_data, organ, organs)
+data['notifications'].update(calculate_proportion(data['notifications'], organs))
+
 
 # To run all possible models
 strata_to_run = [0, 2, 3]
@@ -77,7 +70,7 @@ for n_comorbidities in strata_to_run:
                                 is_quality,  # Low quality care
                                 is_amplification,  # Amplification
                                 is_misassignment,  # Misassignment by strain
-                                country_data,
+                                data,
                                 start_time)
                             print(str(n_organs) + " organ(s),   " +
                                   str(n_strains) + " strain(s),   " +
@@ -86,9 +79,9 @@ for n_comorbidities in strata_to_run:
                                   "Amplification? " + str(is_amplification) + ",   " +
                                   "Misassignment? " + str(is_misassignment) + ".")
 
-                            for key, value in fixed_parameters.items():
+                            for key, value in data['parameters'].items():
                                 model.set_parameter(key, value)
-                            for key, value in miscellaneous_parameters.items():
+                            for key, value in data['miscellaneous'].items():
                                 model.set_parameter(key, value)
 
                             model.make_times(start_time, 2015.1, 0.1)

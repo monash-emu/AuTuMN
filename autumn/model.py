@@ -568,7 +568,7 @@ class ConsolidatedModel(BaseModel):
     def process_country_data(self):
 
         self.case_detection_xvalues, self.case_detection_yvalues = \
-            self.prepare_data(self.country_data[u'c_cdr'], 90., True, 1950.)
+            self.prepare_data(self.country_data['tb'][u'c_cdr'], 90., True, 1950.)
         self.bcg_vaccination_xvalues, self.bcg_vaccination_yvalues = \
             self.prepare_data(self.country_data['bcg'], 95., True, 1930.)
         self.treatment_success_xvalues, self.treatment_success_yvalues = \

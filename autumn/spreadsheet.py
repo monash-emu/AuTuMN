@@ -98,7 +98,7 @@ class BcgCoverageSheetReader():
     for BCG coverage over
     """
 
-    def __init__(self, country_to_find):
+    def __init__(self, country_to_read):
         self.data = {}  # Empty dictionary to contain the data that is read
         self.i_par = 0  # Starting row
         self.tab_name = 'BCG'  # Tab of spreadsheet to be read
@@ -107,14 +107,17 @@ class BcgCoverageSheetReader():
         self.start_row = 0  # First row to be read in
         self.column_for_keys = 2  # Column that keys come from
         self.horizontal = True  # Orientation of spreadsheet
-        self.country_to_find = country_to_find  # Country being read
+        self.country_to_read = country_to_read  # Country being read
+        self.start_col = 4
+        self.first_cell = u'Region'
 
     def parse_row(self, row):
 
-        if row[0] == u'Region':
+        if row[0] == self.first_cell:
             self.parlist = parse_year_data(row, '', len(row))
-        elif row[self.column_for_keys] == self.country_to_find:
-            for i in range(4, len(row)):
+        elif row[self.column_for_keys] == self.country_to_read\
+                or self.key == 'programs':
+            for i in range(self.start_col, len(row)):
                 if type(row[i]) == float:
                     self.data[int(self.parlist[i])] = \
                         row[i]
@@ -131,7 +134,7 @@ class BirthRateReader():
     Same structure and approach as for BcgCoverageSheetReader above
     """
 
-    def __init__(self, country_to_find):
+    def __init__(self, country_to_read):
         self.data = {}
         self.i_par = 0
         self.tab_name = 'Data'
@@ -141,7 +144,7 @@ class BirthRateReader():
         self.start_row = 0
         self.column_for_keys = 2
         self.horizontal = True
-        self.country_to_find = country_to_find
+        self.country_to_read = country_to_read
 
     def parse_row(self, row):
 
@@ -149,7 +152,7 @@ class BirthRateReader():
             for i in range(len(row)):
                 self.parlist += \
                     [row[i][:4]]
-        elif row[self.column_for_keys] == self.country_to_find:
+        elif row[self.column_for_keys] == self.country_to_read:
             for i in range(4, len(row)):
                 if type(row[i]) == float:
                     self.data[int(self.parlist[i])] = \
@@ -162,7 +165,7 @@ class BirthRateReader():
 
 class LifeExpectancyReader():
 
-    def __init__(self, country_to_find):
+    def __init__(self, country_to_read):
         self.data = {}
         self.i_par = 0
         self.tab_name = 'Data'
@@ -172,13 +175,13 @@ class LifeExpectancyReader():
         self.start_row = 3
         self.column_for_keys = 0
         self.horizontal = True
-        self.country_to_find = country_to_find
+        self.country_to_read = country_to_read
 
     def parse_row(self, row):
 
         if row[0] == u'Country Name':
             self.parlist += row
-        elif row[self.column_for_keys] == self.country_to_find:
+        elif row[self.column_for_keys] == self.country_to_read:
             for i in range(4, len(row)):
                 if type(row[i]) == float:
                     self.data[int(self.parlist[i])] = \
@@ -225,6 +228,37 @@ class ParametersReader(FixedParametersReader):
         self.column_for_keys = 0
         self.horizontal = True
         self.parameter_dictionary_keys = []
+
+
+class ProgramReader():
+
+    def __init__(self, country_to_read):
+        self.data = {}
+        self.i_par = 0
+        self.tab_name = 'programs'
+        self.key = 'programs'
+        self.filename = 'xls/programs_' + country_to_read.lower() + '.xlsx'
+        self.start_row = 0
+        self.column_for_keys = 0
+        self.horizontal = True
+        self.country_to_read = country_to_read
+        self.start_col = 1
+        self.first_cell = u'year'
+
+    def parse_row(self, row):
+
+        if row[0] == self.first_cell:
+            self.parlist = parse_year_data(row, '', len(row))
+        else:
+            self.data[row[0]] = {}
+            for i in range(self.start_col, len(row)):
+                if type(row[i]) == float:
+                    self.data[row[0]][int(self.parlist[i])] = \
+                        row[i]
+        self.i_par += 1
+
+    def get_data(self):
+        return self.data
 
 
 class GlobalTbReportReader():
@@ -429,6 +463,8 @@ def read_input_data_xls(from_test, sheets_to_read, country):
         sheet_readers.append(FixedParametersReader())
     if 'miscellaneous' in sheets_to_read:
         sheet_readers.append(ParametersReader(country))
+    if 'programs' in sheets_to_read:
+        sheet_readers.append(ProgramReader(country))
     if 'tb' in sheets_to_read:
         sheet_readers.append(GlobalTbReportReader(country))
     if 'notifications' in sheets_to_read:
@@ -460,6 +496,7 @@ if __name__ == "__main__":
         'life_expectancy',
         'parameters',
         'miscellaneous',
+        'programs',
         'tb',
         'notifications',
         'outcomes',

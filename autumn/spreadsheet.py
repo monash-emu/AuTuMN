@@ -49,30 +49,42 @@ def adjust_country_name(country_name, data_item):
     return adjusted_country_name
 
 
-def calculate_proportion(country_data, numerator, denominators):
+def calculate_proportion(data, indices):
 
     """
-
     Calculate the proportions of patients within subgroups
 
     Args:
-        country_data: The main data structure containing all the data for that country
-        numerator: The key indexing the current working numerator dictionary, whose proportion is to be found
-        denominators: All keys of all the dictionaries that contribute to the denominator
+        data: The main data structure containing all the data for that country
+        indices: A list of the dictionary elements of data that are to be summed
+            and then the proportions calculated
 
     Returns:
-        proportion: A dictionary containing the proportions contained within the current numerator dictionary
-
+        proportions: A dictionary containing the proportions by indices
     """
-    proportion = {}
-    for i in country_data[numerator]:
-        total = 0
-        for j in denominators:
-            total += country_data[j][i]
-        result = country_data[numerator][i] / total
-        if not numpy.isnan(result):
-            proportion[i] = result
-    return proportion
+
+    # Calculate totals for denominator
+    denominator = []
+    for j in range(len(indices)):
+        for i in range(len(data[indices[0]])):
+            # Start list from first index
+            if j == 0:
+                denominator += [data[indices[j]][i]]
+            # Add other indices
+            else:
+                denominator[i] += data[indices[j]][i]
+
+    # Calculate proportions
+    proportions = {}
+    for j in range(len(indices)):
+        proportions['prop_' + indices[j]] = []
+        for i in range(len(data[indices[0]])):
+            proportions['prop_' + indices[j]] \
+                += [data[indices[j]][i]
+                    / denominator[i]]
+
+    return proportions
+
 
 ###############################################################
 #  Readers
@@ -93,7 +105,6 @@ class BcgCoverageSheetReader():
         self.key = 'bcg'  # String that defines the data type in this file
         self.filename = 'xls/who_unicef_bcg_coverage.xlsx'  # Filename
         self.start_row = 0  # First row to be read in
-        self.create_parlist = False  # Whether necessary to create a list of keys
         self.column_for_keys = 2  # Column that keys come from
         self.horizontal = True  # Orientation of spreadsheet
         self.country_to_find = country_to_find  # Country being read
@@ -128,7 +139,6 @@ class BirthRateReader():
         self.parlist = []
         self.filename = 'xls/world_bank_crude_birth_rate.xlsx'
         self.start_row = 0
-        self.create_parlist = False
         self.column_for_keys = 2
         self.horizontal = True
         self.country_to_find = country_to_find
@@ -160,7 +170,6 @@ class LifeExpectancyReader():
         self.parlist = []
         self.filename = 'xls/world_bank_life_expectancy.xlsx'
         self.start_row = 3
-        self.create_parlist = False
         self.column_for_keys = 0
         self.horizontal = True
         self.country_to_find = country_to_find
@@ -190,7 +199,6 @@ class FixedParametersReader():
         self.parlist = []
         self.filename = 'xls/universal_constants.xlsx'
         self.start_row = 1
-        self.create_parlist = True
         self.column_for_keys = 0
         self.horizontal = True
         self.parameter_dictionary_keys = []
@@ -214,7 +222,6 @@ class ParametersReader(FixedParametersReader):
         self.parlist = []
         self.filename = 'xls/programs_' + country_to_read.lower() + '.xlsx'
         self.start_row = 1
-        self.create_parlist = True
         self.column_for_keys = 0
         self.horizontal = True
         self.parameter_dictionary_keys = []
@@ -229,7 +236,6 @@ class GlobalTbReportReader():
         self.parlist = []
         self.filename = 'xls/gtb_data.xlsx'
         self.start_row = 1
-        self.create_parlist = True
         self.horizontal = False
         self.start_column = 0
         self.indices = []
@@ -258,6 +264,39 @@ class GlobalTbReportReader():
         return self.data
 
 
+class NotificationsReader(GlobalTbReportReader):
+
+    def __init__(self, country_to_read):
+        self.data = {}
+        self.tab_name = 'TB_notifications_2016-04-20'
+        self.key = 'notifications'
+        self.parlist = []
+        self.filename = 'xls/notifications_data.xlsx'
+        self.start_row = 1
+        self.horizontal = False
+        self.start_column = 0
+        self.start_row = 1
+        self.indices = []
+        self.country_to_read = country_to_read
+
+
+class TreatmentOutcomesReader(GlobalTbReportReader):
+
+    def __init__(self, country_to_read):
+        self.data = {}
+        self.i_par = -1
+        self.tab_name = 'TB_outcomes_2016-04-21'
+        self.key = 'outcomes'
+        self.parlist = []
+        self.filename = 'xls/outcome_data.xlsx'
+        self.start_row = 1
+        self.horizontal = False
+        self.start_column = 0
+        self.start_row = 1
+        self.indices = []
+        self.country_to_read = country_to_read
+
+
 class MdrReportReader():
 
     def __init__(self, country_to_read):
@@ -268,7 +307,6 @@ class MdrReportReader():
         self.parlist = []
         self.filename = 'xls/mdr_data.xlsx'
         self.start_row = 0
-        self.create_parlist = True
         self.column_for_keys = 0
         self.horizontal = True
         self.dictionary_keys = []
@@ -290,23 +328,6 @@ class MdrReportReader():
         return self.data
 
 
-class NotificationsReader(GlobalTbReportReader):
-
-    def __init__(self, country_to_read):
-        self.data = {}
-        self.tab_name = 'TB_notifications_2016-04-20'
-        self.key = 'notifications'
-        self.parlist = []
-        self.filename = 'xls/notifications_data.xlsx'
-        self.start_row = 1
-        self.create_parlist = True
-        self.horizontal = False
-        self.start_column = 0
-        self.start_row = 1
-        self.indices = []
-        self.country_to_read = country_to_read
-
-
 class LaboratoriesReader(GlobalTbReportReader):
 
     def __init__(self, country_to_read):
@@ -316,27 +337,8 @@ class LaboratoriesReader(GlobalTbReportReader):
         self.parlist = []
         self.filename = 'xls/laboratories_data.xlsx'
         self.start_row = 1
-        self.create_parlist = True
         self.horizontal = False
         self.start_column = 0
-        self.indices = []
-        self.country_to_read = country_to_read
-
-
-class TreatmentOutcomesReader(GlobalTbReportReader):
-
-    def __init__(self, country_to_read):
-        self.data = {}
-        self.i_par = -1
-        self.tab_name = 'TB_outcomes_2016-04-21'
-        self.key = 'outcomes'
-        self.parlist = []
-        self.filename = 'xls/outcome_data.xlsx'
-        self.start_row = 1
-        self.create_parlist = True
-        self.horizontal = False
-        self.start_column = 0
-        self.start_row = 1
         self.indices = []
         self.country_to_read = country_to_read
 
@@ -351,7 +353,6 @@ class StrategyReader(MdrReportReader):
         self.parlist = []
         self.filename = 'xls/strategy_data.xlsx'
         self.start_row = 0
-        self.create_parlist = True
         self.column_for_keys = 0
         self.horizontal = True
         self.dictionary_keys = []
@@ -364,21 +365,30 @@ class StrategyReader(MdrReportReader):
 
 def read_xls_with_sheet_readers(sheet_readers=[]):
 
+    """
+    Runs the individual readers to gather all the data from the sheets
+
+    Args:
+        sheet_readers: The sheet readers that were previously collated into a list
+
+    Returns:
+        All the data for reading as a single object
+    """
+
     result = {}
     for reader in sheet_readers:
+
+        # Check that the spreadsheet to be read exists
         try:
             workbook = open_workbook(reader.filename)
         except:
             raise Exception('Failed to open spreadsheet: %s' % reader.filename)
         #print("Reading sheet \"{}\"".format(reader.tab_name))
         sheet = workbook.sheet_by_name(reader.tab_name)
+
+        # Read in the direction that the reader expects (either horizontal or vertical)
         if reader.horizontal:
             for i_row in range(reader.start_row, sheet.nrows):
-                if reader.create_parlist:
-                    key = [sheet.row_values(i_row)[reader.column_for_keys]]
-                    if key == [u'Cname'] or key == [u'Country Name']:
-                        key = [u'year']
-                    reader.parlist += key
                 reader.parse_row(sheet.row_values(i_row))
         else:
             for i_col in range(reader.start_column, sheet.ncols):
@@ -392,72 +402,77 @@ def read_input_data_xls(from_test, sheets_to_read, country):
 
     """
     Compile sheet readers into a list according to which ones have
-    been selected
+    been selected.
+    Note that most readers now take the country in question as an input,
+    while only the fixed parameters sheet reader does not.
 
     Args:
-        from_test:
-        sheets_to_read:
-        country:
+        from_test: Whether being called from the directory above
+        sheets_to_read: A list containing the strings that are also the
+            'keys' attribute of the reader
+        country: Country being read for
 
     Returns:
-
+        A single data structure containing all the data to be read
+            (by calling the read_xls_with_sheet_readers method)
     """
 
     sheet_readers = []
 
-    if 'parameters' in sheets_to_read:
-        sheet_readers.append(FixedParametersReader())
-    if 'miscellaneous' in sheets_to_read:
-        sheet_readers.append(ParametersReader(country))
     if 'bcg' in sheets_to_read:
         sheet_readers.append(BcgCoverageSheetReader(country))
     if 'birth_rate' in sheets_to_read:
         sheet_readers.append(BirthRateReader(country))
     if 'life_expectancy' in sheets_to_read:
         sheet_readers.append(LifeExpectancyReader(country))
+    if 'parameters' in sheets_to_read:
+        sheet_readers.append(FixedParametersReader())
+    if 'miscellaneous' in sheets_to_read:
+        sheet_readers.append(ParametersReader(country))
     if 'tb' in sheets_to_read:
         sheet_readers.append(GlobalTbReportReader(country))
-    if 'mdr' in sheets_to_read:
-        sheet_readers.append(MdrReportReader(country))
     if 'notifications' in sheets_to_read:
         sheet_readers.append(NotificationsReader(country))
-    if 'laboratories' in sheets_to_read:
-        sheet_readers.append(LaboratoriesReader(country))
     if 'outcomes' in sheets_to_read:
         sheet_readers.append(TreatmentOutcomesReader(country))
+    if 'mdr' in sheets_to_read:
+        sheet_readers.append(MdrReportReader(country))
+    if 'laboratories' in sheets_to_read:
+        sheet_readers.append(LaboratoriesReader(country))
     if 'strategy' in sheets_to_read:
         sheet_readers.append(StrategyReader(country))
 
+    # If being run from the directory above
     if from_test:
         for reader in sheet_readers:
             reader.filename = os.path.join('autumn/', reader.filename)
 
     return read_xls_with_sheet_readers(sheet_readers)
 
+
 if __name__ == "__main__":
 
-    country = u'Peru'
+    country = u'Fiji'
 
-    tags_of_sheets_to_read = [
+    keys_of_sheets_to_read = [
         'bcg',
         'birth_rate',
         'life_expectancy',
+        'parameters',
+        'miscellaneous',
         'tb',
-        'mdr',
         'notifications',
         'outcomes',
-        'parameters',
+        'mdr',
         'laboratories',
         'strategy']
 
-    data = read_input_data_xls(False, tags_of_sheets_to_read, country)
+    data = read_input_data_xls(False, keys_of_sheets_to_read, country)
 
     # Calculate proportions that are smear-positive, smear-negative or extra-pulmonary
+    # and add them to the data object
     organs = [u'new_sp', u'new_sn', u'new_ep']
-    # for organ in organs:
-    #     data['notifications'][u'prop_' + organ] =\
-    #         calculate_proportion(data, organ, organs)
+    data['notifications'].update(calculate_proportion(data['notifications'], organs))
 
-    print(data)
     print("Time elapsed in running script is " + str(datetime.datetime.now() - spreadsheet_start_realtime))
 

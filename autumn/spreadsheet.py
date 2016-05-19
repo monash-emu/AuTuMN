@@ -222,19 +222,19 @@ class ParametersReader(FixedParametersReader):
 
 class GlobalTbReportReader():
 
-    def __init__(self):
+    def __init__(self, country_to_read):
         self.data = {}
-        self.par = None
         self.i_par = -1
         self.tab_name = 'TB_burden_countries_2016-04-19'
         self.key = 'tb'
         self.parlist = []
-        self.filename = 'xls/TB_burden_countries_2016-04-19.xlsx'
+        self.filename = 'xls/gtb_data.xlsx'
         self.start_row = 1
         self.create_parlist = True
         self.horizontal = False
         self.start_column = 0
-        self.indices = {}
+        self.indices = []
+        self.country_to_read = country_to_read
 
     def parse_col(self, col):
 
@@ -244,32 +244,16 @@ class GlobalTbReportReader():
         # If it's the country column (the first one)
         if col[0] == u'country':
 
-            # Cycle through the rest of the country column
-            for i in range(1, len(col)):
-
-                # Create a list of indices for the countries
-                # when parsing the first column
-                self.indices[i] = col[i]
-
-                # Add a dictionary for that country
-                if col[i] not in self.data:
-                    self.data[col[i]] = {}
+            # Find the indices for the country in question
+            for i in range(len(col)):
+                if col[i] == self.country_to_read:
+                    self.indices += [i]
 
         # All other columns
         else:
-
-            # Ignore the first row
-            for i in range(1, len(col)):
-
-                # The data item
-                item_to_add = col[i]
-
-                # Add a dictionary key if that country hasn't encountered the field yet
-                if col[0] not in self.data[self.indices[i]]:
-                    self.data[self.indices[i]][col[0]] = []
-
-                # Add the item to the dictionary
-                self.data[self.indices[i]][col[0]] += [item_to_add]
+            self.data[col[0]] = []
+            for i in self.indices:
+                self.data[col[0]] += [col[i]]
 
     def get_data(self):
         return self.data
@@ -424,15 +408,15 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     if 'life_expectancy' in sheets_to_read:
         sheet_readers.append(LifeExpectancyReader(country))
     if 'tb' in sheets_to_read:
-        sheet_readers.append(GlobalTbReportReader())
+        sheet_readers.append(GlobalTbReportReader(country))
     if 'mdr' in sheets_to_read:
         sheet_readers.append(MdrReportReader())
-    if 'notifications' in sheets_to_read:
-        sheet_readers.append(NotificationsReader())
-    if 'lab' in sheets_to_read:
-        sheet_readers.append(LaboratoriesReader())
-    if 'outcomes' in sheets_to_read:
-        sheet_readers.append(TreatmentOutcomesReader())
+    # if 'notifications' in sheets_to_read:
+    #     sheet_readers.append(NotificationsReader())
+    # if 'lab' in sheets_to_read:
+    #     sheet_readers.append(LaboratoriesReader())
+    # if 'outcomes' in sheets_to_read:
+    #     sheet_readers.append(TreatmentOutcomesReader())
     if 'strategy' in sheets_to_read:
         sheet_readers.append(StrategyReader())
 
@@ -442,65 +426,26 @@ def read_input_data_xls(from_test, sheets_to_read, country):
 
     return read_xls_with_sheet_readers(sheet_readers)
 
-
-def get_country_data(spreadsheet, data, data_item, country_name):
-
-    # Call function to adjust country name
-    adjusted_country_name = adjust_country_name(country_name, data_item)
-
-    # Initialise an empty dictionary for the data field being extracted
-    country_data_field = {}
-
-    # If it's a Global TB Report data field (Afghanistan is arbitrary)
-    if data_item in data[spreadsheet][u'Afghanistan'] or data_item in data['outcomes'][u'Afghanistan']:
-        if data_item in data[spreadsheet][u'Afghanistan']:
-            gtb_sheet = spreadsheet
-        elif data_item in data['outcomes'][u'Afghanistan']:
-            gtb_sheet = 'outcomes'
-
-        for i in range(len(data[gtb_sheet][adjusted_country_name][u'year'])):
-            country_data_field[data[gtb_sheet][adjusted_country_name][u'year'][i]] = \
-                data[gtb_sheet][adjusted_country_name][data_item][i]
-
-    elif data_item in ['bcg', 'birth_rate', 'life_expectancy']:
-        country_data_field[data_item] = data[data_item]
-
-    # For the other spreadsheets
-    else:
-        for i in range(len(data[data_item][adjusted_country_name])):
-            if not numpy.isnan(data[data_item][adjusted_country_name][i]):
-                country_data_field[data[data_item]['year'][i]] = data[data_item][adjusted_country_name][i]
-
-    return country_data_field
-
-
-
-
-
 if __name__ == "__main__":
     import json
     country = u'Fiji'
     data = read_input_data_xls(False, ['bcg',
                                        'birth_rate', 'life_expectancy',
-                                       'tb', 'outcomes', 'notifications',
+                                       'tb', 'outcomes',
+                                       #'notifications',
                                        'parameters', 'miscellaneous'],
                                country)
                                # , 'mdr', 'lab', 'strategy'])
     # I suspect the next line of code was causing the problems with GitHub desktop
     # failing to create commits, so commented out:
     # open('spreadsheet.out.txt', 'w').write(json.dumps(data, indent=2))
-    country_data = {}
-    for data_item in ['birth_rate', 'life_expectancy', 'bcg', u'c_cdr', u'c_new_tsr']:
-        country_data[data_item] = get_country_data('tb', data, data_item, country)
-    for data_item in [u'new_sp', u'new_sn', u'new_ep']:
-        country_data[data_item] = get_country_data('notifications', data, data_item, country)
 
     # Calculate proportions that are smear-positive, smear-negative or extra-pulmonary
     organs = [u'new_sp', u'new_sn', u'new_ep']
-    for organ in organs:
-        country_data[u'prop_' + organ] =\
-            calculate_proportion(country_data, organ, organs)
+    # for organ in organs:
+    #     data['notifications'][u'prop_' + organ] =\
+    #         calculate_proportion(data, organ, organs)
 
-    print(country_data)
+    print(data)
     print("Time elapsed in running script is " + str(datetime.datetime.now() - spreadsheet_start_realtime))
 

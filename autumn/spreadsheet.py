@@ -292,20 +292,19 @@ class MdrReportReader():
 
 class NotificationsReader(GlobalTbReportReader):
 
-    def __init__(self):
+    def __init__(self, country_to_read):
         self.data = {}
-        self.par = None
-        self.i_par = -1
         self.tab_name = 'TB_notifications_2016-04-20'
         self.key = 'notifications'
         self.parlist = []
-        self.filename = 'xls/TB_notifications_2016-04-20.xlsx'
+        self.filename = 'xls/notifications_data.xlsx'
         self.start_row = 1
         self.create_parlist = True
         self.horizontal = False
         self.start_column = 0
         self.start_row = 1
-        self.indices = {}
+        self.indices = []
+        self.country_to_read = country_to_read
 
 
 class LaboratoriesReader(GlobalTbReportReader):
@@ -409,8 +408,8 @@ def read_input_data_xls(from_test, sheets_to_read, country):
         sheet_readers.append(GlobalTbReportReader(country))
     if 'mdr' in sheets_to_read:
         sheet_readers.append(MdrReportReader(country))
-    # if 'notifications' in sheets_to_read:
-    #     sheet_readers.append(NotificationsReader())
+    if 'notifications' in sheets_to_read:
+        sheet_readers.append(NotificationsReader(country))
     # if 'lab' in sheets_to_read:
     #     sheet_readers.append(LaboratoriesReader())
     # if 'outcomes' in sheets_to_read:
@@ -430,7 +429,7 @@ if __name__ == "__main__":
     data = read_input_data_xls(False, ['bcg',
                                        'birth_rate', 'life_expectancy',
                                        'tb', 'outcomes', 'mdr',
-                                       #'notifications',
+                                       'notifications',
                                        'parameters'],
                                country)
                                # , 'mdr', 'lab', 'strategy'])

@@ -18,6 +18,9 @@ out_dir = 'fullmodel_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
+start_time = 1850.
+recent_time = 1990.
+
 country = u'Fiji'
 
 keys_of_sheets_to_read = [
@@ -30,7 +33,7 @@ keys_of_sheets_to_read = [
     'tb',
     'notifications']
 
-data = read_and_process_data(True, keys_of_sheets_to_read, country)
+data = read_and_process_data(True, keys_of_sheets_to_read, country, start_time)
 
 fixed_parameters = data['parameters']
 miscellaneous_parameters = data['miscellaneous']
@@ -60,8 +63,6 @@ for n_comorbidities in strata_to_run:
                         else:
                             name = 'model%d' % n_organs
                             base = os.path.join(out_dir, name)
-                            start_time = 1850.
-                            recent_time = 1990.
 
                             model = autumn.model.ConsolidatedModel(
                                 [],  # List of breakpoints for age stratification (or empty list for no stratification)

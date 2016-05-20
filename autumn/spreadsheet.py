@@ -490,7 +490,7 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     return read_xls_with_sheet_readers(sheet_readers)
 
 
-def read_and_process_data(from_test, keys_of_sheets_to_read, country):
+def read_and_process_data(from_test, keys_of_sheets_to_read, country, start_time):
 
     """
     Runs the main data reading function and performs a few tidying tasks.
@@ -517,6 +517,10 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
         for i in range(len(data['tb']['year'])):
             data['programs']['program_prop_detect'][int(data['tb']['year'][i])] \
                 = data['tb']['c_cdr'][i]
+    print()
+    for program in data['programs']:
+        data['programs'][program][start_time] = 0.
+
 
     # Get rid of the load_data item from the program dictionaries
     for program in data['programs']:
@@ -528,6 +532,8 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
 if __name__ == "__main__":
 
     country = u'Fiji'
+
+    start_time = 1850
 
     keys_of_sheets_to_read = [
         'bcg',
@@ -543,7 +549,7 @@ if __name__ == "__main__":
         'laboratories',
         'strategy']
 
-    data = read_and_process_data(False, keys_of_sheets_to_read, country)
+    data = read_and_process_data(False, keys_of_sheets_to_read, country, start_time)
 
     print("Time elapsed in running script is " + str(datetime.datetime.now() - spreadsheet_start_realtime))
 

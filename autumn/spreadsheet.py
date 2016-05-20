@@ -517,10 +517,11 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country, start_time
         for i in range(len(data['tb']['year'])):
             data['programs']['program_prop_detect'][int(data['tb']['year'][i])] \
                 = data['tb']['c_cdr'][i]
-    print()
+
+    # Add a zero at the model's starting time to all programs
+    # Most programs will have a zero starting point later than that too, but that's OK
     for program in data['programs']:
         data['programs'][program][start_time] = 0.
-
 
     # Get rid of the load_data item from the program dictionaries
     for program in data['programs']:

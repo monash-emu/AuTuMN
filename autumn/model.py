@@ -521,13 +521,19 @@ class ConsolidatedModel(BaseModel):
     def find_nontreatment_rates_params(self):
 
 
+        # For the six non-treatment programs
         for program in self.data['programs']:
             if 'prop' in program:
+
+                # Convert percentages to proportions
+                for i in self.data['programs'][program]:
+                    self.data['programs'][program][i] \
+                        = self.data['programs'][program][i] / 1E2
+
+                # Find scale-up functions
                 self.set_scaleup_fn(program,
                                     scale_up_function(self.data['programs'][program].keys(),
                                                       self.data['programs'][program].values()))
-
-        print()
 
     def find_treatment_rates_scaleups(self):
 

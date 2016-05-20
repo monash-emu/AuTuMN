@@ -494,19 +494,19 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country, start_time
 
     """
     Runs the main data reading function and performs a few tidying tasks.
+
     Args:
-        from_test:
-        sheets_to_read:
-        country:
+        from_test, sheets_to_read, country: Are just passed on to the reading function.
 
     Returns:
-
+        data: The adapted and processed data structure.
     """
 
+    # First just get the main data object from the reading function
     data = read_input_data_xls(from_test, keys_of_sheets_to_read, country)
 
     # Calculate proportions that are smear-positive, smear-negative or extra-pulmonary
-    # and add them to the data object
+    # and add them to the data object's notification dictionary
     organs = [u'new_sp', u'new_sn', u'new_ep']
     data['notifications'].update(calculate_proportion(data['notifications'], organs))
 
@@ -523,7 +523,8 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country, start_time
     for program in data['programs']:
         data['programs'][program][start_time] = 0.
 
-    # Get rid of the load_data item from the program dictionaries
+    # Get rid of the load_data item from the program dictionaries,
+    # so that they're all integer keys with float values
     for program in data['programs']:
         del data['programs'][program][u'load_data']
 

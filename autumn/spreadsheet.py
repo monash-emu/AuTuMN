@@ -490,6 +490,41 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     return read_xls_with_sheet_readers(sheet_readers)
 
 
+def read_and_process_data(from_test, keys_of_sheets_to_read, country):
+
+    """
+    Runs the main data reading function and performs a few tidying tasks.
+    Args:
+        from_test:
+        sheets_to_read:
+        country:
+
+    Returns:
+
+    """
+
+    data = read_input_data_xls(from_test, keys_of_sheets_to_read, country)
+
+    # Calculate proportions that are smear-positive, smear-negative or extra-pulmonary
+    # and add them to the data object
+    organs = [u'new_sp', u'new_sn', u'new_ep']
+    data['notifications'].update(calculate_proportion(data['notifications'], organs))
+
+    # Combine loaded data with data from spreadsheets where applicable
+    if data['programs']['program_prop_vaccination'][u'load_data'] == 'yes':
+        data['programs']['program_prop_vaccination'].update(data['bcg'])
+    if data['programs']['program_prop_detect'][u'load_data'] == 'yes':
+        for i in range(len(data['tb']['year'])):
+            data['programs']['program_prop_detect'][int(data['tb']['year'][i])] \
+                = data['tb']['c_cdr'][i]
+
+    # Get rid of the load_data item from the program dictionaries
+    for program in data['programs']:
+        del data['programs'][program][u'load_data']
+
+    return data
+
+
 if __name__ == "__main__":
 
     country = u'Fiji'
@@ -508,17 +543,7 @@ if __name__ == "__main__":
         'laboratories',
         'strategy']
 
-    data = read_input_data_xls(False, keys_of_sheets_to_read, country)
-
-    # Calculate proportions that are smear-positive, smear-negative or extra-pulmonary
-    # and add them to the data object
-    organs = [u'new_sp', u'new_sn', u'new_ep']
-    data['notifications'].update(calculate_proportion(data['notifications'], organs))
-
-    if data['programs']['program_prop_vaccination'][u'load_data'] == 'yes':
-        data['programs']['program_prop_vaccination'].update(data['bcg'])
-
-    del data['programs']['program_prop_vaccination'][u'load_data']
+    data = read_and_process_data(False, keys_of_sheets_to_read, country)
 
     print("Time elapsed in running script is " + str(datetime.datetime.now() - spreadsheet_start_realtime))
 

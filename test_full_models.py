@@ -7,7 +7,7 @@ from pprint import pprint
 import autumn.model
 import numpy
 import autumn.plotting
-from autumn.spreadsheet import read_input_data_xls, calculate_proportion
+from autumn.spreadsheet import read_and_process_data, calculate_proportion
 
 def indices(a, func):
     return [i for (i, val) in enumerate(a) if func(val)]
@@ -26,10 +26,11 @@ keys_of_sheets_to_read = [
     'life_expectancy',
     'parameters',
     'miscellaneous',
+    'programs',
     'tb',
     'notifications']
 
-data = read_input_data_xls(True, keys_of_sheets_to_read, country)
+data = read_and_process_data(True, keys_of_sheets_to_read, country)
 
 fixed_parameters = data['parameters']
 miscellaneous_parameters = data['miscellaneous']
@@ -141,7 +142,7 @@ for n_comorbidities in strata_to_run:
                             autumn.plotting.plot_outputs_against_gtb(
                                 model, "incidence",
                                 recent_time, base + '.rate_outputs_gtb.png',
-                                country_data)
+                                data)
                             # if n_strains >= 2:
                             #     autumn.plotting.plot_outputs(
                             #         model, ["incidence_ds", "incidence_mdr", "mortality_ds", "mortality_mdr", "prevalence_ds", "prevalence_mdr",

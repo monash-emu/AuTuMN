@@ -56,7 +56,7 @@ class ConsolidatedModel(BaseModel):
                  is_lowquality=False,
                  is_amplification=False,
                  is_misassignment=False,
-                 country_data=None,
+                 data=None,
                  start_time=1500.):
 
         """
@@ -99,7 +99,7 @@ class ConsolidatedModel(BaseModel):
         self.is_amplification = is_amplification
         self.is_misassignment = is_misassignment
 
-        self.country_data = country_data
+        self.data = data
 
         if self.is_misassignment:
             assert self.is_amplification, "Misassignment requested without amplification"
@@ -304,11 +304,11 @@ class ConsolidatedModel(BaseModel):
         """
 
         self.set_parameter('demo_rate_birth',
-                           self.country_data['birth_rate'][max(self.country_data['birth_rate'])]
+                           self.data['birth_rate'][max(self.data['birth_rate'])]
                            / 1e3)
         self.set_parameter('demo_rate_death',
                            1.
-                           / self.country_data['life_expectancy'][max(self.country_data['life_expectancy'])])
+                           / self.data['life_expectancy'][max(self.data['life_expectancy'])])
 
     def set_fixed_epi_parameters(self):
 
@@ -319,16 +319,16 @@ class ConsolidatedModel(BaseModel):
 
         if self.n_organ > 1:
             self.set_parameter('epi_proportion_cases_smearpos',
-                               self.country_data[u'prop_new_sp'][max(self.country_data[u'prop_new_sp'])])
+                               self.data[u'prop_new_sp'][max(self.data[u'prop_new_sp'])])
         if self.n_organ > 2:
             self.set_parameter('epi_proportion_cases_smearneg',
-                               self.country_data[u'prop_new_sn'][max(self.country_data[u'prop_new_sn'])])
+                               self.data[u'prop_new_sn'][max(self.data[u'prop_new_sn'])])
             self.set_parameter('epi_proportion_cases_extrapul',
-                               self.country_data[u'prop_new_ep'][max(self.country_data[u'prop_new_ep'])])
+                               self.data[u'prop_new_ep'][max(self.data[u'prop_new_ep'])])
         elif self.n_organ == 2:
             self.set_parameter('epi_proportion_cases_smearneg',
-                               self.country_data[u'prop_new_sn'][max(self.country_data[u'prop_new_sn'])]
-                               + self.country_data[u'prop_new_ep'][max(self.country_data[u'prop_new_ep'])])
+                               self.data[u'prop_new_sn'][max(self.data[u'prop_new_sn'])]
+                               + self.data[u'prop_new_ep'][max(self.data[u'prop_new_ep'])])
 
     def set_parameters(self, paramater_dict=None):
 
@@ -463,8 +463,6 @@ class ConsolidatedModel(BaseModel):
 
         self.find_natural_history_params()
 
-        self.process_country_data()
-
         self.find_nontreatment_rates_params()
 
         self.find_treatment_rates_scaleups()
@@ -520,85 +518,26 @@ class ConsolidatedModel(BaseModel):
                             scale_up_function([self.start_time, 1950., 1960.],
                                               [0., 0., self.params['tb_proportion_amplification']]))
 
-    def prepare_data(self, data, upper_limit_believable,
-                     percentage=True, zero_start_point=None):
-
-        """
-        Method intended for preparation of country data
-        Args:
-            data: An element of country_data
-            upper_limit_believable: The highest believable value (for example, this should
-             always be at most 100. for case detection)
-            percentage: Boolean of whether the input is a percentage
-            zero_start_point: A historical time-point to go back to zero at if required
-
-        Returns:
-            xvalues: List of xvalues (i.e. time-points) for functions to calculate scale-ups
-            yvales: List of yvales (i.e. data) for functions to calculate scale-ups
-        """
-
-        prepared_data = data
-        for i in prepared_data:
-
-            prepared_data[int(i)] = prepared_data.pop(i)
-
-            # e.g. make sure no case detection rates are greater than 100%
-            if prepared_data[i] > upper_limit_believable:
-                prepared_data[i] = upper_limit_believable
-
-            # Divide through by 100 if they are percentages
-            if percentage:
-                prepared_data[i] /= 100.
-
-        # Add a zero starting point
-        if zero_start_point is not None:
-            prepared_data[zero_start_point] = 0.
-
-        # Add a zero starting point at the start of the model run time
-        prepared_data[self.start_time] = 0.
-
-        xvalues = []
-        yvalues = []
-        for i in sorted(prepared_data.keys()):
-            xvalues += [float(i)]
-            yvalues += [prepared_data[float(i)]]
-
-        return xvalues, yvalues
-
-    def process_country_data(self):
-
-        self.case_detection_xvalues, self.case_detection_yvalues = \
-            self.prepare_data(self.country_data['tb'][u'c_cdr'], 90., True, 1950.)
-        self.bcg_vaccination_xvalues, self.bcg_vaccination_yvalues = \
-            self.prepare_data(self.country_data['bcg'], 95., True, 1930.)
-        self.treatment_success_xvalues, self.treatment_success_yvalues = \
-            self.prepare_data(self.country_data[u'c_new_tsr'], 95., True, 1950.)
-        self.treatment_default_yvalues = []
-        self.treatment_death_yvalues = []
-        for i in range(len(self.treatment_success_yvalues)):
-            self.treatment_death_yvalues += \
-                [(1. - self.treatment_success_yvalues[i]) * self.params["program_prop_nonsuccessoutcomes_death"]]
-            self.treatment_default_yvalues += \
-                [1. - self.treatment_success_yvalues[i] - self.treatment_death_yvalues[i]]
-
     def find_nontreatment_rates_params(self):
 
         # Temporary scale-up functions to be populated from spreadsheets
         # as the next thing we need to do
 
         # Currently using method 4 in the following scale-up to prevent negative values
-        self.set_scaleup_fn("program_prop_vaccination",
-                            scale_up_function(self.bcg_vaccination_xvalues,
-                                              self.bcg_vaccination_yvalues, method = 4))
 
-        # First few values for the Philippines are very high - temporary code
-        self.case_detection_yvalues[2] = 0.5
-        self.case_detection_yvalues[3] = 0.5
-        self.case_detection_yvalues[4] = 0.5
+        self.set_scaleup_fn('program_prop_vaccination',
+                            scale_up_function(self.data['programs'][u'program_prop_vaccination'].keys(),
+                                              self.data['programs'][u'program_prop_vaccination'].values()))
 
         self.set_scaleup_fn("program_prop_detect",
-                            scale_up_function(self.case_detection_xvalues,
-                                              self.case_detection_yvalues, method = 4))
+                            scale_up_function(self.data['programs'][u'program_prop_detect'].keys(),
+                                              self.data['programs'][u'program_prop_detect'].values()))
+
+        for program in ['program_prop_vaccination', 'program_prop_detect']:
+            self.set_scaleup_fn(program,
+                                scale_up_function(self.data['programs'][program].keys(),
+                                                  self.data['programs'][program].values()))
+
         self.set_scaleup_fn("program_prop_algorithm_sensitivity",
                             scale_up_function([self.start_time, 1920., 1980., 2000.],
                                               [0.7, 0.7, 0.8, 0.9]))

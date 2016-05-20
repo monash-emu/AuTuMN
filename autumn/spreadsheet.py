@@ -510,20 +510,31 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country, start_time
     organs = [u'new_sp', u'new_sn', u'new_ep']
     data['notifications'].update(calculate_proportion(data['notifications'], organs))
 
+    treatment_outcomes = [u'new_sp_cmplt', u'new_sp_cur', u'new_sp_def', u'new_sp_died', u'new_sp_fail']
+    data['outcomes'].update(calculate_proportion(data['outcomes'], treatment_outcomes))
+    data['outcomes'][u'prop_new_sp_success'] = []
+    for i in range(len(data['outcomes'][u'prop_new_sp_cmplt'])):
+        data['outcomes'][u'prop_new_sp_success'] \
+            += [(data['outcomes'][u'prop_new_sp_cmplt'][i] \
+            + data['outcomes'][u'prop_new_sp_cur'][i]) * 1E2]
+
     # Combine loaded data with data from spreadsheets where applicable
     if data['programs']['program_prop_vaccination'][u'load_data'] == 'yes':
         data['programs']['program_prop_vaccination'].update(data['bcg'])
-    for program in ['program_prop_detect', 'program_prop_treatment_success']:
-        if program == 'program_prop_detect':
-            sheet = 'tb'
-            field = 'c_cdr'
-        elif program == 'program_prop_treatment_success':
-            sheet = 'outcomes'
-            field = 'c_new_tsr'
-        if data['programs'][program][u'load_data'] == 'yes':
-            for i in range(len(data[sheet]['year'])):
-                data['programs'][program][int(data[sheet]['year'][i])] \
-                    = data[sheet][field][i]
+    if data['programs']['program_prop_detect'][u'load_data'] == 'yes':
+        for i in range(len(data['tb']['year'])):
+            data['programs']['program_prop_detect'][int(data['tb']['year'][i])] \
+                = data['tb']['c_cdr'][i]
+
+    # Add the treatment success and death data to the program dictionary
+    if data['programs']['program_prop_treatment_success'][u'load_data'] == 'yes':
+        for i in range(len(data['outcomes']['year'])):
+            data['programs']['program_prop_treatment_success'][int(data['outcomes']['year'][i])] \
+                = data['outcomes'][u'prop_new_sp_success'][i]
+    if data['programs']['program_prop_treatment_death'][u'load_data'] == 'yes':
+        for i in range(len(data['outcomes']['year'])):
+            data['programs']['program_prop_treatment_death'][int(data['outcomes']['year'][i])] \
+                = data['outcomes'][u'prop_new_sp_died'][i]
 
     # Add a zero at the model's starting time to all programs
     # Most programs will have a zero starting point later than that too, but that's OK
@@ -541,6 +552,15 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country, start_time
                 nan_indices += [i]
         for i in nan_indices:
             del data['programs'][program][i]
+
+    # Add treatment success rates by strain
+    # TEMPORARY******************************
+    for strain in ['_ds', '_mdr', '_xdr']:
+        data['programs'][u'program_prop_treatment_success' + strain] \
+            = data['programs'][u'program_prop_treatment_success']
+        data['programs'][u'program_prop_treatment_death' + strain] \
+            = data['programs'][u'program_prop_treatment_death']
+
 
     return data
 

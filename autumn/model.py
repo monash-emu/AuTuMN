@@ -996,7 +996,7 @@ class ConsolidatedModel(BaseModel):
 
         """
         Set rates of progression through treatment stages
-        Accommodates with and without amplification and with and without misassignment
+        Accommodates with and without amplification, and with and without misassignment
         """
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
@@ -1011,11 +1011,13 @@ class ConsolidatedModel(BaseModel):
                         for assigned_strain_number in assignment_strains:
                             if self.is_misassignment:
                                 as_assigned_strain = "_as" + self.strains[assigned_strain_number][1:]
+
                                 # Which treatment parameters to use - for the strain or for inappropriate treatment
                                 if actual_strain_number > assigned_strain_number:
                                     strain_or_inappropriate = "_inappropriate"
                                 else:
                                     strain_or_inappropriate = self.strains[assigned_strain_number]
+
                             else:
                                 as_assigned_strain = ""
                                 strain_or_inappropriate = self.strains[actual_strain_number]
@@ -1039,6 +1041,7 @@ class ConsolidatedModel(BaseModel):
 
                             # Default
                             for treatment_stage in self.treatment_stages:
+
                                 # If it's either the most resistant strain available or amplification is not active:
                                 if actual_strain_number == len(self.strains) - 1 or not self.is_amplification:
                                     self.set_var_transfer_rate_flow(

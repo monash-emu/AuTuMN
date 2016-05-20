@@ -520,36 +520,14 @@ class ConsolidatedModel(BaseModel):
 
     def find_nontreatment_rates_params(self):
 
-        # Temporary scale-up functions to be populated from spreadsheets
-        # as the next thing we need to do
 
-        # Currently using method 4 in the following scale-up to prevent negative values
+        for program in self.data['programs']:
+            if 'prop' in program:
+                self.set_scaleup_fn(program,
+                                    scale_up_function(self.data['programs'][program].keys(),
+                                                      self.data['programs'][program].values()))
 
-        self.set_scaleup_fn('program_prop_vaccination',
-                            scale_up_function(self.data['programs'][u'program_prop_vaccination'].keys(),
-                                              self.data['programs'][u'program_prop_vaccination'].values()))
-
-        self.set_scaleup_fn("program_prop_detect",
-                            scale_up_function(self.data['programs'][u'program_prop_detect'].keys(),
-                                              self.data['programs'][u'program_prop_detect'].values()))
-
-        for program in ['program_prop_vaccination', 'program_prop_detect']:
-            self.set_scaleup_fn(program,
-                                scale_up_function(self.data['programs'][program].keys(),
-                                                  self.data['programs'][program].values()))
-
-        self.set_scaleup_fn("program_prop_algorithm_sensitivity",
-                            scale_up_function([self.start_time, 1920., 1980., 2000.],
-                                              [0.7, 0.7, 0.8, 0.9]))
-        self.set_scaleup_fn("program_prop_lowquality",
-                            scale_up_function([self.start_time, 1980., 1990., 2000.],
-                                              [0.3, 0.3, 0.4, 0.5]))
-        self.set_scaleup_fn("program_prop_firstline_dst",
-                            scale_up_function([self.start_time, 1980., 1990., 2000.],
-                                              [0., 0., 0.5, 0.7]))
-        self.set_scaleup_fn("program_prop_secondline_dst",
-                            scale_up_function([self.start_time, 1985., 1995., 2000.],
-                                              [0., 0., 0.5, 0.7]))
+        print()
 
     def find_treatment_rates_scaleups(self):
 

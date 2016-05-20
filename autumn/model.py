@@ -520,7 +520,6 @@ class ConsolidatedModel(BaseModel):
 
     def find_nontreatment_rates_params(self):
 
-
         # For the six non-treatment programs
         for program in self.data['programs']:
             if 'prop' in program:

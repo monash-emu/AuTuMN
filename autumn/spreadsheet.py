@@ -513,10 +513,17 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country, start_time
     # Combine loaded data with data from spreadsheets where applicable
     if data['programs']['program_prop_vaccination'][u'load_data'] == 'yes':
         data['programs']['program_prop_vaccination'].update(data['bcg'])
-    if data['programs']['program_prop_detect'][u'load_data'] == 'yes':
-        for i in range(len(data['tb']['year'])):
-            data['programs']['program_prop_detect'][int(data['tb']['year'][i])] \
-                = data['tb']['c_cdr'][i]
+    for program in ['program_prop_detect', 'program_prop_treatment_success']:
+        if program == 'program_prop_detect':
+            sheet = 'tb'
+            field = 'c_cdr'
+        elif program == 'program_prop_treatment_success':
+            sheet = 'outcomes'
+            field = 'c_new_tsr'
+        if data['programs'][program][u'load_data'] == 'yes':
+            for i in range(len(data[sheet]['year'])):
+                data['programs'][program][int(data[sheet]['year'][i])] \
+                    = data[sheet][field][i]
 
     # Add a zero at the model's starting time to all programs
     # Most programs will have a zero starting point later than that too, but that's OK
@@ -525,8 +532,15 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country, start_time
 
     # Get rid of the load_data item from the program dictionaries,
     # so that they're all integer keys with float values
-    for program in data['programs']:
         del data['programs'][program][u'load_data']
+
+        # Remove any extraneous nans from the program data
+        nan_indices = []
+        for i in data['programs'][program]:
+            if numpy.isnan(data['programs'][program][i]):
+                nan_indices += [i]
+        for i in nan_indices:
+            del data['programs'][program][i]
 
     return data
 

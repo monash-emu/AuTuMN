@@ -31,16 +31,10 @@ keys_of_sheets_to_read = [
     'miscellaneous',
     'programs',
     'tb',
-    'notifications']
+    'notifications',
+    'outcomes']
 
 data = read_and_process_data(True, keys_of_sheets_to_read, country, start_time)
-
-fixed_parameters = data['parameters']
-miscellaneous_parameters = data['miscellaneous']
-
-organs = [u'new_sp', u'new_sn', u'new_ep']
-data['notifications'].update(calculate_proportion(data['notifications'], organs))
-
 
 # To run all possible models
 strata_to_run = [0, 2, 3]

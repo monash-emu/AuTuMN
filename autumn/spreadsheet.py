@@ -49,7 +49,7 @@ def adjust_country_name(country_name, data_item):
     return adjusted_country_name
 
 
-def calculate_proportion(data, indices):
+def calculate_proportion(data, indices, percent):
 
     """
     Calculate the proportions of patients within subgroups
@@ -62,6 +62,10 @@ def calculate_proportion(data, indices):
     Returns:
         proportions: A dictionary containing the proportions by indices
     """
+
+    multiplier = 1.
+    if percent:
+        multiplier = 100.
 
     # Calculate totals for denominator
     denominator = []
@@ -84,7 +88,9 @@ def calculate_proportion(data, indices):
             if type(denominator[i]) == float and denominator[i] > 0.:
                 proportions['prop_' + indices[j]] \
                     += [data[indices[j]][i]
-                        / denominator[i]]
+                        / denominator[i] * multiplier]
+            else:
+                proportions['prop_' + indices[j]] += [float('nan')]
 
     return proportions
 
@@ -511,18 +517,22 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country, start_time
     # Calculate proportions that are smear-positive, smear-negative or extra-pulmonary
     # and add them to the data object's notification dictionary
     organs = [u'new_sp', u'new_sn', u'new_ep']
-    data['notifications'].update(calculate_proportion(data['notifications'], organs))
+    data['notifications'].update(calculate_proportion(data['notifications'], organs, False))
 
     treatment_outcomes = [u'new_sp_cmplt', u'new_sp_cur', u'new_sp_def', u'new_sp_died', u'new_sp_fail']
-    data['outcomes'].update(calculate_proportion(data['outcomes'], treatment_outcomes))
+    data['outcomes'].update(calculate_proportion(data['outcomes'], treatment_outcomes, True))
     data['outcomes'][u'prop_new_sp_success'] = []
     for i in range(len(data['outcomes'][u'prop_new_sp_cmplt'])):
         data['outcomes'][u'prop_new_sp_success'] \
-            += [(data['outcomes'][u'prop_new_sp_cmplt'][i] \
-            + data['outcomes'][u'prop_new_sp_cur'][i]) * 1E2]
+            += [data['outcomes'][u'prop_new_sp_cmplt'][i] \
+            + data['outcomes'][u'prop_new_sp_cur'][i]]
 
     mdr_treatment_outcomes = [u'mdr_succ', u'mdr_fail', u'mdr_died', u'mdr_lost']
-    data['outcomes'].update(calculate_proportion(data['outcomes'], mdr_treatment_outcomes))
+    data['outcomes'].update(calculate_proportion(data['outcomes'], mdr_treatment_outcomes, True))
+
+    xdr_treatment_outcomes = [u'xdr_succ', u'xdr_fail', u'xdr_died', u'xdr_lost']
+    data['outcomes'].update(calculate_proportion(data['outcomes'], xdr_treatment_outcomes, True))
+
 
     # Combine loaded data with data from spreadsheets where applicable
     if data['programs']['program_prop_vaccination'][u'load_data'] == 'yes':
@@ -541,10 +551,24 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country, start_time
         for i in range(len(data['outcomes'][u'prop_new_sp_died'])):
             data['programs']['program_prop_treatment_death'][int(data['outcomes']['year'][i])] \
                 = data['outcomes'][u'prop_new_sp_died'][i]
+
     data['programs'][u'program_prop_treatment_success_ds'] \
         = data['programs'][u'program_prop_treatment_success']
     data['programs'][u'program_prop_treatment_death_ds'] \
         = data['programs'][u'program_prop_treatment_death']
+
+    for i in range(len(data['outcomes'][u'prop_mdr_succ'])):
+        if not numpy.isnan(data['outcomes'][u'prop_mdr_succ'][i]):
+            data['programs'][u'program_prop_treatment_success_mdr'][data['outcomes'][u'year'][i]] \
+                = data['outcomes'][u'prop_mdr_succ'][i]
+            # data['programs'][u'program_prop_treatment_death_mdr'] \
+            #     = data['outcomes'][u'prop_mdr_died']
+    for i in range(len(data['outcomes'][u'prop_xdr_succ'])):
+        if not numpy.isnan(data['outcomes'][u'prop_xdr_succ'][i]):
+            data['programs'][u'program_prop_treatment_success_xdr'][data['outcomes'][u'year'][i]] \
+                = data['outcomes'][u'prop_xdr_succ'][i]
+            # data['programs'][u'program_prop_treatment_death_xdr'] \
+            #     = data['outcomes'][u'prop_xdr_died']
 
     # Add a zero at the model's starting time to all programs
     # Most programs will have a zero starting point later than that too, but that's OK
@@ -564,8 +588,6 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country, start_time
         for i in nan_indices:
             del data['programs'][program][i]
 
-
-
     return data
 
 
@@ -584,10 +606,7 @@ if __name__ == "__main__":
         'programs',
         'tb',
         'notifications',
-        'outcomes',
-        'mdr',
-        'laboratories',
-        'strategy']
+        'outcomes']
 
     data = read_and_process_data(False, keys_of_sheets_to_read, country, start_time)
 

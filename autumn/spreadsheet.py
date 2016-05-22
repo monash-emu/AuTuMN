@@ -519,28 +519,24 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country, start_time
     organs = [u'new_sp', u'new_sn', u'new_ep']
     data['notifications'].update(calculate_proportion(data['notifications'], organs, False))
 
-    treatment_outcomes = [u'new_sp_cmplt', u'new_sp_cur', u'new_sp_def', u'new_sp_died', u'new_sp_fail']
-    data['outcomes'].update(calculate_proportion(data['outcomes'], treatment_outcomes, True))
-    data['outcomes'][u'prop_new_sp_success'] = []
-    for i in range(len(data['outcomes'][u'prop_new_sp_cmplt'])):
-        data['outcomes'][u'prop_new_sp_success'] \
-            += [data['outcomes'][u'prop_new_sp_cmplt'][i] \
-            + data['outcomes'][u'prop_new_sp_cur'][i]]
-
-    mdr_treatment_outcomes = [u'mdr_succ', u'mdr_fail', u'mdr_died', u'mdr_lost']
-    data['outcomes'].update(calculate_proportion(data['outcomes'], mdr_treatment_outcomes, True))
-
-    xdr_treatment_outcomes = [u'xdr_succ', u'xdr_fail', u'xdr_died', u'xdr_lost']
-    data['outcomes'].update(calculate_proportion(data['outcomes'], xdr_treatment_outcomes, True))
-
-
-    # Combine loaded data with data from spreadsheets where applicable
+    # Combine loaded data with data from spreadsheets for vaccination and case detection
     if data['programs']['program_prop_vaccination'][u'load_data'] == 'yes':
         data['programs']['program_prop_vaccination'].update(data['bcg'])
     if data['programs']['program_prop_detect'][u'load_data'] == 'yes':
         for i in range(len(data['tb']['year'])):
             data['programs']['program_prop_detect'][int(data['tb']['year'][i])] \
                 = data['tb']['c_cdr'][i]
+
+    # Calculate proportions of patients with each outcome for DS-TB
+    treatment_outcomes = [u'new_sp_cmplt', u'new_sp_cur', u'new_sp_def', u'new_sp_died', u'new_sp_fail']
+    data['outcomes'].update(calculate_proportion(data['outcomes'], treatment_outcomes, True))
+
+    # Calculate treatment success as cure plus completion
+    data['outcomes'][u'prop_new_sp_success'] = []
+    for i in range(len(data['outcomes'][u'prop_new_sp_cmplt'])):
+        data['outcomes'][u'prop_new_sp_success'] \
+            += [data['outcomes'][u'prop_new_sp_cmplt'][i] \
+            + data['outcomes'][u'prop_new_sp_cur'][i]]
 
     # Add the treatment success and death data to the program dictionary
     if data['programs']['program_prop_treatment_success'][u'load_data'] == 'yes':
@@ -552,23 +548,31 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country, start_time
             data['programs']['program_prop_treatment_death'][int(data['outcomes']['year'][i])] \
                 = data['outcomes'][u'prop_new_sp_died'][i]
 
-    data['programs'][u'program_prop_treatment_success_ds'] \
-        = data['programs'][u'program_prop_treatment_success']
-    data['programs'][u'program_prop_treatment_death_ds'] \
-        = data['programs'][u'program_prop_treatment_death']
+    # Calculate proportions of each outcome for MDR and XDR-TB
+    mdr_xdr_treatment_outcomes = [u'succ', u'fail', u'died', u'lost']
+    mdr_treatment_outcomes = []
+    xdr_treatment_outcomes = []
+    for i in range(len(mdr_xdr_treatment_outcomes)):
+        mdr_treatment_outcomes += [u'mdr_' + mdr_xdr_treatment_outcomes[i]]
+        xdr_treatment_outcomes += [u'xdr_' + mdr_xdr_treatment_outcomes[i]]
+    data['outcomes'].update(calculate_proportion(data['outcomes'], mdr_treatment_outcomes, True))
+    data['outcomes'].update(calculate_proportion(data['outcomes'], xdr_treatment_outcomes, True))
 
-    for i in range(len(data['outcomes'][u'prop_mdr_succ'])):
-        if not numpy.isnan(data['outcomes'][u'prop_mdr_succ'][i]):
-            data['programs'][u'program_prop_treatment_success_mdr'][data['outcomes'][u'year'][i]] \
-                = data['outcomes'][u'prop_mdr_succ'][i]
-            # data['programs'][u'program_prop_treatment_death_mdr'] \
-            #     = data['outcomes'][u'prop_mdr_died']
-    for i in range(len(data['outcomes'][u'prop_xdr_succ'])):
-        if not numpy.isnan(data['outcomes'][u'prop_xdr_succ'][i]):
-            data['programs'][u'program_prop_treatment_success_xdr'][data['outcomes'][u'year'][i]] \
-                = data['outcomes'][u'prop_xdr_succ'][i]
-            # data['programs'][u'program_prop_treatment_death_xdr'] \
-            #     = data['outcomes'][u'prop_xdr_died']
+    # Duplicate DS-TB outcomes for single strain models
+    for outcome in [u'_success', u'_death']:
+        data['programs'][u'program_prop_treatment' + outcome + '_ds'] \
+            = data['programs'][u'program_prop_treatment' + outcome]
+
+    # Populate MDR and XDR data from outcomes dictionary into program dictionary
+    for strain in [u'_mdr', u'_xdr']:
+        for i in range(len(data['outcomes'][u'prop' + strain + u'_succ'])):
+            if not numpy.isnan(data['outcomes'][u'prop' + strain + u'_succ'][i]):
+                data['programs'][u'program_prop_treatment_success' + strain][data['outcomes'][u'year'][i]] \
+                    = data['outcomes'][u'prop' + strain + u'_succ'][i]
+                data['programs'][u'program_prop_treatment_death' + strain][data['outcomes'][u'year'][i]] \
+                    = data['outcomes'][u'prop' + strain + u'_died'][i]
+
+    # Final rounds of tidying programmatic data
 
     # Add a zero at the model's starting time to all programs
     # Most programs will have a zero starting point later than that too, but that's OK
@@ -611,4 +615,5 @@ if __name__ == "__main__":
     data = read_and_process_data(False, keys_of_sheets_to_read, country, start_time)
 
     print("Time elapsed in running script is " + str(datetime.datetime.now() - spreadsheet_start_realtime))
+    print()
 

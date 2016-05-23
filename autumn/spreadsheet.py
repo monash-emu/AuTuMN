@@ -564,12 +564,16 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
     # Add the treatment success and death data to the program dictionary
     if data['programs']['program_prop_treatment_success'][u'load_data'] == 'yes':
         for i in range(len(data['outcomes'][u'prop_new_sp_success'])):
-            data['programs']['program_prop_treatment_success'][int(data['outcomes']['year'][i])] \
-                = data['outcomes'][u'prop_new_sp_success'][i]
+            if int(data['outcomes']['year'][i]) not in data['programs']['program_prop_treatment_success']:
+                data['programs']['program_prop_treatment_success'][int(data['outcomes']['year'][i])] \
+                    = data['outcomes'][u'prop_new_sp_success'][i]
     if data['programs']['program_prop_treatment_death'][u'load_data'] == 'yes':
         for i in range(len(data['outcomes'][u'prop_new_sp_died'])):
-            data['programs']['program_prop_treatment_death'][int(data['outcomes']['year'][i])] \
-                = data['outcomes'][u'prop_new_sp_died'][i]
+            if int(data['outcomes']['year'][i]) not in data['programs']['program_prop_treatment_death']:
+                data['programs']['program_prop_treatment_death'][int(data['outcomes']['year'][i])] \
+                    = data['outcomes'][u'prop_new_sp_died'][i]
+
+    ##### Got this far in making spreadsheets over-ride loaded data
 
     # Calculate proportions of each outcome for MDR and XDR-TB
     mdr_xdr_treatment_outcomes = [u'succ', u'fail', u'died', u'lost']

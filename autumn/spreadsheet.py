@@ -576,8 +576,6 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
                 data['programs']['program_prop_treatment_death'][int(data['outcomes']['year'][i])] \
                     = data['outcomes'][u'prop_new_sp_died'][i]
 
-    ##### Got this far in making spreadsheets over-ride loaded data
-
     # Treatment outcomes
     # The aim is now to have data for success and death, as default can be derived from these
     # in the model module.

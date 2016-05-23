@@ -572,6 +572,12 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country, start_time
                 data['programs'][u'program_prop_treatment_death' + strain][data['outcomes'][u'year'][i]] \
                     = data['outcomes'][u'prop' + strain + u'_died'][i]
 
+    # Probably temporary code to assign the same treatment outcomes to XDR-TB as for inappropriate
+    data['programs'][u'program_prop_treatment_success_inappropriate'] \
+        = data['programs'][u'program_prop_treatment_success_xdr']
+    data['programs'][u'program_prop_treatment_death_inappropriate'] \
+        = data['programs'][u'program_prop_treatment_death_xdr']
+
     # Final rounds of tidying programmatic data
 
     # Add a zero at the model's starting time to all programs
@@ -615,5 +621,4 @@ if __name__ == "__main__":
     data = read_and_process_data(False, keys_of_sheets_to_read, country, start_time)
 
     print("Time elapsed in running script is " + str(datetime.datetime.now() - spreadsheet_start_realtime))
-    print()
 

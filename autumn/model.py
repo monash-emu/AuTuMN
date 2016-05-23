@@ -559,16 +559,12 @@ class ConsolidatedModel(BaseModel):
             # Populate treatment outcomes from previously calculated functions
             self.set_scaleup_fn(
                 "program_proportion_success" + strain,
-                scale_up_function(self.treatment_success_xvalues,
-                                  self.treatment_success_yvalues))
-            self.set_scaleup_fn(
-                "program_proportion_default" + strain,
-                scale_up_function(self.treatment_success_xvalues,
-                                  self.treatment_default_yvalues))
+                scale_up_function(self.data['programs'][u'program_prop_treatment_success' + strain].keys(),
+                                  self.data['programs'][u'program_prop_treatment_success' + strain].values()))
             self.set_scaleup_fn(
                 "program_proportion_death" + strain,
-                scale_up_function(self.treatment_success_xvalues,
-                                  self.treatment_death_yvalues))
+                scale_up_function(self.data['programs'][u'program_prop_treatment_death' + strain].keys(),
+                                  self.data['programs'][u'program_prop_treatment_death' + strain].values()))
 
     ##################################################################
     # Methods that calculate variables to be used in calculating flows
@@ -742,6 +738,11 @@ class ConsolidatedModel(BaseModel):
     def calculate_treatment_rates_vars(self):
 
         for strain in self.strains + ["_inappropriate"]:
+
+            self.vars['program_proportion_default' + strain] \
+                = 1. \
+                  - self.vars['program_proportion_success' + strain] \
+                  - self.vars['program_proportion_death' + strain]
 
             # Find the proportion of deaths/defaults during the infectious and non-infectious stages
             for outcome in self.non_success_outcomes:

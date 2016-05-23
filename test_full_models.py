@@ -131,13 +131,13 @@ for n_comorbidities in strata_to_run:
                             #         model, ["incidence_ds", "incidence_mdr", "mortality_ds", "mortality_mdr", "prevalence_ds", "prevalence_mdr",
                             #                 "notifications_ds", "notifications_mdr"],
                             #         start_time, base + '.rate_bystrain_outputs.png')
-                            autumn.plotting.plot_outputs(
-                                model, ["incidence", "mortality", "prevalence", "notifications"],
-                                start_time, base + '.rate_outputs.png')
-                            autumn.plotting.plot_outputs_against_gtb(
-                                model, "incidence",
-                                recent_time, base + '.rate_outputs_gtb.png',
-                                data)
+                            # autumn.plotting.plot_outputs(
+                            #     model, ["incidence", "mortality", "prevalence", "notifications"],
+                            #     start_time, base + '.rate_outputs.png')
+                            # autumn.plotting.plot_outputs_against_gtb(
+                            #     model, "incidence",
+                            #     recent_time, base + '.rate_outputs_gtb.png',
+                            #     data)
                             # if n_strains >= 2:
                             #     autumn.plotting.plot_outputs(
                             #         model, ["incidence_ds", "incidence_mdr", "mortality_ds", "mortality_mdr", "prevalence_ds", "prevalence_mdr",
@@ -165,7 +165,6 @@ for n_comorbidities in strata_to_run:
                                                               "program_prop_firstline_dst",
                                                               "program_prop_secondline_dst",
                                                               "program_proportion_success",
-                                                              "program_proportion_default",
                                                               "program_proportion_death",
                                                               "tb_proportion_amplification"],
                                                              base + '.scaleups.png', start_time)

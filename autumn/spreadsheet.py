@@ -540,7 +540,11 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
 
     # Combine loaded data with data from spreadsheets for vaccination and case detection
     if data['programs']['program_prop_vaccination'][u'load_data'] == 'yes':
-        data['programs']['program_prop_vaccination'].update(data['bcg'])
+        for i in data['bcg']:
+            if i not in data['programs']['program_prop_vaccination']:
+                data['programs']['program_prop_vaccination'][i] = data['bcg'][i]
+
+
     if data['programs']['program_prop_detect'][u'load_data'] == 'yes':
         for i in range(len(data['tb']['year'])):
             data['programs']['program_prop_detect'][int(data['tb']['year'][i])] \

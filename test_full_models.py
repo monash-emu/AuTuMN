@@ -10,10 +10,13 @@ from autumn.spreadsheet import read_and_process_data
 def indices(a, func):
     return [i for (i, val) in enumerate(a) if func(val)]
 
+# Start timer
 start_realtime = datetime.datetime.now()
 
+# Decide on country
 country = u'Fiji'
 
+# A few basic preliminaries
 out_dir = 'fullmodel_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
@@ -22,7 +25,8 @@ keys_of_sheets_to_read = [
     'notifications', 'outcomes']
 data = read_and_process_data(True, keys_of_sheets_to_read, country)
 
-# Note that it takes about one hour to run all of the possible model structures
+# Note that it takes about one hour to run all of the possible model structures,
+# so perhaps don't do that
 for n_organs in data['attributes']['n_organs']:
     for n_strains in data['attributes']['n_strains']:
         for n_comorbidities in data['attributes']['n_comorbidities']:
@@ -58,6 +62,8 @@ for n_organs in data['attributes']['n_organs']:
 
                             model.make_times(data['attributes']['start_time'], 2015.1, 0.1)
                             model.integrate_explicit()
+
+                            # Only make a flow-diagram if the model isn't overly complex
                             if n_organs + n_strains + n_comorbidities <= 5:
                                 model.make_graph(base + '.workflow')
 

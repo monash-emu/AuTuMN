@@ -245,15 +245,23 @@ class ModelAttributesReader(FixedParametersReader):
 
     def parse_row(self, row):
 
+        # For the calendar year times
         if u'time' in row[0]:
             self.data[row[0]] = float(row[1])
-        elif u'n_' in row[0]:
+
+        # For the model stratifications
+        elif u'n_' in row[0] or u'age_breakpoints' in row[0]:
             self.data[row[0]] = []
             for i in range(1, len(row)):
                 if not row[i] == '':
                     self.data[row[0]] += [int(row[i])]
-        else:
-            self.data[row[0]] = bool(row[1])
+
+        # For optional elaborations
+        elif u'is_' in row[0]:
+            self.data[row[0]] = []
+            for i in range(1, len(row)):
+                if not row[i] == '':
+                    self.data[row[0]] += [bool(row[i])]
 
 
 class ProgramReader():
@@ -511,7 +519,7 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     return read_xls_with_sheet_readers(sheet_readers)
 
 
-def read_and_process_data(from_test, keys_of_sheets_to_read, country, start_time):
+def read_and_process_data(from_test, keys_of_sheets_to_read, country):
 
     """
     Runs the main data reading function and performs a few tidying tasks.
@@ -585,17 +593,16 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country, start_time
                     = data['outcomes'][u'prop' + strain + u'_died'][i]
 
     # Probably temporary code to assign the same treatment outcomes to XDR-TB as for inappropriate
-    data['programs'][u'program_prop_treatment_success_inappropriate'] \
-        = data['programs'][u'program_prop_treatment_success_xdr']
-    data['programs'][u'program_prop_treatment_death_inappropriate'] \
-        = data['programs'][u'program_prop_treatment_death_xdr']
+    for outcome in [u'_success', u'_death']:
+        data['programs'][u'program_prop_treatment' + outcome + u'_inappropriate'] \
+            = data['programs'][u'program_prop_treatment' + outcome + u'_xdr']
 
     # Final rounds of tidying programmatic data
 
     # Add a zero at the model's starting time to all programs
     # Most programs will have a zero starting point later than that too, but that's OK
     for program in data['programs']:
-        data['programs'][program][start_time] = 0.
+        data['programs'][program][data['attributes']['start_time']] = 0.
 
     # Get rid of the load_data item from the program dictionaries,
     # so that they're all integer keys with float values
@@ -617,8 +624,6 @@ if __name__ == "__main__":
 
     country = u'Fiji'
 
-    start_time = 1850
-
     keys_of_sheets_to_read = [
         'bcg',
         'birth_rate',
@@ -631,7 +636,7 @@ if __name__ == "__main__":
         'notifications',
         'outcomes']
 
-    data = read_and_process_data(False, keys_of_sheets_to_read, country, start_time)
+    data = read_and_process_data(False, keys_of_sheets_to_read, country)
 
     print("Time elapsed in running script is " + str(datetime.datetime.now() - spreadsheet_start_realtime))
 

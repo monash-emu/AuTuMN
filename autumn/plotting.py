@@ -376,13 +376,14 @@ def plot_outputs_against_gtb(model, label, left_xlimit, png=None, country_data=N
 
     # Extract the plotting data you're interested in
     plotting_data = {}
-    for i in country_data:
+    for i in country_data['tb']:
         if index in i and '_lo' in i:
-            plotting_data['lower_limit'] = country_data[i]
+            plotting_data['lower_limit'] = country_data['tb'][i]
         elif index in i and '_hi' in i:
-            plotting_data['upper_limit'] = country_data[i]
+            plotting_data['upper_limit'] = country_data['tb'][i]
         elif index in i:
-            plotting_data['point_estimate'] = country_data[i]
+            plotting_data['point_estimate'] = country_data['tb'][i]
+    plotting_data['year'] = country_data['tb'][u'year']
 
     # Truncate data to what you want to look at (rather than going back to the dawn of time)
     right_xlimit_index, left_xlimit_index = truncate_data(model, left_xlimit)
@@ -403,23 +404,23 @@ def plot_outputs_against_gtb(model, label, left_xlimit, png=None, country_data=N
     # Plot the GTB data
 
     # Central point-estimate
-    ax.plot(plotting_data['point_estimate'].keys(), plotting_data['point_estimate'].values(),
+    ax.plot(plotting_data['year'], plotting_data['point_estimate'],
             label=label, color=colour, linewidth=0.5)
     axis_labels.append("Reported " + label)
 
     # Create the patch array
     patch_array = numpy.zeros(shape=(len(plotting_data['lower_limit']) * 2, 2))
     for i in range(len(plotting_data['lower_limit'])):
-        patch_array[i][0] = plotting_data['lower_limit'].keys()[i]
-        patch_array[-(i+1)][0] = plotting_data['lower_limit'].keys()[i]
-        patch_array[i][1] = plotting_data['lower_limit'].values()[i]
-        patch_array[-(i+1)][1] = plotting_data['upper_limit'].values()[i]
+        patch_array[i][0] = plotting_data['year'][i]
+        patch_array[-(i+1)][0] = plotting_data['year'][i]
+        patch_array[i][1] = plotting_data['lower_limit'][i]
+        patch_array[-(i+1)][1] = plotting_data['upper_limit'][i]
     # Create the patch image and plot it
     patch = patches.Polygon(patch_array, color=patch_colour)
     ax.add_patch(patch)
 
     ax.set_ylim([0,
-                 max(plotting_data['upper_limit'].values() +
+                 max(plotting_data['upper_limit'] +
                      model.get_var_soln(label)[left_xlimit_index: right_xlimit_index].tolist())])
 
     # Set axes

@@ -4,7 +4,6 @@ import os
 import glob
 import datetime
 import autumn.model
-import numpy
 import autumn.plotting
 from autumn.spreadsheet import read_and_process_data
 
@@ -13,24 +12,14 @@ def indices(a, func):
 
 start_realtime = datetime.datetime.now()
 
+country = u'Fiji'
+
 out_dir = 'fullmodel_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
-
-country = u'Fiji'
-
 keys_of_sheets_to_read = [
-    'bcg',
-    'birth_rate',
-    'life_expectancy',
-    'attributes',
-    'parameters',
-    'miscellaneous',
-    'programs',
-    'tb',
-    'notifications',
-    'outcomes']
-
+    'bcg', 'birth_rate', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'programs', 'tb',
+    'notifications', 'outcomes']
 data = read_and_process_data(True, keys_of_sheets_to_read, country)
 
 # Note that it takes about one hour to run all of the possible model structures
@@ -151,8 +140,8 @@ for n_organs in data['attributes']['n_organs']:
                                                               "program_prop_lowquality",
                                                               "program_prop_firstline_dst",
                                                               "program_prop_secondline_dst",
-                                                              "program_proportion_success",
-                                                              "program_proportion_death",
+                                                              # "program_proportion_success",
+                                                              # "program_proportion_death",
                                                               "tb_proportion_amplification"],
                                                              base + '.scaleups.png', data['attributes']['start_time'])
                             #     year = indices(model.times, lambda x: x >= 2015.)[0]
@@ -170,10 +159,3 @@ autumn.plotting.open_pngs(pngs)
 
 print("Time elapsed in running script is " + str(datetime.datetime.now() - start_realtime))
 
-
-# def indices(a, func):
-#     return [i for (i, val) in enumerate(a) if func(val)]
-#
-# inds = indices(model.times, lambda x: x > 2014.)
-#
-# print(inds[0])

@@ -27,8 +27,8 @@ This is a set of Python models that modularizes the development of dynamic trans
 - search for BOSCO comments in the source code
 
 # James TODO:
+- add scale-up functions for proportions by organ status
 - work out why there are lots of notifications before case detection starts
-- write some code to start programmatic scale-ups from the minimum value reported in the Global TB Report
 - work out an approach to allowing a lower case detection rate and higher force of infection
 - MCMC incorporation
 - new/retreatment stratification

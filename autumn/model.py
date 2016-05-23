@@ -314,18 +314,21 @@ class ConsolidatedModel(BaseModel):
         most recent proportions available from GTB notifications for the country being simulated.
         """
 
+        ########## Temporary code - needs to be converted to a var
+
+        arbitray_index = 30
         if self.n_organ > 1:
             self.set_parameter('epi_proportion_cases_smearpos',
-                               self.data[u'prop_new_sp'][max(self.data[u'prop_new_sp'])])
+                               self.data['notifications'][u'prop_new_sp'][arbitray_index])
         if self.n_organ > 2:
             self.set_parameter('epi_proportion_cases_smearneg',
-                               self.data[u'prop_new_sn'][max(self.data[u'prop_new_sn'])])
+                               self.data['notifications'][u'prop_new_sn'][arbitray_index])
             self.set_parameter('epi_proportion_cases_extrapul',
-                               self.data[u'prop_new_ep'][max(self.data[u'prop_new_ep'])])
+                               self.data['notifications'][u'prop_new_ep'][arbitray_index])
         elif self.n_organ == 2:
             self.set_parameter('epi_proportion_cases_smearneg',
-                               self.data[u'prop_new_sn'][max(self.data[u'prop_new_sn'])]
-                               + self.data[u'prop_new_ep'][max(self.data[u'prop_new_ep'])])
+                               self.data['notifications'][u'prop_new_sn'][arbitray_index]
+                               + self.data['notifications'][u'prop_new_ep'][arbitray_index])
 
     ############################################################
     # General underlying methods for use by other methods

@@ -4,7 +4,6 @@ from __future__ import print_function
 from xlrd import open_workbook # For opening Excel workbooks
 from numpy import nan
 import numpy
-import copy
 import os
 import datetime
 
@@ -625,17 +624,8 @@ if __name__ == "__main__":
     country = u'Fiji'
 
     keys_of_sheets_to_read = [
-        'bcg',
-        'birth_rate',
-        'life_expectancy',
-        'attributes',
-        'parameters',
-        'miscellaneous',
-        'programs',
-        'tb',
-        'notifications',
-        'outcomes']
-
+        'bcg', 'birth_rate', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'programs', 'tb',
+        'notifications', 'outcomes']
     data = read_and_process_data(False, keys_of_sheets_to_read, country)
 
     print("Time elapsed in running script is " + str(datetime.datetime.now() - spreadsheet_start_realtime))

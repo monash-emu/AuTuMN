@@ -542,10 +542,13 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
     # Now with spreadsheet inputs over-riding GTB loaded data
     if data['programs']['program_prop_vaccination'][u'load_data'] == 'yes':
         for i in data['bcg']:
+            # If not already loaded through the inputs spreadsheet
             if i not in data['programs']['program_prop_vaccination']:
                 data['programs']['program_prop_vaccination'][i] = data['bcg'][i]
+    # As above, now for case detection
     if data['programs']['program_prop_detect'][u'load_data'] == 'yes':
         for i in range(len(data['tb']['year'])):
+            # If not already loaded through the inputs spreadsheet
             if data['tb']['year'][i] not in data['programs']['program_prop_detect']:
                 data['programs']['program_prop_detect'][int(data['tb']['year'][i])] \
                     = data['tb']['c_cdr'][i]
@@ -575,7 +578,12 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
 
     ##### Got this far in making spreadsheets over-ride loaded data
 
+    # Treatment outcomes
+    # The aim is now to have data for success and death, as default can be derived from these
+    # in the model module.
+
     # Calculate proportions of each outcome for MDR and XDR-TB
+    # Outcomes for MDR and XDR in the GTB data
     mdr_xdr_treatment_outcomes = [u'succ', u'fail', u'died', u'lost']
     mdr_treatment_outcomes = []
     xdr_treatment_outcomes = []
@@ -593,11 +601,20 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
     # Populate MDR and XDR data from outcomes dictionary into program dictionary
     for strain in [u'_mdr', u'_xdr']:
         for i in range(len(data['outcomes'][u'prop' + strain + u'_succ'])):
+            # If there's a GTB value
             if not numpy.isnan(data['outcomes'][u'prop' + strain + u'_succ'][i]):
-                data['programs'][u'program_prop_treatment_success' + strain][data['outcomes'][u'year'][i]] \
-                    = data['outcomes'][u'prop' + strain + u'_succ'][i]
-                data['programs'][u'program_prop_treatment_death' + strain][data['outcomes'][u'year'][i]] \
-                    = data['outcomes'][u'prop' + strain + u'_died'][i]
+                # If there isn't already a value from the inputs spreadsheet
+                if data['outcomes'][u'year'][i] \
+                        not in data['programs'][u'program_prop_treatment_success' + strain]:
+                    # Populate with value from report
+                    data['programs'][u'program_prop_treatment_success' + strain][data['outcomes'][u'year'][i]] \
+                        = data['outcomes'][u'prop' + strain + u'_succ'][i]
+                # If there isn't already a value from the inputs spreadsheet
+                if data['outcomes'][u'year'][i] \
+                        not in data['programs'][u'program_prop_treatment_death' + strain]:
+                    # Populate with value from report
+                    data['programs'][u'program_prop_treatment_death' + strain][data['outcomes'][u'year'][i]] \
+                        = data['outcomes'][u'prop' + strain + u'_died'][i]
 
     # Probably temporary code to assign the same treatment outcomes to XDR-TB as for inappropriate
     for outcome in [u'_success', u'_death']:
@@ -609,7 +626,7 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
     # Add a zero at the model's starting time to all programs
     # Most programs will have a zero starting point later than that too, but that's OK
     for program in data['programs']:
-        data['programs'][program][data['attributes']['start_time']] = 0.
+        data['programs'][program][int(data['attributes']['start_time'])] = 0.
 
     # Get rid of the load_data item from the program dictionaries,
     # so that they're all integer keys with float values

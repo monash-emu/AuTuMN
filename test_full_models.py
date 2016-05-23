@@ -7,7 +7,7 @@ from pprint import pprint
 import autumn.model
 import numpy
 import autumn.plotting
-from autumn.spreadsheet import read_and_process_data, calculate_proportion
+from autumn.spreadsheet import read_and_process_data
 
 def indices(a, func):
     return [i for (i, val) in enumerate(a) if func(val)]
@@ -27,6 +27,7 @@ keys_of_sheets_to_read = [
     'bcg',
     'birth_rate',
     'life_expectancy',
+    'attributes',
     'parameters',
     'miscellaneous',
     'programs',
@@ -45,9 +46,9 @@ strata_to_run = [0]
 true_false = [False]
 
 # Note that it takes about one hour to run all of the possible model structures
-for n_comorbidities in strata_to_run:
+for n_organs in strata_to_run:
     for n_strains in strata_to_run:
-        for n_organs in strata_to_run:
+        for n_comorbidities in strata_to_run:
             for is_quality in true_false:
                 for is_amplification in true_false:
                     for is_misassignment in true_false:
@@ -131,9 +132,9 @@ for n_comorbidities in strata_to_run:
                             #         model, ["incidence_ds", "incidence_mdr", "mortality_ds", "mortality_mdr", "prevalence_ds", "prevalence_mdr",
                             #                 "notifications_ds", "notifications_mdr"],
                             #         start_time, base + '.rate_bystrain_outputs.png')
-                            # autumn.plotting.plot_outputs(
-                            #     model, ["incidence", "mortality", "prevalence", "notifications"],
-                            #     start_time, base + '.rate_outputs.png')
+                            autumn.plotting.plot_outputs(
+                                model, ["incidence", "mortality", "prevalence", "notifications"],
+                                start_time, base + '.rate_outputs.png')
                             # autumn.plotting.plot_outputs_against_gtb(
                             #     model, "incidence",
                             #     recent_time, base + '.rate_outputs_gtb.png',

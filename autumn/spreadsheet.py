@@ -109,7 +109,6 @@ class BcgCoverageSheetReader():
 
     def __init__(self, country_to_read):
         self.data = {}  # Empty dictionary to contain the data that is read
-        self.i_par = 0  # Starting row
         self.tab_name = 'BCG'  # Tab of spreadsheet to be read
         self.key = 'bcg'  # String that defines the data type in this file
         self.filename = 'xls/who_unicef_bcg_coverage.xlsx'  # Filename
@@ -130,7 +129,6 @@ class BcgCoverageSheetReader():
                 if type(row[i]) == float:
                     self.data[int(self.parlist[i])] = \
                         row[i]
-        self.i_par += 1
 
     def get_data(self):
         return self.data
@@ -145,7 +143,6 @@ class BirthRateReader():
 
     def __init__(self, country_to_read):
         self.data = {}
-        self.i_par = 0
         self.tab_name = 'Data'
         self.key = 'birth_rate'
         self.parlist = []
@@ -166,7 +163,6 @@ class BirthRateReader():
                 if type(row[i]) == float:
                     self.data[int(self.parlist[i])] = \
                         row[i]
-        self.i_par += 1
 
     def get_data(self):
         return self.data
@@ -176,7 +172,6 @@ class LifeExpectancyReader():
 
     def __init__(self, country_to_read):
         self.data = {}
-        self.i_par = 0
         self.tab_name = 'Data'
         self.key = 'life_expectancy'
         self.parlist = []
@@ -195,7 +190,6 @@ class LifeExpectancyReader():
                 if type(row[i]) == float:
                     self.data[int(self.parlist[i])] = \
                         row[i]
-        self.i_par += 1
 
     def get_data(self):
         return self.data
@@ -205,7 +199,6 @@ class FixedParametersReader():
 
     def __init__(self):
         self.data = {}
-        self.i_par = 0
         self.tab_name = 'fixed_params'
         self.key = 'parameters'
         self.parlist = []
@@ -218,7 +211,6 @@ class FixedParametersReader():
     def parse_row(self, row):
 
         self.data[row[0]] = row[1]
-        self.i_par += 1
 
     def get_data(self):
         return self.data
@@ -228,7 +220,6 @@ class ParametersReader(FixedParametersReader):
 
     def __init__(self, country_to_read):
         self.data = {}
-        self.i_par = 0
         self.tab_name = 'miscellaneous_constants'
         self.key = 'miscellaneous'
         self.parlist = []
@@ -239,11 +230,36 @@ class ParametersReader(FixedParametersReader):
         self.parameter_dictionary_keys = []
 
 
+class ModelAttributesReader(FixedParametersReader):
+
+    def __init__(self, country_to_read):
+        self.data = {}
+        self.tab_name = 'model_attributes'
+        self.key = 'attributes'
+        self.parlist = []
+        self.filename = 'xls/programs_' + country_to_read.lower() + '.xlsx'
+        self.start_row = 1
+        self.column_for_keys = 0
+        self.horizontal = True
+        self.parameter_dictionary_keys = []
+
+    def parse_row(self, row):
+
+        if u'time' in row[0]:
+            self.data[row[0]] = float(row[1])
+        elif u'n_' in row[0]:
+            self.data[row[0]] = []
+            for i in range(1, len(row)):
+                if not row[i] == '':
+                    self.data[row[0]] += [int(row[i])]
+        else:
+            self.data[row[0]] = bool(row[1])
+
+
 class ProgramReader():
 
     def __init__(self, country_to_read):
         self.data = {}
-        self.i_par = 0
         self.tab_name = 'programs'
         self.key = 'programs'
         self.filename = 'xls/programs_' + country_to_read.lower() + '.xlsx'
@@ -267,8 +283,6 @@ class ProgramReader():
                 elif type(row[i]) == float:
                     self.data[row[0]][int(self.parlist[i])] = \
                         row[i]
-
-        self.i_par += 1
 
     def get_data(self):
         return self.data
@@ -331,7 +345,6 @@ class TreatmentOutcomesReader(GlobalTbReportReader):
 
     def __init__(self, country_to_read):
         self.data = {}
-        self.i_par = -1
         self.tab_name = 'TB_outcomes_2016-04-21'
         self.key = 'outcomes'
         self.parlist = []
@@ -348,7 +361,6 @@ class MdrReportReader():
 
     def __init__(self, country_to_read):
         self.data = {}
-        self.i_par = 0
         self.tab_name = 'MDR-TB_burden_estimates_2016-04'
         self.key = 'mdr'
         self.parlist = []
@@ -369,7 +381,6 @@ class MdrReportReader():
         elif row[0] == self.country_to_read:
             for i in range(len(self.dictionary_keys)):
                 self.data[self.dictionary_keys[i]] = row[i]
-        self.i_par += 1
 
     def get_data(self):
         return self.data
@@ -394,7 +405,6 @@ class StrategyReader(MdrReportReader):
 
     def __init__(self, country_to_read):
         self.data = {}
-        self.i_par = 0
         self.tab_name = 'TB_strategy_2016-04-21'
         self.key = 'strategy'
         self.parlist = []
@@ -472,6 +482,8 @@ def read_input_data_xls(from_test, sheets_to_read, country):
         sheet_readers.append(BirthRateReader(country))
     if 'life_expectancy' in sheets_to_read:
         sheet_readers.append(LifeExpectancyReader(country))
+    if 'attributes' in sheets_to_read:
+        sheet_readers.append(ModelAttributesReader(country))
     if 'parameters' in sheets_to_read:
         sheet_readers.append(FixedParametersReader())
     if 'miscellaneous' in sheets_to_read:
@@ -611,6 +623,7 @@ if __name__ == "__main__":
         'bcg',
         'birth_rate',
         'life_expectancy',
+        'attributes',
         'parameters',
         'miscellaneous',
         'programs',

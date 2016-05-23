@@ -108,7 +108,6 @@ class ConsolidatedModel(BaseModel):
         self.set_fixed_parameters()
         self.set_fixed_demo_parameters()
         self.set_fixed_epi_parameters()
-        self.set_parameters()
 
         # Treatment outcomes that will be universal to all models
         # Global TB outcomes of "completion" and "cure" can be considered "_success",
@@ -327,102 +326,6 @@ class ConsolidatedModel(BaseModel):
             self.set_parameter('epi_proportion_cases_smearneg',
                                self.data[u'prop_new_sn'][max(self.data[u'prop_new_sn'])]
                                + self.data[u'prop_new_ep'][max(self.data[u'prop_new_ep'])])
-
-    def set_parameters(self, paramater_dict=None):
-
-        """
-        Sets some default model parameters for testing when required
-        These will be set externally through the spreadsheets in all real world applications
-
-        Args:
-            paramater_dict: a key-value dictionary where typically key
-                              is a string for a param name and value is a float
-        """
-
-        # Set defaults for testing
-        if paramater_dict is None:
-            paramater_dict = {
-                "tb_multiplier_force_smearneg":
-                    0.24,
-                "tb_n_contact":
-                    14.,
-                "tb_proportion_early_progression":
-                    0.12,
-                "tb_timeperiod_early_latent":
-                    0.4,
-                "tb_rate_late_progression":
-                    0.007,
-                "tb_proportion_casefatality_untreated_smearpos":
-                    0.6,
-                "tb_proportion_casefatality_untreated_smearneg":
-                    0.2,
-                "tb_proportion_casefatality_untreated":
-                    0.4,
-                "tb_timeperiod_activeuntreated":
-                    3.,
-                "tb_multiplier_bcg_protection":
-                    0.5,
-                "program_prop_detect":
-                    0.8,
-                "program_algorithm_sensitivity":
-                    0.9,
-                "program_rate_start_treatment":
-                    26.,
-                "tb_timeperiod_treatment_ds":
-                    0.5,
-                "tb_timeperiod_treatment_mdr":
-                    2.,
-                "tb_timeperiod_treatment_xdr":
-                    3.,
-                "tb_timeperiod_treatment_inappropriate":
-                    3.,
-                "tb_timeperiod_infect_ontreatment_ds":
-                    0.035,
-                "tb_timeperiod_infect_ontreatment_mdr":
-                    1. / 12.,
-                "tb_timeperiod_infect_ontreatment_xdr":
-                    2. / 12.,
-                "tb_timeperiod_infect_ontreatment_inappropriate":
-                    2.,
-                "program_proportion_success_ds":
-                    0.9,
-                "program_proportion_success_mdr":
-                    0.6,
-                "program_proportion_success_xdr":
-                    0.4,
-                "program_proportion_success_inappropriate":
-                    0.25,
-                "program_rate_restart_presenting":
-                    4.,
-                "timepoint_introduce_mdr":
-                    1940.,
-                "timepoint_introduce_xdr":
-                    2050.,
-                "treatment_available_date":
-                    1940.,
-                "dots_start_date":
-                    1990,
-                "finish_scaleup_date":
-                    2010,
-                "pretreatment_available_proportion":
-                    0.,
-                "dots_start_proportion":
-                    0.85,
-                "program_prop_assign_mdr":
-                    0.6,
-                "program_prop_assign_xdr":
-                    .4,
-                "program_prop_lowquality":
-                    0.05,
-                "program_rate_leavelowquality":
-                    2.,
-                "program_prop_nonsuccessoutcomes_death":
-                    0.25
-            }
-
-        # Populate parameters into model
-        for parameter in paramater_dict:
-            self.set_parameter(parameter, paramater_dict[parameter])
 
     ############################################################
     # General underlying methods for use by other methods

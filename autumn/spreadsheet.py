@@ -539,16 +539,16 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
     data['notifications'].update(calculate_proportion(data['notifications'], organs, False))
 
     # Combine loaded data with data from spreadsheets for vaccination and case detection
+    # Now with spreadsheet inputs over-riding GTB loaded data
     if data['programs']['program_prop_vaccination'][u'load_data'] == 'yes':
         for i in data['bcg']:
             if i not in data['programs']['program_prop_vaccination']:
                 data['programs']['program_prop_vaccination'][i] = data['bcg'][i]
-
-
     if data['programs']['program_prop_detect'][u'load_data'] == 'yes':
         for i in range(len(data['tb']['year'])):
-            data['programs']['program_prop_detect'][int(data['tb']['year'][i])] \
-                = data['tb']['c_cdr'][i]
+            if data['tb']['year'][i] not in data['programs']['program_prop_detect']:
+                data['programs']['program_prop_detect'][int(data['tb']['year'][i])] \
+                    = data['tb']['c_cdr'][i]
 
     # Calculate proportions of patients with each outcome for DS-TB
     treatment_outcomes = [u'new_sp_cmplt', u'new_sp_cur', u'new_sp_def', u'new_sp_died', u'new_sp_fail']

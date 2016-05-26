@@ -189,6 +189,9 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
     """
     assert len(x) == len(y), "x and y must have the same length"
 
+    x = [float(i) for i in x]
+    y = [float(i) for i in y]
+
     x = np.array(x)
     y = np.array(y)
 
@@ -641,7 +644,7 @@ if __name__ == "__main__":
     # pylab.ylim(0, 5)
     # pylab.show()
 
-    x = (1960., 1965., 1975, 1976., 1980., 1985., 1990., 1997., 2000., 2002., 2005.)
+    x = (1960., 1965., 1975., 1976., 1980., 1985., 1990., 1997., 2000., 2002., 2005.)
     y = np.random.rand(len(x))
 
     f = scale_up_function(x, y, method=1)

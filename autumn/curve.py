@@ -195,13 +195,15 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
     x = np.array(x)
     y = np.array(y)
 
+    # check that every x_i is unique
+    assert len(x) == len(set(x)), "There are duplicate values in x."
+
     # make sure the arrays are ordered
     order = x.argsort()
     x = x[order]
     y = y[order]
 
-
-    if len(x) == 1:
+    if (len(x) == 1) or (max(y)-min(y) == 0):
         def curve(t):
             return y[0]
         return curve
@@ -406,9 +408,21 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
         rmserror = 0.05
         s = smoothness * len(x) * (rmserror * np.fabs(y).max()) ** 2
 
-        k = min(3, len(x) - 1)
+        # get rid of first elements when they have same y (same for last elements) as there is no need for fitting
+        ind_start = 0
+        while y[ind_start] == y[ind_start+1]:
+            ind_start += 1
 
+        ind_end = len(x) - 1
+        while y[ind_end] == y[ind_end - 1]:
+            ind_end -= 1
+
+        x = x[ind_start:(ind_end+1)]
+        y = y[ind_start:(ind_end+1)]
+
+        k = min(3, len(x) - 1)
         f = UnivariateSpline(x, y, k=k, s=s, ext=3)  # create a first raw approximation
+
 
         # shape the initial and final parts of the curve in order to get null gradients and to hit the external points
         x0 = x[0]
@@ -494,8 +508,16 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
 
                 x1 = x[indice_next]
                 y1 = f(x1)
-                x_peak = x0 + (abs(y0 - bound) / ((abs(y0 - bound)) + abs(y1 - bound))) * (
-                    x1 - x0)  # weighted positioning of the contact with bound
+
+                if y0 == y1:
+                    x_peak = 0.5*(x0 + x1)
+                else:
+                    if y0 == bound:
+                        x_peak = x0
+                    elif y1 == bound:
+                        x_peak = x1
+                    else:
+                        x_peak = x0 + (abs(y0 - bound) / (abs(y0 - bound) + abs(y1 - bound))) * (x1 - x0)  # weighted positioning of the contact with bound
 
                 if indice == 0:
                     v0 = 0
@@ -507,25 +529,32 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
                 else:
                     v1 = f.derivatives(x1)[1]
 
-                g = np.array([
-                    [x0 ** 3, x0 ** 2, x0, 1],
-                    [x_peak ** 3, x_peak ** 2, x_peak, 1],
-                    [3. * x0 ** 2, 2. * x0, 1, 0],
-                    [3. * x_peak ** 2, 2. * x_peak, 1, 0]
-                ])
-                d = np.array([y0, bound, v0, 0.0])
-                a1 = np.linalg.solve(g, d)
-                a1 = a1[::-1]  # reverse
+                if x0 != x_peak:
+                    g = np.array([
+                        [x0 ** 3, x0 ** 2, x0, 1],
+                        [x_peak ** 3, x_peak ** 2, x_peak, 1],
+                        [3. * x0 ** 2, 2. * x0, 1, 0],
+                        [3. * x_peak ** 2, 2. * x_peak, 1, 0]
+                    ])
+                    d = np.array([y0, bound, v0, 0.0])
+                    a1 = np.linalg.solve(g, d)
+                    a1 = a1[::-1]  # reverse
 
-                g = np.array([
-                    [x_peak ** 3, x_peak ** 2, x_peak, 1],
-                    [x1 ** 3, x1 ** 2, x1, 1],
-                    [3. * x_peak ** 2, 2. * x_peak, 1, 0],
-                    [3. * x1 ** 2, 2. * x1, 1, 0]
-                ])
-                d = np.array([bound, y1, 0.0, v1])
-                a2 = np.linalg.solve(g, d)
-                a2 = a2[::-1]  # reverse
+                if x1 != x_peak:
+                    g = np.array([
+                        [x_peak ** 3, x_peak ** 2, x_peak, 1],
+                        [x1 ** 3, x1 ** 2, x1, 1],
+                        [3. * x_peak ** 2, 2. * x_peak, 1, 0],
+                        [3. * x1 ** 2, 2. * x1, 1, 0]
+                    ])
+                    d = np.array([bound, y1, 0.0, v1])
+                    a2 = np.linalg.solve(g, d)
+                    a2 = a2[::-1]  # reverse
+
+                if x0 == x_peak:
+                    a1 = a2
+                if x1 == x_peak:
+                    a2 = a1
 
                 indice_first = indice
                 t1 = test_a(a1, x0, x_peak, x_peak, bound_low, bound_up)
@@ -654,7 +683,7 @@ if __name__ == "__main__":
     p = scale_up_function(x, y, method=5)
     q = scale_up_function(x, y, method=5, bound_low=0.0, bound_up=1.0)
 
-    x_vals = np.linspace(1950, 2010, 1000)
+    x_vals = np.linspace(min(x)-0.1*(max(x)-min(x)), max(x)+0.1*(max(x)-min(x)), 1000)
     pylab.plot(x_vals, map(f, x_vals), color='r')
     pylab.plot(x_vals, map(g, x_vals), color='b')
     pylab.plot(x_vals, map(h, x_vals), color='g')

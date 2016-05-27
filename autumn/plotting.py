@@ -458,8 +458,27 @@ def plot_scaleup_fns(model, functions, png=None, start_time=1900.):
                 map(model.scaleup_fns[function],
                     x_vals),
                 label=function)
-    set_axes_props(ax, 'Year', 'Flow rate (per year)',
+    set_axes_props(ax, 'Year', 'Proportion',
                    'Scaling parameter values', True, functions)
+    save_png(png)
+
+def plot_scaleup_fns_against_data(model, function, png=None, start_time=1900.):
+
+    end_time = 2015.
+    x_vals = numpy.linspace(start_time, end_time, 1E3)
+    ax = make_axes_with_room_for_legend()
+    ax.plot(x_vals,
+            map(model.scaleup_fns[function],
+                x_vals),
+            label=function)
+    data_to_plot = {}
+    for i in model.data['programs'][function]:
+        if i > start_time:
+            data_to_plot[i] = model.data['programs'][function][i]
+    ax.scatter(data_to_plot.keys(),
+            data_to_plot.values())
+    set_axes_props(ax, 'Year', 'Proportion',
+                   'Scaling of ' + function, True, function)
     save_png(png)
 
 

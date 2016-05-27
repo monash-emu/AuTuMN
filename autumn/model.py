@@ -1001,8 +1001,7 @@ class ConsolidatedModel(BaseModel):
 
         # Notifications
         for from_label, to_label, rate in self.var_transfer_rate_flows:
-            if 'active' in from_label and \
-                    ('detect' in to_label or 'treatment_infect' in to_label):
+            if 'active' in from_label and 'detect' in to_label:
                 rate_notifications += self.compartments[from_label] * self.vars[rate]
         self.vars["notifications"] = \
             rate_notifications / self.vars["population"] * 1E5

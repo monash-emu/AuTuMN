@@ -273,6 +273,7 @@ class BaseModel():
         pass
 
     def calculate_diagnostics(self):
+
         self.compartment_soln = {}
         for label in self.labels:
             if label in self.compartment_soln:

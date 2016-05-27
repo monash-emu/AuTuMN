@@ -241,13 +241,13 @@ class BaseModel():
     def integrate_explicit(self, min_dt=0.05):
         self.init_run()
         y = self.get_init_list()
-        n_component = len(y)
+        n_compartment = len(y)
         n_time = len(self.times)
-        self.soln_array = numpy.zeros((n_time, n_component))
+        self.soln_array = numpy.zeros((n_time, n_compartment))
 
         derivative = self.make_derivate_fn()
         time = self.times[0]
-        self.soln_array[0,:] = y
+        self.soln_array[0, :] = y
         for i_time, new_time in enumerate(self.times):
             while time < new_time:
                 f = derivative(y, time)
@@ -257,17 +257,8 @@ class BaseModel():
                 if time > new_time:
                     dt = new_time - old_time
                     time = new_time
-                for i in range(n_component):
+                for i in range(n_compartment):
                     y[i] = y[i] + dt * f[i]
-
-                    ######################################
-                    # HACK to avoid errors due to time-step
-                    # COMMENT FOR BOSCO:
-                    # I'm a bit concerned about this on reflection,
-                    # as this could mean that the system is no longer closed.
-                    # We might be better off without this.
-                    if y[i] < 0.0:
-                        y[i] = 0.0
 
             if i_time < n_time - 1:
                 self.soln_array[i_time+1,:] = y
@@ -362,15 +353,15 @@ class BaseModel():
         Returns:
 
         """
-        # # Check all compartments are positive
+        # Check all compartments are positive
         for label in self.labels:
             assert self.compartments[label] >= 0.0
         # Check population is conserved across compartments
-        population_change = \
-              self.vars['births_vac'] \
-            - self.vars['births_unvac'] \
-            - self.vars['rate_death'] \
-            - self.vars['rate_infection_death']
+        # population_change = \
+        #       self.vars['births_vac'] \
+        #     - self.vars['births_unvac'] \
+        #     - self.vars['rate_death'] \
+        #     - self.vars['rate_infection_death']
         # assert abs(sum(self.flows.values()) - population_change ) < error_margin
 
     def make_graph(self, png):

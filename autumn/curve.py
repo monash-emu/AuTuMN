@@ -606,6 +606,7 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
                 t += (x[-1] - x[0]) / 1000
 
         def curve(t):
+            t = float(t)
             y_t = 0
             if t <= x[0]:
                 y_t = y[0]
@@ -618,14 +619,15 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
             else:
                 y_t = f(t)
 
-            indice = len(x[x < t]) - 1
-            if indice in cut_off_dict.keys():
-                out = cut_off_dict[indice]
-                if t < out['x_peak']:
-                    a = out['a1']
-                else:
-                    a = out['a2']
-                y_t = a[0] + a[1] * t + a[2] * t ** 2 + a[3] * t ** 3
+            if x[0] < t < x[-1]:
+                indice = len(x[x < t]) - 1
+                if indice in cut_off_dict.keys():
+                    out = cut_off_dict[indice]
+                    if t < out['x_peak']:
+                        a = out['a1']
+                    else:
+                        a = out['a2']
+                    y_t = a[0] + a[1] * t + a[2] * t ** 2 + a[3] * t ** 3
 
             if bound_low is not None:
                 y_t = max((y_t, bound_low))  # security check. Normally not needed
@@ -654,7 +656,6 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
 
 
 if __name__ == "__main__":
-
     import pylab
     #
     # x_vals = np.linspace(1950, 2050, 150)
@@ -673,7 +674,7 @@ if __name__ == "__main__":
     # pylab.ylim(0, 5)
     # pylab.show()
 
-    x = (1960., 1965., 1975., 1976., 1980., 1985., 1990., 1997., 2000., 2002., 2005.)
+    x = (1880., 1890., 1900., 1910., 1930., 1950., 1990., 1997., 2000., 2002., 2005.)
     y = np.random.rand(len(x))
 
     f = scale_up_function(x, y, method=1)

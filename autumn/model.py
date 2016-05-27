@@ -436,7 +436,8 @@ class ConsolidatedModel(BaseModel):
                 # Find scale-up functions
                 self.set_scaleup_fn(program,
                                     scale_up_function(self.data['programs'][program].keys(),
-                                                      self.data['programs'][program].values()))
+                                                      self.data['programs'][program].values(),
+                                                      5, 1., 0., 1.))
 
     def find_treatment_rates_scaleups(self):
 
@@ -562,12 +563,18 @@ class ConsolidatedModel(BaseModel):
             / (1. - self.vars["program_prop_detect"] \
                * (1. + (1. - self.vars["program_prop_algorithm_sensitivity"]) \
                   / self.vars["program_prop_algorithm_sensitivity"]))
+        # For any divisions by zero
+        if numpy.isnan(self.vars['program_rate_detect']):
+            self.vars['program_rate_detect'] = 0.
 
         # Missed
         self.vars["program_rate_missed"] = \
             self.vars["program_rate_detect"] \
             * (1. - self. vars["program_prop_algorithm_sensitivity"]) \
             / self.vars["program_prop_algorithm_sensitivity"]
+        # For any divisions by zero
+        if numpy.isnan(self.vars['program_rate_missed']):
+            self.vars['program_rate_missed'] = 0.
 
         # Repeat for each strain
         for strain in self.strains:

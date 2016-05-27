@@ -91,9 +91,9 @@ for n_organs in data['attributes']['n_organs']:
                             #     model, model.compartment_types_bystrain, model.compartment_type_bystrain_fraction_soln, data['attributes']['recent_time'],
                             #     "strain", base + '.types_fraction_bystrain.png')
                             # BROAD COMPARTMENT TYPES
-                            # autumn.plotting.plot_fractions(
-                            #     model, model.broad_compartment_types, model.broad_fraction_soln, data['attributes']['recent_time'],
-                            #     "", base + '.broad_fraction.png')
+                            autumn.plotting.plot_fractions(
+                                model, model.broad_compartment_types, model.broad_fraction_soln, data['attributes']['recent_time'],
+                                "", base + '.broad_fraction.png')
                             # autumn.plotting.plot_fractions(
                             #     model, model.broad_compartment_types_bystrain, model.broad_compartment_type_bystrain_fraction_soln, data['attributes']['recent_time'],
                             #     "strain", base + '.broadtypes_fraction_bystrain.png')
@@ -150,12 +150,12 @@ for n_organs in data['attributes']['n_organs']:
                                                               # "program_proportion_death",
                                                               "tb_proportion_amplification"],
                                                              base + '.scaleups.png', data['attributes']['start_time'])
-                            for program in model.data['programs']:
-                                if 'prop' in program:
-                                    autumn.plotting.plot_scaleup_fns_against_data(model,
-                                                                                  program,
-                                                                                  base + program + '.scaleup.png',
-                                                                                  data['attributes']['recent_time'])
+                            # for program in model.data['programs']:
+                            #     if 'prop' in program:
+                            #         autumn.plotting.plot_scaleup_fns_against_data(model,
+                            #                                                       program,
+                            #                                                       base + program + '.scaleup.png',
+                            #                                                       data['attributes']['recent_time'])
                             #     year = indices(model.times, lambda x: x >= 2015.)[0]
                             #     print("2015 incidence is: ")
                             #     print(model.get_var_soln("incidence")[year])

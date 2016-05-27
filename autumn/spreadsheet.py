@@ -6,6 +6,7 @@ from numpy import nan
 import numpy
 import os
 import datetime
+import copy
 
 
 spreadsheet_start_realtime = datetime.datetime.now()
@@ -594,7 +595,7 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
     # Duplicate DS-TB outcomes for single strain models
     for outcome in [u'_success', u'_death']:
         data['programs'][u'program_prop_treatment' + outcome + '_ds'] \
-            = data['programs'][u'program_prop_treatment' + outcome]
+            = copy.copy(data['programs'][u'program_prop_treatment' + outcome])
 
     # Populate MDR and XDR data from outcomes dictionary into program dictionary
     for strain in [u'_mdr', u'_xdr']:
@@ -617,7 +618,7 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
     # Probably temporary code to assign the same treatment outcomes to XDR-TB as for inappropriate
     for outcome in [u'_success', u'_death']:
         data['programs'][u'program_prop_treatment' + outcome + u'_inappropriate'] \
-            = data['programs'][u'program_prop_treatment' + outcome + u'_xdr']
+            = copy.copy(data['programs'][u'program_prop_treatment' + outcome + u'_xdr'])
 
     # Final rounds of tidying programmatic data
 

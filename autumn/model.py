@@ -437,7 +437,8 @@ class ConsolidatedModel(BaseModel):
                 self.set_scaleup_fn(program,
                                     scale_up_function(self.data['programs'][program].keys(),
                                                       self.data['programs'][program].values(),
-                                                      5, 1., 0., 1.))
+                                                      5, self.data['attributes']['fitting_smoothness'],
+                                                      0., 1.))
 
     def find_treatment_rates_scaleups(self):
 

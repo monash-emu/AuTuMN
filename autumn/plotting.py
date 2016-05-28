@@ -345,6 +345,9 @@ def plot_outputs(model, labels, left_xlimit, png=None):
         )
         axis_labels.append(full_names[var_label])
 
+    ax.plot(model.times[left_xlimit_index: right_xlimit_index],
+            model.rate_notifications[left_xlimit_index: right_xlimit_index])
+
     set_axes_props(ax, 'Year', yaxis_label, "Main epidemiological outputs", True,
         axis_labels)
     save_png(png)

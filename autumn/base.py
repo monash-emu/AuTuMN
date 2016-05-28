@@ -226,11 +226,13 @@ class BaseModel():
         self.var_labels = None
         self.soln_array = None
         self.var_array = None
+        self.scaleup_array = None
         self.flow_array = None
         self.fraction_array = None
         assert not self.times is None, "Haven't set times yet"
 
     def integrate_scipy(self):
+
         self.init_run()
         init_y = self.get_init_list()
         derivative = self.make_derivate_fn()
@@ -298,12 +300,18 @@ class BaseModel():
             if self.var_labels is None:
                 self.var_labels = self.vars.keys()
                 self.var_array = numpy.zeros((n_time, len(self.var_labels)))
+                self.scaleup_array = numpy.zeros((n_time, len(self.scaleup_fns)))
                 self.flow_array = numpy.zeros((n_time, len(self.labels)))
 
             for i_label, label in enumerate(self.var_labels):
                 self.var_array[i, i_label] = self.vars[label]
             for i_label, label in enumerate(self.labels):
                 self.flow_array[i, i_label] = self.flows[label]
+
+            self.scaleup_list = []
+            for i_label, label in enumerate(self.scaleup_fns):
+                self.scaleup_array[i, i_label] = self.scaleup_fns[label](self.time)
+                self.scaleup_list += [label]
 
         self.fraction_array = numpy.zeros((n_time, len(self.labels)))
         self.fraction_soln = {}

@@ -419,8 +419,12 @@ class ConsolidatedModel(BaseModel):
 
         # Set the amplification scale-up function
         self.set_scaleup_fn("tb_proportion_amplification",
-                            scale_up_function([self.start_time, 1950., 1960.],
-                                              [0., 0., self.params['tb_proportion_amplification']]))
+                            scale_up_function([self.start_time,
+                                               self.data['miscellaneous']['timepoint_introduce_mdr'] - 5.,
+                                               self.data['miscellaneous']['timepoint_introduce_mdr'] + 5.],
+                                              [0.,
+                                               0.,
+                                               self.params['tb_proportion_amplification']]))
 
     def find_nontreatment_rates_params(self):
 

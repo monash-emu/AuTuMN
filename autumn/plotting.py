@@ -462,6 +462,7 @@ def plot_scaleup_fns(model, functions, png=None, start_time=1900.):
                    'Scaling parameter values', True, functions)
     save_png(png)
 
+
 def plot_scaleup_fns_against_data(model, function, png=None, start_time=1900.):
 
     end_time = 2015.

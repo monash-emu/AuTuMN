@@ -156,15 +156,23 @@ class BaseModel():
             self.flows[label] -= val
             self.vars["rate_infection_death"] += val
 
+    def prepare_vars_flows(self):
+
+        # This function collects some other functions that
+        # previously led to a bug because not all of them
+        # were called in the diagnostics round.
+        # (Written by James, not Bosco)
+        self.vars.clear()
+        self.calculate_vars_of_scaleup_fns()
+        self.calculate_vars()
+        self.calculate_flows()
+
     def make_derivate_fn(self):
 
         def derivative_fn(y, t):
             self.time = t
             self.compartments = self.convert_list_to_compartments(y)
-            self.vars.clear()
-            self.calculate_vars_of_scaleup_fns()
-            self.calculate_vars()
-            self.calculate_flows()
+            self.prepare_vars_flows()
             flow_vector = self.convert_compartments_to_list(self.flows)
             self.checks()
             return flow_vector
@@ -239,10 +247,7 @@ class BaseModel():
             for label in self.labels:
                 self.compartments[label] = self.compartment_soln[label][i]
 
-            self.vars.clear()
-            self.calculate_vars_of_scaleup_fns()
-            self.calculate_vars()
-            self.calculate_flows()
+            self.prepare_vars_flows()
             self.calculate_output_vars()
 
             # only set after self.calculate_diagnostic_vars is

@@ -402,6 +402,8 @@ class ConsolidatedModel(BaseModel):
 
         self.find_amplification_scaleup()
 
+        self.find_organ_scaleup()
+
         self.set_population_death_rate("demo_rate_death")
 
     ##################################################################
@@ -463,6 +465,10 @@ class ConsolidatedModel(BaseModel):
                                               [0.,
                                                0.,
                                                self.params['tb_proportion_amplification']]))
+
+    def find_organ_scaleup(self):
+
+        print()
 
     def find_nontreatment_rates_params(self):
 

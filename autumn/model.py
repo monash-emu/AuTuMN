@@ -330,6 +330,35 @@ class ConsolidatedModel(BaseModel):
                                self.data['notifications'][u'prop_new_sn'][arbitray_index]
                                + self.data['notifications'][u'prop_new_ep'][arbitray_index])
 
+    def define_age_structure(self):
+
+        # Work out age-groups from list of breakpoints
+        self.agegroups = []
+
+        # If age-group breakpoints are supplied
+        if len(self.age_breakpoints) > 0:
+            for i in range(len(self.age_breakpoints)):
+                if i == 0:
+
+                    # The first age-group
+                    self.agegroups += \
+                        ["_age0to" + str(self.age_breakpoints[i])]
+                else:
+
+                    # Middle age-groups
+                    self.agegroups += \
+                        ["_age" + str(self.age_breakpoints[i - 1]) +
+                         "to" + str(self.age_breakpoints[i])]
+
+            # Last age-group
+            self.agegroups += ["_age" + str(self.age_breakpoints[len(self.age_breakpoints) - 1]) + "up"]
+
+        # Otherwise
+        else:
+            # List consisting of one empty string required
+            # for the methods that iterate over strains
+            self.agegroups += [""]
+
     ############################################################
     # General underlying methods for use by other methods
 
@@ -378,6 +407,15 @@ class ConsolidatedModel(BaseModel):
     ##################################################################
     # The methods that process_parameters calls to set parameters and
     # scale-up functions
+
+    def find_ageing_rates(self):
+
+        # Calculate ageing rates as the reciprocal of the width of the age bracket
+        for agegroup in self.agegroups:
+            if "up" not in agegroup:
+                self.set_parameter("ageing_rate" + agegroup, 1. / (
+                    float(agegroup[agegroup.find("to") + 2:]) -
+                    float(agegroup[agegroup.find("age") + 3: agegroup.find("to")])))
 
     def find_natural_history_params(self):
 
@@ -721,6 +759,16 @@ class ConsolidatedModel(BaseModel):
                 "susceptible_fully" + comorbidity + self.agegroups[0], "births_unvac")
             self.set_var_entry_rate_flow(
                 "susceptible_vac" + comorbidity + self.agegroups[0], "births_vac")
+
+    def set_ageing_flows(self):
+
+        # Set simple ageing flows for any number of strata
+        for label in self.labels:
+            for number_agegroup in range(len(self.agegroups)):
+                if self.agegroups[number_agegroup] in label and number_agegroup < len(self.agegroups) - 1:
+                    self.set_fixed_transfer_rate_flow(
+                        label, label[0: label.find("_age")] + self.agegroups[number_agegroup + 1],
+                               "ageing_rate" + self.agegroups[number_agegroup])
 
     def set_infection_flows(self):
 

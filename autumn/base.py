@@ -288,6 +288,8 @@ class BaseModel():
             for label in self.labels:
                 self.compartments[label] = self.compartment_soln[label][i]
 
+            self.vars.clear()
+            self.calculate_vars_of_scaleup_fns()
             self.calculate_vars()
             self.calculate_flows()
             self.calculate_output_vars()

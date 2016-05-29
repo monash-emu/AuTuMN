@@ -989,7 +989,7 @@ class ConsolidatedModel(BaseModel):
         # Initialise scalars
         rate_incidence = 0.
         rate_mortality = 0.
-        # self.rate_notifications = []
+        rate_notifications = 0.
 
         # Incidence
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
@@ -999,19 +999,12 @@ class ConsolidatedModel(BaseModel):
             rate_incidence \
             / self.vars["population"] * 1E5
 
-        # # Notifications
-        # for from_label, to_label, rate in self.var_transfer_rate_flows:
-        #     if 'active' in from_label and 'detect' in to_label:
-        #         for i in range(len(self.var_labels_jt)):
-        #             if self.var_labels_jt[i] == rate:
-        #                 detect_index = i
-        #             if self.var_labels_jt[i] == 'population':
-        #                 population_index = i
-        #         for i in range(len(self.times)):
-        #             self.rate_notifications += [self.compartment_soln[from_label][i] \
-        #                                         * self.var_array_jt[i, detect_index] \
-        #                                         / self.var_array_jt[i, population_index] \
-        #                                         * 1E5]
+        # Notifications
+        for from_label, to_label, rate in self.var_transfer_rate_flows:
+            if 'active' in from_label and 'detect' in to_label:
+                rate_notifications += self.compartments[from_label] * self.vars[rate]
+        self.vars["notifications"] = \
+            rate_notifications / self.vars["population"] * 1E5
 
         # Mortality
         for from_label, rate in self.fixed_infection_death_rate_flows:
@@ -1031,24 +1024,6 @@ class ConsolidatedModel(BaseModel):
                     / self.vars["population"] * 1E5)
 
         self.calculate_bystrain_output_vars()
-
-    def calculate_notifications(self):
-
-        self.rate_notifications = []
-
-        # Notifications
-        for from_label, to_label, rate in self.var_transfer_rate_flows:
-            if 'active' in from_label and 'detect' in to_label:
-                for i in range(len(self.var_labels_jt)):
-                    if self.var_labels_jt[i] == rate:
-                        detect_index = i
-                    if self.var_labels_jt[i] == 'population':
-                        population_index = i
-                for i in range(len(self.times)):
-                    self.rate_notifications += [self.compartment_soln[from_label][i] \
-                                                * self.var_array_jt[i, detect_index] \
-                                                / self.var_array_jt[i, population_index] \
-                                                * 1E5]
 
     def calculate_bystrain_output_vars(self):
 
@@ -1172,8 +1147,6 @@ class ConsolidatedModel(BaseModel):
             compartment_type_bystrain_denominator)
 
         self.calculate_subgroup_diagnostics()
-
-        self.calculate_notifications()
 
     def calculate_subgroup_diagnostics(self):
 

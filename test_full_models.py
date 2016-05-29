@@ -114,12 +114,12 @@ for n_organs in data['attributes']['n_organs']:
                             #                 "notifications_ds", "notifications_mdr"],
                             #         data['attributes']['start_time'], base + '.rate_bystrain_outputs.png')
                             autumn.plotting.plot_outputs(
-                                model, ["incidence", "mortality", "prevalence"],
+                                model, ["incidence", "mortality", "prevalence", "notifications"],
                                 data['attributes']['start_time'], base + '.rate_outputs.png')
-                            # autumn.plotting.plot_outputs_against_gtb(
-                            #     model, "incidence",
-                            #     data['attributes']['recent_time'], base + '.rate_outputs_gtb.png',
-                            #     data)
+                            autumn.plotting.plot_outputs_against_gtb(
+                                model, "incidence",
+                                data['attributes']['recent_time'], base + '.rate_outputs_gtb.png',
+                                data)
                             # if n_strains >= 2:
                             #     autumn.plotting.plot_outputs(
                             #         model, ["incidence_ds", "incidence_mdr", "mortality_ds", "mortality_mdr", "prevalence_ds", "prevalence_mdr",

@@ -563,6 +563,8 @@ class ConsolidatedModel(BaseModel):
 
         self.calculate_force_infection_vars()
 
+        self.calculate_progression_vars()
+
         self.calculate_detect_missed_vars()
 
         self.calculate_proportionate_detection_vars()
@@ -612,6 +614,29 @@ class ConsolidatedModel(BaseModel):
                 self.params["tb_multiplier_bcg_protection"] \
                 * self.vars["rate_force" + strain]
 
+    def calculate_progression_vars(self):
+
+        """
+        Calculate vars for the remainder of progressions.
+        Note that the vars for the smear-positive and smear-negative proportions
+        have already been calculated. However, all progressions have to go somewhere,
+        so need to calculate the remaining proportions.
+        """
+
+        # If unstratified (self.organ_status should have length 0, but will work for length 1)
+        if len(self.organ_status) < 2:
+            self.vars['tb_proportion_smearpos'] = 1.
+
+        # Stratified into smear-positive and smear-negative
+        elif len(self.organ_status) == 2:
+            self.vars['tb_proportion_smearneg'] = \
+                1. - self.vars['tb_proportion_smearpos']
+
+        # Fully stratified into smear-positive, smear-negative and extra-pulmonary
+        elif len(self.organ_status) > 2:
+            self.vars['tb_proportion_extrapul'] = \
+                1. - self.vars['tb_proportion_smearpos'] - self.vars['tb_proportion_smearneg']
+
     def calculate_detect_missed_vars(self):
 
         """"
@@ -642,7 +667,7 @@ class ConsolidatedModel(BaseModel):
         # Missed
         self.vars["program_rate_missed"] = \
             self.vars["program_rate_detect"] \
-            * (1. - self. vars["program_prop_algorithm_sensitivity"]) \
+            * (1. - self.vars["program_prop_algorithm_sensitivity"]) \
             / self.vars["program_prop_algorithm_sensitivity"]
         # For any divisions by zero
         if numpy.isnan(self.vars['program_rate_missed']):

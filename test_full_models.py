@@ -148,7 +148,9 @@ for n_organs in data['attributes']['n_organs']:
                                                               "program_prop_secondline_dst",
                                                               # "program_proportion_success",
                                                               # "program_proportion_death",
-                                                              "tb_proportion_amplification"],
+                                                              "tb_proportion_amplification",
+                                                              'tb_proportion_smearpos',
+                                                              'tb_proportion_smearneg'],
                                                              base + '.scaleups.png', data['attributes']['start_time'])
                             # for program in model.data['programs']:
                             #     if 'prop' in program:

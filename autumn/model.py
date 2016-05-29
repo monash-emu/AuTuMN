@@ -468,7 +468,30 @@ class ConsolidatedModel(BaseModel):
 
     def find_organ_scaleup(self):
 
-        print()
+        """
+        Work out the scale-up function for progression to disease by organ status.
+        This should only need to be done for smear-positive and smear-negative at most,
+        as the remaining proportion will be calculated as one minus these proportions.
+        """
+
+        # Use lists with the nan-s removed
+        year = []
+        smearpos = []
+        smearneg = []
+        for i in range(len(self.data['notifications'][u'prop_new_sp'])):
+            if not numpy.isnan(self.data['notifications'][u'prop_new_sp'][i]):
+                year += [self.data['notifications'][u'year'][i]]
+                smearpos += [self.data['notifications'][u'prop_new_sp'][i]]
+                smearneg += [self.data['notifications'][u'prop_new_sn'][i]]
+
+        # Currently setting a scale-up function with an extra point added at the
+        # model start time that is equal to the first (non-nan) proportion in the list.
+        self.set_scaleup_fn('tb_proportion_smearpos',
+                            scale_up_function([self.start_time] + year,
+                                              [smearpos[0]] + smearpos))
+        self.set_scaleup_fn('tb_proportion_smearneg',
+                            scale_up_function([self.start_time] + year,
+                                              [smearneg[0]] + smearneg))
 
     def find_nontreatment_rates_params(self):
 

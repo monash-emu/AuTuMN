@@ -213,19 +213,6 @@ class BaseModel():
             self.vars.clear()
             self.calculate_vars_of_scaleup_fns()
             self.calculate_vars()
-
-            # This is James's dodgy code, that might not be in the right place.
-            # However, it seems to function better than what was present before.
-            if self.var_array_jt is None:
-                self.var_array_jt = numpy.zeros((len(self.times), len(self.vars)))
-                self.var_labels_jt = []
-            for i_var, var in enumerate(self.vars):
-                if var not in self.var_labels_jt:
-                    self.var_labels_jt += [var]
-                for i in range(len(self.times)):
-                    if self.times[i] == t:
-                        self.var_array_jt[i, i_var] = self.vars[var]
-
             self.calculate_flows()
             flow_vector = self.convert_compartments_to_list(self.flows)
             self.checks()
@@ -239,7 +226,6 @@ class BaseModel():
         self.var_labels = None
         self.soln_array = None
         self.var_array = None
-        self.var_array_jt = None
         self.scaleup_array = None
         self.flow_array = None
         self.fraction_array = None
@@ -251,15 +237,16 @@ class BaseModel():
         init_y = self.get_init_list()
         derivative = self.make_derivate_fn()
         self.soln_array = odeint(derivative, init_y, self.times)
+
         self.calculate_diagnostics()
 
     def integrate_explicit(self, min_dt=0.05):
-
         self.init_run()
         y = self.get_init_list()
         n_compartment = len(y)
         n_time = len(self.times)
         self.soln_array = numpy.zeros((n_time, n_compartment))
+
         derivative = self.make_derivate_fn()
         time = self.times[0]
         self.soln_array[0, :] = y
@@ -274,6 +261,7 @@ class BaseModel():
                     time = new_time
                 for i in range(n_compartment):
                     y[i] = y[i] + dt * f[i]
+
             if i_time < n_time - 1:
                 self.soln_array[i_time+1,:] = y
 

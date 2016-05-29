@@ -999,6 +999,20 @@ class ConsolidatedModel(BaseModel):
             rate_incidence \
             / self.vars["population"] * 1E5
 
+        # # Notifications
+        # for from_label, to_label, rate in self.var_transfer_rate_flows:
+        #     if 'active' in from_label and 'detect' in to_label:
+        #         for i in range(len(self.var_labels_jt)):
+        #             if self.var_labels_jt[i] == rate:
+        #                 detect_index = i
+        #             if self.var_labels_jt[i] == 'population':
+        #                 population_index = i
+        #         for i in range(len(self.times)):
+        #             self.rate_notifications += [self.compartment_soln[from_label][i] \
+        #                                         * self.var_array_jt[i, detect_index] \
+        #                                         / self.var_array_jt[i, population_index] \
+        #                                         * 1E5]
+
         # Mortality
         for from_label, rate in self.fixed_infection_death_rate_flows:
             rate_mortality \

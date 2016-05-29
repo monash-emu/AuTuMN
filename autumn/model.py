@@ -1280,3 +1280,16 @@ class ConsolidatedModel(BaseModel):
                             summed_denominator += self.compartment_soln[label]
 
         return summed_soln, summed_denominator, compartment_types_bycategory
+
+    ##################################################################
+    # Methods to call base integration function depending on the type of
+    # integration required
+
+    def integrate(self):
+
+        if self.data['attributes'][u'integration'] == u'explicit':
+            self.integrate_explicit()
+        elif self.data['attributes'][u'integration'] == u'scipy':
+            self.integrate_scipy()
+
+

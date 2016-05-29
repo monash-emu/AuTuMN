@@ -61,7 +61,7 @@ for n_organs in data['attributes']['n_organs']:
                                 model.set_parameter(key, value)
 
                             model.make_times(data['attributes']['start_time'], 2015.1, 0.1)
-                            model.integrate_explicit()
+                            model.integrate()
 
                             # Only make a flow-diagram if the model isn't overly complex
                             if n_organs + n_strains + n_comorbidities <= 5:

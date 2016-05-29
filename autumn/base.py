@@ -213,25 +213,27 @@ class BaseModel():
             self.vars.clear()
             self.calculate_vars_of_scaleup_fns()
             self.calculate_vars()
-
-            # This is James's dodgy code, that might not be in the right place.
-            # However, it seems to function better than what was present before.
-            if self.var_array_jt is None:
-                self.var_array_jt = numpy.zeros((len(self.times), len(self.vars)))
-                self.var_labels_jt = []
-            for i_var, var in enumerate(self.vars):
-                if var not in self.var_labels_jt:
-                    self.var_labels_jt += [var]
-                for i in range(len(self.times)):
-                    if self.times[i] == t:
-                        self.var_array_jt[i, i_var] = self.vars[var]
-
+            self.populate_output_arrays(t)
             self.calculate_flows()
             flow_vector = self.convert_compartments_to_list(self.flows)
             self.checks()
             return flow_vector
 
         return derivative_fn
+
+    def populate_output_arrays(self, t):
+
+        # This is James's dodgy code, that might not be in the right place.
+        # However, it seems to function better than what was present before.
+        if self.var_array_jt is None:
+            self.var_array_jt = numpy.zeros((len(self.times), len(self.vars)))
+            self.var_labels_jt = []
+        for i_var, var in enumerate(self.vars):
+            if var not in self.var_labels_jt:
+                self.var_labels_jt += [var]
+            for i in range(len(self.times)):
+                if self.times[i] == t:
+                    self.var_array_jt[i, i_var] = self.vars[var]
 
     def init_run(self):
         self.process_parameters()

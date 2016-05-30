@@ -625,7 +625,7 @@ class ConsolidatedModel(BaseModel):
 
         # If unstratified (self.organ_status should have length 0, but will work for length 1)
         if len(self.organ_status) < 2:
-            self.vars['tb_proportion_smearpos'] = 1.
+            self.vars['tb_proportion'] = 1.
 
         # Stratified into smear-positive and smear-negative
         elif len(self.organ_status) == 2:
@@ -636,6 +636,12 @@ class ConsolidatedModel(BaseModel):
         elif len(self.organ_status) > 2:
             self.vars['tb_proportion_extrapul'] = \
                 1. - self.vars['tb_proportion_smearpos'] - self.vars['tb_proportion_smearneg']
+
+        # Determine variable progression rates
+        for organ in self.organ_status:
+            for timing in ['_early', '_late']:
+                self.vars['tb_rate' + timing + '_progression' + organ] \
+                    = self.vars['tb_proportion' + organ] * self.params['tb_rate' + timing + '_progression']
 
     def calculate_detect_missed_vars(self):
 
@@ -795,6 +801,8 @@ class ConsolidatedModel(BaseModel):
 
         self.set_infection_flows()
 
+        self.set_progression_flows()
+
         self.set_natural_history_flows()
 
         self.set_fixed_programmatic_flows()
@@ -851,7 +859,7 @@ class ConsolidatedModel(BaseModel):
                         "latent_early" + strain + comorbidity + agegroup,
                         "rate_force_weak" + strain)
 
-    def set_natural_history_flows(self):
+    def set_progression_flows(self):
 
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
@@ -862,21 +870,29 @@ class ConsolidatedModel(BaseModel):
                             "latent_early" + strain + comorbidity + agegroup,
                             "latent_late" + strain + comorbidity + agegroup,
                             "tb_rate_stabilise")
+
                         for organ in self.organ_status:
 
                             # Early progression
-                            self.set_fixed_transfer_rate_flow(
+                            self.set_var_transfer_rate_flow(
                                 "latent_early" + strain + comorbidity + agegroup,
                                 "active" + organ + strain + comorbidity + agegroup,
                                 "tb_rate_early_progression" + organ)
 
                             # Late progression
-                            self.set_fixed_transfer_rate_flow(
+                            self.set_var_transfer_rate_flow(
                                 "latent_late" + strain + comorbidity + agegroup,
                                 "active" + organ + strain + comorbidity + agegroup,
                                 "tb_rate_late_progression" + organ)
 
-                            # Recovery, base compartments
+    def set_natural_history_flows(self):
+
+        for agegroup in self.agegroups:
+            for comorbidity in self.comorbidities:
+                for strain in self.strains:
+                    for organ in self.organ_status:
+
+                        # Recovery, base compartments
                             self.set_fixed_transfer_rate_flow(
                                 "active" + organ + strain + comorbidity + agegroup,
                                 "latent_late" + strain + comorbidity + agegroup,
@@ -1098,12 +1114,11 @@ class ConsolidatedModel(BaseModel):
         rate_notifications = 0.
 
         # Incidence
-        for from_label, to_label, rate in self.fixed_transfer_rate_flows:
+        for from_label, to_label, rate in self.var_transfer_rate_flows:
             if 'latent' in from_label and 'active' in to_label:
-                rate_incidence += self.compartments[from_label] * rate
+                rate_incidence += self.compartments[from_label] * self.vars[rate]
         self.vars["incidence"] = \
-            rate_incidence \
-            / self.vars["population"] * 1E5
+            rate_incidence / self.vars["population"] * 1E5
 
         # Notifications
         for from_label, to_label, rate in self.var_transfer_rate_flows:
@@ -1151,10 +1166,10 @@ class ConsolidatedModel(BaseModel):
             rate_notifications[strain] = 0.
 
             # Incidence
-            for from_label, to_label, rate in self.fixed_transfer_rate_flows:
+            for from_label, to_label, rate in self.var_transfer_rate_flows:
                 if 'latent' in from_label and 'active' in to_label and strain in to_label:
                     rate_incidence[strain] \
-                        += self.compartments[from_label] * rate
+                        += self.compartments[from_label] * self.vars[rate]
             self.vars["incidence" + strain] \
                 = rate_incidence[strain] / self.vars["population"] * 1E5
 

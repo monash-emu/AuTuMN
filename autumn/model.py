@@ -464,7 +464,9 @@ class ConsolidatedModel(BaseModel):
                                                self.data['miscellaneous']['timepoint_introduce_mdr'] + 5.],
                                               [0.,
                                                0.,
-                                               self.params['tb_proportion_amplification']]))
+                                               self.params['tb_proportion_amplification']],
+                                              5, self.data['attributes']['fitting_smoothness'],
+                                              0., 1.))
 
     def find_organ_scaleup(self):
 
@@ -488,10 +490,14 @@ class ConsolidatedModel(BaseModel):
         # model start time that is equal to the first (non-nan) proportion in the list.
         self.set_scaleup_fn('tb_proportion_smearpos',
                             scale_up_function([self.start_time] + year,
-                                              [smearpos[0]] + smearpos))
+                                              [smearpos[0]] + smearpos,
+                                              5, self.data['attributes']['fitting_smoothness'],
+                                              0., 1.))
         self.set_scaleup_fn('tb_proportion_smearneg',
                             scale_up_function([self.start_time] + year,
-                                              [smearneg[0]] + smearneg))
+                                              [smearneg[0]] + smearneg,
+                                              5, self.data['attributes']['fitting_smoothness'],
+                                              0., 1.))
 
     def find_nontreatment_rates_params(self):
 

@@ -488,16 +488,13 @@ class ConsolidatedModel(BaseModel):
 
         # Currently setting a scale-up function with an extra point added at the
         # model start time that is equal to the first (non-nan) proportion in the list.
-        self.set_scaleup_fn('tb_proportion_smearpos',
-                            scale_up_function([self.start_time] + year,
-                                              [smearpos[0]] + smearpos,
-                                              5, self.data['attributes']['organ_smoothness'],
-                                              0., 1.))
-        self.set_scaleup_fn('tb_proportion_smearneg',
-                            scale_up_function([self.start_time] + year,
-                                              [smearneg[0]] + smearneg,
-                                              5, self.data['attributes']['organ_smoothness'],
-                                              0., 1.))
+        # (Note that eval(organ_data) turns the string into the variable name.)
+        for organ_data in ['smearpos', 'smearneg']:
+            self.set_scaleup_fn('tb_proportion_' + organ_data,
+                                scale_up_function([self.start_time] + year,
+                                                  [eval(organ_data)[0]] + eval(organ_data),
+                                                  5, self.data['attributes']['organ_smoothness'],
+                                                  0., 1.))
 
     def find_nontreatment_rates_params(self):
 

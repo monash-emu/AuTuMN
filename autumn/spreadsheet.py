@@ -41,10 +41,10 @@ def parse_year_data(these_data, blank, endcolumn):
         return year_vals
 
 
-def adjust_country_name(country_name, data_item):
+def adjust_country_name(country_name):
 
     adjusted_country_name = country_name
-    if country_name == u'Philippines' and data_item == 'bcg':
+    if country_name == u'Philippines':
         adjusted_country_name = country_name + u' (the)'
     return adjusted_country_name
 
@@ -123,7 +123,7 @@ class BcgCoverageSheetReader():
 
         if row[0] == self.first_cell:
             self.parlist = parse_year_data(row, '', len(row))
-        elif row[self.column_for_keys] == self.country_to_read\
+        elif row[self.column_for_keys] == adjust_country_name(self.country_to_read)\
                 or self.key == 'programs':
             for i in range(self.start_col, len(row)):
                 if type(row[i]) == float:
@@ -658,7 +658,7 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
 
 if __name__ == "__main__":
 
-    country = u'Fiji'
+    country = u'Philippines'
 
     keys_of_sheets_to_read = [
         'bcg', 'birth_rate', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'programs', 'tb',
@@ -666,4 +666,5 @@ if __name__ == "__main__":
     data = read_and_process_data(False, keys_of_sheets_to_read, country)
 
     print("Time elapsed in running script is " + str(datetime.datetime.now() - spreadsheet_start_realtime))
+
 

@@ -233,14 +233,6 @@ class ConsolidatedModel(BaseModel):
                                     self.set_compartment(compartment +
                                                          organ + strain + comorbidity + agegroup, 0.)
 
-        # Some defaults initial compartment defaults if None given as the compartment dictionary
-        if compartment_dict is None:
-            compartment_dict = {
-                "susceptible_fully":
-                    2e7,
-                "active":
-                    3.}
-
         # Populate input_compartments
         # Initialise to DS-TB or no strain if single-strain model
         default_start_strain = "_ds"
@@ -249,26 +241,26 @@ class ConsolidatedModel(BaseModel):
         # The equal splits may need to be adjusted, but the important thing is not to
         # initialise multiple strains too early, so that MDR-TB doesn't overtake the model
         for compartment in self.compartment_types:
-            if compartment in compartment_dict:
+            if compartment in self.data['attributes']['start_compartments']:
                 for agegroup in self.agegroups:
                     for comorbidity in self.comorbidities:
                         if "susceptible_fully" in compartment:
                             # Split equally by comorbidities and age-groups
                             self.set_compartment(compartment + comorbidity + agegroup,
-                                                 compartment_dict[compartment]
+                                                 self.data['attributes']['start_compartments'][compartment]
                                                  / len(self.comorbidities)
                                                  / len(self.agegroups))
                         elif "latent" in compartment:
                             # Assign all to DS-TB, split equally by comorbidities and age-groups
                             self.set_compartment(compartment + default_start_strain + comorbidity + agegroup,
-                                                 compartment_dict[compartment]
+                                                 self.data['attributes']['start_compartments'][compartment]
                                                  / len(self.comorbidities)
                                                  / len(self.agegroups))
                         else:
                             for organ in self.organ_status:
                                 self.set_compartment(compartment +
                                                      organ + default_start_strain + comorbidity + agegroup,
-                                                     compartment_dict[compartment]
+                                                     self.data['attributes']['start_compartments'][compartment]
                                                      / len(self.organ_status)  # Split equally by organ statuses,
                                                      / len(self.comorbidities)  # split equally by comorbidities
                                                      / len(self.agegroups))  # and split equally by age-groups

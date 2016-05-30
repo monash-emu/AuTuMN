@@ -234,6 +234,7 @@ class ModelAttributesReader(FixedParametersReader):
 
     def __init__(self, country_to_read):
         self.data = {}
+        self.data['start_compartments'] = {}
         self.tab_name = 'model_attributes'
         self.key = 'attributes'
         self.parlist = []
@@ -266,6 +267,10 @@ class ModelAttributesReader(FixedParametersReader):
             for i in range(1, len(row)):
                 if not row[i] == '':
                     self.data[row[0]] += [bool(row[i])]
+
+        # For starting compartments
+        elif u'susceptible' in row[0] or u'active' in row[0]:
+            self.data['start_compartments'][row[0]] = float(row[1])
 
 
 class ProgramReader():
@@ -637,8 +642,12 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
             del data['programs'][program][u'load_data']
 
         # Remove any extraneous nans from the program data
+        # and cap values
         nan_indices = []
         for i in data['programs'][program]:
+            # This statement ensures no programs go above 100%
+            if data['programs'][program][i] > 100:
+                data['programs'][program][i] = 98.
             if numpy.isnan(data['programs'][program][i]):
                 nan_indices += [i]
         for i in nan_indices:

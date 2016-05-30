@@ -246,11 +246,11 @@ class ModelAttributesReader(FixedParametersReader):
     def parse_row(self, row):
 
         # For the calendar year times
-        if u'time' in row[0] or u'fitting' in row[0]:
+        if u'time' in row[0] or u'smoothness' in row[0]:
             self.data[row[0]] = float(row[1])
 
         # For the integration
-        if u'integration' in row[0]:
+        elif u'integration' in row[0]:
             self.data[row[0]] = row[1]
 
         # For the model stratifications

@@ -250,6 +250,9 @@ class ModelAttributesReader(FixedParametersReader):
         if u'time' in row[0] or u'smoothness' in row[0]:
             self.data[row[0]] = float(row[1])
 
+        elif u'fitting' in row[0]:
+            self.data[row[0]] = int(row[1])
+
         # For the integration
         elif u'integration' in row[0]:
             self.data[row[0]] = row[1]
@@ -658,7 +661,7 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
 
 if __name__ == "__main__":
 
-    country = u'Philippines'
+    country = u'Fiji'
 
     keys_of_sheets_to_read = [
         'bcg', 'birth_rate', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'programs', 'tb',

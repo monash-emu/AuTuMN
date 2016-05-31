@@ -457,7 +457,7 @@ class ConsolidatedModel(BaseModel):
                                               [0.,
                                                0.,
                                                self.params['tb_proportion_amplification']],
-                                              5, self.data['attributes']['organ_smoothness'],
+                                              self.data['attributes'][u'fitting_method'], self.data['attributes']['organ_smoothness'],
                                               0., 1.))
 
     def find_organ_scaleup(self):
@@ -485,7 +485,7 @@ class ConsolidatedModel(BaseModel):
             self.set_scaleup_fn('tb_proportion_' + organ_data,
                                 scale_up_function([self.start_time] + year,
                                                   [eval(organ_data)[0]] + eval(organ_data),
-                                                  5, self.data['attributes']['organ_smoothness'],
+                                                  self.data['attributes'][u'fitting_method'], self.data['attributes']['organ_smoothness'],
                                                   0., 1.))
 
     def find_nontreatment_rates_params(self):
@@ -503,7 +503,7 @@ class ConsolidatedModel(BaseModel):
                 self.set_scaleup_fn(program,
                                     scale_up_function(self.data['programs'][program].keys(),
                                                       self.data['programs'][program].values(),
-                                                      5, self.data['attributes']['program_smoothness'],
+                                                      self.data['attributes'][u'fitting_method'], self.data['attributes']['program_smoothness'],
                                                       0., 1))
 
     def find_treatment_rates_scaleups(self):
@@ -533,13 +533,13 @@ class ConsolidatedModel(BaseModel):
                 "program_proportion_success" + strain,
                 scale_up_function(self.data['programs'][u'program_prop_treatment_success' + strain].keys(),
                                   self.data['programs'][u'program_prop_treatment_success' + strain].values(),
-                                  5, self.data['attributes']['program_smoothness'],
+                                  self.data['attributes'][u'fitting_method'], self.data['attributes']['program_smoothness'],
                                   0., 1.))
             self.set_scaleup_fn(
                 "program_proportion_death" + strain,
                 scale_up_function(self.data['programs'][u'program_prop_treatment_death' + strain].keys(),
                                   self.data['programs'][u'program_prop_treatment_death' + strain].values(),
-                                  5, self.data['attributes']['program_smoothness'],
+                                  self.data['attributes'][u'fitting_method'], self.data['attributes']['program_smoothness'],
                                   0., 1.))
 
     ##################################################################

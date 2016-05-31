@@ -504,7 +504,7 @@ class ConsolidatedModel(BaseModel):
                                     scale_up_function(self.data['programs'][program].keys(),
                                                       self.data['programs'][program].values(),
                                                       5, self.data['attributes']['program_smoothness'],
-                                                      0., 1.))
+                                                      0., 1))
 
     def find_treatment_rates_scaleups(self):
 
@@ -532,11 +532,15 @@ class ConsolidatedModel(BaseModel):
             self.set_scaleup_fn(
                 "program_proportion_success" + strain,
                 scale_up_function(self.data['programs'][u'program_prop_treatment_success' + strain].keys(),
-                                  self.data['programs'][u'program_prop_treatment_success' + strain].values()))
+                                  self.data['programs'][u'program_prop_treatment_success' + strain].values(),
+                                  5, self.data['attributes']['program_smoothness'],
+                                  0., 1.))
             self.set_scaleup_fn(
                 "program_proportion_death" + strain,
                 scale_up_function(self.data['programs'][u'program_prop_treatment_death' + strain].keys(),
-                                  self.data['programs'][u'program_prop_treatment_death' + strain].values()))
+                                  self.data['programs'][u'program_prop_treatment_death' + strain].values(),
+                                  5, self.data['attributes']['program_smoothness'],
+                                  0., 1.))
 
     ##################################################################
     # Methods that calculate variables to be used in calculating flows

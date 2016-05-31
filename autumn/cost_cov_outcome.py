@@ -14,6 +14,12 @@ from numpy import exp
 import numpy as np
 import os
 from autumn.spreadsheet import read_and_process_data
+import plotly.plotly as py
+import plotly.graph_objs as go
+
+import scipy.optimize
+
+
 
 """
 # Decide on country
@@ -131,7 +137,7 @@ def make_cost_steps(start_cost, end_cost, delta_cost):
     return steps
 
 start_cost = 0.01
-end_cost = 1e7
+end_cost = 1.5e6
 delta_cost = 100
 
 cost_values = make_cost_steps (start_cost, end_cost, delta_cost)
@@ -142,7 +148,7 @@ params_default = {
     "saturation": 0.8,
     "coverage": 0.33,
     "funding": 2.5e6,
-    "scale_up_factor": 0.5,
+    "scale_up_factor": 0.75,
     "unitcost": 20,
     "popsize": 1e5,
     "method": 1,
@@ -166,7 +172,7 @@ if prog == 7:
     outcome_fullcov = params_default["outcome_fullcov"]
 elif prog == 9:
     print("Program: treatment success MDR, Year 1986")
-    method = 2
+    method = 1
     saturation = params_default["saturation"] - 0.2
     coverage = prog_cov["program_prop_treatment_success_mdr"] / 100.
     funding = prog_cost["program_cost_treatment_success_mdr"]
@@ -211,6 +217,7 @@ fig.suptitle('Cost-coverage-outcome curve')
 plt.subplot (121)
 #fig.suptitle('Cost-coverage curve')
 plt.plot(cost_values, coverage_values, 'r', linewidth = 3)
+plt.plot(prog_cost["program_cost_treatment_success_mdr"], prog_cov["program_prop_treatment_success_mdr"]/100, 'o')
 plt.xlim([start_cost, end_cost])
 plt.ylim ([0, 1])
 plt.xlabel('$ Cost')
@@ -228,3 +235,5 @@ plt.ylabel('Outcome')
 plt.show()
 #fig.savefig('coverage_outcome.jpg')
 fig.savefig('Cost_coverage_outcome.jpg')
+
+

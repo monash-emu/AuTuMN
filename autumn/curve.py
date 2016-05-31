@@ -476,8 +476,6 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
                     if y[i] > bound_up:
                         y[i] = bound_up
 
-            print(y)
-
             # check bounds
             def cut_off(indice, bound_low, bound_up, sign):
                 if sign == -1:

@@ -465,12 +465,18 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
                 bound_up = 0.5 * (max(y) + min(y)) + 0.5 * amplitude
 
         if (bound_low is not None) or (bound_up is not None):
+            # We adjust the data so that no values go over/under the bounds
             if bound_low is not None:
-                assert min(
-                    y) >= bound_low, "y contains values < bound_low. Please adjust bound_low or remove constraint."
+                for i in range(len(x)-1):
+                    if y[i] < bound_low:
+                        y[i] = bound_low
 
             if bound_up is not None:
-                assert max(y) <= bound_up, "y contains values > bound_up. Please adjust bound_up or remove constraint."
+                for i in range(len(x)):
+                    if y[i] > bound_up:
+                        y[i] = bound_up
+
+            print(y)
 
             # check bounds
             def cut_off(indice, bound_low, bound_up, sign):
@@ -677,6 +683,8 @@ if __name__ == "__main__":
     x = (1880., 1890., 1900., 1910., 1930., 1950., 1990., 1997., 2000., 2002., 2005.)
     y = np.random.rand(len(x))
 
+
+
     f = scale_up_function(x, y, method=1)
     g = scale_up_function(x, y, method=2)
     h = scale_up_function(x, y, method=3)
@@ -691,6 +699,7 @@ if __name__ == "__main__":
     pylab.plot(x_vals, map(k, x_vals), color='purple')
     pylab.plot(x_vals, map(p, x_vals), color='orange')
     pylab.plot(x_vals, map(q, x_vals), color='cyan')
+
 
     pylab.plot(x, y, 'ro')
     pylab.show()

@@ -103,15 +103,15 @@ def truncate_data(model, left_xlimit):
     return right_xlimit_index, left_xlimit_index
 
 
-def make_default_line_styles():
-    """
-    Now inactive
-    """
-    line_styles = []
-    for line in ["-", ":", "-.", "--"]:
-        for color in "rbmgk":
-            line_styles.append(line + color)
-    return line_styles
+def make_default_line_styles(n):
+
+    # Iterate through a standard set of line styles
+    for i in range(n):
+        line_styles = []
+        for line in ["-", ":", "-.", "--"]:
+            for color in "rbmgk":
+                line_styles.append(line + color)
+        return line_styles
 
 
 def make_related_line_styles(labels, strain_or_organ):
@@ -485,34 +485,65 @@ def plot_scaleup_fns_against_data(model, function, png=None, start_time=1900.):
 
 def plot_all_scaleup_fns_against_data(model, functions, png=None, start_time=1900.):
 
-    n = 1
+    # Get some styles for the lines
+    line_styles = make_default_line_styles(len(functions))
+
+    # Iterate through functions
+    i = 1
     for program in functions:
+
+        # Only for programmatic variables
         if 'prop' in program:
+
+            # Currently just plots out to the present day
             end_time = 2015.
+
+            # Set x-values
             x_vals = numpy.linspace(start_time, end_time, 1E3)
+
+            # Initialise figure
             fig = pyplot.figure(10)
+
+            # Upper title for whole figure
             fig.suptitle('Scaling parameter values over time (calendar years)')
-            ax = fig.add_subplot(4, 4, n)
-            n += 1
+
+            # Initialise subplot areas
+            ax = fig.add_subplot(4, 4, i)
+            i += 1
+
+            # Line plot scaling parameters
             ax.plot(x_vals,
                     map(model.scaleup_fns[program],
-                        x_vals),
-                    label=program)
+                        x_vals), line_styles[i-2],
+                        label=program)
             data_to_plot = {}
-            for i in model.data['programs'][program]:
-                if i > start_time:
-                    data_to_plot[i] = model.data['programs'][program][i]
+            for j in model.data['programs'][program]:
+                if j > start_time:
+                    data_to_plot[j] = model.data['programs'][program][j]
+
+            # Scatter plot data from which they are derived
             ax.scatter(data_to_plot.keys(),
-                    data_to_plot.values())
+                        data_to_plot.values(),
+                       color=line_styles[i-2][-1],
+                       s=6)
+
+            # Adjust tick font size
             ax.set_xticks([start_time, end_time])
-            for tick in ax.xaxis.get_major_ticks():
-                tick.label.set_fontsize(6)
-            for tick in ax.yaxis.get_major_ticks():
-                tick.label.set_fontsize(5)
-            ax.legend([program[13:], 'data'], loc=2, frameon=False, prop={'size': 5})
+            for axis_to_change in [ax.xaxis, ax.yaxis]:
+                for tick in axis_to_change.get_major_ticks():
+                    tick.label.set_fontsize(4)
+
+            # Truncate parameter names depending on whether it is a
+            # treatment success/death proportion
+            if 'treatment' in program:
+                title = program[23:]
+            else:
+                title = program[13:]
+            ax.set_title(title, fontsize=6)
             save_png(png)
 
     fig.suptitle('Scale-up functions')
+
 
 def save_png(png):
     if png is not None:

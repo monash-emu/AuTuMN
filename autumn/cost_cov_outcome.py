@@ -4,20 +4,17 @@ Cost-coverage and coverage-outcome curves
 
 """
 TO DO LIST
-1. By year
-2. Like to transmission parameters
-3. Read data from spreadsheet
+1. Like to transmission parameters
+2. Read data from spreadsheet
 """
 
 import matplotlib.pyplot as plt
 from numpy import exp
 import numpy as np
+import scipy.optimize
+import logistic_fitting
 import os
 from autumn.spreadsheet import read_and_process_data
-import plotly.plotly as py
-import plotly.graph_objs as go
-
-import scipy.optimize
 
 
 
@@ -38,6 +35,7 @@ for key, value in data['programs'].items():
     #print(programs)
 """
 
+########################################################
 #Define the programs using a list of strings
 program_name = [
     "vaccination",
@@ -54,7 +52,10 @@ program_name = [
     "treatment_death_xdr"
 ]
 
+#####################################################
+#Single data point
 #Year = 1986
+
 prog_cov = {
     "program_prop_vaccination":
         0.,
@@ -69,17 +70,17 @@ prog_cov = {
     "program_prop_secondline_dst":
         0.,
     "program_prop_treatment_success":
-        50.,
+        50./100,
     "program_prop_treatment_death":
-        12.,
+        12./100,
     "program_prop_treatment_success_mdr":
-        30.,
+        30./100,
     "program_prop_treatment_death_mdr":
-        50.,
+        50./100,
     "program_prop_treatment_success_xdr":
-        15.,
+        15./100,
     "program_prop_treatment_death_xdr":
-        62.,
+        62./100,
 }
 
 prog_cost = {
@@ -109,41 +110,13 @@ prog_cost = {
         0.,
 }
 
-print(len(prog_cost))
+#Multiple data points
 
+costcost = np.array([6e5, 4.2e5, 3.5e5, 3e5, 2e5], dtype='float')
+covcov = np.array  ([0.8, 0.7,   0.6,   0.3, 0.05], dtype='float')
 
-#Logistic function for cost-coverage curve
-def cost_coverage_fx (cost, saturation, coverage, funding, scale_up_factor, unitcost, popsize):
-
-    if method in (1, 2):
-        if method == 1: # For new programs which requires significant start-up cost. Unit cost unknown
-            y =  saturation / (1 + (saturation / coverage) * (funding / cost)**(2 / (1 - scale_up_factor)))
-            return y
-        elif method == 2: # For well-established programs of which start-up cost should be ignored. Unit cost known
-            y =  (2 * saturation / (1 + exp((-2 * cost) / (unitcost * popsize)))) - saturation
-            return y
-
-# Logistic function for coverage-outcome curve
-def coverage_outcome_fx(cov, outcome_zerocov, outcome_fullcov):
-    y = (outcome_fullcov - outcome_zerocov) * np.array (cov) + outcome_zerocov
-    return y
-
-def make_cost_steps(start_cost, end_cost, delta_cost):
-    steps = []
-    step = start_cost
-    while step <= end_cost:
-        steps.append(step)
-        step += delta_cost
-    return steps
-
-start_cost = 0.01
-end_cost = 1.5e6
-delta_cost = 100
-
-cost_values = make_cost_steps (start_cost, end_cost, delta_cost)
-
-
-#### DEFAULT Parameters for cost-coverage function
+###########################################################
+#Default parameters for cost-coverage function
 params_default = {
     "saturation": 0.8,
     "coverage": 0.33,
@@ -156,8 +129,11 @@ params_default = {
     "outcome_fullcov": 5
 }
 
-#### Define which program
+################################
+#Arguments
 prog = 9
+multi_data = True
+################################
 
 if prog == 7:
     print("Program: treatment success, Year 1986")
@@ -173,8 +149,8 @@ if prog == 7:
 elif prog == 9:
     print("Program: treatment success MDR, Year 1986")
     method = 1
-    saturation = params_default["saturation"] - 0.2
-    coverage = prog_cov["program_prop_treatment_success_mdr"] / 100.
+    saturation = params_default["saturation"]
+    coverage = prog_cov["program_prop_treatment_success_mdr"]
     funding = prog_cost["program_cost_treatment_success_mdr"]
     scale_up_factor = params_default["scale_up_factor"]
     unitcost = params_default["unitcost"]
@@ -197,43 +173,112 @@ if method == 1:
 elif method ==2:
     print ('Method 2, established-programs, unit cost available')
 
-# Parameters for coverage-outcome function
 
-def new_cost_coverage_fx (cost):
-    return cost_coverage_fx (cost, saturation, coverage, funding, scale_up_factor, unitcost, popsize)  # closure
-    
+# Values for cost axis
+start_cost = 0.01
+end_cost = 7e5
+delta_cost = 100
+
+def make_cost_steps(start_cost, end_cost, delta_cost):
+    steps = []
+    step = start_cost
+    while step <= end_cost:
+        steps.append(step)
+        step += delta_cost
+    return steps
+
+cost_values = make_cost_steps (start_cost, end_cost, delta_cost)
+
+
 coverage_values = []
 outcome_values = []
 
-for cost in cost_values:
-    coverage_values.append (new_cost_coverage_fx(cost))
+
+###################################################
+#Logistic functions
+
+if multi_data == True:
+    print(costcost)
+    print(covcov)
+    p_guess = (np.median(costcost), np.min(covcov), 0.8, 20000)
+    p, cov, infodict, mesg, ier = scipy.optimize.leastsq(logistic_fitting.residuals, p_guess, args=(costcost, covcov), full_output=1)
+    coverage_values = logistic_fitting.logistic(p, cost_values)
+    #plt.plot(costcost, covcov, 'bo', cost_values, coverage_values, 'r-', linewidth = 3)
+    #plt.xlim([start_cost, end_cost])
+    #plt.ylim ([0, 1])
+    #plt.xlabel('$ Cost')
+    #plt.ylabel('% Coverage')
+    #plt.show()
+
+else:
+#Logistic function for cost-coverage curve
+    def cost_coverage_fx (cost, saturation, coverage, funding, scale_up_factor, unitcost, popsize):
+        if method in (1, 2):
+            if method == 1: # For new programs which requires significant start-up cost. Unit cost unknown
+                y =  saturation / (1 + (saturation / coverage) * (funding / cost)**(2 / (1 - scale_up_factor)))
+                return y
+            elif method == 2: # For well-established programs of which start-up cost should be ignored. Unit cost known
+                y =  (2 * saturation / (1 + exp((-2 * cost) / (unitcost * popsize)))) - saturation
+                return y
+
+    def new_cost_coverage_fx (cost):
+        return cost_coverage_fx (cost, saturation, coverage, funding, scale_up_factor, unitcost, popsize)  # closure
+
+    for cost in cost_values:
+        coverage_values.append (new_cost_coverage_fx(cost))
+
+# Logistic function for coverage-outcome curve
+def coverage_outcome_fx(cov, outcome_zerocov, outcome_fullcov):
+    y = (outcome_fullcov - outcome_zerocov) * np.array (cov) + outcome_zerocov
+    return y
 
 for cov in coverage_values:
     outcome_values.append (coverage_outcome_fx(cov, outcome_zerocov, outcome_fullcov))
 
 
-fig = plt.figure(1)
-fig.suptitle('Cost-coverage-outcome curve')
-plt.subplot (121)
-#fig.suptitle('Cost-coverage curve')
-plt.plot(cost_values, coverage_values, 'r', linewidth = 3)
-plt.plot(prog_cost["program_cost_treatment_success_mdr"], prog_cov["program_prop_treatment_success_mdr"]/100, 'o')
-plt.xlim([start_cost, end_cost])
-plt.ylim ([0, 1])
-plt.xlabel('$ Cost')
-plt.ylabel('% Coverage')
-#plt.show()
-#fig.savefig('cost_coverage.jpg')
-#fig = plt.figure(2)
-plt.subplot (122)
-#fig.suptitle('Coverage-outcome curve')
-plt.plot(coverage_values, outcome_values, 'b', linewidth = 3)
-plt.xlim([0, 1])
-plt.ylim ([outcome_zerocov, outcome_fullcov])
-plt.xlabel('% Coverage')
-plt.ylabel('Outcome')
-plt.show()
-#fig.savefig('coverage_outcome.jpg')
-fig.savefig('Cost_coverage_outcome.jpg')
+if multi_data == True:
+    fig = plt.figure(1)
+    fig.suptitle('Cost-coverage-outcome curve - Multiple data points')
+    plt.subplot (121)
+    plt.plot(costcost, covcov, 'bo', cost_values, coverage_values, 'r-', linewidth = 3)
+    plt.xlim([start_cost, end_cost])
+    plt.ylim ([0, 1])
+    plt.xlabel('$ Cost')
+    plt.ylabel('% Coverage')
+    plt.grid(True)
+    plt.subplot (122)
+    plt.plot(coverage_values, outcome_values, 'b', linewidth = 3)
+    plt.xlim([0, 1])
+    plt.ylim ([outcome_zerocov, outcome_fullcov])
+    plt.xlabel('% Coverage')
+    plt.ylabel('Outcome')
+    plt.grid(True)
+    plt.show()
+    fig.savefig('Cost_coverage_outcome_multiple.jpg')
 
-
+else:
+    fig = plt.figure(1)
+    fig.suptitle('Cost-coverage-outcome curve - Single data point')
+    plt.subplot (121)
+    #fig.suptitle('Cost-coverage curve')
+    plt.plot(cost_values, coverage_values, 'r', linewidth = 3)
+    plt.plot(prog_cost["program_cost_treatment_success_mdr"], prog_cov["program_prop_treatment_success_mdr"], 'o')
+    plt.xlim([start_cost, end_cost])
+    plt.ylim ([0, 1])
+    plt.grid(True)
+    plt.xlabel('$ Cost')
+    plt.ylabel('% Coverage')
+    #plt.show()
+    # #fig.savefig('cost_coverage.jpg')
+    # #fig = plt.figure(2)
+    plt.subplot (122)
+    #fig.suptitle('Coverage-outcome curve')
+    plt.plot(coverage_values, outcome_values, 'b', linewidth = 3)
+    plt.xlim([0, 1])
+    plt.ylim ([outcome_zerocov, outcome_fullcov])
+    plt.xlabel('% Coverage')
+    plt.ylabel('Outcome')
+    plt.grid(True)
+    plt.show()
+    #fig.savefig('coverage_outcome.jpg')
+    fig.savefig('Cost_coverage_outcome_single.jpg')

@@ -483,6 +483,37 @@ def plot_scaleup_fns_against_data(model, function, png=None, start_time=1900.):
     save_png(png)
 
 
+def plot_all_scaleup_fns_against_data(model, functions, png=None, start_time=1900.):
+
+    n = 1
+    for program in functions:
+        if 'prop' in program:
+            end_time = 2015.
+            x_vals = numpy.linspace(start_time, end_time, 1E3)
+            fig = pyplot.figure(10)
+            fig.suptitle('Scaling parameter values over time (calendar years)')
+            ax = fig.add_subplot(4, 4, n)
+            n += 1
+            ax.plot(x_vals,
+                    map(model.scaleup_fns[program],
+                        x_vals),
+                    label=program)
+            data_to_plot = {}
+            for i in model.data['programs'][program]:
+                if i > start_time:
+                    data_to_plot[i] = model.data['programs'][program][i]
+            ax.scatter(data_to_plot.keys(),
+                    data_to_plot.values())
+            ax.set_xticks([start_time, end_time])
+            for tick in ax.xaxis.get_major_ticks():
+                tick.label.set_fontsize(6)
+            for tick in ax.yaxis.get_major_ticks():
+                tick.label.set_fontsize(5)
+            ax.legend([program[13:], 'data'], loc=2, frameon=False, prop={'size': 5})
+            save_png(png)
+
+    fig.suptitle('Scale-up functions')
+
 def save_png(png):
     if png is not None:
         pylab.savefig(png, dpi=300)

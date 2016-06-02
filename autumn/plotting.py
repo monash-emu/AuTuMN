@@ -459,36 +459,17 @@ def plot_flows(model, labels, png=None):
 
 def plot_scaleup_fns(model, functions, png=None, start_time=1900.):
 
+    line_styles = make_default_line_styles(len(functions))
     end_time = 2015.
     x_vals = numpy.linspace(start_time, end_time, 1E3)
     ax = make_axes_with_room_for_legend()
-    for function in functions:
+    for i, function in enumerate(functions):
         ax.plot(x_vals,
                 map(model.scaleup_fns[function],
-                    x_vals),
+                    x_vals), line_styles[i],
                 label=function)
     set_axes_props(ax, 'Year', 'Proportion',
                    'Scaling parameter values', True, functions)
-    save_png(png)
-
-
-def plot_scaleup_fns_against_data(model, function, png=None, start_time=1900.):
-
-    end_time = 2015.
-    x_vals = numpy.linspace(start_time, end_time, 1E3)
-    ax = make_axes_with_room_for_legend()
-    ax.plot(x_vals,
-            map(model.scaleup_fns[function],
-                x_vals),
-            label=function)
-    data_to_plot = {}
-    for i in model.data['programs'][function]:
-        if i > start_time:
-            data_to_plot[i] = model.data['programs'][function][i]
-    ax.scatter(data_to_plot.keys(),
-            data_to_plot.values())
-    set_axes_props(ax, 'Year', 'Proportion',
-                   'Scaling of ' + function, True, function)
     save_png(png)
 
 
@@ -498,65 +479,56 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None, start_time=190
     line_styles = make_default_line_styles(len(functions))
 
     # Determine how many subplots to have
-    n = 0
-    for program in functions:
-        if 'prop' in program:
-            n += 1
-    subplot_grid = find_smallest_factors_of_integer(n)
+    subplot_grid = find_smallest_factors_of_integer(len(functions))
 
     # Iterate through functions
-    i = 1
-    for program in functions:
+    for i, program in enumerate(functions):
 
-        # Only for programmatic variables
-        if 'prop' in program:
+        # Currently just plots out to the present day
+        end_time = 2015.
 
-            # Currently just plots out to the present day
-            end_time = 2015.
+        # Set x-values
+        x_vals = numpy.linspace(start_time, end_time, 1E3)
 
-            # Set x-values
-            x_vals = numpy.linspace(start_time, end_time, 1E3)
+        # Initialise figure
+        fig = pyplot.figure(10)
 
-            # Initialise figure
-            fig = pyplot.figure(10)
+        # Upper title for whole figure
+        fig.suptitle('Scaling parameter values over time (calendar years)')
 
-            # Upper title for whole figure
-            fig.suptitle('Scaling parameter values over time (calendar years)')
+        # Initialise subplot areas
+        ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1)
 
-            # Initialise subplot areas
-            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i)
-            i += 1
+        # Line plot scaling parameters
+        ax.plot(x_vals,
+                map(model.scaleup_fns[program],
+                    x_vals), line_styles[i],
+                    label=program)
+        data_to_plot = {}
+        for j in model.data['programs'][program]:
+            if j > start_time:
+                data_to_plot[j] = model.data['programs'][program][j]
 
-            # Line plot scaling parameters
-            ax.plot(x_vals,
-                    map(model.scaleup_fns[program],
-                        x_vals), line_styles[i-2],
-                        label=program)
-            data_to_plot = {}
-            for j in model.data['programs'][program]:
-                if j > start_time:
-                    data_to_plot[j] = model.data['programs'][program][j]
+        # Scatter plot data from which they are derived
+        ax.scatter(data_to_plot.keys(),
+                    data_to_plot.values(),
+                   color=line_styles[i][-1],
+                   s=6)
 
-            # Scatter plot data from which they are derived
-            ax.scatter(data_to_plot.keys(),
-                        data_to_plot.values(),
-                       color=line_styles[i-2][-1],
-                       s=6)
+        # Adjust tick font size
+        ax.set_xticks([start_time, end_time])
+        for axis_to_change in [ax.xaxis, ax.yaxis]:
+            for tick in axis_to_change.get_major_ticks():
+                tick.label.set_fontsize(4)
 
-            # Adjust tick font size
-            ax.set_xticks([start_time, end_time])
-            for axis_to_change in [ax.xaxis, ax.yaxis]:
-                for tick in axis_to_change.get_major_ticks():
-                    tick.label.set_fontsize(4)
-
-            # Truncate parameter names depending on whether it is a
-            # treatment success/death proportion
-            if 'treatment' in program:
-                title = program[23:]
-            else:
-                title = program[13:]
-            ax.set_title(title, fontsize=6)
-            save_png(png)
+        # Truncate parameter names depending on whether it is a
+        # treatment success/death proportion
+        if 'treatment' in program:
+            title = program[23:]
+        else:
+            title = program[13:]
+        ax.set_title(title, fontsize=6)
+        save_png(png)
 
     fig.suptitle('Scale-up functions')
 

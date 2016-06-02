@@ -139,23 +139,27 @@ for n_organs in data['attributes']['n_organs']:
                             #         model, ["proportion_mdr"],
                             #         data['attributes']['start_time'], base + '.mdr_proportion_recent.png')
                             #
+                            vars_to_plot = []
+                            for var in model.vars.keys():
+                                if var in model.data['programs'].keys() and 'inappropriate' not in var\
+                                        and 'xdr' not in var:
+                                    vars_to_plot += [var]
+
                             autumn.plotting.plot_scaleup_fns(model,
-                                                             ["program_prop_algorithm_sensitivity",
-                                                              "program_prop_detect",
-                                                              "program_prop_vaccination",
-                                                              "program_prop_lowquality",
-                                                              "program_prop_firstline_dst",
-                                                              "program_prop_secondline_dst",
-                                                              # "program_proportion_success",
-                                                              # "program_proportion_death",
-                                                              "tb_proportion_amplification",
-                                                              'tb_proportion_smearpos',
-                                                              'tb_proportion_smearneg'],
-                                                             base + '.scaleups.png', data['attributes']['start_time'])
+                                                             vars_to_plot,
+                                                             base + '.scaleups_start.png', data['attributes']['start_time'])
+                            autumn.plotting.plot_scaleup_fns(model,
+                                                             vars_to_plot,
+                                                             base + '.scaleups_recent.png', data['attributes']['recent_time'])
                             autumn.plotting.plot_all_scaleup_fns_against_data(model,
-                                                                              model.data['programs'],
-                                                                              base + '.scaleup.png',
+                                                                              vars_to_plot,
+                                                                              base + '.scaleup_recent.png',
                                                                               data['attributes']['recent_time'])
+                            autumn.plotting.plot_all_scaleup_fns_against_data(model,
+                                                                              vars_to_plot,
+                                                                              base + '.scaleup_start.png',
+                                                                              data['attributes']['start_time'])
+
                             #     year = indices(model.times, lambda x: x >= 2015.)[0]
                             #     print("2015 incidence is: ")
                             #     print(model.get_var_soln("incidence")[year])

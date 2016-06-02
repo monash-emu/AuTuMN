@@ -92,6 +92,15 @@ def humanise_y_ticks(ax):
     ax.set_yticklabels(labels)
 
 
+def find_smallest_factors_of_integer(n):
+
+    answer = [1E3, 1E3]
+    for i in range(1, n + 1):
+        if n % i == 0 and i+(n/i) < sum(answer):
+            answer = [i, n/i]
+    return answer
+
+
 def truncate_data(model, left_xlimit):
     # Not going to argue that the following code is the most elegant approach
     right_xlimit_index = len(model.times) - 1
@@ -488,6 +497,13 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None, start_time=190
     # Get some styles for the lines
     line_styles = make_default_line_styles(len(functions))
 
+    # Determine how many subplots to have
+    n = 0
+    for program in functions:
+        if 'prop' in program:
+            n += 1
+    subplot_grid = find_smallest_factors_of_integer(n)
+
     # Iterate through functions
     i = 1
     for program in functions:
@@ -508,7 +524,7 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None, start_time=190
             fig.suptitle('Scaling parameter values over time (calendar years)')
 
             # Initialise subplot areas
-            ax = fig.add_subplot(4, 4, i)
+            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i)
             i += 1
 
             # Line plot scaling parameters
@@ -558,5 +574,4 @@ def open_pngs(pngs):
         os.system("start " + " ".join(pngs))
     elif 'Darwin' in operating_system:
         os.system('open ' + " ".join(pngs))
-
 

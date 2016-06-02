@@ -421,8 +421,12 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
         y = y[ind_start:(ind_end+1)]
 
         k = min(3, len(x) - 1)
-        f = UnivariateSpline(x, y, k=k, s=s, ext=3)  # create a first raw approximation
 
+        w = np.ones(len(x))
+        w[0] = 5.
+        w[-1] = 5.
+
+        f = UnivariateSpline(x, y, k=k, s=s, ext=3, w=w)  # create a first raw approximation
 
         # shape the initial and final parts of the curve in order to get null gradients and to hit the external points
         x0 = x[0]

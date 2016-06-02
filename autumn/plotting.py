@@ -438,6 +438,121 @@ def plot_outputs_against_gtb(model, label, left_xlimit, png=None, country_data=N
     save_png(png)
 
 
+def plot_all_outputs_against_gtb(model, labels, start_time, png=None, data=None):
+
+    # Sort out the plotting patterns
+    colour = []
+    indices = []
+    yaxis_label = []
+    title = []
+    patch_colour = []
+    plotting_data = []
+
+    if "incidence" in labels:
+        colour += [(0, 0, 0)]
+        indices += ['e_inc_100k']
+        yaxis_label += ['Per 100,000 per year']
+        title += ["Incidence"]
+    if "mortality" in labels:
+        colour += [(1, 0, 0)]
+        indices += ['e_mort_exc_tbhiv_100k']
+        yaxis_label += ['Per 100,000 per year']
+        title += ["Mortality"]
+    if "prevalence" in labels:
+        colour += [(0, 0.5, 0)]
+        indices += ['e_prev_100k']
+        yaxis_label += ['Per 100,000']
+        title += ["Prevalence"]
+    if "notifications" in labels:
+        colour += [(0, 0, 0.5)]
+        yaxis_label += ['Per 100,000']
+        title += ["Notifications"]
+
+    # Create a colour half-way between the line colour and white
+    for i in range(len(colour)):
+        patch_colour += [[]]
+        for j in range(len(colour[i])):
+            patch_colour[i] += [1. - (1. - colour[i][j]) / 2.]
+
+    # Extract the plotting data you're interested in
+    for i in range(len(indices)):
+        plotting_data += [{}]
+        for j in data['tb']:
+            if indices[i] in j and '_lo' in j:
+                plotting_data[i]['lower_limit'] = data['tb'][j]
+            elif indices[i] in j and '_hi' in j:
+                plotting_data[i]['upper_limit'] = data['tb'][j]
+            elif indices[i] in j:
+                plotting_data[i]['point_estimate'] = data['tb'][j]
+        plotting_data[i]['year'] = data['tb'][u'year']
+
+    # Truncate data to what you want to look at (rather than going back to the dawn of time)
+    right_xlimit_index, left_xlimit_index = truncate_data(model, start_time)
+
+    subplot_grid = find_smallest_factors_of_integer(len(labels))
+
+    end_time = 2015.
+
+    fig = pyplot.figure(11)
+
+    fig.suptitle('Main model outputs', fontsize=12)
+
+    for i in range(len(data['notifications'][u'year'])):
+        if data['notifications'][u'year'][i] > start_time:
+            notification_start_index = i
+            break
+    notification_year_data = data['notifications'][u'year'][notification_start_index:]
+    notification_data = data['notifications'][u'c_newinc'][notification_start_index:]
+
+    for i, outcome in enumerate(labels):
+
+        ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1)
+
+        # Plot the modelled data
+        ax.plot(
+            model.times[left_xlimit_index: right_xlimit_index],
+            model.get_var_soln(labels[i])[left_xlimit_index: right_xlimit_index],
+            color=colour[i],
+            label=labels[i], linewidth=1.5)
+
+        # Plot the GTB data
+        # Notifications are just plotted against raw reported notifications,
+        # as there are no confidence intervals around these values.
+        if outcome == 'notifications':
+            ax.plot(notification_year_data, notification_data)
+            ax.set_ylim((0., max(notification_data)))
+        else:
+            # Central point-estimate
+            ax.plot(plotting_data[i]['year'], plotting_data[i]['point_estimate'],
+                    label=labels[i], color=colour[i], linewidth=0.5)
+
+            # Create the patch array
+            patch_array = numpy.zeros(shape=(len(plotting_data[i]['lower_limit']) * 2, 2))
+            for j in range(len(plotting_data[i]['lower_limit'])):
+                patch_array[j][0] = plotting_data[i]['year'][j]
+                patch_array[-(j+1)][0] = plotting_data[i]['year'][j]
+                patch_array[j][1] = plotting_data[i]['lower_limit'][j]
+                patch_array[-(j+1)][1] = plotting_data[i]['upper_limit'][j]
+
+            # Create the patch image and plot it
+            patch = patches.Polygon(patch_array, color=patch_colour[i])
+            ax.add_patch(patch)
+
+            # Make y-axis range extend downwards to zero
+            ax.set_ylim((0., max(plotting_data[i]['upper_limit'])))
+
+        # Make tick marks text nice and small
+        ax.set_xticks([start_time, end_time])
+        for axis_to_change in [ax.xaxis, ax.yaxis]:
+            for tick in axis_to_change.get_major_ticks():
+                tick.label.set_fontsize(8)
+
+        # Add the sub-plot title
+        ax.set_title(title[i], fontsize=10)
+
+    save_png(png)
+
+
 def plot_flows(model, labels, png=None):
     colours, patterns, compartment_full_names\
         = make_related_line_styles(labels)
@@ -481,20 +596,20 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None, start_time=190
     # Determine how many subplots to have
     subplot_grid = find_smallest_factors_of_integer(len(functions))
 
+    # Currently just plots out to the present day
+    end_time = 2015.
+
+    # Set x-values
+    x_vals = numpy.linspace(start_time, end_time, 1E3)
+
+    # Initialise figure
+    fig = pyplot.figure(10)
+
+    # Upper title for whole figure
+    fig.suptitle('Scaling parameter values over time (calendar years)')
+
     # Iterate through functions
     for i, program in enumerate(functions):
-
-        # Currently just plots out to the present day
-        end_time = 2015.
-
-        # Set x-values
-        x_vals = numpy.linspace(start_time, end_time, 1E3)
-
-        # Initialise figure
-        fig = pyplot.figure(10)
-
-        # Upper title for whole figure
-        fig.suptitle('Scaling parameter values over time (calendar years)')
 
         # Initialise subplot areas
         ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1)

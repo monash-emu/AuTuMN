@@ -500,7 +500,19 @@ class ConsolidatedModel(BaseModel):
                         = self.data['programs'][program][i] / 1E2
 
                 # Find scale-up functions
-                self.set_scaleup_fn(program,
+
+                # Allow a different smoothness parameter for case detection,
+                # because abrupt changes in this time-variant parameter lead to major model problems
+                # (e.g. negative compartment values)
+                if 'detect' in program:
+                    self.set_scaleup_fn(program,
+                                        scale_up_function(self.data['programs'][program].keys(),
+                                                          self.data['programs'][program].values(),
+                                                          self.data['attributes'][u'fitting_method'],
+                                                          self.data['attributes']['detection_smoothness'],
+                                                          0., 1))
+                else:
+                    self.set_scaleup_fn(program,
                                     scale_up_function(self.data['programs'][program].keys(),
                                                       self.data['programs'][program].values(),
                                                       self.data['attributes'][u'fitting_method'], self.data['attributes']['program_smoothness'],

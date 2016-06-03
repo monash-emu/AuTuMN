@@ -157,7 +157,8 @@ def get_spare_fit(indice, x_peak, bound, side, f, cut_off_dict, bound_low, bound
     return {'a': a, 'cpt': cpt}
 
 
-def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=None, auto_bound=1.3):
+def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=None, auto_bound=1.3,
+                      intervention_end = None, intervention_start_date = None):
     """
     Given a set of points defined by x and y,
     this function fits a cubic spline and returns the interpolated function
@@ -183,7 +184,12 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
         auto_bound: In absence of bound_up or bound_low, sets a strip in which the curve should be contained.
                     Its value is a multiplier that applies to the amplitude of y to determine the width of the
                     strip. Set equal to None to delete this constraint.
-
+        intervention_end: tuple or list of two elements defining the final time and the final level corresponding to a
+                    potential intervention. If it is not None, an additional portion of curve will be added to define
+                    the intervention through a sinusoidal function
+        intervention_start_date: If not None, define the date at which intervention should start (must be >= max(x)).
+                    If None, the maximal value of x will be used as a start date for the intervention. If the argument 'intervention_end' is
+                    not defined, this argument is not relevant and will not be used
     Output:
         interpolation function
     """
@@ -203,9 +209,26 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
     x = x[order]
     y = y[order]
 
+    # Define a scale-up for a potential intervention
+    if intervention_end is not None:
+        if intervention_start_date is not None:
+            assert intervention_start_date >= max(x), 'The intervention start date should be >= max(x)'
+            t_intervention_start = intervention_start_date
+        else:
+            t_intervention_start = max(x)
+        curve_intervention = scale_up_function(x=[t_intervention_start, intervention_end[0]],
+                                               y=[y[-1], intervention_end[1]], method=4)
+
     if (len(x) == 1) or (max(y)-min(y) == 0):
         def curve(t):
-            return y[0]
+            if intervention_end is not None:
+                if t >= t_intervention_start:
+                    return curve_intervention(t)
+                else:
+                    return y[-1]
+            else:
+                return y[-1]
+
         return curve
 
     def derivatives(x, y):
@@ -372,7 +395,13 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
             if t <= min(x):  # t is before the range defined by x -> takes the initial value
                 return y[0]
             elif t >= max(x):  # t is after the range defined by x -> takes the last value
-                return y[-1]
+                if intervention_end is not None:
+                    if t >= t_intervention_start:
+                        return curve_intervention(t)
+                    else:
+                        return y[-1]
+                else:
+                    return y[-1]
             else:  # t is in the range defined by x
                 index_low = len(x[x <= t]) - 1
                 func = functions[index_low]
@@ -619,7 +648,13 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
             if t <= x[0]:
                 y_t = y[0]
             elif t > x[-1]:
-                y_t = y[-1]
+                if intervention_end is not None:
+                    if t >= t_intervention_start:
+                        y_t = curve_intervention(t)
+                    else:
+                        y_t = y[-1]
+                else:
+                    y_t = y[-1]
             elif x[0] < t < x[1]:
                 y_t = a_init[0] + a_init[1] * t + a_init[2] * t ** 2 + a_init[3] * t ** 3
             elif x[-2] < t < x[-1]:
@@ -637,9 +672,9 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
                         a = out['a2']
                     y_t = a[0] + a[1] * t + a[2] * t ** 2 + a[3] * t ** 3
 
-            if bound_low is not None:
+            if (bound_low is not None) and (t <= x[-1]):
                 y_t = max((y_t, bound_low))  # security check. Normally not needed
-            if bound_up is not None:
+            if (bound_up is not None) and (t <= x[-1]):
                 y_t = min((y_t, bound_up))  # security check. Normally not needed
 
             return y_t
@@ -653,7 +688,13 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
         if t <= x[0]:  # constant before x[0]
             return y[0]
         elif t >= x[-1]:  # constant after x[0]
-            return y[-1]
+            if intervention_end is not None:
+                if t >= t_intervention_start/coef:
+                    return curve_intervention(t*coef)
+                else:
+                    return y[-1]
+            else:
+                return y[-1]
         else:
             index = len(x[x <= t]) - 1
             p = m[index, :]  # corresponding coefficients
@@ -687,20 +728,21 @@ if __name__ == "__main__":
 
 
 
-    f = scale_up_function(x, y, method=1)
-    g = scale_up_function(x, y, method=2)
-    h = scale_up_function(x, y, method=3)
-    k = scale_up_function(x, y, method=4)
-    p = scale_up_function(x, y, method=5)
-    q = scale_up_function(x, y, method=5, bound_low=0.0, bound_up=1.0)
+    f = scale_up_function(x, y, method=1,intervention_end=[2010, 1.0])
+    g = scale_up_function(x, y, method=2,intervention_end=[2010, 1.0], intervention_start_date=2008)
+    h = scale_up_function(x, y, method=3,intervention_end=[2010, 1.0])
+    k = scale_up_function(x, y, method=4,intervention_end=[2010, 1.0])
+    p = scale_up_function(x, y, method=5,intervention_end=[2020, 1.0])
+    q = scale_up_function(x, y, method=5, bound_low=0.0, bound_up=1.0, intervention_end=[2010, 1.0])
+
 
     x_vals = np.linspace(min(x)-0.1*(max(x)-min(x)), max(x)+0.1*(max(x)-min(x)), 1000)
     pylab.plot(x_vals, map(f, x_vals), color='r')
     pylab.plot(x_vals, map(g, x_vals), color='b')
     pylab.plot(x_vals, map(h, x_vals), color='g')
-    pylab.plot(x_vals, map(k, x_vals), color='purple')
-    pylab.plot(x_vals, map(p, x_vals), color='orange')
-    pylab.plot(x_vals, map(q, x_vals), color='cyan')
+    pylab.plot(x_vals, map(k, x_vals), color='purple')  # ok
+    pylab.plot(x_vals, map(p, x_vals), color='orange') # ok
+    pylab.plot(x_vals, map(q, x_vals), color='cyan')   # ok
 
 
     pylab.plot(x, y, 'ro')

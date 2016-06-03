@@ -1124,7 +1124,7 @@ class ConsolidatedModel(BaseModel):
             if 'active' in from_label and 'detect' in to_label:
                 rate_notifications += self.compartments[from_label] * self.vars[rate]
         self.vars["notifications"] = \
-            rate_notifications / self.vars["population"] * 1E5
+            rate_notifications
 
         # Mortality
         for from_label, rate in self.fixed_infection_death_rate_flows:
@@ -1178,7 +1178,7 @@ class ConsolidatedModel(BaseModel):
                     rate_notifications[strain] \
                         += self.compartments[from_label] * self.vars[rate]
             self.vars["notifications" + strain] \
-                = rate_notifications[strain] / self.vars["population"] * 1E5
+                = rate_notifications[strain]
 
             # Mortality
             for from_label, rate in self.fixed_infection_death_rate_flows:

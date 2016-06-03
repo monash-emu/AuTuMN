@@ -438,7 +438,7 @@ def plot_outputs_against_gtb(model, label, left_xlimit, png=None, country_data=N
     save_png(png)
 
 
-def plot_all_outputs_against_gtb(model, labels, start_time, png=None, data=None):
+def plot_all_outputs_against_gtb(model, labels, start_time, png=None, data=None, country=''):
 
     # Sort out the plotting patterns
     colour = []
@@ -495,7 +495,7 @@ def plot_all_outputs_against_gtb(model, labels, start_time, png=None, data=None)
 
     fig = pyplot.figure(11)
 
-    fig.suptitle('Main model outputs', fontsize=12)
+    fig.suptitle(country + ' model outputs', fontsize=12)
 
     for i in range(len(data['notifications'][u'year'])):
         if data['notifications'][u'year'][i] > start_time:

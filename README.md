@@ -28,6 +28,7 @@ This is a set of Python models that modularizes the development of dynamic trans
 
 # James TODO:
 - make time to commence treatment a program / time-variant
+- time-varient birth and death functions might be fun to add
 - start coding for running scenarios
 - MCMC incorporation
 - new/retreatment stratification

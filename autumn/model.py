@@ -624,10 +624,12 @@ class ConsolidatedModel(BaseModel):
                 self.params["tb_n_contact"] \
                 * self.vars["infectious_population" + strain] \
                 / self.vars["population"]
-            self.vars["rate_force_weak" + strain] = \
+            self.vars["rate_force_vacc" + strain] = \
                 self.params["tb_multiplier_bcg_protection"] \
                 * self.vars["rate_force" + strain]
-
+            self.vars["rate_force_latent" + strain] = \
+                self.params["tb_multiplier_latency_protection"] \
+                * self.vars["rate_force" + strain]
 
     def calculate_progression_vars(self):
 
@@ -864,15 +866,15 @@ class ConsolidatedModel(BaseModel):
                     self.set_var_transfer_rate_flow(
                         "susceptible_vac" + comorbidity + agegroup,
                         "latent_early" + strain + comorbidity + agegroup,
-                        "rate_force_weak" + strain)
+                        "rate_force_vacc" + strain)
                     self.set_var_transfer_rate_flow(
                         "susceptible_treated" + comorbidity + agegroup,
                         "latent_early" + strain + comorbidity + agegroup,
-                        "rate_force_weak" + strain)
+                        "rate_force_vacc" + strain)
                     self.set_var_transfer_rate_flow(
                         "latent_late" + strain + comorbidity + agegroup,
                         "latent_early" + strain + comorbidity + agegroup,
-                        "rate_force_weak" + strain)
+                        "rate_force_latent" + strain)
 
     def set_progression_flows(self):
 

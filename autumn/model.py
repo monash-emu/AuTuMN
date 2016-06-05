@@ -608,10 +608,13 @@ class ConsolidatedModel(BaseModel):
             self.vars["infectious_population" + strain] = 0.
             for organ in self.organ_status:
                 for label in self.labels:
+                    # If we haven't reached the part of the model divided by organ status
                     if organ not in label and organ != "":
                         continue
+                    # If we haven't reached the part of the model divided by strain
                     if strain not in label and strain != "":
                         continue
+                    # If the compartment is non-infectious
                     if not label_intersects_tags(label, self.infectious_tags):
                         continue
                     self.vars["infectious_population" + strain] += \
@@ -624,6 +627,7 @@ class ConsolidatedModel(BaseModel):
             self.vars["rate_force_weak" + strain] = \
                 self.params["tb_multiplier_bcg_protection"] \
                 * self.vars["rate_force" + strain]
+
 
     def calculate_progression_vars(self):
 
@@ -1145,7 +1149,8 @@ class ConsolidatedModel(BaseModel):
         for from_label, rate in self.var_infection_death_rate_flows:
             rate_mortality \
                 += self.compartments[from_label] * self.vars[rate]
-        self.vars["mortality"] = rate_mortality / self.vars["population"] * 1E5
+        self.vars["mortality"] = rate_mortality / self.vars["population"] * 1E5 \
+            * self.data['miscellaneous'][u'program_proportion_death_reporting']
 
         # Prevalence
         self.vars["prevalence"] = 0.
@@ -1202,7 +1207,8 @@ class ConsolidatedModel(BaseModel):
                     rate_mortality[strain] \
                         += self.compartments[from_label] * self.vars[rate]
             self.vars["mortality" + strain] \
-                = rate_mortality[strain] / self.vars["population"] * 1E5
+                = rate_mortality[strain] / self.vars["population"] * 1E5 \
+                * self.data['miscellaneous'][u'program_proportion_death_reporting']
 
         # Prevalence
         for strain in self.strains:

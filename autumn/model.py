@@ -507,6 +507,8 @@ class ConsolidatedModel(BaseModel):
                     self.data['programs'][program][i] \
                         = self.data['programs'][program][i] / 1E2
 
+            if 'prop' in program or 'timeperiod' in program:
+
                 # Find scale-up functions
 
                 # Allow a different smoothness parameter for case detection,
@@ -519,11 +521,19 @@ class ConsolidatedModel(BaseModel):
                                                           self.data['attributes'][u'fitting_method'],
                                                           self.data['attributes']['detection_smoothness'],
                                                           0., 1))
+                elif 'timeperiod' in program:
+                    self.set_scaleup_fn(program,
+                                        scale_up_function(self.data['programs'][program].keys(),
+                                                          self.data['programs'][program].values(),
+                                                          self.data['attributes'][u'fitting_method'],
+                                                          self.data['attributes']['program_smoothness'],
+                                                          0., 1E3))
                 else:
                     self.set_scaleup_fn(program,
                                     scale_up_function(self.data['programs'][program].keys(),
                                                       self.data['programs'][program].values(),
-                                                      self.data['attributes'][u'fitting_method'], self.data['attributes']['program_smoothness'],
+                                                      self.data['attributes'][u'fitting_method'],
+                                                      self.data['attributes']['program_smoothness'],
                                                       0., 1))
 
     def find_treatment_rates_scaleups(self):

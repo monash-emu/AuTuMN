@@ -369,8 +369,16 @@ class ConsolidatedModel(BaseModel):
             late_proportion: Proportion allocated to late time period
         """
 
-        early_proportion \
-            = 1. - exp(log(1. - proportion) * early_period / total_period)
+        if proportion > 1. or proportion < 0.:
+            raise Exception('Proportion greater than one or less than zero')
+        elif proportion == 1.:
+            # This is just to avoid warnings appearing where the proportion
+            # is one - this function isn't really intended for this situation,
+            # but preferable to avoid both errors and warnings.
+            early_proportion = 0.5
+        else:
+            early_proportion \
+                = 1. - exp(log(1. - proportion) * early_period / total_period)
         late_proportion = proportion - early_proportion
         return early_proportion, late_proportion
 
@@ -685,24 +693,28 @@ class ConsolidatedModel(BaseModel):
         # Detection
         # Note that all organ types are assumed to have the same untreated active
         # sojourn time, so any organ status can be arbitrarily selected (here the first, or smear-positive)
-        self.vars["program_rate_detect"] = \
-            self.vars["program_prop_detect"] \
-            * (self.params["tb_rate_recover" + self.organ_status[0]] + self.params[
-                "tb_rate_death" + self.organ_status[0]]) \
-            / (1. - self.vars["program_prop_detect"] \
-               * (1. + (1. - self.vars["program_prop_algorithm_sensitivity"]) \
-                  / self.vars["program_prop_algorithm_sensitivity"]))
-        # For any divisions by zero
-        if numpy.isnan(self.vars['program_rate_detect']):
-            self.vars['program_rate_detect'] = 0.
 
-        # Missed
-        self.vars["program_rate_missed"] = \
-            self.vars["program_rate_detect"] \
-            * (1. - self.vars["program_prop_algorithm_sensitivity"]) \
-            / self.vars["program_prop_algorithm_sensitivity"]
-        # For any divisions by zero
-        if numpy.isnan(self.vars['program_rate_missed']):
+        # If no division by zero
+        if self.vars["program_prop_algorithm_sensitivity"] > 0.:
+
+            # Detections
+            self.vars["program_rate_detect"] = \
+                self.vars["program_prop_detect"] \
+                * (self.params["tb_rate_recover" + self.organ_status[0]] + self.params[
+                    "tb_rate_death" + self.organ_status[0]]) \
+                / (1. - self.vars["program_prop_detect"] \
+                   * (1. + (1. - self.vars["program_prop_algorithm_sensitivity"]) \
+                      / self.vars["program_prop_algorithm_sensitivity"]))
+
+            # Missed
+            self.vars["program_rate_missed"] = \
+                self.vars["program_rate_detect"] \
+                * (1. - self.vars["program_prop_algorithm_sensitivity"]) \
+                / self.vars["program_prop_algorithm_sensitivity"]
+
+        # Otherwise just assign detection and missed rates to zero
+        else:
+            self.vars['program_rate_detect'] = 0.
             self.vars['program_rate_missed'] = 0.
 
         # Repeat for each strain
@@ -1187,18 +1199,19 @@ class ConsolidatedModel(BaseModel):
                         / self.vars["population"] * 1E5)
 
         # Summing MDR and XDR to get the total of all MDRs
-        rate_incidence["all_mdr_strains"] = 0.
         if len(self.strains) > 1:
-            for actual_strain_number in range(len(self.strains)):
-                strain = self.strains[actual_strain_number]
-                if actual_strain_number > 0:
-                    rate_incidence["all_mdr_strains"] \
-                        += rate_incidence[strain]
-        self.vars["all_mdr_strains"] \
-            = rate_incidence["all_mdr_strains"] / self.vars["population"] * 1E5
-        # Convert to percentage
-        self.vars["proportion_mdr"] \
-            = self.vars["all_mdr_strains"] / self.vars["incidence"] * 1E2
+            rate_incidence["all_mdr_strains"] = 0.
+            if len(self.strains) > 1:
+                for actual_strain_number in range(len(self.strains)):
+                    strain = self.strains[actual_strain_number]
+                    if actual_strain_number > 0:
+                        rate_incidence["all_mdr_strains"] \
+                            += rate_incidence[strain]
+            self.vars["all_mdr_strains"] \
+                = rate_incidence["all_mdr_strains"] / self.vars["population"] * 1E5
+            # Convert to percentage
+            self.vars["proportion_mdr"] \
+                = self.vars["all_mdr_strains"] / self.vars["incidence"] * 1E2
 
     def calculate_additional_diagnostics(self):
 
@@ -1290,6 +1303,13 @@ class ConsolidatedModel(BaseModel):
         """
 
         fraction = {}
+
+        # Just to avoid warnings, replace any zeros in the denominators with small values
+        # (numerators will still be zero, so all fractions should be zero)
+        for i in range(len(denominator)):
+            if denominator[i] == 0.:
+                denominator[i] = 1E-3
+
         for label in numerator_labels:
             fraction[label] = [
                 v / t

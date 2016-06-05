@@ -605,25 +605,34 @@ class ConsolidatedModel(BaseModel):
         # Calculate force of infection by strain,
         # incorporating partial immunity and infectiousness
         for strain in self.strains:
+
+            # Initialise infectious population to zero
             self.vars["infectious_population" + strain] = 0.
             for organ in self.organ_status:
                 for label in self.labels:
+
                     # If we haven't reached the part of the model divided by organ status
                     if organ not in label and organ != "":
                         continue
+
                     # If we haven't reached the part of the model divided by strain
                     if strain not in label and strain != "":
                         continue
+
                     # If the compartment is non-infectious
                     if not label_intersects_tags(label, self.infectious_tags):
                         continue
                     self.vars["infectious_population" + strain] += \
                         self.params["tb_multiplier_force" + organ] \
                         * self.compartments[label]
+
+            # Calculate non-immune force of infection
             self.vars["rate_force" + strain] = \
                 self.params["tb_n_contact"] \
                 * self.vars["infectious_population" + strain] \
                 / self.vars["population"]
+
+            # Adjust for immunity
             self.vars["rate_force_vacc" + strain] = \
                 self.params["tb_multiplier_bcg_protection"] \
                 * self.vars["rate_force" + strain]
@@ -1120,51 +1129,6 @@ class ConsolidatedModel(BaseModel):
     # Methods that calculate the output vars and diagnostic properties
 
     def calculate_output_vars(self):
-
-        """
-        Outputs are calculated as vars in each time-step
-        """
-
-        # Initialise scalars
-        rate_incidence = 0.
-        rate_mortality = 0.
-        rate_notifications = 0.
-
-        # Incidence
-        for from_label, to_label, rate in self.var_transfer_rate_flows:
-            if 'latent' in from_label and 'active' in to_label:
-                rate_incidence += self.compartments[from_label] * self.vars[rate]
-        self.vars["incidence"] = \
-            rate_incidence / self.vars["population"] * 1E5
-
-        # Notifications
-        for from_label, to_label, rate in self.var_transfer_rate_flows:
-            if 'active' in from_label and 'detect' in to_label:
-                rate_notifications += self.compartments[from_label] * self.vars[rate]
-        self.vars["notifications"] = \
-            rate_notifications
-
-        # Mortality
-        for from_label, rate in self.fixed_infection_death_rate_flows:
-            rate_mortality \
-                += self.compartments[from_label] * rate
-        for from_label, rate in self.var_infection_death_rate_flows:
-            rate_mortality \
-                += self.compartments[from_label] * self.vars[rate]
-        self.vars["mortality"] = rate_mortality / self.vars["population"] * 1E5 \
-            * self.data['miscellaneous'][u'program_proportion_death_reporting']
-
-        # Prevalence
-        self.vars["prevalence"] = 0.
-        for label in self.labels:
-            if "susceptible" not in label and "latent" not in label:
-                self.vars["prevalence"] += (
-                    self.compartments[label]
-                    / self.vars["population"] * 1E5)
-
-        self.calculate_bystrain_output_vars()
-
-    def calculate_bystrain_output_vars(self):
 
         """
         Method similarly structured to calculate_output_vars,

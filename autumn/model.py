@@ -119,6 +119,10 @@ class ConsolidatedModel(BaseModel):
         self.outcomes = ["_success", "_death", "_default"]
         self.non_success_outcomes = self.outcomes[1: 3]
 
+        self.make_times(self.data['attributes']['start_time'],
+                        self.data['attributes']['scenario_end_time'],
+                        self.data['attributes']['time_step'])
+
     def define_model_structure(self):
 
         """

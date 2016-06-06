@@ -95,10 +95,72 @@ def calculate_proportion(data, indices, percent):
     return proportions
 
 
+def remove_nans(program):
+
+    """
+    Takes a dictionary and removes all of the elements for which the value is nan
+
+    Args:
+        program: Should typically be the dictionary of programmatic values, usually
+                    with time in years as the key.
+
+    Returns:
+        program: The dictionary with the nans removed.
+
+    """
+
+    nan_indices = []
+    for i in program:
+        if numpy.isnan(program[i]):
+            nan_indices += [i]
+    for i in nan_indices:
+        del program[i]
+
+    return program
+
+
+def remove_specific_key(dict, key):
+
+    """
+    Remove a specific named key from a dictionary
+    Args:
+        dict: The dictionary to have a key removed
+        key: The key to be removed
+
+    Returns:
+        dict: The dictionary with the key removed
+
+    """
+
+    if key in dict:
+        del dict[key]
+
+    return dict
+
+
+def add_starting_zero(program, data):
+
+    """
+    Add a zero at the starting time for the model run
+
+    Args:
+        program: The program to have a zero added
+
+    Returns:
+        program: The program with the zero added
+
+    """
+
+    program[int(data['attributes']['start_time'])] = 0.
+
+    return program
+
+
+
 ###############################################################
 #  Readers
 
-class BcgCoverageSheetReader():
+class BcgCoverageSheetReader:
 
     """
     Reader for the WHO/UNICEF BCG coverage data
@@ -134,7 +196,7 @@ class BcgCoverageSheetReader():
         return self.data
 
 
-class BirthRateReader():
+class BirthRateReader:
 
     """
     Reader for the WHO/UNICEF BCG coverage data
@@ -168,7 +230,7 @@ class BirthRateReader():
         return self.data
 
 
-class LifeExpectancyReader():
+class LifeExpectancyReader:
 
     def __init__(self, country_to_read):
         self.data = {}
@@ -195,7 +257,7 @@ class LifeExpectancyReader():
         return self.data
 
 
-class FixedParametersReader():
+class FixedParametersReader:
 
     def __init__(self):
         self.data = {}
@@ -276,7 +338,7 @@ class ModelAttributesReader(FixedParametersReader):
             self.data['start_compartments'][row[0]] = float(row[1])
 
 
-class ProgramReader():
+class ProgramReader:
 
     def __init__(self, country_to_read):
         self.data = {}
@@ -309,7 +371,7 @@ class ProgramReader():
         return self.data
 
 
-class GlobalTbReportReader():
+class GlobalTbReportReader:
 
     def __init__(self, country_to_read):
         self.data = {}
@@ -378,7 +440,7 @@ class TreatmentOutcomesReader(GlobalTbReportReader):
         self.country_to_read = country_to_read
 
 
-class MdrReportReader():
+class MdrReportReader:
 
     def __init__(self, country_to_read):
         self.data = {}
@@ -559,6 +621,7 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
             # If not already loaded through the inputs spreadsheet
             if i not in data['programs']['program_prop_vaccination']:
                 data['programs']['program_prop_vaccination'][i] = data['bcg'][i]
+
     # As above, now for case detection
     if data['programs']['program_prop_detect'][u'load_data'] == 'yes':
         for i in range(len(data['tb']['year'])):
@@ -575,8 +638,7 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
     data['outcomes'][u'prop_new_sp_success'] = []
     for i in range(len(data['outcomes'][u'prop_new_sp_cmplt'])):
         data['outcomes'][u'prop_new_sp_success'] \
-            += [data['outcomes'][u'prop_new_sp_cmplt'][i] \
-            + data['outcomes'][u'prop_new_sp_cur'][i]]
+            += [data['outcomes'][u'prop_new_sp_cmplt'][i] + data['outcomes'][u'prop_new_sp_cur'][i]]
 
     # Add the treatment success and death data to the program dictionary
     if data['programs']['program_prop_treatment_success'][u'load_data'] == 'yes':
@@ -634,27 +696,20 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
             = copy.copy(data['programs'][u'program_prop_treatment' + outcome + u'_xdr'])
 
     # Final rounds of tidying programmatic data
-
-    # Add a zero at the model's starting time to all programs
-    # Most programs will have a zero starting point later than that too, but that's OK
     for program in data['programs']:
+
+        # Add zero at starting time for model run to all programs that are proportions
         if 'prop' in program:
-            data['programs'][program][int(data['attributes']['start_time'])] = 0.
+            data['programs'][program] = add_starting_zero(data['programs'][program], data)
 
-    # Get rid of the load_data item from the program dictionaries,
-    # so that they're all integer keys with float values
-        if u'load_data' in data['programs'][program]:
-            del data['programs'][program][u'load_data']
+        # Remove the load_data keys, as they have now been used
+        data['programs'][program] = remove_specific_key(data['programs'][program], u'load_data')
 
-        # Remove any extraneous nans from the program data
-        nan_indices = []
-        for i in data['programs'][program]:
-            if numpy.isnan(data['programs'][program][i]):
-                nan_indices += [i]
-        for i in nan_indices:
-            del data['programs'][program][i]
+        # Remove dictionary keys for which values are nan
+        data['programs'][program] = remove_nans(data['programs'][program])
 
     return data
+
 
 
 if __name__ == "__main__":

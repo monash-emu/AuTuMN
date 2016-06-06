@@ -638,8 +638,10 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None, start_time=190
 
         # Truncate parameter names depending on whether it is a
         # treatment success/death proportion
-        if 'treatment' in program:
+        if 'treatment' in program and 'timeperiod' not in program:
             title = program[23:]
+        elif 'timeperiod' in program:
+            title = program[19:]
         else:
             title = program[13:]
         ax.set_title(title, fontsize=6)

@@ -530,7 +530,10 @@ class ConsolidatedModel(BaseModel):
 
                 scenario_string = 'scenario_' + str(self.scenario)
                 if scenario_string in self.data['programs'][program]:
-                    scenario_values = [self.data['attributes'][u'scenario_full_time'], self.data['programs'][program][scenario_string]]
+                    scenario_values = [self.data['attributes'][u'scenario_full_time'],
+                                       self.data['programs'][program][scenario_string]]
+                    if 'prop' in program:
+                        scenario_values[1] /= 1E2
                     scenario_start = self.data['attributes'][u'scenario_start_time']
                 else:
                     scenario_values = None
@@ -556,14 +559,18 @@ class ConsolidatedModel(BaseModel):
                                                           self.programs[program].values(),
                                                           self.data['attributes'][u'fitting_method'],
                                                           self.data['attributes']['detection_smoothness'],
-                                                          0., 1.))
+                                                          0., 1.,
+                                                          intervention_end = scenario_values,
+                                                          intervention_start_date = scenario_start))
                 else:
                     self.set_scaleup_fn(program,
                                     scale_up_function(self.programs[program].keys(),
                                                       self.programs[program].values(),
                                                       self.data['attributes'][u'fitting_method'],
                                                       self.data['attributes']['program_smoothness'],
-                                                      0., 1.))
+                                                      0., 1.,
+                                                      intervention_end=scenario_values,
+                                                      intervention_start_date=scenario_start))
 
     def find_treatment_rates_scaleups(self):
 

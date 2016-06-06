@@ -91,9 +91,12 @@ for n_organs in data['attributes']['n_organs']:
                             #     model, model.compartment_types_bystrain, model.compartment_type_bystrain_fraction_soln, data['attributes']['recent_time'],
                             #     "strain", base + '.types_fraction_bystrain.png')
                             # BROAD COMPARTMENT TYPES
-                            autumn.plotting.plot_fractions(
-                                model, model.broad_compartment_types, model.broad_fraction_soln, data['attributes']['recent_time'],
-                                "", base + '.broad_fraction.png')
+                            # autumn.plotting.plot_fractions(
+                            #     model, model.broad_compartment_types, model.broad_fraction_soln, data['attributes']['recent_time'],
+                            #     "", base + '.broad_fraction.png')
+                            # autumn.plotting.plot_fractions(
+                            #     model, model.broad_compartment_types, model.broad_fraction_soln, data['attributes']['start_time'],
+                            #     "", base + '.broad_fraction.png')
                             # autumn.plotting.plot_fractions(
                             #     model, model.broad_compartment_types_bystrain, model.broad_compartment_type_bystrain_fraction_soln, data['attributes']['recent_time'],
                             #     "strain", base + '.broadtypes_fraction_bystrain.png')
@@ -146,7 +149,8 @@ for n_organs in data['attributes']['n_organs']:
                             vars_to_plot = []
                             for var in model.vars.keys():
                                 if var in model.data['programs'].keys() and 'inappropriate' not in var\
-                                        and 'xdr' not in var:
+                                        and 'xdr' not in var and 'lowquality' not in var\
+                                        and 'mdr' not in var and 'dst' not in var:
                                     vars_to_plot += [var]
 
                             autumn.plotting.plot_scaleup_fns(model,
@@ -163,7 +167,7 @@ for n_organs in data['attributes']['n_organs']:
                                                                               vars_to_plot,
                                                                               base + '.scaleup_start.png',
                                                                               data['attributes']['start_time'])
-
+                            #
                             #     year = indices(model.times, lambda x: x >= 2015.)[0]
                             #     print("2015 incidence is: ")
                             #     print(model.get_var_soln("incidence")[year])

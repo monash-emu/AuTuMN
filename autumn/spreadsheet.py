@@ -637,7 +637,8 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
     # Add a zero at the model's starting time to all programs
     # Most programs will have a zero starting point later than that too, but that's OK
     for program in data['programs']:
-        data['programs'][program][int(data['attributes']['start_time'])] = 0.
+        if 'prop' in program:
+            data['programs'][program][int(data['attributes']['start_time'])] = 0.
 
     # Get rid of the load_data item from the program dictionaries,
     # so that they're all integer keys with float values

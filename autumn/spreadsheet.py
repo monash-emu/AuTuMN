@@ -258,7 +258,7 @@ class ModelAttributesReader(FixedParametersReader):
             self.data[row[0]] = row[1]
 
         # For the model stratifications
-        elif u'n_' in row[0] or u'age_breakpoints' in row[0]:
+        elif u'n_' in row[0] or u'age_breakpoints' in row[0] or u'scenarios' in row[0]:
             self.data[row[0]] = []
             for i in range(1, len(row)):
                 if not row[i] == '':
@@ -297,13 +297,12 @@ class ProgramReader():
         else:
             self.data[row[0]] = {}
             for i in range(self.start_col, len(row)):
-                # For the loading data selection or for scenarios
-                # (which should have remained unicode)
-                if i == 1 or type(self.parlist[i]) == unicode:
-                    self.data[row[0]][self.parlist[i]] = \
-                        row[i]
-                elif type(row[i]) == float:
+                parlist_item_string = str(self.parlist[i])
+                if ('19' in parlist_item_string or '20' in parlist_item_string) and row[i] != '':
                     self.data[row[0]][int(self.parlist[i])] = \
+                        row[i]
+                elif row[i] != '':
+                    self.data[row[0]][self.parlist[i]] = \
                         row[i]
 
     def get_data(self):
@@ -648,12 +647,8 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
             del data['programs'][program][u'load_data']
 
         # Remove any extraneous nans from the program data
-        # and cap values
         nan_indices = []
         for i in data['programs'][program]:
-            # This statement ensures no programs go above 100%
-            if data['programs'][program][i] > 100:
-                data['programs'][program][i] = 98.
             if numpy.isnan(data['programs'][program][i]):
                 nan_indices += [i]
         for i in nan_indices:

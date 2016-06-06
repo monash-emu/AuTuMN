@@ -396,6 +396,8 @@ class ConsolidatedModel(BaseModel):
 
         self.find_natural_history_params()
 
+        self.find_programs_to_run()
+
         self.find_nontreatment_rates_params()
 
         self.find_treatment_rates_scaleups()
@@ -496,16 +498,30 @@ class ConsolidatedModel(BaseModel):
                                                   self.data['attributes'][u'fitting_method'], self.data['attributes']['organ_smoothness'],
                                                   0., 1.))
 
-    def find_nontreatment_rates_params(self):
+    def find_programs_to_run(self):
 
-        # For the six non-treatment programs
-        for program in self.data['programs']:
+        # Extract relevant programs to run from the data object and truncate as needed
+        self.programs = {}
+        for program in self.data['programs'].keys():
+
+            # Extract the ones that aren't for cost curve development
+            if u'cost' not in program:
+                self.programs[program] = {}
+                for i in self.data['programs'][program]:
+                    if type(i) == int:
+                        self.programs[program][i] = self.data['programs'][program][i]
+
             if 'prop' in program:
 
                 # Convert percentages to proportions
-                for i in self.data['programs'][program]:
-                    self.data['programs'][program][i] \
-                        = self.data['programs'][program][i] / 1E2
+                for i in self.programs[program]:
+                    self.programs[program][i] \
+                        = self.programs[program][i] / 1E2
+
+    def find_nontreatment_rates_params(self):
+
+        # For the six non-treatment programs
+        for program in self.data['programs'].keys():
 
             if 'prop' in program or 'timeperiod' in program:
 
@@ -516,22 +532,22 @@ class ConsolidatedModel(BaseModel):
                 # (e.g. negative compartment values)
                 if 'detect' in program:
                     self.set_scaleup_fn(program,
-                                        scale_up_function(self.data['programs'][program].keys(),
-                                                          self.data['programs'][program].values(),
+                                        scale_up_function(self.programs[program].keys(),
+                                                          self.programs[program].values(),
                                                           self.data['attributes'][u'fitting_method'],
                                                           self.data['attributes']['detection_smoothness'],
                                                           0., 1.))
                 elif 'timeperiod' in program:
                     self.set_scaleup_fn(program,
-                                        scale_up_function(self.data['programs'][program].keys(),
-                                                          self.data['programs'][program].values(),
+                                        scale_up_function(self.programs[program].keys(),
+                                                          self.programs[program].values(),
                                                           self.data['attributes'][u'fitting_method'],
                                                           self.data['attributes']['detection_smoothness'],
                                                           0., 1.))
                 else:
                     self.set_scaleup_fn(program,
-                                    scale_up_function(self.data['programs'][program].keys(),
-                                                      self.data['programs'][program].values(),
+                                    scale_up_function(self.programs[program].keys(),
+                                                      self.programs[program].values(),
                                                       self.data['attributes'][u'fitting_method'],
                                                       self.data['attributes']['program_smoothness'],
                                                       0., 1.))
@@ -561,14 +577,14 @@ class ConsolidatedModel(BaseModel):
             # Populate treatment outcomes from previously calculated functions
             self.set_scaleup_fn(
                 "program_proportion_success" + strain,
-                scale_up_function(self.data['programs'][u'program_prop_treatment_success' + strain].keys(),
-                                  self.data['programs'][u'program_prop_treatment_success' + strain].values(),
+                scale_up_function(self.programs[u'program_prop_treatment_success' + strain].keys(),
+                                  self.programs[u'program_prop_treatment_success' + strain].values(),
                                   self.data['attributes'][u'fitting_method'], self.data['attributes']['program_smoothness'],
                                   0., 1.))
             self.set_scaleup_fn(
                 "program_proportion_death" + strain,
-                scale_up_function(self.data['programs'][u'program_prop_treatment_death' + strain].keys(),
-                                  self.data['programs'][u'program_prop_treatment_death' + strain].values(),
+                scale_up_function(self.programs[u'program_prop_treatment_death' + strain].keys(),
+                                  self.programs[u'program_prop_treatment_death' + strain].values(),
                                   self.data['attributes'][u'fitting_method'], self.data['attributes']['program_smoothness'],
                                   0., 1.))
 
@@ -1075,13 +1091,13 @@ class ConsolidatedModel(BaseModel):
                                     organ + strain + "_as" + assigned_strain[1:] + comorbidity + agegroup,
                                     "treatment_infect" +
                                     organ + strain + "_as" + assigned_strain[1:] + comorbidity + agegroup,
-                                    "program_var_rate_start_treatment")
+                                    "program_rate_start_treatment")
                         else:
                             # Following line is the currently running line (without mis-assignment)
                             self.set_fixed_transfer_rate_flow(
                                 "detect" + organ + strain + comorbidity + agegroup,
                                 "treatment_infect" + organ + strain + comorbidity + agegroup,
-                                "program_var_rate_start_treatment")
+                                "program_rate_start_treatment")
 
                         if self.is_lowquality:
                             self.set_var_transfer_rate_flow(

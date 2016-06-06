@@ -297,7 +297,9 @@ class ProgramReader():
         else:
             self.data[row[0]] = {}
             for i in range(self.start_col, len(row)):
-                if i == 1:
+                # For the loading data selection or for scenarios
+                # (which should have remained unicode)
+                if i == 1 or type(self.parlist[i]) == unicode:
                     self.data[row[0]][self.parlist[i]] = \
                         row[i]
                 elif type(row[i]) == float:

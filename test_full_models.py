@@ -60,7 +60,7 @@ for n_organs in data['attributes']['n_organs']:
                             for key, value in data['miscellaneous'].items():
                                 model.set_parameter(key, value)
 
-                            model.make_times(data['attributes']['start_time'], 2015.1, 0.1)
+                            model.make_times(data['attributes']['start_time'], data['attributes']['current_time'], 0.1)
                             model.integrate()
 
                             # Only make a flow-diagram if the model isn't overly complex
@@ -147,8 +147,8 @@ for n_organs in data['attributes']['n_organs']:
                             #         data['attributes']['start_time'], base + '.mdr_proportion_recent.png')
                             #
                             vars_to_plot = []
-                            for var in model.vars.keys():
-                                if var in model.data['programs'].keys() and 'inappropriate' not in var\
+                            for var in model.programs.keys():
+                                if var in model.programs.keys() and 'inappropriate' not in var\
                                         and 'xdr' not in var and 'lowquality' not in var\
                                         and 'mdr' not in var and 'dst' not in var:
                                     vars_to_plot += [var]

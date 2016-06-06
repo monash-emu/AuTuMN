@@ -620,9 +620,9 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None, start_time=190
                     x_vals), line_styles[i],
                     label=program)
         data_to_plot = {}
-        for j in model.data['programs'][program]:
+        for j in model.programs[program]:
             if j > start_time:
-                data_to_plot[j] = model.data['programs'][program][j]
+                data_to_plot[j] = model.programs[program][j]
 
         # Scatter plot data from which they are derived
         ax.scatter(data_to_plot.keys(),

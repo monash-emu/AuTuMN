@@ -55,6 +55,7 @@ class ConsolidatedModel(BaseModel):
                  is_lowquality=False,
                  is_amplification=False,
                  is_misassignment=False,
+                 scenario=None,
                  data=None):
 
         """
@@ -96,6 +97,8 @@ class ConsolidatedModel(BaseModel):
         self.is_lowquality = is_lowquality
         self.is_amplification = is_amplification
         self.is_misassignment = is_misassignment
+
+        self.scenario = scenario
 
         self.data = data
 
@@ -525,6 +528,14 @@ class ConsolidatedModel(BaseModel):
 
             if 'prop' in program or 'timeperiod' in program:
 
+                scenario_string = 'scenario_' + str(self.scenario)
+                if scenario_string in self.data['programs'][program]:
+                    scenario_values = [self.data['attributes'][u'scenario_full_time'], self.data['programs'][program][scenario_string]]
+                    scenario_start = self.data['attributes'][u'scenario_start_time']
+                else:
+                    scenario_values = None
+                    scenario_start = None
+
                 # Find scale-up functions
 
                 # Allow a different smoothness parameter for case detection,
@@ -536,7 +547,9 @@ class ConsolidatedModel(BaseModel):
                                                           self.programs[program].values(),
                                                           self.data['attributes'][u'fitting_method'],
                                                           self.data['attributes']['detection_smoothness'],
-                                                          0., 1.))
+                                                          0., 1.,
+                                                          intervention_end=scenario_values,
+                                                          intervention_start_date=scenario_start))
                 elif 'timeperiod' in program:
                     self.set_scaleup_fn(program,
                                         scale_up_function(self.programs[program].keys(),

@@ -156,6 +156,21 @@ def add_starting_zero(program, data):
     return program
 
 
+def convert_dictionary_of_lists_to_dictionary_of_dictionaries(lists_to_process):
+
+    dict = {}
+    for list in lists_to_process:
+        # If it's actually numeric data and not just a column that's of not much use
+        # (not sure how to generalise this - clearly it should be generalised)
+        if u'source' not in list and u'year' not in list and u'iso' not in list and u'who' not in list:
+            dict[list] = {}
+            for i in range(len(lists_to_process['year'])):
+                dict[list][int(lists_to_process['year'][i])] = lists_to_process[list][i]
+            # Remove nans
+            dict[list] = remove_nans(dict[list])
+    return dict
+
+
 
 ###############################################################
 #  Readers
@@ -708,23 +723,13 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
         # Remove dictionary keys for which values are nan
         data['programs'][program] = remove_nans(data['programs'][program])
 
-
     # Convert list formats to dictionaries
     # This should be done above in the data readers, but as subsequent code depends on the lists,
     # I don't want to kill the lists yet. However, we now have consistent
     for data_item in ['tb', 'notifications', 'outcomes']:
-        data[data_item + '_dict'] = {}
-        for item in data[data_item]:
-            # If it's actually numeric data and not just a column that's of not much use
-            if u'source' not in item and u'year' not in item and u'iso' not in item and u'who' not in item:
-                data[data_item + '_dict'][item] = {}
-                for i in range(len(data[data_item]['year'])):
-                    data[data_item + '_dict'][item][int(data[data_item]['year'][i])] = data[data_item][item][i]
-                # Remove nans
-                data[data_item + '_dict'][item] = remove_nans(data[data_item + '_dict'][item])
+        data[data_item + '_dict'] = convert_dictionary_of_lists_to_dictionary_of_dictionaries(data[data_item])
 
     return data
-
 
 
 if __name__ == "__main__":

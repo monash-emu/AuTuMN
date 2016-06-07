@@ -1241,6 +1241,7 @@ class ConsolidatedModel(BaseModel):
 
             # Mortality
             for from_label, rate in self.fixed_infection_death_rate_flows:
+                # Under-reporting factor included for those deaths not occurring on treatment
                 if strain in from_label:
                     rate_mortality[strain] \
                         += self.compartments[from_label] * rate \

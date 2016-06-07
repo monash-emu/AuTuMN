@@ -1243,14 +1243,14 @@ class ConsolidatedModel(BaseModel):
             for from_label, rate in self.fixed_infection_death_rate_flows:
                 if strain in from_label:
                     rate_mortality[strain] \
-                        += self.compartments[from_label] * rate
+                        += self.compartments[from_label] * rate \
+                            * self.data['miscellaneous'][u'program_proportion_death_reporting']
             for from_label, rate in self.var_infection_death_rate_flows:
                 if strain in from_label:
                     rate_mortality[strain] \
                         += self.compartments[from_label] * self.vars[rate]
             self.vars["mortality" + strain] \
-                = rate_mortality[strain] / self.vars["population"] * 1E5 \
-                * self.data['miscellaneous'][u'program_proportion_death_reporting']
+                = rate_mortality[strain] / self.vars["population"] * 1E5
 
         # Prevalence
         for strain in self.strains:

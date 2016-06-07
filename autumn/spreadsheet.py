@@ -111,7 +111,7 @@ def remove_nans(program):
 
     nan_indices = []
     for i in program:
-        if numpy.isnan(program[i]):
+        if type(program[i]) == float and numpy.isnan(program[i]):
             nan_indices += [i]
     for i in nan_indices:
         del program[i]
@@ -707,6 +707,21 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
 
         # Remove dictionary keys for which values are nan
         data['programs'][program] = remove_nans(data['programs'][program])
+
+
+    # Convert list formats to dictionaries
+    # This should be done above in the data readers, but as subsequent code depends on the lists,
+    # I don't want to kill the lists yet. However, we now have consistent
+    for data_item in ['tb', 'notifications', 'outcomes']:
+        data[data_item + '_dict'] = {}
+        for item in data[data_item]:
+            # If it's actually numeric data and not just a column that's of not much use
+            if u'source' not in item and u'year' not in item and u'iso' not in item and u'who' not in item:
+                data[data_item + '_dict'][item] = {}
+                for i in range(len(data[data_item]['year'])):
+                    data[data_item + '_dict'][item][int(data[data_item]['year'][i])] = data[data_item][item][i]
+                # Remove nans
+                data[data_item + '_dict'][item] = remove_nans(data[data_item + '_dict'][item])
 
     return data
 

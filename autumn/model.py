@@ -179,7 +179,7 @@ class ConsolidatedModel(BaseModel):
             self.organ_status = available_organs[:self.n_organ]
 
         # Select number of strains
-        available_strains = [
+        self.available_strains = [
             "_ds",
             "_mdr",
             "_xdr"]
@@ -187,7 +187,7 @@ class ConsolidatedModel(BaseModel):
             # Need a list of an empty string to be iterable for methods iterating by strain
             self.strains = [""]
         else:
-            self.strains = available_strains[:self.n_strain]
+            self.strains = self.available_strains[:self.n_strain]
 
         # Select number of risk groups
         available_comorbidities = [
@@ -413,6 +413,10 @@ class ConsolidatedModel(BaseModel):
 
         self.find_organ_scaleup()
 
+        # self.collect_scaleup_data()
+
+        # self.set_scaleup_functions()
+
         self.set_population_death_rate("demo_rate_death")
 
     ##################################################################
@@ -504,6 +508,59 @@ class ConsolidatedModel(BaseModel):
                                                   [eval(organ_data)[0]] + eval(organ_data),
                                                   self.data['attributes'][u'fitting_method'], self.data['attributes']['organ_smoothness'],
                                                   0., 1.))
+
+    def collect_scaleup_data(self):
+
+        """
+        Method to load all the dictionaries to be used in generating scale-up functions to
+        a single attribute of the class instance (to avoid creating heaps of functions for
+        irrelevant programs)
+
+        Returns:
+            Creates self.scaleup_data, a dictionary of the relevant scale-up data for creating
+            scale-up functions in set_scaleup_functions.
+
+        """
+
+        # Collect data to generate scale-up functions
+        self.scaleup_data = {}
+
+        # Demographic functions
+        self.scaleup_data['smearpos_progression'] = self.data['notifications_dict'][u'prop_new_sp']
+        self.scaleup_data['smearneg_progression'] = self.data['notifications_dict'][u'prop_new_sn']
+        self.scaleup_data['birth_rate'] = self.data['birth_rate']
+        self.scaleup_data['life_expectancy'] = self.data['life_expectancy']
+
+        # Work out which programs are not relevant to this model structure
+        irrelevant_programs = []
+        for program in self.data['programs'].keys():
+            for strain in self.available_strains:
+                if strain not in self.strains and strain in program and u'_dst' not in program:
+                    irrelevant_programs += [program]
+            if u'cost' in program:
+                irrelevant_programs += [program]
+            if len(self.strains) < 2 and ('line_dst' in program or '_inappropriate' in program):
+                irrelevant_programs += [program]
+            elif len(self.strains) == 2 and 'secondline_dst' in program:
+                irrelevant_programs += [program]
+
+        # Find the programs that are relevant and load them to the scaleup_data attribute
+        for program in self.data['programs'].keys():
+            if program not in irrelevant_programs:
+                self.scaleup_data[str(program)] = self.data['programs'][program]
+
+    def set_scaleup_functions(self):
+
+        # Define scale-up functions from these datasets
+        for i in self.scaleup_data:
+            self.set_scaleup_fn(i,
+                                scale_up_function(self.scaleup_data[i].keys(),
+                                                  self.scaleup_data[i].values(),
+                                                  self.data['attributes'][u'fitting_method'],
+                                                  self.data['attributes']['organ_smoothness'],
+                                                  0., 1.))
+
+        print()
 
     def find_programs_to_run(self):
 

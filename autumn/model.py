@@ -570,25 +570,37 @@ class ConsolidatedModel(BaseModel):
     def set_scaleup_functions(self):
 
         # Define scale-up functions from these datasets
-        for i in self.scaleup_data:
-            if 'smoothness' in self.scaleup_data[i]:
-                smoothness = self.scaleup_data[i].pop('smoothness')
+        for variable_param in self.scaleup_data:
+
+            # Extract and remove the smoothness parameter from the dictionary
+            if 'smoothness' in self.scaleup_data[variable_param]:
+                smoothness = self.scaleup_data[variable_param].pop('smoothness')
             else:
                 smoothness = self.data['attributes']['organ_smoothness']
-            if 'scenario' in self.scaleup_data[i]:
+
+            # If the parameter is being modified for the scenario being run
+            if 'scenario' in self.scaleup_data[variable_param]:
                 scenario = [self.data['attributes'][u'scenario_end_time'],
-                            self.scaleup_data[i].pop('scenario')]
+                            self.scaleup_data[variable_param].pop('scenario')]
             else:
                 scenario = None
 
-            self.set_scaleup_fn(i,
-                                scale_up_function(self.scaleup_data[i].keys(),
-                                                  self.scaleup_data[i].values(),
+            # Upper bound depends on whether the parameter is a proportion
+            if 'prop' in variable_param:
+                upper_bound = 1.
+            else:
+                upper_bound = 1E3
+
+            # Calculate the scaling function
+            self.set_scaleup_fn(variable_param,
+                                scale_up_function(self.scaleup_data[variable_param].keys(),
+                                                  self.scaleup_data[variable_param].values(),
                                                   self.data['attributes'][u'fitting_method'],
                                                   smoothness,
                                                   bound_low=0.,
-                                                  bound_up=1E3,
-                                                  intervention_end=scenario))
+                                                  bound_up=upper_bound,
+                                                  intervention_end=scenario,
+                                                  intervention_start_date=self.data['attributes'][u'scenario_start_time']))
 
     def find_programs_to_run(self):
 

@@ -146,28 +146,28 @@ for n_organs in data['attributes']['n_organs']:
                             #         model, ["proportion_mdr"],
                             #         data['attributes']['start_time'], base + '.mdr_proportion_recent.png')
                             #
-                            vars_to_plot = []
-                            for var in model.programs.keys():
-                                if var in model.programs.keys() and 'inappropriate' not in var\
-                                        and 'xdr' not in var and 'lowquality' not in var\
-                                        and 'mdr' not in var and 'dst' not in var:
-                                    vars_to_plot += [var]
-
-                            autumn.plotting.plot_scaleup_fns(model,
-                                                             vars_to_plot,
-                                                             base + '.scaleups_start.png', data['attributes']['start_time'])
-                            autumn.plotting.plot_scaleup_fns(model,
-                                                             vars_to_plot,
-                                                             base + '.scaleups_recent.png', data['attributes']['recent_time'])
-                            autumn.plotting.plot_all_scaleup_fns_against_data(model,
-                                                                              vars_to_plot,
-                                                                              base + '.scaleup_recent.png',
-                                                                              data['attributes']['recent_time'])
-                            autumn.plotting.plot_all_scaleup_fns_against_data(model,
-                                                                              vars_to_plot,
-                                                                              base + '.scaleup_start.png',
-                                                                              data['attributes']['start_time'])
-                            demo_vars_to_plot = ['temp_tb_proportion_smearpos']
+                            # vars_to_plot = []
+                            # for var in model.programs.keys():
+                            #     if var in model.programs.keys() and 'inappropriate' not in var\
+                            #             and 'xdr' not in var and 'lowquality' not in var\
+                            #             and 'mdr' not in var and 'dst' not in var:
+                            #         vars_to_plot += [var]
+                            #
+                            # autumn.plotting.plot_scaleup_fns(model,
+                            #                                  vars_to_plot,
+                            #                                  base + '.scaleups_start.png', data['attributes']['start_time'])
+                            # autumn.plotting.plot_scaleup_fns(model,
+                            #                                  vars_to_plot,
+                            #                                  base + '.scaleups_recent.png', data['attributes']['recent_time'])
+                            # autumn.plotting.plot_all_scaleup_fns_against_data(model,
+                            #                                                   vars_to_plot,
+                            #                                                   base + '.scaleup_recent.png',
+                            #                                                   data['attributes']['recent_time'])
+                            # autumn.plotting.plot_all_scaleup_fns_against_data(model,
+                            #                                                   vars_to_plot,
+                            #                                                   base + '.scaleup_start.png',
+                            #                                                   data['attributes']['start_time'])
+                            # demo_vars_to_plot = ['temp_tb_proportion_smearpos']
 
                             # autumn.plotting.plot_all_scaleup_fns_against_data(model,
                             #                                                   demo_vars_to_plot,

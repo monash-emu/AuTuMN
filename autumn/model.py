@@ -403,10 +403,6 @@ class ConsolidatedModel(BaseModel):
 
         self.find_natural_history_params()
 
-        self.find_programs_to_run()
-
-        self.find_nontreatment_rates_params()
-
         self.find_treatment_rates_scaleups()
 
         self.find_amplification_scaleup()
@@ -602,77 +598,6 @@ class ConsolidatedModel(BaseModel):
                                                   intervention_end=scenario,
                                                   intervention_start_date=self.data['attributes'][u'scenario_start_time']))
 
-    def find_programs_to_run(self):
-
-        # Extract relevant programs to run from the data object and truncate as needed
-        self.programs = {}
-        for program in self.data['programs'].keys():
-
-            # Extract the ones that aren't for cost curve development
-            if u'cost' not in program:
-                self.programs[program] = {}
-                for i in self.data['programs'][program]:
-                    if type(i) == int:
-                        self.programs[program][i] = self.data['programs'][program][i]
-
-            if 'prop' in program:
-
-                # Convert percentages to proportions
-                for i in self.programs[program]:
-                    self.programs[program][i] \
-                        = self.programs[program][i] / 1E2
-
-    def find_nontreatment_rates_params(self):
-
-        # For the six non-treatment programs
-        for program in self.data['programs'].keys():
-
-            if 'prop' in program or 'timeperiod' in program:
-
-                scenario_string = 'scenario_' + str(self.scenario)
-                if scenario_string in self.data['programs'][program]:
-                    scenario_values = [self.data['attributes'][u'scenario_full_time'],
-                                       self.data['programs'][program][scenario_string]]
-                    if 'prop' in program:
-                        scenario_values[1] /= 1E2
-                    scenario_start = self.data['attributes'][u'scenario_start_time']
-                else:
-                    scenario_values = None
-                    scenario_start = None
-
-                # Find scale-up functions
-
-                # Allow a different smoothness parameter for case detection,
-                # because abrupt changes in this time-variant parameter lead to major model problems
-                # (e.g. negative compartment values)
-                if 'detect' in program:
-                    self.set_scaleup_fn(program,
-                                        scale_up_function(self.programs[program].keys(),
-                                                          self.programs[program].values(),
-                                                          self.data['attributes'][u'fitting_method'],
-                                                          self.data['attributes']['detection_smoothness'],
-                                                          0., 1.,
-                                                          intervention_end=scenario_values,
-                                                          intervention_start_date=scenario_start))
-                elif 'timeperiod' in program:
-                    self.set_scaleup_fn(program,
-                                        scale_up_function(self.programs[program].keys(),
-                                                          self.programs[program].values(),
-                                                          self.data['attributes'][u'fitting_method'],
-                                                          self.data['attributes']['detection_smoothness'],
-                                                          0., 1.,
-                                                          intervention_end = scenario_values,
-                                                          intervention_start_date = scenario_start))
-                else:
-                    self.set_scaleup_fn(program,
-                                    scale_up_function(self.programs[program].keys(),
-                                                      self.programs[program].values(),
-                                                      self.data['attributes'][u'fitting_method'],
-                                                      self.data['attributes']['program_smoothness'],
-                                                      0., 1.,
-                                                      intervention_end=scenario_values,
-                                                      intervention_start_date=scenario_start))
-
     def find_treatment_rates_scaleups(self):
 
         """
@@ -694,20 +619,6 @@ class ConsolidatedModel(BaseModel):
                 "tb_timeperiod_noninfect_ontreatment" + strain,
                 self.params["tb_timeperiod_treatment" + strain]
                 - self.params["tb_timeperiod_infect_ontreatment" + strain])
-
-            # Populate treatment outcomes from previously calculated functions
-            self.set_scaleup_fn(
-                "program_proportion_success" + strain,
-                scale_up_function(self.programs[u'program_prop_treatment_success' + strain].keys(),
-                                  self.programs[u'program_prop_treatment_success' + strain].values(),
-                                  self.data['attributes'][u'fitting_method'], self.data['attributes']['program_smoothness'],
-                                  0., 1.))
-            self.set_scaleup_fn(
-                "program_proportion_death" + strain,
-                scale_up_function(self.programs[u'program_prop_treatment_death' + strain].keys(),
-                                  self.programs[u'program_prop_treatment_death' + strain].values(),
-                                  self.data['attributes'][u'fitting_method'], self.data['attributes']['program_smoothness'],
-                                  0., 1.))
 
     ##################################################################
     # Methods that calculate variables to be used in calculating flows
@@ -943,33 +854,38 @@ class ConsolidatedModel(BaseModel):
 
     def calculate_treatment_rates_vars(self):
 
-        for strain in self.strains + ["_inappropriate"]:
+        # May need to adjust this - a bit of a patch for now
+        treatments = self.strains
+        if len(self.strains) > 1:
+            treatments += ['_inappropriate']
 
-            self.vars['program_proportion_default' + strain] \
+        for strain in treatments:
+
+            self.vars['program_prop_treatment_default' + strain] \
                 = 1. \
-                  - self.vars['program_proportion_success' + strain] \
-                  - self.vars['program_proportion_death' + strain]
+                  - self.vars['program_prop_treatment_success' + strain] \
+                  - self.vars['program_prop_treatment_death' + strain]
 
             # Find the proportion of deaths/defaults during the infectious and non-infectious stages
             for outcome in self.non_success_outcomes:
                 early_proportion, late_proportion = self.find_outcome_proportions_by_period(
-                    self.vars["program_proportion" + outcome + strain],
+                    self.vars["program_prop_treatment" + outcome + strain],
                     self.params["tb_timeperiod_infect_ontreatment" + strain],
                     self.params["tb_timeperiod_treatment" + strain])
-                self.vars["program_proportion" + outcome + "_infect" + strain] = early_proportion
-                self.vars["program_proportion" + outcome + "_noninfect" + strain] = late_proportion
+                self.vars["program_prop_treatment" + outcome + "_infect" + strain] = early_proportion
+                self.vars["program_prop_treatment" + outcome + "_noninfect" + strain] = late_proportion
 
             # Find the success proportions
             for treatment_stage in self.treatment_stages:
-                self.vars["program_proportion_success" + treatment_stage + strain] = \
-                    1. - self.vars["program_proportion_default" + treatment_stage + strain] \
-                    - self.vars["program_proportion_death" + treatment_stage + strain]
+                self.vars["program_prop_treatment_success" + treatment_stage + strain] = \
+                    1. - self.vars["program_prop_treatment_default" + treatment_stage + strain] \
+                    - self.vars["program_prop_treatment_death" + treatment_stage + strain]
 
                 # Find the corresponding rates from the proportions
                 for outcome in self.outcomes:
                     self.vars["program_rate" + outcome + treatment_stage + strain] = \
                         1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment" + strain] \
-                        * self.vars["program_proportion" + outcome + treatment_stage + strain]
+                        * self.vars["program_prop_treatment" + outcome + treatment_stage + strain]
                 if self.is_amplification:
                     self.vars["program_rate_default" + treatment_stage + "_amplify" + strain] = \
                         self.vars["program_rate_default" + treatment_stage + strain] \

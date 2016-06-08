@@ -413,9 +413,9 @@ class ConsolidatedModel(BaseModel):
 
         self.find_organ_scaleup()
 
-        # self.collect_scaleup_data()
+        self.collect_scaleup_data()
 
-        # self.set_scaleup_functions()
+        self.set_scaleup_functions()
 
         self.set_population_death_rate("demo_rate_death")
 
@@ -547,20 +547,48 @@ class ConsolidatedModel(BaseModel):
         # Find the programs that are relevant and load them to the scaleup_data attribute
         for program in self.data['programs'].keys():
             if program not in irrelevant_programs:
-                self.scaleup_data[str(program)] = self.data['programs'][program]
+                self.scaleup_data[str(program)] = {}
+                for i in self.data['programs'][program]:
+                    # For the smoothness parameter
+                    if i == u'smoothness':
+                        self.scaleup_data[str(program)]['smoothness'] = self.data['programs'][program][i]
+                    # For years with data percentages
+                    elif type(i) == int and u'prop_' in program:
+                        self.scaleup_data[str(program)][i] = self.data['programs'][program][i] / 1E2
+                    # For years with data not percentages
+                    elif type(i) == int:
+                        self.scaleup_data[str(program)][i] = self.data['programs'][program][i]
+                    # For scenarios with data percentages
+                    elif type(i) == unicode and u'scenario_' + str(self.scenario) in i and u'prop_' in program:
+                        self.scaleup_data[str(program)]['scenario'] = \
+                            self.data['programs'][program][u'scenario_' + str(self.scenario)] / 1E2
+                    # For scenarios with data not percentages
+                    elif type(i) == unicode and u'scenario_' + str(self.scenario) in i:
+                        self.scaleup_data[str(program)]['scenario'] = \
+                            self.data['programs'][program][u'scenario_' + str(self.scenario)]
 
     def set_scaleup_functions(self):
 
         # Define scale-up functions from these datasets
         for i in self.scaleup_data:
+            if 'smoothness' in self.scaleup_data[i]:
+                smoothness = self.scaleup_data[i].pop('smoothness')
+            else:
+                smoothness = self.data['attributes']['organ_smoothness']
+            if 'scenario' in self.scaleup_data[i]:
+                scenario = [self.data['attributes'][u'scenario_end_time'],
+                            self.scaleup_data[i].pop('scenario')]
+            else:
+                scenario = None
+
             self.set_scaleup_fn(i,
                                 scale_up_function(self.scaleup_data[i].keys(),
                                                   self.scaleup_data[i].values(),
                                                   self.data['attributes'][u'fitting_method'],
-                                                  self.data['attributes']['organ_smoothness'],
-                                                  0., 1.))
-
-        print()
+                                                  smoothness,
+                                                  bound_low=0.,
+                                                  bound_up=1E3,
+                                                  intervention_end=scenario))
 
     def find_programs_to_run(self):
 

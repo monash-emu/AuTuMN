@@ -674,6 +674,18 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
                 if i not in data['time_variants']['epi_' + epi_parameter]:
                     data['time_variants']['epi_' + epi_parameter][i] = data[epi_parameter][i]
 
+    # Populate smear-positive and smear-negative proportion dictionaries to time-variant dictionary
+    if data['time_variants']['tb_prop_smearpos'][u'load_data'] == u'yes':
+        for i in range(len(data['notifications'][u'prop_new_sp'])):
+            if int(data['notifications']['year'][i]) not in data['time_variants']['tb_prop_smearpos']:
+                data['time_variants']['tb_prop_smearpos'][(int(data['notifications']['year'][i]))] = \
+                    data['notifications'][u'prop_new_sp'][i]
+    if data['time_variants']['tb_prop_smearneg'][u'load_data'] == u'yes':
+        for i in range(len(data['notifications'][u'prop_new_sn'])):
+            if int(data['notifications']['year'][i]) not in data['time_variants']['tb_prop_smearneg']:
+                data['time_variants']['tb_prop_smearneg'][(int(data['notifications']['year'][i]))] = \
+                    data['notifications'][u'prop_new_sn'][i]
+
     # Treatment outcomes
     # The aim is now to have data for success and death, as default can be derived from these
     # in the model module.
@@ -721,7 +733,7 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
     for program in data['time_variants']:
 
         # Add zero at starting time for model run to all programs that are proportions
-        if 'prop' in program:
+        if u'program_prop' in program:
             data['time_variants'][program] = add_starting_zero(data['time_variants'][program], data)
 
         # Remove the load_data keys, as they have now been used

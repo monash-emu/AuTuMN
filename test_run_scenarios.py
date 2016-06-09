@@ -79,27 +79,6 @@ for scenario in data['attributes']['scenarios_to_run']:
             data['attributes']['recent_time'], base + '.all_rate_outputs_gtb' + str(scenario) + '.png',
             data, country)
 
-        vars_to_plot = []
-        for var in model.programs.keys():
-            if var in model.programs.keys() and 'inappropriate' not in var\
-                    and 'xdr' not in var and 'lowquality' not in var\
-                    and 'mdr' not in var and 'dst' not in var:
-                vars_to_plot += [var]
-
-        autumn.plotting.plot_scaleup_fns(model,
-                                         vars_to_plot,
-                                         base + '.scaleups_start.png', data['attributes']['start_time'])
-        autumn.plotting.plot_scaleup_fns(model,
-                                         vars_to_plot,
-                                         base + '.scaleups_recent.png', data['attributes']['recent_time'])
-        autumn.plotting.plot_all_scaleup_fns_against_data(model,
-                                                          vars_to_plot,
-                                                          base + '.scaleup_recent.png',
-                                                          data['attributes']['recent_time'])
-        autumn.plotting.plot_all_scaleup_fns_against_data(model,
-                                                          vars_to_plot,
-                                                          base + '.scaleup_start.png',
-                                                          data['attributes']['start_time'])
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)

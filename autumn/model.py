@@ -515,31 +515,24 @@ class ConsolidatedModel(BaseModel):
         # Collect data to generate scale-up functions
         self.scaleup_data = {}
 
-        # Demographic functions
-        # (planning later to go back and make everything in the data object go straight into a dictionary)
-        self.scaleup_data['tb_prop_smearpos'] = self.data['notifications_dict'][u'prop_new_sp']
-        self.scaleup_data['tb_prop_smearneg'] = self.data['notifications_dict'][u'prop_new_sn']
-        self.scaleup_data['birth_rate'] = self.data['birth_rate']
-        self.scaleup_data['life_expectancy'] = self.data['life_expectancy']
-
-        # Work out which programs are not relevant to this model structure
-        irrelevant_programs = []
+        # Work out which time-variant parameters are not relevant to this model structure
+        irrelevant_time_variants = []
         for program in self.data['time_variants'].keys():
             for strain in self.available_strains:
                 if strain not in self.strains and strain in program and u'_dst' not in program:
-                    irrelevant_programs += [program]
+                    irrelevant_time_variants += [program]
             if u'cost' in program:
-                irrelevant_programs += [program]
+                irrelevant_time_variants += [program]
             if len(self.strains) < 2 and ('line_dst' in program or '_inappropriate' in program):
-                irrelevant_programs += [program]
+                irrelevant_time_variants += [program]
             elif len(self.strains) == 2 and 'secondline_dst' in program:
-                irrelevant_programs += [program]
+                irrelevant_time_variants += [program]
             if u'low_quality' in program and not self.is_lowquality:
-                irrelevant_programs += [program]
+                irrelevant_time_variants += [program]
 
         # Find the programs that are relevant and load them to the scaleup_data attribute
-        for program in self.data['time_variants'].keys():
-            if program not in irrelevant_programs:
+        for program in self.data['time_variants']:
+            if program not in irrelevant_time_variants:
                 self.scaleup_data[str(program)] = {}
                 for i in self.data['time_variants'][program]:
                     # For the smoothness parameter

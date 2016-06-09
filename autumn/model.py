@@ -103,7 +103,7 @@ class ConsolidatedModel(BaseModel):
         self.data = data
 
         if self.is_misassignment:
-            assert self.is_amplification, "Misassignment requested without amplification"
+            assert self.is_amplification, 'Misassignment requested without amplification'
 
         # Initialise model compartmental structure and set un-processed parameters
         self.define_model_structure()
@@ -116,7 +116,7 @@ class ConsolidatedModel(BaseModel):
         # Global TB outcomes of "completion" and "cure" can be considered "_success",
         # "death" is "_death" (of course), "failure" and "default" are considered "_default"
         # and "transfer out" is removed from denominator calculations.
-        self.outcomes = ["_success", "_death", "_default"]
+        self.outcomes = ['_success', '_death', '_default']
         self.non_success_outcomes = self.outcomes[1: 3]
 
         self.make_times(self.data['attributes']['start_time'],
@@ -133,70 +133,70 @@ class ConsolidatedModel(BaseModel):
 
         # All compartmental disease stages
         self.compartment_types = [
-            "susceptible_fully",
-            "susceptible_vac",
-            "susceptible_treated",
-            "latent_early",
-            "latent_late",
-            "active",
-            "detect",
-            "missed",
-            "treatment_infect",
-            "treatment_noninfect"]
-        if self.is_lowquality: self.compartment_types += ["lowquality"]
+            'susceptible_fully',
+            'susceptible_vac',
+            'susceptible_treated',
+            'latent_early',
+            'latent_late',
+            'active',
+            'detect',
+            'missed',
+            'treatment_infect',
+            'treatment_noninfect']
+        if self.is_lowquality: self.compartment_types += ['lowquality']
 
         # Broader stages for calculating outputs later
         self.broad_compartment_types = [
-            "susceptible",
-            "latent",
-            "active",
-            "missed",
-            "treatment"]
-        if self.is_lowquality: self.broad_compartment_types += ["lowquality"]
+            'susceptible',
+            'latent',
+            'active',
+            'missed',
+            'treatment']
+        if self.is_lowquality: self.broad_compartment_types += ['lowquality']
 
         # Stages in progression through treatment
         self.treatment_stages = [
-            "_infect",
-            "_noninfect"]
+            '_infect',
+            '_noninfect']
 
         # Compartments that contribute to force of infection calculations
         self.infectious_tags = [
-            "active",
-            "missed",
-            "detect",
-            "treatment_infect"]
-        if self.is_lowquality: self.infectious_tags += ["lowquality"]
+            'active',
+            'missed',
+            'detect',
+            'treatment_infect']
+        if self.is_lowquality: self.infectious_tags += ['lowquality']
 
         # Select number of organ statuses
         available_organs = [
-            "_smearpos",
-            "_smearneg",
-            "_extrapul"]
+            '_smearpos',
+            '_smearneg',
+            '_extrapul']
         if self.n_organ == 0:
             # Need a list of an empty string to be iterable for methods iterating by organ status
-            self.organ_status = [""]
+            self.organ_status = ['']
         else:
             self.organ_status = available_organs[:self.n_organ]
 
         # Select number of strains
         self.available_strains = [
-            "_ds",
-            "_mdr",
-            "_xdr"]
+            '_ds',
+            '_mdr',
+            '_xdr']
         if self.n_strain == 0:
             # Need a list of an empty string to be iterable for methods iterating by strain
-            self.strains = [""]
+            self.strains = ['']
         else:
             self.strains = self.available_strains[:self.n_strain]
 
         # Select number of risk groups
         available_comorbidities = [
-            "_nocomorbs",
-            "_hiv",
-            "_diabetes"]
+            '_nocomorbs',
+            '_hiv',
+            '_diabetes']
         if self.n_comorbidity == 0:
             # Need a list of an empty string to be iterable for methods iterating by risk group
-            self.comorbidities = [""]
+            self.comorbidities = ['']
         else:
             self.comorbidities = available_comorbidities[:self.n_comorbidity]
 
@@ -210,16 +210,16 @@ class ConsolidatedModel(BaseModel):
                 for compartment in self.compartment_types:
 
                     # Replicate susceptible for age-groups and comorbidities
-                    if "susceptible" in compartment:
+                    if 'susceptible' in compartment:
                         self.set_compartment(compartment + comorbidity + agegroup, 0.)
 
                     # Replicate latent classes for age-groups, comorbidities and strains
-                    elif "latent" in compartment:
+                    elif 'latent' in compartment:
                         for strain in self.strains:
                             self.set_compartment(compartment + strain + comorbidity + agegroup, 0.)
 
                     # Replicate active classes for age-groups, comorbidities, strains and organ status
-                    elif "active" in compartment or "missed" in compartment or "lowquality" in compartment:
+                    elif 'active' in compartment or 'missed' in compartment or 'lowquality' in compartment:
                         for strain in self.strains:
                             for organ in self.organ_status:
                                 self.set_compartment(compartment + organ + strain + comorbidity + agegroup, 0.)
@@ -234,7 +234,7 @@ class ConsolidatedModel(BaseModel):
                                     for assigned_strain_number in range(len(self.strains)):
                                         self.set_compartment(
                                             compartment + organ + strain +
-                                            "_as" + self.strains[assigned_strain_number][1:] +
+                                            '_as' + self.strains[assigned_strain_number][1:] +
                                             comorbidity + agegroup, 0.)
                                 else:
                                     self.set_compartment(compartment +
@@ -242,8 +242,8 @@ class ConsolidatedModel(BaseModel):
 
         # Populate input_compartments
         # Initialise to DS-TB or no strain if single-strain model
-        default_start_strain = "_ds"
-        if self.strains == [""]: default_start_strain = ""
+        default_start_strain = '_ds'
+        if self.strains == ['']: default_start_strain = ''
 
         # The equal splits may need to be adjusted, but the important thing is not to
         # initialise multiple strains too early, so that MDR-TB doesn't overtake the model
@@ -251,13 +251,13 @@ class ConsolidatedModel(BaseModel):
             if compartment in self.data['attributes']['start_compartments']:
                 for agegroup in self.agegroups:
                     for comorbidity in self.comorbidities:
-                        if "susceptible_fully" in compartment:
+                        if 'susceptible_fully' in compartment:
                             # Split equally by comorbidities and age-groups
                             self.set_compartment(compartment + comorbidity + agegroup,
                                                  self.data['attributes']['start_compartments'][compartment]
                                                  / len(self.comorbidities)
                                                  / len(self.agegroups))
-                        elif "latent" in compartment:
+                        elif 'latent' in compartment:
                             # Assign all to DS-TB, split equally by comorbidities and age-groups
                             self.set_compartment(compartment + default_start_strain + comorbidity + agegroup,
                                                  self.data['attributes']['start_compartments'][compartment]
@@ -280,13 +280,13 @@ class ConsolidatedModel(BaseModel):
         """
 
         fixed_parameters = {
-            "epi_proportion_cases":
+            'epi_prop_cases':
                 1.,  # Proportion infectious if only one organ-status running
-            "tb_multiplier_force":
+            'tb_multiplier_force':
                 1.,  # Infectiousness multiplier if only one organ-status running
-            "tb_multiplier_force_smearpos":
+            'tb_multiplier_force_smearpos':
                 1.,  # Proporiton of smear-positive patients infectious
-            "tb_multiplier_force_extrapul":
+            'tb_multiplier_force_extrapul':
                 0.
         }
         for parameter in fixed_parameters:
@@ -317,15 +317,15 @@ class ConsolidatedModel(BaseModel):
 
         arbitray_index = 30
         if self.n_organ > 1:
-            self.set_parameter('epi_proportion_cases_smearpos',
+            self.set_parameter('epi_prop_cases_smearpos',
                                self.data['notifications'][u'prop_new_sp'][arbitray_index])
         if self.n_organ > 2:
-            self.set_parameter('epi_proportion_cases_smearneg',
+            self.set_parameter('epi_prop_cases_smearneg',
                                self.data['notifications'][u'prop_new_sn'][arbitray_index])
-            self.set_parameter('epi_proportion_cases_extrapul',
+            self.set_parameter('epi_prop_cases_extrapul',
                                self.data['notifications'][u'prop_new_ep'][arbitray_index])
         elif self.n_organ == 2:
-            self.set_parameter('epi_proportion_cases_smearneg',
+            self.set_parameter('epi_prop_cases_smearneg',
                                self.data['notifications'][u'prop_new_sn'][arbitray_index]
                                + self.data['notifications'][u'prop_new_ep'][arbitray_index])
 
@@ -341,22 +341,22 @@ class ConsolidatedModel(BaseModel):
 
                     # The first age-group
                     self.agegroups += \
-                        ["_age0to" + str(self.age_breakpoints[i])]
+                        ['_age0to' + str(self.age_breakpoints[i])]
                 else:
 
                     # Middle age-groups
                     self.agegroups += \
-                        ["_age" + str(self.age_breakpoints[i - 1]) +
-                         "to" + str(self.age_breakpoints[i])]
+                        ['_age' + str(self.age_breakpoints[i - 1]) +
+                         'to' + str(self.age_breakpoints[i])]
 
             # Last age-group
-            self.agegroups += ["_age" + str(self.age_breakpoints[len(self.age_breakpoints) - 1]) + "up"]
+            self.agegroups += ['_age' + str(self.age_breakpoints[len(self.age_breakpoints) - 1]) + 'up']
 
         # Otherwise
         else:
             # List consisting of one empty string required
             # for the methods that iterate over strains
-            self.agegroups += [""]
+            self.agegroups += ['']
 
     ############################################################
     # General underlying methods for use by other methods
@@ -403,17 +403,15 @@ class ConsolidatedModel(BaseModel):
 
         self.find_natural_history_params()
 
-        self.find_treatment_rates_scaleups()
+        self.find_treatment_periods()
 
         self.find_amplification_scaleup()
 
-        self.find_organ_scaleup()
-
         self.collect_scaleup_data()
 
-        self.set_scaleup_functions()
+        self.find_scaleup_functions()
 
-        self.set_population_death_rate("demo_rate_death")
+        self.set_population_death_rate('demo_rate_death')
 
     ##################################################################
     # The methods that process_parameters calls to set parameters and
@@ -423,87 +421,83 @@ class ConsolidatedModel(BaseModel):
 
         # Calculate ageing rates as the reciprocal of the width of the age bracket
         for agegroup in self.agegroups:
-            if "up" not in agegroup:
-                self.set_parameter("ageing_rate" + agegroup, 1. / (
-                    float(agegroup[agegroup.find("to") + 2:]) -
-                    float(agegroup[agegroup.find("age") + 3: agegroup.find("to")])))
+            if 'up' not in agegroup:
+                self.set_parameter('ageing_rate' + agegroup, 1. / (
+                    float(agegroup[agegroup.find('to') + 2:]) -
+                    float(agegroup[agegroup.find('age') + 3: agegroup.find('to')])))
 
     def find_natural_history_params(self):
 
         # If extrapulmonary case-fatality not stated, use smear-negative case-fatality
-        if "tb_proportion_casefatality_untreated_extrapul" not in self.params:
+        if 'tb_prop_casefatality_untreated_extrapul' not in self.params:
             self.set_parameter(
-                "tb_proportion_casefatality_untreated_extrapul",
-                self.params["tb_proportion_casefatality_untreated_smearneg"])
+                'tb_prop_casefatality_untreated_extrapul',
+                self.params['tb_prop_casefatality_untreated_smearneg'])
 
         # Overall progression and stabilisation rates
-        self.set_parameter("tb_rate_early_progression",
-                           self.params["tb_proportion_early_progression"]
-                           / self.params["tb_timeperiod_early_latent"])
-        self.set_parameter("tb_rate_stabilise",
-                           (1. - self.params["tb_proportion_early_progression"])
-                           / self.params["tb_timeperiod_early_latent"])
+        self.set_parameter('tb_rate_early_progression',
+                           self.params['tb_prop_early_progression']
+                           / self.params['tb_timeperiod_early_latent'])
+        self.set_parameter('tb_rate_stabilise',
+                           (1. - self.params['tb_prop_early_progression'])
+                           / self.params['tb_timeperiod_early_latent'])
 
         # Adjust overall rates by organ status
         for organ in self.organ_status:
             self.set_parameter(
-                "tb_rate_early_progression" + organ,
-                self.params["tb_proportion_early_progression"]
-                / self.params["tb_timeperiod_early_latent"]
-                * self.params["epi_proportion_cases" + organ])
+                'tb_rate_early_progression' + organ,
+                self.params['tb_prop_early_progression']
+                / self.params['tb_timeperiod_early_latent']
+                * self.params['epi_prop_cases' + organ])
             self.set_parameter(
-                "tb_rate_late_progression" + organ,
-                self.params["tb_rate_late_progression"]
-                * self.params["epi_proportion_cases" + organ])
+                'tb_rate_late_progression' + organ,
+                self.params['tb_rate_late_progression']
+                * self.params['epi_prop_cases' + organ])
             self.set_parameter(
-                "tb_rate_death" + organ,
-                self.params["tb_proportion_casefatality_untreated" + organ]
-                / self.params["tb_timeperiod_activeuntreated"])
+                'tb_rate_death' + organ,
+                self.params['tb_prop_casefatality_untreated' + organ]
+                / self.params['tb_timeperiod_activeuntreated'])
             self.set_parameter(
-                "tb_rate_recover" + organ,
-                (1 - self.params["tb_proportion_casefatality_untreated" + organ])
-                / self.params["tb_timeperiod_activeuntreated"])
+                'tb_rate_recover' + organ,
+                (1 - self.params['tb_prop_casefatality_untreated' + organ])
+                / self.params['tb_timeperiod_activeuntreated'])
+
+    def find_treatment_periods(self):
+
+        """
+        Work out the periods of time spent infectious and non-infectious
+        """
+
+        # If the model isn't stratified by strain, use DS-TB time-periods for the single strain
+        if self.strains == ['']:
+            self.params['tb_timeperiod_infect_ontreatment'] \
+                = self.params['tb_timeperiod_infect_ontreatment_ds']
+            self.params['tb_timeperiod_treatment'] \
+                = self.params['tb_timeperiod_treatment_ds']
+
+        treatment_outcome_types = self.strains
+        if len(self.strains) > 1 and self.is_misassignment:
+            treatment_outcome_types += ['_inappropriate']
+
+        for strain in treatment_outcome_types:
+
+            # Find the non-infectious periods
+            self.set_parameter(
+                'tb_timeperiod_noninfect_ontreatment' + strain,
+                self.params['tb_timeperiod_treatment' + strain]
+                - self.params['tb_timeperiod_infect_ontreatment' + strain])
 
     def find_amplification_scaleup(self):
 
         # Set the amplification scale-up function
-        self.set_scaleup_fn("tb_proportion_amplification",
-                            scale_up_function([self.start_time,
-                                               self.data['miscellaneous']['timepoint_introduce_mdr'] - 5.,
-                                               self.data['miscellaneous']['timepoint_introduce_mdr'] + 5.],
+        self.set_scaleup_fn('tb_prop_amplification',
+                            scale_up_function([self.data['miscellaneous']['start_mdr_introduce_period'],
+                                               self.data['miscellaneous']['end_mdr_introduce_period']],
                                               [0.,
-                                               0.,
-                                               self.params['tb_proportion_amplification']],
-                                              self.data['attributes'][u'fitting_method'], self.data['attributes']['organ_smoothness'],
+                                               self.params['tb_prop_amplification']],
+                                              self.data['attributes'][u'fitting_method'],
+                                              self.data['attributes'][u'default_smoothness'],
                                               0., 1.))
-
-    def find_organ_scaleup(self):
-
-        """
-        Work out the scale-up function for progression to disease by organ status.
-        This should only need to be done for smear-positive and smear-negative at most,
-        as the remaining proportion will be calculated as one minus these proportions.
-        """
-
-        # Use lists with the nan-s removed
-        year = []
-        smearpos = []
-        smearneg = []
-        for i in range(len(self.data['notifications'][u'prop_new_sp'])):
-            if not numpy.isnan(self.data['notifications'][u'prop_new_sp'][i]):
-                year += [self.data['notifications'][u'year'][i]]
-                smearpos += [self.data['notifications'][u'prop_new_sp'][i]]
-                smearneg += [self.data['notifications'][u'prop_new_sn'][i]]
-
-        # Currently setting a scale-up function with an extra point added at the
-        # model start time that is equal to the first (non-nan) proportion in the list.
-        # (Note that eval(organ_data) turns the string into the variable name.)
-        for organ_data in ['smearpos', 'smearneg']:
-            self.set_scaleup_fn('tb_proportion_' + organ_data,
-                                scale_up_function([self.start_time] + year,
-                                                  [eval(organ_data)[0]] + eval(organ_data),
-                                                  self.data['attributes'][u'fitting_method'], self.data['attributes']['organ_smoothness'],
-                                                  0., 1.))
 
     def collect_scaleup_data(self):
 
@@ -522,8 +516,9 @@ class ConsolidatedModel(BaseModel):
         self.scaleup_data = {}
 
         # Demographic functions
-        self.scaleup_data['smearpos_progression'] = self.data['notifications_dict'][u'prop_new_sp']
-        self.scaleup_data['smearneg_progression'] = self.data['notifications_dict'][u'prop_new_sn']
+        # (planning later to go back and make everything in the data object go straight into a dictionary)
+        self.scaleup_data['tb_prop_smearpos'] = self.data['notifications_dict'][u'prop_new_sp']
+        self.scaleup_data['tb_prop_smearneg'] = self.data['notifications_dict'][u'prop_new_sn']
         self.scaleup_data['birth_rate'] = self.data['birth_rate']
         self.scaleup_data['life_expectancy'] = self.data['life_expectancy']
 
@@ -563,7 +558,7 @@ class ConsolidatedModel(BaseModel):
                         self.scaleup_data[str(program)]['scenario'] = \
                             self.data['programs'][program][u'scenario_' + str(self.scenario)]
 
-    def set_scaleup_functions(self):
+    def find_scaleup_functions(self):
 
         # Define scale-up functions from these datasets
         for variable_param in self.scaleup_data:
@@ -572,7 +567,7 @@ class ConsolidatedModel(BaseModel):
             if 'smoothness' in self.scaleup_data[variable_param]:
                 smoothness = self.scaleup_data[variable_param].pop('smoothness')
             else:
-                smoothness = self.data['attributes']['organ_smoothness']
+                smoothness = self.data['attributes'][u'default_smoothness']
 
             # If the parameter is being modified for the scenario being run
             if 'scenario' in self.scaleup_data[variable_param]:
@@ -598,28 +593,6 @@ class ConsolidatedModel(BaseModel):
                                                   intervention_end=scenario,
                                                   intervention_start_date=self.data['attributes'][u'scenario_start_time']))
 
-    def find_treatment_rates_scaleups(self):
-
-        """
-        Calculate treatment rates from the treatment outcome proportions
-        Has to be done for each strain separately and also for those on inappropriate treatment
-        """
-
-        # If the model isn't stratified by strain, use DS-TB time-periods for the single strain
-        if self.strains == [""]:
-            self.params["tb_timeperiod_infect_ontreatment"] \
-                = self.params["tb_timeperiod_infect_ontreatment_ds"]
-            self.params["tb_timeperiod_treatment"] \
-                = self.params["tb_timeperiod_treatment_ds"]
-
-        for strain in self.strains + ["_inappropriate"]:
-
-            # Find the non-infectious periods
-            self.set_parameter(
-                "tb_timeperiod_noninfect_ontreatment" + strain,
-                self.params["tb_timeperiod_treatment" + strain]
-                - self.params["tb_timeperiod_infect_ontreatment" + strain])
-
     ##################################################################
     # Methods that calculate variables to be used in calculating flows
     # Note: all scaleup_fns are calculated and put into self.vars before
@@ -634,7 +607,7 @@ class ConsolidatedModel(BaseModel):
         variable rates
         """
 
-        self.vars["population"] = sum(self.compartments.values())
+        self.vars['population'] = sum(self.compartments.values())
 
         self.calculate_birth_rates_vars()
 
@@ -657,15 +630,15 @@ class ConsolidatedModel(BaseModel):
         # Calculate vaccinated and unvaccinated birth rates
         # Rates are dependent upon two variables, i.e. the total population
         # and the scale-up function of BCG vaccination coverage
-        self.vars["births_unvac"] = \
-            (1. - self.vars["program_prop_vaccination"]) \
-            * self.params["demo_rate_birth"] \
-            * self.vars["population"] \
+        self.vars['births_unvac'] = \
+            (1. - self.vars['program_prop_vaccination']) \
+            * self.params['demo_rate_birth'] \
+            * self.vars['population'] \
             / len(self.comorbidities)
-        self.vars["births_vac"] = \
-            self.vars["program_prop_vaccination"] \
-            * self.params["demo_rate_birth"] \
-            * self.vars["population"] \
+        self.vars['births_vac'] = \
+            self.vars['program_prop_vaccination'] \
+            * self.params['demo_rate_birth'] \
+            * self.vars['population'] \
             / len(self.comorbidities)
 
     def calculate_force_infection_vars(self):
@@ -675,38 +648,38 @@ class ConsolidatedModel(BaseModel):
         for strain in self.strains:
 
             # Initialise infectious population to zero
-            self.vars["infectious_population" + strain] = 0.
+            self.vars['infectious_population' + strain] = 0.
             for organ in self.organ_status:
                 for label in self.labels:
 
                     # If we haven't reached the part of the model divided by organ status
-                    if organ not in label and organ != "":
+                    if organ not in label and organ != '':
                         continue
 
                     # If we haven't reached the part of the model divided by strain
-                    if strain not in label and strain != "":
+                    if strain not in label and strain != '':
                         continue
 
                     # If the compartment is non-infectious
                     if not label_intersects_tags(label, self.infectious_tags):
                         continue
-                    self.vars["infectious_population" + strain] += \
-                        self.params["tb_multiplier_force" + organ] \
+                    self.vars['infectious_population' + strain] += \
+                        self.params['tb_multiplier_force' + organ] \
                         * self.compartments[label]
 
             # Calculate non-immune force of infection
-            self.vars["rate_force" + strain] = \
-                self.params["tb_n_contact"] \
-                * self.vars["infectious_population" + strain] \
-                / self.vars["population"]
+            self.vars['rate_force' + strain] = \
+                self.params['tb_n_contact'] \
+                * self.vars['infectious_population' + strain] \
+                / self.vars['population']
 
             # Adjust for immunity
-            self.vars["rate_force_vacc" + strain] = \
-                self.params["tb_multiplier_bcg_protection"] \
-                * self.vars["rate_force" + strain]
-            self.vars["rate_force_latent" + strain] = \
-                self.params["tb_multiplier_latency_protection"] \
-                * self.vars["rate_force" + strain]
+            self.vars['rate_force_vacc' + strain] = \
+                self.params['tb_multiplier_bcg_protection'] \
+                * self.vars['rate_force' + strain]
+            self.vars['rate_force_latent' + strain] = \
+                self.params['tb_multiplier_latency_protection'] \
+                * self.vars['rate_force' + strain]
 
     def calculate_progression_vars(self):
 
@@ -719,23 +692,23 @@ class ConsolidatedModel(BaseModel):
 
         # If unstratified (self.organ_status should have length 0, but will work for length 1)
         if len(self.organ_status) < 2:
-            self.vars['tb_proportion'] = 1.
+            self.vars['tb_prop'] = 1.
 
         # Stratified into smear-positive and smear-negative
         elif len(self.organ_status) == 2:
-            self.vars['tb_proportion_smearneg'] = \
-                1. - self.vars['tb_proportion_smearpos']
+            self.vars['tb_prop_smearneg'] = \
+                1. - self.vars['tb_prop_smearpos']
 
         # Fully stratified into smear-positive, smear-negative and extra-pulmonary
         elif len(self.organ_status) > 2:
-            self.vars['tb_proportion_extrapul'] = \
-                1. - self.vars['tb_proportion_smearpos'] - self.vars['tb_proportion_smearneg']
+            self.vars['tb_prop_extrapul'] = \
+                1. - self.vars['tb_prop_smearpos'] - self.vars['tb_prop_smearneg']
 
         # Determine variable progression rates
         for organ in self.organ_status:
             for timing in ['_early', '_late']:
                 self.vars['tb_rate' + timing + '_progression' + organ] \
-                    = self.vars['tb_proportion' + organ] * self.params['tb_rate' + timing + '_progression']
+                    = self.vars['tb_prop' + organ] * self.params['tb_rate' + timing + '_progression']
 
     def calculate_detect_missed_vars(self):
 
@@ -755,22 +728,22 @@ class ConsolidatedModel(BaseModel):
         # sojourn time, so any organ status can be arbitrarily selected (here the first, or smear-positive)
 
         # If no division by zero
-        if self.vars["program_prop_algorithm_sensitivity"] > 0.:
+        if self.vars['program_prop_algorithm_sensitivity'] > 0.:
 
             # Detections
-            self.vars["program_rate_detect"] = \
-                self.vars["program_prop_detect"] \
-                * (self.params["tb_rate_recover" + self.organ_status[0]] + self.params[
-                    "tb_rate_death" + self.organ_status[0]]) \
-                / (1. - self.vars["program_prop_detect"] \
-                   * (1. + (1. - self.vars["program_prop_algorithm_sensitivity"]) \
-                      / self.vars["program_prop_algorithm_sensitivity"]))
+            self.vars['program_rate_detect'] = \
+                self.vars['program_prop_detect'] \
+                * (self.params['tb_rate_recover' + self.organ_status[0]] + self.params[
+                    'tb_rate_death' + self.organ_status[0]]) \
+                / (1. - self.vars['program_prop_detect'] \
+                   * (1. + (1. - self.vars['program_prop_algorithm_sensitivity']) \
+                      / self.vars['program_prop_algorithm_sensitivity']))
 
             # Missed
-            self.vars["program_rate_missed"] = \
-                self.vars["program_rate_detect"] \
-                * (1. - self.vars["program_prop_algorithm_sensitivity"]) \
-                / self.vars["program_prop_algorithm_sensitivity"]
+            self.vars['program_rate_missed'] = \
+                self.vars['program_rate_detect'] \
+                * (1. - self.vars['program_prop_algorithm_sensitivity']) \
+                / self.vars['program_prop_algorithm_sensitivity']
 
         # Otherwise just assign detection and missed rates to zero
         else:
@@ -779,9 +752,9 @@ class ConsolidatedModel(BaseModel):
 
         # Repeat for each strain
         for strain in self.strains:
-            for programmatic_rate in ["_detect", "_missed"]:
-                self.vars["program_rate" + programmatic_rate + strain] = \
-                    self.vars["program_rate" + programmatic_rate]
+            for programmatic_rate in ['_detect', '_missed']:
+                self.vars['program_rate' + programmatic_rate + strain] = \
+                    self.vars['program_rate' + programmatic_rate]
 
     def calculate_await_treatment_var(self):
 
@@ -799,10 +772,10 @@ class ConsolidatedModel(BaseModel):
         cases isn't actually detected
         """
 
-        self.vars["program_rate_enterlowquality"] = \
-            self.vars["program_rate_detect"] \
-            * self.vars["program_prop_lowquality"] \
-            / (1. - self.vars["program_prop_lowquality"])
+        self.vars['program_rate_enterlowquality'] = \
+            self.vars['program_rate_detect'] \
+            * self.vars['program_prop_lowquality'] \
+            / (1. - self.vars['program_prop_lowquality'])
 
     def calculate_proportionate_detection_vars(self):
 
@@ -819,38 +792,38 @@ class ConsolidatedModel(BaseModel):
         if self.is_misassignment:
 
             # DS-TB
-            self.vars["program_rate_detect_ds_asds"] = \
-                self.vars["program_rate_detect"]
-            self.vars["program_rate_detect_ds_asmdr"] = 0.
-            self.vars["program_rate_detect_ds_asxdr"] = 0.
+            self.vars['program_rate_detect_ds_asds'] = \
+                self.vars['program_rate_detect']
+            self.vars['program_rate_detect_ds_asmdr'] = 0.
+            self.vars['program_rate_detect_ds_asxdr'] = 0.
 
             # MDR-TB
-            self.vars["program_rate_detect_mdr_asds"] = \
-                (1. - self.vars["program_prop_firstline_dst"]) \
-                * self.vars["program_rate_detect"]
-            self.vars["program_rate_detect_mdr_asmdr"] = \
-                self.vars["program_prop_firstline_dst"] \
-                * self.vars["program_rate_detect"]
-            self.vars["program_rate_detect_mdr_asxdr"] = 0.
+            self.vars['program_rate_detect_mdr_asds'] = \
+                (1. - self.vars['program_prop_firstline_dst']) \
+                * self.vars['program_rate_detect']
+            self.vars['program_rate_detect_mdr_asmdr'] = \
+                self.vars['program_prop_firstline_dst'] \
+                * self.vars['program_rate_detect']
+            self.vars['program_rate_detect_mdr_asxdr'] = 0.
 
             # XDR-TB
-            self.vars["program_rate_detect_xdr_asds"] = \
-                (1. - self.vars["program_prop_firstline_dst"]) \
-                 * self.vars["program_rate_detect"]
-            self.vars["program_rate_detect_xdr_asmdr"] = \
-                self.vars["program_prop_firstline_dst"] \
-                * (1. - self.vars["program_prop_secondline_dst"])\
-                * self.vars["program_rate_detect"]
-            self.vars["program_rate_detect_xdr_asxdr"] = \
-                self.vars["program_prop_firstline_dst"] \
-                * self.vars["program_prop_secondline_dst"] \
-                * self.vars["program_rate_detect"]
+            self.vars['program_rate_detect_xdr_asds'] = \
+                (1. - self.vars['program_prop_firstline_dst']) \
+                 * self.vars['program_rate_detect']
+            self.vars['program_rate_detect_xdr_asmdr'] = \
+                self.vars['program_prop_firstline_dst'] \
+                * (1. - self.vars['program_prop_secondline_dst'])\
+                * self.vars['program_rate_detect']
+            self.vars['program_rate_detect_xdr_asxdr'] = \
+                self.vars['program_prop_firstline_dst'] \
+                * self.vars['program_prop_secondline_dst'] \
+                * self.vars['program_rate_detect']
 
         # Without misassignment:
         else:
             for strain in self.strains:
-                self.vars["program_rate_detect" + strain + "_as"+strain[1:]] = \
-                    self.vars["program_rate_detect"]
+                self.vars['program_rate_detect' + strain + '_as'+strain[1:]] = \
+                    self.vars['program_rate_detect']
 
     def calculate_treatment_rates_vars(self):
 
@@ -869,30 +842,30 @@ class ConsolidatedModel(BaseModel):
             # Find the proportion of deaths/defaults during the infectious and non-infectious stages
             for outcome in self.non_success_outcomes:
                 early_proportion, late_proportion = self.find_outcome_proportions_by_period(
-                    self.vars["program_prop_treatment" + outcome + strain],
-                    self.params["tb_timeperiod_infect_ontreatment" + strain],
-                    self.params["tb_timeperiod_treatment" + strain])
-                self.vars["program_prop_treatment" + outcome + "_infect" + strain] = early_proportion
-                self.vars["program_prop_treatment" + outcome + "_noninfect" + strain] = late_proportion
+                    self.vars['program_prop_treatment' + outcome + strain],
+                    self.params['tb_timeperiod_infect_ontreatment' + strain],
+                    self.params['tb_timeperiod_treatment' + strain])
+                self.vars['program_prop_treatment' + outcome + '_infect' + strain] = early_proportion
+                self.vars['program_prop_treatment' + outcome + '_noninfect' + strain] = late_proportion
 
             # Find the success proportions
             for treatment_stage in self.treatment_stages:
-                self.vars["program_prop_treatment_success" + treatment_stage + strain] = \
-                    1. - self.vars["program_prop_treatment_default" + treatment_stage + strain] \
-                    - self.vars["program_prop_treatment_death" + treatment_stage + strain]
+                self.vars['program_prop_treatment_success' + treatment_stage + strain] = \
+                    1. - self.vars['program_prop_treatment_default' + treatment_stage + strain] \
+                    - self.vars['program_prop_treatment_death' + treatment_stage + strain]
 
                 # Find the corresponding rates from the proportions
                 for outcome in self.outcomes:
-                    self.vars["program_rate" + outcome + treatment_stage + strain] = \
-                        1. / self.params["tb_timeperiod" + treatment_stage + "_ontreatment" + strain] \
-                        * self.vars["program_prop_treatment" + outcome + treatment_stage + strain]
+                    self.vars['program_rate' + outcome + treatment_stage + strain] = \
+                        1. / self.params['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
+                        * self.vars['program_prop_treatment' + outcome + treatment_stage + strain]
                 if self.is_amplification:
-                    self.vars["program_rate_default" + treatment_stage + "_amplify" + strain] = \
-                        self.vars["program_rate_default" + treatment_stage + strain] \
-                        * self.vars["tb_proportion_amplification"]
-                    self.vars["program_rate_default" + treatment_stage + "_noamplify" + strain] = \
-                        self.vars["program_rate_default" + treatment_stage + strain] \
-                        * (1. - self.vars["tb_proportion_amplification"])
+                    self.vars['program_rate_default' + treatment_stage + '_amplify' + strain] = \
+                        self.vars['program_rate_default' + treatment_stage + strain] \
+                        * self.vars['tb_prop_amplification']
+                    self.vars['program_rate_default' + treatment_stage + '_noamplify' + strain] = \
+                        self.vars['program_rate_default' + treatment_stage + strain] \
+                        * (1. - self.vars['tb_prop_amplification'])
 
     ##################################################################
     # Methods that calculate the flows of all the compartments
@@ -926,9 +899,9 @@ class ConsolidatedModel(BaseModel):
         # Set birth flows (currently evenly distributed between comorbidities)
         for comorbidity in self.comorbidities:
             self.set_var_entry_rate_flow(
-                "susceptible_fully" + comorbidity + self.agegroups[0], "births_unvac")
+                'susceptible_fully' + comorbidity + self.agegroups[0], 'births_unvac')
             self.set_var_entry_rate_flow(
-                "susceptible_vac" + comorbidity + self.agegroups[0], "births_vac")
+                'susceptible_vac' + comorbidity + self.agegroups[0], 'births_vac')
 
     def set_ageing_flows(self):
 
@@ -937,8 +910,8 @@ class ConsolidatedModel(BaseModel):
             for number_agegroup in range(len(self.agegroups)):
                 if self.agegroups[number_agegroup] in label and number_agegroup < len(self.agegroups) - 1:
                     self.set_fixed_transfer_rate_flow(
-                        label, label[0: label.find("_age")] + self.agegroups[number_agegroup + 1],
-                               "ageing_rate" + self.agegroups[number_agegroup])
+                        label, label[0: label.find('_age')] + self.agegroups[number_agegroup + 1],
+                               'ageing_rate' + self.agegroups[number_agegroup])
 
     def set_infection_flows(self):
 
@@ -949,23 +922,23 @@ class ConsolidatedModel(BaseModel):
 
                     # Fully susceptible
                     self.set_var_transfer_rate_flow(
-                        "susceptible_fully" + comorbidity + agegroup,
-                        "latent_early" + strain + comorbidity + agegroup,
-                        "rate_force" + strain)
+                        'susceptible_fully' + comorbidity + agegroup,
+                        'latent_early' + strain + comorbidity + agegroup,
+                        'rate_force' + strain)
 
                     # Partially immune
                     self.set_var_transfer_rate_flow(
-                        "susceptible_vac" + comorbidity + agegroup,
-                        "latent_early" + strain + comorbidity + agegroup,
-                        "rate_force_vacc" + strain)
+                        'susceptible_vac' + comorbidity + agegroup,
+                        'latent_early' + strain + comorbidity + agegroup,
+                        'rate_force_vacc' + strain)
                     self.set_var_transfer_rate_flow(
-                        "susceptible_treated" + comorbidity + agegroup,
-                        "latent_early" + strain + comorbidity + agegroup,
-                        "rate_force_vacc" + strain)
+                        'susceptible_treated' + comorbidity + agegroup,
+                        'latent_early' + strain + comorbidity + agegroup,
+                        'rate_force_vacc' + strain)
                     self.set_var_transfer_rate_flow(
-                        "latent_late" + strain + comorbidity + agegroup,
-                        "latent_early" + strain + comorbidity + agegroup,
-                        "rate_force_latent" + strain)
+                        'latent_late' + strain + comorbidity + agegroup,
+                        'latent_early' + strain + comorbidity + agegroup,
+                        'rate_force_latent' + strain)
 
     def set_progression_flows(self):
 
@@ -975,23 +948,23 @@ class ConsolidatedModel(BaseModel):
 
                         # Stabilisation
                         self.set_fixed_transfer_rate_flow(
-                            "latent_early" + strain + comorbidity + agegroup,
-                            "latent_late" + strain + comorbidity + agegroup,
-                            "tb_rate_stabilise")
+                            'latent_early' + strain + comorbidity + agegroup,
+                            'latent_late' + strain + comorbidity + agegroup,
+                            'tb_rate_stabilise')
 
                         for organ in self.organ_status:
 
                             # Early progression
                             self.set_var_transfer_rate_flow(
-                                "latent_early" + strain + comorbidity + agegroup,
-                                "active" + organ + strain + comorbidity + agegroup,
-                                "tb_rate_early_progression" + organ)
+                                'latent_early' + strain + comorbidity + agegroup,
+                                'active' + organ + strain + comorbidity + agegroup,
+                                'tb_rate_early_progression' + organ)
 
                             # Late progression
                             self.set_var_transfer_rate_flow(
-                                "latent_late" + strain + comorbidity + agegroup,
-                                "active" + organ + strain + comorbidity + agegroup,
-                                "tb_rate_late_progression" + organ)
+                                'latent_late' + strain + comorbidity + agegroup,
+                                'active' + organ + strain + comorbidity + agegroup,
+                                'tb_rate_late_progression' + organ)
 
     def set_natural_history_flows(self):
 
@@ -1002,54 +975,54 @@ class ConsolidatedModel(BaseModel):
 
                         # Recovery, base compartments
                             self.set_fixed_transfer_rate_flow(
-                                "active" + organ + strain + comorbidity + agegroup,
-                                "latent_late" + strain + comorbidity + agegroup,
-                                "tb_rate_recover" + organ)
+                                'active' + organ + strain + comorbidity + agegroup,
+                                'latent_late' + strain + comorbidity + agegroup,
+                                'tb_rate_recover' + organ)
                             self.set_fixed_transfer_rate_flow(
-                                "missed" + organ + strain + comorbidity + agegroup,
-                                "latent_late" + strain + comorbidity + agegroup,
-                                "tb_rate_recover" + organ)
+                                'missed' + organ + strain + comorbidity + agegroup,
+                                'latent_late' + strain + comorbidity + agegroup,
+                                'tb_rate_recover' + organ)
 
                             # Death, base compartments
                             self.set_fixed_infection_death_rate_flow(
-                                "active" + organ + strain + comorbidity + agegroup,
-                                "tb_rate_death" + organ)
+                                'active' + organ + strain + comorbidity + agegroup,
+                                'tb_rate_death' + organ)
                             self.set_fixed_infection_death_rate_flow(
-                                "missed" + organ + strain + comorbidity + agegroup,
-                                "tb_rate_death" + organ)
+                                'missed' + organ + strain + comorbidity + agegroup,
+                                'tb_rate_death' + organ)
 
                             # Extra low-quality compartments
                             if self.is_lowquality:
                                 self.set_fixed_transfer_rate_flow(
-                                    "lowquality" + organ + strain + comorbidity + agegroup,
-                                    "latent_late" + strain + comorbidity + agegroup,
-                                    "tb_rate_recover" + organ)
+                                    'lowquality' + organ + strain + comorbidity + agegroup,
+                                    'latent_late' + strain + comorbidity + agegroup,
+                                    'tb_rate_recover' + organ)
                                 self.set_fixed_infection_death_rate_flow(
-                                    "lowquality" + organ + strain + comorbidity + agegroup,
-                                    "tb_rate_death" + organ)
+                                    'lowquality' + organ + strain + comorbidity + agegroup,
+                                    'tb_rate_death' + organ)
 
                             # Detected, with misassignment
                             if self.is_misassignment:
                                 for assigned_strain in self.strains:
                                     self.set_fixed_infection_death_rate_flow(
-                                        "detect" +
-                                        organ + strain + "_as" + assigned_strain[1:] + comorbidity + agegroup,
-                                        "tb_rate_death" + organ)
+                                        'detect' +
+                                        organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup,
+                                        'tb_rate_death' + organ)
                                     self.set_fixed_transfer_rate_flow(
-                                        "detect" +
-                                        organ + strain + "_as" + assigned_strain[1:] + comorbidity + agegroup,
-                                        "latent_late" + strain + comorbidity + agegroup,
-                                        "tb_rate_recover" + organ)
+                                        'detect' +
+                                        organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup,
+                                        'latent_late' + strain + comorbidity + agegroup,
+                                        'tb_rate_recover' + organ)
 
                             # Detected, without misassignment
                             else:
                                 self.set_fixed_transfer_rate_flow(
-                                    "detect" + organ + strain + comorbidity + agegroup,
-                                    "latent_late" + strain + comorbidity + agegroup,
-                                    "tb_rate_recover" + organ)
+                                    'detect' + organ + strain + comorbidity + agegroup,
+                                    'latent_late' + strain + comorbidity + agegroup,
+                                    'tb_rate_recover' + organ)
                                 self.set_fixed_infection_death_rate_flow(
-                                    "detect" + organ + strain + comorbidity + agegroup,
-                                    "tb_rate_death" + organ)
+                                    'detect' + organ + strain + comorbidity + agegroup,
+                                    'tb_rate_death' + organ)
 
     def set_fixed_programmatic_flows(self):
 
@@ -1060,16 +1033,16 @@ class ConsolidatedModel(BaseModel):
 
                         # Re-start presenting after a missed diagnosis
                         self.set_fixed_transfer_rate_flow(
-                            "missed" + organ + strain + comorbidity + agegroup,
-                            "active" + organ + strain + comorbidity + agegroup,
-                            "program_rate_restart_presenting")
+                            'missed' + organ + strain + comorbidity + agegroup,
+                            'active' + organ + strain + comorbidity + agegroup,
+                            'program_rate_restart_presenting')
 
                         # Give up on the hopeless low-quality health system
                         if self.is_lowquality:
                             self.set_fixed_transfer_rate_flow(
-                                "lowquality" + organ + strain + comorbidity + agegroup,
-                                "active" + organ + strain + comorbidity + agegroup,
-                                "program_rate_leavelowquality")
+                                'lowquality' + organ + strain + comorbidity + agegroup,
+                                'active' + organ + strain + comorbidity + agegroup,
+                                'program_rate_leavelowquality')
 
     def set_detection_flows(self):
 
@@ -1088,20 +1061,20 @@ class ConsolidatedModel(BaseModel):
                         # With misassignment
                         if self.is_misassignment:
                             for assigned_strain_number in range(len(self.strains)):
-                                as_assigned_strain = "_as" + self.strains[assigned_strain_number][1:]
+                                as_assigned_strain = '_as' + self.strains[assigned_strain_number][1:]
                                 # If the strain is equally or more resistant than its assignment
                                 if actual_strain_number >= assigned_strain_number:
                                     self.set_var_transfer_rate_flow(
-                                        "active" + organ + strain + comorbidity + agegroup,
-                                        "detect" + organ + strain + as_assigned_strain + comorbidity + agegroup,
-                                        "program_rate_detect" + strain + as_assigned_strain)
+                                        'active' + organ + strain + comorbidity + agegroup,
+                                        'detect' + organ + strain + as_assigned_strain + comorbidity + agegroup,
+                                        'program_rate_detect' + strain + as_assigned_strain)
 
                         # Without misassignment - everyone is correctly identified by strain
                         else:
                             self.set_var_transfer_rate_flow(
-                                "active" + organ + strain + comorbidity + agegroup,
-                                "detect" + organ + strain + comorbidity + agegroup,
-                                "program_rate_detect")
+                                'active' + organ + strain + comorbidity + agegroup,
+                                'detect' + organ + strain + comorbidity + agegroup,
+                                'program_rate_detect')
 
     def set_variable_programmatic_flows(self):
 
@@ -1111,9 +1084,9 @@ class ConsolidatedModel(BaseModel):
                 for strain in self.strains:
                     for organ in self.organ_status:
                         self.set_var_transfer_rate_flow(
-                            "active" + organ + strain + comorbidity + agegroup,
-                            "missed" + organ + strain + comorbidity + agegroup,
-                            "program_rate_missed")
+                            'active' + organ + strain + comorbidity + agegroup,
+                            'missed' + organ + strain + comorbidity + agegroup,
+                            'program_rate_missed')
                         # Detection, with and without misassignment
 
                         ### Warning, the following two rate setting functions should actually be
@@ -1124,23 +1097,23 @@ class ConsolidatedModel(BaseModel):
                             for assigned_strain in self.strains:
                                 # Following line only for models incorporating mis-assignment
                                 self.set_fixed_transfer_rate_flow(
-                                    "detect" +
-                                    organ + strain + "_as" + assigned_strain[1:] + comorbidity + agegroup,
-                                    "treatment_infect" +
-                                    organ + strain + "_as" + assigned_strain[1:] + comorbidity + agegroup,
-                                    "program_rate_start_treatment")
+                                    'detect' +
+                                    organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup,
+                                    'treatment_infect' +
+                                    organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup,
+                                    'program_rate_start_treatment')
                         else:
                             # Following line is the currently running line (without mis-assignment)
                             self.set_fixed_transfer_rate_flow(
-                                "detect" + organ + strain + comorbidity + agegroup,
-                                "treatment_infect" + organ + strain + comorbidity + agegroup,
-                                "program_rate_start_treatment")
+                                'detect' + organ + strain + comorbidity + agegroup,
+                                'treatment_infect' + organ + strain + comorbidity + agegroup,
+                                'program_rate_start_treatment')
 
                         if self.is_lowquality:
                             self.set_var_transfer_rate_flow(
-                                "active" + organ + strain + comorbidity + agegroup,
-                                "lowquality" + organ + strain + comorbidity + agegroup,
-                                "program_rate_enterlowquality")
+                                'active' + organ + strain + comorbidity + agegroup,
+                                'lowquality' + organ + strain + comorbidity + agegroup,
+                                'program_rate_enterlowquality')
 
     def set_treatment_flows(self):
 
@@ -1157,37 +1130,37 @@ class ConsolidatedModel(BaseModel):
                         if self.is_misassignment:
                             assignment_strains = range(len(self.strains))
                         else:
-                            assignment_strains = [""]
+                            assignment_strains = ['']
                         for assigned_strain_number in assignment_strains:
                             if self.is_misassignment:
-                                as_assigned_strain = "_as" + self.strains[assigned_strain_number][1:]
+                                as_assigned_strain = '_as' + self.strains[assigned_strain_number][1:]
 
                                 # Which treatment parameters to use - for the strain or for inappropriate treatment
                                 if actual_strain_number > assigned_strain_number:
-                                    strain_or_inappropriate = "_inappropriate"
+                                    strain_or_inappropriate = '_inappropriate'
                                 else:
                                     strain_or_inappropriate = self.strains[assigned_strain_number]
 
                             else:
-                                as_assigned_strain = ""
+                                as_assigned_strain = ''
                                 strain_or_inappropriate = self.strains[actual_strain_number]
 
                             # Success at either treatment stage
                             self.set_var_transfer_rate_flow(
-                                "treatment_infect" + organ + strain + as_assigned_strain + comorbidity + agegroup,
-                                "treatment_noninfect" + organ + strain + as_assigned_strain + comorbidity + agegroup,
-                                "program_rate_success_infect" + strain_or_inappropriate)
+                                'treatment_infect' + organ + strain + as_assigned_strain + comorbidity + agegroup,
+                                'treatment_noninfect' + organ + strain + as_assigned_strain + comorbidity + agegroup,
+                                'program_rate_success_infect' + strain_or_inappropriate)
                             self.set_var_transfer_rate_flow(
-                                "treatment_noninfect" + organ + strain + as_assigned_strain + comorbidity + agegroup,
-                                "susceptible_treated" + comorbidity + agegroup,
-                                "program_rate_success_noninfect" + strain_or_inappropriate)
+                                'treatment_noninfect' + organ + strain + as_assigned_strain + comorbidity + agegroup,
+                                'susceptible_treated' + comorbidity + agegroup,
+                                'program_rate_success_noninfect' + strain_or_inappropriate)
 
                             # Rates of death on treatment
                             for treatment_stage in self.treatment_stages:
                                 self.set_var_infection_death_rate_flow(
-                                    "treatment" +
+                                    'treatment' +
                                     treatment_stage + organ + strain + as_assigned_strain + comorbidity + agegroup,
-                                    "program_rate_death" + treatment_stage + strain_or_inappropriate)
+                                    'program_rate_death' + treatment_stage + strain_or_inappropriate)
 
                             # Default
                             for treatment_stage in self.treatment_stages:
@@ -1195,24 +1168,24 @@ class ConsolidatedModel(BaseModel):
                                 # If it's either the most resistant strain available or amplification is not active:
                                 if actual_strain_number == len(self.strains) - 1 or not self.is_amplification:
                                     self.set_var_transfer_rate_flow(
-                                        "treatment" +
+                                        'treatment' +
                                         treatment_stage + organ + strain + as_assigned_strain + comorbidity + agegroup,
-                                        "active" + organ + strain + comorbidity + agegroup,
-                                        "program_rate_default" + treatment_stage + strain_or_inappropriate)
+                                        'active' + organ + strain + comorbidity + agegroup,
+                                        'program_rate_default' + treatment_stage + strain_or_inappropriate)
 
                                 # Otherwise
                                 else:
                                     amplify_to_strain = self.strains[actual_strain_number + 1]
                                     self.set_var_transfer_rate_flow(
-                                        "treatment" +
+                                        'treatment' +
                                         treatment_stage + organ + strain + as_assigned_strain + comorbidity + agegroup,
-                                        "active" + organ + strain + comorbidity + agegroup,
-                                        "program_rate_default" + treatment_stage + "_noamplify" + strain_or_inappropriate)
+                                        'active' + organ + strain + comorbidity + agegroup,
+                                        'program_rate_default' + treatment_stage + '_noamplify' + strain_or_inappropriate)
                                     self.set_var_transfer_rate_flow(
-                                        "treatment" +
+                                        'treatment' +
                                         treatment_stage + organ + strain + as_assigned_strain + comorbidity + agegroup,
-                                        "active" + organ + amplify_to_strain + comorbidity + agegroup,
-                                        "program_rate_default" + treatment_stage + "_amplify" + strain_or_inappropriate)
+                                        'active' + organ + amplify_to_strain + comorbidity + agegroup,
+                                        'program_rate_default' + treatment_stage + '_amplify' + strain_or_inappropriate)
 
     ##################################################################
     # Methods that calculate the output vars and diagnostic properties
@@ -1241,15 +1214,15 @@ class ConsolidatedModel(BaseModel):
                 if 'latent' in from_label and 'active' in to_label and strain in to_label:
                     rate_incidence[strain] \
                         += self.compartments[from_label] * self.vars[rate]
-            self.vars["incidence" + strain] \
-                = rate_incidence[strain] / self.vars["population"] * 1E5
+            self.vars['incidence' + strain] \
+                = rate_incidence[strain] / self.vars['population'] * 1E5
 
             # Notifications
             for from_label, to_label, rate in self.var_transfer_rate_flows:
                 if 'active' in from_label and 'detect' in to_label and strain in from_label:
                     rate_notifications[strain] \
                         += self.compartments[from_label] * self.vars[rate]
-            self.vars["notifications" + strain] \
+            self.vars['notifications' + strain] \
                 = rate_notifications[strain]
 
             # Mortality
@@ -1258,38 +1231,38 @@ class ConsolidatedModel(BaseModel):
                 if strain in from_label:
                     rate_mortality[strain] \
                         += self.compartments[from_label] * rate \
-                            * self.data['miscellaneous'][u'program_proportion_death_reporting']
+                            * self.data['miscellaneous'][u'program_prop_death_reporting']
             for from_label, rate in self.var_infection_death_rate_flows:
                 if strain in from_label:
                     rate_mortality[strain] \
                         += self.compartments[from_label] * self.vars[rate]
-            self.vars["mortality" + strain] \
-                = rate_mortality[strain] / self.vars["population"] * 1E5
+            self.vars['mortality' + strain] \
+                = rate_mortality[strain] / self.vars['population'] * 1E5
 
         # Prevalence
         for strain in self.strains:
-            self.vars["prevalence" + strain] = 0.
+            self.vars['prevalence' + strain] = 0.
             for label in self.labels:
-                if "susceptible" not in label and \
-                                "latent" not in label and strain in label:
-                    self.vars["prevalence" + strain] \
+                if 'susceptible' not in label and \
+                                'latent' not in label and strain in label:
+                    self.vars['prevalence' + strain] \
                         += (self.compartments[label]
-                        / self.vars["population"] * 1E5)
+                        / self.vars['population'] * 1E5)
 
         # Summing MDR and XDR to get the total of all MDRs
         if len(self.strains) > 1:
-            rate_incidence["all_mdr_strains"] = 0.
+            rate_incidence['all_mdr_strains'] = 0.
             if len(self.strains) > 1:
                 for actual_strain_number in range(len(self.strains)):
                     strain = self.strains[actual_strain_number]
                     if actual_strain_number > 0:
-                        rate_incidence["all_mdr_strains"] \
+                        rate_incidence['all_mdr_strains'] \
                             += rate_incidence[strain]
-            self.vars["all_mdr_strains"] \
-                = rate_incidence["all_mdr_strains"] / self.vars["population"] * 1E5
+            self.vars['all_mdr_strains'] \
+                = rate_incidence['all_mdr_strains'] / self.vars['population'] * 1E5
             # Convert to percentage
-            self.vars["proportion_mdr"] \
-                = self.vars["all_mdr_strains"] / self.vars["incidence"] * 1E2
+            self.vars['proportion_mdr'] \
+                = self.vars['all_mdr_strains'] / self.vars['incidence'] * 1E2
 
     def calculate_additional_diagnostics(self):
 
@@ -1316,7 +1289,7 @@ class ConsolidatedModel(BaseModel):
 
         self.broad_compartment_type_bystrain_soln, broad_compartment_type_bystrain_denominator, \
         self.broad_compartment_types_bystrain \
-            = self.sum_over_compartments_bycategory(self.broad_compartment_types, "strain")
+            = self.sum_over_compartments_bycategory(self.broad_compartment_types, 'strain')
         self.broad_compartment_type_bystrain_fraction_soln \
             = self.get_fraction_soln(
             self.broad_compartment_types_bystrain,
@@ -1325,7 +1298,7 @@ class ConsolidatedModel(BaseModel):
 
         self.broad_compartment_type_byorgan_soln, broad_compartment_type_byorgan_denominator, \
         self.broad_compartment_types_byorgan \
-            = self.sum_over_compartments_bycategory(self.broad_compartment_types, "organ")
+            = self.sum_over_compartments_bycategory(self.broad_compartment_types, 'organ')
         self.broad_compartment_type_byorgan_fraction_soln \
             = self.get_fraction_soln(
             self.broad_compartment_types_byorgan,
@@ -1334,7 +1307,7 @@ class ConsolidatedModel(BaseModel):
 
         self.compartment_type_bystrain_soln, compartment_type_bystrain_denominator, \
         self.compartment_types_bystrain \
-            = self.sum_over_compartments_bycategory(self.compartment_types, "strain")
+            = self.sum_over_compartments_bycategory(self.compartment_types, 'strain')
         self.compartment_type_bystrain_fraction_soln \
             = self.get_fraction_soln(
             self.compartment_types_bystrain,
@@ -1349,18 +1322,18 @@ class ConsolidatedModel(BaseModel):
         Calculate fractions and populations within subgroups of the full population
         """
         self.groups = {
-            "ever_infected": ["susceptible_treated", "latent", "active", "missed", "lowquality", "detect", "treatment"],
-            "infected": ["latent", "active", "missed", "lowquality", "detect", "treatment"],
-            "active": ["active", "missed", "detect", "lowquality", "treatment"],
-            "infectious": ["active", "missed", "lowquality", "detect", "treatment_infect"],
-            "identified": ["detect", "treatment"],
-            "treatment": ["treatment_infect", "treatment_noninfect"]}
+            'ever_infected': ['susceptible_treated', 'latent', 'active', 'missed', 'lowquality', 'detect', 'treatment'],
+            'infected': ['latent', 'active', 'missed', 'lowquality', 'detect', 'treatment'],
+            'active': ['active', 'missed', 'detect', 'lowquality', 'treatment'],
+            'infectious': ['active', 'missed', 'lowquality', 'detect', 'treatment_infect'],
+            'identified': ['detect', 'treatment'],
+            'treatment': ['treatment_infect', 'treatment_noninfect']}
         for key in self.groups:
             compartment_soln, compartment_denominator \
                 = self.sum_over_compartments(self.groups[key])
-            setattr(self, key + "_compartment_soln", compartment_soln)
-            setattr(self, key + "_compartment_denominator", compartment_denominator)
-            setattr(self, key + "_fraction_soln",
+            setattr(self, key + '_compartment_soln', compartment_soln)
+            setattr(self, key + '_compartment_denominator', compartment_denominator)
+            setattr(self, key + '_fraction_soln',
                     self.get_fraction_soln(
                         self.groups[key],
                         compartment_soln,
@@ -1440,14 +1413,14 @@ class ConsolidatedModel(BaseModel):
         # strain applies to all compartments except for the susceptible, it might be possible
         # to say that strain applies to all compartments except for those that have any
         # strain in their label.
-        if categories == "strain":
+        if categories == 'strain':
             working_categories = self.strains
-        elif categories == "organ":
+        elif categories == 'organ':
             working_categories = self.organ_status
         for compartment_type in compartment_types:
-            if (categories == "strain" and "susceptible" in compartment_type) \
-                    or (categories == "organ" and
-                                ("susceptible" in compartment_type or "latent" in compartment_type)):
+            if (categories == 'strain' and 'susceptible' in compartment_type) \
+                    or (categories == 'organ' and
+                                ('susceptible' in compartment_type or 'latent' in compartment_type)):
                 summed_soln[compartment_type] \
                     = [0] * len(random.sample(self.compartment_soln.items(), 1)[0][1])
                 for label in self.labels:

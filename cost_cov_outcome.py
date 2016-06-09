@@ -5,109 +5,160 @@ Cost-coverage and coverage-outcome curves
 """
 TO DO LIST
 1. Like to transmission parameters
-2. Read data from spreadsheet
 """
 
 import matplotlib.pyplot as plt
 from numpy import exp
+from numpy import linspace
 import numpy as np
 import scipy.optimize
-import logistic_fitting
-import os
+import autumn.logistic_fitting as logistic_fitting
 from autumn.spreadsheet import read_and_process_data
 
 
-
-"""
-# Decide on country
+####### RUNNING CONDITIONS ############
 country = u'Fiji'
+
+prog = 9   #refer to program_name below
+multi_data = False
+
+divider = 100.
+
+year = 1986
+
+start_year = 1920
+end_year = 2015
+delta_year = 1
+
+########################################
+
+def make_year_steps(start_year, end_year, delta_year):
+    steps = []
+    step = start_year
+    while step <= end_year:
+        steps.append(step)
+        step += delta_year
+    return steps
+year_values = make_year_steps (start_year, end_year, delta_year)
+
+#########################################
+
+if multi_data == True:
+    print("Multiple cost-coverage data points available")
+else:
+    print("Only one cost-coverage data point available")
+
+#########################################
+
+# Read data
+
 keys_of_sheets_to_read = [
     'bcg', 'birth_rate', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'programs', 'tb',
     'notifications', 'outcomes']
 data = read_and_process_data(True, keys_of_sheets_to_read, country)
 
-programs = []
+initials = data['programs'][u'program_prop_treatment_success_mdr'][year]
 
-for key, value in data['programs'].items():
-    print(key, value)
-    #print(u'program_prop_treatment_success_mdr', value)
-    #programs = key[1]
-    #print(programs)
-"""
 
 ########################################################
+
 #Define the programs using a list of strings
 program_name = [
-    "vaccination",
-    "detect",
-    "algorithm_sensitivity",
-    "lowquality",
-    "firstline_dst",
-    "secondline_dst",
-    "treatment_success",
-    "treatment_death",
-    "treatment_success_mdr",
-    "treatment_death_mdr",
-    "treatment_success_xdr",
-    "treatment_death_xdr"
+    "vaccination",                   #prog 1
+    "detect",                        #prog 2
+    "algorithm_sensitivity",         #prog 3
+    "lowquality",                    #prog 4
+    "firstline_dst",                 #prog 5
+    "secondline_dst",                #prog 6
+    "treatment_success",             #prog 7
+    "treatment_death",               #prog 8
+    "treatment_success_mdr",         #prog 9
+    "treatment_death_mdr",           #prog 10
+    "treatment_success_xdr",         #prog 11
+    "treatment_death_xdr"            #prog 12
 ]
 
+#print("PROGRAM" "" + program_name[8])
+#print("YEAR" "" + str(year))
 #####################################################
 #Single data point
-#Year = 1986
 
 prog_cov = {
     "program_prop_vaccination":
-        0.,
+        data['programs'][u'program_prop_vaccination'][year] / divider,
+
     "program_prop_detect":
-        0.,
+        data['programs'][u'program_prop_detect'][year] / divider,
+
     "program_prop_algorithm_sensitivity":
-        0.,
+        data['programs'][u'program_prop_algorithm_sensitivity'][year] / divider,
+
     "program_prop_lowquality":
-        0.,
+        data['programs'][u'program_prop_lowquality'][year] / divider,
+
     "program_prop_firstline_dst":
-        0.,
+        data['programs'][u'program_prop_firstline_dst'][year] / divider,
+
     "program_prop_secondline_dst":
-        0.,
+        data['programs'][u'program_prop_secondline_dst'][year] / divider,
+
     "program_prop_treatment_success":
-        50./100,
+        data['programs'][u'program_prop_treatment_success'][year] / divider,
+
     "program_prop_treatment_death":
-        12./100,
+        data['programs'][u'program_prop_treatment_death'][year] / divider,
+
     "program_prop_treatment_success_mdr":
-        30./100,
+        data['programs'][u'program_prop_treatment_success_mdr'][year] / divider,
+
     "program_prop_treatment_death_mdr":
-        50./100,
+        data['programs'][u'program_prop_treatment_death_mdr'][year] / divider,
+
     "program_prop_treatment_success_xdr":
-        15./100,
+        data['programs'][u'program_prop_treatment_success_xdr'][year] / divider,
+
     "program_prop_treatment_death_xdr":
-        62./100,
+        data['programs'][u'program_prop_treatment_death_xdr'][year] / divider,
 }
+
+#print(prog_cov["program_prop_treatment_success_mdr"])
 
 prog_cost = {
     "program_cost_vaccination":
-        0.,
+        data['programs'][u'program_cost_vaccination'][year],
+
     "program_cost_detect":
-        0.,
+        data['programs'][u'program_cost_detect'][year],
+
     "program_cost_algorithm_sensitivity":
-        0.,
+        data['programs'][u'program_cost_algorithm_sensitivity'][year],
+
     "program_cost_lowquality":
-        0.,
+        data['programs'][u'program_cost_lowquality'][year],
+
     "program_cost_firstline_dst":
-        0.,
+        data['programs'][u'program_cost_firstline_dst'][year],
+
     "program_cost_secondline_dst":
-        0.,
+        data['programs'][u'program_cost_secondline_dst'][year],
+
     "program_cost_treatment_success":
-        5e6,
+        data['programs'][u'program_cost_treatment_success'][year],
+
     "program_cost_treatment_death":
-        0.,
+        data['programs'][u'program_cost_treatment_death'][year],
+
     "program_cost_treatment_success_mdr":
-        256491.,
+        data['programs'][u'program_cost_treatment_success_mdr'][year],
+
     "program_cost_treatment_death_mdr":
-        0.,
+        data['programs'][u'program_cost_treatment_death_mdr'][year],
+
     "program_cost_treatment_success_xdr":
-        0.,
+        data['programs'][u'program_cost_treatment_success_xdr'][year],
+
     "program_cost_treatment_death_xdr":
-        0.,
+        data['programs'][u'program_cost_treatment_death_xdr'][year],
 }
 
 #Multiple data points
@@ -129,15 +180,9 @@ params_default = {
     "outcome_fullcov": 5
 }
 
-################################
-#Arguments
-prog = 9
-multi_data = True
-################################
-
 if prog == 7:
-    print("Program: treatment success, Year 1986")
-    method = 2
+    print("PROGRAM" "" + program_name[prog - 1], "YEAR" "" + str(year))
+    method = 1
     saturation = params_default["saturation"]
     coverage = prog_cov["program_prop_treatment_success"]
     funding = prog_cost["program_cost_treatment_success"]
@@ -147,7 +192,8 @@ if prog == 7:
     outcome_zerocov = params_default["outcome_zerocov"]
     outcome_fullcov = params_default["outcome_fullcov"]
 elif prog == 9:
-    print("Program: treatment success MDR, Year 1986")
+    print("PROGRAM" " " + program_name[prog - 1],
+          "YEAR" " " + str(year))
     method = 1
     saturation = params_default["saturation"]
     coverage = prog_cov["program_prop_treatment_success_mdr"]
@@ -168,10 +214,11 @@ else:
     outcome_zerocov = params_default["outcome_zerocov"]
     outcome_fullcov = params_default["outcome_fullcov"]
 
+
 if method == 1:
-    print ('Method 1, new prpgrams, unit cost not available')
+    print ("METHOD" " " + str(method), "new programs", "unit cost not available")
 elif method ==2:
-    print ('Method 2, established-programs, unit cost available')
+    print ("METHOD" " " + str(method), "established-programs", "unit cost available")
 
 
 # Values for cost axis

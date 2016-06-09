@@ -667,6 +667,13 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
                 data['programs']['program_prop_treatment_death'][int(data['outcomes']['year'][i])] \
                     = data['outcomes'][u'prop_new_sp_died'][i]
 
+    # Populate program dictionaries from epi ones
+    for epi_parameter in ['life_expectancy', 'birth_rate']:
+        if data['programs']['epi_' + epi_parameter][u'load_data'] == u'yes':
+            for i in data[epi_parameter]:
+                if i not in data['programs']['epi_' + epi_parameter]:
+                    data['programs']['epi_' + epi_parameter][i] = data[epi_parameter][i]
+
     # Treatment outcomes
     # The aim is now to have data for success and death, as default can be derived from these
     # in the model module.

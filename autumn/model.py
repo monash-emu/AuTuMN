@@ -534,6 +534,8 @@ class ConsolidatedModel(BaseModel):
                 irrelevant_programs += [program]
             elif len(self.strains) == 2 and 'secondline_dst' in program:
                 irrelevant_programs += [program]
+            if u'low_quality' in program and not self.is_lowquality:
+                irrelevant_programs += [program]
 
         # Find the programs that are relevant and load them to the scaleup_data attribute
         for program in self.data['time_variants'].keys():

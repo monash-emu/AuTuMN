@@ -53,11 +53,11 @@ else:
 # Read data
 
 keys_of_sheets_to_read = [
-    'bcg', 'birth_rate', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'programs', 'tb',
+    'bcg', 'birth_rate', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'time_variants', 'tb',
     'notifications', 'outcomes']
 data = read_and_process_data(True, keys_of_sheets_to_read, country)
 
-initials = data['programs'][u'program_prop_treatment_success_mdr'][year]
+initials = data['time_variants'][u'program_prop_treatment_success_mdr'][year]
 
 
 ########################################################
@@ -85,80 +85,80 @@ program_name = [
 
 prog_cov = {
     "program_prop_vaccination":
-        data['programs'][u'program_prop_vaccination'][year] / divider,
+        data['time_variants'][u'program_prop_vaccination'][year] / divider,
 
     "program_prop_detect":
-        data['programs'][u'program_prop_detect'][year] / divider,
+        data['time_variants'][u'program_prop_detect'][year] / divider,
 
     "program_prop_algorithm_sensitivity":
-        data['programs'][u'program_prop_algorithm_sensitivity'][year] / divider,
+        data['time_variants'][u'program_prop_algorithm_sensitivity'][year] / divider,
 
     "program_prop_lowquality":
-        data['programs'][u'program_prop_lowquality'][year] / divider,
+        data['time_variants'][u'program_prop_lowquality'][year] / divider,
 
     "program_prop_firstline_dst":
-        data['programs'][u'program_prop_firstline_dst'][year] / divider,
+        data['time_variants'][u'program_prop_firstline_dst'][year] / divider,
 
     "program_prop_secondline_dst":
-        data['programs'][u'program_prop_secondline_dst'][year] / divider,
+        data['time_variants'][u'program_prop_secondline_dst'][year] / divider,
 
     "program_prop_treatment_success":
-        data['programs'][u'program_prop_treatment_success'][year] / divider,
+        data['time_variants'][u'program_prop_treatment_success'][year] / divider,
 
     "program_prop_treatment_death":
-        data['programs'][u'program_prop_treatment_death'][year] / divider,
+        data['time_variants'][u'program_prop_treatment_death'][year] / divider,
 
     "program_prop_treatment_success_mdr":
-        data['programs'][u'program_prop_treatment_success_mdr'][year] / divider,
+        data['time_variants'][u'program_prop_treatment_success_mdr'][year] / divider,
 
     "program_prop_treatment_death_mdr":
-        data['programs'][u'program_prop_treatment_death_mdr'][year] / divider,
+        data['time_variants'][u'program_prop_treatment_death_mdr'][year] / divider,
 
     "program_prop_treatment_success_xdr":
-        data['programs'][u'program_prop_treatment_success_xdr'][year] / divider,
+        data['time_variants'][u'program_prop_treatment_success_xdr'][year] / divider,
 
     "program_prop_treatment_death_xdr":
-        data['programs'][u'program_prop_treatment_death_xdr'][year] / divider,
+        data['time_variants'][u'program_prop_treatment_death_xdr'][year] / divider,
 }
 
 #print(prog_cov["program_prop_treatment_success_mdr"])
 
 prog_cost = {
     "program_cost_vaccination":
-        data['programs'][u'program_cost_vaccination'][year],
+        data['time_variants'][u'program_cost_vaccination'][year],
 
     "program_cost_detect":
-        data['programs'][u'program_cost_detect'][year],
+        data['time_variants'][u'program_cost_detect'][year],
 
     "program_cost_algorithm_sensitivity":
-        data['programs'][u'program_cost_algorithm_sensitivity'][year],
+        data['time_variants'][u'program_cost_algorithm_sensitivity'][year],
 
     "program_cost_lowquality":
-        data['programs'][u'program_cost_lowquality'][year],
+        data['time_variants'][u'program_cost_lowquality'][year],
 
     "program_cost_firstline_dst":
-        data['programs'][u'program_cost_firstline_dst'][year],
+        data['time_variants'][u'program_cost_firstline_dst'][year],
 
     "program_cost_secondline_dst":
-        data['programs'][u'program_cost_secondline_dst'][year],
+        data['time_variants'][u'program_cost_secondline_dst'][year],
 
     "program_cost_treatment_success":
-        data['programs'][u'program_cost_treatment_success'][year],
+        data['time_variants'][u'program_cost_treatment_success'][year],
 
     "program_cost_treatment_death":
-        data['programs'][u'program_cost_treatment_death'][year],
+        data['time_variants'][u'program_cost_treatment_death'][year],
 
     "program_cost_treatment_success_mdr":
-        data['programs'][u'program_cost_treatment_success_mdr'][year],
+        data['time_variants'][u'program_cost_treatment_success_mdr'][year],
 
     "program_cost_treatment_death_mdr":
-        data['programs'][u'program_cost_treatment_death_mdr'][year],
+        data['time_variants'][u'program_cost_treatment_death_mdr'][year],
 
     "program_cost_treatment_success_xdr":
-        data['programs'][u'program_cost_treatment_success_xdr'][year],
+        data['time_variants'][u'program_cost_treatment_success_xdr'][year],
 
     "program_cost_treatment_death_xdr":
-        data['programs'][u'program_cost_treatment_death_xdr'][year],
+        data['time_variants'][u'program_cost_treatment_death_xdr'][year],
 }
 
 #Multiple data points

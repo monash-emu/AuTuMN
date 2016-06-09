@@ -201,7 +201,7 @@ class BcgCoverageSheetReader:
         if row[0] == self.first_cell:
             self.parlist = parse_year_data(row, '', len(row))
         elif row[self.column_for_keys] == adjust_country_name(self.country_to_read)\
-                or self.key == 'programs':
+                or self.key == 'time_variants':
             for i in range(self.start_col, len(row)):
                 if type(row[i]) == float:
                     self.data[int(self.parlist[i])] = \
@@ -357,8 +357,8 @@ class ProgramReader:
 
     def __init__(self, country_to_read):
         self.data = {}
-        self.tab_name = 'programs'
-        self.key = 'programs'
+        self.tab_name = 'time_variants'
+        self.key = 'time_variants'
         self.filename = 'xls/programs_' + country_to_read.lower() + '.xlsx'
         self.start_row = 0
         self.column_for_keys = 0
@@ -586,7 +586,7 @@ def read_input_data_xls(from_test, sheets_to_read, country):
         sheet_readers.append(FixedParametersReader())
     if 'miscellaneous' in sheets_to_read:
         sheet_readers.append(ParametersReader(country))
-    if 'programs' in sheets_to_read:
+    if 'time_variants' in sheets_to_read:
         sheet_readers.append(ProgramReader(country))
     if 'tb' in sheets_to_read:
         sheet_readers.append(GlobalTbReportReader(country))
@@ -631,18 +631,18 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
 
     # Combine loaded data with data from spreadsheets for vaccination and case detection
     # Now with spreadsheet inputs over-riding GTB loaded data
-    if data['programs']['program_prop_vaccination'][u'load_data'] == 'yes':
+    if data['time_variants']['program_prop_vaccination'][u'load_data'] == 'yes':
         for i in data['bcg']:
             # If not already loaded through the inputs spreadsheet
-            if i not in data['programs']['program_prop_vaccination']:
-                data['programs']['program_prop_vaccination'][i] = data['bcg'][i]
+            if i not in data['time_variants']['program_prop_vaccination']:
+                data['time_variants']['program_prop_vaccination'][i] = data['bcg'][i]
 
     # As above, now for case detection
-    if data['programs']['program_prop_detect'][u'load_data'] == 'yes':
+    if data['time_variants']['program_prop_detect'][u'load_data'] == 'yes':
         for i in range(len(data['tb']['year'])):
             # If not already loaded through the inputs spreadsheet
-            if data['tb']['year'][i] not in data['programs']['program_prop_detect']:
-                data['programs']['program_prop_detect'][int(data['tb']['year'][i])] \
+            if data['tb']['year'][i] not in data['time_variants']['program_prop_detect']:
+                data['time_variants']['program_prop_detect'][int(data['tb']['year'][i])] \
                     = data['tb']['c_cdr'][i]
 
     # Calculate proportions of patients with each outcome for DS-TB
@@ -656,23 +656,23 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
             += [data['outcomes'][u'prop_new_sp_cmplt'][i] + data['outcomes'][u'prop_new_sp_cur'][i]]
 
     # Add the treatment success and death data to the program dictionary
-    if data['programs']['program_prop_treatment_success'][u'load_data'] == 'yes':
+    if data['time_variants']['program_prop_treatment_success'][u'load_data'] == 'yes':
         for i in range(len(data['outcomes'][u'prop_new_sp_success'])):
-            if int(data['outcomes']['year'][i]) not in data['programs']['program_prop_treatment_success']:
-                data['programs']['program_prop_treatment_success'][int(data['outcomes']['year'][i])] \
+            if int(data['outcomes']['year'][i]) not in data['time_variants']['program_prop_treatment_success']:
+                data['time_variants']['program_prop_treatment_success'][int(data['outcomes']['year'][i])] \
                     = data['outcomes'][u'prop_new_sp_success'][i]
-    if data['programs']['program_prop_treatment_death'][u'load_data'] == 'yes':
+    if data['time_variants']['program_prop_treatment_death'][u'load_data'] == 'yes':
         for i in range(len(data['outcomes'][u'prop_new_sp_died'])):
-            if int(data['outcomes']['year'][i]) not in data['programs']['program_prop_treatment_death']:
-                data['programs']['program_prop_treatment_death'][int(data['outcomes']['year'][i])] \
+            if int(data['outcomes']['year'][i]) not in data['time_variants']['program_prop_treatment_death']:
+                data['time_variants']['program_prop_treatment_death'][int(data['outcomes']['year'][i])] \
                     = data['outcomes'][u'prop_new_sp_died'][i]
 
     # Populate program dictionaries from epi ones
     for epi_parameter in ['life_expectancy', 'birth_rate']:
-        if data['programs']['epi_' + epi_parameter][u'load_data'] == u'yes':
+        if data['time_variants']['epi_' + epi_parameter][u'load_data'] == u'yes':
             for i in data[epi_parameter]:
-                if i not in data['programs']['epi_' + epi_parameter]:
-                    data['programs']['epi_' + epi_parameter][i] = data[epi_parameter][i]
+                if i not in data['time_variants']['epi_' + epi_parameter]:
+                    data['time_variants']['epi_' + epi_parameter][i] = data[epi_parameter][i]
 
     # Treatment outcomes
     # The aim is now to have data for success and death, as default can be derived from these
@@ -691,8 +691,8 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
 
     # Duplicate DS-TB outcomes for single strain models
     for outcome in [u'_success', u'_death']:
-        data['programs'][u'program_prop_treatment' + outcome + '_ds'] \
-            = copy.copy(data['programs'][u'program_prop_treatment' + outcome])
+        data['time_variants'][u'program_prop_treatment' + outcome + '_ds'] \
+            = copy.copy(data['time_variants'][u'program_prop_treatment' + outcome])
 
     # Populate MDR and XDR data from outcomes dictionary into program dictionary
     for strain in [u'_mdr', u'_xdr']:
@@ -701,34 +701,34 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
             if not numpy.isnan(data['outcomes'][u'prop' + strain + u'_succ'][i]):
                 # If there isn't already a value from the inputs spreadsheet
                 if data['outcomes'][u'year'][i] \
-                        not in data['programs'][u'program_prop_treatment_success' + strain]:
+                        not in data['time_variants'][u'program_prop_treatment_success' + strain]:
                     # Populate with value from report
-                    data['programs'][u'program_prop_treatment_success' + strain][data['outcomes'][u'year'][i]] \
+                    data['time_variants'][u'program_prop_treatment_success' + strain][data['outcomes'][u'year'][i]] \
                         = data['outcomes'][u'prop' + strain + u'_succ'][i]
                 # If there isn't already a value from the inputs spreadsheet
                 if data['outcomes'][u'year'][i] \
-                        not in data['programs'][u'program_prop_treatment_death' + strain]:
+                        not in data['time_variants'][u'program_prop_treatment_death' + strain]:
                     # Populate with value from report
-                    data['programs'][u'program_prop_treatment_death' + strain][data['outcomes'][u'year'][i]] \
+                    data['time_variants'][u'program_prop_treatment_death' + strain][data['outcomes'][u'year'][i]] \
                         = data['outcomes'][u'prop' + strain + u'_died'][i]
 
     # Probably temporary code to assign the same treatment outcomes to XDR-TB as for inappropriate
     for outcome in [u'_success', u'_death']:
-        data['programs'][u'program_prop_treatment' + outcome + u'_inappropriate'] \
-            = copy.copy(data['programs'][u'program_prop_treatment' + outcome + u'_xdr'])
+        data['time_variants'][u'program_prop_treatment' + outcome + u'_inappropriate'] \
+            = copy.copy(data['time_variants'][u'program_prop_treatment' + outcome + u'_xdr'])
 
     # Final rounds of tidying programmatic data
-    for program in data['programs']:
+    for program in data['time_variants']:
 
         # Add zero at starting time for model run to all programs that are proportions
         if 'prop' in program:
-            data['programs'][program] = add_starting_zero(data['programs'][program], data)
+            data['time_variants'][program] = add_starting_zero(data['time_variants'][program], data)
 
         # Remove the load_data keys, as they have now been used
-        data['programs'][program] = remove_specific_key(data['programs'][program], u'load_data')
+        data['time_variants'][program] = remove_specific_key(data['time_variants'][program], u'load_data')
 
         # Remove dictionary keys for which values are nan
-        data['programs'][program] = remove_nans(data['programs'][program])
+        data['time_variants'][program] = remove_nans(data['time_variants'][program])
 
     # Convert list formats to dictionaries
     # This should be done above in the data readers, but as subsequent code depends on the lists,
@@ -744,7 +744,7 @@ if __name__ == "__main__":
     country = u'Fiji'
 
     keys_of_sheets_to_read = [
-        'bcg', 'birth_rate', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'programs', 'tb',
+        'bcg', 'birth_rate', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'time_variants', 'tb',
         'notifications', 'outcomes']
     data = read_and_process_data(False, keys_of_sheets_to_read, country)
 

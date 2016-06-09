@@ -524,7 +524,7 @@ class ConsolidatedModel(BaseModel):
 
         # Work out which programs are not relevant to this model structure
         irrelevant_programs = []
-        for program in self.data['programs'].keys():
+        for program in self.data['time_variants'].keys():
             for strain in self.available_strains:
                 if strain not in self.strains and strain in program and u'_dst' not in program:
                     irrelevant_programs += [program]
@@ -536,27 +536,27 @@ class ConsolidatedModel(BaseModel):
                 irrelevant_programs += [program]
 
         # Find the programs that are relevant and load them to the scaleup_data attribute
-        for program in self.data['programs'].keys():
+        for program in self.data['time_variants'].keys():
             if program not in irrelevant_programs:
                 self.scaleup_data[str(program)] = {}
-                for i in self.data['programs'][program]:
+                for i in self.data['time_variants'][program]:
                     # For the smoothness parameter
                     if i == u'smoothness':
-                        self.scaleup_data[str(program)]['smoothness'] = self.data['programs'][program][i]
+                        self.scaleup_data[str(program)]['smoothness'] = self.data['time_variants'][program][i]
                     # For years with data percentages
                     elif type(i) == int and u'prop_' in program:
-                        self.scaleup_data[str(program)][i] = self.data['programs'][program][i] / 1E2
+                        self.scaleup_data[str(program)][i] = self.data['time_variants'][program][i] / 1E2
                     # For years with data not percentages
                     elif type(i) == int:
-                        self.scaleup_data[str(program)][i] = self.data['programs'][program][i]
+                        self.scaleup_data[str(program)][i] = self.data['time_variants'][program][i]
                     # For scenarios with data percentages
                     elif type(i) == unicode and u'scenario_' + str(self.scenario) in i and u'prop_' in program:
                         self.scaleup_data[str(program)]['scenario'] = \
-                            self.data['programs'][program][u'scenario_' + str(self.scenario)] / 1E2
+                            self.data['time_variants'][program][u'scenario_' + str(self.scenario)] / 1E2
                     # For scenarios with data not percentages
                     elif type(i) == unicode and u'scenario_' + str(self.scenario) in i:
                         self.scaleup_data[str(program)]['scenario'] = \
-                            self.data['programs'][program][u'scenario_' + str(self.scenario)]
+                            self.data['time_variants'][program][u'scenario_' + str(self.scenario)]
 
     def find_scaleup_functions(self):
 

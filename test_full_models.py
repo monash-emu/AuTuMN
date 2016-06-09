@@ -20,7 +20,7 @@ if not os.path.isdir(out_dir):
 
 # Load data
 keys_of_sheets_to_read = [
-    'bcg', 'birth_rate', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'programs', 'tb',
+    'bcg', 'birth_rate', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'time_variants', 'tb',
     'notifications', 'outcomes']
 data = read_and_process_data(True, keys_of_sheets_to_read, country)
 

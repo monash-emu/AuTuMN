@@ -300,7 +300,7 @@ class ConsolidatedModel(BaseModel):
         """
 
         self.set_parameter('demo_rate_birth',
-                           self.data['birth_rate'][max(self.data['birth_rate'])]
+                           self.data['rate_birth'][max(self.data['rate_birth'])]
                            / 1e3)
         self.set_parameter('demo_rate_death',
                            1.

@@ -221,7 +221,7 @@ class BirthRateReader:
     def __init__(self, country_to_read):
         self.data = {}
         self.tab_name = 'Data'
-        self.key = 'birth_rate'
+        self.key = 'rate_birth'
         self.parlist = []
         self.filename = 'xls/world_bank_crude_birth_rate.xlsx'
         self.start_row = 0
@@ -576,7 +576,7 @@ def read_input_data_xls(from_test, sheets_to_read, country):
 
     if 'bcg' in sheets_to_read:
         sheet_readers.append(BcgCoverageSheetReader(country))
-    if 'birth_rate' in sheets_to_read:
+    if 'rate_birth' in sheets_to_read:
         sheet_readers.append(BirthRateReader(country))
     if 'life_expectancy' in sheets_to_read:
         sheet_readers.append(LifeExpectancyReader(country))
@@ -668,7 +668,7 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
                     = data['outcomes'][u'prop_new_sp_died'][i]
 
     # Populate program dictionaries from epi ones
-    for demo_parameter in ['life_expectancy', 'birth_rate']:
+    for demo_parameter in ['life_expectancy', 'rate_birth']:
         if data['time_variants']['demo_' + demo_parameter][u'load_data'] == u'yes':
             for i in data[demo_parameter]:
                 if i not in data['time_variants']['demo_' + demo_parameter]:
@@ -756,7 +756,7 @@ if __name__ == "__main__":
     country = u'Fiji'
 
     keys_of_sheets_to_read = [
-        'bcg', 'birth_rate', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'time_variants', 'tb',
+        'bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'time_variants', 'tb',
         'notifications', 'outcomes']
     data = read_and_process_data(False, keys_of_sheets_to_read, country)
 

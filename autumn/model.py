@@ -399,8 +399,6 @@ class ConsolidatedModel(BaseModel):
 
         self.find_functions_or_params()
 
-        self.set_population_death_rate('demo_rate_death')
-
     ##################################################################
     # The methods that process_parameters calls to set parameters and
     # scale-up functions
@@ -589,13 +587,12 @@ class ConsolidatedModel(BaseModel):
                 if 'smoothness' in self.scaleup_data[param]:
                     del self.scaleup_data[param]['smoothness']
 
-                # Set it as a constant parameter
-                if param == 'demo_life_expectancy':
-                    self.set_parameter('demo_rate_death',
-                                       1. / self.scaleup_data[param][max(self.scaleup_data[param])])
-                else:
-                    self.set_parameter(param,
+                # Set as a constant parameter
+                self.set_parameter(param,
                                    self.scaleup_data[param][max(self.scaleup_data[param])])
+
+                # Note that the 'demo_life_expectancy' parameter has to be given this name
+                # and base.py will then calculate population death rates automatically.
 
     ##################################################################
     # Methods that calculate variables to be used in calculating flows

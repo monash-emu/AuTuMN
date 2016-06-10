@@ -74,6 +74,8 @@ class BaseModel():
         return self.convert_compartments_to_list(self.init_compartments)
 
     def set_population_death_rate(self, death_label):
+
+        # Currently inactive (although Bosco might not be pleased about this)
         self.death_rate = self.params[death_label]
 
     def set_fixed_infection_death_rate_flow(self, label, param_label):
@@ -139,9 +141,13 @@ class BaseModel():
             self.flows[to_label] += val
 
         # normal death flows
-        self.vars["rate_death"] = 0.0
+        # This might be naughty - but now changed to access one of the parameters
+        # (which has to have this name). Saves on creating a separate model attribute
+        # just for population death. I think it makes more sense for it to be just
+        # another parameter.
+        self.vars["rate_death"] = 0.
         for label in self.labels:
-            val = self.compartments[label] * self.death_rate
+            val = self.compartments[label] / self.params['demo_life_expectancy']
             self.flows[label] -= val
             self.vars['rate_death'] += val
 

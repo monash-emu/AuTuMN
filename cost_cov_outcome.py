@@ -236,6 +236,8 @@ def make_cost_steps(start_cost, end_cost, delta_cost):
 
 cost_values = make_cost_steps (start_cost, end_cost, delta_cost)
 
+print(cost_values)
+
 
 coverage_values = []
 outcome_values = []

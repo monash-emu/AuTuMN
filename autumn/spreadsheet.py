@@ -668,11 +668,11 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
                     = data['outcomes'][u'prop_new_sp_died'][i]
 
     # Populate program dictionaries from epi ones
-    for epi_parameter in ['life_expectancy', 'birth_rate']:
-        if data['time_variants']['epi_' + epi_parameter][u'load_data'] == u'yes':
-            for i in data[epi_parameter]:
-                if i not in data['time_variants']['epi_' + epi_parameter]:
-                    data['time_variants']['epi_' + epi_parameter][i] = data[epi_parameter][i]
+    for demo_parameter in ['life_expectancy', 'birth_rate']:
+        if data['time_variants']['demo_' + demo_parameter][u'load_data'] == u'yes':
+            for i in data[demo_parameter]:
+                if i not in data['time_variants']['demo_' + demo_parameter]:
+                    data['time_variants']['demo_' + demo_parameter][i] = data[demo_parameter][i]
 
     # Populate smear-positive and smear-negative proportion dictionaries to time-variant dictionary
     if data['time_variants']['tb_prop_smearpos'][u'load_data'] == u'yes':

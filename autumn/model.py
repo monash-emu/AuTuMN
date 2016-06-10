@@ -701,7 +701,7 @@ class ConsolidatedModel(BaseModel):
 
         # If unstratified (self.organ_status should have length 0, but will work for length 1)
         if len(self.organ_status) < 2:
-            self.vars['tb_prop'] = 1.
+            self.vars['epi_prop'] = 1.
 
         # Stratified into smear-positive and smear-negative
         elif len(self.organ_status) == 2:
@@ -710,14 +710,14 @@ class ConsolidatedModel(BaseModel):
 
         # Fully stratified into smear-positive, smear-negative and extra-pulmonary
         elif len(self.organ_status) > 2:
-            self.vars['tb_prop_extrapul'] = \
-                1. - self.vars['tb_prop_smearpos'] - self.vars['tb_prop_smearneg']
+            self.vars['epi_prop_extrapul'] = \
+                1. - self.vars['epi_prop_smearpos'] - self.vars['epi_prop_smearneg']
 
         # Determine variable progression rates
         for organ in self.organ_status:
             for timing in ['_early', '_late']:
                 self.vars['tb_rate' + timing + '_progression' + organ] \
-                    = self.vars['tb_prop' + organ] * self.params['tb_rate' + timing + '_progression']
+                    = self.vars['epi_prop' + organ] * self.params['tb_rate' + timing + '_progression']
 
     def calculate_detect_missed_vars(self):
 

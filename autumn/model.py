@@ -112,8 +112,6 @@ class ConsolidatedModel(BaseModel):
 
         self.set_fixed_parameters()
 
-        self.set_fixed_epi_parameters()
-
         # Treatment outcomes that will be universal to all models
         # Global TB outcomes of "completion" and "cure" can be considered "_success",
         # "death" is "_death" (of course), "failure" and "default" are considered "_default"
@@ -282,40 +280,18 @@ class ConsolidatedModel(BaseModel):
         """
 
         fixed_parameters = {
-            'epi_prop_cases':
-                1.,  # Proportion infectious if only one organ-status running
-            'tb_multiplier_force':
-                1.,  # Infectiousness multiplier if only one organ-status running
             'tb_multiplier_force_smearpos':
                 1.,  # Proporiton of smear-positive patients infectious
             'tb_multiplier_force_extrapul':
                 0.
         }
+
+        if len(self.organ_status) < 2:
+            fixed_parameters['epi_prop'] = 1.
+            fixed_parameters['tb_multiplier_force'] = 1.
+
         for parameter in fixed_parameters:
             self.set_parameter(parameter, fixed_parameters[parameter])
-
-    def set_fixed_epi_parameters(self):
-
-        """
-        Sets fixed proportions smear-positive, smear-negative and extra-pulmonary based on the
-        most recent proportions available from GTB notifications for the country being simulated.
-        """
-
-        ########## Temporary code - needs to be converted to a var
-
-        arbitray_index = 30
-        if self.n_organ > 1:
-            self.set_parameter('epi_prop_cases_smearpos',
-                               self.data['notifications'][u'prop_new_sp'][arbitray_index])
-        if self.n_organ > 2:
-            self.set_parameter('epi_prop_cases_smearneg',
-                               self.data['notifications'][u'prop_new_sn'][arbitray_index])
-            self.set_parameter('epi_prop_cases_extrapul',
-                               self.data['notifications'][u'prop_new_ep'][arbitray_index])
-        elif self.n_organ == 2:
-            self.set_parameter('epi_prop_cases_smearneg',
-                               self.data['notifications'][u'prop_new_sn'][arbitray_index]
-                               + self.data['notifications'][u'prop_new_ep'][arbitray_index])
 
     def define_age_structure(self):
 
@@ -389,8 +365,6 @@ class ConsolidatedModel(BaseModel):
 
         if len(self.agegroups) > 1: self.find_ageing_rates()
 
-        self.find_natural_history_params()
-
         self.find_treatment_periods()
 
         self.find_amplification_scaleup()
@@ -398,6 +372,8 @@ class ConsolidatedModel(BaseModel):
         self.collect_data_for_functions_or_params()
 
         self.find_functions_or_params()
+
+        self.find_natural_history_params()
 
     ##################################################################
     # The methods that process_parameters calls to set parameters and
@@ -411,42 +387,6 @@ class ConsolidatedModel(BaseModel):
                 self.set_parameter('ageing_rate' + agegroup, 1. / (
                     float(agegroup[agegroup.find('to') + 2:]) -
                     float(agegroup[agegroup.find('age') + 3: agegroup.find('to')])))
-
-    def find_natural_history_params(self):
-
-        # If extrapulmonary case-fatality not stated, use smear-negative case-fatality
-        if 'tb_prop_casefatality_untreated_extrapul' not in self.params:
-            self.set_parameter(
-                'tb_prop_casefatality_untreated_extrapul',
-                self.params['tb_prop_casefatality_untreated_smearneg'])
-
-        # Overall progression and stabilisation rates
-        self.set_parameter('tb_rate_early_progression',
-                           self.params['tb_prop_early_progression']
-                           / self.params['tb_timeperiod_early_latent'])
-        self.set_parameter('tb_rate_stabilise',
-                           (1. - self.params['tb_prop_early_progression'])
-                           / self.params['tb_timeperiod_early_latent'])
-
-        # Adjust overall rates by organ status
-        for organ in self.organ_status:
-            self.set_parameter(
-                'tb_rate_early_progression' + organ,
-                self.params['tb_prop_early_progression']
-                / self.params['tb_timeperiod_early_latent']
-                * self.params['epi_prop_cases' + organ])
-            self.set_parameter(
-                'tb_rate_late_progression' + organ,
-                self.params['tb_rate_late_progression']
-                * self.params['epi_prop_cases' + organ])
-            self.set_parameter(
-                'tb_rate_death' + organ,
-                self.params['tb_prop_casefatality_untreated' + organ]
-                / self.params['tb_timeperiod_activeuntreated'])
-            self.set_parameter(
-                'tb_rate_recover' + organ,
-                (1 - self.params['tb_prop_casefatality_untreated' + organ])
-                / self.params['tb_timeperiod_activeuntreated'])
 
     def find_treatment_periods(self):
 
@@ -548,6 +488,12 @@ class ConsolidatedModel(BaseModel):
 
             time_variant = self.scaleup_data[param].pop(u'time_variant')
 
+            if param == 'epi_prop_smearpos':
+                if time_variant == u'yes':
+                    self.is_organvariation = True
+                else:
+                    self.is_organvariation = False
+
             if time_variant == u'yes':
 
                 # Extract and remove the smoothness parameter from the dictionary
@@ -593,6 +539,46 @@ class ConsolidatedModel(BaseModel):
 
                 # Note that the 'demo_life_expectancy' parameter has to be given this name
                 # and base.py will then calculate population death rates automatically.
+
+        if not self.is_organvariation:
+            self.set_parameter('epi_prop_extrapul',
+                               1. - self.params['epi_prop_smearpos'] - self.params['epi_prop_smearneg'])
+
+    def find_natural_history_params(self):
+
+        # If extrapulmonary case-fatality not stated, use smear-negative case-fatality
+        if 'tb_prop_casefatality_untreated_extrapul' not in self.params:
+            self.set_parameter(
+                'tb_prop_casefatality_untreated_extrapul',
+                self.params['tb_prop_casefatality_untreated_smearneg'])
+
+        # Overall early progression rate
+        self.set_parameter('tb_rate_early_progression',
+                           self.params['tb_prop_early_progression']
+                           / self.params['tb_timeperiod_early_latent'])
+
+        # Stabilisation rate
+        self.set_parameter('tb_rate_stabilise',
+                           (1. - self.params['tb_prop_early_progression'])
+                           / self.params['tb_timeperiod_early_latent'])
+
+        # Adjust overall death and recovery rates by organ status
+        for organ in self.organ_status:
+            self.set_parameter(
+                'tb_rate_death' + organ,
+                self.params['tb_prop_casefatality_untreated' + organ]
+                / self.params['tb_timeperiod_activeuntreated'])
+            self.set_parameter(
+                'tb_rate_recover' + organ,
+                (1 - self.params['tb_prop_casefatality_untreated' + organ])
+                / self.params['tb_timeperiod_activeuntreated'])
+
+        if not self.is_organvariation:
+            for organ in self.organ_status:
+                for timing in ['_early', '_late']:
+                    self.set_parameter('tb_rate' + timing + '_progression' + organ,
+                                       self.params['tb_rate' + timing + '_progression']
+                                       * self.params['epi_prop' + organ])
 
     ##################################################################
     # Methods that calculate variables to be used in calculating flows
@@ -699,25 +685,27 @@ class ConsolidatedModel(BaseModel):
         so need to calculate the remaining proportions.
         """
 
-        # If unstratified (self.organ_status should have length 0, but will work for length 1)
-        if len(self.organ_status) < 2:
-            self.vars['epi_prop'] = 1.
+        if self.is_organvariation:
 
-        # Stratified into smear-positive and smear-negative
-        elif len(self.organ_status) == 2:
-            self.vars['tb_prop_smearneg'] = \
-                1. - self.vars['tb_prop_smearpos']
+            # If unstratified (self.organ_status should have length 0, but length 1 OK)
+            if len(self.organ_status) < 2:
+                self.vars['epi_prop'] = 1.
 
-        # Fully stratified into smear-positive, smear-negative and extra-pulmonary
-        elif len(self.organ_status) > 2:
-            self.vars['epi_prop_extrapul'] = \
-                1. - self.vars['epi_prop_smearpos'] - self.vars['epi_prop_smearneg']
+            # Stratified into smear-positive and smear-negative
+            elif len(self.organ_status) == 2:
+                self.vars['tb_prop_smearneg'] = \
+                    1. - self.vars['tb_prop_smearpos']
 
-        # Determine variable progression rates
-        for organ in self.organ_status:
-            for timing in ['_early', '_late']:
-                self.vars['tb_rate' + timing + '_progression' + organ] \
-                    = self.vars['epi_prop' + organ] * self.params['tb_rate' + timing + '_progression']
+            # Fully stratified into smear-positive, smear-negative and extra-pulmonary
+            elif len(self.organ_status) > 2:
+                self.vars['epi_prop_extrapul'] = \
+                    1. - self.vars['epi_prop_smearpos'] - self.vars['epi_prop_smearneg']
+
+            # Determine variable progression rates
+            for organ in self.organ_status:
+                for timing in ['_early', '_late']:
+                    self.vars['tb_rate' + timing + '_progression' + organ] \
+                        = self.vars['epi_prop' + organ] * self.params['tb_rate' + timing + '_progression']
 
     def calculate_detect_missed_vars(self):
 
@@ -963,17 +951,35 @@ class ConsolidatedModel(BaseModel):
 
                         for organ in self.organ_status:
 
-                            # Early progression
-                            self.set_var_transfer_rate_flow(
-                                'latent_early' + strain + comorbidity + agegroup,
-                                'active' + organ + strain + comorbidity + agegroup,
-                                'tb_rate_early_progression' + organ)
+                            # If organ scale-ups available, set flows as variable
+                            # (if epi_prop_smearpos is in self.scaleup_fns, then epi_prop_smearneg
+                            # should be too)
+                            if 'epi_prop_smearpos' in self.scaleup_fns:
+                                # Early progression
+                                self.set_var_transfer_rate_flow(
+                                    'latent_early' + strain + comorbidity + agegroup,
+                                    'active' + organ + strain + comorbidity + agegroup,
+                                    'tb_rate_early_progression' + organ)
 
-                            # Late progression
-                            self.set_var_transfer_rate_flow(
-                                'latent_late' + strain + comorbidity + agegroup,
-                                'active' + organ + strain + comorbidity + agegroup,
-                                'tb_rate_late_progression' + organ)
+                                # Late progression
+                                self.set_var_transfer_rate_flow(
+                                    'latent_late' + strain + comorbidity + agegroup,
+                                    'active' + organ + strain + comorbidity + agegroup,
+                                    'tb_rate_late_progression' + organ)
+
+                            # Otherwise, set fixed flows
+                            else:
+                                # Early progression
+                                self.set_fixed_transfer_rate_flow(
+                                    'latent_early' + strain + comorbidity + agegroup,
+                                    'active' + organ + strain + comorbidity + agegroup,
+                                    'tb_rate_early_progression' + organ)
+
+                                # Late progression
+                                self.set_fixed_transfer_rate_flow(
+                                    'latent_late' + strain + comorbidity + agegroup,
+                                    'active' + organ + strain + comorbidity + agegroup,
+                                    'tb_rate_late_progression' + organ)
 
     def set_natural_history_flows(self):
 
@@ -1223,6 +1229,11 @@ class ConsolidatedModel(BaseModel):
                 if 'latent' in from_label and 'active' in to_label and strain in to_label:
                     rate_incidence[strain] \
                         += self.compartments[from_label] * self.vars[rate]
+            for from_label, to_label, rate in self.fixed_transfer_rate_flows:
+                if 'latent' in from_label and 'active' in to_label and strain in to_label:
+                    rate_incidence[strain] \
+                        += self.compartments[from_label] * rate
+
             self.vars['incidence' + strain] \
                 = rate_incidence[strain] / self.vars['population'] * 1E5
 

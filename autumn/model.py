@@ -535,8 +535,10 @@ class ConsolidatedModel(BaseModel):
             if program not in irrelevant_time_variants:
                 self.scaleup_data[str(program)] = {}
                 for i in self.data['time_variants'][program]:
+                    if i == u'time_variant':
+                        self.scaleup_data[str(program)]['time_variant'] = self.data['time_variants'][program][i]
                     # For the smoothness parameter
-                    if i == u'smoothness':
+                    elif i == u'smoothness':
                         self.scaleup_data[str(program)]['smoothness'] = self.data['time_variants'][program][i]
                     # For years with data percentages
                     elif type(i) == int and u'prop_' in program:
@@ -556,37 +558,51 @@ class ConsolidatedModel(BaseModel):
     def find_scaleup_functions(self):
 
         # Define scale-up functions from these datasets
-        for variable_param in self.scaleup_data:
+        for param in self.scaleup_data:
 
-            # Extract and remove the smoothness parameter from the dictionary
-            if 'smoothness' in self.scaleup_data[variable_param]:
-                smoothness = self.scaleup_data[variable_param].pop('smoothness')
-            else:
-                smoothness = self.data['attributes'][u'default_smoothness']
+            time_variant = self.scaleup_data[param].pop(u'time_variant')
+            if time_variant == u'yes':
 
-            # If the parameter is being modified for the scenario being run
-            if 'scenario' in self.scaleup_data[variable_param]:
-                scenario = [self.data['attributes'][u'scenario_end_time'],
-                            self.scaleup_data[variable_param].pop('scenario')]
-            else:
-                scenario = None
+                # Extract and remove the smoothness parameter from the dictionary
+                if 'smoothness' in self.scaleup_data[param]:
+                    smoothness = self.scaleup_data[param].pop('smoothness')
+                else:
+                    smoothness = self.data['attributes'][u'default_smoothness']
 
-            # Upper bound depends on whether the parameter is a proportion
-            if 'prop' in variable_param:
-                upper_bound = 1.
-            else:
-                upper_bound = 1E3
+                # If the parameter is being modified for the scenario being run
+                if 'scenario' in self.scaleup_data[param]:
+                    scenario = [self.data['attributes'][u'scenario_end_time'],
+                                self.scaleup_data[param].pop('scenario')]
+                else:
+                    scenario = None
 
-            # Calculate the scaling function
-            self.set_scaleup_fn(variable_param,
-                                scale_up_function(self.scaleup_data[variable_param].keys(),
-                                                  self.scaleup_data[variable_param].values(),
-                                                  self.data['attributes'][u'fitting_method'],
-                                                  smoothness,
-                                                  bound_low=0.,
-                                                  bound_up=upper_bound,
-                                                  intervention_end=scenario,
-                                                  intervention_start_date=self.data['attributes'][u'scenario_start_time']))
+                # Upper bound depends on whether the parameter is a proportion
+                if 'prop' in param:
+                    upper_bound = 1.
+                else:
+                    upper_bound = 1E3
+
+                # Calculate the scaling function
+                self.set_scaleup_fn(param,
+                                    scale_up_function(self.scaleup_data[param].keys(),
+                                                      self.scaleup_data[param].values(),
+                                                      self.data['attributes'][u'fitting_method'],
+                                                      smoothness,
+                                                      bound_low=0.,
+                                                      bound_up=upper_bound,
+                                                      intervention_end=scenario,
+                                                      intervention_start_date=self.data['attributes'][u'scenario_start_time']))
+
+            # If no is selected in the time variant column
+            elif time_variant == u'no':
+
+                # Get rid of smoothness, which isn't relevant
+                if 'smoothness' in self.scaleup_data[param]:
+                    del self.scaleup_data[param]['smoothness']
+
+                # Set it as a constant parameter
+                self.set_parameter(param,
+                                   self.scaleup_data[param][max(self.scaleup_data[param])])
 
     ##################################################################
     # Methods that calculate variables to be used in calculating flows

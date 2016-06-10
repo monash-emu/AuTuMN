@@ -91,9 +91,9 @@ for n_organs in data['attributes']['n_organs']:
                             #     model, model.compartment_types_bystrain, model.compartment_type_bystrain_fraction_soln, data['attributes']['recent_time'],
                             #     "strain", base + '.types_fraction_bystrain.png')
                             # BROAD COMPARTMENT TYPES
-                            # autumn.plotting.plot_fractions(
-                            #     model, model.broad_compartment_types, model.broad_fraction_soln, data['attributes']['recent_time'],
-                            #     "", base + '.broad_fraction.png')
+                            autumn.plotting.plot_fractions(
+                                model, model.broad_compartment_types, model.broad_fraction_soln, data['attributes']['recent_time'],
+                                "", base + '.broad_fraction.png')
                             # autumn.plotting.plot_fractions(
                             #     model, model.broad_compartment_types, model.broad_fraction_soln, data['attributes']['start_time'],
                             #     "", base + '.broad_fraction.png')
@@ -147,8 +147,8 @@ for n_organs in data['attributes']['n_organs']:
                             #         data['attributes']['start_time'], base + '.mdr_proportion_recent.png')
                             #
                             # vars_to_plot = []
-                            # for var in model.programs.keys():
-                            #     if var in model.programs.keys() and 'inappropriate' not in var\
+                            # for var in model.vars.keys():
+                            #     if var in model.vars.keys() and 'inappropriate' not in var\
                             #             and 'xdr' not in var and 'lowquality' not in var\
                             #             and 'mdr' not in var and 'dst' not in var:
                             #         vars_to_plot += [var]

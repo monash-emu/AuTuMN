@@ -517,43 +517,43 @@ class ConsolidatedModel(BaseModel):
 
         # Work out which time-variant parameters are not relevant to this model structure
         irrelevant_time_variants = []
-        for program in self.data['time_variants'].keys():
+        for time_variant in self.data['time_variants'].keys():
             for strain in self.available_strains:
-                if strain not in self.strains and strain in program and u'_dst' not in program:
-                    irrelevant_time_variants += [program]
-            if u'cost' in program:
-                irrelevant_time_variants += [program]
-            if len(self.strains) < 2 and ('line_dst' in program or '_inappropriate' in program):
-                irrelevant_time_variants += [program]
-            elif len(self.strains) == 2 and 'secondline_dst' in program:
-                irrelevant_time_variants += [program]
-            if u'low_quality' in program and not self.is_lowquality:
-                irrelevant_time_variants += [program]
+                if strain not in self.strains and strain in time_variant and u'_dst' not in time_variant:
+                    irrelevant_time_variants += [time_variant]
+            if u'cost' in time_variant:
+                irrelevant_time_variants += [time_variant]
+            if len(self.strains) < 2 and ('line_dst' in time_variant or '_inappropriate' in time_variant):
+                irrelevant_time_variants += [time_variant]
+            elif len(self.strains) == 2 and 'secondline_dst' in time_variant:
+                irrelevant_time_variants += [time_variant]
+            if u'low_quality' in time_variant and not self.is_lowquality:
+                irrelevant_time_variants += [time_variant]
 
         # Find the programs that are relevant and load them to the scaleup_data attribute
-        for program in self.data['time_variants']:
-            if program not in irrelevant_time_variants:
-                self.scaleup_data[str(program)] = {}
-                for i in self.data['time_variants'][program]:
+        for time_variant in self.data['time_variants']:
+            if time_variant not in irrelevant_time_variants:
+                self.scaleup_data[str(time_variant)] = {}
+                for i in self.data['time_variants'][time_variant]:
                     if i == u'time_variant':
-                        self.scaleup_data[str(program)]['time_variant'] = self.data['time_variants'][program][i]
+                        self.scaleup_data[str(time_variant)]['time_variant'] = self.data['time_variants'][time_variant][i]
                     # For the smoothness parameter
                     elif i == u'smoothness':
-                        self.scaleup_data[str(program)]['smoothness'] = self.data['time_variants'][program][i]
+                        self.scaleup_data[str(time_variant)]['smoothness'] = self.data['time_variants'][time_variant][i]
                     # For years with data percentages
-                    elif type(i) == int and u'prop_' in program:
-                        self.scaleup_data[str(program)][i] = self.data['time_variants'][program][i] / 1E2
+                    elif type(i) == int and u'program_prop_' in time_variant:
+                        self.scaleup_data[str(time_variant)][i] = self.data['time_variants'][time_variant][i] / 1E2
                     # For years with data not percentages
                     elif type(i) == int:
-                        self.scaleup_data[str(program)][i] = self.data['time_variants'][program][i]
+                        self.scaleup_data[str(time_variant)][i] = self.data['time_variants'][time_variant][i]
                     # For scenarios with data percentages
-                    elif type(i) == unicode and u'scenario_' + str(self.scenario) in i and u'prop_' in program:
-                        self.scaleup_data[str(program)]['scenario'] = \
-                            self.data['time_variants'][program][u'scenario_' + str(self.scenario)] / 1E2
+                    elif type(i) == unicode and u'scenario_' + str(self.scenario) in i and u'prop_' in time_variant:
+                        self.scaleup_data[str(time_variant)]['scenario'] = \
+                            self.data['time_variants'][time_variant][u'scenario_' + str(self.scenario)] / 1E2
                     # For scenarios with data not percentages
                     elif type(i) == unicode and u'scenario_' + str(self.scenario) in i:
-                        self.scaleup_data[str(program)]['scenario'] = \
-                            self.data['time_variants'][program][u'scenario_' + str(self.scenario)]
+                        self.scaleup_data[str(time_variant)]['scenario'] = \
+                            self.data['time_variants'][time_variant][u'scenario_' + str(self.scenario)]
 
     def find_scaleup_functions(self):
 

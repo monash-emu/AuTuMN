@@ -107,9 +107,11 @@ class ConsolidatedModel(BaseModel):
 
         # Initialise model compartmental structure and set un-processed parameters
         self.define_model_structure()
+
         self.initialise_compartments()
+
         self.set_fixed_parameters()
-        self.set_fixed_demo_parameters()
+
         self.set_fixed_epi_parameters()
 
         # Treatment outcomes that will be universal to all models
@@ -292,20 +294,6 @@ class ConsolidatedModel(BaseModel):
         for parameter in fixed_parameters:
             self.set_parameter(parameter, fixed_parameters[parameter])
 
-    def set_fixed_demo_parameters(self):
-
-        """
-        Temporary code to set birth and death rates to the most recent ones recorded in the
-        country-specific spreadsheets being read in.
-        """
-
-        self.set_parameter('demo_rate_birth',
-                           self.data['rate_birth'][max(self.data['rate_birth'])]
-                           / 1e3)
-        self.set_parameter('demo_rate_death',
-                           1.
-                           / self.data['life_expectancy'][max(self.data['life_expectancy'])])
-
     def set_fixed_epi_parameters(self):
 
         """
@@ -407,9 +395,9 @@ class ConsolidatedModel(BaseModel):
 
         self.find_amplification_scaleup()
 
-        self.collect_scaleup_data()
+        self.collect_data_for_functions_or_params()
 
-        self.find_scaleup_functions()
+        self.find_functions_or_params()
 
         self.set_population_death_rate('demo_rate_death')
 
@@ -499,7 +487,7 @@ class ConsolidatedModel(BaseModel):
                                               self.data['attributes'][u'default_smoothness'],
                                               0., 1.))
 
-    def collect_scaleup_data(self):
+    def collect_data_for_functions_or_params(self):
 
         """
         Method to load all the dictionaries to be used in generating scale-up functions to
@@ -555,12 +543,13 @@ class ConsolidatedModel(BaseModel):
                         self.scaleup_data[str(time_variant)]['scenario'] = \
                             self.data['time_variants'][time_variant][u'scenario_' + str(self.scenario)]
 
-    def find_scaleup_functions(self):
+    def find_functions_or_params(self):
 
         # Define scale-up functions from these datasets
         for param in self.scaleup_data:
 
             time_variant = self.scaleup_data[param].pop(u'time_variant')
+
             if time_variant == u'yes':
 
                 # Extract and remove the smoothness parameter from the dictionary
@@ -601,7 +590,11 @@ class ConsolidatedModel(BaseModel):
                     del self.scaleup_data[param]['smoothness']
 
                 # Set it as a constant parameter
-                self.set_parameter(param,
+                if param == 'demo_life_expectancy':
+                    self.set_parameter('demo_rate_death',
+                                       1. / self.scaleup_data[param][max(self.scaleup_data[param])])
+                else:
+                    self.set_parameter(param,
                                    self.scaleup_data[param][max(self.scaleup_data[param])])
 
     ##################################################################
@@ -638,17 +631,25 @@ class ConsolidatedModel(BaseModel):
 
     def calculate_birth_rates_vars(self):
 
-        # Calculate vaccinated and unvaccinated birth rates
-        # Rates are dependent upon two variables, i.e. the total population
-        # and the scale-up function of BCG vaccination coverage
+        """
+        Now allows either time-variant or constant birth rates
+        """
+
+        # Set total birth rate with either the constant or time-variant birth parameter
+        if 'demo_rate_birth' in self.vars:
+            rate_birth = self.vars['demo_rate_birth'] / 1E3
+        elif 'demo_rate_birth' in self.params:
+            rate_birth = self.params['demo_rate_birth'] / 1E3
+
+        # Calculate the birth rates by compartment
         self.vars['births_unvac'] = \
             (1. - self.vars['program_prop_vaccination']) \
-            * self.params['demo_rate_birth'] \
+            * rate_birth \
             * self.vars['population'] \
             / len(self.comorbidities)
         self.vars['births_vac'] = \
             self.vars['program_prop_vaccination'] \
-            * self.params['demo_rate_birth'] \
+            * rate_birth \
             * self.vars['population'] \
             / len(self.comorbidities)
 

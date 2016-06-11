@@ -572,9 +572,10 @@ def plot_flows(model, labels, png=None):
     save_png(png)
 
 
-def plot_scaleup_fns(model, functions, png=None, start_time=1900.):
+def plot_scaleup_fns(model, functions, png=None, start_time_str='start_time', parameter_type=''):
 
     line_styles = make_default_line_styles(len(functions))
+    start_time = model.data['attributes'][start_time_str]
     end_time = 2015.
     x_vals = numpy.linspace(start_time, end_time, 1E3)
     ax = make_axes_with_room_for_legend()
@@ -583,8 +584,12 @@ def plot_scaleup_fns(model, functions, png=None, start_time=1900.):
                 map(model.scaleup_fns[function],
                     x_vals), line_styles[i],
                 label=function)
+
+    title = parameter_type + ' parameters from ' + start_time_str
     set_axes_props(ax, 'Year', 'Proportion',
-                   'Scaling parameter values', True, functions)
+                   title, True, functions)
+    ax.set_ylim(bottom=0)
+
     save_png(png)
 
 

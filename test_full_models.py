@@ -148,29 +148,29 @@ for n_organs in data['attributes']['n_organs']:
                             #         model, ["proportion_mdr"],
                             #         data['attributes']['start_time'], base + '.mdr_proportion_recent.png')
 
-                            # Classify scale-up functions and plot them
-                            classified_scaleups = {'program_prop_scaleups': [],
-                                                   'program_other_scaleups': [],
-                                                   'birth_scaleup': [],
-                                                   'non_program_scaleups': []}
+                            # Classify scale-up functions for plotting
+                            classified_scaleups = {'program_prop': [],
+                                                   'program_other': [],
+                                                   'birth': [],
+                                                   'non_program': []}
                             for fn in model.scaleup_fns:
                                 if 'program_prop' in fn:
-                                    classified_scaleups['program_prop_scaleups'] += [fn]
+                                    classified_scaleups['program_prop'] += [fn]
                                 elif 'program' in fn:
-                                    classified_scaleups['program_other_scaleups'] += [fn]
+                                    classified_scaleups['program_other'] += [fn]
                                 elif 'demo_rate_birth' in fn:
-                                    classified_scaleups['birth_scaleup'] += [fn]
+                                    classified_scaleups['birth'] += [fn]
                                 else:
-                                    classified_scaleups['non_program_scaleups'] += [fn]
-                            for classification in classified_scaleups:
-                                autumn.plotting.plot_scaleup_fns(model,
-                                                                 classified_scaleups[classification],
-                                                                 base + '.' + classification + 'scaleups_start.png',
-                                                                 data['attributes']['start_time'])
+                                    classified_scaleups['non_program'] += [fn]
 
-                            # autumn.plotting.plot_scaleup_fns(model,
-                            #                                  vars_to_plot,
-                            #                                  base + '.scaleups_recent.png', data['attributes']['recent_time'])
+                            # Plot them from the start of the model and from "recent_time"
+                            for classification in classified_scaleups:
+                                for start_time in ['start_', 'recent_']:
+                                    autumn.plotting.plot_scaleup_fns(model,
+                                                                     classified_scaleups[classification],
+                                                                     base + '.' + classification + 'scaleups_' + start_time + '.png',
+                                                                     start_time + 'time', classification)
+
                             # autumn.plotting.plot_all_scaleup_fns_against_data(model,
                             #                                                   vars_to_plot,
                             #                                                   base + '.scaleup_recent.png',

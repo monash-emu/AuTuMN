@@ -27,6 +27,7 @@ data = read_and_process_data(True, keys_of_sheets_to_read, country)
 # Note that it takes about one hour to run all of the possible model structures,
 # so perhaps don't do that - and longer if running multiple scenarios
 scenario = None
+is_additional_diagnostics = data['attributes']['is_additional_diagnostics'][0]
 for n_organs in data['attributes']['n_organs']:
     for n_strains in data['attributes']['n_strains']:
         for n_comorbidities in data['attributes']['n_comorbidities']:
@@ -47,6 +48,7 @@ for n_organs in data['attributes']['n_organs']:
                                 is_quality,  # Low quality care
                                 is_amplification,  # Amplification
                                 is_misassignment,  # Misassignment by strain
+                                is_additional_diagnostics,
                                 scenario,  # Scenario to run
                                 data)
                             print(str(n_organs) + " organ(s),   " +
@@ -91,9 +93,9 @@ for n_organs in data['attributes']['n_organs']:
                             #     model, model.compartment_types_bystrain, model.compartment_type_bystrain_fraction_soln, data['attributes']['recent_time'],
                             #     "strain", base + '.types_fraction_bystrain.png')
                             # BROAD COMPARTMENT TYPES
-                            autumn.plotting.plot_fractions(
-                                model, model.broad_compartment_types, model.broad_fraction_soln, data['attributes']['recent_time'],
-                                "", base + '.broad_fraction.png')
+                            # autumn.plotting.plot_fractions(
+                            #     model, model.broad_compartment_types, model.broad_fraction_soln, data['attributes']['recent_time'],
+                            #     "", base + '.broad_fraction.png')
                             # autumn.plotting.plot_fractions(
                             #     model, model.broad_compartment_types, model.broad_fraction_soln, data['attributes']['start_time'],
                             #     "", base + '.broad_fraction.png')

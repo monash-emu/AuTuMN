@@ -24,6 +24,8 @@ class BaseModel():
         self.flow_array = None
         self.fraction_array = None
 
+        self.is_additional_diagnostics = False
+
         self.flows = {}
         self.fixed_transfer_rate_flows = []
         self.fixed_infection_death_rate_flows = []
@@ -280,7 +282,8 @@ class BaseModel():
                     self.get_var_soln("population"))]
             self.fraction_array[:, i_label] = self.fraction_soln[label]
 
-        self.calculate_additional_diagnostics()
+        if self.is_additional_diagnostics:
+            self.calculate_additional_diagnostics()
 
     def calculate_additional_diagnostics(self):
         pass

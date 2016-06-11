@@ -55,6 +55,7 @@ class ConsolidatedModel(BaseModel):
                  is_lowquality=False,
                  is_amplification=False,
                  is_misassignment=False,
+                 is_additional_diagnostics=False,
                  scenario=None,
                  data=None):
 
@@ -97,6 +98,7 @@ class ConsolidatedModel(BaseModel):
         self.is_lowquality = is_lowquality
         self.is_amplification = is_amplification
         self.is_misassignment = is_misassignment
+        self.is_additional_diagnostics = is_additional_diagnostics
 
         self.scenario = scenario
 

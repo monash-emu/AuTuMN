@@ -276,22 +276,35 @@ class ConsolidatedModel(BaseModel):
 
         """
         Sets parameters that should never be changed in any situation,
-        i.e. "by definition" parameters
+        i.e. "by definition" parameters (although note that the infectiousness
+        of the single infectious compartment for models unstratified by organ
+        status is now set in set_fixed_infectious_proportion, because it is
+        dependent upon loading some parameters in find_functions_or_params)
         """
 
-        fixed_parameters = {
-            'tb_multiplier_force_smearpos':
-                1.,  # Proporiton of smear-positive patients infectious
-            'tb_multiplier_force_extrapul':
-                0.
-        }
-
+        fixed_parameters = {}
         if len(self.organ_status) < 2:
+            # Proportion progressing to the only infectious compartment
+            # for models unstratified by organ status
             fixed_parameters['epi_prop'] = 1.
-            fixed_parameters['tb_multiplier_force'] = 1.
+        else:
+            fixed_parameters = {
+                'tb_multiplier_force_smearpos':
+                    1.,  # Infectiousness of smear-positive patients
+                'tb_multiplier_force_extrapul':
+                    0.}  # Infectiousness of extrapulmonary patients
 
         for parameter in fixed_parameters:
             self.set_parameter(parameter, fixed_parameters[parameter])
+
+    def set_fixed_infectious_proportion(self):
+
+        # Find a multiplier for the proportion of all cases infectious for
+        # models unstructured by organ status.
+        if len(self.organ_status) < 2:
+            self.set_parameter('tb_multiplier_force',
+                               self.params['epi_prop_smearpos'] + \
+                               self.params['epi_prop_smearneg'] * self.params['tb_multiplier_force_smearneg'])
 
     def define_age_structure(self):
 
@@ -374,6 +387,8 @@ class ConsolidatedModel(BaseModel):
         self.find_functions_or_params()
 
         self.find_natural_history_params()
+
+        self.set_fixed_infectious_proportion()
 
     ##################################################################
     # The methods that process_parameters calls to set parameters and
@@ -648,19 +663,19 @@ class ConsolidatedModel(BaseModel):
                 for label in self.labels:
 
                     # If we haven't reached the part of the model divided by organ status
-                    if organ not in label and organ != '':
-                        continue
+                    # if organ not in label and organ != '':
+                    #     continue
 
                     # If we haven't reached the part of the model divided by strain
-                    if strain not in label and strain != '':
-                        continue
+                    # if strain not in label and strain != '':
+                    #     continue
 
                     # If the compartment is non-infectious
-                    if not label_intersects_tags(label, self.infectious_tags):
-                        continue
-                    self.vars['infectious_population' + strain] += \
-                        self.params['tb_multiplier_force' + organ] \
-                        * self.compartments[label]
+                    if label_intersects_tags(label, self.infectious_tags):
+
+                        self.vars['infectious_population' + strain] += \
+                            self.params['tb_multiplier_force' + organ] \
+                            * self.compartments[label]
 
             # Calculate non-immune force of infection
             self.vars['rate_force' + strain] = \

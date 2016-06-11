@@ -169,7 +169,9 @@ for n_organs in data['attributes']['n_organs']:
                                     autumn.plotting.plot_scaleup_fns(model,
                                                                      classified_scaleups[classification],
                                                                      base + '.' + classification + 'scaleups_' + start_time + '.png',
-                                                                     start_time + 'time', classification)
+                                                                     start_time + 'time',
+                                                                     classification,
+                                                                     country)
 
                             # autumn.plotting.plot_all_scaleup_fns_against_data(model,
                             #                                                   vars_to_plot,

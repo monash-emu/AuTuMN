@@ -466,9 +466,11 @@ class ConsolidatedModel(BaseModel):
                     irrelevant_time_variants += [time_variant]
             if u'cost' in time_variant:
                 irrelevant_time_variants += [time_variant]
-            if len(self.strains) < 2 and ('line_dst' in time_variant or '_inappropriate' in time_variant):
+            if len(self.organ_status) < 2 and ('line_dst' in time_variant or '_inappropriate' in time_variant):
                 irrelevant_time_variants += [time_variant]
-            elif len(self.strains) == 2 and 'secondline_dst' in time_variant:
+            elif len(self.organ_status) == 2 and u'secondline_dst' in time_variant:
+                irrelevant_time_variants += [time_variant]
+            elif len(self.organ_status) == 2 and u'smearneg' in time_variant:
                 irrelevant_time_variants += [time_variant]
             if u'lowquality' in time_variant and not self.is_lowquality:
                 irrelevant_time_variants += [time_variant]
@@ -710,8 +712,8 @@ class ConsolidatedModel(BaseModel):
 
             # Stratified into smear-positive and smear-negative
             elif len(self.organ_status) == 2:
-                self.vars['tb_prop_smearneg'] = \
-                    1. - self.vars['tb_prop_smearpos']
+                self.vars['epi_prop_smearneg'] = \
+                    1. - self.vars['epi_prop_smearpos']
 
             # Fully stratified into smear-positive, smear-negative and extra-pulmonary
             elif len(self.organ_status) > 2:

@@ -572,7 +572,7 @@ def plot_flows(model, labels, png=None):
     save_png(png)
 
 
-def plot_scaleup_fns(model, functions, png=None, start_time_str='start_time', parameter_type=''):
+def plot_scaleup_fns(model, functions, png=None, start_time_str='start_time', parameter_type='', country=u''):
 
     line_styles = make_default_line_styles(len(functions))
     start_time = model.data['attributes'][start_time_str]
@@ -585,8 +585,8 @@ def plot_scaleup_fns(model, functions, png=None, start_time_str='start_time', pa
                     x_vals), line_styles[i],
                 label=function)
 
-    title = parameter_type + ' parameters from ' + start_time_str
-    set_axes_props(ax, 'Year', 'Proportion',
+    title = str(country) + ' ' + parameter_type + ' parameter(s) from ' + start_time_str
+    set_axes_props(ax, 'Year', 'Parameter value',
                    title, True, functions)
     ax.set_ylim(bottom=0)
 

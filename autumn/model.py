@@ -452,11 +452,11 @@ class ConsolidatedModel(BaseModel):
                     irrelevant_time_variants += [time_variant]
             if u'cost' in time_variant:
                 irrelevant_time_variants += [time_variant]
-            if len(self.organ_status) < 2 and ('line_dst' in time_variant or '_inappropriate' in time_variant):
+            if len(self.strains) < 2 and ('line_dst' in time_variant or '_inappropriate' in time_variant):
                 irrelevant_time_variants += [time_variant]
-            elif len(self.organ_status) == 2 and u'secondline_dst' in time_variant:
+            elif len(self.strains) == 2 and u'secondline_dst' in time_variant:
                 irrelevant_time_variants += [time_variant]
-            elif len(self.organ_status) == 2 and u'smearneg' in time_variant:
+            elif len(self.strains) == 2 and u'smearneg' in time_variant:
                 irrelevant_time_variants += [time_variant]
             if u'lowquality' in time_variant and not self.is_lowquality:
                 irrelevant_time_variants += [time_variant]

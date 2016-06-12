@@ -118,17 +118,19 @@ for n_organs in data['attributes']['n_organs']:
                             #         model, ["incidence_ds", "incidence_mdr", "mortality_ds", "mortality_mdr", "prevalence_ds", "prevalence_mdr",
                             #                 "notifications_ds", "notifications_mdr"],
                             #         data['attributes']['start_time'], base + '.rate_bystrain_outputs.png')
-                            autumn.plotting.plot_outputs(
-                                model, ["incidence", "mortality", "prevalence"],
-                                data['attributes']['start_time'], base + '.rate_outputs.png')
-                            autumn.plotting.plot_outputs_against_gtb(
-                                model, "incidence",
-                                data['attributes']['recent_time'], base + '.rate_outputs_gtb.png',
-                                data)
-                            autumn.plotting.plot_all_outputs_against_gtb(
-                                model, ["incidence", "mortality", "prevalence", "notifications"],
-                                data['attributes']['recent_time'], base + '.all_rate_outputs_gtb' + str(scenario) + '.png',
-                                data, country)
+
+                            # autumn.plotting.plot_outputs(
+                            #     model, ["incidence", "mortality", "prevalence"],
+                            #     data['attributes']['start_time'], base + '.rate_outputs.png')
+                            # autumn.plotting.plot_outputs_against_gtb(
+                            #     model, "incidence",
+                            #     data['attributes']['recent_time'], base + '.rate_outputs_gtb.png',
+                            #     data)
+                            # autumn.plotting.plot_all_outputs_against_gtb(
+                            #     model, ["incidence", "mortality", "prevalence", "notifications"],
+                            #     data['attributes']['recent_time'], base + '.all_rate_outputs_gtb' + str(scenario) + '.png',
+                            #     data, country)
+                            
                             # if n_strains >= 2:
                             #     autumn.plotting.plot_outputs(
                             #         model, ["incidence_ds", "incidence_mdr", "mortality_ds", "mortality_mdr", "prevalence_ds", "prevalence_mdr",
@@ -170,23 +172,16 @@ for n_organs in data['attributes']['n_organs']:
                                                                      classified_scaleups[classification],
                                                                      base + '.' + classification + 'scaleups_' + start_time + '.png',
                                                                      start_time + 'time',
+                                                                     'current_time',
                                                                      classification,
                                                                      country)
-
-                            # autumn.plotting.plot_all_scaleup_fns_against_data(model,
-                            #                                                   vars_to_plot,
-                            #                                                   base + '.scaleup_recent.png',
-                            #                                                   data['attributes']['recent_time'])
-                            # autumn.plotting.plot_all_scaleup_fns_against_data(model,
-                            #                                                   vars_to_plot,
-                            #                                                   base + '.scaleup_start.png',
-                            #                                                   data['attributes']['start_time'])
-                            # demo_vars_to_plot = ['temp_tb_proportion_smearpos']
-
-                            # autumn.plotting.plot_all_scaleup_fns_against_data(model,
-                            #                                                   demo_vars_to_plot,
-                            #                                                   base + '.scaleup_organ.png',
-                            #                                                   data['attributes']['start_time'])
+                                    autumn.plotting.plot_all_scaleup_fns_against_data(model,
+                                                                                      classified_scaleups[classification],
+                                                                                      base + '.' + classification + 'scaleups_' + start_time + '.png',
+                                                                                      start_time + 'time',
+                                                                                      'current_time',
+                                                                                      classification,
+                                                                                      country)
 
                             #
                             #     year = indices(model.times, lambda x: x >= 2015.)[0]

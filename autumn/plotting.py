@@ -92,12 +92,73 @@ def humanise_y_ticks(ax):
     ax.set_yticklabels(labels)
 
 
+def replace_underscore_with_space(original_string):
+
+    # Just a simple method to remove underscores and replace with
+    # spaces for titles of plots.
+
+    replaced_string = ''
+    for i in range(len(original_string)):
+        if original_string[i] == '_':
+            replaced_string += ' '
+        else:
+            replaced_string += original_string[i]
+
+    return replaced_string
+
+
+def capitalise_first_letter(old_string):
+
+    new_string = ''
+    for i in range(len(old_string)):
+        if i == 0:
+            new_string += old_string[i].upper()
+        else:
+            new_string += old_string[i]
+
+    return new_string
+
+
 def find_smallest_factors_of_integer(n):
 
+    # Simple function to find the smallest whole number factors of an integer
     answer = [1E3, 1E3]
     for i in range(1, n + 1):
         if n % i == 0 and i+(n/i) < sum(answer):
             answer = [i, n/i]
+    return answer
+
+
+def relax_y_axis(ax):
+
+    # Simple algorithm to move yaxis limits a little further from the data
+    # (Just my preferences really)
+    ylims = list(ax.get_ylim())
+    if ylims[0] < ylims[1] * .75:
+        ylims[0] = 0.
+    else:
+        ylims[0] = ylims[0] * .6
+    ylims[1] = ylims[1] * 1.1
+
+    return ylims
+
+
+def get_nice_font_size(subplot_grid):
+
+    return 10. / subplot_grid[0]
+
+
+def find_subplot_numbers(n):
+
+    # Find a nice number of subplots for a panel plot
+    answer = find_smallest_factors_of_integer(n)
+    i = 0
+    while i < 10:
+        if abs(answer[0] - answer[1]) > 3:
+            n = n + 1
+            answer = find_smallest_factors_of_integer(n)
+        i = i + 1
+
     return answer
 
 
@@ -489,7 +550,7 @@ def plot_all_outputs_against_gtb(model, labels, start_time, png=None, data=None,
     # Truncate data to what you want to look at (rather than going back to the dawn of time)
     right_xlimit_index, left_xlimit_index = truncate_data(model, start_time)
 
-    subplot_grid = find_smallest_factors_of_integer(len(labels))
+    subplot_grid = find_subplot_numbers(len(labels))
 
     end_time = 2015.
 
@@ -572,11 +633,13 @@ def plot_flows(model, labels, png=None):
     save_png(png)
 
 
-def plot_scaleup_fns(model, functions, png=None, start_time_str='start_time', parameter_type='', country=u''):
+def plot_scaleup_fns(model, functions, png=None,
+                     start_time_str='start_time', end_time_str='',
+                     parameter_type='', country=u''):
 
     line_styles = make_default_line_styles(len(functions))
     start_time = model.data['attributes'][start_time_str]
-    end_time = 2015.
+    end_time = model.data['attributes'][end_time_str]
     x_vals = numpy.linspace(start_time, end_time, 1E3)
     ax = make_axes_with_room_for_legend()
     for i, function in enumerate(functions):
@@ -585,49 +648,64 @@ def plot_scaleup_fns(model, functions, png=None, start_time_str='start_time', pa
                     x_vals), line_styles[i],
                 label=function)
 
-    title = str(country) + ' ' + parameter_type + ' parameter(s) from ' + start_time_str
+    plural = ''
+    if len(functions) > 1:
+        plural += 's'
+    title = str(country) + ' ' + \
+            replace_underscore_with_space(parameter_type) + \
+            ' parameter' + plural + ' from ' + replace_underscore_with_space(start_time_str)
     set_axes_props(ax, 'Year', 'Parameter value',
                    title, True, functions)
-    ax.set_ylim(bottom=0)
+
+    ylims = relax_y_axis(ax)
+    ax.set_ylim(bottom=ylims[0], top=ylims[1])
 
     save_png(png)
 
 
-def plot_all_scaleup_fns_against_data(model, functions, png=None, start_time=1900.):
+def plot_all_scaleup_fns_against_data(model, functions, png=None,
+                                      start_time_str='start_time',
+                                      end_time_str='',
+                                      parameter_type='', country=u''):
 
     # Get some styles for the lines
     line_styles = make_default_line_styles(len(functions))
 
     # Determine how many subplots to have
-    subplot_grid = find_smallest_factors_of_integer(len(functions))
-
-    # Currently just plots out to the present day
-    end_time = 2015.
+    subplot_grid = find_subplot_numbers(len(functions))
 
     # Set x-values
+    start_time = model.data['attributes'][start_time_str]
+    end_time = model.data['attributes'][end_time_str]
     x_vals = numpy.linspace(start_time, end_time, 1E3)
 
     # Initialise figure
-    fig = pyplot.figure(10)
+    fig = pyplot.figure()
 
     # Upper title for whole figure
-    fig.suptitle('Scaling parameter values over time (calendar years)')
+    plural = ''
+    if len(functions) > 1:
+        plural += 's'
+    title = str(country) + ' ' + \
+            replace_underscore_with_space(parameter_type) + \
+            ' parameter' + plural + ' from ' + replace_underscore_with_space(start_time_str)
+    fig.suptitle(title)
 
     # Iterate through functions
-    for i, program in enumerate(functions):
+    for i, function in enumerate(functions):
 
         # Initialise subplot areas
         ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1)
 
         # Line plot scaling parameters
         ax.plot(x_vals,
-                map(model.scaleup_fns[program],
+                map(model.scaleup_fns[function],
                     x_vals), line_styles[i],
-                    label=program)
+                    label=function)
         data_to_plot = {}
-        for j in model.programs[program]:
+        for j in model.scaleup_data[function]:
             if j > start_time:
-                data_to_plot[j] = model.programs[program][j]
+                data_to_plot[j] = model.scaleup_data[function][j]
 
         # Scatter plot data from which they are derived
         ax.scatter(data_to_plot.keys(),
@@ -639,17 +717,16 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None, start_time=190
         ax.set_xticks([start_time, end_time])
         for axis_to_change in [ax.xaxis, ax.yaxis]:
             for tick in axis_to_change.get_major_ticks():
-                tick.label.set_fontsize(4)
+                tick.label.set_fontsize(get_nice_font_size(subplot_grid))
 
         # Truncate parameter names depending on whether it is a
         # treatment success/death proportion
-        if 'treatment' in program and 'timeperiod' not in program:
-            title = program[23:]
-        elif 'timeperiod' in program:
-            title = program[19:]
-        else:
-            title = program[13:]
-        ax.set_title(title, fontsize=6)
+        title = capitalise_first_letter(replace_underscore_with_space(function))
+        ax.set_title(title, fontsize=get_nice_font_size(subplot_grid))
+
+        ylims = relax_y_axis(ax)
+        ax.set_ylim(bottom=ylims[0], top=ylims[1])
+
         save_png(png)
 
     fig.suptitle('Scale-up functions')
@@ -668,4 +745,8 @@ def open_pngs(pngs):
         os.system("start " + " ".join(pngs))
     elif 'Darwin' in operating_system:
         os.system('open ' + " ".join(pngs))
+
+
+
+
 

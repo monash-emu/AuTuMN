@@ -674,10 +674,12 @@ class ConsolidatedModel(BaseModel):
                 for label in self.labels:
 
                     # If we haven't reached the part of the model divided by organ status
+                    # and we're not doing the organ status of interest.
                     if organ not in label and organ != '':
                         continue
 
                     # If we haven't reached the part of the model divided by strain
+                    # and we're not doing the strain of interest.
                     if strain not in label and strain != '':
                         continue
 

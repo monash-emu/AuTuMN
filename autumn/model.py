@@ -382,7 +382,9 @@ class ConsolidatedModel(BaseModel):
 
         self.find_treatment_periods()
 
-        self.collect_data_for_functions_or_params()
+        self.find_data_for_functions_or_params()
+
+        self.find_amplification_data()
 
         self.find_functions_or_params()
 
@@ -428,21 +430,7 @@ class ConsolidatedModel(BaseModel):
                 self.params['tb_timeperiod_treatment' + strain]
                 - self.params['tb_timeperiod_infect_ontreatment' + strain])
 
-    def collect_data_for_functions_or_params(self):
-
-        """
-        Method to load all the dictionaries to be used in generating scale-up functions to
-        a single attribute of the class instance (to avoid creating heaps of functions for
-        irrelevant programs)
-
-        Returns:
-            Creates self.scaleup_data, a dictionary of the relevant scale-up data for creating
-            scale-up functions in set_scaleup_functions.
-
-        """
-
-        # Collect data to generate scale-up functions
-        self.scaleup_data = {}
+    def find_irrelevant_time_variants(self):
 
         # Work out which time-variant parameters are not relevant to this model structure
         irrelevant_time_variants = []
@@ -460,6 +448,27 @@ class ConsolidatedModel(BaseModel):
                 irrelevant_time_variants += [time_variant]
             if u'lowquality' in time_variant and not self.is_lowquality:
                 irrelevant_time_variants += [time_variant]
+
+        return irrelevant_time_variants
+
+    def find_data_for_functions_or_params(self):
+
+        """
+        Method to load all the dictionaries to be used in generating scale-up functions to
+        a single attribute of the class instance (to avoid creating heaps of functions for
+        irrelevant programs)
+
+        Returns:
+            Creates self.scaleup_data, a dictionary of the relevant scale-up data for creating
+            scale-up functions in set_scaleup_functions.
+
+        """
+
+        # Collect data to generate scale-up functions
+        self.scaleup_data = {}
+
+        # Flag the time-variant parameters that aren't relevant
+        irrelevant_time_variants = self.find_irrelevant_time_variants()
 
         # Find the programs that are relevant and load them to the scaleup_data attribute
         for time_variant in self.data['time_variants']:
@@ -485,6 +494,8 @@ class ConsolidatedModel(BaseModel):
                     elif type(i) == unicode and u'scenario_' + str(self.scenario) in i:
                         self.scaleup_data[str(time_variant)]['scenario'] = \
                             self.data['time_variants'][time_variant][u'scenario_' + str(self.scenario)]
+
+    def find_amplification_data(self):
 
         # Add dictionary for the amplification proportion scale-up (if relevant)
         if len(self.strains) > 1:

@@ -674,12 +674,12 @@ class ConsolidatedModel(BaseModel):
                 for label in self.labels:
 
                     # If we haven't reached the part of the model divided by organ status
-                    # if organ not in label and organ != '':
-                    #     continue
+                    if organ not in label and organ != '':
+                        continue
 
                     # If we haven't reached the part of the model divided by strain
-                    # if strain not in label and strain != '':
-                    #     continue
+                    if strain not in label and strain != '':
+                        continue
 
                     # If the compartment is non-infectious
                     if label_intersects_tags(label, self.infectious_tags):
@@ -980,7 +980,7 @@ class ConsolidatedModel(BaseModel):
                             # If organ scale-ups available, set flows as variable
                             # (if epi_prop_smearpos is in self.scaleup_fns, then epi_prop_smearneg
                             # should be too)
-                            if 'epi_prop_smearpos' in self.scaleup_fns:
+                            if self.is_organvariation:
                                 # Early progression
                                 self.set_var_transfer_rate_flow(
                                     'latent_early' + strain + comorbidity + agegroup,
@@ -1006,6 +1006,7 @@ class ConsolidatedModel(BaseModel):
                                     'latent_late' + strain + comorbidity + agegroup,
                                     'active' + organ + strain + comorbidity + agegroup,
                                     'tb_rate_late_progression' + organ)
+
 
     def set_natural_history_flows(self):
 

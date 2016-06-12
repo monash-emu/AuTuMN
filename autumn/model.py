@@ -382,8 +382,6 @@ class ConsolidatedModel(BaseModel):
 
         self.find_treatment_periods()
 
-        self.find_amplification_scaleup()
-
         self.collect_data_for_functions_or_params()
 
         self.find_functions_or_params()
@@ -429,18 +427,6 @@ class ConsolidatedModel(BaseModel):
                 'tb_timeperiod_noninfect_ontreatment' + strain,
                 self.params['tb_timeperiod_treatment' + strain]
                 - self.params['tb_timeperiod_infect_ontreatment' + strain])
-
-    def find_amplification_scaleup(self):
-
-        # Set the amplification scale-up function
-        self.set_scaleup_fn('epi_prop_amplification',
-                            scale_up_function([self.data['miscellaneous']['start_mdr_introduce_period'],
-                                               self.data['miscellaneous']['end_mdr_introduce_period']],
-                                              [0.,
-                                               self.params['tb_prop_amplification']],
-                                              self.data['attributes'][u'fitting_method'],
-                                              self.data['attributes'][u'default_smoothness'],
-                                              0., 1.))
 
     def collect_data_for_functions_or_params(self):
 
@@ -499,6 +485,16 @@ class ConsolidatedModel(BaseModel):
                     elif type(i) == unicode and u'scenario_' + str(self.scenario) in i:
                         self.scaleup_data[str(time_variant)]['scenario'] = \
                             self.data['time_variants'][time_variant][u'scenario_' + str(self.scenario)]
+
+        # Add dictionary for the amplification proportion scale-up (if relevant)
+        if len(self.strains) > 1:
+            self.scaleup_data['epi_prop_amplification'] = \
+                {self.data['miscellaneous']['start_mdr_introduce_period']:
+                     0.,
+                 self.data['miscellaneous']['end_mdr_introduce_period']:
+                     self.params['tb_prop_amplification'],
+                 u'time_variant':
+                    u'yes'}
 
     def find_functions_or_params(self):
 

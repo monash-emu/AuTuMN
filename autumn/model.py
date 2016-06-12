@@ -433,7 +433,7 @@ class ConsolidatedModel(BaseModel):
     def find_amplification_scaleup(self):
 
         # Set the amplification scale-up function
-        self.set_scaleup_fn('tb_prop_amplification',
+        self.set_scaleup_fn('epi_prop_amplification',
                             scale_up_function([self.data['miscellaneous']['start_mdr_introduce_period'],
                                                self.data['miscellaneous']['end_mdr_introduce_period']],
                                               [0.,
@@ -878,10 +878,10 @@ class ConsolidatedModel(BaseModel):
                 if self.is_amplification:
                     self.vars['program_rate_default' + treatment_stage + '_amplify' + strain] = \
                         self.vars['program_rate_default' + treatment_stage + strain] \
-                        * self.vars['tb_prop_amplification']
+                        * self.vars['epi_prop_amplification']
                     self.vars['program_rate_default' + treatment_stage + '_noamplify' + strain] = \
                         self.vars['program_rate_default' + treatment_stage + strain] \
-                        * (1. - self.vars['tb_prop_amplification'])
+                        * (1. - self.vars['epi_prop_amplification'])
 
     ##################################################################
     # Methods that calculate the flows of all the compartments

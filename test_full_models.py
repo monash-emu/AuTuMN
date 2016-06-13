@@ -119,18 +119,22 @@ for n_organs in data['attributes']['n_organs']:
                             #                 "notifications_ds", "notifications_mdr"],
                             #         data['attributes']['start_time'], base + '.rate_bystrain_outputs.png')
 
-                            # autumn.plotting.plot_outputs(
-                            #     model, ["incidence", "mortality", "prevalence"],
-                            #     data['attributes']['start_time'], base + '.rate_outputs.png')
-                            # autumn.plotting.plot_outputs_against_gtb(
-                            #     model, "incidence",
-                            #     data['attributes']['recent_time'], base + '.rate_outputs_gtb.png',
-                            #     data)
-                            # autumn.plotting.plot_all_outputs_against_gtb(
-                            #     model, ["incidence", "mortality", "prevalence", "notifications"],
-                            #     data['attributes']['recent_time'], base + '.all_rate_outputs_gtb' + str(scenario) + '.png',
-                            #     data, country)
-                            
+                            autumn.plotting.plot_outputs(
+                                model, ["incidence", "mortality", "prevalence"],
+                                data['attributes']['start_time'], base + '.rate_outputs.png')
+                            autumn.plotting.plot_outputs_against_gtb(
+                                model, "incidence",
+                                data['attributes']['recent_time'], base + '.rate_outputs_gtb.png',
+                                data)
+                            autumn.plotting.plot_all_outputs_against_gtb(
+                                model, ["incidence", "mortality", "prevalence", "notifications"],
+                                data['attributes']['recent_time'], base + '.all_rate_outputs_gtb' + str(scenario) + '.png',
+                                data, country)
+
+                            # Quick patch of code to calculate what the starting population should be:
+                            # print(data['attributes']['start_compartments'][u'susceptible_fully'] *
+                            #       model.vars['population'] / 881065)
+
                             # if n_strains >= 2:
                             #     autumn.plotting.plot_outputs(
                             #         model, ["incidence_ds", "incidence_mdr", "mortality_ds", "mortality_mdr", "prevalence_ds", "prevalence_mdr",
@@ -167,21 +171,22 @@ for n_organs in data['attributes']['n_organs']:
 
                             # Plot them from the start of the model and from "recent_time"
                             for classification in classified_scaleups:
-                                for start_time in ['start_', 'recent_']:
-                                    autumn.plotting.plot_scaleup_fns(model,
-                                                                     classified_scaleups[classification],
-                                                                     base + '.' + classification + 'scaleups_' + start_time + '.png',
-                                                                     start_time + 'time',
-                                                                     'current_time',
-                                                                     classification,
-                                                                     country)
-                                    autumn.plotting.plot_all_scaleup_fns_against_data(model,
-                                                                                      classified_scaleups[classification],
-                                                                                      base + '.' + classification + 'scaleups_' + start_time + '.png',
-                                                                                      start_time + 'time',
-                                                                                      'current_time',
-                                                                                      classification,
-                                                                                      country)
+                                if len(classified_scaleups[classification]) > 0:
+                                    for start_time in ['start_', 'recent_']:
+                                        autumn.plotting.plot_scaleup_fns(model,
+                                                                         classified_scaleups[classification],
+                                                                         base + '.' + classification + 'scaleups_' + start_time + '.png',
+                                                                         start_time + 'time',
+                                                                         'current_time',
+                                                                         classification,
+                                                                         country)
+                                        autumn.plotting.plot_all_scaleup_fns_against_data(model,
+                                                                                          classified_scaleups[classification],
+                                                                                          base + '.' + classification + 'scaleups_' + start_time + '.png',
+                                                                                          start_time + 'time',
+                                                                                          'current_time',
+                                                                                          classification,
+                                                                                          country)
 
                             #
                             #     year = indices(model.times, lambda x: x >= 2015.)[0]

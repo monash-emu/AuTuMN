@@ -23,9 +23,12 @@ keys_of_sheets_to_read = [
     'bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'time_variants', 'tb',
     'notifications', 'outcomes']
 data = read_and_process_data(True, keys_of_sheets_to_read, country)
+is_additional_diagnostics = data['attributes']['is_additional_diagnostics'][0]
 
 # Note that it takes about one hour to run all of the possible model structures,
 # so perhaps don't do that - and longer if running multiple scenarios
+last_scenario = data['attributes']['scenarios_to_run'][-1]
+print(last_scenario)
 for scenario in data['attributes']['scenarios_to_run']:
     n_organs = data['attributes']['n_organs'][0]
     n_strains =  data['attributes']['n_strains'][0]
@@ -47,6 +50,7 @@ for scenario in data['attributes']['scenarios_to_run']:
             is_quality,  # Low quality care
             is_amplification,  # Amplification
             is_misassignment,  # Misassignment by strain
+            is_additional_diagnostics,
             scenario,  # Scenario to run
             data)
         print(str(n_organs) + " organ(s),   " +
@@ -64,20 +68,23 @@ for scenario in data['attributes']['scenarios_to_run']:
         model.integrate()
 
         # Only make a flow-diagram if the model isn't overly complex
-        if n_organs + n_strains + n_comorbidities <= 5:
-            model.make_graph(base + '.workflow')
+        # if n_organs + n_strains + n_comorbidities <= 5:
+        #     model.make_graph(base + '.workflow')
 
-        autumn.plotting.plot_outputs(
-            model, ["incidence", "mortality", "prevalence"],
-            data['attributes']['start_time'], base + '.rate_outputs.png')
-        autumn.plotting.plot_outputs_against_gtb(
-            model, "incidence",
-            data['attributes']['recent_time'], base + '.rate_outputs_gtb.png',
-            data)
+        # autumn.plotting.plot_outputs(
+        #     model, ["incidence", "mortality", "prevalence"],
+        #     data['attributes']['start_time'], base + '.rate_outputs.png')
+        # autumn.plotting.plot_outputs_against_gtb(
+        #     model, "incidence",
+        #     data['attributes']['recent_time'], base + '.rate_outputs_gtb.png',
+        #     data)
         autumn.plotting.plot_all_outputs_against_gtb(
             model, ["incidence", "mortality", "prevalence", "notifications"],
-            data['attributes']['recent_time'], base + '.all_rate_outputs_gtb' + str(scenario) + '.png',
-            data, country)
+            data['attributes']['recent_time'],
+            'current_time',
+            base + '.all_rate_outputs_gtb' + str(scenario) + '.png',
+            data, country,
+            scenario=scenario, last_scenario=last_scenario)
 
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))

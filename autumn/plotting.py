@@ -1,6 +1,5 @@
 
 
-import math
 import pylab
 import numpy
 from matplotlib import pyplot, patches
@@ -20,6 +19,7 @@ def make_axes_with_room_for_legend():
 def set_axes_props(
         ax, xlabel=None, ylabel=None, title=None, is_legend=True,
         axis_labels=None):
+
     frame_color = "grey"
 
     # hide top and right border of plot
@@ -145,7 +145,9 @@ def relax_y_axis(ax):
 
 def get_nice_font_size(subplot_grid):
 
-    return 10. / subplot_grid[0]
+    # Simple function to return a reasonable font size
+    # as appropriate to the number of rows of subplots in the figure
+    return 3. + 9. / subplot_grid[0]
 
 
 def find_subplot_numbers(n):
@@ -163,6 +165,7 @@ def find_subplot_numbers(n):
 
 
 def truncate_data(model, left_xlimit):
+
     # Not going to argue that the following code is the most elegant approach
     right_xlimit_index = len(model.times) - 1
     left_xlimit_index = 0
@@ -171,6 +174,88 @@ def truncate_data(model, left_xlimit):
             left_xlimit_index = i
             break
     return right_xlimit_index, left_xlimit_index
+
+
+def find_reasonable_year_ticks(start_time, end_time):
+
+    """
+    Simple method to find some reasonably spaced x-ticks
+
+    Args:
+        start_time: Plotting start time
+        end_time: Plotting end time
+
+    Returns:
+        xticsk: List of where the x ticks should go
+    """
+
+    # If the range is divisible by 15
+    if (start_time - end_time) % 15 == 0:
+        xticks = numpy.arange(start_time, end_time + 15, 15)
+    # Otherwise if it's divisible by 10
+    elif (start_time - end_time) % 10 == 0:
+        xticks = numpy.arange(start_time, end_time + 10, 10)
+    # Otherwise just give up on having ticks along axis
+    else:
+        xticks = [start_time, end_time]
+
+    return xticks
+
+
+def find_standard_output_styles(labels, lightening_factor=1.):
+
+    """
+    Function to find some standardised colours for the outputs we'll typically
+    be reporting on - i.e. incidence, prevalence, mortality and notifications.
+    Incidence is black/grey, prevalence green, mortality red and notifications blue.
+
+    Args:
+        labels: List containing strings for the outputs that colours are needed for.
+        lightening_factor: Float between zero and one that specifies how much lighter to make
+            the colours - with 0. being no additional lightening (black or dark green/red/blue)
+            and 1. being completely lightened to reach white.
+
+    Returns:
+        colour: Colour for plotting
+        indices: List of strings to be used to find the data in the data object
+        yaxis_label: Unit of measurement for outcome
+        title: Title for plot (so far usually a subplot)
+        patch_colour: Colour half way between colour and white
+    """
+
+    colour = []
+    indices = []
+    yaxis_label = []
+    title = []
+    patch_colour = []
+
+    if "incidence" in labels:
+        colour += [(lightening_factor, lightening_factor, lightening_factor)]
+        indices += ['e_inc_100k']
+        yaxis_label += ['Per 100,000 per year']
+        title += ["Incidence"]
+    if "mortality" in labels:
+        colour += [(1., lightening_factor, lightening_factor)]
+        indices += ['e_mort_exc_tbhiv_100k']
+        yaxis_label += ['Per 100,000 per year']
+        title += ["Mortality"]
+    if "prevalence" in labels:
+        colour += [(lightening_factor, 0.5 + 0.5 * lightening_factor, lightening_factor)]
+        indices += ['e_prev_100k']
+        yaxis_label += ['Per 100,000']
+        title += ["Prevalence"]
+    if "notifications" in labels:
+        colour += [(lightening_factor, lightening_factor, 0.5 + 0.5 * lightening_factor)]
+        yaxis_label += ['']
+        title += ["Notifications"]
+
+    # Create a colour half-way between the line colour and white for patches
+    for i in range(len(colour)):
+        patch_colour += [[]]
+        for j in range(len(colour[i])):
+            patch_colour[i] += [1. - (1. - colour[i][j]) / 2.]
+
+    return colour, indices, yaxis_label, title, patch_colour
 
 
 def make_default_line_styles(n, return_all=True):
@@ -520,87 +605,77 @@ def plot_outputs_against_gtb(model, label, left_xlimit, png=None, country_data=N
     save_png(png)
 
 
-def find_standard_output_styles(labels):
+def plot_all_outputs_against_gtb(model,
+                                 labels,
+                                 start_time,
+                                 end_time_str='current_time',
+                                 png=None,
+                                 country='',
+                                 scenario=None):
 
-    # Find some standard styles for model outputs
-    colour = []
-    indices = []
-    yaxis_label = []
-    title = []
-    patch_colour = []
+    """
+    Produces the plot for the main outputs, can handle multiple scenarios (if required).
+    Save as png at the end.
+    Note that if running a series of scenarios, it is expected that the last scenario to
+    be run will be baseline, which should have scenario set to None.
 
-    if "incidence" in labels:
-        colour += [(0, 0, 0)]
-        indices += ['e_inc_100k']
-        yaxis_label += ['Per 100,000 per year']
-        title += ["Incidence"]
-    if "mortality" in labels:
-        colour += [(1, 0, 0)]
-        indices += ['e_mort_exc_tbhiv_100k']
-        yaxis_label += ['Per 100,000 per year']
-        title += ["Mortality"]
-    if "prevalence" in labels:
-        colour += [(0, 0.5, 0)]
-        indices += ['e_prev_100k']
-        yaxis_label += ['Per 100,000']
-        title += ["Prevalence"]
-    if "notifications" in labels:
-        colour += [(0, 0, 0.5)]
-        yaxis_label += ['Per 100,000']
-        title += ["Notifications"]
+    Args:
+        model: The entire model object
+        labels: A list of the outputs to be plotted
+        start_time: Starting time
+        end_time_str: String to access end time from data
+        png:
+        country: Country being plotted (just need for title)
+        scenario: The scenario being run, number needed for line colour
 
-    # Create a colour half-way between the line colour and white
-    for i in range(len(colour)):
-        patch_colour += [[]]
-        for j in range(len(colour[i])):
-            patch_colour[i] += [1. - (1. - colour[i][j]) / 2.]
+    """
 
-    return colour, indices, yaxis_label, title, patch_colour
-
-
-def plot_all_outputs_against_gtb(model, labels, start_time, end_time_str='current_time', png=None, data=None, country='',
-                                 scenario=None, last_scenario=None):
-
-    # if scenario == None:
+    # Get standard colours for plotting GTB data against
     colour, indices, yaxis_label, title, patch_colour = \
-        find_standard_output_styles(labels)
+        find_standard_output_styles(labels, lightening_factor=0.3)
 
-    if scenario != None:
-        output_colour = [make_default_line_styles(scenario, False)[1]] * len(labels)
+    # Get the colours for the model outputs
+    if scenario is None:
+        # Last scenario to run should be baseline and should be run last
+        # to lay a black line over the top for comparison
+        output_colour = ['k'] * len(labels)
     else:
-        output_colour = colour
-
-    plotting_data = []
+        # Otherwise cycling through colours
+        output_colour = [make_default_line_styles(scenario, False)[1]] * len(labels)
 
     # Extract the plotting data you're interested in
+    plotting_data = []
     for i in range(len(indices)):
         plotting_data += [{}]
-        for j in data['tb']:
+        for j in model.data['tb']:
             if indices[i] in j and '_lo' in j:
-                plotting_data[i]['lower_limit'] = data['tb'][j]
+                plotting_data[i]['lower_limit'] = model.data['tb'][j]
             elif indices[i] in j and '_hi' in j:
-                plotting_data[i]['upper_limit'] = data['tb'][j]
+                plotting_data[i]['upper_limit'] = model.data['tb'][j]
             elif indices[i] in j:
-                plotting_data[i]['point_estimate'] = data['tb'][j]
-        plotting_data[i]['year'] = data['tb'][u'year']
+                plotting_data[i]['point_estimate'] = model.data['tb'][j]
+        plotting_data[i]['year'] = model.data['tb'][u'year']
 
     # Truncate data to what you want to look at (rather than going back to the dawn of time)
     right_xlimit_index, left_xlimit_index = truncate_data(model, start_time)
 
     subplot_grid = find_subplot_numbers(len(labels))
 
+    # Time to plot until
     end_time = model.data['attributes'][end_time_str]
 
+    # Not sure whether we have to specify a figure number
     fig = pyplot.figure(11)
 
+    # Overall title
     fig.suptitle(country + ' model outputs', fontsize=12)
 
-    for i in range(len(data['notifications'][u'year'])):
-        if data['notifications'][u'year'][i] > start_time:
+    for i in range(len(model.data['notifications'][u'year'])):
+        if model.data['notifications'][u'year'][i] > start_time:
             notification_start_index = i
             break
-    notification_year_data = data['notifications'][u'year'][notification_start_index:]
-    notification_data = data['notifications'][u'c_newinc'][notification_start_index:]
+    notification_year_data = model.data['notifications'][u'year'][notification_start_index:]
+    notification_data = model.data['notifications'][u'c_newinc'][notification_start_index:]
 
     for i, outcome in enumerate(labels):
 
@@ -613,39 +688,49 @@ def plot_all_outputs_against_gtb(model, labels, start_time, end_time_str='curren
             color=output_colour[i],
             label=labels[i], linewidth=1.5)
 
-        # Plot the GTB data
-        # Notifications are just plotted against raw reported notifications,
-        # as there are no confidence intervals around these values.
-        if outcome == 'notifications':
-            ax.plot(notification_year_data, notification_data)
-            ax.set_ylim((0., max(notification_data)))
-        else:
-            # Central point-estimate
-            ax.plot(plotting_data[i]['year'], plotting_data[i]['point_estimate'],
-                    label=labels[i], color=colour[i], linewidth=0.5)
+        # This is supposed to mean if it's the last scenario, which is the baseline
+        # (provided the function has been called as intended).
+        if scenario is None:
 
-            # Create the patch array
-            patch_array = create_patch_from_dictionary(plotting_data[i])
+            # Plot the GTB data
+            # Notifications are just plotted against raw reported notifications,
+            # as there are no confidence intervals around these values.
+            if outcome == 'notifications':
+                ax.plot(notification_year_data, notification_data,
+                        color=colour[i], linewidth=0.5)
+                ax.set_ylim((0., max(notification_data)))
+            else:
+                # Central point-estimate
+                ax.plot(plotting_data[i]['year'], plotting_data[i]['point_estimate'],
+                        label=labels[i], color=colour[i], linewidth=0.5)
 
-            # Create the patch image and plot it
-            patch = patches.Polygon(patch_array, color=patch_colour[i])
-            ax.add_patch(patch)
+                # Create the patch array
+                patch_array = create_patch_from_dictionary(plotting_data[i])
 
-            # Make y-axis range extend downwards to zero
-            ax.set_ylim((0., max(plotting_data[i]['upper_limit'])))
+                # Create the patch image and plot it
+                patch = patches.Polygon(patch_array, color=patch_colour[i])
+                ax.add_patch(patch)
 
-        # Make tick marks text nice and small
-        ax.set_xticks([start_time, end_time])
-        for axis_to_change in [ax.xaxis, ax.yaxis]:
-            for tick in axis_to_change.get_major_ticks():
-                tick.label.set_fontsize(8)
+                # Make y-axis range extend downwards to zero
+                ax.set_ylim((0., max(plotting_data[i]['upper_limit'])))
 
-        # Add the sub-plot title
-        ax.set_title(title[i], fontsize=10)
+            # Set x-ticks
+            xticks = find_reasonable_year_ticks(start_time, end_time)
+            ax.set_xticks(xticks)
 
-    # Only save the image if we're on the last scenario
-    if scenario == last_scenario:
-        save_png(png)
+            # Adjust size of labels of x-ticks
+            for axis_to_change in [ax.xaxis, ax.yaxis]:
+                for tick in axis_to_change.get_major_ticks():
+                    tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+
+            # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
+            ax.set_title(title[i], fontsize=get_nice_font_size(subplot_grid) + 2.)
+
+            # Label the y axis with the smaller text size
+            ax.set_ylabel(yaxis_label[i], fontsize=get_nice_font_size(subplot_grid))
+
+            # Save
+            save_png(png)
 
 
 def create_patch_from_dictionary(dict):

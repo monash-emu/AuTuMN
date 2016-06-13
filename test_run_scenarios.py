@@ -27,9 +27,7 @@ is_additional_diagnostics = data['attributes']['is_additional_diagnostics'][0]
 
 # Note that it takes about one hour to run all of the possible model structures,
 # so perhaps don't do that - and longer if running multiple scenarios
-last_scenario = data['attributes']['scenarios_to_run'][-1]
-print(last_scenario)
-for scenario in data['attributes']['scenarios_to_run']:
+for scenario in data['attributes']['scenarios_to_run'] + [None]:
     n_organs = data['attributes']['n_organs'][0]
     n_strains =  data['attributes']['n_strains'][0]
     n_comorbidities = data['attributes']['n_comorbidities'][0]
@@ -81,10 +79,10 @@ for scenario in data['attributes']['scenarios_to_run']:
         autumn.plotting.plot_all_outputs_against_gtb(
             model, ["incidence", "mortality", "prevalence", "notifications"],
             data['attributes']['recent_time'],
-            'current_time',
+            'scenario_end_time',
             base + '.all_rate_outputs_gtb' + str(scenario) + '.png',
-            data, country,
-            scenario=scenario, last_scenario=last_scenario)
+            country,
+            scenario=scenario)
 
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))

@@ -13,7 +13,7 @@ from numpy import linspace
 import numpy as np
 import math
 import scipy.optimize
-import autumn.logistic_fitting as logistic_fitting
+import autumn.logistic_fitting2 as logistic_fitting2
 from autumn.spreadsheet import read_and_process_data
 
 
@@ -54,7 +54,7 @@ else:
 # Read data
 
 keys_of_sheets_to_read = [
-    'bcg', 'birth_rate', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'time_variants', 'tb',
+    'bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'time_variants', 'tb',
     'notifications', 'outcomes']
 data = read_and_process_data(True, keys_of_sheets_to_read, country)
 
@@ -165,7 +165,7 @@ prog_cost = {
 #Multiple data points
 
 costcost = np.array([6e5, 4.2e5, 3.5e5, 3e5, 2e5], dtype='float')
-covcov = np.array  ([0.8, 0.7,   0.6,   0.3, 0.05], dtype='float')
+covcov = np.array  ([0.8, 0.7,   0.6,   0.3, 0.08], dtype='float')
 
 ###########################################################
 #Default parameters for cost-coverage function
@@ -249,8 +249,8 @@ if multi_data == True:
     print(costcost)
     print(covcov)
     p_guess = (np.median(costcost), np.min(covcov), 0.8, 20000)
-    p, cov, infodict, mesg, ier = scipy.optimize.leastsq(logistic_fitting.residuals, p_guess, args=(costcost, covcov), full_output=1)
-    coverage_values = logistic_fitting.logistic(p, cost_values)
+    p, cov, infodict, mesg, ier = scipy.optimize.leastsq(logistic_fitting2.residuals, p_guess, args=(covcov, costcost), full_output=1)
+    cost_values = logistic_fitting2.logistic(p, coverage_values)
     #plt.plot(costcost, covcov, 'bo', cost_values, coverage_values, 'r-', linewidth = 3)
     #plt.xlim([start_cost, end_cost])
     #plt.ylim ([0, 1])
@@ -288,13 +288,13 @@ for cov in coverage_values:
 
 if multi_data == True:
     fig = plt.figure(1)
-    fig.suptitle('Cost-coverage-outcome curve - Multiple data points')
+    fig.suptitle('Coverage-cost-outcome curve - Multiple data points')
     plt.subplot (121)
-    plt.plot(costcost, covcov, 'bo', cost_values, coverage_values, 'r-', linewidth = 3)
-    plt.xlim([start_cost, end_cost])
-    plt.ylim ([0, 1])
-    plt.xlabel('$ Cost')
-    plt.ylabel('% Coverage')
+    plt.plot(covcov, costcost, 'bo', coverage_values, cost_values, 'r-', linewidth = 3)
+    plt.xlim([0, 1])
+    plt.ylim ([0, 1e6])
+    plt.xlabel('% Coverage')
+    plt.ylabel('$ Cost')
     plt.grid(True)
     plt.subplot (122)
     plt.plot(coverage_values, outcome_values, 'b', linewidth = 3)

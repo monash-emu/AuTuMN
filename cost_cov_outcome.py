@@ -12,7 +12,7 @@ from numpy import exp
 from numpy import linspace
 import numpy as np
 import scipy.optimize
-import autumn.logistic_fitting as logistic_fitting
+import autumn.logistic_fitting1 as logistic_fitting1
 from autumn.spreadsheet import read_and_process_data
 
 
@@ -53,7 +53,7 @@ else:
 # Read data
 
 keys_of_sheets_to_read = [
-    'bcg', 'birth_rate', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'time_variants', 'tb',
+    'bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'time_variants', 'tb',
     'notifications', 'outcomes']
 data = read_and_process_data(True, keys_of_sheets_to_read, country)
 
@@ -236,7 +236,7 @@ def make_cost_steps(start_cost, end_cost, delta_cost):
 
 cost_values = make_cost_steps (start_cost, end_cost, delta_cost)
 
-print(cost_values)
+#print(cost_values)
 
 
 coverage_values = []
@@ -250,8 +250,8 @@ if multi_data == True:
     print(costcost)
     print(covcov)
     p_guess = (np.median(costcost), np.min(covcov), 0.8, 20000)
-    p, cov, infodict, mesg, ier = scipy.optimize.leastsq(logistic_fitting.residuals, p_guess, args=(costcost, covcov), full_output=1)
-    coverage_values = logistic_fitting.logistic(p, cost_values)
+    p, cov, infodict, mesg, ier = scipy.optimize.leastsq(logistic_fitting1.residuals, p_guess, args=(costcost, covcov), full_output=1)
+    coverage_values = logistic_fitting1.logistic(p, cost_values)
     #plt.plot(costcost, covcov, 'bo', cost_values, coverage_values, 'r-', linewidth = 3)
     #plt.xlim([start_cost, end_cost])
     #plt.ylim ([0, 1])

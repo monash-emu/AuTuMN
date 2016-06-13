@@ -476,63 +476,14 @@ def plot_fractions(model, labels, values, left_xlimit, strain_or_organ, png=None
     save_png(png)
 
 
-def plot_outputs(model, labels, left_xlimit, png=None):
-
-    # Truncate data to what you want to look at (rather than going back to the dawn of time)
-    right_xlimit_index, left_xlimit_index = truncate_data(model, left_xlimit)
-    colours = {}
-    patterns = {}
-    full_names = {}
-    axis_labels = []
-    yaxis_label = "Per 100,000 (per year as applicable)"
-
-    # Sort out the plotting patterns
-    for label in labels:
-        patterns[label] = get_line_pattern(label, "strain")
-        if "incidence" in label:
-            colours[label] = (0, 0, 0)
-            full_names[label] = "Incidence"
-        elif "notification" in label:
-            colours[label] = (0, 0, 1)
-            full_names[label] = "Notifications"
-        elif "mortality" in label:
-            colours[label] = (1, 0, 0)
-            full_names[label] = "Mortality"
-        elif "prevalence" in label:
-            colours[label] = (0, 0.5, 0)
-            full_names[label] = "Prevalence"
-        elif "proportion" in label:
-            colours[label] = (0, 0, 0)
-            full_names[label] = "Proportion"
-            yaxis_label = "Percentage"
-
-        if "_ds" in label:
-            full_names[label] += ", DS-TB"
-        elif "_mdr" in label:
-            full_names[label] += ", MDR-TB"
-    ax = make_axes_with_room_for_legend()
-
-    for i_plot, var_label in enumerate(labels):
-        ax.plot(
-            model.times[left_xlimit_index: right_xlimit_index],
-            model.get_var_soln(var_label)[left_xlimit_index: right_xlimit_index],
-            color=colours[var_label],
-            label=var_label, linewidth=1, linestyle=patterns[var_label]
-        )
-        axis_labels.append(full_names[var_label])
-
-    set_axes_props(ax, 'Year', yaxis_label, "Main epidemiological outputs", True,
-        axis_labels)
-    save_png(png)
-
-
 def plot_outputs_against_gtb(model,
                              labels,
                              start_time,
                              end_time_str='current_time',
                              png=None,
                              country='',
-                             scenario=None):
+                             scenario=None,
+                             gtb=True):
 
     """
     Produces the plot for the main outputs, can handle multiple scenarios (if required).
@@ -613,27 +564,28 @@ def plot_outputs_against_gtb(model,
         # (provided the function has been called as intended).
         if scenario is None:
 
+            if gtb:
             # Plot the GTB data
             # Notifications are just plotted against raw reported notifications,
             # as there are no confidence intervals around these values.
-            if outcome == 'notifications':
-                ax.plot(notification_year_data, notification_data,
-                        color=colour[i], linewidth=0.5)
-                ax.set_ylim((0., max(notification_data)))
-            else:
-                # Central point-estimate
-                ax.plot(plotting_data[i]['year'], plotting_data[i]['point_estimate'],
-                        label=labels[i], color=colour[i], linewidth=0.5)
+                if outcome == 'notifications':
+                    ax.plot(notification_year_data, notification_data,
+                            color=colour[i], linewidth=0.5)
+                    ax.set_ylim((0., max(notification_data)))
+                else:
+                    # Central point-estimate
+                    ax.plot(plotting_data[i]['year'], plotting_data[i]['point_estimate'],
+                            label=labels[i], color=colour[i], linewidth=0.5)
 
-                # Create the patch array
-                patch_array = create_patch_from_dictionary(plotting_data[i])
+                    # Create the patch array
+                    patch_array = create_patch_from_dictionary(plotting_data[i])
 
-                # Create the patch image and plot it
-                patch = patches.Polygon(patch_array, color=patch_colour[i])
-                ax.add_patch(patch)
+                    # Create the patch image and plot it
+                    patch = patches.Polygon(patch_array, color=patch_colour[i])
+                    ax.add_patch(patch)
 
-                # Make y-axis range extend downwards to zero
-                ax.set_ylim((0., max(plotting_data[i]['upper_limit'])))
+                    # Make y-axis range extend downwards to zero
+                    ax.set_ylim((0., max(plotting_data[i]['upper_limit'])))
 
             # Set x-ticks
             xticks = find_reasonable_year_ticks(start_time, end_time)

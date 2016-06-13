@@ -66,21 +66,14 @@ for scenario in data['attributes']['scenarios_to_run'] + [None]:
         model.integrate()
 
         # Only make a flow-diagram if the model isn't overly complex
-        # if n_organs + n_strains + n_comorbidities <= 5:
-        #     model.make_graph(base + '.workflow')
+        if n_organs + n_strains + n_comorbidities <= 5:
+            model.make_graph(base + '.workflow')
 
-        # autumn.plotting.plot_outputs(
-        #     model, ["incidence", "mortality", "prevalence"],
-        #     data['attributes']['start_time'], base + '.rate_outputs.png')
-        # autumn.plotting.plot_outputs_against_gtb(
-        #     model, "incidence",
-        #     data['attributes']['recent_time'], base + '.rate_outputs_gtb.png',
-        #     data)
-        autumn.plotting.plot_all_outputs_against_gtb(
+        autumn.plotting.plot_outputs_against_gtb(
             model, ["incidence", "mortality", "prevalence", "notifications"],
             data['attributes']['recent_time'],
             'scenario_end_time',
-            base + '.all_rate_outputs_gtb' + str(scenario) + '.png',
+            base + '.rate_outputs_gtb.png',
             country,
             scenario=scenario)
 

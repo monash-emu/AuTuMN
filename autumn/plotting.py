@@ -173,18 +173,37 @@ def truncate_data(model, left_xlimit):
     return right_xlimit_index, left_xlimit_index
 
 
-def make_default_line_styles(n):
+def make_default_line_styles(n, return_all=True):
+
+    """
+    Produces a standard set of line styles that isn't adapted to
+    the data being plotted.
+
+    Args:
+        n: The number of line-styles
+        return_all: Whether to return all of the styles up to n or just the last one
+
+    Returns:
+        line_styles: A list of standard line-styles, or if return_all is False,
+            then the single item (for methods that are iterating through plots.
+
+    """
 
     # Iterate through a standard set of line styles
     for i in range(n):
         line_styles = []
         for line in ["-", ":", "-.", "--"]:
-            for color in "rbmgk":
-                line_styles.append(line + color)
+            for colour in "rbmgk":
+                line_styles.append(line + colour)
+
+    if return_all:
         return line_styles
+    else:
+        return line_styles[n-1]
 
 
 def make_related_line_styles(labels, strain_or_organ):
+
     colours = {}
     patterns = {}
     compartment_full_names = {}
@@ -200,6 +219,7 @@ def make_related_line_styles(labels, strain_or_organ):
 
 
 def get_line_style(label, strain_or_organ):
+
     # Unassigned groups remain black
     colour = (0, 0, 0)
     if "susceptible_vac" in label:  # susceptible_unvac remains black
@@ -319,6 +339,7 @@ def make_plot_title(model, labels):
 
 
 def plot_populations(model, labels, values, left_xlimit, strain_or_organ, png=None):
+
     right_xlimit_index, left_xlimit_index = truncate_data(model, left_xlimit)
     colours, patterns, compartment_full_names, markers\
         = make_related_line_styles(labels, strain_or_organ)
@@ -499,15 +520,14 @@ def plot_outputs_against_gtb(model, label, left_xlimit, png=None, country_data=N
     save_png(png)
 
 
-def plot_all_outputs_against_gtb(model, labels, start_time, png=None, data=None, country=''):
+def find_standard_output_styles(labels):
 
-    # Sort out the plotting patterns
+    # Find some standard styles for model outputs
     colour = []
     indices = []
     yaxis_label = []
     title = []
     patch_colour = []
-    plotting_data = []
 
     if "incidence" in labels:
         colour += [(0, 0, 0)]
@@ -534,6 +554,23 @@ def plot_all_outputs_against_gtb(model, labels, start_time, png=None, data=None,
         patch_colour += [[]]
         for j in range(len(colour[i])):
             patch_colour[i] += [1. - (1. - colour[i][j]) / 2.]
+
+    return colour, indices, yaxis_label, title, patch_colour
+
+
+def plot_all_outputs_against_gtb(model, labels, start_time, png=None, data=None, country='',
+                                 scenario=None, last_scenario=None):
+
+    # if scenario == None:
+    colour, indices, yaxis_label, title, patch_colour = \
+        find_standard_output_styles(labels)
+
+    if scenario != None:
+        output_colour = [make_default_line_styles(scenario, False)[1]] * len(labels)
+    else:
+        output_colour = colour
+
+    plotting_data = []
 
     # Extract the plotting data you're interested in
     for i in range(len(indices)):
@@ -573,7 +610,7 @@ def plot_all_outputs_against_gtb(model, labels, start_time, png=None, data=None,
         ax.plot(
             model.times[left_xlimit_index: right_xlimit_index],
             model.get_var_soln(labels[i])[left_xlimit_index: right_xlimit_index],
-            color=colour[i],
+            color=output_colour[i],
             label=labels[i], linewidth=1.5)
 
         # Plot the GTB data
@@ -611,10 +648,12 @@ def plot_all_outputs_against_gtb(model, labels, start_time, png=None, data=None,
         # Add the sub-plot title
         ax.set_title(title[i], fontsize=10)
 
-    save_png(png)
+    if scenario == last_scenario:
+        save_png(png)
 
 
 def plot_flows(model, labels, png=None):
+
     colours, patterns, compartment_full_names\
         = make_related_line_styles(labels)
     ax = make_axes_with_room_for_legend()
@@ -637,7 +676,7 @@ def plot_scaleup_fns(model, functions, png=None,
                      start_time_str='start_time', end_time_str='',
                      parameter_type='', country=u''):
 
-    line_styles = make_default_line_styles(len(functions))
+    line_styles = make_default_line_styles(len(functions), True)
     start_time = model.data['attributes'][start_time_str]
     end_time = model.data['attributes'][end_time_str]
     x_vals = numpy.linspace(start_time, end_time, 1E3)
@@ -669,7 +708,7 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
                                       parameter_type='', country=u''):
 
     # Get some styles for the lines
-    line_styles = make_default_line_styles(len(functions))
+    line_styles = make_default_line_styles(len(functions), True)
 
     # Determine how many subplots to have
     subplot_grid = find_subplot_numbers(len(functions))
@@ -733,11 +772,13 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
 
 
 def save_png(png):
+
     if png is not None:
         pylab.savefig(png, dpi=300)
 
 
 def open_pngs(pngs):
+
     import platform
     import os
     operating_system = platform.system()
@@ -745,8 +786,6 @@ def open_pngs(pngs):
         os.system("start " + " ".join(pngs))
     elif 'Darwin' in operating_system:
         os.system('open ' + " ".join(pngs))
-
-
 
 
 

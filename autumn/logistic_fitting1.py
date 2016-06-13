@@ -47,6 +47,7 @@ pxp = logistic(p, xp)
 # Plot the results
 #fig = plt.figure(1)
 #plt.plot(x, y, 'o', xp, pxp, 'r-', linewidth = 2)
+#plt.plot(y, x, 'o', pxp, xp, 'r-', linewidth = 2)
 #plt.xlabel('$ Cost')
 #plt.ylabel('% Coverage',rotation='vertical')
 #plt.grid(True)

@@ -23,6 +23,7 @@ keys_of_sheets_to_read = [
     'bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'time_variants', 'tb',
     'notifications', 'outcomes']
 data = read_and_process_data(True, keys_of_sheets_to_read, country)
+is_additional_diagnostics = data['attributes']['is_additional_diagnostics'][0]
 
 # Note that it takes about one hour to run all of the possible model structures,
 # so perhaps don't do that - and longer if running multiple scenarios
@@ -47,6 +48,7 @@ for scenario in data['attributes']['scenarios_to_run']:
             is_quality,  # Low quality care
             is_amplification,  # Amplification
             is_misassignment,  # Misassignment by strain
+            is_additional_diagnostics,
             scenario,  # Scenario to run
             data)
         print(str(n_organs) + " organ(s),   " +

@@ -80,7 +80,9 @@ for scenario in data['attributes']['scenarios_to_run']:
         #     data)
         autumn.plotting.plot_all_outputs_against_gtb(
             model, ["incidence", "mortality", "prevalence", "notifications"],
-            data['attributes']['recent_time'], base + '.all_rate_outputs_gtb' + str(scenario) + '.png',
+            data['attributes']['recent_time'],
+            'current_time',
+            base + '.all_rate_outputs_gtb' + str(scenario) + '.png',
             data, country,
             scenario=scenario, last_scenario=last_scenario)
 

@@ -558,7 +558,7 @@ def find_standard_output_styles(labels):
     return colour, indices, yaxis_label, title, patch_colour
 
 
-def plot_all_outputs_against_gtb(model, labels, start_time, png=None, data=None, country='',
+def plot_all_outputs_against_gtb(model, labels, start_time, end_time_str='current_time', png=None, data=None, country='',
                                  scenario=None, last_scenario=None):
 
     # if scenario == None:
@@ -589,7 +589,7 @@ def plot_all_outputs_against_gtb(model, labels, start_time, png=None, data=None,
 
     subplot_grid = find_subplot_numbers(len(labels))
 
-    end_time = 2015.
+    end_time = model.data['attributes'][end_time_str]
 
     fig = pyplot.figure(11)
 
@@ -625,12 +625,7 @@ def plot_all_outputs_against_gtb(model, labels, start_time, png=None, data=None,
                     label=labels[i], color=colour[i], linewidth=0.5)
 
             # Create the patch array
-            patch_array = numpy.zeros(shape=(len(plotting_data[i]['lower_limit']) * 2, 2))
-            for j in range(len(plotting_data[i]['lower_limit'])):
-                patch_array[j][0] = plotting_data[i]['year'][j]
-                patch_array[-(j+1)][0] = plotting_data[i]['year'][j]
-                patch_array[j][1] = plotting_data[i]['lower_limit'][j]
-                patch_array[-(j+1)][1] = plotting_data[i]['upper_limit'][j]
+            patch_array = create_patch_from_dictionary(plotting_data[i])
 
             # Create the patch image and plot it
             patch = patches.Polygon(patch_array, color=patch_colour[i])
@@ -648,8 +643,31 @@ def plot_all_outputs_against_gtb(model, labels, start_time, png=None, data=None,
         # Add the sub-plot title
         ax.set_title(title[i], fontsize=10)
 
+    # Only save the image if we're on the last scenario
     if scenario == last_scenario:
         save_png(png)
+
+
+def create_patch_from_dictionary(dict):
+
+    """
+    Creates an array that can be used as a patch for plotting
+    Args:
+        dict: Dictionary with keys 'lower_limit', 'upper_limit' and 'year'
+            (at least, although 'point_estimate' will also usually be there)
+
+    Returns:
+        patch_array: The patch array for plotting
+    """
+
+    patch_array = numpy.zeros(shape=(len(dict['lower_limit']) * 2, 2))
+    for i in range(len(dict['lower_limit'])):
+        patch_array[i][0] = dict['year'][i]
+        patch_array[-(i + 1)][0] = dict['year'][i]
+        patch_array[i][1] = dict['lower_limit'][i]
+        patch_array[-(i + 1)][1] = dict['upper_limit'][i]
+
+    return patch_array
 
 
 def plot_flows(model, labels, png=None):

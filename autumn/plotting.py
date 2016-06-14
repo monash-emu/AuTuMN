@@ -553,13 +553,11 @@ def plot_outputs_against_gtb(model,
 
         ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1)
 
-
         # Plot the modelled data
         ax.plot(
             model.times[left_xlimit_index: right_xlimit_index],
             model.get_var_soln(labels[i])[left_xlimit_index: right_xlimit_index],
             color=output_colour[i],
-            # label=labels[i],
             linewidth=1.5)
 
         # This is supposed to mean if it's the last scenario, which is the baseline
@@ -671,17 +669,20 @@ def plot_flows(model, labels, png=None):
 
 def plot_scaleup_fns(model, functions, png=None,
                      start_time_str='start_time', end_time_str='',
-                     parameter_type='', country=u''):
+                     parameter_type='', country=u'', figure_number=1):
 
     line_styles = make_default_line_styles(len(functions), True)
     start_time = model.data['attributes'][start_time_str]
     end_time = model.data['attributes'][end_time_str]
     x_vals = numpy.linspace(start_time, end_time, 1E3)
+
+    pyplot.figure(figure_number)
+
     ax = make_axes_with_room_for_legend()
-    for i, function in enumerate(functions):
+    for figure_number, function in enumerate(functions):
         ax.plot(x_vals,
                 map(model.scaleup_fns[function],
-                    x_vals), line_styles[i],
+                    x_vals), line_styles[figure_number],
                 label=function)
 
     plural = ''
@@ -702,10 +703,21 @@ def plot_scaleup_fns(model, functions, png=None,
 def plot_all_scaleup_fns_against_data(model, functions, png=None,
                                       start_time_str='start_time',
                                       end_time_str='',
-                                      parameter_type='', country=u''):
+                                      parameter_type='', country=u'',
+                                      scenario=None,
+                                      figure_number=2):
 
     # Get some styles for the lines
     line_styles = make_default_line_styles(len(functions), True)
+
+    # Get the colours for the model outputs
+    if scenario is None:
+        # Last scenario to run should be baseline and should be run last
+        # to lay a black line over the top for comparison
+        output_colour = ['k'] * len(functions)
+    else:
+        # Otherwise cycling through colours
+        output_colour = [make_default_line_styles(scenario, False)[1]] * len(functions)
 
     # Determine how many subplots to have
     subplot_grid = find_subplot_numbers(len(functions))
@@ -716,7 +728,7 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
     x_vals = numpy.linspace(start_time, end_time, 1E3)
 
     # Initialise figure
-    fig = pyplot.figure()
+    fig = pyplot.figure(figure_number)
 
     # Upper title for whole figure
     plural = ''
@@ -728,42 +740,46 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
     fig.suptitle(title)
 
     # Iterate through functions
-    for i, function in enumerate(functions):
+    for figure_number, function in enumerate(functions):
 
         # Initialise subplot areas
-        ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1)
+        ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], figure_number + 1)
 
         # Line plot scaling parameters
         ax.plot(x_vals,
                 map(model.scaleup_fns[function],
-                    x_vals), line_styles[i],
-                    label=function)
-        data_to_plot = {}
-        for j in model.scaleup_data[function]:
-            if j > start_time:
-                data_to_plot[j] = model.scaleup_data[function][j]
+                    x_vals),
+                # line_styles[i],
+                # label=function,
+                color=output_colour[figure_number])
 
-        # Scatter plot data from which they are derived
-        ax.scatter(data_to_plot.keys(),
-                    data_to_plot.values(),
-                   color=line_styles[i][-1],
-                   s=6)
+        if scenario is None:
+            data_to_plot = {}
+            for j in model.scaleup_data[function]:
+                if j > start_time:
+                    data_to_plot[j] = model.scaleup_data[function][j]
 
-        # Adjust tick font size
-        ax.set_xticks([start_time, end_time])
-        for axis_to_change in [ax.xaxis, ax.yaxis]:
-            for tick in axis_to_change.get_major_ticks():
-                tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+            # Scatter plot data from which they are derived
+            ax.scatter(data_to_plot.keys(),
+                       data_to_plot.values(),
+                       color=output_colour[figure_number],
+                       s=6)
 
-        # Truncate parameter names depending on whether it is a
-        # treatment success/death proportion
-        title = capitalise_first_letter(replace_underscore_with_space(function))
-        ax.set_title(title, fontsize=get_nice_font_size(subplot_grid))
+            # Adjust tick font size
+            ax.set_xticks([start_time, end_time])
+            for axis_to_change in [ax.xaxis, ax.yaxis]:
+                for tick in axis_to_change.get_major_ticks():
+                    tick.label.set_fontsize(get_nice_font_size(subplot_grid))
 
-        ylims = relax_y_axis(ax)
-        ax.set_ylim(bottom=ylims[0], top=ylims[1])
+            # Truncate parameter names depending on whether it is a
+            # treatment success/death proportion
+            title = capitalise_first_letter(replace_underscore_with_space(function))
+            ax.set_title(title, fontsize=get_nice_font_size(subplot_grid))
 
-        save_png(png)
+            ylims = relax_y_axis(ax)
+            ax.set_ylim(bottom=ylims[0], top=ylims[1])
+
+            save_png(png)
 
     fig.suptitle('Scale-up functions')
 

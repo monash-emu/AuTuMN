@@ -553,12 +553,14 @@ def plot_outputs_against_gtb(model,
 
         ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1)
 
+
         # Plot the modelled data
         ax.plot(
             model.times[left_xlimit_index: right_xlimit_index],
             model.get_var_soln(labels[i])[left_xlimit_index: right_xlimit_index],
             color=output_colour[i],
-            label=labels[i], linewidth=1.5)
+            # label=labels[i],
+            linewidth=1.5)
 
         # This is supposed to mean if it's the last scenario, which is the baseline
         # (provided the function has been called as intended).
@@ -575,7 +577,8 @@ def plot_outputs_against_gtb(model,
                 else:
                     # Central point-estimate
                     ax.plot(plotting_data[i]['year'], plotting_data[i]['point_estimate'],
-                            label=labels[i], color=colour[i], linewidth=0.5)
+                            # label=labels[i],
+                            color=colour[i], linewidth=0.5)
 
                     # Create the patch array
                     patch_array = create_patch_from_dictionary(plotting_data[i])
@@ -601,6 +604,24 @@ def plot_outputs_against_gtb(model,
 
             # Label the y axis with the smaller text size
             ax.set_ylabel(yaxis_label[i], fontsize=get_nice_font_size(subplot_grid))
+
+            # Get the handles, except for the last one, which plots the data
+            scenario_handles = ax.lines[:-1]
+
+            # Make some string labels for these handles
+            # (this code could probably be better)
+            scenario_labels = []
+            for i in range(len(scenario_handles)):
+                if i < len(scenario_handles) - 1:
+                    scenario_labels += ['Scenario ' + str(i + 1)]
+                else:
+                    scenario_labels += ['Baseline']
+
+            # Draw the legend
+            ax.legend(scenario_handles,
+                      scenario_labels,
+                      fontsize=get_nice_font_size(subplot_grid) - 2.,
+                      frameon=False)
 
             # Save
             save_png(png)

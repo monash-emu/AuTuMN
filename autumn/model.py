@@ -530,7 +530,7 @@ class ConsolidatedModel(BaseModel):
 
                 # If the parameter is being modified for the scenario being run
                 if 'scenario' in self.scaleup_data[param]:
-                    scenario = [self.data['attributes'][u'scenario_end_time'],
+                    scenario = [self.data['attributes'][u'scenario_full_time'],
                                 self.scaleup_data[param].pop('scenario')]
                 else:
                     scenario = None

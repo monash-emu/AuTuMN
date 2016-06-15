@@ -309,13 +309,13 @@ class ParametersReader(FixedParametersReader):
 
 class ModelAttributesReader(FixedParametersReader):
 
-    def __init__(self, country_to_read):
+    def __init__(self):
         self.data = {}
         self.data['start_compartments'] = {}
-        self.tab_name = 'model_attributes'
+        self.tab_name = 'control_panel'
         self.key = 'attributes'
         self.parlist = []
-        self.filename = 'xls/programs_' + country_to_read.lower() + '.xlsx'
+        self.filename = 'xls/control_panel.xlsx'
         self.start_row = 1
         self.column_for_keys = 0
         self.horizontal = True
@@ -581,7 +581,7 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     if 'life_expectancy' in sheets_to_read:
         sheet_readers.append(LifeExpectancyReader(country))
     if 'attributes' in sheets_to_read:
-        sheet_readers.append(ModelAttributesReader(country))
+        sheet_readers.append(ModelAttributesReader())
     if 'parameters' in sheets_to_read:
         sheet_readers.append(FixedParametersReader())
     if 'miscellaneous' in sheets_to_read:

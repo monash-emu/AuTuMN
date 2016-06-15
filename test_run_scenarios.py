@@ -20,7 +20,7 @@ if not os.path.isdir(out_dir):
 
 # Load data
 keys_of_sheets_to_read = [
-    'bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'time_variants', 'tb',
+    'bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters', 'country_constants', 'time_variants', 'tb',
     'notifications', 'outcomes']
 data = read_and_process_data(True, keys_of_sheets_to_read, country)
 is_additional_diagnostics = data['attributes']['is_additional_diagnostics'][0]
@@ -60,7 +60,7 @@ for scenario in data['attributes']['scenarios_to_run'] + [None]:
 
         for key, value in data['parameters'].items():
             model.set_parameter(key, value)
-        for key, value in data['miscellaneous'].items():
+        for key, value in data['country_constants'].items():
             model.set_parameter(key, value)
 
         model.integrate()

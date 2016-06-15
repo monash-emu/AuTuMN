@@ -93,7 +93,7 @@ class ConsolidatedModel(BaseModel):
         self.n_organ = n_organ
         self.n_strain = n_strain
         self.n_comorbidity = n_comorbidity
-        self.start_time = data['attributes']['start_time']
+        self.start_time = data['country_constants']['start_time']
 
         self.is_lowquality = is_lowquality
         self.is_amplification = is_amplification
@@ -121,7 +121,7 @@ class ConsolidatedModel(BaseModel):
         self.outcomes = ['_success', '_death', '_default']
         self.non_success_outcomes = self.outcomes[1: 3]
 
-        self.make_times(self.data['attributes']['start_time'],
+        self.make_times(self.data['country_constants']['start_time'],
                         self.data['attributes']['scenario_end_time'],
                         self.data['attributes']['time_step'])
 
@@ -250,26 +250,26 @@ class ConsolidatedModel(BaseModel):
         # The equal splits may need to be adjusted, but the important thing is not to
         # initialise multiple strains too early, so that MDR-TB doesn't overtake the model
         for compartment in self.compartment_types:
-            if compartment in self.data['attributes']['start_compartments']:
+            if compartment in self.data['country_constants']:
                 for agegroup in self.agegroups:
                     for comorbidity in self.comorbidities:
                         if 'susceptible_fully' in compartment:
                             # Split equally by comorbidities and age-groups
                             self.set_compartment(compartment + comorbidity + agegroup,
-                                                 self.data['attributes']['start_compartments'][compartment]
+                                                 self.data['country_constants'][compartment]
                                                  / len(self.comorbidities)
                                                  / len(self.agegroups))
                         elif 'latent' in compartment:
                             # Assign all to DS-TB, split equally by comorbidities and age-groups
                             self.set_compartment(compartment + default_start_strain + comorbidity + agegroup,
-                                                 self.data['attributes']['start_compartments'][compartment]
+                                                 self.data['country_constants'][compartment]
                                                  / len(self.comorbidities)
                                                  / len(self.agegroups))
                         else:
                             for organ in self.organ_status:
                                 self.set_compartment(compartment +
                                                      organ + default_start_strain + comorbidity + agegroup,
-                                                     self.data['attributes']['start_compartments'][compartment]
+                                                     self.data['country_constants'][compartment]
                                                      / len(self.organ_status)  # Split equally by organ statuses,
                                                      / len(self.comorbidities)  # split equally by comorbidities
                                                      / len(self.agegroups))  # and split equally by age-groups
@@ -500,9 +500,9 @@ class ConsolidatedModel(BaseModel):
         # Add dictionary for the amplification proportion scale-up (if relevant)
         if len(self.strains) > 1:
             self.scaleup_data['epi_prop_amplification'] = \
-                {self.data['miscellaneous']['start_mdr_introduce_period']:
+                {self.data['country_constants']['start_mdr_introduce_period']:
                      0.,
-                 self.data['miscellaneous']['end_mdr_introduce_period']:
+                 self.data['country_constants']['end_mdr_introduce_period']:
                      self.params['tb_prop_amplification'],
                  u'time_variant':
                     u'yes'}
@@ -530,7 +530,7 @@ class ConsolidatedModel(BaseModel):
 
                 # If the parameter is being modified for the scenario being run
                 if 'scenario' in self.scaleup_data[param]:
-                    scenario = [self.data['attributes'][u'scenario_full_time'],
+                    scenario = [self.data['country_constants'][u'scenario_full_time'],
                                 self.scaleup_data[param].pop('scenario')]
                 else:
                     scenario = None
@@ -550,7 +550,7 @@ class ConsolidatedModel(BaseModel):
                                                       bound_low=0.,
                                                       bound_up=upper_bound,
                                                       intervention_end=scenario,
-                                                      intervention_start_date=self.data['attributes'][u'scenario_start_time']))
+                                                      intervention_start_date=self.data['country_constants'][u'scenario_start_time']))
 
             # If no is selected in the time variant column
             elif time_variant == u'no':
@@ -1280,7 +1280,7 @@ class ConsolidatedModel(BaseModel):
                 if strain in from_label:
                     rate_mortality[strain] \
                         += self.compartments[from_label] * rate \
-                            * self.data['miscellaneous'][u'program_prop_death_reporting']
+                            * self.data['country_constants'][u'program_prop_death_reporting']
             for from_label, rate in self.var_infection_death_rate_flows:
                 if strain in from_label:
                     rate_mortality[strain] \

@@ -20,7 +20,7 @@ if not os.path.isdir(out_dir):
 
 # Load data
 keys_of_sheets_to_read = [
-    'bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'time_variants', 'tb',
+    'bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters', 'country_constants', 'time_variants', 'tb',
     'notifications', 'outcomes']
 data = read_and_process_data(True, keys_of_sheets_to_read, country)
 
@@ -60,7 +60,7 @@ for n_organs in data['attributes']['n_organs']:
 
                             for key, value in data['parameters'].items():
                                 model.set_parameter(key, value)
-                            for key, value in data['miscellaneous'].items():
+                            for key, value in data['country_constants'].items():
                                 model.set_parameter(key, value)
 
                             model.integrate()
@@ -130,10 +130,6 @@ for n_organs in data['attributes']['n_organs']:
                                 base + '.rate_outputs_gtb.png',
                                 country,
                                 scenario=None)
-
-                            # Quick patch of code to calculate what the starting population should be:
-                            # print(data['attributes']['start_compartments'][u'susceptible_fully'] *
-                            #       model.vars['population'] / 881065)
 
                             # if n_strains >= 2:
                             #     autumn.plotting.plot_outputs(

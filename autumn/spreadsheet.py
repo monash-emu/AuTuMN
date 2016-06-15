@@ -151,7 +151,7 @@ def add_starting_zero(program, data):
 
     """
 
-    program[int(data['attributes']['start_time'])] = 0.
+    program[int(data['country_constants']['start_time'])] = 0.
 
     return program
 
@@ -297,8 +297,8 @@ class ParametersReader(FixedParametersReader):
 
     def __init__(self, country_to_read):
         self.data = {}
-        self.tab_name = 'miscellaneous_constants'
-        self.key = 'miscellaneous'
+        self.tab_name = 'country_constants'
+        self.key = 'country_constants'
         self.parlist = []
         self.filename = 'xls/programs_' + country_to_read.lower() + '.xlsx'
         self.start_row = 1
@@ -307,7 +307,7 @@ class ParametersReader(FixedParametersReader):
         self.parameter_dictionary_keys = []
 
 
-class ModelAttributesReader(FixedParametersReader):
+class ControlPanelReader(FixedParametersReader):
 
     def __init__(self):
         self.data = {}
@@ -347,11 +347,6 @@ class ModelAttributesReader(FixedParametersReader):
             for i in range(1, len(row)):
                 if not row[i] == '':
                     self.data[row[0]] += [bool(row[i])]
-
-        # For starting compartments
-        elif u'susceptible' in row[0] or u'active' in row[0]:
-            self.data['start_compartments'][row[0]] = float(row[1])
-
 
 class ProgramReader:
 
@@ -581,10 +576,10 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     if 'life_expectancy' in sheets_to_read:
         sheet_readers.append(LifeExpectancyReader(country))
     if 'attributes' in sheets_to_read:
-        sheet_readers.append(ModelAttributesReader())
+        sheet_readers.append(ControlPanelReader())
     if 'parameters' in sheets_to_read:
         sheet_readers.append(FixedParametersReader())
-    if 'miscellaneous' in sheets_to_read:
+    if 'country_constants' in sheets_to_read:
         sheet_readers.append(ParametersReader(country))
     if 'time_variants' in sheets_to_read:
         sheet_readers.append(ProgramReader(country))
@@ -756,7 +751,7 @@ if __name__ == "__main__":
     country = u'Fiji'
 
     keys_of_sheets_to_read = [
-        'bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'time_variants', 'tb',
+        'bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters', 'country_constants', 'time_variants', 'tb',
         'notifications', 'outcomes']
     data = read_and_process_data(False, keys_of_sheets_to_read, country)
 

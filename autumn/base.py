@@ -263,7 +263,7 @@ class BaseModel():
 
         self.calculate_diagnostics()
 
-    def integrate_Runge_Kutta(self, min_dt=0.05):
+    def integrate_runge_kutta(self, min_dt=0.05):
         """ Uses Runge-Kutta 4 method.
             Input:
                 min_dt: represents the time step for calculation points. The attribute self.times will also be used to make

@@ -1511,7 +1511,7 @@ class ConsolidatedModel(BaseModel):
             self.integrate_explicit()
         elif self.data['attributes'][u'integration'] == u'scipy':
             self.integrate_scipy()
-        elif self.data['attributes'][u'integration'] == u'Runge_Kutta':
-            self.integrate_Runge_Kutta()
+        elif self.data['attributes'][u'integration'] == u'runge_kutta':
+            self.integrate_runge_kutta()
 
 

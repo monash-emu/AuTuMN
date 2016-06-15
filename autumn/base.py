@@ -197,15 +197,46 @@ class BaseModel():
         self.fraction_array = None
         assert not self.times is None, "Haven't set times yet"
 
-    def integrate_scipy(self):
+    def integrate_scipy(self, min_dt=0.05):
+        """ Uses Adams method coded in the LSODA Fortran package. This method is programmed to "slow down" when a tricky
+        point is encountered. Then we need to allow for a high maximal number of iterations (mxstep)so that the
+        algorithm does not get stuck.
+        Input:
+            min_dt: represents the time step for calculation points. The attribute self.times will also be used to make sure
+            that a solution is affected to the time points known by the model
+        """
         self.init_run()
         init_y = self.get_init_list()
         derivative = self.make_derivate_fn()
-        self.soln_array = odeint(derivative, init_y, self.times)
+
+        tt = [] # all the calculation times
+        tt_record = [] # store the indices of tt corresponding to the calculation times to be stored
+
+        time = self.times[0]
+        tt.append(time)
+        tt_record.append(0)
+        i_tt = 0
+        for i_time, new_time in enumerate(self.times):
+            while time < new_time:
+                time = time + min_dt
+                if time > new_time:
+                    time = new_time
+                i_tt += 1
+                tt.append(time)
+                if time == new_time:
+                    tt_record.append(i_tt)
+
+        sol = odeint(derivative, init_y, tt, mxstep=5000000)
+        self.soln_array = sol[tt_record, :]
 
         self.calculate_diagnostics()
 
     def integrate_explicit(self, min_dt=0.05):
+        """ Uses Euler Explicit method.
+            Input:
+            min_dt: represents the time step for calculation points. The attribute self.times will also be used to make sure
+            that a solution is affected to the time points known by the model
+        """
         self.init_run()
         y = self.get_init_list()
         n_compartment = len(y)
@@ -219,7 +250,7 @@ class BaseModel():
             while time < new_time:
                 f = derivative(y, time)
                 old_time = time
-                time = time + min_dt
+                time += min_dt
                 dt = min_dt
                 if time > new_time:
                     dt = new_time - old_time
@@ -228,11 +259,16 @@ class BaseModel():
                     y[i] = y[i] + dt * f[i]
 
             if i_time < n_time - 1:
-                self.soln_array[i_time+1,:] = y
+                self.soln_array[i_time+1, :] = y
 
         self.calculate_diagnostics()
 
     def integrate_Runge_Kutta(self, min_dt=0.05):
+        """ Uses Runge-Kutta 4 method.
+            Input:
+                min_dt: represents the time step for calculation points. The attribute self.times will also be used to make
+                sure that a solution is affected to the time points known by the model
+        """
         self.init_run()
         y = self.get_init_list()
         n_compartment = len(y)

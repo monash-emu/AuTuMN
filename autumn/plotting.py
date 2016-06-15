@@ -11,6 +11,15 @@ Module for plotting population systems
 """
 
 def make_axes_with_room_for_legend():
+
+    """
+    Create axes for a figure with a single plot with a reasonable
+    amount of space around.
+    
+    Returns:
+        ax: The axes that can be plotted on
+    
+    """
     fig = pyplot.figure()
     ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
     return ax
@@ -20,9 +29,9 @@ def set_axes_props(
         ax, xlabel=None, ylabel=None, title=None, is_legend=True,
         axis_labels=None):
 
-    frame_color = "grey"
+    frame_colour = "grey"
 
-    # hide top and right border of plot
+    # Hide top and right border of plot
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
     ax.yaxis.set_ticks_position('left')
@@ -53,26 +62,38 @@ def set_axes_props(
                 frameon=False,
                 prop={'size':7})
         for text in leg.get_texts():
-            text.set_color(frame_color)
+            text.set_color(frame_colour)
 
     if title is not None:
         t = ax.set_title(title)
-        t.set_color(frame_color)
+        t.set_color(frame_colour)
 
     for label in (ax.get_xticklabels() + ax.get_yticklabels()):
         label.set_fontname('Arial')
         label.set_fontsize(8)
 
-    ax.tick_params(color=frame_color, labelcolor=frame_color)
+    ax.tick_params(color=frame_colour, labelcolor=frame_colour)
     for spine in ax.spines.values():
-        spine.set_edgecolor(frame_color)
-    ax.xaxis.label.set_color(frame_color)
-    ax.yaxis.label.set_color(frame_color)
+        spine.set_edgecolor(frame_colour)
+    ax.xaxis.label.set_color(frame_colour)
+    ax.yaxis.label.set_color(frame_colour)
 
     humanise_y_ticks(ax)
 
 
 def humanise_y_ticks(ax):
+
+    """
+    Coded by Bosco, does a few things, including rounding
+    axis values to thousands, millions or billions and abbreviating
+    these to single letters.
+
+    Args:
+        ax: The adapted axis
+
+    """
+
+
     vals = list(ax.get_yticks())
     max_val = max([abs(v) for v in vals])
     if max_val < 1e3:
@@ -94,8 +115,18 @@ def humanise_y_ticks(ax):
 
 def replace_underscore_with_space(original_string):
 
-    # Just a simple method to remove underscores and replace with
-    # spaces for titles of plots.
+    """
+    A quick, simple method to remove underscores and replace with
+    spaces for titles of plots.
+
+    Args:
+        original_string: String with underscores
+
+    Returns:
+        replaced_string: String with underscores replaced
+
+    """
+
 
     replaced_string = ''
     for i in range(len(original_string)):
@@ -109,6 +140,17 @@ def replace_underscore_with_space(original_string):
 
 def capitalise_first_letter(old_string):
 
+    """
+    Really simple method to capitalise the first character of a string
+
+    Args:
+        old_string: The string to be capitalised
+
+    Returns:
+        new_string: The capitalised string
+
+    """
+
     new_string = ''
     for i in range(len(old_string)):
         if i == 0:
@@ -121,7 +163,18 @@ def capitalise_first_letter(old_string):
 
 def find_smallest_factors_of_integer(n):
 
-    # Simple function to find the smallest whole number factors of an integer
+    """
+    Quick method to iterate through integers to find the smallest whole number
+    fractions. Written only to be called by find_subplot_numbers.
+
+    Args:
+        n: Integer to be factorised
+
+    Returns:
+        answer: The two smallest factors of the integer
+
+    """
+
     answer = [1E3, 1E3]
     for i in range(1, n + 1):
         if n % i == 0 and i+(n/i) < sum(answer):
@@ -129,10 +182,34 @@ def find_smallest_factors_of_integer(n):
     return answer
 
 
+def find_subplot_numbers(n):
+
+    # Find a nice number of subplots for a panel plot
+    answer = find_smallest_factors_of_integer(n)
+    i = 0
+    while i < 10:
+        if abs(answer[0] - answer[1]) > 3:
+            n = n + 1
+            answer = find_smallest_factors_of_integer(n)
+        i = i + 1
+
+    return answer
+
+
 def relax_y_axis(ax):
 
-    # Simple algorithm to move yaxis limits a little further from the data
-    # (Just my preferences really)
+    """
+    Matplotlib's default values often place curves very close to the top
+    of axes and sometimes extend down to small fractions for plots that are
+    proportions. This over-rides some of these defaults, that I don't like.
+    Args:
+        ax: Axis with default y-limits to be revised
+
+    Returns:
+        ylims: New y-lims that look better
+
+    """
+
     ylims = list(ax.get_ylim())
     if ylims[0] < ylims[1] * .75:
         ylims[0] = 0.
@@ -148,20 +225,6 @@ def get_nice_font_size(subplot_grid):
     # Simple function to return a reasonable font size
     # as appropriate to the number of rows of subplots in the figure
     return 3. + 9. / subplot_grid[0]
-
-
-def find_subplot_numbers(n):
-
-    # Find a nice number of subplots for a panel plot
-    answer = find_smallest_factors_of_integer(n)
-    i = 0
-    while i < 10:
-        if abs(answer[0] - answer[1]) > 3:
-            n = n + 1
-            answer = find_smallest_factors_of_integer(n)
-        i = i + 1
-
-    return answer
 
 
 def truncate_data(model, left_xlimit):

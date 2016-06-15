@@ -1,5 +1,5 @@
 """
-Cost-coverage and coverage-outcome curves
+COST-coverage and coverage-outcome curves
 """
 
 """

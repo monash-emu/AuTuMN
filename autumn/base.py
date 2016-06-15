@@ -232,6 +232,38 @@ class BaseModel():
 
         self.calculate_diagnostics()
 
+    def integrate_Runge_Kutta(self, min_dt=0.05):
+        self.init_run()
+        y = self.get_init_list()
+        n_compartment = len(y)
+        n_time = len(self.times)
+        self.soln_array = numpy.zeros((n_time, n_compartment))
+
+        derivative = self.make_derivate_fn()
+        time = self.times[0]
+        self.soln_array[0, :] = y
+        for i_time, new_time in enumerate(self.times):
+            while time < new_time:
+                old_time = time
+                time = time + min_dt
+                dt = min_dt
+                if time > new_time:
+                    dt = new_time - old_time
+                    time = new_time
+
+                k1 = numpy.asarray(derivative(y, old_time))
+                k2 = numpy.asarray(derivative(y + 0.5*dt*k1, old_time + 0.5*dt))
+                k3 = numpy.asarray(derivative(y + 0.5*dt*k2,  old_time + 0.5*dt))
+                k4 = numpy.asarray(derivative(y + dt*k3, time))
+
+                for i in range(n_compartment):
+                    y[i] = y[i] + (dt/6.0) * (k1[i] + 2.0*k2[i] + 2.0*k3[i] + k4[i])
+
+            if i_time < n_time - 1:
+                self.soln_array[i_time + 1, :] = y
+
+        self.calculate_diagnostics()
+
     def calculate_output_vars(self):
         """
         Calculate diagnostic vars that can depend on self.flows as

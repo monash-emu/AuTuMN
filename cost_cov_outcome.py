@@ -13,11 +13,13 @@ from numpy import linspace
 import numpy as np
 import scipy.optimize
 import autumn.logistic_fitting1 as logistic_fitting1
-from autumn.spreadsheet import read_and_process_data
+from autumn.spreadsheet import read_and_process_data, read_input_data_xls
 
 
 ####### RUNNING CONDITIONS ############
-country = u'Fiji'
+#country = u'Fiji'
+country = read_input_data_xls(True, ['attributes'])['attributes'][u'country']
+print(country)
 
 prog = 9   #refer to program_name below
 multi_data = False
@@ -52,10 +54,15 @@ else:
 
 # Read data
 
-keys_of_sheets_to_read = [
-    'bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'time_variants', 'tb',
-    'notifications', 'outcomes']
-data = read_and_process_data(True, keys_of_sheets_to_read, country)
+#keys_of_sheets_to_read = [
+#    'bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'time_variants', 'tb',
+#    'notifications', 'outcomes']
+#data = read_and_process_data(True, keys_of_sheets_to_read, country)
+
+data = read_and_process_data(True,
+                             ['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
+                              'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes'],
+                             country)
 
 initials = data['time_variants'][u'program_prop_treatment_success_mdr'][year]
 

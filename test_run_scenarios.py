@@ -5,24 +5,23 @@ import glob
 import datetime
 import autumn.model
 import autumn.plotting
-from autumn.spreadsheet import read_and_process_data
+from autumn.spreadsheet import read_and_process_data, read_input_data_xls
 
 # Start timer
 start_realtime = datetime.datetime.now()
 
-# Decide on country
-country = u'Fiji'
+# Import the data
+country = read_input_data_xls(True, ['attributes'])['attributes'][u'country']
+data = read_and_process_data(True,
+                             ['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
+                              'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes'],
+                             country)
 
 # A few basic preliminaries
 out_dir = 'fullmodel_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
-# Load data
-keys_of_sheets_to_read = [
-    'bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters', 'country_constants', 'time_variants', 'tb',
-    'notifications', 'outcomes']
-data = read_and_process_data(True, keys_of_sheets_to_read, country)
 is_additional_diagnostics = data['attributes']['is_additional_diagnostics'][0]
 
 # Note that it takes about one hour to run all of the possible model structures,

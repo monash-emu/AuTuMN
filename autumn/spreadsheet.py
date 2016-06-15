@@ -316,7 +316,7 @@ class ControlPanelReader(FixedParametersReader):
         self.key = 'attributes'
         self.parlist = []
         self.filename = 'xls/control_panel.xlsx'
-        self.start_row = 1
+        self.start_row = 0
         self.column_for_keys = 0
         self.horizontal = True
         self.parameter_dictionary_keys = []
@@ -347,6 +347,11 @@ class ControlPanelReader(FixedParametersReader):
             for i in range(1, len(row)):
                 if not row[i] == '':
                     self.data[row[0]] += [bool(row[i])]
+
+        # For the country to be analysed
+        elif row[0] == u'country':
+            self.data[row[0]] = row[1]
+
 
 class ProgramReader:
 
@@ -548,7 +553,7 @@ def read_xls_with_sheet_readers(sheet_readers=[]):
     return result
 
 
-def read_input_data_xls(from_test, sheets_to_read, country):
+def read_input_data_xls(from_test, sheets_to_read, country=None):
 
     """
     Compile sheet readers into a list according to which ones have
@@ -748,12 +753,14 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
 
 if __name__ == "__main__":
 
-    country = u'Fiji'
+    # Find the country by just reading that sheet first
+    country = read_input_data_xls(False, ['attributes'])['attributes'][u'country']
 
-    keys_of_sheets_to_read = [
-        'bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters', 'country_constants', 'time_variants', 'tb',
-        'notifications', 'outcomes']
-    data = read_and_process_data(False, keys_of_sheets_to_read, country)
+    # Then import the data
+    data = read_and_process_data(False,
+                                 ['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
+                                  'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes'],
+                                 country)
 
     print("Time elapsed in running script is " + str(datetime.datetime.now() - spreadsheet_start_realtime))
 

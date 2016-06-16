@@ -546,7 +546,8 @@ def plot_outputs_against_gtb(model,
                              png=None,
                              country='',
                              scenario=None,
-                             gtb=True):
+                             gtb=True,
+                             figure_number=11):
 
     """
     Produces the plot for the main outputs, can handle multiple scenarios (if required).
@@ -600,7 +601,7 @@ def plot_outputs_against_gtb(model,
     end_time = model.data['attributes'][end_time_str]
 
     # Not sure whether we have to specify a figure number
-    fig = pyplot.figure(11)
+    fig = pyplot.figure(figure_number)
 
     # Overall title
     fig.suptitle(country + ' model outputs', fontsize=12)

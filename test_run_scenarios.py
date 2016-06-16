@@ -65,16 +65,26 @@ for scenario in data['attributes']['scenarios_to_run'] + [None]:
         model.integrate()
 
         # Only make a flow-diagram if the model isn't overly complex
-        # if n_organs + n_strains + n_comorbidities <= 5:
-        #     model.make_graph(base + '.workflow')
+        if n_organs + n_strains + n_comorbidities <= 5:
+            model.make_graph(base + '.workflow')
 
         autumn.plotting.plot_outputs_against_gtb(
             model, ["incidence", "mortality", "prevalence", "notifications"],
             data['attributes']['recent_time'],
             'scenario_end_time',
-            base + '.rate_outputs_gtb.png',
+            base + '.rate_outputs_gtb_recent.png',
             country,
-            scenario=scenario)
+            scenario=scenario,
+            figure_number=10)
+
+        # autumn.plotting.plot_outputs_against_gtb(
+        #     model, ["incidence", "mortality", "prevalence", "notifications"],
+        #     data['country_constants']['start_time'],
+        #     'scenario_end_time',
+        #     base + '.rate_outputs_gtb_start.png',
+        #     country,
+        #     scenario=scenario,
+        #     figure_number=11)
 
         # Classify scale-up functions for plotting
         classified_scaleups = {'program_prop': [],

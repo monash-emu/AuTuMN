@@ -284,12 +284,14 @@ else:
         cost_values.append (new_coverage_cost_fx(coverage_range))
 
 # Logistic function for coverage-outcome curve
-def coverage_outcome_fx(cov, outcome_zerocov, outcome_fullcov):
-    y = (outcome_fullcov - outcome_zerocov) * np.array (cov) + outcome_zerocov
-    return y
+def outcome_coverage_fx(cost, outcome_zerocov, outcome_fullcov):
 
-for cov in coverage_values:
-    outcome_values.append (coverage_outcome_fx(cov, outcome_zerocov, outcome_fullcov))
+    x = (np.array (outcome) - outcome_zerocov) / (outcome_fullcov - outcome_zerocov)
+    #y = (outcome_fullcov - outcome_zerocov) * np.array (cov) + outcome_zerocov
+    return x
+
+for cost in cost_values:
+    coverage_values.append (outcome_coverage_fx(cost, outcome_zerocov, outcome_fullcov))
 
 
 
@@ -304,18 +306,18 @@ if multi_data == True:
     plt.ylabel('$ Cost')
     plt.grid(True)
     plt.subplot (122)
-    plt.plot(coverage_values, outcome_values, 'b', linewidth = 3)
-    plt.xlim([0, 1])
-    plt.ylim ([outcome_zerocov, outcome_fullcov])
-    plt.xlabel('% Coverage')
-    plt.ylabel('Outcome')
+    plt.plot(outcome_values, coverage_values, 'b', linewidth = 3)
+    plt.xlim ([outcome_zerocov, outcome_fullcov])
+    plt.ylim([0, 1])
+    plt.xlabel('Outcome')
+    plt.ylabel('% coverage')
     plt.grid(True)
     plt.show()
-    fig.savefig('Cost_coverage_outcome_multiple.jpg')
+    fig.savefig('Coverage_cost_outcome_multiple.jpg')
 
 else:
     fig = plt.figure(1)
-    fig.suptitle('Cost-coverage-outcome curve - Single data point')
+    fig.suptitle('Coverage-cost-outcome curve - Single data point')
     plt.subplot (121)
     #fig.suptitle('Cost-coverage curve')
     plt.plot(coverage_values, cost_values, 'r', linewidth = 3)
@@ -330,12 +332,12 @@ else:
     # #fig = plt.figure(2)
     plt.subplot (122)
     #fig.suptitle('Coverage-outcome curve')
-    plt.plot(coverage_values, outcome_values, 'b', linewidth = 3)
-    plt.xlim([0, 1])
-    plt.ylim ([outcome_zerocov, outcome_fullcov])
-    plt.xlabel('% Coverage')
-    plt.ylabel('Outcome')
+    plt.plot(outcome_values, coverage_values, 'b', linewidth = 3)
+    plt.xlim ([outcome_zerocov, outcome_fullcov])
+    plt.ylim([0, 1])
+    plt.xlabel('Outcome')
+    plt.ylabel('% Coverage')
     plt.grid(True)
     plt.show()
     #fig.savefig('coverage_outcome.jpg')
-    fig.savefig('Cost_coverage_outcome_single.jpg')
+    fig.savefig('Coverage_cost_outcome_single.jpg')

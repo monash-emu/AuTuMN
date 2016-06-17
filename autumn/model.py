@@ -758,11 +758,10 @@ class ConsolidatedModel(BaseModel):
             # Detections
             self.vars['program_rate_detect'] = \
                 self.vars['program_prop_detect'] \
-                * (self.params['tb_rate_recover' + self.organ_status[0]] + self.params[
-                    'tb_rate_death' + self.organ_status[0]]) \
-                / (1. - self.vars['program_prop_detect'] \
-                   * (1. + (1. - self.vars['program_prop_algorithm_sensitivity']) \
-                      / self.vars['program_prop_algorithm_sensitivity']))
+                * (self.params['tb_rate_recover' + self.organ_status[0]] +
+                   self.params['tb_rate_death' + self.organ_status[0]]) \
+                / (1. - self.vars['program_prop_detect']) \
+                / self.vars['program_prop_algorithm_sensitivity']
 
             # Missed
             self.vars['program_rate_missed'] = \

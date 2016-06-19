@@ -15,23 +15,14 @@ This is a set of Python models that modularizes the development of dynamic trans
   
 # TODO  
   
-- link to optima optimization
-- fit to Phillippines output
-- Link to macroeconomic model  
-- make cost-coverage curves from data  
-- feed cost-coverage curves into model
-
-# Bosco TODO:
-- change set_scaleup_var to set_scaleup_param to allow complex combination of scaleups
-- curve fitting to data
-- search for BOSCO comments in the source code
-
 # James TODO:
-- make time to commence treatment a program / time-variant
-- time-varient birth and death functions might be fun to add
-- start coding for running scenarios
-- MCMC incorporation
-- new/retreatment stratification
+- age stratify with view to simulating treatment of latent infection
+- Xpert improvement in diagnostic algorithm
+- allow scenarios to be scaled-up over varying time periods
+- population stratification for at-risk groups
+- tidy existing spreadsheet and plotting code
+- organise spreadsheets so that any country can be run without inputs
+- new/retreatment stratification?
 
 # Current TB dynamic transmission model  
   

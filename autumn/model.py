@@ -783,18 +783,11 @@ class ConsolidatedModel(BaseModel):
     def calculate_await_treatment_var(self):
 
         # Just simply take the reciprocal of the time to start on treatment
-
-        # self.vars['program_rate_start_treatment'] = 1. / self.vars['program_timeperiod_await_treatment']
-        #
         if len(self.organ_status) < 2:
-            self.vars['program_rate_start_treatment'] = 1. / self.vars['program_timeperiod_await_treatment']
-        elif len(self.organ_status) == 2:
-            self.vars['program_rate_start_treatment_smearpos'] = 1. / self.vars['program_timeperiod_await_treatment']
-            self.vars['program_rate_start_treatment_smearneg'] = 1. / self.vars['program_timeperiod_await_treatment_smearneg']
+            self.vars['program_rate_start_treatment'] = 1. / self.vars['program_timeperiod_await_treatment_smearpos']
         else:
-            self.vars['program_rate_start_treatment_smearpos'] = 1. / self.vars['program_timeperiod_await_treatment']
-            self.vars['program_rate_start_treatment_smearneg'] = 1. / self.vars['program_timeperiod_await_treatment_smearneg']
-            self.vars['program_rate_start_treatment_extrapul'] = 1. / self.vars['program_timeperiod_await_treatment_extrapul']
+            for organ in self.organ_status:
+                self.vars['program_rate_start_treatment' + organ] = 1. / self.vars['program_timeperiod_await_treatment' + organ]
 
     def calculate_lowquality_detection_vars(self):
 

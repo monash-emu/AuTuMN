@@ -783,7 +783,18 @@ class ConsolidatedModel(BaseModel):
     def calculate_await_treatment_var(self):
 
         # Just simply take the reciprocal of the time to start on treatment
-        self.vars['program_var_rate_start_treatment'] = 1. / self.vars['program_timeperiod_await_treatment']
+
+        # self.vars['program_rate_start_treatment'] = 1. / self.vars['program_timeperiod_await_treatment']
+        #
+        if len(self.organ_status) < 2:
+            self.vars['program_rate_start_treatment'] = 1. / self.vars['program_timeperiod_await_treatment']
+        elif len(self.organ_status) == 2:
+            self.vars['program_rate_start_treatment_smearpos'] = 1. / self.vars['program_timeperiod_await_treatment']
+            self.vars['program_rate_start_treatment_smearneg'] = 1. / self.vars['program_timeperiod_await_treatment_smearneg']
+        else:
+            self.vars['program_rate_start_treatment_smearpos'] = 1. / self.vars['program_timeperiod_await_treatment']
+            self.vars['program_rate_start_treatment_smearneg'] = 1. / self.vars['program_timeperiod_await_treatment_smearneg']
+            self.vars['program_rate_start_treatment_extrapul'] = 1. / self.vars['program_timeperiod_await_treatment_extrapul']
 
     def calculate_lowquality_detection_vars(self):
 
@@ -1131,26 +1142,21 @@ class ConsolidatedModel(BaseModel):
                             'missed' + organ + strain + comorbidity + agegroup,
                             'program_rate_missed')
                         # Detection, with and without misassignment
-
-                        ### Warning, the following two rate setting functions should actually be
-                        # variable (i.e. set_var_transfer_rate_flow, rather than
-                        # set_fixed_transfer_rate_flow). However, when you change them to variable,
-                        # scipy integration fails. No idea why this should be.
                         if self.is_misassignment:
                             for assigned_strain in self.strains:
                                 # Following line only for models incorporating mis-assignment
-                                self.set_fixed_transfer_rate_flow(
+                                self.set_var_transfer_rate_flow(
                                     'detect' +
                                     organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup,
                                     'treatment_infect' +
                                     organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup,
-                                    'program_rate_start_treatment')
+                                    'program_rate_start_treatment' + organ)
                         else:
                             # Following line is the currently running line (without mis-assignment)
-                            self.set_fixed_transfer_rate_flow(
+                            self.set_var_transfer_rate_flow(
                                 'detect' + organ + strain + comorbidity + agegroup,
                                 'treatment_infect' + organ + strain + comorbidity + agegroup,
-                                'program_rate_start_treatment')
+                                'program_rate_start_treatment' + organ)
 
                         if self.is_lowquality:
                             self.set_var_transfer_rate_flow(

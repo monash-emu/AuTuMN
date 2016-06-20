@@ -40,6 +40,8 @@ class BaseModel():
         while step <= end:
             self.times.append(step)
             step += delta
+        if self.times[-1] < end:
+            self.times.append(end)
 
     def make_times_with_n_step(self, start, end, n):
         "Return steps between start and in n increments"
@@ -49,6 +51,8 @@ class BaseModel():
         while step <= end:
             self.times.append(step)
             step += delta
+        if self.times[-1] < end:
+            self.times.append(end)
 
     def set_compartment(self, label, init_val=0.0):
         if label not in self.labels:

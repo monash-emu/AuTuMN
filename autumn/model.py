@@ -1519,12 +1519,12 @@ class ConsolidatedModel(BaseModel):
     # integration required
 
     def integrate(self):
-
+        min_dt = 0.05
         if self.data['attributes'][u'integration'] == u'explicit':
-            self.integrate_explicit()
+            self.integrate_explicit(min_dt)
         elif self.data['attributes'][u'integration'] == u'scipy':
-            self.integrate_scipy()
+            self.integrate_scipy(min_dt)
         elif self.data['attributes'][u'integration'] == u'runge_kutta':
-            self.integrate_runge_kutta()
+            self.integrate_runge_kutta(min_dt)
 
 

@@ -117,6 +117,9 @@ class ConsolidatedModel(BaseModel):
         self.define_model_structure()
 
         # Set the few universally fixed and hard-coded parameters
+        self.set_universal_parameters()
+
+        # Set other fixed parameters
         self.set_fixed_parameters()
 
         # Treatment outcomes that will be universal to all models
@@ -283,7 +286,7 @@ class ConsolidatedModel(BaseModel):
                                                      / len(self.comorbidities)  # split equally by comorbidities
                                                      / len(self.agegroups))  # and split equally by age-groups
 
-    def set_fixed_parameters(self):
+    def set_universal_parameters(self):
 
         """
         Sets parameters that should never be changed in any situation,
@@ -307,6 +310,16 @@ class ConsolidatedModel(BaseModel):
 
         for parameter in fixed_parameters:
             self.set_parameter(parameter, fixed_parameters[parameter])
+
+    def set_fixed_parameters(self):
+
+        # Set parameters from the data object
+        # (country_constants are country-specific, while parameters aren't)
+
+        for key, value in self.data['parameters'].items():
+            self.set_parameter(key, value)
+        for key, value in self.data['country_constants'].items():
+            self.set_parameter(key, value)
 
     def set_fixed_infectious_proportion(self):
 

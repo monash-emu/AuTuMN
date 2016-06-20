@@ -57,10 +57,7 @@ for scenario in data['attributes']['scenarios_to_run'] + [None]:
               "Amplification? " + str(is_amplification) + ",   " +
               "Misassignment? " + str(is_misassignment) + ".")
 
-        for key, value in data['parameters'].items():
-            model.set_parameter(key, value)
-        for key, value in data['country_constants'].items():
-            model.set_parameter(key, value)
+        # model.initial_compartments['susceptible_fully'] = 1E6
 
         model.integrate()
 

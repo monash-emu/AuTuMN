@@ -112,11 +112,11 @@ class ConsolidatedModel(BaseModel):
         if self.is_misassignment:
             assert self.is_amplification, 'Misassignment requested without amplification'
 
-        # Initialise model compartmental structure and set un-processed parameters
+        # Define model compartmental structure
+        # (note that compartment initialisation has now been shifted to base.py)
         self.define_model_structure()
 
-        self.initialise_compartments()
-
+        # Set the few universally fixed and hard-coded parameters
         self.set_fixed_parameters()
 
         # Treatment outcomes that will be universal to all models
@@ -149,6 +149,7 @@ class ConsolidatedModel(BaseModel):
         if self.is_lowquality: self.compartment_types += ['lowquality']
 
         # Broader stages for calculating outputs later
+        # Now thinking this should eventually go into the plotting module
         self.broad_compartment_types = [
             'susceptible',
             'latent',
@@ -205,6 +206,12 @@ class ConsolidatedModel(BaseModel):
 
         self.define_age_structure()
 
+        self.initial_compartments = {}
+        for compartment in self.compartment_types:
+            if compartment in self.data['country_constants']:
+                self.initial_compartments[compartment] \
+                    = self.data['country_constants'][compartment]
+
     def initialise_compartments(self, compartment_dict=None):
 
         # First initialise all compartments to zero
@@ -248,10 +255,11 @@ class ConsolidatedModel(BaseModel):
         default_start_strain = '_ds'
         if self.strains == ['']: default_start_strain = ''
 
-        # The equal splits may need to be adjusted, but the important thing is not to
+        # The equal splits will need to be adjusted, but the important thing is not to
         # initialise multiple strains too early, so that MDR-TB doesn't overtake the model
+
         for compartment in self.compartment_types:
-            if compartment in self.data['country_constants']:
+            if compartment in self.initial_compartments:
                 for agegroup in self.agegroups:
                     for comorbidity in self.comorbidities:
                         if 'susceptible_fully' in compartment:

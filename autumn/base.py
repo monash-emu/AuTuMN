@@ -192,6 +192,7 @@ class BaseModel():
         self.make_times(self.start_time,
                         self.end_time,
                         self.time_step)
+        self.initialise_compartments()
         self.process_parameters()
         self.set_flows()
         self.var_labels = None

@@ -787,13 +787,21 @@ class ConsolidatedModel(BaseModel):
         treatment after detection.
         Note that the default behaviour for a single strain model is to use the
         waiting time for smear-positive patients.
+        Also weight the time period
         """
 
         if len(self.organ_status) < 2:
-            self.vars['program_rate_start_treatment'] = 1. / self.vars['program_timeperiod_await_treatment_smearpos']
+            self.vars['program_rate_start_treatment'] = \
+                1. / self.vars['program_timeperiod_await_treatment_smearpos']
         else:
             for organ in self.organ_status:
-                self.vars['program_rate_start_treatment' + organ] = 1. / self.vars['program_timeperiod_await_treatment' + organ]
+                if organ == '_smearneg':
+                    self.vars['program_rate_start_treatment_smearneg'] = \
+                        1. / (self.vars['program_timeperiod_await_treatment_smearneg'] * (1. - self.vars['program_prop_xpert'])
+                            + self.params['program_timeperiod_await_treatment_smearneg_xpert'] * self.vars['program_prop_xpert'])
+                else:
+                    self.vars['program_rate_start_treatment' + organ] = \
+                        1. / self.vars['program_timeperiod_await_treatment' + organ]
 
     def calculate_lowquality_detection_vars(self):
 

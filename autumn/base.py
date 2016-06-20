@@ -390,8 +390,8 @@ class BaseModel():
 
         """
         # Check all compartments are positive
-        # for label in self.labels:
-        #     assert self.compartments[label] >= 0.0
+        for label in self.labels:
+            assert self.compartments[label] >= 0.
         # Check population is conserved across compartments
         # population_change = \
         #       self.vars['births_vac'] \

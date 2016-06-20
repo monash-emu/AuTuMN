@@ -782,7 +782,13 @@ class ConsolidatedModel(BaseModel):
 
     def calculate_await_treatment_var(self):
 
-        # Just simply take the reciprocal of the time to start on treatment
+        """
+        Take the reciprocal of the waiting times to calculate the flow rate to start
+        treatment after detection.
+        Note that the default behaviour for a single strain model is to use the
+        waiting time for smear-positive patients.
+        """
+
         if len(self.organ_status) < 2:
             self.vars['program_rate_start_treatment'] = 1. / self.vars['program_timeperiod_await_treatment_smearpos']
         else:

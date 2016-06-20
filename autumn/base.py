@@ -188,6 +188,10 @@ class BaseModel():
         return derivative_fn
 
     def init_run(self):
+
+        self.make_times(self.start_time,
+                        self.end_time,
+                        self.time_step)
         self.process_parameters()
         self.set_flows()
         self.var_labels = None

@@ -93,8 +93,13 @@ class ConsolidatedModel(BaseModel):
         self.n_organ = n_organ
         self.n_strain = n_strain
         self.n_comorbidity = n_comorbidity
-        self.start_time = data['country_constants']['start_time']
 
+        # Set time points for integration (model.times now created in base.py)
+        self.start_time = data['country_constants']['start_time']
+        self.end_time = data['attributes']['scenario_end_time']
+        self.time_step = data['attributes']['time_step']
+
+        # Set Boolean conditionals for model structure and additional diagnostics
         self.is_lowquality = is_lowquality
         self.is_amplification = is_amplification
         self.is_misassignment = is_misassignment
@@ -120,10 +125,6 @@ class ConsolidatedModel(BaseModel):
         # and "transfer out" is removed from denominator calculations.
         self.outcomes = ['_success', '_death', '_default']
         self.non_success_outcomes = self.outcomes[1: 3]
-
-        self.make_times(self.data['country_constants']['start_time'],
-                        self.data['attributes']['scenario_end_time'],
-                        self.data['attributes']['time_step'])
 
     def define_model_structure(self):
 

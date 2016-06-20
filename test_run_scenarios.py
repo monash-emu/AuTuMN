@@ -57,8 +57,6 @@ for scenario in data['attributes']['scenarios_to_run'] + [None]:
               "Amplification? " + str(is_amplification) + ",   " +
               "Misassignment? " + str(is_misassignment) + ".")
 
-        # model.initial_compartments['susceptible_fully'] = 1E6
-
         model.integrate()
 
         # Only make a flow-diagram if the model isn't overly complex
@@ -72,7 +70,7 @@ for scenario in data['attributes']['scenarios_to_run'] + [None]:
             base + '.rate_outputs_gtb_recent.png',
             country,
             scenario=scenario,
-            figure_number=10)
+            figure_number=1)
 
         # autumn.plotting.plot_outputs_against_gtb(
         #     model, ["incidence", "mortality", "prevalence", "notifications"],
@@ -112,7 +110,7 @@ for scenario in data['attributes']['scenarios_to_run'] + [None]:
                                                                       classification,
                                                                       country,
                                                                       scenario=scenario,
-                                                                      figure_number=i + j * 4)
+                                                                      figure_number=i + j*4 + 2)
                     if classification == 'program_prop':
                         autumn.plotting.plot_scaleup_fns(model,
                                                          classified_scaleups[classification],
@@ -121,7 +119,7 @@ for scenario in data['attributes']['scenarios_to_run'] + [None]:
                                                          'scenario_end_time',
                                                          classification,
                                                          country,
-                                                         figure_number=i + j * 4 + 8)
+                                                         figure_number=i + j*4 + 10)
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)

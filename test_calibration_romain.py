@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-
-
 import os
-import collections
+import glob
 
 import numpy
 from numpy import isfinite
@@ -11,6 +9,7 @@ from scipy.stats import  norm,  uniform
 import autumn.base
 import autumn.model
 import autumn.curve
+import autumn.plotting
 
 import datetime
 from autumn.spreadsheet import read_and_process_data, read_input_data_xls
@@ -64,7 +63,7 @@ class ModelRunner():
         self.is_last_run_success = False
         self.param_props_list = [ # the parameters that we are fitting
             {
-                'init': 15.0,
+                'init': 16.0,
                 'key': u'tb_n_contact',
                 'format': lambda v: "%.4f" % v,
                 'bounds': [3., 30.],
@@ -98,8 +97,8 @@ class ModelRunner():
                 'output_weight': 1.0, # how much we want this output to be taken into account.
                 'times': None,
                 'values': None,
-                'time_weights': {2014: 10.}, # all weigths are equal to 1 by default. Specify if different
-                'posterior_sd': 2.  # 10.
+                'time_weights': {2014: 1.}, # all weigths are equal to 1 by default. Specify if different
+                'posterior_sd': 2.
             },
             {
                 'key': 'mortality',
@@ -107,7 +106,7 @@ class ModelRunner():
                 'times': None,
                 'values': None,
                 'time_weights': {2014: 1.},
-                'posterior_sd': 0.1  # 0.5
+                'posterior_sd': 0.1
             }
         ]
         for key, value in data['parameters'].items():
@@ -320,6 +319,8 @@ class ModelRunner():
 
         n_accepted = 1
         n_candidates = 1
+        acc = 1
+        n_consecutive_rej = 0
         pars_accepted = numpy.zeros((n_mcmc_step, len(self.param_props_list)))
         f_accepted = numpy.zeros((n_mcmc_step, 1))
         pars_accepted[0, :] = pars
@@ -329,8 +330,15 @@ class ModelRunner():
 
         while n_accepted < n_mcmc_step and n_candidates < max_iter:
             n_candidates += 1
+
             print '%d accepted / %d candidates' % (n_accepted, n_candidates)
             print(pars)
+            if n_consecutive_rej >= 5 and n_candidates >= 10: # the algorithm struggles to accept a new candidate.
+                for props in self.param_props_list:
+                    props['width_95_prior'] *= 0.5 # new candidates generated in a narrower interval
+                n_consecutive_rej = 0
+
+
             new_pars = update_par(pars)
 
             if not dist:
@@ -351,9 +359,14 @@ class ModelRunner():
                 print(f)
                 pars = new_pars
                 n_accepted += 1
+                n_consecutive_rej = 0
 
                 pars_accepted[n_accepted-1, :] = pars
                 f_accepted[n_accepted-1, 0] = f
+
+            else:
+                n_consecutive_rej += 1
+
         self.pars = pars_accepted
         self.f = f_accepted
         self.rate_accepted = float(n_accepted) / float(n_candidates)
@@ -369,49 +382,75 @@ class ModelRunner():
             self.best_fit[props['key']] = self.pars[ind_max][i]
             i += 1
 
-    def get_initial_population(self):
+    def get_initial_population(self, targeted_year=2014, tol=1000.):
+        """
+        Calculates the initial population that leads to the targeted current population
+        Args:
+            targeted_year: the time at which the population size should match
+            tol: tolerated error
+        Returns:
+            The calculated initial population that should be used
+        """
+
         if self.is_last_run_success == False: # need to run an intyegration
             self.model.integrate_explicit()
+
+        indice_year = indices(self.model.times, lambda x: x >= targeted_year)[0]
+
+        targeted_final_pop = self.model.data['tb_dict'][u'e_pop_num'][targeted_year]
+
         initial_pop = self.model.params[u'susceptible_fully']
-        final_pop = sum(self.model.compartments.values())
+        final_pop = sum(self.model.soln_array[indice_year, :])
 
-#        final_pop = self.model.vars['population']
-        print('initial: ' + str(initial_pop))
-        print('final: ' + str(final_pop))
+        while abs(final_pop-targeted_final_pop) > tol:
+            initial_pop = initial_pop * targeted_final_pop / final_pop
+            # New run
+            self.model.initial_compartments['susceptible_fully'] = initial_pop
+            self.model.initialise_compartments()
+            self.model.integrate_explicit()
+            final_pop = sum(self.model.soln_array[indice_year, :])
 
-        targeted_final_pop = 900000.
-        deduced_initial_pop = initial_pop * targeted_final_pop / final_pop
-        self.model.set_parameter(u'susceptible_fully', deduced_initial_pop)
-
-        print self.model.params[u'susceptible_fully']
-        self.model.integrate_explicit()
-
-
-
-        final_pop = sum(self.model.compartments.values())
-        print('initial: ' + str(deduced_initial_pop))
-        print('final: ' + str(final_pop))
+        return initial_pop
 
 
 
 
-
-
-
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#                         Tests
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 model_runner = ModelRunner()
-model_runner.mcmc_romain(n_mcmc_step=50, max_iter=1000, dist=True)
 
+# Calibration
+model_runner.mcmc_romain(n_mcmc_step=20, max_iter=1000, dist=True)
 print('******* pars **********')
 print(model_runner.pars)
 print('******* f **********')
 print(model_runner.f)
 print('******* rate_accepted *********')
 print(model_runner.rate_accepted)
-
 print('******* Best Fit *********')
 print(model_runner.best_fit)
 
-#model_runner.get_initial_population()
+out_dir = 'calibration_graphs'
+if not os.path.isdir(out_dir):
+    os.makedirs(out_dir)
+name = 'calibrated_output'
+base = os.path.join(out_dir, name)
+autumn.plotting.plot_outputs_against_gtb(
+    model_runner.model, ["incidence", "mortality", "prevalence", "notifications"],
+    data['attributes']['recent_time'],
+    'current_time',
+    base + '.rate_outputs_gtb.png',
+    country,
+    scenario=None,
+    figure_number=1)
+pngs = glob.glob(os.path.join(out_dir, '*png'))
+autumn.plotting.open_pngs(pngs)
 
+
+# Determine the initial population size (uncomment code below))
+#init_pop = model_runner.get_initial_population()
+# print ('******* Initial population *********')
+# print(init_pop)
 
 print("Time elapsed in running script is " + str(datetime.datetime.now() - start_realtime))

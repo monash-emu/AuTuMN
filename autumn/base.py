@@ -28,6 +28,7 @@ class BaseModel():
 
         self.flows = {}
         self.fixed_transfer_rate_flows = []
+        self.linked_transfer_rate_flows = []
         self.fixed_infection_death_rate_flows = []
         self.var_transfer_rate_flows = []
         self.var_flows = []
@@ -99,6 +100,11 @@ class BaseModel():
             self.fixed_transfer_rate_flows,
             (from_label, to_label, self.params[param_label]))
 
+    def set_linked_transfer_rate_flow(self, from_label, to_label, vars_label):
+        add_unique_tuple_to_list(
+            self.linked_transfer_rate_flows,
+            (from_label, to_label, vars_label))
+
     def set_var_transfer_rate_flow(self, from_label, to_label, vars_label):
         add_unique_tuple_to_list(
             self.var_transfer_rate_flows,
@@ -143,6 +149,12 @@ class BaseModel():
         # fixed-rate flows
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
             val = self.compartments[from_label] * rate
+            self.flows[from_label] -= val
+            self.flows[to_label] += val
+
+        # linked flows
+        for from_label, to_label, vars_label in self.linked_transfer_rate_flows:
+            val = self.vars[vars_label]
             self.flows[from_label] -= val
             self.flows[to_label] += val
 
@@ -471,6 +483,8 @@ class BaseModel():
             self.graph.edge(from_label, to_label, label=var_label[:4])
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
             self.graph.edge(from_label, to_label, label=num_str(rate))
+        for from_label, to_label, rate in self.linked_transfer_rate_flows:
+            self.graph.edge(from_label, to_label, label='link')
         for label, rate in self.fixed_infection_death_rate_flows:
             self.graph.edge(label, "tb_death", label=num_str(rate))
         for label, rate in self.var_infection_death_rate_flows:
@@ -485,11 +499,13 @@ class BaseModel():
 
 
 def add_unique_tuple_to_list(a_list, a_tuple):
+
     """
     Adds or modifies a list of tuples, compares only the items
     before the last in the tuples, the last value in the tuple
     is assumed to be a value.
     """
+
     for i, test_tuple in enumerate(a_list):
         if test_tuple[:-1] == a_tuple[:-1]:
             a_list[i] = a_tuple

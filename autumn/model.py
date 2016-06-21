@@ -660,6 +660,8 @@ class ConsolidatedModel(BaseModel):
 
         self.calculate_treatment_rates_vars()
 
+        self.calculate_ipt_rate()
+
     def calculate_birth_rates_vars(self):
 
         """
@@ -931,6 +933,38 @@ class ConsolidatedModel(BaseModel):
                         self.vars['program_rate_default' + treatment_stage + strain] \
                         * (1. - self.vars['epi_prop_amplification'])
 
+    def calculate_ipt_rate(self):
+
+        """
+        Calculate the number of persons starting treatment for IPT, which is linked to the number
+        of patients starting treatment.
+        This code structure echoes the code in set_variable_programmatic_flows
+        This code is UNFINISHED. Currently, the function ignores issues of strains, age-groups, etc.
+        It is just the general code structure I have in mind.
+        """
+
+        # This parameter is the number of persons effectively treated with IPT for each
+        # patient started on treatment for active disease.
+        ratio_effectively_treated = 1.
+
+        for agegroup in self.agegroups:
+            for comorbidity in self.comorbidities:
+                for strain in self.strains:
+                    for organ in self.organ_status:
+                        if self.is_misassignment:
+                            for assigned_strain in self.strains:
+                                self.vars['ipt'] = \
+                                    self.compartments['detect' + organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup] * \
+                                    self.vars['program_rate_start_treatment' + organ] * \
+                                    self.vars['program_prop_ipt'] * \
+                                    ratio_effectively_treated
+                        else:
+                            self.vars['ipt'] = \
+                                self.compartments['detect' + organ + strain + comorbidity + agegroup] * \
+                                self.vars['program_rate_start_treatment' + organ] * \
+                                self.vars['program_prop_ipt'] * \
+                                ratio_effectively_treated
+
     ##################################################################
     # Methods that calculate the flows of all the compartments
 
@@ -957,6 +991,8 @@ class ConsolidatedModel(BaseModel):
         self.set_detection_flows()
 
         self.set_treatment_flows()
+
+        self.set_ipt_flows()
 
     def set_birth_flows(self):
 
@@ -1158,7 +1194,6 @@ class ConsolidatedModel(BaseModel):
                                 'detect' + organ + strain + comorbidity + agegroup,
                                 'program_rate_detect')
 
-
     def set_variable_programmatic_flows(self):
 
         # Set rate of missed diagnoses and entry to low-quality health care
@@ -1264,6 +1299,22 @@ class ConsolidatedModel(BaseModel):
                                         treatment_stage + organ + strain + as_assigned_strain + comorbidity + agegroup,
                                         'active' + organ + amplify_to_strain + comorbidity + agegroup,
                                         'program_rate_default' + treatment_stage + '_amplify' + strain_or_inappropriate)
+
+    def set_ipt_flows(self):
+
+        """
+        Sets a flow from the early latent compartment to the partially immune susceptible compartment
+        that is determined by report_numbers_starting_treatment above and is not linked to the
+        'from_label' compartment.
+        This UNFINISHED - we need to make adjustments for strain and age group still
+        """
+
+        for agegroup in self.agegroups:
+            for comorbidity in self.comorbidities:
+                for strain in self.strains:
+                    self.set_linked_transfer_rate_flow('latent_early' + strain + comorbidity + agegroup,
+                                                       'susceptible_vac' + strain + comorbidity + agegroup,
+                                                       'ipt')
 
     ##################################################################
     # Methods that calculate the output vars and diagnostic properties

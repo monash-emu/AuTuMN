@@ -190,7 +190,7 @@ params_default = {
 
 if prog == 7:
     print("PROGRAM" "" + program_name[prog - 1], "YEAR" "" + str(year))
-    method = 1
+    method = 2
     saturation = params_default["saturation"]
     coverage = prog_cov["program_prop_treatment_success"]
     funding = prog_cost["program_cost_treatment_success"]
@@ -202,7 +202,7 @@ if prog == 7:
 elif prog == 9:
     print("PROGRAM" " " + program_name[prog - 1],
           "YEAR" " " + str(year))
-    method = 1
+    method = 2
     saturation = params_default["saturation"]
     coverage = prog_cov["program_prop_treatment_success_mdr"]
     funding = prog_cost["program_cost_treatment_success_mdr"]
@@ -284,6 +284,8 @@ else:
         cost_values.append (new_coverage_cost_fx(coverage_range))
 
 # Logistic function for coverage-outcome curve
+
+"""
 def outcome_coverage_fx(cost, outcome_zerocov, outcome_fullcov):
 
     x = (np.array (outcome) - outcome_zerocov) / (outcome_fullcov - outcome_zerocov)
@@ -293,7 +295,7 @@ def outcome_coverage_fx(cost, outcome_zerocov, outcome_fullcov):
 for cost in cost_values:
     coverage_values.append (outcome_coverage_fx(cost, outcome_zerocov, outcome_fullcov))
 
-
+"""
 
 if multi_data == True:
     fig = plt.figure(1)
@@ -305,6 +307,7 @@ if multi_data == True:
     plt.xlabel('% Coverage')
     plt.ylabel('$ Cost')
     plt.grid(True)
+    """
     plt.subplot (122)
     plt.plot(outcome_values, coverage_values, 'b', linewidth = 3)
     plt.xlim ([outcome_zerocov, outcome_fullcov])
@@ -312,6 +315,7 @@ if multi_data == True:
     plt.xlabel('Outcome')
     plt.ylabel('% coverage')
     plt.grid(True)
+    """
     plt.show()
     fig.savefig('Coverage_cost_outcome_multiple.jpg')
 
@@ -330,6 +334,7 @@ else:
     #plt.show()
     # #fig.savefig('cost_coverage.jpg')
     # #fig = plt.figure(2)
+    """
     plt.subplot (122)
     #fig.suptitle('Coverage-outcome curve')
     plt.plot(outcome_values, coverage_values, 'b', linewidth = 3)
@@ -338,6 +343,7 @@ else:
     plt.xlabel('Outcome')
     plt.ylabel('% Coverage')
     plt.grid(True)
+    """
     plt.show()
     #fig.savefig('coverage_outcome.jpg')
     fig.savefig('Coverage_cost_outcome_single.jpg')

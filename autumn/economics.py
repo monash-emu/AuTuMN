@@ -11,26 +11,43 @@ import math
 Module for estimating cost of a program
 
 """
+
+############### INITIAL CONDITIONS##################
+
 params_default = {
     "saturation": 1,
     "coverage": 0.33,
-    "funding": 2.5e6,
+    "funding": 1.5e6,
     "scale_up_factor": 0.75,
-    "unitcost": 20,
-    "popsize": 1e5,
-    "method": 1,
+    "unitcost": 90,
+    "popsize": 881e3,
+    "method": 2,
     "outcome_zerocov": 20,
     "outcome_fullcov": 5}
-
-def get_coverage_from_outcome_program_as_param(outcome):
-    coverage = numpy.array(outcome)
-    return coverage
-
 
 start_coverage = 0.0001
 end_coverage = params_default["saturation"]
 delta_coverage = 0.001
 method = 1
+year_index = 1995
+
+if method == 1:
+    print ("METHOD" " " + str(method), "new programs", "unit cost not available")
+elif method ==2:
+    print ("METHOD" " " + str(method), "established-programs", "unit cost available")
+
+###################################################
+
+
+#######CREATE EMPTY LIST TO STORE RESULTS LATER #####
+
+cost = []
+coverage_values = []
+
+#####################################################
+
+
+######## MAKE COVERAGE RANGE #######################
 
 def make_coverage_steps(start_coverage, end_coverage, delta_coverage):
     steps = []
@@ -42,6 +59,20 @@ def make_coverage_steps(start_coverage, end_coverage, delta_coverage):
 coverage_values = make_coverage_steps(start_coverage, end_coverage, delta_coverage)
 
 
+#######################################################
+
+
+##### FX TO GET COVERAGE FROM OUTCOME #################
+# Because Vaccination is both a TB program and model param, COVERAGE = OUTCOME
+
+def get_coverage_from_outcome_program_as_param(outcome):
+    coverage = numpy.array(outcome)
+    return coverage
+
+######################################################
+
+##### FX TO GET COST FROM COVERAGE ##################
+
 def get_cost_from_coverage(coverage_range, saturation, coverage, funding, scale_up_factor, unitcost, popsize):
     if method in (1, 2):
         if method == 1: # For new programs which requires significant start-up cost. Unit cost unknown
@@ -51,25 +82,30 @@ def get_cost_from_coverage(coverage_range, saturation, coverage, funding, scale_
             cost = - unitcost * popsize * math.log(((2 * saturation) / (coverage_range + saturation)) - 1)
             return cost
 
+
 def cost_scaleup_fns(model,
                      functions,
                      start_time_str = 'start_time',
                      end_time_str = '',
                      parameter_type='',
-                     country=u'',
-                     figure_number = 1):
+                     country=u''):
 
-    if  start_time_str == 'recent_time':
+    if start_time_str == 'recent_time':
         start_time = model.data['attributes'][start_time_str]
     else:
         start_time = model.data['country_constants'][start_time_str]
 
     end_time = model.data['attributes'][end_time_str]
-    x_vals = numpy.linspace(start_time, end_time, end_time - start_time + 1)
+    x_vals = numpy.linspace(start_time, end_time, end_time - start_time + 1)  # years
 
-    for figure_number, function in enumerate(functions):
+    year_pos = year_index - start_time
+    print(year_index, year_pos)
+
+
+    for i, function in enumerate(functions):
         if function == str('program_prop_vaccination'):
             scaleup_param_vals = map(model.scaleup_fns[function], x_vals)
+            print(scaleup_param_vals[int(year_pos)], x_vals[int(year_pos)])
             coverage = get_coverage_from_outcome_program_as_param(scaleup_param_vals)
 
             for coverage_range in coverage_values:
@@ -81,14 +117,20 @@ def cost_scaleup_fns(model,
                                               params_default['unitcost'],
                                               params_default['popsize'])
 
-
             plt.figure(111)
             plt.plot(x_vals, coverage)
             title = str(country) + ' ' + \
                         plotting.replace_underscore_with_space(parameter_type) + \
                         ' parameter' + ' from ' + plotting.replace_underscore_with_space(start_time_str)
             plt.title(title)
+            plt.ylim([0, 1.1])
+            plt.xlabel("Years")
+            plt.ylabel('program_prop_vaccination')
             plt.show()
+
+            print(len(x_vals))
+            print(len(cost))
+
 
             plt.figure(222)
             plt.plot(x_vals, cost)
@@ -96,4 +138,24 @@ def cost_scaleup_fns(model,
                         plotting.replace_underscore_with_space(parameter_type) + \
                         ' parameter' + ' from ' + plotting.replace_underscore_with_space(start_time_str)
             plt.title(title)
+            plt.xlabel('Years')
+            plt.ylabel('$ Cost of program_vaccination')
             plt.show()
+
+            '''
+            plt.figure(333)
+            plt.plot(cost, coverage_values)
+            title = str(country) + ' ' + \
+                        plotting.replace_underscore_with_space(parameter_type) + \
+                        ' parameter' + ' from ' + plotting.replace_underscore_with_space(start_time_str)
+            plt.title(title)
+            plt.xlabel('Cost')
+            plt.ylabel('Coverage')
+            plt.show()
+            '''
+
+
+
+
+
+

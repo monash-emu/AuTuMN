@@ -204,7 +204,7 @@ else:
     #     print(model.get_var_soln("mortality")[year])
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
-#autumn.plotting.open_pngs(pngs)
+autumn.plotting.open_pngs(pngs)
 
 print("Time elapsed in running script is " + str(datetime.datetime.now() - start_realtime))
 

@@ -6,6 +6,7 @@ import datetime
 import autumn.model
 import autumn.plotting
 from autumn.spreadsheet import read_and_process_data, read_input_data_xls
+import autumn.economics
 
 # Start timer
 start_realtime = datetime.datetime.now()
@@ -121,6 +122,9 @@ else:
         scenario=None,
         figure_number=1)
 
+
+
+
     # if n_strains >= 2:
     #     autumn.plotting.plot_outputs(
     #         model, ["incidence_ds", "incidence_mdr", "mortality_ds", "mortality_mdr", "prevalence_ds", "prevalence_mdr",
@@ -158,6 +162,7 @@ else:
     # Plot them from the start of the model and from "recent_time"
     for i, classification in enumerate(classified_scaleups):
         if len(classified_scaleups[classification]) > 0:
+            #print(classified_scaleups[classification])
             for j, start_time in enumerate(['start_', 'recent_']):
                 autumn.plotting.plot_all_scaleup_fns_against_data(model,
                                                                   classified_scaleups[classification],
@@ -178,6 +183,16 @@ else:
                                                      figure_number=i + j*4 + 10)
 
 
+                autumn.economics.cost_scaleup_fns(model,
+                                                  classified_scaleups[classification],
+                                                  start_time + 'time',
+                                                  'current_time',
+                                                  classification,
+                                                  country,
+                                                  figure_number= i + j *4 +2)
+
+
+
     #     year = indices(model.times, lambda x: x >= 2015.)[0]
     #     print("2015 incidence is: ")
     #     print(model.get_var_soln("incidence")[year])
@@ -189,7 +204,8 @@ else:
     #     print(model.get_var_soln("mortality")[year])
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
-autumn.plotting.open_pngs(pngs)
+#autumn.plotting.open_pngs(pngs)
 
 print("Time elapsed in running script is " + str(datetime.datetime.now() - start_realtime))
+
 

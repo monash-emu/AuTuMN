@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-
-
 import os
-import collections
+import glob
 
 import numpy
 from numpy import isfinite
@@ -11,27 +9,13 @@ from scipy.stats import  norm,  uniform
 import autumn.base
 import autumn.model
 import autumn.curve
+import autumn.plotting
 
 import datetime
 from autumn.spreadsheet import read_and_process_data, read_input_data_xls
 
 from scipy.optimize import minimize
-
-# Start timer
-start_realtime = datetime.datetime.now()
-
-scenario = None
-# Load data
-# Import the data
-country = read_input_data_xls(True, ['attributes'])['attributes'][u'country']
-print(country)
-data = read_and_process_data(True,
-                             ['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
-                              'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes'],
-                             country)
-
-is_additional_diagnostics = data['attributes']['is_additional_diagnostics'][0]
-
+import openpyxl as xl
 
 # Following function likely to be needed later as we have calibration inputs
 # at multiple time points
@@ -44,12 +28,18 @@ def is_positive_definite(v):
 class ModelRunner():
 
     def __init__(self):
-        n_organs = data['attributes']['n_organs'][0]
-        n_strains = data['attributes']['n_strains'][0]
-        n_comorbidities = data['attributes']['n_comorbidities'][0]
-        is_quality = data['attributes']['is_lowquality'][0]
-        is_amplification = data['attributes']['is_amplification'][0]
-        is_misassignment = data['attributes']['is_misassignment'][0]
+        self.country = read_input_data_xls(True, ['attributes'])['attributes'][u'country']
+        self.data = read_and_process_data(True,
+                                     ['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
+                                      'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes'],
+                                     self.country)
+        is_additional_diagnostics = self.data['attributes']['is_additional_diagnostics'][0]
+        n_organs = self.data['attributes']['n_organs'][0]
+        n_strains = self.data['attributes']['n_strains'][0]
+        n_comorbidities = self.data['attributes']['n_comorbidities'][0]
+        is_quality = self.data['attributes']['is_lowquality'][0]
+        is_amplification = self.data['attributes']['is_amplification'][0]
+        is_misassignment = self.data['attributes']['is_misassignment'][0]
         self.model = autumn.model.ConsolidatedModel(
             n_organs,
             n_strains,
@@ -58,20 +48,21 @@ class ModelRunner():
             is_amplification,  # Amplification
             is_misassignment,  # Misassignment by strain
             is_additional_diagnostics,
-            scenario,  # Scenario to run
-            data)
+            None,  # Scenario to run
+            self.data)
+
 
         self.is_last_run_success = False
         self.param_props_list = [ # the parameters that we are fitting
             {
-                'init': 15.0,
+                'init': 19.0,
                 'key': u'tb_n_contact',
                 'format': lambda v: "%.4f" % v,
                 'bounds': [3., 30.],
                 'width_95_prior':1.0
             },
             {
-                'init': 0.5,
+                'init': 0.4,
                 'key': u'program_prop_death_reporting',
                 'short': 'prop_death_reported',
                 'format': lambda v: "%.4f" % v,
@@ -98,8 +89,8 @@ class ModelRunner():
                 'output_weight': 1.0, # how much we want this output to be taken into account.
                 'times': None,
                 'values': None,
-                'time_weights': {2014: 10.}, # all weigths are equal to 1 by default. Specify if different
-                'posterior_sd': 2.  # 10.
+                'time_weights': {2014: 1.}, # all weigths are equal to 1 by default. Specify if different
+                'posterior_sd': 2.
             },
             {
                 'key': 'mortality',
@@ -107,12 +98,12 @@ class ModelRunner():
                 'times': None,
                 'values': None,
                 'time_weights': {2014: 1.},
-                'posterior_sd': 0.1  # 0.5
+                'posterior_sd': 0.1
             }
         ]
-        for key, value in data['parameters'].items():
+        for key, value in self.data['parameters'].items():
             self.model.set_parameter(key, value)
-        for key, value in data['country_constants'].items():
+        for key, value in self.data['country_constants'].items():
             self.model.set_parameter(key, value)
 
         for props in self.param_props_list:
@@ -121,6 +112,7 @@ class ModelRunner():
         self.data_to_fit = {}
         self.get_data_to_fit() # collect the data regarding incidence , mortality, etc. from the model object
         self.best_fit = {}
+        self.nb_accepted = 0
 
     def get_data_to_fit(self):
         for output in self.calib_outputs:
@@ -291,6 +283,7 @@ class ModelRunner():
         return best_theta
 
     def mcmc_romain(self, n_mcmc_step=40, max_iter=500, dist = False):
+        self.nb_accepted = n_mcmc_step
 
         def get_sd_from_width(width):
             return width/(2.0*1.96)
@@ -320,17 +313,32 @@ class ModelRunner():
 
         n_accepted = 1
         n_candidates = 1
+        acc = 1
+        n_consecutive_rej = 0
         pars_accepted = numpy.zeros((n_mcmc_step, len(self.param_props_list)))
         f_accepted = numpy.zeros((n_mcmc_step, 1))
         pars_accepted[0, :] = pars
         f_accepted[0] = f
-        print('initial value for f:')
-        print(f)
+        print ("Initial value for f:" + str(f))
 
         while n_accepted < n_mcmc_step and n_candidates < max_iter:
             n_candidates += 1
+
             print '%d accepted / %d candidates' % (n_accepted, n_candidates)
-            print(pars)
+            if acc == 1:
+                cpt = 0
+                s = ""
+                for props in self.param_props_list:
+                    s += props['key'] + " = " + str(pars[cpt]) + "    "
+                    cpt += 1
+                s += "objective f: " + str(f)
+                print s
+            if n_consecutive_rej >= 5 and n_candidates >= 10: # the algorithm struggles to accept a new candidate.
+                for props in self.param_props_list:
+                    props['width_95_prior'] *= 0.5 # new candidates generated in a narrower interval
+                n_consecutive_rej = 0
+
+
             new_pars = update_par(pars)
 
             if not dist:
@@ -348,12 +356,16 @@ class ModelRunner():
 
             if acc == 1:
                 f = new_f
-                print(f)
                 pars = new_pars
                 n_accepted += 1
+                n_consecutive_rej = 0
 
                 pars_accepted[n_accepted-1, :] = pars
                 f_accepted[n_accepted-1, 0] = f
+
+            else:
+                n_consecutive_rej += 1
+
         self.pars = pars_accepted
         self.f = f_accepted
         self.rate_accepted = float(n_accepted) / float(n_candidates)
@@ -369,49 +381,172 @@ class ModelRunner():
             self.best_fit[props['key']] = self.pars[ind_max][i]
             i += 1
 
-    def get_initial_population(self):
+    def get_initial_population(self, targeted_year=2014, tol=1000.):
+        """
+        Calculates the initial population that leads to the targeted current population
+        Args:
+            targeted_year: the time at which the population size should match
+            tol: tolerated error
+        Returns:
+            The calculated initial population that should be used
+        """
+
         if self.is_last_run_success == False: # need to run an intyegration
             self.model.integrate_explicit()
+
+        indice_year = indices(self.model.times, lambda x: x >= targeted_year)[0]
+
+        targeted_final_pop = self.model.data['tb_dict'][u'e_pop_num'][targeted_year]
+
         initial_pop = self.model.params[u'susceptible_fully']
-        final_pop = sum(self.model.compartments.values())
+        final_pop = sum(self.model.soln_array[indice_year, :])
 
-#        final_pop = self.model.vars['population']
-        print('initial: ' + str(initial_pop))
-        print('final: ' + str(final_pop))
+        while abs(final_pop-targeted_final_pop) > tol:
+            initial_pop = initial_pop * targeted_final_pop / final_pop
+            # New run
+            self.model.initial_compartments['susceptible_fully'] = initial_pop
+            self.model.initialise_compartments()
+            self.model.integrate_explicit()
+            final_pop = sum(self.model.soln_array[indice_year, :])
 
-        targeted_final_pop = 900000.
-        deduced_initial_pop = initial_pop * targeted_final_pop / final_pop
-        self.model.set_parameter(u'susceptible_fully', deduced_initial_pop)
+        return initial_pop
 
-        print self.model.params[u'susceptible_fully']
-        self.model.integrate_explicit()
+    def write_best_fit_into_file(self):
+        out_dir = 'calibrations/xls'
+        if not os.path.isdir(out_dir):
+            os.makedirs(out_dir)
+        name = 'calibrated_params_' + self.country + '_' + str(self.nb_accepted) + 'runs'
+        path = os.path.join(out_dir, name)
+        path = path + ".xlsx"
+
+        wb = xl.Workbook()
+        sheet = wb.active
+        sheet.title = 'Parameters'
+
+        cells_names = ['A1','A2']
+        cells_vals = ['B1','B2']
+
+        i = 0
+        for par in self.best_fit.keys():
+            sheet[cells_names[i]] = par
+            sheet[cells_vals[i]] = self.best_fit[par]
+            i += 1
+
+        wb.save(path)
+
+def run_calibration(n_runs, calibrated_params, targeted_outputs, dt=None):
+    """
+    run the automatic calibration for a country
+    Args:
+        n_runs: number of accepted parameter sets that we want
+        calibrated_params: dictionary defining the parameters to adjust
+        targeted_outputs: dictionary defining the outputs that we are targeting
+        dt: step time for integration. If None, it will be automatically determined to get optimal calculation time
+
+    Returns:
+        Nothing but writes a spreadsheet with the fitted parameters in calibrations/xls/...
+        Also produces a graph
+    """
+    # Start timer
+    start_realtime = datetime.datetime.now()
+
+    model_runner = ModelRunner()
+    print model_runner.country
+    model_runner.param_props_list = calibrated_params
+    model_runner.calib_outputs = targeted_outputs
 
 
+    if dt is None:
+        print "******** Automatic determination of the step-time *********"
+        dts = [2., 1., 0.75, 0.5, 0.4, 0.3, 0.2, 0.15, 0.1, 0.075, 0.05, 0.02, 0.01, 0.005, 0.001 ]
+        ok = 0
+        i = 0
+        while ok == 0:
+            val = dts[i]
+            model_runner.model.time_step = val
+            ok = 1
+            try:
+                model_runner.model.integrate_explicit()
+            except:
+                print "dt=" + str(val) + " fails"
+                ok = 0
+                i += 1
+        dt = val
+        print "********   dt=" + str(val) + " succeeds     ******** "
 
-        final_pop = sum(self.model.compartments.values())
-        print('initial: ' + str(deduced_initial_pop))
-        print('final: ' + str(final_pop))
+    model_runner.model.time_step = dt
+
+    print('')
+    print "******** Start MCMC simulation *********"
+    model_runner.mcmc_romain(n_mcmc_step=n_runs, max_iter=1000, dist=True)
+    model_runner.write_best_fit_into_file()
+
+    out_dir = 'calibrations'
+    if not os.path.isdir(out_dir):
+        os.makedirs(out_dir)
+    name = 'calibrated_outputs_' + model_runner.country + '_' + str(model_runner.nb_accepted) + 'runs'
+    base = os.path.join(out_dir, name)
+    autumn.plotting.plot_outputs_against_gtb(
+        model_runner.model, ["incidence", "mortality", "prevalence", "notifications"],
+        model_runner.data['attributes']['recent_time'],
+        'current_time',
+        base + '.png',
+        model_runner.country,
+        scenario=None,
+        figure_number=1)
+    pngs = glob.glob(os.path.join(out_dir, '*png'))
+    autumn.plotting.open_pngs(pngs)
+    model_runner.write_best_fit_into_file()
+
+    print("Time elapsed in running script is " + str(datetime.datetime.now() - start_realtime))
 
 
+#   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #
+#   #         Define and run the calibration from here          #   #
+
+calibrated_params = [  # the parameters that we are fitting
+    {
+        'key': u'tb_n_contact',
+        'init': 20., # initial guess
+        'bounds': [3., 30.], # no parameter values will be generated outside of these bounds
+        'width_95_prior': 1.0 # width of the interval containing 95% of the generated parameter values
+    },
+    {
+        'key': u'program_prop_death_reporting',
+        'init': 0.3,
+        'short': 'prop_death_reported',
+        'bounds': [0.1, 0.9],
+        'width_95_prior': 0.20
+    }
+]
+targeted_outputs = [  # the targeted outputs
+    {
+        'key': 'incidence',
+        'output_weight': 1.0,  # how much we want this output to be taken into account.
+        'times': None,  # only used when data is not available in GTB
+        'values': None, # only used when data is not available in GTB
+        'time_weights': {},  # all weigths are equal to 1 by default. Specify if different (e.g {2014: 10., 1990: 10.}   )
+        'posterior_sd': 2.
+    },
+    {
+        'key': 'mortality',
+        'output_weight': 1.0,  # how much we want this output to be taken into account
+        'times': None,
+        'values': None,
+        'time_weights': {},
+        'posterior_sd': 0.1
+    }
+]
+n_runs = 20
+
+run_calibration(n_runs, calibrated_params, targeted_outputs, dt=None)
 
 
+#   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #
+#   #  Determine the initial population size (uncomment code below))    #
 
+# model_runner = ModelRunner()
+#init_pop = model_runner.get_initial_population()
+# print ('******* Initial population *********')
+# print(init_pop)
 
-
-model_runner = ModelRunner()
-model_runner.mcmc_romain(n_mcmc_step=50, max_iter=1000, dist=True)
-
-print('******* pars **********')
-print(model_runner.pars)
-print('******* f **********')
-print(model_runner.f)
-print('******* rate_accepted *********')
-print(model_runner.rate_accepted)
-
-print('******* Best Fit *********')
-print(model_runner.best_fit)
-
-#model_runner.get_initial_population()
-
-
-print("Time elapsed in running script is " + str(datetime.datetime.now() - start_realtime))

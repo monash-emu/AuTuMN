@@ -6,6 +6,7 @@ import datetime
 import autumn.model
 import autumn.plotting
 from autumn.spreadsheet import read_and_process_data, read_input_data_xls
+import autumn.write_outputs as w_o
 
 # Start timer
 start_realtime = datetime.datetime.now()
@@ -24,9 +25,15 @@ if not os.path.isdir(out_dir):
 
 is_additional_diagnostics = data['attributes']['is_additional_diagnostics'][0]
 
+project = w_o.Project()
+project.country = country
+project.name = 'project_test' # this name will be used as a directory to store all the output files
+
 # Note that it takes about one hour to run all of the possible model structures,
 # so perhaps don't do that - and longer if running multiple scenarios
 for scenario in data['attributes']['scenarios_to_run'] + [None]:
+    project.scenarios.append(scenario)
+
     n_organs = data['attributes']['n_organs'][0]
     n_strains =  data['attributes']['n_strains'][0]
     n_comorbidities = data['attributes']['n_comorbidities'][0]
@@ -58,6 +65,9 @@ for scenario in data['attributes']['scenarios_to_run'] + [None]:
               "Misassignment? " + str(is_misassignment) + ".")
 
         model.integrate()
+
+        project.models[scenario] = model # Store the model in the object 'project'
+        project.output_dict[scenario] = w_o.create_output_dict(model) # store simplified outputs
 
         # Only make a flow-diagram if the model isn't overly complex
         if n_organs + n_strains + n_comorbidities <= 5:
@@ -123,6 +133,9 @@ for scenario in data['attributes']['scenarios_to_run'] + [None]:
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)
+
+
+project.write_output_dict_xls()
 
 print("Time elapsed in running script is " + str(datetime.datetime.now() - start_realtime))
 

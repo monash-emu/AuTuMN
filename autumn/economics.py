@@ -20,7 +20,7 @@ params_default = {
     "popsize": 1e5,
     "method": 1,
     "outcome_zerocov": 20,
-    "outcome_fullcov": 5
+    "outcome_fullcov": 5}
 
 def get_coverage_from_outcome_program_as_param(outcome):
     coverage = numpy.array(outcome)
@@ -30,6 +30,7 @@ def get_coverage_from_outcome_program_as_param(outcome):
 start_coverage = 0.0001
 end_coverage = params_default["saturation"]
 delta_coverage = 0.001
+method = 1
 
 def make_coverage_steps(start_coverage, end_coverage, delta_coverage):
     steps = []
@@ -38,7 +39,6 @@ def make_coverage_steps(start_coverage, end_coverage, delta_coverage):
         steps.append(step)
         step += delta_coverage
     return steps
-
 coverage_values = make_coverage_steps(start_coverage, end_coverage, delta_coverage)
 
 
@@ -50,13 +50,6 @@ def get_cost_from_coverage(coverage_range, saturation, coverage, funding, scale_
         elif method == 2: # For well-established programs of which start-up cost should be ignored. Unit cost known
             cost = - unitcost * popsize * math.log(((2 * saturation) / (coverage_range + saturation)) - 1)
             return cost
-
-def new_get_cost_from_coverage (coverage_range):
-    return  get_cost_from_coverage (coverage_range, saturation, coverage, funding, scale_up_factor, unitcost, popsize)  # closure
-
-for coverage_range in coverage_values:
-    cost_values.append (new_coverage_cost_fx(coverage_range))
-
 
 def cost_scaleup_fns(model,
                      functions,
@@ -79,8 +72,26 @@ def cost_scaleup_fns(model,
             scaleup_param_vals = map(model.scaleup_fns[function], x_vals)
             coverage = get_coverage_from_outcome_program_as_param(scaleup_param_vals)
 
-            plt.figure(figure_number)
+            for coverage_range in coverage_values:
+                cost = get_cost_from_coverage(coverage_range,
+                                              params_default['saturation'],
+                                              coverage,
+                                              params_default['funding'],
+                                              params_default['scale_up_factor'],
+                                              params_default['unitcost'],
+                                              params_default['popsize'])
+
+
+            plt.figure(111)
             plt.plot(x_vals, coverage)
+            title = str(country) + ' ' + \
+                        plotting.replace_underscore_with_space(parameter_type) + \
+                        ' parameter' + ' from ' + plotting.replace_underscore_with_space(start_time_str)
+            plt.title(title)
+            plt.show()
+
+            plt.figure(222)
+            plt.plot(x_vals, cost)
             title = str(country) + ' ' + \
                         plotting.replace_underscore_with_space(parameter_type) + \
                         ' parameter' + ' from ' + plotting.replace_underscore_with_space(start_time_str)

@@ -183,16 +183,6 @@ else:
                                                      figure_number=i + j*4 + 10)
 
 
-                autumn.economics.cost_scaleup_fns(model,
-                                                  classified_scaleups[classification],
-                                                  start_time + 'time',
-                                                  'current_time',
-                                                  classification,
-                                                  country,
-                                                  figure_number= i + j *4 +2)
-
-
-
     #     year = indices(model.times, lambda x: x >= 2015.)[0]
     #     print("2015 incidence is: ")
     #     print(model.get_var_soln("incidence")[year])

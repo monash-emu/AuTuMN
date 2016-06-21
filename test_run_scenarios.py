@@ -27,6 +27,7 @@ is_additional_diagnostics = data['attributes']['is_additional_diagnostics'][0]
 
 project = w_o.Project()
 project.country = country
+project.name = 'project_test' # this name will be used as a directory to store all the output files
 
 # Note that it takes about one hour to run all of the possible model structures,
 # so perhaps don't do that - and longer if running multiple scenarios

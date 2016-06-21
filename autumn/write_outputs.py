@@ -54,12 +54,13 @@ class Project():
         if not os.path.isdir(out_dir_project):
             os.makedirs(out_dir_project)
 
-        # scenario_name = {None: 'baseline'}
-        # for i in range(10)[1:-1]:
-        #     scenario_name[i] = 'scenario_' + str(i)
+        scenario_name = {None: 'baseline'}
+        for i in range(10)[1:-1]:
+            scenario_name[i] = 'scenario_' + str(i)
 
         outputs = self.output_dict[self.scenarios[0]].keys()
-        for output in outputs:
+
+        for output in outputs: # write a new file
             path = os.path.join(out_dir_project, output)
             path += ".xlsx"
 
@@ -67,7 +68,22 @@ class Project():
             sheet = wb.active
             sheet.title = 'model_outputs'
 
-            sheet['A1'] = 'year'
+            sheet.cell(row=1, column=1).value = 'year'
+            years = self.output_dict[self.scenarios[0]][output].keys()
+            col = 1
+            for y in years:
+                col += 1
+                sheet.cell(row=1, column=col).value = y
+
+            r = 1
+            for sc in self.scenarios:
+                r += 1
+                sheet.cell(row=r, column=1).value = scenario_name[sc]
+                col = 1
+                for y in years:
+                    col += 1
+                    sheet.cell(row=r, column=col).value = self.output_dict[sc][output][y]
+
             wb.save(path)
 
 

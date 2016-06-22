@@ -939,7 +939,7 @@ class ConsolidatedModel(BaseModel):
         Calculate the number of persons starting treatment for IPT, which is linked to the number
         of patients starting treatment.
         This code structure echoes the code in set_variable_programmatic_flows
-        This code is UNFINISHED. Currently, the function ignores issues of strains, age-groups, etc.
+        This code is UNFINISHED. Currently, the function ignores issues of age-groups, etc.
         It is just the general code structure I have in mind.
         """
 
@@ -947,23 +947,27 @@ class ConsolidatedModel(BaseModel):
         # patient started on treatment for active disease.
         ratio_effectively_treated = 1.
 
-        for agegroup in self.agegroups:
-            for comorbidity in self.comorbidities:
-                for strain in self.strains:
-                    for organ in self.organ_status:
-                        if self.is_misassignment:
-                            for assigned_strain in self.strains:
+        # Currently only applying to patients with drug-susceptible TB,
+        # which is presumed to be all patients if the model is unstratified by strain
+        # and only '_ds' if the model is stratified.
+        for strain in self.strains:
+            if 'dr' not in strain:
+                for agegroup in self.agegroups:
+                    for comorbidity in self.comorbidities:
+                        for organ in self.organ_status:
+                            if self.is_misassignment:
+                                for assigned_strain in self.strains:
+                                    self.vars['ipt'] = \
+                                        self.compartments['detect' + organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup] * \
+                                        self.vars['program_rate_start_treatment' + organ] * \
+                                        self.vars['program_prop_ipt'] * \
+                                        ratio_effectively_treated
+                            else:
                                 self.vars['ipt'] = \
-                                    self.compartments['detect' + organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup] * \
+                                    self.compartments['detect' + organ + strain + comorbidity + agegroup] * \
                                     self.vars['program_rate_start_treatment' + organ] * \
                                     self.vars['program_prop_ipt'] * \
                                     ratio_effectively_treated
-                        else:
-                            self.vars['ipt'] = \
-                                self.compartments['detect' + organ + strain + comorbidity + agegroup] * \
-                                self.vars['program_rate_start_treatment' + organ] * \
-                                self.vars['program_prop_ipt'] * \
-                                ratio_effectively_treated
 
     ##################################################################
     # Methods that calculate the flows of all the compartments

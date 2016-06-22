@@ -6,7 +6,7 @@ import datetime
 import autumn.model
 
 from autumn.spreadsheet import read_and_process_data, read_input_data_xls
-import autumn.economics
+import economics
 
 # Start timer
 start_realtime = datetime.datetime.now()
@@ -157,12 +157,14 @@ else:
             for j, start_time in enumerate(['start_', 'recent_']):
 
 
-                autumn.economics.cost_scaleup_fns(model,
+                economics.cost_scaleup_fns(model,
                                                   classified_scaleups[classification],
                                                   start_time + 'time',
                                                   'current_time',
                                                   classification,
                                                   country)
+
+
 
 
 

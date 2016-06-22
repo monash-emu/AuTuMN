@@ -120,7 +120,7 @@ for scenario in data['attributes']['scenarios_to_run'] + [None]:
                                                                       classification,
                                                                       country,
                                                                       scenario=scenario,
-                                                                      figure_number=i + j*4 + 2)
+                                                                      figure_number= i + j*4 + 2)
                     if classification == 'program_prop':
                         autumn.plotting.plot_scaleup_fns(model,
                                                          classified_scaleups[classification],
@@ -129,7 +129,7 @@ for scenario in data['attributes']['scenarios_to_run'] + [None]:
                                                          'scenario_end_time',
                                                          classification,
                                                          country,
-                                                         figure_number=i + j*4 + 10)
+                                                         figure_number= i + j*4 + 10)
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)

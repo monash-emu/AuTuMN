@@ -49,7 +49,7 @@ def adjust_country_name(country_name):
     return adjusted_country_name
 
 
-def calculate_proportion(data, indices, percent):
+def calculate_proportion_list(data, indices, percent):
 
     """
     Calculate the proportions of patients within subgroups
@@ -93,6 +93,72 @@ def calculate_proportion(data, indices, percent):
                 proportions['prop_' + indices[j]] += [float('nan')]
 
     return proportions
+
+
+def calculate_proportion_dict(data, indices):
+
+    # Create a list of the years that are common to all indices within data
+    lists_of_years = []
+    for i in range(len(indices)):
+        lists_of_years += [data[indices[i]].keys()]
+    common_years = find_common_elements_multiple_lists(lists_of_years)
+
+    # Calculate the denominator
+    denominator = {}
+    for i in common_years:
+        for j in indices:
+            if j == indices[0]:
+                denominator[i] = data[j][i]
+            else:
+                denominator[i] += data[j][i]
+
+    # Calculate the prop
+    proportions = {}
+    for j in indices:
+        proportions['prop_' + j] = {}
+        for i in common_years:
+            proportions['prop_' + j][i] = \
+                data[j][i] / denominator[i]
+
+    return proportions
+
+
+def find_common_elements(list_1, list_2):
+
+    """
+    Simple function to find the intersection of two lists
+
+    Args:
+        list_1 and list_2: The two lists
+
+    Returns:
+        intersection: The common elements of the two lists
+    """
+
+    intersection = []
+    for i in list_1:
+        if i in list_2:
+            intersection += [i]
+    return intersection
+
+
+def find_common_elements_multiple_lists(list_of_lists):
+
+    """
+    Simple function to find the common elements of any number of lists
+
+    Args:
+        list_of_lists: A list whose elements are all the lists we want to find the
+            intersection of.
+
+    Returns:
+        intersection: Common elements of all lists.
+    """
+
+    intersection = list_of_lists[0]
+    for i in range(1, len(list_of_lists)):
+        intersection = find_common_elements(intersection, list_of_lists[i])
+    return intersection
 
 
 def remove_nans(program):
@@ -423,7 +489,7 @@ class GlobalTbReportReader:
         return self.data
 
 
-class NotificationsReader(GlobalTbReportReader):
+class NotificationsReader():
 
     def __init__(self, country_to_read):
         self.data = {}
@@ -437,6 +503,36 @@ class NotificationsReader(GlobalTbReportReader):
         self.start_row = 1
         self.indices = []
         self.country_to_read = country_to_read
+
+    def parse_col(self, col):
+
+        col = replace_blanks(col, nan, '')
+
+        # If it's the country column (the first one)
+        if col[0] == u'country':
+
+            # Find the indices for the country in question
+            for i in range(len(col)):
+                if col[i] == self.country_to_read:
+                    self.indices += [i]
+
+        elif u'iso' in col[0] or u'g_who' in col[0]:
+            pass
+
+        elif col[0] == u'year':
+            self.year_indices = {}
+            for i in self.indices:
+                self.year_indices[int(col[i])] = i
+
+        # All other columns
+        else:
+            self.data[str(col[0])] = {}
+            for year in self.year_indices:
+                if not numpy.isnan(col[self.year_indices[year]]):
+                    self.data[col[0]][year] = col[self.year_indices[year]]
+
+    def get_data(self):
+        return self.data
 
 
 class TreatmentOutcomesReader(GlobalTbReportReader):
@@ -626,8 +722,9 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
 
     # Calculate proportions that are smear-positive, smear-negative or extra-pulmonary
     # and add them to the data object's notification dictionary
-    organs = [u'new_sp', u'new_sn', u'new_ep']
-    data['notifications'].update(calculate_proportion(data['notifications'], organs, False))
+
+    data['notifications'].update(calculate_proportion_dict(data['notifications'],
+                                                           ['new_sp', 'new_sn', 'new_ep']))
 
     # Combine loaded data with data from spreadsheets for vaccination and case detection
     # Now with spreadsheet inputs over-riding GTB loaded data
@@ -647,7 +744,7 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
 
     # Calculate proportions of patients with each outcome for DS-TB
     treatment_outcomes = [u'new_sp_cmplt', u'new_sp_cur', u'new_sp_def', u'new_sp_died', u'new_sp_fail']
-    data['outcomes'].update(calculate_proportion(data['outcomes'], treatment_outcomes, True))
+    data['outcomes'].update(calculate_proportion_list(data['outcomes'], treatment_outcomes, True))
 
     # Calculate treatment success as cure plus completion
     data['outcomes'][u'prop_new_sp_success'] = []
@@ -676,15 +773,14 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
 
     # Populate smear-positive and smear-negative proportion dictionaries to time-variant dictionary
     if data['time_variants']['epi_prop_smearpos'][u'load_data'] == u'yes':
-        for i in range(len(data['notifications'][u'prop_new_sp'])):
-            if int(data['notifications']['year'][i]) not in data['time_variants']['epi_prop_smearpos']:
-                data['time_variants']['epi_prop_smearpos'][(int(data['notifications']['year'][i]))] = \
-                    data['notifications'][u'prop_new_sp'][i]
-    if data['time_variants']['epi_prop_smearneg'][u'load_data'] == u'yes':
-        for i in range(len(data['notifications'][u'prop_new_sn'])):
-            if int(data['notifications']['year'][i]) not in data['time_variants']['epi_prop_smearneg']:
-                data['time_variants']['epi_prop_smearneg'][(int(data['notifications']['year'][i]))] = \
-                    data['notifications'][u'prop_new_sn'][i]
+        for i in data['notifications']['prop_new_sp']:
+            if i not in data['time_variants']['epi_prop_smearpos']:
+                data['time_variants']['epi_prop_smearpos'][i] = data['notifications']['prop_new_sp'][i]
+    if data['time_variants']['epi_prop_smearpos'][u'load_data'] == u'yes':
+        for i in data['notifications']['prop_new_sn']:
+            if i not in data['time_variants']['epi_prop_smearneg']:
+                data['time_variants']['epi_prop_smearneg'][i] = data['notifications']['prop_new_sn'][i]
+
 
     # Treatment outcomes
     # The aim is now to have data for success and death, as default can be derived from these
@@ -698,8 +794,8 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
     for i in range(len(mdr_xdr_treatment_outcomes)):
         mdr_treatment_outcomes += [u'mdr_' + mdr_xdr_treatment_outcomes[i]]
         xdr_treatment_outcomes += [u'xdr_' + mdr_xdr_treatment_outcomes[i]]
-    data['outcomes'].update(calculate_proportion(data['outcomes'], mdr_treatment_outcomes, True))
-    data['outcomes'].update(calculate_proportion(data['outcomes'], xdr_treatment_outcomes, True))
+    data['outcomes'].update(calculate_proportion_list(data['outcomes'], mdr_treatment_outcomes, True))
+    data['outcomes'].update(calculate_proportion_list(data['outcomes'], xdr_treatment_outcomes, True))
 
     # Duplicate DS-TB outcomes for single strain models
     for outcome in [u'_success', u'_death']:
@@ -745,7 +841,7 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
     # Convert list formats to dictionaries
     # This should be done above in the data readers, but as subsequent code depends on the lists,
     # I don't want to kill the lists yet. However, we now have consistent
-    for data_item in ['tb', 'notifications', 'outcomes']:
+    for data_item in ['tb', 'outcomes']:
         data[data_item + '_dict'] = convert_dictionary_of_lists_to_dictionary_of_dictionaries(data[data_item])
 
     return data

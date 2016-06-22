@@ -122,9 +122,6 @@ else:
         scenario=None,
         figure_number=1)
 
-
-
-
     # if n_strains >= 2:
     #     autumn.plotting.plot_outputs(
     #         model, ["incidence_ds", "incidence_mdr", "mortality_ds", "mortality_mdr", "prevalence_ds", "prevalence_mdr",

@@ -606,12 +606,12 @@ def plot_outputs_against_gtb(model,
     # Overall title
     fig.suptitle(country + ' model outputs', fontsize=12)
 
-    for i in range(len(model.data['notifications'][u'year'])):
-        if model.data['notifications'][u'year'][i] > start_time:
-            notification_start_index = i
-            break
-    notification_year_data = model.data['notifications'][u'year'][notification_start_index:]
-    notification_data = model.data['notifications'][u'c_newinc'][notification_start_index:]
+    # Truncate notification data to years of interest
+    notification_data = {}
+    for i in model.data['notifications']['c_newinc']:
+        if i > start_time:
+            notification_data[i] = \
+                model.data['notifications']['c_newinc'][i]
 
     for i, outcome in enumerate(labels):
 
@@ -633,7 +633,7 @@ def plot_outputs_against_gtb(model,
             # Notifications are just plotted against raw reported notifications,
             # as there are no confidence intervals around these values.
                 if outcome == 'notifications':
-                    ax.plot(notification_year_data, notification_data,
+                    ax.plot(notification_data.keys(), notification_data.values(),
                             color=colour[i], linewidth=0.5)
                     ax.set_ylim((0., max(notification_data)))
                 else:

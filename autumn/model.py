@@ -939,35 +939,36 @@ class ConsolidatedModel(BaseModel):
         Calculate the number of persons starting treatment for IPT, which is linked to the number
         of patients starting treatment.
         This code structure echoes the code in set_variable_programmatic_flows
-        This code is UNFINISHED. Currently, the function ignores issues of age-groups, etc.
-        It is just the general code structure I have in mind.
         """
 
         # This parameter is the number of persons effectively treated with IPT for each
         # patient started on treatment for active disease.
-        ratio_effectively_treated = 1.
-
-        # Currently only applying to patients with drug-susceptible TB,
-        # which is presumed to be all patients if the model is unstratified by strain
-        # and only '_ds' if the model is stratified.
+        prevented_cases_per_patient_starting_treatment = self.vars['program_prop_ipt'] \
+                                                         * self.data['parameters'][u'demo_household_size'] \
+                                                         * self.data['parameters'][u'tb_prop_contacts_infected'] \
+                                                         * self.data['parameters'][u'tb_prop_ltbi_test_sensitivity'] \
+                                                         * self.data['parameters'][u'tb_prop_ipt_effectiveness']
+        self.vars['ipt_commencements'] = 0.
         for strain in self.strains:
-            if 'dr' not in strain:
-                for agegroup in self.agegroups:
-                    for comorbidity in self.comorbidities:
-                        for organ in self.organ_status:
+            for agegroup in self.agegroups:
+                for comorbidity in self.comorbidities:
+                    for organ in self.organ_status:
+                        # Currently only applying to patients with drug-susceptible TB,
+                        # which is presumed to be all patients if the model is unstratified by strain
+                        # and only '_ds' if the model is stratified.
+                        if 'dr' not in strain and organ == '_smearpos':
                             if self.is_misassignment:
                                 for assigned_strain in self.strains:
-                                    self.vars['treatment_commencements'] = \
-                                        self.compartments['detect' + organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup] * \
-                                        self.vars['program_rate_start_treatment' + organ] * \
-                                        self.vars['program_prop_ipt'] * \
-                                        ratio_effectively_treated
+                                    if 'dr' not in assigned_strain:
+                                        self.vars['ipt_commencements'] += \
+                                            self.compartments['detect' + organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup] * \
+                                            self.vars['program_rate_start_treatment' + organ] * \
+                                            prevented_cases_per_patient_starting_treatment
                             else:
-                                self.vars['treatment_commencements'] = \
+                                self.vars['ipt_commencements'] += \
                                     self.compartments['detect' + organ + strain + comorbidity + agegroup] * \
                                     self.vars['program_rate_start_treatment' + organ] * \
-                                    self.vars['program_prop_ipt'] * \
-                                    ratio_effectively_treated
+                                    prevented_cases_per_patient_starting_treatment
 
     ##################################################################
     # Methods that calculate the flows of all the compartments
@@ -1310,7 +1311,6 @@ class ConsolidatedModel(BaseModel):
         Sets a flow from the early latent compartment to the partially immune susceptible compartment
         that is determined by report_numbers_starting_treatment above and is not linked to the
         'from_label' compartment.
-        This UNFINISHED - we need to make adjustments for strain and age group still
         """
 
         for agegroup in self.agegroups:
@@ -1318,7 +1318,7 @@ class ConsolidatedModel(BaseModel):
                 for strain in self.strains:
                     self.set_linked_transfer_rate_flow('latent_early' + strain + comorbidity + agegroup,
                                                        'susceptible_vac' + strain + comorbidity + agegroup,
-                                                       'treatment_commencements')
+                                                       'ipt_commencements')
 
     ##################################################################
     # Methods that calculate the output vars and diagnostic properties

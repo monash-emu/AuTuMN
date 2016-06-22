@@ -6,7 +6,7 @@ import datetime
 import autumn.model
 import autumn.plotting
 from autumn.spreadsheet import read_and_process_data, read_input_data_xls
-import autumn.economics
+
 
 # Start timer
 start_realtime = datetime.datetime.now()

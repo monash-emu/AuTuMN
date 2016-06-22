@@ -957,13 +957,13 @@ class ConsolidatedModel(BaseModel):
                         for organ in self.organ_status:
                             if self.is_misassignment:
                                 for assigned_strain in self.strains:
-                                    self.vars['ipt'] = \
+                                    self.vars['treatment_commencements'] = \
                                         self.compartments['detect' + organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup] * \
                                         self.vars['program_rate_start_treatment' + organ] * \
                                         self.vars['program_prop_ipt'] * \
                                         ratio_effectively_treated
                             else:
-                                self.vars['ipt'] = \
+                                self.vars['treatment_commencements'] = \
                                     self.compartments['detect' + organ + strain + comorbidity + agegroup] * \
                                     self.vars['program_rate_start_treatment' + organ] * \
                                     self.vars['program_prop_ipt'] * \
@@ -1318,7 +1318,7 @@ class ConsolidatedModel(BaseModel):
                 for strain in self.strains:
                     self.set_linked_transfer_rate_flow('latent_early' + strain + comorbidity + agegroup,
                                                        'susceptible_vac' + strain + comorbidity + agegroup,
-                                                       'ipt')
+                                                       'treatment_commencements')
 
     ##################################################################
     # Methods that calculate the output vars and diagnostic properties

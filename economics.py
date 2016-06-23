@@ -13,6 +13,20 @@ Module for estimating cost of a program
 
 """
 
+"""
+TO DO LIST
+1. Funding in cost-curve to be time-variant. This requires 2
+2. Funding value for each year. This will be challenging to get data for
+3. Cost - coverage curve for Method 2 does not work
+4. Get number of children directly from model
+5. Use plotting.py to plot all results. At the moment, economics.py has its own plotting function
+6. Move the initial conditions to a Excel spreadsheet.
+7. Think about discounting. At the moment, it is not need as the model only runs until 2015.
+If we consider future cost projections, then discounting is needed. Formula for discounting:
+Present value = cost / (1+ discount rate)^t, where t is number of years into the future
+http://www.crest.uts.edu.au/pdfs/FactSheet_Discounting.pdf
+"""
+
 ############### INITIAL CONDITIONS##################
 
 params_default = {

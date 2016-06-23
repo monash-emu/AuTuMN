@@ -95,7 +95,12 @@ def calculate_proportion_list(data, indices, percent):
     return proportions
 
 
-def calculate_proportion_dict(data, indices):
+def calculate_proportion_dict(data, indices, percent=False):
+
+    if percent:
+        multiplier = 1E2
+    else:
+        multiplier = 1.
 
     # Create a list of the years that are common to all indices within data
     lists_of_years = []
@@ -117,8 +122,10 @@ def calculate_proportion_dict(data, indices):
     for j in indices:
         proportions['prop_' + j] = {}
         for i in common_years:
-            proportions['prop_' + j][i] = \
-                data[j][i] / denominator[i]
+            if denominator[i] > 0.:
+                proportions['prop_' + j][i] = \
+                    data[j][i] / denominator[i] \
+                    * multiplier
 
     return proportions
 
@@ -535,7 +542,7 @@ class NotificationsReader():
         return self.data
 
 
-class TreatmentOutcomesReader(GlobalTbReportReader):
+class TreatmentOutcomesReader(NotificationsReader):
 
     def __init__(self, country_to_read):
         self.data = {}
@@ -723,8 +730,9 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
     # Calculate proportions that are smear-positive, smear-negative or extra-pulmonary
     # and add them to the data object's notification dictionary
 
-    data['notifications'].update(calculate_proportion_dict(data['notifications'],
-                                                           ['new_sp', 'new_sn', 'new_ep']))
+    data['notifications'].update(
+        calculate_proportion_dict(data['notifications'],
+                                  ['new_sp', 'new_sn', 'new_ep']))
 
     # Combine loaded data with data from spreadsheets for vaccination and case detection
     # Now with spreadsheet inputs over-riding GTB loaded data
@@ -743,26 +751,34 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
                     = data['tb']['c_cdr'][i]
 
     # Calculate proportions of patients with each outcome for DS-TB
-    treatment_outcomes = [u'new_sp_cmplt', u'new_sp_cur', u'new_sp_def', u'new_sp_died', u'new_sp_fail']
-    data['outcomes'].update(calculate_proportion_list(data['outcomes'], treatment_outcomes, True))
+    data['outcomes'].update(
+        calculate_proportion_dict(
+            data['outcomes'],
+            ['new_sp_cmplt', 'new_sp_cur', 'new_sp_def', 'new_sp_died', 'new_sp_fail'],
+            percent=True))
 
     # Calculate treatment success as cure plus completion
-    data['outcomes'][u'prop_new_sp_success'] = []
-    for i in range(len(data['outcomes'][u'prop_new_sp_cmplt'])):
-        data['outcomes'][u'prop_new_sp_success'] \
-            += [data['outcomes'][u'prop_new_sp_cmplt'][i] + data['outcomes'][u'prop_new_sp_cur'][i]]
+    data['outcomes']['prop_new_sp_success'] = {}
+    for i in data['outcomes']['prop_new_sp_cmplt']:
+        data['outcomes']['prop_new_sp_success'][i] \
+            = data['outcomes']['prop_new_sp_cmplt'][i] + data['outcomes']['prop_new_sp_cur'][i]
 
     # Add the treatment success and death data to the program dictionary
     if data['time_variants']['program_prop_treatment_success'][u'load_data'] == 'yes':
-        for i in range(len(data['outcomes'][u'prop_new_sp_success'])):
-            if int(data['outcomes']['year'][i]) not in data['time_variants']['program_prop_treatment_success']:
-                data['time_variants']['program_prop_treatment_success'][int(data['outcomes']['year'][i])] \
-                    = data['outcomes'][u'prop_new_sp_success'][i]
+        for i in data['outcomes']['prop_new_sp_success']:
+            if i not in data['time_variants']['program_prop_treatment_success']:
+                data['time_variants'][u'program_prop_treatment_success'][i] \
+                    = data['outcomes']['prop_new_sp_success'][i]
     if data['time_variants']['program_prop_treatment_death'][u'load_data'] == 'yes':
-        for i in range(len(data['outcomes'][u'prop_new_sp_died'])):
-            if int(data['outcomes']['year'][i]) not in data['time_variants']['program_prop_treatment_death']:
-                data['time_variants']['program_prop_treatment_death'][int(data['outcomes']['year'][i])] \
-                    = data['outcomes'][u'prop_new_sp_died'][i]
+        for i in data['outcomes']['prop_new_sp_died']:
+            if i not in data['time_variants']['program_prop_treatment_death']:
+                data['time_variants'][u'program_prop_treatment_death'][i] \
+                    = data['outcomes']['prop_new_sp_died'][i]
+
+    # Duplicate DS-TB outcomes for single strain models (possibly should be moved to model.py)
+    for outcome in ['_success', '_death']:
+        data['time_variants']['program_prop_treatment' + outcome + '_ds'] \
+            = copy.copy(data['time_variants']['program_prop_treatment' + outcome])
 
     # Populate program dictionaries from epi ones
     for demo_parameter in ['life_expectancy', 'rate_birth']:
@@ -785,45 +801,26 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
     # Treatment outcomes
     # The aim is now to have data for success and death, as default can be derived from these
     # in the model module.
-
     # Calculate proportions of each outcome for MDR and XDR-TB
     # Outcomes for MDR and XDR in the GTB data
-    mdr_xdr_treatment_outcomes = [u'succ', u'fail', u'died', u'lost']
-    mdr_treatment_outcomes = []
-    xdr_treatment_outcomes = []
-    for i in range(len(mdr_xdr_treatment_outcomes)):
-        mdr_treatment_outcomes += [u'mdr_' + mdr_xdr_treatment_outcomes[i]]
-        xdr_treatment_outcomes += [u'xdr_' + mdr_xdr_treatment_outcomes[i]]
-    data['outcomes'].update(calculate_proportion_list(data['outcomes'], mdr_treatment_outcomes, True))
-    data['outcomes'].update(calculate_proportion_list(data['outcomes'], xdr_treatment_outcomes, True))
-
-    # Duplicate DS-TB outcomes for single strain models
-    for outcome in [u'_success', u'_death']:
-        data['time_variants'][u'program_prop_treatment' + outcome + '_ds'] \
-            = copy.copy(data['time_variants'][u'program_prop_treatment' + outcome])
+    for strain in ['mdr', 'xdr']:
+        data['outcomes'].update(
+            calculate_proportion_dict(data['outcomes'],
+                                      [strain + '_succ', strain + '_fail', strain + '_died', strain + '_lost'],
+                                      percent=True))
 
     # Populate MDR and XDR data from outcomes dictionary into program dictionary
-    for strain in [u'_mdr', u'_xdr']:
-        for i in range(len(data['outcomes'][u'prop' + strain + u'_succ'])):
-            # If there's a GTB value
-            if not numpy.isnan(data['outcomes'][u'prop' + strain + u'_succ'][i]):
-                # If there isn't already a value from the inputs spreadsheet
-                if data['outcomes'][u'year'][i] \
-                        not in data['time_variants'][u'program_prop_treatment_success' + strain]:
-                    # Populate with value from report
-                    data['time_variants'][u'program_prop_treatment_success' + strain][data['outcomes'][u'year'][i]] \
-                        = data['outcomes'][u'prop' + strain + u'_succ'][i]
-                # If there isn't already a value from the inputs spreadsheet
-                if data['outcomes'][u'year'][i] \
-                        not in data['time_variants'][u'program_prop_treatment_death' + strain]:
-                    # Populate with value from report
-                    data['time_variants'][u'program_prop_treatment_death' + strain][data['outcomes'][u'year'][i]] \
-                        = data['outcomes'][u'prop' + strain + u'_died'][i]
+    for strain in ['_mdr', '_xdr']:
+        if data['time_variants']['program_prop_treatment_success' + strain][u'load_data'] == 'yes':
+            for i in data['outcomes']['prop' + strain + '_succ']:
+                if i not in data['time_variants']['program_prop_treatment_success' + strain]:
+                    data['time_variants']['program_prop_treatment_success' + strain][i] \
+                        = data['outcomes']['prop' + strain + '_succ'][i]
 
     # Probably temporary code to assign the same treatment outcomes to XDR-TB as for inappropriate
-    for outcome in [u'_success', u'_death']:
-        data['time_variants'][u'program_prop_treatment' + outcome + u'_inappropriate'] \
-            = copy.copy(data['time_variants'][u'program_prop_treatment' + outcome + u'_xdr'])
+    for outcome in ['_success', '_death']:
+        data['time_variants']['program_prop_treatment' + outcome + '_inappropriate'] \
+            = copy.copy(data['time_variants']['program_prop_treatment' + outcome + '_xdr'])
 
     # Final rounds of tidying programmatic data
     for program in data['time_variants']:
@@ -841,8 +838,7 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
     # Convert list formats to dictionaries
     # This should be done above in the data readers, but as subsequent code depends on the lists,
     # I don't want to kill the lists yet. However, we now have consistent
-    for data_item in ['tb', 'outcomes']:
-        data[data_item + '_dict'] = convert_dictionary_of_lists_to_dictionary_of_dictionaries(data[data_item])
+    data['tb_dict'] = convert_dictionary_of_lists_to_dictionary_of_dictionaries(data['tb'])
 
     return data
 

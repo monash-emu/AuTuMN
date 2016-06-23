@@ -168,14 +168,15 @@ def cost_scaleup_fns(model,
 
         if function == str('program_prop_vaccination'):
             scaleup_param_vals = map(model.scaleup_fns[function], x_vals)
-            print(scaleup_param_vals[int(year_pos)], x_vals[int(year_pos)])
+            funding = map(model.scaleup_fns['program_cost_vaccination'], x_vals)
+            #print(scaleup_param_vals[int(year_pos)], x_vals[int(year_pos)])
             #print(len(x_vals))
             coverage = get_coverage_from_outcome_program_as_param(scaleup_param_vals)
             for coverage_range in coverage_values:
                 cost_uninflated = get_cost_from_coverage(coverage_range,
                                               params_default['saturation'],
                                               coverage,
-                                              params_default['funding'],
+                                              funding,
                                               params_default['scale_up_factor'],
                                               params_default['unitcost'],
                                               params_default['popsize'])
@@ -210,6 +211,14 @@ def cost_scaleup_fns(model,
             plt.show()
 
 
+            plt.figure(101)
+            plt.plot(x_vals, funding)
+            a = {}
+            a = model.scaleup_data['program_cost_vaccination']
+            plt.scatter(a.keys(), a.values())
+            plt.show()
+
+
             fig, ax1 = plt.subplots()
             ax1.plot(x_vals, cost_uninflated, 'b-', linewidth = 3, label = 'Un-inflated cost')
             ax1.plot(x_vals, cost_inflated, 'b--', linewidth = 3, label = 'Inflated cost')
@@ -218,7 +227,6 @@ def cost_scaleup_fns(model,
             ax1.set_ylabel('Yearly total BCG cost (USD)', color='b')
             for tl in ax1.get_yticklabels():
                 tl.set_color('b')
-
             ax2 = ax1.twinx()
             ax2.plot(x_vals, cpi_scaleup, 'r-', linewidth = 3, label = 'Consumer price index - actual data')
             ax2.plot(cpi.keys(), cpi.values(), 'ro', label = 'Consumer price index - fitted')

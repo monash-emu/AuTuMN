@@ -15,7 +15,7 @@ Module for estimating cost of a program
 
 """
 TO DO LIST
-1. Funding in cost-curve to be time-variant. This requires 2
+
 2. Funding value for each year. This will be challenging to get data for
 3. Cost - coverage curve for Method 2 does not work
 4. Get number of children directly from model
@@ -43,7 +43,7 @@ params_default = {
 start_coverage = 0.0001
 end_coverage = params_default["saturation"]
 delta_coverage = 0.001
-method = 1
+method = 2
 year_index = 1985 # To plot/use cost function of a particular year. 1995 is just an exmaple
 year_ref = 2015 # Reference year for inflation calculation
 
@@ -134,9 +134,11 @@ def get_coverage_from_outcome_program_as_param(outcome):
 def get_cost_from_coverage(coverage_range, saturation, coverage, funding, scale_up_factor, unitcost, popsize):
     if method in (1, 2):
         if method == 1: # For new programs which requires significant start-up cost. Unit cost unknown
+            # In this function, funding and coverage are time-variant. Coverage_range varies from a pre-define range every year
             cost_uninflated = funding / (((saturation - coverage_range) / (coverage_range * (saturation / coverage)))**((1 - scale_up_factor) / 2))
             return cost_uninflated
         elif method == 2: # For well-established programs of which start-up cost should be ignored. Unit cost known
+            # In this function, popsize and unit cost are time-variant. Unitcost can be constant if only has 1 data
             cost_uninflated = - unitcost * popsize * math.log(((2 * saturation) / (coverage_range + saturation)) - 1)
             return cost_uninflated
 
@@ -175,8 +177,8 @@ def cost_scaleup_fns(model,
             for coverage_range in coverage_values:
                 cost_uninflated = get_cost_from_coverage(coverage_range,
                                               params_default['saturation'],
-                                              coverage,
-                                              funding,
+                                              coverage, #Add [year_pos] to get cost-coverage curve at that year
+                                              funding, #Add [year_pos] to get cost-coverage curve at that year
                                               params_default['scale_up_factor'],
                                               params_default['unitcost'],
                                               params_default['popsize'])

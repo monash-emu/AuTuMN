@@ -43,7 +43,7 @@ params_default = {
 start_coverage = 0.0001
 end_coverage = params_default["saturation"]
 delta_coverage = 0.001
-method = 2
+method = 1
 year_index = 1985 # To plot/use cost function of a particular year. 1995 is just an exmaple
 year_ref = 2015 # Reference year for inflation calculation
 
@@ -82,6 +82,8 @@ data = read_and_process_data(True,
                              country)
 inflation_excel = data['time_variants'][u'inflation']
 cpi_excel = data['time_variants'][u'cpi']
+time_step = data['attributes']['time_step']
+print(time_step)
 
 
 #inft = map(inflation, years)
@@ -107,15 +109,7 @@ def make_coverage_steps(start_coverage, end_coverage, delta_coverage):
     return steps
 coverage_values = make_coverage_steps(start_coverage, end_coverage, delta_coverage)
 
-def make_year_steps(start_time, end_time, delta_time):
-    steps = []
-    step = start_time
-    while step <= end_time:
-        steps.append(step)
-        step += delta_time
-    return steps
-year_steps = make_year_steps(0, 121, 1)
-#print(year_steps[120])
+
 
 #######################################################
 
@@ -156,7 +150,13 @@ def cost_scaleup_fns(model,
         start_time = model.data['country_constants'][start_time_str]
 
     end_time = model.data['attributes'][end_time_str]
-    x_vals = numpy.linspace(start_time, end_time, end_time - start_time + 1)  # years
+    #x_vals = numpy.linspace(start_time, end_time, end_time - start_time + 1)  # years
+    x_vals = numpy.linspace(start_time, end_time, 14002)  # years
+    print(x_vals)
+    print(len(x_vals))
+
+
+    #print(year_steps[120])
 
     year_pos = year_index - start_time
     #print(year_index, year_pos)
@@ -173,6 +173,7 @@ def cost_scaleup_fns(model,
             funding = map(model.scaleup_fns['program_cost_vaccination'], x_vals)
             #print(scaleup_param_vals[int(year_pos)], x_vals[int(year_pos)])
             #print(len(x_vals))
+            popsize = model.compartment_soln['susceptible_fully']
             coverage = get_coverage_from_outcome_program_as_param(scaleup_param_vals)
             for coverage_range in coverage_values:
                 cost_uninflated = get_cost_from_coverage(coverage_range,
@@ -181,7 +182,7 @@ def cost_scaleup_fns(model,
                                               funding, #Add [year_pos] to get cost-coverage curve at that year
                                               params_default['scale_up_factor'],
                                               params_default['unitcost'],
-                                              params_default['popsize'])
+                                              popsize)
                 cost_inflated = cost_uninflated * cpi_excel[year_ref] / cpi_scaleup
 
             data_to_plot = {}
@@ -189,35 +190,41 @@ def cost_scaleup_fns(model,
 
 
 
-            plt.figure(111)
+            plt.figure('Coverage (program_prop_vaccination')
             plt.plot(x_vals, coverage)
             plt.scatter(data_to_plot.keys(), data_to_plot.values())
-            title = str(country) + ' ' + \
-                        plotting.replace_underscore_with_space(parameter_type) + \
-                        ' parameter' + ' from ' + plotting.replace_underscore_with_space(start_time_str)
-            plt.title(title)
+            #title = str(country) + ' ' + \
+            #            plotting.replace_underscore_with_space(parameter_type) + \
+            #            ' parameter' + ' from ' + plotting.replace_underscore_with_space(start_time_str)
+            plt.title('Coverage (program_prop_vaccination')
             plt.ylim([0, 1.1])
             plt.xlabel("Years")
             plt.ylabel('program_prop_vaccination')
             plt.show()
 
 
-            plt.figure(222)
+            plt.figure('Cost of BCG program (USD)')
             plt.plot(x_vals, cost_uninflated, x_vals, cost_inflated)
-            title = str(country) + ' ' + \
-                        plotting.replace_underscore_with_space(parameter_type) + \
-                        ' parameter' + ' from ' + plotting.replace_underscore_with_space(start_time_str)
-            plt.title(title)
+            #title = str(country) + ' ' + \
+            #            plotting.replace_underscore_with_space(parameter_type) + \
+            #            ' parameter' + ' from ' + plotting.replace_underscore_with_space(start_time_str)
+            plt.title('Cost of BCG program (USD')
             plt.xlabel('Years')
             plt.ylabel('$ Cost of program_vaccination')
             plt.show()
 
 
-            plt.figure(101)
+            plt.figure('BCG spending')
             plt.plot(x_vals, funding)
             a = {}
             a = model.scaleup_data['program_cost_vaccination']
             plt.scatter(a.keys(), a.values())
+            plt.title('BCG spending')
+            plt.show()
+
+            plt.figure('Population size')
+            plt.plot(x_vals, popsize)
+            plt.title('Population size')
             plt.show()
 
 

@@ -20,6 +20,7 @@ Import model inputs from Excel spreadsheet
 #  General functions for use by readers below
 
 def is_all_same_value(a_list, test_val):
+
     for val in a_list:
         if val != test_val:
             return False
@@ -27,10 +28,12 @@ def is_all_same_value(a_list, test_val):
 
 
 def replace_blanks(a_list, new_val, blank):
+
     return [new_val if val == blank else val for val in a_list]
 
 
 def parse_year_data(these_data, blank, endcolumn):
+
     these_data = replace_blanks(these_data, nan, blank)
     assumption_val = these_data[-1]
     year_vals = these_data[: endcolumn]
@@ -504,31 +507,8 @@ class GlobalTbReportReader:
     def get_data(self):
         return self.data
 
-    #
-    # def parse_col(self, col):
-    #
-    #     if self.key in ['notifications', 'laboratories', 'outcomes']:
-    #         col = replace_blanks(col, nan, '')
-    #
-    #     # If it's the country column (the first one)
-    #     if col[0] == u'country':
-    #
-    #         # Find the indices for the country in question
-    #         for i in range(len(col)):
-    #             if col[i] == self.country_to_read:
-    #                 self.indices += [i]
-    #
-    #     # All other columns
-    #     else:
-    #         self.data[col[0]] = []
-    #         for i in self.indices:
-    #             self.data[col[0]] += [col[i]]
-    #
-    # def get_data(self):
-    #     return self.data
 
-
-class NotificationsReader:
+class NotificationsReader(GlobalTbReportReader):
 
     def __init__(self, country_to_read):
         self.data = {}
@@ -543,38 +523,10 @@ class NotificationsReader:
         self.indices = []
         self.country_to_read = country_to_read
 
-    def parse_col(self, col):
-
-        col = replace_blanks(col, nan, '')
-
-        # If it's the country column (the first one)
-        if col[0] == u'country':
-
-            # Find the indices for the country in question
-            for i in range(len(col)):
-                if col[i] == self.country_to_read:
-                    self.indices += [i]
-
-        elif u'iso' in col[0] or u'g_who' in col[0]:
-            pass
-
-        elif col[0] == u'year':
-            self.year_indices = {}
-            for i in self.indices:
-                self.year_indices[int(col[i])] = i
-
-        # All other columns
-        else:
-            self.data[str(col[0])] = {}
-            for year in self.year_indices:
-                if not numpy.isnan(col[self.year_indices[year]]):
-                    self.data[col[0]][year] = col[self.year_indices[year]]
-
-    def get_data(self):
-        return self.data
 
 
-class TreatmentOutcomesReader(NotificationsReader):
+
+class TreatmentOutcomesReader(GlobalTbReportReader):
 
     def __init__(self, country_to_read):
         self.data = {}

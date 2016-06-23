@@ -519,6 +519,7 @@ def plot_populations(model, labels, values, left_xlimit, strain_or_organ, png=No
 
 
 def plot_fractions(model, labels, values, left_xlimit, strain_or_organ, png=None):
+
     right_xlimit_index, left_xlimit_index = truncate_data(model, left_xlimit)
     colours, patterns, compartment_full_names, markers\
         = make_related_line_styles(labels, strain_or_organ)
@@ -590,7 +591,6 @@ def plot_outputs_against_gtb(model,
                 plotting_data[i]['upper_limit'] = model.data['tb'][j]
             elif indices[i] in j:
                 plotting_data[i]['point_estimate'] = model.data['tb'][j]
-        plotting_data[i]['year'] = model.data['tb'][u'year']
 
     # Truncate data to what you want to look at (rather than going back to the dawn of time)
     right_xlimit_index, left_xlimit_index = truncate_data(model, start_time)
@@ -638,7 +638,7 @@ def plot_outputs_against_gtb(model,
                     ax.set_ylim((0., max(notification_data)))
                 else:
                     # Central point-estimate
-                    ax.plot(plotting_data[i]['year'], plotting_data[i]['point_estimate'],
+                    ax.plot(plotting_data[i]['point_estimate'].keys(), plotting_data[i]['point_estimate'].values(),
                             # label=labels[i],
                             color=colour[i], linewidth=0.5)
 
@@ -650,7 +650,7 @@ def plot_outputs_against_gtb(model,
                     ax.add_patch(patch)
 
                     # Make y-axis range extend downwards to zero
-                    ax.set_ylim((0., max(plotting_data[i]['upper_limit'])))
+                    ax.set_ylim((0., max(plotting_data[i]['upper_limit'].values())))
 
             # Set x-ticks
             xticks = find_reasonable_year_ticks(start_time, end_time)
@@ -702,11 +702,17 @@ def create_patch_from_dictionary(dict):
     """
 
     patch_array = numpy.zeros(shape=(len(dict['lower_limit']) * 2, 2))
-    for i in range(len(dict['lower_limit'])):
-        patch_array[i][0] = dict['year'][i]
-        patch_array[-(i + 1)][0] = dict['year'][i]
-        patch_array[i][1] = dict['lower_limit'][i]
-        patch_array[-(i + 1)][1] = dict['upper_limit'][i]
+    j = 0
+    for i in dict['lower_limit']:
+        # Years going forwards
+        patch_array[j][0] = i
+        # Years going backwards
+        patch_array[-(j + 1)][0] = i
+        # Lower limit data going forwards
+        patch_array[j][1] = dict['lower_limit'][i]
+        # Upper limit data going backwards
+        patch_array[-(j + 1)][1] = dict['upper_limit'][i]
+        j += 1
 
     return patch_array
 

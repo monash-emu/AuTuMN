@@ -473,10 +473,10 @@ class GlobalTbReportReader:
         self.indices = []
         self.country_to_read = country_to_read
 
+
     def parse_col(self, col):
 
-        if self.key in ['notifications', 'laboratories', 'outcomes']:
-            col = replace_blanks(col, nan, '')
+        col = replace_blanks(col, nan, '')
 
         # If it's the country column (the first one)
         if col[0] == u'country':
@@ -486,17 +486,49 @@ class GlobalTbReportReader:
                 if col[i] == self.country_to_read:
                     self.indices += [i]
 
+        elif u'iso' in col[0] or u'g_who' in col[0] or u'source' in col[0]:
+            pass
+
+        elif col[0] == u'year':
+            self.year_indices = {}
+            for i in self.indices:
+                self.year_indices[int(col[i])] = i
+
         # All other columns
         else:
-            self.data[col[0]] = []
-            for i in self.indices:
-                self.data[col[0]] += [col[i]]
+            self.data[str(col[0])] = {}
+            for year in self.year_indices:
+                if not numpy.isnan(col[self.year_indices[year]]):
+                    self.data[col[0]][year] = col[self.year_indices[year]]
 
     def get_data(self):
         return self.data
 
+    #
+    # def parse_col(self, col):
+    #
+    #     if self.key in ['notifications', 'laboratories', 'outcomes']:
+    #         col = replace_blanks(col, nan, '')
+    #
+    #     # If it's the country column (the first one)
+    #     if col[0] == u'country':
+    #
+    #         # Find the indices for the country in question
+    #         for i in range(len(col)):
+    #             if col[i] == self.country_to_read:
+    #                 self.indices += [i]
+    #
+    #     # All other columns
+    #     else:
+    #         self.data[col[0]] = []
+    #         for i in self.indices:
+    #             self.data[col[0]] += [col[i]]
+    #
+    # def get_data(self):
+    #     return self.data
 
-class NotificationsReader():
+
+class NotificationsReader:
 
     def __init__(self, country_to_read):
         self.data = {}
@@ -744,10 +776,10 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
 
     # As above, now for case detection
     if data['time_variants']['program_prop_detect'][u'load_data'] == 'yes':
-        for i in range(len(data['tb']['year'])):
+        for i in data['tb']['c_cdr']:
             # If not already loaded through the inputs spreadsheet
-            if data['tb']['year'][i] not in data['time_variants']['program_prop_detect']:
-                data['time_variants']['program_prop_detect'][int(data['tb']['year'][i])] \
+            if i not in data['time_variants'][u'program_prop_detect']:
+                data['time_variants'][u'program_prop_detect'][i] \
                     = data['tb']['c_cdr'][i]
 
     # Calculate proportions of patients with each outcome for DS-TB
@@ -834,11 +866,6 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
 
         # Remove dictionary keys for which values are nan
         data['time_variants'][program] = remove_nans(data['time_variants'][program])
-
-    # Convert list formats to dictionaries
-    # This should be done above in the data readers, but as subsequent code depends on the lists,
-    # I don't want to kill the lists yet. However, we now have consistent
-    data['tb_dict'] = convert_dictionary_of_lists_to_dictionary_of_dictionaries(data['tb'])
 
     return data
 

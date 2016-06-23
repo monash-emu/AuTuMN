@@ -145,6 +145,7 @@ else:
     classified_scaleups = {'program_prop': [],
                            'program_other': [],
                            'birth': [],
+                           'cost': [],
                            'non_program': []}
     for fn in model.scaleup_fns:
         if 'program_prop' in fn:
@@ -153,6 +154,8 @@ else:
             classified_scaleups['program_other'] += [fn]
         elif 'demo_rate_birth' in fn:
             classified_scaleups['birth'] += [fn]
+        elif 'cost' in fn:
+            classified_scaleups['cost'] += [fn]
         else:
             classified_scaleups['non_program'] += [fn]
 

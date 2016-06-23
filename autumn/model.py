@@ -460,8 +460,8 @@ class ConsolidatedModel(BaseModel):
             for strain in self.available_strains:
                 if strain not in self.strains and strain in time_variant and u'_dst' not in time_variant:
                     irrelevant_time_variants += [time_variant]
-            if u'cost' in time_variant:
-                irrelevant_time_variants += [time_variant]
+            # if u'cost' in time_variant:
+            #     irrelevant_time_variants += [time_variant]
             if len(self.strains) < 2 and ('line_dst' in time_variant or '_inappropriate' in time_variant):
                 irrelevant_time_variants += [time_variant]
             elif len(self.strains) == 2 and u'secondline_dst' in time_variant:

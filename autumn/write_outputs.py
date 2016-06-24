@@ -55,7 +55,7 @@ class Project():
             os.makedirs(out_dir_project)
 
         scenario_name = {None: 'baseline'}
-        for i in range(10)[1:-1]:
+        for i in range(20)[1:-1]:
             scenario_name[i] = 'scenario_' + str(i)
 
         outputs = self.output_dict[self.scenarios[0]].keys()
@@ -85,8 +85,6 @@ class Project():
                     sheet.cell(row=r, column=col).value = self.output_dict[sc][output][y]
 
             wb.save(path)
-
-
 
 if __name__ == "__main__":
 

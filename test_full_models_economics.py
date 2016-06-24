@@ -154,15 +154,13 @@ else:
     for i, classification in enumerate(classified_scaleups):
         if len(classified_scaleups[classification]) > 0:
             #print(classified_scaleups[classification])
-            for j, start_time in enumerate(['start_', 'recent_']):
-
 
                 economics.cost_scaleup_fns(model,
-                                                  classified_scaleups[classification],
-                                                  start_time + 'time',
-                                                  'current_time',
-                                                  classification,
-                                                  country)
+                                            classified_scaleups[classification],
+                                            'start_time',
+                                            'scenario_end_time',
+                                            classification,
+                                            country)
 
 
 

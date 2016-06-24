@@ -20,6 +20,7 @@ Import model inputs from Excel spreadsheet
 #  General functions for use by readers below
 
 def is_all_same_value(a_list, test_val):
+
     for val in a_list:
         if val != test_val:
             return False
@@ -27,10 +28,12 @@ def is_all_same_value(a_list, test_val):
 
 
 def replace_blanks(a_list, new_val, blank):
+
     return [new_val if val == blank else val for val in a_list]
 
 
 def parse_year_data(these_data, blank, endcolumn):
+
     these_data = replace_blanks(these_data, nan, blank)
     assumption_val = these_data[-1]
     year_vals = these_data[: endcolumn]
@@ -44,8 +47,8 @@ def parse_year_data(these_data, blank, endcolumn):
 def adjust_country_name(country_name):
 
     adjusted_country_name = country_name
-    if country_name == u'Philippines':
-        adjusted_country_name = country_name + u' (the)'
+    if country_name == 'Philippines':
+        adjusted_country_name = country_name + ' (the)'
     return adjusted_country_name
 
 
@@ -235,7 +238,7 @@ def convert_dictionary_of_lists_to_dictionary_of_dictionaries(lists_to_process):
     for list in lists_to_process:
         # If it's actually numeric data and not just a column that's of not much use
         # (not sure how to generalise this - clearly it should be generalised)
-        if u'source' not in list and u'year' not in list and u'iso' not in list and u'who' not in list:
+        if 'source' not in list and 'year' not in list and 'iso' not in list and 'who' not in list:
             dict[list] = {}
             for i in range(len(lists_to_process['year'])):
                 dict[list][int(lists_to_process['year'][i])] = lists_to_process[list][i]
@@ -267,12 +270,14 @@ class BcgCoverageSheetReader:
         self.horizontal = True  # Orientation of spreadsheet
         self.country_to_read = country_to_read  # Country being read
         self.start_col = 4
-        self.first_cell = u'Region'
+        self.first_cell = 'Region'
 
     def parse_row(self, row):
 
         if row[0] == self.first_cell:
             self.parlist = parse_year_data(row, '', len(row))
+            for i in range(len(self.parlist)):
+                self.parlist[i] = str(self.parlist[i])
         elif row[self.column_for_keys] == adjust_country_name(self.country_to_read)\
                 or self.key == 'time_variants':
             for i in range(self.start_col, len(row)):
@@ -304,7 +309,7 @@ class BirthRateReader:
 
     def parse_row(self, row):
 
-        if row[0] == u'Series Name':
+        if row[0] == 'Series Name':
             for i in range(len(row)):
                 self.parlist += \
                     [row[i][:4]]
@@ -333,7 +338,7 @@ class LifeExpectancyReader:
 
     def parse_row(self, row):
 
-        if row[0] == u'Country Name':
+        if row[0] == 'Country Name':
             self.parlist += row
         elif row[self.column_for_keys] == self.country_to_read:
             for i in range(4, len(row)):
@@ -360,7 +365,7 @@ class FixedParametersReader:
 
     def parse_row(self, row):
 
-        self.data[row[0]] = row[1]
+        self.data[str(row[0])] = row[1]
 
     def get_data(self):
         return self.data
@@ -397,33 +402,33 @@ class ControlPanelReader(FixedParametersReader):
     def parse_row(self, row):
 
         # For the calendar year times
-        if u'time' in row[0] or u'smoothness' in row[0]:
-            self.data[row[0]] = float(row[1])
+        if 'time' in row[0] or 'smoothness' in row[0]:
+            self.data[str(row[0])] = float(row[1])
 
-        elif u'fitting' in row[0]:
-            self.data[row[0]] = int(row[1])
+        elif 'fitting' in row[0]:
+            self.data[str(row[0])] = int(row[1])
 
         # For the integration
-        elif u'integration' in row[0]:
-            self.data[row[0]] = row[1]
+        elif 'integration' in row[0]:
+            self.data[str(row[0])] = str(row[1])
 
         # For the model stratifications
-        elif u'n_' in row[0] or u'age_breakpoints' in row[0] or u'scenarios' in row[0]:
-            self.data[row[0]] = []
+        elif 'n_' in row[0] or 'age_breakpoints' in row[0] or 'scenarios' in row[0]:
+            self.data[str(row[0])] = []
             for i in range(1, len(row)):
                 if not row[i] == '':
-                    self.data[row[0]] += [int(row[i])]
+                    self.data[str(row[0])] += [int(row[i])]
 
         # For optional elaborations
-        elif u'is_' in row[0]:
-            self.data[row[0]] = []
+        elif 'is_' in row[0]:
+            self.data[str(row[0])] = []
             for i in range(1, len(row)):
                 if not row[i] == '':
-                    self.data[row[0]] += [bool(row[i])]
+                    self.data[str(row[0])] += [bool(row[i])]
 
         # For the country to be analysed
-        elif row[0] == u'country':
-            self.data[row[0]] = row[1]
+        elif row[0] == 'country':
+            self.data[str(row[0])] = str(row[1])
 
 
 class ProgramReader:
@@ -438,7 +443,7 @@ class ProgramReader:
         self.horizontal = True
         self.country_to_read = country_to_read
         self.start_col = 1
-        self.first_cell = u'program'
+        self.first_cell = 'program'
 
     def parse_row(self, row):
 
@@ -473,60 +478,23 @@ class GlobalTbReportReader:
         self.indices = []
         self.country_to_read = country_to_read
 
-    def parse_col(self, col):
-
-        if self.key in ['notifications', 'laboratories', 'outcomes']:
-            col = replace_blanks(col, nan, '')
-
-        # If it's the country column (the first one)
-        if col[0] == u'country':
-
-            # Find the indices for the country in question
-            for i in range(len(col)):
-                if col[i] == self.country_to_read:
-                    self.indices += [i]
-
-        # All other columns
-        else:
-            self.data[col[0]] = []
-            for i in self.indices:
-                self.data[col[0]] += [col[i]]
-
-    def get_data(self):
-        return self.data
-
-
-class NotificationsReader():
-
-    def __init__(self, country_to_read):
-        self.data = {}
-        self.tab_name = 'TB_notifications_2016-04-20'
-        self.key = 'notifications'
-        self.parlist = []
-        self.filename = 'xls/notifications_data.xlsx'
-        self.start_row = 1
-        self.horizontal = False
-        self.start_column = 0
-        self.start_row = 1
-        self.indices = []
-        self.country_to_read = country_to_read
 
     def parse_col(self, col):
 
         col = replace_blanks(col, nan, '')
 
         # If it's the country column (the first one)
-        if col[0] == u'country':
+        if col[0] == 'country':
 
             # Find the indices for the country in question
             for i in range(len(col)):
                 if col[i] == self.country_to_read:
                     self.indices += [i]
 
-        elif u'iso' in col[0] or u'g_who' in col[0]:
+        elif 'iso' in col[0] or 'g_who' in col[0] or 'source' in col[0]:
             pass
 
-        elif col[0] == u'year':
+        elif col[0] == 'year':
             self.year_indices = {}
             for i in self.indices:
                 self.year_indices[int(col[i])] = i
@@ -542,7 +510,25 @@ class NotificationsReader():
         return self.data
 
 
-class TreatmentOutcomesReader(NotificationsReader):
+class NotificationsReader(GlobalTbReportReader):
+
+    def __init__(self, country_to_read):
+        self.data = {}
+        self.tab_name = 'TB_notifications_2016-04-20'
+        self.key = 'notifications'
+        self.parlist = []
+        self.filename = 'xls/notifications_data.xlsx'
+        self.start_row = 1
+        self.horizontal = False
+        self.start_column = 0
+        self.start_row = 1
+        self.indices = []
+        self.country_to_read = country_to_read
+
+
+
+
+class TreatmentOutcomesReader(GlobalTbReportReader):
 
     def __init__(self, country_to_read):
         self.data = {}
@@ -575,7 +561,7 @@ class MdrReportReader:
     def parse_row(self, row):
 
         # Create the list to turn in to dictionary keys later
-        if row[0] == u'country':
+        if row[0] == 'country':
             self.dictionary_keys += row
 
         # Populate when country to read is encountered
@@ -736,18 +722,18 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
 
     # Combine loaded data with data from spreadsheets for vaccination and case detection
     # Now with spreadsheet inputs over-riding GTB loaded data
-    if data['time_variants']['program_prop_vaccination'][u'load_data'] == 'yes':
+    if data['time_variants']['program_prop_vaccination']['load_data'] == 'yes':
         for i in data['bcg']:
             # If not already loaded through the inputs spreadsheet
             if i not in data['time_variants']['program_prop_vaccination']:
                 data['time_variants']['program_prop_vaccination'][i] = data['bcg'][i]
 
     # As above, now for case detection
-    if data['time_variants']['program_prop_detect'][u'load_data'] == 'yes':
-        for i in range(len(data['tb']['year'])):
+    if data['time_variants']['program_prop_detect']['load_data'] == 'yes':
+        for i in data['tb']['c_cdr']:
             # If not already loaded through the inputs spreadsheet
-            if data['tb']['year'][i] not in data['time_variants']['program_prop_detect']:
-                data['time_variants']['program_prop_detect'][int(data['tb']['year'][i])] \
+            if i not in data['time_variants']['program_prop_detect']:
+                data['time_variants']['program_prop_detect'][i] \
                     = data['tb']['c_cdr'][i]
 
     # Calculate proportions of patients with each outcome for DS-TB
@@ -764,15 +750,15 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
             = data['outcomes']['prop_new_sp_cmplt'][i] + data['outcomes']['prop_new_sp_cur'][i]
 
     # Add the treatment success and death data to the program dictionary
-    if data['time_variants']['program_prop_treatment_success'][u'load_data'] == 'yes':
+    if data['time_variants']['program_prop_treatment_success']['load_data'] == 'yes':
         for i in data['outcomes']['prop_new_sp_success']:
             if i not in data['time_variants']['program_prop_treatment_success']:
-                data['time_variants'][u'program_prop_treatment_success'][i] \
+                data['time_variants']['program_prop_treatment_success'][i] \
                     = data['outcomes']['prop_new_sp_success'][i]
-    if data['time_variants']['program_prop_treatment_death'][u'load_data'] == 'yes':
+    if data['time_variants']['program_prop_treatment_death']['load_data'] == 'yes':
         for i in data['outcomes']['prop_new_sp_died']:
             if i not in data['time_variants']['program_prop_treatment_death']:
-                data['time_variants'][u'program_prop_treatment_death'][i] \
+                data['time_variants']['program_prop_treatment_death'][i] \
                     = data['outcomes']['prop_new_sp_died'][i]
 
     # Duplicate DS-TB outcomes for single strain models (possibly should be moved to model.py)
@@ -782,25 +768,25 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
 
     # Populate program dictionaries from epi ones
     for demo_parameter in ['life_expectancy', 'rate_birth']:
-        if data['time_variants']['demo_' + demo_parameter][u'load_data'] == u'yes':
+        if data['time_variants']['demo_' + demo_parameter]['load_data'] == 'yes':
             for i in data[demo_parameter]:
                 if i not in data['time_variants']['demo_' + demo_parameter]:
                     data['time_variants']['demo_' + demo_parameter][i] = data[demo_parameter][i]
 
     # Populate smear-positive and smear-negative proportion dictionaries to time-variant dictionary
-    if data['time_variants']['epi_prop_smearpos'][u'load_data'] == u'yes':
+    if data['time_variants']['epi_prop_smearpos']['load_data'] == 'yes':
         for i in data['notifications']['prop_new_sp']:
             if i not in data['time_variants']['epi_prop_smearpos']:
                 data['time_variants']['epi_prop_smearpos'][i] = data['notifications']['prop_new_sp'][i]
-    if data['time_variants']['epi_prop_smearpos'][u'load_data'] == u'yes':
+    if data['time_variants']['epi_prop_smearpos']['load_data'] == 'yes':
         for i in data['notifications']['prop_new_sn']:
             if i not in data['time_variants']['epi_prop_smearneg']:
                 data['time_variants']['epi_prop_smearneg'][i] = data['notifications']['prop_new_sn'][i]
 
-
     # Treatment outcomes
     # The aim is now to have data for success and death, as default can be derived from these
     # in the model module.
+
     # Calculate proportions of each outcome for MDR and XDR-TB
     # Outcomes for MDR and XDR in the GTB data
     for strain in ['mdr', 'xdr']:
@@ -811,7 +797,7 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
 
     # Populate MDR and XDR data from outcomes dictionary into program dictionary
     for strain in ['_mdr', '_xdr']:
-        if data['time_variants']['program_prop_treatment_success' + strain][u'load_data'] == 'yes':
+        if data['time_variants']['program_prop_treatment_success' + strain]['load_data'] == 'yes':
             for i in data['outcomes']['prop' + strain + '_succ']:
                 if i not in data['time_variants']['program_prop_treatment_success' + strain]:
                     data['time_variants']['program_prop_treatment_success' + strain][i] \
@@ -826,19 +812,14 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
     for program in data['time_variants']:
 
         # Add zero at starting time for model run to all programs that are proportions
-        if u'program_prop' in program:
+        if 'program_prop' in program:
             data['time_variants'][program] = add_starting_zero(data['time_variants'][program], data)
 
         # Remove the load_data keys, as they have now been used
-        data['time_variants'][program] = remove_specific_key(data['time_variants'][program], u'load_data')
+        data['time_variants'][program] = remove_specific_key(data['time_variants'][program], 'load_data')
 
         # Remove dictionary keys for which values are nan
         data['time_variants'][program] = remove_nans(data['time_variants'][program])
-
-    # Convert list formats to dictionaries
-    # This should be done above in the data readers, but as subsequent code depends on the lists,
-    # I don't want to kill the lists yet. However, we now have consistent
-    data['tb_dict'] = convert_dictionary_of_lists_to_dictionary_of_dictionaries(data['tb'])
 
     return data
 
@@ -846,7 +827,7 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
 if __name__ == "__main__":
 
     # Find the country by just reading that sheet first
-    country = read_input_data_xls(False, ['attributes'])['attributes'][u'country']
+    country = read_input_data_xls(False, ['attributes'])['attributes']['country']
 
     # Then import the data
     data = read_and_process_data(False,

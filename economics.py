@@ -64,12 +64,12 @@ inflation = {1920: 0.123, 1930: 0.123, 1940: 0.123, 1950: 0.123, 1955: 0.123, 19
             2010: 0.037, 2011: 0.073, 2012: 0.034, 2013: 0.029, 2014: 0.005, 2015: 0.014}
 #Inflation: 1970 onwards are actual data. 1920 - 1970 calculated as average of 1970 - 1975
 
-cpi = {1970: 9.04, 1971: 9.41, 1972: 11.48, 1973: 12.75, 1974: 14.6, 1975: 16.5, 1976: 18.38, 1977: 19.67, 1978: 20.87,
-       1979: 22.5, 1980: 25.9,
-       1981: 28.8, 1982: 30.8, 1983: 32.9, 1984: 34.6, 1985: 36.1, 1986: 36.8, 1987: 38.9, 1988: 43.4, 1989: 46.1,
-       1990: 49.9, 1991: 53.1, 1992: 55.7, 1993: 58.6, 1994: 59.1, 1995: 60.4, 1996: 62.2, 1997: 64.3, 1998: 68,
-       1999: 69.3, 2000: 70.1, 2001: 73.1, 2002: 73.6, 2003: 76.7, 2004: 78.9, 2005: 80.8, 2006: 82.8, 2007: 86.7,
-       2008: 93.4, 2009: 96.5, 2010: 100, 2011: 107.3, 2012: 110.9, 2013: 114.2, 2014: 114.8, 2015: 116.4}
+econ_cpi = {1970: 9.04, 1971: 9.41, 1972: 11.48, 1973: 12.75, 1974: 14.6, 1975: 16.5, 1976: 18.38, 1977: 19.67, 1978: 20.87,
+            1979: 22.5, 1980: 25.9,
+            1981: 28.8, 1982: 30.8, 1983: 32.9, 1984: 34.6, 1985: 36.1, 1986: 36.8, 1987: 38.9, 1988: 43.4, 1989: 46.1,
+            1990: 49.9, 1991: 53.1, 1992: 55.7, 1993: 58.6, 1994: 59.1, 1995: 60.4, 1996: 62.2, 1997: 64.3, 1998: 68,
+            1999: 69.3, 2000: 70.1, 2001: 73.1, 2002: 73.6, 2003: 76.7, 2004: 78.9, 2005: 80.8, 2006: 82.8, 2007: 86.7,
+            2008: 93.4, 2009: 96.5, 2010: 100, 2011: 107.3, 2012: 110.9, 2013: 114.2, 2014: 114.8, 2015: 116.4}
 #CPI: 1981 onwards are actual data. 1970 - 1980 calculated from inflation rate (inflation = (CPI new - CPI old)/CPI old.
 #1920 - 1970 also calculated fron inflation rate but less reliable as inflation data are not actual data
 
@@ -80,7 +80,7 @@ data = read_and_process_data(True,
                               'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes'],
                              country)
 inflation_excel = data['time_variants'][u'inflation']
-cpi_excel = data['time_variants'][u'cpi']
+econ_cpi_excel = data['time_variants']['econ_cpi']
 time_step = data['attributes']['time_step']
 
 
@@ -167,7 +167,7 @@ def cost_scaleup_fns(model,
     '''
 
     for i, function in enumerate(functions):
-        cpi_scaleup = map(model.scaleup_fns['cpi'], x_vals)
+        econ_cpi_scaleup = map(model.scaleup_fns['cpi'], x_vals)
         inflation_scaleup = map(model.scaleup_fns['inflation'], x_vals)
 
         if function == str('program_prop_vaccination'):
@@ -187,7 +187,7 @@ def cost_scaleup_fns(model,
                                               popsize)
 
                 print(cost_uninflated[year_pos])
-                cost_inflated = cost_uninflated * cpi_excel[year_ref] / cpi_scaleup
+                cost_inflated = cost_uninflated * econ_cpi_excel[year_ref] / econ_cpi_scaleup
 
 
 ################### PLOTTING ##############################################
@@ -259,8 +259,8 @@ def cost_scaleup_fns(model,
             for tl in ax1.get_yticklabels():
                 tl.set_color('b')
             ax2 = ax1.twinx()
-            ax2.plot(x_vals, cpi_scaleup, 'r-', linewidth = 3, label = 'Consumer price index - actual data')
-            ax2.plot(cpi.keys(), cpi.values(), 'ro', label = 'Consumer price index - fitted')
+            ax2.plot(x_vals, econ_cpi_scaleup, 'r-', linewidth = 3, label = 'Consumer price index - actual data')
+            ax2.plot(econ_cpi.keys(), econ_cpi.values(), 'ro', label ='Consumer price index - fitted')
             ax2.set_ylabel('Consumer price index', color='r')
             for tl in ax2.get_yticklabels():
                 tl.set_color('r')

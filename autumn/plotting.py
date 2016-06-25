@@ -575,10 +575,10 @@ def plot_outputs_against_gtb(model,
     if scenario is None:
         # Last scenario to run should be baseline and should be run last
         # to lay a black line over the top for comparison
-        output_colour = ['k'] * len(labels)
+        output_colour = ['-k'] * len(labels)
     else:
         # Otherwise cycling through colours
-        output_colour = [make_default_line_styles(scenario, False)[1]] * len(labels)
+        output_colour = [make_default_line_styles(scenario, False)] * len(labels)
 
     # Extract the plotting data you're interested in
     plotting_data = []
@@ -621,7 +621,8 @@ def plot_outputs_against_gtb(model,
         ax.plot(
             model.times[left_xlimit_index: right_xlimit_index],
             model.get_var_soln(labels[i])[left_xlimit_index: right_xlimit_index],
-            color=output_colour[i],
+            color=output_colour[i][1],
+            linestyle=output_colour[i][0],
             linewidth=1.5)
 
         # This is supposed to mean if it's the last scenario, which is the baseline

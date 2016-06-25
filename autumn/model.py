@@ -458,17 +458,17 @@ class ConsolidatedModel(BaseModel):
         irrelevant_time_variants = []
         for time_variant in self.data['time_variants'].keys():
             for strain in self.available_strains:
-                if strain not in self.strains and strain in time_variant and u'_dst' not in time_variant:
+                if strain not in self.strains and strain in time_variant and '_dst' not in time_variant:
                     irrelevant_time_variants += [time_variant]
-            # if u'cost' in time_variant:
+            # if 'cost' in time_variant:
             #     irrelevant_time_variants += [time_variant]
             if len(self.strains) < 2 and ('line_dst' in time_variant or '_inappropriate' in time_variant):
                 irrelevant_time_variants += [time_variant]
-            elif len(self.strains) == 2 and u'secondline_dst' in time_variant:
+            elif len(self.strains) == 2 and 'secondline_dst' in time_variant:
                 irrelevant_time_variants += [time_variant]
-            elif len(self.strains) == 2 and u'smearneg' in time_variant:
+            elif len(self.strains) == 2 and 'smearneg' in time_variant:
                 irrelevant_time_variants += [time_variant]
-            if u'lowquality' in time_variant and not self.is_lowquality:
+            if 'lowquality' in time_variant and not self.is_lowquality:
                 irrelevant_time_variants += [time_variant]
 
         return irrelevant_time_variants
@@ -497,25 +497,25 @@ class ConsolidatedModel(BaseModel):
             if time_variant not in irrelevant_time_variants:
                 self.scaleup_data[str(time_variant)] = {}
                 for i in self.data['time_variants'][time_variant]:
-                    if i == u'time_variant':
+                    if i == 'time_variant':
                         self.scaleup_data[str(time_variant)]['time_variant'] = self.data['time_variants'][time_variant][i]
                     # For the smoothness parameter
-                    elif i == u'smoothness':
+                    elif i == 'smoothness':
                         self.scaleup_data[str(time_variant)]['smoothness'] = self.data['time_variants'][time_variant][i]
                     # For years with data percentages
-                    elif type(i) == int and u'program_prop_' in time_variant:
+                    elif type(i) == int and 'program_prop_' in time_variant:
                         self.scaleup_data[str(time_variant)][i] = self.data['time_variants'][time_variant][i] / 1E2
                     # For years with data not percentages
                     elif type(i) == int:
                         self.scaleup_data[str(time_variant)][i] = self.data['time_variants'][time_variant][i]
                     # For scenarios with data percentages
-                    elif type(i) == unicode and u'scenario_' + str(self.scenario) in i and u'prop_' in time_variant:
+                    elif type(i) == unicode and 'scenario_' + str(self.scenario) in i and 'prop_' in time_variant:
                         self.scaleup_data[str(time_variant)]['scenario'] = \
-                            self.data['time_variants'][time_variant][u'scenario_' + str(self.scenario)] / 1E2
+                            self.data['time_variants'][time_variant]['scenario_' + str(self.scenario)] / 1E2
                     # For scenarios with data not percentages
-                    elif type(i) == unicode and u'scenario_' + str(self.scenario) in i:
+                    elif type(i) == unicode and 'scenario_' + str(self.scenario) in i:
                         self.scaleup_data[str(time_variant)]['scenario'] = \
-                            self.data['time_variants'][time_variant][u'scenario_' + str(self.scenario)]
+                            self.data['time_variants'][time_variant]['scenario_' + str(self.scenario)]
 
     def find_amplification_data(self):
 
@@ -526,33 +526,33 @@ class ConsolidatedModel(BaseModel):
                      0.,
                  self.params['end_mdr_introduce_period']:
                      self.params['tb_prop_amplification'],
-                 u'time_variant':
-                    u'yes'}
+                 'time_variant':
+                    'yes'}
 
     def find_functions_or_params(self):
 
         # Define scale-up functions from these datasets
         for param in self.scaleup_data:
 
-            time_variant = self.scaleup_data[param].pop(u'time_variant')
+            time_variant = self.scaleup_data[param].pop('time_variant')
 
             if param == 'epi_prop_smearpos':
-                if time_variant == u'yes':
+                if time_variant == 'yes':
                     self.is_organvariation = True
                 else:
                     self.is_organvariation = False
 
-            if time_variant == u'yes':
+            if time_variant == 'yes':
 
                 # Extract and remove the smoothness parameter from the dictionary
                 if 'smoothness' in self.scaleup_data[param]:
                     smoothness = self.scaleup_data[param].pop('smoothness')
                 else:
-                    smoothness = self.data['attributes'][u'default_smoothness']
+                    smoothness = self.data['attributes']['default_smoothness']
 
                 # If the parameter is being modified for the scenario being run
                 if 'scenario' in self.scaleup_data[param]:
-                    scenario = [self.params[u'scenario_full_time'],
+                    scenario = [self.params['scenario_full_time'],
                                 self.scaleup_data[param].pop('scenario')]
                 else:
                     scenario = None
@@ -567,15 +567,15 @@ class ConsolidatedModel(BaseModel):
                 self.set_scaleup_fn(param,
                                     scale_up_function(self.scaleup_data[param].keys(),
                                                       self.scaleup_data[param].values(),
-                                                      self.data['attributes'][u'fitting_method'],
+                                                      self.data['attributes']['fitting_method'],
                                                       smoothness,
                                                       bound_low=0.,
                                                       bound_up=upper_bound,
                                                       intervention_end=scenario,
-                                                      intervention_start_date=self.params[u'scenario_start_time']))
+                                                      intervention_start_date=self.params['scenario_start_time']))
 
             # If no is selected in the time variant column
-            elif time_variant == u'no':
+            elif time_variant == 'no':
 
                 # Get rid of smoothness, which isn't relevant
                 if 'smoothness' in self.scaleup_data[param]:
@@ -944,10 +944,10 @@ class ConsolidatedModel(BaseModel):
         # This parameter is the number of persons effectively treated with IPT for each
         # patient started on treatment for active disease.
         prevented_cases_per_patient_starting_treatment = self.vars['program_prop_ipt'] \
-                                                         * self.data['parameters'][u'demo_household_size'] \
-                                                         * self.data['parameters'][u'tb_prop_contacts_infected'] \
-                                                         * self.data['parameters'][u'tb_prop_ltbi_test_sensitivity'] \
-                                                         * self.data['parameters'][u'tb_prop_ipt_effectiveness']
+                                                         * self.data['parameters']['demo_household_size'] \
+                                                         * self.data['parameters']['tb_prop_contacts_infected'] \
+                                                         * self.data['parameters']['tb_prop_ltbi_test_sensitivity'] \
+                                                         * self.data['parameters']['tb_prop_ipt_effectiveness']
         self.vars['ipt_commencements'] = 0.
         for strain in self.strains:
             for agegroup in self.agegroups:
@@ -1369,7 +1369,7 @@ class ConsolidatedModel(BaseModel):
                 if strain in from_label:
                     rate_mortality[strain] \
                         += self.compartments[from_label] * rate \
-                            * self.params[u'program_prop_death_reporting']
+                            * self.params['program_prop_death_reporting']
             for from_label, rate in self.var_infection_death_rate_flows:
                 if strain in from_label:
                     rate_mortality[strain] \
@@ -1596,11 +1596,11 @@ class ConsolidatedModel(BaseModel):
 
     def integrate(self):
         min_dt = 0.05
-        if self.data['attributes'][u'integration'] == u'explicit':
+        if self.data['attributes']['integration'] == 'explicit':
             self.integrate_explicit(min_dt)
-        elif self.data['attributes'][u'integration'] == u'scipy':
+        elif self.data['attributes']['integration'] == 'scipy':
             self.integrate_scipy(min_dt)
-        elif self.data['attributes'][u'integration'] == u'runge_kutta':
+        elif self.data['attributes']['integration'] == 'runge_kutta':
             self.integrate_runge_kutta(min_dt)
 
 

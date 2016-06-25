@@ -12,7 +12,7 @@ import autumn.write_outputs as w_o
 start_realtime = datetime.datetime.now()
 
 # Import the data
-country = read_input_data_xls(True, ['attributes'])['attributes'][u'country']
+country = read_input_data_xls(True, ['attributes'])['attributes']['country']
 data = read_and_process_data(True,
                              ['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
                               'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes'],

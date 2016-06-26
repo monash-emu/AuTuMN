@@ -55,13 +55,13 @@ elif method ==2:
 
 ########### GET INFLATION RATE DATA ###############
 
-inflation = {1920: 0.123, 1930: 0.123, 1940: 0.123, 1950: 0.123, 1955: 0.123, 1960: 0.123, 1965: 0.123,
-            1970: 0.041, 1971: 0.091, 1972: 0.22, 1973: 0.111, 1974: 0.145, 1975: 0.131, 1976: 0.114, 1977: 0.07,
-            1978: 0.061, 1979: 0.078, 1980: 0.145, 1981: 0.112, 1982: 0.07, 1983: 0.067, 1984: 0.053, 1985: 0.044,
-            1986: 0.018, 1987: 0.057, 1988: 0.118, 1989: 0.062, 1990: 0.082, 1991: 0.065, 1992: 0.049, 1993: 0.052,
-            1994: 0.008, 1995: 0.022, 1996: 0.031, 1997: 0.034, 1998: 0.057, 1999: 0.02, 2000: 0.011, 2001: 0.043,
-            2002: 0.008, 2003: 0.042, 2004: 0.028, 2005: 0.024, 2006: 0.025, 2007: 0.048, 2008: 0.077, 2009: 0.032,
-            2010: 0.037, 2011: 0.073, 2012: 0.034, 2013: 0.029, 2014: 0.005, 2015: 0.014}
+econ_inflation = {1920: 0.123, 1930: 0.123, 1940: 0.123, 1950: 0.123, 1955: 0.123, 1960: 0.123, 1965: 0.123,
+                  1970: 0.041, 1971: 0.091, 1972: 0.22, 1973: 0.111, 1974: 0.145, 1975: 0.131, 1976: 0.114, 1977: 0.07,
+                  1978: 0.061, 1979: 0.078, 1980: 0.145, 1981: 0.112, 1982: 0.07, 1983: 0.067, 1984: 0.053, 1985: 0.044,
+                  1986: 0.018, 1987: 0.057, 1988: 0.118, 1989: 0.062, 1990: 0.082, 1991: 0.065, 1992: 0.049, 1993: 0.052,
+                  1994: 0.008, 1995: 0.022, 1996: 0.031, 1997: 0.034, 1998: 0.057, 1999: 0.02, 2000: 0.011, 2001: 0.043,
+                  2002: 0.008, 2003: 0.042, 2004: 0.028, 2005: 0.024, 2006: 0.025, 2007: 0.048, 2008: 0.077, 2009: 0.032,
+                  2010: 0.037, 2011: 0.073, 2012: 0.034, 2013: 0.029, 2014: 0.005, 2015: 0.014}
 #Inflation: 1970 onwards are actual data. 1920 - 1970 calculated as average of 1970 - 1975
 
 econ_cpi = {1970: 9.04, 1971: 9.41, 1972: 11.48, 1973: 12.75, 1974: 14.6, 1975: 16.5, 1976: 18.38, 1977: 19.67, 1978: 20.87,
@@ -79,7 +79,7 @@ data = read_and_process_data(True,
                              ['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
                               'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes'],
                              country)
-inflation_excel = data['time_variants'][u'inflation']
+econ_inflation_excel = data['time_variants']['econ_inflation']
 econ_cpi_excel = data['time_variants']['econ_cpi']
 time_step = data['attributes']['time_step']
 
@@ -168,7 +168,7 @@ def cost_scaleup_fns(model,
 
     for i, function in enumerate(functions):
         econ_cpi_scaleup = map(model.scaleup_fns['cpi'], x_vals)
-        inflation_scaleup = map(model.scaleup_fns['inflation'], x_vals)
+        econ_inflation_scaleup = map(model.scaleup_fns['econ_inflation'], x_vals)
 
         if function == str('program_prop_vaccination'):
             scaleup_param_vals = map(model.scaleup_fns[function], x_vals)

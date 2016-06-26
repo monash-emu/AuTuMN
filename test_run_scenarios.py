@@ -91,45 +91,7 @@ for scenario in data['attributes']['scenarios_to_run'] + [None]:
         #     scenario=scenario,
         #     figure_number=11)
 
-        # Classify scale-up functions for plotting
-        classified_scaleups = {'program_prop': [],
-                               'program_other': [],
-                               'birth': [],
-                               'non_program': []}
-        for fn in model.scaleup_fns:
-            if 'program_prop' in fn:
-                classified_scaleups['program_prop'] += [fn]
-            elif 'program' in fn:
-                classified_scaleups['program_other'] += [fn]
-            elif 'demo_rate_birth' in fn:
-                classified_scaleups['birth'] += [fn]
-            else:
-                classified_scaleups['non_program'] += [fn]
-
-        # Plot them from the start of the model and from "recent_time"
-        # Enumerations are to make sure each plot goes on a separate figure
-        # and to tell the loop to come back to the relevant figure at each iteration
-        for i, classification in enumerate(classified_scaleups):
-            if len(classified_scaleups[classification]) > 0:
-                for j, start_time in enumerate(['start_', 'recent_']):
-                    autumn.plotting.plot_all_scaleup_fns_against_data(model,
-                                                                      classified_scaleups[classification],
-                                                                      base + '.' + classification + '_scaleups_' + start_time + 'time.png',
-                                                                      start_time + 'time',
-                                                                      'scenario_end_time',
-                                                                      classification,
-                                                                      country,
-                                                                      scenario=scenario,
-                                                                      figure_number= i + j*5 + 2)
-                    if classification == 'program_prop':
-                        autumn.plotting.plot_scaleup_fns(model,
-                                                         classified_scaleups[classification],
-                                                         base + '.' + classification + 'scaleups_' + start_time + '.png',
-                                                         start_time + 'time',
-                                                         'scenario_end_time',
-                                                         classification,
-                                                         country,
-                                                         figure_number= i + j*4 + 12)
+        autumn.plotting.plot_classified_scaleups(model, country, base)
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)

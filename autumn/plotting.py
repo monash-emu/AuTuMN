@@ -860,6 +860,53 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
 
     fig.suptitle('Scale-up functions')
 
+def plot_classified_scaleups(model, country, base):
+
+    # Classify scale-up functions for plotting
+    classified_scaleups = {'program_prop': [],
+                           'program_other': [],
+                           'birth': [],
+                           'cost': [],
+                           'econ': [],
+                           'non_program': []}
+    for fn in model.scaleup_fns:
+        if 'program_prop' in fn:
+            classified_scaleups['program_prop'] += [fn]
+        elif 'program' in fn:
+            classified_scaleups['program_other'] += [fn]
+        elif 'demo_rate_birth' in fn:
+            classified_scaleups['birth'] += [fn]
+        elif 'cost' in fn:
+            classified_scaleups['cost'] += [fn]
+        elif 'econ' in fn:
+            classified_scaleups['econ'] += [fn]
+        else:
+            classified_scaleups['non_program'] += [fn]
+
+    times_to_plot = ['start_', 'recent_']
+
+    # Plot them from the start of the model and from "recent_time"
+    for i, classification in enumerate(classified_scaleups):
+        if len(classified_scaleups[classification]) > 0:
+            for j, start_time in enumerate(times_to_plot):
+                plot_all_scaleup_fns_against_data(model,
+                                                  classified_scaleups[classification],
+                                                  base + '.' + classification + '_all_scaleups_' + start_time + '.png',
+                                                  start_time + 'time',
+                                                  'current_time',
+                                                  classification,
+                                                  country,
+                                                  figure_number=i + j * len(classified_scaleups) + 2)
+                if classification == 'program_prop':
+                    plot_scaleup_fns(model,
+                                     classified_scaleups[classification],
+                                     base + '.' + classification + 'scaleups_' + start_time + '.png',
+                                     start_time + 'time',
+                                     'current_time',
+                                     classification,
+                                     country,
+                                     figure_number=i + j * len(classified_scaleups) + 2 + len(classified_scaleups) * len(times_to_plot))
+
 
 def save_png(png):
 

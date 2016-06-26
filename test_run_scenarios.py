@@ -44,8 +44,7 @@ for scenario in data['attributes']['scenarios_to_run'] + [None]:
             or (n_strains <= 1 and (is_amplification or is_misassignment)):
         pass
     else:
-        name = 'model%d' % n_organs
-        base = os.path.join(out_dir, name)
+        base = os.path.join(out_dir, country + '_scenarios')
 
         model = autumn.model.ConsolidatedModel(
             n_organs,

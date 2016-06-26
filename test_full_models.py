@@ -37,8 +37,7 @@ if (is_misassignment and not is_amplification) \
         or (n_strains <= 1 and (is_amplification or is_misassignment)):
     pass
 else:
-    name = 'model%d' % n_organs
-    base = os.path.join(out_dir, name)
+    base = os.path.join(out_dir, country + '_baseline')
 
     model = autumn.model.ConsolidatedModel(
         n_organs,
@@ -117,7 +116,7 @@ else:
         model, ["incidence", "mortality", "prevalence", "notifications"],
         data['attributes']['recent_time'],
         'current_time',
-        base + '.rate_outputs_gtb.png',
+        base + '_rate_outputs_gtb.png',
         country,
         scenario=None,
         figure_number=1)
@@ -142,8 +141,6 @@ else:
     #         data['attributes']['start_time'], base + '.mdr_proportion_recent.png')
 
     autumn.plotting.plot_classified_scaleups(model, country, base)
-
-
 
     #     year = indices(model.times, lambda x: x >= 2015.)[0]
     #     print("2015 incidence is: ")

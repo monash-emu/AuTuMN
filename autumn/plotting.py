@@ -891,7 +891,7 @@ def plot_classified_scaleups(model, country, base):
             for j, start_time in enumerate(times_to_plot):
                 plot_all_scaleup_fns_against_data(model,
                                                   classified_scaleups[classification],
-                                                  base + '.' + classification + '_all_scaleups_' + start_time + '.png',
+                                                  base + '_' + classification + '_datascaleups_from' + start_time[:-1] + '.png',
                                                   start_time + 'time',
                                                   'current_time',
                                                   classification,
@@ -900,7 +900,7 @@ def plot_classified_scaleups(model, country, base):
                 if classification == 'program_prop':
                     plot_scaleup_fns(model,
                                      classified_scaleups[classification],
-                                     base + '.' + classification + 'scaleups_' + start_time + '.png',
+                                     base + '_' + classification + 'scaleups_from' + start_time[:-1] + '.png',
                                      start_time + 'time',
                                      'current_time',
                                      classification,

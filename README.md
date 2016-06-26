@@ -15,6 +15,7 @@ This is a set of Python models that modularizes the development of dynamic trans
 # TODO  
   
 # James TODO:
+- adjust calculations for detections to ignore those going to missed
 - age stratify with view to simulating treatment of latent infection
 - Xpert improvement in diagnostic algorithm
 - allow scenarios to be scaled-up over varying time periods

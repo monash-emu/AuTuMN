@@ -146,6 +146,7 @@ else:
                            'program_other': [],
                            'birth': [],
                            'cost': [],
+                           'econ': [],
                            'non_program': []}
     for fn in model.scaleup_fns:
         if 'program_prop' in fn:
@@ -156,14 +157,17 @@ else:
             classified_scaleups['birth'] += [fn]
         elif 'cost' in fn:
             classified_scaleups['cost'] += [fn]
+        elif 'econ' in fn:
+            classified_scaleups['econ'] += [fn]
         else:
             classified_scaleups['non_program'] += [fn]
+
+    times_to_plot = ['start_', 'recent_']
 
     # Plot them from the start of the model and from "recent_time"
     for i, classification in enumerate(classified_scaleups):
         if len(classified_scaleups[classification]) > 0:
-            #print(classified_scaleups[classification])
-            for j, start_time in enumerate(['start_', 'recent_']):
+            for j, start_time in enumerate(times_to_plot):
                 autumn.plotting.plot_all_scaleup_fns_against_data(model,
                                                                   classified_scaleups[classification],
                                                                   base + '.' + classification + '_all_scaleups_' + start_time + '.png',
@@ -171,7 +175,7 @@ else:
                                                                   'current_time',
                                                                   classification,
                                                                   country,
-                                                                  figure_number=i + j*4 + 2)
+                                                                  figure_number=i + j*len(classified_scaleups) + 2)
                 if classification == 'program_prop':
                     autumn.plotting.plot_scaleup_fns(model,
                                                      classified_scaleups[classification],
@@ -180,7 +184,7 @@ else:
                                                      'current_time',
                                                      classification,
                                                      country,
-                                                     figure_number=i + j*4 + 10)
+                                                     figure_number=i + j*len(classified_scaleups) + 2 + len(classified_scaleups)*len(times_to_plot))
 
 
     #     year = indices(model.times, lambda x: x >= 2015.)[0]

@@ -777,12 +777,9 @@ def plot_scaleup_fns(model, functions, png=None,
 def plot_all_scaleup_fns_against_data(model, functions, png=None,
                                       start_time_str='start_time',
                                       end_time_str='',
-                                      parameter_type='', country=u'',
+                                      parameter_type='',
                                       scenario=None,
                                       figure_number=2):
-
-    # Get some styles for the lines
-    line_styles = make_default_line_styles(len(functions), True)
 
     # Get the colours for the model outputs
     if scenario is None:
@@ -811,7 +808,7 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
     plural = ''
     if len(functions) > 1:
         plural += 's'
-    title = str(country) + ' ' + \
+    title = model.data['attributes']['country'] + ' ' + \
             replace_underscore_with_space(parameter_type) + \
             ' parameter' + plural + ' from ' + replace_underscore_with_space(start_time_str)
     fig.suptitle(title)
@@ -860,7 +857,7 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
 
     fig.suptitle('Scale-up functions')
 
-def plot_classified_scaleups(model, country, base):
+def plot_classified_scaleups(model, base):
 
     # Classify scale-up functions for plotting
     classified_scaleups = {'program_prop': [],
@@ -895,7 +892,6 @@ def plot_classified_scaleups(model, country, base):
                                                   start_time + 'time',
                                                   'current_time',
                                                   classification,
-                                                  country,
                                                   figure_number=i + j * len(classified_scaleups) + 2)
                 if classification == 'program_prop':
                     plot_scaleup_fns(model,
@@ -904,7 +900,6 @@ def plot_classified_scaleups(model, country, base):
                                      start_time + 'time',
                                      'current_time',
                                      classification,
-                                     country,
                                      figure_number=i + j * len(classified_scaleups) + 2 + len(classified_scaleups) * len(times_to_plot))
 
 

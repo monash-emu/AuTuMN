@@ -81,16 +81,7 @@ for scenario in data['attributes']['scenarios_to_run'] + [None]:
             scenario=scenario,
             figure_number=1)
 
-        # autumn.plotting.plot_outputs_against_gtb(
-        #     model, ["incidence", "mortality", "prevalence", "notifications"],
-        #     data['country_constants']['start_time'],
-        #     'scenario_end_time',
-        #     base + '.rate_outputs_gtb_start.png',
-        #     country,
-        #     scenario=scenario,
-        #     figure_number=11)
-
-        autumn.plotting.plot_classified_scaleups(model, country, base)
+        autumn.plotting.plot_classified_scaleups(model, base)
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)

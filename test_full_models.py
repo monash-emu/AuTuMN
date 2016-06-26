@@ -140,7 +140,7 @@ else:
     #         model, ["proportion_mdr"],
     #         data['attributes']['start_time'], base + '.mdr_proportion_recent.png')
 
-    autumn.plotting.plot_classified_scaleups(model, country, base)
+    autumn.plotting.plot_classified_scaleups(model, base)
 
     #     year = indices(model.times, lambda x: x >= 2015.)[0]
     #     print("2015 incidence is: ")

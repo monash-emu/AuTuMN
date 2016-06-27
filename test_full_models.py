@@ -14,7 +14,8 @@ start_realtime = datetime.datetime.now()
 # Import the data
 country = read_input_data_xls(True, ['attributes'])['attributes']['country']
 data = read_and_process_data(True,
-                             ['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
+                             ['bcg', 'rate_birth', 'life_expectancy', 'attributes',
+                              'default_parameters',
                               'tb', 'notifications', 'outcomes',
                               'country_constants', 'default_constants',
                               'country_economics', 'default_economics',

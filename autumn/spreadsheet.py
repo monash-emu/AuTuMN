@@ -353,12 +353,14 @@ class LifeExpectancyReader:
 class FixedParametersReader:
 
     def __init__(self):
-        self.tab_name = 'fixed_params'
-        self.key = 'parameters'
-        self.filename = 'xls/universal_constants.xlsx'
+
+        self.tab_name = 'default_constants'
+        self.key = 'default_constants'
+        self.filename = 'xls/default_constants.xlsx'
         self.general_program_intialisations()
 
     def general_program_intialisations(self):
+
         self.data = {}
         self.parlist = []
         self.start_row = 1
@@ -368,9 +370,38 @@ class FixedParametersReader:
 
     def parse_row(self, row):
 
-        self.data[str(row[0])] = row[1]
+        # Stratifications
+        if row[0][:2] == 'n_':
+            self.data[str(row[0])] = []
+            for i in range(1, len(row)):
+                if not row[i] == '':
+                    self.data[str(row[0])] += [int(row[i])]
+
+        # Integration method
+        elif row[0] == 'integration':
+            self.data[str(row[0])] = str(row[1])
+
+        # Don't set scenarios through the default sheet
+        elif row[0] == 'scenarios':
+            self.data[str(row[0])] = [None]
+
+        # Conditionals for model
+        elif row[0][:3] == 'is_':
+            self.data[str(row[0])] = [bool(row[1])]
+
+        # Age breakpoints (arguably should just be an empty list always)
+        elif row[0] == 'age_breakpoints':
+            self.data[str(row[0])] = []
+            for i in range(1, len(row)):
+                if not row[i] == '':
+                    self.data[str(row[0])] += [int(row[i])]
+
+        # Parameters
+        else:
+            self.data[str(row[0])] = row[1]
 
     def get_data(self):
+
         return self.data
 
 
@@ -380,15 +411,6 @@ class CountryParametersReader(FixedParametersReader):
         self.tab_name = 'country_constants'
         self.key = 'country_constants'
         self.filename = 'xls/programs_' + country_to_read.lower() + '.xlsx'
-        self.general_program_intialisations()
-
-
-class DefaultParametersReader(FixedParametersReader):
-
-    def __init__(self):
-        self.tab_name = 'country_constants'
-        self.key = 'default_constants'
-        self.filename = 'xls/programs_default.xlsx'
         self.general_program_intialisations()
 
 
@@ -408,8 +430,15 @@ class ControlPanelReader(FixedParametersReader):
 
     def parse_row(self, row):
 
+        if row[1] == '':
+            pass
+
+        # For the country to be analysed
+        elif row[0] == 'country':
+            self.data[str(row[0])] = str(row[1])
+
         # For the calendar year times
-        if 'time' in row[0] or 'smoothness' in row[0]:
+        elif 'time' in row[0] or 'smoothness' in row[0]:
             self.data[str(row[0])] = float(row[1])
 
         elif 'fitting' in row[0]:
@@ -419,9 +448,12 @@ class ControlPanelReader(FixedParametersReader):
         elif 'integration' in row[0]:
             self.data[str(row[0])] = str(row[1])
 
-        # For the model stratifications
+        # For the model stratifications and scenarios to run
         elif 'n_' in row[0] or 'age_breakpoints' in row[0] or 'scenarios' in row[0]:
-            self.data[str(row[0])] = []
+            if 'scenarios' in row[0]:
+                self.data[str(row[0])] = [None]
+            else:
+                self.data[str(row[0])] = []
             for i in range(1, len(row)):
                 if not row[i] == '':
                     self.data[str(row[0])] += [int(row[i])]
@@ -432,10 +464,6 @@ class ControlPanelReader(FixedParametersReader):
             for i in range(1, len(row)):
                 if not row[i] == '':
                     self.data[str(row[0])] += [bool(row[i])]
-
-        # For the country to be analysed
-        elif row[0] == 'country':
-            self.data[str(row[0])] = str(row[1])
 
 
 class DefaultProgramReader:
@@ -706,12 +734,10 @@ def read_input_data_xls(from_test, sheets_to_read, country=None):
         sheet_readers.append(LifeExpectancyReader(country))
     if 'attributes' in sheets_to_read:
         sheet_readers.append(ControlPanelReader())
-    if 'parameters' in sheets_to_read:
+    if 'default_constants' in sheets_to_read:
         sheet_readers.append(FixedParametersReader())
     if 'country_constants' in sheets_to_read:
         sheet_readers.append(CountryParametersReader(country))
-    if 'default_constants' in sheets_to_read:
-        sheet_readers.append(DefaultParametersReader())
     if 'default_programs' in sheets_to_read:
         sheet_readers.append(DefaultProgramReader())
     if 'country_programs' in sheets_to_read:
@@ -786,7 +812,7 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country_for_process
     # sheet or default sheet hierarchically - such that the control panel is read in
     # preference to the country data in preference to the default back-ups
     data['model_constants'] = data['attributes']
-    other_sheets_with_constants = ['country_constants', 'default_constants', 'parameters']
+    other_sheets_with_constants = ['country_constants', 'default_constants']
     for other_sheet in other_sheets_with_constants:
         if other_sheet in data:
             for item in data[other_sheet]:
@@ -914,9 +940,10 @@ if __name__ == "__main__":
 
     # Then import the data
     data = read_and_process_data(False,
-                                 ['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
+                                 ['bcg', 'rate_birth', 'life_expectancy', 'attributes',
+                                  'default_constants',
                                   'tb', 'notifications', 'outcomes',
-                                  'country_constants', 'default_constants',
+                                  'country_constants',
                                   'country_economics', 'default_economics',
                                   'country_programs', 'default_programs'],
                                  country)

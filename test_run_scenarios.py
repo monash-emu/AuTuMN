@@ -14,8 +14,10 @@ start_realtime = datetime.datetime.now()
 # Import the data
 country = read_input_data_xls(True, ['attributes'])['attributes']['country']
 data = read_and_process_data(True,
-                             ['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
-                              'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes',
+                             ['bcg', 'rate_birth', 'life_expectancy', 'attributes',
+                              'default_parameters',
+                              'tb', 'notifications', 'outcomes',
+                              'country_constants', 'default_constants',
                               'country_economics', 'default_economics',
                               'country_programs', 'default_programs'],
                              country)
@@ -33,7 +35,7 @@ project.name = 'project_test' # this name will be used as a directory to store a
 
 # Note that it takes about one hour to run all of the possible model structures,
 # so perhaps don't do that - and longer if running multiple scenarios
-for scenario in data['model_constants']['scenarios_to_run'] + [None]:
+for scenario in data['model_constants']['scenarios_to_run']:
     project.scenarios.append(scenario)
 
     n_organs = data['model_constants']['n_organs'][0]

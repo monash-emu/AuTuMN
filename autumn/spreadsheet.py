@@ -354,7 +354,7 @@ class FixedParametersReader:
 
     def __init__(self):
 
-        self.tab_name = 'default_constants'
+        self.tab_name = 'constants'
         self.key = 'default_constants'
         self.filename = 'xls/programs_default.xlsx'
         self.general_program_intialisations()
@@ -408,7 +408,7 @@ class FixedParametersReader:
 class CountryParametersReader(FixedParametersReader):
 
     def __init__(self, country_to_read):
-        self.tab_name = 'country_constants'
+        self.tab_name = 'constants'
         self.key = 'country_constants'
         self.filename = 'xls/programs_' + country_to_read.lower() + '.xlsx'
         self.general_program_intialisations()

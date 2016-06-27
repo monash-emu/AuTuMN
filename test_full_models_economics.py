@@ -12,10 +12,14 @@ import economics
 start_realtime = datetime.datetime.now()
 
 # Import the data
-country = read_input_data_xls(True, ['attributes'])['attributes'][u'country']
+country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
 data = read_and_process_data(True,
-                             ['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
-                              'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes'],
+                             ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
+                              'default_parameters',
+                              'tb', 'notifications', 'outcomes',
+                              'country_constants', 'default_constants',
+                              'country_economics', 'default_economics',
+                              'country_programs', 'default_programs'],
                              country)
 
 # A few basic preliminaries
@@ -26,13 +30,13 @@ if not os.path.isdir(out_dir):
 # Note that it takes about one hour to run all of the possible model structures,
 # so perhaps don't do that - and longer if running multiple scenarios
 scenario = None
-is_additional_diagnostics = data['attributes']['is_additional_diagnostics'][0]
-n_organs = data['attributes']['n_organs'][0]
-n_strains = data['attributes']['n_strains'][0]
-n_comorbidities = data['attributes']['n_comorbidities'][0]
-is_quality = data['attributes']['is_lowquality'][0]
-is_amplification = data['attributes']['is_amplification'][0]
-is_misassignment = data['attributes']['is_misassignment'][0]
+is_additional_diagnostics = data['model_constants']['is_additional_diagnostics'][0]
+n_organs = data['model_constants']['n_organs'][0]
+n_strains = data['model_constants']['n_strains'][0]
+n_comorbidities = data['model_constants']['n_comorbidities'][0]
+is_quality = data['model_constants']['is_lowquality'][0]
+is_amplification = data['model_constants']['is_amplification'][0]
+is_misassignment = data['model_constants']['is_misassignment'][0]
 if (is_misassignment and not is_amplification) \
         or (n_strains <= 1 and (is_amplification or is_misassignment)):
     pass

@@ -73,15 +73,19 @@ econ_cpi = {1970: 9.04, 1971: 9.41, 1972: 11.48, 1973: 12.75, 1974: 14.6, 1975: 
 #CPI: 1981 onwards are actual data. 1970 - 1980 calculated from inflation rate (inflation = (CPI new - CPI old)/CPI old.
 #1920 - 1970 also calculated fron inflation rate but less reliable as inflation data are not actual data
 
-country = read_input_data_xls(True, ['attributes'])['attributes'][u'country']
+country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
 print(country)
 data = read_and_process_data(True,
-                             ['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
-                              'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes'],
+                             ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
+                              'default_parameters',
+                              'tb', 'notifications', 'outcomes',
+                              'country_constants', 'default_constants',
+                              'country_economics', 'default_economics',
+                              'country_programs', 'default_programs'],
                              country)
-econ_inflation_excel = data['time_variants']['econ_inflation']
-econ_cpi_excel = data['time_variants']['econ_cpi']
-time_step = data['attributes']['time_step']
+econ_inflation_excel = data['country_economics']['econ_inflation']
+econ_cpi_excel = data['country_economics']['econ_cpi']
+time_step = data['model_constants']['time_step']
 
 
 #######CREATE EMPTY LIST TO STORE RESULTS LATER #####
@@ -139,11 +143,11 @@ def cost_scaleup_fns(model,
                      country = u''):
 
     if start_time_str == 'recent_time':
-        start_time = model.data['attributes'][start_time_str]
+        start_time = model.data['model_constants'][start_time_str]
     else:
         start_time = model.data['country_constants'][start_time_str]
 
-    end_time = model.data['attributes'][end_time_str]
+    end_time = model.data['model_constants'][end_time_str]
     #x_vals = numpy.linspace(start_time, end_time, end_time - start_time + 1)  # years
     x_vals = numpy.linspace(start_time, end_time, len(model.times))  # years
 
@@ -167,7 +171,7 @@ def cost_scaleup_fns(model,
     '''
 
     for i, function in enumerate(functions):
-        econ_cpi_scaleup = map(model.scaleup_fns['cpi'], x_vals)
+        econ_cpi_scaleup = map(model.scaleup_fns['econ_cpi'], x_vals)
         econ_inflation_scaleup = map(model.scaleup_fns['econ_inflation'], x_vals)
 
         if function == str('program_prop_vaccination'):
@@ -191,9 +195,6 @@ def cost_scaleup_fns(model,
 
 
 ################### PLOTTING ##############################################
-
-
-
 
             data_to_plot = {}
             data_to_plot = model.scaleup_data[function]
@@ -270,8 +271,6 @@ def cost_scaleup_fns(model,
             frame.set_facecolor('0.90')
             plt.show()
 
-
-
             '''
             plt.figure(333)
             plt.plot(cost_uninflated, coverage_values)
@@ -284,7 +283,7 @@ def cost_scaleup_fns(model,
             plt.title('Cost coverage curve for year ' + str(year_index))
             plt.show()
             '''
-
+############################################################################################
 
 
 

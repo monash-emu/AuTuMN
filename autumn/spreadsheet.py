@@ -356,7 +356,7 @@ class FixedParametersReader:
 
         self.tab_name = 'constants'
         self.key = 'default_constants'
-        self.filename = 'xls/programs_default.xlsx'
+        self.filename = 'xls/data_default.xlsx'
         self.general_program_intialisations()
 
     def general_program_intialisations(self):
@@ -410,7 +410,7 @@ class CountryParametersReader(FixedParametersReader):
     def __init__(self, country_to_read):
         self.tab_name = 'constants'
         self.key = 'country_constants'
-        self.filename = 'xls/programs_' + country_to_read.lower() + '.xlsx'
+        self.filename = 'xls/data_' + country_to_read.lower() + '.xlsx'
         self.general_program_intialisations()
 
 
@@ -469,7 +469,7 @@ class ControlPanelReader(FixedParametersReader):
 class DefaultProgramReader:
 
     def __init__(self):
-        self.filename = 'xls/programs_default.xlsx'
+        self.filename = 'xls/data_default.xlsx'
         self.key = 'default_programs'
         self.general_program_intialisations()
 
@@ -504,7 +504,7 @@ class DefaultProgramReader:
 class CountryProgramReader(DefaultProgramReader):
 
     def __init__(self, country_to_read):
-        self.filename = 'xls/programs_' + country_to_read.lower() + '.xlsx'
+        self.filename = 'xls/data_' + country_to_read.lower() + '.xlsx'
         self.country_to_read = country_to_read
         self.key = 'country_programs'
         self.general_program_intialisations()

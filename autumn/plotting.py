@@ -746,7 +746,7 @@ def plot_scaleup_fns(model, functions, png=None,
     if start_time_str == 'recent_time':
         start_time = model.data['attributes'][start_time_str]
     else:
-        start_time = model.data['country_constants'][start_time_str]
+        start_time = model.data['model_constants'][start_time_str]
     end_time = model.data['attributes'][end_time_str]
     x_vals = numpy.linspace(start_time, end_time, 1E3)
 
@@ -797,7 +797,7 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
     if start_time_str == 'recent_time':
         start_time = model.data['attributes'][start_time_str]
     else:
-        start_time = model.data['country_constants'][start_time_str]
+        start_time = model.data['model_constants'][start_time_str]
     end_time = model.data['attributes'][end_time_str]
     x_vals = numpy.linspace(start_time, end_time, 1E3)
 

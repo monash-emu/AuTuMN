@@ -228,7 +228,7 @@ def add_starting_zero(program, data):
 
     """
 
-    program[int(data['country_constants']['start_time'])] = 0.
+    program[int(data['model_constants']['start_time'])] = 0.
 
     return program
 
@@ -353,11 +353,14 @@ class LifeExpectancyReader:
 class FixedParametersReader:
 
     def __init__(self):
-        self.data = {}
         self.tab_name = 'fixed_params'
         self.key = 'parameters'
-        self.parlist = []
         self.filename = 'xls/universal_constants.xlsx'
+        self.general_program_intialisations()
+
+    def general_program_intialisations(self):
+        self.data = {}
+        self.parlist = []
         self.start_row = 1
         self.column_for_keys = 0
         self.horizontal = True
@@ -371,18 +374,22 @@ class FixedParametersReader:
         return self.data
 
 
-class ParametersReader(FixedParametersReader):
+class CountryParametersReader(FixedParametersReader):
 
     def __init__(self, country_to_read):
-        self.data = {}
         self.tab_name = 'country_constants'
         self.key = 'country_constants'
-        self.parlist = []
         self.filename = 'xls/programs_' + country_to_read.lower() + '.xlsx'
-        self.start_row = 1
-        self.column_for_keys = 0
-        self.horizontal = True
-        self.parameter_dictionary_keys = []
+        self.general_program_intialisations()
+
+
+class DefaultParametersReader(FixedParametersReader):
+
+    def __init__(self):
+        self.tab_name = 'country_constants'
+        self.key = 'default_constants'
+        self.filename = 'xls/programs_default.xlsx'
+        self.general_program_intialisations()
 
 
 class ControlPanelReader(FixedParametersReader):
@@ -665,7 +672,7 @@ def read_xls_with_sheet_readers(sheet_readers=[]):
             result[reader.key] = reader.get_data()
 
         except:
-            warnings.warn('Spreadsheet %s not available' % reader.filename)
+            warnings.warn('Spreadsheet %s is not available' % reader.filename)
 
     return result
 
@@ -702,7 +709,9 @@ def read_input_data_xls(from_test, sheets_to_read, country=None):
     if 'parameters' in sheets_to_read:
         sheet_readers.append(FixedParametersReader())
     if 'country_constants' in sheets_to_read:
-        sheet_readers.append(ParametersReader(country))
+        sheet_readers.append(CountryParametersReader(country))
+    if 'default_constants' in sheets_to_read:
+        sheet_readers.append(DefaultParametersReader())
     if 'default_programs' in sheets_to_read:
         sheet_readers.append(DefaultProgramReader())
     if 'country_programs' in sheets_to_read:
@@ -762,14 +771,28 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country_for_process
 
     # Add default values if country_specific ones not available
     for program_var in data['default_programs']:
+        # If the key isn't in available for the country at all
         if program_var not in data['time_variants']:
             data['time_variants'][program_var] = \
                 data['default_programs'][program_var]
+        # Otherwise if it's there, use if there's no data available from the country
         else:
             for year in data['default_programs'][program_var]:
                 if year not in data['time_variants'][program_var]:
                     data['time_variants'][program_var][year] = \
                         data['default_programs'][program_var][year]
+
+    # Populate a "model_constants" dictionary with data from control panel, country
+    # sheet or default sheet hierarchically - such that the control panel is read in
+    # preference to the country data in preference to the default back-ups
+    data['model_constants'] = data['attributes']
+    other_sheets_with_constants = ['country_constants', 'default_constants', 'parameters']
+    for other_sheet in other_sheets_with_constants:
+        if other_sheet in data:
+            for item in data[other_sheet]:
+                if item not in data['attributes']:
+                    data['model_constants'][item] = \
+                        data[other_sheet][item]
 
     # Combine loaded data with data from spreadsheets for vaccination and case detection
     # Now with spreadsheet inputs over-riding GTB loaded data
@@ -892,7 +915,8 @@ if __name__ == "__main__":
     # Then import the data
     data = read_and_process_data(False,
                                  ['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
-                                  'country_constants', 'tb', 'notifications', 'outcomes',
+                                  'tb', 'notifications', 'outcomes',
+                                  'country_constants', 'default_constants',
                                   'country_economics', 'default_economics',
                                   'country_programs', 'default_programs'],
                                  country)

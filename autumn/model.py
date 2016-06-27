@@ -95,7 +95,7 @@ class ConsolidatedModel(BaseModel):
         self.n_comorbidity = n_comorbidity
 
         # Set time points for integration (model.times now created in base.py)
-        self.start_time = data['country_constants']['start_time']
+        self.start_time = data['model_constants']['start_time']
         self.end_time = data['attributes']['scenario_end_time']
         self.time_step = data['attributes']['time_step']
 
@@ -211,9 +211,9 @@ class ConsolidatedModel(BaseModel):
 
         self.initial_compartments = {}
         for compartment in self.compartment_types:
-            if compartment in self.data['country_constants']:
+            if compartment in self.data['model_constants']:
                 self.initial_compartments[compartment] \
-                    = self.data['country_constants'][compartment]
+                    = self.data['model_constants'][compartment]
 
     def initialise_compartments(self):
 
@@ -316,10 +316,9 @@ class ConsolidatedModel(BaseModel):
         # Set parameters from the data object
         # (country_constants are country-specific, while parameters aren't)
 
-        for key, value in self.data['parameters'].items():
-            self.set_parameter(key, value)
-        for key, value in self.data['country_constants'].items():
-            self.set_parameter(key, value)
+        for key, value in self.data['model_constants'].items():
+            if type(value) == float:
+                self.set_parameter(key, value)
 
     def set_fixed_infectious_proportion(self):
 

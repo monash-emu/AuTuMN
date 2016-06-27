@@ -598,7 +598,7 @@ def plot_outputs_against_gtb(model,
     subplot_grid = find_subplot_numbers(len(labels))
 
     # Time to plot until
-    end_time = model.data['attributes'][end_time_str]
+    end_time = model.data['model_constants'][end_time_str]
 
     # Not sure whether we have to specify a figure number
     fig = pyplot.figure(figure_number)
@@ -744,10 +744,10 @@ def plot_scaleup_fns(model, functions, png=None,
 
     line_styles = make_default_line_styles(len(functions), True)
     if start_time_str == 'recent_time':
-        start_time = model.data['attributes'][start_time_str]
+        start_time = model.data['model_constants'][start_time_str]
     else:
         start_time = model.data['model_constants'][start_time_str]
-    end_time = model.data['attributes'][end_time_str]
+    end_time = model.data['model_constants'][end_time_str]
     x_vals = numpy.linspace(start_time, end_time, 1E3)
 
     pyplot.figure(figure_number)
@@ -795,10 +795,10 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
 
     # Set x-values
     if start_time_str == 'recent_time':
-        start_time = model.data['attributes'][start_time_str]
+        start_time = model.data['model_constants'][start_time_str]
     else:
         start_time = model.data['model_constants'][start_time_str]
-    end_time = model.data['attributes'][end_time_str]
+    end_time = model.data['model_constants'][end_time_str]
     x_vals = numpy.linspace(start_time, end_time, 1E3)
 
     # Initialise figure
@@ -808,7 +808,7 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
     plural = ''
     if len(functions) > 1:
         plural += 's'
-    title = model.data['attributes']['country'] + ' ' + \
+    title = model.data['model_constants']['country'] + ' ' + \
             replace_underscore_with_space(parameter_type) + \
             ' parameter' + plural + ' from ' + replace_underscore_with_space(start_time_str)
     fig.suptitle(title)

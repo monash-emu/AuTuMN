@@ -420,7 +420,7 @@ class ControlPanelReader(FixedParametersReader):
         self.data = {}
         self.data['start_compartments'] = {}
         self.tab_name = 'control_panel'
-        self.key = 'attributes'
+        self.key = 'control_panel'
         self.parlist = []
         self.filename = 'xls/control_panel.xlsx'
         self.start_row = 0
@@ -732,7 +732,7 @@ def read_input_data_xls(from_test, sheets_to_read, country=None):
         sheet_readers.append(BirthRateReader(country))
     if 'life_expectancy' in sheets_to_read:
         sheet_readers.append(LifeExpectancyReader(country))
-    if 'attributes' in sheets_to_read:
+    if 'control_panel' in sheets_to_read:
         sheet_readers.append(ControlPanelReader())
     if 'default_constants' in sheets_to_read:
         sheet_readers.append(FixedParametersReader())
@@ -811,12 +811,12 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country_for_process
     # Populate a "model_constants" dictionary with data from control panel, country
     # sheet or default sheet hierarchically - such that the control panel is read in
     # preference to the country data in preference to the default back-ups
-    data['model_constants'] = data['attributes']
+    data['model_constants'] = data['control_panel']
     other_sheets_with_constants = ['country_constants', 'default_constants']
     for other_sheet in other_sheets_with_constants:
         if other_sheet in data:
             for item in data[other_sheet]:
-                if item not in data['attributes']:
+                if item not in data['control_panel']:
                     data['model_constants'][item] = \
                         data[other_sheet][item]
 
@@ -936,11 +936,11 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country_for_process
 if __name__ == "__main__":
 
     # Find the country by just reading that sheet first
-    country = read_input_data_xls(False, ['attributes'])['attributes']['country']
+    country = read_input_data_xls(False, ['control_panel'])['control_panel']['country']
 
     # Then import the data
     data = read_and_process_data(False,
-                                 ['bcg', 'rate_birth', 'life_expectancy', 'attributes',
+                                 ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
                                   'default_constants',
                                   'tb', 'notifications', 'outcomes',
                                   'country_constants',

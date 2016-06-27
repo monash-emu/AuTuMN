@@ -12,9 +12,9 @@ from autumn.spreadsheet import read_and_process_data, read_input_data_xls
 start_realtime = datetime.datetime.now()
 
 # Import the data
-country = read_input_data_xls(True, ['attributes'])['attributes']['country']
+country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
 data = read_and_process_data(True,
-                             ['bcg', 'rate_birth', 'life_expectancy', 'attributes',
+                             ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
                               'default_parameters',
                               'tb', 'notifications', 'outcomes',
                               'country_constants', 'default_constants',

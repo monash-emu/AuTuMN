@@ -356,7 +356,7 @@ class FixedParametersReader:
 
         self.tab_name = 'default_constants'
         self.key = 'default_constants'
-        self.filename = 'xls/default_constants.xlsx'
+        self.filename = 'xls/programs_default.xlsx'
         self.general_program_intialisations()
 
     def general_program_intialisations(self):

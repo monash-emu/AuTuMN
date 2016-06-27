@@ -25,7 +25,7 @@ out_dir = 'fullmodel_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
-is_additional_diagnostics = data['attributes']['is_additional_diagnostics'][0]
+is_additional_diagnostics = data['model_constants']['is_additional_diagnostics'][0]
 
 project = w_o.Project()
 project.country = country
@@ -33,15 +33,15 @@ project.name = 'project_test' # this name will be used as a directory to store a
 
 # Note that it takes about one hour to run all of the possible model structures,
 # so perhaps don't do that - and longer if running multiple scenarios
-for scenario in data['attributes']['scenarios_to_run'] + [None]:
+for scenario in data['model_constants']['scenarios_to_run'] + [None]:
     project.scenarios.append(scenario)
 
-    n_organs = data['attributes']['n_organs'][0]
-    n_strains =  data['attributes']['n_strains'][0]
-    n_comorbidities = data['attributes']['n_comorbidities'][0]
-    is_quality = data['attributes']['is_lowquality'][0]
-    is_amplification = data['attributes']['is_amplification'][0]
-    is_misassignment = data['attributes']['is_misassignment'][0]
+    n_organs = data['model_constants']['n_organs'][0]
+    n_strains =  data['model_constants']['n_strains'][0]
+    n_comorbidities = data['model_constants']['n_comorbidities'][0]
+    is_quality = data['model_constants']['is_lowquality'][0]
+    is_amplification = data['model_constants']['is_amplification'][0]
+    is_misassignment = data['model_constants']['is_misassignment'][0]
     if (is_misassignment and not is_amplification) \
             or (n_strains <= 1 and (is_amplification or is_misassignment)):
         pass
@@ -76,7 +76,7 @@ for scenario in data['attributes']['scenarios_to_run'] + [None]:
 
         autumn.plotting.plot_outputs_against_gtb(
             model, ["incidence", "mortality", "prevalence", "notifications"],
-            data['attributes']['recent_time'],
+            data['model_constants']['recent_time'],
             'scenario_end_time',
             base + '.rate_outputs_gtb_recent.png',
             country,

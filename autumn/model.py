@@ -89,15 +89,15 @@ class ConsolidatedModel(BaseModel):
         BaseModel.__init__(self)
 
         # Convert inputs to attributes
-        self.age_breakpoints = data['attributes']['age_breakpoints']
+        self.age_breakpoints = data['model_constants']['age_breakpoints']
         self.n_organ = n_organ
         self.n_strain = n_strain
         self.n_comorbidity = n_comorbidity
 
         # Set time points for integration (model.times now created in base.py)
         self.start_time = data['model_constants']['start_time']
-        self.end_time = data['attributes']['scenario_end_time']
-        self.time_step = data['attributes']['time_step']
+        self.end_time = data['model_constants']['scenario_end_time']
+        self.time_step = data['model_constants']['time_step']
 
         # Set Boolean conditionals for model structure and additional diagnostics
         self.is_lowquality = is_lowquality
@@ -314,8 +314,6 @@ class ConsolidatedModel(BaseModel):
     def set_fixed_parameters(self):
 
         # Set parameters from the data object
-        # (country_constants are country-specific, while parameters aren't)
-
         for key, value in self.data['model_constants'].items():
             if type(value) == float:
                 self.set_parameter(key, value)
@@ -547,7 +545,7 @@ class ConsolidatedModel(BaseModel):
                 if 'smoothness' in self.scaleup_data[param]:
                     smoothness = self.scaleup_data[param].pop('smoothness')
                 else:
-                    smoothness = self.data['attributes']['default_smoothness']
+                    smoothness = self.data['model_constants']['default_smoothness']
 
                 # If the parameter is being modified for the scenario being run
                 if 'scenario' in self.scaleup_data[param]:
@@ -566,7 +564,7 @@ class ConsolidatedModel(BaseModel):
                 self.set_scaleup_fn(param,
                                     scale_up_function(self.scaleup_data[param].keys(),
                                                       self.scaleup_data[param].values(),
-                                                      self.data['attributes']['fitting_method'],
+                                                      self.data['model_constants']['fitting_method'],
                                                       smoothness,
                                                       bound_low=0.,
                                                       bound_up=upper_bound,
@@ -943,10 +941,10 @@ class ConsolidatedModel(BaseModel):
         # This parameter is the number of persons effectively treated with IPT for each
         # patient started on treatment for active disease.
         prevented_cases_per_patient_starting_treatment = self.vars['program_prop_ipt'] \
-                                                         * self.data['parameters']['demo_household_size'] \
-                                                         * self.data['parameters']['tb_prop_contacts_infected'] \
-                                                         * self.data['parameters']['tb_prop_ltbi_test_sensitivity'] \
-                                                         * self.data['parameters']['tb_prop_ipt_effectiveness']
+                                                         * self.data['model_constants']['demo_household_size'] \
+                                                         * self.data['model_constants']['tb_prop_contacts_infected'] \
+                                                         * self.data['model_constants']['tb_prop_ltbi_test_sensitivity'] \
+                                                         * self.data['model_constants']['tb_prop_ipt_effectiveness']
         self.vars['ipt_commencements'] = 0.
         for strain in self.strains:
             for agegroup in self.agegroups:
@@ -1595,11 +1593,11 @@ class ConsolidatedModel(BaseModel):
 
     def integrate(self):
         min_dt = 0.05
-        if self.data['attributes']['integration'] == 'explicit':
+        if self.data['model_constants']['integration'] == 'explicit':
             self.integrate_explicit(min_dt)
-        elif self.data['attributes']['integration'] == 'scipy':
+        elif self.data['model_constants']['integration'] == 'scipy':
             self.integrate_scipy(min_dt)
-        elif self.data['attributes']['integration'] == 'runge_kutta':
+        elif self.data['model_constants']['integration'] == 'runge_kutta':
             self.integrate_runge_kutta(min_dt)
 
 

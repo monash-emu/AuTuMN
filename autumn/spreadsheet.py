@@ -279,8 +279,7 @@ class BcgCoverageSheetReader:
             self.parlist = parse_year_data(row, '', len(row))
             for i in range(len(self.parlist)):
                 self.parlist[i] = str(self.parlist[i])
-        elif row[self.column_for_keys] == adjust_country_name(self.country_to_read)\
-                or self.key == 'time_variants':
+        elif row[self.column_for_keys] == adjust_country_name(self.country_to_read):
             for i in range(self.start_col, len(row)):
                 if type(row[i]) == float:
                     self.data[int(self.parlist[i])] = \
@@ -432,12 +431,11 @@ class ControlPanelReader(FixedParametersReader):
             self.data[str(row[0])] = str(row[1])
 
 
-class ProgramReader:
+class DefaultProgramReader:
 
-    def __init__(self, country_to_read):
-        self.filename = 'xls/programs_' + country_to_read.lower() + '.xlsx'
-        self.country_to_read = country_to_read
-        self.key = 'time_variants'
+    def __init__(self):
+        self.filename = 'xls/programs_default.xlsx'
+        self.key = 'default_programs'
         self.general_program_intialisations()
 
     def general_program_intialisations(self):
@@ -468,15 +466,24 @@ class ProgramReader:
         return self.data
 
 
-class DefaultEconomicsReader(ProgramReader):
+class CountryProgramReader(DefaultProgramReader):
 
-    def __init__(self, country_to_read=None):
+    def __init__(self, country_to_read):
+        self.filename = 'xls/programs_' + country_to_read.lower() + '.xlsx'
+        self.country_to_read = country_to_read
+        self.key = 'country_programs'
+        self.general_program_intialisations()
+
+
+class DefaultEconomicsReader(DefaultProgramReader):
+
+    def __init__(self):
         self.key = 'default_economics'
         self.filename = 'xls/economics_default.xlsx'
         self.general_program_intialisations()
 
 
-class CountryEconomicsReader(ProgramReader):
+class CountryEconomicsReader(DefaultProgramReader):
 
     def __init__(self, country_to_read):
         self.key = 'country_economics'
@@ -658,8 +665,7 @@ def read_xls_with_sheet_readers(sheet_readers=[]):
             result[reader.key] = reader.get_data()
 
         except:
-            warnings.warn('Failed to open spreadsheet: %s' % reader.filename)
-
+            warnings.warn('Spreadsheet %s not available' % reader.filename)
 
     return result
 
@@ -697,8 +703,10 @@ def read_input_data_xls(from_test, sheets_to_read, country=None):
         sheet_readers.append(FixedParametersReader())
     if 'country_constants' in sheets_to_read:
         sheet_readers.append(ParametersReader(country))
-    if 'time_variants' in sheets_to_read:
-        sheet_readers.append(ProgramReader(country))
+    if 'default_programs' in sheets_to_read:
+        sheet_readers.append(DefaultProgramReader())
+    if 'country_programs' in sheets_to_read:
+        sheet_readers.append(CountryProgramReader(country))
     if 'tb' in sheets_to_read:
         sheet_readers.append(GlobalTbReportReader(country))
     if 'notifications' in sheets_to_read:
@@ -712,7 +720,7 @@ def read_input_data_xls(from_test, sheets_to_read, country=None):
     if 'strategy' in sheets_to_read:
         sheet_readers.append(StrategyReader(country))
     if 'default_economics' in sheets_to_read:
-        sheet_readers.append(DefaultEconomicsReader(None))
+        sheet_readers.append(DefaultEconomicsReader())
     if 'country_economics' in sheets_to_read:
         sheet_readers.append(CountryEconomicsReader(country))
 
@@ -746,21 +754,38 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country_for_process
         calculate_proportion_dict(data['notifications'],
                                   ['new_sp', 'new_sn', 'new_ep']))
 
+    data['time_variants'] = {}
+
+    # Add all the loaded country-specific economic variables to the time-variants dictionary
+    if 'country_programs' in data:
+        data['time_variants'].update(data['country_programs'])
+
+    # Add default values if country_specific ones not available
+    for program_var in data['default_programs']:
+        if program_var not in data['time_variants']:
+            data['time_variants'][program_var] = \
+                data['default_programs'][program_var]
+        else:
+            for year in data['default_programs'][program_var]:
+                if year not in data['time_variants'][program_var]:
+                    data['time_variants'][program_var][year] = \
+                        data['default_programs'][program_var][year]
+
     # Combine loaded data with data from spreadsheets for vaccination and case detection
     # Now with spreadsheet inputs over-riding GTB loaded data
     if data['time_variants']['program_prop_vaccination']['load_data'] == 'yes':
-        for i in data['bcg']:
+        for year in data['bcg']:
             # If not already loaded through the inputs spreadsheet
-            if i not in data['time_variants']['program_prop_vaccination']:
-                data['time_variants']['program_prop_vaccination'][i] = data['bcg'][i]
+            if year not in data['time_variants']['program_prop_vaccination']:
+                data['time_variants']['program_prop_vaccination'][year] = data['bcg'][year]
 
     # As above, now for case detection
     if data['time_variants']['program_prop_detect']['load_data'] == 'yes':
-        for i in data['tb']['c_cdr']:
+        for year in data['tb']['c_cdr']:
             # If not already loaded through the inputs spreadsheet
-            if i not in data['time_variants']['program_prop_detect']:
-                data['time_variants']['program_prop_detect'][i] \
-                    = data['tb']['c_cdr'][i]
+            if year not in data['time_variants']['program_prop_detect']:
+                data['time_variants']['program_prop_detect'][year] \
+                    = data['tb']['c_cdr'][year]
 
     # Calculate proportions of patients with each outcome for DS-TB
     data['outcomes'].update(
@@ -771,21 +796,21 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country_for_process
 
     # Calculate treatment success as cure plus completion
     data['outcomes']['prop_new_sp_success'] = {}
-    for i in data['outcomes']['prop_new_sp_cmplt']:
-        data['outcomes']['prop_new_sp_success'][i] \
-            = data['outcomes']['prop_new_sp_cmplt'][i] + data['outcomes']['prop_new_sp_cur'][i]
+    for year in data['outcomes']['prop_new_sp_cmplt']:
+        data['outcomes']['prop_new_sp_success'][year] \
+            = data['outcomes']['prop_new_sp_cmplt'][year] + data['outcomes']['prop_new_sp_cur'][year]
 
     # Add the treatment success and death data to the program dictionary
     if data['time_variants']['program_prop_treatment_success']['load_data'] == 'yes':
-        for i in data['outcomes']['prop_new_sp_success']:
-            if i not in data['time_variants']['program_prop_treatment_success']:
-                data['time_variants']['program_prop_treatment_success'][i] \
-                    = data['outcomes']['prop_new_sp_success'][i]
+        for year in data['outcomes']['prop_new_sp_success']:
+            if year not in data['time_variants']['program_prop_treatment_success']:
+                data['time_variants']['program_prop_treatment_success'][year] \
+                    = data['outcomes']['prop_new_sp_success'][year]
     if data['time_variants']['program_prop_treatment_death']['load_data'] == 'yes':
-        for i in data['outcomes']['prop_new_sp_died']:
-            if i not in data['time_variants']['program_prop_treatment_death']:
-                data['time_variants']['program_prop_treatment_death'][i] \
-                    = data['outcomes']['prop_new_sp_died'][i]
+        for year in data['outcomes']['prop_new_sp_died']:
+            if year not in data['time_variants']['program_prop_treatment_death']:
+                data['time_variants']['program_prop_treatment_death'][year] \
+                    = data['outcomes']['prop_new_sp_died'][year]
 
     # Duplicate DS-TB outcomes for single strain models (possibly should be moved to model.py)
     for outcome in ['_success', '_death']:
@@ -795,19 +820,19 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country_for_process
     # Populate program dictionaries from epi ones
     for demo_parameter in ['life_expectancy', 'rate_birth']:
         if data['time_variants']['demo_' + demo_parameter]['load_data'] == 'yes':
-            for i in data[demo_parameter]:
-                if i not in data['time_variants']['demo_' + demo_parameter]:
-                    data['time_variants']['demo_' + demo_parameter][i] = data[demo_parameter][i]
+            for year in data[demo_parameter]:
+                if year not in data['time_variants']['demo_' + demo_parameter]:
+                    data['time_variants']['demo_' + demo_parameter][year] = data[demo_parameter][year]
 
     # Populate smear-positive and smear-negative proportion dictionaries to time-variant dictionary
     if data['time_variants']['epi_prop_smearpos']['load_data'] == 'yes':
-        for i in data['notifications']['prop_new_sp']:
-            if i not in data['time_variants']['epi_prop_smearpos']:
-                data['time_variants']['epi_prop_smearpos'][i] = data['notifications']['prop_new_sp'][i]
+        for year in data['notifications']['prop_new_sp']:
+            if year not in data['time_variants']['epi_prop_smearpos']:
+                data['time_variants']['epi_prop_smearpos'][year] = data['notifications']['prop_new_sp'][year]
     if data['time_variants']['epi_prop_smearpos']['load_data'] == 'yes':
-        for i in data['notifications']['prop_new_sn']:
-            if i not in data['time_variants']['epi_prop_smearneg']:
-                data['time_variants']['epi_prop_smearneg'][i] = data['notifications']['prop_new_sn'][i]
+        for year in data['notifications']['prop_new_sn']:
+            if year not in data['time_variants']['epi_prop_smearneg']:
+                data['time_variants']['epi_prop_smearneg'][year] = data['notifications']['prop_new_sn'][year]
 
     # Treatment outcomes
     # The aim is now to have data for success and death, as default can be derived from these
@@ -824,10 +849,10 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country_for_process
     # Populate MDR and XDR data from outcomes dictionary into program dictionary
     for strain in ['_mdr', '_xdr']:
         if data['time_variants']['program_prop_treatment_success' + strain]['load_data'] == 'yes':
-            for i in data['outcomes']['prop' + strain + '_succ']:
-                if i not in data['time_variants']['program_prop_treatment_success' + strain]:
-                    data['time_variants']['program_prop_treatment_success' + strain][i] \
-                        = data['outcomes']['prop' + strain + '_succ'][i]
+            for year in data['outcomes']['prop' + strain + '_succ']:
+                if year not in data['time_variants']['program_prop_treatment_success' + strain]:
+                    data['time_variants']['program_prop_treatment_success' + strain][year] \
+                        = data['outcomes']['prop' + strain + '_succ'][year]
 
     # Probably temporary code to assign the same treatment outcomes to XDR-TB as for inappropriate
     for outcome in ['_success', '_death']:
@@ -867,8 +892,9 @@ if __name__ == "__main__":
     # Then import the data
     data = read_and_process_data(False,
                                  ['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
-                                  'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes',
-                                  'country_economics', 'default_economics'],
+                                  'country_constants', 'tb', 'notifications', 'outcomes',
+                                  'country_economics', 'default_economics',
+                                  'country_programs', 'default_programs'],
                                  country)
 
     print("Time elapsed in running script is " + str(datetime.datetime.now() - spreadsheet_start_realtime))

@@ -16,7 +16,8 @@ country = read_input_data_xls(True, ['attributes'])['attributes']['country']
 data = read_and_process_data(True,
                              ['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
                               'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes',
-                              'country_economics', 'default_economics'],
+                             'country_economics', 'default_economics',
+                             'country_programs', 'default_programs'],
                              country)
 
 # A few basic preliminaries

@@ -62,7 +62,8 @@ else:
 
 data = read_and_process_data(True,
                              ['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
-                              'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes'],
+                              'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes',
+                              'country_economics', 'default_economics'],
                              country)
 
 initials = data['time_variants'][u'program_prop_treatment_success_mdr'][year]

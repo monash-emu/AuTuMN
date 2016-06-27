@@ -7,6 +7,7 @@ import numpy
 import os
 import datetime
 import copy
+import warnings
 
 
 spreadsheet_start_realtime = datetime.datetime.now()
@@ -434,14 +435,17 @@ class ControlPanelReader(FixedParametersReader):
 class ProgramReader:
 
     def __init__(self, country_to_read):
+        self.filename = 'xls/programs_' + country_to_read.lower() + '.xlsx'
+        self.country_to_read = country_to_read
+        self.key = 'time_variants'
+        self.general_program_intialisations()
+
+    def general_program_intialisations(self):
         self.data = {}
         self.tab_name = 'time_variants'
-        self.key = 'time_variants'
-        self.filename = 'xls/programs_' + country_to_read.lower() + '.xlsx'
         self.start_row = 0
         self.column_for_keys = 0
         self.horizontal = True
-        self.country_to_read = country_to_read
         self.start_col = 1
         self.first_cell = 'program'
 
@@ -450,18 +454,35 @@ class ProgramReader:
         if row[0] == self.first_cell:
             self.parlist = parse_year_data(row, '', len(row))
         else:
-            self.data[row[0]] = {}
+            self.data[str(row[0])] = {}
             for i in range(self.start_col, len(row)):
                 parlist_item_string = str(self.parlist[i])
                 if ('19' in parlist_item_string or '20' in parlist_item_string) and row[i] != '':
                     self.data[row[0]][int(self.parlist[i])] = \
                         row[i]
                 elif row[i] != '':
-                    self.data[row[0]][self.parlist[i]] = \
+                    self.data[str(row[0])][self.parlist[i]] = \
                         row[i]
 
     def get_data(self):
         return self.data
+
+
+class DefaultEconomicsReader(ProgramReader):
+
+    def __init__(self, country_to_read=None):
+        self.key = 'default_economics'
+        self.filename = 'xls/economics_default.xlsx'
+        self.general_program_intialisations()
+
+
+class CountryEconomicsReader(ProgramReader):
+
+    def __init__(self, country_to_read):
+        self.key = 'country_economics'
+        self.filename = 'xls/economics_' + country_to_read.lower() + '.xlsx'
+        self.country_to_read = country_to_read
+        self.general_program_intialisations()
 
 
 class GlobalTbReportReader:
@@ -524,8 +545,6 @@ class NotificationsReader(GlobalTbReportReader):
         self.start_row = 1
         self.indices = []
         self.country_to_read = country_to_read
-
-
 
 
 class TreatmentOutcomesReader(GlobalTbReportReader):
@@ -625,19 +644,22 @@ def read_xls_with_sheet_readers(sheet_readers=[]):
         # Check that the spreadsheet to be read exists
         try:
             workbook = open_workbook(reader.filename)
-        except:
-            raise Exception('Failed to open spreadsheet: %s' % reader.filename)
-        #print("Reading sheet \"{}\"".format(reader.tab_name))
-        sheet = workbook.sheet_by_name(reader.tab_name)
 
-        # Read in the direction that the reader expects (either horizontal or vertical)
-        if reader.horizontal:
-            for i_row in range(reader.start_row, sheet.nrows):
-                reader.parse_row(sheet.row_values(i_row))
-        else:
-            for i_col in range(reader.start_column, sheet.ncols):
-                reader.parse_col(sheet.col_values(i_col))
-        result[reader.key] = reader.get_data()
+            # raise Exception('Failed to open spreadsheet: %s' % reader.filename)
+            sheet = workbook.sheet_by_name(reader.tab_name)
+
+            # Read in the direction that the reader expects (either horizontal or vertical)
+            if reader.horizontal:
+                for i_row in range(reader.start_row, sheet.nrows):
+                    reader.parse_row(sheet.row_values(i_row))
+            else:
+                for i_col in range(reader.start_column, sheet.ncols):
+                    reader.parse_col(sheet.col_values(i_col))
+            result[reader.key] = reader.get_data()
+
+        except:
+            warnings.warn('Failed to open spreadsheet: %s' % reader.filename)
+
 
     return result
 
@@ -689,6 +711,10 @@ def read_input_data_xls(from_test, sheets_to_read, country=None):
         sheet_readers.append(LaboratoriesReader(country))
     if 'strategy' in sheets_to_read:
         sheet_readers.append(StrategyReader(country))
+    if 'default_economics' in sheets_to_read:
+        sheet_readers.append(DefaultEconomicsReader(None))
+    if 'country_economics' in sheets_to_read:
+        sheet_readers.append(CountryEconomicsReader(country))
 
     # If being run from the directory above
     if from_test:
@@ -698,7 +724,7 @@ def read_input_data_xls(from_test, sheets_to_read, country=None):
     return read_xls_with_sheet_readers(sheet_readers)
 
 
-def read_and_process_data(from_test, keys_of_sheets_to_read, country):
+def read_and_process_data(from_test, keys_of_sheets_to_read, country_for_processing):
 
     """
     Runs the main data reading function and performs a few tidying tasks.
@@ -711,7 +737,7 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
     """
 
     # First just get the main data object from the reading function
-    data = read_input_data_xls(from_test, keys_of_sheets_to_read, country)
+    data = read_input_data_xls(from_test, keys_of_sheets_to_read, country_for_processing)
 
     # Calculate proportions that are smear-positive, smear-negative or extra-pulmonary
     # and add them to the data object's notification dictionary
@@ -821,6 +847,15 @@ def read_and_process_data(from_test, keys_of_sheets_to_read, country):
         # Remove dictionary keys for which values are nan
         data['time_variants'][program] = remove_nans(data['time_variants'][program])
 
+    # Add all the loaded country-specific economic variables to the time-variants dictionary
+    if 'country_economics' in data:
+        data['time_variants'].update(data['country_economics'])
+
+    # Add default values if country_specific ones not available
+    for economic_var in data['default_economics']:
+        if economic_var not in data['time_variants']:
+            data['time_variants'][economic_var] = data['default_economics'][economic_var]
+
     return data
 
 
@@ -832,7 +867,8 @@ if __name__ == "__main__":
     # Then import the data
     data = read_and_process_data(False,
                                  ['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
-                                  'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes'],
+                                  'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes',
+                                  'country_economics', 'default_economics'],
                                  country)
 
     print("Time elapsed in running script is " + str(datetime.datetime.now() - spreadsheet_start_realtime))

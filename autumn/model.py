@@ -941,7 +941,7 @@ class ConsolidatedModel(BaseModel):
         # This parameter is the number of persons effectively treated with IPT for each
         # patient started on treatment for active disease.
         prevented_cases_per_patient_starting_treatment = self.vars['program_prop_ipt'] \
-                                                         * self.data['model_constants']['demo_household_size'] \
+                                                         * (self.data['model_constants']['demo_household_size'] - 1.) \
                                                          * self.data['model_constants']['tb_prop_contacts_infected'] \
                                                          * self.data['model_constants']['tb_prop_ltbi_test_sensitivity'] \
                                                          * self.data['model_constants']['tb_prop_ipt_effectiveness']

@@ -1,10 +1,9 @@
 
-
 import numpy
 import matplotlib.pyplot as plt
-import autumn.plotting as plotting
 import math
 from autumn.spreadsheet import read_and_process_data, read_input_data_xls
+import autumn.model as model
 
 """
 
@@ -26,10 +25,29 @@ Present value = cost / (1+ discount rate)^t, where t is number of years into the
 http://www.crest.uts.edu.au/pdfs/FactSheet_Discounting.pdf
 """
 
-############### INITIAL CONDITIONS##################
+############ READ SOME DATA FROM SPREADSHEET ########
+
+country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
+print(country)
+data = read_and_process_data(True,
+                             ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
+                              'default_parameters',
+                              'tb', 'notifications', 'outcomes',
+                              'country_constants', 'default_constants',
+                              'country_economics', 'default_economics',
+                              'country_programs', 'default_programs'],
+                             country)
+econ_inflation_excel = data['country_economics']['econ_inflation']
+econ_cpi_excel = data['country_economics']['econ_cpi']
+time_step = data['model_constants']['time_step']
+
+###################################################
+
+
+############### INITIAL CONDITIONS#################
 
 params_default = {
-    "saturation": 1,
+    "saturation": 1.001,
     "coverage": 0.33,
     "funding": 1.5e6,
     "scale_up_factor": 0.75,
@@ -39,12 +57,12 @@ params_default = {
     "outcome_zerocov": 20,
     "outcome_fullcov": 5}
 
-start_coverage = 0.0001
-end_coverage = params_default["saturation"]
-delta_coverage = 0.001
-method = 1
+
+method = 2
 year_index = 2000 # To plot/use cost function of a particular year. 1995 is just an example
-year_ref = 2015 # Reference year for inflation calculation
+year_ref = data['model_constants']['current_time'] # Reference year for inflation calculation
+print("Reference year " + str(year_ref))
+
 
 if method == 1:
     print ("METHOD" " " + str(method), "new programs", "unit cost not available")
@@ -73,41 +91,13 @@ econ_cpi = {1970: 9.04, 1971: 9.41, 1972: 11.48, 1973: 12.75, 1974: 14.6, 1975: 
 #CPI: 1981 onwards are actual data. 1970 - 1980 calculated from inflation rate (inflation = (CPI new - CPI old)/CPI old.
 #1920 - 1970 also calculated fron inflation rate but less reliable as inflation data are not actual data
 
-country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
-print(country)
-data = read_and_process_data(True,
-                             ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
-                              'default_parameters',
-                              'tb', 'notifications', 'outcomes',
-                              'country_constants', 'default_constants',
-                              'country_economics', 'default_economics',
-                              'country_programs', 'default_programs'],
-                             country)
-econ_inflation_excel = data['country_economics']['econ_inflation']
-econ_cpi_excel = data['country_economics']['econ_cpi']
-time_step = data['model_constants']['time_step']
-
-
 #######CREATE EMPTY LIST TO STORE RESULTS LATER #####
 
 cost_uninflated = []
+cost_inflated = []
 coverage_values = []
 
 #####################################################
-
-
-######## MAKE COVERAGE RANGE #######################
-
-def make_coverage_steps(start_coverage, end_coverage, delta_coverage):
-    steps = []
-    step = start_coverage
-    while step <= end_coverage:
-        steps.append(step)
-        step += delta_coverage
-    return steps
-coverage_values = make_coverage_steps(start_coverage, end_coverage, delta_coverage)
-
-#######################################################
 
 
 ##### FX TO GET COVERAGE FROM OUTCOME #################
@@ -122,16 +112,16 @@ def get_coverage_from_outcome_program_as_param(outcome):
 
 ##### FX TO GET COST FROM COVERAGE ##################
 
-def get_cost_from_coverage(coverage_range, saturation, coverage, funding, scale_up_factor, unitcost, popsize):
+def get_cost_from_coverage(saturation, coverage, funding, scale_up_factor, unitcost, popsize):
     if method in (1, 2):
         if method == 1: # For new programs which requires significant start-up cost. Unit cost unknown
             # In this function, funding and coverage are time-variant. Coverage_range varies from a pre-define range every year
-            cost_uninflated = funding / (((saturation - coverage_range) / (coverage_range * (saturation / coverage)))**((1 - scale_up_factor) / 2))
+            cost_uninflated = funding / (((saturation - coverage) / (coverage * (saturation / coverage)))**((1 - scale_up_factor) / 2))
             return cost_uninflated
 
         elif method == 2: # For well-established programs of which start-up cost should be ignored. Unit cost known
             # In this function, popsize and unit cost are time-variant. Unitcost can be constant if only has 1 data
-            cost_uninflated = - unitcost * popsize * math.log(((2 * saturation) / (coverage_range + saturation)) - 1)
+            cost_uninflated = - unitcost * popsize * math.log(((2 * saturation) / (coverage + saturation)) - 1)
             return cost_uninflated
 
 
@@ -148,6 +138,7 @@ def cost_scaleup_fns(model,
         start_time = model.data['country_constants'][start_time_str]
 
     end_time = model.data['model_constants'][end_time_str]
+    print('Start time ' + str(start_time) + ' End time ' + str(end_time))
     #x_vals = numpy.linspace(start_time, end_time, end_time - start_time + 1)  # years
     x_vals = numpy.linspace(start_time, end_time, len(model.times))  # years
 
@@ -179,20 +170,19 @@ def cost_scaleup_fns(model,
             funding_scaleup = map(model.scaleup_fns['program_cost_vaccination'], x_vals)
             #print(scaleup_param_vals[int(year_pos)], x_vals[int(year_pos)])
             #print(len(x_vals))
+            unitcost = map(model.scaleup_fns[function], x_vals)
             popsize = model.compartment_soln['susceptible_fully']
             coverage = get_coverage_from_outcome_program_as_param(scaleup_param_vals)
-            for coverage_range in coverage_values:
-                cost_uninflated = get_cost_from_coverage(coverage_range,
-                                              params_default['saturation'],
-                                              coverage, #Add [year_pos] to get cost-coverage curve at that year
-                                              funding_scaleup, #Add [year_pos] to get cost-coverage curve at that year
-                                              params_default['scale_up_factor'],
-                                              params_default['unitcost'],
-                                              popsize)
 
-                print(cost_uninflated[year_pos])
-                cost_inflated = cost_uninflated * econ_cpi_excel[year_ref] / econ_cpi_scaleup
 
+            for i in numpy.arange(0, len(x_vals), 1):
+                cost_uninflated.append(get_cost_from_coverage(params_default['saturation'],
+                                                        coverage[int(i)], #Add [year_pos] to get cost-coverage curve at that year
+                                                        funding_scaleup[int(i)], #Add [year_pos] to get cost-coverage curve at that year
+                                                        params_default['scale_up_factor'],
+                                                        unitcost[int(i)],
+                                                        popsize[int(i)]))
+                cost_inflated.append(cost_uninflated[int(i)] * econ_cpi_excel[int(year_ref)] / econ_cpi_scaleup[int(i)])
 
 ################### PLOTTING ##############################################
 

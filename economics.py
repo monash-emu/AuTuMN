@@ -3,6 +3,7 @@ import numpy
 import matplotlib.pyplot as plt
 import math
 from autumn.spreadsheet import read_and_process_data, read_input_data_xls
+import autumn.plotting as plotting
 import autumn.model as model
 
 """
@@ -16,7 +17,6 @@ TO DO LIST
 
 2. Funding value for each year. This will be challenging to get data for
 
-4. Check with James: popsize is susceptible_fully?
 5. Use plotting.py to plot all results. At the moment, economics.py has its own plotting function
 6. Move the initial conditions to a Excel spreadsheet.
 7. Think about discounting. At the moment, it is not need as the model only runs until 2015.
@@ -57,10 +57,13 @@ params_default = {
     "outcome_zerocov": 20,
     "outcome_fullcov": 5}
 
-
+start_coverage = 0.0001
+end_coverage = params_default["saturation"]
+delta_coverage = 0.001
+plot_costcurve = True
 method = 2
-year_index = 2000 # To plot/use cost function of a particular year. 1995 is just an example
-year_ref = data['model_constants']['current_time'] # Reference year for inflation calculation
+year_index = 1985 # To plot/use cost function of a particular year. 1995 is just an example
+year_ref = data['model_constants']['current_time'] # Reference year for inflation calculation (2015)
 print("Reference year " + str(year_ref))
 
 
@@ -70,6 +73,21 @@ elif method ==2:
     print ("METHOD" " " + str(method), "established-programs", "unit cost available")
 
 ###################################################
+
+######## MAKE COVERAGE RANGE #######################
+
+def make_coverage_steps(start_coverage, end_coverage, delta_coverage):
+    steps = []
+    step = start_coverage
+    while step <= end_coverage:
+        steps.append(step)
+        step += delta_coverage
+    return steps
+coverage_values = make_coverage_steps(start_coverage, end_coverage, delta_coverage)
+
+
+#######################################################
+
 
 ########### GET INFLATION RATE DATA ###############
 
@@ -94,8 +112,10 @@ econ_cpi = {1970: 9.04, 1971: 9.41, 1972: 11.48, 1973: 12.75, 1974: 14.6, 1975: 
 #######CREATE EMPTY LIST TO STORE RESULTS LATER #####
 
 cost_uninflated = []
+cost_uninflated_toplotcostcurve = []
 cost_inflated = []
-coverage_values = []
+
+
 
 #####################################################
 
@@ -145,7 +165,9 @@ def cost_scaleup_fns(model,
     #year_pos = year_index - start_time
     year_pos = ((year_index - start_time) / ((end_time - start_time) / len(model.times)))
     year_pos = int(year_pos)
+    print('Index year ' + str(x_vals[year_pos]))
     #print(year_index, model.times[year_pos])
+
 
     '''
     def make_time_steps(start_time, end_time, time_step):
@@ -174,7 +196,6 @@ def cost_scaleup_fns(model,
             popsize = model.compartment_soln['susceptible_fully']
             coverage = get_coverage_from_outcome_program_as_param(scaleup_param_vals)
 
-
             for i in numpy.arange(0, len(x_vals), 1):
                 cost_uninflated.append(get_cost_from_coverage(params_default['saturation'],
                                                         coverage[int(i)], #Add [year_pos] to get cost-coverage curve at that year
@@ -183,6 +204,20 @@ def cost_scaleup_fns(model,
                                                         unitcost[int(i)],
                                                         popsize[int(i)]))
                 cost_inflated.append(cost_uninflated[int(i)] * econ_cpi_excel[int(year_ref)] / econ_cpi_scaleup[int(i)])
+
+
+########## PLOT COST COVERAGE CURVE #######################################
+
+            for coverage_range in coverage_values:
+                cost_uninflated_toplotcostcurve.append(get_cost_from_coverage(params_default['saturation'],
+                                                coverage_range, #Add [year_pos] to get cost-coverage curve at that year
+                                                funding_scaleup[year_pos], #Add [year_pos] to get cost-coverage curve at that year
+                                                params_default['scale_up_factor'],
+                                                unitcost[year_pos],
+                                                popsize[year_pos]))
+
+###########################################################################
+
 
 ################### PLOTTING ##############################################
 
@@ -261,19 +296,18 @@ def cost_scaleup_fns(model,
             frame.set_facecolor('0.90')
             plt.show()
 
-            '''
-            plt.figure(333)
-            plt.plot(cost_uninflated, coverage_values)
-            title = str(country) + ' ' + \
-                        plotting.replace_underscore_with_space(parameter_type) + \
-                        ' parameter' + ' from ' + plotting.replace_underscore_with_space(start_time_str)
-            plt.title(title)
-            plt.xlabel('Cost')
-            plt.ylabel('Coverage')
+
+            plt.figure('Cost-coverage curve')
+            plt.plot(cost_uninflated_toplotcostcurve, coverage_values, 'r', linewidth = 3)
             plt.title('Cost coverage curve for year ' + str(year_index))
+            plt.xlabel('$ Cost')
+            plt.ylabel('Coverage')
+            plt.ylim([0, params_default['saturation']])
             plt.show()
-            '''
+
 ############################################################################################
+
+
 
 
 

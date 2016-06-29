@@ -519,12 +519,13 @@ def plot_populations(model, labels, values, left_xlimit, strain_or_organ, png=No
     save_png(png)
 
 
-def plot_fractions(model, values, left_xlimit, strain_or_organ, png=None):
+def plot_fractions(model, values, left_xlimit, strain_or_organ, png=None, figure_number=30):
 
     right_xlimit_index, left_xlimit_index = truncate_data(model, left_xlimit)
     colours, patterns, compartment_full_names, markers\
         = make_related_line_styles(values.keys(), strain_or_organ)
-    ax = make_axes_with_room_for_legend()
+    fig = pyplot.figure(figure_number)
+    ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
     axis_labels = []
     for i_plot, plot_label in enumerate(values.keys()):
         ax.plot(

@@ -69,10 +69,10 @@ else:
 
     # Plot over subgroups
     subgroup_solns, subgroup_fractions = autumn.base_analyses.find_fractions(model)
-    for category in subgroup_fractions:
+    for i, category in enumerate(subgroup_fractions):
         autumn.plotting.plot_fractions(
             model, subgroup_fractions[category], model.data['model_constants']['recent_time'],
-            'strain', 'fraction_' + category + '.png')
+            'strain', base + 'fraction_' + category + '.png', figure_number=30+i)
 
     autumn.plotting.plot_outputs_against_gtb(
         model, ["incidence", "mortality", "prevalence", "notifications"],

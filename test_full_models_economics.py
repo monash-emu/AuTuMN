@@ -51,7 +51,6 @@ else:
         is_quality,  # Low quality care
         is_amplification,  # Amplification
         is_misassignment,  # Misassignment by strain
-        is_additional_diagnostics,
         scenario,  # Scenario to run
         data)
     print(str(n_organs) + " organ(s),   " +

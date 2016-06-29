@@ -61,7 +61,7 @@ start_coverage = 0.0001
 end_coverage = params_default["saturation"]
 delta_coverage = 0.001
 plot_costcurve = True
-method = 2
+method = 1
 year_index = 1985 # To plot/use cost function of a particular year. 1995 is just an example
 year_ref = data['model_constants']['current_time'] # Reference year for inflation calculation (2015)
 print("Reference year " + str(year_ref))
@@ -132,11 +132,11 @@ def get_coverage_from_outcome_program_as_param(outcome):
 
 ##### FX TO GET COST FROM COVERAGE ##################
 
-def get_cost_from_coverage(saturation, coverage, funding, scale_up_factor, unitcost, popsize):
+def get_cost_from_coverage(saturation, coverage, funding_mid, scale_up_factor, unitcost, popsize, coverage_mid):
     if method in (1, 2):
         if method == 1: # For new programs which requires significant start-up cost. Unit cost unknown
             # In this function, funding and coverage are time-variant. Coverage_range varies from a pre-define range every year
-            cost_uninflated = funding / (((saturation - coverage) / (coverage * (saturation / coverage)))**((1 - scale_up_factor) / 2))
+            cost_uninflated = funding_mid / (((saturation - coverage) / (coverage * (saturation / coverage_mid - 1)))**((1 - scale_up_factor) / 2))
             return cost_uninflated
 
         elif method == 2: # For well-established programs of which start-up cost should be ignored. Unit cost known
@@ -202,13 +202,13 @@ def cost_scaleup_fns(model,
 
         if function == str('program_prop_vaccination'):
             scaleup_param_vals = map(model.scaleup_fns[function], x_vals)
-            funding_scaleup = map(model.scaleup_fns['program_cost_vaccination'], x_vals)
+            funding_scaleup = map(model.scaleup_fns['econ_program_totalcost_vaccination'], x_vals)
             #print(scaleup_param_vals[int(year_pos)], x_vals[int(year_pos)])
             #print(len(x_vals))
-            unitcost = map(model.scaleup_fns[function], x_vals)
+            unitcost = map(model.scaleup_fns['econ_program_unitcost_vaccination'], x_vals)
             #popsize = model.compartment_soln['susceptible_fully']
-
             coverage = get_coverage_from_outcome_program_as_param(scaleup_param_vals)
+            coverage_mid = coverage
             for i in numpy.arange(0, len(x_vals), 1):
                 all_flows = model.var_array[int(i)]
                 for a, b in enumerate(model.var_labels):
@@ -220,7 +220,8 @@ def cost_scaleup_fns(model,
                                                         funding_scaleup[int(i)], #Add [year_pos] to get cost-coverage curve at that year
                                                         params_default['scale_up_factor'],
                                                         unitcost[int(i)],
-                                                        popsize[int(i)]))
+                                                        popsize[int(i)],
+                                                        coverage_mid[int(i)]))
                         cost_inflated.append(cost_uninflated[int(i)] * econ_cpi_excel[int(year_ref)] / econ_cpi_scaleup[int(i)])
 
 
@@ -233,7 +234,8 @@ def cost_scaleup_fns(model,
                                                 funding_scaleup[year_pos], #Add [year_pos] to get cost-coverage curve at that year
                                                 params_default['scale_up_factor'],
                                                 unitcost[year_pos],
-                                                popsize[year_pos]))
+                                                popsize[year_pos],
+                                                coverage_mid[year_pos]))
 
 ###########################################################################
 
@@ -278,7 +280,7 @@ def cost_scaleup_fns(model,
             plt.figure('BCG spending')
             plt.plot(x_vals, funding_scaleup, 'b', linewidth = 3, label = 'BCG spending')
             a = {}
-            a = model.scaleup_data['program_cost_vaccination']
+            a = model.scaleup_data['econ_program_totalcost_vaccination']
             plt.scatter(a.keys(), a.values())
             plt.title('BCG spending')
             plt.legend(loc = 'upper left')

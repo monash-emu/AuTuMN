@@ -61,7 +61,7 @@ start_coverage = 0.0001
 end_coverage = params_default["saturation"]
 delta_coverage = 0.001
 plot_costcurve = True
-method = 1
+method = 2
 year_index = 1985 # To plot/use cost function of a particular year. 1995 is just an example
 year_ref = data['model_constants']['current_time'] # Reference year for inflation calculation (2015)
 print("Reference year " + str(year_ref))
@@ -223,6 +223,8 @@ def cost_scaleup_fns(model,
                                                         popsize[int(i)],
                                                         coverage_mid[int(i)]))
                         cost_inflated.append(cost_uninflated[int(i)] * econ_cpi_excel[int(year_ref)] / econ_cpi_scaleup[int(i)])
+
+                        #current_year_pos = ((year_ref - start_time) / ((end_time - start_time) / len(model.times)))
 
 
 ########## PLOT COST COVERAGE CURVE #######################################

@@ -114,7 +114,7 @@ econ_cpi = {1970: 9.04, 1971: 9.41, 1972: 11.48, 1973: 12.75, 1974: 14.6, 1975: 
 cost_uninflated = []
 cost_uninflated_toplotcostcurve = []
 cost_inflated = []
-
+popsize = []
 
 
 #####################################################
@@ -144,7 +144,6 @@ def get_cost_from_coverage(saturation, coverage, funding, scale_up_factor, unitc
             cost_uninflated = - unitcost * popsize * math.log(((2 * saturation) / (coverage + saturation)) - 1)
             return cost_uninflated
 
-
 def cost_scaleup_fns(model,
                      functions,
                      start_time_str = 'start_time',
@@ -170,6 +169,20 @@ def cost_scaleup_fns(model,
 
 
     '''
+    popsize = []
+    a = model.var_labels[36]
+    print(a)
+    for i in numpy.arange(0, len(x_vals), 1):
+        x = model.var_array[int(i)]
+        for a, b in enumerate(model.var_labels):
+            if b == 'births_vac':
+                pop = x[a]
+                popsize.append((pop))
+                print(len(popsize))
+    plt.figure()
+    plt.plot(x_vals, popsize)
+    plt.show()
+
     def make_time_steps(start_time, end_time, time_step):
         steps = []
         step = start_time
@@ -193,23 +206,29 @@ def cost_scaleup_fns(model,
             #print(scaleup_param_vals[int(year_pos)], x_vals[int(year_pos)])
             #print(len(x_vals))
             unitcost = map(model.scaleup_fns[function], x_vals)
-            popsize = model.compartment_soln['susceptible_fully']
-            coverage = get_coverage_from_outcome_program_as_param(scaleup_param_vals)
+            #popsize = model.compartment_soln['susceptible_fully']
 
+            coverage = get_coverage_from_outcome_program_as_param(scaleup_param_vals)
             for i in numpy.arange(0, len(x_vals), 1):
-                cost_uninflated.append(get_cost_from_coverage(params_default['saturation'],
+                all_flows = model.var_array[int(i)]
+                for a, b in enumerate(model.var_labels):
+                    if b == 'births_vac':
+                        pop = all_flows[a]
+                        popsize.append(pop)
+                        cost_uninflated.append(get_cost_from_coverage(params_default['saturation'],
                                                         coverage[int(i)], #Add [year_pos] to get cost-coverage curve at that year
                                                         funding_scaleup[int(i)], #Add [year_pos] to get cost-coverage curve at that year
                                                         params_default['scale_up_factor'],
                                                         unitcost[int(i)],
                                                         popsize[int(i)]))
-                cost_inflated.append(cost_uninflated[int(i)] * econ_cpi_excel[int(year_ref)] / econ_cpi_scaleup[int(i)])
+                        cost_inflated.append(cost_uninflated[int(i)] * econ_cpi_excel[int(year_ref)] / econ_cpi_scaleup[int(i)])
 
 
 ########## PLOT COST COVERAGE CURVE #######################################
 
-            for coverage_range in coverage_values:
-                cost_uninflated_toplotcostcurve.append(get_cost_from_coverage(params_default['saturation'],
+            if plot_costcurve is True:
+                for coverage_range in coverage_values:
+                    cost_uninflated_toplotcostcurve.append(get_cost_from_coverage(params_default['saturation'],
                                                 coverage_range, #Add [year_pos] to get cost-coverage curve at that year
                                                 funding_scaleup[year_pos], #Add [year_pos] to get cost-coverage curve at that year
                                                 params_default['scale_up_factor'],
@@ -268,10 +287,12 @@ def cost_scaleup_fns(model,
             plt.show()
 
             plt.figure('Population size')
-            plt.plot(x_vals, popsize, 'r', linewidth = 3, label = 'Population size (susceptible_fully')
-            plt.title('Population size (susceptible_fully')
+            plt.plot(x_vals, popsize, 'r', linewidth = 3, label = 'Population size (birth_vac)')
+            plt.title('Population size (biths_vac)')
             plt.legend(loc = 'upper left')
             plt.xlim([start_time, end_time])
+            plt.xlabel('Year')
+            plt.ylabel('Number of people')
             plt.grid(True)
             plt.show()
 
@@ -306,12 +327,6 @@ def cost_scaleup_fns(model,
             plt.show()
 
 ############################################################################################
-
-
-
-
-
-
 
 
 

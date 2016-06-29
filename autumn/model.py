@@ -561,15 +561,16 @@ class ConsolidatedModel(BaseModel):
                     upper_bound = 1E3
 
                 # Calculate the scaling function
-                self.set_scaleup_fn(param,
-                                    scale_up_function(self.scaleup_data[param].keys(),
-                                                      self.scaleup_data[param].values(),
-                                                      self.data['model_constants']['fitting_method'],
-                                                      smoothness,
-                                                      bound_low=0.,
-                                                      bound_up=upper_bound,
-                                                      intervention_end=scenario,
-                                                      intervention_start_date=self.params['scenario_start_time']))
+                if 'econ' not in param:
+                    self.set_scaleup_fn(param,
+                                        scale_up_function(self.scaleup_data[param].keys(),
+                                                          self.scaleup_data[param].values(),
+                                                          self.data['model_constants']['fitting_method'],
+                                                          smoothness,
+                                                          bound_low=0.,
+                                                          bound_up=upper_bound,
+                                                          intervention_end=scenario,
+                                                          intervention_start_date=self.params['scenario_start_time']))
 
             # If no is selected in the time variant column
             elif time_variant == 'no':

@@ -64,8 +64,8 @@ else:
     model.integrate()
 
     # Only make a flow-diagram if the model isn't overly complex
-    # if n_organs + n_strains + n_comorbidities <= 5:
-    #     model.make_graph(base + '.workflow')
+    if n_organs + n_strains + n_comorbidities <= 5:
+        model.make_graph(base + '.workflow')
 
     # Plot over subgroups
     subgroup_solns, subgroup_fractions = autumn.base_analyses.find_fractions(model)
@@ -74,17 +74,16 @@ else:
             model, subgroup_fractions[category], model.data['model_constants']['recent_time'],
             'strain', 'fraction_' + category + '.png')
 
-    # autumn.plotting.plot_outputs_against_gtb(
-    #     model, ["incidence", "mortality", "prevalence", "notifications"],
-    #     data['model_constants']['recent_time'],
-    #     'current_time',
-    #     base + '_rate_outputs_gtb.png',
-    #     country,
-    #     scenario=None,
-    #     figure_number=1)
-    #
-    # autumn.plotting.plot_classified_scaleups(model, base)
-    print()
+    autumn.plotting.plot_outputs_against_gtb(
+        model, ["incidence", "mortality", "prevalence", "notifications"],
+        data['model_constants']['recent_time'],
+        'current_time',
+        base + '_rate_outputs_gtb.png',
+        country,
+        scenario=None,
+        figure_number=1)
+
+    autumn.plotting.plot_classified_scaleups(model, base)
 
     # if n_strains >= 2:
     #     autumn.plotting.plot_outputs(

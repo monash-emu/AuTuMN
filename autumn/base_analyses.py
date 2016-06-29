@@ -1,5 +1,4 @@
 
-import autumn.plotting
 import random
 
 
@@ -123,41 +122,43 @@ def sum_over_compartments_bycategory(model, compartment_types, categories):
 def find_fractions(model):
 
     # All compartmental disease stages
-    compartment_types = [
-        'susceptible_fully',
-        'susceptible_vac',
-        'susceptible_treated',
-        'latent_early',
-        'latent_late',
-        'active',
-        'detect',
-        'missed',
-        'treatment_infect',
-        'treatment_noninfect']
-    if model.is_lowquality: compartment_types += ['lowquality']
-
-    broad_compartment_types = [
-        'susceptible',
-        'latent',
-        'active',
-        'missed',
-        'treatment']
-    if model.is_lowquality: broad_compartment_types += ['lowquality']
+    dictionary_of_classifications = {
+        'compartment_types':
+            ['susceptible_fully',
+             'susceptible_vac',
+             'susceptible_treated',
+             'latent_early',
+             'latent_late',
+             'active',
+             'detect',
+             'missed',
+             'treatment_infect',
+             'treatment_noninfect'],
+        'broad_compartment_types':
+            ['susceptible',
+             'latent',
+             'active',
+             'missed',
+             'treatment']
+    }
+    if model.is_lowquality:
+        dictionary_of_classifications['compartment_types'] += ['lowquality']
+        dictionary_of_classifications['broad_compartment_types'] += ['lowquality']
 
     # The following was previously the additional diagnostics code in model.py
     subgroup_solns = {}
     subgroup_fractions = {}
-    for category in ['compartment_types', 'broad_compartment_types']:
+    for category in dictionary_of_classifications:
         subgroup_solns[category], compartment_type_denominator \
-            = sum_over_compartments(model, eval(category))
+            = sum_over_compartments(model, dictionary_of_classifications[category])
         subgroup_fractions[category] \
             = get_fraction_soln(
-            eval(category),
+            dictionary_of_classifications[category],
             subgroup_solns[category],
             compartment_type_denominator)
         for strata in ['strain', 'organ']:
             subgroup_solns[category + strata], compartment_type_bystrain_denominator, compartment_types_bystrain \
-                = sum_over_compartments_bycategory(model, eval(category), strata)
+                = sum_over_compartments_bycategory(model, dictionary_of_classifications[category], strata)
             subgroup_fractions[category + strata] \
                 = get_fraction_soln(
                 compartment_types_bystrain,

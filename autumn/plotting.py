@@ -4,6 +4,7 @@ import pylab
 import numpy
 from matplotlib import pyplot, patches
 
+
 """
 
 Module for plotting population systems
@@ -518,14 +519,14 @@ def plot_populations(model, labels, values, left_xlimit, strain_or_organ, png=No
     save_png(png)
 
 
-def plot_fractions(model, labels, values, left_xlimit, strain_or_organ, png=None):
+def plot_fractions(model, values, left_xlimit, strain_or_organ, png=None):
 
     right_xlimit_index, left_xlimit_index = truncate_data(model, left_xlimit)
     colours, patterns, compartment_full_names, markers\
-        = make_related_line_styles(labels, strain_or_organ)
+        = make_related_line_styles(values.keys(), strain_or_organ)
     ax = make_axes_with_room_for_legend()
     axis_labels = []
-    for i_plot, plot_label in enumerate(labels):
+    for i_plot, plot_label in enumerate(values.keys()):
         ax.plot(
             model.times[left_xlimit_index: right_xlimit_index],
             values[plot_label][left_xlimit_index: right_xlimit_index],
@@ -534,7 +535,7 @@ def plot_fractions(model, labels, values, left_xlimit, strain_or_organ, png=None
             marker=markers[plot_label],
             linestyle=patterns[plot_label])
         axis_labels.append(compartment_full_names[plot_label])
-    title = make_plot_title(model, labels)
+    title = make_plot_title(model, values.keys())
     set_axes_props(ax, 'Year', 'Proportion of population',
         'Population, ' + title, True, axis_labels)
     save_png(png)

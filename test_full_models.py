@@ -31,7 +31,6 @@ if not os.path.isdir(out_dir):
 # Note that it takes about one hour to run all of the possible model structures,
 # so perhaps don't do that - and longer if running multiple scenarios
 scenario = None
-is_additional_diagnostics = data['model_constants']['is_additional_diagnostics'][0]
 n_organs = data['model_constants']['n_organs'][0]
 n_strains = data['model_constants']['n_strains'][0]
 n_comorbidities = data['model_constants']['n_comorbidities'][0]
@@ -51,7 +50,6 @@ else:
         is_quality,  # Low quality care
         is_amplification,  # Amplification
         is_misassignment,  # Misassignment by strain
-        is_additional_diagnostics,
         scenario,  # Scenario to run
         data)
     print(str(n_organs) + " organ(s),   " +
@@ -72,7 +70,7 @@ else:
     for i, category in enumerate(subgroup_fractions):
         autumn.plotting.plot_fractions(
             model, subgroup_fractions[category], model.data['model_constants']['recent_time'],
-            'strain', base + 'fraction_' + category + '.png', figure_number=30+i)
+            'strain', base + '_fraction_' + category + '.png', figure_number=30+i)
 
     autumn.plotting.plot_outputs_against_gtb(
         model, ["incidence", "mortality", "prevalence", "notifications"],
@@ -84,6 +82,9 @@ else:
         figure_number=1)
 
     autumn.plotting.plot_classified_scaleups(model, base)
+
+    subgroup_solns, subgroup_fractions = \
+        autumn.base_analyses.calculate_additional_diagnostics(model)
 
     # if n_strains >= 2:
     #     autumn.plotting.plot_outputs(

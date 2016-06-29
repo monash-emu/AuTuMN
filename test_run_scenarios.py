@@ -27,8 +27,6 @@ out_dir = 'fullmodel_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
-is_additional_diagnostics = data['model_constants']['is_additional_diagnostics'][0]
-
 project = w_o.Project()
 project.country = country
 project.name = 'project_test' # this name will be used as a directory to store all the output files
@@ -57,7 +55,6 @@ for scenario in data['model_constants']['scenarios_to_run']:
             is_quality,  # Low quality care
             is_amplification,  # Amplification
             is_misassignment,  # Misassignment by strain
-            is_additional_diagnostics,
             scenario,  # Scenario to run
             data)
         print(str(n_organs) + " organ(s),   " +

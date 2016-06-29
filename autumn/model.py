@@ -55,7 +55,6 @@ class ConsolidatedModel(BaseModel):
                  is_lowquality=False,
                  is_amplification=False,
                  is_misassignment=False,
-                 is_additional_diagnostics=False,
                  scenario=None,
                  data=None):
 
@@ -103,7 +102,6 @@ class ConsolidatedModel(BaseModel):
         self.is_lowquality = is_lowquality
         self.is_amplification = is_amplification
         self.is_misassignment = is_misassignment
-        self.is_additional_diagnostics = is_additional_diagnostics
 
         self.scenario = scenario
 
@@ -153,13 +151,6 @@ class ConsolidatedModel(BaseModel):
 
         # Broader stages for calculating outputs later
         # Now thinking this should eventually go into the plotting module
-        self.broad_compartment_types = [
-            'susceptible',
-            'latent',
-            'active',
-            'missed',
-            'treatment']
-        if self.is_lowquality: self.broad_compartment_types += ['lowquality']
 
         # Stages in progression through treatment
         self.treatment_stages = [
@@ -1399,33 +1390,6 @@ class ConsolidatedModel(BaseModel):
             # Convert to percentage
             self.vars['proportion_mdr'] \
                 = self.vars['all_mdr_strains'] / self.vars['incidence'] * 1E2
-
-    def calculate_additional_diagnostics(self):
-
-        self.calculate_subgroup_diagnostics()
-
-    def calculate_subgroup_diagnostics(self):
-
-        """
-        Calculate fractions and populations within subgroups of the full population
-        """
-        self.groups = {
-            'ever_infected': ['susceptible_treated', 'latent', 'active', 'missed', 'lowquality', 'detect', 'treatment'],
-            'infected': ['latent', 'active', 'missed', 'lowquality', 'detect', 'treatment'],
-            'active': ['active', 'missed', 'detect', 'lowquality', 'treatment'],
-            'infectious': ['active', 'missed', 'lowquality', 'detect', 'treatment_infect'],
-            'identified': ['detect', 'treatment'],
-            'treatment': ['treatment_infect', 'treatment_noninfect']}
-        for key in self.groups:
-            compartment_soln, compartment_denominator \
-                = self.sum_over_compartments(self.groups[key])
-            setattr(self, key + '_compartment_soln', compartment_soln)
-            setattr(self, key + '_compartment_denominator', compartment_denominator)
-            setattr(self, key + '_fraction_soln',
-                    self.get_fraction_soln(
-                        self.groups[key],
-                        compartment_soln,
-                        compartment_denominator))
 
     ##################################################################
     # Methods to call base integration function depending on the type of

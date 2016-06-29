@@ -167,3 +167,31 @@ def find_fractions(model):
 
     return subgroup_solns, subgroup_fractions
 
+
+def calculate_additional_diagnostics(model):
+
+    """
+    Calculate fractions and populations within subgroups of the full population
+    """
+
+    groups = {
+        'ever_infected': ['susceptible_treated', 'latent', 'active', 'missed', 'lowquality', 'detect', 'treatment'],
+        'infected': ['latent', 'active', 'missed', 'lowquality', 'detect', 'treatment'],
+        'active': ['active', 'missed', 'detect', 'lowquality', 'treatment'],
+        'infectious': ['active', 'missed', 'lowquality', 'detect', 'treatment_infect'],
+        'identified': ['detect', 'treatment'],
+        'treatment': ['treatment_infect', 'treatment_noninfect']}
+
+    subgroup_solns = {}
+    subgroup_fractions = {}
+
+    for key in groups:
+        subgroup_solns[key], compartment_denominator \
+            = sum_over_compartments(model, groups[key])
+        subgroup_fractions[key] \
+            = get_fraction_soln(
+            groups[key],
+            subgroup_solns[key],
+            compartment_denominator)
+
+    return subgroup_solns, subgroup_fractions

@@ -371,9 +371,6 @@ class BaseModel():
                     self.get_var_soln("population"))]
             self.fraction_array[:, i_label] = self.fraction_soln[label]
 
-        if self.is_additional_diagnostics:
-            self.calculate_additional_diagnostics()
-
     def calculate_additional_diagnostics(self):
         pass
 

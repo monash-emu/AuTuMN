@@ -62,6 +62,7 @@ end_coverage = params_default["saturation"]
 delta_coverage = 0.001
 plot_costcurve = True
 method = 2
+discount_rate = 0.03
 year_index = 1985 # To plot/use cost function of a particular year. 1995 is just an example
 year_ref = data['model_constants']['current_time'] # Reference year for inflation calculation (2015)
 print("Reference year " + str(year_ref))
@@ -115,6 +116,9 @@ cost_uninflated = []
 cost_uninflated_toplotcostcurve = []
 cost_inflated = []
 popsize = []
+x_vals_2015onwards_array =[]
+cost_discounted_array = []
+
 
 
 #####################################################
@@ -224,7 +228,58 @@ def cost_scaleup_fns(model,
                                                         coverage_mid[int(i)]))
                         cost_inflated.append(cost_uninflated[int(i)] * econ_cpi_excel[int(year_ref)] / econ_cpi_scaleup[int(i)])
 
-                        #current_year_pos = ((year_ref - start_time) / ((end_time - start_time) / len(model.times)))
+                        current_year_pos = ((year_ref- start_time) / ((end_time - start_time) / len(model.times)))
+                        if i >= current_year_pos and i <= len(x_vals):
+                            x_vals_2015onwards = x_vals[i]
+                            x_vals_2015onwards_array.append(x_vals_2015onwards)
+                            cost_todiscount = cost_uninflated[int(i)]
+                            if x_vals[i] <= 2015:
+                                    years_into_future = 0
+                            elif x_vals[i] > 2015 and x_vals[i] <= 2016:
+                                    years_into_future = 1
+                            elif x_vals[i] > 2016 and x_vals[i] <= 2017:
+                                    years_into_future = 2
+                            elif x_vals[i] > 2017 and x_vals[i] <= 2018:
+                                    years_into_future = 3
+                            elif x_vals[i] > 2018 and x_vals[i] <= 2019:
+                                    years_into_future = 4
+                            elif x_vals[i] > 2019 and x_vals[i] <= 2020:
+                                    years_into_future = 5
+                            elif x_vals[i] > 2020 and x_vals[i] <= 2021:
+                                    years_into_future = 6
+                            elif x_vals[i] > 2021 and x_vals[i] <= 2022:
+                                    years_into_future = 7
+                            elif x_vals[i] > 2022 and x_vals[i] <= 2023:
+                                    years_into_future = 8
+                            elif x_vals[i] > 2023 and x_vals[i] <= 2024:
+                                    years_into_future = 9
+                            elif x_vals[i] > 2024 and x_vals[i] <= 2025:
+                                    years_into_future = 10
+                            elif x_vals[i] > 2025 and x_vals[i] <= 2026:
+                                    years_into_future = 11
+                            elif x_vals[i] > 2026 and x_vals[i] <= 2027:
+                                    years_into_future = 12
+                            elif x_vals[i] > 2027 and x_vals[i] <= 2028:
+                                    years_into_future = 13
+                            elif x_vals[i] > 2028 and x_vals[i] <= 2029:
+                                    years_into_future = 14
+                            elif x_vals[i] > 2029 and x_vals[i] <= 2030:
+                                    years_into_future = 15
+                            elif x_vals[i] > 2030 and x_vals[i] <= 2031:
+                                    years_into_future = 16
+                            elif x_vals[i] > 2031 and x_vals[i] <= 2032:
+                                    years_into_future = 17
+                            elif x_vals[i] > 2032 and x_vals[i] <= 2033:
+                                    years_into_future = 18
+                            elif x_vals[i] > 2033 and x_vals[i] <= 2034:
+                                    years_into_future = 19
+                            else:
+                                    years_into_future = 20
+                            cost_discounted = cost_todiscount / ((1 + discount_rate)**years_into_future)
+                            cost_discounted_array.append(cost_discounted)
+                            print(len(x_vals_2015onwards_array))
+                            #print(len(cost_discounted_array))
+
 
 
 ########## PLOT COST COVERAGE CURVE #######################################
@@ -265,7 +320,8 @@ def cost_scaleup_fns(model,
 
             plt.figure('Cost of BCG program (USD)')
             plt.plot(x_vals, cost_uninflated, 'b', linewidth = 3, label = 'Uninflated')
-            plt.plot(x_vals, cost_inflated, 'b--', linewidth = 3, label = 'Inflated')
+            plt.plot(x_vals, cost_inflated, 'g', linewidth = 3, label = 'Inflated')
+            plt.plot(x_vals_2015onwards_array, cost_discounted_array, 'r', linewidth =3, label = 'Discounted')
             #title = str(country) + ' ' + \
             #            plotting.replace_underscore_with_space(parameter_type) + \
             #            ' parameter' + ' from ' + plotting.replace_underscore_with_space(start_time_str)

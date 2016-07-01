@@ -3,6 +3,7 @@
 import pylab
 import numpy
 from matplotlib import pyplot, patches
+import base_analyses
 
 
 """
@@ -137,29 +138,6 @@ def replace_underscore_with_space(original_string):
             replaced_string += original_string[i]
 
     return replaced_string
-
-
-def capitalise_first_letter(old_string):
-
-    """
-    Really simple method to capitalise the first character of a string
-
-    Args:
-        old_string: The string to be capitalised
-
-    Returns:
-        new_string: The capitalised string
-
-    """
-
-    new_string = ''
-    for i in range(len(old_string)):
-        if i == 0:
-            new_string += old_string[i].upper()
-        else:
-            new_string += old_string[i]
-
-    return new_string
 
 
 def find_smallest_factors_of_integer(n):
@@ -851,7 +829,7 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
 
             # Truncate parameter names depending on whether it is a
             # treatment success/death proportion
-            title = capitalise_first_letter(replace_underscore_with_space(function))
+            title = base_analyses.capitalise_first_letter(replace_underscore_with_space(function))
             ax.set_title(title, fontsize=get_nice_font_size(subplot_grid))
 
             ylims = relax_y_axis(ax)

@@ -36,13 +36,13 @@ else:
     base = os.path.join(out_dir, country + '_baseline')
 
     models = {}
-    for i in inputs['model_constants']['scenarios_to_run']:
-        if i is None:
+    for n, scenario in enumerate(inputs['model_constants']['scenarios_to_run']):
+        if scenario is None:
             model_name = 'baseline'
         else:
-            model_name = 'scenario_' + str(i)
+            model_name = 'scenario_' + str(scenario)
 
-        if i == inputs['model_constants']['scenarios_to_run'][-1]:
+        if scenario == inputs['model_constants']['scenarios_to_run'][-1]:
             final = True
         else:
             final = False
@@ -54,13 +54,19 @@ else:
             is_quality,  # Low quality care
             is_amplification,  # Amplification
             is_misassignment,  # Misassignment by strain
-            i,  # Scenario to run
+            scenario,  # Scenario to run
             inputs)
-        if i is not None:
+        if n == 0:
+            print(autumn.base_analyses.introduce_model(models, model_name))
+
+        if scenario is not None:
             scenario_start_time_index = models['baseline'].find_time_index(inputs['model_constants']['scenario_start_time'])
             models[model_name].start_time = models['baseline'].times[scenario_start_time_index]
             models[model_name].loaded_compartments = models['baseline'].load_state(scenario_start_time_index)
 
+        print('Running model "' + model_name + '".')
+        if n == 0:
+            print(autumn.base_analyses.describe_model(models, model_name))
         models[model_name].integrate()
 
         autumn.plotting.plot_outputs_against_gtb(
@@ -69,7 +75,7 @@ else:
             'scenario_end_time',
             base + '_rate_outputs_gtb.png',
             country,
-            scenario=i,
+            scenario=scenario,
             figure_number=11,
             final_run=final)
 

@@ -1,5 +1,53 @@
 
 import random
+import base_analyses
+
+def capitalise_first_letter(old_string):
+
+    """
+    Really simple method to capitalise the first character of a string
+
+    Args:
+        old_string: The string to be capitalised
+
+    Returns:
+        new_string: The capitalised string
+
+    """
+
+    new_string = ''
+    for i in range(len(old_string)):
+        if i == 0:
+            new_string += old_string[i].upper()
+        else:
+            new_string += old_string[i]
+
+    return new_string
+
+def introduce_model(models, model_name):
+
+    return 'Initialising model for ' + capitalise_first_letter(
+        models[model_name].inputs['model_constants']['country']) + ' with key "' + model_name + '".'
+
+def describe_model(models, model_name):
+
+    model = models[model_name]
+
+    returned_string = 'Model "' + model_name + '" has the following attributes:\n'
+    if model.inputs['model_constants']['n_organs'][0] <= 1:
+        returned_string += 'unstratified by organ involvement,\n'
+    else:
+        returned_string += str(model.inputs['model_constants']['n_organs'][0]) + ' organ strata,\n'
+    if model.inputs['model_constants']['n_comorbidities'][0] <= 1:
+        returned_string += 'unstratified by comorbidities, \n'
+    else:
+        returned_string += str(model.inputs['model_constants']['n_comorbidities'][0]) + ' comorbidity strata'
+    if model.inputs['model_constants']['n_strains'][0] <= 1:
+        returned_string += 'single strain model.'
+    else:
+        returned_string += str(model.inputs['model_constants']['n_strains'][0]) + ' circulating strains.'
+
+    return returned_string
 
 
 def sum_over_compartments(model, compartment_types):

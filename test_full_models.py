@@ -8,7 +8,6 @@ import autumn.base_analyses
 import autumn.plotting
 from autumn.spreadsheet import read_and_process_data, read_input_data_xls
 
-
 # Start timer
 start_realtime = datetime.datetime.now()
 
@@ -21,8 +20,9 @@ out_dir = 'fullmodel_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
-# Note that it takes about one hour to run all of the possible model structures,
-# so perhaps don't do that - and longer if running multiple scenarios
+# At this point, I'm leaving the model attributes elements that follow as lists,
+# as it may be useful iterate over several model structures in the future, although I'm not sure
+# this will be needed.
 n_organs = inputs['model_constants']['n_organs'][0]
 n_strains = inputs['model_constants']['n_strains'][0]
 n_comorbidities = inputs['model_constants']['n_comorbidities'][0]
@@ -68,6 +68,8 @@ else:
         if n == 0:
             print(autumn.base_analyses.describe_model(models, model_name))
         models[model_name].integrate()
+
+        print("Time elapsed so far is " + str(datetime.datetime.now() - start_realtime))
 
         autumn.plotting.plot_outputs_against_gtb(
             models[model_name], ["incidence", "mortality", "prevalence", "notifications"],

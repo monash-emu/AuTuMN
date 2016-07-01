@@ -35,7 +35,9 @@ class BaseModel():
         self.var_infection_death_rate_flows = []
 
     def make_times(self, start, end, delta):
+
         "Return steps between start and end every delta"
+
         self.times = []
         step = start
         while step <= end:
@@ -54,6 +56,15 @@ class BaseModel():
             step += delta
         if self.times[-1] < end:
             self.times.append(end)
+
+    def find_time_index(self, time):
+
+        for index, model_time in enumerate(self.times):
+            if model_time > time:
+                return index
+
+        raise ValueError('Time not found')
+
 
     def set_compartment(self, label, init_val=0.0):
         if label not in self.labels:
@@ -78,7 +89,11 @@ class BaseModel():
         pass
 
     def get_init_list(self):
-        return self.convert_compartments_to_list(self.init_compartments)
+
+        if self.loaded_compartments is None:
+            return self.convert_compartments_to_list(self.init_compartments)
+        else:
+            return self.convert_compartments_to_list(self.loaded_compartments)
 
     def set_population_death_rate(self, death_label):
 
@@ -253,6 +268,7 @@ class BaseModel():
         self.calculate_diagnostics()
 
     def integrate_explicit(self, min_dt=0.05):
+
         """ Uses Euler Explicit method.
             Input:
             min_dt: represents the time step for calculation points. The attribute self.times will also be used to make sure
@@ -285,11 +301,15 @@ class BaseModel():
         self.calculate_diagnostics()
 
     def integrate_runge_kutta(self, min_dt=0.05):
-        """ Uses Runge-Kutta 4 method.
+
+        """
+        Uses Runge-Kutta 4 method.
+
             Input:
                 min_dt: represents the time step for calculation points. The attribute self.times will also be used to make
                 sure that a solution is affected to the time points known by the model
         """
+
         self.init_run()
         y = self.get_init_list()
         n_compartment = len(y)
@@ -390,15 +410,19 @@ class BaseModel():
         return self.flow_array[:, i_label]
 
     def load_state(self, i_time):
+
         self.time = self.times[i_time]
         for i_label, label in enumerate(self.labels):
             self.compartments[label] = \
                 self.soln_array[i_time, i_label]
         self.calculate_vars()
 
+        return self.compartments
+
     def checks(self, error_margin=0.1):
+
         """
-        Assertion run during the simulation, should be overriden
+        Assertion run during the simulation, should be overridden
         for each model.
 
         Args:
@@ -407,6 +431,7 @@ class BaseModel():
         Returns:
 
         """
+
         # Check all compartments are positive
         for label in self.labels:
             assert self.compartments[label] >= 0.

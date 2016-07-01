@@ -25,14 +25,14 @@ TO DO LIST
 
 country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
 print(country)
-data = read_and_process_data(True,
-                             ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
+data = read_and_process_data(country,
+                             keys_of_sheets_to_read=['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
                               'default_parameters',
                               'tb', 'notifications', 'outcomes',
                               'country_constants', 'default_constants',
                               'country_economics', 'default_economics',
                               'country_programs', 'default_programs'],
-                             country)
+                             from_test=True)
 inflation = data['country_economics']['econ_inflation']
 cpi = data['country_economics']['econ_cpi']
 time_step = data['model_constants']['time_step']

@@ -13,14 +13,14 @@ start_realtime = datetime.datetime.now()
 
 # Import the data
 country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
-data = read_and_process_data(True,
-                             ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
+data = read_and_process_data(country,
+                             keys_of_sheets_read=['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
                               'default_parameters',
                               'tb', 'notifications', 'outcomes',
                               'country_constants', 'default_constants',
                               'country_economics', 'default_economics',
                               'country_programs', 'default_programs'],
-                             country)
+                             from_test=True)
 
 # A few basic preliminaries
 out_dir = 'fullmodel_graphs'

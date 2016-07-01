@@ -55,7 +55,7 @@ else:
 keys_of_sheets_to_read = [
     'bcg', 'birth_rate', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'programs', 'tb',
     'notifications', 'outcomes']
-data = read_and_process_data(True, keys_of_sheets_to_read, country)
+data = read_and_process_data(country, keys_of_sheets_to_read=keys_of_sheets_to_read, from_test=True)
 
 initials = data['programs'][u'program_prop_treatment_success_mdr'][year]
 

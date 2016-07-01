@@ -550,7 +550,8 @@ def plot_outputs_against_gtb(model,
                              country='',
                              scenario=None,
                              gtb=True,
-                             figure_number=11):
+                             figure_number=11,
+                             final_run=True):
 
     """
     Produces the plot for the main outputs, can handle multiple scenarios (if required).
@@ -582,17 +583,17 @@ def plot_outputs_against_gtb(model,
         # Otherwise cycling through colours
         output_colour = [make_default_line_styles(scenario, False)] * len(labels)
 
-    # Extract the plotting data you're interested in
+    # Extract the plotting data of interest
     plotting_data = []
     for i in range(len(indices)):
         plotting_data += [{}]
-        for j in model.data['tb']:
+        for j in model.inputs['tb']:
             if indices[i] in j and '_lo' in j:
-                plotting_data[i]['lower_limit'] = model.data['tb'][j]
+                plotting_data[i]['lower_limit'] = model.inputs['tb'][j]
             elif indices[i] in j and '_hi' in j:
-                plotting_data[i]['upper_limit'] = model.data['tb'][j]
+                plotting_data[i]['upper_limit'] = model.inputs['tb'][j]
             elif indices[i] in j:
-                plotting_data[i]['point_estimate'] = model.data['tb'][j]
+                plotting_data[i]['point_estimate'] = model.inputs['tb'][j]
 
     # Truncate data to what you want to look at (rather than going back to the dawn of time)
     right_xlimit_index, left_xlimit_index = truncate_data(model, start_time)
@@ -600,7 +601,7 @@ def plot_outputs_against_gtb(model,
     subplot_grid = find_subplot_numbers(len(labels))
 
     # Time to plot until
-    end_time = model.data['model_constants'][end_time_str]
+    end_time = model.inputs['model_constants'][end_time_str]
 
     # Not sure whether we have to specify a figure number
     fig = pyplot.figure(figure_number)
@@ -610,10 +611,10 @@ def plot_outputs_against_gtb(model,
 
     # Truncate notification data to years of interest
     notification_data = {}
-    for i in model.data['notifications']['c_newinc']:
+    for i in model.inputs['notifications']['c_newinc']:
         if i > start_time:
             notification_data[i] = \
-                model.data['notifications']['c_newinc'][i]
+                model.inputs['notifications']['c_newinc'][i]
 
     for i, outcome in enumerate(labels):
 
@@ -688,8 +689,9 @@ def plot_outputs_against_gtb(model,
                       fontsize=get_nice_font_size(subplot_grid) - 2.,
                       frameon=False)
 
-            # Save
-            save_png(png)
+    if final_run:
+        # Save
+        save_png(png)
 
 
 def create_patch_from_dictionary(dict):
@@ -746,10 +748,10 @@ def plot_scaleup_fns(model, functions, png=None,
 
     line_styles = make_default_line_styles(len(functions), True)
     if start_time_str == 'recent_time':
-        start_time = model.data['model_constants'][start_time_str]
+        start_time = model.inputs['model_constants'][start_time_str]
     else:
-        start_time = model.data['model_constants'][start_time_str]
-    end_time = model.data['model_constants'][end_time_str]
+        start_time = model.inputs['model_constants'][start_time_str]
+    end_time = model.inputs['model_constants'][end_time_str]
     x_vals = numpy.linspace(start_time, end_time, 1E3)
 
     pyplot.figure(figure_number)
@@ -797,10 +799,10 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
 
     # Set x-values
     if start_time_str == 'recent_time':
-        start_time = model.data['model_constants'][start_time_str]
+        start_time = model.inputs['model_constants'][start_time_str]
     else:
-        start_time = model.data['model_constants'][start_time_str]
-    end_time = model.data['model_constants'][end_time_str]
+        start_time = model.inputs['model_constants'][start_time_str]
+    end_time = model.inputs['model_constants'][end_time_str]
     x_vals = numpy.linspace(start_time, end_time, 1E3)
 
     # Initialise figure
@@ -810,7 +812,7 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
     plural = ''
     if len(functions) > 1:
         plural += 's'
-    title = model.data['model_constants']['country'] + ' ' + \
+    title = model.inputs['model_constants']['country'] + ' ' + \
             replace_underscore_with_space(parameter_type) + \
             ' parameter' + plural + ' from ' + replace_underscore_with_space(start_time_str)
     fig.suptitle(title)

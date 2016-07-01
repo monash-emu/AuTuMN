@@ -13,14 +13,7 @@ start_realtime = datetime.datetime.now()
 
 # Import the data
 country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
-data = read_and_process_data(country,
-                             keys_of_sheets_read=['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
-                              'default_parameters',
-                              'tb', 'notifications', 'outcomes',
-                              'country_constants', 'default_constants',
-                              'country_economics', 'default_economics',
-                              'country_programs', 'default_programs'],
-                             from_test=True)
+inputs = read_and_process_data(country, from_test=True)
 
 # A few basic preliminaries
 out_dir = 'fullmodel_graphs'
@@ -30,13 +23,13 @@ if not os.path.isdir(out_dir):
 # Note that it takes about one hour to run all of the possible model structures,
 # so perhaps don't do that - and longer if running multiple scenarios
 scenario = None
-is_additional_diagnostics = data['model_constants']['is_additional_diagnostics'][0]
-n_organs = data['model_constants']['n_organs'][0]
-n_strains = data['model_constants']['n_strains'][0]
-n_comorbidities = data['model_constants']['n_comorbidities'][0]
-is_quality = data['model_constants']['is_lowquality'][0]
-is_amplification = data['model_constants']['is_amplification'][0]
-is_misassignment = data['model_constants']['is_misassignment'][0]
+is_additional_diagnostics = inputs['model_constants']['is_additional_diagnostics'][0]
+n_organs = inputs['model_constants']['n_organs'][0]
+n_strains = inputs['model_constants']['n_strains'][0]
+n_comorbidities = inputs['model_constants']['n_comorbidities'][0]
+is_quality = inputs['model_constants']['is_lowquality'][0]
+is_amplification = inputs['model_constants']['is_amplification'][0]
+is_misassignment = inputs['model_constants']['is_misassignment'][0]
 if (is_misassignment and not is_amplification) \
         or (n_strains <= 1 and (is_amplification or is_misassignment)):
     pass
@@ -52,7 +45,7 @@ else:
         is_amplification,  # Amplification
         is_misassignment,  # Misassignment by strain
         scenario,  # Scenario to run
-        data)
+        inputs)
     print(str(n_organs) + " organ(s),   " +
           str(n_strains) + " strain(s),   " +
           str(n_comorbidities) + " comorbidity(ies),   " +

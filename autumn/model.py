@@ -550,7 +550,7 @@ class ConsolidatedModel(BaseModel):
                 if 'prop' in param:
                     upper_bound = 1.
                 else:
-                    upper_bound = 1E3
+                    upper_bound = 1E7
 
                 # Calculate the scaling function
                 if 'econ' not in param:

@@ -16,13 +16,9 @@ Module for estimating cost of a program
 TO DO LIST
 
 2. Funding value for each year. This will be challenging to get data for
-
 5. Use plotting.py to plot all results. At the moment, economics.py has its own plotting function
 6. Move the initial conditions to a Excel spreadsheet.
-7. Think about discounting. At the moment, it is not need as the model only runs until 2015.
-If we consider future cost projections, then discounting is needed. Formula for discounting:
-Present value = cost / (1+ discount rate)^t, where t is number of years into the future
-http://www.crest.uts.edu.au/pdfs/FactSheet_Discounting.pdf
+
 """
 
 ############ READ SOME DATA FROM SPREADSHEET ########
@@ -37,8 +33,8 @@ data = read_and_process_data(True,
                               'country_economics', 'default_economics',
                               'country_programs', 'default_programs'],
                              country)
-econ_inflation_excel = data['country_economics']['econ_inflation']
-econ_cpi_excel = data['country_economics']['econ_cpi']
+inflation = data['country_economics']['econ_inflation']
+cpi = data['country_economics']['econ_cpi']
 time_step = data['model_constants']['time_step']
 
 ###################################################
@@ -62,9 +58,10 @@ end_coverage = params_default["saturation"]
 delta_coverage = 0.001
 plot_costcurve = True
 method = 2
+discount_rate = 0.03
 year_index = 1985 # To plot/use cost function of a particular year. 1995 is just an example
-year_ref = data['model_constants']['current_time'] # Reference year for inflation calculation (2015)
-print("Reference year " + str(year_ref))
+year_current = data['model_constants']['current_time'] # Reference year for inflation calculation (2015)
+print("Current year " + str(year_current))
 
 
 if method == 1:
@@ -89,33 +86,14 @@ coverage_values = make_coverage_steps(start_coverage, end_coverage, delta_covera
 #######################################################
 
 
-########### GET INFLATION RATE DATA ###############
-
-econ_inflation = {1920: 0.123, 1930: 0.123, 1940: 0.123, 1950: 0.123, 1955: 0.123, 1960: 0.123, 1965: 0.123,
-                  1970: 0.041, 1971: 0.091, 1972: 0.22, 1973: 0.111, 1974: 0.145, 1975: 0.131, 1976: 0.114, 1977: 0.07,
-                  1978: 0.061, 1979: 0.078, 1980: 0.145, 1981: 0.112, 1982: 0.07, 1983: 0.067, 1984: 0.053, 1985: 0.044,
-                  1986: 0.018, 1987: 0.057, 1988: 0.118, 1989: 0.062, 1990: 0.082, 1991: 0.065, 1992: 0.049, 1993: 0.052,
-                  1994: 0.008, 1995: 0.022, 1996: 0.031, 1997: 0.034, 1998: 0.057, 1999: 0.02, 2000: 0.011, 2001: 0.043,
-                  2002: 0.008, 2003: 0.042, 2004: 0.028, 2005: 0.024, 2006: 0.025, 2007: 0.048, 2008: 0.077, 2009: 0.032,
-                  2010: 0.037, 2011: 0.073, 2012: 0.034, 2013: 0.029, 2014: 0.005, 2015: 0.014}
-#Inflation: 1970 onwards are actual data. 1920 - 1970 calculated as average of 1970 - 1975
-
-econ_cpi = {1970: 9.04, 1971: 9.41, 1972: 11.48, 1973: 12.75, 1974: 14.6, 1975: 16.5, 1976: 18.38, 1977: 19.67, 1978: 20.87,
-            1979: 22.5, 1980: 25.9,
-            1981: 28.8, 1982: 30.8, 1983: 32.9, 1984: 34.6, 1985: 36.1, 1986: 36.8, 1987: 38.9, 1988: 43.4, 1989: 46.1,
-            1990: 49.9, 1991: 53.1, 1992: 55.7, 1993: 58.6, 1994: 59.1, 1995: 60.4, 1996: 62.2, 1997: 64.3, 1998: 68,
-            1999: 69.3, 2000: 70.1, 2001: 73.1, 2002: 73.6, 2003: 76.7, 2004: 78.9, 2005: 80.8, 2006: 82.8, 2007: 86.7,
-            2008: 93.4, 2009: 96.5, 2010: 100, 2011: 107.3, 2012: 110.9, 2013: 114.2, 2014: 114.8, 2015: 116.4}
-#CPI: 1981 onwards are actual data. 1970 - 1980 calculated from inflation rate (inflation = (CPI new - CPI old)/CPI old.
-#1920 - 1970 also calculated fron inflation rate but less reliable as inflation data are not actual data
-
 #######CREATE EMPTY LIST TO STORE RESULTS LATER #####
 
 cost_uninflated = []
 cost_uninflated_toplotcostcurve = []
 cost_inflated = []
 popsize = []
-
+x_vals_2015onwards_array =[]
+cost_discounted_array = []
 
 #####################################################
 
@@ -161,50 +139,20 @@ def cost_scaleup_fns(model,
     #x_vals = numpy.linspace(start_time, end_time, end_time - start_time + 1)  # years
     x_vals = numpy.linspace(start_time, end_time, len(model.times))  # years
 
-    #year_pos = year_index - start_time
     year_pos = ((year_index - start_time) / ((end_time - start_time) / len(model.times)))
     year_pos = int(year_pos)
     print('Index year ' + str(x_vals[year_pos]))
     #print(year_index, model.times[year_pos])
 
 
-    '''
-    popsize = []
-    a = model.var_labels[36]
-    print(a)
-    for i in numpy.arange(0, len(x_vals), 1):
-        x = model.var_array[int(i)]
-        for a, b in enumerate(model.var_labels):
-            if b == 'births_vac':
-                pop = x[a]
-                popsize.append((pop))
-                print(len(popsize))
-    plt.figure()
-    plt.plot(x_vals, popsize)
-    plt.show()
-
-    def make_time_steps(start_time, end_time, time_step):
-        steps = []
-        step = start_time
-        while step <= end_time:
-            steps.append(step)
-            step += time_step
-        return steps
-    x_vals = make_time_steps(start_time, end_time, time_step)
-    #For it to work, time_step = (start_time - end_time) / len(model.times))
-    print(len(x_vals))
-    print(model.times)
-    '''
-
     for i, function in enumerate(functions):
-        econ_cpi_scaleup = map(model.scaleup_fns['econ_cpi'], x_vals)
-        econ_inflation_scaleup = map(model.scaleup_fns['econ_inflation'], x_vals)
+        cpi_scaleup = map(model.scaleup_fns['econ_cpi'], x_vals)
+        inflation_scaleup = map(model.scaleup_fns['econ_inflation'], x_vals)
 
         if function == str('program_prop_vaccination'):
             scaleup_param_vals = map(model.scaleup_fns[function], x_vals)
             funding_scaleup = map(model.scaleup_fns['econ_program_totalcost_vaccination'], x_vals)
             #print(scaleup_param_vals[int(year_pos)], x_vals[int(year_pos)])
-            #print(len(x_vals))
             unitcost = map(model.scaleup_fns['econ_program_unitcost_vaccination'], x_vals)
             #popsize = model.compartment_soln['susceptible_fully']
             coverage = get_coverage_from_outcome_program_as_param(scaleup_param_vals)
@@ -222,9 +170,60 @@ def cost_scaleup_fns(model,
                                                         unitcost[int(i)],
                                                         popsize[int(i)],
                                                         coverage_mid[int(i)]))
-                        cost_inflated.append(cost_uninflated[int(i)] * econ_cpi_excel[int(year_ref)] / econ_cpi_scaleup[int(i)])
+                        cost_inflated.append(cost_uninflated[int(i)] * cpi[int(year_current)] / cpi_scaleup[int(i)])
 
-                        #current_year_pos = ((year_ref - start_time) / ((end_time - start_time) / len(model.times)))
+                        current_year_pos = ((year_current - start_time) / ((end_time - start_time) / len(model.times)))
+                        if i >= current_year_pos and i <= len(x_vals):
+                            x_vals_2015onwards = x_vals[i]
+                            x_vals_2015onwards_array.append(x_vals_2015onwards)
+                            cost_todiscount = cost_uninflated[int(i)]
+                            if x_vals[i] <= 2015:
+                                    years_into_future = 0
+                            elif x_vals[i] > 2015 and x_vals[i] <= 2016:
+                                    years_into_future = 1
+                            elif x_vals[i] > 2016 and x_vals[i] <= 2017:
+                                    years_into_future = 2
+                            elif x_vals[i] > 2017 and x_vals[i] <= 2018:
+                                    years_into_future = 3
+                            elif x_vals[i] > 2018 and x_vals[i] <= 2019:
+                                    years_into_future = 4
+                            elif x_vals[i] > 2019 and x_vals[i] <= 2020:
+                                    years_into_future = 5
+                            elif x_vals[i] > 2020 and x_vals[i] <= 2021:
+                                    years_into_future = 6
+                            elif x_vals[i] > 2021 and x_vals[i] <= 2022:
+                                    years_into_future = 7
+                            elif x_vals[i] > 2022 and x_vals[i] <= 2023:
+                                    years_into_future = 8
+                            elif x_vals[i] > 2023 and x_vals[i] <= 2024:
+                                    years_into_future = 9
+                            elif x_vals[i] > 2024 and x_vals[i] <= 2025:
+                                    years_into_future = 10
+                            elif x_vals[i] > 2025 and x_vals[i] <= 2026:
+                                    years_into_future = 11
+                            elif x_vals[i] > 2026 and x_vals[i] <= 2027:
+                                    years_into_future = 12
+                            elif x_vals[i] > 2027 and x_vals[i] <= 2028:
+                                    years_into_future = 13
+                            elif x_vals[i] > 2028 and x_vals[i] <= 2029:
+                                    years_into_future = 14
+                            elif x_vals[i] > 2029 and x_vals[i] <= 2030:
+                                    years_into_future = 15
+                            elif x_vals[i] > 2030 and x_vals[i] <= 2031:
+                                    years_into_future = 16
+                            elif x_vals[i] > 2031 and x_vals[i] <= 2032:
+                                    years_into_future = 17
+                            elif x_vals[i] > 2032 and x_vals[i] <= 2033:
+                                    years_into_future = 18
+                            elif x_vals[i] > 2033 and x_vals[i] <= 2034:
+                                    years_into_future = 19
+                            else:
+                                    years_into_future = 20
+                            cost_discounted = cost_todiscount / ((1 + discount_rate)**years_into_future)
+                            cost_discounted_array.append(cost_discounted)
+
+                            #print(len(cost_discounted_array))
+
 
 
 ########## PLOT COST COVERAGE CURVE #######################################
@@ -265,7 +264,8 @@ def cost_scaleup_fns(model,
 
             plt.figure('Cost of BCG program (USD)')
             plt.plot(x_vals, cost_uninflated, 'b', linewidth = 3, label = 'Uninflated')
-            plt.plot(x_vals, cost_inflated, 'b--', linewidth = 3, label = 'Inflated')
+            plt.plot(x_vals, cost_inflated, 'g', linewidth = 3, label = 'Inflated')
+            plt.plot(x_vals_2015onwards_array, cost_discounted_array, 'r', linewidth =3, label = 'Discounted')
             #title = str(country) + ' ' + \
             #            plotting.replace_underscore_with_space(parameter_type) + \
             #            ' parameter' + ' from ' + plotting.replace_underscore_with_space(start_time_str)
@@ -310,8 +310,7 @@ def cost_scaleup_fns(model,
             for tl in ax1.get_yticklabels():
                 tl.set_color('b')
             ax2 = ax1.twinx()
-            ax2.plot(x_vals, econ_cpi_scaleup, 'r-', linewidth = 3, label = 'Consumer price index - actual data')
-            ax2.plot(econ_cpi.keys(), econ_cpi.values(), 'ro', label ='Consumer price index - fitted')
+            ax2.plot(x_vals, cpi_scaleup, 'r-', linewidth = 3, label = 'Consumer price index')
             ax2.set_ylabel('Consumer price index', color='r')
             for tl in ax2.get_yticklabels():
                 tl.set_color('r')

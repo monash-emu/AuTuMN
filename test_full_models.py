@@ -14,14 +14,7 @@ start_realtime = datetime.datetime.now()
 
 # Import the data
 country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
-inputs = read_and_process_data(True,
-                               ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
-                              'default_parameters',
-                              'tb', 'notifications', 'outcomes',
-                              'country_constants', 'default_constants',
-                              'country_economics', 'default_economics',
-                              'country_programs', 'default_programs'],
-                               country)
+inputs = read_and_process_data(country, from_test=True)
 
 # A few basic preliminaries
 out_dir = 'fullmodel_graphs'
@@ -81,22 +74,20 @@ else:
             final_run=final)
 
     # Only make a flow-diagram if the model isn't overly complex
-    # if n_organs + n_strains + n_comorbidities <= 5:
-    #     models['baseline'].make_graph(base + '.workflow')
-    #
+    if n_organs + n_strains + n_comorbidities <= 5:
+        models['baseline'].make_graph(base + '.workflow')
+
     # Plot over subgroups
-    # subgroup_solns, subgroup_fractions = autumn.base_analyses.find_fractions(models['baseline'])
-    # for i, category in enumerate(subgroup_fractions):
-    #     autumn.plotting.plot_fractions(
-    #         models['baseline'], subgroup_fractions[category], models['baseline'].inputs['model_constants']['recent_time'],
-    #         'strain', base + '_fraction_' + category + '.png', figure_number=30+i)
-    #
-    #
-    #
-    # autumn.plotting.plot_classified_scaleups(models['baseline'], base)
-    #
-    # subgroup_solns, subgroup_fractions = \
-    #     autumn.base_analyses.calculate_additional_diagnostics(models['baseline'])
+    subgroup_solns, subgroup_fractions = autumn.base_analyses.find_fractions(models['baseline'])
+    for i, category in enumerate(subgroup_fractions):
+        autumn.plotting.plot_fractions(
+            models['baseline'], subgroup_fractions[category], models['baseline'].inputs['model_constants']['recent_time'],
+            'strain', base + '_fraction_' + category + '.png', figure_number=30+i)
+
+    autumn.plotting.plot_classified_scaleups(models['baseline'], base)
+
+    subgroup_solns, subgroup_fractions = \
+        autumn.base_analyses.calculate_additional_diagnostics(models['baseline'])
 
 
     # if n_strains >= 2:

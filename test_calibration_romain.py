@@ -28,18 +28,16 @@ def is_positive_definite(v):
 class ModelRunner():
 
     def __init__(self):
-        self.country = read_input_data_xls(True, ['attributes'])['attributes'][u'country']
-        self.data = read_and_process_data(True,
-                                     ['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
-                                      'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes'],
-                                     self.country)
-        is_additional_diagnostics = self.data['attributes']['is_additional_diagnostics'][0]
-        n_organs = self.data['attributes']['n_organs'][0]
-        n_strains = self.data['attributes']['n_strains'][0]
-        n_comorbidities = self.data['attributes']['n_comorbidities'][0]
-        is_quality = self.data['attributes']['is_lowquality'][0]
-        is_amplification = self.data['attributes']['is_amplification'][0]
-        is_misassignment = self.data['attributes']['is_misassignment'][0]
+        self.country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
+        self.inputs = read_and_process_data(self.country,
+                                     from_test=True)
+        is_additional_diagnostics = self.inputs['model_constants']['is_additional_diagnostics'][0]
+        n_organs = self.inputs['model_constants']['n_organs'][0]
+        n_strains = self.inputs['model_constants']['n_strains'][0]
+        n_comorbidities = self.inputs['model_constants']['n_comorbidities'][0]
+        is_quality = self.inputs['model_constants']['is_lowquality'][0]
+        is_amplification = self.inputs['model_constants']['is_amplification'][0]
+        is_misassignment = self.inputs['model_constants']['is_misassignment'][0]
         self.model = autumn.model.ConsolidatedModel(
             n_organs,
             n_strains,
@@ -47,9 +45,8 @@ class ModelRunner():
             is_quality,  # Low quality care
             is_amplification,  # Amplification
             is_misassignment,  # Misassignment by strain
-            is_additional_diagnostics,
             None,  # Scenario to run
-            self.data)
+            self.inputs)
 
 
         self.is_last_run_success = False
@@ -101,10 +98,11 @@ class ModelRunner():
                 'posterior_sd': 0.1
             }
         ]
-        for key, value in self.data['parameters'].items():
-            self.model.set_parameter(key, value)
-        for key, value in self.data['country_constants'].items():
-            self.model.set_parameter(key, value)
+        for key, value in self.inputs['model_constants'].items():
+            if type(value) == float:
+                self.model.set_parameter(key, value)
+        # for key, value in self.inputs['country_constants'].items():
+        #     self.model.set_parameter(key, value)
 
         for props in self.param_props_list:
             self.model.set_parameter(props['key'],props['init'])
@@ -117,9 +115,9 @@ class ModelRunner():
     def get_data_to_fit(self):
         for output in self.calib_outputs:
             if (output['key']) == 'incidence':
-                self.data_to_fit['incidence'] = self.model.inputs['tb_dict'][u'e_inc_100k']
+                self.data_to_fit['incidence'] = self.model.inputs['tb']['e_inc_100k']
             elif (output['key']) == 'mortality':
-                self.data_to_fit['mortality'] = self.model.inputs['tb_dict'][u'e_mort_exc_tbhiv_100k']
+                self.data_to_fit['mortality'] = self.model.inputs['tb']['e_mort_exc_tbhiv_100k']
             else:
                 print "Warning: Calibrated output %s is not directly available from the data" % output['key']
 
@@ -488,7 +486,7 @@ def run_calibration(n_runs, calibrated_params, targeted_outputs, dt=None):
     base = os.path.join(out_dir, name)
     autumn.plotting.plot_outputs_against_gtb(
         model_runner.model, ["incidence", "mortality", "prevalence", "notifications"],
-        model_runner.data['attributes']['recent_time'],
+        model_runner.inputs['model_constants']['recent_time'],
         'current_time',
         base + '.png',
         model_runner.country,

@@ -91,10 +91,10 @@ if __name__ == "__main__":
     scenario = None
     country = read_input_data_xls(False, ['attributes'])['attributes'][u'country']
     print(country)
-    data = read_and_process_data(False,
-                                 ['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
+    data = read_and_process_data(country,
+                                 keys_of_sheets_to_read=['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
                                   'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes'],
-                                 country)
+                                 from_test=False)
 
     is_additional_diagnostics = data['attributes']['is_additional_diagnostics'][0]
     n_organs = data['attributes']['n_organs'][0]

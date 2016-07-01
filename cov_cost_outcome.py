@@ -58,13 +58,13 @@ else:
 #keys_of_sheets_to_read = [
 #    'bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters', 'miscellaneous', 'time_variants', 'tb',
 #    'notifications', 'outcomes']
-#data = read_and_process_data(True, keys_of_sheets_to_read, country)
+#data = read_and_process_data(country, keys_of_sheets_to_read, from_test=True)
 
-data = read_and_process_data(True,
-                             ['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
+data = read_and_process_data(country,
+                             keys_of_sheets_to_read=['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
                               'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes',
                               'country_economics', 'default_economics'],
-                             country)
+                             from_test=False)
 
 initials = data['time_variants'][u'program_prop_treatment_success_mdr'][year]
 

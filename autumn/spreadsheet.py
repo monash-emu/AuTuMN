@@ -767,7 +767,12 @@ def read_input_data_xls(from_test, sheets_to_read, country=None):
     return read_xls_with_sheet_readers(sheet_readers)
 
 
-def read_and_process_data(from_test, keys_of_sheets_to_read, country_for_processing):
+def read_and_process_data(country_for_processing,
+                          keys_of_sheets_to_read=['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
+                                                  'default_parameters', 'tb', 'notifications', 'outcomes',
+                                                  'country_constants', 'default_constants', 'country_economics',
+                                                  'default_economics', 'country_programs', 'default_programs'],
+                          from_test=False):
 
     """
     Runs the main data reading function and performs a few tidying tasks.
@@ -939,14 +944,13 @@ if __name__ == "__main__":
     country = read_input_data_xls(False, ['control_panel'])['control_panel']['country']
 
     # Then import the data
-    data = read_and_process_data(False,
-                                 ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
+    data = read_and_process_data(country, ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
                                   'default_constants',
                                   'tb', 'notifications', 'outcomes',
                                   'country_constants',
                                   'country_economics', 'default_economics',
                                   'country_programs', 'default_programs'],
-                                 country)
+                                 from_test=False)
 
     print("Time elapsed in running script is " + str(datetime.datetime.now() - spreadsheet_start_realtime))
 

@@ -13,14 +13,14 @@ start_realtime = datetime.datetime.now()
 
 # Import the data
 country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
-data = read_and_process_data(True,
-                             ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
+inputs = read_and_process_data(True,
+                               ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
                               'default_parameters',
                               'tb', 'notifications', 'outcomes',
                               'country_constants', 'default_constants',
                               'country_economics', 'default_economics',
                               'country_programs', 'default_programs'],
-                             country)
+                               country)
 
 # A few basic preliminaries
 out_dir = 'fullmodel_graphs'
@@ -33,15 +33,15 @@ project.name = 'project_test' # this name will be used as a directory to store a
 
 # Note that it takes about one hour to run all of the possible model structures,
 # so perhaps don't do that - and longer if running multiple scenarios
-for scenario in data['model_constants']['scenarios_to_run']:
+for scenario in inputs['model_constants']['scenarios_to_run']:
     project.scenarios.append(scenario)
 
-    n_organs = data['model_constants']['n_organs'][0]
-    n_strains =  data['model_constants']['n_strains'][0]
-    n_comorbidities = data['model_constants']['n_comorbidities'][0]
-    is_quality = data['model_constants']['is_lowquality'][0]
-    is_amplification = data['model_constants']['is_amplification'][0]
-    is_misassignment = data['model_constants']['is_misassignment'][0]
+    n_organs = inputs['model_constants']['n_organs'][0]
+    n_strains =  inputs['model_constants']['n_strains'][0]
+    n_comorbidities = inputs['model_constants']['n_comorbidities'][0]
+    is_quality = inputs['model_constants']['is_lowquality'][0]
+    is_amplification = inputs['model_constants']['is_amplification'][0]
+    is_misassignment = inputs['model_constants']['is_misassignment'][0]
     if (is_misassignment and not is_amplification) \
             or (n_strains <= 1 and (is_amplification or is_misassignment)):
         pass
@@ -56,7 +56,7 @@ for scenario in data['model_constants']['scenarios_to_run']:
             is_amplification,  # Amplification
             is_misassignment,  # Misassignment by strain
             scenario,  # Scenario to run
-            data)
+            inputs)
         print(str(n_organs) + " organ(s),   " +
               str(n_strains) + " strain(s),   " +
               str(n_comorbidities) + " comorbidity(ies),   " +
@@ -75,12 +75,12 @@ for scenario in data['model_constants']['scenarios_to_run']:
 
         autumn.plotting.plot_outputs_against_gtb(
             model, ["incidence", "mortality", "prevalence", "notifications"],
-            data['model_constants']['recent_time'],
+            inputs['model_constants']['recent_time'],
             'scenario_end_time',
             base + '.rate_outputs_gtb_recent.png',
             country,
             scenario=scenario,
-            figure_number=1)
+            figure_number=11)
 
         autumn.plotting.plot_classified_scaleups(model, base)
 

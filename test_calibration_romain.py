@@ -117,9 +117,9 @@ class ModelRunner():
     def get_data_to_fit(self):
         for output in self.calib_outputs:
             if (output['key']) == 'incidence':
-                self.data_to_fit['incidence'] = self.model.data['tb_dict'][u'e_inc_100k']
+                self.data_to_fit['incidence'] = self.model.inputs['tb_dict'][u'e_inc_100k']
             elif (output['key']) == 'mortality':
-                self.data_to_fit['mortality'] = self.model.data['tb_dict'][u'e_mort_exc_tbhiv_100k']
+                self.data_to_fit['mortality'] = self.model.inputs['tb_dict'][u'e_mort_exc_tbhiv_100k']
             else:
                 print "Warning: Calibrated output %s is not directly available from the data" % output['key']
 
@@ -396,7 +396,7 @@ class ModelRunner():
 
         indice_year = indices(self.model.times, lambda x: x >= targeted_year)[0]
 
-        targeted_final_pop = self.model.data['tb_dict'][u'e_pop_num'][targeted_year]
+        targeted_final_pop = self.model.inputs['tb_dict'][u'e_pop_num'][targeted_year]
 
         initial_pop = self.model.params[u'susceptible_fully']
         final_pop = sum(self.model.soln_array[indice_year, :])

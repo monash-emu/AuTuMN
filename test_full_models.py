@@ -16,7 +16,7 @@ start_realtime = datetime.datetime.now()
 country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
 inputs = read_and_process_data(country, from_test=True)
 print('Data have been loaded.')
-print('Time elapsed so far is ' + str(datetime.datetime.now() - start_realtime))
+print('Time elapsed so far is ' + str(datetime.datetime.now() - start_realtime) + '\n')
 
 # A few basic preliminaries
 out_dir = 'fullmodel_graphs'
@@ -119,7 +119,7 @@ else:
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)
 
-project.write_output_dict_xls()
+project.write_output_dict_xls(horizontal=True, minimum=None)
 
 print('Time elapsed in running script is ' + str(datetime.datetime.now() - start_realtime))
 

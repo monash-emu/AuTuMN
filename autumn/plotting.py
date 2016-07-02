@@ -115,31 +115,6 @@ def humanise_y_ticks(ax):
     ax.set_yticklabels(labels)
 
 
-def replace_underscore_with_space(original_string):
-
-    """
-    A quick, simple method to remove underscores and replace with
-    spaces for titles of plots.
-
-    Args:
-        original_string: String with underscores
-
-    Returns:
-        replaced_string: String with underscores replaced
-
-    """
-
-
-    replaced_string = ''
-    for i in range(len(original_string)):
-        if original_string[i] == '_':
-            replaced_string += ' '
-        else:
-            replaced_string += original_string[i]
-
-    return replaced_string
-
-
 def find_smallest_factors_of_integer(n):
 
     """

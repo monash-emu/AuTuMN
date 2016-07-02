@@ -24,6 +24,32 @@ def capitalise_first_letter(old_string):
 
     return new_string
 
+
+def replace_underscore_with_space(original_string):
+
+    """
+    A quick, simple method to remove underscores and replace with
+    spaces for titles of plots.
+
+    Args:
+        original_string: String with underscores
+
+    Returns:
+        replaced_string: String with underscores replaced
+
+    """
+
+
+    replaced_string = ''
+    for i in range(len(original_string)):
+        if original_string[i] == '_':
+            replaced_string += ' '
+        else:
+            replaced_string += original_string[i]
+
+    return replaced_string
+
+
 def introduce_model(models, model_name):
 
     return 'Initialising model for ' + capitalise_first_letter(

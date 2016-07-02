@@ -1,3 +1,4 @@
+
 import os
 import glob
 import datetime
@@ -6,18 +7,21 @@ import autumn.plotting
 from autumn.spreadsheet import read_and_process_data, read_input_data_xls
 import numpy as np
 import openpyxl as xl
+import base_analyses
 
 def indices(a, func):
     return [i for (i, val) in enumerate(a) if func(val)]
 
 
 def create_output_dict(model):
+
     """
     Create a dictionary with the main model outputs
     Args:
         model: a model instance after integration
     Returns: a dictionary with the different outputs
     """
+
     outputs = ['incidence', 'mortality', 'prevalence', 'notifications']
     output_dict = {}
     times = np.linspace(model.start_time, model.end_time, num=(1 + model.end_time - model.start_time))
@@ -46,7 +50,7 @@ class Project():
         self.models = {}
         self.output_dict = {}
 
-    def write_output_dict_xls(self):
+    def write_output_dict_xls(self, horizontal, minimum=None):
 
         out_dir_project = os.path.join('projects', self.name)
         if not os.path.isdir(out_dir_project):
@@ -54,33 +58,75 @@ class Project():
 
         outputs = self.output_dict['baseline'].keys()
 
-        for output in outputs:  # Write a new file
+        # Write a new file for each epidemiological indicator
+        for output in outputs:
 
+            # Get filename
             path = os.path.join(out_dir_project, output)
             path += ".xlsx"
 
+            #
             wb = xl.Workbook()
             sheet = wb.active
             sheet.title = 'model_outputs'
 
-            sheet.cell(row=1, column=1).value = 'year'
-            years = self.output_dict['baseline'][output].keys()
+            # Find years to write
+            years = []
+            for y in self.output_dict['baseline'][output].keys():
+                if minimum is None or y >= minimum:
+                    years += [y]
+
+            # Write data
+            if horizontal:
+                self.write_horizontally(sheet, output, years)
+            else:
+                self.write_vertically(sheet, output, years)
+
+            # Save workbook
+            wb.save(path)
+
+    def write_horizontally(self, sheet, output, years):
+
+        sheet.cell(row=1, column=1).value = 'Year'
+
+        col = 1
+        for y in years:
+            col += 1
+            sheet.cell(row=1, column=col).value = y
+
+        r = 1
+        for sc in self.scenarios:
+            r += 1
+            sheet.cell(row=r, column=1).value = \
+                base_analyses.replace_underscore_with_space(
+                    base_analyses.capitalise_first_letter(sc))
             col = 1
             for y in years:
                 col += 1
-                sheet.cell(row=1, column=col).value = y
+                if y in self.output_dict[sc][output]:
+                    sheet.cell(row=r, column=col).value = self.output_dict[sc][output][y]
 
-            r = 1
-            for sc in self.scenarios:
-                r += 1
-                sheet.cell(row=r, column=1).value = sc
-                col = 1
-                for y in years:
-                    col += 1
-                    if y in self.output_dict[sc][output]:
-                        sheet.cell(row=r, column=col).value = self.output_dict[sc][output][y]
+    def write_vertically(self, sheet, output, years):
 
-            wb.save(path)
+        sheet.cell(row=1, column=1).value = 'Year'
+
+        row = 1
+        for y in years:
+            row += 1
+            sheet.cell(row=row, column=1).value = y
+
+        col = 1
+        for sc in self.scenarios:
+            col += 1
+            sheet.cell(row=1, column=col).value = \
+                base_analyses.replace_underscore_with_space(
+                    base_analyses.capitalise_first_letter(sc))
+            row = 1
+            for y in years:
+                row += 1
+                if y in self.output_dict[sc][output]:
+                    sheet.cell(row=row, column=col).value = self.output_dict[sc][output][y]
+
 
 if __name__ == "__main__":
 

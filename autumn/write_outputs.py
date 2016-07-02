@@ -8,6 +8,7 @@ from autumn.spreadsheet import read_and_process_data, read_input_data_xls
 import numpy as np
 import openpyxl as xl
 import base_analyses
+from docx import Document
 
 def indices(a, func):
     return [i for (i, val) in enumerate(a) if func(val)]
@@ -81,6 +82,45 @@ class Project():
 
             # Save workbook
             wb.save(path)
+
+    def write_output_dict_word(self, minimum=None, maximum=None, step=None):
+
+        # Sort out directory if not already sorted
+        out_dir_project = os.path.join('projects', self.name)
+        if not os.path.isdir(out_dir_project):
+            os.makedirs(out_dir_project)
+
+        # Find outputs
+        outputs = self.output_dict['baseline'].keys()
+
+        # Initialise document
+        path = os.path.join(out_dir_project, 'results')
+        path += ".docx"
+        document = Document()
+        table = document.add_table(rows=1, cols=4)
+
+        # Write headers
+        header_cells = table.rows[0].cells
+        header_cells[0].text = 'Year'
+        for output_no, output in enumerate(outputs):
+            header_cells[output_no].text = base_analyses.capitalise_first_letter(output)
+
+        # Find years to write
+        years = self.find_years_to_write('incidence', minimum, maximum, step)
+        for year in years:
+
+            # Add row to table
+            row_cells = table.add_row().cells
+
+            # Write a new file for each epidemiological indicator
+            for output_no, output in enumerate(outputs):
+                row_cells[0].text = str(year)
+                indicator = '%.2f' % self.output_dict['baseline'][output][year]
+                row_cells[output_no].text = indicator
+
+        # Save document
+        document.save(path)
+
 
     def find_years_to_write(self, output, minimum, maximum, step):
 

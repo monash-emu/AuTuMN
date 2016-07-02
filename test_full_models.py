@@ -7,6 +7,7 @@ import autumn.model
 import autumn.base_analyses
 import autumn.plotting
 from autumn.spreadsheet import read_and_process_data, read_input_data_xls
+import autumn.write_outputs as w_o
 
 # Start timer
 start_realtime = datetime.datetime.now()
@@ -14,11 +15,17 @@ start_realtime = datetime.datetime.now()
 # Import the data
 country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
 inputs = read_and_process_data(country, from_test=True)
+print('Data have been loaded.')
+print('Time elapsed so far is ' + str(datetime.datetime.now() - start_realtime))
 
 # A few basic preliminaries
 out_dir = 'fullmodel_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
+
+project = w_o.Project()
+project.country = country
+project.name = 'project_test'  # this name will be used as a directory to store all the output files
 
 # At this point, I'm leaving the model attributes elements that follow as lists,
 # as it may be useful iterate over several model structures in the future, although I'm not sure
@@ -37,6 +44,9 @@ else:
 
     models = {}
     for n, scenario in enumerate(inputs['model_constants']['scenarios_to_run']):
+
+
+
         if scenario is None:
             model_name = 'baseline'
         else:
@@ -46,6 +56,11 @@ else:
             final = True
         else:
             final = False
+
+        print(scenario)
+        print(model_name)
+
+        project.scenarios.append(scenario)
 
         models[model_name] = autumn.model.ConsolidatedModel(
             n_organs,
@@ -62,18 +77,25 @@ else:
         if scenario is not None:
             scenario_start_time_index = \
                 models['baseline'].find_time_index(inputs['model_constants']['scenario_start_time'])
-            models[model_name].start_time = models['baseline'].times[scenario_start_time_index]
-            models[model_name].loaded_compartments = models['baseline'].load_state(scenario_start_time_index)
+            models[model_name].start_time = \
+                models['baseline'].times[scenario_start_time_index]
+            models[model_name].loaded_compartments = \
+                models['baseline'].load_state(scenario_start_time_index)
 
-        print('Running model "' + model_name + '".')
+        print('Running model '' + model_name + ''.')
         if n == 0:
             print(autumn.base_analyses.describe_model(models, model_name))
         models[model_name].integrate()
 
-        print("Time elapsed so far is " + str(datetime.datetime.now() - start_realtime))
+        project.models[scenario] = \
+            models[model_name]  # Store the model in the object 'project'
+        project.output_dict[scenario] = \
+            w_o.create_output_dict(models[model_name])  # Store simplified outputs
+
+        print('Time elapsed so far is ' + str(datetime.datetime.now() - start_realtime))
 
         autumn.plotting.plot_outputs_against_gtb(
-            models[model_name], ["incidence", "mortality", "prevalence", "notifications"],
+            models[model_name], ['incidence', 'mortality', 'prevalence', 'notifications'],
             inputs['model_constants']['recent_time'],
             'scenario_end_time',
             base + '_rate_outputs_gtb.png',
@@ -87,40 +109,23 @@ else:
         models['baseline'].make_graph(base + '.workflow')
 
     # Plot over subgroups
-    subgroup_solns, subgroup_fractions = autumn.base_analyses.find_fractions(models['baseline'])
-    for i, category in enumerate(subgroup_fractions):
-        autumn.plotting.plot_fractions(
-            models['baseline'], subgroup_fractions[category], models['baseline'].inputs['model_constants']['recent_time'],
-            'strain', base + '_fraction_' + category + '.png', figure_number=30+i)
-
-    autumn.plotting.plot_classified_scaleups(models['baseline'], base)
-
-    subgroup_solns, subgroup_fractions = \
-        autumn.base_analyses.calculate_additional_diagnostics(models['baseline'])
-
-
-    # if n_strains >= 2:
-    #     autumn.plotting.plot_outputs(
-    #         models['baseline'], ["incidence_ds", "incidence_mdr", "mortality_ds", "mortality_mdr", "prevalence_ds", "prevalence_mdr",
-    #                 "notifications_ds", "notifications_mdr"],
-    #         data['model_constants']['recent_time'], base + '.rate_bystrain_outputs_recent.png')
-    #     autumn.plotting.plot_outputs(
-    #         models['baseline'], ["incidence_ds", "incidence_mdr", "mortality_ds", "mortality_mdr", "prevalence_ds", "prevalence_mdr",
-    #                 "notifications_ds", "notifications_mdr"],
-    #         start_time, base + '.rate_outputs.png')
-    #     autumn.plotting.plot_outputs(
-    #         models['baseline'], ["incidence_mdr", "prevalence_mdr", "mortality_mdr"],
-    #         data['model_constants']['start_time'], base + '.mdr_outputs.png')
-    #     autumn.plotting.plot_outputs(
-    #         models['baseline'], ["incidence_mdr", "prevalence_mdr", "mortality_mdr"],
-    #         data['model_constants']['recent_time'], base + '.mdr_outputs_recent.png')
-    #     autumn.plotting.plot_outputs(
-    #         models['baseline'], ["proportion_mdr"],
-    #         data['model_constants']['start_time'], base + '.mdr_proportion_recent.png')
+    # subgroup_solns, subgroup_fractions = autumn.base_analyses.find_fractions(models['baseline'])
+    # for i, category in enumerate(subgroup_fractions):
+    #     autumn.plotting.plot_fractions(
+    #         models['baseline'], subgroup_fractions[category], models['baseline'].inputs['model_constants']['recent_time'],
+    #         'strain', base + '_fraction_' + category + '.png', figure_number=30+i)
+    #
+    # autumn.plotting.plot_classified_scaleups(models['baseline'], base)
+    #
+    # subgroup_solns, subgroup_fractions = \
+    #     autumn.base_analyses.calculate_additional_diagnostics(models['baseline'])
+    #
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)
 
-print("Time elapsed in running script is " + str(datetime.datetime.now() - start_realtime))
+project.write_output_dict_xls()
+
+print('Time elapsed in running script is ' + str(datetime.datetime.now() - start_realtime))
 
 

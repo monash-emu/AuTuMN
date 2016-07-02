@@ -26,8 +26,8 @@ def create_output_dict(model):
         output_dict[label] = {}
         solution = model.get_var_soln(label)
         for time in times:
-            indice_year = indices(model.times, lambda x: x >= time)[0]
-            output_dict[label][time] = solution[indice_year]
+            year_index = indices(model.times, lambda x: x >= time)[0]
+            output_dict[label][int(round(time))] = solution[year_index]
 
     return output_dict
 
@@ -50,6 +50,7 @@ class Project():
         #     self.output_dict[sc] = create_output_dict(self.models[sc])
 
     def write_output_dict_xls(self):
+
         out_dir_project = os.path.join('projects', self.name)
         if not os.path.isdir(out_dir_project):
             os.makedirs(out_dir_project)
@@ -82,7 +83,8 @@ class Project():
                 col = 1
                 for y in years:
                     col += 1
-                    sheet.cell(row=r, column=col).value = self.output_dict[sc][output][y]
+                    if y in self.output_dict[sc][output]:
+                        sheet.cell(row=r, column=col).value = self.output_dict[sc][output][y]
 
             wb.save(path)
 

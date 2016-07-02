@@ -46,22 +46,16 @@ class Project():
         self.models = {}
         self.output_dict = {}
 
-        # for sc in self.scenarios:
-        #     self.output_dict[sc] = create_output_dict(self.models[sc])
-
     def write_output_dict_xls(self):
 
         out_dir_project = os.path.join('projects', self.name)
         if not os.path.isdir(out_dir_project):
             os.makedirs(out_dir_project)
 
-        scenario_name = {None: 'baseline'}
-        for i in range(20)[1:-1]:
-            scenario_name[i] = 'scenario_' + str(i)
+        outputs = self.output_dict['baseline'].keys()
 
-        outputs = self.output_dict[self.scenarios[0]].keys()
+        for output in outputs:  # Write a new file
 
-        for output in outputs: # write a new file
             path = os.path.join(out_dir_project, output)
             path += ".xlsx"
 
@@ -70,7 +64,7 @@ class Project():
             sheet.title = 'model_outputs'
 
             sheet.cell(row=1, column=1).value = 'year'
-            years = self.output_dict[self.scenarios[0]][output].keys()
+            years = self.output_dict['baseline'][output].keys()
             col = 1
             for y in years:
                 col += 1
@@ -79,7 +73,7 @@ class Project():
             r = 1
             for sc in self.scenarios:
                 r += 1
-                sheet.cell(row=r, column=1).value = scenario_name[sc]
+                sheet.cell(row=r, column=1).value = sc
                 col = 1
                 for y in years:
                     col += 1

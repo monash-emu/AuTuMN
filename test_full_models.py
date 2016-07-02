@@ -25,7 +25,7 @@ if not os.path.isdir(out_dir):
 
 project = w_o.Project()
 project.country = country
-project.name = 'project_test'  # this name will be used as a directory to store all the output files
+project.name = 'project_test'  # This name will be used as a directory to store all the output files
 
 # At this point, I'm leaving the model attributes elements that follow as lists,
 # as it may be useful iterate over several model structures in the future, although I'm not sure
@@ -45,8 +45,6 @@ else:
     models = {}
     for n, scenario in enumerate(inputs['model_constants']['scenarios_to_run']):
 
-
-
         if scenario is None:
             model_name = 'baseline'
         else:
@@ -57,10 +55,7 @@ else:
         else:
             final = False
 
-        print(scenario)
-        print(model_name)
-
-        project.scenarios.append(scenario)
+        project.scenarios.append(model_name)
 
         models[model_name] = autumn.model.ConsolidatedModel(
             n_organs,
@@ -82,32 +77,32 @@ else:
             models[model_name].loaded_compartments = \
                 models['baseline'].load_state(scenario_start_time_index)
 
-        print('Running model '' + model_name + ''.')
+        print('Running model "' + model_name + '".')
         if n == 0:
             print(autumn.base_analyses.describe_model(models, model_name))
         models[model_name].integrate()
 
-        project.models[scenario] = \
+        project.models[model_name] = \
             models[model_name]  # Store the model in the object 'project'
-        project.output_dict[scenario] = \
+        project.output_dict[model_name] = \
             w_o.create_output_dict(models[model_name])  # Store simplified outputs
 
         print('Time elapsed so far is ' + str(datetime.datetime.now() - start_realtime))
-
-        autumn.plotting.plot_outputs_against_gtb(
-            models[model_name], ['incidence', 'mortality', 'prevalence', 'notifications'],
-            inputs['model_constants']['recent_time'],
-            'scenario_end_time',
-            base + '_rate_outputs_gtb.png',
-            country,
-            scenario=scenario,
-            figure_number=11,
-            final_run=final)
-
+        #
+        # autumn.plotting.plot_outputs_against_gtb(
+        #     models[model_name], ['incidence', 'mortality', 'prevalence', 'notifications'],
+        #     inputs['model_constants']['recent_time'],
+        #     'scenario_end_time',
+        #     base + '_rate_outputs_gtb.png',
+        #     country,
+        #     scenario=scenario,
+        #     figure_number=11,
+        #     final_run=final)
+    #
     # Only make a flow-diagram if the model isn't overly complex
-    if n_organs + n_strains + n_comorbidities <= 5:
-        models['baseline'].make_graph(base + '.workflow')
-
+    # if n_organs + n_strains + n_comorbidities <= 5:
+    #     models['baseline'].make_graph(base + '.workflow')
+    #
     # Plot over subgroups
     # subgroup_solns, subgroup_fractions = autumn.base_analyses.find_fractions(models['baseline'])
     # for i, category in enumerate(subgroup_fractions):

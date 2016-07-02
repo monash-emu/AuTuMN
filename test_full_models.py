@@ -23,9 +23,10 @@ out_dir = 'fullmodel_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
-project = w_o.Project()
-project.country = country
-project.name = 'project_test'  # This name will be used as a directory to store all the output files
+if inputs['model_constants']['output_spreadsheets']:
+    project = w_o.Project()
+    project.country = country
+    project.name = 'project_test'  # This name will be used as a directory to store all the output files
 
 # At this point, I'm leaving the model attributes elements that follow as lists,
 # as it may be useful iterate over several model structures in the future, although I'm not sure
@@ -55,7 +56,8 @@ else:
         else:
             final = False
 
-        project.scenarios.append(model_name)
+        if inputs['model_constants']['output_spreadsheets']:
+            project.scenarios.append(model_name)
 
         models[model_name] = autumn.model.ConsolidatedModel(
             n_organs,
@@ -82,10 +84,11 @@ else:
             print(autumn.base_analyses.describe_model(models, model_name))
         models[model_name].integrate()
 
-        project.models[model_name] = \
-            models[model_name]  # Store the model in the object 'project'
-        project.output_dict[model_name] = \
-            w_o.create_output_dict(models[model_name])  # Store simplified outputs
+        if inputs['model_constants']['output_spreadsheets']:
+            project.models[model_name] = \
+                models[model_name]  # Store the model in the object 'project'
+            project.output_dict[model_name] = \
+                w_o.create_output_dict(models[model_name])  # Store simplified outputs
 
         print('Time elapsed so far is ' + str(datetime.datetime.now() - start_realtime))
         #
@@ -119,7 +122,8 @@ else:
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)
 
-project.write_output_dict_xls(horizontal=True, minimum=2015, maximum=2040, step=5)
+if inputs['model_constants']['output_spreadsheets']:
+    project.write_output_dict_xls(horizontal=True, minimum=2015, maximum=2040, step=5)
 
 print('Time elapsed in running script is ' + str(datetime.datetime.now() - start_realtime))
 

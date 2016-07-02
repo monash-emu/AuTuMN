@@ -396,6 +396,9 @@ class FixedParametersReader:
                 if not row[i] == '':
                     self.data[str(row[0])] += [int(row[i])]
 
+        elif row[0] == 'output_spreadsheets':
+            self.data[str(row[0])] = bool(row[1])
+
         # Parameters
         else:
             self.data[str(row[0])] = row[1]
@@ -464,6 +467,9 @@ class ControlPanelReader(FixedParametersReader):
             for i in range(1, len(row)):
                 if not row[i] == '':
                     self.data[str(row[0])] += [bool(row[i])]
+
+        elif row[0] == 'output_spreadsheets':
+            self.data[str(row[0])] = bool(row[1])
 
 
 class DefaultProgramReader:

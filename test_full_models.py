@@ -119,7 +119,7 @@ else:
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)
 
-project.write_output_dict_xls(horizontal=True, minimum=1960, maximum=2035, step=5)
+project.write_output_dict_xls(horizontal=True, minimum=2015, maximum=2040, step=5)
 
 print('Time elapsed in running script is ' + str(datetime.datetime.now() - start_realtime))
 

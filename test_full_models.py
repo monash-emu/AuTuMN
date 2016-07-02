@@ -91,33 +91,31 @@ else:
                 w_o.create_output_dict(models[model_name])  # Store simplified outputs
 
         print('Time elapsed so far is ' + str(datetime.datetime.now() - start_realtime))
-        #
-        # autumn.plotting.plot_outputs_against_gtb(
-        #     models[model_name], ['incidence', 'mortality', 'prevalence', 'notifications'],
-        #     inputs['model_constants']['recent_time'],
-        #     'scenario_end_time',
-        #     base + '_rate_outputs_gtb.png',
-        #     country,
-        #     scenario=scenario,
-        #     figure_number=11,
-        #     final_run=final)
-    #
+
+        autumn.plotting.plot_outputs_against_gtb(
+            models[model_name], ['incidence', 'mortality', 'prevalence', 'notifications'],
+            inputs['model_constants']['recent_time'],
+            'scenario_end_time',
+            base + '_rate_outputs_gtb.png',
+            country,
+            scenario=scenario,
+            figure_number=11,
+            final_run=final)
+
     # Make a flow-diagram
-    # if n_organs + n_strains + n_comorbidities <= 5:
-    #     models['baseline'].make_graph(base + '.workflow')
-    #
+    if inputs['model_constants']['output_flow_diagram']:
+        models['baseline'].make_graph(base + '.workflow')
+
     # Plot over subgroups
-    # subgroup_solns, subgroup_fractions = autumn.base_analyses.find_fractions(models['baseline'])
-    # for i, category in enumerate(subgroup_fractions):
-    #     autumn.plotting.plot_fractions(
-    #         models['baseline'], subgroup_fractions[category], models['baseline'].inputs['model_constants']['recent_time'],
-    #         'strain', base + '_fraction_' + category + '.png', figure_number=30+i)
-    #
-    # autumn.plotting.plot_classified_scaleups(models['baseline'], base)
-    #
-    # subgroup_solns, subgroup_fractions = \
-    #     autumn.base_analyses.calculate_additional_diagnostics(models['baseline'])
-    #
+    if inputs['model_constants']['output_fractions']:
+        subgroup_solns, subgroup_fractions = autumn.base_analyses.find_fractions(models['baseline'])
+        for i, category in enumerate(subgroup_fractions):
+            autumn.plotting.plot_fractions(
+                models['baseline'], subgroup_fractions[category], models['baseline'].inputs['model_constants']['recent_time'],
+                'strain', base + '_fraction_' + category + '.png', figure_number=30+i)
+
+    if inputs['model_constants']['output_scaleups']:
+        autumn.plotting.plot_classified_scaleups(models['baseline'], base)
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)

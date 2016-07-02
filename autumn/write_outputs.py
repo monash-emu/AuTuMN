@@ -50,7 +50,7 @@ class Project():
         self.models = {}
         self.output_dict = {}
 
-    def write_output_dict_xls(self, horizontal, minimum=None):
+    def write_output_dict_xls(self, horizontal, minimum=None, maximum=None, step=None):
 
         out_dir_project = os.path.join('projects', self.name)
         if not os.path.isdir(out_dir_project):
@@ -65,16 +65,13 @@ class Project():
             path = os.path.join(out_dir_project, output)
             path += ".xlsx"
 
-            #
+            # Get active sheet
             wb = xl.Workbook()
             sheet = wb.active
             sheet.title = 'model_outputs'
 
             # Find years to write
-            years = []
-            for y in self.output_dict['baseline'][output].keys():
-                if minimum is None or y >= minimum:
-                    years += [y]
+            years = self.find_years_to_write(output, minimum, maximum, step)
 
             # Write data
             if horizontal:
@@ -84,6 +81,25 @@ class Project():
 
             # Save workbook
             wb.save(path)
+
+    def find_years_to_write(self, output, minimum, maximum, step):
+
+        # Determine years requested
+        if minimum is None:
+            minimum = 0
+        if maximum is None:
+            maximum = 3000
+        if step is None:
+            requested_years = range(minimum, maximum)
+        else:
+            requested_years = range(minimum, maximum, step)
+
+        # Find years to write
+        years = []
+        for y in self.output_dict['baseline'][output].keys():
+            if y in requested_years:
+                years += [y]
+        return years
 
     def write_horizontally(self, sheet, output, years):
 

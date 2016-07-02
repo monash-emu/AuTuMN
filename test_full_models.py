@@ -99,7 +99,7 @@ else:
         #     figure_number=11,
         #     final_run=final)
     #
-    # Only make a flow-diagram if the model isn't overly complex
+    # Make a flow-diagram
     # if n_organs + n_strains + n_comorbidities <= 5:
     #     models['baseline'].make_graph(base + '.workflow')
     #
@@ -119,7 +119,7 @@ else:
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)
 
-project.write_output_dict_xls(horizontal=True, minimum=None)
+project.write_output_dict_xls(horizontal=True, minimum=1960, maximum=2035, step=5)
 
 print('Time elapsed in running script is ' + str(datetime.datetime.now() - start_realtime))
 

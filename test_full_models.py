@@ -60,7 +60,8 @@ else:
             print(autumn.base_analyses.introduce_model(models, model_name))
 
         if scenario is not None:
-            scenario_start_time_index = models['baseline'].find_time_index(inputs['model_constants']['scenario_start_time'])
+            scenario_start_time_index = \
+                models['baseline'].find_time_index(inputs['model_constants']['scenario_start_time'])
             models[model_name].start_time = models['baseline'].times[scenario_start_time_index]
             models[model_name].loaded_compartments = models['baseline'].load_state(scenario_start_time_index)
 

@@ -122,8 +122,7 @@ autumn.plotting.open_pngs(pngs)
 
 if inputs['model_constants']['output_spreadsheets']:
     project.write_output_dict_xls(horizontal=True, minimum=2015, maximum=2040, step=5)
-
-project.write_output_dict_word(minimum=2015, maximum=2040, step=5)
+    project.write_scenario_dict_word('incidence', minimum=2019, maximum=2040, step=5)
 
 print('Time elapsed in running script is ' + str(datetime.datetime.now() - start_realtime))
 

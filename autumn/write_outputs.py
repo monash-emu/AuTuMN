@@ -36,15 +36,18 @@ def create_output_dict(model):
 
     return output_dict
 
-class Project():
+
+class Project:
 
     def __init__(self):
+
         """
         Initialises an object of class Project, that will contain all the information (data + outputs) for writing a
         report for a country
         Args:
             models: dictionary such as: models = {'baseline': model, 'scenario_1': model_1,  ...}
         """
+
         self.country = ''
         self.name = 'project_test'
         self.scenarios = []
@@ -83,30 +86,76 @@ class Project():
             # Save workbook
             wb.save(path)
 
-    def write_output_dict_word(self, minimum=None, maximum=None, step=None):
+    def write_scenario_dict_word(self,
+                               indicator='incidence',
+                               minimum=None, maximum=None, step=None):
 
         # Sort out directory if not already sorted
-        out_dir_project = os.path.join('projects', self.name)
+        out_dir_project = self.make_path('projects')
+
+        # Initialise document
+        path = os.path.join(out_dir_project, 'scenarios')
+        path += ".docx"
+        document = Document()
+        table = document.add_table(rows=1, cols=len(self.scenarios)+1)
+
+        # Write headers
+        header_cells = table.rows[0].cells
+        header_cells[0].text = 'Year'
+        for scenario_no, scenario in enumerate(self.scenarios):
+            header_cells[scenario_no+1].text = base_analyses.capitalise_first_letter(scenario)
+
+        # Find years to write
+        years = self.find_years_to_write(indicator, minimum, maximum, step)
+        for year in years:
+
+            # Add row to table
+            row_cells = table.add_row().cells
+
+            # Write a new file for each epidemiological indicator
+            for scenario_no, scenario in enumerate(self.scenarios):
+                row_cells[0].text = str(year)
+                text_to_write = '%.2f' % self.output_dict[scenario][indicator][year]
+                row_cells[scenario_no+1].text = text_to_write
+
+        # Save document
+        document.save(path)
+
+    def make_path(self, filename):
+
+        # Sort out directory if not already sorted
+        out_dir_project = os.path.join(filename, self.name)
         if not os.path.isdir(out_dir_project):
             os.makedirs(out_dir_project)
+        return out_dir_project
+
+    def write_output_dict_word(self,
+                               indicators_to_tabulate=['incidence', 'prevalence', 'mortality', 'notifications'],
+                               minimum=None, maximum=None, step=None):
+
+        # Sort out directory if not already sorted
+        out_dir_project = self.make_path('projects')
 
         # Find outputs
-        outputs = self.output_dict['baseline'].keys()
+        outputs = []
+        for output in self.output_dict['baseline'].keys():
+            if output in indicators_to_tabulate:
+                outputs += [output]
 
         # Initialise document
         path = os.path.join(out_dir_project, 'results')
         path += ".docx"
         document = Document()
-        table = document.add_table(rows=1, cols=4)
+        table = document.add_table(rows=1, cols=len(outputs)+1)
 
         # Write headers
         header_cells = table.rows[0].cells
         header_cells[0].text = 'Year'
         for output_no, output in enumerate(outputs):
-            header_cells[output_no].text = base_analyses.capitalise_first_letter(output)
+            header_cells[output_no+1].text = base_analyses.capitalise_first_letter(output)
 
         # Find years to write
-        years = self.find_years_to_write('incidence', minimum, maximum, step)
+        years = self.find_years_to_write(outputs[0], minimum, maximum, step)
         for year in years:
 
             # Add row to table
@@ -116,11 +165,10 @@ class Project():
             for output_no, output in enumerate(outputs):
                 row_cells[0].text = str(year)
                 indicator = '%.2f' % self.output_dict['baseline'][output][year]
-                row_cells[output_no].text = indicator
+                row_cells[output_no+1].text = indicator
 
         # Save document
         document.save(path)
-
 
     def find_years_to_write(self, output, minimum, maximum, step):
 

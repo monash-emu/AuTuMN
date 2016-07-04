@@ -235,20 +235,16 @@ class Project:
 if __name__ == "__main__":
 
     scenario = None
-    country = read_input_data_xls(False, ['attributes'])['attributes'][u'country']
+    country = read_input_data_xls(False, ['control_panel'])['control_panel']['country']
     print(country)
-    data = read_and_process_data(country,
-                                 keys_of_sheets_to_read=['bcg', 'rate_birth', 'life_expectancy', 'attributes', 'parameters',
-                                  'country_constants', 'time_variants', 'tb', 'notifications', 'outcomes'],
-                                 from_test=False)
+    inputs = read_and_process_data(country, from_test=False)
 
-    is_additional_diagnostics = data['attributes']['is_additional_diagnostics'][0]
-    n_organs = data['attributes']['n_organs'][0]
-    n_strains = data['attributes']['n_strains'][0]
-    n_comorbidities = data['attributes']['n_comorbidities'][0]
-    is_quality = data['attributes']['is_lowquality'][0]
-    is_amplification = data['attributes']['is_amplification'][0]
-    is_misassignment = data['attributes']['is_misassignment'][0]
+    n_organs = inputs['model_constants']['n_organs'][0]
+    n_strains = inputs['model_constants']['n_strains'][0]
+    n_comorbidities = inputs['model_constants']['n_comorbidities'][0]
+    is_quality = inputs['model_constants']['is_lowquality'][0]
+    is_amplification = inputs['model_constants']['is_amplification'][0]
+    is_misassignment = inputs['model_constants']['is_misassignment'][0]
     model = autumn.model.ConsolidatedModel(
         n_organs,
         n_strains,
@@ -256,14 +252,8 @@ if __name__ == "__main__":
         is_quality,  # Low quality care
         is_amplification,  # Amplification
         is_misassignment,  # Misassignment by strain
-        is_additional_diagnostics,
         scenario,  # Scenario to run
-        data)
-
-    for key, value in data['parameters'].items():
-        model.set_parameter(key, value)
-    for key, value in data['country_constants'].items():
-        model.set_parameter(key, value)
+        inputs)
 
     model.integrate()
 

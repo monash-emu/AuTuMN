@@ -831,6 +831,7 @@ class ConsolidatedModel(BaseModel):
         for organ in self.organ_status:
             self.vars['program_timeperiod_await_treatment' + organ] = \
                 self.get_constant_or_variable_param('program_timeperiod_await_treatment' + organ)
+        prop_xpert = self.get_constant_or_variable_param('program_prop_xpert')
 
         # If only one organ stratum
         if len(self.organ_status) < 2:
@@ -840,8 +841,8 @@ class ConsolidatedModel(BaseModel):
             for organ in self.organ_status:
                 if organ == '_smearneg':
                     self.vars['program_rate_start_treatment_smearneg'] = \
-                        1. / (self.vars['program_timeperiod_await_treatment_smearneg'] * (1. - self.vars['program_prop_xpert'])
-                            + self.params['program_timeperiod_await_treatment_smearneg_xpert'] * self.vars['program_prop_xpert'])
+                        1. / (self.vars['program_timeperiod_await_treatment_smearneg'] * (1. - prop_xpert)
+                            + self.params['program_timeperiod_await_treatment_smearneg_xpert'] * prop_xpert)
                 else:
                     self.vars['program_rate_start_treatment' + organ] = \
                         1. / self.vars['program_timeperiod_await_treatment' + organ]

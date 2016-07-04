@@ -787,9 +787,10 @@ class ConsolidatedModel(BaseModel):
         # sojourn time, so any organ status can be arbitrarily selected (here the first, or smear-positive)
 
         detect_prop = self.get_constant_or_variable_param('program_prop_detect')
+        alg_sens = self.get_constant_or_variable_param('program_prop_algorithm_sensitivity')
 
         # If no division by zero
-        if self.vars['program_prop_algorithm_sensitivity'] > 0.:
+        if alg_sens > 0.:
 
             # Detections
             self.vars['program_rate_detect'] = \
@@ -802,8 +803,8 @@ class ConsolidatedModel(BaseModel):
             # Missed
             self.vars['program_rate_missed'] = \
                 self.vars['program_rate_detect'] \
-                * (1. - self.vars['program_prop_algorithm_sensitivity']) \
-                / self.vars['program_prop_algorithm_sensitivity']
+                * (1. - alg_sens) \
+                / alg_sens
 
         # Otherwise just assign detection and missed rates to zero
         else:

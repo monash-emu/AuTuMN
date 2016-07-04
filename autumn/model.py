@@ -827,6 +827,12 @@ class ConsolidatedModel(BaseModel):
         Also weight the time period
         """
 
+        # Use params if vars not available
+        for organ in self.organ_status:
+            self.vars['program_timeperiod_await_treatment' + organ] = \
+                self.get_constant_or_variable_param('program_timeperiod_await_treatment' + organ)
+
+        # If only one organ stratum
         if len(self.organ_status) < 2:
             self.vars['program_rate_start_treatment'] = \
                 1. / self.vars['program_timeperiod_await_treatment_smearpos']

@@ -953,9 +953,11 @@ class ConsolidatedModel(BaseModel):
         This code structure echoes the code in set_variable_programmatic_flows
         """
 
+        prop_ipt = self.get_constant_or_variable_param('program_prop_ipt')
+
         # This parameter is the number of persons effectively treated with IPT for each
         # patient started on treatment for active disease.
-        prevented_cases_per_patient_starting_treatment = self.vars['program_prop_ipt'] \
+        prevented_cases_per_patient_starting_treatment = prop_ipt \
                                                          * (self.inputs['model_constants']['demo_household_size'] - 1.) \
                                                          * self.inputs['model_constants']['tb_prop_contacts_infected'] \
                                                          * self.inputs['model_constants']['tb_prop_ltbi_test_sensitivity'] \

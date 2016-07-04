@@ -379,6 +379,29 @@ class ConsolidatedModel(BaseModel):
         late_proportion = proportion - early_proportion
         return early_proportion, late_proportion
 
+    def get_constant_or_variable_param(self, param):
+
+        """
+        Simple function to look first in vars then params for a parameter value and
+        raise an error if the parameter is not found.
+
+        Args:
+            param: String for the parameter (should be the same in either vars or params)
+
+        Returns:
+            param_value: The value of the parameter
+
+        """
+
+        if param in self.vars:
+            param_value = self.vars[param]
+        elif param in self.params:
+            param_value = self.params[param]
+        else:
+            raise NameError('Parameter "' + param + '" not found in either vars or params.')
+
+        return param_value
+
     ##################################################################
     # The master parameter processing and scale-up setting method
 
@@ -654,23 +677,21 @@ class ConsolidatedModel(BaseModel):
     def calculate_birth_rates_vars(self):
 
         """
-        Now allows either time-variant or constant birth rates
+        Calculate birth rates into vaccinated and unvaccinated compartments
         """
 
-        # Set total birth rate with either the constant or time-variant birth parameter
-        if 'demo_rate_birth' in self.vars:
-            rate_birth = self.vars['demo_rate_birth'] / 1E3
-        elif 'demo_rate_birth' in self.params:
-            rate_birth = self.params['demo_rate_birth'] / 1E3
+        # Get the parameters depending on whether constant or time variant
+        rate_birth = self.get_constant_or_variable_param('demo_rate_birth') / 1E3
+        prop_vacc = self.get_constant_or_variable_param('program_prop_vaccination')
 
         # Calculate the birth rates by compartment
         self.vars['births_unvac'] = \
-            (1. - self.vars['program_prop_vaccination']) \
+            (1. - prop_vacc) \
             * rate_birth \
             * self.vars['population'] \
             / len(self.comorbidities)
         self.vars['births_vac'] = \
-            self.vars['program_prop_vaccination'] \
+            prop_vacc \
             * rate_birth \
             * self.vars['population'] \
             / len(self.comorbidities)
@@ -758,23 +779,25 @@ class ConsolidatedModel(BaseModel):
         Derived from original formulas of by solving the simultaneous equations:
           algorithm sensitivity = detection rate / (detection rate + missed rate)
           - and -
-          detection proportion = detection rate / (detection rate + missed rate + spont recover rate + death rate)
+          detection proportion = detection rate / (detection rate + spont recover rate + tb death rate + natural death rate)
         """
 
         # Detection
         # Note that all organ types are assumed to have the same untreated active
         # sojourn time, so any organ status can be arbitrarily selected (here the first, or smear-positive)
 
+        detect_prop = self.get_constant_or_variable_param('program_prop_detect')
+
         # If no division by zero
         if self.vars['program_prop_algorithm_sensitivity'] > 0.:
 
             # Detections
             self.vars['program_rate_detect'] = \
-                - self.vars['program_prop_detect'] \
+                - detect_prop \
                 * (self.params['tb_rate_recover' + self.organ_status[0]] +
                    self.params['tb_rate_death' + self.organ_status[0]] +
                    1. / self.params['demo_life_expectancy']) \
-                / (self.vars['program_prop_detect'] - 1.)
+                / (detect_prop - 1.)
 
             # Missed
             self.vars['program_rate_missed'] = \

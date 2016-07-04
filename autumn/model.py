@@ -16,6 +16,7 @@ from autumn.base import BaseModel
 from curve import make_sigmoidal_curve, make_two_step_curve, scale_up_function
 import numpy
 import pylab
+import warnings
 
 
 def label_intersects_tags(label, tags):
@@ -87,10 +88,24 @@ class ConsolidatedModel(BaseModel):
 
         BaseModel.__init__(self)
 
+        self.inputs = inputs
+
         self.loaded_compartments = None
 
         # Convert inputs to attributes
         self.n_organ = n_organ
+        if n_organ < 2 and self.inputs['time_variants']['epi_prop_smearpos']['time_variant'] == 'yes':
+            warnings.warn('Warning: time variant smear-positive proportion requested, but ' +
+                          'model is not stratified by organ status. Therefore, time variant smear-positive status ' +
+                          'has been turned off.')
+            self.inputs['time_variants']['epi_prop_smearpos']['time_variant'] = 'no'
+        if n_organ < 2 and self.inputs['time_variants']['epi_prop_smearneg']['time_variant'] == 'yes':
+            warnings.warn('Warning: time variant smear-negative proportion requested, but ' +
+                          'model is not stratified by organ status. Therefore, time variant smear-negative status ' +
+                          'has been turned off.')
+            self.inputs['time_variants']['epi_prop_smearneg']['time_variant'] = 'no'
+
+        # Set strain and comorbidities
         self.n_strain = n_strain
         self.n_comorbidity = n_comorbidity
 
@@ -105,8 +120,6 @@ class ConsolidatedModel(BaseModel):
         self.is_misassignment = is_misassignment
 
         self.scenario = scenario
-
-        self.inputs = inputs
 
         if self.is_misassignment:
             assert self.is_amplification, 'Misassignment requested without amplification'
@@ -827,16 +840,23 @@ class ConsolidatedModel(BaseModel):
         Also weight the time period
         """
 
-        # Use params if vars not available
-        for organ in self.organ_status:
-            self.vars['program_timeperiod_await_treatment' + organ] = \
-                self.get_constant_or_variable_param('program_timeperiod_await_treatment' + organ)
+        # If not stratified by organ status, use the smear-positive value
+        if len(self.organ_status) < 2:
+            self.vars['program_timeperiod_await_treatment'] = \
+                self.get_constant_or_variable_param('program_timeperiod_await_treatment_smearpos')
+
+        # Otherwise, use the organ-specific value
+        else:
+            for organ in self.organ_status:
+                self.vars['program_timeperiod_await_treatment' + organ] = \
+                    self.get_constant_or_variable_param('program_timeperiod_await_treatment' + organ)
+
         prop_xpert = self.get_constant_or_variable_param('program_prop_xpert')
 
         # If only one organ stratum
         if len(self.organ_status) < 2:
             self.vars['program_rate_start_treatment'] = \
-                1. / self.vars['program_timeperiod_await_treatment_smearpos']
+                1. / self.vars['program_timeperiod_await_treatment']
         else:
             for organ in self.organ_status:
                 if organ == '_smearneg':

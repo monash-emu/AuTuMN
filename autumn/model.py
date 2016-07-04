@@ -851,10 +851,12 @@ class ConsolidatedModel(BaseModel):
         cases isn't actually detected
         """
 
+        prop_lowqual = self.get_constant_or_variable_param('program_prop_lowquality')
+
         self.vars['program_rate_enterlowquality'] = \
             self.vars['program_rate_detect'] \
-            * self.vars['program_prop_lowquality'] \
-            / (1. - self.vars['program_prop_lowquality'])
+            * prop_lowqual \
+            / (1. - prop_lowqual)
 
     def calculate_proportionate_detection_vars(self):
 
@@ -870,6 +872,9 @@ class ConsolidatedModel(BaseModel):
         # treatment available)
         if self.is_misassignment:
 
+            prop_firstline = self.get_constant_or_variable_param('program_prop_firstline_dst')
+            prop_secondline = self.get_constant_or_variable_param('program_prop_secondline_dst')
+
             # DS-TB
             self.vars['program_rate_detect_ds_asds'] = \
                 self.vars['program_rate_detect']
@@ -878,24 +883,24 @@ class ConsolidatedModel(BaseModel):
 
             # MDR-TB
             self.vars['program_rate_detect_mdr_asds'] = \
-                (1. - self.vars['program_prop_firstline_dst']) \
+                (1. - prop_firstline) \
                 * self.vars['program_rate_detect']
             self.vars['program_rate_detect_mdr_asmdr'] = \
-                self.vars['program_prop_firstline_dst'] \
+                prop_firstline \
                 * self.vars['program_rate_detect']
             self.vars['program_rate_detect_mdr_asxdr'] = 0.
 
             # XDR-TB
             self.vars['program_rate_detect_xdr_asds'] = \
-                (1. - self.vars['program_prop_firstline_dst']) \
+                (1. - prop_firstline) \
                  * self.vars['program_rate_detect']
             self.vars['program_rate_detect_xdr_asmdr'] = \
-                self.vars['program_prop_firstline_dst'] \
-                * (1. - self.vars['program_prop_secondline_dst'])\
+                prop_firstline \
+                * (1. - prop_secondline)\
                 * self.vars['program_rate_detect']
             self.vars['program_rate_detect_xdr_asxdr'] = \
-                self.vars['program_prop_firstline_dst'] \
-                * self.vars['program_prop_secondline_dst'] \
+                prop_firstline \
+                * prop_secondline \
                 * self.vars['program_rate_detect']
 
         # Without misassignment:
@@ -912,6 +917,16 @@ class ConsolidatedModel(BaseModel):
             treatments += ['_inappropriate']
 
         for strain in treatments:
+
+            # Get treatment success proportion from vars if possible and from params if not
+            for outcome in ['_success', '_death']:
+                if 'program_prop_treatment'+outcome+strain in self.vars:
+                    pass
+                elif 'program_prop_treatment'+outcome+strain in self.params:
+                    self.vars['program_prop_treatment' + outcome] = \
+                        self.params['program_prop_treatment' + outcome ]
+                else:
+                    raise NameError('program_prop_treatment' + outcome + strain + ' not found in vars or params')
 
             self.vars['program_prop_treatment_default' + strain] \
                 = 1. \

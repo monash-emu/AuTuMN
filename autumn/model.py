@@ -17,6 +17,8 @@ from curve import make_sigmoidal_curve, make_two_step_curve, scale_up_function
 import numpy
 import pylab
 import warnings
+import base_analyses
+import age_strat
 
 
 def label_intersects_tags(label, tags):
@@ -212,7 +214,9 @@ class ConsolidatedModel(BaseModel):
         else:
             self.comorbidities = available_comorbidities[:self.n_comorbidity]
 
+        # Age stratification
         self.define_age_structure()
+        self.find_age_breakpoints_from_age_strings()
 
         self.initial_compartments = {}
         for compartment in self.compartment_types:
@@ -332,6 +336,22 @@ class ConsolidatedModel(BaseModel):
                                self.params['epi_prop_smearpos'] + \
                                self.params['epi_prop_smearneg'] * self.params['tb_multiplier_force_smearneg'])
 
+    def find_age_breakpoints_from_age_strings(self):
+
+        data_param_vals = {}
+        param_age_dict = {}
+        for constant in self.inputs['model_constants']:
+            if 'agestrat_' in constant:
+                param_age_string = base_analyses.find_string_from_starting_letters(constant, '_age')
+                param_age_dict[param_age_string] = base_analyses.interrogate_age_string(param_age_string)
+                data_param_vals[param_age_string] = self.inputs['model_constants'][constant]
+
+        model_breakpoints = []
+        for i in self.inputs['model_constants']['age_breakpoints']:
+            model_breakpoints += [float(i)]
+        param_breakpoints = base_analyses.find_age_breakpoints_from_dicts(param_age_dict)
+        model_params = age_strat.adapt_params_to_stratification(param_breakpoints, model_breakpoints, data_param_vals)
+
     def define_age_structure(self):
 
         # Work out age-groups from list of breakpoints
@@ -340,25 +360,27 @@ class ConsolidatedModel(BaseModel):
         # If age-group breakpoints are supplied
         if len(self.inputs['model_constants']['age_breakpoints']) > 0:
             for i in range(len(self.inputs['model_constants']['age_breakpoints'])):
-                if i == 0:
 
-                    # The first age-group
+                # The first age-group
+                if i == 0:
                     self.agegroups += \
                         ['_age0to' + str(self.inputs['model_constants']['age_breakpoints'][i])]
-                else:
 
-                    # Middle age-groups
+                # Middle age-groups
+                else:
                     self.agegroups += \
                         ['_age' + str(self.inputs['model_constants']['age_breakpoints'][i - 1]) +
                          'to' + str(self.inputs['model_constants']['age_breakpoints'][i])]
 
             # Last age-group
-            self.agegroups += ['_age' + str(self.inputs['model_constants']['age_breakpoints'][len(self.inputs['model_constants']['age_breakpoints']) - 1]) + 'up']
+            self.agegroups += \
+                ['_age' +
+                 str(self.inputs['model_constants']['age_breakpoints'][len(self.inputs['model_constants']['age_breakpoints']) - 1]) +
+                 'up']
 
         # Otherwise
         else:
-            # List consisting of one empty string required
-            # for the methods that iterate over strains
+            # List consisting of one empty string required for methods that iterate over strains
             self.agegroups += ['']
 
     ############################################################
@@ -1464,6 +1486,7 @@ class ConsolidatedModel(BaseModel):
     # integration required
 
     def integrate(self):
+
         min_dt = 0.05
         if self.inputs['model_constants']['integration'] == 'explicit':
             self.integrate_explicit(min_dt)

@@ -55,6 +55,7 @@ def introduce_model(models, model_name):
     return 'Initialising model for ' + capitalise_first_letter(
         models[model_name].inputs['model_constants']['country']) + ' with key "' + model_name + '".'
 
+
 def describe_model(models, model_name):
 
     model = models[model_name]
@@ -75,6 +76,80 @@ def describe_model(models, model_name):
 
     return returned_string
 
+
+def find_string_from_starting_letters(string_to_analyse, string_start_to_find):
+
+    # Find the position of the age string
+    string_position = string_to_analyse.find(string_start_to_find)
+
+    # Find the position of all the underscores in the string
+    underscores = [pos for pos, char in enumerate(string_to_analyse) if char == '_']
+
+    # Find the age underscore's position in the list of underscores
+    for i, position in enumerate(underscores):
+        if position == string_position:
+            string_underscore_index = i
+
+    # If the age stratification is at the end of the string
+    if string_position == underscores[-1]:
+        result_string = string_to_analyse[string_position:]
+
+    # Otherwise if more string follows the age string
+    else:
+        result_string = string_to_analyse[string_position: underscores[string_underscore_index + 1]]
+
+    return result_string
+
+
+def interrogate_age_string(age_string):
+
+    # Check the age string sta
+    assert age_string[:4] == '_age', 'Age string does not begin with "_age".'
+
+    # Extract the part of the string that actually refers to the ages
+    ages = age_string[4:]
+
+    # Find the lower age limit
+    lower_age_limit = ''
+    for i, letter in enumerate(ages):
+        if letter.isdigit():
+            lower_age_limit += letter
+        else:
+            break
+    remaining_string = ages[len(lower_age_limit):]
+    lower_age_limit = float(lower_age_limit)
+
+    # Find the upper age limit
+    if remaining_string == 'up':
+        upper_age_limit = float('inf')
+    elif remaining_string[:2] == 'to':
+        upper_age_limit = float(remaining_string[2:])
+    else:
+        raise NameError('Age string incorrectly specified')
+
+    return [lower_age_limit, upper_age_limit]
+
+
+def find_age_breakpoints_from_dicts(age_dict):
+
+    breakpoints_with_repetition = []
+    breakpoints = []
+
+    # Add all age breakpoints to a temporary list that allows repetition
+    for key in age_dict:
+        for i in age_dict[key]:
+            breakpoints_with_repetition += [i]
+
+    # Check there is a lowest and highest age group
+    assert 0. in breakpoints_with_repetition, 'No age group goes to zero'
+    assert float('inf') in breakpoints_with_repetition, 'No age group goes to infinity'
+
+    # Add the actual breakpoints once each
+    for breakpoint in breakpoints_with_repetition:
+        if breakpoint != 0. and breakpoint < 1E10 and breakpoint not in breakpoints:
+            breakpoints += [breakpoint]
+
+    return breakpoints
 
 def sum_over_compartments(model, compartment_types):
 

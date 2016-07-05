@@ -338,19 +338,25 @@ class ConsolidatedModel(BaseModel):
 
     def find_age_breakpoints_from_age_strings(self):
 
+        # Extract age-stratified parameters in the appropriate form
         data_param_vals = {}
         param_age_dict = {}
         for constant in self.inputs['model_constants']:
             if 'agestrat_' in constant:
-                param_age_string = base_analyses.find_string_from_starting_letters(constant, '_age')
+                param_age_string, stem = base_analyses.find_string_from_starting_letters(constant, '_age')
                 param_age_dict[param_age_string] = base_analyses.interrogate_age_string(param_age_string)
                 data_param_vals[param_age_string] = self.inputs['model_constants'][constant]
 
+        # Extract age breakpoints in appropriate form for module
         model_breakpoints = []
         for i in self.inputs['model_constants']['age_breakpoints']:
             model_breakpoints += [float(i)]
         param_breakpoints = base_analyses.find_age_breakpoints_from_dicts(param_age_dict)
-        model_params = age_strat.adapt_params_to_stratification(param_breakpoints, model_breakpoints, data_param_vals)
+
+        # Find and set age-adjusted parameters
+        age_adjusted_params = age_strat.adapt_params_to_stratification(param_breakpoints, model_breakpoints, data_param_vals)
+        for agegroup in self.agegroups:
+            self.set_parameter(stem + agegroup, age_adjusted_params[agegroup])
 
     def define_age_structure(self):
 

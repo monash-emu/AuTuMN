@@ -98,7 +98,9 @@ def find_string_from_starting_letters(string_to_analyse, string_start_to_find):
     else:
         result_string = string_to_analyse[string_position: underscores[string_underscore_index + 1]]
 
-    return result_string
+    stem = string_to_analyse[:string_position]
+
+    return result_string, stem
 
 
 def interrogate_age_string(age_string):
@@ -150,6 +152,7 @@ def find_age_breakpoints_from_dicts(age_dict):
             breakpoints += [breakpoint]
 
     return breakpoints
+
 
 def sum_over_compartments(model, compartment_types):
 

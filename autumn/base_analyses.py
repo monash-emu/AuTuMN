@@ -349,6 +349,59 @@ def calculate_additional_diagnostics(model):
     return subgroup_solns, subgroup_fractions
 
 
+def get_agegroups_from_breakpoints(breakpoints):
+
+    """
+    This function consolidates get_strat_from_breakpoints from Romain's age_strat
+    module and define_age_structure from James' model.py method into one function
+    that can return either a dictionary or a list for the model stratification. (One
+    reason for using this approach rather than Romain's is that the lists need to be
+    ordered for model.py.)
+
+    Args:
+        breakpoints: The age group cut-offs.
+
+    Returns:
+        agegroups: List of the strings describing the age groups only.
+        agegroups_dict: List with strings of agegroups as keys with values being
+            lists of the lower and upper age cut-off for that age group.
+
+    """
+
+    # Initialise
+    agegroups = []
+    agegroups_dict = {}
+
+    if len(breakpoints) > 0:
+        for i in range(len(breakpoints)):
+
+            # The first age-group
+            if i == 0:
+                agegroup_string = '_age0to' + str(int(breakpoints[i]))
+                agegroups_dict[agegroup_string] = [0.,
+                                                   float(breakpoints[i])]
+
+            # Middle age-groups
+            else:
+                agegroup_string = '_age' + str(int(breakpoints[i - 1])) + 'to' + str(int(breakpoints[i]))
+                agegroups_dict[agegroup_string] = [float(breakpoints[i - 1]),
+                                                   float(breakpoints[i])]
+            agegroups += [agegroup_string]
+
+        # Last age-group
+        agegroup_string = '_age' + str(int(breakpoints[-1])) + 'up'
+        agegroups_dict[agegroup_string] = [float(breakpoints[-1]),
+                                           float('inf')]
+        agegroups += [agegroup_string]
+
+    # If no age groups
+    else:
+        # List consisting of one empty string required for methods that iterate over strains
+        agegroups += ['']
+
+    return agegroups, agegroups_dict
+
+
 def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_param_vals, assumed_max_params=100.):
 
     """
@@ -366,23 +419,10 @@ def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_par
         dictionary containing the parameter values associated with each category defined by model_breakpoints
     """
 
-    # Analogous method to that in model.define_age_structure
-    def get_strat_from_breakpoints(breakpoints):
-        strat = {}
-        name = '_age0to' + str(int(breakpoints[0]))
-        strat[name] = [0., breakpoints[0]]
-        for i in range(len(breakpoints) - 1):
-            name = '_age' + str(int(breakpoints[i])) + 'to' + str(int(breakpoints[i + 1]))
-            strat[name] = [breakpoints[i], breakpoints[i + 1]]
-        name = '_age' + str(int(breakpoints[-1])) + 'up'
-        strat[name] = [breakpoints[-1], float('inf')]
-        return strat
-
-    data_strat = get_strat_from_breakpoints(data_breakpoints)
-    model_strat = get_strat_from_breakpoints(model_breakpoints)
+    _, data_strat = get_agegroups_from_breakpoints(data_breakpoints)
+    _, model_strat = get_agegroups_from_breakpoints(model_breakpoints)
 
     assert data_param_vals.viewkeys() == data_strat.viewkeys()
-
 
     model_param_vals = {}
     for new_name, new_range in model_strat.iteritems():

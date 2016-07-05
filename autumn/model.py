@@ -360,34 +360,8 @@ class ConsolidatedModel(BaseModel):
 
     def define_age_structure(self):
 
-        # Work out age-groups from list of breakpoints
-        self.agegroups = []
-
-        # If age-group breakpoints are supplied
-        if len(self.inputs['model_constants']['age_breakpoints']) > 0:
-            for i in range(len(self.inputs['model_constants']['age_breakpoints'])):
-
-                # The first age-group
-                if i == 0:
-                    self.agegroups += \
-                        ['_age0to' + str(self.inputs['model_constants']['age_breakpoints'][i])]
-
-                # Middle age-groups
-                else:
-                    self.agegroups += \
-                        ['_age' + str(self.inputs['model_constants']['age_breakpoints'][i - 1]) +
-                         'to' + str(self.inputs['model_constants']['age_breakpoints'][i])]
-
-            # Last age-group
-            self.agegroups += \
-                ['_age' +
-                 str(self.inputs['model_constants']['age_breakpoints'][len(self.inputs['model_constants']['age_breakpoints']) - 1]) +
-                 'up']
-
-        # Otherwise
-        else:
-            # List consisting of one empty string required for methods that iterate over strains
-            self.agegroups += ['']
+        self.agegroups, _ = \
+            base_analyses.get_agegroups_from_breakpoints(self.inputs['model_constants']['age_breakpoints'])
 
     ############################################################
     # General underlying methods for use by other methods

@@ -18,7 +18,6 @@ import numpy
 import pylab
 import warnings
 import base_analyses
-import age_strat
 
 
 def label_intersects_tags(label, tags):
@@ -355,7 +354,7 @@ class ConsolidatedModel(BaseModel):
         param_breakpoints = base_analyses.find_age_breakpoints_from_dicts(param_age_dict)
 
         # Find and set age-adjusted parameters
-        age_adjusted_params = age_strat.adapt_params_to_stratification(param_breakpoints, model_breakpoints, data_param_vals)
+        age_adjusted_params = base_analyses.adapt_params_to_stratification(param_breakpoints, model_breakpoints, data_param_vals)
         for agegroup in self.agegroups:
             self.set_parameter(stem + agegroup, age_adjusted_params[agegroup])
 

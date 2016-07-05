@@ -216,7 +216,8 @@ class ConsolidatedModel(BaseModel):
 
         # Age stratification
         self.define_age_structure()
-        self.find_age_breakpoints_from_age_strings()
+        if len(self.agegroups) > 1:
+            self.set_fixed_age_specific_parameters()
 
         self.initial_compartments = {}
         for compartment in self.compartment_types:
@@ -336,13 +337,13 @@ class ConsolidatedModel(BaseModel):
                                self.params['epi_prop_smearpos'] + \
                                self.params['epi_prop_smearneg'] * self.params['tb_multiplier_force_smearneg'])
 
-    def find_age_breakpoints_from_age_strings(self):
+    def set_fixed_age_specific_parameters(self):
 
         # Extract age-stratified parameters in the appropriate form
         data_param_vals = {}
         param_age_dict = {}
         for constant in self.inputs['model_constants']:
-            if 'agestrat_' in constant:
+            if 'early_progression_age' in constant:
                 param_age_string, stem = base_analyses.find_string_from_starting_letters(constant, '_age')
                 param_age_dict[param_age_string] = base_analyses.interrogate_age_string(param_age_string)
                 data_param_vals[param_age_string] = self.inputs['model_constants'][constant]
@@ -653,15 +654,25 @@ class ConsolidatedModel(BaseModel):
                 'tb_prop_casefatality_untreated_extrapul',
                 self.params['tb_prop_casefatality_untreated_smearneg'])
 
-        # Overall early progression rate
-        self.set_parameter('tb_rate_early_progression',
-                           self.params['tb_prop_early_progression']
-                           / self.params['tb_timeperiod_early_latent'])
+        # Overall early progression and stabilisation rates
+        # If not age-stratified
+        if len(self.agegroups) < 2:
+            self.set_parameter('tb_rate_early_progression',
+                               self.params['tb_prop_early_progression']
+                               / self.params['tb_timeperiod_early_latent'])
+            self.set_parameter('tb_rate_stabilise',
+                               (1. - self.params['tb_prop_early_progression'])
+                               / self.params['tb_timeperiod_early_latent'])
 
-        # Stabilisation rate
-        self.set_parameter('tb_rate_stabilise',
-                           (1. - self.params['tb_prop_early_progression'])
-                           / self.params['tb_timeperiod_early_latent'])
+        # If age-stratified
+        else:
+            for agegroup in self.agegroups:
+                self.set_parameter('tb_rate_early_progression' + agegroup,
+                                   self.params['tb_prop_early_progression' + agegroup]
+                                   / self.params['tb_timeperiod_early_latent'])
+                self.set_parameter('tb_rate_stabilise' + agegroup,
+                                   (1. - self.params['tb_prop_early_progression' + agegroup])
+                                   / self.params['tb_timeperiod_early_latent'])
 
         # Adjust overall death and recovery rates by organ status
         for organ in self.organ_status:
@@ -675,11 +686,20 @@ class ConsolidatedModel(BaseModel):
                 / self.params['tb_timeperiod_activeuntreated'])
 
         if not self.is_organvariation:
-            for organ in self.organ_status:
-                for timing in ['_early', '_late']:
-                    self.set_parameter('tb_rate' + timing + '_progression' + organ,
-                                       self.params['tb_rate' + timing + '_progression']
-                                       * self.params['epi_prop' + organ])
+
+            if len(self.agegroups) < 2:
+                for organ in self.organ_status:
+                    for timing in ['_early', '_late']:
+                        self.set_parameter('tb_rate' + timing + '_progression' + organ,
+                                           self.params['tb_rate' + timing + '_progression']
+                                           * self.params['epi_prop' + organ])
+            else:
+                for organ in self.organ_status:
+                    for timing in ['_early', '_late']:
+                        for agegroup in self.agegroups:
+                            self.set_parameter('tb_rate' + timing + '_progression' + organ + agegroup,
+                                               self.params['tb_rate' + timing + '_progression' + agegroup]
+                                               * self.params['epi_prop' + organ])
 
     ##################################################################
     # Methods that calculate variables to be used in calculating flows
@@ -805,10 +825,23 @@ class ConsolidatedModel(BaseModel):
                     1. - self.vars['epi_prop_smearpos'] - self.vars['epi_prop_smearneg']
 
             # Determine variable progression rates
-            for organ in self.organ_status:
-                for timing in ['_early', '_late']:
-                    self.vars['tb_rate' + timing + '_progression' + organ] \
-                        = self.vars['epi_prop' + organ] * self.params['tb_rate' + timing + '_progression']
+            if len(self.agegroups) < 2:
+                for organ in self.organ_status:
+                    for timing in ['_early', '_late']:
+                        self.vars['tb_rate' + timing + '_progression' + organ] \
+                            = self.vars['epi_prop' + organ] * self.params['tb_rate' + timing + '_progression']
+
+            # Determine variable progression rates
+            else:
+                for organ in self.organ_status:
+                    self.vars['tb_rate_late_progression' + organ] \
+                        = self.vars['epi_prop' + organ] \
+                          * self.params['tb_rate_late_progression']
+                    for agegroup in self.agegroups:
+                        self.vars['tb_rate_early_progression' + organ + agegroup] \
+                            = self.vars['epi_prop' + organ] \
+                              * self.params['tb_rate_early_progression' + agegroup]
+
 
     def calculate_detect_missed_vars(self):
 
@@ -1140,7 +1173,7 @@ class ConsolidatedModel(BaseModel):
                         self.set_fixed_transfer_rate_flow(
                             'latent_early' + strain + comorbidity + agegroup,
                             'latent_late' + strain + comorbidity + agegroup,
-                            'tb_rate_stabilise')
+                            'tb_rate_stabilise' + agegroup)
 
                         for organ in self.organ_status:
 
@@ -1152,7 +1185,7 @@ class ConsolidatedModel(BaseModel):
                                 self.set_var_transfer_rate_flow(
                                     'latent_early' + strain + comorbidity + agegroup,
                                     'active' + organ + strain + comorbidity + agegroup,
-                                    'tb_rate_early_progression' + organ)
+                                    'tb_rate_early_progression' + organ + agegroup)
 
                                 # Late progression
                                 self.set_var_transfer_rate_flow(
@@ -1166,7 +1199,7 @@ class ConsolidatedModel(BaseModel):
                                 self.set_fixed_transfer_rate_flow(
                                     'latent_early' + strain + comorbidity + agegroup,
                                     'active' + organ + strain + comorbidity + agegroup,
-                                    'tb_rate_early_progression' + organ)
+                                    'tb_rate_early_progression' + organ + agegroup)
 
                                 # Late progression
                                 self.set_fixed_transfer_rate_flow(

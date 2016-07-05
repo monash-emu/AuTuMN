@@ -214,7 +214,8 @@ class ConsolidatedModel(BaseModel):
             self.comorbidities = available_comorbidities[:self.n_comorbidity]
 
         # Age stratification
-        self.define_age_structure()
+        self.agegroups, _ = \
+            base_analyses.get_agegroups_from_breakpoints(self.inputs['model_constants']['age_breakpoints'])
         if len(self.agegroups) > 1:
             self.set_fixed_age_specific_parameters()
 
@@ -338,30 +339,33 @@ class ConsolidatedModel(BaseModel):
 
     def set_fixed_age_specific_parameters(self):
 
-        # Extract age-stratified parameters in the appropriate form
-        data_param_vals = {}
-        param_age_dict = {}
-        for constant in self.inputs['model_constants']:
-            if 'early_progression_age' in constant:
-                param_age_string, stem = base_analyses.find_string_from_starting_letters(constant, '_age')
-                param_age_dict[param_age_string] = base_analyses.interrogate_age_string(param_age_string)
-                data_param_vals[param_age_string] = self.inputs['model_constants'][constant]
-
         # Extract age breakpoints in appropriate form for module
         model_breakpoints = []
         for i in self.inputs['model_constants']['age_breakpoints']:
             model_breakpoints += [float(i)]
-        param_breakpoints = base_analyses.find_age_breakpoints_from_dicts(param_age_dict)
 
-        # Find and set age-adjusted parameters
-        age_adjusted_params = base_analyses.adapt_params_to_stratification(param_breakpoints, model_breakpoints, data_param_vals)
-        for agegroup in self.agegroups:
-            self.set_parameter(stem + agegroup, age_adjusted_params[agegroup])
+        for param in ['early_progression_age', 'late_progression_age']:
+            # Extract age-stratified parameters in the appropriate form
+            prog_param_vals = {}
+            prog_age_dict = {}
+            for constant in self.inputs['model_constants']:
+                if param in constant:
+                    prog_param_string, prog_stem = \
+                        base_analyses.find_string_from_starting_letters(constant, '_age')
+                    prog_age_dict[prog_param_string] = \
+                        base_analyses.interrogate_age_string(prog_param_string)
+                    prog_param_vals[prog_param_string] = \
+                        self.inputs['model_constants'][constant]
 
-    def define_age_structure(self):
+            param_breakpoints = base_analyses.find_age_breakpoints_from_dicts(prog_age_dict)
 
-        self.agegroups, _ = \
-            base_analyses.get_agegroups_from_breakpoints(self.inputs['model_constants']['age_breakpoints'])
+            # Find and set age-adjusted parameters
+            prog_age_adjusted_params = \
+                base_analyses.adapt_params_to_stratification(param_breakpoints,
+                                                             model_breakpoints,
+                                                             prog_param_vals)
+            for agegroup in self.agegroups:
+                self.set_parameter(prog_stem + agegroup, prog_age_adjusted_params[agegroup])
 
     ############################################################
     # General underlying methods for use by other methods
@@ -781,14 +785,11 @@ class ConsolidatedModel(BaseModel):
 
             # Determine variable progression rates
             for organ in self.organ_status:
-                self.vars['tb_rate_late_progression' + organ] \
-                    = self.vars['epi_prop' + organ] \
-                      * self.params['tb_rate_late_progression']
                 for agegroup in self.agegroups:
-                    self.vars['tb_rate_early_progression' + organ + agegroup] \
-                        = self.vars['epi_prop' + organ] \
-                          * self.params['tb_rate_early_progression' + agegroup]
-
+                    for timing in ['_early', '_late']:
+                        self.vars['tb_rate' + timing + '_progression' + organ + agegroup] \
+                            = self.vars['epi_prop' + organ] \
+                              * self.params['tb_rate' + timing + '_progression' + agegroup]
 
     def calculate_detect_missed_vars(self):
 
@@ -1138,7 +1139,7 @@ class ConsolidatedModel(BaseModel):
                                 self.set_var_transfer_rate_flow(
                                     'latent_late' + strain + comorbidity + agegroup,
                                     'active' + organ + strain + comorbidity + agegroup,
-                                    'tb_rate_late_progression' + organ)
+                                    'tb_rate_late_progression' + organ + agegroup)
 
                             # Otherwise, set fixed flows
                             else:
@@ -1152,7 +1153,7 @@ class ConsolidatedModel(BaseModel):
                                 self.set_fixed_transfer_rate_flow(
                                     'latent_late' + strain + comorbidity + agegroup,
                                     'active' + organ + strain + comorbidity + agegroup,
-                                    'tb_rate_late_progression' + organ)
+                                    'tb_rate_late_progression' + organ + agegroup)
 
     def set_natural_history_flows(self):
 

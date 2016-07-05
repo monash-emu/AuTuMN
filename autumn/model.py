@@ -655,24 +655,13 @@ class ConsolidatedModel(BaseModel):
                 self.params['tb_prop_casefatality_untreated_smearneg'])
 
         # Overall early progression and stabilisation rates
-        # If not age-stratified
-        if len(self.agegroups) < 2:
-            self.set_parameter('tb_rate_early_progression',
-                               self.params['tb_prop_early_progression']
+        for agegroup in self.agegroups:
+            self.set_parameter('tb_rate_early_progression' + agegroup,
+                               self.params['tb_prop_early_progression' + agegroup]
                                / self.params['tb_timeperiod_early_latent'])
-            self.set_parameter('tb_rate_stabilise',
-                               (1. - self.params['tb_prop_early_progression'])
+            self.set_parameter('tb_rate_stabilise' + agegroup,
+                               (1. - self.params['tb_prop_early_progression' + agegroup])
                                / self.params['tb_timeperiod_early_latent'])
-
-        # If age-stratified
-        else:
-            for agegroup in self.agegroups:
-                self.set_parameter('tb_rate_early_progression' + agegroup,
-                                   self.params['tb_prop_early_progression' + agegroup]
-                                   / self.params['tb_timeperiod_early_latent'])
-                self.set_parameter('tb_rate_stabilise' + agegroup,
-                                   (1. - self.params['tb_prop_early_progression' + agegroup])
-                                   / self.params['tb_timeperiod_early_latent'])
 
         # Adjust overall death and recovery rates by organ status
         for organ in self.organ_status:
@@ -687,19 +676,12 @@ class ConsolidatedModel(BaseModel):
 
         if not self.is_organvariation:
 
-            if len(self.agegroups) < 2:
-                for organ in self.organ_status:
-                    for timing in ['_early', '_late']:
-                        self.set_parameter('tb_rate' + timing + '_progression' + organ,
-                                           self.params['tb_rate' + timing + '_progression']
+            for organ in self.organ_status:
+                for timing in ['_early', '_late']:
+                    for agegroup in self.agegroups:
+                        self.set_parameter('tb_rate' + timing + '_progression' + organ + agegroup,
+                                           self.params['tb_rate' + timing + '_progression' + agegroup]
                                            * self.params['epi_prop' + organ])
-            else:
-                for organ in self.organ_status:
-                    for timing in ['_early', '_late']:
-                        for agegroup in self.agegroups:
-                            self.set_parameter('tb_rate' + timing + '_progression' + organ + agegroup,
-                                               self.params['tb_rate' + timing + '_progression' + agegroup]
-                                               * self.params['epi_prop' + organ])
 
     ##################################################################
     # Methods that calculate variables to be used in calculating flows
@@ -825,22 +807,14 @@ class ConsolidatedModel(BaseModel):
                     1. - self.vars['epi_prop_smearpos'] - self.vars['epi_prop_smearneg']
 
             # Determine variable progression rates
-            if len(self.agegroups) < 2:
-                for organ in self.organ_status:
-                    for timing in ['_early', '_late']:
-                        self.vars['tb_rate' + timing + '_progression' + organ] \
-                            = self.vars['epi_prop' + organ] * self.params['tb_rate' + timing + '_progression']
-
-            # Determine variable progression rates
-            else:
-                for organ in self.organ_status:
-                    self.vars['tb_rate_late_progression' + organ] \
+            for organ in self.organ_status:
+                self.vars['tb_rate_late_progression' + organ] \
+                    = self.vars['epi_prop' + organ] \
+                      * self.params['tb_rate_late_progression']
+                for agegroup in self.agegroups:
+                    self.vars['tb_rate_early_progression' + organ + agegroup] \
                         = self.vars['epi_prop' + organ] \
-                          * self.params['tb_rate_late_progression']
-                    for agegroup in self.agegroups:
-                        self.vars['tb_rate_early_progression' + organ + agegroup] \
-                            = self.vars['epi_prop' + organ] \
-                              * self.params['tb_rate_early_progression' + agegroup]
+                          * self.params['tb_rate_early_progression' + agegroup]
 
 
     def calculate_detect_missed_vars(self):

@@ -154,6 +154,22 @@ def find_age_breakpoints_from_dicts(age_dict):
     return breakpoints
 
 
+def find_age_breakpoints_from_string(string):
+
+    # Simple method that finds age group limits from the string
+    assert string[:4] == '_age', 'Age group not correctly specified'
+
+    if 'to' in string:
+        limits = [float(string[string.find('to') - 1]), float(string[string.find('to') + 2])]
+    elif 'up' in string:
+        limits = [float(string[string.find('up') - 1]), float('inf')]
+    else:
+        raise NameError('Age group not correctly specified')
+
+    limit_dict_item = {string: limits}
+
+    return limits, limit_dict_item
+
 def sum_over_compartments(model, compartment_types):
 
     """
@@ -402,7 +418,11 @@ def get_agegroups_from_breakpoints(breakpoints):
     return agegroups, agegroups_dict
 
 
-def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_param_vals, assumed_max_params=100.):
+def adapt_params_to_stratification(data_breakpoints,
+                                   model_breakpoints,
+                                   data_param_vals,
+                                   assumed_max_params=100.,
+                                   parameter_name=''):
 
     """
     Create a new set of parameters associated to the model stratification given parameter values that are known for
@@ -446,6 +466,12 @@ def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_par
         beta = beta / (new_up - new_low)
         model_param_vals[new_name] = beta
 
+    print('For parameter "' + replace_underscore_with_space(parameter_name) + '":')
+    for age_param in model_param_vals:
+        print('\tthe value for age group "' +
+              str(age_param) + '" has been estimated as ' + str(model_param_vals[age_param]))
+    print()
+
     return(model_param_vals)
 
 
@@ -461,5 +487,9 @@ if __name__ == "__main__":
                        '_age5to15': 0.,
                        '_age15up': 1.0}
 
-    model_param = adapt_params_to_stratification(data_breaks, model_breaks, data_param_vals)
+    model_param = adapt_params_to_stratification(data_breaks,
+                                                 model_breaks,
+                                                 data_param_vals,
+                                                 parameter_name='test parameter')
     print(model_param)
+

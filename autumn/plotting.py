@@ -4,6 +4,7 @@ import pylab
 import numpy
 from matplotlib import pyplot, patches
 import base_analyses
+import os
 
 
 """
@@ -766,8 +767,8 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
     if len(functions) > 1:
         plural += 's'
     title = model.inputs['model_constants']['country'] + ' ' + \
-            replace_underscore_with_space(parameter_type) + \
-            ' parameter' + plural + ' from ' + replace_underscore_with_space(start_time_str)
+            base_analyses.replace_underscore_with_space(parameter_type) + \
+            ' parameter' + plural + ' from ' + base_analyses.replace_underscore_with_space(start_time_str)
     fig.suptitle(title)
 
     # Iterate through functions
@@ -858,6 +859,52 @@ def plot_classified_scaleups(model, base):
                                      'current_time',
                                      classification,
                                      figure_number=i + j * len(classified_scaleups) + 2 + len(classified_scaleups) * len(times_to_plot))
+
+
+def plot_comparative_age_parameters(data_strat_list,
+                                    data_value_list,
+                                    model_value_list,
+                                    model_strat_list,
+                                    parameter_name):
+
+    data_strat_labels = []
+    for i in range(len(data_strat_list)):
+        data_strat_labels += [base_analyses.turn_strat_into_label(data_strat_list[i])]
+
+    model_strat_labels = []
+    for i in range(len(model_strat_list)):
+        model_strat_labels += [base_analyses.turn_strat_into_label(model_strat_list[i])]
+
+    ymax = max(data_value_list + model_value_list) * 1.2
+
+    subplot_grid = (1, 2)
+    fig = pyplot.figure(40)
+    ax = fig.add_axes([0.1, 0.2, 0.35, 0.6])
+
+    x_positions = range(len(data_strat_list))
+    width = .6
+    ax.bar(x_positions, data_value_list, width)
+    ax.set_ylabel('Parameter value',
+                  fontsize=get_nice_font_size(subplot_grid))
+    ax.set_title('Data', fontsize=12)
+    ax.set_xticklabels(data_strat_labels, rotation=45)
+    ax.set_xticks(x_positions)
+    ax.set_ylim(0., ymax)
+    ax.set_xlim(-.4, x_positions[-1] + 1)
+
+    ax = fig.add_axes([0.55, 0.2, 0.35, 0.6])
+    x_positions = range(len(model_strat_list))
+    ax.bar(x_positions, model_value_list, width)
+    ax.set_title('Model implementation', fontsize=12)
+    ax.set_xticklabels(model_strat_labels, rotation=45)
+    ax.set_xticks(x_positions)
+    ax.set_ylim(0., ymax)
+    ax.set_xlim(-.4, x_positions[-1] + 1)
+
+    fig.suptitle(base_analyses.capitalise_first_letter(base_analyses.replace_underscore_with_space(parameter_name)),
+                 fontsize=15)
+
+    save_png(parameter_name + '.png')
 
 
 def save_png(png):

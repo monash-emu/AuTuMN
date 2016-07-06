@@ -1,6 +1,10 @@
 
 import random
 import base_analyses
+from matplotlib import pyplot, patches
+import autumn.plotting
+
+
 
 def capitalise_first_letter(old_string):
 
@@ -405,6 +409,17 @@ def get_agegroups_from_breakpoints(breakpoints):
     return agegroups, agegroups_dict
 
 
+def turn_strat_into_label(stratum):
+
+    if 'up' in stratum:
+        label = stratum[4: -2] + ' and up'
+    else:
+        to_index = stratum.find('to')
+        label = stratum[4: to_index] + ' to ' + stratum[to_index+2:]
+
+    return label
+
+
 def adapt_params_to_stratification(data_breakpoints,
                                    model_breakpoints,
                                    data_param_vals,
@@ -426,8 +441,8 @@ def adapt_params_to_stratification(data_breakpoints,
         dictionary containing the parameter values associated with each category defined by model_breakpoints
     """
 
-    _, data_strat = get_agegroups_from_breakpoints(data_breakpoints)
-    _, model_strat = get_agegroups_from_breakpoints(model_breakpoints)
+    data_strat_list, data_strat = get_agegroups_from_breakpoints(data_breakpoints)
+    model_strat_list, model_strat = get_agegroups_from_breakpoints(model_breakpoints)
 
     assert data_param_vals.viewkeys() == data_strat.viewkeys()
 
@@ -454,6 +469,20 @@ def adapt_params_to_stratification(data_breakpoints,
         model_param_vals[new_name] = beta
 
     report_age_specific_parameter_calculations(parameter_name, model_param_vals)
+
+    # Convert data into list with same order as the ordered strat_lists
+    data_value_list = []
+    for i in data_strat_list:
+        data_value_list += [data_param_vals[i]]
+    model_value_list = []
+    for i in model_strat_list:
+        model_value_list += [model_param_vals[i]]
+
+    autumn.plotting.plot_comparative_age_parameters(data_strat_list,
+                                                    data_value_list,
+                                                    model_value_list,
+                                                    model_strat_list,
+                                                    parameter_name)
 
     return(model_param_vals)
 
@@ -484,7 +513,7 @@ if __name__ == "__main__":
     model_breaks = [2., 7., 20.]
 
     data_param_vals = {'_age0to5': 0.5,
-                       '_age5to15': 0.,
+                       '_age5to15': 0.1,
                        '_age15up': 1.0}
 
     model_param = adapt_params_to_stratification(data_breaks,

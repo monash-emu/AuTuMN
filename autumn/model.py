@@ -352,7 +352,7 @@ class ConsolidatedModel(BaseModel):
                 if param in constant:
                     prog_param_string, prog_stem = \
                         base_analyses.find_string_from_starting_letters(constant, '_age')
-                    prog_age_dict[prog_param_string] = \
+                    prog_age_dict[prog_param_string], _ = \
                         base_analyses.interrogate_age_string(prog_param_string)
                     prog_param_vals[prog_param_string] = \
                         self.inputs['model_constants'][constant]

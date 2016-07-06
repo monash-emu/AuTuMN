@@ -129,7 +129,10 @@ def interrogate_age_string(age_string):
     else:
         raise NameError('Age string incorrectly specified')
 
-    return [lower_age_limit, upper_age_limit]
+    limits = [lower_age_limit, upper_age_limit]
+    dict_limits = {age_string: limits}
+
+    return limits, dict_limits
 
 
 def find_age_breakpoints_from_dicts(age_dict):
@@ -153,22 +156,6 @@ def find_age_breakpoints_from_dicts(age_dict):
 
     return breakpoints
 
-
-def find_age_breakpoints_from_string(string):
-
-    # Simple method that finds age group limits from the string
-    assert string[:4] == '_age', 'Age group not correctly specified'
-
-    if 'to' in string:
-        limits = [float(string[string.find('to') - 1]), float(string[string.find('to') + 2])]
-    elif 'up' in string:
-        limits = [float(string[string.find('up') - 1]), float('inf')]
-    else:
-        raise NameError('Age group not correctly specified')
-
-    limit_dict_item = {string: limits}
-
-    return limits, limit_dict_item
 
 def sum_over_compartments(model, compartment_types):
 
@@ -466,13 +453,26 @@ def adapt_params_to_stratification(data_breakpoints,
         beta = beta / (new_up - new_low)
         model_param_vals[new_name] = beta
 
-    print('For parameter "' + replace_underscore_with_space(parameter_name) + '":')
-    for age_param in model_param_vals:
-        print('\tthe value for age group "' +
-              str(age_param) + '" has been estimated as ' + str(model_param_vals[age_param]))
-    print()
+    report_age_specific_parameter_calculations(parameter_name, model_param_vals)
 
     return(model_param_vals)
+
+
+def report_age_specific_parameter_calculations(parameter_name, model_param_vals):
+
+    # Function to report the age-specific parameter calculations
+
+    print('For parameter "' + replace_underscore_with_space(parameter_name) + '":')
+    for age_param in model_param_vals:
+        limits, _ = interrogate_age_string(age_param)
+        if limits[1] != float('inf'):
+            lower_limit = ' from ' + str(int(limits[0]))
+            upper_limit = ' to ' + str(int(limits[1]))
+        else:
+            lower_limit = ' for those aged ' + str(int(limits[0]))
+            upper_limit = ' and up'
+        print('\tthe parameter value for the age group' + lower_limit + upper_limit
+              + ' has been estimated as ' + str(model_param_vals[age_param]))
 
 
 # * * * * * * * * * * * * * * * * * * * * * *

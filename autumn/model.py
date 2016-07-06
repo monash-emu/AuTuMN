@@ -1409,6 +1409,7 @@ class ConsolidatedModel(BaseModel):
         rate_mortality = {}
         rate_notifications = {}
 
+        # By strain
         for strain in self.strains:
 
             # Initialise scalars
@@ -1475,6 +1476,61 @@ class ConsolidatedModel(BaseModel):
             # Convert to percentage
             self.vars['proportion_mdr'] \
                 = self.vars['all_mdr_strains'] / self.vars['incidence'] * 1E2
+
+        # By age group
+        if len(self.agegroups) > 1:
+            # Calculate outputs by age group - note that this code is fundamentally different
+            # to the code above even though it looks similar, because the denominator
+            # changes for age group, whereas it remains the whole population for strain calculations
+            # (although should be able to use this code for comorbidities).
+            for agegroup in self.agegroups:
+
+                # Find age group denominator
+                self.vars['population' + agegroup] = 0.
+                for compartment in self.compartments:
+                    if agegroup in compartment:
+                        self.vars['population' + agegroup] \
+                            += self.compartments[compartment]
+
+                # Initialise scalars
+                rate_incidence[agegroup] = 0.
+                rate_mortality[agegroup] = 0.
+
+                # Incidence
+                for from_label, to_label, rate in self.var_transfer_rate_flows:
+                    if 'latent' in from_label and 'active' in to_label and agegroup in to_label:
+                        rate_incidence[agegroup] \
+                            += self.compartments[from_label] * self.vars[rate]
+                for from_label, to_label, rate in self.fixed_transfer_rate_flows:
+                    if 'latent' in from_label and 'active' in to_label and agegroup in to_label:
+                        rate_incidence[agegroup] \
+                            += self.compartments[from_label] * rate
+                self.vars['incidence' + agegroup] \
+                    = rate_incidence[agegroup] / self.vars['population' + agegroup] * 1E5
+
+                # Mortality
+                for from_label, rate in self.fixed_infection_death_rate_flows:
+                    # Under-reporting factor included for those deaths not occurring on treatment
+                    if agegroup in from_label:
+                        rate_mortality[agegroup] \
+                            += self.compartments[from_label] * rate \
+                               * self.params['program_prop_death_reporting']
+                for from_label, rate in self.var_infection_death_rate_flows:
+                    if agegroup in from_label:
+                        rate_mortality[agegroup] \
+                            += self.compartments[from_label] * self.vars[rate]
+                self.vars['mortality' + agegroup] \
+                    = rate_mortality[agegroup] / self.vars['population' + agegroup] * 1E5
+
+        # Prevalence
+        for agegroup in self.agegroups:
+            self.vars['prevalence' + agegroup] = 0.
+            for label in self.labels:
+                if 'susceptible' not in label and \
+                                'latent' not in label and agegroup in label:
+                    self.vars['prevalence' + agegroup] \
+                        += (self.compartments[label]
+                        / self.vars['population' + agegroup] * 1E5)
 
     ##################################################################
     # Methods to call base integration function depending on the type of

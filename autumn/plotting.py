@@ -867,31 +867,33 @@ def plot_comparative_age_parameters(data_strat_list,
                                     model_strat_list,
                                     parameter_name):
 
+    # Get good tick labels from the stratum lists
     data_strat_labels = []
     for i in range(len(data_strat_list)):
         data_strat_labels += [base_analyses.turn_strat_into_label(data_strat_list[i])]
-
     model_strat_labels = []
     for i in range(len(model_strat_list)):
         model_strat_labels += [base_analyses.turn_strat_into_label(model_strat_list[i])]
 
+    # Find a reasonable upper limit for the y-axis
     ymax = max(data_value_list + model_value_list) * 1.2
 
+    # Plot original data bar charts
     subplot_grid = (1, 2)
     fig = pyplot.figure()
     ax = fig.add_axes([0.1, 0.2, 0.35, 0.6])
-
     x_positions = range(len(data_strat_list))
     width = .6
     ax.bar(x_positions, data_value_list, width)
     ax.set_ylabel('Parameter value',
                   fontsize=get_nice_font_size(subplot_grid))
-    ax.set_title('Data', fontsize=12)
+    ax.set_title('Input data', fontsize=12)
     ax.set_xticklabels(data_strat_labels, rotation=45)
     ax.set_xticks(x_positions)
     ax.set_ylim(0., ymax)
-    ax.set_xlim(-.4, x_positions[-1] + 1)
+    ax.set_xlim(-1. + width, x_positions[-1] + 1)
 
+    # Plot adjusted parameters bar charts
     ax = fig.add_axes([0.55, 0.2, 0.35, 0.6])
     x_positions = range(len(model_strat_list))
     ax.bar(x_positions, model_value_list, width)
@@ -899,12 +901,19 @@ def plot_comparative_age_parameters(data_strat_list,
     ax.set_xticklabels(model_strat_labels, rotation=45)
     ax.set_xticks(x_positions)
     ax.set_ylim(0., ymax)
-    ax.set_xlim(-.4, x_positions[-1] + 1)
+    ax.set_xlim(-1. + width, x_positions[-1] + 1)
 
-    fig.suptitle(base_analyses.capitalise_first_letter(base_analyses.replace_underscore_with_space(parameter_name)),
+    # Overall title
+    fig.suptitle(base_analyses.capitalise_first_letter(base_analyses.replace_underscore_with_space(parameter_name))
+                 + ' adjustment',
                  fontsize=15)
 
-    save_png(parameter_name + '.png')
+    # Find directory and save
+    out_dir = 'fullmodel_graphs'
+    if not os.path.isdir(out_dir):
+        os.makedirs(out_dir)
+    base = os.path.join(out_dir, parameter_name)
+    save_png(base + '_param_adjustment.png')
 
 
 def save_png(png):

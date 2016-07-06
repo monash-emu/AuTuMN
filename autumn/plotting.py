@@ -878,7 +878,7 @@ def plot_comparative_age_parameters(data_strat_list,
     ymax = max(data_value_list + model_value_list) * 1.2
 
     subplot_grid = (1, 2)
-    fig = pyplot.figure(40)
+    fig = pyplot.figure()
     ax = fig.add_axes([0.1, 0.2, 0.35, 0.6])
 
     x_positions = range(len(data_strat_list))

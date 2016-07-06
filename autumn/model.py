@@ -344,7 +344,7 @@ class ConsolidatedModel(BaseModel):
         for i in self.inputs['model_constants']['age_breakpoints']:
             model_breakpoints += [float(i)]
 
-        for param in ['early_progression_age', 'late_progression_age']:
+        for param in ['early_progression_age', 'late_progression_age', 'tb_multiplier_child_infectiousness_age']:
             # Extract age-stratified parameters in the appropriate form
             prog_param_vals = {}
             prog_age_dict = {}
@@ -721,6 +721,7 @@ class ConsolidatedModel(BaseModel):
 
         # Calculate force of infection by strain,
         # incorporating partial immunity and infectiousness
+
         for strain in self.strains:
 
             # Initialise infectious population to zero
@@ -741,9 +742,15 @@ class ConsolidatedModel(BaseModel):
                     # If the compartment is non-infectious
                     if label_intersects_tags(label, self.infectious_tags):
 
-                        self.vars['infectious_population' + strain] += \
-                            self.params['tb_multiplier_force' + organ] \
-                            * self.compartments[label]
+                        # Allow modification for infectiousness by age
+                        for agegroup in self.agegroups:
+                            if agegroup in label:
+
+                                # Calculate the effective infectious population
+                                self.vars['infectious_population' + strain] += \
+                                    self.params['tb_multiplier_force' + organ] \
+                                    * self.params['tb_multiplier_child_infectiousness' + agegroup] \
+                                    * self.compartments[label]
 
             # Calculate non-immune force of infection
             self.vars['rate_force' + strain] = \

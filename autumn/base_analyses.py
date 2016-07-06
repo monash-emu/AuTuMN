@@ -462,14 +462,14 @@ def report_age_specific_parameter_calculations(parameter_name, model_param_vals)
 
     # Function to report the age-specific parameter calculations
 
-    print('For parameter "' + replace_underscore_with_space(parameter_name) + '":')
+    print('For parameter "' + replace_underscore_with_space(parameter_name[:-4]) + '":')
     for age_param in model_param_vals:
         limits, _ = interrogate_age_string(age_param)
         if limits[1] != float('inf'):
             lower_limit = ' from ' + str(int(limits[0]))
             upper_limit = ' to ' + str(int(limits[1]))
         else:
-            lower_limit = ' for those aged ' + str(int(limits[0]))
+            lower_limit = ' aged ' + str(int(limits[0]))
             upper_limit = ' and up'
         print('\tthe parameter value for the age group' + lower_limit + upper_limit
               + ' has been estimated as ' + str(model_param_vals[age_param]))

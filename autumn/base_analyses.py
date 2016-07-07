@@ -413,9 +413,11 @@ def turn_strat_into_label(stratum):
 
     if 'up' in stratum:
         label = stratum[4: -2] + ' and up'
-    else:
+    elif 'to' in stratum:
         to_index = stratum.find('to')
         label = stratum[4: to_index] + ' to ' + stratum[to_index+2:]
+    elif stratum == '':
+        label = 'All ages'
 
     return label
 

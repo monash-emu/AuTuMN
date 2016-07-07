@@ -10,6 +10,7 @@ import openpyxl as xl
 import base_analyses
 from docx import Document
 
+
 def indices(a, func):
     return [i for (i, val) in enumerate(a) if func(val)]
 
@@ -18,9 +19,11 @@ def create_output_dict(model):
 
     """
     Create a dictionary with the main model outputs
+
     Args:
         model: a model instance after integration
-    Returns: a dictionary with the different outputs
+    Returns:
+        output_dict: a dictionary with the different outputs
     """
 
     outputs = ['incidence', 'mortality', 'prevalence', 'notifications']

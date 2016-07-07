@@ -710,7 +710,7 @@ def plot_outputs_by_age(model,
 
         for i, agegroup in enumerate(model.agegroups + ['']):
 
-            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1 + output_no * 3)
+            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1 + output_no * (len(model.agegroups)+1))
 
             # Plot the modelled data
             ax.plot(

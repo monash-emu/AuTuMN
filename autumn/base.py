@@ -6,7 +6,7 @@ from scipy.integrate import odeint
 from autumn.curve import make_two_step_curve
 
 
-class BaseModel():
+class BaseModel:
 
     def __init__(self):
 

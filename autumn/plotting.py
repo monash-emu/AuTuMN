@@ -590,14 +590,20 @@ def plot_outputs_against_gtb(model,
             # Plot the GTB data
             # Notifications are just plotted against raw reported notifications,
             # as there are no confidence intervals around these values.
+
+                max_modelled_output = max(model.get_var_soln(labels[i])[left_xlimit_index: right_xlimit_index])
+
                 if outcome == 'notifications':
                     ax.plot(notification_data.keys(), notification_data.values(),
                             color=colour[i], linewidth=0.5)
-                    ax.set_ylim((0., max(notification_data)))
+                    max_notifications = max(notification_data.values())
+                    if max_modelled_output > max_notifications:
+                        max_notifications = max_modelled_output
+                    ax.set_ylim((0., max_notifications * 1.1))
+
                 else:
                     # Central point-estimate
                     ax.plot(plotting_data[i]['point_estimate'].keys(), plotting_data[i]['point_estimate'].values(),
-                            # label=labels[i],
                             color=colour[i], linewidth=0.5)
 
                     # Create the patch array
@@ -607,8 +613,12 @@ def plot_outputs_against_gtb(model,
                     patch = patches.Polygon(patch_array, color=patch_colour[i])
                     ax.add_patch(patch)
 
+                    max_output = max(plotting_data[i]['upper_limit'].values())
+                    if max_modelled_output > max_output:
+                        max_output = max_modelled_output
+
                     # Make y-axis range extend downwards to zero
-                    ax.set_ylim((0., max(plotting_data[i]['upper_limit'].values())))
+                    ax.set_ylim((0., max_output * 1.1))
 
             # Set x-ticks
             xticks = find_reasonable_year_ticks(start_time, end_time)

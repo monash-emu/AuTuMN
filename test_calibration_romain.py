@@ -19,19 +19,22 @@ import openpyxl as xl
 
 # Following function likely to be needed later as we have calibration inputs
 # at multiple time points
+
+
 def indices(a, func):
     return [i for (i, val) in enumerate(a) if func(val)]
+
 
 def is_positive_definite(v):
     return isfinite(v) and v > 0.0
 
-class ModelRunner():
+
+class ModelRunner:
 
     def __init__(self):
+
         self.country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
-        self.inputs = read_and_process_data(self.country,
-                                     from_test=True)
-        is_additional_diagnostics = self.inputs['model_constants']['is_additional_diagnostics'][0]
+        self.inputs = read_and_process_data(self.country, from_test=True)
         n_organs = self.inputs['model_constants']['n_organs'][0]
         n_strains = self.inputs['model_constants']['n_strains'][0]
         n_comorbidities = self.inputs['model_constants']['n_comorbidities'][0]
@@ -48,9 +51,8 @@ class ModelRunner():
             None,  # Scenario to run
             self.inputs)
 
-
         self.is_last_run_success = False
-        self.param_props_list = [ # the parameters that we are fitting
+        self.param_props_list = [  # the parameters that we are fitting
             {
                 'init': 19.0,
                 'key': u'tb_n_contact',
@@ -80,7 +82,7 @@ class ModelRunner():
 
         ]
 
-        self.calib_outputs = [ # the targeted outputs
+        self.calib_outputs = [  # the targeted outputs
             {
                 'key': 'incidence',
                 'output_weight': 1.0, # how much we want this output to be taken into account.
@@ -113,6 +115,7 @@ class ModelRunner():
         self.nb_accepted = 0
 
     def get_data_to_fit(self):
+
         for output in self.calib_outputs:
             if (output['key']) == 'incidence':
                 self.data_to_fit['incidence'] = self.model.inputs['tb']['e_inc_100k']
@@ -199,7 +202,6 @@ class ModelRunner():
         ln_overall = ln_posterior
 
         return ln_overall
-
 
     def dist_squares(self,params):
         self.run_with_params(params)
@@ -410,6 +412,7 @@ class ModelRunner():
         return initial_pop
 
     def write_best_fit_into_file(self):
+
         out_dir = 'calibrations/xls'
         if not os.path.isdir(out_dir):
             os.makedirs(out_dir)
@@ -421,8 +424,8 @@ class ModelRunner():
         sheet = wb.active
         sheet.title = 'Parameters'
 
-        cells_names = ['A1','A2']
-        cells_vals = ['B1','B2']
+        cells_names = ['A1', 'A2']
+        cells_vals = ['B1', 'B2']
 
         i = 0
         for par in self.best_fit.keys():
@@ -433,17 +436,20 @@ class ModelRunner():
         wb.save(path)
 
 def run_calibration(n_runs, calibrated_params, targeted_outputs, dt=None):
+
     """
     run the automatic calibration for a country
+
     Args:
         n_runs: number of accepted parameter sets that we want
-        calibrated_params: dictionary defining the parameters to adjust
+        calibration_params: dictionary defining the parameters to adjust
         targeted_outputs: dictionary defining the outputs that we are targeting
         dt: step time for integration. If None, it will be automatically determined to get optimal calculation time
 
     Returns:
         Nothing but writes a spreadsheet with the fitted parameters in calibrations/xls/...
         Also produces a graph
+
     """
     # Start timer
     start_realtime = datetime.datetime.now()
@@ -452,7 +458,6 @@ def run_calibration(n_runs, calibrated_params, targeted_outputs, dt=None):
     print model_runner.country
     model_runner.param_props_list = calibrated_params
     model_runner.calib_outputs = targeted_outputs
-
 
     if dt is None:
         print "******** Automatic determination of the step-time *********"
@@ -502,12 +507,12 @@ def run_calibration(n_runs, calibrated_params, targeted_outputs, dt=None):
 #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #
 #   #         Define and run the calibration from here          #   #
 
-calibrated_params = [  # the parameters that we are fitting
+calibration_params = [  # the parameters that we are fitting
     {
         'key': u'tb_n_contact',
-        'init': 20., # initial guess
-        'bounds': [3., 30.], # no parameter values will be generated outside of these bounds
-        'width_95_prior': 1.0 # width of the interval containing 95% of the generated parameter values
+        'init': 20.,  # initial guess
+        'bounds': [3., 30.],  # no parameter values will be generated outside of these bounds
+        'width_95_prior': 1.0  # width of the interval containing 95% of the generated parameter values
     },
     {
         'key': u'program_prop_death_reporting',
@@ -522,7 +527,7 @@ targeted_outputs = [  # the targeted outputs
         'key': 'incidence',
         'output_weight': 1.0,  # how much we want this output to be taken into account.
         'times': None,  # only used when data is not available in GTB
-        'values': None, # only used when data is not available in GTB
+        'values': None,  # only used when data is not available in GTB
         'time_weights': {},  # all weigths are equal to 1 by default. Specify if different (e.g {2014: 10., 1990: 10.}   )
         'posterior_sd': 2.
     },
@@ -535,16 +540,16 @@ targeted_outputs = [  # the targeted outputs
         'posterior_sd': 0.1
     }
 ]
-n_runs = 20
+n_runs = 100
 
-run_calibration(n_runs, calibrated_params, targeted_outputs, dt=None)
+run_calibration(n_runs, calibration_params, targeted_outputs)
 
 
 #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #
 #   #  Determine the initial population size (uncomment code below))    #
 
 # model_runner = ModelRunner()
-#init_pop = model_runner.get_initial_population()
+# init_pop = model_runner.get_initial_population()
 # print ('******* Initial population *********')
 # print(init_pop)
 

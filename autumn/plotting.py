@@ -924,7 +924,8 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
 
             # Truncate parameter names depending on whether it is a
             # treatment success/death proportion
-            title = base_analyses.capitalise_first_letter(base_analyses.replace_underscore_with_space(function))
+            title = base_analyses.capitalise_first_letter(base_analyses.replace_underscore_with_space(
+                find_title_from_dictionary(function)))
             ax.set_title(title, fontsize=get_nice_font_size(subplot_grid))
 
             ylims = relax_y_axis(ax)
@@ -933,6 +934,36 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
             save_png(png)
 
     fig.suptitle('Scale-up functions')
+
+
+def find_title_from_dictionary(name):
+
+    """
+    Function to store nicer strings for plot titles in a dictionary and extract
+    for scale-up functions (initially, although could be used more widely).
+
+    Args:
+        name: The scale-up function (or other string for conversion)
+
+    Returns:
+        String for title of plots
+
+    """
+
+    dictionary_of_names = {
+        'program_prop_vaccination': 'Vaccination coverage',
+        'program_prop_treatment_success': 'Treatment success rate',
+        'program_prop_xpert': 'GeneXpert coverage',
+        'program_prop_detect': 'Case detection rate',
+        'program_prop_treatment_death': 'Death rate on treatment',
+        'program_prop_algorithm_sensitivity': 'Diagnostic algorithm sensitivity',
+        'program_prop_ipt': 'IPT coverage'
+    }
+
+    if name in dictionary_of_names:
+        return dictionary_of_names[name]
+    else:
+        return name
 
 
 def plot_classified_scaleups(model, base):
@@ -948,7 +979,7 @@ def plot_classified_scaleups(model, base):
     for fn in model.scaleup_fns:
         if 'program_prop' in fn:
             classified_scaleups['program_prop'] += [fn]
-        elif 'program' in fn:
+        elif 'program' in fn and 'cost' not in fn:
             classified_scaleups['program_other'] += [fn]
         elif 'cost' in fn:
             classified_scaleups['cost'] += [fn]

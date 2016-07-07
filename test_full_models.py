@@ -99,7 +99,7 @@ else:
             base + '_outputs_gtb.png',
             country,
             scenario=scenario,
-            figure_number=11,
+            figure_number=31,
             final_run=final)
 
         if inputs['model_constants']['output_by_age']:

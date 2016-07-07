@@ -182,7 +182,7 @@ def get_nice_font_size(subplot_grid):
     return 2. + 8. / subplot_grid[0]
 
 
-def truncate_data(model, left_xlimit):
+def find_truncation_points(model, left_xlimit):
 
     # Not going to argue that the following code is the most elegant approach
     right_xlimit_index = len(model.times) - 1
@@ -411,6 +411,7 @@ def get_line_pattern(label, strain_or_organ):
 
 
 def make_plot_title(model, labels):
+
     try:
         if labels is model.labels:
             title = "by each individual compartment"
@@ -443,7 +444,7 @@ def make_plot_title(model, labels):
 
 def plot_populations(model, labels, values, left_xlimit, strain_or_organ, png=None):
 
-    right_xlimit_index, left_xlimit_index = truncate_data(model, left_xlimit)
+    right_xlimit_index, left_xlimit_index = find_truncation_points(model, left_xlimit)
     colours, patterns, compartment_full_names, markers\
         = make_related_line_styles(labels, strain_or_organ)
     ax = make_axes_with_room_for_legend()
@@ -475,7 +476,7 @@ def plot_populations(model, labels, values, left_xlimit, strain_or_organ, png=No
 
 def plot_fractions(model, values, left_xlimit, strain_or_organ, png=None, figure_number=30):
 
-    right_xlimit_index, left_xlimit_index = truncate_data(model, left_xlimit)
+    right_xlimit_index, left_xlimit_index = find_truncation_points(model, left_xlimit)
     colours, patterns, compartment_full_names, markers\
         = make_related_line_styles(values.keys(), strain_or_organ)
     fig = pyplot.figure(figure_number)
@@ -493,6 +494,31 @@ def plot_fractions(model, values, left_xlimit, strain_or_organ, png=None, figure
     title = make_plot_title(model, values.keys())
     set_axes_props(ax, 'Year', 'Proportion of population',
         'Population, ' + title, True, axis_labels)
+    save_png(png)
+
+
+def plot_age_populations(model, left_xlimit, png=None):
+
+    right_xlimit_index, left_xlimit_index = find_truncation_points(model, left_xlimit)
+    age_soln, age_denominator = base_analyses.sum_over_compartments(model, model.agegroups)
+    age_fraction = base_analyses.get_fraction_soln(age_soln.keys(), age_soln, age_denominator)
+
+    fig = pyplot.figure()
+    for agegroup in model.agegroups:
+        ax = fig.add_subplot(1, 2, 1)
+        ax.plot(model.times[left_xlimit_index: right_xlimit_index],
+                age_soln[agegroup][left_xlimit_index: right_xlimit_index])
+        ax.set_title('Absolute')
+        ax = fig.add_subplot(1, 2, 2)
+        ax.plot(model.times[left_xlimit_index: right_xlimit_index],
+                age_fraction[agegroup][left_xlimit_index: right_xlimit_index])
+        ax.set_title('Proportion')
+
+    lines = ax.lines
+    ax.legend(lines, model.agegroups)
+
+    fig.suptitle('Population by age group')
+
     save_png(png)
 
 
@@ -550,7 +576,7 @@ def plot_outputs_against_gtb(model,
                 plotting_data[i]['point_estimate'] = model.inputs['tb'][j]
 
     # Truncate data to what you want to look at (rather than going back to the dawn of time)
-    right_xlimit_index, left_xlimit_index = truncate_data(model, start_time)
+    right_xlimit_index, left_xlimit_index = find_truncation_points(model, start_time)
 
     subplot_grid = find_subplot_numbers(len(labels))
 
@@ -696,7 +722,7 @@ def plot_outputs_by_age(model,
         output_colour = [make_default_line_styles(scenario, False)]
 
     # Truncate data to what you want to look at (rather than going back to the dawn of time)
-    right_xlimit_index, left_xlimit_index = truncate_data(model, start_time)
+    right_xlimit_index, left_xlimit_index = find_truncation_points(model, start_time)
 
     subplot_grid = find_subplot_numbers(len(model.agegroups) * 2 + 1)
 

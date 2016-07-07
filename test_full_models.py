@@ -122,8 +122,16 @@ else:
         subgroup_solns, subgroup_fractions = autumn.base_analyses.find_fractions(models['baseline'])
         for i, category in enumerate(subgroup_fractions):
             autumn.plotting.plot_fractions(
-                models['baseline'], subgroup_fractions[category], models['baseline'].inputs['model_constants']['recent_time'],
+                models['baseline'],
+                subgroup_fractions[category],
+                models['baseline'].inputs['model_constants']['recent_time'],
                 'strain', base + '_fraction_' + category + '.png', figure_number=30+i)
+
+    # Plot proportions of population
+    if inputs['model_constants']['output_age_fractions'] and len(models['baseline'].agegroups) > 1:
+        autumn.plotting.plot_age_populations(models['baseline'],
+                                             models['baseline'].inputs['model_constants']['recent_time'],
+                                             png=base + '_age_fraction.png')
 
     if inputs['model_constants']['output_scaleups']:
         autumn.plotting.plot_classified_scaleups(models['baseline'], base)

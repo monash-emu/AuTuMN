@@ -179,7 +179,7 @@ def get_nice_font_size(subplot_grid):
 
     # Simple function to return a reasonable font size
     # as appropriate to the number of rows of subplots in the figure
-    return 3. + 9. / subplot_grid[0]
+    return 2. + 8. / subplot_grid[0]
 
 
 def truncate_data(model, left_xlimit):
@@ -840,8 +840,8 @@ def plot_scaleup_fns(model, functions, png=None,
     if len(functions) > 1:
         plural += 's'
     title = str(country) + ' ' + \
-            base_analyses.replace_underscore_with_space(parameter_type) + \
-            ' parameter' + plural + ' from ' + base_analyses.replace_underscore_with_space(start_time_str)
+            find_title_from_dictionary(parameter_type) + \
+            ' parameter' + plural + find_title_from_dictionary(start_time_str)
     set_axes_props(ax, 'Year', 'Parameter value',
                    title, True, functions)
 
@@ -886,8 +886,8 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
     if len(functions) > 1:
         plural += 's'
     title = model.inputs['model_constants']['country'] + ' ' + \
-            base_analyses.replace_underscore_with_space(parameter_type) + \
-            ' parameter' + plural + ' from ' + base_analyses.replace_underscore_with_space(start_time_str)
+            find_title_from_dictionary(parameter_type) + \
+            ' parameter' + plural + find_title_from_dictionary(start_time_str)
     fig.suptitle(title)
 
     # Iterate through functions
@@ -924,8 +924,7 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
 
             # Truncate parameter names depending on whether it is a
             # treatment success/death proportion
-            title = base_analyses.capitalise_first_letter(base_analyses.replace_underscore_with_space(
-                find_title_from_dictionary(function)))
+            title = find_title_from_dictionary(function)
             ax.set_title(title, fontsize=get_nice_font_size(subplot_grid))
 
             ylims = relax_y_axis(ax)
@@ -951,13 +950,56 @@ def find_title_from_dictionary(name):
     """
 
     dictionary_of_names = {
-        'program_prop_vaccination': 'Vaccination coverage',
-        'program_prop_treatment_success': 'Treatment success rate',
-        'program_prop_xpert': 'GeneXpert coverage',
-        'program_prop_detect': 'Case detection rate',
-        'program_prop_treatment_death': 'Death rate on treatment',
-        'program_prop_algorithm_sensitivity': 'Diagnostic algorithm sensitivity',
-        'program_prop_ipt': 'IPT coverage'
+        'program_prop_vaccination':
+            'Vaccination coverage',
+        'program_prop_treatment_success':
+            'Treatment success rate',
+        'program_prop_xpert':
+            'GeneXpert coverage',
+        'program_prop_detect':
+            'Case detection rate',
+        'program_prop_treatment_death':
+            'Death rate on treatment',
+        'program_prop_algorithm_sensitivity':
+            'Diagnostic algorithm sensitivity',
+        'program_prop_ipt':
+            'IPT coverage',
+        'econ_program_unitcost_ipt':
+            'IPT unit cost',
+        'program_cost_vaccination':
+            'Vaccination program cost (?dummy)',
+        'econ_program_unitcost_vaccination':
+            'Unit cost of BCG',
+        'econ_program_totalcost_ipt':
+            'IPT program cost',
+        'econ_program_totalcost_vaccination':
+            'Vaccination program cost',
+        'demo_rate_birth':
+            'Birth rate',
+        'demo_life_expectancy':
+            'Life expectancy',
+        'econ_inflation':
+            'Inflation rate',
+        'econ_cpi':
+            'Consumer price index',
+        'program_timeperiod_await_treatment_smearpos':
+            'Smear-positive time to treatment',
+        'program_timeperiod_await_treatment_smearneg':
+            'Smear-negative time to treatment',
+        'program_timeperiod_await_treatment_extrapul':
+            'Extrapulmonary time to treatment',
+        'program_prop':
+            'Programmatic proportion',
+        'econ':
+            'economic',
+        'demo':
+            'demographic',
+        'program_other':
+            'unclassified',
+        'start_time':
+            ' from start of model run',
+        'recent_time':
+            ' over recent years'
     }
 
     if name in dictionary_of_names:

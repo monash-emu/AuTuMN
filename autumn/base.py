@@ -178,22 +178,26 @@ class BaseModel():
         # (which has to have this name). Saves on creating a separate model attribute
         # just for population death. I think it makes more sense for it to be just
         # another parameter.
-        self.vars["rate_death"] = 0.
+        # Now works if the death rate is selected to be constant or time-variant
+        self.vars['rate_death'] = 0.
         for label in self.labels:
-            val = self.compartments[label] / self.params['demo_life_expectancy']
+            if self.inputs['time_variants']['demo_life_expectancy'][u'time_variant'] == u'no':
+                val = self.compartments[label] / self.params['demo_life_expectancy']
+            elif self.inputs['time_variants']['demo_life_expectancy'][u'time_variant'] == u'yes':
+                val = self.compartments[label] / self.vars['demo_life_expectancy']
             self.flows[label] -= val
             self.vars['rate_death'] += val
 
         # extra death flows
-        self.vars["rate_infection_death"] = 0.0
+        self.vars['rate_infection_death'] = 0.
         for label, rate in self.fixed_infection_death_rate_flows:
             val = self.compartments[label] * rate
             self.flows[label] -= val
-            self.vars["rate_infection_death"] += val
+            self.vars['rate_infection_death'] += val
         for label, rate in self.var_infection_death_rate_flows:
             val = self.compartments[label] * self.vars[vars_label]
             self.flows[label] -= val
-            self.vars["rate_infection_death"] += val
+            self.vars['rate_infection_death'] += val
 
     def prepare_vars_flows(self):
 
@@ -231,7 +235,7 @@ class BaseModel():
         self.var_array = None
         self.flow_array = None
         self.fraction_array = None
-        assert not self.times is None, "Haven't set times yet"
+        assert not self.times is None, 'Times have not been set yet'
 
     def integrate_scipy(self, min_dt=0.05):
         """ Uses Adams method coded in the LSODA Fortran package. This method is programmed to "slow down" when a tricky
@@ -388,24 +392,24 @@ class BaseModel():
                 for v, t
                 in zip(
                     self.compartment_soln[label],
-                    self.get_var_soln("population"))]
+                    self.get_var_soln('population'))]
             self.fraction_array[:, i_label] = self.fraction_soln[label]
 
     def calculate_additional_diagnostics(self):
         pass
 
     def get_compartment_soln(self, label):
-        assert self.soln_array is not None, "calculate_diagnostics has not been run"
+        assert self.soln_array is not None, 'calculate_diagnostics has not been run'
         i_label = self.labels.index(label)
         return self.soln_array[:, i_label]
 
     def get_var_soln(self, label):
-        assert self.var_array is not None, "calculate_diagnostics has not been run"
+        assert self.var_array is not None, 'calculate_diagnostics has not been run'
         i_label = self.var_labels.index(label)
         return self.var_array[:, i_label]
 
     def get_flow_soln(self, label):
-        assert self.flow_array is not None, "calculate_diagnostics has not been run"
+        assert self.flow_array is not None, 'calculate_diagnostics has not been run'
         i_label = self.labels.index(label)
         return self.flow_array[:, i_label]
 
@@ -480,27 +484,27 @@ class BaseModel():
         def num_str(f):
             abs_f = abs(f)
             if abs_f > 1E9:
-                return "%.1fB" % (f/1E9)
+                return '%.1fB' % (f/1E9)
             if abs_f > 1E6:
-                return "%.1fM" % (f/1E6)
+                return '%.1fM' % (f/1E6)
             if abs_f > 1E3:
-                return "%.1fK" % (f/1E3)
+                return '%.1fK' % (f/1E3)
             if abs_f > 100:
-                return "%.0f" % f
+                return '%.0f' % f
             if abs_f > 0.5:
-                return "%.1f" % f
+                return '%.1f' % f
             if abs_f > 0.05:
-                return "%.2f" % f
+                return '%.2f' % f
             if abs_f > 0.0005:
-                return "%.4f" % f
+                return '%.4f' % f
             if abs_f > 0.000005:
-                return "%.6f" % f
+                return '%.6f' % f
             return str(f)
 
         self.graph = Digraph(format='png')
         for label in self.labels:
             self.graph.node(label)
-        self.graph.node("tb_death")
+        self.graph.node('tb_death')
         for from_label, to_label, var_label in self.var_transfer_rate_flows:
             self.graph.edge(from_label, to_label, label=var_label[:4])
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
@@ -508,9 +512,9 @@ class BaseModel():
         for from_label, to_label, rate in self.linked_transfer_rate_flows:
             self.graph.edge(from_label, to_label, label='link')
         for label, rate in self.fixed_infection_death_rate_flows:
-            self.graph.edge(label, "tb_death", label=num_str(rate))
+            self.graph.edge(label, 'tb_death', label=num_str(rate))
         for label, rate in self.var_infection_death_rate_flows:
-            self.graph.edge(label, "tb_death", label=var_label[:4])
+            self.graph.edge(label, 'tb_death', label=var_label[:4])
         base, ext = os.path.splitext(png)
         if ext.lower() != '.png':
             base = png
@@ -546,123 +550,123 @@ class SimpleModel(BaseModel):
 
         BaseModel.__init__(self)
 
-        self.set_compartment("susceptible", 1e6)
-        self.set_compartment("susceptible_vac", 1e6)
-        self.set_compartment("latent_early", 0.)
-        self.set_compartment("latent_late", 0.)
-        self.set_compartment("active", 1.)
-        self.set_compartment("treatment_infect", 0.)
-        self.set_compartment("treatment_noninfect", 0.)
+        self.set_compartment('susceptible', 1e6)
+        self.set_compartment('susceptible_vac', 1e6)
+        self.set_compartment('latent_early', 0.)
+        self.set_compartment('latent_late', 0.)
+        self.set_compartment('active', 1.)
+        self.set_compartment('treatment_infect', 0.)
+        self.set_compartment('treatment_noninfect', 0.)
 
-        self.set_parameter("total_population", 1E6)
-        self.set_parameter("demo_rate_birth", 20. / 1e3)
-        self.set_parameter("demo_rate_death", 1. / 65)
+        self.set_parameter('total_population', 1E6)
+        self.set_parameter('demo_rate_birth', 20. / 1e3)
+        self.set_parameter('demo_rate_death', 1. / 65)
 
-        self.set_parameter("tb_n_contact", 20.)
-        self.set_parameter("tb_rate_earlyprogress", .2)
-        self.set_parameter("tb_rate_lateprogress", .0001)
-        self.set_parameter("tb_rate_stabilise", 2.3)
-        self.set_parameter("tb_rate_recover", .3)
-        self.set_parameter("tb_rate_death", .07)
+        self.set_parameter('tb_n_contact', 20.)
+        self.set_parameter('tb_rate_earlyprogress', .2)
+        self.set_parameter('tb_rate_lateprogress', .0001)
+        self.set_parameter('tb_rate_stabilise', 2.3)
+        self.set_parameter('tb_rate_recover', .3)
+        self.set_parameter('tb_rate_death', .07)
 
-        self.set_parameter("tb_bcg_multiplier", .5)
+        self.set_parameter('tb_bcg_multiplier', .5)
 
-        self.set_parameter("program_prop_vac", 0.4)
-        self.set_parameter("program_prop_unvac",
-                           1 - self.params["program_prop_vac"])
-        self.set_parameter("program_rate_detect", 1.)
-        self.set_parameter("program_time_treatment", .5)
+        self.set_parameter('program_prop_vac', 0.4)
+        self.set_parameter('program_prop_unvac',
+                           1 - self.params['program_prop_vac'])
+        self.set_parameter('program_rate_detect', 1.)
+        self.set_parameter('program_time_treatment', .5)
 
     def process_parameters(self):
-        prop = self.params["program_prop_vac"]
+        prop = self.params['program_prop_vac']
         self.set_compartment(
-            "susceptible_vac",
-            prop * self.params["total_population"])
+            'susceptible_vac',
+            prop * self.params['total_population'])
         self.set_compartment(
-            "susceptible",
-            (1 - prop) * self.params["total_population"])
-        time_treatment = self.params["program_time_treatment"]
-        self.set_parameter("program_rate_completion_infect", .9 / time_treatment)
-        self.set_parameter("program_rate_default_infect", .05 / time_treatment)
-        self.set_parameter("program_rate_death_infect", .05 / time_treatment)
-        self.set_parameter("program_rate_completion_noninfect", .9 / time_treatment)
-        self.set_parameter("program_rate_default_noninfect", .05 / time_treatment)
-        self.set_parameter("program_rate_death_noninfect", .05 / time_treatment)
+            'susceptible',
+            (1 - prop) * self.params['total_population'])
+        time_treatment = self.params['program_time_treatment']
+        self.set_parameter('program_rate_completion_infect', .9 / time_treatment)
+        self.set_parameter('program_rate_default_infect', .05 / time_treatment)
+        self.set_parameter('program_rate_death_infect', .05 / time_treatment)
+        self.set_parameter('program_rate_completion_noninfect', .9 / time_treatment)
+        self.set_parameter('program_rate_default_noninfect', .05 / time_treatment)
+        self.set_parameter('program_rate_death_noninfect', .05 / time_treatment)
 
         y = 4
         self.set_scaleup_fn(
-            "program_rate_detect",
+            'program_rate_detect',
             make_two_step_curve(0, 0.5 * y, y, 1950, 1995, 2015))
 
 
     def set_flows(self):
-        self.set_var_entry_rate_flow("susceptible", "births_unvac")
-        self.set_var_entry_rate_flow("susceptible_vac", "births_vac")
+        self.set_var_entry_rate_flow('susceptible', 'births_unvac')
+        self.set_var_entry_rate_flow('susceptible_vac', 'births_vac')
 
         self.set_var_transfer_rate_flow(
-            "susceptible", "latent_early", "rate_force")
+            'susceptible', 'latent_early', 'rate_force')
 
         self.set_var_transfer_rate_flow(
-            "susceptible_vac", "latent_early", "rate_force_weak")
+            'susceptible_vac', 'latent_early', 'rate_force_weak')
 
         self.set_fixed_transfer_rate_flow(
-            "latent_early", "active", "tb_rate_earlyprogress")
+            'latent_early', 'active', 'tb_rate_earlyprogress')
         self.set_fixed_transfer_rate_flow(
-            "latent_early", "latent_late", "tb_rate_stabilise")
+            'latent_early', 'latent_late', 'tb_rate_stabilise')
 
         self.set_fixed_transfer_rate_flow(
-            "latent_late", "active", "tb_rate_lateprogress")
+            'latent_late', 'active', 'tb_rate_lateprogress')
         self.set_var_transfer_rate_flow(
-            "latent_late", "latent_early", "rate_force_weak")
+            'latent_late', 'latent_early', 'rate_force_weak')
 
         self.set_fixed_transfer_rate_flow(
-            "active", "latent_late", "tb_rate_recover")
+            'active', 'latent_late', 'tb_rate_recover')
 
-        y = self.params["program_rate_detect"]
+        y = self.params['program_rate_detect']
         self.set_var_transfer_rate_flow(
-            "active", "treatment_infect", "program_rate_detect")
+            'active', 'treatment_infect', 'program_rate_detect')
 
         self.set_fixed_transfer_rate_flow(
-            "treatment_infect", "treatment_noninfect", "program_rate_completion_infect")
+            'treatment_infect', 'treatment_noninfect', 'program_rate_completion_infect')
         self.set_fixed_transfer_rate_flow(
-            "treatment_infect", "active", "program_rate_default_infect")
+            'treatment_infect', 'active', 'program_rate_default_infect')
 
         self.set_fixed_transfer_rate_flow(
-            "treatment_noninfect", "susceptible_vac", "program_rate_completion_noninfect")
+            'treatment_noninfect', 'susceptible_vac', 'program_rate_completion_noninfect')
         self.set_fixed_transfer_rate_flow(
-            "treatment_noninfect", "active", "program_rate_default_noninfect")
+            'treatment_noninfect', 'active', 'program_rate_default_noninfect')
 
-        self.set_population_death_rate("demo_rate_death")
+        self.set_population_death_rate('demo_rate_death')
         self.set_infection_death_rate_flow(
-            "active", "tb_rate_death")
+            'active', 'tb_rate_death')
         self.set_infection_death_rate_flow(
-            "treatment_infect", "program_rate_death_infect")
+            'treatment_infect', 'program_rate_death_infect')
         self.set_infection_death_rate_flow(
-            "treatment_noninfect", "program_rate_death_noninfect")
+            'treatment_noninfect', 'program_rate_death_noninfect')
 
     def calculate_vars(self):
 
-        self.vars["population"] = sum(self.compartments.values())
+        self.vars['population'] = sum(self.compartments.values())
 
-        self.vars["rate_birth"] = \
-            self.params["demo_rate_birth"] * self.vars["population"]
-        self.vars["births_unvac"] = \
-            self.params["program_prop_unvac"] * self.vars["rate_birth"]
-        self.vars["births_vac"] = \
-            self.params["program_prop_vac"] * self.vars["rate_birth"]
+        self.vars['rate_birth'] = \
+            self.params['demo_rate_birth'] * self.vars['population']
+        self.vars['births_unvac'] = \
+            self.params['program_prop_unvac'] * self.vars['rate_birth']
+        self.vars['births_vac'] = \
+            self.params['program_prop_vac'] * self.vars['rate_birth']
 
-        self.vars["infectious_population"] = 0.0
+        self.vars['infectious_population'] = 0.0
         for label in self.labels:
-            if label in ["active", "treatment_infect"]:
-                self.vars["infectious_population"] += \
+            if label in ['active', 'treatment_infect']:
+                self.vars['infectious_population'] += \
                     self.compartments[label]
-        self.vars["rate_force"] = \
-            self.params["tb_n_contact"] \
-              * self.vars["infectious_population"] \
-              / self.vars["population"]
-        self.vars["rate_force_weak"] = \
-            self.params["tb_bcg_multiplier"] \
-              * self.vars["rate_force"]
+        self.vars['rate_force'] = \
+            self.params['tb_n_contact'] \
+              * self.vars['infectious_population'] \
+              / self.vars['population']
+        self.vars['rate_force_weak'] = \
+            self.params['tb_bcg_multiplier'] \
+              * self.vars['rate_force']
 
     def calculate_output_vars(self):
 
@@ -672,25 +676,25 @@ class SimpleModel(BaseModel):
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
             if 'latent' in from_label and 'active' in to_label:
                 rate_incidence += self.compartments[from_label] * rate
-        self.vars["incidence"] = \
+        self.vars['incidence'] = \
             rate_incidence \
-            / self.vars["population"] * 1E5
+            / self.vars['population'] * 1E5
         for from_label, to_label, rate in self.var_transfer_rate_flows:
             if 'active' in from_label and\
                     ('detect' in to_label or 'treatment_infect' in to_label):
                 rate_notifications += self.compartments[from_label] * self.vars[rate]
-        self.vars["notifications"] = \
-            rate_notifications / self.vars["population"] * 1E5
+        self.vars['notifications'] = \
+            rate_notifications / self.vars['population'] * 1E5
         for from_label, rate in self.infection_death_rate_flows:
             rate_mortality \
                 += self.compartments[from_label] * rate
-        self.vars["mortality"] = \
+        self.vars['mortality'] = \
             rate_mortality \
-            / self.vars["population"] * 1E5
+            / self.vars['population'] * 1E5
 
-        self.vars["prevalence"] = 0.0
+        self.vars['prevalence'] = 0.0
         for label in self.labels:
-            if "susceptible" not in label and "latent" not in label:
-                self.vars["prevalence"] += (
+            if 'susceptible' not in label and 'latent' not in label:
+                self.vars['prevalence'] += (
                     self.compartments[label]
-                     / self.vars["population"] * 1E5)
+                     / self.vars['population'] * 1E5)

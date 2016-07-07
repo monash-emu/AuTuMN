@@ -102,15 +102,16 @@ else:
             figure_number=11,
             final_run=final)
 
-        autumn.plotting.plot_outputs_by_age(
-            models[model_name],
-            inputs['model_constants']['recent_time'],
-            'scenario_end_time',
-            base + '_age_outputs_gtb.png',
-            country,
-            scenario=scenario,
-            figure_number=21,
-            final_run=final)
+        if inputs['model_constants']['output_by_age']:
+            autumn.plotting.plot_outputs_by_age(
+                models[model_name],
+                inputs['model_constants']['recent_time'],
+                'scenario_end_time',
+                base + '_age_outputs_gtb.png',
+                country,
+                scenario=scenario,
+                figure_number=21,
+                final_run=final)
 
     # Make a flow-diagram
     if inputs['model_constants']['output_flow_diagram']:

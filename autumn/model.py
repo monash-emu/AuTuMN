@@ -818,6 +818,7 @@ class ConsolidatedModel(BaseModel):
 
         detect_prop = self.get_constant_or_variable_param('program_prop_detect')
         alg_sens = self.get_constant_or_variable_param('program_prop_algorithm_sensitivity')
+        life_expectancy = self.get_constant_or_variable_param('demo_life_expectancy')
 
         # If no division by zero
         if alg_sens > 0.:
@@ -827,7 +828,7 @@ class ConsolidatedModel(BaseModel):
                 - detect_prop \
                 * (self.params['tb_rate_recover' + self.organ_status[0]] +
                    self.params['tb_rate_death' + self.organ_status[0]] +
-                   1. / self.params['demo_life_expectancy']) \
+                   1. / life_expectancy) \
                 / (detect_prop - 1.)
 
             # Missed

@@ -504,7 +504,7 @@ def plot_outputs_against_gtb(model,
                              country='',
                              scenario=None,
                              gtb=True,
-                             figure_number=11,
+                             figure_number=31,
                              final_run=True):
 
     """
@@ -840,8 +840,8 @@ def plot_scaleup_fns(model, functions, png=None,
     if len(functions) > 1:
         plural += 's'
     title = str(country) + ' ' + \
-            replace_underscore_with_space(parameter_type) + \
-            ' parameter' + plural + ' from ' + replace_underscore_with_space(start_time_str)
+            base_analyses.replace_underscore_with_space(parameter_type) + \
+            ' parameter' + plural + ' from ' + base_analyses.replace_underscore_with_space(start_time_str)
     set_axes_props(ax, 'Year', 'Parameter value',
                    title, True, functions)
 
@@ -924,7 +924,7 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
 
             # Truncate parameter names depending on whether it is a
             # treatment success/death proportion
-            title = base_analyses.capitalise_first_letter(replace_underscore_with_space(function))
+            title = base_analyses.capitalise_first_letter(base_analyses.replace_underscore_with_space(function))
             ax.set_title(title, fontsize=get_nice_font_size(subplot_grid))
 
             ylims = relax_y_axis(ax)
@@ -934,6 +934,7 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
 
     fig.suptitle('Scale-up functions')
 
+
 def plot_classified_scaleups(model, base):
 
     # Classify scale-up functions for plotting
@@ -942,18 +943,19 @@ def plot_classified_scaleups(model, base):
                            'birth': [],
                            'cost': [],
                            'econ': [],
+                           'demo': [],
                            'non_program': []}
     for fn in model.scaleup_fns:
         if 'program_prop' in fn:
             classified_scaleups['program_prop'] += [fn]
         elif 'program' in fn:
             classified_scaleups['program_other'] += [fn]
-        elif 'demo_rate_birth' in fn:
-            classified_scaleups['birth'] += [fn]
         elif 'cost' in fn:
             classified_scaleups['cost'] += [fn]
         elif 'econ' in fn:
             classified_scaleups['econ'] += [fn]
+        elif 'demo' in fn:
+            classified_scaleups['demo'] += [fn]
         else:
             classified_scaleups['non_program'] += [fn]
 

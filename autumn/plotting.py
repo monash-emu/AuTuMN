@@ -56,7 +56,7 @@ def set_axes_props(
                 loc=2,
                 borderaxespad=0.,
                 frameon=False,
-                prop={'size':7})
+                prop={'size': 7})
         else:
             leg = ax.legend(
                 bbox_to_anchor=(1.05, 1),
@@ -503,21 +503,57 @@ def plot_age_populations(model, left_xlimit, png=None):
     age_soln, age_denominator = base_analyses.sum_over_compartments(model, model.agegroups)
     age_fraction = base_analyses.get_fraction_soln(age_soln.keys(), age_soln, age_denominator)
 
+    times = model.times[left_xlimit_index: right_xlimit_index]
+
+    lower_plot_margin_count = numpy.zeros(len(times))
+    upper_plot_margin_count = numpy.zeros(len(times))
+    lower_plot_margin_fraction = numpy.zeros(len(times))
+    upper_plot_margin_fraction = numpy.zeros(len(times))
+
+    colours = ['r', 'b', 'g']
+
+    legd_text = []
+
     fig = pyplot.figure()
+    for i, agegroup in enumerate(model.agegroups):
+
+        # Find numbers or fractions in that age group
+        agegroup_count = age_soln[agegroup][left_xlimit_index: right_xlimit_index]
+        agegroup_fraction = age_fraction[agegroup][left_xlimit_index: right_xlimit_index]
+
+        # Add age group values to the upper plot range for area plot
+        for j in range(len(upper_plot_margin_count)):
+            upper_plot_margin_count[j] += agegroup_count[j]
+            upper_plot_margin_fraction[j] += agegroup_fraction[j]
+
+        # Plot
+        ax = fig.add_axes([0.1, 0.2, 0.35, 0.6])
+        ax.fill_between(times, lower_plot_margin_count, upper_plot_margin_count, facecolors=colours[i])
+
+        ax.plot([], [], color=colours[i], linewidth=10)
+        legd_text += [base_analyses.turn_strat_into_label(agegroup)]
+
+        if i == len(model.agegroups)-1:
+            ax.set_ylim((0., max(upper_plot_margin_count) * 1.1))
+            ax.set_title('Count')
+            ax.legend(ax.lines, legd_text, loc=2, frameon=False)
+
+        ax = fig.add_axes([0.55, 0.2, 0.35, 0.6])
+        ax.fill_between(times, lower_plot_margin_fraction, upper_plot_margin_fraction, facecolors=colours[i])
+        if i == len(model.agegroups)-1:
+            ax.set_ylim((0., 1.))
+            ax.set_title('Fraction')
+
+        # Add age group values to the lower plot range for next iteration
+        for j in range(len(lower_plot_margin_count)):
+            lower_plot_margin_count[j] += agegroup_count[j]
+            lower_plot_margin_fraction[j] += agegroup_fraction[j]
+
+    agegroup_labels = []
     for agegroup in model.agegroups:
-        ax = fig.add_subplot(1, 2, 1)
-        ax.plot(model.times[left_xlimit_index: right_xlimit_index],
-                age_soln[agegroup][left_xlimit_index: right_xlimit_index])
-        ax.set_title('Absolute')
-        ax = fig.add_subplot(1, 2, 2)
-        ax.plot(model.times[left_xlimit_index: right_xlimit_index],
-                age_fraction[agegroup][left_xlimit_index: right_xlimit_index])
-        ax.set_title('Proportion')
+        agegroup_labels += [base_analyses.turn_strat_into_label(agegroup)]
 
-    lines = ax.lines
-    ax.legend(lines, model.agegroups)
-
-    fig.suptitle('Population by age group')
+    fig.suptitle('Population by age group', fontsize=14)
 
     save_png(png)
 

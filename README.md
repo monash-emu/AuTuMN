@@ -10,7 +10,7 @@ pluggable API to other system. Applied to Tuberculosis.
 - model.py: underlying transmission dynamic model.  
 - plotting.py: plotting results of the model  
 - spreadsheet.py: reads data from input.xlsx  
-- settings: parameters for model  
+
 
 # TODO  
   
@@ -23,6 +23,13 @@ pluggable API to other system. Applied to Tuberculosis.
 - allow scenarios to be scaled-up over varying time periods
 - population stratification for at-risk groups
 - new/retreatment stratification (possibly)
+- get test_full_models.py to run with no scenarios selected
+- would be nice to include assertion check of age-stratified variables
+    to ensure that each age group starts where the last one left off
+
+# Bigger outstanding tasks TODO
+- GUI
+- Automatic calibration
 
 
 ## Compartments  

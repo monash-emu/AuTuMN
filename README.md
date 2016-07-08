@@ -26,6 +26,8 @@ pluggable API to other system. Applied to Tuberculosis.
 - population stratification for at-risk groups (partially done)
 - would be nice to include assertion check of age-stratified variables
     to ensure that each age group starts where the last one left off
+- make the analysis more consistently object-oriented, following the lead
+    of Romain's object oriented spreadsheet writer
 
 # Bigger outstanding tasks TODO
 - GUI

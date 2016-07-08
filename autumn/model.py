@@ -236,6 +236,8 @@ class ConsolidatedModel(BaseModel):
         assert remainder > 0., NameError('Total of the proportions of risk groups is greater than 1.')
         if '_nocomorb' in self.comorbidities:
             self.comorb_props['_nocomorb'] = remainder
+        if self.comorbidities == ['']:
+            self.comorb_props[''] = 1.
 
     def initialise_compartments(self):
 

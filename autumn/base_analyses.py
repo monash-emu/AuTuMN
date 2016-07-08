@@ -5,7 +5,6 @@ from matplotlib import pyplot, patches
 import autumn.plotting
 
 
-
 def capitalise_first_letter(old_string):
 
     """

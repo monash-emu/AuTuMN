@@ -197,25 +197,34 @@ def find_truncation_points(model, left_xlimit):
 def find_reasonable_year_ticks(start_time, end_time):
 
     """
-    Simple method to find some reasonably spaced x-ticks
+    Simple method to find some reasonably spaced x-ticks and making sure there
+    aren't too many of them
 
     Args:
         start_time: Plotting start time
         end_time: Plotting end time
 
     Returns:
-        xticsk: List of where the x ticks should go
+        xticks: List of where the x ticks should go
     """
 
     # If the range is divisible by 15
     if (start_time - end_time) % 15 == 0:
-        xticks = numpy.arange(start_time, end_time + 15, 15)
+        xticks_any_length = numpy.arange(start_time, end_time + 15, 15)
     # Otherwise if it's divisible by 10
     elif (start_time - end_time) % 10 == 0:
-        xticks = numpy.arange(start_time, end_time + 10, 10)
+        xticks_any_length = numpy.arange(start_time, end_time + 10, 10)
     # Otherwise just give up on having ticks along axis
     else:
-        xticks = [start_time, end_time]
+        xticks_any_length = [start_time, end_time]
+
+    xticks = []
+    if len(xticks_any_length) > 10:
+        for i in range(len(xticks_any_length)):
+            if i % 2 == 0:
+                xticks += [xticks_any_length[i]]
+    else:
+        xticks = xticks_any_length
 
     return xticks
 
@@ -296,7 +305,7 @@ def make_default_line_styles(n, return_all=True):
     for i in range(n):
         line_styles = []
         for line in ["-", ":", "-.", "--"]:
-            for colour in "rbmgk":
+            for colour in "rbgkmcy":
                 line_styles.append(line + colour)
 
     if return_all:
@@ -499,62 +508,97 @@ def plot_fractions(model, values, left_xlimit, strain_or_organ, png=None, figure
 
 def plot_age_populations(model, left_xlimit, png=None):
 
-    right_xlimit_index, left_xlimit_index = find_truncation_points(model, left_xlimit)
+    """
+    Function to plot population by age group both as raw numbers and as proportions,
+    both from the start of the model and using the input argument
+
+    Args:
+        model: The entire model object being interrogated
+        left_xlimit: Float value representing the time to plot from for the recent plot
+        png: The name of the file to be saved
+
+    """
+
+    # Open figure
+    fig = pyplot.figure()
+
+    # Extract data
     age_soln, age_denominator = base_analyses.sum_over_compartments(model, model.agegroups)
     age_fraction = base_analyses.get_fraction_soln(age_soln.keys(), age_soln, age_denominator)
 
-    times = model.times[left_xlimit_index: right_xlimit_index]
+    colours = make_default_line_styles(len(model.agegroups), return_all=True)
 
-    lower_plot_margin_count = numpy.zeros(len(times))
-    upper_plot_margin_count = numpy.zeros(len(times))
-    lower_plot_margin_fraction = numpy.zeros(len(times))
-    upper_plot_margin_fraction = numpy.zeros(len(times))
+    # Loop over starting from the model start and the specified starting time
+    for start_time in range(2):
 
-    colours = ['r', 'b', 'g']
+        # Find starting times
+        if start_time == 0:
+            right_xlimit_index, left_xlimit_index = find_truncation_points(model,
+                                                                           left_xlimit)
+        elif start_time == 1:
+            right_xlimit_index, left_xlimit_index = find_truncation_points(model,
+                                                                           model.inputs['model_constants']['start_time'])
 
-    legd_text = []
+        # Initialise some variables
+        times = model.times[left_xlimit_index: right_xlimit_index]
+        lower_plot_margin_count = numpy.zeros(len(times))
+        upper_plot_margin_count = numpy.zeros(len(times))
+        lower_plot_margin_fraction = numpy.zeros(len(times))
+        upper_plot_margin_fraction = numpy.zeros(len(times))
+        legd_text = []
 
-    fig = pyplot.figure()
-    for i, agegroup in enumerate(model.agegroups):
+        for i, agegroup in enumerate(model.agegroups):
 
-        # Find numbers or fractions in that age group
-        agegroup_count = age_soln[agegroup][left_xlimit_index: right_xlimit_index]
-        agegroup_fraction = age_fraction[agegroup][left_xlimit_index: right_xlimit_index]
+            # Find numbers or fractions in that age group
+            agegroup_count = age_soln[agegroup][left_xlimit_index: right_xlimit_index]
+            agegroup_fraction = age_fraction[agegroup][left_xlimit_index: right_xlimit_index]
 
-        # Add age group values to the upper plot range for area plot
-        for j in range(len(upper_plot_margin_count)):
-            upper_plot_margin_count[j] += agegroup_count[j]
-            upper_plot_margin_fraction[j] += agegroup_fraction[j]
+            # Add age group values to the upper plot range for area plot
+            for j in range(len(upper_plot_margin_count)):
+                upper_plot_margin_count[j] += agegroup_count[j]
+                upper_plot_margin_fraction[j] += agegroup_fraction[j]
 
-        # Plot
-        ax = fig.add_axes([0.1, 0.2, 0.35, 0.6])
-        ax.fill_between(times, lower_plot_margin_count, upper_plot_margin_count, facecolors=colours[i])
+            # Plot
+            ax = fig.add_subplot(2, 2, 1 + start_time)
+            ax.fill_between(times, lower_plot_margin_count, upper_plot_margin_count, facecolors=colours[i][1])
+            ax.plot([], [], color=colours[i][1], linewidth=6)
+            legd_text += [base_analyses.turn_strat_into_label(agegroup)]
 
-        ax.plot([], [], color=colours[i], linewidth=10)
-        legd_text += [base_analyses.turn_strat_into_label(agegroup)]
+            # Cosmetic changes at the end
+            if i == len(model.agegroups)-1:
+                ax.set_ylim((0., max(upper_plot_margin_count) * 1.1))
+                ax.set_title('Total numbers by age group', fontsize=8)
+                xticks = find_reasonable_year_ticks(int(model.times[left_xlimit_index]),
+                                                    model.times[right_xlimit_index])
+                ax.set_xticks(xticks)
+                for axis_to_change in [ax.xaxis, ax.yaxis]:
+                    for tick in axis_to_change.get_major_ticks():
+                        tick.label.set_fontsize(get_nice_font_size([2]))
+                if start_time == 1:
+                    ax.legend(reversed(ax.lines), reversed(legd_text), loc=2, frameon=False, fontsize=8)
 
-        if i == len(model.agegroups)-1:
-            ax.set_ylim((0., max(upper_plot_margin_count) * 1.1))
-            ax.set_title('Count')
-            ax.legend(ax.lines, legd_text, loc=2, frameon=False)
+            # Plot popuation proportions
+            ax = fig.add_subplot(2, 2, 3 + start_time)
+            ax.fill_between(times, lower_plot_margin_fraction, upper_plot_margin_fraction, facecolors=colours[i][1])
 
-        ax = fig.add_axes([0.55, 0.2, 0.35, 0.6])
-        ax.fill_between(times, lower_plot_margin_fraction, upper_plot_margin_fraction, facecolors=colours[i])
-        if i == len(model.agegroups)-1:
-            ax.set_ylim((0., 1.))
-            ax.set_title('Fraction')
+            # Cosmetic changes at the end
+            if i == len(model.agegroups)-1:
+                ax.set_ylim((0., 1.))
+                ax.set_title('Proportion of population by age group', fontsize=8)
+                xticks = find_reasonable_year_ticks(int(model.times[left_xlimit_index]),
+                                                    model.times[right_xlimit_index])
+                ax.set_xticks(xticks)
+                for axis_to_change in [ax.xaxis, ax.yaxis]:
+                    for tick in axis_to_change.get_major_ticks():
+                        tick.label.set_fontsize(get_nice_font_size([2]))
 
-        # Add age group values to the lower plot range for next iteration
-        for j in range(len(lower_plot_margin_count)):
-            lower_plot_margin_count[j] += agegroup_count[j]
-            lower_plot_margin_fraction[j] += agegroup_fraction[j]
+            # Add age group values to the lower plot range for next iteration
+            for j in range(len(lower_plot_margin_count)):
+                lower_plot_margin_count[j] += agegroup_count[j]
+                lower_plot_margin_fraction[j] += agegroup_fraction[j]
 
-    agegroup_labels = []
-    for agegroup in model.agegroups:
-        agegroup_labels += [base_analyses.turn_strat_into_label(agegroup)]
-
-    fig.suptitle('Population by age group', fontsize=14)
-
+    # Finish up
+    fig.suptitle('Population by age group', fontsize=13)
     save_png(png)
 
 

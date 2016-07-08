@@ -69,10 +69,6 @@ def describe_model(models, model_name):
         returned_string += 'unstratified by organ involvement,\n'
     else:
         returned_string += str(model.inputs['model_constants']['n_organs'][0]) + ' organ strata,\n'
-    if model.inputs['model_constants']['n_comorbidities'][0] <= 1:
-        returned_string += 'unstratified by comorbidities, \n'
-    else:
-        returned_string += str(model.inputs['model_constants']['n_comorbidities'][0]) + ' comorbidity strata'
     if model.inputs['model_constants']['n_strains'][0] <= 1:
         returned_string += 'single strain model.'
     else:

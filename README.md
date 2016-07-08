@@ -26,6 +26,8 @@ pluggable API to other system. Applied to Tuberculosis.
 - get test_full_models.py to run with no scenarios selected
 - would be nice to include assertion check of age-stratified variables
     to ensure that each age group starts where the last one left off
+- stop age-stratified parameter reporting occurring at every scenario run
+    (just for baseline case)
 
 # Bigger outstanding tasks TODO
 - GUI

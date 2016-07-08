@@ -53,7 +53,6 @@ class ConsolidatedModel(BaseModel):
     def __init__(self,
                  n_organ=0,
                  n_strain=0,
-                 n_comorbidity=0,
                  is_lowquality=False,
                  is_amplification=False,
                  is_misassignment=False,
@@ -74,11 +73,6 @@ class ConsolidatedModel(BaseModel):
                 2. DS-TB and MDR-TB
                 3. DS-TB, MDR-TB and XDR-TB
                 (N.B. this may change in future models, which may include isoniazid mono-resistance, etc.)
-            n_comorbidity: number of whole-population stratifications, other than age
-                0. No population stratification
-                1. Entire population is not at increased risk (avoid)
-                2. No additional risk factor or HIV
-                3. No additional risk factor, HIV or diabetes
             is_lowquality: Boolean of whether to include detections through the private/low-quality sector
             is_amplification: Boolean of whether to include resistance amplification through treatment default
             is_misassignment: Boolean of whether also to incorporate misclassification of patients with drug-resistance
@@ -95,20 +89,15 @@ class ConsolidatedModel(BaseModel):
 
         # Convert inputs to attributes
         self.n_organ = n_organ
-        if n_organ < 2 and self.inputs['time_variants']['epi_prop_smearpos']['time_variant'] == 'yes':
-            warnings.warn('Warning: time variant smear-positive proportion requested, but ' +
-                          'model is not stratified by organ status. Therefore, time variant smear-positive status ' +
-                          'has been turned off.')
-            self.inputs['time_variants']['epi_prop_smearpos']['time_variant'] = 'no'
-        if n_organ < 2 and self.inputs['time_variants']['epi_prop_smearneg']['time_variant'] == 'yes':
-            warnings.warn('Warning: time variant smear-negative proportion requested, but ' +
-                          'model is not stratified by organ status. Therefore, time variant smear-negative status ' +
-                          'has been turned off.')
-            self.inputs['time_variants']['epi_prop_smearneg']['time_variant'] = 'no'
+        for status in ['pos', 'neg']:
+            if n_organ < 2 and self.inputs['time_variants']['epi_prop_smear' + status]['time_variant'] == 'yes':
+                warnings.warn('Warning: time variant smear-' + status + ' proportion requested, but ' +
+                              'model is not stratified by organ status. Therefore, time variant smear-' + status +
+                              ' status has been turned off.')
+                self.inputs['time_variants']['epi_prop_smear' + status]['time_variant'] = 'no'
 
         # Set strain and comorbidities
         self.n_strain = n_strain
-        self.n_comorbidity = n_comorbidity
 
         # Set time points for integration (model.times now created in base.py)
         self.start_time = inputs['model_constants']['start_time']
@@ -202,16 +191,16 @@ class ConsolidatedModel(BaseModel):
         else:
             self.strains = self.available_strains[:self.n_strain]
 
-        # Select number of risk groups
-        available_comorbidities = [
-            '_nocomorbs',
-            '_hiv',
-            '_diabetes']
-        if self.n_comorbidity == 0:
-            # Need a list of an empty string to be iterable for methods iterating by risk group
-            self.comorbidities = ['']
+        # Read and add requested comorbidities
+        self.comorbidities = []
+        for input in self.inputs['model_constants']:
+            if 'comorbidity' in input:
+                if self.inputs['model_constants'][input] == [True]:
+                    self.comorbidities += [input[11:]]
+        if len(self.comorbidities) == 0:
+            self.comorbidities += ['']
         else:
-            self.comorbidities = available_comorbidities[:self.n_comorbidity]
+            self.comorbidities += ['_nocomorb']
 
         # Age stratification
         self.agegroups, _ = \

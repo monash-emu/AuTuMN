@@ -386,7 +386,7 @@ class FixedParametersReader:
             self.data[str(row[0])] = [None]
 
         # Conditionals for model
-        elif row[0][:3] == 'is_':
+        elif row[0][:3] == 'is_' or row[0][:11] == 'comorbidity':
             self.data[str(row[0])] = [bool(row[1])]
 
         # Age breakpoints (arguably should just be an empty list always)
@@ -462,7 +462,7 @@ class ControlPanelReader(FixedParametersReader):
                     self.data[str(row[0])] += [int(row[i])]
 
         # For optional elaborations
-        elif 'is_' in row[0]:
+        elif 'is_' in row[0] or row[0][:11] == 'comorbidity':
             self.data[str(row[0])] = []
             for i in range(1, len(row)):
                 if not row[i] == '':

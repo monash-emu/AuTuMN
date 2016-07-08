@@ -23,10 +23,8 @@ if not os.path.isdir(out_dir):
 # Note that it takes about one hour to run all of the possible model structures,
 # so perhaps don't do that - and longer if running multiple scenarios
 scenario = None
-is_additional_diagnostics = inputs['model_constants']['is_additional_diagnostics'][0]
 n_organs = inputs['model_constants']['n_organs'][0]
 n_strains = inputs['model_constants']['n_strains'][0]
-n_comorbidities = inputs['model_constants']['n_comorbidities'][0]
 is_quality = inputs['model_constants']['is_lowquality'][0]
 is_amplification = inputs['model_constants']['is_amplification'][0]
 is_misassignment = inputs['model_constants']['is_misassignment'][0]
@@ -40,7 +38,6 @@ else:
     model = autumn.model.ConsolidatedModel(
         n_organs,
         n_strains,
-        n_comorbidities,
         is_quality,  # Low quality care
         is_amplification,  # Amplification
         is_misassignment,  # Misassignment by strain
@@ -48,7 +45,6 @@ else:
         inputs)
     print(str(n_organs) + " organ(s),   " +
           str(n_strains) + " strain(s),   " +
-          str(n_comorbidities) + " comorbidity(ies),   " +
           "Low quality? " + str(is_quality) + ",   " +
           "Amplification? " + str(is_amplification) + ",   " +
           "Misassignment? " + str(is_misassignment) + ".")
@@ -56,7 +52,7 @@ else:
     model.integrate()
 
     # Only make a flow-diagram if the model isn't overly complex
-    if n_organs + n_strains + n_comorbidities <= 5:
+    if n_organs + n_strains <= 5:
         model.make_graph(base + '.workflow')
 
     # INDIVIDUAL COMPARTMENTS

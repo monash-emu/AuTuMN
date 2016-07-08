@@ -37,14 +37,12 @@ class ModelRunner:
         self.inputs = read_and_process_data(self.country, from_test=True)
         n_organs = self.inputs['model_constants']['n_organs'][0]
         n_strains = self.inputs['model_constants']['n_strains'][0]
-        n_comorbidities = self.inputs['model_constants']['n_comorbidities'][0]
         is_quality = self.inputs['model_constants']['is_lowquality'][0]
         is_amplification = self.inputs['model_constants']['is_amplification'][0]
         is_misassignment = self.inputs['model_constants']['is_misassignment'][0]
         self.model = autumn.model.ConsolidatedModel(
             n_organs,
             n_strains,
-            n_comorbidities,
             is_quality,  # Low quality care
             is_amplification,  # Amplification
             is_misassignment,  # Misassignment by strain

@@ -33,7 +33,6 @@ if inputs['model_constants']['output_spreadsheets']:
 # this will be needed.
 n_organs = inputs['model_constants']['n_organs'][0]
 n_strains = inputs['model_constants']['n_strains'][0]
-n_comorbidities = inputs['model_constants']['n_comorbidities'][0]
 is_quality = inputs['model_constants']['is_lowquality'][0]
 is_amplification = inputs['model_constants']['is_amplification'][0]
 is_misassignment = inputs['model_constants']['is_misassignment'][0]
@@ -62,7 +61,6 @@ else:
         models[model_name] = autumn.model.ConsolidatedModel(
             n_organs,
             n_strains,
-            n_comorbidities,
             is_quality,  # Low quality care
             is_amplification,  # Amplification
             is_misassignment,  # Misassignment by strain

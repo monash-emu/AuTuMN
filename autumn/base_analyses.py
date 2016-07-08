@@ -422,7 +422,7 @@ def adapt_params_to_stratification(data_breakpoints,
                                    data_param_vals,
                                    assumed_max_params=100.,
                                    parameter_name='',
-                                   scenario='baseline'):
+                                   scenario=None):
 
     """
     Create a new set of parameters associated to the model stratification given parameter values that are known for

@@ -36,21 +36,5 @@ pluggable API to other system. Applied to Tuberculosis.
 - Automatic calibration
 
 
-## Compartments  
-  
-susceptible_unvac  
-susceptible_vac  
-susceptible_treated  
-latent_early  
-latent_late  
-  
-stratas over   
-    - organ [smearpospulm, smearnegpulm, extrapulm]  
-    - strain [xdr, dr, mdr]  
-    - comorbidity [hiv, diabetes, nocomorb]
-active   
-detect  
-missed  
-treatment_infect  
-treatment_noninfet
+
 

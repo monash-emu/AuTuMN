@@ -378,7 +378,8 @@ class ConsolidatedModel(BaseModel):
                 base_analyses.adapt_params_to_stratification(param_breakpoints,
                                                              model_breakpoints,
                                                              prog_param_vals,
-                                                             parameter_name=param)
+                                                             parameter_name=param,
+                                                             scenario=self.scenario)
             for agegroup in self.agegroups:
                 self.set_parameter(prog_stem + agegroup, prog_age_adjusted_params[agegroup])
 

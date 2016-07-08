@@ -3,7 +3,7 @@
 import pylab
 import numpy
 from matplotlib import pyplot, patches
-import base_analyses
+import tool_kit
 import os
 
 
@@ -523,8 +523,8 @@ def plot_age_populations(model, png=None):
     fig = pyplot.figure()
 
     # Extract data
-    age_soln, age_denominator = base_analyses.sum_over_compartments(model, model.agegroups)
-    age_fraction = base_analyses.get_fraction_soln(age_soln.keys(), age_soln, age_denominator)
+    age_soln, age_denominator = tool_kit.sum_over_compartments(model, model.agegroups)
+    age_fraction = tool_kit.get_fraction_soln(age_soln.keys(), age_soln, age_denominator)
 
     colours = make_default_line_styles(len(model.agegroups), return_all=True)
 
@@ -535,7 +535,7 @@ def plot_age_populations(model, png=None):
         right_xlimit_index, left_xlimit_index \
             = find_truncation_points(model,
                                      model.inputs['model_constants'][plot_left_time])
-        title_time_text = base_analyses.find_title_from_dictionary(plot_left_time)
+        title_time_text = tool_kit.find_title_from_dictionary(plot_left_time)
 
         # Initialise some variables
         times = model.times[left_xlimit_index: right_xlimit_index]
@@ -560,7 +560,7 @@ def plot_age_populations(model, png=None):
             ax = fig.add_subplot(2, 2, 1 + i_time)
             ax.fill_between(times, lower_plot_margin_count, upper_plot_margin_count, facecolors=colours[i][1])
             ax.plot([], [], color=colours[i][1], linewidth=6)
-            legd_text += [base_analyses.turn_strat_into_label(agegroup)]
+            legd_text += [tool_kit.turn_strat_into_label(agegroup)]
 
             # Cosmetic changes at the end
             if i == len(model.agegroups)-1:
@@ -852,8 +852,8 @@ def plot_outputs_by_age(model,
                         tick.label.set_fontsize(get_nice_font_size(subplot_grid))
 
                 # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
-                ax.set_title(base_analyses.capitalise_first_letter(output) + ', '
-                             + base_analyses.turn_strat_into_label(agegroup), fontsize=get_nice_font_size(subplot_grid))
+                ax.set_title(tool_kit.capitalise_first_letter(output) + ', '
+                             + tool_kit.turn_strat_into_label(agegroup), fontsize=get_nice_font_size(subplot_grid))
 
                 # Label the y axis with the smaller text size
                 if i == 0:
@@ -958,8 +958,8 @@ def plot_scaleup_fns(model, functions, png=None,
     if len(functions) > 1:
         plural += 's'
     title = str(country) + ' ' + \
-            base_analyses.find_title_from_dictionary(parameter_type) + \
-            ' parameter' + plural + base_analyses.find_title_from_dictionary(start_time_str)
+            tool_kit.find_title_from_dictionary(parameter_type) + \
+            ' parameter' + plural + tool_kit.find_title_from_dictionary(start_time_str)
     set_axes_props(ax, 'Year', 'Parameter value',
                    title, True, functions)
 
@@ -1004,8 +1004,8 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
     if len(functions) > 1:
         plural += 's'
     title = model.inputs['model_constants']['country'] + ' ' + \
-            base_analyses.find_title_from_dictionary(parameter_type) + \
-            ' parameter' + plural + base_analyses.find_title_from_dictionary(start_time_str)
+            tool_kit.find_title_from_dictionary(parameter_type) + \
+            ' parameter' + plural + tool_kit.find_title_from_dictionary(start_time_str)
     fig.suptitle(title)
 
     # Iterate through functions
@@ -1042,7 +1042,7 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
 
             # Truncate parameter names depending on whether it is a
             # treatment success/death proportion
-            title = base_analyses.find_title_from_dictionary(function)
+            title = tool_kit.find_title_from_dictionary(function)
             ax.set_title(title, fontsize=get_nice_font_size(subplot_grid))
 
             ylims = relax_y_axis(ax)
@@ -1109,10 +1109,10 @@ def plot_comparative_age_parameters(data_strat_list,
     # Get good tick labels from the stratum lists
     data_strat_labels = []
     for i in range(len(data_strat_list)):
-        data_strat_labels += [base_analyses.turn_strat_into_label(data_strat_list[i])]
+        data_strat_labels += [tool_kit.turn_strat_into_label(data_strat_list[i])]
     model_strat_labels = []
     for i in range(len(model_strat_list)):
-        model_strat_labels += [base_analyses.turn_strat_into_label(model_strat_list[i])]
+        model_strat_labels += [tool_kit.turn_strat_into_label(model_strat_list[i])]
 
     # Find a reasonable upper limit for the y-axis
     ymax = max(data_value_list + model_value_list) * 1.2
@@ -1143,7 +1143,7 @@ def plot_comparative_age_parameters(data_strat_list,
     ax.set_xlim(-1. + width, x_positions[-1] + 1)
 
     # Overall title
-    fig.suptitle(base_analyses.capitalise_first_letter(base_analyses.replace_underscore_with_space(parameter_name))
+    fig.suptitle(tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(parameter_name))
                  + ' adjustment',
                  fontsize=15)
 

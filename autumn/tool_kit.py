@@ -1,6 +1,5 @@
 
 import random
-import base_analyses
 from matplotlib import pyplot, patches
 import autumn.plotting
 

@@ -4,7 +4,7 @@ import os
 import glob
 import datetime
 import autumn.model
-import autumn.base_analyses
+import autumn.tool_kit
 import autumn.plotting
 from autumn.spreadsheet import read_and_process_data, read_input_data_xls
 import autumn.write_outputs as w_o
@@ -67,7 +67,7 @@ else:
             scenario,  # Scenario to run
             inputs)
         if n == 0:
-            print(autumn.base_analyses.introduce_model(models, model_name))
+            print(autumn.tool_kit.introduce_model(models, model_name))
 
         if scenario is not None:
             scenario_start_time_index = \
@@ -79,7 +79,7 @@ else:
 
         print('Running model "' + model_name + '".')
         if n == 0:
-            print(autumn.base_analyses.describe_model(models, model_name))
+            print(autumn.tool_kit.describe_model(models, model_name))
         models[model_name].integrate()
 
         if inputs['model_constants']['output_spreadsheets']:
@@ -117,7 +117,7 @@ else:
 
     # Plot over subgroups
     if inputs['model_constants']['output_fractions']:
-        subgroup_solns, subgroup_fractions = autumn.base_analyses.find_fractions(models['baseline'])
+        subgroup_solns, subgroup_fractions = autumn.tool_kit.find_fractions(models['baseline'])
         for i, category in enumerate(subgroup_fractions):
             autumn.plotting.plot_fractions(
                 models['baseline'],

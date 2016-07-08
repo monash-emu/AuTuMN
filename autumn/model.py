@@ -17,7 +17,7 @@ from curve import make_sigmoidal_curve, make_two_step_curve, scale_up_function
 import numpy
 import pylab
 import warnings
-import base_analyses
+import tool_kit
 
 
 def label_intersects_tags(label, tags):
@@ -195,7 +195,7 @@ class ConsolidatedModel(BaseModel):
 
         # Age stratification
         self.agegroups, _ = \
-            base_analyses.get_agegroups_from_breakpoints(self.inputs['model_constants']['age_breakpoints'])
+            tool_kit.get_agegroups_from_breakpoints(self.inputs['model_constants']['age_breakpoints'])
         if len(self.agegroups) > 1:
             self.set_fixed_age_specific_parameters()
 
@@ -365,21 +365,21 @@ class ConsolidatedModel(BaseModel):
             for constant in self.inputs['model_constants']:
                 if param in constant:
                     prog_param_string, prog_stem = \
-                        base_analyses.find_string_from_starting_letters(constant, '_age')
+                        tool_kit.find_string_from_starting_letters(constant, '_age')
                     prog_age_dict[prog_param_string], _ = \
-                        base_analyses.interrogate_age_string(prog_param_string)
+                        tool_kit.interrogate_age_string(prog_param_string)
                     prog_param_vals[prog_param_string] = \
                         self.inputs['model_constants'][constant]
 
-            param_breakpoints = base_analyses.find_age_breakpoints_from_dicts(prog_age_dict)
+            param_breakpoints = tool_kit.find_age_breakpoints_from_dicts(prog_age_dict)
 
             # Find and set age-adjusted parameters
             prog_age_adjusted_params = \
-                base_analyses.adapt_params_to_stratification(param_breakpoints,
-                                                             model_breakpoints,
-                                                             prog_param_vals,
-                                                             parameter_name=param,
-                                                             scenario=self.scenario)
+                tool_kit.adapt_params_to_stratification(param_breakpoints,
+                                                        model_breakpoints,
+                                                        prog_param_vals,
+                                                        parameter_name=param,
+                                                        scenario=self.scenario)
             for agegroup in self.agegroups:
                 self.set_parameter(prog_stem + agegroup, prog_age_adjusted_params[agegroup])
 

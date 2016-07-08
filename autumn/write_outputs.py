@@ -7,7 +7,7 @@ import autumn.plotting
 from autumn.spreadsheet import read_and_process_data, read_input_data_xls
 import numpy as np
 import openpyxl as xl
-import base_analyses
+import tool_kit
 from docx import Document
 
 
@@ -106,7 +106,7 @@ class Project:
         header_cells = table.rows[0].cells
         header_cells[0].text = 'Year'
         for scenario_no, scenario in enumerate(self.scenarios):
-            header_cells[scenario_no+1].text = base_analyses.capitalise_first_letter(scenario)
+            header_cells[scenario_no+1].text = tool_kit.capitalise_first_letter(scenario)
 
         # Find years to write
         years = self.find_years_to_write(indicator, minimum, maximum, step)
@@ -155,7 +155,7 @@ class Project:
         header_cells = table.rows[0].cells
         header_cells[0].text = 'Year'
         for output_no, output in enumerate(outputs):
-            header_cells[output_no+1].text = base_analyses.capitalise_first_letter(output)
+            header_cells[output_no+1].text = tool_kit.capitalise_first_letter(output)
 
         # Find years to write
         years = self.find_years_to_write(outputs[0], minimum, maximum, step)
@@ -205,8 +205,8 @@ class Project:
         for sc in self.scenarios:
             r += 1
             sheet.cell(row=r, column=1).value = \
-                base_analyses.replace_underscore_with_space(
-                    base_analyses.capitalise_first_letter(sc))
+                tool_kit.replace_underscore_with_space(
+                    tool_kit.capitalise_first_letter(sc))
             col = 1
             for y in years:
                 col += 1
@@ -226,8 +226,8 @@ class Project:
         for sc in self.scenarios:
             col += 1
             sheet.cell(row=1, column=col).value = \
-                base_analyses.replace_underscore_with_space(
-                    base_analyses.capitalise_first_letter(sc))
+                tool_kit.replace_underscore_with_space(
+                    tool_kit.capitalise_first_letter(sc))
             row = 1
             for y in years:
                 row += 1

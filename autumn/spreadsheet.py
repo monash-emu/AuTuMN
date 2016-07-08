@@ -382,7 +382,7 @@ class FixedParametersReader:
             self.data[str(row[0])] = str(row[1])
 
         # Don't set scenarios through the default sheet
-        elif row[0] == 'scenarios':
+        elif row[0] == 'scenarios_to_run':
             self.data[str(row[0])] = [None]
 
         # Conditionals for model

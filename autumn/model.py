@@ -984,9 +984,20 @@ class ConsolidatedModel(BaseModel):
                     pass
                 elif 'program_prop_treatment'+outcome+strain in self.params:
                     self.vars['program_prop_treatment' + outcome] = \
-                        self.params['program_prop_treatment' + outcome ]
+                        self.params['program_prop_treatment' + outcome]
                 else:
                     raise NameError('program_prop_treatment' + outcome + strain + ' not found in vars or params')
+
+            # Add some extra treatment success if the treatment support program is active
+            if 'program_prop_treatment_support' in self.vars and self.vars['program_prop_treatment_support'] > 0.:
+                self.vars['program_prop_treatment_success' + strain] \
+                    += (1. - self.vars['program_prop_treatment_success' + strain]) \
+                       * self.params['program_prop_treatment_support_improvement'] \
+                       * self.vars['program_prop_treatment_support']
+                self.vars['program_prop_treatment_death' + strain] \
+                    -= self.vars['program_prop_treatment_death' + strain] \
+                        * self.params['program_prop_treatment_support_improvement'] \
+                        * self.vars['program_prop_treatment_support']
 
             self.vars['program_prop_treatment_default' + strain] \
                 = 1. \

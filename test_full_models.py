@@ -31,13 +31,11 @@ if inputs['model_constants']['output_spreadsheets']:
 # At this point, I'm leaving the model attributes elements that follow as lists,
 # as it may be useful iterate over several model structures in the future, although I'm not sure
 # this will be needed.
-n_organs = inputs['model_constants']['n_organs'][0]
 n_strains = inputs['model_constants']['n_strains'][0]
-is_quality = inputs['model_constants']['is_lowquality'][0]
 is_amplification = inputs['model_constants']['is_amplification'][0]
 is_misassignment = inputs['model_constants']['is_misassignment'][0]
 if (is_misassignment and not is_amplification) \
-        or (n_strains <= 1 and (is_amplification or is_misassignment)):
+        or (inputs['model_constants']['n_strains'][0] <= 1 and (is_amplification or is_misassignment)):
     pass
 else:
     base = os.path.join(out_dir, country + '_baseline')
@@ -59,9 +57,9 @@ else:
             project.scenarios.append(model_name)
 
         models[model_name] = autumn.model.ConsolidatedModel(
-            n_organs,
+            inputs['model_constants']['n_organs'][0],
             n_strains,
-            is_quality,  # Low quality care
+            inputs['model_constants']['is_lowquality'][0],  # Low quality care
             is_amplification,  # Amplification
             is_misassignment,  # Misassignment by strain
             scenario,  # Scenario to run

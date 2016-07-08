@@ -506,7 +506,7 @@ def plot_fractions(model, values, left_xlimit, strain_or_organ, png=None, figure
     save_png(png)
 
 
-def plot_age_populations(model, left_xlimit, png=None):
+def plot_age_populations(model, png=None):
 
     """
     Function to plot population by age group both as raw numbers and as proportions,
@@ -529,15 +529,13 @@ def plot_age_populations(model, left_xlimit, png=None):
     colours = make_default_line_styles(len(model.agegroups), return_all=True)
 
     # Loop over starting from the model start and the specified starting time
-    for start_time in range(2):
+    for i_time, plot_left_time in enumerate(['recent_time', 'start_time']):
 
         # Find starting times
-        if start_time == 0:
-            right_xlimit_index, left_xlimit_index = find_truncation_points(model,
-                                                                           left_xlimit)
-        elif start_time == 1:
-            right_xlimit_index, left_xlimit_index = find_truncation_points(model,
-                                                                           model.inputs['model_constants']['start_time'])
+        right_xlimit_index, left_xlimit_index \
+            = find_truncation_points(model,
+                                     model.inputs['model_constants'][plot_left_time])
+        title_time_text = base_analyses.find_title_from_dictionary(plot_left_time)
 
         # Initialise some variables
         times = model.times[left_xlimit_index: right_xlimit_index]
@@ -559,7 +557,7 @@ def plot_age_populations(model, left_xlimit, png=None):
                 upper_plot_margin_fraction[j] += agegroup_fraction[j]
 
             # Plot
-            ax = fig.add_subplot(2, 2, 1 + start_time)
+            ax = fig.add_subplot(2, 2, 1 + i_time)
             ax.fill_between(times, lower_plot_margin_count, upper_plot_margin_count, facecolors=colours[i][1])
             ax.plot([], [], color=colours[i][1], linewidth=6)
             legd_text += [base_analyses.turn_strat_into_label(agegroup)]
@@ -567,24 +565,28 @@ def plot_age_populations(model, left_xlimit, png=None):
             # Cosmetic changes at the end
             if i == len(model.agegroups)-1:
                 ax.set_ylim((0., max(upper_plot_margin_count) * 1.1))
-                ax.set_title('Total numbers by age group', fontsize=8)
+                ax.set_xlim(int(model.times[left_xlimit_index]),
+                            model.times[right_xlimit_index])
+                ax.set_title('Total numbers' + title_time_text, fontsize=8)
                 xticks = find_reasonable_year_ticks(int(model.times[left_xlimit_index]),
                                                     model.times[right_xlimit_index])
                 ax.set_xticks(xticks)
                 for axis_to_change in [ax.xaxis, ax.yaxis]:
                     for tick in axis_to_change.get_major_ticks():
                         tick.label.set_fontsize(get_nice_font_size([2]))
-                if start_time == 1:
+                if i_time == 1:
                     ax.legend(reversed(ax.lines), reversed(legd_text), loc=2, frameon=False, fontsize=8)
 
             # Plot popuation proportions
-            ax = fig.add_subplot(2, 2, 3 + start_time)
+            ax = fig.add_subplot(2, 2, 3 + i_time)
             ax.fill_between(times, lower_plot_margin_fraction, upper_plot_margin_fraction, facecolors=colours[i][1])
 
             # Cosmetic changes at the end
             if i == len(model.agegroups)-1:
                 ax.set_ylim((0., 1.))
-                ax.set_title('Proportion of population by age group', fontsize=8)
+                ax.set_xlim(int(model.times[left_xlimit_index]),
+                            model.times[right_xlimit_index])
+                ax.set_title('Proportion of population' + title_time_text, fontsize=8)
                 xticks = find_reasonable_year_ticks(int(model.times[left_xlimit_index]),
                                                     model.times[right_xlimit_index])
                 ax.set_xticks(xticks)
@@ -956,8 +958,8 @@ def plot_scaleup_fns(model, functions, png=None,
     if len(functions) > 1:
         plural += 's'
     title = str(country) + ' ' + \
-            find_title_from_dictionary(parameter_type) + \
-            ' parameter' + plural + find_title_from_dictionary(start_time_str)
+            base_analyses.find_title_from_dictionary(parameter_type) + \
+            ' parameter' + plural + base_analyses.find_title_from_dictionary(start_time_str)
     set_axes_props(ax, 'Year', 'Parameter value',
                    title, True, functions)
 
@@ -1002,8 +1004,8 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
     if len(functions) > 1:
         plural += 's'
     title = model.inputs['model_constants']['country'] + ' ' + \
-            find_title_from_dictionary(parameter_type) + \
-            ' parameter' + plural + find_title_from_dictionary(start_time_str)
+            base_analyses.find_title_from_dictionary(parameter_type) + \
+            ' parameter' + plural + base_analyses.find_title_from_dictionary(start_time_str)
     fig.suptitle(title)
 
     # Iterate through functions
@@ -1040,7 +1042,7 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
 
             # Truncate parameter names depending on whether it is a
             # treatment success/death proportion
-            title = find_title_from_dictionary(function)
+            title = base_analyses.find_title_from_dictionary(function)
             ax.set_title(title, fontsize=get_nice_font_size(subplot_grid))
 
             ylims = relax_y_axis(ax)
@@ -1049,79 +1051,6 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
             save_png(png)
 
     fig.suptitle('Scale-up functions')
-
-
-def find_title_from_dictionary(name):
-
-    """
-    Function to store nicer strings for plot titles in a dictionary and extract
-    for scale-up functions (initially, although could be used more widely).
-
-    Args:
-        name: The scale-up function (or other string for conversion)
-
-    Returns:
-        String for title of plots
-
-    """
-
-    dictionary_of_names = {
-        'program_prop_vaccination':
-            'Vaccination coverage',
-        'program_prop_treatment_success':
-            'Treatment success rate',
-        'program_prop_xpert':
-            'GeneXpert coverage',
-        'program_prop_detect':
-            'Case detection rate',
-        'program_prop_treatment_death':
-            'Death rate on treatment',
-        'program_prop_algorithm_sensitivity':
-            'Diagnostic algorithm sensitivity',
-        'program_prop_ipt':
-            'IPT coverage',
-        'econ_program_unitcost_ipt':
-            'IPT unit cost',
-        'program_cost_vaccination':
-            'Vaccination program cost (?dummy)',
-        'econ_program_unitcost_vaccination':
-            'Unit cost of BCG',
-        'econ_program_totalcost_ipt':
-            'IPT program cost',
-        'econ_program_totalcost_vaccination':
-            'Vaccination program cost',
-        'demo_rate_birth':
-            'Birth rate',
-        'demo_life_expectancy':
-            'Life expectancy',
-        'econ_inflation':
-            'Inflation rate',
-        'econ_cpi':
-            'Consumer price index',
-        'program_timeperiod_await_treatment_smearpos':
-            'Smear-positive time to treatment',
-        'program_timeperiod_await_treatment_smearneg':
-            'Smear-negative time to treatment',
-        'program_timeperiod_await_treatment_extrapul':
-            'Extrapulmonary time to treatment',
-        'program_prop':
-            'Programmatic proportion',
-        'econ':
-            'economic',
-        'demo':
-            'demographic',
-        'program_other':
-            'unclassified',
-        'start_time':
-            ' from start of model run',
-        'recent_time':
-            ' over recent years'
-    }
-
-    if name in dictionary_of_names:
-        return dictionary_of_names[name]
-    else:
-        return name
 
 
 def plot_classified_scaleups(model, base):

@@ -76,6 +76,79 @@ def describe_model(models, model_name):
     return returned_string
 
 
+def find_title_from_dictionary(name):
+
+    """
+    Function to store nicer strings for plot titles in a dictionary and extract
+    for scale-up functions (initially, although could be used more widely).
+
+    Args:
+        name: The scale-up function (or other string for conversion)
+
+    Returns:
+        String for title of plots
+
+    """
+
+    dictionary_of_names = {
+        'program_prop_vaccination':
+            'Vaccination coverage',
+        'program_prop_treatment_success':
+            'Treatment success rate',
+        'program_prop_xpert':
+            'GeneXpert coverage',
+        'program_prop_detect':
+            'Case detection rate',
+        'program_prop_treatment_death':
+            'Death rate on treatment',
+        'program_prop_algorithm_sensitivity':
+            'Diagnostic algorithm sensitivity',
+        'program_prop_ipt':
+            'IPT coverage',
+        'econ_program_unitcost_ipt':
+            'IPT unit cost',
+        'program_cost_vaccination':
+            'Vaccination program cost (?dummy)',
+        'econ_program_unitcost_vaccination':
+            'Unit cost of BCG',
+        'econ_program_totalcost_ipt':
+            'IPT program cost',
+        'econ_program_totalcost_vaccination':
+            'Vaccination program cost',
+        'demo_rate_birth':
+            'Birth rate',
+        'demo_life_expectancy':
+            'Life expectancy',
+        'econ_inflation':
+            'Inflation rate',
+        'econ_cpi':
+            'Consumer price index',
+        'program_timeperiod_await_treatment_smearpos':
+            'Smear-positive time to treatment',
+        'program_timeperiod_await_treatment_smearneg':
+            'Smear-negative time to treatment',
+        'program_timeperiod_await_treatment_extrapul':
+            'Extrapulmonary time to treatment',
+        'program_prop':
+            'Programmatic proportion',
+        'econ':
+            'economic',
+        'demo':
+            'demographic',
+        'program_other':
+            'unclassified',
+        'start_time':
+            ' from start of model run',
+        'recent_time':
+            ' over recent years'
+    }
+
+    if name in dictionary_of_names:
+        return dictionary_of_names[name]
+    else:
+        return name
+
+
 def find_string_from_starting_letters(string_to_analyse, string_start_to_find):
 
     # Find the position of the age string

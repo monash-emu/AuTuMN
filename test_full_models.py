@@ -128,7 +128,6 @@ else:
     # Plot proportions of population
     if inputs['model_constants']['output_age_fractions'] and len(models['baseline'].agegroups) > 1:
         autumn.plotting.plot_age_populations(models['baseline'],
-                                             models['baseline'].inputs['model_constants']['recent_time'],
                                              png=base + '_age_fraction.png')
 
     if inputs['model_constants']['output_scaleups']:
@@ -142,5 +141,4 @@ if inputs['model_constants']['output_spreadsheets']:
     project.write_scenario_dict_word('incidence', minimum=2019, maximum=2040, step=5)
 
 print('Time elapsed in running script is ' + str(datetime.datetime.now() - start_realtime))
-
 

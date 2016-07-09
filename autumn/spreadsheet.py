@@ -670,6 +670,39 @@ class StrategyReader(MdrReportReader):
         self.country_to_read = country_to_read
 
 
+class DiabetesReportReader:
+
+    def __init__(self, country_to_read):
+        self.data = {}
+        self.tab_name = 'DM estimates 2015'
+        self.key = 'diabetes'
+        self.parlist = []
+        self.filename = 'xls/diabetes_internationaldiabetesfederation.xlsx'
+        self.start_row = 2
+        self.column_for_keys = 0
+        self.horizontal = True
+        self.dictionary_keys = []
+        self.country_to_read = country_to_read
+
+    def parse_row(self, row):
+
+        # Create the list to turn in to dictionary keys later
+        if row[0] == u'Country/territory':
+            self.dictionary_keys += row
+
+        # Populate when country to read is encountered
+        elif row[0] == self.country_to_read:
+            for i in range(len(self.dictionary_keys)):
+                if self.dictionary_keys[i][:28] == u'Diabetes national prevalence':
+                    self.data[str(self.dictionary_keys[i])] = float(row[i][:4])
+                    print(self.dictionary_keys[i][:28])
+                else:
+                    self.data[str(self.dictionary_keys[i])] = row[i]
+
+    def get_data(self):
+        return self.data
+
+
 ###############################################################
 #  Master scripts
 
@@ -764,6 +797,8 @@ def read_input_data_xls(from_test, sheets_to_read, country=None):
         sheet_readers.append(DefaultEconomicsReader())
     if 'country_economics' in sheets_to_read:
         sheet_readers.append(CountryEconomicsReader(country))
+    if 'diabetes' in sheets_to_read:
+        sheet_readers.append(DiabetesReportReader(country))
 
     # If being run from the directory above
     if from_test:
@@ -777,7 +812,8 @@ def read_and_process_data(country_for_processing,
                           keys_of_sheets_to_read=['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
                                                   'default_parameters', 'tb', 'notifications', 'outcomes',
                                                   'country_constants', 'default_constants', 'country_economics',
-                                                  'default_economics', 'country_programs', 'default_programs'],
+                                                  'default_economics', 'country_programs', 'default_programs',
+                                                  'diabetes'],
                           from_test=False):
 
     """
@@ -951,11 +987,12 @@ if __name__ == "__main__":
 
     # Then import the data
     data = read_and_process_data(country, ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
-                                  'default_constants',
-                                  'tb', 'notifications', 'outcomes',
-                                  'country_constants',
-                                  'country_economics', 'default_economics',
-                                  'country_programs', 'default_programs'],
+                                           'default_constants',
+                                           'tb', 'notifications', 'outcomes',
+                                           'country_constants',
+                                           'country_economics', 'default_economics',
+                                           'country_programs', 'default_programs',
+                                           'diabetes'],
                                  from_test=False)
 
     print("Time elapsed in running script is " + str(datetime.datetime.now() - spreadsheet_start_realtime))

@@ -30,6 +30,8 @@ pluggable API to other system. Applied to Tuberculosis.
     of Romain's object oriented spreadsheet writer
 
 # Bigger outstanding tasks TODO
+- incorporate all the analysis tools, including plotting, report writing, etc. into one
+    big analysis object (I think this is probably the more elegant way to have this coded)
 - GUI
 - Automatic calibration
 - new/retreatment stratification (possibly)

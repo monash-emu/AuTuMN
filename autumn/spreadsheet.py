@@ -620,7 +620,6 @@ class MdrReportReader:
         self.parlist = []
         self.filename = 'xls/mdr_data.xlsx'
         self.start_row = 0
-        self.column_for_keys = 0
         self.horizontal = True
         self.dictionary_keys = []
         self.country_to_read = country_to_read
@@ -694,10 +693,8 @@ class DiabetesReportReader:
         elif row[0] == self.country_to_read:
             for i in range(len(self.dictionary_keys)):
                 if self.dictionary_keys[i][:28] == u'Diabetes national prevalence':
-                    self.data[str(self.dictionary_keys[i])] = float(row[i][:4])
-                    print(self.dictionary_keys[i][:28])
-                else:
-                    self.data[str(self.dictionary_keys[i])] = row[i]
+                    self.data['comorb_prop_diabetes'] \
+                        = float(row[i][:row[i].find('\n')]) / 1E2
 
     def get_data(self):
         return self.data
@@ -859,7 +856,7 @@ def read_and_process_data(country_for_processing,
     # sheet or default sheet hierarchically - such that the control panel is read in
     # preference to the country data in preference to the default back-ups
     data['model_constants'] = data['control_panel']
-    other_sheets_with_constants = ['country_constants', 'default_constants']
+    other_sheets_with_constants = ['diabetes', 'country_constants', 'default_constants']
     for other_sheet in other_sheets_with_constants:
         if other_sheet in data:
             for item in data[other_sheet]:

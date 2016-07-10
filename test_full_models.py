@@ -121,12 +121,23 @@ else:
                 models['baseline'],
                 subgroup_fractions[category],
                 models['baseline'].inputs['model_constants']['recent_time'],
-                'strain', base + '_fraction_' + category + '.png', figure_number=30+i)
+                'strain', base + '_fraction_' + category + '.png',
+                figure_number=30+i)
 
     # Plot proportions of population
-    if inputs['model_constants']['output_age_fractions'] and len(models['baseline'].agegroups) > 1:
-        autumn.plotting.plot_age_populations(models['baseline'],
-                                             png=base + '_age_fraction.png')
+    if inputs['model_constants']['output_comorbidity_fractions']:
+        autumn.plotting.plot_stratified_populations(models['baseline'],
+                                                    png=base + '_comorbidity_fraction.png',
+                                                    age_or_comorbidity='comorbidity',
+                                                    start_time='early_time')
+
+    # Plot proportions of population
+    if inputs['model_constants']['output_age_fractions']:
+        autumn.plotting.plot_stratified_populations(models['baseline'],
+                                                    png=base + '_age_fraction.png',
+                                                    age_or_comorbidity='age',
+                                                    start_time='early_time')
+
 
     if inputs['model_constants']['output_scaleups']:
         autumn.plotting.plot_classified_scaleups(models['baseline'], base)

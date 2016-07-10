@@ -138,8 +138,18 @@ def find_title_from_dictionary(name):
             'unclassified',
         'start_time':
             ' from start of model run',
+        'early_time':
+            ' from start of model run',  # This is a bit of a fib
         'recent_time':
-            ' over recent years'
+            ' over recent years',
+        '_diabetes':
+            'Diabetes',
+        '_nocomorb':
+            'No risk group',
+        'age':
+            'age group',
+        'comorbidity':
+            'risk group'
     }
 
     if name in dictionary_of_names:
@@ -485,6 +495,8 @@ def turn_strat_into_label(stratum):
         label = stratum[4: to_index] + ' to ' + stratum[to_index+2:]
     elif stratum == '':
         label = 'All ages'
+    else:
+        label = ''
 
     return label
 

@@ -722,12 +722,12 @@ class ConsolidatedModel(BaseModel):
 
         # Calculate the birth rates by compartment
         for comorbidity in self.comorbidities:
-            self.vars['births_unvac'] = \
+            self.vars['births_unvac' + comorbidity] = \
                 (1. - prop_vacc) \
                 * rate_birth \
                 * self.vars['population'] \
                 * self.comorb_props[comorbidity]
-            self.vars['births_vac'] = \
+            self.vars['births_vac' + comorbidity] = \
                 prop_vacc \
                 * rate_birth \
                 * self.vars['population'] \
@@ -1106,9 +1106,9 @@ class ConsolidatedModel(BaseModel):
         # Set birth flows (currently evenly distributed between comorbidities)
         for comorbidity in self.comorbidities:
             self.set_var_entry_rate_flow(
-                'susceptible_fully' + comorbidity + self.agegroups[0], 'births_unvac')
+                'susceptible_fully' + comorbidity + self.agegroups[0], 'births_unvac' + comorbidity)
             self.set_var_entry_rate_flow(
-                'susceptible_vac' + comorbidity + self.agegroups[0], 'births_vac')
+                'susceptible_vac' + comorbidity + self.agegroups[0], 'births_vac' + comorbidity)
 
     def set_ageing_flows(self):
 

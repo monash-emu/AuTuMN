@@ -5,6 +5,7 @@ import numpy
 from matplotlib import pyplot, patches
 import tool_kit
 import os
+import warnings
 
 
 """
@@ -506,7 +507,7 @@ def plot_fractions(model, values, left_xlimit, strain_or_organ, png=None, figure
     save_png(png)
 
 
-def plot_age_populations(model, png=None):
+def plot_stratified_populations(model, png=None, age_or_comorbidity='age', start_time='start_time'):
 
     """
     Function to plot population by age group both as raw numbers and as proportions,
@@ -519,89 +520,106 @@ def plot_age_populations(model, png=None):
 
     """
 
-    # Open figure
-    fig = pyplot.figure()
+    if age_or_comorbidity == 'age':
+        stratification = model.agegroups
+    elif age_or_comorbidity == 'comorbidity':
+        stratification = model.comorbidities
+    else:
+        raise NameError('Stratification not permitted')
 
-    # Extract data
-    age_soln, age_denominator = tool_kit.sum_over_compartments(model, model.agegroups)
-    age_fraction = tool_kit.get_fraction_soln(age_soln.keys(), age_soln, age_denominator)
+    if len(stratification) < 2:
+        warnings.warn('No stratification to plot')
+    else:
+        # Open figure
+        fig = pyplot.figure()
 
-    colours = make_default_line_styles(len(model.agegroups), return_all=True)
+        # Extract data
+        stratified_soln, denominator = tool_kit.sum_over_compartments(model, stratification)
+        stratified_fraction = tool_kit.get_fraction_soln(stratified_soln.keys(), stratified_soln, denominator)
 
-    # Loop over starting from the model start and the specified starting time
-    for i_time, plot_left_time in enumerate(['recent_time', 'start_time']):
+        colours = make_default_line_styles(len(stratification), return_all=True)
 
-        # Find starting times
-        right_xlimit_index, left_xlimit_index \
-            = find_truncation_points(model,
-                                     model.inputs['model_constants'][plot_left_time])
-        title_time_text = tool_kit.find_title_from_dictionary(plot_left_time)
+        # Loop over starting from the model start and the specified starting time
+        for i_time, plot_left_time in enumerate(['recent_time', start_time]):
 
-        # Initialise some variables
-        times = model.times[left_xlimit_index: right_xlimit_index]
-        lower_plot_margin_count = numpy.zeros(len(times))
-        upper_plot_margin_count = numpy.zeros(len(times))
-        lower_plot_margin_fraction = numpy.zeros(len(times))
-        upper_plot_margin_fraction = numpy.zeros(len(times))
-        legd_text = []
+            # Find starting times
+            right_xlimit_index, left_xlimit_index \
+                = find_truncation_points(model,
+                                         model.inputs['model_constants'][plot_left_time])
+            title_time_text = tool_kit.find_title_from_dictionary(plot_left_time)
 
-        for i, agegroup in enumerate(model.agegroups):
+            # Initialise some variables
+            times = model.times[left_xlimit_index: right_xlimit_index]
+            lower_plot_margin_count = numpy.zeros(len(times))
+            upper_plot_margin_count = numpy.zeros(len(times))
+            lower_plot_margin_fraction = numpy.zeros(len(times))
+            upper_plot_margin_fraction = numpy.zeros(len(times))
+            legd_text = []
 
-            # Find numbers or fractions in that age group
-            agegroup_count = age_soln[agegroup][left_xlimit_index: right_xlimit_index]
-            agegroup_fraction = age_fraction[agegroup][left_xlimit_index: right_xlimit_index]
+            for i, stratum in enumerate(stratification):
 
-            # Add age group values to the upper plot range for area plot
-            for j in range(len(upper_plot_margin_count)):
-                upper_plot_margin_count[j] += agegroup_count[j]
-                upper_plot_margin_fraction[j] += agegroup_fraction[j]
+                # Find numbers or fractions in that group
+                stratum_count = stratified_soln[stratum][left_xlimit_index: right_xlimit_index]
+                stratum_fraction = stratified_fraction[stratum][left_xlimit_index: right_xlimit_index]
 
-            # Plot
-            ax = fig.add_subplot(2, 2, 1 + i_time)
-            ax.fill_between(times, lower_plot_margin_count, upper_plot_margin_count, facecolors=colours[i][1])
-            ax.plot([], [], color=colours[i][1], linewidth=6)
-            legd_text += [tool_kit.turn_strat_into_label(agegroup)]
+                # Add group values to the upper plot range for area plot
+                for j in range(len(upper_plot_margin_count)):
+                    upper_plot_margin_count[j] += stratum_count[j]
+                    upper_plot_margin_fraction[j] += stratum_fraction[j]
 
-            # Cosmetic changes at the end
-            if i == len(model.agegroups)-1:
-                ax.set_ylim((0., max(upper_plot_margin_count) * 1.1))
-                ax.set_xlim(int(model.times[left_xlimit_index]),
-                            model.times[right_xlimit_index])
-                ax.set_title('Total numbers' + title_time_text, fontsize=8)
-                xticks = find_reasonable_year_ticks(int(model.times[left_xlimit_index]),
-                                                    model.times[right_xlimit_index])
-                ax.set_xticks(xticks)
-                for axis_to_change in [ax.xaxis, ax.yaxis]:
-                    for tick in axis_to_change.get_major_ticks():
-                        tick.label.set_fontsize(get_nice_font_size([2]))
-                if i_time == 1:
-                    ax.legend(reversed(ax.lines), reversed(legd_text), loc=2, frameon=False, fontsize=8)
+                # Plot
+                ax = fig.add_subplot(2, 2, 1 + i_time)
+                ax.fill_between(times, lower_plot_margin_count, upper_plot_margin_count, facecolors=colours[i][1])
 
-            # Plot popuation proportions
-            ax = fig.add_subplot(2, 2, 3 + i_time)
-            ax.fill_between(times, lower_plot_margin_fraction, upper_plot_margin_fraction, facecolors=colours[i][1])
+                # Create proxy for legend
+                ax.plot([], [], color=colours[i][1], linewidth=6)
+                if age_or_comorbidity == 'age':
+                    legd_text += [tool_kit.turn_strat_into_label(stratum)]
+                elif age_or_comorbidity == 'comorbidity':
+                    print(tool_kit.find_title_from_dictionary(stratum))
+                    legd_text += [tool_kit.find_title_from_dictionary(stratum)]
 
-            # Cosmetic changes at the end
-            if i == len(model.agegroups)-1:
-                ax.set_ylim((0., 1.))
-                ax.set_xlim(int(model.times[left_xlimit_index]),
-                            model.times[right_xlimit_index])
-                ax.set_title('Proportion of population' + title_time_text, fontsize=8)
-                xticks = find_reasonable_year_ticks(int(model.times[left_xlimit_index]),
-                                                    model.times[right_xlimit_index])
-                ax.set_xticks(xticks)
-                for axis_to_change in [ax.xaxis, ax.yaxis]:
-                    for tick in axis_to_change.get_major_ticks():
-                        tick.label.set_fontsize(get_nice_font_size([2]))
+                # Cosmetic changes at the end
+                if i == len(stratification)-1:
+                    ax.set_ylim((0., max(upper_plot_margin_count) * 1.1))
+                    ax.set_xlim(int(model.times[left_xlimit_index]),
+                                model.times[right_xlimit_index])
+                    ax.set_title('Total numbers' + title_time_text, fontsize=8)
+                    xticks = find_reasonable_year_ticks(int(model.times[left_xlimit_index]),
+                                                        model.times[right_xlimit_index])
+                    ax.set_xticks(xticks)
+                    for axis_to_change in [ax.xaxis, ax.yaxis]:
+                        for tick in axis_to_change.get_major_ticks():
+                            tick.label.set_fontsize(get_nice_font_size([2]))
+                    if i_time == 1:
+                        ax.legend(reversed(ax.lines), reversed(legd_text), loc=2, frameon=False, fontsize=8)
 
-            # Add age group values to the lower plot range for next iteration
-            for j in range(len(lower_plot_margin_count)):
-                lower_plot_margin_count[j] += agegroup_count[j]
-                lower_plot_margin_fraction[j] += agegroup_fraction[j]
+                # Plot popuation proportions
+                ax = fig.add_subplot(2, 2, 3 + i_time)
+                ax.fill_between(times, lower_plot_margin_fraction, upper_plot_margin_fraction, facecolors=colours[i][1])
 
-    # Finish up
-    fig.suptitle('Population by age group', fontsize=13)
-    save_png(png)
+                # Cosmetic changes at the end
+                if i == len(stratification)-1:
+                    ax.set_ylim((0., 1.))
+                    ax.set_xlim(int(model.times[left_xlimit_index]),
+                                model.times[right_xlimit_index])
+                    ax.set_title('Proportion of population' + title_time_text, fontsize=8)
+                    xticks = find_reasonable_year_ticks(int(model.times[left_xlimit_index]),
+                                                        model.times[right_xlimit_index])
+                    ax.set_xticks(xticks)
+                    for axis_to_change in [ax.xaxis, ax.yaxis]:
+                        for tick in axis_to_change.get_major_ticks():
+                            tick.label.set_fontsize(get_nice_font_size([2]))
+
+                # Add group values to the lower plot range for next iteration
+                for j in range(len(lower_plot_margin_count)):
+                    lower_plot_margin_count[j] += stratum_count[j]
+                    lower_plot_margin_fraction[j] += stratum_fraction[j]
+
+        # Finish up
+        fig.suptitle('Population by ' + tool_kit.find_title_from_dictionary(age_or_comorbidity),
+                     fontsize=13)
+        save_png(png)
 
 
 def plot_outputs_against_gtb(model,

@@ -49,7 +49,7 @@ start_coverage = 0.0001
 end_coverage = params_default["saturation"]
 delta_coverage = 0.001
 plot_costcurve = True
-method = 1
+method = 2
 discount_rate = 0.03
 year_index = 2014 # To plot/use cost function of a particular year. 1995 is just an example
 year_current = inputs['model_constants']['current_time'] # Reference year for inflation calculation (2015)
@@ -177,6 +177,7 @@ def cost_scaleup_fns(model,
                         popsize_unvac.append(pop_unvac)
                         pop = pop_vac + pop_unvac
                         popsize.append(pop)
+                        print(len(popsize))
                         cost_uninflated.append(get_cost_from_coverage(params_default['saturation'],
                                                                     coverage[int(i)], #Add [year_pos] to get cost-coverage curve at that year
                                                                     funding_scaleup[int(i)], #Add [year_pos] to get cost-coverage curve at that year
@@ -588,8 +589,8 @@ def cost_scaleup_fns(model,
 
             for i in numpy.arange(0, len(x_vals), 1):
                 all_flows = model.var_array[int(i)]
-                program_rate_detect = all_flows[43]
-                program_rate_missed = all_flows[31]
+                program_rate_detect = all_flows[47]
+                program_rate_missed = all_flows[34]
                 presenting_for_care_rate = program_rate_detect + program_rate_missed
                 #active_all = active_extrapul[int(i)] + active_smearneg[int(i)] + active_smearpos[int(i)]
                 #active_all_array.append(active_all)

@@ -7,7 +7,7 @@ import scipy.optimize
 saturation = 0.7
 unit_cost = 15.
 popsize = 1.e3
-c_reflection_cost = 0
+c_reflection_cost = 20000
 alpha = 1.
 init_cost = 1.e4
 
@@ -26,7 +26,7 @@ def make_coverage_steps(start_coverage, end_coverage, delta_coverage):
     return steps
 coverage_values = make_coverage_steps(start_coverage, end_coverage, delta_coverage)
 
-c_reflection_cost_equal_initcost = True
+c_reflection_cost_equal_initcost = False
 
 
 if c_reflection_cost_equal_initcost is True:
@@ -56,6 +56,7 @@ else:
         b = (2**(alpha + 1)) / (alpha * (saturation - a) * unit_cost * popsize)
 
         result = a - saturation/(1-(1 + math.exp(-b*(init_cost-c_reflection_cost)))**alpha)
+        print(result)
         return(result)
     a = scipy.optimize.broyden1(F, 0., f_tol = 1e-25)
     b_growth_rate = (2**(alpha + 1)) / (alpha * (saturation - a) * unit_cost * popsize)

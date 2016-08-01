@@ -249,51 +249,61 @@ class Inputs:
                         self.time_variants['epi_prop' + outcome][year] \
                             = self.derived_data['prop_new' + report_outcome][year]
 
-    # ********************************************
-
     def add_resistant_strain_outcomes(self):
 
-        # Treatment outcomes
-        # The aim is to have data for success and death, as default can be derived from these
-        # in the model module.
+        """
+        Finds treatment outcomes for the resistant strains (i.e. MDR and XDR-TB).
+        As for DS-TB, no need to find default proportion, as it is equal to one minus success minus death.
+        **** Inappropriate outcomes are currently set to those for XDR-TB - this is temporary ****
+        """
 
-        # Calculate proportions of each outcome for MDR and XDR-TB
-        # Outcomes for MDR and XDR in the GTB data
+        # Calculate proportions of each outcome for MDR and XDR-TB from GTB
         for strain in ['mdr', 'xdr']:
             self.derived_data.update(
                 self.calculate_proportion_dict(self.original_data['outcomes'],
                                                [strain + '_succ', strain + '_fail', strain + '_died', strain + '_lost'],
                                                percent=True))
 
-        # Populate MDR and XDR data from outcomes dictionary into program dictionary
+            # Populate MDR and XDR data from outcomes dictionary into time variants where requested and not entered
             if self.time_variants['program_prop_treatment_success_' + strain]['load_data'] == 'yes':
                 for year in self.derived_data['prop_' + strain + '_succ']:
                     if year not in self.time_variants['program_prop_treatment_success_' + strain]:
                         self.time_variants['program_prop_treatment_success_' + strain][year] \
                             = self.derived_data['prop_' + strain + '_succ'][year]
 
-        # Probably temporary code to assign the same treatment outcomes to XDR-TB as for inappropriate
+        # Temporarily assign the same treatment outcomes to XDR-TB as for inappropriate
         for outcome in ['_success', '_death']:
             self.time_variants['program_prop_treatment' + outcome + '_inappropriate'] \
                 = copy.copy(self.time_variants['program_prop_treatment' + outcome + '_xdr'])
 
     def tidy_timevariants(self):
 
-        # Final rounds of tidying programmatic data
+        """
+        Perform final rounds of tidying of time-variants
+        """
+
+        # Looping over each time variant
         for program in self.time_variants:
 
             # Add zero at starting time for model run to all programs that are proportions
             if 'program_prop' in program:
                 self.time_variants[program][int(self.model_constants['start_time'])] = 0.
 
-            # Remove the load_data keys, as they have now been used
+            # Remove the load_data keys, as they have been used and are now redundant
             self.time_variants[program] \
                 = self.remove_specific_key(self.time_variants[program], 'load_data')
 
             # Remove dictionary keys for which values are nan
-            self.time_variants[program] = self.remove_nans(self.time_variants[program])
+            self.time_variants[program] \
+                = self.remove_nans(self.time_variants[program])
 
     def add_economic_timevariants(self):
+
+        """
+        Method that probably needs some work and Tan should feel free to change.
+        Currently loads default and country-specific economic variables, with the country-specific ones
+        over-riding the defaults where present (for consistency with epidemiological approach).
+        """
 
         # Add all the loaded country-specific economic variables to the time-variants dictionary
         if 'country_economics' in self.original_data:
@@ -310,6 +320,19 @@ class Inputs:
 
     def calculate_proportion_dict(self, data, indices, percent=False):
 
+        """
+        General method to calculate proportions from absolute values provided as dictionaries.
+
+        Args:
+            data: Dicionary containing the absolute values.
+            indices: The keys of data from which proportions are to be calculated (generally a list of strings).
+            percent: Boolean describing whether the method should return the output as a percent or proportion.
+
+        Returns:
+            proportions: A dictionary of the resulting proportions.
+        """
+
+        # Calculate multiplier for percentages if requested, otherwise leave as one
         if percent:
             multiplier = 1E2
         else:
@@ -321,7 +344,7 @@ class Inputs:
             lists_of_years += [data[indices[i]].keys()]
         common_years = self.find_common_elements_multiple_lists(lists_of_years)
 
-        # Calculate the denominator
+        # Calculate the denominator by summing the values for which proportions have been requested
         denominator = {}
         for i in common_years:
             for j in indices:
@@ -330,7 +353,7 @@ class Inputs:
                 else:
                     denominator[i] += data[j][i]
 
-        # Calculate the prop
+        # Calculate the proportions
         proportions = {}
         for j in indices:
             proportions['prop_' + j] = {}
@@ -345,7 +368,7 @@ class Inputs:
     def find_common_elements_multiple_lists(self, list_of_lists):
 
         """
-        Simple function to find the common elements of any number of lists
+        Simple method to find the common elements of any number of lists
 
         Args:
             list_of_lists: A list whose elements are all the lists we want to find the
@@ -363,7 +386,7 @@ class Inputs:
     def find_common_elements(self, list_1, list_2):
 
         """
-        Simple function to find the intersection of two lists
+        Simple method to find the intersection of two lists
 
         Args:
             list_1 and list_2: The two lists
@@ -382,13 +405,13 @@ class Inputs:
 
         """
         Remove a specific named key from a dictionary
+
         Args:
             dictionary: The dictionary to have a key removed
             key: The key to be removed
 
         Returns:
             dictionary: The dictionary with the key removed
-
         """
 
         if key in dictionary:
@@ -396,28 +419,27 @@ class Inputs:
 
         return dictionary
 
-    def remove_nans(self, program):
+    def remove_nans(self, dictionary):
 
         """
         Takes a dictionary and removes all of the elements for which the value is nan
 
         Args:
-            program: Should typically be the dictionary of programmatic values, usually
+            dictionary: Should typically be the dictionary of programmatic values, usually
                         with time in years as the key.
 
         Returns:
-            program: The dictionary with the nans removed.
-
+            dictionary: The dictionary with the nans removed.
         """
 
         nan_indices = []
-        for i in program:
-            if type(program[i]) == float and numpy.isnan(program[i]):
+        for i in dictionary:
+            if type(dictionary[i]) == float and numpy.isnan(dictionary[i]):
                 nan_indices += [i]
         for i in nan_indices:
-            del program[i]
+            del dictionary[i]
 
-        return program
+        return dictionary
 
 
 if __name__ == '__main__':

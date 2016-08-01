@@ -6,7 +6,7 @@ import datetime
 import autumn.model
 import autumn.tool_kit
 import autumn.plotting
-from autumn.spreadsheet import read_and_process_data, read_input_data_xls
+from autumn.spreadsheet import read_input_data_xls
 import autumn.write_outputs as w_o
 import autumn.data_processing
 
@@ -15,7 +15,6 @@ start_realtime = datetime.datetime.now()
 
 # Import the data
 country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
-inputs = read_and_process_data(country, from_test=True)
 
 inputs_object = autumn.data_processing.Inputs(True)
 inputs_object.read_and_load_data()

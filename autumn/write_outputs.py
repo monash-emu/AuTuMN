@@ -4,7 +4,7 @@ import glob
 import datetime
 import autumn.model
 import autumn.plotting
-from autumn.spreadsheet import read_and_process_data, read_input_data_xls
+from autumn.spreadsheet import read_input_data_xls
 import numpy as np
 import openpyxl as xl
 import tool_kit

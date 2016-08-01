@@ -90,19 +90,19 @@ class ConsolidatedModel(BaseModel):
         # Convert inputs to attributes
         self.n_organ = n_organ
         for status in ['pos', 'neg']:
-            if n_organ < 2 and self.inputs['time_variants']['epi_prop_smear' + status]['time_variant'] == 'yes':
+            if n_organ < 2 and self.inputs.time_variants['epi_prop_smear' + status]['time_variant'] == 'yes':
                 warnings.warn('Warning: time variant smear-' + status + ' proportion requested, but ' +
                               'model is not stratified by organ status. Therefore, time variant smear-' + status +
                               ' status has been turned off.')
-                self.inputs['time_variants']['epi_prop_smear' + status]['time_variant'] = 'no'
+                self.inputs.time_variants['epi_prop_smear' + status]['time_variant'] = 'no'
 
         # Set strain and comorbidities
         self.n_strain = n_strain
 
         # Set time points for integration (model.times now created in base.py)
-        self.start_time = inputs['model_constants']['start_time']
-        self.end_time = inputs['model_constants']['scenario_end_time']
-        self.time_step = inputs['model_constants']['time_step']
+        self.start_time = inputs.model_constants['start_time']
+        self.end_time = inputs.model_constants['scenario_end_time']
+        self.time_step = inputs.model_constants['time_step']
 
         # Set Boolean conditionals for model structure and additional diagnostics
         self.is_lowquality = is_lowquality
@@ -195,15 +195,15 @@ class ConsolidatedModel(BaseModel):
 
         # Age stratification
         self.agegroups, _ = \
-            tool_kit.get_agegroups_from_breakpoints(self.inputs['model_constants']['age_breakpoints'])
+            tool_kit.get_agegroups_from_breakpoints(self.inputs.model_constants['age_breakpoints'])
         if len(self.agegroups) > 1:
             self.set_fixed_age_specific_parameters()
 
         self.initial_compartments = {}
         for compartment in self.compartment_types:
-            if compartment in self.inputs['model_constants']:
+            if compartment in self.inputs.model_constants:
                 self.initial_compartments[compartment] \
-                    = self.inputs['model_constants'][compartment]
+                    = self.inputs.model_constants[compartment]
 
     def define_comorbidities(self):
 
@@ -213,9 +213,9 @@ class ConsolidatedModel(BaseModel):
 
         # Create list of comorbidity names
         self.comorbidities = []
-        for input in self.inputs['model_constants']:
+        for input in self.inputs.model_constants:
             if 'comorbidity' in input:
-                if self.inputs['model_constants'][input] == [True]:
+                if self.inputs.model_constants[input] == [True]:
                     self.comorbidities += [input[11:]]
         if len(self.comorbidities) == 0:
             self.comorbidities += ['']
@@ -227,10 +227,10 @@ class ConsolidatedModel(BaseModel):
         remainder = 1.
         for comorbidity in self.comorbidities:
             if comorbidity != '' and comorbidity != '_nocomorb':
-                assert self.inputs['model_constants']['comorb_prop' + comorbidity] > 0., \
+                assert self.inputs.model_constants['comorb_prop' + comorbidity] > 0., \
                     'Please ensure all comorbidity sub-groups are greater than 0% for the model to run'
-                self.comorb_props[comorbidity] = self.inputs['model_constants']['comorb_prop' + comorbidity]
-                remainder -= self.inputs['model_constants']['comorb_prop' + comorbidity]
+                self.comorb_props[comorbidity] = self.inputs.model_constants['comorb_prop' + comorbidity]
+                remainder -= self.inputs.model_constants['comorb_prop' + comorbidity]
 
         # Calculate remainder of population to have no comorbidities
         assert remainder > 0., NameError('Total of the proportions of risk groups is greater than 1.')
@@ -338,7 +338,7 @@ class ConsolidatedModel(BaseModel):
     def set_fixed_parameters(self):
 
         # Set parameters from the data object
-        for key, value in self.inputs['model_constants'].items():
+        for key, value in self.inputs.model_constants.items():
             if type(value) == float:
                 self.set_parameter(key, value)
 
@@ -355,21 +355,21 @@ class ConsolidatedModel(BaseModel):
 
         # Extract age breakpoints in appropriate form for module
         model_breakpoints = []
-        for i in self.inputs['model_constants']['age_breakpoints']:
+        for i in self.inputs.model_constants['age_breakpoints']:
             model_breakpoints += [float(i)]
 
         for param in ['early_progression_age', 'late_progression_age', 'tb_multiplier_child_infectiousness_age']:
             # Extract age-stratified parameters in the appropriate form
             prog_param_vals = {}
             prog_age_dict = {}
-            for constant in self.inputs['model_constants']:
+            for constant in self.inputs.model_constants:
                 if param in constant:
                     prog_param_string, prog_stem = \
                         tool_kit.find_string_from_starting_letters(constant, '_age')
                     prog_age_dict[prog_param_string], _ = \
                         tool_kit.interrogate_age_string(prog_param_string)
                     prog_param_vals[prog_param_string] = \
-                        self.inputs['model_constants'][constant]
+                        self.inputs.model_constants[constant]
 
             param_breakpoints = tool_kit.find_age_breakpoints_from_dicts(prog_age_dict)
 
@@ -503,7 +503,7 @@ class ConsolidatedModel(BaseModel):
 
         # Work out which time-variant parameters are not relevant to this model structure
         irrelevant_time_variants = []
-        for time_variant in self.inputs['time_variants'].keys():
+        for time_variant in self.inputs.time_variants.keys():
             for strain in self.available_strains:
                 if strain not in self.strains and strain in time_variant and '_dst' not in time_variant:
                     irrelevant_time_variants += [time_variant]
@@ -540,29 +540,29 @@ class ConsolidatedModel(BaseModel):
         irrelevant_time_variants = self.find_irrelevant_time_variants()
 
         # Find the programs that are relevant and load them to the scaleup_data attribute
-        for time_variant in self.inputs['time_variants']:
+        for time_variant in self.inputs.time_variants:
             if time_variant not in irrelevant_time_variants:
                 self.scaleup_data[str(time_variant)] = {}
-                for i in self.inputs['time_variants'][time_variant]:
+                for i in self.inputs.time_variants[time_variant]:
                     if i == 'time_variant':
-                        self.scaleup_data[str(time_variant)]['time_variant'] = self.inputs['time_variants'][time_variant][i]
+                        self.scaleup_data[str(time_variant)]['time_variant'] = self.inputs.time_variants[time_variant][i]
                     # For the smoothness parameter
                     elif i == 'smoothness':
-                        self.scaleup_data[str(time_variant)]['smoothness'] = self.inputs['time_variants'][time_variant][i]
+                        self.scaleup_data[str(time_variant)]['smoothness'] = self.inputs.time_variants[time_variant][i]
                     # For years with data percentages
                     elif type(i) == int and 'program_prop_' in time_variant:
-                        self.scaleup_data[str(time_variant)][i] = self.inputs['time_variants'][time_variant][i] / 1E2
+                        self.scaleup_data[str(time_variant)][i] = self.inputs.time_variants[time_variant][i] / 1E2
                     # For years with data not percentages
                     elif type(i) == int:
-                        self.scaleup_data[str(time_variant)][i] = self.inputs['time_variants'][time_variant][i]
+                        self.scaleup_data[str(time_variant)][i] = self.inputs.time_variants[time_variant][i]
                     # For scenarios with data percentages
                     elif type(i) == unicode and 'scenario_' + str(self.scenario) in i and 'prop_' in time_variant:
                         self.scaleup_data[str(time_variant)]['scenario'] = \
-                            self.inputs['time_variants'][time_variant]['scenario_' + str(self.scenario)] / 1E2
+                            self.inputs.time_variants[time_variant]['scenario_' + str(self.scenario)] / 1E2
                     # For scenarios with data not percentages
                     elif type(i) == unicode and 'scenario_' + str(self.scenario) in i:
                         self.scaleup_data[str(time_variant)]['scenario'] = \
-                            self.inputs['time_variants'][time_variant]['scenario_' + str(self.scenario)]
+                            self.inputs.time_variants[time_variant]['scenario_' + str(self.scenario)]
 
     def find_amplification_data(self):
 
@@ -595,7 +595,7 @@ class ConsolidatedModel(BaseModel):
                 if 'smoothness' in self.scaleup_data[param]:
                     smoothness = self.scaleup_data[param].pop('smoothness')
                 else:
-                    smoothness = self.inputs['model_constants']['default_smoothness']
+                    smoothness = self.inputs.model_constants['default_smoothness']
 
                 # If the parameter is being modified for the scenario being run
                 if 'scenario' in self.scaleup_data[param]:
@@ -614,7 +614,7 @@ class ConsolidatedModel(BaseModel):
                 self.set_scaleup_fn(param,
                                     scale_up_function(self.scaleup_data[param].keys(),
                                                       self.scaleup_data[param].values(),
-                                                      self.inputs['model_constants']['fitting_method'],
+                                                      self.inputs.model_constants['fitting_method'],
                                                       smoothness,
                                                       bound_low=0.,
                                                       bound_up=upper_bound,
@@ -1046,10 +1046,10 @@ class ConsolidatedModel(BaseModel):
         # This parameter is the number of persons effectively treated with IPT for each
         # patient started on treatment for active disease.
         prevented_cases_per_patient_starting_treatment = prop_ipt \
-                                                         * (self.inputs['model_constants']['demo_household_size'] - 1.) \
-                                                         * self.inputs['model_constants']['tb_prop_contacts_infected'] \
-                                                         * self.inputs['model_constants']['tb_prop_ltbi_test_sensitivity'] \
-                                                         * self.inputs['model_constants']['tb_prop_ipt_effectiveness']
+                                                         * (self.inputs.model_constants['demo_household_size'] - 1.) \
+                                                         * self.inputs.model_constants['tb_prop_contacts_infected'] \
+                                                         * self.inputs.model_constants['tb_prop_ltbi_test_sensitivity'] \
+                                                         * self.inputs.model_constants['tb_prop_ipt_effectiveness']
         self.vars['ipt_commencements'] = 0.
         for strain in self.strains:
             for agegroup in self.agegroups:
@@ -1567,11 +1567,11 @@ class ConsolidatedModel(BaseModel):
     def integrate(self):
 
         min_dt = 0.05
-        if self.inputs['model_constants']['integration'] == 'explicit':
+        if self.inputs.model_constants['integration'] == 'explicit':
             self.integrate_explicit(min_dt)
-        elif self.inputs['model_constants']['integration'] == 'scipy':
+        elif self.inputs.model_constants['integration'] == 'scipy':
             self.integrate_scipy(min_dt)
-        elif self.inputs['model_constants']['integration'] == 'runge_kutta':
+        elif self.inputs.model_constants['integration'] == 'runge_kutta':
             self.integrate_runge_kutta(min_dt)
 
 

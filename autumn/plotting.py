@@ -667,13 +667,13 @@ def plot_outputs_against_gtb(model,
     plotting_data = []
     for i in range(len(indices)):
         plotting_data += [{}]
-        for j in model.inputs['tb']:
+        for j in model.inputs.original_data['tb']:
             if indices[i] in j and '_lo' in j:
-                plotting_data[i]['lower_limit'] = model.inputs['tb'][j]
+                plotting_data[i]['lower_limit'] = model.inputs.original_data['tb'][j]
             elif indices[i] in j and '_hi' in j:
-                plotting_data[i]['upper_limit'] = model.inputs['tb'][j]
+                plotting_data[i]['upper_limit'] = model.inputs.original_data['tb'][j]
             elif indices[i] in j:
-                plotting_data[i]['point_estimate'] = model.inputs['tb'][j]
+                plotting_data[i]['point_estimate'] = model.inputs.original_data['tb'][j]
 
     # Truncate data to what you want to look at (rather than going back to the dawn of time)
     right_xlimit_index, left_xlimit_index = find_truncation_points(model, start_time)
@@ -681,7 +681,7 @@ def plot_outputs_against_gtb(model,
     subplot_grid = find_subplot_numbers(len(labels))
 
     # Time to plot until
-    end_time = model.inputs['model_constants'][end_time_str]
+    end_time = model.inputs.model_constants[end_time_str]
 
     # Not sure whether we have to specify a figure number
     fig = pyplot.figure(figure_number)
@@ -691,10 +691,10 @@ def plot_outputs_against_gtb(model,
 
     # Truncate notification data to years of interest
     notification_data = {}
-    for i in model.inputs['notifications']['c_newinc']:
+    for i in model.inputs.original_data['notifications']['c_newinc']:
         if i > start_time:
             notification_data[i] = \
-                model.inputs['notifications']['c_newinc'][i]
+                model.inputs.original_data['notifications']['c_newinc'][i]
 
     for i, outcome in enumerate(labels):
 
@@ -827,7 +827,7 @@ def plot_outputs_by_age(model,
     subplot_grid = find_subplot_numbers(len(model.agegroups) * 2 + 1)
 
     # Time to plot until
-    end_time = model.inputs['model_constants'][end_time_str]
+    end_time = model.inputs.model_constants[end_time_str]
 
     # Not sure whether we have to specify a figure number
     fig = pyplot.figure(figure_number)
@@ -957,10 +957,10 @@ def plot_scaleup_fns(model, functions, png=None,
 
     line_styles = make_default_line_styles(len(functions), True)
     if start_time_str == 'recent_time':
-        start_time = model.inputs['model_constants'][start_time_str]
+        start_time = model.inputs.model_constants[start_time_str]
     else:
-        start_time = model.inputs['model_constants'][start_time_str]
-    end_time = model.inputs['model_constants'][end_time_str]
+        start_time = model.inputs.model_constants[start_time_str]
+    end_time = model.inputs.model_constants[end_time_str]
     x_vals = numpy.linspace(start_time, end_time, 1E3)
 
     pyplot.figure(figure_number)
@@ -1008,10 +1008,10 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
 
     # Set x-values
     if start_time_str == 'recent_time':
-        start_time = model.inputs['model_constants'][start_time_str]
+        start_time = model.inputs.model_constants[start_time_str]
     else:
-        start_time = model.inputs['model_constants'][start_time_str]
-    end_time = model.inputs['model_constants'][end_time_str]
+        start_time = model.inputs.model_constants[start_time_str]
+    end_time = model.inputs.model_constants[end_time_str]
     x_vals = numpy.linspace(start_time, end_time, 1E3)
 
     # Initialise figure
@@ -1021,7 +1021,7 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
     plural = ''
     if len(functions) > 1:
         plural += 's'
-    title = model.inputs['model_constants']['country'] + ' ' + \
+    title = model.inputs.model_constants['country'] + ' ' + \
             tool_kit.find_title_from_dictionary(parameter_type) + \
             ' parameter' + plural + tool_kit.find_title_from_dictionary(start_time_str)
     fig.suptitle(title)

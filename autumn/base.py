@@ -181,9 +181,9 @@ class BaseModel:
         # Now works if the death rate is selected to be constant or time-variant
         self.vars['rate_death'] = 0.
         for label in self.labels:
-            if self.inputs['time_variants']['demo_life_expectancy'][u'time_variant'] == u'no':
+            if self.inputs.time_variants['demo_life_expectancy'][u'time_variant'] == u'no':
                 val = self.compartments[label] / self.params['demo_life_expectancy']
-            elif self.inputs['time_variants']['demo_life_expectancy'][u'time_variant'] == u'yes':
+            elif self.inputs.time_variants['demo_life_expectancy'][u'time_variant'] == u'yes':
                 val = self.compartments[label] / self.vars['demo_life_expectancy']
             self.flows[label] -= val
             self.vars['rate_death'] += val

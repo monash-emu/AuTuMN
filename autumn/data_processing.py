@@ -2,6 +2,7 @@
 import autumn.spreadsheet as spreadsheet
 import copy
 import numpy
+import warnings
 
 class Inputs:
 
@@ -39,6 +40,9 @@ class Inputs:
         self.add_resistant_strain_outcomes()
         self.tidy_timevariants()
         self.add_economic_timevariants()
+
+        # Perform checks
+        self.checks()
 
     def determine_country(self):
 
@@ -307,6 +311,26 @@ class Inputs:
             if economic_var not in self.time_variants:
                 self.time_variants[economic_var] \
                     = self.original_data['default_economics'][economic_var]
+
+    def checks(self):
+
+        """
+        Perform checks for data consistency
+        """
+
+        for status in ['pos', 'neg']:
+
+            # If no organ stratification is requested, but time variant organ status requested
+            if max(self.model_constants['n_organs']) < 2 \
+                    and self.time_variants['epi_prop_smear' + status]['time_variant'] == 'yes':
+
+                # Warn about the problem
+                warnings.warn('Warning: time variant smear-' + status + ' proportion requested, but ' +
+                              'model is not stratified by organ status. Therefore, time variant smear-' + status +
+                              ' status has been turned off.')
+
+                # Make the proportions constant instead
+                self.time_variants['epi_prop_smear' + status]['time_variant'] = 'no'
 
     #############################################################################
     #  General methods for use by the other methods above

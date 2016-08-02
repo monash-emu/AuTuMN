@@ -89,12 +89,6 @@ class ConsolidatedModel(BaseModel):
 
         # Convert inputs to attributes
         self.n_organ = n_organ
-        for status in ['pos', 'neg']:
-            if n_organ < 2 and self.inputs.time_variants['epi_prop_smear' + status]['time_variant'] == 'yes':
-                warnings.warn('Warning: time variant smear-' + status + ' proportion requested, but ' +
-                              'model is not stratified by organ status. Therefore, time variant smear-' + status +
-                              ' status has been turned off.')
-                self.inputs.time_variants['epi_prop_smear' + status]['time_variant'] = 'no'
 
         # Set strain and comorbidities
         self.n_strain = n_strain

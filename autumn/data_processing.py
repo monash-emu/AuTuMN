@@ -15,36 +15,29 @@ class Inputs:
                                                          'default_economics', 'country_programs', 'default_programs',
                                                          'diabetes')):
 
+        # Determine country to be read
         self.determine_country()
+
+        # Read the relevant sheets
         self.read_sheets(keys_of_sheets_to_read)
 
+        # Work through the data processing
         self.derived_data = {}
         self.find_organ_proportions()
-
         self.time_variants = {}
         self.find_time_variants()
         self.update_time_variants()
-
         self.add_timevariant_defaults()
-
         self.model_constants = {}
         self.add_model_constant_defaults()
-
         self.find_ds_outcomes()
-
         self.add_read_treatment_outcomes()
-
         if max(self.model_constants['n_strains']) > 1:
             self.duplicate_ds_outcomes_for_multistrain()
-
         self.add_epi_dictionaries_to_timevariants()
-
         self.add_organ_status_to_timevariants()
-
         self.add_resistant_strain_outcomes()
-
         self.tidy_timevariants()
-
         self.add_economic_timevariants()
 
     def determine_country(self):

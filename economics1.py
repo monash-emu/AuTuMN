@@ -2,7 +2,8 @@
 import numpy
 import matplotlib.pyplot as plt
 import math
-from autumn.spreadsheet import read_and_process_data, read_input_data_xls
+from autumn.spreadsheet import read_input_data_xls
+import autumn.data_processing
 
 """
 
@@ -24,10 +25,13 @@ TO DO LIST
 
 country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
 print(country)
-inputs = read_and_process_data(country, from_test=True)
-inflation = inputs['country_economics']['econ_inflation']
-cpi = inputs['country_economics']['econ_cpi']
-time_step = inputs['model_constants']['time_step']
+
+inputs = autumn.data_processing.Inputs(True)
+inputs.read_and_load_data()
+
+inflation = inputs.original_data['country_economics']['econ_inflation']
+cpi = inputs.original_data['country_economics']['econ_cpi']
+time_step = inputs.model_constants['time_step']
 
 ###################################################
 
@@ -52,7 +56,7 @@ plot_costcurve = True
 method = 2
 discount_rate = 0.03
 year_index = 2014 # To plot/use cost function of a particular year. 1995 is just an example
-year_current = inputs['model_constants']['current_time'] # Reference year for inflation calculation (2015)
+year_current = inputs.model_constants['current_time'] # Reference year for inflation calculation (2015)
 print("Current year " + str(year_current))
 
 if method == 1:
@@ -124,11 +128,11 @@ def cost_scaleup_fns(model,
                      country = u''):
 
     if start_time_str == 'recent_time':
-        start_time = model.inputs['model_constants'][start_time_str]
+        start_time = model.inputs.model_constants[start_time_str]
     else:
-        start_time = model.inputs['country_constants'][start_time_str]
+        start_time = model.inputs.original_data['country_constants'][start_time_str]
 
-    end_time = model.inputs['model_constants'][end_time_str]
+    end_time = model.inputs.model_constants[end_time_str]
     print('Start time ' + str(start_time) + ' End time ' + str(end_time))
     #x_vals = numpy.linspace(start_time, end_time, end_time - start_time + 1)  # years
     x_vals = numpy.linspace(start_time, end_time, len(model.times))  # years

@@ -4,16 +4,14 @@ import os
 import glob
 import datetime
 import autumn.model
-
-from autumn.spreadsheet import read_and_process_data, read_input_data_xls
 import economics2
 
 # Start timer
 start_realtime = datetime.datetime.now()
 
 # Import the data
-country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
-inputs = read_and_process_data(country, from_test=True)
+inputs = autumn.data_processing.Inputs(True)
+inputs.read_and_load_data()
 
 # A few basic preliminaries
 out_dir = 'fullmodel_graphs'
@@ -23,11 +21,13 @@ if not os.path.isdir(out_dir):
 # Note that it takes about one hour to run all of the possible model structures,
 # so perhaps don't do that - and longer if running multiple scenarios
 scenario = None
-n_organs = inputs['model_constants']['n_organs'][0]
-n_strains = inputs['model_constants']['n_strains'][0]
-is_quality = inputs['model_constants']['is_lowquality'][0]
-is_amplification = inputs['model_constants']['is_amplification'][0]
-is_misassignment = inputs['model_constants']['is_misassignment'][0]
+n_organs = inputs.model_constants['n_organs'][0]
+n_strains = inputs.model_constants['n_strains'][0]
+is_quality = inputs.model_constants['is_lowquality'][0]
+is_amplification = inputs.model_constants['is_amplification'][0]
+is_misassignment = inputs.model_constants['is_misassignment'][0]
+is_amplification = inputs.model_constants['is_amplification'][0]
+is_misassignment = inputs.model_constants['is_misassignment'][0]
 if (is_misassignment and not is_amplification) \
         or (n_strains <= 1 and (is_amplification or is_misassignment)):
     pass
@@ -152,7 +152,7 @@ else:
                                             'start_time',
                                             'scenario_end_time',
                                             classification,
-                                            country)
+                                            model.inputs.country)
 
 
 

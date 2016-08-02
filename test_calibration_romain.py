@@ -10,9 +10,10 @@ import autumn.base
 import autumn.model
 import autumn.curve
 import autumn.plotting
+import autumn.data_processing
 
 import datetime
-from autumn.spreadsheet import read_and_process_data, read_input_data_xls
+from autumn.spreadsheet import read_input_data_xls
 
 from scipy.optimize import minimize
 import openpyxl as xl
@@ -34,12 +35,13 @@ class ModelRunner:
     def __init__(self):
 
         self.country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
-        self.inputs = read_and_process_data(self.country, from_test=True)
-        n_organs = self.inputs['model_constants']['n_organs'][0]
-        n_strains = self.inputs['model_constants']['n_strains'][0]
-        is_quality = self.inputs['model_constants']['is_lowquality'][0]
-        is_amplification = self.inputs['model_constants']['is_amplification'][0]
-        is_misassignment = self.inputs['model_constants']['is_misassignment'][0]
+        self.inputs = autumn.data_processing.Inputs(True)
+        self.inputs.read_and_load_data()
+        n_organs = self.inputs.model_constants['n_organs'][0]
+        n_strains = self.inputs.model_constants['n_strains'][0]
+        is_quality = self.inputs.model_constants['is_lowquality'][0]
+        is_amplification = self.inputs.model_constants['is_amplification'][0]
+        is_misassignment = self.inputs.model_constants['is_misassignment'][0]
         self.model = autumn.model.ConsolidatedModel(
             n_organs,
             n_strains,
@@ -98,7 +100,7 @@ class ModelRunner:
                 'posterior_sd': 0.1
             }
         ]
-        for key, value in self.inputs['model_constants'].items():
+        for key, value in self.inputs.model_constants.items():
             if type(value) == float:
                 self.model.set_parameter(key, value)
         # for key, value in self.inputs['country_constants'].items():
@@ -116,9 +118,9 @@ class ModelRunner:
 
         for output in self.calib_outputs:
             if (output['key']) == 'incidence':
-                self.data_to_fit['incidence'] = self.model.inputs['tb']['e_inc_100k']
+                self.data_to_fit['incidence'] = self.model.inputs.original_data['tb']['e_inc_100k']
             elif (output['key']) == 'mortality':
-                self.data_to_fit['mortality'] = self.model.inputs['tb']['e_mort_exc_tbhiv_100k']
+                self.data_to_fit['mortality'] = self.model.inputs.original_data['tb']['e_mort_exc_tbhiv_100k']
             else:
                 print "Warning: Calibrated output %s is not directly available from the data" % output['key']
 
@@ -394,7 +396,7 @@ class ModelRunner:
 
         indice_year = indices(self.model.times, lambda x: x >= targeted_year)[0]
 
-        targeted_final_pop = self.model.inputs['tb_dict'][u'e_pop_num'][targeted_year]
+        targeted_final_pop = self.model.inputs.original_data['tb_dict'][u'e_pop_num'][targeted_year]
 
         initial_pop = self.model.params[u'susceptible_fully']
         final_pop = sum(self.model.soln_array[indice_year, :])

@@ -587,14 +587,20 @@ def cost_scaleup_fns(model,
             unitcost = map(model.scaleup_fns['econ_program_unitcost_xpert'], x_vals)
             coverage = get_coverage_from_outcome_program_as_param(scaleup_param_vals)
             coverage_mid = coverage
-            active_all = model.compartment_soln['active_extrapul'] + \
-                        model.compartment_soln['active_smearneg'] + \
-                        model.compartment_soln['active_smearpos']
+            active_all = model.compartment_soln['active_extrapul_age0to5'] + \
+                        model.compartment_soln['active_extrapul_age15up'] + \
+                        model.compartment_soln['active_extrapul_age5to15'] + \
+                        model.compartment_soln['active_smearneg_age0to5'] + \
+                        model.compartment_soln['active_smearneg_age15up'] + \
+                        model.compartment_soln['active_smearneg_age5to15'] + \
+                        model.compartment_soln['active_smearpos_age0to5'] + \
+                        model.compartment_soln['active_smearpos_age15up'] + \
+                        model.compartment_soln['active_smearpos_age5to15']
 
             for i in numpy.arange(0, len(x_vals), 1):
                 all_flows = model.var_array[int(i)]
-                program_rate_detect = all_flows[47]
-                program_rate_missed = all_flows[34]
+                program_rate_detect = all_flows[48]
+                program_rate_missed = all_flows[12]
                 presenting_for_care_rate = program_rate_detect + program_rate_missed
                 #active_all = active_extrapul[int(i)] + active_smearneg[int(i)] + active_smearpos[int(i)]
                 #active_all_array.append(active_all)
@@ -790,12 +796,24 @@ def cost_scaleup_fns(model,
             #popsize = model.compartment_soln['susceptible_fully']
             coverage = get_coverage_from_outcome_program_as_param(scaleup_param_vals)
             coverage_mid = coverage
-            treatment_all = model.compartment_soln['treatment_infect_extrapul'] + \
-                            model.compartment_soln['treatment_infect_smearneg'] + \
-                            model.compartment_soln['treatment_infect_smearpos'] + \
-                            model.compartment_soln['treatment_noninfect_extrapul'] + \
-                            model.compartment_soln['treatment_noninfect_smearneg'] + \
-                            model.compartment_soln['treatment_noninfect_smearpos']
+            treatment_all = model.compartment_soln['treatment_infect_extrapul_age0to5'] + \
+                            model.compartment_soln['treatment_infect_extrapul_age15up'] + \
+                            model.compartment_soln['treatment_infect_extrapul_age5to15'] + \
+                            model.compartment_soln['treatment_infect_smearneg_age0to5'] + \
+                            model.compartment_soln['treatment_infect_smearneg_age15up'] + \
+                            model.compartment_soln['treatment_infect_smearneg_age5to15'] + \
+                            model.compartment_soln['treatment_infect_smearpos_age0to5'] + \
+                            model.compartment_soln['treatment_infect_smearpos_age15up'] + \
+                            model.compartment_soln['treatment_infect_smearpos_age5to15'] + \
+                            model.compartment_soln['treatment_noninfect_extrapul_age0to5'] + \
+                            model.compartment_soln['treatment_noninfect_extrapul_age15up'] + \
+                            model.compartment_soln['treatment_noninfect_extrapul_age5to15'] + \
+                            model.compartment_soln['treatment_noninfect_smearneg_age0to5'] + \
+                            model.compartment_soln['treatment_noninfect_smearneg_age15up'] + \
+                            model.compartment_soln['treatment_noninfect_smearneg_age5to15'] + \
+                            model.compartment_soln['treatment_noninfect_smearpos_age0to5'] + \
+                            model.compartment_soln['treatment_noninfect_smearpos_age15up'] + \
+                            model.compartment_soln['treatment_noninfect_smearpos_age5to15']
             popsize = treatment_all
             for i in numpy.arange(0, len(x_vals), 1):
                         cost_uninflated.append(get_cost_from_coverage(params_default['saturation'],

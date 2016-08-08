@@ -692,6 +692,8 @@ class ConsolidatedModel(BaseModel):
 
         self.calculate_progression_vars()
 
+        self.calculate_acf_rate()
+
         self.calculate_detect_missed_vars()
 
         self.calculate_proportionate_detection_vars()
@@ -809,6 +811,20 @@ class ConsolidatedModel(BaseModel):
                             = self.vars['epi_prop' + organ] \
                               * self.params['tb_rate' + timing + '_progression' + agegroup]
 
+    def calculate_acf_rate(self):
+
+        self.vars['program_rate_acf_smearpos'] \
+            = (self.vars['program_prop_smearacf'] + self.vars['program_prop_xpertacf']) \
+              * self.params['program_prop_acf_detections_per_round'] \
+              / self.params['program_timeperiod_acf_rounds']
+        self.vars['program_rate_acf_smearneg'] \
+            = self.vars['program_prop_xpertacf'] \
+              * self.params['tb_prop_ltbi_test_sensitivity'] \
+              * self.params['program_prop_acf_detections_per_round'] \
+              / self.params['program_timeperiod_acf_rounds']
+        self.vars['program_rate_acf_extrapul'] \
+            = 0.
+
     def calculate_detect_missed_vars(self):
 
         """"
@@ -854,9 +870,16 @@ class ConsolidatedModel(BaseModel):
 
         # Repeat for each strain
         for strain in self.strains:
-            for programmatic_rate in ['_detect', '_missed']:
-                self.vars['program_rate' + programmatic_rate + strain] = \
-                    self.vars['program_rate' + programmatic_rate]
+            for organ in self.organ_status:
+                for programmatic_rate in ['_detect', '_missed']:
+                    self.vars['program_rate' + programmatic_rate + strain + organ] \
+                        = self.vars['program_rate' + programmatic_rate]
+                    if programmatic_rate == '_detect':
+                        # print(organ)
+                        # print(self.vars['program_rate_acf' + organ])
+
+                        self.vars['program_rate' + programmatic_rate + strain + organ] \
+                            += self.vars['program_rate_acf' + organ]
 
     def calculate_await_treatment_var(self):
 
@@ -1091,6 +1114,8 @@ class ConsolidatedModel(BaseModel):
 
         self.set_detection_flows()
 
+        # self.set_acf_flows()
+
         self.set_treatment_flows()
 
         self.set_ipt_flows()
@@ -1286,14 +1311,14 @@ class ConsolidatedModel(BaseModel):
                                     self.set_var_transfer_rate_flow(
                                         'active' + organ + strain + comorbidity + agegroup,
                                         'detect' + organ + strain + as_assigned_strain + comorbidity + agegroup,
-                                        'program_rate_detect' + strain + as_assigned_strain)
+                                        'program_rate_detect' + strain + as_assigned_strain + organ)
 
                         # Without misassignment - everyone is correctly identified by strain
                         else:
                             self.set_var_transfer_rate_flow(
                                 'active' + organ + strain + comorbidity + agegroup,
                                 'detect' + organ + strain + comorbidity + agegroup,
-                                'program_rate_detect')
+                                'program_rate_detect' + organ)
 
     def set_variable_programmatic_flows(self):
 

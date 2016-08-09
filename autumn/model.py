@@ -112,9 +112,6 @@ class ConsolidatedModel(BaseModel):
         # (note that compartment initialisation has now been shifted to base.py)
         self.define_model_structure()
 
-        # Set the few universally fixed and hard-coded parameters
-        self.set_universal_parameters()
-
         # Set other fixed parameters
         self.set_fixed_parameters()
 
@@ -303,31 +300,6 @@ class ConsolidatedModel(BaseModel):
                                                      / len(self.organ_status)  # Split equally by organ statuses,
                                                      * self.comorb_props[comorbidity]
                                                      / len(self.agegroups))  # and split equally by age-groups
-
-    def set_universal_parameters(self):
-
-        """
-        Sets parameters that should never be changed in any situation,
-        i.e. "by definition" parameters (although note that the infectiousness
-        of the single infectious compartment for models unstratified by organ
-        status is now set in set_fixed_infectious_proportion, because it is
-        dependent upon loading some parameters in find_functions_or_params)
-        """
-
-        fixed_parameters = {}
-        if len(self.organ_status) < 2:
-            # Proportion progressing to the only infectious compartment
-            # for models unstratified by organ status
-            fixed_parameters['epi_prop'] = 1.
-        else:
-            fixed_parameters = {
-                'tb_multiplier_force_smearpos':
-                    1.,  # Infectiousness of smear-positive patients
-                'tb_multiplier_force_extrapul':
-                    0.}  # Infectiousness of extrapulmonary patients
-
-        for parameter in fixed_parameters:
-            self.set_parameter(parameter, fixed_parameters[parameter])
 
     def set_fixed_parameters(self):
 

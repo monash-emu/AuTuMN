@@ -40,6 +40,7 @@ class Inputs:
         self.add_resistant_strain_outcomes()
         self.tidy_timevariants()
         self.add_economic_timevariants()
+        self.add_fixed_parameters()
 
         # Perform checks
         self.checks()
@@ -311,6 +312,26 @@ class Inputs:
             if economic_var not in self.time_variants:
                 self.time_variants[economic_var] \
                     = self.original_data['default_economics'][economic_var]
+
+    def add_fixed_parameters(self):
+
+        """
+        Sets parameters that should never be changed in any situation,
+        i.e. "by definition" parameters (although note that the infectiousness
+        of the single infectious compartment for models unstratified by organ
+        status is now set in set_fixed_infectious_proportion, because it is
+        dependent upon loading some parameters in find_functions_or_params)
+        """
+
+        if self.model_constants['n_organs'] < 2:
+            # Proportion progressing to the only infectious compartment
+            # for models unstratified by organ status
+            self.model_constants['epi_prop'] = 1.
+        else:
+            self.model_constants['tb_multiplier_force_smearpos'] \
+                = 1.  # Infectiousness of smear-positive patients
+            self.model_constants['tb_multiplier_force_extrapul'] \
+                = 0.  # Infectiousness of extrapulmonary patients
 
     def checks(self):
 

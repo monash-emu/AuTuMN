@@ -813,15 +813,29 @@ class ConsolidatedModel(BaseModel):
 
     def calculate_acf_rate(self):
 
+        """
+        Calculates rates of ACF from the proportion of programmatic coverage of both
+        smear-based and Xpert-based ACF (both presuming symptom-based screening before this,
+        as in the studies on which this is based).
+        Smear-based screening only detects smear-positive disease, while Xpert-based screening
+        detects some smear-negative disease, with a multiplier for the sensitivity of Xpert
+        for smear-negative disease. (Extrapulmonary disease can't be detected through ACF.
+        """
+
+        # Additional detection rate for smear-positive TB
         self.vars['program_rate_acf_smearpos'] \
             = (self.vars['program_prop_smearacf'] + self.vars['program_prop_xpertacf']) \
               * self.params['program_prop_acf_detections_per_round'] \
               / self.params['program_timeperiod_acf_rounds']
+
+        # Additional detection rate for smear-negative TB
         self.vars['program_rate_acf_smearneg'] \
             = self.vars['program_prop_xpertacf'] \
               * self.params['tb_prop_ltbi_test_sensitivity'] \
               * self.params['program_prop_acf_detections_per_round'] \
               / self.params['program_timeperiod_acf_rounds']
+
+        # No additional detection rate for extra-pulmonary TB, but add a var to allow loops to operate
         self.vars['program_rate_acf_extrapul'] \
             = 0.
 
@@ -874,10 +888,9 @@ class ConsolidatedModel(BaseModel):
                 for programmatic_rate in ['_detect', '_missed']:
                     self.vars['program_rate' + programmatic_rate + strain + organ] \
                         = self.vars['program_rate' + programmatic_rate]
-                    if programmatic_rate == '_detect':
-                        # print(organ)
-                        # print(self.vars['program_rate_acf' + organ])
 
+                    # Add active case finding rate to standard DOTS-based detection rate
+                    if programmatic_rate == '_detect':
                         self.vars['program_rate' + programmatic_rate + strain + organ] \
                             += self.vars['program_rate_acf' + organ]
 

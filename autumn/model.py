@@ -185,10 +185,7 @@ class ConsolidatedModel(BaseModel):
         self.define_comorbidities()
 
         # Age stratification
-        self.agegroups, _ = \
-            tool_kit.get_agegroups_from_breakpoints(self.inputs.model_constants['age_breakpoints'])
-        if len(self.agegroups) > 1:
-            self.set_fixed_age_specific_parameters()
+        self.agegroups = self.inputs.agegroups
 
         self.initial_compartments = {}
         for compartment in self.compartment_types:
@@ -316,38 +313,6 @@ class ConsolidatedModel(BaseModel):
             self.set_parameter('tb_multiplier_force',
                                self.params['epi_prop_smearpos'] + \
                                self.params['epi_prop_smearneg'] * self.params['tb_multiplier_force_smearneg'])
-
-    def set_fixed_age_specific_parameters(self):
-
-        # Extract age breakpoints in appropriate form for module
-        model_breakpoints = []
-        for i in self.inputs.model_constants['age_breakpoints']:
-            model_breakpoints += [float(i)]
-
-        for param in ['early_progression_age', 'late_progression_age', 'tb_multiplier_child_infectiousness_age']:
-            # Extract age-stratified parameters in the appropriate form
-            prog_param_vals = {}
-            prog_age_dict = {}
-            for constant in self.inputs.model_constants:
-                if param in constant:
-                    prog_param_string, prog_stem = \
-                        tool_kit.find_string_from_starting_letters(constant, '_age')
-                    prog_age_dict[prog_param_string], _ = \
-                        tool_kit.interrogate_age_string(prog_param_string)
-                    prog_param_vals[prog_param_string] = \
-                        self.inputs.model_constants[constant]
-
-            param_breakpoints = tool_kit.find_age_breakpoints_from_dicts(prog_age_dict)
-
-            # Find and set age-adjusted parameters
-            prog_age_adjusted_params = \
-                tool_kit.adapt_params_to_stratification(param_breakpoints,
-                                                        model_breakpoints,
-                                                        prog_param_vals,
-                                                        parameter_name=param,
-                                                        scenario=self.scenario)
-            for agegroup in self.agegroups:
-                self.set_parameter(prog_stem + agegroup, prog_age_adjusted_params[agegroup])
 
     ############################################################
     # General underlying methods for use by other methods

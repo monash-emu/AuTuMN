@@ -3,6 +3,7 @@ import autumn.spreadsheet as spreadsheet
 import copy
 import numpy
 import warnings
+import tool_kit
 
 class Inputs:
 
@@ -41,6 +42,9 @@ class Inputs:
         self.tidy_timevariants()
         self.add_economic_timevariants()
         self.add_fixed_parameters()
+        self.find_age_groups()
+        if len(self.agegroups) > 1:
+            self.set_fixed_age_specific_parameters()
 
         # Perform checks
         self.checks()
@@ -332,6 +336,45 @@ class Inputs:
                 = 1.  # Infectiousness of smear-positive patients
             self.model_constants['tb_multiplier_force_extrapul'] \
                 = 0.  # Infectiousness of extrapulmonary patients
+
+    def find_age_groups(self):
+
+        # Age stratification
+        self.agegroups, _ = \
+            tool_kit.get_agegroups_from_breakpoints(
+                self.model_constants['age_breakpoints'])
+
+    def set_fixed_age_specific_parameters(self):
+
+        # Extract age breakpoints in appropriate form for module
+        model_breakpoints = []
+        for i in self.model_constants['age_breakpoints']:
+            model_breakpoints += [float(i)]
+
+        for param in ['early_progression_age', 'late_progression_age',
+                      'tb_multiplier_child_infectiousness_age']:
+            # Extract age-stratified parameters in the appropriate form
+            prog_param_vals = {}
+            prog_age_dict = {}
+            for constant in self.model_constants:
+                if param in constant:
+                    prog_param_string, prog_stem = \
+                        tool_kit.find_string_from_starting_letters(constant, '_age')
+                    prog_age_dict[prog_param_string], _ = \
+                        tool_kit.interrogate_age_string(prog_param_string)
+                    prog_param_vals[prog_param_string] = \
+                        self.model_constants[constant]
+
+            param_breakpoints = tool_kit.find_age_breakpoints_from_dicts(prog_age_dict)
+
+            # Find and set age-adjusted parameters
+            prog_age_adjusted_params = \
+                tool_kit.adapt_params_to_stratification(param_breakpoints,
+                                                        model_breakpoints,
+                                                        prog_param_vals,
+                                                        parameter_name=param)
+            for agegroup in self.agegroups:
+                self.model_constants[prog_stem + agegroup] = prog_age_adjusted_params[agegroup]
 
     def checks(self):
 

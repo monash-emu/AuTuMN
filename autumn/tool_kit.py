@@ -525,8 +525,7 @@ def adapt_params_to_stratification(data_breakpoints,
                                    model_breakpoints,
                                    data_param_vals,
                                    assumed_max_params=100.,
-                                   parameter_name='',
-                                   scenario=None):
+                                   parameter_name=''):
 
     """
     Create a new set of parameters associated to the model stratification given parameter values that are known for
@@ -570,8 +569,7 @@ def adapt_params_to_stratification(data_breakpoints,
         beta = beta / (new_up - new_low)
         model_param_vals[new_name] = beta
 
-    if scenario is None:
-        report_age_specific_parameter_calculations(parameter_name, model_param_vals)
+    report_age_specific_parameter_calculations(parameter_name, model_param_vals)
 
     # Convert data into list with same order as the ordered strat_lists
     data_value_list = []

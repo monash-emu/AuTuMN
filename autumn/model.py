@@ -1071,20 +1071,35 @@ class ConsolidatedModel(BaseModel):
         This code structure echoes the code in set_variable_programmatic_flows
         """
 
-        prop_ipt = self.get_constant_or_variable_param('program_prop_ipt')
 
         # This parameter is the number of persons effectively treated with IPT for each
         # patient started on treatment for active disease.
-        prevented_cases_per_patient_starting_treatment = prop_ipt \
-                                                         * (self.inputs.model_constants['demo_household_size'] - 1.) \
-                                                         * self.inputs.model_constants['tb_prop_contacts_infected'] \
-                                                         * self.inputs.model_constants['tb_prop_ltbi_test_sensitivity'] \
-                                                         * self.inputs.model_constants['tb_prop_ipt_effectiveness']
-        self.vars['ipt_commencements'] = 0.
-        for strain in self.strains:
-            for agegroup in self.agegroups:
+
+        for agegroup in self.agegroups:
+
+            age_limits, _ = tool_kit.interrogate_age_string(agegroup)
+
+            estimated_prop_in_agegroup = exp(-age_limits[0] * (1. / self.vars['demo_life_expectancy'])) \
+                                         - exp(-age_limits[1] * (1. / self.vars['demo_life_expectancy']))
+
+            prop_ipt = 0.
+            if 'program_prop_ipt' + agegroup in self.vars:
+                prop_ipt += self.vars['program_prop_ipt' + agegroup]
+            elif 'program_prop_ipt' in self.vars and prop_ipt < self.vars['program_prop_ipt']:
+                prop_ipt += self.vars['program_prop_ipt']
+
+            prevented_cases_per_treatment_start = prop_ipt \
+                                                  * (self.inputs.model_constants['demo_household_size'] - 1.) \
+                                                  * self.inputs.model_constants['tb_prop_contacts_infected'] \
+                                                  * self.inputs.model_constants['tb_prop_ltbi_test_sensitivity'] \
+                                                  * self.inputs.model_constants['tb_prop_ipt_effectiveness'] \
+                                                  * estimated_prop_in_agegroup
+
+            self.vars['ipt_commencements' + agegroup] = 0.
+            for strain in self.strains:
                 for comorbidity in self.comorbidities:
                     for organ in self.organ_status:
+                        
                         # Currently only applying to patients with drug-susceptible TB,
                         # which is presumed to be all patients if the model is unstratified by strain
                         # and only '_ds' if the model is stratified.
@@ -1092,15 +1107,15 @@ class ConsolidatedModel(BaseModel):
                             if self.is_misassignment:
                                 for assigned_strain in self.strains:
                                     if 'dr' not in assigned_strain:
-                                        self.vars['ipt_commencements'] += \
+                                        self.vars['ipt_commencements' + agegroup] += \
                                             self.compartments['detect' + organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup] * \
                                             self.vars['program_rate_start_treatment' + organ] * \
-                                            prevented_cases_per_patient_starting_treatment
+                                            prevented_cases_per_treatment_start
                             else:
-                                self.vars['ipt_commencements'] += \
+                                self.vars['ipt_commencements' + agegroup] += \
                                     self.compartments['detect' + organ + strain + comorbidity + agegroup] * \
                                     self.vars['program_rate_start_treatment' + organ] * \
-                                    prevented_cases_per_patient_starting_treatment
+                                    prevented_cases_per_treatment_start
 
     ##################################################################
     # Methods that calculate the flows of all the compartments
@@ -1452,7 +1467,7 @@ class ConsolidatedModel(BaseModel):
                 for strain in self.strains:
                     self.set_linked_transfer_rate_flow('latent_early' + strain + comorbidity + agegroup,
                                                        'susceptible_vac' + strain + comorbidity + agegroup,
-                                                       'ipt_commencements')
+                                                       'ipt_commencements' + agegroup)
 
     ##################################################################
     # Methods that calculate the output vars and diagnostic properties

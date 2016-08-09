@@ -398,12 +398,15 @@ class ConsolidatedModel(BaseModel):
 
     def find_ageing_rates(self):
 
-        # Calculate ageing rates as the reciprocal of the width of the age bracket
+        """
+        Calculate ageing rates as the reciprocal of the width of the age bracket
+        """
+
         for agegroup in self.agegroups:
+            age_limits, _ = tool_kit.interrogate_age_string(agegroup)
             if 'up' not in agegroup:
-                self.set_parameter('ageing_rate' + agegroup, 1. / (
-                    float(agegroup[agegroup.find('to') + 2:]) -
-                    float(agegroup[agegroup.find('age') + 3: agegroup.find('to')])))
+                self.set_parameter('ageing_rate' + agegroup,
+                                   1. / (age_limits[1] - age_limits[0]))
 
     def find_treatment_periods(self):
 

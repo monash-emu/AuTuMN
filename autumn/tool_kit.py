@@ -1,6 +1,7 @@
 
 import random
 from matplotlib import pyplot, patches
+from scipy import exp
 import autumn.plotting
 
 
@@ -236,6 +237,25 @@ def find_age_breakpoints_from_dicts(age_dict):
             breakpoints += [breakpoint]
 
     return breakpoints
+
+
+def estimate_prop_of_population_in_agegroup(age_limits, life_expectancy):
+
+    """
+    Function to estimate the proportion of the population that should be in a specific age
+    group, assuming model equilibrium and absence of TB effects (which are false, of course).
+    Args:
+        age_limits: Two element string of the upper and lower limit of the age group.
+        life_expectancy: Float specifying the life expectancy.
+
+    Returns:
+        estimated_prop_in_agegroup: Estimate of the proportion of the population in the age group.
+    """
+
+    estimated_prop_in_agegroup = exp(-age_limits[0] * (1. / life_expectancy)) \
+                                 - exp(-age_limits[1] * (1. / life_expectancy))
+
+    return estimated_prop_in_agegroup
 
 
 def sum_over_compartments(model, compartment_types):
@@ -604,4 +624,7 @@ if __name__ == "__main__":
                                                  data_param_vals,
                                                  parameter_name='test parameter')
     print(model_param)
+
+
+
 

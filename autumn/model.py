@@ -1077,11 +1077,13 @@ class ConsolidatedModel(BaseModel):
 
         for agegroup in self.agegroups:
 
+            # Estimate the proportion of the populatoin that should
             age_limits, _ = tool_kit.interrogate_age_string(agegroup)
+            estimated_prop_in_agegroup = \
+                tool_kit.estimate_prop_of_population_in_agegroup(age_limits,
+                                                                 self.vars['demo_life_expectancy'])
 
-            estimated_prop_in_agegroup = exp(-age_limits[0] * (1. / self.vars['demo_life_expectancy'])) \
-                                         - exp(-age_limits[1] * (1. / self.vars['demo_life_expectancy']))
-
+            # Find IPT coverage for the age group
             prop_ipt = 0.
             if 'program_prop_ipt' + agegroup in self.vars:
                 prop_ipt += self.vars['program_prop_ipt' + agegroup]

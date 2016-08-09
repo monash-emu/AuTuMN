@@ -419,7 +419,7 @@ def cost_scaleup_fns(model,
                         model.compartment_soln['active_smearpos_age5to15']
             for i in numpy.arange(0, len(x_vals), 1):
                 all_flows = model.var_array[int(i)]
-                program_rate_detect = all_flows[48]
+                program_rate_detect = all_flows[51]
                 program_rate_missed = all_flows[12]
                 presenting_for_care_rate = program_rate_detect + program_rate_missed
                 presentation_per_time =  presenting_for_care_rate * active_all[int(i)]
@@ -679,6 +679,277 @@ def cost_scaleup_fns(model,
             ax4.plot(x_vals, coverage, 'r-', linewidth =3)
             ax4.scatter(data_to_plot.keys(), data_to_plot.values())
             ax4.set_title('TREATMENT SUPPORT coverage')
+            ax4.set_xlabel('Year')
+            ax4.set_ylabel('Coverage (%)')
+            ax4.set_ylim([0, 1.1])
+            ax4.grid(True)
+            plt.show()
+
+#######################################################################################
+### ACTIVE CASE FINDING - SMEAR BASED ALGORITHM
+#######################################################################################
+
+        elif function == str('econ_program_prop_smearacf'):
+            cost_uninflated = []
+            cost_uninflated_toplotcostcurve = []
+            cost_inflated = []
+            popsize = []
+            x_vals_2015onwards_array =[]
+            cost_discounted_array = []
+            b_growth_rate = []
+
+            scaleup_param_vals = map(model.scaleup_fns[function], x_vals)
+            funding_scaleup = map(model.scaleup_fns['econ_program_totalcost_smearacf'], x_vals)
+            reflection_cost_scaleup = map(model.scaleup_fns['econ_program_reflectioncost_smearacf'], x_vals)
+            unitcost = map(model.scaleup_fns['econ_program_unitcost_smearacf'], x_vals)
+            coverage = get_coverage_from_outcome_program_as_param(scaleup_param_vals)
+            coverage_mid = coverage
+
+            popsize =   model.compartment_soln['active_smearpos_age0to5'] + \
+                        model.compartment_soln['active_smearpos_age15up'] + \
+                        model.compartment_soln['active_smearpos_age5to15']
+
+            for i in numpy.arange(0, len(x_vals), 1):
+                a = saturation / (1 - 2**alpha)
+                b = ((2**(alpha + 1)) / (alpha * (saturation - a) * unitcost[int(i)] * popsize[int(i)]))
+                b_growth_rate.append(b)
+                cost_uninflated.append(get_cost_from_coverage(reflection_cost_scaleup[int(i)], #Add [year_pos] to get cost-coverage curve at that year,
+                                                                          b_growth_rate[int(i)],
+                                                                          saturation,
+                                                                          a,
+                                                                          coverage[int(i)], #Add [year_pos] to get cost-coverage curve at that year
+                                                                          alpha))
+                cost_inflated.append(cost_uninflated[int(i)] * cpi[int(year_current)] / cpi_scaleup[int(i)])
+                current_year_pos = ((year_current - start_time) / ((end_time - start_time) / len(model.times)))
+
+                if i >= current_year_pos and i <= len(x_vals):
+                    x_vals_2015onwards = x_vals[i]
+                    x_vals_2015onwards_array.append(x_vals_2015onwards)
+                    cost_todiscount = cost_uninflated[int(i)]
+                    if x_vals[i] <= 2015:
+                            years_into_future = 0
+                    elif x_vals[i] > 2015 and x_vals[i] <= 2016:
+                            years_into_future = 1
+                    elif x_vals[i] > 2016 and x_vals[i] <= 2017:
+                            years_into_future = 2
+                    elif x_vals[i] > 2017 and x_vals[i] <= 2018:
+                            years_into_future = 3
+                    elif x_vals[i] > 2018 and x_vals[i] <= 2019:
+                            years_into_future = 4
+                    elif x_vals[i] > 2019 and x_vals[i] <= 2020:
+                            years_into_future = 5
+                    elif x_vals[i] > 2020 and x_vals[i] <= 2021:
+                            years_into_future = 6
+                    elif x_vals[i] > 2021 and x_vals[i] <= 2022:
+                            years_into_future = 7
+                    elif x_vals[i] > 2022 and x_vals[i] <= 2023:
+                            years_into_future = 8
+                    elif x_vals[i] > 2023 and x_vals[i] <= 2024:
+                            years_into_future = 9
+                    elif x_vals[i] > 2024 and x_vals[i] <= 2025:
+                            years_into_future = 10
+                    elif x_vals[i] > 2025 and x_vals[i] <= 2026:
+                            years_into_future = 11
+                    elif x_vals[i] > 2026 and x_vals[i] <= 2027:
+                            years_into_future = 12
+                    elif x_vals[i] > 2027 and x_vals[i] <= 2028:
+                            years_into_future = 13
+                    elif x_vals[i] > 2028 and x_vals[i] <= 2029:
+                            years_into_future = 14
+                    elif x_vals[i] > 2029 and x_vals[i] <= 2030:
+                            years_into_future = 15
+                    elif x_vals[i] > 2030 and x_vals[i] <= 2031:
+                            years_into_future = 16
+                    elif x_vals[i] > 2031 and x_vals[i] <= 2032:
+                            years_into_future = 17
+                    elif x_vals[i] > 2032 and x_vals[i] <= 2033:
+                            years_into_future = 18
+                    elif x_vals[i] > 2033 and x_vals[i] <= 2034:
+                            years_into_future = 19
+                    else:
+                            years_into_future = 20
+                    cost_discounted = cost_todiscount / ((1 + discount_rate)**years_into_future)
+                    cost_discounted_array.append(cost_discounted)
+
+            if plot_costcurve is True:
+                for coverage_range in coverage_values:
+                    a = saturation / (1 - 2**alpha)
+                    cost_uninflated_toplotcostcurve.append(get_cost_from_coverage(reflection_cost_scaleup[year_pos], #Add [year_pos] to get cost-coverage curve at that year,
+                                                                          b_growth_rate[year_pos],
+                                                                          saturation,
+                                                                          a,
+                                                                          coverage_range, #Add [year_pos] to get cost-coverage curve at that year
+                                                                          alpha))
+            data_to_plot = model.scaleup_data[function]
+            fig = plt.figure('SMEAR_ACF')
+            ax1 = fig.add_subplot(221)
+            ax1.plot(cost_uninflated_toplotcostcurve, coverage_values, 'b-', linewidth = 3)
+            ax1.set_title('SMEAR ACF cost-coverage curve ' + str(year_index))
+            ax1.set_xlabel('Cost (USD)')
+            ax1.set_ylabel('Coverage (%)')
+            ax1.set_ylim([0, 1.1])
+            ax1.grid(True)
+
+            ax2 = fig.add_subplot(222)
+            ax2.plot(x_vals, cost_uninflated, 'r-', linewidth = 3, label = 'Cost uninflated')
+            ax2.plot(x_vals, cost_inflated, 'r--', linewidth = 3, label = 'Cost inflated')
+            ax2.plot(x_vals_2015onwards_array, cost_discounted_array, 'b--', linewidth = 3, label = 'Cost discounted')
+            ax2.set_title('SMEAR ACF yearly total cost (USD)')
+            ax2.set_xlabel('Year')
+            ax2.set_ylabel('Cost (USD)')
+            ax2.set_xlim([2014, end_time])
+            ax2.legend(loc = 'upper right')
+            ax2.grid(True)
+
+            ax3 = fig.add_subplot(223)
+            ax3.plot(x_vals, popsize, 'r-', linewidth = 3)
+            ax3.set_title('SMEAR ACF population size')
+            ax3.set_xlabel('Year')
+            ax3.set_ylabel('People')
+            ax3.set_xlim([start_time, end_time])
+            ax3.grid(True)
+
+            ax4 = fig.add_subplot(224)
+            ax4.plot(x_vals, coverage, 'r-', linewidth =3)
+            ax4.scatter(data_to_plot.keys(), data_to_plot.values())
+            ax4.set_title('SMEAR ACF coverage')
+            ax4.set_xlabel('Year')
+            ax4.set_ylabel('Coverage (%)')
+            ax4.set_ylim([0, 1.1])
+            ax4.grid(True)
+            plt.show()
+
+#######################################################################################
+### ACTIVE CASE FINDING - XPERT BASED ALGORITHM
+#######################################################################################
+
+        elif function == str('econ_program_prop_xpertacf'):
+            cost_uninflated = []
+            cost_uninflated_toplotcostcurve = []
+            cost_inflated = []
+            popsize = []
+            x_vals_2015onwards_array =[]
+            cost_discounted_array = []
+            b_growth_rate = []
+
+            scaleup_param_vals = map(model.scaleup_fns[function], x_vals)
+            funding_scaleup = map(model.scaleup_fns['econ_program_totalcost_xpertacf'], x_vals)
+            reflection_cost_scaleup = map(model.scaleup_fns['econ_program_reflectioncost_xpertacf'], x_vals)
+            unitcost = map(model.scaleup_fns['econ_program_unitcost_xpertacf'], x_vals)
+            coverage = get_coverage_from_outcome_program_as_param(scaleup_param_vals)
+            coverage_mid = coverage
+
+            popsize =   model.compartment_soln['active_smearpos_age0to5'] + \
+                        model.compartment_soln['active_smearpos_age15up'] + \
+                        model.compartment_soln['active_smearpos_age5to15'] + \
+                        model.compartment_soln['active_smearneg_age0to5'] + \
+                        model.compartment_soln['active_smearneg_age15up'] + \
+                        model.compartment_soln['active_smearneg_age5to15']
+
+            for i in numpy.arange(0, len(x_vals), 1):
+                a = saturation / (1 - 2**alpha)
+                b = ((2**(alpha + 1)) / (alpha * (saturation - a) * unitcost[int(i)] * popsize[int(i)]))
+                b_growth_rate.append(b)
+                cost_uninflated.append(get_cost_from_coverage(reflection_cost_scaleup[int(i)], #Add [year_pos] to get cost-coverage curve at that year,
+                                                                          b_growth_rate[int(i)],
+                                                                          saturation,
+                                                                          a,
+                                                                          coverage[int(i)], #Add [year_pos] to get cost-coverage curve at that year
+                                                                          alpha))
+                cost_inflated.append(cost_uninflated[int(i)] * cpi[int(year_current)] / cpi_scaleup[int(i)])
+                current_year_pos = ((year_current - start_time) / ((end_time - start_time) / len(model.times)))
+
+                if i >= current_year_pos and i <= len(x_vals):
+                    x_vals_2015onwards = x_vals[i]
+                    x_vals_2015onwards_array.append(x_vals_2015onwards)
+                    cost_todiscount = cost_uninflated[int(i)]
+                    if x_vals[i] <= 2015:
+                            years_into_future = 0
+                    elif x_vals[i] > 2015 and x_vals[i] <= 2016:
+                            years_into_future = 1
+                    elif x_vals[i] > 2016 and x_vals[i] <= 2017:
+                            years_into_future = 2
+                    elif x_vals[i] > 2017 and x_vals[i] <= 2018:
+                            years_into_future = 3
+                    elif x_vals[i] > 2018 and x_vals[i] <= 2019:
+                            years_into_future = 4
+                    elif x_vals[i] > 2019 and x_vals[i] <= 2020:
+                            years_into_future = 5
+                    elif x_vals[i] > 2020 and x_vals[i] <= 2021:
+                            years_into_future = 6
+                    elif x_vals[i] > 2021 and x_vals[i] <= 2022:
+                            years_into_future = 7
+                    elif x_vals[i] > 2022 and x_vals[i] <= 2023:
+                            years_into_future = 8
+                    elif x_vals[i] > 2023 and x_vals[i] <= 2024:
+                            years_into_future = 9
+                    elif x_vals[i] > 2024 and x_vals[i] <= 2025:
+                            years_into_future = 10
+                    elif x_vals[i] > 2025 and x_vals[i] <= 2026:
+                            years_into_future = 11
+                    elif x_vals[i] > 2026 and x_vals[i] <= 2027:
+                            years_into_future = 12
+                    elif x_vals[i] > 2027 and x_vals[i] <= 2028:
+                            years_into_future = 13
+                    elif x_vals[i] > 2028 and x_vals[i] <= 2029:
+                            years_into_future = 14
+                    elif x_vals[i] > 2029 and x_vals[i] <= 2030:
+                            years_into_future = 15
+                    elif x_vals[i] > 2030 and x_vals[i] <= 2031:
+                            years_into_future = 16
+                    elif x_vals[i] > 2031 and x_vals[i] <= 2032:
+                            years_into_future = 17
+                    elif x_vals[i] > 2032 and x_vals[i] <= 2033:
+                            years_into_future = 18
+                    elif x_vals[i] > 2033 and x_vals[i] <= 2034:
+                            years_into_future = 19
+                    else:
+                            years_into_future = 20
+                    cost_discounted = cost_todiscount / ((1 + discount_rate)**years_into_future)
+                    cost_discounted_array.append(cost_discounted)
+
+            if plot_costcurve is True:
+                for coverage_range in coverage_values:
+                    a = saturation / (1 - 2**alpha)
+                    cost_uninflated_toplotcostcurve.append(get_cost_from_coverage(reflection_cost_scaleup[year_pos], #Add [year_pos] to get cost-coverage curve at that year,
+                                                                          b_growth_rate[year_pos],
+                                                                          saturation,
+                                                                          a,
+                                                                          coverage_range, #Add [year_pos] to get cost-coverage curve at that year
+                                                                          alpha))
+            data_to_plot = model.scaleup_data[function]
+            fig = plt.figure('XPERT_ACF')
+            ax1 = fig.add_subplot(221)
+            ax1.plot(cost_uninflated_toplotcostcurve, coverage_values, 'b-', linewidth = 3)
+            ax1.set_title('XPERT ACF cost-coverage curve ' + str(year_index))
+            ax1.set_xlabel('Cost (USD)')
+            ax1.set_ylabel('Coverage (%)')
+            ax1.set_ylim([0, 1.1])
+            ax1.grid(True)
+
+            ax2 = fig.add_subplot(222)
+            ax2.plot(x_vals, cost_uninflated, 'r-', linewidth = 3, label = 'Cost uninflated')
+            ax2.plot(x_vals, cost_inflated, 'r--', linewidth = 3, label = 'Cost inflated')
+            ax2.plot(x_vals_2015onwards_array, cost_discounted_array, 'b--', linewidth = 3, label = 'Cost discounted')
+            ax2.set_title('XPERT ACF yearly total cost (USD)')
+            ax2.set_xlabel('Year')
+            ax2.set_ylabel('Cost (USD)')
+            ax2.set_xlim([2014, end_time])
+            ax2.legend(loc = 'upper right')
+            ax2.grid(True)
+
+            ax3 = fig.add_subplot(223)
+            ax3.plot(x_vals, popsize, 'r-', linewidth = 3)
+            ax3.set_title('XPERT ACF population size')
+            ax3.set_xlabel('Year')
+            ax3.set_ylabel('People')
+            ax3.set_xlim([start_time, end_time])
+            ax3.grid(True)
+
+            ax4 = fig.add_subplot(224)
+            ax4.plot(x_vals, coverage, 'r-', linewidth =3)
+            ax4.scatter(data_to_plot.keys(), data_to_plot.values())
+            ax4.set_title('XPERT ACF coverage')
             ax4.set_xlabel('Year')
             ax4.set_ylabel('Coverage (%)')
             ax4.set_ylim([0, 1.1])

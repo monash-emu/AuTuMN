@@ -33,7 +33,7 @@ class Inputs:
         self.add_model_constant_defaults()
         self.find_ds_outcomes()
         self.add_read_treatment_outcomes()
-        if max(self.model_constants['n_strains']) > 1:
+        if self.model_constants['n_strains'] > 1:
             self.duplicate_ds_outcomes_for_multistrain()
         self.add_epi_dictionaries_to_timevariants()
         self.add_organ_status_to_timevariants()
@@ -321,7 +321,7 @@ class Inputs:
         for status in ['pos', 'neg']:
 
             # If no organ stratification is requested, but time variant organ status requested
-            if max(self.model_constants['n_organs']) < 2 \
+            if self.model_constants['n_organs'] < 2 \
                     and self.time_variants['epi_prop_smear' + status]['time_variant'] == 'yes':
 
                 # Warn about the problem
@@ -463,5 +463,6 @@ if __name__ == '__main__':
 
     inputs = Inputs()
     inputs.read_and_load_data()
+    print()
 
 

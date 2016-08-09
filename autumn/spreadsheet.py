@@ -250,8 +250,7 @@ class ControlPanelReader:
 
         # Stratifications
         elif row[0][:2] == 'n_':
-            self.data[str(row[0])] = []
-            self.add_integer_iteration(row)
+            self.data[str(row[0])] = int(row[1])
 
         # For the calendar year times
         elif 'time' in row[0] or 'smoothness' in row[0]:
@@ -265,8 +264,8 @@ class ControlPanelReader:
 
         # Conditionals for model
         elif row[0][:3] == 'is_' or row[0][:11] == 'comorbidity':
-            self.data[str(row[0])] = []
-            self.add_bool_iteration(row)
+            self.data[str(row[0])] = bool(row[1])
+            # self.add_bool_iteration(row)
 
         # Don't set scenarios through the default sheet
         elif row[0] == 'scenarios_to_run':

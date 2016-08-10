@@ -527,7 +527,7 @@ def run_calibration(n_runs, calibrated_params, targeted_outputs, dt=None):
     base = os.path.join(out_dir, name)
     autumn.plotting.plot_outputs_against_gtb(
         model_runner.model, ["incidence", "mortality", "prevalence", "notifications"],
-        model_runner.inputs['model_constants']['recent_time'],
+        model_runner.inputs.model_constants['recent_time'],
         'current_time',
         base + '.png',
         model_runner.country,
@@ -808,9 +808,9 @@ targeted_outputs = [  # the targeted outputs
         'posterior_sd': 0.1
     }
 ]
-n_runs = 20
+n_runs = 5
 
-#run_calibration(n_runs, calibration_params, targeted_outputs)
+run_calibration(n_runs, calibration_params, targeted_outputs)
 
 
 
@@ -842,16 +842,16 @@ outputs_unc = [
     }
 ]
 
-n_runs = 2
+#n_runs = 2
 
-model_shelf = run_uncertainty(n_runs, param_ranges_unc, outputs_unc, burn_in=5, dt=0.075, adaptive_search=True, search_width=0.2)
+#model_shelf = run_uncertainty(n_runs, param_ranges_unc, outputs_unc, burn_in=5, dt=0.075, adaptive_search=True, search_width=0.2)
 # Notes:
 # adapt for time variant params
 # prevent the algorithm from getting stuck
 # include economics bit after integration of economics with the epi model
 
 
-spaghetti_plot_uncertainty(model_shelf, 'Fiji')
+#spaghetti_plot_uncertainty(model_shelf, 'Fiji')
 
 
 #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #

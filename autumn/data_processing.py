@@ -48,6 +48,7 @@ class Inputs:
             self.find_ageing_rates()
         self.find_single_strain_timeperiods()
         self.find_strains()
+        self.find_treatment_periods()
 
         # Perform checks
         self.checks()
@@ -423,6 +424,24 @@ class Inputs:
             self.strains = ['']
         else:
             self.strains = self.available_strains[:self.model_constants['n_strains']]
+
+    def find_treatment_periods(self):
+
+        """
+        Work out the periods of time spent infectious and non-infectious
+        for each type of treatment.
+        """
+
+        treatment_outcome_types = self.strains
+        if self.model_constants['n_strains'] > 1 and self.is_misassignment:
+            treatment_outcome_types += ['_inappropriate']
+
+        for strain in treatment_outcome_types:
+
+            # Find the non-infectious periods
+            self.model_constants['tb_timeperiod_noninfect_ontreatment' + strain] \
+                = self.model_constants['tb_timeperiod_treatment' + strain] \
+                  - self.model_constants['tb_timeperiod_infect_ontreatment' + strain]
 
     def checks(self):
 

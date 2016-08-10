@@ -368,8 +368,6 @@ class ConsolidatedModel(BaseModel):
         The order in which these methods is run is often important
         """
 
-        self.find_treatment_periods()
-
         self.find_data_for_functions_or_params()
 
         self.find_amplification_data()
@@ -383,24 +381,6 @@ class ConsolidatedModel(BaseModel):
     ##################################################################
     # The methods that process_parameters calls to set parameters and
     # scale-up functions
-
-    def find_treatment_periods(self):
-
-        """
-        Work out the periods of time spent infectious and non-infectious
-        """
-
-        treatment_outcome_types = self.strains
-        if len(self.strains) > 1 and self.is_misassignment:
-            treatment_outcome_types += ['_inappropriate']
-
-        for strain in treatment_outcome_types:
-
-            # Find the non-infectious periods
-            self.set_parameter(
-                'tb_timeperiod_noninfect_ontreatment' + strain,
-                self.params['tb_timeperiod_treatment' + strain]
-                - self.params['tb_timeperiod_infect_ontreatment' + strain])
 
     def find_irrelevant_time_variants(self):
 

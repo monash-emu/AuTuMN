@@ -15,10 +15,6 @@ pluggable API to other system. Applied to Tuberculosis.
 # TODO  
   
 # James TODO:
-- still one bug in spreadsheet.py: parse_row is very similar between
-    ControlPanelReader and FixedParametersReader, but I haven't yet
-    been able to rationalise these back to one function (that
-    ControlPanelReader can inherit from FixedParametersReader)
 - might speed things up to have spreadsheet reader save a data object of
     some sort, as reading is now taking 20+ seconds at each run
 - Xpert improvement in diagnostic algorithm

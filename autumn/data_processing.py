@@ -47,6 +47,7 @@ class Inputs:
             self.set_fixed_age_specific_parameters()
             self.find_ageing_rates()
         self.find_single_strain_timeperiods()
+        self.find_strains()
 
         # Perform checks
         self.checks()
@@ -403,6 +404,25 @@ class Inputs:
                 = self.model_constants['tb_timeperiod_infect_ontreatment_ds']
             self.model_constants['tb_timeperiod_treatment'] \
                 = self.model_constants['tb_timeperiod_treatment_ds']
+
+    def find_strains(self):
+
+        """
+        Finds the strains to be present in the model from a list of available strains and
+        the integer value for the number of strains selected.
+        """
+
+        # List of strains available to model
+        self.available_strains = [
+            '_ds',
+            '_mdr',
+            '_xdr']
+
+        # Need a list of an empty string to be iterable for methods iterating by strain
+        if self.model_constants['n_strains'] == 0:
+            self.strains = ['']
+        else:
+            self.strains = self.available_strains[:self.model_constants['n_strains']]
 
     def checks(self):
 

@@ -171,16 +171,7 @@ class ConsolidatedModel(BaseModel):
         else:
             self.organ_status = available_organs[:self.n_organ]
 
-        # Select number of strains
-        self.available_strains = [
-            '_ds',
-            '_mdr',
-            '_xdr']
-        if self.n_strain == 0:
-            # Need a list of an empty string to be iterable for methods iterating by strain
-            self.strains = ['']
-        else:
-            self.strains = self.available_strains[:self.n_strain]
+        self.strains = self.inputs.strains
 
         self.define_comorbidities()
 
@@ -416,7 +407,7 @@ class ConsolidatedModel(BaseModel):
         # Work out which time-variant parameters are not relevant to this model structure
         irrelevant_time_variants = []
         for time_variant in self.inputs.time_variants.keys():
-            for strain in self.available_strains:
+            for strain in self.inputs.available_strains:
                 if strain not in self.strains and strain in time_variant and '_dst' not in time_variant:
                     irrelevant_time_variants += [time_variant]
             # if 'cost' in time_variant:

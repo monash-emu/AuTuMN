@@ -46,6 +46,7 @@ class Inputs:
         if len(self.agegroups) > 1:
             self.set_fixed_age_specific_parameters()
             self.find_ageing_rates()
+        self.find_single_strain_timeperiods()
 
         # Perform checks
         self.checks()
@@ -388,6 +389,20 @@ class Inputs:
             if 'up' not in agegroup:
                 self.model_constants['ageing_rate' + agegroup] \
                     = 1. / (age_limits[1] - age_limits[0])
+
+    def find_single_strain_timeperiods(self):
+
+        """
+        If the model isn't stratified by strain, use DS-TB time-periods for the single strain.
+        Note that the parameter for the time period infectious on treatment will only be defined
+        for DS-TB in this case and not for no strain name.
+        """
+
+        if self.model_constants['n_strains'] == 0:
+            self.model_constants['tb_timeperiod_infect_ontreatment'] \
+                = self.model_constants['tb_timeperiod_infect_ontreatment_ds']
+            self.model_constants['tb_timeperiod_treatment'] \
+                = self.model_constants['tb_timeperiod_treatment_ds']
 
     def checks(self):
 

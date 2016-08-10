@@ -399,13 +399,6 @@ class ConsolidatedModel(BaseModel):
         Work out the periods of time spent infectious and non-infectious
         """
 
-        # If the model isn't stratified by strain, use DS-TB time-periods for the single strain
-        if self.strains == ['']:
-            self.params['tb_timeperiod_infect_ontreatment'] \
-                = self.params['tb_timeperiod_infect_ontreatment_ds']
-            self.params['tb_timeperiod_treatment'] \
-                = self.params['tb_timeperiod_treatment_ds']
-
         treatment_outcome_types = self.strains
         if len(self.strains) > 1 and self.is_misassignment:
             treatment_outcome_types += ['_inappropriate']

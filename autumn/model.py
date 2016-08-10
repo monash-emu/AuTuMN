@@ -382,27 +382,6 @@ class ConsolidatedModel(BaseModel):
     # The methods that process_parameters calls to set parameters and
     # scale-up functions
 
-    def find_irrelevant_time_variants(self):
-
-        # Work out which time-variant parameters are not relevant to this model structure
-        irrelevant_time_variants = []
-        for time_variant in self.inputs.time_variants.keys():
-            for strain in self.inputs.available_strains:
-                if strain not in self.strains and strain in time_variant and '_dst' not in time_variant:
-                    irrelevant_time_variants += [time_variant]
-            # if 'cost' in time_variant:
-            #     irrelevant_time_variants += [time_variant]
-            if len(self.strains) < 2 and ('line_dst' in time_variant or '_inappropriate' in time_variant):
-                irrelevant_time_variants += [time_variant]
-            elif len(self.strains) == 2 and 'secondline_dst' in time_variant:
-                irrelevant_time_variants += [time_variant]
-            elif len(self.strains) == 2 and 'smearneg' in time_variant:
-                irrelevant_time_variants += [time_variant]
-            if 'lowquality' in time_variant and not self.is_lowquality:
-                irrelevant_time_variants += [time_variant]
-
-        return irrelevant_time_variants
-
     def find_data_for_functions_or_params(self):
 
         """
@@ -420,7 +399,7 @@ class ConsolidatedModel(BaseModel):
         self.scaleup_data = {}
 
         # Flag the time-variant parameters that aren't relevant
-        irrelevant_time_variants = self.find_irrelevant_time_variants()
+        irrelevant_time_variants = self.inputs.irrelevant_time_variants
 
         # Find the programs that are relevant and load them to the scaleup_data attribute
         for time_variant in self.inputs.time_variants:

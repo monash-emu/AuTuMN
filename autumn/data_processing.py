@@ -49,6 +49,7 @@ class Inputs:
         self.find_single_strain_timeperiods()
         self.find_strains()
         self.find_treatment_periods()
+        self.find_irrelevant_time_variants()
 
         # Perform checks
         self.checks()
@@ -442,6 +443,24 @@ class Inputs:
             self.model_constants['tb_timeperiod_noninfect_ontreatment' + strain] \
                 = self.model_constants['tb_timeperiod_treatment' + strain] \
                   - self.model_constants['tb_timeperiod_infect_ontreatment' + strain]
+
+    def find_irrelevant_time_variants(self):
+
+        # Work out which time-variant parameters are not relevant to this model structure
+        self.irrelevant_time_variants = []
+        for time_variant in self.time_variants.keys():
+            for strain in self.available_strains:
+                if strain not in self.strains and strain in time_variant and '_dst' not in time_variant:
+                    self.irrelevant_time_variants += [time_variant]
+            if self.model_constants['n_strains'] < 2 \
+                    and ('line_dst' in time_variant or '_inappropriate' in time_variant):
+                self.irrelevant_time_variants += [time_variant]
+            elif self.model_constants['n_strains'] == 2 and 'secondline_dst' in time_variant:
+                self.irrelevant_time_variants += [time_variant]
+            elif self.model_constants['n_strains'] == 2 and 'smearneg' in time_variant:
+                self.irrelevant_time_variants += [time_variant]
+            if 'lowquality' in time_variant and not self.model_constants['is_lowquality']:
+                self.irrelevant_time_variants += [time_variant]
 
     def checks(self):
 

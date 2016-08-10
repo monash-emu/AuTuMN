@@ -45,6 +45,7 @@ class Inputs:
         self.find_age_groups()
         if len(self.agegroups) > 1:
             self.set_fixed_age_specific_parameters()
+            self.find_ageing_rates()
 
         # Perform checks
         self.checks()
@@ -375,6 +376,18 @@ class Inputs:
                                                         parameter_name=param)
             for agegroup in self.agegroups:
                 self.model_constants[prog_stem + agegroup] = prog_age_adjusted_params[agegroup]
+
+    def find_ageing_rates(self):
+
+        """
+        Calculate ageing rates as the reciprocal of the width of the age bracket.
+        """
+
+        for agegroup in self.agegroups:
+            age_limits, _ = tool_kit.interrogate_age_string(agegroup)
+            if 'up' not in agegroup:
+                self.model_constants['ageing_rate' + agegroup] \
+                    = 1. / (age_limits[1] - age_limits[0])
 
     def checks(self):
 

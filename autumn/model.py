@@ -335,9 +335,8 @@ class ConsolidatedModel(BaseModel):
         if proportion > 1. or proportion < 0.:
             raise Exception('Proportion greater than one or less than zero')
         elif proportion == 1.:
-            # This is just to avoid warnings appearing where the proportion
-            # is one - this function isn't really intended for this situation,
-            # but preferable to avoid both errors and warnings.
+            # This is just to avoid warnings or errors where the proportion
+            # is one. However, this function isn't really intended for this situation.
             early_proportion = 0.5
         else:
             early_proportion \
@@ -378,8 +377,6 @@ class ConsolidatedModel(BaseModel):
         The order in which these methods is run is often important
         """
 
-        if len(self.agegroups) > 1: self.find_ageing_rates()
-
         self.find_treatment_periods()
 
         self.find_data_for_functions_or_params()
@@ -395,18 +392,6 @@ class ConsolidatedModel(BaseModel):
     ##################################################################
     # The methods that process_parameters calls to set parameters and
     # scale-up functions
-
-    def find_ageing_rates(self):
-
-        """
-        Calculate ageing rates as the reciprocal of the width of the age bracket
-        """
-
-        for agegroup in self.agegroups:
-            age_limits, _ = tool_kit.interrogate_age_string(agegroup)
-            if 'up' not in agegroup:
-                self.set_parameter('ageing_rate' + agegroup,
-                                   1. / (age_limits[1] - age_limits[0]))
 
     def find_treatment_periods(self):
 

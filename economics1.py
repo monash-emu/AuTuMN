@@ -599,7 +599,7 @@ def cost_scaleup_fns(model,
 
             for i in numpy.arange(0, len(x_vals), 1):
                 all_flows = model.var_array[int(i)]
-                program_rate_detect = all_flows[48]
+                program_rate_detect = all_flows[51]
                 program_rate_missed = all_flows[12]
                 presenting_for_care_rate = program_rate_detect + program_rate_missed
                 #active_all = active_extrapul[int(i)] + active_smearneg[int(i)] + active_smearpos[int(i)]

@@ -146,7 +146,10 @@ def cost_scaleup_fns(model,
                                                                           a,
                                                                           coverage[int(i)], #Add [year_pos] to get cost-coverage curve at that year
                                                                           alpha))
+                        print(start_time, end_time, len(cost_uninflated), len(x_vals))
+
                         cost_inflated.append(cost_uninflated[int(i)] * cpi[int(year_current)] / cpi_scaleup[int(i)])
+
                         current_year_pos = ((year_current - start_time) / ((end_time - start_time) / len(model.times)))
 
                         if i >= current_year_pos and i <= len(x_vals):

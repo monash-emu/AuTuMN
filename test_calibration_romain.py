@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 import os
 import glob
+import copy
 
 import numpy
 from numpy import isfinite
-from scipy.stats import  norm,  uniform
+from scipy.stats import norm,  uniform, beta
 
 import autumn.base
 import autumn.model
 import autumn.curve
 import autumn.plotting
 import autumn.data_processing
+import autumn.tool_kit
 
 import datetime
 from autumn.spreadsheet import read_input_data_xls
@@ -33,15 +35,16 @@ def is_positive_definite(v):
 class ModelRunner:
 
     def __init__(self):
-
+        #self.mode = 'calibration'
+        self.mode = 'uncertainty'
         self.country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
         self.inputs = autumn.data_processing.Inputs(True)
         self.inputs.read_and_load_data()
-        n_organs = self.inputs.model_constants['n_organs'][0]
-        n_strains = self.inputs.model_constants['n_strains'][0]
-        is_quality = self.inputs.model_constants['is_lowquality'][0]
-        is_amplification = self.inputs.model_constants['is_amplification'][0]
-        is_misassignment = self.inputs.model_constants['is_misassignment'][0]
+        n_organs = self.inputs.model_constants['n_organs'] #[0]
+        n_strains = self.inputs.model_constants['n_strains'] #[0]
+        is_quality = self.inputs.model_constants['is_lowquality'] #[0]
+        is_amplification = self.inputs.model_constants['is_amplification'] #[0]
+        is_misassignment = self.inputs.model_constants['is_misassignment'] #[0]
         self.model = autumn.model.ConsolidatedModel(
             n_organs,
             n_strains,
@@ -100,14 +103,40 @@ class ModelRunner:
                 'posterior_sd': 0.1
             }
         ]
+
+
+        self.param_ranges_unc = [
+            {
+                'key': u'tb_n_contact',
+                'bounds': [3., 30.],
+                'distribution': 'beta'
+            },
+            {
+                'key': u'program_prop_death_reporting',
+                'bounds': [0.1, 0.6],
+                'distribution': 'beta'
+            }
+        ]
+
+        self.outputs_unc = [
+            {
+                'key': 'incidence',
+                'posterior_sd': None
+            },
+            {
+                'key': 'mortality',
+                'posterior_width': 2.0
+            }
+        ]
+
+
         for key, value in self.inputs.model_constants.items():
             if type(value) == float:
                 self.model.set_parameter(key, value)
-        # for key, value in self.inputs['country_constants'].items():
-        #     self.model.set_parameter(key, value)
 
-        for props in self.param_props_list:
-            self.model.set_parameter(props['key'],props['init'])
+        if self.mode == 'calibration':
+            for props in self.param_props_list:
+                self.model.set_parameter(props['key'], props['init'])
 
         self.data_to_fit = {}
         self.get_data_to_fit() # collect the data regarding incidence , mortality, etc. from the model object
@@ -115,12 +144,19 @@ class ModelRunner:
         self.nb_accepted = 0
 
     def get_data_to_fit(self):
+        var_to_iterate = self.calib_outputs # for calibration
+        if self.mode == 'uncertainty':
+            var_to_iterate = self.outputs_unc
 
-        for output in self.calib_outputs:
+        for output in var_to_iterate:
             if (output['key']) == 'incidence':
                 self.data_to_fit['incidence'] = self.model.inputs.original_data['tb']['e_inc_100k']
+                self.data_to_fit['incidence_low'] = self.model.inputs.original_data['tb']['e_inc_100k_lo']
+                self.data_to_fit['incidence_high'] = self.model.inputs.original_data['tb']['e_inc_100k_hi']
             elif (output['key']) == 'mortality':
                 self.data_to_fit['mortality'] = self.model.inputs.original_data['tb']['e_mort_exc_tbhiv_100k']
+                self.data_to_fit['mortality_low'] = self.model.inputs.original_data['tb']['e_mort_exc_tbhiv_100k_lo']
+                self.data_to_fit['mortality_high'] = self.model.inputs.original_data['tb']['e_mort_exc_tbhiv_100k_hi']
             else:
                 print "Warning: Calibrated output %s is not directly available from the data" % output['key']
 
@@ -504,13 +540,245 @@ def run_calibration(n_runs, calibrated_params, targeted_outputs, dt=None):
     print("Time elapsed in running script is " + str(datetime.datetime.now() - start_realtime))
 
 
+def run_uncertainty(n_runs, param_ranges_unc, outputs_unc, burn_in=10, dt=None, adaptive_search=True ,search_width=0.2):
+    """
+        run the uncertainty analysis for a country
+
+        Args:
+            n_runs: number of accepted parameter sets that we want
+            param_ranges_unc: dictionary defining the parameter ranges
+            outputs_unc: dictionary defining the outputs that we are targeting
+            dt: step time for integration. If None, it will be automatically determined to get optimal calculation time
+            adaptive_search: if True, the next candidate is generated from Normal distribution centred around current position
+                             if False, the prior distribution is used to generate the parameter
+            search_width: relevant when adaptive_search is True. Define the relative width of the 95% SI corresponding to the
+                          new candidate generation from the normal distribution. It is relative to the width of the
+                          attribute 'bounds' of 'param_ranges_unc'. i.e. search_width = 1.0 -> bounds is the 95% SI
+        Returns:
+            master storage unit that will keep track of all accepted parameter sets and associated model objects (with integration run)
+        """
+    model_shelf = []      # the master storage unit be returned
+
+    model_runner = ModelRunner()
+    print model_runner.country
+    print "Uncertainty analysis"
+    model_runner.param_ranges_unc = param_ranges_unc
+    model_runner.outputs_unc = outputs_unc
+
+    if dt is None:
+        print "******** Automatic determination of the step-time *********"
+        dts = [2., 1., 0.75, 0.5, 0.4, 0.3, 0.2, 0.15, 0.1, 0.075, 0.05, 0.02, 0.01, 0.005, 0.001 ]
+        ok = 0
+        i = 0
+        while ok == 0:
+            val = dts[i]
+            model_runner.model.time_step = val
+            ok = 1
+            try:
+                model_runner.model.integrate_explicit()
+            except:
+                print "dt=" + str(val) + " fails"
+                ok = 0
+                i += 1
+        dt = val
+        print "********   dt=" + str(val) + " succeeds     ******** "
+
+    model_runner.model.time_step = dt
+
+    # Parameters candidates generation
+    def generate_candidates(nb_candidates, param_ranges_unc):
+        par_candidates = {}  # will store the candidates value
+        for par_dic in param_ranges_unc:
+            bound_low, bound_high = par_dic['bounds'][0], par_dic['bounds'][1]
+            if par_dic['distribution'] == 'beta':
+                x = numpy.random.beta(2.0, 2.0, nb_candidates)
+                x = bound_low + x*(bound_high - bound_low)
+            elif par_dic['distribution'] == 'uniform':
+                x = numpy.random.uniform(bound_low,bound_high, nb_candidates)
+
+            par_candidates[par_dic['key']] = x
+
+        return par_candidates
+
+    def update_par(pars):
+        # pars is the former position for the different parameters
+        new_pars = []
+        i = 0
+        for par_dict in param_ranges_unc:
+            bounds = par_dict['bounds']
+            sd = search_width*(bounds[1] - bounds[0]) / (2.0 * 1.96)
+            random = -100.
+            while random < bounds[0] or random > bounds[1]:
+                random = norm.rvs(loc=pars[i], scale=sd, size=1)
+            new_pars.append(random)
+            i += 1
+        return (new_pars)
+
+    if not adaptive_search:
+        nb_candidates = n_runs * 10
+    else:
+        nb_candidates = 1
+
+    par_candidates = generate_candidates(nb_candidates=nb_candidates, param_ranges_unc=param_ranges_unc)
+
+    # define the characteristics of the normal distribution for model outputs (incidence, mortality)
+    def get_normal_char(model_runner, outputs_unc):
+        normal_char = {} # store the characteristics of the normal distributions
+        for output_dict in outputs_unc:
+            normal_char[output_dict['key']] = {}
+            if output_dict['key'] == 'mortality':
+                sd = output_dict['posterior_width'] / (2.0 * 1.96)
+                for year in model_runner.data_to_fit[output_dict['key']].keys():
+                    mu = model_runner.data_to_fit[output_dict['key']][year]
+                    normal_char[output_dict['key']][year] = [mu, sd]
+
+            elif output_dict['key'] == 'incidence':
+                for year in model_runner.data_to_fit[output_dict['key']].keys():
+                    low = model_runner.data_to_fit['incidence_low'][year]
+                    high = model_runner.data_to_fit['incidence_high'][year]
+                    sd = (high - low) / (2.0 * 1.96)
+                    mu = 0.5*(high + low)
+                    normal_char[output_dict['key']][year] = [mu, sd]
+
+        return normal_char
+
+    normal_char = get_normal_char(model_runner=model_runner, outputs_unc=outputs_unc)
+
+    # start simulation
+    par_accepted = {}
+    for par_dict in param_ranges_unc:
+        par_accepted[par_dict['key']] = []
+    n_accepted = 0
+    i_candidates = 0
+    j = 0
+    prev_log_likelihood = -1e10
+    while n_accepted < n_runs + burn_in:
+        new_params = []
+        if not adaptive_search:
+            for par_dict in param_ranges_unc:
+                new_params.append(par_candidates[par_dict['key']][j])
+        else:
+            if i_candidates == 0:
+                new_params = []
+                for par_dict in param_ranges_unc:
+                    new_params.append(par_candidates[par_dict['key']][j])
+            else:
+                new_params = update_par(params)
+
+        model_runner.run_with_params(new_params)
+        if not model_runner.is_last_run_success:
+            accepted = 0
+        else:
+            prior_log_likelihood = 0.0
+            k = 0
+            for par_dict in param_ranges_unc:
+                par_val = new_params[k]
+                # calculate the density of par_val
+                bound_low, bound_high = par_dict['bounds'][0], par_dict['bounds'][1]
+                if par_dict['distribution'] == 'beta':
+                    #x = numpy.random.beta(2.0, 2.0, nb_candidates)
+                    x = (par_val - bound_low)/(bound_high - bound_low)
+                    prior_log_likelihood += beta.logpdf(x, 2.0, 2.0)
+                elif par_dict['distribution'] == 'uniform':
+                    prior_log_likelihood += numpy.log(1.0 / (bound_high - bound_low))
+
+                k += 1
+
+            posterior_log_likelihood = 0.0
+            for output_dict in outputs_unc:
+                dic = normal_char[output_dict['key']]
+                for year in dic.keys():
+                    year_indice = indices(model_runner.model.times, lambda x: x >= year)[0]
+                    y = model_runner.model.get_var_soln(output_dict['key'])[year_indice]
+                    mu, sd = dic[year][0], dic[year][1]
+                    posterior_log_likelihood += norm.logpdf(y, mu, sd)
+
+            log_likelihood = prior_log_likelihood + posterior_log_likelihood
+
+            if log_likelihood >= prev_log_likelihood:
+                accepted = 1
+            else:
+                accepted = numpy.random.binomial(n=1, p=numpy.exp(log_likelihood - prev_log_likelihood))
+
+            if accepted == 1:
+                n_accepted += 1
+                k = 0
+                for par_dict in param_ranges_unc:
+                    par_accepted[par_dict['key']].append(new_params[k])
+                    k += 1
+                prev_log_likelihood = log_likelihood
+                params = new_params
+
+                if n_accepted > burn_in:
+                    # model storage
+                    params_dict = {}
+                    k = 0
+                    for par_dict in param_ranges_unc:
+                        params_dict[par_dict['key']] = new_params[k]
+                        k += 1
+
+                    model_copy = copy.copy(model_runner.model)
+                    model_shelf.append(
+                        {
+                            'model': model_copy,
+                            'params': params_dict,
+                            'log_likelihood': log_likelihood
+                        }
+                    )
+
+        i_candidates += 1
+        j += 1
+        if j >= len(par_candidates.keys()) and not adaptive_search: # we need to generate more candidates
+            par_candidates = generate_candidates(nb_candidates=nb_candidates, param_ranges_unc=param_ranges_unc)
+            j = 0
+        print (str(n_accepted) + ' accepted / ' + str(i_candidates) + ' candidates' )
+
+    return model_shelf
+
+def spaghetti_plot_uncertainty(model_shelf, country):
+    """
+
+    Args:
+        model_shelf: master storage unit created from the function run_uncertainty(...)
+
+    Returns:
+        nothing. Just plot
+    """
+    n_runs = len(model_shelf)
+
+    out_dir = 'uncertainty'
+    if not os.path.isdir(out_dir):
+        os.makedirs(out_dir)
+    base = os.path.join(out_dir, country + '_uncertainty_outputs_gtb')
+
+    cpt = 0
+    for model_dict in model_shelf:
+        cpt += 1
+        if (cpt == 1):
+            sc = None
+        else:
+            sc = 2
+        final_run = False
+        if cpt == n_runs:
+            final_run = True
+
+        autumn.plotting.plot_outputs_against_gtb(
+            model_dict['model'], ['incidence', 'mortality', 'prevalence', 'notifications'],
+            1990.0,
+            png= base + '.png',
+            country=country,
+            final_run=final_run,
+            scenario=sc
+            )
+
+
 #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #
 #   #         Define and run the calibration from here          #   #
 
 calibration_params = [  # the parameters that we are fitting
     {
         'key': u'tb_n_contact',
-        'init': 20.,  # initial guess
+        'init': 7.,  # initial guess
         'bounds': [3., 30.],  # no parameter values will be generated outside of these bounds
         'width_95_prior': 1.0  # width of the interval containing 95% of the generated parameter values
     },
@@ -540,9 +808,50 @@ targeted_outputs = [  # the targeted outputs
         'posterior_sd': 0.1
     }
 ]
-n_runs = 100
+n_runs = 20
 
-run_calibration(n_runs, calibration_params, targeted_outputs)
+#run_calibration(n_runs, calibration_params, targeted_outputs)
+
+
+
+
+
+#   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #
+#   #         Define and run the the uncertainty from here          #   #
+param_ranges_unc = [
+    {
+        'key': u'tb_n_contact',
+        'bounds': [6.5, 8.5],
+        'distribution': 'uniform'
+    },
+    {
+        'key': u'program_prop_death_reporting',
+        'bounds': [0.1, 0.6],
+        'distribution': 'beta'
+    }
+]
+
+outputs_unc = [
+    {
+        'key': 'incidence',
+        'posterior_width': None
+    },
+    {
+        'key': 'mortality',
+        'posterior_width': 1.0
+    }
+]
+
+n_runs = 2
+
+model_shelf = run_uncertainty(n_runs, param_ranges_unc, outputs_unc, burn_in=5, dt=0.075, adaptive_search=True, search_width=0.2)
+# Notes:
+# adapt for time variant params
+# prevent the algorithm from getting stuck
+# include economics bit after integration of economics with the epi model
+
+
+spaghetti_plot_uncertainty(model_shelf, 'Fiji')
 
 
 #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #

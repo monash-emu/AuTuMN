@@ -55,6 +55,7 @@ class Inputs:
         self.find_tb_case_fatality()
         self.checks()
         self.find_amplification_data()
+        self.find_other_structures()
 
     def determine_country(self):
 
@@ -548,6 +549,16 @@ class Inputs:
                 = {self.model_constants['start_mdr_introduce_period']: 0.,
                    self.model_constants['end_mdr_introduce_period']: self.model_constants['tb_prop_amplification'],
                    'time_variant': 'yes'}
+
+    def find_other_structures(self):
+
+        # Set Boolean conditionals for model structure and additional diagnostics
+        self.is_lowquality = self.model_constants['is_lowquality']
+        self.is_amplification = self.model_constants['is_amplification']
+        self.is_misassignment = self.model_constants['is_misassignment']
+
+        if self.is_misassignment:
+            assert self.is_amplification, 'Misassignment requested without amplification'
 
     #############################################################################
     #  General methods for use by the other methods above

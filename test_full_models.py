@@ -32,114 +32,104 @@ if inputs.model_constants['output_spreadsheets']:
     project.country = country
     project.name = 'project_test'  # This name will be used as a directory to store all the output files
 
-# At this point, I'm leaving the model attributes elements that follow as lists,
-# as it may be useful iterate over several model structures in the future, although I'm not sure
-# this will be needed.
-n_strains = inputs.model_constants['n_strains']
-is_amplification = inputs.model_constants['is_amplification']
-is_misassignment = inputs.model_constants['is_misassignment']
-if (is_misassignment and not is_amplification) \
-        or (inputs.model_constants['n_strains'] <= 1 and (is_amplification or is_misassignment)):
-    pass
-else:
-    base = os.path.join(out_dir, country + '_baseline')
+base = os.path.join(out_dir, country + '_baseline')
 
-    models = {}
-    for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
+models = {}
+for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
 
-        if scenario is None:
-            model_name = 'baseline'
-        else:
-            model_name = 'scenario_' + str(scenario)
+    if scenario is None:
+        model_name = 'baseline'
+    else:
+        model_name = 'scenario_' + str(scenario)
 
-        if scenario == inputs.model_constants['scenarios_to_run'][-1]:
-            final = True
-        else:
-            final = False
+    if scenario == inputs.model_constants['scenarios_to_run'][-1]:
+        final = True
+    else:
+        final = False
 
-        if inputs.model_constants['output_spreadsheets']:
-            project.scenarios.append(model_name)
+    if inputs.model_constants['output_spreadsheets']:
+        project.scenarios.append(model_name)
 
-        models[model_name] = autumn.model.ConsolidatedModel(
-            scenario,  # Scenario to run
-            inputs)
-        if n == 0:
-            print(autumn.tool_kit.introduce_model(models, model_name))
+    models[model_name] = autumn.model.ConsolidatedModel(
+        scenario,  # Scenario to run
+        inputs)
+    if n == 0:
+        print(autumn.tool_kit.introduce_model(models, model_name))
 
-        if scenario is not None:
-            scenario_start_time_index = \
-                models['baseline'].find_time_index(inputs.model_constants['scenario_start_time'])
-            models[model_name].start_time = \
-                models['baseline'].times[scenario_start_time_index]
-            models[model_name].loaded_compartments = \
-                models['baseline'].load_state(scenario_start_time_index)
+    if scenario is not None:
+        scenario_start_time_index = \
+            models['baseline'].find_time_index(inputs.model_constants['scenario_start_time'])
+        models[model_name].start_time = \
+            models['baseline'].times[scenario_start_time_index]
+        models[model_name].loaded_compartments = \
+            models['baseline'].load_state(scenario_start_time_index)
 
-        print('Running model "' + model_name + '".')
-        if n == 0:
-            print(autumn.tool_kit.describe_model(models, model_name))
-        models[model_name].integrate()
+    print('Running model "' + model_name + '".')
+    if n == 0:
+        print(autumn.tool_kit.describe_model(models, model_name))
+    models[model_name].integrate()
 
-        if inputs.model_constants['output_spreadsheets']:
-            project.models[model_name] = \
-                models[model_name]  # Store the model in the object 'project'
-            project.output_dict[model_name] = \
-                w_o.create_output_dict(models[model_name])  # Store simplified outputs
+    if inputs.model_constants['output_spreadsheets']:
+        project.models[model_name] = \
+            models[model_name]  # Store the model in the object 'project'
+        project.output_dict[model_name] = \
+            w_o.create_output_dict(models[model_name])  # Store simplified outputs
 
-        print('Time elapsed so far is ' + str(datetime.datetime.now() - start_realtime))
+    print('Time elapsed so far is ' + str(datetime.datetime.now() - start_realtime))
 
-        autumn.plotting.plot_outputs_against_gtb(
-            models[model_name], ['incidence', 'mortality', 'prevalence', 'notifications'],
+    autumn.plotting.plot_outputs_against_gtb(
+        models[model_name], ['incidence', 'mortality', 'prevalence', 'notifications'],
+        inputs.model_constants['recent_time'],
+        'scenario_end_time',
+        base + '_outputs_gtb.png',
+        country,
+        scenario=scenario,
+        figure_number=31,
+        final_run=final)
+
+    if inputs.model_constants['output_by_age']:
+        autumn.plotting.plot_outputs_by_age(
+            models[model_name],
             inputs.model_constants['recent_time'],
             'scenario_end_time',
-            base + '_outputs_gtb.png',
+            base + '_age_outputs_gtb.png',
             country,
             scenario=scenario,
-            figure_number=31,
+            figure_number=21,
             final_run=final)
 
-        if inputs.model_constants['output_by_age']:
-            autumn.plotting.plot_outputs_by_age(
-                models[model_name],
-                inputs.model_constants['recent_time'],
-                'scenario_end_time',
-                base + '_age_outputs_gtb.png',
-                country,
-                scenario=scenario,
-                figure_number=21,
-                final_run=final)
+# Make a flow-diagram
+if inputs.model_constants['output_flow_diagram']:
+    models['baseline'].make_graph(base + '.workflow')
 
-    # Make a flow-diagram
-    if inputs.model_constants['output_flow_diagram']:
-        models['baseline'].make_graph(base + '.workflow')
+# Plot over subgroups
+if inputs.model_constants['output_fractions']:
+    subgroup_solns, subgroup_fractions = autumn.tool_kit.find_fractions(models['baseline'])
+    for i, category in enumerate(subgroup_fractions):
+        autumn.plotting.plot_fractions(
+            models['baseline'],
+            subgroup_fractions[category],
+            models['baseline'].inputs.model_constants['recent_time'],
+            'strain', base + '_fraction_' + category + '.png',
+            figure_number=30+i)
 
-    # Plot over subgroups
-    if inputs.model_constants['output_fractions']:
-        subgroup_solns, subgroup_fractions = autumn.tool_kit.find_fractions(models['baseline'])
-        for i, category in enumerate(subgroup_fractions):
-            autumn.plotting.plot_fractions(
-                models['baseline'],
-                subgroup_fractions[category],
-                models['baseline'].inputs.model_constants['recent_time'],
-                'strain', base + '_fraction_' + category + '.png',
-                figure_number=30+i)
+# Plot proportions of population
+if inputs.model_constants['output_comorbidity_fractions']:
+    autumn.plotting.plot_stratified_populations(models['baseline'],
+                                                png=base + '_comorbidity_fraction.png',
+                                                age_or_comorbidity='comorbidity',
+                                                start_time='early_time')
 
-    # Plot proportions of population
-    if inputs.model_constants['output_comorbidity_fractions']:
-        autumn.plotting.plot_stratified_populations(models['baseline'],
-                                                    png=base + '_comorbidity_fraction.png',
-                                                    age_or_comorbidity='comorbidity',
-                                                    start_time='early_time')
-
-    # Plot proportions of population
-    if inputs.model_constants['output_age_fractions']:
-        autumn.plotting.plot_stratified_populations(models['baseline'],
-                                                    png=base + '_age_fraction.png',
-                                                    age_or_comorbidity='age',
-                                                    start_time='early_time')
+# Plot proportions of population
+if inputs.model_constants['output_age_fractions']:
+    autumn.plotting.plot_stratified_populations(models['baseline'],
+                                                png=base + '_age_fraction.png',
+                                                age_or_comorbidity='age',
+                                                start_time='early_time')
 
 
-    if inputs.model_constants['output_scaleups']:
-        autumn.plotting.plot_classified_scaleups(models['baseline'], base)
+if inputs.model_constants['output_scaleups']:
+    autumn.plotting.plot_classified_scaleups(models['baseline'], base)
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)

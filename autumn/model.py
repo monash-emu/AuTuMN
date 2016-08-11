@@ -398,33 +398,27 @@ class ConsolidatedModel(BaseModel):
         # Collect data to generate scale-up functions
         self.scaleup_data = {}
 
-        # Flag the time-variant parameters that aren't relevant
-        irrelevant_time_variants = self.inputs.irrelevant_time_variants
-
         # Find the programs that are relevant and load them to the scaleup_data attribute
         for time_variant in self.inputs.time_variants:
-            if time_variant not in irrelevant_time_variants:
+            if time_variant not in self.inputs.irrelevant_time_variants:
                 self.scaleup_data[str(time_variant)] = {}
                 for i in self.inputs.time_variants[time_variant]:
-                    if i == 'time_variant':
-                        self.scaleup_data[str(time_variant)]['time_variant'] = self.inputs.time_variants[time_variant][i]
-                    # For the smoothness parameter
-                    elif i == 'smoothness':
-                        self.scaleup_data[str(time_variant)]['smoothness'] = self.inputs.time_variants[time_variant][i]
                     # For years with data percentages
-                    elif type(i) == int and 'program_prop_' in time_variant:
-                        self.scaleup_data[str(time_variant)][i] = self.inputs.time_variants[time_variant][i] / 1E2
+                    if type(i) == int and 'program_prop_' in time_variant:
+                        self.scaleup_data[str(time_variant)][i] \
+                            = self.inputs.time_variants[time_variant][i] / 1E2
                     # For years with data not percentages
-                    elif type(i) == int:
-                        self.scaleup_data[str(time_variant)][i] = self.inputs.time_variants[time_variant][i]
+                    elif type(i) == int or i == 'time_variant' or i == 'smoothness':
+                        self.scaleup_data[str(time_variant)][i] \
+                            = self.inputs.time_variants[time_variant][i]
                     # For scenarios with data percentages
-                    elif type(i) == unicode and 'scenario_' + str(self.scenario) in i and 'prop_' in time_variant:
+                    elif type(i) == unicode and i == 'scenario_' + str(self.scenario) and 'prop_' in time_variant:
                         self.scaleup_data[str(time_variant)]['scenario'] = \
-                            self.inputs.time_variants[time_variant]['scenario_' + str(self.scenario)] / 1E2
+                            self.inputs.time_variants[time_variant][i] / 1E2
                     # For scenarios with data not percentages
-                    elif type(i) == unicode and 'scenario_' + str(self.scenario) in i:
+                    elif type(i) == unicode and i == 'scenario_' + str(self.scenario):
                         self.scaleup_data[str(time_variant)]['scenario'] = \
-                            self.inputs.time_variants[time_variant]['scenario_' + str(self.scenario)]
+                            self.inputs.time_variants[time_variant][i]
 
     def find_amplification_data(self):
 

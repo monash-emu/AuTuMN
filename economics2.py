@@ -146,7 +146,6 @@ def cost_scaleup_fns(model,
                                                                           a,
                                                                           coverage[int(i)], #Add [year_pos] to get cost-coverage curve at that year
                                                                           alpha))
-                        print(start_time, end_time, len(cost_uninflated), len(x_vals))
 
                         cost_inflated.append(cost_uninflated[int(i)] * cpi[int(year_current)] / cpi_scaleup[int(i)])
 
@@ -278,7 +277,7 @@ def cost_scaleup_fns(model,
             for i in numpy.arange(0, len(x_vals), 1):
                 all_flows = model.var_array[int(i)]
                 for a, b in enumerate(model.var_labels):
-                    if b == 'ipt_commencements':
+                    if b == 'ipt_commencements_age0to5':
                         #pop = all_flows[a] #actually vaccinated
                         pop = all_flows[a]
                         popsize.append(pop)
@@ -422,8 +421,8 @@ def cost_scaleup_fns(model,
                         model.compartment_soln['active_smearpos_age5to15']
             for i in numpy.arange(0, len(x_vals), 1):
                 all_flows = model.var_array[int(i)]
-                program_rate_detect = all_flows[51]
-                program_rate_missed = all_flows[12]
+                program_rate_detect = all_flows[52]
+                program_rate_missed = all_flows[14]
                 presenting_for_care_rate = program_rate_detect + program_rate_missed
                 presentation_per_time =  presenting_for_care_rate * active_all[int(i)]
                 pop = presentation_per_time

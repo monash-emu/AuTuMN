@@ -304,7 +304,7 @@ class BaseModel:
 
         self.calculate_diagnostics()
 
-    def integrate_runge_kutta(self, min_dt=0.05):
+    def integrate_runge_kutta(self, dt_max=0.05):
 
         """
         Uses Runge-Kutta 4 method.
@@ -323,22 +323,44 @@ class BaseModel:
         derivative = self.make_derivate_fn()
         time = self.times[0]
         self.soln_array[0, :] = y
+        dt_is_ok = True
         for i_time, new_time in enumerate(self.times):
             while time < new_time:
+                if not dt_is_ok:
+                    adaptive_dt_max = dt/2.0
+                else:
+                    adaptive_dt_max = dt_max
+                dt_is_ok = True
                 old_time = time
-                time = time + min_dt
-                dt = min_dt
+                time = time + adaptive_dt_max
+                dt = adaptive_dt_max
                 if time > new_time:
                     dt = new_time - old_time
                     time = new_time
 
                 k1 = numpy.asarray(derivative(y, old_time))
-                k2 = numpy.asarray(derivative(y + 0.5*dt*k1, old_time + 0.5*dt))
-                k3 = numpy.asarray(derivative(y + 0.5*dt*k2,  old_time + 0.5*dt))
-                k4 = numpy.asarray(derivative(y + dt*k3, time))
+                y_k2 = y + 0.5 * dt * k1
+                if (y_k2 >= 0).all():
+                    k2 = numpy.asarray(derivative(y_k2, old_time + 0.5*dt))
+                else:
+                    dt_is_ok = False
+                    continue
+                y_k3 = y + 0.5 * dt * k2
+                if (y_k3 >= 0).all():
+                    k3 = numpy.asarray(derivative(y + 0.5*dt*k2,  old_time + 0.5*dt))
+                else:
+                    dt_is_ok = False
+                    continue
+                y_k4 = y + dt*k3
+                if (y_k4 >= 0).all():
+                    k4 = numpy.asarray(derivative(y + dt*k3, time))
+                else:
+                    dt_is_ok = False
+                    continue
 
                 for i in range(n_compartment):
                     y[i] = y[i] + (dt/6.0) * (k1[i] + 2.0*k2[i] + 2.0*k3[i] + k4[i])
+
 
             if i_time < n_time - 1:
                 self.soln_array[i_time + 1, :] = y

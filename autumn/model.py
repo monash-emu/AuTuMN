@@ -1463,12 +1463,12 @@ class ConsolidatedModel(BaseModel):
 
     def integrate(self):
 
-        min_dt = 0.05
+        dt_max = 0.1
         if self.inputs.model_constants['integration'] == 'explicit':
-            self.integrate_explicit(min_dt)
+            self.integrate_explicit(dt_max)
         elif self.inputs.model_constants['integration'] == 'scipy':
-            self.integrate_scipy(min_dt)
+            self.integrate_scipy(dt_max)
         elif self.inputs.model_constants['integration'] == 'runge_kutta':
-            self.integrate_runge_kutta(min_dt)
+            self.integrate_runge_kutta(dt_max)
 
 

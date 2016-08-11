@@ -370,8 +370,6 @@ class ConsolidatedModel(BaseModel):
 
         self.find_data_for_functions_or_params()
 
-        self.find_amplification_data()
-
         self.find_functions_or_params()
 
         self.find_natural_history_params()
@@ -419,18 +417,6 @@ class ConsolidatedModel(BaseModel):
                     elif type(i) == unicode and i == 'scenario_' + str(self.scenario):
                         self.scaleup_data[str(time_variant)]['scenario'] = \
                             self.inputs.time_variants[time_variant][i]
-
-    def find_amplification_data(self):
-
-        # Add dictionary for the amplification proportion scale-up (if relevant)
-        if len(self.strains) > 1:
-            self.scaleup_data['epi_prop_amplification'] = \
-                {self.params['start_mdr_introduce_period']:
-                     0.,
-                 self.params['end_mdr_introduce_period']:
-                     self.params['tb_prop_amplification'],
-                 'time_variant':
-                    'yes'}
 
     def find_functions_or_params(self):
 

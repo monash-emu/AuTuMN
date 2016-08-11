@@ -54,6 +54,8 @@ class Inputs:
         # Perform checks
         self.checks()
 
+        self.find_amplification_data()
+
     def determine_country(self):
 
         """
@@ -481,6 +483,15 @@ class Inputs:
 
                 # Make the proportions constant instead
                 self.time_variants['epi_prop_smear' + status]['time_variant'] = 'no'
+
+    def find_amplification_data(self):
+
+        # Add dictionary for the amplification proportion scale-up (if relevant)
+        if self.model_constants['n_strains'] > 1:
+            self.time_variants['epi_prop_amplification'] \
+                = {self.model_constants['start_mdr_introduce_period']: 0.,
+                   self.model_constants['end_mdr_introduce_period']: self.model_constants['tb_prop_amplification'],
+                   'time_variant': 'yes'}
 
     #############################################################################
     #  General methods for use by the other methods above

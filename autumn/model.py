@@ -160,17 +160,9 @@ class ConsolidatedModel(BaseModel):
             'treatment_infect']
         if self.is_lowquality: self.infectious_tags += ['lowquality']
 
-        # Select number of organ statuses
-        available_organs = [
-            '_smearpos',
-            '_smearneg',
-            '_extrapul']
-        if self.n_organ == 0:
-            # Need a list of an empty string to be iterable for methods iterating by organ status
-            self.organ_status = ['']
-        else:
-            self.organ_status = available_organs[:self.n_organ]
-
+        # Get organ stratification and strains from inputs objects
+        self.organ_status = self.inputs.organ_status
+        self.is_organvariation = self.inputs.is_organvariation
         self.strains = self.inputs.strains
 
         self.define_comorbidities()
@@ -370,11 +362,7 @@ class ConsolidatedModel(BaseModel):
 
         self.find_data_for_functions_or_params()
 
-        self.find_amplification_data()
-
         self.find_functions_or_params()
-
-        self.find_natural_history_params()
 
         self.set_fixed_infectious_proportion()
 
@@ -398,45 +386,27 @@ class ConsolidatedModel(BaseModel):
         # Collect data to generate scale-up functions
         self.scaleup_data = {}
 
-        # Flag the time-variant parameters that aren't relevant
-        irrelevant_time_variants = self.inputs.irrelevant_time_variants
-
         # Find the programs that are relevant and load them to the scaleup_data attribute
         for time_variant in self.inputs.time_variants:
-            if time_variant not in irrelevant_time_variants:
+            if time_variant not in self.inputs.irrelevant_time_variants:
                 self.scaleup_data[str(time_variant)] = {}
                 for i in self.inputs.time_variants[time_variant]:
-                    if i == 'time_variant':
-                        self.scaleup_data[str(time_variant)]['time_variant'] = self.inputs.time_variants[time_variant][i]
-                    # For the smoothness parameter
-                    elif i == 'smoothness':
-                        self.scaleup_data[str(time_variant)]['smoothness'] = self.inputs.time_variants[time_variant][i]
                     # For years with data percentages
-                    elif type(i) == int and 'program_prop_' in time_variant:
-                        self.scaleup_data[str(time_variant)][i] = self.inputs.time_variants[time_variant][i] / 1E2
+                    if type(i) == int and 'program_prop_' in time_variant:
+                        self.scaleup_data[str(time_variant)][i] \
+                            = self.inputs.time_variants[time_variant][i] / 1E2
                     # For years with data not percentages
-                    elif type(i) == int:
-                        self.scaleup_data[str(time_variant)][i] = self.inputs.time_variants[time_variant][i]
+                    elif type(i) == int or i == 'time_variant' or i == 'smoothness':
+                        self.scaleup_data[str(time_variant)][i] \
+                            = self.inputs.time_variants[time_variant][i]
                     # For scenarios with data percentages
-                    elif type(i) == unicode and 'scenario_' + str(self.scenario) in i and 'prop_' in time_variant:
+                    elif type(i) == unicode and i == 'scenario_' + str(self.scenario) and 'prop_' in time_variant:
                         self.scaleup_data[str(time_variant)]['scenario'] = \
-                            self.inputs.time_variants[time_variant]['scenario_' + str(self.scenario)] / 1E2
+                            self.inputs.time_variants[time_variant][i] / 1E2
                     # For scenarios with data not percentages
-                    elif type(i) == unicode and 'scenario_' + str(self.scenario) in i:
+                    elif type(i) == unicode and i == 'scenario_' + str(self.scenario):
                         self.scaleup_data[str(time_variant)]['scenario'] = \
-                            self.inputs.time_variants[time_variant]['scenario_' + str(self.scenario)]
-
-    def find_amplification_data(self):
-
-        # Add dictionary for the amplification proportion scale-up (if relevant)
-        if len(self.strains) > 1:
-            self.scaleup_data['epi_prop_amplification'] = \
-                {self.params['start_mdr_introduce_period']:
-                     0.,
-                 self.params['end_mdr_introduce_period']:
-                     self.params['tb_prop_amplification'],
-                 'time_variant':
-                    'yes'}
+                            self.inputs.time_variants[time_variant][i]
 
     def find_functions_or_params(self):
 
@@ -444,12 +414,6 @@ class ConsolidatedModel(BaseModel):
         for param in self.scaleup_data:
 
             time_variant = self.scaleup_data[param].pop('time_variant')
-
-            if param == 'epi_prop_smearpos':
-                if time_variant == 'yes':
-                    self.is_organvariation = True
-                else:
-                    self.is_organvariation = False
 
             if time_variant == 'yes':
 
@@ -500,43 +464,6 @@ class ConsolidatedModel(BaseModel):
         if not self.is_organvariation:
             self.set_parameter('epi_prop_extrapul',
                                1. - self.params['epi_prop_smearpos'] - self.params['epi_prop_smearneg'])
-
-    def find_natural_history_params(self):
-
-        # If extrapulmonary case-fatality not stated, use smear-negative case-fatality
-        if 'tb_prop_casefatality_untreated_extrapul' not in self.params:
-            self.set_parameter(
-                'tb_prop_casefatality_untreated_extrapul',
-                self.params['tb_prop_casefatality_untreated_smearneg'])
-
-        # Overall early progression and stabilisation rates
-        for agegroup in self.agegroups:
-            self.set_parameter('tb_rate_early_progression' + agegroup,
-                               self.params['tb_prop_early_progression' + agegroup]
-                               / self.params['tb_timeperiod_early_latent'])
-            self.set_parameter('tb_rate_stabilise' + agegroup,
-                               (1. - self.params['tb_prop_early_progression' + agegroup])
-                               / self.params['tb_timeperiod_early_latent'])
-
-        # Adjust overall death and recovery rates by organ status
-        for organ in self.organ_status:
-            self.set_parameter(
-                'tb_rate_death' + organ,
-                self.params['tb_prop_casefatality_untreated' + organ]
-                / self.params['tb_timeperiod_activeuntreated'])
-            self.set_parameter(
-                'tb_rate_recover' + organ,
-                (1 - self.params['tb_prop_casefatality_untreated' + organ])
-                / self.params['tb_timeperiod_activeuntreated'])
-
-        if not self.is_organvariation:
-
-            for organ in self.organ_status:
-                for timing in ['_early', '_late']:
-                    for agegroup in self.agegroups:
-                        self.set_parameter('tb_rate' + timing + '_progression' + organ + agegroup,
-                                           self.params['tb_rate' + timing + '_progression' + agegroup]
-                                           * self.params['epi_prop' + organ])
 
     ##################################################################
     # Methods that calculate variables to be used in calculating flows
@@ -1483,12 +1410,12 @@ class ConsolidatedModel(BaseModel):
 
     def integrate(self):
 
-        min_dt = 0.05
+        dt_max = 0.1
         if self.inputs.model_constants['integration'] == 'explicit':
-            self.integrate_explicit(min_dt)
+            self.integrate_explicit(dt_max)
         elif self.inputs.model_constants['integration'] == 'scipy':
-            self.integrate_scipy(min_dt)
+            self.integrate_scipy(dt_max)
         elif self.inputs.model_constants['integration'] == 'runge_kutta':
-            self.integrate_runge_kutta(min_dt)
+            self.integrate_runge_kutta(dt_max)
 
 

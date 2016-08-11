@@ -237,7 +237,7 @@ class BaseModel:
         self.fraction_array = None
         assert not self.times is None, 'Times have not been set yet'
 
-    def integrate_scipy(self, min_dt=0.05):
+    def integrate_scipy(self, dt_max=0.05):
         """ Uses Adams method coded in the LSODA Fortran package. This method is programmed to "slow down" when a tricky
         point is encountered. Then we need to allow for a high maximal number of iterations (mxstep)so that the
         algorithm does not get stuck.
@@ -258,7 +258,7 @@ class BaseModel:
         i_tt = 0
         for i_time, new_time in enumerate(self.times):
             while time < new_time:
-                time = time + min_dt
+                time = time + dt_max
                 if time > new_time:
                     time = new_time
                 i_tt += 1
@@ -271,7 +271,7 @@ class BaseModel:
 
         self.calculate_diagnostics()
 
-    def integrate_explicit(self, min_dt=0.05):
+    def integrate_explicit(self, dt_max=0.05):
 
         """ Uses Euler Explicit method.
             Input:
@@ -280,24 +280,42 @@ class BaseModel:
         """
         self.init_run()
         y = self.get_init_list()
+        y_candidate = numpy.zeros((len(y)))
         n_compartment = len(y)
         n_time = len(self.times)
         self.soln_array = numpy.zeros((n_time, n_compartment))
 
         derivative = self.make_derivate_fn()
-        time = self.times[0]
+        old_time = self.times[0]
+        time = old_time
         self.soln_array[0, :] = y
+        dt_is_ok = True
         for i_time, new_time in enumerate(self.times):
             while time < new_time:
+                if not dt_is_ok:
+                    adaptive_dt_max = dt / 2.0
+                else:
+                    adaptive_dt_max = dt_max
+                    old_time = time
+                dt_is_ok = True
+
                 f = derivative(y, time)
-                old_time = time
-                time += min_dt
-                dt = min_dt
+                time = old_time + adaptive_dt_max
+                dt = adaptive_dt_max
                 if time > new_time:
                     dt = new_time - old_time
                     time = new_time
+
                 for i in range(n_compartment):
-                    y[i] = y[i] + dt * f[i]
+                    y_candidate[i] = y[i] + dt * f[i]
+
+                if (numpy.asarray(y_candidate) >= 0).all():
+                    dt_is_ok = True
+                    for i in range(n_compartment):
+                        y[i] = y_candidate[i]
+                else:
+                    dt_is_ok = False
+
 
             if i_time < n_time - 1:
                 self.soln_array[i_time+1, :] = y
@@ -305,7 +323,6 @@ class BaseModel:
         self.calculate_diagnostics()
 
     def integrate_runge_kutta(self, dt_max=0.05):
-
         """
         Uses Runge-Kutta 4 method.
 
@@ -321,6 +338,7 @@ class BaseModel:
         self.soln_array = numpy.zeros((n_time, n_compartment))
 
         derivative = self.make_derivate_fn()
+        old_time = self.times[0]
         time = self.times[0]
         self.soln_array[0, :] = y
         dt_is_ok = True
@@ -329,10 +347,11 @@ class BaseModel:
                 if not dt_is_ok:
                     adaptive_dt_max = dt/2.0
                 else:
+                    old_time = time
                     adaptive_dt_max = dt_max
                 dt_is_ok = True
-                old_time = time
-                time = time + adaptive_dt_max
+                #old_time = time
+                time = old_time + adaptive_dt_max
                 dt = adaptive_dt_max
                 if time > new_time:
                     dt = new_time - old_time
@@ -347,13 +366,13 @@ class BaseModel:
                     continue
                 y_k3 = y + 0.5 * dt * k2
                 if (y_k3 >= 0).all():
-                    k3 = numpy.asarray(derivative(y + 0.5*dt*k2,  old_time + 0.5*dt))
+                    k3 = numpy.asarray(derivative(y_k3,  old_time + 0.5*dt))
                 else:
                     dt_is_ok = False
                     continue
                 y_k4 = y + dt*k3
                 if (y_k4 >= 0).all():
-                    k4 = numpy.asarray(derivative(y + dt*k3, time))
+                    k4 = numpy.asarray(derivative(y_k4, time))
                 else:
                     dt_is_ok = False
                     continue

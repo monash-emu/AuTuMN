@@ -1370,7 +1370,7 @@ class ConsolidatedModel(BaseModel):
 
     def integrate(self):
 
-        dt_max = 0.1
+        dt_max = 2.0
         if self.inputs.model_constants['integration'] == 'explicit':
             self.integrate_explicit(dt_max)
         elif self.inputs.model_constants['integration'] == 'scipy':

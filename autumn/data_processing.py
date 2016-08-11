@@ -26,11 +26,9 @@ class Inputs:
         # Work through the data processing
         self.derived_data = {}
         self.find_organ_proportions()
-        self.time_variants = {}
         self.find_time_variants()
         self.update_time_variants()
         self.add_timevariant_defaults()
-        self.model_constants = {}
         self.add_model_constant_defaults()
         self.find_ds_outcomes()
         self.add_read_treatment_outcomes()
@@ -46,14 +44,16 @@ class Inputs:
         if len(self.agegroups) > 1:
             self.set_fixed_age_specific_parameters()
             self.find_ageing_rates()
-        self.find_single_strain_timeperiods()
+        if self.model_constants['n_strains'] == 0:
+            self.find_single_strain_timeperiods()
         self.find_strains()
+        self.find_organs()
         self.find_treatment_periods()
         self.find_irrelevant_time_variants()
-
-        # Perform checks
+        self.set_extrapul_casefatality_if_not_provided()
+        self.find_progression_rate_from_params()
+        self.find_tb_case_fatality()
         self.checks()
-
         self.find_amplification_data()
 
     def determine_country(self):
@@ -89,6 +89,7 @@ class Inputs:
         dictionary with them.
         """
 
+        self.time_variants = {}
         if 'country_programs' in self.original_data:
             self.time_variants.update(self.original_data['country_programs'])
 
@@ -157,6 +158,7 @@ class Inputs:
             other_sheets_with_constants: The sheets of original_data which contain model constants
         """
 
+        self.model_constants = {}
         self.model_constants = self.original_data['control_panel']
         for other_sheet in other_sheets_with_constants:
             if other_sheet in self.original_data:
@@ -403,11 +405,10 @@ class Inputs:
         for DS-TB in this case and not for no strain name.
         """
 
-        if self.model_constants['n_strains'] == 0:
-            self.model_constants['tb_timeperiod_infect_ontreatment'] \
-                = self.model_constants['tb_timeperiod_infect_ontreatment_ds']
-            self.model_constants['tb_timeperiod_treatment'] \
-                = self.model_constants['tb_timeperiod_treatment_ds']
+        self.model_constants['tb_timeperiod_infect_ontreatment'] \
+            = self.model_constants['tb_timeperiod_infect_ontreatment_ds']
+        self.model_constants['tb_timeperiod_treatment'] \
+            = self.model_constants['tb_timeperiod_treatment_ds']
 
     def find_strains(self):
 
@@ -427,6 +428,19 @@ class Inputs:
             self.strains = ['']
         else:
             self.strains = self.available_strains[:self.model_constants['n_strains']]
+
+    def find_organs(self):
+
+        # Define all possible organ stratifications
+        available_organs = [
+            '_smearpos',
+            '_smearneg',
+            '_extrapul']
+        if self.model_constants['n_organs'] == 0:
+            # Need a list of an empty string to be iterable for methods iterating by organ status
+            self.organ_status = ['']
+        else:
+            self.organ_status = available_organs[:self.model_constants['n_organs']]
 
     def find_treatment_periods(self):
 
@@ -463,6 +477,48 @@ class Inputs:
                 self.irrelevant_time_variants += [time_variant]
             if 'lowquality' in time_variant and not self.model_constants['is_lowquality']:
                 self.irrelevant_time_variants += [time_variant]
+
+    def set_extrapul_casefatality_if_not_provided(self):
+
+        # If extrapulmonary case-fatality not stated, use smear-negative case-fatality
+        if 'tb_prop_casefatality_untreated_extrapul' not in self.model_constants:
+            self.model_constants['tb_prop_casefatality_untreated_extrapul'] \
+                = self.model_constants['tb_prop_casefatality_untreated_smearneg']
+
+    def find_progression_rate_from_params(self):
+
+        # Overall early progression and stabilisation rates
+        for agegroup in self.agegroups:
+            self.model_constants['tb_rate_early_progression' + agegroup] \
+                = self.model_constants['tb_prop_early_progression' + agegroup] \
+                  / self.model_constants['tb_timeperiod_early_latent']
+            self.model_constants['tb_rate_stabilise' + agegroup] \
+                = (1. - self.model_constants['tb_prop_early_progression' + agegroup]) \
+                  / self.model_constants['tb_timeperiod_early_latent']
+
+    def find_tb_case_fatality(self):
+
+        # Adjust overall death and recovery rates by organ status
+        for organ in self.organ_status:
+            self.model_constants['tb_rate_death' + organ] \
+                = self.model_constants['tb_prop_casefatality_untreated' + organ] \
+                  / self.model_constants['tb_timeperiod_activeuntreated']
+            self.model_constants['tb_rate_recover' + organ] \
+                = (1 - self.model_constants['tb_prop_casefatality_untreated' + organ]) \
+                  / self.model_constants['tb_timeperiod_activeuntreated']
+
+        if self.time_variants['epi_prop_smearpos']['time_variant']:
+            self.is_organvariation = True
+        else:
+            self.is_organvariation = False
+
+        if not self.is_organvariation:
+            for organ in self.organ_status:
+                for timing in ['_early', '_late']:
+                    for agegroup in self.agegroups:
+                        self.model_constants['tb_rate' + timing + '_progression' + organ + agegroup] \
+                            = self.model_constants['tb_rate' + timing + '_progression' + agegroup] \
+                              * self.model_constants['epi_prop' + organ]
 
     def checks(self):
 

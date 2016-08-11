@@ -160,17 +160,9 @@ class ConsolidatedModel(BaseModel):
             'treatment_infect']
         if self.is_lowquality: self.infectious_tags += ['lowquality']
 
-        # Select number of organ statuses
-        available_organs = [
-            '_smearpos',
-            '_smearneg',
-            '_extrapul']
-        if self.n_organ == 0:
-            # Need a list of an empty string to be iterable for methods iterating by organ status
-            self.organ_status = ['']
-        else:
-            self.organ_status = available_organs[:self.n_organ]
-
+        # Get organ stratification and strains from inputs objects
+        self.organ_status = self.inputs.organ_status
+        self.is_organvariation = self.inputs.is_organvariation
         self.strains = self.inputs.strains
 
         self.define_comorbidities()
@@ -372,8 +364,6 @@ class ConsolidatedModel(BaseModel):
 
         self.find_functions_or_params()
 
-        self.find_natural_history_params()
-
         self.set_fixed_infectious_proportion()
 
     ##################################################################
@@ -425,12 +415,6 @@ class ConsolidatedModel(BaseModel):
 
             time_variant = self.scaleup_data[param].pop('time_variant')
 
-            if param == 'epi_prop_smearpos':
-                if time_variant == 'yes':
-                    self.is_organvariation = True
-                else:
-                    self.is_organvariation = False
-
             if time_variant == 'yes':
 
                 # Extract and remove the smoothness parameter from the dictionary
@@ -480,43 +464,6 @@ class ConsolidatedModel(BaseModel):
         if not self.is_organvariation:
             self.set_parameter('epi_prop_extrapul',
                                1. - self.params['epi_prop_smearpos'] - self.params['epi_prop_smearneg'])
-
-    def find_natural_history_params(self):
-
-        # If extrapulmonary case-fatality not stated, use smear-negative case-fatality
-        if 'tb_prop_casefatality_untreated_extrapul' not in self.params:
-            self.set_parameter(
-                'tb_prop_casefatality_untreated_extrapul',
-                self.params['tb_prop_casefatality_untreated_smearneg'])
-
-        # Overall early progression and stabilisation rates
-        for agegroup in self.agegroups:
-            self.set_parameter('tb_rate_early_progression' + agegroup,
-                               self.params['tb_prop_early_progression' + agegroup]
-                               / self.params['tb_timeperiod_early_latent'])
-            self.set_parameter('tb_rate_stabilise' + agegroup,
-                               (1. - self.params['tb_prop_early_progression' + agegroup])
-                               / self.params['tb_timeperiod_early_latent'])
-
-        # Adjust overall death and recovery rates by organ status
-        for organ in self.organ_status:
-            self.set_parameter(
-                'tb_rate_death' + organ,
-                self.params['tb_prop_casefatality_untreated' + organ]
-                / self.params['tb_timeperiod_activeuntreated'])
-            self.set_parameter(
-                'tb_rate_recover' + organ,
-                (1 - self.params['tb_prop_casefatality_untreated' + organ])
-                / self.params['tb_timeperiod_activeuntreated'])
-
-        if not self.is_organvariation:
-
-            for organ in self.organ_status:
-                for timing in ['_early', '_late']:
-                    for agegroup in self.agegroups:
-                        self.set_parameter('tb_rate' + timing + '_progression' + organ + agegroup,
-                                           self.params['tb_rate' + timing + '_progression' + agegroup]
-                                           * self.params['epi_prop' + organ])
 
     ##################################################################
     # Methods that calculate variables to be used in calculating flows

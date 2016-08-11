@@ -102,17 +102,8 @@ def cost_scaleup_fns(model,
 
     year_pos = ((year_index - start_time) / ((end_time - start_time) / len(model.times)))
     year_pos = int(year_pos)
-    #print('Index year ' + str(x_vals[year_pos]))
-    #print('year position ' + str(year_pos))
+
     year_pos_end = ((end_time - start_time) / ((end_time - start_time) / len(model.times)))
-    #print(year_pos_end)
-
-    #indexes = numpy.linspace (year_pos, year_pos_end, 12001)
-
-    #print(len(indexes))
-
-    #print(len(replacement))
-    #print(year_index, model.times[year_pos])
 
     for i, function in enumerate(functions):
         cpi_scaleup = map(model.scaleup_fns['econ_cpi'], x_vals)
@@ -1282,42 +1273,18 @@ def cost_scaleup_fns(model,
 ########## RUNNING CODE #############
 
 scenario = None
-n_organs = inputs.model_constants['n_organs']
-n_strains = inputs.model_constants['n_strains']
-is_quality = inputs.model_constants['is_lowquality']
-is_amplification = inputs.model_constants['is_amplification']
-is_misassignment = inputs.model_constants['is_misassignment']
-
 
 model = autumn.model.ConsolidatedModel(
     scenario,  # Scenario to run
     inputs)
 
-print(str(n_organs) + " organ(s),   " +
-      str(n_strains) + " strain(s),   " +
-      "Low quality? " + str(is_quality) + ",   " +
-      "Amplification? " + str(is_amplification) + ",   " +
-      "Misassignment? " + str(is_misassignment) + ".")
-
 model.integrate()
 
-
-# Classify scale-up functions for plotting
-classified_scaleups = {'program_prop': [],
-                       'program_other': [],
-                       'birth': [],
-                       'non_program': []}
+classified_scaleups = {'program_prop': []}
 for fn in model.scaleup_fns:
     if 'program_prop' in fn:
         classified_scaleups['program_prop'] += [fn]
-    elif 'program' in fn:
-        classified_scaleups['program_other'] += [fn]
-    elif 'demo_rate_birth' in fn:
-        classified_scaleups['birth'] += [fn]
-    else:
-        classified_scaleups['non_program'] += [fn]
 
-# Plot them from the start of the model and from "recent_time"
 for i, classification in enumerate(classified_scaleups):
    cost_scaleup_fns(model,
                     classified_scaleups[classification],

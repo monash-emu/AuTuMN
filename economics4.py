@@ -349,7 +349,7 @@ def cost_scaleup_fns(model,
             for i in numpy.arange(0, len(x_vals), 1):
                 all_flows = model.var_array[int(i)]
                 for a, b in enumerate(model.var_labels):
-                    if b == 'ipt_commencements':
+                    if b == 'ipt_commencements_age0to5':
                         #pop = all_flows[a] #actually vaccinated
                         pop = all_flows[a]
                         popsize.append(pop)
@@ -1282,13 +1282,12 @@ def cost_scaleup_fns(model,
 ########## RUNNING CODE #############
 
 scenario = None
-n_organs = inputs.model_constants['n_organs'][0]
-n_strains = inputs.model_constants['n_strains'][0]
-is_quality = inputs.model_constants['is_lowquality'][0]
-is_amplification = inputs.model_constants['is_amplification'][0]
-is_misassignment = inputs.model_constants['is_misassignment'][0]
-is_amplification = inputs.model_constants['is_amplification'][0]
-is_misassignment = inputs.model_constants['is_misassignment'][0]
+n_organs = inputs.model_constants['n_organs']
+n_strains = inputs.model_constants['n_strains']
+is_quality = inputs.model_constants['is_lowquality']
+is_amplification = inputs.model_constants['is_amplification']
+is_misassignment = inputs.model_constants['is_misassignment']
+
 
 model = autumn.model.ConsolidatedModel(
     scenario,  # Scenario to run

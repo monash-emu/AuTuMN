@@ -1291,11 +1291,6 @@ is_amplification = inputs.model_constants['is_amplification'][0]
 is_misassignment = inputs.model_constants['is_misassignment'][0]
 
 model = autumn.model.ConsolidatedModel(
-    n_organs,
-    n_strains,
-    is_quality,  # Low quality care
-    is_amplification,  # Amplification
-    is_misassignment,  # Misassignment by strain
     scenario,  # Scenario to run
     inputs)
 

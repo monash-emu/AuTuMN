@@ -61,11 +61,6 @@ else:
             project.scenarios.append(model_name)
 
         models[model_name] = autumn.model.ConsolidatedModel(
-            inputs.model_constants['n_organs'],
-            n_strains,
-            inputs.model_constants['is_lowquality'],  # Low quality care
-            is_amplification,  # Amplification
-            is_misassignment,  # Misassignment by strain
             scenario,  # Scenario to run
             inputs)
         if n == 0:

@@ -224,9 +224,9 @@ class BaseModel:
 
     def init_run(self):
 
-        self.make_times(self.start_time,
-                        self.end_time,
-                        self.time_step)
+        self.make_times(self.inputs.model_constants['start_time'],
+                        self.inputs.model_constants['scenario_end_time'],
+                        self.inputs.model_constants['time_step'])
         self.initialise_compartments()
         self.process_parameters()
         self.set_flows()

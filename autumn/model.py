@@ -51,57 +51,20 @@ class ConsolidatedModel(BaseModel):
     """
 
     def __init__(self,
-                 n_organ=0,
-                 n_strain=0,
-                 is_lowquality=False,
-                 is_amplification=False,
-                 is_misassignment=False,
                  scenario=None,
                  inputs=None):
-
-        """
-        Args:
-            n_organ: whether pulmonary status and smear-positive/smear-negative status
-                can be included in the model (which apply to all compartments representing active disease)
-                0. No subdivision
-                1. All patients are smear-positive pulmonary (avoid)
-                2. All patients are pulmonary, but smear status can be selected (i.e. smear-pos/smear-neg)
-                3. Full stratification into smear-positive, smear-negative and extra-pulmonary
-            n_strain: number of types of drug-resistance included (not strains in the strict phylogenetic sense)
-                0. No strains included
-                1. All TB is DS-TB (avoid)
-                2. DS-TB and MDR-TB
-                3. DS-TB, MDR-TB and XDR-TB
-                (N.B. this may change in future models, which may include isoniazid mono-resistance, etc.)
-            is_lowquality: Boolean of whether to include detections through the private/low-quality sector
-            is_amplification: Boolean of whether to include resistance amplification through treatment default
-            is_misassignment: Boolean of whether also to incorporate misclassification of patients with drug-resistance
-                    to the wrong strain by the high-quality health system
-                Avoid amplification=False but misassignment=True (the model should run with both
-                amplification and misassignment, but this combination doesn't make sense)
-        """
 
         BaseModel.__init__(self)
 
         self.inputs = inputs
 
+        # Needed in base.py to work out whether to load a previous model state
         self.loaded_compartments = None
 
-        # Convert inputs to attributes
-        self.n_organ = n_organ
-
-        # Set strain and comorbidities
-        self.n_strain = n_strain
-
-        # Set time points for integration (model.times now created in base.py)
-        self.start_time = inputs.model_constants['start_time']
-        self.end_time = inputs.model_constants['scenario_end_time']
-        self.time_step = inputs.model_constants['time_step']
-
         # Set Boolean conditionals for model structure and additional diagnostics
-        self.is_lowquality = is_lowquality
-        self.is_amplification = is_amplification
-        self.is_misassignment = is_misassignment
+        self.is_lowquality = self.inputs.model_constants['is_lowquality']
+        self.is_amplification = self.inputs.model_constants['is_amplification']
+        self.is_misassignment = self.inputs.model_constants['is_misassignment']
 
         self.scenario = scenario
 

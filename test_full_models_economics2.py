@@ -35,11 +35,6 @@ else:
     base = os.path.join(out_dir, name)
 
     model = autumn.model.ConsolidatedModel(
-        n_organs,
-        n_strains,
-        is_quality,  # Low quality care
-        is_amplification,  # Amplification
-        is_misassignment,  # Misassignment by strain
         scenario,  # Scenario to run
         inputs)
     print(str(n_organs) + " organ(s),   " +

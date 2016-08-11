@@ -41,7 +41,7 @@ def is_positive_definite(v):
 class ModelRunner():
 
     def __init__(self):
-        self.model = autumn.model.ConsolidatedModel(0, 0, 0, False, False, False)
+        self.model = autumn.model.ConsolidatedModel(None, 0)
         self.model.make_times(1900, 2015.1, 1.)
         self.is_last_run_success = False
         self.param_props_list = [

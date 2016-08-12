@@ -10,18 +10,16 @@ import autumn.model
 import xlwt
 from xlrd import open_workbook
 from xlutils.copy import copy
+from autumn.discounting import discounting_fx
 
 '''
 TO DO:
 0-15 years population for IPT
 Position of "program_rate_detect" and "program_rate_miss" in Xpert
 '''
-
-# Define the path for the workbook
+############ READ SOME DATA FROM SPREADSHEET ########
 out_dir = 'autumn/xls'
 save_path = os.path.join(out_dir,'new_bcg_cov_fiji.xls')
-
-############ READ SOME DATA FROM SPREADSHEET ########
 
 country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
 #print(country)
@@ -107,8 +105,17 @@ def cost_scaleup_fns(model,
 
     year_pos = ((year_index - start_time) / ((end_time - start_time) / len(model.times)))
     year_pos = int(year_pos)
-
+    #print('Index year ' + str(x_vals[year_pos]))
+    #print('year position ' + str(year_pos))
     year_pos_end = ((end_time - start_time) / ((end_time - start_time) / len(model.times)))
+    #print(year_pos_end)
+
+    #indexes = numpy.linspace (year_pos, year_pos_end, 12001)
+
+    #print(len(indexes))
+
+    #print(len(replacement))
+    #print(year_index, model.times[year_pos])
 
     for i, function in enumerate(functions):
         cpi_scaleup = map(model.scaleup_fns['econ_cpi'], x_vals)
@@ -170,52 +177,8 @@ def cost_scaleup_fns(model,
                         if i >= current_year_pos and i <= len(x_vals):
                             x_vals_2015onwards = x_vals[i]
                             x_vals_2015onwards_array.append(x_vals_2015onwards)
-                            cost_todiscount = cost_uninflated[int(i)]
-                            if x_vals[i] <= 2015:
-                                    years_into_future = 0
-                            elif x_vals[i] > 2015 and x_vals[i] <= 2016:
-                                    years_into_future = 1
-                            elif x_vals[i] > 2016 and x_vals[i] <= 2017:
-                                    years_into_future = 2
-                            elif x_vals[i] > 2017 and x_vals[i] <= 2018:
-                                    years_into_future = 3
-                            elif x_vals[i] > 2018 and x_vals[i] <= 2019:
-                                    years_into_future = 4
-                            elif x_vals[i] > 2019 and x_vals[i] <= 2020:
-                                    years_into_future = 5
-                            elif x_vals[i] > 2020 and x_vals[i] <= 2021:
-                                    years_into_future = 6
-                            elif x_vals[i] > 2021 and x_vals[i] <= 2022:
-                                    years_into_future = 7
-                            elif x_vals[i] > 2022 and x_vals[i] <= 2023:
-                                    years_into_future = 8
-                            elif x_vals[i] > 2023 and x_vals[i] <= 2024:
-                                    years_into_future = 9
-                            elif x_vals[i] > 2024 and x_vals[i] <= 2025:
-                                    years_into_future = 10
-                            elif x_vals[i] > 2025 and x_vals[i] <= 2026:
-                                    years_into_future = 11
-                            elif x_vals[i] > 2026 and x_vals[i] <= 2027:
-                                    years_into_future = 12
-                            elif x_vals[i] > 2027 and x_vals[i] <= 2028:
-                                    years_into_future = 13
-                            elif x_vals[i] > 2028 and x_vals[i] <= 2029:
-                                    years_into_future = 14
-                            elif x_vals[i] > 2029 and x_vals[i] <= 2030:
-                                    years_into_future = 15
-                            elif x_vals[i] > 2030 and x_vals[i] <= 2031:
-                                    years_into_future = 16
-                            elif x_vals[i] > 2031 and x_vals[i] <= 2032:
-                                    years_into_future = 17
-                            elif x_vals[i] > 2032 and x_vals[i] <= 2033:
-                                    years_into_future = 18
-                            elif x_vals[i] > 2033 and x_vals[i] <= 2034:
-                                    years_into_future = 19
-                            else:
-                                    years_into_future = 20
-                            cost_discounted = cost_todiscount / ((1 + discount_rate)**years_into_future)
+                            cost_discounted = discounting_fx(x_vals[int(i)], cost_uninflated[int(i)], discount_rate, current_year_pos)
                             cost_discounted_array.append(cost_discounted)
-
                         coverage_estimated.append(get_coverage_from_cost(a,
                                                                     saturation,
                                                                     b_growth_rate[int(i)],
@@ -321,147 +284,101 @@ def cost_scaleup_fns(model,
 #######################################################################################
 
         #elif function == str('program_prop_vaccination'): #using data from data_fiji
-        # elif function == str('econ_program_prop_ipt'):
-        #     cost_uninflated = []
-        #     cost_uninflated_toplotcostcurve = []
-        #     cost_inflated = []
-        #     popsize = []
-        #     x_vals_2015onwards_array =[]
-        #     cost_discounted_array = []
-        #     popsize_vac =[]
-        #     popsize_unvac = []
-        #     b_growth_rate = []
-        #     coverage_estimated = []
-        #     cost_predefined = []
-        #
-        #     indexes = numpy.arange(12001, 17002, 1)
-        #     replacements = numpy.linspace(20000, 30000, 5001)
-        #
-        #     scaleup_param_vals = map(model.scaleup_fns[function], x_vals)
-        #     funding_scaleup = map(model.scaleup_fns['econ_program_totalcost_ipt'], x_vals)
-        #     reflection_cost_scaleup = map(model.scaleup_fns['econ_program_reflectioncost_ipt'], x_vals)
-        #     unitcost = map(model.scaleup_fns['econ_program_unitcost_ipt'], x_vals)
-        #     coverage = get_coverage_from_outcome_program_as_param(scaleup_param_vals)
-        #     coverage_mid = coverage
-        #     for i in numpy.arange(0, len(x_vals), 1):
-        #         all_flows = model.var_array[int(i)]
-        #         for a, b in enumerate(model.var_labels):
-        #             if b == 'ipt_commencements_age0to5':
-        #                 #pop = all_flows[a] #actually vaccinated
-        #                 pop = all_flows[a]
-        #                 popsize.append(pop)
-        #                 a = saturation / (1 - 2**alpha)
-        #                 b = ((2**(alpha + 1)) / (alpha * (saturation - a) * unitcost[int(i)] * popsize[int(i)]))
-        #                 b_growth_rate.append(b)
-        #                 cost_uninflated.append(get_cost_from_coverage(reflection_cost_scaleup[int(i)], #Add [year_pos] to get cost-coverage curve at that year,
-        #                                                                   b_growth_rate[int(i)],
-        #                                                                   saturation,
-        #                                                                   a,
-        #                                                                   coverage[int(i)], #Add [year_pos] to get cost-coverage curve at that year
-        #                                                                   alpha))
-        #                 cost_inflated.append(cost_uninflated[int(i)] * cpi[int(year_current)] / cpi_scaleup[int(i)])
-        #                 current_year_pos = ((year_current - start_time) / ((end_time - start_time) / len(model.times)))
-        #                 cost_predefined.append(get_cost_from_coverage(reflection_cost_scaleup[int(i)], #Add [year_pos] to get cost-coverage curve at that year,
-        #                                                                   b_growth_rate[int(i)],
-        #                                                                   saturation,
-        #                                                                   a,
-        #                                                                   coverage[int(i)], #Add [year_pos] to get cost-coverage curve at that year
-        #                                                                   alpha))
-        #
-        #
-        #                 if i >= current_year_pos and i <= len(x_vals):
-        #                     x_vals_2015onwards = x_vals[i]
-        #                     x_vals_2015onwards_array.append(x_vals_2015onwards)
-        #                     cost_todiscount = cost_uninflated[int(i)]
-        #                     if x_vals[i] <= 2015:
-        #                             years_into_future = 0
-        #                     elif x_vals[i] > 2015 and x_vals[i] <= 2016:
-        #                             years_into_future = 1
-        #                     elif x_vals[i] > 2016 and x_vals[i] <= 2017:
-        #                             years_into_future = 2
-        #                     elif x_vals[i] > 2017 and x_vals[i] <= 2018:
-        #                             years_into_future = 3
-        #                     elif x_vals[i] > 2018 and x_vals[i] <= 2019:
-        #                             years_into_future = 4
-        #                     elif x_vals[i] > 2019 and x_vals[i] <= 2020:
-        #                             years_into_future = 5
-        #                     elif x_vals[i] > 2020 and x_vals[i] <= 2021:
-        #                             years_into_future = 6
-        #                     elif x_vals[i] > 2021 and x_vals[i] <= 2022:
-        #                             years_into_future = 7
-        #                     elif x_vals[i] > 2022 and x_vals[i] <= 2023:
-        #                             years_into_future = 8
-        #                     elif x_vals[i] > 2023 and x_vals[i] <= 2024:
-        #                             years_into_future = 9
-        #                     elif x_vals[i] > 2024 and x_vals[i] <= 2025:
-        #                             years_into_future = 10
-        #                     elif x_vals[i] > 2025 and x_vals[i] <= 2026:
-        #                             years_into_future = 11
-        #                     elif x_vals[i] > 2026 and x_vals[i] <= 2027:
-        #                             years_into_future = 12
-        #                     elif x_vals[i] > 2027 and x_vals[i] <= 2028:
-        #                             years_into_future = 13
-        #                     elif x_vals[i] > 2028 and x_vals[i] <= 2029:
-        #                             years_into_future = 14
-        #                     elif x_vals[i] > 2029 and x_vals[i] <= 2030:
-        #                             years_into_future = 15
-        #                     elif x_vals[i] > 2030 and x_vals[i] <= 2031:
-        #                             years_into_future = 16
-        #                     elif x_vals[i] > 2031 and x_vals[i] <= 2032:
-        #                             years_into_future = 17
-        #                     elif x_vals[i] > 2032 and x_vals[i] <= 2033:
-        #                             years_into_future = 18
-        #                     elif x_vals[i] > 2033 and x_vals[i] <= 2034:
-        #                             years_into_future = 19
-        #                     else:
-        #                             years_into_future = 20
-        #                     cost_discounted = cost_todiscount / ((1 + discount_rate)**years_into_future)
-        #                     cost_discounted_array.append(cost_discounted)
-        #
-        #                 coverage_estimated.append(get_coverage_from_cost(a,
-        #                                                                  saturation,
-        #                                                                  b_growth_rate[int(i)],
-        #                                                                  cost_uninflated[int(i)],
-        #                                                                  reflection_cost_scaleup[int(i)],
-        #                                                                  alpha))
-        #
-        #     for index_element, replacement_element in zip (indexes, replacements):
-        #         cost_predefined [index_element] = replacement_element
-        #     b_growth_rate_2 = []
-        #     coverage_new_ipt = []
-        #     for i in numpy.arange (0, len(x_vals), 1):
-        #         a = saturation / (1 - 2**alpha)
-        #         b = ((2**(alpha + 1)) / (alpha * (saturation - a) * unitcost[int(i)] * popsize[int(i)]))
-        #         b_growth_rate_2.append(b)
-        #         coverage_new_ipt.append(get_coverage_from_cost(a,
-        #                                                     saturation,
-        #                                                     b_growth_rate_2[int(i)],
-        #                                                     cost_predefined[int(i)],
-        #                                                     reflection_cost_scaleup[int(i)],
-        #                                                     alpha))
-        #         coverage_new_ipt_nan = numpy.nan_to_num(coverage_new_ipt)
-        #
-        #     #rb = open_workbook('C:/Users/ntdoan/Github/AuTuMN/autumn/xls/new_bcg_cov_fiji.xls')
-        #     rb = open_workbook(save_path)
-        #     book = copy(rb)
-        #     sheet1 = book.get_sheet(0)
-        #     sheet1.write(0, 2, 'new_ipt_cov')
-        #     i=0
-        #     for n in coverage_new_ipt_nan:
-        #         i = i+1
-        #         sheet1.write(i, 2, n)
-        #     #book.save('C:/Users/ntdoan/Github/AuTuMN/autumn/xls/new_bcg_cov_fiji.xls')
-        #     book.save(save_path)
-        #
-        #     if plot_costcurve is True:
-        #         for coverage_range in coverage_values:
-        #             a = saturation / (1 - 2**alpha)
-        #             cost_uninflated_toplotcostcurve.append(get_cost_from_coverage(reflection_cost_scaleup[year_pos], #Add [year_pos] to get cost-coverage curve at that year,
-        #                                                                   b_growth_rate[year_pos],
-        #                                                                   saturation,
-        #                                                                   a,
-        #                                                                   coverage_range, #Add [year_pos] to get cost-coverage curve at that year
-        #                                                                   alpha))
+        elif function == str('econ_program_prop_ipt'):
+            cost_uninflated = []
+            cost_uninflated_toplotcostcurve = []
+            cost_inflated = []
+            popsize = []
+            x_vals_2015onwards_array =[]
+            cost_discounted_array = []
+            popsize_vac =[]
+            popsize_unvac = []
+            b_growth_rate = []
+            coverage_estimated = []
+            cost_predefined = []
+
+            indexes = numpy.arange(12001, 17002, 1)
+            replacements = numpy.linspace(20000, 30000, 5001)
+
+            scaleup_param_vals = map(model.scaleup_fns[function], x_vals)
+            funding_scaleup = map(model.scaleup_fns['econ_program_totalcost_ipt'], x_vals)
+            reflection_cost_scaleup = map(model.scaleup_fns['econ_program_reflectioncost_ipt'], x_vals)
+            unitcost = map(model.scaleup_fns['econ_program_unitcost_ipt'], x_vals)
+            coverage = get_coverage_from_outcome_program_as_param(scaleup_param_vals)
+            coverage_mid = coverage
+            for i in numpy.arange(0, len(x_vals), 1):
+                all_flows = model.var_array[int(i)]
+                for a, b in enumerate(model.var_labels):
+                    if b == 'ipt_commencements_age0to5':
+                        #pop = all_flows[a] #actually vaccinated
+                        pop = all_flows[a]
+                        popsize.append(pop)
+                        a = saturation / (1 - 2**alpha)
+                        b = ((2**(alpha + 1)) / (alpha * (saturation - a) * unitcost[int(i)] * popsize[int(i)]))
+                        b_growth_rate.append(b)
+                        cost_uninflated.append(get_cost_from_coverage(reflection_cost_scaleup[int(i)], #Add [year_pos] to get cost-coverage curve at that year,
+                                                                          b_growth_rate[int(i)],
+                                                                          saturation,
+                                                                          a,
+                                                                          coverage[int(i)], #Add [year_pos] to get cost-coverage curve at that year
+                                                                          alpha))
+                        cost_inflated.append(cost_uninflated[int(i)] * cpi[int(year_current)] / cpi_scaleup[int(i)])
+                        current_year_pos = ((year_current - start_time) / ((end_time - start_time) / len(model.times)))
+                        cost_predefined.append(get_cost_from_coverage(reflection_cost_scaleup[int(i)], #Add [year_pos] to get cost-coverage curve at that year,
+                                                                          b_growth_rate[int(i)],
+                                                                          saturation,
+                                                                          a,
+                                                                          coverage[int(i)], #Add [year_pos] to get cost-coverage curve at that year
+                                                                          alpha))
+
+
+                        if i >= current_year_pos and i <= len(x_vals):
+                            x_vals_2015onwards = x_vals[i]
+                            x_vals_2015onwards_array.append(x_vals_2015onwards)
+                            cost_discounted = discounting_fx(x_vals[int(i)], cost_uninflated[int(i)], discount_rate, current_year_pos)
+                            cost_discounted_array.append(cost_discounted)
+                        coverage_estimated.append(get_coverage_from_cost(a,
+                                                                         saturation,
+                                                                         b_growth_rate[int(i)],
+                                                                         cost_uninflated[int(i)],
+                                                                         reflection_cost_scaleup[int(i)],
+                                                                         alpha))
+
+            for index_element, replacement_element in zip (indexes, replacements):
+                cost_predefined [index_element] = replacement_element
+            b_growth_rate_2 = []
+            coverage_new_ipt = []
+            for i in numpy.arange (0, len(x_vals), 1):
+                a = saturation / (1 - 2**alpha)
+                b = ((2**(alpha + 1)) / (alpha * (saturation - a) * unitcost[int(i)] * popsize[int(i)]))
+                b_growth_rate_2.append(b)
+                coverage_new_ipt.append(get_coverage_from_cost(a,
+                                                            saturation,
+                                                            b_growth_rate_2[int(i)],
+                                                            cost_predefined[int(i)],
+                                                            reflection_cost_scaleup[int(i)],
+                                                            alpha))
+                coverage_new_ipt_nan = numpy.nan_to_num(coverage_new_ipt)
+
+            rb = open_workbook(save_path)
+            book = copy(rb)
+            sheet1 = book.get_sheet(0)
+            sheet1.write(0, 2, 'new_ipt_cov')
+            i=0
+            for n in coverage_new_ipt_nan:
+                i = i+1
+                sheet1.write(i, 2, n)
+            book.save('C:/Users/ntdoan/Github/AuTuMN/autumn/xls/new_bcg_cov_fiji.xls')
+
+            if plot_costcurve is True:
+                for coverage_range in coverage_values:
+                    a = saturation / (1 - 2**alpha)
+                    cost_uninflated_toplotcostcurve.append(get_cost_from_coverage(reflection_cost_scaleup[year_pos], #Add [year_pos] to get cost-coverage curve at that year,
+                                                                          b_growth_rate[year_pos],
+                                                                          saturation,
+                                                                          a,
+                                                                          coverage_range, #Add [year_pos] to get cost-coverage curve at that year
+                                                                          alpha))
             '''
             data_to_plot = model.scaleup_data[function]
             fig = plt.figure('IPT')
@@ -568,52 +485,8 @@ def cost_scaleup_fns(model,
                 if i >= current_year_pos and i <= len(x_vals):
                     x_vals_2015onwards = x_vals[i]
                     x_vals_2015onwards_array.append(x_vals_2015onwards)
-                    cost_todiscount = cost_uninflated[int(i)]
-                    if x_vals[i] <= 2015:
-                            years_into_future = 0
-                    elif x_vals[i] > 2015 and x_vals[i] <= 2016:
-                            years_into_future = 1
-                    elif x_vals[i] > 2016 and x_vals[i] <= 2017:
-                            years_into_future = 2
-                    elif x_vals[i] > 2017 and x_vals[i] <= 2018:
-                            years_into_future = 3
-                    elif x_vals[i] > 2018 and x_vals[i] <= 2019:
-                            years_into_future = 4
-                    elif x_vals[i] > 2019 and x_vals[i] <= 2020:
-                            years_into_future = 5
-                    elif x_vals[i] > 2020 and x_vals[i] <= 2021:
-                            years_into_future = 6
-                    elif x_vals[i] > 2021 and x_vals[i] <= 2022:
-                            years_into_future = 7
-                    elif x_vals[i] > 2022 and x_vals[i] <= 2023:
-                            years_into_future = 8
-                    elif x_vals[i] > 2023 and x_vals[i] <= 2024:
-                            years_into_future = 9
-                    elif x_vals[i] > 2024 and x_vals[i] <= 2025:
-                            years_into_future = 10
-                    elif x_vals[i] > 2025 and x_vals[i] <= 2026:
-                            years_into_future = 11
-                    elif x_vals[i] > 2026 and x_vals[i] <= 2027:
-                            years_into_future = 12
-                    elif x_vals[i] > 2027 and x_vals[i] <= 2028:
-                            years_into_future = 13
-                    elif x_vals[i] > 2028 and x_vals[i] <= 2029:
-                            years_into_future = 14
-                    elif x_vals[i] > 2029 and x_vals[i] <= 2030:
-                            years_into_future = 15
-                    elif x_vals[i] > 2030 and x_vals[i] <= 2031:
-                            years_into_future = 16
-                    elif x_vals[i] > 2031 and x_vals[i] <= 2032:
-                            years_into_future = 17
-                    elif x_vals[i] > 2032 and x_vals[i] <= 2033:
-                            years_into_future = 18
-                    elif x_vals[i] > 2033 and x_vals[i] <= 2034:
-                            years_into_future = 19
-                    else:
-                            years_into_future = 20
-                    cost_discounted = cost_todiscount / ((1 + discount_rate)**years_into_future)
+                    cost_discounted = discounting_fx(x_vals[int(i)], cost_uninflated[int(i)], discount_rate, current_year_pos)
                     cost_discounted_array.append(cost_discounted)
-
                 coverage_estimated.append(get_coverage_from_cost(a,
                                                                  saturation,
                                                                  b_growth_rate[int(i)],
@@ -637,11 +510,7 @@ def cost_scaleup_fns(model,
                                                             alpha))
                 coverage_new_xpert_nan = numpy.nan_to_num(coverage_new_xpert)
 
-            #rb = open_workbook('C:/Users/ntdoan/Github/AuTuMN/autumn/xls/new_bcg_cov_fiji.xls')
             rb = open_workbook(save_path)
-
-
-
             book = copy(rb)
             sheet1 = book.get_sheet(0)
             sheet1.write(0, 3, 'new_xpert_cov')
@@ -649,9 +518,7 @@ def cost_scaleup_fns(model,
             for n in coverage_new_xpert_nan:
                 i = i+1
                 sheet1.write(i, 3, n)
-            #book.save('C:/Users/ntdoan/Github/AuTuMN/autumn/xls/new_bcg_cov_fiji.xls')
             book.save(save_path)
-
 
             if plot_costcurve is True:
                 for coverage_range in coverage_values:
@@ -769,52 +636,8 @@ def cost_scaleup_fns(model,
                 if i >= current_year_pos and i <= len(x_vals):
                     x_vals_2015onwards = x_vals[i]
                     x_vals_2015onwards_array.append(x_vals_2015onwards)
-                    cost_todiscount = cost_uninflated[int(i)]
-                    if x_vals[i] <= 2015:
-                            years_into_future = 0
-                    elif x_vals[i] > 2015 and x_vals[i] <= 2016:
-                            years_into_future = 1
-                    elif x_vals[i] > 2016 and x_vals[i] <= 2017:
-                            years_into_future = 2
-                    elif x_vals[i] > 2017 and x_vals[i] <= 2018:
-                            years_into_future = 3
-                    elif x_vals[i] > 2018 and x_vals[i] <= 2019:
-                            years_into_future = 4
-                    elif x_vals[i] > 2019 and x_vals[i] <= 2020:
-                            years_into_future = 5
-                    elif x_vals[i] > 2020 and x_vals[i] <= 2021:
-                            years_into_future = 6
-                    elif x_vals[i] > 2021 and x_vals[i] <= 2022:
-                            years_into_future = 7
-                    elif x_vals[i] > 2022 and x_vals[i] <= 2023:
-                            years_into_future = 8
-                    elif x_vals[i] > 2023 and x_vals[i] <= 2024:
-                            years_into_future = 9
-                    elif x_vals[i] > 2024 and x_vals[i] <= 2025:
-                            years_into_future = 10
-                    elif x_vals[i] > 2025 and x_vals[i] <= 2026:
-                            years_into_future = 11
-                    elif x_vals[i] > 2026 and x_vals[i] <= 2027:
-                            years_into_future = 12
-                    elif x_vals[i] > 2027 and x_vals[i] <= 2028:
-                            years_into_future = 13
-                    elif x_vals[i] > 2028 and x_vals[i] <= 2029:
-                            years_into_future = 14
-                    elif x_vals[i] > 2029 and x_vals[i] <= 2030:
-                            years_into_future = 15
-                    elif x_vals[i] > 2030 and x_vals[i] <= 2031:
-                            years_into_future = 16
-                    elif x_vals[i] > 2031 and x_vals[i] <= 2032:
-                            years_into_future = 17
-                    elif x_vals[i] > 2032 and x_vals[i] <= 2033:
-                            years_into_future = 18
-                    elif x_vals[i] > 2033 and x_vals[i] <= 2034:
-                            years_into_future = 19
-                    else:
-                            years_into_future = 20
-                    cost_discounted = cost_todiscount / ((1 + discount_rate)**years_into_future)
+                    cost_discounted = discounting_fx(x_vals[int(i)], cost_uninflated[int(i)], discount_rate, current_year_pos)
                     cost_discounted_array.append(cost_discounted)
-
                 coverage_estimated.append(get_coverage_from_cost(a,
                                                             saturation,
                                                             b_growth_rate[int(i)],
@@ -838,9 +661,7 @@ def cost_scaleup_fns(model,
                                                             reflection_cost_scaleup[int(i)],
                                                             alpha))
                 coverage_new_treatment_support_nan = numpy.nan_to_num(coverage_new_treatment_support)
-            #rb = open_workbook('C:/Users/ntdoan/Github/AuTuMN/autumn/xls/new_bcg_cov_fiji.xls')
             rb = open_workbook(save_path)
-
             book = copy(rb)
             sheet1 = book.get_sheet(0)
             sheet1.write(0, 4, 'new_treatment_support_cov')
@@ -848,7 +669,6 @@ def cost_scaleup_fns(model,
             for n in coverage_new_treatment_support_nan:
                 i = i+1
                 sheet1.write(i, 4, n)
-            #book.save('C:/Users/ntdoan/Github/AuTuMN/autumn/xls/new_bcg_cov_fiji.xls')
             book.save(save_path)
 
 
@@ -956,52 +776,8 @@ def cost_scaleup_fns(model,
                 if i >= current_year_pos and i <= len(x_vals):
                     x_vals_2015onwards = x_vals[i]
                     x_vals_2015onwards_array.append(x_vals_2015onwards)
-                    cost_todiscount = cost_uninflated[int(i)]
-                    if x_vals[i] <= 2015:
-                            years_into_future = 0
-                    elif x_vals[i] > 2015 and x_vals[i] <= 2016:
-                            years_into_future = 1
-                    elif x_vals[i] > 2016 and x_vals[i] <= 2017:
-                            years_into_future = 2
-                    elif x_vals[i] > 2017 and x_vals[i] <= 2018:
-                            years_into_future = 3
-                    elif x_vals[i] > 2018 and x_vals[i] <= 2019:
-                            years_into_future = 4
-                    elif x_vals[i] > 2019 and x_vals[i] <= 2020:
-                            years_into_future = 5
-                    elif x_vals[i] > 2020 and x_vals[i] <= 2021:
-                            years_into_future = 6
-                    elif x_vals[i] > 2021 and x_vals[i] <= 2022:
-                            years_into_future = 7
-                    elif x_vals[i] > 2022 and x_vals[i] <= 2023:
-                            years_into_future = 8
-                    elif x_vals[i] > 2023 and x_vals[i] <= 2024:
-                            years_into_future = 9
-                    elif x_vals[i] > 2024 and x_vals[i] <= 2025:
-                            years_into_future = 10
-                    elif x_vals[i] > 2025 and x_vals[i] <= 2026:
-                            years_into_future = 11
-                    elif x_vals[i] > 2026 and x_vals[i] <= 2027:
-                            years_into_future = 12
-                    elif x_vals[i] > 2027 and x_vals[i] <= 2028:
-                            years_into_future = 13
-                    elif x_vals[i] > 2028 and x_vals[i] <= 2029:
-                            years_into_future = 14
-                    elif x_vals[i] > 2029 and x_vals[i] <= 2030:
-                            years_into_future = 15
-                    elif x_vals[i] > 2030 and x_vals[i] <= 2031:
-                            years_into_future = 16
-                    elif x_vals[i] > 2031 and x_vals[i] <= 2032:
-                            years_into_future = 17
-                    elif x_vals[i] > 2032 and x_vals[i] <= 2033:
-                            years_into_future = 18
-                    elif x_vals[i] > 2033 and x_vals[i] <= 2034:
-                            years_into_future = 19
-                    else:
-                            years_into_future = 20
-                    cost_discounted = cost_todiscount / ((1 + discount_rate)**years_into_future)
+                    cost_discounted = discounting_fx(x_vals[int(i)], cost_uninflated[int(i)], discount_rate, current_year_pos)
                     cost_discounted_array.append(cost_discounted)
-
                 coverage_estimated.append(get_coverage_from_cost(a,
                                                             saturation,
                                                             b_growth_rate[int(i)],
@@ -1025,9 +801,7 @@ def cost_scaleup_fns(model,
                                                             reflection_cost_scaleup[int(i)],
                                                             alpha))
                 coverage_new_smearacf_nan = numpy.nan_to_num(coverage_new_smearacf)
-            #rb = open_workbook('C:/Users/ntdoan/Github/AuTuMN/autumn/xls/new_bcg_cov_fiji.xls')
             rb = open_workbook(save_path)
-
             book = copy(rb)
             sheet1 = book.get_sheet(0)
             sheet1.write(0, 5, 'new_smearacf_cov')
@@ -1035,7 +809,6 @@ def cost_scaleup_fns(model,
             for n in coverage_new_smearacf_nan:
                 i = i+1
                 sheet1.write(i, 5, n)
-            #book.save('C:/Users/ntdoan/Github/AuTuMN/autumn/xls/new_bcg_cov_fiji.xls')
             book.save(save_path)
 
             if plot_costcurve is True:
@@ -1145,52 +918,8 @@ def cost_scaleup_fns(model,
                 if i >= current_year_pos and i <= len(x_vals):
                     x_vals_2015onwards = x_vals[i]
                     x_vals_2015onwards_array.append(x_vals_2015onwards)
-                    cost_todiscount = cost_uninflated[int(i)]
-                    if x_vals[i] <= 2015:
-                            years_into_future = 0
-                    elif x_vals[i] > 2015 and x_vals[i] <= 2016:
-                            years_into_future = 1
-                    elif x_vals[i] > 2016 and x_vals[i] <= 2017:
-                            years_into_future = 2
-                    elif x_vals[i] > 2017 and x_vals[i] <= 2018:
-                            years_into_future = 3
-                    elif x_vals[i] > 2018 and x_vals[i] <= 2019:
-                            years_into_future = 4
-                    elif x_vals[i] > 2019 and x_vals[i] <= 2020:
-                            years_into_future = 5
-                    elif x_vals[i] > 2020 and x_vals[i] <= 2021:
-                            years_into_future = 6
-                    elif x_vals[i] > 2021 and x_vals[i] <= 2022:
-                            years_into_future = 7
-                    elif x_vals[i] > 2022 and x_vals[i] <= 2023:
-                            years_into_future = 8
-                    elif x_vals[i] > 2023 and x_vals[i] <= 2024:
-                            years_into_future = 9
-                    elif x_vals[i] > 2024 and x_vals[i] <= 2025:
-                            years_into_future = 10
-                    elif x_vals[i] > 2025 and x_vals[i] <= 2026:
-                            years_into_future = 11
-                    elif x_vals[i] > 2026 and x_vals[i] <= 2027:
-                            years_into_future = 12
-                    elif x_vals[i] > 2027 and x_vals[i] <= 2028:
-                            years_into_future = 13
-                    elif x_vals[i] > 2028 and x_vals[i] <= 2029:
-                            years_into_future = 14
-                    elif x_vals[i] > 2029 and x_vals[i] <= 2030:
-                            years_into_future = 15
-                    elif x_vals[i] > 2030 and x_vals[i] <= 2031:
-                            years_into_future = 16
-                    elif x_vals[i] > 2031 and x_vals[i] <= 2032:
-                            years_into_future = 17
-                    elif x_vals[i] > 2032 and x_vals[i] <= 2033:
-                            years_into_future = 18
-                    elif x_vals[i] > 2033 and x_vals[i] <= 2034:
-                            years_into_future = 19
-                    else:
-                            years_into_future = 20
-                    cost_discounted = cost_todiscount / ((1 + discount_rate)**years_into_future)
+                    cost_discounted = discounting_fx(x_vals[int(i)], cost_uninflated[int(i)], discount_rate, current_year_pos)
                     cost_discounted_array.append(cost_discounted)
-
                 coverage_estimated.append(get_coverage_from_cost(a,
                                                             saturation,
                                                             b_growth_rate[int(i)],
@@ -1215,9 +944,7 @@ def cost_scaleup_fns(model,
                                                             alpha))
                 coverage_new_xpertacf_nan = numpy.nan_to_num(coverage_new_xpertacf)
 
-            #rb = open_workbook('C:/Users/ntdoan/Github/AuTuMN/autumn/xls/new_bcg_cov_fiji.xls')
             rb = open_workbook(save_path)
-
             book = copy(rb)
             sheet1 = book.get_sheet(0)
             sheet1.write(0, 6, 'new_xpertacf_cov')
@@ -1225,7 +952,6 @@ def cost_scaleup_fns(model,
             for n in coverage_new_xpertacf_nan:
                 i = i+1
                 sheet1.write(i, 6, n)
-            #book.save('C:/Users/ntdoan/Github/AuTuMN/autumn/xls/new_bcg_cov_fiji.xls')
             book.save(save_path)
 
             if plot_costcurve is True:
@@ -1296,18 +1022,42 @@ def cost_scaleup_fns(model,
 ########## RUNNING CODE #############
 
 scenario = None
+n_organs = inputs.model_constants['n_organs']
+n_strains = inputs.model_constants['n_strains']
+is_quality = inputs.model_constants['is_lowquality']
+is_amplification = inputs.model_constants['is_amplification']
+is_misassignment = inputs.model_constants['is_misassignment']
+
 
 model = autumn.model.ConsolidatedModel(
     scenario,  # Scenario to run
     inputs)
 
+print(str(n_organs) + " organ(s),   " +
+      str(n_strains) + " strain(s),   " +
+      "Low quality? " + str(is_quality) + ",   " +
+      "Amplification? " + str(is_amplification) + ",   " +
+      "Misassignment? " + str(is_misassignment) + ".")
+
 model.integrate()
 
-classified_scaleups = {'program_prop': []}
+
+# Classify scale-up functions for plotting
+classified_scaleups = {'program_prop': [],
+                       'program_other': [],
+                       'birth': [],
+                       'non_program': []}
 for fn in model.scaleup_fns:
     if 'program_prop' in fn:
         classified_scaleups['program_prop'] += [fn]
+    elif 'program' in fn:
+        classified_scaleups['program_other'] += [fn]
+    elif 'demo_rate_birth' in fn:
+        classified_scaleups['birth'] += [fn]
+    else:
+        classified_scaleups['non_program'] += [fn]
 
+# Plot them from the start of the model and from "recent_time"
 for i, classification in enumerate(classified_scaleups):
    cost_scaleup_fns(model,
                     classified_scaleups[classification],

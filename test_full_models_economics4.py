@@ -21,13 +21,13 @@ if not os.path.isdir(out_dir):
 # Note that it takes about one hour to run all of the possible model structures,
 # so perhaps don't do that - and longer if running multiple scenarios
 scenario = None
-n_organs = inputs.model_constants['n_organs'][0]
-n_strains = inputs.model_constants['n_strains'][0]
-is_quality = inputs.model_constants['is_lowquality'][0]
-is_amplification = inputs.model_constants['is_amplification'][0]
-is_misassignment = inputs.model_constants['is_misassignment'][0]
-is_amplification = inputs.model_constants['is_amplification'][0]
-is_misassignment = inputs.model_constants['is_misassignment'][0]
+n_organs = inputs.model_constants['n_organs']
+n_strains = inputs.model_constants['n_strains']
+is_quality = inputs.model_constants['is_lowquality']
+is_amplification = inputs.model_constants['is_amplification']
+is_misassignment = inputs.model_constants['is_misassignment']
+is_amplification = inputs.model_constants['is_amplification']
+is_misassignment = inputs.model_constants['is_misassignment']
 if (is_misassignment and not is_amplification) \
         or (n_strains <= 1 and (is_amplification or is_misassignment)):
     pass

@@ -461,6 +461,8 @@ class ConsolidatedModel(BaseModel):
 
         self.calculate_ipt_rate()
 
+        self.calculate_population_sizes()
+
     def calculate_birth_rates_vars(self):
 
         """
@@ -832,11 +834,14 @@ class ConsolidatedModel(BaseModel):
 
         for agegroup in self.agegroups:
 
-            # Estimate the proportion of the populatoin that should
-            age_limits, _ = tool_kit.interrogate_age_string(agegroup)
-            estimated_prop_in_agegroup = \
-                tool_kit.estimate_prop_of_population_in_agegroup(age_limits,
-                                                                 self.vars['demo_life_expectancy'])
+            # Estimate the proportion of the population that could get IPT
+            if len(self.agegroups) > 1:
+                age_limits, _ = tool_kit.interrogate_age_string(agegroup)
+                estimated_prop_in_agegroup = \
+                    tool_kit.estimate_prop_of_population_in_agegroup(age_limits,
+                                                                     self.vars['demo_life_expectancy'])
+            else:
+                estimated_prop_in_agegroup = 1.
 
             # Find IPT coverage for the age group
             prop_ipt = 0.
@@ -874,6 +879,25 @@ class ConsolidatedModel(BaseModel):
                                     self.vars['program_rate_start_treatment' + organ] * \
                                     prevented_cases_per_treatment_start
 
+    def calculate_population_sizes(self):
+
+        """
+        Calculate the size of the populations to which each intervention is applicable
+        """
+
+        # Treatment support
+        self.vars['popsize_treatment_support'] = 0.
+        for compartment in self.compartments:
+            if 'treatment_' in compartment:
+                self.vars['popsize_treatment_support'] += self.compartments[compartment]
+
+        print(self.vars['popsize_treatment_support'])
+        print(self.vars['population'])
+        print(self.vars['popsize_treatment_support'] / self.vars['population'])
+
+
+        print()
+
     ##################################################################
     # Methods that calculate the flows of all the compartments
 
@@ -898,8 +922,6 @@ class ConsolidatedModel(BaseModel):
         self.set_variable_programmatic_flows()
 
         self.set_detection_flows()
-
-        # self.set_acf_flows()
 
         self.set_treatment_flows()
 

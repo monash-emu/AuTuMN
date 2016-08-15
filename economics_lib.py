@@ -36,6 +36,9 @@ def get_cost_from_coverage(coverage, c_reflection_cost, saturation, unit_cost, p
         uninflated cost
 
     """
+    if pop_size*unit_cost == 0: # if unit cost or pop_size is null, return 0
+        return 0
+
     a = saturation / (1.0 - 2**alpha)
     b = ((2.0**(alpha + 1.0)) / (alpha * (saturation - a) * unit_cost * pop_size))
     cost_uninflated = c_reflection_cost - 1.0/b * math.log((((saturation - a) / (coverage - a))**(1.0 / alpha)) - 1.0)
@@ -98,7 +101,9 @@ def economics_diagnostic(model, period_end,
     # prepare the storage. 'costs' will store all the costs and will be returned
     costs = {'cost_times': []}
 
+    count_intervention = 0 # to count the interventions
     for intervention in interventions: # for each intervention
+        count_intervention += 1
         costs[intervention] = {'uninflated_cost': [], 'inflated_cost': [], 'discounted_cost': []}
 
         param_key = param_key_base + intervention # name of the corresponding parameter
@@ -117,8 +122,8 @@ def economics_diagnostic(model, period_end,
 
         for i in range(start_index, end_index + 1): # for each step time. We may want to change this bit. No need for all time steps
             t = model.times[i]
-            costs['cost_times'].append(t) # storage of the time
-
+            if count_intervention == 1:
+                costs['cost_times'].append(t)   # storage of the time
             # calculate the time variants that feed into the logistic function
             coverage = coverage_function(t)
             c_reflection_cost = c_reflection_cost_function(t)

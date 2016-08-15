@@ -870,7 +870,15 @@ class ConsolidatedModel(BaseModel):
                                                   * self.compartments['detect' \
                                                                       + organ + strain + comorbidity + agegroup]
 
-        print()
+        # ACF
+        self.vars['popsize_smearacf'] = 0.
+        for compartment in self.compartments:
+            if 'active_' in compartment and '_smearpos' in compartment:
+                self.vars['popsize_smearacf'] += self.compartments[compartment]
+        self.vars['popsize_xpertacf'] = 0.
+        for compartment in self.compartments:
+            if 'active_' in compartment and ('_smearpos' in compartment or '_smearneg' in compartment):
+                self.vars['popsize_xpertacf'] += self.compartments[compartment]
 
     def calculate_ipt_rate(self):
 

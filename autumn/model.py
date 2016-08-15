@@ -867,7 +867,7 @@ class ConsolidatedModel(BaseModel):
                 for strain in self.strains:
                     self.vars['popsize_xpert'] += (self.vars['program_rate_detect'] \
                                                    + self.vars['program_rate_missed']) \
-                                                  * self.compartments['detect' \
+                                                  * self.compartments['active' \
                                                                       + organ + strain + comorbidity + agegroup]
 
         # ACF

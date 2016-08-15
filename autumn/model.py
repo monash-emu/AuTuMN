@@ -857,8 +857,20 @@ class ConsolidatedModel(BaseModel):
                                        * self.compartments['detect' + organ + strain + comorbidity + agegroup] \
                                        * self.inputs.model_constants['ipt_eligible_per_treatment_start']
 
-        # BCG
-        self.vars['popsize_vaccination'] = self.vars['births_total']  # So simple that it's possibly unnecessary
+        # BCG (So simple that it's possibly unnecessary, but may be needed for loops over programs)
+        self.vars['popsize_vaccination'] = self.vars['births_total']
+
+        # Xpert - all presentations with active TB
+        self.vars['popsize_xpert'] = 0.
+        for agegroup in self.agegroups:
+            for comorbidity in self.comorbidities:
+                for strain in self.strains:
+                    self.vars['popsize_xpert'] += (self.vars['program_rate_detect'] \
+                                                   + self.vars['program_rate_missed']) \
+                                                  * self.compartments['detect' \
+                                                                      + organ + strain + comorbidity + agegroup]
+
+        print()
 
     def calculate_ipt_rate(self):
 

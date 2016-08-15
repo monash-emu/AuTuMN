@@ -172,11 +172,6 @@ inputs = autumn.data_processing.Inputs(True)
 inputs.read_and_load_data()
 
 scenario = None
-n_organs = inputs.model_constants['n_organs']
-n_strains = inputs.model_constants['n_strains']
-is_quality = inputs.model_constants['is_lowquality']
-is_amplification = inputs.model_constants['is_amplification']
-is_misassignment = inputs.model_constants['is_misassignment']
 
 model = autumn.model.ConsolidatedModel(scenario, inputs)
 model.integrate()

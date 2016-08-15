@@ -56,6 +56,7 @@ class Inputs:
         self.checks()
         self.find_amplification_data()
         self.find_other_structures()
+        self.prepare_for_ipt()
 
     def determine_country(self):
 
@@ -559,6 +560,18 @@ class Inputs:
 
         if self.is_misassignment:
             assert self.is_amplification, 'Misassignment requested without amplification'
+
+    def prepare_for_ipt(self):
+
+        """
+        Calculate number of persons eligible for IPT per person commencing treatment
+        and number of persons who receive effective IPT per person assessed for LTBI
+        """
+
+        self.model_constants['ipt_eligible_per_treatment_start'] = (self.model_constants['demo_household_size'] - 1.) \
+                                                                   * self.model_constants['tb_prop_contacts_infected']
+        self.model_constants['ipt_effective_per_assessment'] = self.model_constants['tb_prop_ltbi_test_sensitivity'] \
+                                                               * self.model_constants['tb_prop_ipt_effectiveness']
 
     #############################################################################
     #  General methods for use by the other methods above

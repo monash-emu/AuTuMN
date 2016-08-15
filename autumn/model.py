@@ -473,17 +473,22 @@ class ConsolidatedModel(BaseModel):
         rate_birth = self.get_constant_or_variable_param('demo_rate_birth') / 1E3
         prop_vacc = self.get_constant_or_variable_param('program_prop_vaccination')
 
+        # Calculate total births first, so that it can be tracked for interventions as well
+        self.vars['births_total'] = \
+            rate_birth \
+            * self.vars['population']
+
         # Calculate the birth rates by compartment
         for comorbidity in self.comorbidities:
+
+            # Then split for model implementation
             self.vars['births_unvac' + comorbidity] = \
                 (1. - prop_vacc) \
-                * rate_birth \
-                * self.vars['population'] \
+                * self.vars['births_total'] \
                 * self.comorb_props[comorbidity]
             self.vars['births_vac' + comorbidity] = \
                 prop_vacc \
-                * rate_birth \
-                * self.vars['population'] \
+                * self.vars['births_total'] \
                 * self.comorb_props[comorbidity]
 
     def calculate_force_infection_vars(self):
@@ -851,6 +856,9 @@ class ConsolidatedModel(BaseModel):
                                     += self.vars['program_rate_start_treatment' + organ] \
                                        * self.compartments['detect' + organ + strain + comorbidity + agegroup] \
                                        * self.inputs.model_constants['ipt_eligible_per_treatment_start']
+
+        # BCG
+        self.vars['popsize_vaccination'] = self.vars['births_total']  # So simple that it's possibly unnecessary
 
     def calculate_ipt_rate(self):
 

@@ -459,9 +459,9 @@ class ConsolidatedModel(BaseModel):
 
         self.calculate_treatment_rates_vars()
 
-        self.calculate_ipt_rate()
-
         self.calculate_population_sizes()
+
+        self.calculate_ipt_rate()
 
     def calculate_birth_rates_vars(self):
 
@@ -820,65 +820,6 @@ class ConsolidatedModel(BaseModel):
                         self.vars['program_rate_default' + treatment_stage + strain] \
                         * (1. - self.vars['epi_prop_amplification'])
 
-    def calculate_ipt_rate(self):
-
-        """
-        Calculate the number of persons starting treatment for IPT, which is linked to the number
-        of patients starting treatment.
-        This code structure echoes the code in set_variable_programmatic_flows
-        """
-
-
-        # This parameter is the number of persons effectively treated with IPT for each
-        # patient started on treatment for active disease.
-
-        for agegroup in self.agegroups:
-
-            # Estimate the proportion of the population that could get IPT
-            if len(self.agegroups) > 1:
-                age_limits, _ = tool_kit.interrogate_age_string(agegroup)
-                estimated_prop_in_agegroup = \
-                    tool_kit.estimate_prop_of_population_in_agegroup(age_limits,
-                                                                     self.vars['demo_life_expectancy'])
-            else:
-                estimated_prop_in_agegroup = 1.
-
-            # Find IPT coverage for the age group
-            prop_ipt = 0.
-            if 'program_prop_ipt' + agegroup in self.vars:
-                prop_ipt += self.vars['program_prop_ipt' + agegroup]
-            elif 'program_prop_ipt' in self.vars and prop_ipt < self.vars['program_prop_ipt']:
-                prop_ipt += self.vars['program_prop_ipt']
-
-            prevented_cases_per_treatment_start = prop_ipt \
-                                                  * (self.inputs.model_constants['demo_household_size'] - 1.) \
-                                                  * self.inputs.model_constants['tb_prop_contacts_infected'] \
-                                                  * self.inputs.model_constants['tb_prop_ltbi_test_sensitivity'] \
-                                                  * self.inputs.model_constants['tb_prop_ipt_effectiveness'] \
-                                                  * estimated_prop_in_agegroup
-
-            self.vars['ipt_commencements' + agegroup] = 0.
-            for strain in self.strains:
-                for comorbidity in self.comorbidities:
-                    for organ in self.organ_status:
-                        
-                        # Currently only applying to patients with drug-susceptible TB,
-                        # which is presumed to be all patients if the model is unstratified by strain
-                        # and only '_ds' if the model is stratified.
-                        if 'dr' not in strain and organ == '_smearpos':
-                            if self.is_misassignment:
-                                for assigned_strain in self.strains:
-                                    if 'dr' not in assigned_strain:
-                                        self.vars['ipt_commencements' + agegroup] += \
-                                            self.compartments['detect' + organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup] * \
-                                            self.vars['program_rate_start_treatment' + organ] * \
-                                            prevented_cases_per_treatment_start
-                            else:
-                                self.vars['ipt_commencements' + agegroup] += \
-                                    self.compartments['detect' + organ + strain + comorbidity + agegroup] * \
-                                    self.vars['program_rate_start_treatment' + organ] * \
-                                    prevented_cases_per_treatment_start
-
     def calculate_population_sizes(self):
 
         """
@@ -891,12 +832,48 @@ class ConsolidatedModel(BaseModel):
             if 'treatment_' in compartment:
                 self.vars['popsize_treatment_support'] += self.compartments[compartment]
 
-        print(self.vars['popsize_treatment_support'])
-        print(self.vars['population'])
-        print(self.vars['popsize_treatment_support'] / self.vars['population'])
+        # IPT
+        for agegroup in self.agegroups:
+            self.vars['popsize_ipt' + agegroup] = 0.
+            for comorbidity in self.comorbidities:
+                for strain in self.strains:
+                    for organ in self.organ_status:
+                        if '_smearpos' in organ and 'dr' not in strain:
+                            if self.is_misassignment:
+                                for assigned_strain in self.strains:
+                                    self.vars['popsize_ipt' + agegroup] \
+                                        += self.vars['program_rate_start_treatment' + organ] \
+                                           * self.compartments['detect' + organ + strain + '_as' + assigned_strain[1:] \
+                                                               + comorbidity + agegroup] \
+                                           * self.inputs.model_constants['ipt_eligible_per_treatment_start']
+                            else:
+                                self.vars['popsize_ipt' + agegroup] \
+                                    += self.vars['program_rate_start_treatment' + organ] \
+                                       * self.compartments['detect' + organ + strain + comorbidity + agegroup] \
+                                       * self.inputs.model_constants['ipt_eligible_per_treatment_start']
 
+    def calculate_ipt_rate(self):
 
-        print()
+        """
+        Uses the popsize to which IPT is applicable, which was calculated in calculate_population_sizes
+         to determine the actual number of persons who should be shifted across compartments.
+        """
+
+        for agegroup in self.agegroups:
+
+            # Find IPT coverage for the age group as the maximum of the coverage in that age group
+            # and the overall coverage.
+            prop_ipt = 0.
+            if 'program_prop_ipt' + agegroup in self.vars:
+                prop_ipt += self.vars['program_prop_ipt' + agegroup]
+            elif 'program_prop_ipt' in self.vars and prop_ipt < self.vars['program_prop_ipt']:
+                prop_ipt += self.vars['program_prop_ipt']
+
+            # Multiply by the eligible population and by the number of effective treatments per person assessed
+            self.vars['ipt_effective_treatments' + agegroup] = prop_ipt \
+                                                               * self.vars['popsize_ipt' + agegroup] \
+                                                               * self.inputs.model_constants[
+                                                                   'ipt_effective_per_assessment']
 
     ##################################################################
     # Methods that calculate the flows of all the compartments
@@ -1246,7 +1223,7 @@ class ConsolidatedModel(BaseModel):
                 for strain in self.strains:
                     self.set_linked_transfer_rate_flow('latent_early' + strain + comorbidity + agegroup,
                                                        'susceptible_vac' + strain + comorbidity + agegroup,
-                                                       'ipt_commencements' + agegroup)
+                                                       'ipt_effective_treatments' + agegroup)
 
     ##################################################################
     # Methods that calculate the output vars and diagnostic properties

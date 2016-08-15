@@ -605,6 +605,15 @@ def report_age_specific_parameter_calculations(parameter_name, model_param_vals)
               + ' has been estimated as ' + str(model_param_vals[age_param]))
 
 
+def indices(a, func):
+    """
+    Returns the indices of a which verify a condition defined by a lambda function
+        example: year = indices(self.model.times, lambda x: x >= 2003)[0]  returns the smallest index where x >=2003
+
+    """
+    return [i for (i, val) in enumerate(a) if func(val)]
+
+
 # * * * * * * * * * * * * * * * * * * * * * *
 #                   Test age-stratification
 

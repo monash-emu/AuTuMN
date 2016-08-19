@@ -51,6 +51,7 @@ class Inputs:
         self.find_treatment_periods()
         self.find_irrelevant_time_variants()
         self.set_extrapul_casefatality_if_not_provided()
+        self.diabetes_effects()
         self.find_progression_rate_from_params()
         self.find_tb_case_fatality()
         self.checks()
@@ -486,6 +487,47 @@ class Inputs:
         if 'tb_prop_casefatality_untreated_extrapul' not in self.model_constants:
             self.model_constants['tb_prop_casefatality_untreated_extrapul'] \
                 = self.model_constants['tb_prop_casefatality_untreated_smearneg']
+
+    def diabetes_effects(self):
+
+        """
+        Temporary - this code definitely needs generalising to all comorbidities and parameters,
+        but is specific to diabetes's effect on progression rates at the moment.
+        Currently multiplies progression rate by the relevant multiplier for older age groups.
+        """
+
+        age_cut_off = 10.  # Process will be applied to any age group that starting from this age or greater
+
+        diabetes_parameters = {}
+        for param in self.model_constants:
+
+            # For non-age stratified parameters
+            if '_progression' in param \
+                    and '_age' not in param \
+                    and '_multiplier' not in param:  # Prevent the process being performed for the multiplier itself
+                diabetes_parameters[param + '_diabetes'] \
+                    = self.model_constants[param] \
+                      * self.model_constants['comorb_multiplier_diabetes_progression']
+
+            # For age-stratified parameters
+            elif '_progression' in param \
+                    and '_age' in param \
+                    and '_multiplier' not in param:
+                age_string, _ = tool_kit.find_string_from_starting_letters(param, '_age')
+                age_limits, _ = tool_kit.interrogate_age_string(age_string)
+
+                # Only apply to adults (i.e. age groups with a lower limit greater than 10)
+                if age_limits[0] >= age_cut_off:
+                    diabetes_parameters[param + '_diabetes'] \
+                        = self.model_constants[param] \
+                          * self.model_constants['comorb_multiplier_diabetes_progression']
+
+                # Otherwise just accept the original parameter
+                else:
+                    diabetes_parameters[param + '_diabetes'] \
+                        = self.model_constants[param]
+
+        self.model_constants.update(diabetes_parameters)
 
     def find_progression_rate_from_params(self):
 

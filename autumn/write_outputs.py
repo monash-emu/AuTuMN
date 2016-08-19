@@ -30,7 +30,8 @@ def create_output_dict(model):
     output_dict = {}
     times = np.linspace(model.inputs.model_constants['start_time'],
                         model.inputs.model_constants['scenario_end_time'],
-                        num=(1 + model.inputs.model_constants['scenario_end_time'] - model.inputs.model_constants['start_time']))
+                        num=(1 + model.inputs.model_constants['scenario_end_time'] \
+                             - model.inputs.model_constants['start_time']))
 
     for label in outputs:
         output_dict[label] = {}

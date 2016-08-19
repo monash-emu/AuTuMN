@@ -12,11 +12,12 @@ pluggable API to other system. Applied to Tuberculosis.
 - spreadsheet.py: reads data from input.xlsx  
 
 
-# TODO  
+# TODO
   
 # James TODO:
 - might speed things up to have spreadsheet reader save a data object of
     some sort, as reading is now taking 20+ seconds at each run
+    or alternatively, code to only load spreadsheets relevent to this model run
 - Xpert improvement in diagnostic algorithm
 - allow scenarios to be scaled-up over varying time periods
 - population stratification for at-risk groups (partially done)

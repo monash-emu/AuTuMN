@@ -204,7 +204,15 @@ class BaseModel:
         # previously led to a bug because not all of them
         # were called in the diagnostics round.
         # (Written by James, not Bosco)
-        self.vars.clear()
+
+        # Before clearing vars, we need to save the ones that are population sizes as its needed for the economics
+        saved_vars = {}
+        for key in self.vars.keys():
+            if 'popsize' in key:
+                saved_vars[key] = self.vars[key]
+
+        self.vars.clear() # clear all the vars
+        self.vars = saved_vars # re-populate the saved vars
         self.calculate_vars_of_scaleup_fns()
         self.calculate_vars()
         self.calculate_flows()

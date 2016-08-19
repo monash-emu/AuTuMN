@@ -37,18 +37,22 @@ base = os.path.join(out_dir, country + '_baseline')
 models = {}
 for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
 
+    # Name model
     if scenario is None:
         model_name = 'baseline'
     else:
         model_name = 'scenario_' + str(scenario)
 
+    # Determine whether this is the final iteration of the loop
     if scenario == inputs.model_constants['scenarios_to_run'][-1]:
         final = True
     else:
         final = False
 
+    # Create an outputs object for use later
     if inputs.model_constants['output_spreadsheets']:
         project.scenarios.append(model_name)
+
 
     models[model_name] = autumn.model.ConsolidatedModel(
         scenario,  # Scenario to run
@@ -64,18 +68,24 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
         models[model_name].loaded_compartments = \
             models['baseline'].load_state(scenario_start_time_index)
 
+    # Describe model
     print('Running model "' + model_name + '".')
     if n == 0:
         print(autumn.tool_kit.describe_model(models, model_name))
+
+    # Integrate
     models[model_name].integrate()
 
+    # Write to spreadsheets
     if inputs.model_constants['output_spreadsheets']:
         project.models[model_name] = \
             models[model_name]  # Store the model in the object 'project'
         project.output_dict[model_name] = \
             w_o.create_output_dict(models[model_name])  # Store simplified outputs
 
+    # Report time
     print('Time elapsed so far is ' + str(datetime.datetime.now() - start_realtime))
+
 
     autumn.plotting.plot_outputs_against_gtb(
         models[model_name], ['incidence', 'mortality', 'prevalence', 'notifications'],

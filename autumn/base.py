@@ -65,7 +65,6 @@ class BaseModel:
 
         raise ValueError('Time not found')
 
-
     def set_compartment(self, label, init_val=0.0):
         if label not in self.labels:
             self.labels.append(label)
@@ -224,7 +223,13 @@ class BaseModel:
 
     def init_run(self):
 
-        self.make_times(self.inputs.model_constants['start_time'],
+
+
+        if self.scenario == None:
+            start_time = self.inputs.model_constants['start_time']
+        else:
+            start_time = self.inputs.model_constants['scenario_start_time']
+        self.make_times(start_time,
                         self.inputs.model_constants['scenario_end_time'],
                         self.inputs.model_constants['time_step'])
         self.initialise_compartments()
@@ -323,6 +328,7 @@ class BaseModel:
         self.calculate_diagnostics()
 
     def integrate_runge_kutta(self, dt_max=0.05):
+
         """
         Uses Runge-Kutta 4 method.
 

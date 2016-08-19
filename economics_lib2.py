@@ -156,24 +156,35 @@ def economics_diagnostic(model, period_end,
     return costs
 
 def total_cost_intervention(costs, intervention, time_from=None, time_to=None):
+    """
+    provide the total spending on an intervention during a given period of time
+    Args:
+        costs: dictionary obtained from economics_diagnostics
+        intervention: the name of the intervention. eg 'vaccination'
+        time_from: if None, will consider the earliest time used in economics_diagnostic
+        time_to: if None, will consider the latest time used in economics_diagnostic
 
+    Returns:
+        a dictionary with the total costs (uninflated, inflated and discounted)
+    """
     if time_from is None:
-        indice_time_from = 0
+        indice_time_from = 0.
     else:
         assert time_from >= costs['cost_times'][0], 'time_from is too early'
-        indice_time_from = indices(costs['cost_times'], lambda x: x >= time_from)[0]
+        indice_time_from = indices(costs['cost_times'], lambda x: x >= time_from - 0.0000001)[0]  # Need to investigate why we need -0.00000001. Not urgent
 
     if time_to is None:
         indice_time_to = len(costs['cost_times']) - 1
     else:
         assert time_to <= costs['cost_times'][-1], 'time_to is too late'
-        indice_time_to = indices(costs['cost_times'], lambda x: x <= time_to)[-1]
+        indice_time_to = indices(costs['cost_times'], lambda x: x <= time_to )[-1]
 
     time_step = costs['cost_times'][1] - costs['cost_times'][0]
 
     total_intervention_uninflated = 0
     total_intervention_inflated = 0
     total_intervention_discounted = 0
+
     for i in range(indice_time_from, indice_time_to):
         total_intervention_uninflated += time_step * costs[intervention]['uninflated_cost'][i]
         total_intervention_inflated += time_step * costs[intervention]['inflated_cost'][i]
@@ -182,6 +193,21 @@ def total_cost_intervention(costs, intervention, time_from=None, time_to=None):
                       'total_intervention_inflated': total_intervention_inflated,
                       'total_intervention_discounted': total_intervention_discounted}
     return total_cost_int
+
+def total_cost_intervention_year(costs, intervention, year):
+    """
+    express function derivated from total_cost_intervention to get the costs by intervention for a given year
+    Args:
+        costs: dictionary obtained from economics_diagnostics
+        intervention: the name of the intervention. eg 'vaccination'
+        year: the year
+
+    Returns:
+        a dictionary with the total costs (uninflated, inflated and discounted)
+    """
+    assert costs['cost_times'][0] <= year <= costs['cost_times'][-1], 'costs not available for year ' + year
+    assert costs['cost_times'][0] <= year + 1 <= costs['cost_times'][-1], 'costs not available for year ' + year
+    return total_cost_intervention(costs, intervention, time_from=year, time_to=year + 1.0)
 
 # Functions related to the more complicated direction, where there is a feed back loop
 def get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.0):
@@ -222,4 +248,11 @@ if __name__ == "__main__":
     costs = economics_diagnostic(model, period_end=2020.)
 
     costs_bcg = total_cost_intervention(costs, 'vaccination', time_from=2012, time_to=2014)
-    print(costs_bcg)
+    costs_bcg_2012 = total_cost_intervention_year(costs, 'vaccination', 2012)
+    costs_bcg_2013 = total_cost_intervention_year(costs, 'vaccination', 2013)
+
+
+
+
+
+

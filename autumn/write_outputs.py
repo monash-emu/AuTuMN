@@ -28,7 +28,9 @@ def create_output_dict(model):
 
     outputs = ['incidence', 'mortality', 'prevalence', 'notifications']
     output_dict = {}
-    times = np.linspace(model.start_time, model.end_time, num=(1 + model.end_time - model.start_time))
+    times = np.linspace(model.inputs.model_constants['start_time'],
+                        model.inputs.model_constants['scenario_end_time'],
+                        num=(1 + model.inputs.model_constants['scenario_end_time'] - model.inputs.model_constants['start_time']))
 
     for label in outputs:
         output_dict[label] = {}

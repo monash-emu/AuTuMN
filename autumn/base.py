@@ -223,8 +223,6 @@ class BaseModel:
 
     def init_run(self):
 
-
-
         if self.scenario == None:
             start_time = self.inputs.model_constants['start_time']
         else:

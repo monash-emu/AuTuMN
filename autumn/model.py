@@ -439,7 +439,9 @@ class ConsolidatedModel(BaseModel):
         variable rates
         """
 
-        #self.update_vars_from_cost()
+        # the parameter values are calculated from the costs, but only in the future
+        # if self.time > self.inputs.model_constants['current_time']:
+        #     self.update_vars_from_cost()
 
         self.vars['population'] = sum(self.compartments.values())
 
@@ -471,11 +473,12 @@ class ConsolidatedModel(BaseModel):
         popsize_label_base = 'popsize_'
         c_inflection_cost_base = 'econ_program_inflectioncost_'
         unitcost_base = 'econ_program_unitcost_'
+        cost_base = 'econ_program_totalcost_'
 
         for int in interventions:
             vars_key = vars_key_base + int
 
-            cost = 100000000  # dummy   . Should be obtained from scale_up functions
+            cost = self.vars[cost_base + int]  # dummy   . Should be obtained from scale_up functions
             unit_cost = self.vars[unitcost_base + int]
             c_inflection_cost = self.vars[c_inflection_cost_base + int]
             saturation = 0.9  # dummy   provisional

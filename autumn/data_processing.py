@@ -576,18 +576,18 @@ class Inputs:
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
                 if comorbidity is '_nocomorb':
-                    self.model_constants['tb_rate_early_progression' + agegroup + comorbidity] \
+                    self.model_constants['tb_rate_early_progression' + comorbidity + agegroup] \
                         = self.model_constants['tb_prop_early_progression' + agegroup] \
                           / self.model_constants['tb_timeperiod_early_latent']
-                    self.model_constants['tb_rate_stabilise' + agegroup + comorbidity] \
+                    self.model_constants['tb_rate_stabilise' + comorbidity + agegroup] \
                         = (1. - self.model_constants['tb_prop_early_progression' + agegroup]) \
                           / self.model_constants['tb_timeperiod_early_latent']
                 else:
-                    self.model_constants['tb_rate_early_progression' + agegroup + comorbidity] \
-                        = self.model_constants['tb_prop_early_progression' + agegroup + comorbidity] \
+                    self.model_constants['tb_rate_early_progression' + comorbidity + agegroup] \
+                        = self.model_constants['tb_prop_early_progression' + comorbidity + agegroup] \
                           / self.model_constants['tb_timeperiod_early_latent']
-                    self.model_constants['tb_rate_stabilise' + agegroup + comorbidity] \
-                        = (1. - self.model_constants['tb_prop_early_progression' + agegroup + comorbidity]) \
+                    self.model_constants['tb_rate_stabilise' + comorbidity + agegroup] \
+                        = (1. - self.model_constants['tb_prop_early_progression' + comorbidity + agegroup]) \
                           / self.model_constants['tb_timeperiod_early_latent']
 
     def find_tb_case_fatality(self):

@@ -595,9 +595,9 @@ class ConsolidatedModel(BaseModel):
                 for agegroup in self.agegroups:
                     for comorbidity in self.comorbidities:
                         for timing in ['_early', '_late']:
-                            self.vars['tb_rate' + timing + '_progression' + organ + agegroup + comorbidity] \
+                            self.vars['tb_rate' + timing + '_progression' + organ + comorbidity + agegroup] \
                                 = self.vars['epi_prop' + organ] \
-                                  * self.params['tb_rate' + timing + '_progression' + agegroup + comorbidity]
+                                  * self.params['tb_rate' + timing + '_progression' + comorbidity + agegroup]
 
     def calculate_acf_rate(self):
 
@@ -1014,7 +1014,7 @@ class ConsolidatedModel(BaseModel):
                         self.set_fixed_transfer_rate_flow(
                             'latent_early' + strain + comorbidity + agegroup,
                             'latent_late' + strain + comorbidity + agegroup,
-                            'tb_rate_stabilise' + agegroup + comorbidity)
+                            'tb_rate_stabilise' + comorbidity + agegroup)
 
                         for organ in self.organ_status:
 
@@ -1026,13 +1026,13 @@ class ConsolidatedModel(BaseModel):
                                 self.set_var_transfer_rate_flow(
                                     'latent_early' + strain + comorbidity + agegroup,
                                     'active' + organ + strain + comorbidity + agegroup,
-                                    'tb_rate_early_progression' + organ + agegroup + comorbidity)
+                                    'tb_rate_early_progression' + organ + comorbidity + agegroup)
 
                                 # Late progression
                                 self.set_var_transfer_rate_flow(
                                     'latent_late' + strain + comorbidity + agegroup,
                                     'active' + organ + strain + comorbidity + agegroup,
-                                    'tb_rate_late_progression' + organ + agegroup + comorbidity)
+                                    'tb_rate_late_progression' + organ + comorbidity + agegroup)
 
                             # Otherwise, set fixed flows
                             else:
@@ -1040,13 +1040,13 @@ class ConsolidatedModel(BaseModel):
                                 self.set_fixed_transfer_rate_flow(
                                     'latent_early' + strain + comorbidity + agegroup,
                                     'active' + organ + strain + comorbidity + agegroup,
-                                    'tb_rate_early_progression' + organ + agegroup + comorbidity)
+                                    'tb_rate_early_progression' + organ + comorbidity + agegroup)
 
                                 # Late progression
                                 self.set_fixed_transfer_rate_flow(
                                     'latent_late' + strain + comorbidity + agegroup,
                                     'active' + organ + strain + comorbidity + agegroup,
-                                    'tb_rate_late_progression' + organ + agegroup + comorbidity)
+                                    'tb_rate_late_progression' + organ + comorbidity + agegroup)
 
     def set_natural_history_flows(self):
 

@@ -11,17 +11,23 @@ class Inputs:
 
         self.from_test = from_test
 
-    def read_and_load_data(self, keys_of_sheets_to_read=('bcg', 'rate_birth', 'life_expectancy', 'control_panel',
-                                                         'default_parameters', 'tb', 'notifications', 'outcomes',
-                                                         'country_constants', 'default_constants', 'country_economics',
-                                                         'default_economics', 'country_programs', 'default_programs',
-                                                         'diabetes')):
+    def read_and_load_data(self):
 
-        # Determine country to be read
-        self.determine_country()
+        self.first_read_control_panel = spreadsheet.read_input_data_xls(self.from_test, ['control_panel'])
+        self.country = self.first_read_control_panel['control_panel']['country']
 
-        # Read the relevant sheets
-        self.read_sheets(keys_of_sheets_to_read)
+        keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
+                                  'default_parameters', 'tb', 'notifications', 'outcomes',
+                                  'country_constants', 'default_constants', 'country_economics',
+                                  'default_economics', 'country_programs', 'default_programs']
+
+        if 'comorbidity_diabetes' in self.first_read_control_panel['control_panel']:
+            keys_of_sheets_to_read += ['diabetes']
+
+        self.original_data \
+            = spreadsheet.read_input_data_xls(self.from_test,
+                                              keys_of_sheets_to_read,
+                                              self.country)
 
         # Work through the data processing
         self.derived_data = {}
@@ -59,32 +65,6 @@ class Inputs:
         self.find_amplification_data()
         self.find_other_structures()
         self.prepare_for_ipt()
-
-    def determine_country(self):
-
-        """
-        Method to quickly return the country for analysis by reading the control panel
-        and only extracting the country name.
-        """
-
-        self.country = spreadsheet.read_input_data_xls(self.from_test,
-                                                       ['control_panel'])['control_panel']['country']
-
-    def read_sheets(self, keys_of_sheets_to_read):
-
-        """
-        Method that just calls the reading function in the spreadsheet reader,
-        with directory correction and country specification as required.
-
-        Args:
-            keys_of_sheets_to_read: Specifies the spreadsheets that need to be read,
-                defaults are provided through read_and_load_data method inputs above.
-        """
-
-        self.original_data \
-            = spreadsheet.read_input_data_xls(self.from_test,
-                                              keys_of_sheets_to_read,
-                                              self.country)
 
     def find_time_variants(self):
 
@@ -526,7 +506,7 @@ class Inputs:
     def diabetes_effects(self):
 
         """
-        Temporary - this code definitely needs generalising to all comorbidities and parameters,
+        Temporary - this code needs generalising to all comorbidities and parameters,
         but is specific to diabetes's effect on progression rates at the moment.
         Currently multiplies progression rate by the relevant multiplier for older age groups.
         """
@@ -552,20 +532,21 @@ class Inputs:
                     and '_multiplier' not in param:
                 age_string, _ = tool_kit.find_string_from_starting_letters(param, '_age')
                 age_limits, _ = tool_kit.interrogate_age_string(age_string)
+                param_without_age = param[:-len(age_string)]
 
                 # Only apply to adults (i.e. age groups with a lower limit greater than 10)
                 if age_limits[0] >= age_cut_off:
-                    diabetes_parameters[param + '_diabetes'] \
+                    diabetes_parameters[param_without_age + '_diabetes' + age_string] \
                         = self.model_constants[param] \
                           * self.model_constants['comorb_multiplier_diabetes_progression']
-                    diabetes_parameters[param + '_nocomorb'] \
+                    diabetes_parameters[param_without_age + '_nocomorb' + age_string] \
                         = self.model_constants[param]
 
                 # Otherwise just accept the original parameter
                 else:
-                    diabetes_parameters[param + '_diabetes'] \
+                    diabetes_parameters[param_without_age + '_diabetes' + age_string] \
                         = self.model_constants[param]
-                    diabetes_parameters[param + '_nocomorb'] \
+                    diabetes_parameters[param_without_age + '_nocomorb' + age_string] \
                         = self.model_constants[param]
 
         self.model_constants.update(diabetes_parameters)

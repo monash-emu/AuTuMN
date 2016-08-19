@@ -125,7 +125,8 @@ class ConsolidatedModel(BaseModel):
         self.is_organvariation = self.inputs.is_organvariation
         self.strains = self.inputs.strains
 
-        self.define_comorbidities()
+        self.comorbidities = self.inputs.comorbidities
+        self.comorb_props = self.inputs.comorb_props
 
         # Age stratification
         self.agegroups = self.inputs.agegroups
@@ -135,40 +136,6 @@ class ConsolidatedModel(BaseModel):
             if compartment in self.inputs.model_constants:
                 self.initial_compartments[compartment] \
                     = self.inputs.model_constants[compartment]
-
-    def define_comorbidities(self):
-
-        """
-        Work out the comorbidity stratification
-        """
-
-        # Create list of comorbidity names
-        self.comorbidities = []
-        for input in self.inputs.model_constants:
-            if 'comorbidity' in input:
-                if self.inputs.model_constants[input] == [True]:
-                    self.comorbidities += [input[11:]]
-        if len(self.comorbidities) == 0:
-            self.comorbidities += ['']
-        else:
-            self.comorbidities += ['_nocomorb']
-
-        # Create dictionary of proportions
-        self.comorb_props = {}
-        remainder = 1.
-        for comorbidity in self.comorbidities:
-            if comorbidity != '' and comorbidity != '_nocomorb':
-                assert self.inputs.model_constants['comorb_prop' + comorbidity] > 0., \
-                    'Please ensure all comorbidity sub-groups are greater than 0% for the model to run'
-                self.comorb_props[comorbidity] = self.inputs.model_constants['comorb_prop' + comorbidity]
-                remainder -= self.inputs.model_constants['comorb_prop' + comorbidity]
-
-        # Calculate remainder of population to have no comorbidities
-        assert remainder > 0., NameError('Total of the proportions of risk groups is greater than 1.')
-        if '_nocomorb' in self.comorbidities:
-            self.comorb_props['_nocomorb'] = remainder
-        if self.comorbidities == ['']:
-            self.comorb_props[''] = 1.
 
     def initialise_compartments(self):
 
@@ -626,10 +593,11 @@ class ConsolidatedModel(BaseModel):
             # Determine variable progression rates
             for organ in self.organ_status:
                 for agegroup in self.agegroups:
-                    for timing in ['_early', '_late']:
-                        self.vars['tb_rate' + timing + '_progression' + organ + agegroup] \
-                            = self.vars['epi_prop' + organ] \
-                              * self.params['tb_rate' + timing + '_progression' + agegroup]
+                    for comorbidity in self.comorbidities:
+                        for timing in ['_early', '_late']:
+                            self.vars['tb_rate' + timing + '_progression' + organ + agegroup + comorbidity] \
+                                = self.vars['epi_prop' + organ] \
+                                  * self.params['tb_rate' + timing + '_progression' + agegroup + comorbidity]
 
     def calculate_acf_rate(self):
 
@@ -1046,7 +1014,7 @@ class ConsolidatedModel(BaseModel):
                         self.set_fixed_transfer_rate_flow(
                             'latent_early' + strain + comorbidity + agegroup,
                             'latent_late' + strain + comorbidity + agegroup,
-                            'tb_rate_stabilise' + agegroup)
+                            'tb_rate_stabilise' + agegroup + comorbidity)
 
                         for organ in self.organ_status:
 
@@ -1058,13 +1026,13 @@ class ConsolidatedModel(BaseModel):
                                 self.set_var_transfer_rate_flow(
                                     'latent_early' + strain + comorbidity + agegroup,
                                     'active' + organ + strain + comorbidity + agegroup,
-                                    'tb_rate_early_progression' + organ + agegroup)
+                                    'tb_rate_early_progression' + organ + agegroup + comorbidity)
 
                                 # Late progression
                                 self.set_var_transfer_rate_flow(
                                     'latent_late' + strain + comorbidity + agegroup,
                                     'active' + organ + strain + comorbidity + agegroup,
-                                    'tb_rate_late_progression' + organ + agegroup)
+                                    'tb_rate_late_progression' + organ + agegroup + comorbidity)
 
                             # Otherwise, set fixed flows
                             else:
@@ -1072,13 +1040,13 @@ class ConsolidatedModel(BaseModel):
                                 self.set_fixed_transfer_rate_flow(
                                     'latent_early' + strain + comorbidity + agegroup,
                                     'active' + organ + strain + comorbidity + agegroup,
-                                    'tb_rate_early_progression' + organ + agegroup)
+                                    'tb_rate_early_progression' + organ + agegroup + comorbidity)
 
                                 # Late progression
                                 self.set_fixed_transfer_rate_flow(
                                     'latent_late' + strain + comorbidity + agegroup,
                                     'active' + organ + strain + comorbidity + agegroup,
-                                    'tb_rate_late_progression' + organ + agegroup)
+                                    'tb_rate_late_progression' + organ + agegroup + comorbidity)
 
     def set_natural_history_flows(self):
 

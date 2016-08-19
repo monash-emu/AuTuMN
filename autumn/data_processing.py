@@ -46,6 +46,7 @@ class Inputs:
             self.find_ageing_rates()
         if self.model_constants['n_strains'] == 0:
             self.find_single_strain_timeperiods()
+        self.define_comorbidities()
         self.find_strains()
         self.find_organs()
         self.find_treatment_periods()
@@ -413,6 +414,40 @@ class Inputs:
         self.model_constants['tb_timeperiod_treatment'] \
             = self.model_constants['tb_timeperiod_treatment_ds']
 
+    def define_comorbidities(self):
+
+        """
+        Work out the comorbidity stratification
+        """
+
+        # Create list of comorbidity names
+        self.comorbidities = []
+        for input in self.model_constants:
+            if 'comorbidity_' in input:
+                if self.model_constants[input]:
+                    self.comorbidities += [input[11:]]
+        if len(self.comorbidities) == 0:
+            self.comorbidities += ['']
+        else:
+            self.comorbidities += ['_nocomorb']
+
+        # Create dictionary of proportions
+        self.comorb_props = {}
+        remainder = 1.
+        for comorbidity in self.comorbidities:
+            if comorbidity != '' and comorbidity != '_nocomorb':
+                assert self.model_constants['comorb_prop' + comorbidity] > 0., \
+                    'Please ensure all comorbidity sub-groups are greater than 0%'
+                self.comorb_props[comorbidity] = self.model_constants['comorb_prop' + comorbidity]
+                remainder -= self.model_constants['comorb_prop' + comorbidity]
+
+        # Calculate remainder of population to have no comorbidities
+        assert remainder > 0., NameError('Total of the proportions of risk groups is greater than 1.')
+        if '_nocomorb' in self.comorbidities:
+            self.comorb_props['_nocomorb'] = remainder
+        if self.comorbidities == ['']:
+            self.comorb_props[''] = 1.
+
     def find_strains(self):
 
         """
@@ -508,6 +543,8 @@ class Inputs:
                 diabetes_parameters[param + '_diabetes'] \
                     = self.model_constants[param] \
                       * self.model_constants['comorb_multiplier_diabetes_progression']
+                diabetes_parameters[param + '_nocomorb'] \
+                    = self.model_constants[param]
 
             # For age-stratified parameters
             elif '_progression' in param \
@@ -521,10 +558,14 @@ class Inputs:
                     diabetes_parameters[param + '_diabetes'] \
                         = self.model_constants[param] \
                           * self.model_constants['comorb_multiplier_diabetes_progression']
+                    diabetes_parameters[param + '_nocomorb'] \
+                        = self.model_constants[param]
 
                 # Otherwise just accept the original parameter
                 else:
                     diabetes_parameters[param + '_diabetes'] \
+                        = self.model_constants[param]
+                    diabetes_parameters[param + '_nocomorb'] \
                         = self.model_constants[param]
 
         self.model_constants.update(diabetes_parameters)
@@ -533,12 +574,21 @@ class Inputs:
 
         # Overall early progression and stabilisation rates
         for agegroup in self.agegroups:
-            self.model_constants['tb_rate_early_progression' + agegroup] \
-                = self.model_constants['tb_prop_early_progression' + agegroup] \
-                  / self.model_constants['tb_timeperiod_early_latent']
-            self.model_constants['tb_rate_stabilise' + agegroup] \
-                = (1. - self.model_constants['tb_prop_early_progression' + agegroup]) \
-                  / self.model_constants['tb_timeperiod_early_latent']
+            for comorbidity in self.comorbidities:
+                if comorbidity is '_nocomorb':
+                    self.model_constants['tb_rate_early_progression' + agegroup + comorbidity] \
+                        = self.model_constants['tb_prop_early_progression' + agegroup] \
+                          / self.model_constants['tb_timeperiod_early_latent']
+                    self.model_constants['tb_rate_stabilise' + agegroup + comorbidity] \
+                        = (1. - self.model_constants['tb_prop_early_progression' + agegroup]) \
+                          / self.model_constants['tb_timeperiod_early_latent']
+                else:
+                    self.model_constants['tb_rate_early_progression' + agegroup + comorbidity] \
+                        = self.model_constants['tb_prop_early_progression' + agegroup + comorbidity] \
+                          / self.model_constants['tb_timeperiod_early_latent']
+                    self.model_constants['tb_rate_stabilise' + agegroup + comorbidity] \
+                        = (1. - self.model_constants['tb_prop_early_progression' + agegroup + comorbidity]) \
+                          / self.model_constants['tb_timeperiod_early_latent']
 
     def find_tb_case_fatality(self):
 

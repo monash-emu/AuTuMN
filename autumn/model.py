@@ -369,8 +369,9 @@ class ConsolidatedModel(BaseModel):
         """
 
         # the parameter values are calculated from the costs, but only in the future
-        # if self.time > self.inputs.model_constants['current_time']:
-        #     self.update_vars_from_cost()
+        if self.eco_drives_epi:
+            if self.time > self.inputs.model_constants['current_time']:
+                self.update_vars_from_cost()
 
         self.vars['population'] = sum(self.compartments.values())
 
@@ -396,59 +397,7 @@ class ConsolidatedModel(BaseModel):
 
         self.calculate_ipt_rate()
 
-    def update_vars_from_cost(self):
-        interventions = ['vaccination', 'treatment_support'] # provisional
-        vars_key_base = 'program_prop_'
-        popsize_label_base = 'popsize_'
-        c_inflection_cost_base = 'econ_program_inflectioncost_'
-        unitcost_base = 'econ_program_unitcost_'
-        cost_base = 'econ_program_totalcost_'
 
-        for int in interventions:
-            vars_key = vars_key_base + int
-
-            cost = self.vars[cost_base + int]  # dummy   . Should be obtained from scale_up functions
-            unit_cost = self.vars[unitcost_base + int]
-            c_inflection_cost = self.vars[c_inflection_cost_base + int]
-            saturation = 0.9  # dummy   provisional
-
-            popsize_key = popsize_label_base + int
-            if popsize_key in self.vars.keys():
-                pop_size = self.vars[popsize_key]
-            else:
-                pop_size = 0
-
-            def get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.0):
-                """
-                Estimate the coverage associated with a spending in a programme
-                Args:
-                   cost: the amount of money allocated to a programme (absolute number, not a proportion of global funding)
-                   c_inflection_cost: cost at which inflection occurs on the curve. It's also the configuration leading to the
-                                       best efficiency.
-                   saturation: maximal acceptable coverage, ie upper asymptote
-                   unit_cost: unit cost of the intervention
-                   pop_size: size of the population targeted by the intervention
-                   alpha: steepness parameter
-
-                Returns:
-                   coverage (as a proportion, then lives in 0-1)
-               """
-                assert cost >= 0, 'cost must be positive or null'
-                if cost <= c_inflection_cost:  # if cost is smaller thar c_inflection_cost, then the starting cost necessary to get coverage has not been reached
-                    return 0
-
-                if pop_size * unit_cost == 0:  # if unit cost or pop_size is null, return 0
-                    return 0
-
-                a = saturation / (1.0 - 2 ** alpha)
-                b = ((2.0 ** (alpha + 1.0)) / (alpha * (saturation - a) * unit_cost * pop_size))
-                coverage_estimated = a + (saturation - a) / (
-                    (1 + numpy.exp((-b) * (cost - c_inflection_cost))) ** alpha)
-                return coverage_estimated
-
-            coverage = get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.0)
-
-            self.vars[vars_key] = coverage
 
     def calculate_birth_rates_vars(self):
 

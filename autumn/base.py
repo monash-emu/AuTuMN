@@ -7,7 +7,6 @@ from tool_kit import indices
 
 from autumn.curve import make_two_step_curve
 
-
 class BaseModel:
 
     def __init__(self):
@@ -37,6 +36,11 @@ class BaseModel:
         self.var_infection_death_rate_flows = []
 
         self.costs = {}
+        self.run_costing = True
+        self.end_period_costing = 2035
+        self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf']
+
+        self.eco_drives_epi = True
 
     def make_times(self, start, end, delta):
 
@@ -211,9 +215,10 @@ class BaseModel:
 
         # Before clearing vars, we need to save the ones that are population sizes as its needed for the economics
         saved_vars = {}
-        for key in self.vars.keys():
-            if 'popsize' in key:
-                saved_vars[key] = self.vars[key]
+        if self.eco_drives_epi:
+            for key in self.vars.keys():
+                if 'popsize' in key:
+                    saved_vars[key] = self.vars[key]
 
         self.vars.clear() # clear all the vars
         self.vars = saved_vars # re-populate the saved vars
@@ -285,6 +290,8 @@ class BaseModel:
         self.soln_array = sol[tt_record, :]
 
         self.calculate_diagnostics()
+        if self.run_costing:
+            self.calculate_economics_diagnostics(self.end_period_costing)
 
     def integrate_explicit(self, dt_max=0.05):
 
@@ -336,6 +343,8 @@ class BaseModel:
                 self.soln_array[i_time+1, :] = y
 
         self.calculate_diagnostics()
+        if self.run_costing:
+            self.calculate_economics_diagnostics(self.end_period_costing)
 
     def integrate_runge_kutta(self, dt_max=0.05):
 
@@ -401,7 +410,8 @@ class BaseModel:
                 self.soln_array[i_time + 1, :] = y
 
         self.calculate_diagnostics()
-        self.calculate_economics_diagnostics(2020)
+        if self.run_costing:
+            self.calculate_economics_diagnostics()
 
     def calculate_output_vars(self):
         """
@@ -469,17 +479,13 @@ class BaseModel:
         coverage_function = self.scaleup_fns[param_key]
         return coverage_function
 
-    def calculate_economics_diagnostics(self, period_end,
-                                        interventions=['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf']):
+    def calculate_economics_diagnostics(self):
         """
         Run the economics diagnostics associated with a model run. Integration is supposed to have been run at this point
         Args:
             self the model object
-            period_end: date of the end of the period considered for total cost calculations
-            interventions: list of interventions considered for costing
-
         Returns:
-            the costs associated to each intervention and at each time step. These are yearly costs.
+            nothing
         """
 
         def get_cost_from_coverage(coverage, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.0):
@@ -536,8 +542,8 @@ class BaseModel:
         start_index = indices(self.times, lambda x: x >= start_time)[0]
 
         end_time_integration = self.inputs.model_constants['scenario_end_time']
-        assert period_end <= end_time_integration, 'period_end must be <= end_time_integration'
-        end_index = indices(self.times, lambda x: x >= period_end)[0]
+        assert self.end_period_costing <= end_time_integration, 'period_end must be <= end_time_integration'
+        end_index = indices(self.times, lambda x: x >= self.end_period_costing)[0]
 
         # prepare the references to fetch the data and model outputs
         param_key_base = 'econ_program_prop_'
@@ -554,7 +560,7 @@ class BaseModel:
         costs = {'cost_times': []}
 
         count_intervention = 0  # to count the interventions
-        for intervention in interventions:  # for each intervention
+        for intervention in self.interventions_to_cost:  # for each intervention
             count_intervention += 1
             costs[intervention] = {'uninflated_cost': [], 'inflated_cost': [], 'discounted_cost': []}
 
@@ -599,6 +605,67 @@ class BaseModel:
                 costs[intervention]['discounted_cost'].append(discounted_cost)  # storage
 
         self.costs = costs
+
+    def update_vars_from_cost(self):
+        """
+        update parameter values according to the funding allocated to each interventions. This process is done during
+        integration
+        Returns:
+        Nothing
+        """
+        def get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.0):
+            """
+            Estimate the coverage associated with a spending in a programme
+            Args:
+               cost: the amount of money allocated to a programme (absolute number, not a proportion of global funding)
+               c_inflection_cost: cost at which inflection occurs on the curve. It's also the configuration leading to the
+                                   best efficiency.
+               saturation: maximal acceptable coverage, ie upper asymptote
+               unit_cost: unit cost of the intervention
+               pop_size: size of the population targeted by the intervention
+               alpha: steepness parameter
+
+            Returns:
+               coverage (as a proportion, then lives in 0-1)
+           """
+            assert cost >= 0, 'cost must be positive or null'
+            if cost <= c_inflection_cost:  # if cost is smaller thar c_inflection_cost, then the starting cost necessary to get coverage has not been reached
+                return 0
+
+            if pop_size * unit_cost == 0:  # if unit cost or pop_size is null, return 0
+                return 0
+
+            a = saturation / (1.0 - 2 ** alpha)
+            b = ((2.0 ** (alpha + 1.0)) / (alpha * (saturation - a) * unit_cost * pop_size))
+            coverage_estimated = a + (saturation - a) / (
+                (1 + numpy.exp((-b) * (cost - c_inflection_cost))) ** alpha)
+            return coverage_estimated
+
+        interventions = ['vaccination', 'treatment_support']  # provisional
+        interventions = self.interventions_to_cost  # provisional
+
+        vars_key_base = 'program_prop_'
+        popsize_label_base = 'popsize_'
+        c_inflection_cost_base = 'econ_program_inflectioncost_'
+        unitcost_base = 'econ_program_unitcost_'
+        cost_base = 'econ_program_totalcost_'
+
+        for int in interventions:
+            vars_key = vars_key_base + int
+
+            cost = self.vars[cost_base + int]  # dummy   . Should be obtained from scale_up functions
+            unit_cost = self.vars[unitcost_base + int]
+            c_inflection_cost = self.vars[c_inflection_cost_base + int]
+            saturation = 0.9  # dummy   provisional
+
+            popsize_key = popsize_label_base + int
+            if popsize_key in self.vars.keys():
+                pop_size = self.vars[popsize_key]
+            else:
+                pop_size = 0
+
+            coverage = get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.0)
+            self.vars[vars_key] = coverage
 
     def get_compartment_soln(self, label):
         assert self.soln_array is not None, 'calculate_diagnostics has not been run'

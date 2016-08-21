@@ -10,37 +10,66 @@ class Inputs:
     def __init__(self, from_test=False):
 
         self.from_test = from_test
+        self.derived_data = {}
+        self.time_variants = {}
+        self.model_constants = {}
 
     def read_and_load_data(self):
 
+        # Create a "first read" attribute, which can later be used to determine whether other
+        # elements of the control pane need to be read.
         self.first_read_control_panel = spreadsheet.read_input_data_xls(self.from_test, ['control_panel'])
+
+        # Specify the country from the first read
         self.country = self.first_read_control_panel['control_panel']['country']
 
+        # Default keys of sheets to read (ones that should always be read
         keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
                                   'default_parameters', 'tb', 'notifications', 'outcomes',
                                   'country_constants', 'default_constants', 'country_economics',
                                   'default_economics', 'country_programs', 'default_programs']
 
+        # Add the optional ones (this is intended to be the standard approach to reading additional
+        # data to the data object - currently not that useful as it only applies to diabetes)
         if 'comorbidity_diabetes' in self.first_read_control_panel['control_panel']:
             keys_of_sheets_to_read += ['diabetes']
 
+        # Read all the original data required
         self.original_data \
             = spreadsheet.read_input_data_xls(self.from_test,
                                               keys_of_sheets_to_read,
                                               self.country)
 
         # Work through the data processing
-        self.derived_data = {}
+
+        # Find the proportion of new cases by organ status and start to populate the derived data dictionary
         self.find_organ_proportions()
-        self.find_time_variants()
+
+        # Start to populate the time variants dictionary
+        if 'country_programs' in self.original_data:
+            self.time_variants.update(self.original_data['country_programs'])
+
+        # Add vaccination and case detection time variants to time variant dictionary
         self.update_time_variants()
-        self.add_timevariant_defaults()
+
+        # Populate time variant dictionary with defaults where not present in country-specific data
+        self.add_time_variant_defaults()
+
+        # Populate constant model values hierarchically
         self.add_model_constant_defaults()
+
+        # Find outcomes for smear-positive DS-TB patients and populate to derived data dictionary
         self.find_ds_outcomes()
-        self.add_read_treatment_outcomes()
+        self.add_treatment_outcomes()
+
+        # Add ds to the naming of the treatment outcomes for multistrain models
         if self.model_constants['n_strains'] > 1:
             self.duplicate_ds_outcomes_for_multistrain()
-        self.add_epi_dictionaries_to_timevariants()
+
+        # Add time variant demographic dictionaries
+        self.add_demo_dictionaries_to_timevariants()
+
+        #
         self.add_organ_status_to_timevariants()
         self.add_resistant_strain_outcomes()
         self.tidy_timevariants()
@@ -65,17 +94,6 @@ class Inputs:
         self.find_amplification_data()
         self.find_other_structures()
         self.prepare_for_ipt()
-
-    def find_time_variants(self):
-
-        """
-        Extracts all the country-specific economic variables and populates the time-variants
-        dictionary with them.
-        """
-
-        self.time_variants = {}
-        if 'country_programs' in self.original_data:
-            self.time_variants.update(self.original_data['country_programs'])
 
     def update_time_variants(self):
 
@@ -111,7 +129,7 @@ class Inputs:
         self.derived_data.update(self.calculate_proportion_dict(self.original_data['notifications'],
                                                                 ['new_sp', 'new_sn', 'new_ep']))
 
-    def add_timevariant_defaults(self):
+    def add_time_variant_defaults(self):
 
         """
         Populates time variant parameters with defaults if those values aren't found
@@ -142,8 +160,10 @@ class Inputs:
             other_sheets_with_constants: The sheets of original_data which contain model constants
         """
 
-        self.model_constants = {}
+        # First take control panel values
         self.model_constants = self.original_data['control_panel']
+
+        # Populate from country_constants if available and default_constants if not
         for other_sheet in other_sheets_with_constants:
             if other_sheet in self.original_data:
                 for item in self.original_data[other_sheet]:
@@ -173,7 +193,7 @@ class Inputs:
                 = self.derived_data['prop_new_sp_cmplt'][year] \
                   + self.derived_data['prop_new_sp_cur'][year]
 
-    def add_read_treatment_outcomes(self):
+    def add_treatment_outcomes(self):
 
         """
         Add treatment outcomes for DS-TB to the time variants attribute.
@@ -183,14 +203,15 @@ class Inputs:
         # Iterate over success and death outcomes
         for outcome in ['_success', '_death']:
 
-            # Correct naming GTB report
-            if outcome == '_success':
-                report_outcome = '_success'
-            elif outcome == '_death':
-                report_outcome = '_died'
-
             # Populate data
             if self.time_variants['program_prop_treatment' + outcome]['load_data'] == 'yes':
+
+                # Correct naming GTB report
+                if outcome == '_success':
+                    report_outcome = '_success'
+                elif outcome == '_death':
+                    report_outcome = '_died'
+
                 for year in self.derived_data['prop_new_sp' + report_outcome]:
                     if year not in self.time_variants['program_prop_treatment' + outcome]:
                         self.time_variants['program_prop_treatment' + outcome][year] \
@@ -206,7 +227,7 @@ class Inputs:
             self.time_variants['program_prop_treatment' + outcome + '_ds'] \
                 = copy.copy(self.time_variants['program_prop_treatment' + outcome])
 
-    def add_epi_dictionaries_to_timevariants(self):
+    def add_demo_dictionaries_to_timevariants(self):
 
         """
         Add epidemiological time variant parameters to time_variants.

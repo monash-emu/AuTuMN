@@ -13,6 +13,14 @@ class Inputs:
         self.derived_data = {}
         self.time_variants = {}
         self.model_constants = {}
+        self.available_strains = [
+            '_ds',
+            '_mdr',
+            '_xdr']
+        self.available_organs = [
+            '_smearpos',
+            '_smearneg',
+            '_extrapul']
 
     def read_and_load_data(self):
 
@@ -40,7 +48,9 @@ class Inputs:
                                               keys_of_sheets_to_read,
                                               self.country)
 
-        # Work through the data processing
+        ####################################
+        # Work through the data processing #
+        ####################################
 
         # Find the proportion of new cases by organ status and start to populate the derived data dictionary
         self.find_organ_proportions()
@@ -69,22 +79,46 @@ class Inputs:
         # Add time variant demographic dictionaries
         self.add_demo_dictionaries_to_timevariants()
 
-        #
+        # Add time-variant organ status to time variant parameters
         self.add_organ_status_to_timevariants()
+
+        # Add outcomes for resistant strains - currently using XDR-TB outcomes for inappropriate treatment
         self.add_resistant_strain_outcomes()
-        self.tidy_timevariants()
-        self.add_economic_timevariants()
-        self.add_fixed_parameters()
-        self.find_age_groups()
+
+        # Add zeroes, remove nans and remove load_data key from time variant dictionaries
+        self.tidy_time_variants()
+
+        # Add economic time variants hierarchically
+        self.add_economic_time_variants()
+
+        # Add hard-coded parameters that are universal to all models that require them
+        self.add_universal_parameters()
+
+        # Work out age stratification structure for model from the list of age breakpoints
+        self.agegroups, _ = tool_kit.get_agegroups_from_breakpoints(self.model_constants['age_breakpoints'])
+
+        # Find ageing rates and age-weighted parameters
         if len(self.agegroups) > 1:
-            self.set_fixed_age_specific_parameters()
             self.find_ageing_rates()
+            self.find_fixed_age_specific_parameters()
+
+        # Add treatment time periods for single strain model, as only populated for DS-TB to now
         if self.model_constants['n_strains'] == 0:
             self.find_single_strain_timeperiods()
-        self.define_comorbidities()
-        self.find_strains()
-        self.find_organs()
-        self.find_treatment_periods()
+
+        # Define the structuring of comorbidities for the model
+        self.define_comorbidity_structure()
+
+        # Define the strain structure for the model
+        self.define_strain_structure()
+
+        # Define the organ status structure for the model
+        self.define_organ_structure()
+
+        # Find the time non-infectious on treatment from the total time on treatment and the time infectious
+        self.find_noninfectious_period()
+
+        #
         self.find_irrelevant_time_variants()
         self.set_extrapul_casefatality_if_not_provided()
         self.diabetes_effects()
@@ -292,7 +326,7 @@ class Inputs:
             self.time_variants['program_prop_treatment' + outcome + '_inappropriate'] \
                 = copy.copy(self.time_variants['program_prop_treatment' + outcome + '_xdr'])
 
-    def tidy_timevariants(self):
+    def tidy_time_variants(self):
 
         """
         Perform final rounds of tidying of time-variants
@@ -313,7 +347,7 @@ class Inputs:
             self.time_variants[program] \
                 = self.remove_nans(self.time_variants[program])
 
-    def add_economic_timevariants(self):
+    def add_economic_time_variants(self):
 
         """
         Method that probably needs some work and Tan should feel free to change.
@@ -331,7 +365,7 @@ class Inputs:
                 self.time_variants[economic_var] \
                     = self.original_data['default_economics'][economic_var]
 
-    def add_fixed_parameters(self):
+    def add_universal_parameters(self):
 
         """
         Sets parameters that should never be changed in any situation,
@@ -342,8 +376,7 @@ class Inputs:
         """
 
         if self.model_constants['n_organs'] < 2:
-            # Proportion progressing to the only infectious compartment
-            # for models unstratified by organ status
+            # Proportion progressing to the only infectious compartment for models unstratified by organ status
             self.model_constants['epi_prop'] = 1.
         else:
             self.model_constants['tb_multiplier_force_smearpos'] \
@@ -351,14 +384,11 @@ class Inputs:
             self.model_constants['tb_multiplier_force_extrapul'] \
                 = 0.  # Infectiousness of extrapulmonary patients
 
-    def find_age_groups(self):
+    def find_fixed_age_specific_parameters(self):
 
-        # Age stratification
-        self.agegroups, _ = \
-            tool_kit.get_agegroups_from_breakpoints(
-                self.model_constants['age_breakpoints'])
-
-    def set_fixed_age_specific_parameters(self):
+        """
+        Find weighted age specific parameters using Romain's age weighting code (now in took_kit)
+        """
 
         # Extract age breakpoints in appropriate form for module
         model_breakpoints = []
@@ -410,12 +440,11 @@ class Inputs:
         for DS-TB in this case and not for no strain name.
         """
 
-        self.model_constants['tb_timeperiod_infect_ontreatment'] \
-            = self.model_constants['tb_timeperiod_infect_ontreatment_ds']
-        self.model_constants['tb_timeperiod_treatment'] \
-            = self.model_constants['tb_timeperiod_treatment_ds']
+        for timeperiod in ['tb_timeperiod_infect_ontreatment', 'tb_timeperiod_treatment']:
+            self.model_constants[timeperiod] \
+                = self.model_constants[timeperiod + '_ds']
 
-    def define_comorbidities(self):
+    def define_comorbidity_structure(self):
 
         """
         Work out the comorbidity stratification
@@ -449,18 +478,12 @@ class Inputs:
         if self.comorbidities == ['']:
             self.comorb_props[''] = 1.
 
-    def find_strains(self):
+    def define_strain_structure(self):
 
         """
         Finds the strains to be present in the model from a list of available strains and
         the integer value for the number of strains selected.
         """
-
-        # List of strains available to model
-        self.available_strains = [
-            '_ds',
-            '_mdr',
-            '_xdr']
 
         # Need a list of an empty string to be iterable for methods iterating by strain
         if self.model_constants['n_strains'] == 0:
@@ -468,24 +491,25 @@ class Inputs:
         else:
             self.strains = self.available_strains[:self.model_constants['n_strains']]
 
-    def find_organs(self):
+    def define_organ_structure(self):
 
-        # Define all possible organ stratifications
-        available_organs = [
-            '_smearpos',
-            '_smearneg',
-            '_extrapul']
+        """
+        Defines the organ status stratification from the number of statuses selected
+        Note that "organ" is the simplest single-word term that I can currently think of to
+        describe whether patients have smear-positive, smear-negative or extrapulmonary disease.
+        """
+
         if self.model_constants['n_organs'] == 0:
             # Need a list of an empty string to be iterable for methods iterating by organ status
             self.organ_status = ['']
         else:
-            self.organ_status = available_organs[:self.model_constants['n_organs']]
+            self.organ_status = self.available_organs[:self.model_constants['n_organs']]
 
-    def find_treatment_periods(self):
+    def find_noninfectious_period(self):
 
         """
-        Work out the periods of time spent infectious and non-infectious
-        for each type of treatment.
+        Work out the periods of time spent non-infectious for each strain (plus inappropriate as required)
+        by very simple subtraction.
         """
 
         treatment_outcome_types = self.strains

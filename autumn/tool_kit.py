@@ -217,6 +217,23 @@ def interrogate_age_string(age_string):
     return limits, dict_limits
 
 
+def find_age_limits_directly_from_string(param_or_compartment):
+
+    """
+    Simple function to quickly grab the age limits from a stirng containing a standardised age string
+
+    Args:
+        param_or_compartment: String for parameter or compartment that contains a standardised age string
+
+    Returns:
+        age_limits: A list containing the upper and lower bounds of the age limit from the string being interrogated
+    """
+
+    age_string, _ = find_string_from_starting_letters(param_or_compartment, '_age')
+    age_limits, _ = interrogate_age_string(age_string)
+
+    return age_limits
+
 def find_age_breakpoints_from_dicts(age_dict):
 
     breakpoints_with_repetition = []

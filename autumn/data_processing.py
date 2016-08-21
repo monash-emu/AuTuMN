@@ -9,6 +9,9 @@ class Inputs:
 
     def __init__(self, from_test=False):
 
+        self.first_read_control_panel = None
+        self.country = None
+        self.original_data = None
         self.from_test = from_test
         self.derived_data = {}
         self.time_variants = {}
@@ -21,6 +24,7 @@ class Inputs:
             '_smearpos',
             '_smearneg',
             '_extrapul']
+        self.irrelevant_time_variants = []
 
     def read_and_load_data(self):
 
@@ -118,12 +122,24 @@ class Inputs:
         # Find the time non-infectious on treatment from the total time on treatment and the time infectious
         self.find_noninfectious_period()
 
-        #
-        self.find_irrelevant_time_variants()
-        self.set_extrapul_casefatality_if_not_provided()
-        self.diabetes_effects()
-        self.find_progression_rate_from_params()
-        self.find_tb_case_fatality()
+        # List all the time variant parameters that are not relevant to this model structure
+        self.list_irrelevant_time_variants()
+
+        # Populate extrapulmonary case fatality from smear-negative if not provided
+        if '_extrapul' in self.organ_status:
+            self.find_extrapul_casefatality_if_not_provided()
+
+        # Find diabetes_specific parameters
+        if '_diabetes' in self.comorbidities:
+            self.find_diabetes_effects(10.)
+
+        # Calculate rates of progression to active disease or late latency
+        self.find_progression_rates_from_params()
+
+        # Find rates of progression untreated from case fatality and untreated time period parameters
+        self.find_active_natural_history_rates()
+
+        
         self.checks()
         self.find_amplification_data()
         self.find_other_structures()
@@ -523,10 +539,12 @@ class Inputs:
                 = self.model_constants['tb_timeperiod_treatment' + strain] \
                   - self.model_constants['tb_timeperiod_infect_ontreatment' + strain]
 
-    def find_irrelevant_time_variants(self):
+    def list_irrelevant_time_variants(self):
 
-        # Work out which time-variant parameters are not relevant to this model structure
-        self.irrelevant_time_variants = []
+        """
+        List all the time-variant parameters that are not relevant to the current model structure
+        """
+
         for time_variant in self.time_variants.keys():
             for strain in self.available_strains:
                 if strain not in self.strains and strain in time_variant and '_dst' not in time_variant:
@@ -541,22 +559,27 @@ class Inputs:
             if 'lowquality' in time_variant and not self.model_constants['is_lowquality']:
                 self.irrelevant_time_variants += [time_variant]
 
-    def set_extrapul_casefatality_if_not_provided(self):
+    def find_extrapul_casefatality_if_not_provided(self):
 
-        # If extrapulmonary case-fatality not stated, use smear-negative case-fatality
+        """
+        If extrapulmonary case-fatality not provided as a parameter, use smear-negative case-fatality
+        """
+
         if 'tb_prop_casefatality_untreated_extrapul' not in self.model_constants:
             self.model_constants['tb_prop_casefatality_untreated_extrapul'] \
                 = self.model_constants['tb_prop_casefatality_untreated_smearneg']
 
-    def diabetes_effects(self):
+    def find_diabetes_effects(self, age_cut_off):
 
         """
-        Temporary - this code needs generalising to all comorbidities and parameters,
+        This code needs generalising to all comorbidities and parameters,
         but is specific to diabetes's effect on progression rates at the moment.
         Currently multiplies progression rate by the relevant multiplier for older age groups.
-        """
 
-        age_cut_off = 10.  # Process will be applied to any age group that starting from this age or greater
+        Args:
+            age_cut_off: Diabetes-specific parameters will be applied to any age group whose lower bound is greater
+                than this value.
+        """
 
         diabetes_parameters = {}
         for param in self.model_constants:
@@ -596,11 +619,17 @@ class Inputs:
 
         self.model_constants.update(diabetes_parameters)
 
-    def find_progression_rate_from_params(self):
+    def find_progression_rates_from_params(self):
 
-        # Overall early progression and stabilisation rates
+        """
+        Find early progression rates by age group and by comorbidity status - i.e. early progression to
+        active TB and stabilisation into late latency.
+        """
+
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
+
+                # If no comorbidity, use the original parameter value
                 if comorbidity is '_nocomorb':
                     self.model_constants['tb_rate_early_progression' + comorbidity + agegroup] \
                         = self.model_constants['tb_prop_early_progression' + agegroup] \
@@ -608,6 +637,8 @@ class Inputs:
                     self.model_constants['tb_rate_stabilise' + comorbidity + agegroup] \
                         = (1. - self.model_constants['tb_prop_early_progression' + agegroup]) \
                           / self.model_constants['tb_timeperiod_early_latent']
+
+                # Otherwise, use the newly derived one
                 else:
                     self.model_constants['tb_rate_early_progression' + comorbidity + agegroup] \
                         = self.model_constants['tb_prop_early_progression' + comorbidity + agegroup] \
@@ -616,9 +647,12 @@ class Inputs:
                         = (1. - self.model_constants['tb_prop_early_progression' + comorbidity + agegroup]) \
                           / self.model_constants['tb_timeperiod_early_latent']
 
-    def find_tb_case_fatality(self):
+    def find_active_natural_history_rates(self):
 
-        # Adjust overall death and recovery rates by organ status
+        """
+        Find the natural history rates from the case fatality and time untreated parameters by organ status
+        """
+
         for organ in self.organ_status:
             self.model_constants['tb_rate_death' + organ] \
                 = self.model_constants['tb_prop_casefatality_untreated' + organ] \

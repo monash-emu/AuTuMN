@@ -53,6 +53,7 @@ def calculate_proportion_dict(data, indices, percent=False):
 
     return proportions
 
+
 def find_common_elements_multiple_lists(list_of_lists):
 
     """
@@ -70,6 +71,7 @@ def find_common_elements_multiple_lists(list_of_lists):
     for i in range(1, len(list_of_lists)):
         intersection = find_common_elements(intersection, list_of_lists[i])
     return intersection
+
 
 def find_common_elements(list_1, list_2):
 
@@ -89,6 +91,7 @@ def find_common_elements(list_1, list_2):
             intersection += [i]
     return intersection
 
+
 def remove_specific_key(dictionary, key):
 
     """
@@ -106,6 +109,7 @@ def remove_specific_key(dictionary, key):
         del dictionary[key]
 
     return dictionary
+
 
 def remove_nans(dictionary):
 
@@ -130,7 +134,6 @@ def remove_nans(dictionary):
     return dictionary
 
 
-
 class Inputs:
 
     def __init__(self, from_test=False):
@@ -153,6 +156,7 @@ class Inputs:
         self.agegroups = None
         self.irrelevant_time_variants = []
         self.is_organvariation = False
+        self.scaleup_data = {}
 
     def read_and_load_data(self):
 
@@ -276,6 +280,9 @@ class Inputs:
 
         # Derive some basic parameters for IPT
         self.find_ipt_params()
+
+        #####
+        self.find_data_for_functions_or_params()
 
     def update_time_variants(self):
 
@@ -862,6 +869,44 @@ class Inputs:
                                                                    * self.model_constants['tb_prop_contacts_infected']
         self.model_constants['ipt_effective_per_assessment'] = self.model_constants['tb_prop_ltbi_test_sensitivity'] \
                                                                * self.model_constants['tb_prop_ipt_effectiveness']
+
+    def find_data_for_functions_or_params(self):
+
+        """
+        Method to load all the dictionaries to be used in generating scale-up functions to
+        a single attribute of the class instance (to avoid creating heaps of functions for
+        irrelevant programs)
+
+        Returns:
+            Creates self.scaleup_data, a dictionary of the relevant scale-up data for creating
+             scale-up functions in set_scaleup_functions within the model object. First tier
+             of keys is the scenario to be run, next is the time variant parameter to be calculated.
+        """
+
+        for scenario in self.model_constants['scenarios_to_run']:
+
+            self.scaleup_data[scenario] = {}
+            # Find the programs that are relevant and load them to the scaleup_data attribute
+            for time_variant in self.time_variants:
+                if time_variant not in self.irrelevant_time_variants:
+                    self.scaleup_data[scenario][str(time_variant)] = {}
+                    for i in self.time_variants[time_variant]:
+                        # For years with data percentages
+                        if type(i) == int and 'program_prop_' in time_variant:
+                            self.scaleup_data[scenario][str(time_variant)][i] \
+                                = self.time_variants[time_variant][i] / 1E2
+                        # For years with data not percentages
+                        elif type(i) == int or i == 'time_variant' or i == 'smoothness':
+                            self.scaleup_data[scenario][str(time_variant)][i] \
+                                = self.time_variants[time_variant][i]
+                        # For scenarios with data percentages
+                        elif type(i) == unicode and i == 'scenario_' + str(scenario) and 'prop_' in time_variant:
+                            self.scaleup_data[scenario][str(time_variant)]['scenario'] = \
+                                self.time_variants[time_variant][i] / 1E2
+                        # For scenarios with data not percentages
+                        elif type(i) == unicode and i == 'scenario_' + str(scenario):
+                            self.scaleup_data[scenario][str(time_variant)]['scenario'] = \
+                                self.time_variants[time_variant][i]
 
 
 if __name__ == '__main__':

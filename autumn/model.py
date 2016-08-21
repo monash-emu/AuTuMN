@@ -289,8 +289,6 @@ class ConsolidatedModel(BaseModel):
         The order in which these methods is run is often important
         """
 
-        self.find_data_for_functions_or_params()
-
         self.find_functions_or_params()
 
         self.set_fixed_infectious_proportion()
@@ -299,63 +297,25 @@ class ConsolidatedModel(BaseModel):
     # The methods that process_parameters calls to set parameters and
     # scale-up functions
 
-    def find_data_for_functions_or_params(self):
-
-        """
-        Method to load all the dictionaries to be used in generating scale-up functions to
-        a single attribute of the class instance (to avoid creating heaps of functions for
-        irrelevant programs)
-
-        Returns:
-            Creates self.scaleup_data, a dictionary of the relevant scale-up data for creating
-            scale-up functions in set_scaleup_functions.
-
-        """
-
-        # Collect data to generate scale-up functions
-        self.scaleup_data = {}
-
-        # Find the programs that are relevant and load them to the scaleup_data attribute
-        for time_variant in self.inputs.time_variants:
-            if time_variant not in self.inputs.irrelevant_time_variants:
-                self.scaleup_data[str(time_variant)] = {}
-                for i in self.inputs.time_variants[time_variant]:
-                    # For years with data percentages
-                    if type(i) == int and 'program_prop_' in time_variant:
-                        self.scaleup_data[str(time_variant)][i] \
-                            = self.inputs.time_variants[time_variant][i] / 1E2
-                    # For years with data not percentages
-                    elif type(i) == int or i == 'time_variant' or i == 'smoothness':
-                        self.scaleup_data[str(time_variant)][i] \
-                            = self.inputs.time_variants[time_variant][i]
-                    # For scenarios with data percentages
-                    elif type(i) == unicode and i == 'scenario_' + str(self.scenario) and 'prop_' in time_variant:
-                        self.scaleup_data[str(time_variant)]['scenario'] = \
-                            self.inputs.time_variants[time_variant][i] / 1E2
-                    # For scenarios with data not percentages
-                    elif type(i) == unicode and i == 'scenario_' + str(self.scenario):
-                        self.scaleup_data[str(time_variant)]['scenario'] = \
-                            self.inputs.time_variants[time_variant][i]
-
     def find_functions_or_params(self):
 
         # Define scale-up functions from these datasets
-        for param in self.scaleup_data:
+        for param in self.inputs.scaleup_data[self.scenario]:
 
-            time_variant = self.scaleup_data[param].pop('time_variant')
+            time_variant = self.inputs.scaleup_data[self.scenario][param].pop('time_variant')
 
             if time_variant == 'yes':
 
                 # Extract and remove the smoothness parameter from the dictionary
-                if 'smoothness' in self.scaleup_data[param]:
-                    smoothness = self.scaleup_data[param].pop('smoothness')
+                if 'smoothness' in self.inputs.scaleup_data[self.scenario][param]:
+                    smoothness = self.inputs.scaleup_data[self.scenario][param].pop('smoothness')
                 else:
                     smoothness = self.inputs.model_constants['default_smoothness']
 
                 # If the parameter is being modified for the scenario being run
-                if 'scenario' in self.scaleup_data[param]:
+                if 'scenario' in self.inputs.scaleup_data[self.scenario][param]:
                     scenario = [self.params['scenario_full_time'],
-                                self.scaleup_data[param].pop('scenario')]
+                                self.inputs.scaleup_data[self.scenario][param].pop('scenario')]
                 else:
                     scenario = None
 
@@ -367,8 +327,8 @@ class ConsolidatedModel(BaseModel):
 
                 # Calculate the scaling function
                 self.set_scaleup_fn(param,
-                                    scale_up_function(self.scaleup_data[param].keys(),
-                                                      self.scaleup_data[param].values(),
+                                    scale_up_function(self.inputs.scaleup_data[self.scenario][param].keys(),
+                                                      self.inputs.scaleup_data[self.scenario][param].values(),
                                                       self.inputs.model_constants['fitting_method'],
                                                       smoothness,
                                                       bound_low=0.,
@@ -380,12 +340,12 @@ class ConsolidatedModel(BaseModel):
             elif time_variant == 'no':
 
                 # Get rid of smoothness, which isn't relevant
-                if 'smoothness' in self.scaleup_data[param]:
-                    del self.scaleup_data[param]['smoothness']
+                if 'smoothness' in self.inputs.scaleup_data[self.scenario][param]:
+                    del self.inputs.scaleup_data[self.scenario][param]['smoothness']
 
                 # Set as a constant parameter
                 self.set_parameter(param,
-                                   self.scaleup_data[param][max(self.scaleup_data[param])])
+                                   self.inputs.scaleup_data[self.scenario][param][max(self.inputs.scaleup_data[self.scenario][param])])
 
                 # Note that the 'demo_life_expectancy' parameter has to be given this name
                 # and base.py will then calculate population death rates automatically.

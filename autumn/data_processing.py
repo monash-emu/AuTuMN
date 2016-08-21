@@ -148,8 +148,8 @@ class Inputs:
         if self.model_constants['n_strains'] > 1:
             self.find_amplification_data()
 
-        self.find_other_structures()
-        self.prepare_for_ipt()
+        # Derive some basic parameters for IPT
+        self.find_ipt_params()
 
     def update_time_variants(self):
 
@@ -680,7 +680,7 @@ class Inputs:
             # Leave organ variation as false if no organ stratification and warn if variation requested
             for status in ['pos', 'neg']:
                 if self.time_variants['epi_prop_smear' + status]['time_variant'] == 'yes':
-                    warnings.warn('Warning: time variant smear-' + status + ' proportion requested, but ' +
+                    warnings.warn('time variant smear-' + status + ' proportion requested, but ' +
                                   'model is not stratified by organ status. Therefore, time variant smear-' + status +
                                   ' status has been turned off.')
                     self.time_variants['epi_prop_smear' + status]['time_variant'] = 'no'
@@ -691,7 +691,7 @@ class Inputs:
                 self.is_organvariation = True
                 # Warn if smear-negative variation not requested
                 if self.time_variants['epi_prop_smearneg']['time_variant'] == 'no':
-                    warnings.warn('Warning: requested time variant smear-positive status, but ' +
+                    warnings.warn('requested time variant smear-positive status, but ' +
                                   'not time variant smear-negative status. Therefore, changed to time variant ' +
                                   'smear-negative status.')
                     self.time_variants['epi_prop_smearneg']['time_variant'] = 'yes'
@@ -700,7 +700,7 @@ class Inputs:
             elif self.time_variants['epi_prop_smearpos']['time_variant'] == 'no':
                 # Warn if smear-negative variation requested
                 if self.time_variants['epi_prop_smearneg']['time_variant'] == 'yes':
-                    warnings.warn('Warning: requested non-time variant smear-positive status, but ' +
+                    warnings.warn('requested non-time variant smear-positive status, but ' +
                                   'time variant smear-negative status. Therefore, changed to non-time variant ' +
                                   'smear-negative status.')
                     self.time_variants['epi_prop_smearneg']['time_variant'] = 'no'
@@ -725,17 +725,7 @@ class Inputs:
                self.model_constants['end_mdr_introduce_period']: self.model_constants['tb_prop_amplification'],
                'time_variant': 'yes'}
 
-    def find_other_structures(self):
-
-        # Set Boolean conditionals for model structure and additional diagnostics
-        self.is_lowquality = self.model_constants['is_lowquality']
-        self.is_amplification = self.model_constants['is_amplification']
-        self.is_misassignment = self.model_constants['is_misassignment']
-
-        if self.is_misassignment:
-            assert self.is_amplification, 'Misassignment requested without amplification'
-
-    def prepare_for_ipt(self):
+    def find_ipt_params(self):
 
         """
         Calculate number of persons eligible for IPT per person commencing treatment

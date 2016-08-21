@@ -1,7 +1,9 @@
 import os
 
 import numpy
+import scipy
 from scipy.integrate import odeint
+from tool_kit import indices
 
 from autumn.curve import make_two_step_curve
 
@@ -33,6 +35,8 @@ class BaseModel:
         self.var_transfer_rate_flows = []
         self.var_flows = []
         self.var_infection_death_rate_flows = []
+
+        self.costs = {}
 
     def make_times(self, start, end, delta):
 
@@ -397,6 +401,7 @@ class BaseModel:
                 self.soln_array[i_time + 1, :] = y
 
         self.calculate_diagnostics()
+        self.calculate_economics_diagnostics(2020)
 
     def calculate_output_vars(self):
         """
@@ -450,6 +455,150 @@ class BaseModel:
 
     def calculate_additional_diagnostics(self):
         pass
+
+    def coverage_over_time(self, param_key):
+        """
+        Define a function which returns the coverage over time associated with an intervention
+        Args:
+            model: model object, after integration
+            param_key: the key of the parameter associated with the intervention
+
+        Returns:
+            a function which takes a time for argument an will return a coverage
+        """
+        coverage_function = self.scaleup_fns[param_key]
+        return coverage_function
+
+    def calculate_economics_diagnostics(self, period_end,
+                                        interventions=['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf']):
+        """
+        Run the economics diagnostics associated with a model run. Integration is supposed to have been run at this point
+        Args:
+            self the model object
+            period_end: date of the end of the period considered for total cost calculations
+            interventions: list of interventions considered for costing
+
+        Returns:
+            the costs associated to each intervention and at each time step. These are yearly costs.
+        """
+
+        def get_cost_from_coverage(coverage, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.0):
+            """
+            Estimate the global uninflated cost associated with a given coverage
+            Args:
+                coverage: the coverage (as a proportion, then lives in 0-1)
+                c_inflection_cost: cost at which inflection occurs on the curve. It's also the configuration leading to the
+                                    best efficiency.
+                saturation: maximal acceptable coverage, ie upper asymptote
+                unit_cost: unit cost of the intervention
+                pop_size: size of the population targeted by the intervention
+                alpha: steepness parameter
+
+            Returns:
+                uninflated cost
+
+            """
+            if pop_size * unit_cost == 0:  # if unit cost or pop_size is null, return 0
+                return 0
+            assert 0 <= coverage < saturation, 'coverage must verify 0 <= coverage < saturation'
+
+            a = saturation / (1.0 - 2 ** alpha)
+            b = ((2.0 ** (alpha + 1.0)) / (alpha * (saturation - a) * unit_cost * pop_size))
+            cost_uninflated = c_inflection_cost - 1.0 / b * scipy.log(
+                (((saturation - a) / (coverage - a)) ** (1.0 / alpha)) - 1.0)
+            return cost_uninflated
+
+        def inflate_cost(cost_uninflated, current_cpi, cpi_time_variant):
+            """
+            Calculate the inflated cost associated with cost_uninflated and considering the current cpi and the cpi correponding
+            to the date considered (cpi_time_variant)
+
+            Returns:
+                the inflated cost
+            """
+            return cost_uninflated * current_cpi / cpi_time_variant
+
+        def discount_cost(cost_uninflated, discount_rate, t_into_future):
+            """
+            Calculate the discounted cost associated with cost_uninflated at time (t + t_into_future)
+            Args:
+                cost_uninflated: cost without accounting for discounting
+                discount_rate: discount rate (/year)
+                t_into_future: number of years into future at which we want to calculate the discounted cost
+
+            Returns:
+                the discounted cost
+            """
+            assert t_into_future >= 0, 't_into_future must be >= 0'
+            return (cost_uninflated / ((1 + discount_rate) ** t_into_future))
+
+        start_time = self.inputs.model_constants['recent_time']  # start time for cost calculations
+        start_index = indices(self.times, lambda x: x >= start_time)[0]
+
+        end_time_integration = self.inputs.model_constants['scenario_end_time']
+        assert period_end <= end_time_integration, 'period_end must be <= end_time_integration'
+        end_index = indices(self.times, lambda x: x >= period_end)[0]
+
+        # prepare the references to fetch the data and model outputs
+        param_key_base = 'econ_program_prop_'
+        c_inflection_cost_base = 'econ_program_inflectioncost_'
+        unitcost_base = 'econ_program_unitcost_'
+        popsize_label_base = 'popsize_'
+
+        discount_rate = 0.03  # not ideal... perhaps best to get it from a spreadsheet
+        cpi_function = self.scaleup_fns['econ_cpi']
+        year_current = self.inputs.model_constants['current_time']
+        current_cpi = cpi_function(year_current)
+
+        # prepare the storage. 'costs' will store all the costs and will be returned
+        costs = {'cost_times': []}
+
+        count_intervention = 0  # to count the interventions
+        for intervention in interventions:  # for each intervention
+            count_intervention += 1
+            costs[intervention] = {'uninflated_cost': [], 'inflated_cost': [], 'discounted_cost': []}
+
+            param_key = param_key_base + intervention  # name of the corresponding parameter
+            coverage_function = self.coverage_over_time(param_key)  # create a function to calculate coverage over time
+
+            c_inflection_cost_label = c_inflection_cost_base + intervention  # key of the scale up function for inflection cost
+            c_inflection_cost_function = self.scaleup_fns[c_inflection_cost_label]
+
+            unitcost_label = unitcost_base + intervention  # key of the scale up function for unit cost
+            unit_cost_function = self.scaleup_fns[unitcost_label]
+
+            popsize_label = popsize_label_base + intervention
+            pop_size_index = self.var_labels.index(
+                popsize_label)  # column index in model.var_array that corresponds to the intervention
+
+            saturation = 1.001  # provisional
+
+            for i in range(start_index,
+                           end_index + 1):  # for each step time. We may want to change this bit. No need for all time steps
+                t = self.times[i]
+                if count_intervention == 1:
+                    costs['cost_times'].append(t)  # storage of the time
+                # calculate the time variants that feed into the logistic function
+                coverage = coverage_function(t)
+                c_inflection_cost = c_inflection_cost_function(t)
+                unit_cost = unit_cost_function(t)
+                pop_size = self.var_array[i, pop_size_index]
+
+                # calculate uninflated cost
+                cost = get_cost_from_coverage(coverage, c_inflection_cost, saturation, unit_cost, pop_size)
+                costs[intervention]['uninflated_cost'].append(cost)  # storage
+
+                # calculate inflated cost
+                cpi_time_variant = cpi_function(t)
+                inflated_cost = inflate_cost(cost, current_cpi, cpi_time_variant)
+                costs[intervention]['inflated_cost'].append(inflated_cost)  # storage
+
+                # calculate discounted cost
+                t_into_future = max(0, (t - year_current))
+                discounted_cost = discount_cost(cost, discount_rate, t_into_future)
+                costs[intervention]['discounted_cost'].append(discounted_cost)  # storage
+
+        self.costs = costs
 
     def get_compartment_soln(self, label):
         assert self.soln_array is not None, 'calculate_diagnostics has not been run'

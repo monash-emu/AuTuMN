@@ -5,6 +5,132 @@ import numpy
 import warnings
 import tool_kit
 
+
+def calculate_proportion_dict(data, indices, percent=False):
+
+    """
+    General method to calculate proportions from absolute values provided as dictionaries.
+
+    Args:
+        data: Dicionary containing the absolute values.
+        indices: The keys of data from which proportions are to be calculated (generally a list of strings).
+        percent: Boolean describing whether the method should return the output as a percent or proportion.
+
+    Returns:
+        proportions: A dictionary of the resulting proportions.
+    """
+
+    # Calculate multiplier for percentages if requested, otherwise leave as one
+    if percent:
+        multiplier = 1E2
+    else:
+        multiplier = 1.
+
+    # Create a list of the years that are common to all indices within data
+    lists_of_years = []
+    for i in range(len(indices)):
+        lists_of_years += [data[indices[i]].keys()]
+    common_years = find_common_elements_multiple_lists(lists_of_years)
+
+    # Calculate the denominator by summing the values for which proportions have been requested
+    denominator = {}
+    for i in common_years:
+        for j in indices:
+            if j == indices[0]:
+                denominator[i] = data[j][i]
+            else:
+                denominator[i] += data[j][i]
+
+    # Calculate the proportions
+    proportions = {}
+    for j in indices:
+        proportions['prop_' + j] = {}
+        for i in common_years:
+            if denominator[i] > 0.:
+                proportions['prop_' + j][i] = \
+                    data[j][i] / denominator[i] \
+                    * multiplier
+
+    return proportions
+
+def find_common_elements_multiple_lists(list_of_lists):
+
+    """
+    Simple method to find the common elements of any number of lists
+
+    Args:
+        list_of_lists: A list whose elements are all the lists we want to find the
+            intersection of.
+
+    Returns:
+        intersection: Common elements of all lists.
+    """
+
+    intersection = list_of_lists[0]
+    for i in range(1, len(list_of_lists)):
+        intersection = find_common_elements(intersection, list_of_lists[i])
+    return intersection
+
+def find_common_elements(list_1, list_2):
+
+    """
+    Simple method to find the intersection of two lists
+
+    Args:
+        list_1 and list_2: The two lists
+
+    Returns:
+        intersection: The common elements of the two lists
+    """
+
+    intersection = []
+    for i in list_1:
+        if i in list_2:
+            intersection += [i]
+    return intersection
+
+def remove_specific_key(dictionary, key):
+
+    """
+    Remove a specific named key from a dictionary
+
+    Args:
+        dictionary: The dictionary to have a key removed
+        key: The key to be removed
+
+    Returns:
+        dictionary: The dictionary with the key removed
+    """
+
+    if key in dictionary:
+        del dictionary[key]
+
+    return dictionary
+
+def remove_nans(dictionary):
+
+    """
+    Takes a dictionary and removes all of the elements for which the value is nan
+
+    Args:
+        dictionary: Should typically be the dictionary of programmatic values, usually
+                    with time in years as the key.
+
+    Returns:
+        dictionary: The dictionary with the nans removed.
+    """
+
+    nan_indices = []
+    for i in dictionary:
+        if type(dictionary[i]) == float and numpy.isnan(dictionary[i]):
+            nan_indices += [i]
+    for i in nan_indices:
+        del dictionary[i]
+
+    return dictionary
+
+
+
 class Inputs:
 
     def __init__(self, from_test=False):
@@ -182,7 +308,7 @@ class Inputs:
         and adds these to the derived_data attribute of the object.
         """
 
-        self.derived_data.update(self.calculate_proportion_dict(self.original_data['notifications'],
+        self.derived_data.update(calculate_proportion_dict(self.original_data['notifications'],
                                                                 ['new_sp', 'new_sn', 'new_ep']))
 
     def add_time_variant_defaults(self):
@@ -237,7 +363,7 @@ class Inputs:
 
         # Calculate each proportion
         self.derived_data.update(
-            self.calculate_proportion_dict(
+            calculate_proportion_dict(
                 self.original_data['outcomes'],
                 ['new_sp_cmplt', 'new_sp_cur', 'new_sp_def', 'new_sp_died', 'new_sp_fail'],
                 percent=True))
@@ -332,7 +458,7 @@ class Inputs:
         # Calculate proportions of each outcome for MDR and XDR-TB from GTB
         for strain in ['mdr', 'xdr']:
             self.derived_data.update(
-                self.calculate_proportion_dict(self.original_data['outcomes'],
+                calculate_proportion_dict(self.original_data['outcomes'],
                                                [strain + '_succ', strain + '_fail', strain + '_died', strain + '_lost'],
                                                percent=True))
 
@@ -363,11 +489,11 @@ class Inputs:
 
             # Remove the load_data keys, as they have been used and are now redundant
             self.time_variants[program] \
-                = self.remove_specific_key(self.time_variants[program], 'load_data')
+                = remove_specific_key(self.time_variants[program], 'load_data')
 
             # Remove dictionary keys for which values are nan
             self.time_variants[program] \
-                = self.remove_nans(self.time_variants[program])
+                = remove_nans(self.time_variants[program])
 
     def add_economic_time_variants(self):
 
@@ -736,132 +862,6 @@ class Inputs:
                                                                    * self.model_constants['tb_prop_contacts_infected']
         self.model_constants['ipt_effective_per_assessment'] = self.model_constants['tb_prop_ltbi_test_sensitivity'] \
                                                                * self.model_constants['tb_prop_ipt_effectiveness']
-
-    #############################################################################
-    #  General methods for use by the other methods above
-
-    def calculate_proportion_dict(self, data, indices, percent=False):
-
-        """
-        General method to calculate proportions from absolute values provided as dictionaries.
-
-        Args:
-            data: Dicionary containing the absolute values.
-            indices: The keys of data from which proportions are to be calculated (generally a list of strings).
-            percent: Boolean describing whether the method should return the output as a percent or proportion.
-
-        Returns:
-            proportions: A dictionary of the resulting proportions.
-        """
-
-        # Calculate multiplier for percentages if requested, otherwise leave as one
-        if percent:
-            multiplier = 1E2
-        else:
-            multiplier = 1.
-
-        # Create a list of the years that are common to all indices within data
-        lists_of_years = []
-        for i in range(len(indices)):
-            lists_of_years += [data[indices[i]].keys()]
-        common_years = self.find_common_elements_multiple_lists(lists_of_years)
-
-        # Calculate the denominator by summing the values for which proportions have been requested
-        denominator = {}
-        for i in common_years:
-            for j in indices:
-                if j == indices[0]:
-                    denominator[i] = data[j][i]
-                else:
-                    denominator[i] += data[j][i]
-
-        # Calculate the proportions
-        proportions = {}
-        for j in indices:
-            proportions['prop_' + j] = {}
-            for i in common_years:
-                if denominator[i] > 0.:
-                    proportions['prop_' + j][i] = \
-                        data[j][i] / denominator[i] \
-                        * multiplier
-
-        return proportions
-
-    def find_common_elements_multiple_lists(self, list_of_lists):
-
-        """
-        Simple method to find the common elements of any number of lists
-
-        Args:
-            list_of_lists: A list whose elements are all the lists we want to find the
-                intersection of.
-
-        Returns:
-            intersection: Common elements of all lists.
-        """
-
-        intersection = list_of_lists[0]
-        for i in range(1, len(list_of_lists)):
-            intersection = self.find_common_elements(intersection, list_of_lists[i])
-        return intersection
-
-    def find_common_elements(self, list_1, list_2):
-
-        """
-        Simple method to find the intersection of two lists
-
-        Args:
-            list_1 and list_2: The two lists
-
-        Returns:
-            intersection: The common elements of the two lists
-        """
-
-        intersection = []
-        for i in list_1:
-            if i in list_2:
-                intersection += [i]
-        return intersection
-
-    def remove_specific_key(self, dictionary, key):
-
-        """
-        Remove a specific named key from a dictionary
-
-        Args:
-            dictionary: The dictionary to have a key removed
-            key: The key to be removed
-
-        Returns:
-            dictionary: The dictionary with the key removed
-        """
-
-        if key in dictionary:
-            del dictionary[key]
-
-        return dictionary
-
-    def remove_nans(self, dictionary):
-
-        """
-        Takes a dictionary and removes all of the elements for which the value is nan
-
-        Args:
-            dictionary: Should typically be the dictionary of programmatic values, usually
-                        with time in years as the key.
-
-        Returns:
-            dictionary: The dictionary with the nans removed.
-        """
-
-        nan_indices = []
-        for i in dictionary:
-            if type(dictionary[i]) == float and numpy.isnan(dictionary[i]):
-                nan_indices += [i]
-        for i in nan_indices:
-            del dictionary[i]
-
-        return dictionary
 
 
 if __name__ == '__main__':

@@ -388,7 +388,7 @@ class ConsolidatedModel(BaseModel):
                 # Note that the 'demo_life_expectancy' parameter has to be given this name
                 # and base.py will then calculate population death rates automatically.
 
-        if not self.is_organvariation:
+        if not self.is_organvariation and len(self.organ_status) > 2:
             self.set_parameter('epi_prop_extrapul',
                                1. - self.params['epi_prop_smearpos'] - self.params['epi_prop_smearneg'])
 
@@ -678,7 +678,7 @@ class ConsolidatedModel(BaseModel):
                         = self.vars['program_rate' + programmatic_rate]
 
                     # Add active case finding rate to standard DOTS-based detection rate
-                    if programmatic_rate == '_detect':
+                    if programmatic_rate == '_detect' and len(self.organ_status) >= 2:
                         self.vars['program_rate' + programmatic_rate + strain + organ] \
                             += self.vars['program_rate_acf' + organ]
 

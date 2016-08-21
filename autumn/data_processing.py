@@ -24,7 +24,9 @@ class Inputs:
             '_smearpos',
             '_smearneg',
             '_extrapul']
+        self.agegroups = None
         self.irrelevant_time_variants = []
+        self.is_organvariation = False
 
     def read_and_load_data(self):
 
@@ -139,9 +141,13 @@ class Inputs:
         # Find rates of progression untreated from case fatality and untreated time period parameters
         self.find_active_natural_history_rates()
 
-        
-        self.checks()
-        self.find_amplification_data()
+        # Work through whether organ status should be time variant
+        self.find_organ_time_variation()
+
+        # Create a scale-up dictionary for resistance amplification if appropriate
+        if self.model_constants['n_strains'] > 1:
+            self.find_amplification_data()
+
         self.find_other_structures()
         self.prepare_for_ipt()
 
@@ -661,11 +667,45 @@ class Inputs:
                 = (1 - self.model_constants['tb_prop_casefatality_untreated' + organ]) \
                   / self.model_constants['tb_timeperiod_activeuntreated']
 
-        if self.time_variants['epi_prop_smearpos']['time_variant']:
-            self.is_organvariation = True
-        else:
-            self.is_organvariation = False
+    def find_organ_time_variation(self):
 
+        """
+        Work through whether variation in organ status with time should be implemented,
+        according to whether the model is stratified by organ and whether organ stratification is requested
+        through the smear-positive time-variant input.
+        """
+
+        # If no organ stratification
+        if self.model_constants['n_organs'] < 2:
+            # Leave organ variation as false if no organ stratification and warn if variation requested
+            for status in ['pos', 'neg']:
+                if self.time_variants['epi_prop_smear' + status]['time_variant'] == 'yes':
+                    warnings.warn('Warning: time variant smear-' + status + ' proportion requested, but ' +
+                                  'model is not stratified by organ status. Therefore, time variant smear-' + status +
+                                  ' status has been turned off.')
+                    self.time_variants['epi_prop_smear' + status]['time_variant'] = 'no'
+        else:
+
+            # Change to organ variation true if organ stratification and smear-positive variation requested
+            if self.time_variants['epi_prop_smearpos']['time_variant'] == 'yes':
+                self.is_organvariation = True
+                # Warn if smear-negative variation not requested
+                if self.time_variants['epi_prop_smearneg']['time_variant'] == 'no':
+                    warnings.warn('Warning: requested time variant smear-positive status, but ' +
+                                  'not time variant smear-negative status. Therefore, changed to time variant ' +
+                                  'smear-negative status.')
+                    self.time_variants['epi_prop_smearneg']['time_variant'] = 'yes'
+
+            # Leave organ variation as false if smear-positive variation not requested
+            elif self.time_variants['epi_prop_smearpos']['time_variant'] == 'no':
+                # Warn if smear-negative variation requested
+                if self.time_variants['epi_prop_smearneg']['time_variant'] == 'yes':
+                    warnings.warn('Warning: requested non-time variant smear-positive status, but ' +
+                                  'time variant smear-negative status. Therefore, changed to non-time variant ' +
+                                  'smear-negative status.')
+                    self.time_variants['epi_prop_smearneg']['time_variant'] = 'no'
+
+        # Set fixed parameters if no organ status variation
         if not self.is_organvariation:
             for organ in self.organ_status:
                 for timing in ['_early', '_late']:
@@ -674,34 +714,16 @@ class Inputs:
                             = self.model_constants['tb_rate' + timing + '_progression' + agegroup] \
                               * self.model_constants['epi_prop' + organ]
 
-    def checks(self):
-
-        """
-        Perform checks for data consistency
-        """
-
-        for status in ['pos', 'neg']:
-
-            # If no organ stratification is requested, but time variant organ status requested
-            if self.model_constants['n_organs'] < 2 \
-                    and self.time_variants['epi_prop_smear' + status]['time_variant'] == 'yes':
-
-                # Warn about the problem
-                warnings.warn('Warning: time variant smear-' + status + ' proportion requested, but ' +
-                              'model is not stratified by organ status. Therefore, time variant smear-' + status +
-                              ' status has been turned off.')
-
-                # Make the proportions constant instead
-                self.time_variants['epi_prop_smear' + status]['time_variant'] = 'no'
-
     def find_amplification_data(self):
 
-        # Add dictionary for the amplification proportion scale-up (if relevant)
-        if self.model_constants['n_strains'] > 1:
-            self.time_variants['epi_prop_amplification'] \
-                = {self.model_constants['start_mdr_introduce_period']: 0.,
-                   self.model_constants['end_mdr_introduce_period']: self.model_constants['tb_prop_amplification'],
-                   'time_variant': 'yes'}
+        """
+        Add dictionary for the amplification proportion scale-up, where relevant.
+        """
+
+        self.time_variants['epi_prop_amplification'] \
+            = {self.model_constants['start_mdr_introduce_period']: 0.,
+               self.model_constants['end_mdr_introduce_period']: self.model_constants['tb_prop_amplification'],
+               'time_variant': 'yes'}
 
     def find_other_structures(self):
 

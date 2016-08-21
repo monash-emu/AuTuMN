@@ -575,8 +575,7 @@ class BaseModel:
                 (1 + numpy.exp((-b) * (cost - c_inflection_cost))) ** alpha)
             return coverage_estimated
 
-        interventions = ['vaccination', 'treatment_support']  # provisional
-        interventions = self.interventions_to_cost  # provisional
+        interventions = self.interventions_to_cost 
 
         vars_key_base = 'program_prop_'
         popsize_label_base = 'popsize_'
@@ -587,7 +586,7 @@ class BaseModel:
         for int in interventions:
             vars_key = vars_key_base + int
 
-            cost = self.vars[cost_base + int]  # dummy   . Should be obtained from scale_up functions
+            cost = self.vars[cost_base + int]
             unit_cost = self.vars[unitcost_base + int]
             c_inflection_cost = self.vars[c_inflection_cost_base + int]
             saturation = 0.9  # dummy   provisional

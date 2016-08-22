@@ -543,7 +543,8 @@ class BaseModel:
         start_index = indices(self.times, lambda x: x >= start_time)[0]
 
         # Assertion check - probably move to data processing
-        assert self.inputs.model_constants['economics_start_time'] <= self.inputs.model_constants['scenario_end_time'], \
+        assert self.inputs.model_constants['economics_start_time'] \
+               <= self.inputs.model_constants['scenario_end_time'], \
             'period_end must be before the end of the model integration time'
         end_index = indices(self.times, lambda x: x >= self.inputs.model_constants['scenario_end_time'])[0]
 
@@ -553,7 +554,7 @@ class BaseModel:
         unitcost_base = 'econ_program_unitcost_'
         popsize_label_base = 'popsize_'
 
-        discount_rate = 0.03  # not ideal... perhaps best to get it from a spreadsheet
+        #
         cpi_function = self.scaleup_fns['econ_cpi']
         year_current = self.inputs.model_constants['current_time']
         current_cpi = cpi_function(year_current)
@@ -598,12 +599,16 @@ class BaseModel:
 
                 # calculate inflated cost
                 cpi_time_variant = cpi_function(t)
-                inflated_cost = inflate_cost(cost, current_cpi, cpi_time_variant)
+                inflated_cost = inflate_cost(cost,
+                                             current_cpi,
+                                             cpi_time_variant)
                 costs[intervention]['inflated_cost'].append(inflated_cost)  # storage
 
                 # calculate discounted cost
                 t_into_future = max(0, (t - year_current))
-                discounted_cost = discount_cost(cost, discount_rate, t_into_future)
+                discounted_cost = discount_cost(cost,
+                                                self.params['econ_discount_rate'],
+                                                t_into_future)
                 costs[intervention]['discounted_cost'].append(discounted_cost)  # storage
 
         self.costs = costs

@@ -40,7 +40,7 @@ class BaseModel:
         self.end_period_costing = 2035
         self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf']
 
-        self.eco_drives_epi = True
+        self.eco_drives_epi = False
 
     def make_times(self, start, end, delta):
 

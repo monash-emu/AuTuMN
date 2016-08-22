@@ -172,7 +172,7 @@ class Inputs:
         keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
                                   'default_parameters', 'tb', 'notifications', 'outcomes',
                                   'country_constants', 'default_constants', 'country_economics',
-                                  'default_economics', 'country_programs', 'default_programs']
+                                  'country_programs', 'default_programs']
 
         # Add the optional ones (this is intended to be the standard approach to reading additional
         # data to the data object - currently not that useful as it only applies to diabetes)
@@ -527,12 +527,6 @@ class Inputs:
         # Add all the loaded country-specific economic variables to the time-variants dictionary
         if 'country_economics' in self.original_data:
             self.time_variants.update(self.original_data['country_economics'])
-
-        # Add default values if country_specific ones not available
-        for economic_var in self.original_data['default_economics']:
-            if economic_var not in self.time_variants:
-                self.time_variants[economic_var] \
-                    = self.original_data['default_economics'][economic_var]
 
     def add_universal_parameters(self):
 
@@ -1023,5 +1017,7 @@ if __name__ == '__main__':
     inputs = Inputs()
     inputs.read_and_load_data()
     print()
+
+
 
 

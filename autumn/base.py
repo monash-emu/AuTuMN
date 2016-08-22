@@ -548,23 +548,22 @@ class BaseModel:
             'period_end must be before the end of the model integration time'
         end_index = indices(self.times, lambda x: x >= self.inputs.model_constants['scenario_end_time'])[0]
 
-        # prepare the references to fetch the data and model outputs
-        param_key_base = 'econ_program_prop_'
+        # Prepare the references to fetch the data and model outputs
+        param_key_base = 'econ_program_prop_'  # Probably need to change this to just program_prop_
         c_inflection_cost_base = 'econ_program_inflectioncost_'
         unitcost_base = 'econ_program_unitcost_'
         popsize_label_base = 'popsize_'
 
-        #
-        cpi_function = self.scaleup_fns['econ_cpi']
+        # Find the current year and CPI
         year_current = self.inputs.model_constants['current_time']
-        current_cpi = cpi_function(year_current)
+        current_cpi = self.scaleup_fns['econ_cpi'](year_current)
 
-        # prepare the storage. 'costs' will store all the costs and will be returned
+        # Prepare the storage object. 'costs' will store the costs for each program being costed
+        # and will be added to the current object instance.
         costs = {'cost_times': []}
 
-        count_intervention = 0  # to count the interventions
-        for intervention in self.interventions_to_cost:  # for each intervention
-            count_intervention += 1
+        # Loop over interventions to be costed
+        for intervention in self.interventions_to_cost:
             costs[intervention] = {'uninflated_cost': [], 'inflated_cost': [], 'discounted_cost': []}
 
             param_key = param_key_base + intervention  # name of the corresponding parameter
@@ -585,26 +584,35 @@ class BaseModel:
             for i in range(start_index,
                            end_index + 1):  # for each step time. We may want to change this bit. No need for all time steps
                 t = self.times[i]
-                if count_intervention == 1:
-                    costs['cost_times'].append(t)  # storage of the time
-                # calculate the time variants that feed into the logistic function
+
+                # If it's the first intervention, store a list of times
+                if intervention == self.interventions_to_cost[0]:
+                    costs['cost_times'].append(t)
+
+                # Calculate time variant parameters that feed into the logistic function
                 coverage = coverage_function(t)
                 c_inflection_cost = c_inflection_cost_function(t)
                 unit_cost = unit_cost_function(t)
                 pop_size = self.var_array[i, pop_size_index]
 
-                # calculate uninflated cost
-                cost = get_cost_from_coverage(coverage, c_inflection_cost, saturation, unit_cost, pop_size)
+                # Raw cost (which is the uninflated cost)
+                cost = get_cost_from_coverage(coverage,
+                                              c_inflection_cost,
+                                              saturation,
+                                              unit_cost,
+                                              pop_size)
+
+                # Uninflated cost
                 costs[intervention]['uninflated_cost'].append(cost)  # storage
 
-                # calculate inflated cost
-                cpi_time_variant = cpi_function(t)
+                # Inflated cost
+                cpi_time_variant = self.scaleup_fns['econ_cpi'](t)
                 inflated_cost = inflate_cost(cost,
                                              current_cpi,
                                              cpi_time_variant)
                 costs[intervention]['inflated_cost'].append(inflated_cost)  # storage
 
-                # calculate discounted cost
+                # Discounted cost
                 t_into_future = max(0, (t - year_current))
                 discounted_cost = discount_cost(cost,
                                                 self.params['econ_discount_rate'],

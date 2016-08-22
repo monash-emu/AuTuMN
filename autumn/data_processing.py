@@ -4,7 +4,7 @@ import copy
 import numpy
 import warnings
 import tool_kit
-
+from curve import scale_up_function
 
 def calculate_proportion_dict(data, indices, percent=False):
 
@@ -157,6 +157,7 @@ class Inputs:
         self.irrelevant_time_variants = []
         self.is_organvariation = False
         self.scaleup_data = {}
+        self.scaleup_fns = {}
 
     def read_and_load_data(self):
 
@@ -281,8 +282,12 @@ class Inputs:
         # Derive some basic parameters for IPT
         self.find_ipt_params()
 
-        #####
+        # Extract data from time variants dictionary and populate to dictionary with scenario keys
         self.find_data_for_functions_or_params()
+
+        ######
+        self.find_functions_or_params()
+
 
     def update_time_variants(self):
 
@@ -907,6 +912,67 @@ class Inputs:
                         elif type(i) == unicode and i == 'scenario_' + str(scenario):
                             self.scaleup_data[scenario][str(time_variant)]['scenario'] = \
                                 self.time_variants[time_variant][i]
+
+    def find_functions_or_params(self):
+
+        whether_time_variant = {}
+
+        for scenario in self.model_constants['scenarios_to_run']:
+
+            self.scaleup_fns[scenario] = {}
+
+            # Define scale-up functions from these datasets
+            for param in self.scaleup_data[scenario]:
+
+                if param not in whether_time_variant:
+                    whether_time_variant[param] = self.scaleup_data[scenario][param].pop('time_variant')
+
+                if whether_time_variant[param] == 'yes':
+
+                    # Extract and remove the smoothness parameter from the dictionary
+                    if 'smoothness' in self.scaleup_data[scenario][param]:
+                        smoothness = self.scaleup_data[scenario][param].pop('smoothness')
+                    else:
+                        smoothness = self.model_constants['default_smoothness']
+
+                    # If the parameter is being modified for the scenario being run
+                    if 'scenario' in self.scaleup_data[scenario][param]:
+                        scenario = [self.model_constants['scenario_full_time'],
+                                    self.scaleup_data[scenario][param].pop('scenario')]
+                    else:
+                        scenario = None
+
+                    # Upper bound depends on whether the parameter is a proportion
+                    if 'prop' in param:
+                        upper_bound = 1.
+                    else:
+                        upper_bound = 1E7
+
+                    # Calculate the scaling function
+                    self.scaleup_fns[scenario][param] = scale_up_function(self.scaleup_data[scenario][param].keys(),
+                                                                self.scaleup_data[scenario][param].values(),
+                                                                self.model_constants['fitting_method'],
+                                                                smoothness,
+                                                                bound_low=0.,
+                                                                bound_up=upper_bound,
+                                                                intervention_end=scenario,
+                                                                intervention_start_date=self.model_constants['scenario_start_time'])
+
+                # If no is selected in the time variant column
+                elif whether_time_variant[param] == 'no':
+
+                    # Get rid of smoothness, which isn't relevant
+                    if 'smoothness' in self.scaleup_data[scenario][param]:
+                        del self.scaleup_data[scenario][param]['smoothness']
+
+                    # Set as a constant parameter
+                    self.model_constants[param] = self.scaleup_data[scenario][param][max(self.scaleup_data[scenario][param])]
+
+                    # Note that the 'demo_life_expectancy' parameter has to be given this name
+                    # and base.py will then calculate population death rates automatically.
+
+        if not self.is_organvariation and len(self.organ_status) > 2:
+            self.model_constants['epi_prop_extrapul'] = 1. - self.model_constants['epi_prop_smearpos'] - self.model_constants['epi_prop_smearneg']
 
 
 if __name__ == '__main__':

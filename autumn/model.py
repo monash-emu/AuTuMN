@@ -10,14 +10,11 @@ Compartment unit throughout: patients
 
 """
 
-import random
 from scipy import exp, log
 from autumn.base import BaseModel
-from curve import make_sigmoidal_curve, make_two_step_curve, scale_up_function
+from curve import scale_up_function
 import numpy
-import pylab
 import warnings
-import tool_kit
 
 
 def label_intersects_tags(label, tags):
@@ -289,70 +286,13 @@ class ConsolidatedModel(BaseModel):
         The order in which these methods is run is often important
         """
 
-        self.find_functions_or_params()
+        self.scaleup_fns = self.inputs.scaleup_fns[self.scenario]
 
         self.set_fixed_infectious_proportion()
 
     ##################################################################
     # The methods that process_parameters calls to set parameters and
     # scale-up functions
-
-    def find_functions_or_params(self):
-
-        # Define scale-up functions from these datasets
-        for param in self.inputs.scaleup_data[self.scenario]:
-
-            time_variant = self.inputs.scaleup_data[self.scenario][param].pop('time_variant')
-
-            if time_variant == 'yes':
-
-                # Extract and remove the smoothness parameter from the dictionary
-                if 'smoothness' in self.inputs.scaleup_data[self.scenario][param]:
-                    smoothness = self.inputs.scaleup_data[self.scenario][param].pop('smoothness')
-                else:
-                    smoothness = self.inputs.model_constants['default_smoothness']
-
-                # If the parameter is being modified for the scenario being run
-                if 'scenario' in self.inputs.scaleup_data[self.scenario][param]:
-                    scenario = [self.params['scenario_full_time'],
-                                self.inputs.scaleup_data[self.scenario][param].pop('scenario')]
-                else:
-                    scenario = None
-
-                # Upper bound depends on whether the parameter is a proportion
-                if 'prop' in param:
-                    upper_bound = 1.
-                else:
-                    upper_bound = 1E7
-
-                # Calculate the scaling function
-                self.set_scaleup_fn(param,
-                                    scale_up_function(self.inputs.scaleup_data[self.scenario][param].keys(),
-                                                      self.inputs.scaleup_data[self.scenario][param].values(),
-                                                      self.inputs.model_constants['fitting_method'],
-                                                      smoothness,
-                                                      bound_low=0.,
-                                                      bound_up=upper_bound,
-                                                      intervention_end=scenario,
-                                                      intervention_start_date=self.params['scenario_start_time']))
-
-            # If no is selected in the time variant column
-            elif time_variant == 'no':
-
-                # Get rid of smoothness, which isn't relevant
-                if 'smoothness' in self.inputs.scaleup_data[self.scenario][param]:
-                    del self.inputs.scaleup_data[self.scenario][param]['smoothness']
-
-                # Set as a constant parameter
-                self.set_parameter(param,
-                                   self.inputs.scaleup_data[self.scenario][param][max(self.inputs.scaleup_data[self.scenario][param])])
-
-                # Note that the 'demo_life_expectancy' parameter has to be given this name
-                # and base.py will then calculate population death rates automatically.
-
-        if not self.is_organvariation and len(self.organ_status) > 2:
-            self.set_parameter('epi_prop_extrapul',
-                               1. - self.params['epi_prop_smearpos'] - self.params['epi_prop_smearneg'])
 
     ##################################################################
     # Methods that calculate variables to be used in calculating flows

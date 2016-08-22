@@ -4,7 +4,6 @@ import numpy
 import scipy
 from scipy.integrate import odeint
 from tool_kit import indices
-
 from autumn.curve import make_two_step_curve
 
 
@@ -26,19 +25,22 @@ def get_cost_from_coverage(coverage, c_inflection_cost, saturation, unit_cost, p
 
     """
 
-    if pop_size * unit_cost == 0.:  # if unit cost or pop_size is null, return 0
+    # If unit cost or pop_size is null, return 0
+    if pop_size * unit_cost == 0.:
         return 0.
     assert 0. <= coverage < saturation, 'coverage must verify 0 <= coverage < saturation'
 
+    # Here's the logistic curve function code
     a = saturation / (1. - 2. ** alpha)
     b = ((2. ** (alpha + 1.)) / (alpha * (saturation - a) * unit_cost * pop_size))
-    cost_uninflated = c_inflection_cost - 1.0 / b * scipy.log(
-        (((saturation - a) / (coverage - a)) ** (1.0 / alpha)) - 1.0)
+    cost_uninflated = c_inflection_cost - 1. / b * scipy.log(
+        (((saturation - a) / (coverage - a)) ** (1. / alpha)) - 1.)
 
     return cost_uninflated
 
 
 def inflate_cost(cost_uninflated, current_cpi, cpi_time_variant):
+
     """
     Calculate the inflated cost associated with cost_uninflated and considering the current cpi and the cpi correponding
     to the date considered (cpi_time_variant)
@@ -46,6 +48,7 @@ def inflate_cost(cost_uninflated, current_cpi, cpi_time_variant):
     Returns:
         the inflated cost
     """
+
     return cost_uninflated * current_cpi / cpi_time_variant
 
 
@@ -568,7 +571,10 @@ class BaseModel:
         for intervention in self.interventions_to_cost:
 
             # Initialise output lists
-            costs[intervention] = {'uninflated_cost': [], 'inflated_cost': [], 'discounted_cost': []}
+            costs[intervention] = {'raw_cost': [],
+                                   'inflated_cost': [],
+                                   'discounted_cost': [],
+                                   'discounted_inflated_cost': []}
 
             # Collect the time-variant functions that are required for calculating the inputs to the cost
             # coverage function.
@@ -585,8 +591,8 @@ class BaseModel:
             saturation = 1.001
 
             # for each step time. We may want to change this bit. No need for all time steps
-            for i in range(start_index,
-                           end_index + 1, 10):
+            # Just add a third argument if you want to decrease the frequency of calculation
+            for i in range(start_index, end_index + 1):
                 t = self.times[i]
 
                 # If it's the first intervention, store a list of times
@@ -607,7 +613,7 @@ class BaseModel:
                                               pop_size)
 
                 # Store uninflated cost
-                costs[intervention]['uninflated_cost'].append(cost)
+                costs[intervention]['raw_cost'].append(cost)
 
                 # Calculate and store inflated cost
                 cpi_time_variant = self.scaleup_fns['econ_cpi'](t)
@@ -621,7 +627,13 @@ class BaseModel:
                 discounted_cost = discount_cost(cost,
                                                 self.params['econ_discount_rate'],
                                                 t_into_future)
-                costs[intervention]['discounted_cost'].append(discounted_cost)  # storage
+                costs[intervention]['discounted_cost'].append(discounted_cost)
+
+                # Calculate and store discounted-inflated cost
+                discounted_inflated_cost = discount_cost(inflated_cost,
+                                                self.params['econ_discount_rate'],
+                                                t_into_future)
+                costs[intervention]['discounted_inflated_cost'].append(discounted_inflated_cost)
 
         self.costs = costs
 

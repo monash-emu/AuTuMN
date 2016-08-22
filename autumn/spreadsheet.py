@@ -661,16 +661,15 @@ if __name__ == "__main__":
     # Find the country by just reading that sheet first
     country = read_input_data_xls(False, ['control_panel'])['control_panel']['country']
 
-    # Then import the data
-    data = read_and_process_data(country, ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
-                                           'default_constants',
-                                           'tb', 'notifications', 'outcomes',
-                                           'country_constants',
-                                           'country_economics', 'default_economics',
-                                           'country_programs', 'default_programs',
-                                           'diabetes'],
-                                 from_test=False)
+    original_data = read_input_data_xls(False,
+                                        ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
+                                         'default_constants',
+                                         'tb', 'notifications', 'outcomes',
+                                         'country_constants',
+                                         'country_economics', 'default_economics',
+                                         'country_programs', 'default_programs',
+                                         'diabetes'],
+                                        country)
 
     print("Time elapsed in running script is " + str(datetime.datetime.now() - spreadsheet_start_realtime))
-
 

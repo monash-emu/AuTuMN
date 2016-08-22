@@ -72,7 +72,9 @@ class ConsolidatedModel(BaseModel):
         self.define_model_structure()
 
         # Set other fixed parameters
-        self.set_fixed_parameters()
+        for key, value in self.inputs.model_constants.items():
+            if type(value) == float:
+                self.set_parameter(key, value)
 
         # Treatment outcomes that will be universal to all models
         # Global TB outcomes of "completion" and "cure" can be considered "_success",
@@ -80,6 +82,9 @@ class ConsolidatedModel(BaseModel):
         # and "transfer out" is removed from denominator calculations.
         self.outcomes = ['_success', '_death', '_default']
         self.non_success_outcomes = self.outcomes[1: 3]
+
+        # Get scaleup functions from input object
+        self.scaleup_fns = self.inputs.scaleup_fns[self.scenario]
 
     def define_model_structure(self):
 
@@ -207,22 +212,6 @@ class ConsolidatedModel(BaseModel):
                                                      * self.comorb_props[comorbidity]
                                                      / len(self.agegroups))  # and split equally by age-groups
 
-    def set_fixed_parameters(self):
-
-        # Set parameters from the data object
-        for key, value in self.inputs.model_constants.items():
-            if type(value) == float:
-                self.set_parameter(key, value)
-
-    def set_fixed_infectious_proportion(self):
-
-        # Find a multiplier for the proportion of all cases infectious for
-        # models unstructured by organ status.
-        if len(self.organ_status) < 2:
-            self.set_parameter('tb_multiplier_force',
-                               self.params['epi_prop_smearpos'] + \
-                               self.params['epi_prop_smearneg'] * self.params['tb_multiplier_force_smearneg'])
-
     ############################################################
     # General underlying methods for use by other methods
 
@@ -277,20 +266,6 @@ class ConsolidatedModel(BaseModel):
         return param_value
 
     ##################################################################
-    # The master parameter processing and scale-up setting method
-
-    def process_parameters(self):
-
-        """
-        Calls all the methods to set parameters and scale-up functions
-        The order in which these methods is run is often important
-        """
-
-        self.scaleup_fns = self.inputs.scaleup_fns[self.scenario]
-
-        self.set_fixed_infectious_proportion()
-
-    ##################################################################
     # The methods that process_parameters calls to set parameters and
     # scale-up functions
 
@@ -336,8 +311,6 @@ class ConsolidatedModel(BaseModel):
         self.calculate_population_sizes()
 
         self.calculate_ipt_rate()
-
-
 
     def calculate_birth_rates_vars(self):
 

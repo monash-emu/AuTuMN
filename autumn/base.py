@@ -88,13 +88,6 @@ class BaseModel:
     def convert_compartments_to_list(self, compartments):
         return [compartments[l] for l in self.labels]
 
-    def process_parameters(self):
-        """
-        To be overridden: calculates derived parameters from an initial set
-        of raw parameters.
-        """
-        pass
-
     def get_init_list(self):
 
         if self.loaded_compartments is None:
@@ -248,7 +241,6 @@ class BaseModel:
                         self.inputs.model_constants['scenario_end_time'],
                         self.inputs.model_constants['time_step'])
         self.initialise_compartments()
-        self.process_parameters()
         self.set_flows()
         self.var_labels = None
         self.soln_array = None

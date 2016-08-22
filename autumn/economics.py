@@ -61,4 +61,4 @@ def discount_cost(cost_uninflated, discount_rate, t_into_future):
     """
 
     assert t_into_future >= 0, 't_into_future must be >= 0'
-    return (cost_uninflated / ((1 + discount_rate) ** t_into_future))
+    return cost_uninflated / ((1 + discount_rate) ** t_into_future)

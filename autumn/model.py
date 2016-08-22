@@ -12,7 +12,6 @@ Compartment unit throughout: patients
 
 from scipy import exp, log
 from autumn.base import BaseModel
-from curve import scale_up_function
 import numpy
 import warnings
 
@@ -22,6 +21,34 @@ def label_intersects_tags(label, tags):
         if tag in label:
             return True
     return False
+
+
+def find_outcome_proportions_by_period(
+        proportion, early_period, total_period):
+
+    """
+    Split one outcome proportion (e.g. default, death) over multiple
+    periods
+    Args:
+        proportion: Total proportion to be split
+        early_period: Early time period
+        total_period: Late time period
+    Returns:
+        early_proportion: Proportion allocated to early time period
+        late_proportion: Proportion allocated to late time period
+    """
+
+    if proportion > 1. or proportion < 0.:
+        raise Exception('Proportion greater than one or less than zero')
+    elif proportion == 1.:
+        # This is just to avoid warnings or errors where the proportion
+        # is one. However, this function isn't really intended for this situation.
+        early_proportion = 0.5
+    else:
+        early_proportion \
+            = 1. - exp(log(1. - proportion) * early_period / total_period)
+    late_proportion = proportion - early_proportion
+    return early_proportion, late_proportion
 
 
 class ConsolidatedModel(BaseModel):
@@ -215,32 +242,7 @@ class ConsolidatedModel(BaseModel):
     ############################################################
     # General underlying methods for use by other methods
 
-    def find_outcome_proportions_by_period(
-            self, proportion, early_period, total_period):
 
-        """
-        Split one outcome proportion (e.g. default, death) over multiple
-        periods
-        Args:
-            proportion: Total proportion to be split
-            early_period: Early time period
-            total_period: Late time period
-        Returns:
-            early_proportion: Proportion allocated to early time period
-            late_proportion: Proportion allocated to late time period
-        """
-
-        if proportion > 1. or proportion < 0.:
-            raise Exception('Proportion greater than one or less than zero')
-        elif proportion == 1.:
-            # This is just to avoid warnings or errors where the proportion
-            # is one. However, this function isn't really intended for this situation.
-            early_proportion = 0.5
-        else:
-            early_proportion \
-                = 1. - exp(log(1. - proportion) * early_period / total_period)
-        late_proportion = proportion - early_proportion
-        return early_proportion, late_proportion
 
     def get_constant_or_variable_param(self, param):
 
@@ -264,10 +266,6 @@ class ConsolidatedModel(BaseModel):
             raise NameError('Parameter "' + param + '" not found in either vars or params.')
 
         return param_value
-
-    ##################################################################
-    # The methods that process_parameters calls to set parameters and
-    # scale-up functions
 
     ##################################################################
     # Methods that calculate variables to be used in calculating flows
@@ -649,7 +647,7 @@ class ConsolidatedModel(BaseModel):
 
             # Find the proportion of deaths/defaults during the infectious and non-infectious stages
             for outcome in self.non_success_outcomes:
-                early_proportion, late_proportion = self.find_outcome_proportions_by_period(
+                early_proportion, late_proportion = find_outcome_proportions_by_period(
                     self.vars['program_prop_treatment' + outcome + strain],
                     self.params['tb_timeperiod_infect_ontreatment' + strain],
                     self.params['tb_timeperiod_treatment' + strain])

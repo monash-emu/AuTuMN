@@ -494,7 +494,6 @@ class BaseModel:
         # Prepare the references to fetch the data and model outputs
         param_key_base = 'econ_program_prop_'  # Probably need to change this to just program_prop_
         c_inflection_cost_base = 'econ_program_inflectioncost_'
-        unitcost_base = 'econ_program_unitcost_'
         popsize_label_base = 'popsize_'
 
         # Find the current year and CPI
@@ -518,7 +517,6 @@ class BaseModel:
             # coverage function.
             coverage_function = self.coverage_over_time(param_key_base + intervention)  # Coverage
             c_inflection_cost_function = self.scaleup_fns[c_inflection_cost_base + intervention]  # Inflection
-            unit_cost_function = self.scaleup_fns[unitcost_base + intervention]  # Unit cost
 
             # Find the column index in model.var_array for the intervention
             popsize_label = popsize_label_base + intervention
@@ -540,7 +538,7 @@ class BaseModel:
                 # Calculate time variant parameters that feed into the logistic function
                 coverage = coverage_function(t)
                 c_inflection_cost = c_inflection_cost_function(t)
-                unit_cost = unit_cost_function(t)
+                unit_cost = self.inputs.model_constants['econ_unitcost_' + intervention]
                 pop_size = self.var_array[i, pop_size_index]
 
                 # Raw cost (which is the uninflated cost)

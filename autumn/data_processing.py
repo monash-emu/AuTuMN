@@ -285,9 +285,18 @@ class Inputs:
         # Extract data from time variants dictionary and populate to dictionary with scenario keys
         self.find_data_for_functions_or_params()
 
-        ######
+        # Find scale-up functions or constant parameters from
         self.find_functions_or_params()
 
+        # Find extrapulmonary proportion if model is stratified by organ type, but there is no time variant organ
+        # proportion. Note that this has to be done after find_functions_or_params or the constant parameter
+        # won't have been calculated yet.
+        if not self.is_organvariation and len(self.organ_status) > 2:
+            self.find_constant_extrapulmonary_proportion()
+
+        # Find the proportion of cases that are infectious for models that are unstratified by organ status
+        if len(self.organ_status) < 2:
+            self.set_fixed_infectious_proportion()
 
     def update_time_variants(self):
 
@@ -915,18 +924,30 @@ class Inputs:
 
     def find_functions_or_params(self):
 
+        """
+        Calculate the scale-up functions from the scale-up data attribute and populate to
+        a dictionary with keys of the scenarios to be run.
+        """
+
+        # Need dictionary to track whether each parameter is time variant
         whether_time_variant = {}
 
+        # For each scenario to be run
         for scenario in self.model_constants['scenarios_to_run']:
 
+            # Initialise the scaleup function dictionary
             self.scaleup_fns[scenario] = {}
 
             # Define scale-up functions from these datasets
             for param in self.scaleup_data[scenario]:
 
+                # Determine whether the parameter is time variant at the first scenario iteration,
+                # because otherwise the code will keep trying to pop off the time variant string
+                # from the same scaleup data dictionary.
                 if param not in whether_time_variant:
                     whether_time_variant[param] = self.scaleup_data[scenario][param].pop('time_variant')
 
+                # If time variant
                 if whether_time_variant[param] == 'yes':
 
                     # Extract and remove the smoothness parameter from the dictionary
@@ -949,14 +970,15 @@ class Inputs:
                         upper_bound = 1E7
 
                     # Calculate the scaling function
-                    self.scaleup_fns[scenario][param] = scale_up_function(self.scaleup_data[scenario][param].keys(),
-                                                                self.scaleup_data[scenario][param].values(),
-                                                                self.model_constants['fitting_method'],
-                                                                smoothness,
-                                                                bound_low=0.,
-                                                                bound_up=upper_bound,
-                                                                intervention_end=scenario,
-                                                                intervention_start_date=self.model_constants['scenario_start_time'])
+                    self.scaleup_fns[scenario][param] \
+                        = scale_up_function(self.scaleup_data[scenario][param].keys(),
+                                            self.scaleup_data[scenario][param].values(),
+                                            self.model_constants['fitting_method'],
+                                            smoothness,
+                                            bound_low=0.,
+                                            bound_up=upper_bound,
+                                            intervention_end=scenario,
+                                            intervention_start_date=self.model_constants['scenario_start_time'])
 
                 # If no is selected in the time variant column
                 elif whether_time_variant[param] == 'no':
@@ -966,13 +988,34 @@ class Inputs:
                         del self.scaleup_data[scenario][param]['smoothness']
 
                     # Set as a constant parameter
-                    self.model_constants[param] = self.scaleup_data[scenario][param][max(self.scaleup_data[scenario][param])]
+                    self.model_constants[param] \
+                        = self.scaleup_data[scenario][param][max(self.scaleup_data[scenario][param])]
 
                     # Note that the 'demo_life_expectancy' parameter has to be given this name
                     # and base.py will then calculate population death rates automatically.
 
-        if not self.is_organvariation and len(self.organ_status) > 2:
-            self.model_constants['epi_prop_extrapul'] = 1. - self.model_constants['epi_prop_smearpos'] - self.model_constants['epi_prop_smearneg']
+    def find_constant_extrapulmonary_proportion(self):
+
+        """
+        Calculate constant proportion progressing to extrapulmonary for models that are stratified by organ status,
+        but are not time-variant by organ status.
+        """
+
+        self.model_constants['epi_prop_extrapul'] \
+            = 1. \
+              - self.model_constants['epi_prop_smearpos'] \
+              - self.model_constants['epi_prop_smearneg']
+
+    def set_fixed_infectious_proportion(self):
+
+        """
+        Find a multiplier for the proportion of all cases infectious for
+        models unstructured by organ status.
+        """
+
+        self.model_constants['tb_multiplier_force'] \
+            = self.model_constants['epi_prop_smearpos'] \
+              + self.model_constants['epi_prop_smearneg'] * self.model_constants['tb_multiplier_force_smearneg']
 
 
 if __name__ == '__main__':

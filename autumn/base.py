@@ -519,6 +519,7 @@ class BaseModel:
         pass
 
     def coverage_over_time(self, param_key):
+
         """
         Define a function which returns the coverage over time associated with an intervention
         Args:
@@ -528,6 +529,7 @@ class BaseModel:
         Returns:
             a function which takes a time for argument an will return a coverage
         """
+
         coverage_function = self.scaleup_fns[param_key]
         return coverage_function
 
@@ -564,25 +566,27 @@ class BaseModel:
 
         # Loop over interventions to be costed
         for intervention in self.interventions_to_cost:
+
+            # Initialise output lists
             costs[intervention] = {'uninflated_cost': [], 'inflated_cost': [], 'discounted_cost': []}
 
-            param_key = param_key_base + intervention  # name of the corresponding parameter
-            coverage_function = self.coverage_over_time(param_key)  # create a function to calculate coverage over time
+            # Collect the time-variant functions that are required for calculating the inputs to the cost
+            # coverage function.
+            coverage_function = self.coverage_over_time(param_key_base + intervention)  # Coverage
+            c_inflection_cost_function = self.scaleup_fns[c_inflection_cost_base + intervention]  # Inflection
+            unit_cost_function = self.scaleup_fns[unitcost_base + intervention]  # Unit cost
 
-            c_inflection_cost_label = c_inflection_cost_base + intervention  # key of the scale up function for inflection cost
-            c_inflection_cost_function = self.scaleup_fns[c_inflection_cost_label]
-
-            unitcost_label = unitcost_base + intervention  # key of the scale up function for unit cost
-            unit_cost_function = self.scaleup_fns[unitcost_label]
-
+            # Find the column index in model.var_array for the intervention
             popsize_label = popsize_label_base + intervention
             pop_size_index = self.var_labels.index(
-                popsize_label)  # column index in model.var_array that corresponds to the intervention
+                popsize_label)
 
-            saturation = 1.001  # provisional
+            # Provisional
+            saturation = 1.001
 
+            # for each step time. We may want to change this bit. No need for all time steps
             for i in range(start_index,
-                           end_index + 1):  # for each step time. We may want to change this bit. No need for all time steps
+                           end_index + 1, 10):
                 t = self.times[i]
 
                 # If it's the first intervention, store a list of times
@@ -602,17 +606,17 @@ class BaseModel:
                                               unit_cost,
                                               pop_size)
 
-                # Uninflated cost
-                costs[intervention]['uninflated_cost'].append(cost)  # storage
+                # Store uninflated cost
+                costs[intervention]['uninflated_cost'].append(cost)
 
-                # Inflated cost
+                # Calculate and store inflated cost
                 cpi_time_variant = self.scaleup_fns['econ_cpi'](t)
                 inflated_cost = inflate_cost(cost,
                                              current_cpi,
                                              cpi_time_variant)
-                costs[intervention]['inflated_cost'].append(inflated_cost)  # storage
+                costs[intervention]['inflated_cost'].append(inflated_cost)
 
-                # Discounted cost
+                # Calculate and store discounted cost
                 t_into_future = max(0, (t - year_current))
                 discounted_cost = discount_cost(cost,
                                                 self.params['econ_discount_rate'],

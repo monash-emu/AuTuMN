@@ -486,7 +486,7 @@ class BaseModel:
         start_index = indices(self.times, lambda x: x >= start_time)[0]
 
         # Assertion check - probably move to data processing
-        assert self.inputs.model_constants['economics_start_time'] \
+        assert self.inputs.model_constants['econ_start_time'] \
                <= self.inputs.model_constants['scenario_end_time'], \
             'period_end must be before the end of the model integration time'
         end_index = indices(self.times, lambda x: x >= self.inputs.model_constants['scenario_end_time'])[0]

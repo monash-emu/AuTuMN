@@ -242,8 +242,6 @@ class ConsolidatedModel(BaseModel):
     ############################################################
     # General underlying methods for use by other methods
 
-
-
     def get_constant_or_variable_param(self, param):
 
         """

@@ -1,5 +1,4 @@
 
-
 import os
 import glob
 import datetime
@@ -39,9 +38,9 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
 
     # Name model
     if scenario is None:
-        model_name = 'baseline'
+        scenario_name = 'baseline'
     else:
-        model_name = 'scenario_' + str(scenario)
+        scenario_name = 'scenario_' + str(scenario)
 
     # Determine whether this is the final iteration of the loop
     if scenario == inputs.model_constants['scenarios_to_run'][-1]:
@@ -51,44 +50,31 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
 
     # Create an outputs object for use later
     if inputs.model_constants['output_spreadsheets']:
-        project.scenarios.append(model_name)
+        project.scenarios.append(scenario_name)
 
-
-    models[model_name] = autumn.model.ConsolidatedModel(
-        scenario,  # Scenario to run
-        inputs)
+    models[scenario_name] = autumn.model.ConsolidatedModel(scenario, inputs)
     if n == 0:
-        print(autumn.tool_kit.introduce_model(models, model_name))
+        print(autumn.tool_kit.introduce_model(models, scenario_name))
 
     if scenario is not None:
         scenario_start_time_index = \
             models['baseline'].find_time_index(inputs.model_constants['scenario_start_time'])
-        models[model_name].start_time = \
+        models[scenario_name].start_time = \
             models['baseline'].times[scenario_start_time_index]
-        models[model_name].loaded_compartments = \
+        models[scenario_name].loaded_compartments = \
             models['baseline'].load_state(scenario_start_time_index)
 
     # Describe model
-    print('Running model "' + model_name + '".')
+    print('Running model "' + scenario_name + '".')
     if n == 0:
-        print(autumn.tool_kit.describe_model(models, model_name))
+        print(autumn.tool_kit.describe_model(models, scenario_name))
 
     # Integrate
-    models[model_name].integrate()
-
-    # Write to spreadsheets
-    if inputs.model_constants['output_spreadsheets']:
-        project.models[model_name] = \
-            models[model_name]  # Store the model in the object 'project'
-        project.output_dict[model_name] = \
-            w_o.create_output_dict(models[model_name])  # Store simplified outputs
-
-    # Report time
-    print('Time elapsed so far is ' + str(datetime.datetime.now() - start_realtime))
-
+    models[scenario_name].integrate()
+    print('Time elapsed to completion of integration is ' + str(datetime.datetime.now() - start_realtime))
 
     autumn.plotting.plot_outputs_against_gtb(
-        models[model_name], ['incidence', 'mortality', 'prevalence', 'notifications'],
+        models[scenario_name], ['incidence', 'mortality', 'prevalence', 'notifications'],
         inputs.model_constants['recent_time'],
         'scenario_end_time',
         base + '_outputs_gtb.png',
@@ -99,7 +85,7 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
 
     if inputs.model_constants['output_by_age']:
         autumn.plotting.plot_outputs_by_age(
-            models[model_name],
+            models[scenario_name],
             inputs.model_constants['recent_time'],
             'scenario_end_time',
             base + '_age_outputs_gtb.png',
@@ -107,6 +93,14 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
             scenario=scenario,
             figure_number=21,
             final_run=final)
+
+    project.models[scenario_name] = models[scenario_name]  # Store the model in the object 'project'
+
+
+# Write to spreadsheets
+if inputs.model_constants['output_spreadsheets']:
+    project.create_output_dicts()  # Store simplified outputs
+    # project.add_economics_outputs_to_dict(scenario_name)
 
 # Make a flow-diagram
 if inputs.model_constants['output_flow_diagram']:
@@ -137,16 +131,14 @@ if inputs.model_constants['output_age_fractions']:
                                                 age_or_comorbidity='age',
                                                 start_time='early_time')
 
-
 if inputs.model_constants['output_scaleups']:
     autumn.plotting.plot_classified_scaleups(models['baseline'], base)
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)
 
-if inputs.model_constants['output_spreadsheets']:
-    project.write_output_dict_xls(horizontal=True, minimum=2015, maximum=2040, step=5)
-    project.write_scenario_dict_word('incidence', minimum=2019, maximum=2040, step=5)
+# if inputs.model_constants['output_spreadsheets']:
+#     project.write_output_dict_xls('baseline', horizontal=True, minimum=2015, maximum=2040, step=5)
+#     project.write_scenario_dict_word('incidence', minimum=2019, maximum=2040, step=5)
 
 print('Time elapsed in running script is ' + str(datetime.datetime.now() - start_realtime))
-

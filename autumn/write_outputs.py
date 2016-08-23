@@ -15,32 +15,7 @@ def indices(a, func):
     return [i for (i, val) in enumerate(a) if func(val)]
 
 
-def create_output_dict(model):
 
-    """
-    Create a dictionary with the main model outputs
-
-    Args:
-        model: a model instance after integration
-    Returns:
-        output_dict: a dictionary with the different outputs
-    """
-
-    outputs = ['incidence', 'mortality', 'prevalence', 'notifications']
-    output_dict = {}
-    times = np.linspace(model.inputs.model_constants['start_time'],
-                        model.inputs.model_constants['scenario_end_time'],
-                        num=(1 + model.inputs.model_constants['scenario_end_time'] \
-                             - model.inputs.model_constants['start_time']))
-
-    for label in outputs:
-        output_dict[label] = {}
-        solution = model.get_var_soln(label)
-        for time in times:
-            year_index = indices(model.times, lambda x: x >= time)[0]
-            output_dict[label][int(round(time))] = solution[year_index]
-
-    return output_dict
 
 
 class Project:
@@ -58,15 +33,16 @@ class Project:
         self.name = 'project_test'
         self.scenarios = []
         self.models = {}
-        self.output_dict = {}
+        self.full_output_dict = {}
+        self.integer_output_dict = {}
 
-    def write_output_dict_xls(self, horizontal, minimum=None, maximum=None, step=None):
+    def write_output_dict_xls(self, model_name, horizontal, minimum=None, maximum=None, step=None):
 
         out_dir_project = os.path.join('projects', self.name)
         if not os.path.isdir(out_dir_project):
             os.makedirs(out_dir_project)
 
-        outputs = self.output_dict['baseline'].keys()
+        outputs = self.output_dict[model_name].keys()
 
         # Write a new file for each epidemiological indicator
         for output in outputs:
@@ -237,27 +213,78 @@ class Project:
                 if y in self.output_dict[sc][output]:
                     sheet.cell(row=row, column=col).value = self.output_dict[sc][output][y]
 
+    def create_output_dict(self, model_name):
 
-if __name__ == "__main__":
+        """
+        Create a dictionary with the main model outputs
 
-    scenario = None
-    country = read_input_data_xls(False, ['control_panel'])['control_panel']['country']
-    print(country)
-    inputs = read_and_process_data(country, from_test=False)
+        Args:
+            model_name: a model instance after integration
+        Returns:
+            output_dict: a dictionary with the different outputs
+        """
 
-    n_organs = inputs['model_constants']['n_organs'][0]
-    n_strains = inputs['model_constants']['n_strains'][0]
-    is_quality = inputs['model_constants']['is_lowquality'][0]
-    is_amplification = inputs['model_constants']['is_amplification'][0]
-    is_misassignment = inputs['model_constants']['is_misassignment'][0]
-    model = autumn.model.ConsolidatedModel(
-        scenario,  # Scenario to run
-        inputs)
+        outputs = ['incidence', 'mortality', 'prevalence', 'notifications']
+        self.output_dict[model_name] = {}
+        times = np.linspace(self.models[model_name].inputs.model_constants['start_time'],
+                            self.models[model_name].inputs.model_constants['scenario_end_time'],
+                            num=(1 + self.models[model_name].inputs.model_constants['scenario_end_time'] \
+                                 - self.models[model_name].inputs.model_constants['start_time']))
 
-    model.integrate()
+        for label in outputs:
+            self.output_dict[model_name][label] = {}
+            solution = self.models[model_name].get_var_soln(label)
+            for time in times:
+                year_index = indices(self.models[model_name].times, lambda x: x >= time)[0]
+                self.output_dict[model_name][label][int(round(time))] = solution[year_index]
 
-    dict = create_output_dict(model)
+    def create_output_dicts(self, outputs=['incidence', 'mortality', 'prevalence', 'notifications']):
 
-    print(dict)
+        self.create_full_output_dict(outputs)
+        self.extract_integer_dict(outputs)
 
+    def create_full_output_dict(self, outputs):
+
+        """
+        Creates a dictionary for each requested output at every time point in that model's times attribute
+        """
+
+        for scenario in self.scenarios:
+            self.full_output_dict[scenario] = {}
+            for label in outputs:
+                times = self.models[scenario].times
+                solution = self.models[scenario].get_var_soln(label)
+                self.full_output_dict[scenario][label] = dict(zip(times, solution))
+
+    def extract_integer_dict(self, outputs):
+
+        """
+        Extracts a dictionary from full_output_dict with only integer years, using the first time value greater than
+        the integer year in question.
+
+        Args:
+            outputs: Model outputs that were previously extracted (should be the same as for create_full_output_dict)
+        """
+
+        for scenario in self.scenarios:
+            self.integer_output_dict[scenario] = {}
+            for output in outputs:
+                self.integer_output_dict[scenario][output] = {}
+                times = self.full_output_dict[scenario][output].keys()
+                times.sort()
+                start = np.floor(times[0])
+                finish = np.floor(times[-1])
+                float_years = np.linspace(start, finish, finish - start + 1.)
+                for year in float_years:
+                    key = [t for t in times if t >= year][0]
+                    self.integer_output_dict[scenario][output][int(key)] \
+                        = self.full_output_dict[scenario][output][key]
+
+    def add_economics_outputs_to_dict(self, model_name):
+
+        econ_outputs = ['discounted_inflated_cost']
+        times = np.linspace(self.models[model_name].inputs.model_constants['recent_time'],
+                            self.models[model_name].inputs.model_constants['scenario_end_time'],
+                            num=(1 + self.models[model_name].inputs.model_constants['scenario_end_time'] \
+                                 - self.models[model_name].inputs.model_constants['recent_time']))
 

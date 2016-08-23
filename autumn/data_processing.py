@@ -926,11 +926,11 @@ class Inputs:
         a dictionary with keys of the scenarios to be run.
         """
 
-        # Need dictionary to track whether each parameter is time variant
-        whether_time_variant = {}
-
         # For each scenario to be run
         for scenario in self.model_constants['scenarios_to_run']:
+
+            # Need dictionary to track whether each parameter is time variant
+            whether_time_variant = {}
 
             # Initialise the scaleup function dictionary
             self.scaleup_fns[scenario] = {}
@@ -955,10 +955,10 @@ class Inputs:
 
                     # If the parameter is being modified for the scenario being run
                     if 'scenario' in self.scaleup_data[scenario][param]:
-                        scenario = [self.model_constants['scenario_full_time'],
+                        scenario_for_function = [self.model_constants['scenario_full_time'],
                                     self.scaleup_data[scenario][param].pop('scenario')]
                     else:
-                        scenario = None
+                        scenario_for_function = None
 
                     # Upper bound depends on whether the parameter is a proportion
                     if 'prop' in param:
@@ -974,7 +974,7 @@ class Inputs:
                                             smoothness,
                                             bound_low=0.,
                                             bound_up=upper_bound,
-                                            intervention_end=scenario,
+                                            intervention_end=scenario_for_function,
                                             intervention_start_date=self.model_constants['scenario_start_time'])
 
                 # If no is selected in the time variant column

@@ -171,7 +171,7 @@ class Inputs:
         # Default keys of sheets to read (ones that should always be read
         keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
                                   'default_parameters', 'tb', 'notifications', 'outcomes',
-                                  'country_constants', 'default_constants', 'country_economics',
+                                  'country_constants', 'default_constants',
                                   'country_programs', 'default_programs']
 
         # Add the optional ones (this is intended to be the standard approach to reading additional

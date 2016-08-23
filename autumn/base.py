@@ -456,9 +456,6 @@ class BaseModel:
                     self.get_var_soln('population'))]
             self.fraction_array[:, i_label] = self.fraction_soln[label]
 
-    def calculate_additional_diagnostics(self):
-        pass
-
     def coverage_over_time(self, param_key):
 
         """
@@ -482,19 +479,13 @@ class BaseModel:
         """
 
         # Starting time for cost calculations, doesn't have to be (and probably shouldn't be) the start of the model run
-        start_time = self.inputs.model_constants['recent_time']
-        start_index = indices(self.times, lambda x: x >= start_time)[0]
+        start_index = indices(self.times, lambda x: x >= self.inputs.model_constants['recent_time'])[0]
 
         # Assertion check - probably move to data processing
         assert self.inputs.model_constants['econ_start_time'] \
                <= self.inputs.model_constants['scenario_end_time'], \
             'period_end must be before the end of the model integration time'
         end_index = indices(self.times, lambda x: x >= self.inputs.model_constants['scenario_end_time'])[0]
-
-        # Prepare the references to fetch the data and model outputs
-        param_key_base = 'econ_program_prop_'  # Probably need to change this to just program_prop_
-        c_inflection_cost_base = 'econ_program_inflectioncost_'
-        popsize_label_base = 'popsize_'
 
         # Find the current year and CPI
         year_current = self.inputs.model_constants['current_time']
@@ -513,19 +504,6 @@ class BaseModel:
                                    'discounted_cost': [],
                                    'discounted_inflated_cost': []}
 
-            # Collect the time-variant functions that are required for calculating the inputs to the cost
-            # coverage function.
-            coverage_function = self.coverage_over_time(param_key_base + intervention)  # Coverage
-            c_inflection_cost_function = self.scaleup_fns[c_inflection_cost_base + intervention]  # Inflection
-
-            # Find the column index in model.var_array for the intervention
-            popsize_label = popsize_label_base + intervention
-            pop_size_index = self.var_labels.index(
-                popsize_label)
-
-            # Provisional
-            saturation = 1.001
-
             # for each step time. We may want to change this bit. No need for all time steps
             # Just add a third argument if you want to decrease the frequency of calculation
             for i in range(start_index, end_index + 1):
@@ -535,18 +513,12 @@ class BaseModel:
                 if intervention == self.interventions_to_cost[0]:
                     costs['cost_times'].append(t)
 
-                # Calculate time variant parameters that feed into the logistic function
-                coverage = coverage_function(t)
-                c_inflection_cost = c_inflection_cost_function(t)
-                unit_cost = self.inputs.model_constants['econ_unitcost_' + intervention]
-                pop_size = self.var_array[i, pop_size_index]
-
                 # Raw cost (which is the uninflated cost)
-                cost = get_cost_from_coverage(coverage,
-                                              c_inflection_cost,
-                                              saturation,
-                                              unit_cost,
-                                              pop_size)
+                cost = get_cost_from_coverage(self.coverage_over_time('program_prop_' + intervention)(t),
+                                              self.inputs.model_constants['econ_inflectioncost_' + intervention],
+                                              self.inputs.model_constants['econ_saturation_' + intervention],
+                                              self.inputs.model_constants['econ_unitcost_' + intervention],
+                                              self.var_array[i, self.var_labels.index('popsize_' + intervention)])
 
                 # Store uninflated cost
                 costs[intervention]['raw_cost'].append(cost)

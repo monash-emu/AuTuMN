@@ -298,6 +298,9 @@ class Inputs:
         if len(self.organ_status) < 2:
             self.set_fixed_infectious_proportion()
 
+        # Perform checks
+        self.checks()
+
     def update_time_variants(self):
 
         """
@@ -1010,6 +1013,18 @@ class Inputs:
         self.model_constants['tb_multiplier_force'] \
             = self.model_constants['epi_prop_smearpos'] \
               + self.model_constants['epi_prop_smearneg'] * self.model_constants['tb_multiplier_force_smearneg']
+
+    def checks(self):
+
+        """
+        Not much in here as yet. However, this function is intended to contain all the data consistency checks for
+        data entry.
+        """
+
+        # Check that the time to start economics analyses from is earlier than the end time of the model run
+        assert self.model_constants['econ_start_time'] \
+               <= self.model_constants['scenario_end_time'], \
+            'period_end must be before the end of the model integration time'
 
 
 if __name__ == '__main__':

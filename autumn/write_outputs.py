@@ -17,7 +17,7 @@ def indices(a, func):
 
 class Project:
 
-    def __init__(self, country):
+    def __init__(self, country, inputs):
 
         """
         Initialises an object of class Project, that will contain all the information (data + outputs) for writing a
@@ -32,6 +32,7 @@ class Project:
         self.models = {}
         self.full_output_dict = {}
         self.integer_output_dict = {}
+        self.inputs = inputs
 
     #################################
     # General methods for use below #
@@ -124,6 +125,17 @@ class Project:
     #################################################
     # Methods for outputting to Office applications #
     #################################################
+
+    def write_spreadsheets(self):
+
+        """
+        Determine whether to write to spreadsheets by scenario or by output
+        """
+
+        if self.inputs.model_constants['output_by_scenario']:
+            self.write_xls_by_scenario(horizontal=True, minimum=2015, maximum=2040, step=5)
+        else:
+            self.write_xls_by_output(horizontal=True, minimum=2015, maximum=2040, step=5)
 
     def write_xls_by_output(self, horizontal, minimum=None, maximum=None, step=None):
 

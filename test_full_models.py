@@ -27,7 +27,7 @@ if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
 if inputs.model_constants['output_spreadsheets']:
-    project = w_o.Project(country)
+    project = w_o.Project(country, inputs)
 
 base = os.path.join(out_dir, country + '_baseline')
 
@@ -135,9 +135,11 @@ if inputs.model_constants['output_scaleups']:
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)
 
-if inputs.model_constants['output_spreadsheets']:
-    project.write_xls_by_output(horizontal=True, minimum=2015, maximum=2040, step=5)
-    project.write_xls_by_scenario(horizontal=True, minimum=2015, maximum=2040, step=5)
+
+project.write_spreadsheets()
+
+
+# if inputs.model_constants['output_spreadsheets']:
     # project.write_scenario_dict_word('incidence', minimum=2019, maximum=2040, step=5)
 
 print('Time elapsed in running script is ' + str(datetime.datetime.now() - start_realtime))

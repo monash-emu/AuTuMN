@@ -113,7 +113,7 @@ class Project:
         if not os.path.isdir(out_dir_project):
             os.makedirs(out_dir_project)
 
-        outputs = self.output_dict[model_name].keys()
+        outputs = self.integer_output_dict[model_name].keys()
 
         # Write a new file for each epidemiological indicator
         for output in outputs:
@@ -237,7 +237,7 @@ class Project:
 
         # Find years to write
         years = []
-        for y in self.output_dict['baseline'][output].keys():
+        for y in self.integer_output_dict['baseline'][output].keys():
             if y in requested_years:
                 years += [y]
         return years
@@ -260,8 +260,8 @@ class Project:
             col = 1
             for y in years:
                 col += 1
-                if y in self.output_dict[sc][output]:
-                    sheet.cell(row=r, column=col).value = self.output_dict[sc][output][y]
+                if y in self.integer_output_dict[sc][output]:
+                    sheet.cell(row=r, column=col).value = self.integer_output_dict[sc][output][y]
 
     def write_vertically(self, sheet, output, years):
 
@@ -281,8 +281,8 @@ class Project:
             row = 1
             for y in years:
                 row += 1
-                if y in self.output_dict[sc][output]:
-                    sheet.cell(row=row, column=col).value = self.output_dict[sc][output][y]
+                if y in self.integer_output_dict[sc][output]:
+                    sheet.cell(row=row, column=col).value = self.integer_output_dict[sc][output][y]
 
     def create_output_dict(self, model_name):
 

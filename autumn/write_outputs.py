@@ -296,19 +296,19 @@ class Project:
             outputs: Model outputs that were previously extracted (should be the same as for create_full_output_dict)
         """
 
-        for scenario in self.scenarios:
-            self.integer_output_dict[scenario] = {}
-            for output in outputs:
-                self.integer_output_dict[scenario][output] = {}
-                times = self.full_output_dict[scenario][output].keys()
+        for model in self.models:
+            self.integer_output_dict[model] = {}
+            for output in self.full_output_dict[model]:
+                self.integer_output_dict[model][output] = {}
+                times = self.full_output_dict[model][output].keys()
                 times.sort()
                 start = np.floor(times[0])
                 finish = np.floor(times[-1])
                 float_years = np.linspace(start, finish, finish - start + 1.)
                 for year in float_years:
                     key = [t for t in times if t >= year][0]
-                    self.integer_output_dict[scenario][output][int(key)] \
-                        = self.full_output_dict[scenario][output][key]
+                    self.integer_output_dict[model][output][int(key)] \
+                        = self.full_output_dict[model][output][key]
 
-
+        print()
 

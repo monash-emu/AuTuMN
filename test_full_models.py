@@ -94,7 +94,8 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
             figure_number=21,
             final_run=final)
 
-    project.models[scenario_name] = models[scenario_name]  # Store the model in the object 'project'
+    if inputs.model_constants['output_spreadsheets']:
+        project.models[scenario_name] = models[scenario_name]  # Store the model in the object 'project'
 
 
 # Write to spreadsheets

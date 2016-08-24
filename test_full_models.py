@@ -26,8 +26,7 @@ out_dir = 'fullmodel_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
-if inputs.model_constants['output_spreadsheets']:
-    project = w_o.Project(country, inputs)
+project = w_o.Project(country, inputs)
 
 base = os.path.join(out_dir, country + '_baseline')
 
@@ -47,8 +46,7 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
         final = False
 
     # Create an outputs object for use later
-    if inputs.model_constants['output_spreadsheets']:
-        project.scenarios.append(scenario_name)
+    project.scenarios.append(scenario_name)
 
     models[scenario_name] = autumn.model.ConsolidatedModel(scenario, inputs)
     if n == 0:
@@ -92,13 +90,10 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
             figure_number=21,
             final_run=final)
 
-    if inputs.model_constants['output_spreadsheets']:
-        project.models[scenario_name] = models[scenario_name]  # Store the model in the object 'project'
-
+    project.models[scenario_name] = models[scenario_name]  # Store the model in the object 'project'
 
 # Write to spreadsheets
-if inputs.model_constants['output_spreadsheets']:
-    project.create_output_dicts()  # Store simplified outputs
+project.create_output_dicts()  # Store simplified outputs
 
 # Make a flow-diagram
 if inputs.model_constants['output_flow_diagram']:
@@ -134,7 +129,6 @@ if inputs.model_constants['output_scaleups']:
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)
-
 
 project.write_spreadsheets()
 

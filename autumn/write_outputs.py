@@ -33,6 +33,18 @@ class Project:
         self.full_output_dict = {}
         self.integer_output_dict = {}
 
+    #################################
+    # General methods for use below #
+    #################################
+
+
+    def find_or_make_directory(self):
+
+        out_dir_project = os.path.join('projects', self.name)
+        if not os.path.isdir(out_dir_project):
+            os.makedirs(out_dir_project)
+        return out_dir_project
+
     #########################################
     # Methods to collect data for later use #
     #########################################
@@ -106,34 +118,67 @@ class Project:
     # Methods for outputting to Office applications #
     #################################################
 
-    def write_output_dict_xls(self, model_name, horizontal, minimum=None, maximum=None, step=None):
+    def write_xls_by_output(self, horizontal, minimum=None, maximum=None, step=None):
 
-        out_dir_project = os.path.join('projects', self.name)
-        if not os.path.isdir(out_dir_project):
-            os.makedirs(out_dir_project)
+        for scenario in self.integer_output_dict.keys():
 
-        outputs = self.integer_output_dict[model_name].keys()
+            # Find directory to write to
+            out_dir_project = self.find_or_make_directory()
 
-        # Write a new file for each epidemiological indicator
-        for output in outputs:
+            outputs = self.integer_output_dict[scenario].keys()
 
-            # Get filename
-            path = os.path.join(out_dir_project, output)
-            path += ".xlsx"
+            # Write a new file for each epidemiological indicator
+            for output in outputs:
+
+                # Make filename
+                path = os.path.join(out_dir_project, output)
+                path += ".xlsx"
+
+                # Get active sheet
+                wb = xl.Workbook()
+                sheet = wb.active
+                sheet.title = 'model_outputs'
+
+                # Find years to write
+                years = self.find_years_to_write(scenario, output, minimum, maximum, step)
+
+                # Write data
+                if horizontal:
+                    self.write_horizontally_by_scenario(sheet, output, years)
+                else:
+                    self.write_vertically_by_scenario(sheet, output, years)
+
+                # Save workbook
+                wb.save(path)
+
+    def write_xls_by_scenario(self, horizontal, minimum=None, maximum=None, step=None):
+
+        # Find directory to write to
+        out_dir_project = self.find_or_make_directory()
+
+        # Write a new file for each scenario
+        scenarios = self.integer_output_dict.keys()
+        for scenario in scenarios:
+
+            # Make filename
+            path = os.path.join(out_dir_project, scenario)
+            path += '.xlsx'
 
             # Get active sheet
             wb = xl.Workbook()
             sheet = wb.active
-            sheet.title = 'model_outputs'
+            sheet.title = scenario
 
-            # Find years to write
-            years = self.find_years_to_write(model_name, output, minimum, maximum, step)
+            for output in self.integer_output_dict['baseline'].keys():
 
-            # Write data
-            if horizontal:
-                self.write_horizontally(sheet, output, years)
-            else:
-                self.write_vertically(sheet, output, years)
+                # Find years to write
+                years = self.find_years_to_write(scenario, output, minimum, maximum, step)
+
+                # Write data
+                if horizontal:
+                    self.write_horizontally_by_output(sheet, scenario, years)
+                else:
+                    self.write_vertically_by_output(sheet, scenario, years)
 
             # Save workbook
             wb.save(path)
@@ -224,7 +269,6 @@ class Project:
 
     def find_years_to_write(self, scenario, output, minimum=0, maximum=3000, step=1):
 
-
         requested_years = range(minimum, maximum, step)
         years = []
         for y in self.integer_output_dict[scenario][output].keys():
@@ -232,7 +276,7 @@ class Project:
                 years += [y]
         return years
 
-    def write_horizontally(self, sheet, output, years):
+    def write_horizontally_by_scenario(self, sheet, output, years):
 
         sheet.cell(row=1, column=1).value = 'Year'
 
@@ -242,18 +286,41 @@ class Project:
             sheet.cell(row=1, column=col).value = y
 
         r = 1
-        for sc in self.scenarios:
+        for scenario in self.scenarios:
             r += 1
             sheet.cell(row=r, column=1).value = \
                 tool_kit.replace_underscore_with_space(
-                    tool_kit.capitalise_first_letter(sc))
+                    tool_kit.capitalise_first_letter(scenario))
             col = 1
             for y in years:
                 col += 1
-                if y in self.integer_output_dict[sc][output]:
-                    sheet.cell(row=r, column=col).value = self.integer_output_dict[sc][output][y]
+                if y in self.integer_output_dict[scenario][output]:
+                    sheet.cell(row=r, column=col).value \
+                        = self.integer_output_dict[scenario][output][y]
 
-    def write_vertically(self, sheet, output, years):
+    def write_horizontally_by_output(self, sheet, scenario, years):
+
+        sheet.cell(row=1, column=1).value = 'Year'
+
+        col = 1
+        for y in years:
+            col += 1
+            sheet.cell(row=1, column=col).value = y
+
+        r = 1
+        for output in self.integer_output_dict['baseline'].keys():
+            r += 1
+            sheet.cell(row=r, column=1).value = \
+                tool_kit.replace_underscore_with_space(
+                    tool_kit.capitalise_first_letter(output))
+            col = 1
+            for y in years:
+                col += 1
+                if y in self.integer_output_dict[scenario][output]:
+                    sheet.cell(row=r, column=col).value \
+                        = self.integer_output_dict[scenario][output][y]
+
+    def write_vertically_by_scenario(self, sheet, output, years):
 
         sheet.cell(row=1, column=1).value = 'Year'
 
@@ -263,16 +330,38 @@ class Project:
             sheet.cell(row=row, column=1).value = y
 
         col = 1
-        for sc in self.scenarios:
+        for scenario in self.scenarios:
             col += 1
             sheet.cell(row=1, column=col).value = \
                 tool_kit.replace_underscore_with_space(
-                    tool_kit.capitalise_first_letter(sc))
+                    tool_kit.capitalise_first_letter(scenario))
             row = 1
             for y in years:
                 row += 1
-                if y in self.integer_output_dict[sc][output]:
-                    sheet.cell(row=row, column=col).value = self.integer_output_dict[sc][output][y]
+                if y in self.integer_output_dict[scenario][output]:
+                    sheet.cell(row=row, column=col).value = self.integer_output_dict[scenario][output][y]
+
+    def write_vertically_by_output(self, sheet, scenario, years):
+
+        sheet.cell(row=1, column=1).value = 'Year'
+
+        row = 1
+        for y in years:
+            row += 1
+            sheet.cell(row=row, column=1).value = y
+
+        col = 1
+        for output in self.integer_output_dict['baseline'].keys():
+            col += 1
+            sheet.cell(row=1, column=col).value = \
+                tool_kit.replace_underscore_with_space(
+                    tool_kit.capitalise_first_letter(output))
+            row = 1
+            for y in years:
+                row += 1
+                if y in self.integer_output_dict[scenario][output]:
+                    sheet.cell(row=row, column=col).value \
+                        = self.integer_output_dict[scenario][output][y]
 
     def create_output_dict(self, model_name):
 

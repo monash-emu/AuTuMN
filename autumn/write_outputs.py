@@ -134,11 +134,13 @@ class Project:
 
         if self.inputs.model_constants['output_spreadsheets']:
             if self.inputs.model_constants['output_by_scenario']:
-                self.write_xls_by_scenario(minimum=2015, maximum=2040, step=5)
+                print('Writing scenario spreadsheets')
+                self.write_xls_by_scenario()
             else:
-                self.write_xls_by_output(minimum=2015, maximum=2040, step=5)
+                print('Writing output indicator spreadsheets')
+                self.write_xls_by_output()
 
-    def write_xls_by_output(self, minimum=None, maximum=None, step=None):
+    def write_xls_by_output(self):
 
         # Find directory to write to
         out_dir_project = self.find_or_make_directory()
@@ -160,7 +162,11 @@ class Project:
                 sheet.title = output
 
                 # Find years to write
-                years = self.find_years_to_write(scenario, output, minimum, maximum, step)
+                years = self.find_years_to_write(scenario,
+                                                 output,
+                                                 int(self.inputs.model_constants['report_start_time']),
+                                                 int(self.inputs.model_constants['report_end_time']),
+                                                 int(self.inputs.model_constants['report_step_time']))
 
                 # Write data
                 if self.inputs.model_constants['output_horizontally']:
@@ -171,7 +177,7 @@ class Project:
             # Save workbook
             wb.save(path)
 
-    def write_xls_by_scenario(self, minimum=None, maximum=None, step=None):
+    def write_xls_by_scenario(self):
 
         # Find directory to write to
         out_dir_project = self.find_or_make_directory()
@@ -192,8 +198,11 @@ class Project:
             for output in self.integer_output_dict['baseline'].keys():
 
                 # Find years to write
-                years = self.find_years_to_write(scenario, output, minimum, maximum, step)
-
+                years = self.find_years_to_write(scenario,
+                                                 output,
+                                                 int(self.inputs.model_constants['report_start_time']),
+                                                 int(self.inputs.model_constants['report_end_time']),
+                                                 int(self.inputs.model_constants['report_step_time']))
                 # Write data
                 if self.inputs.model_constants['output_horizontally']:
                     self.write_horizontally_by_output(sheet, scenario, years)

@@ -9,6 +9,7 @@ import numpy as np
 import openpyxl as xl
 import tool_kit
 from docx import Document
+import pprint
 
 
 def indices(a, func):
@@ -216,6 +217,8 @@ class Project:
     def create_output_dict(self, model_name):
 
         """
+        This the old version that I'm trying to make obsolete
+
         Create a dictionary with the main model outputs
 
         Args:
@@ -223,6 +226,7 @@ class Project:
         Returns:
             output_dict: a dictionary with the different outputs
         """
+
 
         outputs = ['incidence', 'mortality', 'prevalence', 'notifications']
         self.output_dict[model_name] = {}
@@ -240,8 +244,17 @@ class Project:
 
     def create_output_dicts(self, outputs=['incidence', 'mortality', 'prevalence', 'notifications']):
 
+        """
+        Works through all the methods to this object that are required to populate the output dictionaries.
+        First the "full" ones with all time point included, then the abbreviated ones.
+
+        Args:
+            outputs: The outputs to be populated to the dictionaries
+        """
+
         self.create_full_output_dict(outputs)
         self.extract_integer_dict(outputs)
+        self.add_full_economics_dict()
 
     def create_full_output_dict(self, outputs):
 
@@ -255,6 +268,23 @@ class Project:
                 times = self.models[scenario].times
                 solution = self.models[scenario].get_var_soln(label)
                 self.full_output_dict[scenario][label] = dict(zip(times, solution))
+
+    def add_full_economics_dict(self):
+
+        """
+        Creates an economics dictionary structure that mirrors that of the epi dictionaries and adds
+        this to the main outputs (epi) dictionary
+        """
+
+        for model in self.models:
+            economics_dict = {}
+            for intervention in self.models[model].costs:
+                if intervention != 'cost_times':
+                    economics_dict['cost_' + intervention] = {}
+                    for t in range(len(self.models[model].costs['cost_times'])):
+                        economics_dict['cost_' + intervention][self.models[model].costs['cost_times'][t]] \
+                            = self.models[model].costs[intervention]['raw_cost'][t]
+            self.full_output_dict[model].update(economics_dict)
 
     def extract_integer_dict(self, outputs):
 
@@ -280,11 +310,5 @@ class Project:
                     self.integer_output_dict[scenario][output][int(key)] \
                         = self.full_output_dict[scenario][output][key]
 
-    def add_economics_outputs_to_dict(self, model_name):
 
-        econ_outputs = ['discounted_inflated_cost']
-        times = np.linspace(self.models[model_name].inputs.model_constants['recent_time'],
-                            self.models[model_name].inputs.model_constants['scenario_end_time'],
-                            num=(1 + self.models[model_name].inputs.model_constants['scenario_end_time'] \
-                                 - self.models[model_name].inputs.model_constants['recent_time']))
 

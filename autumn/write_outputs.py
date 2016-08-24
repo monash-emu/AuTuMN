@@ -37,10 +37,17 @@ class Project:
     # General methods for use below #
     #################################
 
-
     def find_or_make_directory(self):
 
         out_dir_project = os.path.join('projects', self.name)
+        if not os.path.isdir(out_dir_project):
+            os.makedirs(out_dir_project)
+        return out_dir_project
+
+    def make_path(self, filename):
+
+        # Sort out directory if not already sorted
+        out_dir_project = os.path.join(filename, self.name)
         if not os.path.isdir(out_dir_project):
             os.makedirs(out_dir_project)
         return out_dir_project
@@ -120,15 +127,15 @@ class Project:
 
     def write_xls_by_output(self, horizontal, minimum=None, maximum=None, step=None):
 
-        for scenario in self.integer_output_dict.keys():
+        # Find directory to write to
+        out_dir_project = self.find_or_make_directory()
 
-            # Find directory to write to
-            out_dir_project = self.find_or_make_directory()
-
-            outputs = self.integer_output_dict[scenario].keys()
+        # Write a new file for each output
+        outputs = self.integer_output_dict['baseline'].keys()
+        for output in outputs:
 
             # Write a new file for each epidemiological indicator
-            for output in outputs:
+            for scenario in self.integer_output_dict.keys():
 
                 # Make filename
                 path = os.path.join(out_dir_project, output)
@@ -137,7 +144,7 @@ class Project:
                 # Get active sheet
                 wb = xl.Workbook()
                 sheet = wb.active
-                sheet.title = 'model_outputs'
+                sheet.title = output
 
                 # Find years to write
                 years = self.find_years_to_write(scenario, output, minimum, maximum, step)
@@ -148,8 +155,8 @@ class Project:
                 else:
                     self.write_vertically_by_scenario(sheet, output, years)
 
-                # Save workbook
-                wb.save(path)
+            # Save workbook
+            wb.save(path)
 
     def write_xls_by_scenario(self, horizontal, minimum=None, maximum=None, step=None):
 
@@ -217,14 +224,6 @@ class Project:
 
         # Save document
         document.save(path)
-
-    def make_path(self, filename):
-
-        # Sort out directory if not already sorted
-        out_dir_project = os.path.join(filename, self.name)
-        if not os.path.isdir(out_dir_project):
-            os.makedirs(out_dir_project)
-        return out_dir_project
 
     def write_output_dict_word(self,
                                indicators_to_tabulate=['incidence', 'prevalence', 'mortality', 'notifications'],

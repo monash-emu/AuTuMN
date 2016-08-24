@@ -9,7 +9,6 @@ import numpy as np
 import openpyxl as xl
 import tool_kit
 from docx import Document
-import pprint
 
 
 def indices(a, func):
@@ -18,7 +17,7 @@ def indices(a, func):
 
 class Project:
 
-    def __init__(self):
+    def __init__(self, country):
 
         """
         Initialises an object of class Project, that will contain all the information (data + outputs) for writing a
@@ -27,8 +26,8 @@ class Project:
             models: dictionary such as: models = {'baseline': model, 'scenario_1': model_1,  ...}
         """
 
-        self.country = ''
-        self.name = 'project_test'
+        self.country = country.lower()
+        self.name = 'test_' + self.country
         self.scenarios = []
         self.models = {}
         self.full_output_dict = {}

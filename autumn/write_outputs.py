@@ -134,11 +134,11 @@ class Project:
 
         if self.inputs.model_constants['output_spreadsheets']:
             if self.inputs.model_constants['output_by_scenario']:
-                self.write_xls_by_scenario(horizontal=True, minimum=2015, maximum=2040, step=5)
+                self.write_xls_by_scenario(minimum=2015, maximum=2040, step=5)
             else:
-                self.write_xls_by_output(horizontal=True, minimum=2015, maximum=2040, step=5)
+                self.write_xls_by_output(minimum=2015, maximum=2040, step=5)
 
-    def write_xls_by_output(self, horizontal, minimum=None, maximum=None, step=None):
+    def write_xls_by_output(self, minimum=None, maximum=None, step=None):
 
         # Find directory to write to
         out_dir_project = self.find_or_make_directory()
@@ -163,7 +163,7 @@ class Project:
                 years = self.find_years_to_write(scenario, output, minimum, maximum, step)
 
                 # Write data
-                if horizontal:
+                if self.inputs.model_constants['output_horizontally']:
                     self.write_horizontally_by_scenario(sheet, output, years)
                 else:
                     self.write_vertically_by_scenario(sheet, output, years)
@@ -171,7 +171,7 @@ class Project:
             # Save workbook
             wb.save(path)
 
-    def write_xls_by_scenario(self, horizontal, minimum=None, maximum=None, step=None):
+    def write_xls_by_scenario(self, minimum=None, maximum=None, step=None):
 
         # Find directory to write to
         out_dir_project = self.find_or_make_directory()
@@ -195,7 +195,7 @@ class Project:
                 years = self.find_years_to_write(scenario, output, minimum, maximum, step)
 
                 # Write data
-                if horizontal:
+                if self.inputs.model_constants['output_horizontally']:
                     self.write_horizontally_by_output(sheet, scenario, years)
                 else:
                     self.write_vertically_by_output(sheet, scenario, years)

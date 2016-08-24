@@ -128,7 +128,7 @@ class Project:
             sheet.title = 'model_outputs'
 
             # Find years to write
-            years = self.find_years_to_write(output, minimum, maximum, step)
+            years = self.find_years_to_write(model_name, output, minimum, maximum, step)
 
             # Write data
             if horizontal:
@@ -223,21 +223,12 @@ class Project:
         # Save document
         document.save(path)
 
-    def find_years_to_write(self, output, minimum, maximum, step):
+    def find_years_to_write(self, scenario, output, minimum=0, maximum=3000, step=1):
 
-        # Determine years requested
-        if minimum is None:
-            minimum = 0
-        if maximum is None:
-            maximum = 3000
-        if step is None:
-            requested_years = range(minimum, maximum)
-        else:
-            requested_years = range(minimum, maximum, step)
 
-        # Find years to write
+        requested_years = range(minimum, maximum, step)
         years = []
-        for y in self.integer_output_dict['baseline'][output].keys():
+        for y in self.integer_output_dict[scenario][output].keys():
             if y in requested_years:
                 years += [y]
         return years

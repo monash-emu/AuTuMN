@@ -101,7 +101,6 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
 # Write to spreadsheets
 if inputs.model_constants['output_spreadsheets']:
     project.create_output_dicts()  # Store simplified outputs
-    # project.add_economics_outputs_to_dict(scenario_name)
 
 # Make a flow-diagram
 if inputs.model_constants['output_flow_diagram']:

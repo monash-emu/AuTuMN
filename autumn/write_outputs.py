@@ -16,9 +16,6 @@ def indices(a, func):
     return [i for (i, val) in enumerate(a) if func(val)]
 
 
-
-
-
 class Project:
 
     def __init__(self):
@@ -36,6 +33,79 @@ class Project:
         self.models = {}
         self.full_output_dict = {}
         self.integer_output_dict = {}
+
+    #########################################
+    # Methods to collect data for later use #
+    #########################################
+
+    def create_output_dicts(self, outputs=['incidence', 'mortality', 'prevalence', 'notifications']):
+
+        """
+        Works through all the methods to this object that are required to populate the output dictionaries.
+        First the "full" ones with all time point included, then the abbreviated ones.
+
+        Args:
+            outputs: The outputs to be populated to the dictionaries
+        """
+
+        self.create_full_output_dict(outputs)
+        self.add_full_economics_dict()
+        self.extract_integer_dict()
+
+    def create_full_output_dict(self, outputs):
+
+        """
+        Creates a dictionary for each requested output at every time point in that model's times attribute
+        """
+
+        for scenario in self.scenarios:
+            self.full_output_dict[scenario] = {}
+            for label in outputs:
+                times = self.models[scenario].times
+                solution = self.models[scenario].get_var_soln(label)
+                self.full_output_dict[scenario][label] = dict(zip(times, solution))
+
+    def add_full_economics_dict(self):
+
+        """
+        Creates an economics dictionary structure that mirrors that of the epi dictionaries and adds
+        this to the main outputs (epi) dictionary
+        """
+
+        for model in self.models:
+            economics_dict = {}
+            for intervention in self.models[model].costs:
+                if intervention != 'cost_times':
+                    economics_dict['cost_' + intervention] = {}
+                    for t in range(len(self.models[model].costs['cost_times'])):
+                        economics_dict['cost_' + intervention][self.models[model].costs['cost_times'][t]] \
+                            = self.models[model].costs[intervention]['raw_cost'][t]
+            self.full_output_dict[model].update(economics_dict)
+
+    def extract_integer_dict(self):
+
+        """
+        Extracts a dictionary from full_output_dict with only integer years, using the first time value greater than
+        the integer year in question.
+        """
+
+        for model in self.models:
+            self.integer_output_dict[model] = {}
+            for output in self.full_output_dict[model]:
+                self.integer_output_dict[model][output] = {}
+                times = self.full_output_dict[model][output].keys()
+                times.sort()
+                start = np.floor(times[0])
+                finish = np.floor(times[-1])
+                float_years = np.linspace(start, finish, finish - start + 1.)
+                for year in float_years:
+                    key = [t for t in times if t >= year][0]
+                    self.integer_output_dict[model][output][int(key)] \
+                        = self.full_output_dict[model][output][key]
+
+    #################################################
+    # Methods for outputting to Office applications #
+    #################################################
 
     def write_output_dict_xls(self, model_name, horizontal, minimum=None, maximum=None, step=None):
 
@@ -242,73 +312,6 @@ class Project:
                 year_index = indices(self.models[model_name].times, lambda x: x >= time)[0]
                 self.output_dict[model_name][label][int(round(time))] = solution[year_index]
 
-    def create_output_dicts(self, outputs=['incidence', 'mortality', 'prevalence', 'notifications']):
 
-        """
-        Works through all the methods to this object that are required to populate the output dictionaries.
-        First the "full" ones with all time point included, then the abbreviated ones.
 
-        Args:
-            outputs: The outputs to be populated to the dictionaries
-        """
-
-        self.create_full_output_dict(outputs)
-        self.extract_integer_dict(outputs)
-        self.add_full_economics_dict()
-
-    def create_full_output_dict(self, outputs):
-
-        """
-        Creates a dictionary for each requested output at every time point in that model's times attribute
-        """
-
-        for scenario in self.scenarios:
-            self.full_output_dict[scenario] = {}
-            for label in outputs:
-                times = self.models[scenario].times
-                solution = self.models[scenario].get_var_soln(label)
-                self.full_output_dict[scenario][label] = dict(zip(times, solution))
-
-    def add_full_economics_dict(self):
-
-        """
-        Creates an economics dictionary structure that mirrors that of the epi dictionaries and adds
-        this to the main outputs (epi) dictionary
-        """
-
-        for model in self.models:
-            economics_dict = {}
-            for intervention in self.models[model].costs:
-                if intervention != 'cost_times':
-                    economics_dict['cost_' + intervention] = {}
-                    for t in range(len(self.models[model].costs['cost_times'])):
-                        economics_dict['cost_' + intervention][self.models[model].costs['cost_times'][t]] \
-                            = self.models[model].costs[intervention]['raw_cost'][t]
-            self.full_output_dict[model].update(economics_dict)
-
-    def extract_integer_dict(self, outputs):
-
-        """
-        Extracts a dictionary from full_output_dict with only integer years, using the first time value greater than
-        the integer year in question.
-
-        Args:
-            outputs: Model outputs that were previously extracted (should be the same as for create_full_output_dict)
-        """
-
-        for model in self.models:
-            self.integer_output_dict[model] = {}
-            for output in self.full_output_dict[model]:
-                self.integer_output_dict[model][output] = {}
-                times = self.full_output_dict[model][output].keys()
-                times.sort()
-                start = np.floor(times[0])
-                finish = np.floor(times[-1])
-                float_years = np.linspace(start, finish, finish - start + 1.)
-                for year in float_years:
-                    key = [t for t in times if t >= year][0]
-                    self.integer_output_dict[model][output][int(key)] \
-                        = self.full_output_dict[model][output][key]
-
-        print()
 

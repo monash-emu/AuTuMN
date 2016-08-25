@@ -6,6 +6,7 @@ from matplotlib import pyplot, patches
 import tool_kit
 import os
 import warnings
+import write_outputs
 
 
 """
@@ -14,75 +15,6 @@ Module for plotting population systems
 
 """
 
-def make_axes_with_room_for_legend():
-
-    """
-    Create axes for a figure with a single plot with a reasonable
-    amount of space around.
-    
-    Returns:
-        ax: The axes that can be plotted on
-    
-    """
-    fig = pyplot.figure()
-    ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
-    return ax
-
-
-def set_axes_props(
-        ax, xlabel=None, ylabel=None, title=None, is_legend=True,
-        axis_labels=None):
-
-    frame_colour = "grey"
-
-    # Hide top and right border of plot
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    ax.yaxis.set_ticks_position('left')
-    ax.xaxis.set_ticks_position('bottom')
-
-    if xlabel is not None:
-        ax.set_xlabel(xlabel)
-
-    if ylabel is not None:
-        ax.set_ylabel(ylabel)
-
-    if is_legend:
-        if axis_labels:
-            handles, labels = ax.get_legend_handles_labels()
-            leg = ax.legend(
-                handles,
-                axis_labels,
-                bbox_to_anchor=(1.05, 1),
-                loc=2,
-                borderaxespad=0.,
-                frameon=False,
-                prop={'size': 7})
-        else:
-            leg = ax.legend(
-                bbox_to_anchor=(1.05, 1),
-                loc=2,
-                borderaxespad=0.,
-                frameon=False,
-                prop={'size':7})
-        for text in leg.get_texts():
-            text.set_color(frame_colour)
-
-    if title is not None:
-        t = ax.set_title(title)
-        t.set_color(frame_colour)
-
-    for label in (ax.get_xticklabels() + ax.get_yticklabels()):
-        label.set_fontname('Arial')
-        label.set_fontsize(8)
-
-    ax.tick_params(color=frame_colour, labelcolor=frame_colour)
-    for spine in ax.spines.values():
-        spine.set_edgecolor(frame_colour)
-    ax.xaxis.label.set_color(frame_colour)
-    ax.yaxis.label.set_color(frame_colour)
-
-    humanise_y_ticks(ax)
 
 
 def humanise_y_ticks(ax):
@@ -457,7 +389,7 @@ def plot_populations(model, labels, values, left_xlimit, strain_or_organ, png=No
     right_xlimit_index, left_xlimit_index = find_truncation_points(model, left_xlimit)
     colours, patterns, compartment_full_names, markers\
         = make_related_line_styles(labels, strain_or_organ)
-    ax = make_axes_with_room_for_legend()
+    ax = write_outputs.make_axes_with_room_for_legend()
     axis_labels = []
     ax.plot(
         model.times[left_xlimit_index: right_xlimit_index],
@@ -478,7 +410,7 @@ def plot_populations(model, labels, values, left_xlimit, strain_or_organ, png=No
 
     title = make_plot_title(model, labels)
 
-    set_axes_props(ax, 'Year', 'Persons',
+    write_outputs.set_axes_props(ax, 'Year', 'Persons',
                    'Population, ' + title, True,
                    axis_labels)
     save_png(png)
@@ -502,7 +434,7 @@ def plot_fractions(model, values, left_xlimit, strain_or_organ, png=None, figure
             linestyle=patterns[plot_label])
         axis_labels.append(compartment_full_names[plot_label])
     title = make_plot_title(model, values.keys())
-    set_axes_props(ax, 'Year', 'Proportion of population',
+    write_outputs.set_axes_props(ax, 'Year', 'Proportion of population',
         'Population, ' + title, True, axis_labels)
     save_png(png)
 
@@ -935,7 +867,7 @@ def plot_flows(model, labels, png=None):
 
     colours, patterns, compartment_full_names\
         = make_related_line_styles(labels)
-    ax = make_axes_with_room_for_legend()
+    ax = write_outputs.make_axes_with_room_for_legend()
     axis_labels = []
     for i_plot, plot_label in enumerate(labels):
         ax.plot(
@@ -945,7 +877,7 @@ def plot_flows(model, labels, png=None):
             color=colours[plot_label],
             linestyle=patterns[plot_label])
         axis_labels.append(compartment_full_names[plot_label])
-    set_axes_props(ax, 'Year', 'Change per year, thousands',
+    write_outputs.set_axes_props(ax, 'Year', 'Change per year, thousands',
                    'Aggregate flows in/out of compartment',
                    True, axis_labels)
     save_png(png)
@@ -965,7 +897,7 @@ def plot_scaleup_fns(model, functions, png=None,
 
     pyplot.figure(figure_number)
 
-    ax = make_axes_with_room_for_legend()
+    ax = write_outputs.make_axes_with_room_for_legend()
     for figure_number, function in enumerate(functions):
         ax.plot(x_vals,
                 map(model.scaleup_fns[function],
@@ -978,144 +910,13 @@ def plot_scaleup_fns(model, functions, png=None,
     title = str(country) + ' ' + \
             tool_kit.find_title_from_dictionary(parameter_type) + \
             ' parameter' + plural + tool_kit.find_title_from_dictionary(start_time_str)
-    set_axes_props(ax, 'Year', 'Parameter value',
+    write_outputs.set_axes_props(ax, 'Year', 'Parameter value',
                    title, True, functions)
 
     ylims = relax_y_axis(ax)
     ax.set_ylim(bottom=ylims[0], top=ylims[1])
 
     save_png(png)
-
-
-def plot_all_scaleup_fns_against_data(model, functions, png=None,
-                                      start_time_str='start_time',
-                                      end_time_str='',
-                                      parameter_type='',
-                                      scenario=None,
-                                      figure_number=2):
-
-    # Get the colours for the model outputs
-    if scenario is None:
-        # Last scenario to run should be baseline and should be run last
-        # to lay a black line over the top for comparison
-        output_colour = ['k'] * len(functions)
-    else:
-        # Otherwise cycling through colours
-        output_colour = [make_default_line_styles(scenario, False)[1]] * len(functions)
-
-    # Determine how many subplots to have
-    subplot_grid = find_subplot_numbers(len(functions))
-
-    # Set x-values
-    if start_time_str == 'recent_time':
-        start_time = model.inputs.model_constants[start_time_str]
-    else:
-        start_time = model.inputs.model_constants[start_time_str]
-    end_time = model.inputs.model_constants[end_time_str]
-    x_vals = numpy.linspace(start_time, end_time, 1E3)
-
-    # Initialise figure
-    fig = pyplot.figure(figure_number)
-
-    # Upper title for whole figure
-    plural = ''
-    if len(functions) > 1:
-        plural += 's'
-    title = model.inputs.model_constants['country'] + ' ' + \
-            tool_kit.find_title_from_dictionary(parameter_type) + \
-            ' parameter' + plural + tool_kit.find_title_from_dictionary(start_time_str)
-    fig.suptitle(title)
-
-    # Iterate through functions
-    for figure_number, function in enumerate(functions):
-
-        # Initialise subplot areas
-        ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], figure_number + 1)
-
-        # Line plot scaling parameters
-        ax.plot(x_vals,
-                map(model.scaleup_fns[function],
-                    x_vals),
-                # line_styles[i],
-                # label=function,
-                color=output_colour[figure_number])
-
-        if scenario is None:
-            data_to_plot = {}
-            for j in model.scaleup_data[function]:
-                if j > start_time:
-                    data_to_plot[j] = model.scaleup_data[function][j]
-
-            # Scatter plot data from which they are derived
-            ax.scatter(data_to_plot.keys(),
-                       data_to_plot.values(),
-                       color=output_colour[figure_number],
-                       s=6)
-
-            # Adjust tick font size
-            ax.set_xticks([start_time, end_time])
-            for axis_to_change in [ax.xaxis, ax.yaxis]:
-                for tick in axis_to_change.get_major_ticks():
-                    tick.label.set_fontsize(get_nice_font_size(subplot_grid))
-
-            # Truncate parameter names depending on whether it is a
-            # treatment success/death proportion
-            title = tool_kit.find_title_from_dictionary(function)
-            ax.set_title(title, fontsize=get_nice_font_size(subplot_grid))
-
-            ylims = relax_y_axis(ax)
-            ax.set_ylim(bottom=ylims[0], top=ylims[1])
-
-            save_png(png)
-
-    fig.suptitle('Scale-up functions')
-
-
-def plot_classified_scaleups(model, base):
-
-    # Classify scale-up functions for plotting
-    classified_scaleups = {'program_prop': [],
-                           'program_other': [],
-                           'birth': [],
-                           'cost': [],
-                           'econ': [],
-                           'demo': [],
-                           'non_program': []}
-    for fn in model.scaleup_fns:
-        if 'program_prop' in fn:
-            classified_scaleups['program_prop'] += [fn]
-        elif 'program' in fn and 'cost' not in fn:
-            classified_scaleups['program_other'] += [fn]
-        elif 'cost' in fn:
-            classified_scaleups['cost'] += [fn]
-        elif 'econ' in fn:
-            classified_scaleups['econ'] += [fn]
-        elif 'demo' in fn:
-            classified_scaleups['demo'] += [fn]
-        else:
-            classified_scaleups['non_program'] += [fn]
-
-    times_to_plot = ['start_', 'recent_']
-
-    # Plot them from the start of the model and from "recent_time"
-    for i, classification in enumerate(classified_scaleups):
-        if len(classified_scaleups[classification]) > 0:
-            for j, start_time in enumerate(times_to_plot):
-                plot_all_scaleup_fns_against_data(model,
-                                                  classified_scaleups[classification],
-                                                  base + '_' + classification + '_datascaleups_from' + start_time[:-1] + '.png',
-                                                  start_time + 'time',
-                                                  'current_time',
-                                                  classification,
-                                                  figure_number=i + j * len(classified_scaleups) + 2)
-                if classification == 'program_prop':
-                    plot_scaleup_fns(model,
-                                     classified_scaleups[classification],
-                                     base + '_' + classification + 'scaleups_from' + start_time[:-1] + '.png',
-                                     start_time + 'time',
-                                     'current_time',
-                                     classification,
-                                     figure_number=i + j * len(classified_scaleups) + 2 + len(classified_scaleups) * len(times_to_plot))
 
 
 def plot_comparative_age_parameters(data_strat_list,

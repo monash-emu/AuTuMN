@@ -9,6 +9,80 @@ import numpy as np
 import openpyxl as xl
 import tool_kit
 from docx import Document
+from matplotlib import pyplot, patches
+import numpy
+
+
+def make_axes_with_room_for_legend():
+
+    """
+    Create axes for a figure with a single plot with a reasonable
+    amount of space around.
+
+    Returns:
+        ax: The axes that can be plotted on
+
+    """
+
+    fig = pyplot.figure()
+    ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
+    return ax
+
+
+def set_axes_props(
+        ax, xlabel=None, ylabel=None, title=None, is_legend=True,
+        axis_labels=None):
+
+    frame_colour = "grey"
+
+    # Hide top and right border of plot
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
+
+    if xlabel is not None:
+        ax.set_xlabel(xlabel)
+
+    if ylabel is not None:
+        ax.set_ylabel(ylabel)
+
+    if is_legend:
+        if axis_labels:
+            handles, labels = ax.get_legend_handles_labels()
+            leg = ax.legend(
+                handles,
+                axis_labels,
+                bbox_to_anchor=(1.05, 1),
+                loc=2,
+                borderaxespad=0.,
+                frameon=False,
+                prop={'size': 7})
+        else:
+            leg = ax.legend(
+                bbox_to_anchor=(1.05, 1),
+                loc=2,
+                borderaxespad=0.,
+                frameon=False,
+                prop={'size':7})
+        for text in leg.get_texts():
+            text.set_color(frame_colour)
+
+    if title is not None:
+        t = ax.set_title(title)
+        t.set_color(frame_colour)
+
+    for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+        label.set_fontname('Arial')
+        label.set_fontsize(8)
+
+    ax.tick_params(color=frame_colour, labelcolor=frame_colour)
+    for spine in ax.spines.values():
+        spine.set_edgecolor(frame_colour)
+    ax.xaxis.label.set_color(frame_colour)
+    ax.yaxis.label.set_color(frame_colour)
+
+    autumn.plotting.humanise_y_ticks(ax)
 
 
 def indices(a, func):
@@ -399,4 +473,130 @@ class Project:
 
             # Save document
             document.save(path)
+
+    def run_plotting(self):
+
+        # Plot scale-up functions - currently only doing this for the baseline model run
+        if self.inputs.model_constants['output_scaleups']:
+            self.plot_classified_scaleups(self.models['baseline'])
+
+    def plot_classified_scaleups(self, model):
+
+        # Classify scale-up functions
+        classifications = ['demo_', 'econ_', 'epi_', 'program_prop_', 'program_timeperiod']
+        classified_scaleups = {}
+        for classification in classifications:
+            classified_scaleups[classification] = []
+            for fn in model.scaleup_fns:
+                if classification in fn:
+                    classified_scaleups[classification] += [fn]
+
+        out_dir_project = self.find_or_make_directory()
+        base = os.path.join(out_dir_project, self.country + '_baseline_')
+
+        # Time periods to perform the plots over
+        times_to_plot = ['start_', 'recent_']
+
+        # Plot them from the start of the model and from "recent_time"
+        for c, classification in enumerate(classified_scaleups):
+            if len(classified_scaleups[classification]) > 0:
+                for j, start_time in enumerate(times_to_plot):
+                    self.plot_all_scaleup_fns_against_data(model,
+                                                           classified_scaleups[classification],
+                                                           base + classification + '_datascaleups_from' + start_time[:-1] + '.png',
+                                                           start_time + 'time',
+                                                           'current_time',
+                                                           classification,
+                                                           figure_number=c + j * len(classified_scaleups) + 2)
+                    if classification == 'program_prop':
+                        autumn.plotting.plot_scaleup_fns(model,
+                                                         classified_scaleups[classification],
+                                                         base + classification + 'scaleups_from' + start_time[:-1] + '.png',
+                                                         start_time + 'time',
+                                                         'current_time',
+                                                         classification,
+                                                         figure_number=c + j * len(classified_scaleups) + 2 + len(classified_scaleups) * len(times_to_plot))
+
+    def plot_all_scaleup_fns_against_data(self, model, functions, png=None,
+                                          start_time_str='start_time',
+                                          end_time_str='',
+                                          parameter_type='',
+                                          scenario=None,
+                                          figure_number=2):
+
+        # Get the colours for the model outputs
+        if scenario is None:
+            # Last scenario to run should be baseline and should be run last
+            # to lay a black line over the top for comparison
+            output_colour = ['k'] * len(functions)
+        else:
+            # Otherwise cycling through colours
+            output_colour = [autumn.plotting.make_default_line_styles(scenario, False)[1]] * len(functions)
+
+        # Determine how many subplots to have
+        subplot_grid = autumn.plotting.find_subplot_numbers(len(functions))
+
+        # Set x-values
+        if start_time_str == 'recent_time':
+            start_time = model.inputs.model_constants[start_time_str]
+        else:
+            start_time = model.inputs.model_constants[start_time_str]
+        end_time = model.inputs.model_constants[end_time_str]
+        x_vals = numpy.linspace(start_time, end_time, 1E3)
+
+        # Initialise figure
+        fig = pyplot.figure(figure_number)
+
+        # Upper title for whole figure
+        plural = ''
+        if len(functions) > 1:
+            plural += 's'
+        title = model.inputs.model_constants['country'] + ' ' + \
+                tool_kit.find_title_from_dictionary(parameter_type) + \
+                ' parameter' + plural + tool_kit.find_title_from_dictionary(start_time_str)
+        fig.suptitle(title)
+
+        # Iterate through functions
+        for figure_number, function in enumerate(functions):
+
+            # Initialise subplot areas
+            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], figure_number + 1)
+
+            # Line plot scaling parameters
+            ax.plot(x_vals,
+                    map(model.scaleup_fns[function],
+                        x_vals),
+                    # line_styles[i],
+                    # label=function,
+                    color=output_colour[figure_number])
+
+            if scenario is None:
+                data_to_plot = {}
+                for j in model.inputs.scaleup_data[scenario][function]:
+                    if j > start_time:
+                        data_to_plot[j] = model.inputs.scaleup_data[scenario][function][j]
+
+                # Scatter plot data from which they are derived
+                ax.scatter(data_to_plot.keys(),
+                           data_to_plot.values(),
+                           color=output_colour[figure_number],
+                           s=6)
+
+                # Adjust tick font size
+                ax.set_xticks([start_time, end_time])
+                for axis_to_change in [ax.xaxis, ax.yaxis]:
+                    for tick in axis_to_change.get_major_ticks():
+                        tick.label.set_fontsize(autumn.plotting.get_nice_font_size(subplot_grid))
+
+                # Truncate parameter names depending on whether it is a
+                # treatment success/death proportion
+                title = tool_kit.find_title_from_dictionary(function)
+                ax.set_title(title, fontsize=autumn.plotting.get_nice_font_size(subplot_grid))
+
+                ylims = autumn.plotting.relax_y_axis(ax)
+                ax.set_ylim(bottom=ylims[0], top=ylims[1])
+
+        fig.suptitle('Scale-up functions')
+
+        autumn.plotting.save_png(png)
 

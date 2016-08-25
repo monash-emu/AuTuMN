@@ -205,6 +205,9 @@ class Inputs:
         # Populate constant model values hierarchically
         self.add_model_constant_defaults()
 
+        # Convert time variants loaded as percentages to proportions
+        self.convert_percentages_to_proportions()
+
         # Find outcomes for smear-positive DS-TB patients and populate to derived data dictionary
         self.find_ds_outcomes()
         self.add_treatment_outcomes()
@@ -279,9 +282,6 @@ class Inputs:
 
         # Derive some basic parameters for IPT
         self.find_ipt_params()
-
-        # Convert time variants loaded as percentages to proportions
-        self.convert_percentages_to_proportions()
 
         # Extract data from time variants dictionary and populate to dictionary with scenario keys
         self.find_data_for_functions_or_params()
@@ -378,6 +378,28 @@ class Inputs:
                         self.model_constants[item] = \
                             self.original_data[other_sheet][item]
 
+    def convert_percentages_to_proportions(self):
+
+        """
+        Converts time-variant dictionaries to proportions if they are loaded as percentages in their raw form.
+        """
+
+        time_variants_converted_to_prop = {}
+        for time_variant in self.time_variants:
+            # If the entered data is a percentage
+            if 'program_perc_' in time_variant:
+                time_variants_converted_to_prop['program_prop_' + time_variant[13:]] = {}
+                for i in self.time_variants[time_variant]:
+                    # If it's a year or scenario
+                    if type(i) == int or 'scenario' in i:
+                        time_variants_converted_to_prop['program_prop_' + time_variant[13:]][i] \
+                            = self.time_variants[time_variant][i] / 1E2
+                    else:
+                        time_variants_converted_to_prop['program_prop_' + time_variant[13:]][i] \
+                            = self.time_variants[time_variant][i]
+
+        self.time_variants.update(time_variants_converted_to_prop)
+
     def find_ds_outcomes(self):
 
         """
@@ -391,7 +413,7 @@ class Inputs:
             calculate_proportion_dict(
                 self.original_data['outcomes'],
                 ['new_sp_cmplt', 'new_sp_cur', 'new_sp_def', 'new_sp_died', 'new_sp_fail'],
-                percent=True))
+                percent=False))
 
         # Sum to get treatment success
         self.derived_data['prop_new_sp_success'] = {}
@@ -848,28 +870,6 @@ class Inputs:
         self.model_constants['ipt_effective_per_assessment'] = self.model_constants['tb_prop_ltbi_test_sensitivity'] \
                                                                * self.model_constants['tb_prop_ipt_effectiveness']
 
-    def convert_percentages_to_proportions(self):
-
-        """
-        Converts time-variant dictionaries to proportions if they are loaded as percentages in their raw form.
-        """
-
-        time_variants_converted_to_prop = {}
-        for time_variant in self.time_variants:
-            # If the entered data is a percentage
-            if 'program_perc_' in time_variant:
-                time_variants_converted_to_prop['program_prop_' + time_variant[13:]] = {}
-                for i in self.time_variants[time_variant]:
-                    # If it's a year or scenario
-                    if type(i) == int or 'scenario' in i:
-                        time_variants_converted_to_prop['program_prop_' + time_variant[13:]][i] \
-                            = self.time_variants[time_variant][i] / 1E2
-                    else:
-                        time_variants_converted_to_prop['program_prop_' + time_variant[13:]][i] \
-                            = self.time_variants[time_variant][i]
-
-        self.time_variants.update(time_variants_converted_to_prop)
-
     def find_data_for_functions_or_params(self):
 
         """
@@ -891,19 +891,9 @@ class Inputs:
                 if time_variant not in self.irrelevant_time_variants:
                     self.scaleup_data[scenario][str(time_variant)] = {}
                     for i in self.time_variants[time_variant]:
-                        # For years with data percentages
-                        if type(i) == int and 'program_prop_treatment_' in time_variant:
-                            self.scaleup_data[scenario][str(time_variant)][i] \
-                                = self.time_variants[time_variant][i] / 1E2
-                        # For years with data not percentages
-                        elif type(i) == int or i == 'time_variant' or i == 'smoothness':
+                        if type(i) == int or i == 'time_variant' or i == 'smoothness':
                             self.scaleup_data[scenario][str(time_variant)][i] \
                                 = self.time_variants[time_variant][i]
-                        # For scenarios with data percentages
-                        elif type(i) == unicode and i == 'scenario_' + str(scenario) and 'prop_' in time_variant:
-                            self.scaleup_data[scenario][str(time_variant)]['scenario'] = \
-                                self.time_variants[time_variant][i] / 1E2
-                        # For scenarios with data not percentages
                         elif type(i) == unicode and i == 'scenario_' + str(scenario):
                             self.scaleup_data[scenario][str(time_variant)]['scenario'] = \
                                 self.time_variants[time_variant][i]
@@ -929,7 +919,6 @@ class Inputs:
                 self.irrelevant_time_variants += [time_variant]
             if 'lowquality' in time_variant and not self.model_constants['is_lowquality']:
                 self.irrelevant_time_variants += [time_variant]
-
 
     def find_functions_or_params(self):
 

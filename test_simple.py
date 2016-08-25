@@ -4,6 +4,7 @@ import glob
 import autumn.base
 import autumn.model
 import autumn.plotting
+import autumn.write_outputs
 
 out_dir = 'simplified_graphs'
 if not os.path.isdir(out_dir):
@@ -32,4 +33,4 @@ autumn.plotting.plot_outputs(
     1800, base + '.rate_outputs.png')
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
-autumn.plotting.open_pngs(pngs)
+autumn.write_outputs.open_pngs(pngs)

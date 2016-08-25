@@ -20,6 +20,7 @@ from autumn.spreadsheet import read_input_data_xls
 
 from scipy.optimize import minimize
 import openpyxl as xl
+import autumn.write_outputs
 
 
 def is_positive_definite(v):
@@ -525,7 +526,7 @@ def run_calibration(n_runs, calibrated_params, targeted_outputs, dt=None):
         scenario=None,
         figure_number=1)
     pngs = glob.glob(os.path.join(out_dir, '*png'))
-    autumn.plotting.open_pngs(pngs)
+    autumn.write_outputs.open_pngs(pngs)
     model_runner.write_best_fit_into_file()
 
     print("Time elapsed in running script is " + str(datetime.datetime.now() - start_realtime))

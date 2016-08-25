@@ -129,7 +129,7 @@ if inputs.model_constants['output_age_fractions']:
                                                 start_time='early_time')
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
-autumn.plotting.open_pngs(pngs)
+autumn.write_outputs.open_pngs(pngs)
 
 project.write_spreadsheets()
 project.write_documents()

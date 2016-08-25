@@ -11,8 +11,9 @@ import tool_kit
 from docx import Document
 from matplotlib import pyplot, patches
 import numpy
-
-
+import pylab
+import platform
+import os
 
 def relax_y_axis(ax):
 
@@ -484,6 +485,21 @@ def create_patch_from_dictionary(dict):
 
     return patch_array
 
+
+def save_png(png):
+
+    if png is not None:
+        pylab.savefig(png, dpi=300)
+
+
+def open_pngs(pngs):
+
+
+    operating_system = platform.system()
+    if 'Windows' in operating_system:
+        os.system("start " + " ".join(pngs))
+    elif 'Darwin' in operating_system:
+        os.system('open ' + " ".join(pngs))
 
 
 class Project:
@@ -995,5 +1011,5 @@ class Project:
 
         fig.suptitle('Scale-up functions')
 
-        autumn.plotting.save_png(png)
+        save_png(png)
 

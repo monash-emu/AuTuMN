@@ -1,6 +1,5 @@
 
 
-import pylab
 import numpy
 from matplotlib import pyplot, patches
 import tool_kit
@@ -45,7 +44,7 @@ def plot_populations(model, labels, values, left_xlimit, strain_or_organ, png=No
     write_outputs.set_axes_props(ax, 'Year', 'Persons',
                    'Population, ' + title, True,
                    axis_labels)
-    save_png(png)
+    write_outputs.save_png(png)
 
 
 def plot_fractions(model, values, left_xlimit, strain_or_organ, png=None, figure_number=30):
@@ -68,7 +67,7 @@ def plot_fractions(model, values, left_xlimit, strain_or_organ, png=None, figure
     title = write_outputs.make_plot_title(model, values.keys())
     write_outputs.set_axes_props(ax, 'Year', 'Proportion of population',
         'Population, ' + title, True, axis_labels)
-    save_png(png)
+    write_outputs.save_png(png)
 
 
 def plot_stratified_populations(model, png=None, age_or_comorbidity='age', start_time='start_time'):
@@ -183,7 +182,7 @@ def plot_stratified_populations(model, png=None, age_or_comorbidity='age', start
         # Finish up
         fig.suptitle('Population by ' + tool_kit.find_title_from_dictionary(age_or_comorbidity),
                      fontsize=13)
-        save_png(png)
+        write_outputs.save_png(png)
 
 
 def plot_outputs_against_gtb(model,
@@ -345,7 +344,7 @@ def plot_outputs_against_gtb(model,
 
     if final_run:
         # Save
-        save_png(png)
+        write_outputs.save_png(png)
 
 
 def plot_outputs_by_age(model,
@@ -464,7 +463,7 @@ def plot_outputs_by_age(model,
 
     # Save
     if final_run:
-        save_png(png)
+        write_outputs.save_png(png)
 
 
 def plot_flows(model, labels, png=None):
@@ -484,7 +483,7 @@ def plot_flows(model, labels, png=None):
     write_outputs.set_axes_props(ax, 'Year', 'Change per year, thousands',
                    'Aggregate flows in/out of compartment',
                    True, axis_labels)
-    save_png(png)
+    write_outputs.save_png(png)
 
 
 def plot_scaleup_fns(model, functions, png=None,
@@ -520,7 +519,7 @@ def plot_scaleup_fns(model, functions, png=None,
     ylims = write_outputs.relax_y_axis(ax)
     ax.set_ylim(bottom=ylims[0], top=ylims[1])
 
-    save_png(png)
+    write_outputs.save_png(png)
 
 
 def plot_comparative_age_parameters(data_strat_list,
@@ -575,24 +574,9 @@ def plot_comparative_age_parameters(data_strat_list,
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
     base = os.path.join(out_dir, parameter_name)
-    save_png(base + '_param_adjustment.png')
+    write_outputs.save_png(base + '_param_adjustment.png')
 
 
-def save_png(png):
-
-    if png is not None:
-        pylab.savefig(png, dpi=300)
-
-
-def open_pngs(pngs):
-
-    import platform
-    import os
-    operating_system = platform.system()
-    if 'Windows' in operating_system:
-        os.system("start " + " ".join(pngs))
-    elif 'Darwin' in operating_system:
-        os.system('open ' + " ".join(pngs))
 
 
 

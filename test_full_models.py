@@ -49,6 +49,10 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
     project.scenarios.append(scenario_name)
 
     models[scenario_name] = autumn.model.ConsolidatedModel(scenario, inputs)
+
+    if models[scenario_name].uncertainty:
+        model_shelf = models[scenario_name].run_uncertainty()
+
     if n == 0:
         print(autumn.tool_kit.introduce_model(models, scenario_name))
 

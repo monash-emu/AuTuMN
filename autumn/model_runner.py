@@ -81,3 +81,25 @@ class ModelRunner:
         except:
             print "Warning: parameters=%s failed with model" % params
             self.is_last_run_success = False
+
+    # define the characteristics of the normal distribution for model outputs (incidence, mortality)
+    def get_normal_char(self):
+        normal_char = {}  # store the characteristics of the normal distributions
+        for output_dict in self.model.outputs_unc:
+            normal_char[output_dict['key']] = {}
+            if output_dict['key'] == 'mortality':
+                sd = output_dict['posterior_width'] / (2.0 * 1.96)
+                for year in self.data_to_fit[output_dict['key']].keys():
+                    mu = self.data_to_fit[output_dict['key']][year]
+                    normal_char[output_dict['key']][year] = [mu, sd]
+
+            elif output_dict['key'] == 'incidence':
+                for year in self.data_to_fit[output_dict['key']].keys():
+                    low = self.data_to_fit['incidence_low'][year]
+                    high = self.data_to_fit['incidence_high'][year]
+                    sd = (high - low) / (2.0 * 1.96)
+                    mu = 0.5 * (high + low)
+                    normal_char[output_dict['key']][year] = [mu, sd]
+
+        return normal_char
+

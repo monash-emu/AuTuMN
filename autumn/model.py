@@ -12,7 +12,11 @@ Compartment unit throughout: patients
 
 from scipy import exp, log
 from autumn.base import BaseModel
+import autumn.model_runner
 import numpy
+from scipy.stats import norm, beta
+import copy
+
 import warnings
 
 
@@ -112,6 +116,26 @@ class ConsolidatedModel(BaseModel):
 
         # Get scaleup functions from input object
         self.scaleup_fns = self.inputs.scaleup_fns[self.scenario]
+
+        # Here-below is just provisional stuff. Should be read from spreadsheets
+        self.uncertainty = False
+        self.n_runs = 2
+        self.burn_in = 1
+        self.adaptive_search = True
+        self.search_width = 0.2
+        self.param_ranges_unc = [
+            {
+                'key': u'tb_n_contact',
+                'bounds': [6.0, 6.2],
+                'distribution': 'uniform'
+            }
+        ]
+        self.outputs_unc = [
+            {
+                'key': 'incidence',
+                'posterior_width': None
+            }
+        ]
 
     def define_model_structure(self):
 
@@ -1250,5 +1274,162 @@ class ConsolidatedModel(BaseModel):
             self.integrate_scipy(dt_max)
         elif self.inputs.model_constants['integration'] == 'runge_kutta':
             self.integrate_runge_kutta(dt_max)
+
+    def update_par(self, pars):
+        # pars is the former position for the different parameters
+        new_pars = []
+        i = 0
+        for par_dict in self.param_ranges_unc:
+            bounds = par_dict['bounds']
+            sd = self.search_width * (bounds[1] - bounds[0]) / (2.0 * 1.96)
+            random = -100.
+            while random < bounds[0] or random > bounds[1]:
+                random = norm.rvs(loc=pars[i], scale=sd, size=1)
+            new_pars.append(random)
+            i += 1
+        return (new_pars)
+
+    def run_uncertainty(self):
+        """
+            run the uncertainty analysis for a country
+
+            Args:
+                n_runs: number of accepted parameter sets that we want
+                param_ranges_unc: dictionary defining the parameter ranges
+                outputs_unc: dictionary defining the outputs that we are targeting
+                dt: step time for integration. If None, it will be automatically determined to get optimal calculation time
+                adaptive_search: if True, the next candidate is generated from Normal distribution centred around current position
+                                 if False, the prior distribution is used to generate the parameter
+                search_width: relevant when adaptive_search is True. Define the relative width of the 95% SI corresponding to the
+                              new candidate generation from the normal distribution. It is relative to the width of the
+                              attribute 'bounds' of 'param_ranges_unc'. i.e. search_width = 1.0 -> bounds is the 95% SI
+            Returns:
+                master storage unit that will keep track of all accepted parameter sets and associated model objects (with integration run)
+            """
+        model_shelf = []  # the master storage unit be returned
+        model_runner = autumn.model_runner.ModelRunner(self)
+        print self.inputs.country
+        print "Uncertainty analysis"
+
+        # model_runner.param_ranges_unc = param_ranges_unc
+        # model_runner.outputs_unc = outputs_unc
+
+        # Parameters candidates generation
+        def generate_candidates(nb_candidates, param_ranges_unc):
+            par_candidates = {}  # will store the candidates value
+            for par_dic in param_ranges_unc:
+                bound_low, bound_high = par_dic['bounds'][0], par_dic['bounds'][1]
+                if par_dic['distribution'] == 'beta':
+                    x = numpy.random.beta(2.0, 2.0, nb_candidates)
+                    x = bound_low + x * (bound_high - bound_low)
+                elif par_dic['distribution'] == 'uniform':
+                    x = numpy.random.uniform(bound_low, bound_high, nb_candidates)
+
+                par_candidates[par_dic['key']] = x
+
+            return par_candidates
+
+        if not self.adaptive_search:
+            nb_candidates = self.n_runs * 10
+        else:
+            nb_candidates = 1
+
+        par_candidates = generate_candidates(nb_candidates=nb_candidates, param_ranges_unc=self.param_ranges_unc)
+
+        normal_char = model_runner.get_normal_char()
+
+        # start simulation
+        par_accepted = {}
+        for par_dict in self.param_ranges_unc:
+            par_accepted[par_dict['key']] = []
+        n_accepted = 0
+        i_candidates = 0
+        j = 0
+        prev_log_likelihood = -1e10
+        params = []
+        while n_accepted < self.n_runs + self.burn_in:
+            new_params = []
+            if not self.adaptive_search:
+                for par_dict in self.param_ranges_unc:
+                    new_params.append(par_candidates[par_dict['key']][j])
+            else:
+                if i_candidates == 0:
+                    new_params = []
+                    for par_dict in self.param_ranges_unc:
+                        new_params.append(par_candidates[par_dict['key']][j])
+                        params.append(par_candidates[par_dict['key']][j])
+                else:
+                    new_params = self.update_par(params)
+
+            model_runner.run_with_params(new_params)
+            if not model_runner.is_last_run_success:
+                accepted = 0
+            else:
+                prior_log_likelihood = 0.0
+                k = 0
+                for par_dict in self.param_ranges_unc:
+                    par_val = new_params[k]
+                    # calculate the density of par_val
+                    bound_low, bound_high = par_dict['bounds'][0], par_dict['bounds'][1]
+                    if par_dict['distribution'] == 'beta':
+                        # x = numpy.random.beta(2.0, 2.0, nb_candidates)
+                        x = (par_val - bound_low) / (bound_high - bound_low)
+                        prior_log_likelihood += beta.logpdf(x, 2.0, 2.0)
+                    elif par_dict['distribution'] == 'uniform':
+                        prior_log_likelihood += numpy.log(1.0 / (bound_high - bound_low))
+
+                    k += 1
+
+                posterior_log_likelihood = 0.0
+                for output_dict in self.outputs_unc:
+                    dic = normal_char[output_dict['key']]
+                    for year in dic.keys():
+                        year_indice = autumn.tool_kit.indices(self.times, lambda x: x >= year)[0]
+                        y = self.get_var_soln(output_dict['key'])[year_indice]
+                        mu, sd = dic[year][0], dic[year][1]
+                        posterior_log_likelihood += norm.logpdf(y, mu, sd)
+
+                log_likelihood = prior_log_likelihood + posterior_log_likelihood
+
+                if log_likelihood >= prev_log_likelihood:
+                    accepted = 1
+                else:
+                    accepted = numpy.random.binomial(n=1, p=numpy.exp(log_likelihood - prev_log_likelihood))
+
+                if accepted == 1:
+                    n_accepted += 1
+                    k = 0
+                    for par_dict in self.param_ranges_unc:
+                        par_accepted[par_dict['key']].append(new_params[k])
+                        k += 1
+                    prev_log_likelihood = log_likelihood
+                    params = new_params
+
+                    if n_accepted > self.burn_in:
+                        # model storage
+                        params_dict = {}
+                        k = 0
+                        for par_dict in self.param_ranges_unc:
+                            params_dict[par_dict['key']] = new_params[k]
+                            k += 1
+
+                        model_copy = copy.copy(model_runner.model)
+                        model_shelf.append(
+                            {
+                                'model': model_copy,
+                                'params': params_dict,
+                                'log_likelihood': log_likelihood
+                            }
+                        )
+
+            i_candidates += 1
+            j += 1
+            if j >= len(par_candidates.keys()) and not self.adaptive_search:  # we need to generate more candidates
+                par_candidates = generate_candidates(nb_candidates=nb_candidates,
+                                                     param_ranges_unc=self.param_ranges_unc)
+                j = 0
+            print (str(n_accepted) + ' accepted / ' + str(i_candidates) + ' candidates')
+
+        return model_shelf
 
 

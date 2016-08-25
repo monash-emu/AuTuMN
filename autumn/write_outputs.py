@@ -277,6 +277,41 @@ class Project:
         # Write a new file for each output
         outputs = self.integer_output_dict['baseline'].keys()
 
+        for scenario in self.scenarios:
+
+            # Initialise document
+            path = os.path.join(out_dir_project, scenario)
+            path += ".docx"
+            document = Document()
+            table = document.add_table(rows=1, cols=len(outputs) + 1)
+
+            # Write headers
+            header_cells = table.rows[0].cells
+            header_cells[0].text = 'Year'
+            for output_no, output in enumerate(outputs):
+                header_cells[output_no + 1].text \
+                    = tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(output))
+
+            # Find years to write
+            years = self.find_years_to_write(scenario,
+                                             output,
+                                             int(self.inputs.model_constants['report_start_time']),
+                                             int(self.inputs.model_constants['report_end_time']),
+                                             int(self.inputs.model_constants['report_step_time']))
+
+            for year in years:
+
+                # Add row to table
+                row_cells = table.add_row().cells
+                row_cells[0].text = str(year)
+
+                for out, output in enumerate(outputs):
+                    if year in self.integer_output_dict[scenario][output]:
+                        row_cells[out + 1].text = '%.2f' % self.integer_output_dict[scenario][output][year]
+
+            # Save document
+            document.save(path)
+
 
     def write_scenario_dict_word(self,
                                indicator='incidence',

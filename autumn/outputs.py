@@ -1083,25 +1083,13 @@ class Project:
         self.full_output_dict = {}
         self.integer_output_dict = {}
         self.inputs = inputs
+        self.out_dir_project = os.path.join('projects', self.name)
+        if not os.path.isdir(self.out_dir_project):
+            os.makedirs(self.out_dir_project)
 
     #################################
     # General methods for use below #
     #################################
-
-    def find_or_make_directory(self):
-
-        out_dir_project = os.path.join('projects', self.name)
-        if not os.path.isdir(out_dir_project):
-            os.makedirs(out_dir_project)
-        return out_dir_project
-
-    def make_path(self, filename):
-
-        # Sort out directory if not already sorted
-        out_dir_project = os.path.join(filename, self.name)
-        if not os.path.isdir(out_dir_project):
-            os.makedirs(out_dir_project)
-        return out_dir_project
 
     def find_years_to_write(self, scenario, output, minimum=0, maximum=3000, step=1):
 
@@ -1209,7 +1197,7 @@ class Project:
         for output in outputs:
 
             # Make filename
-            path = os.path.join(out_dir_project, output)
+            path = os.path.join(self.out_dir_project, output)
             path += ".xlsx"
 
             # Get active sheet
@@ -1241,15 +1229,12 @@ class Project:
 
     def write_xls_by_scenario(self):
 
-        # Find directory to write to
-        out_dir_project = self.find_or_make_directory()
-
         # Write a new file for each scenario
         scenarios = self.integer_output_dict.keys()
         for scenario in scenarios:
 
             # Make filename
-            path = os.path.join(out_dir_project, scenario)
+            path = os.path.join(self.out_dir_project, scenario)
             path += '.xlsx'
 
             # Get active sheet
@@ -1366,16 +1351,13 @@ class Project:
 
     def write_docs_by_output(self):
 
-        # Find directory to write to
-        out_dir_project = self.find_or_make_directory()
-
         # Write a new file for each output
         outputs = self.integer_output_dict['baseline'].keys()
 
         for output in outputs:
 
             # Initialise document
-            path = os.path.join(out_dir_project, output)
+            path = os.path.join(self.out_dir_project, output)
             path += ".docx"
             document = Document()
             table = document.add_table(rows=1, cols=len(self.scenarios) + 1)
@@ -1409,16 +1391,13 @@ class Project:
 
     def write_docs_by_scenario(self):
 
-        # Find directory to write to
-        out_dir_project = self.find_or_make_directory()
-
         # Write a new file for each output
         outputs = self.integer_output_dict['baseline'].keys()
 
         for scenario in self.scenarios:
 
             # Initialise document
-            path = os.path.join(out_dir_project, scenario)
+            path = os.path.join(self.out_dir_project, scenario)
             path += ".docx"
             document = Document()
             table = document.add_table(rows=1, cols=len(outputs) + 1)
@@ -1467,8 +1446,7 @@ class Project:
                 if classification in fn:
                     classified_scaleups[classification] += [fn]
 
-        out_dir_project = self.find_or_make_directory()
-        base = os.path.join(out_dir_project, self.country + '_baseline_')
+        base = os.path.join(self.out_dir_project, self.country + '_baseline_')
 
         # Time periods to perform the plots over
         times_to_plot = ['start_', 'recent_']

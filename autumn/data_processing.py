@@ -217,16 +217,14 @@ class Inputs:
         self.add_demo_dictionaries_to_timevariants()
 
         # Add time-variant organ status to time variant parameters
-        self.add_organ_status_to_timevariants()
+        if self.time_variants['epi_prop_smearpos']['load_data'] == 'yes':
+            self.add_organ_status_to_timevariants()
 
         # Add outcomes for resistant strains - currently using XDR-TB outcomes for inappropriate treatment
         self.add_resistant_strain_outcomes()
 
         # Add zeroes, remove nans and remove load_data key from time variant dictionaries
         self.tidy_time_variants()
-
-        # Add economic time variants hierarchically
-        self.add_economic_time_variants()
 
         # Add hard-coded parameters that are universal to all models that require them
         self.add_universal_parameters()
@@ -457,22 +455,20 @@ class Inputs:
         Populate organ status dictionaries where requested and not already loaded.
         """
 
-        if self.time_variants['epi_prop_smearpos']['load_data'] == 'yes':
+        # Iterate over smear positive and negative status
+        for outcome in ['_smearpos', '_smearneg']:
 
-            # Iterate over smear positive and negative status
-            for outcome in ['_smearpos', '_smearneg']:
+            # Correct naming GTB report
+            if outcome == '_smearpos':
+                report_outcome = '_sp'
+            elif outcome == '_smearneg':
+                report_outcome = '_sn'
 
-                # Correct naming GTB report
-                if outcome == '_smearpos':
-                    report_outcome = '_sp'
-                elif outcome == '_smearneg':
-                    report_outcome = '_sn'
-
-                # Populate data
-                for year in self.derived_data['prop_new' + report_outcome]:
-                    if year not in self.time_variants['epi_prop' + outcome]:
-                        self.time_variants['epi_prop' + outcome][year] \
-                            = self.derived_data['prop_new' + report_outcome][year]
+            # Populate data
+            for year in self.derived_data['prop_new' + report_outcome]:
+                if year not in self.time_variants['epi_prop' + outcome]:
+                    self.time_variants['epi_prop' + outcome][year] \
+                        = self.derived_data['prop_new' + report_outcome][year]
 
     def add_resistant_strain_outcomes(self):
 
@@ -521,18 +517,6 @@ class Inputs:
             # Remove dictionary keys for which values are nan
             self.time_variants[program] \
                 = remove_nans(self.time_variants[program])
-
-    def add_economic_time_variants(self):
-
-        """
-        Method that probably needs some work and Tan should feel free to change.
-        Currently loads default and country-specific economic variables, with the country-specific ones
-        over-riding the defaults where present (for consistency with epidemiological approach).
-        """
-
-        # Add all the loaded country-specific economic variables to the time-variants dictionary
-        if 'country_economics' in self.original_data:
-            self.time_variants.update(self.original_data['country_economics'])
 
     def add_universal_parameters(self):
 
@@ -691,26 +675,6 @@ class Inputs:
             self.model_constants['tb_timeperiod_noninfect_ontreatment' + strain] \
                 = self.model_constants['tb_timeperiod_treatment' + strain] \
                   - self.model_constants['tb_timeperiod_infect_ontreatment' + strain]
-
-    def list_irrelevant_time_variants(self):
-
-        """
-        List all the time-variant parameters that are not relevant to the current model structure
-        """
-
-        for time_variant in self.time_variants.keys():
-            for strain in self.available_strains:
-                if strain not in self.strains and strain in time_variant and '_dst' not in time_variant:
-                    self.irrelevant_time_variants += [time_variant]
-            if self.model_constants['n_strains'] < 2 \
-                    and ('line_dst' in time_variant or '_inappropriate' in time_variant):
-                self.irrelevant_time_variants += [time_variant]
-            elif self.model_constants['n_strains'] == 2 and 'secondline_dst' in time_variant:
-                self.irrelevant_time_variants += [time_variant]
-            elif self.model_constants['n_strains'] == 2 and 'smearneg' in time_variant:
-                self.irrelevant_time_variants += [time_variant]
-            if 'lowquality' in time_variant and not self.model_constants['is_lowquality']:
-                self.irrelevant_time_variants += [time_variant]
 
     def find_extrapul_casefatality_if_not_provided(self):
 
@@ -928,7 +892,7 @@ class Inputs:
                     self.scaleup_data[scenario][str(time_variant)] = {}
                     for i in self.time_variants[time_variant]:
                         # For years with data percentages
-                        if type(i) == int and 'program_prop_' in time_variant and 'vaccination' not in time_variant and 'detect' not in time_variant:
+                        if type(i) == int and 'program_prop_treatment_' in time_variant:
                             self.scaleup_data[scenario][str(time_variant)][i] \
                                 = self.time_variants[time_variant][i] / 1E2
                         # For years with data not percentages
@@ -943,6 +907,29 @@ class Inputs:
                         elif type(i) == unicode and i == 'scenario_' + str(scenario):
                             self.scaleup_data[scenario][str(time_variant)]['scenario'] = \
                                 self.time_variants[time_variant][i]
+
+    def list_irrelevant_time_variants(self):
+
+        """
+        List all the time-variant parameters that are not relevant to the current model structure
+        """
+
+        for time_variant in self.time_variants.keys():
+            if 'perc_' in time_variant:
+                self.irrelevant_time_variants += [time_variant]
+            for strain in self.available_strains:
+                if strain not in self.strains and strain in time_variant and '_dst' not in time_variant:
+                    self.irrelevant_time_variants += [time_variant]
+            if self.model_constants['n_strains'] < 2 \
+                    and ('line_dst' in time_variant or '_inappropriate' in time_variant):
+                self.irrelevant_time_variants += [time_variant]
+            elif self.model_constants['n_strains'] == 2 and 'secondline_dst' in time_variant:
+                self.irrelevant_time_variants += [time_variant]
+            elif self.model_constants['n_strains'] == 2 and 'smearneg' in time_variant:
+                self.irrelevant_time_variants += [time_variant]
+            if 'lowquality' in time_variant and not self.model_constants['is_lowquality']:
+                self.irrelevant_time_variants += [time_variant]
+
 
     def find_functions_or_params(self):
 

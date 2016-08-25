@@ -402,12 +402,11 @@ class Project:
 
     def run_plotting(self):
 
+        # Plot scale-up functions - currently only doing this for the baseline model run
         if self.inputs.model_constants['output_scaleups']:
-            out_dir_project = self.find_or_make_directory()
-            base = os.path.join(out_dir_project, self.country + '_baseline')
-            self.plot_classified_scaleups(self.models['baseline'], base)
+            self.plot_classified_scaleups(self.models['baseline'])
 
-    def plot_classified_scaleups(self, model, base):
+    def plot_classified_scaleups(self, model):
 
         # Classify scale-up functions
         classifications = ['demo_', 'econ_', 'epi_', 'program_prop_', 'program_timeperiod']
@@ -418,25 +417,28 @@ class Project:
                 if classification in fn:
                     classified_scaleups[classification] += [fn]
 
+        out_dir_project = self.find_or_make_directory()
+        base = os.path.join(out_dir_project, self.country + '_baseline_')
+
         # Time periods to perform the plots over
         times_to_plot = ['start_', 'recent_']
 
         # Plot them from the start of the model and from "recent_time"
-        for i, classification in enumerate(classified_scaleups):
+        for c, classification in enumerate(classified_scaleups):
             if len(classified_scaleups[classification]) > 0:
                 for j, start_time in enumerate(times_to_plot):
                     autumn.plotting.plot_all_scaleup_fns_against_data(model,
-                                                      classified_scaleups[classification],
-                                                      base + '_' + classification + '_datascaleups_from' + start_time[:-1] + '.png',
-                                                      start_time + 'time',
-                                                      'current_time',
-                                                      classification,
-                                                      figure_number=i + j * len(classified_scaleups) + 2)
+                                                                      classified_scaleups[classification],
+                                                                      base + classification + '_datascaleups_from' + start_time[:-1] + '.png',
+                                                                      start_time + 'time',
+                                                                      'current_time',
+                                                                      classification,
+                                                                      figure_number=c + j * len(classified_scaleups) + 2)
                     if classification == 'program_prop':
                         autumn.plotting.plot_scaleup_fns(model,
-                                         classified_scaleups[classification],
-                                         base + '_' + classification + 'scaleups_from' + start_time[:-1] + '.png',
-                                         start_time + 'time',
-                                         'current_time',
-                                         classification,
-                                         figure_number=i + j * len(classified_scaleups) + 2 + len(classified_scaleups) * len(times_to_plot))
+                                                         classified_scaleups[classification],
+                                                         base + classification + 'scaleups_from' + start_time[:-1] + '.png',
+                                                         start_time + 'time',
+                                                         'current_time',
+                                                         classification,
+                                                         figure_number=c + j * len(classified_scaleups) + 2 + len(classified_scaleups) * len(times_to_plot))

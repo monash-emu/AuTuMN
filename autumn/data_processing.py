@@ -282,6 +282,9 @@ class Inputs:
         # Derive some basic parameters for IPT
         self.find_ipt_params()
 
+
+        self.convert_percentages_to_proportions()
+
         # Extract data from time variants dictionary and populate to dictionary with scenario keys
         self.find_data_for_functions_or_params()
 
@@ -310,11 +313,11 @@ class Inputs:
         """
 
         # Vaccination
-        if self.time_variants['program_prop_vaccination']['load_data'] == 'yes':
+        if self.time_variants['program_perc_vaccination']['load_data'] == 'yes':
             for year in self.original_data['bcg']:
                 # If not already loaded through the inputs spreadsheet
-                if year not in self.time_variants['program_prop_vaccination']:
-                    self.time_variants['program_prop_vaccination'][year] \
+                if year not in self.time_variants['program_perc_vaccination']:
+                    self.time_variants['program_perc_vaccination'][year] \
                         = self.original_data['bcg'][year]
 
         # Case detection
@@ -881,6 +884,25 @@ class Inputs:
         self.model_constants['ipt_effective_per_assessment'] = self.model_constants['tb_prop_ltbi_test_sensitivity'] \
                                                                * self.model_constants['tb_prop_ipt_effectiveness']
 
+    def convert_percentages_to_proportions(self):
+
+        new_time_variants = {}
+        for time_variant in self.time_variants:
+            # If the entered data is a percentage
+            if 'program_perc_' in time_variant:
+                new_time_variants['program_prop_' + time_variant[13:]] = {}
+                for i in self.time_variants[time_variant]:
+                    # If it's a year or scenario
+                    if type(i) == int or 'scenario' in i:
+                        new_time_variants['program_prop_' + time_variant[13:]][i] \
+                            = self.time_variants[time_variant][i] / 1E2
+                    else:
+                        new_time_variants['program_prop_' + time_variant[13:]][i] \
+                            = self.time_variants[time_variant][i]
+
+        self.time_variants.update(new_time_variants)
+
+
     def find_data_for_functions_or_params(self):
 
         """
@@ -903,7 +925,7 @@ class Inputs:
                     self.scaleup_data[scenario][str(time_variant)] = {}
                     for i in self.time_variants[time_variant]:
                         # For years with data percentages
-                        if type(i) == int and 'program_prop_' in time_variant:
+                        if type(i) == int and 'program_prop_' in time_variant and 'vaccination' not in time_variant:
                             self.scaleup_data[scenario][str(time_variant)][i] \
                                 = self.time_variants[time_variant][i] / 1E2
                         # For years with data not percentages

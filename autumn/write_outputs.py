@@ -13,6 +13,78 @@ from matplotlib import pyplot, patches
 import numpy
 
 
+def make_axes_with_room_for_legend():
+
+    """
+    Create axes for a figure with a single plot with a reasonable
+    amount of space around.
+
+    Returns:
+        ax: The axes that can be plotted on
+
+    """
+
+    fig = pyplot.figure()
+    ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
+    return ax
+
+
+def set_axes_props(
+        ax, xlabel=None, ylabel=None, title=None, is_legend=True,
+        axis_labels=None):
+
+    frame_colour = "grey"
+
+    # Hide top and right border of plot
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
+
+    if xlabel is not None:
+        ax.set_xlabel(xlabel)
+
+    if ylabel is not None:
+        ax.set_ylabel(ylabel)
+
+    if is_legend:
+        if axis_labels:
+            handles, labels = ax.get_legend_handles_labels()
+            leg = ax.legend(
+                handles,
+                axis_labels,
+                bbox_to_anchor=(1.05, 1),
+                loc=2,
+                borderaxespad=0.,
+                frameon=False,
+                prop={'size': 7})
+        else:
+            leg = ax.legend(
+                bbox_to_anchor=(1.05, 1),
+                loc=2,
+                borderaxespad=0.,
+                frameon=False,
+                prop={'size':7})
+        for text in leg.get_texts():
+            text.set_color(frame_colour)
+
+    if title is not None:
+        t = ax.set_title(title)
+        t.set_color(frame_colour)
+
+    for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+        label.set_fontname('Arial')
+        label.set_fontsize(8)
+
+    ax.tick_params(color=frame_colour, labelcolor=frame_colour)
+    for spine in ax.spines.values():
+        spine.set_edgecolor(frame_colour)
+    ax.xaxis.label.set_color(frame_colour)
+    ax.yaxis.label.set_color(frame_colour)
+
+    autumn.plotting.humanise_y_ticks(ax)
+
+
 def indices(a, func):
     return [i for (i, val) in enumerate(a) if func(val)]
 

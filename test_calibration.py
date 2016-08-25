@@ -220,7 +220,7 @@ class ModelRunner():
                 max_val = max(vals.max(), max_val)
             pylab.ylim([0, 1.2 * max_val])
             key = self.param_props_list[i_param]['key']
-            plotting.set_axes_props(
+            write_outputs.set_axes_props(
                 pylab.gca(), 
                 'MCMC steps', 
                 '', 
@@ -259,7 +259,7 @@ class ModelRunner():
             pylab.plot(times, vals, color="k", alpha=0.1)
         self.run_with_params(self.average_params)
         pylab.plot(times, self.model.get_var_soln(label), color="r", alpha=0.8)
-        plotting.set_axes_props(
+        write_outputs.set_axes_props(
             pylab.gca(), 
             'year', 
             label,
@@ -276,7 +276,7 @@ class ModelRunner():
             pylab.plot(times, vals, color="k", alpha=0.1)
         self.run_with_params(self.average_params)
         pylab.plot(times, self.model.fraction_soln[label], color="r", alpha=0.8)
-        plotting.set_axes_props(
+        write_outputs.set_axes_props(
             pylab.gca(),
             'year',
             label,

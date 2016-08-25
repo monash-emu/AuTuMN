@@ -19,7 +19,6 @@ from scipy.stats import beta, gamma, norm, truncnorm
 
 import autumn.base
 import autumn.model
-import autumn.plotting as plotting
 import autumn.curve
 
 

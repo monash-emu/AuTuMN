@@ -4,9 +4,8 @@ import glob
 import datetime
 import autumn.model
 import autumn.tool_kit
-import autumn.plotting
 from autumn.spreadsheet import read_input_data_xls
-import autumn.write_outputs as w_o
+import autumn.outputs as w_o
 import autumn.data_processing
 
 # Start timer
@@ -73,7 +72,7 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
     models[scenario_name].integrate()
     print('Time elapsed to completion of integration is ' + str(datetime.datetime.now() - start_realtime))
 
-    autumn.plotting.plot_outputs_against_gtb(
+    autumn.outputs.plot_outputs_against_gtb(
         models[scenario_name], ['incidence', 'mortality', 'prevalence', 'notifications'],
         inputs.model_constants['recent_time'],
         'scenario_end_time',
@@ -84,7 +83,7 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
         final_run=final)
 
     if inputs.model_constants['output_by_age']:
-        autumn.plotting.plot_outputs_by_age(
+        autumn.outputs.plot_outputs_by_age(
             models[scenario_name],
             inputs.model_constants['recent_time'],
             'scenario_end_time',
@@ -107,7 +106,7 @@ if inputs.model_constants['output_flow_diagram']:
 if inputs.model_constants['output_fractions']:
     subgroup_solns, subgroup_fractions = autumn.tool_kit.find_fractions(models['baseline'])
     for i, category in enumerate(subgroup_fractions):
-        autumn.plotting.plot_fractions(
+        autumn.outputs.plot_fractions(
             models['baseline'],
             subgroup_fractions[category],
             models['baseline'].inputs.model_constants['recent_time'],
@@ -116,23 +115,24 @@ if inputs.model_constants['output_fractions']:
 
 # Plot proportions of population
 if inputs.model_constants['output_comorbidity_fractions']:
-    autumn.plotting.plot_stratified_populations(models['baseline'],
-                                                png=base + '_comorbidity_fraction.png',
-                                                age_or_comorbidity='comorbidity',
-                                                start_time='early_time')
+    autumn.outputs.plot_stratified_populations(models['baseline'],
+                                               png=base + '_comorbidity_fraction.png',
+                                               age_or_comorbidity='comorbidity',
+                                               start_time='early_time')
 
 # Plot proportions of population
 if inputs.model_constants['output_age_fractions']:
-    autumn.plotting.plot_stratified_populations(models['baseline'],
-                                                png=base + '_age_fraction.png',
-                                                age_or_comorbidity='age',
-                                                start_time='early_time')
+    autumn.outputs.plot_stratified_populations(models['baseline'],
+                                               png=base + '_age_fraction.png',
+                                               age_or_comorbidity='age',
+                                               start_time='early_time')
 
 pngs = glob.glob(os.path.join(out_dir, '*png'))
-autumn.write_outputs.open_pngs(pngs)
 
 project.write_spreadsheets()
 project.write_documents()
 project.run_plotting()
+
+autumn.outputs.open_pngs(pngs)
 
 print('Time elapsed in running script is ' + str(datetime.datetime.now() - start_realtime))

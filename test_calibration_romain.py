@@ -10,7 +10,6 @@ from scipy.stats import norm,  uniform, beta
 import autumn.base
 import autumn.model
 import autumn.curve
-import autumn.plotting
 import autumn.data_processing
 import autumn.tool_kit
 from autumn.tool_kit import indices
@@ -20,7 +19,7 @@ from autumn.spreadsheet import read_input_data_xls
 
 from scipy.optimize import minimize
 import openpyxl as xl
-import autumn.write_outputs
+import autumn.outputs
 
 
 def is_positive_definite(v):
@@ -517,7 +516,7 @@ def run_calibration(n_runs, calibrated_params, targeted_outputs, dt=None):
         os.makedirs(out_dir)
     name = 'calibrated_outputs_' + model_runner.country + '_' + str(model_runner.nb_accepted) + 'runs'
     base = os.path.join(out_dir, name)
-    autumn.plotting.plot_outputs_against_gtb(
+    autumn.outputs.plot_outputs_against_gtb(
         model_runner.model, ["incidence", "mortality", "prevalence", "notifications"],
         model_runner.inputs.model_constants['recent_time'],
         'current_time',
@@ -526,7 +525,7 @@ def run_calibration(n_runs, calibrated_params, targeted_outputs, dt=None):
         scenario=None,
         figure_number=1)
     pngs = glob.glob(os.path.join(out_dir, '*png'))
-    autumn.write_outputs.open_pngs(pngs)
+    autumn.outputs.open_pngs(pngs)
     model_runner.write_best_fit_into_file()
 
     print("Time elapsed in running script is " + str(datetime.datetime.now() - start_realtime))
@@ -755,7 +754,7 @@ def spaghetti_plot_uncertainty(model_shelf, country):
         if cpt == n_runs:
             final_run = True
 
-        autumn.plotting.plot_outputs_against_gtb(
+        autumn.outputs.plot_outputs_against_gtb(
             model_dict['model'], ['incidence', 'mortality', 'prevalence', 'notifications'],
             1990.0,
             png= base + '.png',

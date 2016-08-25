@@ -53,6 +53,15 @@ class Project:
             os.makedirs(out_dir_project)
         return out_dir_project
 
+    def find_years_to_write(self, scenario, output, minimum=0, maximum=3000, step=1):
+
+        requested_years = range(minimum, maximum, step)
+        years = []
+        for y in self.integer_output_dict[scenario][output].keys():
+            if y in requested_years:
+                years += [y]
+        return years
+
     #########################################
     # Methods to collect data for later use #
     #########################################
@@ -149,33 +158,36 @@ class Project:
         outputs = self.integer_output_dict['baseline'].keys()
         for output in outputs:
 
+            # Make filename
+            path = os.path.join(out_dir_project, output)
+            path += ".xlsx"
+
+            # Get active sheet
+            wb = xl.Workbook()
+            sheet = wb.active
+            sheet.title = output
+
             # Write a new file for each epidemiological indicator
             for scenario in self.integer_output_dict.keys():
-
-                # Make filename
-                path = os.path.join(out_dir_project, output)
-                path += ".xlsx"
-
-                # Get active sheet
-                wb = xl.Workbook()
-                sheet = wb.active
-                sheet.title = output
-
-                # Find years to write
-                years = self.find_years_to_write(scenario,
-                                                 output,
-                                                 int(self.inputs.model_constants['report_start_time']),
-                                                 int(self.inputs.model_constants['report_end_time']),
-                                                 int(self.inputs.model_constants['report_step_time']))
-
-                # Write data
-                if self.inputs.model_constants['output_horizontally']:
-                    self.write_horizontally_by_scenario(sheet, output, years)
-                else:
-                    self.write_vertically_by_scenario(sheet, output, years)
+                self.write_xls_column_or_row(sheet, scenario, output)
 
             # Save workbook
             wb.save(path)
+
+    def write_xls_column_or_row(self, sheet, scenario, output):
+
+        # Find years to write
+        years = self.find_years_to_write(scenario,
+                                         output,
+                                         int(self.inputs.model_constants['report_start_time']),
+                                         int(self.inputs.model_constants['report_end_time']),
+                                         int(self.inputs.model_constants['report_step_time']))
+
+        # Write data
+        if self.inputs.model_constants['output_horizontally']:
+            self.write_horizontally_by_scenario(sheet, output, years)
+        else:
+            self.write_vertically_by_scenario(sheet, output, years)
 
     def write_xls_by_scenario(self):
 
@@ -196,167 +208,10 @@ class Project:
             sheet.title = scenario
 
             for output in self.integer_output_dict['baseline'].keys():
-
-                # Find years to write
-                years = self.find_years_to_write(scenario,
-                                                 output,
-                                                 int(self.inputs.model_constants['report_start_time']),
-                                                 int(self.inputs.model_constants['report_end_time']),
-                                                 int(self.inputs.model_constants['report_step_time']))
-                # Write data
-                if self.inputs.model_constants['output_horizontally']:
-                    self.write_horizontally_by_output(sheet, scenario, years)
-                else:
-                    self.write_vertically_by_output(sheet, scenario, years)
+                self.write_xls_column_or_row(sheet, scenario, output)
 
             # Save workbook
             wb.save(path)
-
-    def write_documents(self):
-
-        """
-        Determine whether to write to documents by scenario or by output
-        """
-
-        if self.inputs.model_constants['output_documents']:
-            if self.inputs.model_constants['output_by_scenario']:
-                print('Writing scenario documents')
-                self.write_docs_by_scenario()
-            else:
-                print('Writing output indicator documents')
-                self.write_docs_by_output()
-
-    def write_docs_by_output(self):
-
-        # Find directory to write to
-        out_dir_project = self.find_or_make_directory()
-
-        # Write a new file for each output
-        outputs = self.integer_output_dict['baseline'].keys()
-
-        for output in outputs:
-
-            # Initialise document
-            path = os.path.join(out_dir_project, output)
-            path += ".docx"
-            document = Document()
-            table = document.add_table(rows=1, cols=len(self.scenarios) + 1)
-
-            # Write headers
-            header_cells = table.rows[0].cells
-            header_cells[0].text = 'Year'
-            for scenario_no, scenario in enumerate(self.scenarios):
-                header_cells[scenario_no + 1].text \
-                    = tool_kit.capitalise_first_letter(scenario)
-
-            # Find years to write
-            years = self.find_years_to_write('baseline',
-                                             output,
-                                             int(self.inputs.model_constants['report_start_time']),
-                                             int(self.inputs.model_constants['report_end_time']),
-                                             int(self.inputs.model_constants['report_step_time']))
-
-            for year in years:
-
-                # Add row to table
-                row_cells = table.add_row().cells
-                row_cells[0].text = str(year)
-
-                for sc, scenario in enumerate(self.scenarios):
-                    if year in self.integer_output_dict[scenario][output]:
-                        row_cells[sc + 1].text = '%.2f' % self.integer_output_dict[scenario][output][year]
-
-            # Save document
-            document.save(path)
-
-    def write_docs_by_scenario(self):
-
-        # Find directory to write to
-        out_dir_project = self.find_or_make_directory()
-
-        # Write a new file for each output
-        outputs = self.integer_output_dict['baseline'].keys()
-
-        for scenario in self.scenarios:
-
-            # Initialise document
-            path = os.path.join(out_dir_project, scenario)
-            path += ".docx"
-            document = Document()
-            table = document.add_table(rows=1, cols=len(outputs) + 1)
-
-            # Write headers
-            header_cells = table.rows[0].cells
-            header_cells[0].text = 'Year'
-            for output_no, output in enumerate(outputs):
-                header_cells[output_no + 1].text \
-                    = tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(output))
-
-            # Find years to write
-            years = self.find_years_to_write(scenario,
-                                             output,
-                                             int(self.inputs.model_constants['report_start_time']),
-                                             int(self.inputs.model_constants['report_end_time']),
-                                             int(self.inputs.model_constants['report_step_time']))
-
-            for year in years:
-
-                # Add row to table
-                row_cells = table.add_row().cells
-                row_cells[0].text = str(year)
-
-                for out, output in enumerate(outputs):
-                    if year in self.integer_output_dict[scenario][output]:
-                        row_cells[out + 1].text = '%.2f' % self.integer_output_dict[scenario][output][year]
-
-            # Save document
-            document.save(path)
-
-
-    def write_scenario_dict_word(self,
-                               indicator='incidence',
-                               minimum=None, maximum=None, step=None):
-
-        # Sort out directory if not already sorted
-        out_dir_project = self.make_path('projects')
-
-        # Initialise document
-        path = os.path.join(out_dir_project, 'scenarios')
-        path += ".docx"
-        document = Document()
-        table = document.add_table(rows=1, cols=len(self.scenarios)+1)
-
-        # Write headers
-        header_cells = table.rows[0].cells
-        header_cells[0].text = 'Year'
-        for scenario_no, scenario in enumerate(self.scenarios):
-            header_cells[scenario_no+1].text = tool_kit.capitalise_first_letter(scenario)
-
-        # Find years to write
-        years = self.find_years_to_write(indicator, minimum, maximum, step)
-        for year in years:
-
-            # Add row to table
-            row_cells = table.add_row().cells
-
-            # Write a new file for each epidemiological indicator
-            for scenario_no, scenario in enumerate(self.scenarios):
-                row_cells[0].text = str(year)
-                text_to_write = '%.2f' % self.output_dict[scenario][indicator][year]
-                row_cells[scenario_no+1].text = text_to_write
-
-        # Save document
-        document.save(path)
-
-
-    def find_years_to_write(self, scenario, output, minimum=0, maximum=3000, step=1):
-
-        requested_years = range(minimum, maximum, step)
-        years = []
-        for y in self.integer_output_dict[scenario][output].keys():
-            if y in requested_years:
-                years += [y]
-        return years
 
     def write_horizontally_by_scenario(self, sheet, output, years):
 
@@ -445,34 +300,103 @@ class Project:
                     sheet.cell(row=row, column=col).value \
                         = self.integer_output_dict[scenario][output][y]
 
-    def create_output_dict(self, model_name):
+    def write_documents(self):
 
         """
-        This the old version that I'm trying to make obsolete
-
-        Create a dictionary with the main model outputs
-
-        Args:
-            model_name: a model instance after integration
-        Returns:
-            output_dict: a dictionary with the different outputs
+        Determine whether to write to documents by scenario or by output
         """
 
+        if self.inputs.model_constants['output_documents']:
+            if self.inputs.model_constants['output_by_scenario']:
+                print('Writing scenario documents')
+                self.write_docs_by_scenario()
+            else:
+                print('Writing output indicator documents')
+                self.write_docs_by_output()
 
-        outputs = ['incidence', 'mortality', 'prevalence', 'notifications']
-        self.output_dict[model_name] = {}
-        times = np.linspace(self.models[model_name].inputs.model_constants['start_time'],
-                            self.models[model_name].inputs.model_constants['scenario_end_time'],
-                            num=(1 + self.models[model_name].inputs.model_constants['scenario_end_time'] \
-                                 - self.models[model_name].inputs.model_constants['start_time']))
+    def write_docs_by_output(self):
 
-        for label in outputs:
-            self.output_dict[model_name][label] = {}
-            solution = self.models[model_name].get_var_soln(label)
-            for time in times:
-                year_index = indices(self.models[model_name].times, lambda x: x >= time)[0]
-                self.output_dict[model_name][label][int(round(time))] = solution[year_index]
+        # Find directory to write to
+        out_dir_project = self.find_or_make_directory()
 
+        # Write a new file for each output
+        outputs = self.integer_output_dict['baseline'].keys()
 
+        for output in outputs:
 
+            # Initialise document
+            path = os.path.join(out_dir_project, output)
+            path += ".docx"
+            document = Document()
+            table = document.add_table(rows=1, cols=len(self.scenarios) + 1)
+
+            # Write headers
+            header_cells = table.rows[0].cells
+            header_cells[0].text = 'Year'
+            for scenario_no, scenario in enumerate(self.scenarios):
+                header_cells[scenario_no + 1].text \
+                    = tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario))
+
+            # Find years to write
+            years = self.find_years_to_write('baseline',
+                                             output,
+                                             int(self.inputs.model_constants['report_start_time']),
+                                             int(self.inputs.model_constants['report_end_time']),
+                                             int(self.inputs.model_constants['report_step_time']))
+
+            for year in years:
+
+                # Add row to table
+                row_cells = table.add_row().cells
+                row_cells[0].text = str(year)
+
+                for sc, scenario in enumerate(self.scenarios):
+                    if year in self.integer_output_dict[scenario][output]:
+                        row_cells[sc + 1].text = '%.2f' % self.integer_output_dict[scenario][output][year]
+
+            # Save document
+            document.save(path)
+
+    def write_docs_by_scenario(self):
+
+        # Find directory to write to
+        out_dir_project = self.find_or_make_directory()
+
+        # Write a new file for each output
+        outputs = self.integer_output_dict['baseline'].keys()
+
+        for scenario in self.scenarios:
+
+            # Initialise document
+            path = os.path.join(out_dir_project, scenario)
+            path += ".docx"
+            document = Document()
+            table = document.add_table(rows=1, cols=len(outputs) + 1)
+
+            # Write headers
+            header_cells = table.rows[0].cells
+            header_cells[0].text = 'Year'
+            for output_no, output in enumerate(outputs):
+                header_cells[output_no + 1].text \
+                    = tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(output))
+
+            # Find years to write
+            years = self.find_years_to_write(scenario,
+                                             output,
+                                             int(self.inputs.model_constants['report_start_time']),
+                                             int(self.inputs.model_constants['report_end_time']),
+                                             int(self.inputs.model_constants['report_step_time']))
+
+            for year in years:
+
+                # Add row to table
+                row_cells = table.add_row().cells
+                row_cells[0].text = str(year)
+
+                for out, output in enumerate(outputs):
+                    if year in self.integer_output_dict[scenario][output]:
+                        row_cells[out + 1].text = '%.2f' % self.integer_output_dict[scenario][output][year]
+
+            # Save document
+            document.save(path)
 

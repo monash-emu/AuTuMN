@@ -337,7 +337,7 @@ class BaseModel:
 
         self.calculate_diagnostics()
         if self.run_costing:
-            self.calculate_economics_diagnostics(self.end_period_costing)
+            self.calculate_economics_diagnostics()
 
     def integrate_runge_kutta(self, dt_max=0.05):
 
@@ -405,7 +405,6 @@ class BaseModel:
         self.calculate_diagnostics()
         if self.run_costing:
             self.calculate_economics_diagnostics()
-
     def calculate_output_vars(self):
         """
         Calculate diagnostic vars that can depend on self.flows as

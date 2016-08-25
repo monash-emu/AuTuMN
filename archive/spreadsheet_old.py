@@ -121,7 +121,7 @@ class ConstantsSheetReader:
                     'program_rate_restart_presenting',
                     'proportion_amplification',
                     'timepoint_introduce_mdr',
-                    'timepoint_introduce_xdr',
+                    'xdr_introduce_time',
                     'treatment_available_date',
                     'dots_start_date',
                     'finish_scaleup_date',

@@ -1042,9 +1042,9 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
 
         if scenario is None:
             data_to_plot = {}
-            for j in model.scaleup_data[function]:
+            for j in model.inputs.scaleup_data[scenario][function]:
                 if j > start_time:
-                    data_to_plot[j] = model.scaleup_data[function][j]
+                    data_to_plot[j] = model.inputs.scaleup_data[scenario][function][j]
 
             # Scatter plot data from which they are derived
             ax.scatter(data_to_plot.keys(),
@@ -1069,53 +1069,6 @@ def plot_all_scaleup_fns_against_data(model, functions, png=None,
             save_png(png)
 
     fig.suptitle('Scale-up functions')
-
-
-def plot_classified_scaleups(model, base):
-
-    # Classify scale-up functions for plotting
-    classified_scaleups = {'program_prop': [],
-                           'program_other': [],
-                           'birth': [],
-                           'cost': [],
-                           'econ': [],
-                           'demo': [],
-                           'non_program': []}
-    for fn in model.scaleup_fns:
-        if 'program_prop' in fn:
-            classified_scaleups['program_prop'] += [fn]
-        elif 'program' in fn and 'cost' not in fn:
-            classified_scaleups['program_other'] += [fn]
-        elif 'cost' in fn:
-            classified_scaleups['cost'] += [fn]
-        elif 'econ' in fn:
-            classified_scaleups['econ'] += [fn]
-        elif 'demo' in fn:
-            classified_scaleups['demo'] += [fn]
-        else:
-            classified_scaleups['non_program'] += [fn]
-
-    times_to_plot = ['start_', 'recent_']
-
-    # Plot them from the start of the model and from "recent_time"
-    for i, classification in enumerate(classified_scaleups):
-        if len(classified_scaleups[classification]) > 0:
-            for j, start_time in enumerate(times_to_plot):
-                plot_all_scaleup_fns_against_data(model,
-                                                  classified_scaleups[classification],
-                                                  base + '_' + classification + '_datascaleups_from' + start_time[:-1] + '.png',
-                                                  start_time + 'time',
-                                                  'current_time',
-                                                  classification,
-                                                  figure_number=i + j * len(classified_scaleups) + 2)
-                if classification == 'program_prop':
-                    plot_scaleup_fns(model,
-                                     classified_scaleups[classification],
-                                     base + '_' + classification + 'scaleups_from' + start_time[:-1] + '.png',
-                                     start_time + 'time',
-                                     'current_time',
-                                     classification,
-                                     figure_number=i + j * len(classified_scaleups) + 2 + len(classified_scaleups) * len(times_to_plot))
 
 
 def plot_comparative_age_parameters(data_strat_list,

@@ -400,3 +400,43 @@ class Project:
             # Save document
             document.save(path)
 
+    def run_plotting(self):
+
+        if self.inputs.model_constants['output_scaleups']:
+            out_dir_project = self.find_or_make_directory()
+            base = os.path.join(out_dir_project, self.country + '_baseline')
+            self.plot_classified_scaleups(self.models['baseline'], base)
+
+    def plot_classified_scaleups(self, model, base):
+
+        # Classify scale-up functions
+        classifications = ['demo_', 'econ_', 'epi_', 'program_prop_', 'program_timeperiod']
+        classified_scaleups = {}
+        for classification in classifications:
+            classified_scaleups[classification] = []
+            for fn in model.scaleup_fns:
+                if classification in fn:
+                    classified_scaleups[classification] += [fn]
+
+        # Time periods to perform the plots over
+        times_to_plot = ['start_', 'recent_']
+
+        # Plot them from the start of the model and from "recent_time"
+        for i, classification in enumerate(classified_scaleups):
+            if len(classified_scaleups[classification]) > 0:
+                for j, start_time in enumerate(times_to_plot):
+                    autumn.plotting.plot_all_scaleup_fns_against_data(model,
+                                                      classified_scaleups[classification],
+                                                      base + '_' + classification + '_datascaleups_from' + start_time[:-1] + '.png',
+                                                      start_time + 'time',
+                                                      'current_time',
+                                                      classification,
+                                                      figure_number=i + j * len(classified_scaleups) + 2)
+                    if classification == 'program_prop':
+                        autumn.plotting.plot_scaleup_fns(model,
+                                         classified_scaleups[classification],
+                                         base + '_' + classification + 'scaleups_from' + start_time[:-1] + '.png',
+                                         start_time + 'time',
+                                         'current_time',
+                                         classification,
+                                         figure_number=i + j * len(classified_scaleups) + 2 + len(classified_scaleups) * len(times_to_plot))

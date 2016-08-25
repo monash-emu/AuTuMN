@@ -124,13 +124,11 @@ if inputs.model_constants['output_age_fractions']:
                                                 age_or_comorbidity='age',
                                                 start_time='early_time')
 
-if inputs.model_constants['output_scaleups']:
-    autumn.plotting.plot_classified_scaleups(models['baseline'], base)
-
 pngs = glob.glob(os.path.join(out_dir, '*png'))
 autumn.plotting.open_pngs(pngs)
 
 project.write_spreadsheets()
 project.write_documents()
+project.run_plotting()
 
 print('Time elapsed in running script is ' + str(datetime.datetime.now() - start_realtime))

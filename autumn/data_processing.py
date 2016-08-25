@@ -1025,8 +1025,13 @@ class Inputs:
         # Check that the time to start economics analyses from is earlier than the end time of the model run
         assert self.model_constants['econ_start_time'] \
                <= self.model_constants['scenario_end_time'], \
-            'period_end must be before the end of the model integration time'
+            'Period_end must be before the end of the model integration time'
 
+        # Check that all entered times occur after the model start time
+        for time in self.model_constants:
+            if time[-5:] == '_time' and '_step_time' not in time:
+                assert self.model_constants[time] >= self.model_constants['start_time'], \
+                    '% is before model start time' % self.model_constants[time]
 
 if __name__ == '__main__':
 

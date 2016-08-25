@@ -30,6 +30,7 @@ project = w_o.Project(country, inputs)
 base = os.path.join(out_dir, country + '_baseline')
 
 models = {}
+model_shelf = []  # will store the accepted model runs for the uncertainty analysis
 for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
 
     # Name model
@@ -49,8 +50,6 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
 
     models[scenario_name] = autumn.model.ConsolidatedModel(scenario, inputs)
 
-    if models[scenario_name].uncertainty:
-        model_shelf = models[scenario_name].run_uncertainty()
 
     if n == 0:
         print(autumn.tool_kit.introduce_model(models, scenario_name))
@@ -67,6 +66,12 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
     print('Running model "' + scenario_name + '".')
     if n == 0:
         print(autumn.tool_kit.describe_model(models, scenario_name))
+
+
+    if models[scenario_name].uncertainty:
+        # we only need to run uncertainty if this on the baseline scenario. Unless other specification (e.g. for counterfactual)
+        if scenario is None or models[scenario_name].uncertainty_for_all_scenarios:
+            model_shelf = models[scenario_name].run_uncertainty()
 
     # Integrate
     models[scenario_name].integrate()

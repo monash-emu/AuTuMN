@@ -118,11 +118,12 @@ class ConsolidatedModel(BaseModel):
         self.scaleup_fns = self.inputs.scaleup_fns[self.scenario]
 
         # Here-below is just provisional stuff. Should be read from spreadsheets
-        self.uncertainty = False
-        self.n_runs = 2
-        self.burn_in = 1
-        self.adaptive_search = True
-        self.search_width = 0.2
+        self.uncertainty = False  # Whether or not to run uncertainty
+        self.uncertainty_for_all_scenarios = False # If False. Uncertainty is based on baseline only. Scenarios will still include uncertainty
+        self.n_runs = 2  # number of accepted runs per scenario
+        self.burn_in = 0 # number of accepted runs that we burn
+        self.adaptive_search = True # if True, next candidate generated according to previous position
+        self.search_width = 0.2 # Width of the interval in which next parameter value is likely (95%) to be drawn. Expressed as a proportion of the width defined in bounds
         self.param_ranges_unc = [
             {
                 'key': u'tb_n_contact',

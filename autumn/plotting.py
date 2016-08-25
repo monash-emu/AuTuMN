@@ -16,379 +16,11 @@ Module for plotting population systems
 """
 
 
-
-def humanise_y_ticks(ax):
-
-    """
-    Coded by Bosco, does a few things, including rounding
-    axis values to thousands, millions or billions and abbreviating
-    these to single letters.
-
-    Args:
-        ax: The adapted axis
-
-    """
-
-
-    vals = list(ax.get_yticks())
-    max_val = max([abs(v) for v in vals])
-    if max_val < 1e3:
-        return
-    if max_val >= 1e3 and max_val < 1e6:
-        labels = ["%.1fK" % (v/1e3) for v in vals]
-    elif max_val >= 1e6 and max_val < 1e9:
-        labels = ["%.1fM" % (v/1e6) for v in vals]
-    elif max_val >= 1e9:
-        labels = ["%.1fB" % (v/1e9) for v in vals]
-    is_fraction = False
-    for label in labels:
-        if label[-3:-1] != ".0":
-            is_fraction = True
-    if not is_fraction:
-        labels = [l[:-3] + l[-1] for l in labels]
-    ax.set_yticklabels(labels)
-
-
-def find_smallest_factors_of_integer(n):
-
-    """
-    Quick method to iterate through integers to find the smallest whole number
-    fractions. Written only to be called by find_subplot_numbers.
-
-    Args:
-        n: Integer to be factorised
-
-    Returns:
-        answer: The two smallest factors of the integer
-
-    """
-
-    answer = [1E3, 1E3]
-    for i in range(1, n + 1):
-        if n % i == 0 and i+(n/i) < sum(answer):
-            answer = [i, n/i]
-    return answer
-
-
-def find_subplot_numbers(n):
-
-    # Find a nice number of subplots for a panel plot
-    answer = find_smallest_factors_of_integer(n)
-    i = 0
-    while i < 10:
-        if abs(answer[0] - answer[1]) > 3:
-            n = n + 1
-            answer = find_smallest_factors_of_integer(n)
-        i = i + 1
-
-    return answer
-
-
-def relax_y_axis(ax):
-
-    """
-    Matplotlib's default values often place curves very close to the top
-    of axes and sometimes extend down to small fractions for plots that are
-    proportions. This over-rides some of these defaults, that I don't like.
-    Args:
-        ax: Axis with default y-limits to be revised
-
-    Returns:
-        ylims: New y-lims that look better
-
-    """
-
-    ylims = list(ax.get_ylim())
-    if ylims[0] < ylims[1] * .75:
-        ylims[0] = 0.
-    else:
-        ylims[0] = ylims[0] * .6
-    ylims[1] = ylims[1] * 1.1
-
-    return ylims
-
-
-def get_nice_font_size(subplot_grid):
-
-    # Simple function to return a reasonable font size
-    # as appropriate to the number of rows of subplots in the figure
-    return 2. + 8. / subplot_grid[0]
-
-
-def find_truncation_points(model, left_xlimit):
-
-    # Not going to argue that the following code is the most elegant approach
-    right_xlimit_index = len(model.times) - 1
-    left_xlimit_index = 0
-    for i in range(len(model.times)):
-        if model.times[i] > left_xlimit:
-            left_xlimit_index = i
-            break
-    return right_xlimit_index, left_xlimit_index
-
-
-def find_reasonable_year_ticks(start_time, end_time):
-
-    """
-    Simple method to find some reasonably spaced x-ticks and making sure there
-    aren't too many of them
-
-    Args:
-        start_time: Plotting start time
-        end_time: Plotting end time
-
-    Returns:
-        xticks: List of where the x ticks should go
-    """
-
-    # If the range is divisible by 15
-    if (start_time - end_time) % 15 == 0:
-        xticks_any_length = numpy.arange(start_time, end_time + 15, 15)
-    # Otherwise if it's divisible by 10
-    elif (start_time - end_time) % 10 == 0:
-        xticks_any_length = numpy.arange(start_time, end_time + 10, 10)
-    # Otherwise just give up on having ticks along axis
-    else:
-        xticks_any_length = [start_time, end_time]
-
-    xticks = []
-    if len(xticks_any_length) > 10:
-        for i in range(len(xticks_any_length)):
-            if i % 2 == 0:
-                xticks += [xticks_any_length[i]]
-    else:
-        xticks = xticks_any_length
-
-    return xticks
-
-
-def find_standard_output_styles(labels, lightening_factor=1.):
-
-    """
-    Function to find some standardised colours for the outputs we'll typically
-    be reporting on - i.e. incidence, prevalence, mortality and notifications.
-    Incidence is black/grey, prevalence green, mortality red and notifications blue.
-
-    Args:
-        labels: List containing strings for the outputs that colours are needed for.
-        lightening_factor: Float between zero and one that specifies how much lighter to make
-            the colours - with 0. being no additional lightening (black or dark green/red/blue)
-            and 1. being completely lightened to reach white.
-
-    Returns:
-        colour: Colour for plotting
-        indices: List of strings to be used to find the data in the data object
-        yaxis_label: Unit of measurement for outcome
-        title: Title for plot (so far usually a subplot)
-        patch_colour: Colour half way between colour and white
-    """
-
-    colour = []
-    indices = []
-    yaxis_label = []
-    title = []
-    patch_colour = []
-
-    if "incidence" in labels:
-        colour += [(lightening_factor, lightening_factor, lightening_factor)]
-        indices += ['e_inc_100k']
-        yaxis_label += ['Per 100,000 per year']
-        title += ["Incidence"]
-    if "mortality" in labels:
-        colour += [(1., lightening_factor, lightening_factor)]
-        indices += ['e_mort_exc_tbhiv_100k']
-        yaxis_label += ['Per 100,000 per year']
-        title += ["Mortality"]
-    if "prevalence" in labels:
-        colour += [(lightening_factor, 0.5 + 0.5 * lightening_factor, lightening_factor)]
-        indices += ['e_prev_100k']
-        yaxis_label += ['Per 100,000']
-        title += ["Prevalence"]
-    if "notifications" in labels:
-        colour += [(lightening_factor, lightening_factor, 0.5 + 0.5 * lightening_factor)]
-        yaxis_label += ['']
-        title += ["Notifications"]
-
-    # Create a colour half-way between the line colour and white for patches
-    for i in range(len(colour)):
-        patch_colour += [[]]
-        for j in range(len(colour[i])):
-            patch_colour[i] += [1. - (1. - colour[i][j]) / 2.]
-
-    return colour, indices, yaxis_label, title, patch_colour
-
-
-def make_default_line_styles(n, return_all=True):
-
-    """
-    Produces a standard set of line styles that isn't adapted to
-    the data being plotted.
-
-    Args:
-        n: The number of line-styles
-        return_all: Whether to return all of the styles up to n or just the last one
-
-    Returns:
-        line_styles: A list of standard line-styles, or if return_all is False,
-            then the single item (for methods that are iterating through plots.
-
-    """
-
-    # Iterate through a standard set of line styles
-    for i in range(n):
-        line_styles = []
-        for line in ["-", ":", "-.", "--"]:
-            for colour in "rbgkmcy":
-                line_styles.append(line + colour)
-
-    if return_all:
-        return line_styles
-    else:
-        return line_styles[n-1]
-
-
-def make_related_line_styles(labels, strain_or_organ):
-
-    colours = {}
-    patterns = {}
-    compartment_full_names = {}
-    markers = {}
-    for label in labels:
-        colour, pattern, compartment_full_name, marker =\
-            get_line_style(label, strain_or_organ)
-        colours[label] = colour
-        patterns[label] = pattern
-        compartment_full_names[label] = compartment_full_name
-        markers[label] = marker
-    return colours, patterns, compartment_full_names, markers
-
-
-def get_line_style(label, strain_or_organ):
-
-    # Unassigned groups remain black
-    colour = (0, 0, 0)
-    if "susceptible_vac" in label:  # susceptible_unvac remains black
-        colour = (0.3, 0.3, 0.3)
-    elif "susceptible_treated" in label:
-        colour = (0.6, 0.6, 0.6)
-    if "latent" in label:  # latent_early remains as for latent
-        colour = (0, 0.4, 0.8)
-    if "latent_late" in label:
-        colour = (0, 0.2, 0.4)
-    if "active" in label:
-        colour = (0.9, 0, 0)
-    elif "detect" in label:
-        colour = (0, 0.5, 0)
-    elif "missed" in label:
-        colour = (0.5, 0, 0.5)
-    if "treatment" in label:  # treatment_infect remains as for treatment
-        colour = (1, 0.5, 0)
-    if "treatment_noninfect" in label:
-        colour = (1, 1, 0)
-
-    pattern = get_line_pattern(label, strain_or_organ)
-
-    category_full_name = label
-    if "susceptible" in label:
-        category_full_name = "Susceptible"
-    if "susceptible_fully" in label:
-        category_full_name = "Fully susceptible"
-    elif "susceptible_vac" in label:
-        category_full_name = "BCG vaccinated, susceptible"
-    elif "susceptible_treated" in label:
-        category_full_name = "Previously treated, susceptible"
-    if "latent" in label:
-        category_full_name = "Latent"
-    if "latent_early" in label:
-        category_full_name = "Early latent"
-    elif "latent_late" in label:
-        category_full_name = "Late latent"
-    if "active" in label:
-        category_full_name = "Active, yet to present"
-    elif "detect" in label:
-        category_full_name = "Detected"
-    elif "missed" in label:
-        category_full_name = "Missed"
-    if "treatment" in label:
-        category_full_name = "Under treatment"
-    if "treatment_infect" in label:
-        category_full_name = "Infectious under treatment"
-    elif "treatment_noninfect" in label:
-        category_full_name = "Non-infectious under treatment"
-
-    if "smearpos" in label:
-        category_full_name += ", \nsmear-positive"
-    elif "smearneg" in label:
-        category_full_name += ", \nsmear-negative"
-    elif "extrapul" in label:
-        category_full_name += ", \nextrapulmonary"
-
-    if "_ds" in label:
-        category_full_name += ", \nDS-TB"
-    elif "_mdr" in label:
-        category_full_name += ", \nMDR-TB"
-    elif "_xdr" in label:
-        category_full_name += ", \nXDR-TB"
-
-    marker = ""
-
-    return colour, pattern, category_full_name, marker
-
-
-def get_line_pattern(label, strain_or_organ):
-
-    pattern = "-"  # Default solid line
-    if strain_or_organ == "organ":
-        if "smearneg" in label:
-            pattern = "-."
-        elif "extrapul" in label:
-            pattern = ":"
-    elif strain_or_organ == "strain":
-        if "_mdr" in label:
-            pattern = '-.'
-        elif "_xdr" in label:
-            pattern = '.'
-
-    return pattern
-
-
-def make_plot_title(model, labels):
-
-    try:
-        if labels is model.labels:
-            title = "by each individual compartment"
-        elif labels is model.compartment_types \
-                or labels is model.compartment_types_bystrain:
-            title = "by types of compartments"
-        elif labels is model.broad_compartment_types_byorgan:
-            title = "by organ involvement"
-        elif labels is model.broad_compartment_types \
-                or labels is model.broad_compartment_types_bystrain:
-            title = "by broad types of compartments"
-        elif labels is model.groups["ever_infected"]:
-            title = "within ever infected compartments"
-        elif labels is model.groups["infected"]:
-            title = "within infected compartments"
-        elif labels is model.groups["active"]:
-            title = "within active disease compartments"
-        elif labels is model.groups["infectious"]:
-            title = "within infectious compartments"
-        elif labels is model.groups["identified"]:
-            title = "within identified compartments"
-        elif labels is model.groups["treatment"]:
-            title = "within treatment compartments"
-        else:
-            title = "not sure"
-        return title
-    except:
-        return ""
-
-
 def plot_populations(model, labels, values, left_xlimit, strain_or_organ, png=None):
 
-    right_xlimit_index, left_xlimit_index = find_truncation_points(model, left_xlimit)
+    right_xlimit_index, left_xlimit_index = write_outputs.find_truncation_points(model, left_xlimit)
     colours, patterns, compartment_full_names, markers\
-        = make_related_line_styles(labels, strain_or_organ)
+        = write_outputs.make_related_line_styles(labels, strain_or_organ)
     ax = write_outputs.make_axes_with_room_for_legend()
     axis_labels = []
     ax.plot(
@@ -408,7 +40,7 @@ def plot_populations(model, labels, values, left_xlimit, strain_or_organ, png=No
             linestyle=patterns[plot_label])
         axis_labels.append(compartment_full_names[plot_label])
 
-    title = make_plot_title(model, labels)
+    title = write_outputs.make_plot_title(model, labels)
 
     write_outputs.set_axes_props(ax, 'Year', 'Persons',
                    'Population, ' + title, True,
@@ -418,9 +50,9 @@ def plot_populations(model, labels, values, left_xlimit, strain_or_organ, png=No
 
 def plot_fractions(model, values, left_xlimit, strain_or_organ, png=None, figure_number=30):
 
-    right_xlimit_index, left_xlimit_index = find_truncation_points(model, left_xlimit)
+    right_xlimit_index, left_xlimit_index = write_outputs.find_truncation_points(model, left_xlimit)
     colours, patterns, compartment_full_names, markers\
-        = make_related_line_styles(values.keys(), strain_or_organ)
+        = write_outputs.make_related_line_styles(values.keys(), strain_or_organ)
     fig = pyplot.figure(figure_number)
     ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
     axis_labels = []
@@ -433,7 +65,7 @@ def plot_fractions(model, values, left_xlimit, strain_or_organ, png=None, figure
             marker=markers[plot_label],
             linestyle=patterns[plot_label])
         axis_labels.append(compartment_full_names[plot_label])
-    title = make_plot_title(model, values.keys())
+    title = write_outputs.make_plot_title(model, values.keys())
     write_outputs.set_axes_props(ax, 'Year', 'Proportion of population',
         'Population, ' + title, True, axis_labels)
     save_png(png)
@@ -469,14 +101,14 @@ def plot_stratified_populations(model, png=None, age_or_comorbidity='age', start
         stratified_soln, denominator = tool_kit.sum_over_compartments(model, stratification)
         stratified_fraction = tool_kit.get_fraction_soln(stratified_soln.keys(), stratified_soln, denominator)
 
-        colours = make_default_line_styles(len(stratification), return_all=True)
+        colours = write_outputs.make_default_line_styles(len(stratification), return_all=True)
 
         # Loop over starting from the model start and the specified starting time
         for i_time, plot_left_time in enumerate(['recent_time', start_time]):
 
             # Find starting times
             right_xlimit_index, left_xlimit_index \
-                = find_truncation_points(model,
+                = write_outputs.find_truncation_points(model,
                                          model.inputs['model_constants'][plot_left_time])
             title_time_text = tool_kit.find_title_from_dictionary(plot_left_time)
 
@@ -517,12 +149,12 @@ def plot_stratified_populations(model, png=None, age_or_comorbidity='age', start
                     ax.set_xlim(int(model.times[left_xlimit_index]),
                                 model.times[right_xlimit_index])
                     ax.set_title('Total numbers' + title_time_text, fontsize=8)
-                    xticks = find_reasonable_year_ticks(int(model.times[left_xlimit_index]),
+                    xticks = write_outputs.find_reasonable_year_ticks(int(model.times[left_xlimit_index]),
                                                         model.times[right_xlimit_index])
                     ax.set_xticks(xticks)
                     for axis_to_change in [ax.xaxis, ax.yaxis]:
                         for tick in axis_to_change.get_major_ticks():
-                            tick.label.set_fontsize(get_nice_font_size([2]))
+                            tick.label.set_fontsize(write_outputs.get_nice_font_size([2]))
                     if i_time == 1:
                         ax.legend(reversed(ax.lines), reversed(legd_text), loc=2, frameon=False, fontsize=8)
 
@@ -536,12 +168,12 @@ def plot_stratified_populations(model, png=None, age_or_comorbidity='age', start
                     ax.set_xlim(int(model.times[left_xlimit_index]),
                                 model.times[right_xlimit_index])
                     ax.set_title('Proportion of population' + title_time_text, fontsize=8)
-                    xticks = find_reasonable_year_ticks(int(model.times[left_xlimit_index]),
+                    xticks = write_outputs.find_reasonable_year_ticks(int(model.times[left_xlimit_index]),
                                                         model.times[right_xlimit_index])
                     ax.set_xticks(xticks)
                     for axis_to_change in [ax.xaxis, ax.yaxis]:
                         for tick in axis_to_change.get_major_ticks():
-                            tick.label.set_fontsize(get_nice_font_size([2]))
+                            tick.label.set_fontsize(write_outputs.get_nice_font_size([2]))
 
                 # Add group values to the lower plot range for next iteration
                 for j in range(len(lower_plot_margin_count)):
@@ -584,7 +216,7 @@ def plot_outputs_against_gtb(model,
 
     # Get standard colours for plotting GTB data against
     colour, indices, yaxis_label, title, patch_colour = \
-        find_standard_output_styles(labels, lightening_factor=0.3)
+        write_outputs.find_standard_output_styles(labels, lightening_factor=0.3)
 
     # Get the colours for the model outputs
     if scenario is None:
@@ -593,7 +225,7 @@ def plot_outputs_against_gtb(model,
         output_colour = ['-k'] * len(labels)
     else:
         # Otherwise cycling through colours
-        output_colour = [make_default_line_styles(scenario, False)] * len(labels)
+        output_colour = [write_outputs.make_default_line_styles(scenario, False)] * len(labels)
 
     # Extract the plotting data of interest
     plotting_data = []
@@ -608,9 +240,9 @@ def plot_outputs_against_gtb(model,
                 plotting_data[i]['point_estimate'] = model.inputs.original_data['tb'][j]
 
     # Truncate data to what you want to look at (rather than going back to the dawn of time)
-    right_xlimit_index, left_xlimit_index = find_truncation_points(model, start_time)
+    right_xlimit_index, left_xlimit_index = write_outputs.find_truncation_points(model, start_time)
 
-    subplot_grid = find_subplot_numbers(len(labels))
+    subplot_grid = write_outputs.find_subplot_numbers(len(labels))
 
     # Time to plot until
     end_time = model.inputs.model_constants[end_time_str]
@@ -665,7 +297,7 @@ def plot_outputs_against_gtb(model,
                             color=colour[i], linewidth=0.5)
 
                     # Create the patch array
-                    patch_array = create_patch_from_dictionary(plotting_data[i])
+                    patch_array = write_outputs.create_patch_from_dictionary(plotting_data[i])
 
                     # Create the patch image and plot it
                     patch = patches.Polygon(patch_array, color=patch_colour[i])
@@ -679,19 +311,19 @@ def plot_outputs_against_gtb(model,
                     ax.set_ylim((0., max_output * 1.1))
 
             # Set x-ticks
-            xticks = find_reasonable_year_ticks(start_time, end_time)
+            xticks = write_outputs.find_reasonable_year_ticks(start_time, end_time)
             ax.set_xticks(xticks)
 
             # Adjust size of labels of x-ticks
             for axis_to_change in [ax.xaxis, ax.yaxis]:
                 for tick in axis_to_change.get_major_ticks():
-                    tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+                    tick.label.set_fontsize(write_outputs.get_nice_font_size(subplot_grid))
 
             # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
-            ax.set_title(title[i], fontsize=get_nice_font_size(subplot_grid) + 2.)
+            ax.set_title(title[i], fontsize=write_outputs.get_nice_font_size(subplot_grid) + 2.)
 
             # Label the y axis with the smaller text size
-            ax.set_ylabel(yaxis_label[i], fontsize=get_nice_font_size(subplot_grid))
+            ax.set_ylabel(yaxis_label[i], fontsize=write_outputs.get_nice_font_size(subplot_grid))
 
             # Get the handles, except for the last one, which plots the data
             scenario_handles = ax.lines[:-1]
@@ -708,7 +340,7 @@ def plot_outputs_against_gtb(model,
             # Draw the legend
             ax.legend(scenario_handles,
                       scenario_labels,
-                      fontsize=get_nice_font_size(subplot_grid) - 2.,
+                      fontsize=write_outputs.get_nice_font_size(subplot_grid) - 2.,
                       frameon=False)
 
     if final_run:
@@ -751,12 +383,12 @@ def plot_outputs_by_age(model,
         output_colour = ['-k']
     else:
         # Otherwise cycling through colours
-        output_colour = [make_default_line_styles(scenario, False)]
+        output_colour = [write_outputs.make_default_line_styles(scenario, False)]
 
     # Truncate data to what you want to look at (rather than going back to the dawn of time)
-    right_xlimit_index, left_xlimit_index = find_truncation_points(model, start_time)
+    right_xlimit_index, left_xlimit_index = write_outputs.find_truncation_points(model, start_time)
 
-    subplot_grid = find_subplot_numbers(len(model.agegroups) * 2 + 1)
+    subplot_grid = write_outputs.find_subplot_numbers(len(model.agegroups) * 2 + 1)
 
     # Time to plot until
     end_time = model.inputs.model_constants[end_time_str]
@@ -793,21 +425,21 @@ def plot_outputs_by_age(model,
             if scenario is None:
 
                 # Set x-ticks
-                xticks = find_reasonable_year_ticks(start_time, end_time)
+                xticks = write_outputs.find_reasonable_year_ticks(start_time, end_time)
                 ax.set_xticks(xticks)
 
                 # Adjust size of labels of x-ticks
                 for axis_to_change in [ax.xaxis, ax.yaxis]:
                     for tick in axis_to_change.get_major_ticks():
-                        tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+                        tick.label.set_fontsize(write_outputs.get_nice_font_size(subplot_grid))
 
                 # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
                 ax.set_title(tool_kit.capitalise_first_letter(output) + ', '
-                             + tool_kit.turn_strat_into_label(agegroup), fontsize=get_nice_font_size(subplot_grid))
+                             + tool_kit.turn_strat_into_label(agegroup), fontsize=write_outputs.get_nice_font_size(subplot_grid))
 
                 # Label the y axis with the smaller text size
                 if i == 0:
-                    ax.set_ylabel('Per 100,000 per year', fontsize=get_nice_font_size(subplot_grid))
+                    ax.set_ylabel('Per 100,000 per year', fontsize=write_outputs.get_nice_font_size(subplot_grid))
 
                 # Set upper y-limit to the maximum value for any age group during the period of interest
                 ax.set_ylim(bottom=0., top=ymax)
@@ -827,7 +459,7 @@ def plot_outputs_by_age(model,
                 # Draw the legend
                 ax.legend(scenario_handles,
                           scenario_labels,
-                          fontsize=get_nice_font_size(subplot_grid) - 2.,
+                          fontsize=write_outputs.get_nice_font_size(subplot_grid) - 2.,
                           frameon=False)
 
     # Save
@@ -835,38 +467,10 @@ def plot_outputs_by_age(model,
         save_png(png)
 
 
-def create_patch_from_dictionary(dict):
-
-    """
-    Creates an array that can be used as a patch for plotting
-    Args:
-        dict: Dictionary with keys 'lower_limit', 'upper_limit' and 'year'
-            (at least, although 'point_estimate' will also usually be there)
-
-    Returns:
-        patch_array: The patch array for plotting
-    """
-
-    patch_array = numpy.zeros(shape=(len(dict['lower_limit']) * 2, 2))
-    j = 0
-    for i in dict['lower_limit']:
-        # Years going forwards
-        patch_array[j][0] = i
-        # Years going backwards
-        patch_array[-(j + 1)][0] = i
-        # Lower limit data going forwards
-        patch_array[j][1] = dict['lower_limit'][i]
-        # Upper limit data going backwards
-        patch_array[-(j + 1)][1] = dict['upper_limit'][i]
-        j += 1
-
-    return patch_array
-
-
 def plot_flows(model, labels, png=None):
 
     colours, patterns, compartment_full_names\
-        = make_related_line_styles(labels)
+        = write_outputs.make_related_line_styles(labels)
     ax = write_outputs.make_axes_with_room_for_legend()
     axis_labels = []
     for i_plot, plot_label in enumerate(labels):
@@ -887,7 +491,7 @@ def plot_scaleup_fns(model, functions, png=None,
                      start_time_str='start_time', end_time_str='',
                      parameter_type='', country=u'', figure_number=1):
 
-    line_styles = make_default_line_styles(len(functions), True)
+    line_styles = write_outputs.make_default_line_styles(len(functions), True)
     if start_time_str == 'recent_time':
         start_time = model.inputs.model_constants[start_time_str]
     else:
@@ -913,7 +517,7 @@ def plot_scaleup_fns(model, functions, png=None,
     write_outputs.set_axes_props(ax, 'Year', 'Parameter value',
                    title, True, functions)
 
-    ylims = relax_y_axis(ax)
+    ylims = write_outputs.relax_y_axis(ax)
     ax.set_ylim(bottom=ylims[0], top=ylims[1])
 
     save_png(png)
@@ -944,7 +548,7 @@ def plot_comparative_age_parameters(data_strat_list,
     width = .6
     ax.bar(x_positions, data_value_list, width)
     ax.set_ylabel('Parameter value',
-                  fontsize=get_nice_font_size(subplot_grid))
+                  fontsize=write_outputs.get_nice_font_size(subplot_grid))
     ax.set_title('Input data', fontsize=12)
     ax.set_xticklabels(data_strat_labels, rotation=45)
     ax.set_xticks(x_positions)

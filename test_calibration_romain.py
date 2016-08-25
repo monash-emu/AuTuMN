@@ -13,19 +13,13 @@ import autumn.curve
 import autumn.plotting
 import autumn.data_processing
 import autumn.tool_kit
+from autumn.tool_kit import indices
 
 import datetime
 from autumn.spreadsheet import read_input_data_xls
 
 from scipy.optimize import minimize
 import openpyxl as xl
-
-# Following function likely to be needed later as we have calibration inputs
-# at multiple time points
-
-
-def indices(a, func):
-    return [i for (i, val) in enumerate(a) if func(val)]
 
 
 def is_positive_definite(v):
@@ -188,6 +182,8 @@ class ModelRunner:
         self.is_last_run_success = True
         # self.model.integrate_explicit()
         try:
+            print self.model.params['tb_n_contact']
+            #self.model.integrate_runge_kutta()
             self.model.integrate_explicit()
         except:
             print "Warning: parameters=%s failed with model" % params
@@ -534,7 +530,6 @@ def run_calibration(n_runs, calibrated_params, targeted_outputs, dt=None):
 
     print("Time elapsed in running script is " + str(datetime.datetime.now() - start_realtime))
 
-
 def run_uncertainty(n_runs, param_ranges_unc, outputs_unc, burn_in=10, dt=None, adaptive_search=True ,search_width=0.2):
     """
         run the uncertainty analysis for a country
@@ -647,6 +642,7 @@ def run_uncertainty(n_runs, param_ranges_unc, outputs_unc, burn_in=10, dt=None, 
     i_candidates = 0
     j = 0
     prev_log_likelihood = -1e10
+    params = []
     while n_accepted < n_runs + burn_in:
         new_params = []
         if not adaptive_search:
@@ -657,6 +653,7 @@ def run_uncertainty(n_runs, param_ranges_unc, outputs_unc, burn_in=10, dt=None, 
                 new_params = []
                 for par_dict in param_ranges_unc:
                     new_params.append(par_candidates[par_dict['key']][j])
+                    params.append(par_candidates[par_dict['key']][j])
             else:
                 new_params = update_par(params)
 
@@ -805,7 +802,7 @@ targeted_outputs = [  # the targeted outputs
 ]
 n_runs = 5
 
-run_calibration(n_runs, calibration_params, targeted_outputs)
+#run_calibration(n_runs, calibration_params, targeted_outputs)
 
 
 
@@ -816,38 +813,38 @@ run_calibration(n_runs, calibration_params, targeted_outputs)
 param_ranges_unc = [
     {
         'key': u'tb_n_contact',
-        'bounds': [6.5, 8.5],
+        'bounds': [6.0, 6.2],
         'distribution': 'uniform'
-    },
-    {
-        'key': u'program_prop_death_reporting',
-        'bounds': [0.1, 0.6],
-        'distribution': 'beta'
-    }
+    }#,
+    # {
+    #     'key': u'program_prop_death_reporting',
+    #     'bounds': [0.1, 0.6],
+    #     'distribution': 'beta'
+    # }
 ]
 
 outputs_unc = [
     {
         'key': 'incidence',
         'posterior_width': None
-    },
-    {
-        'key': 'mortality',
-        'posterior_width': 1.0
-    }
+    }#,
+    # {
+    #     'key': 'mortality',
+    #     'posterior_width': 1.0
+    # }
 ]
 
-#n_runs = 2
+n_runs = 5
 
-#model_shelf = run_uncertainty(n_runs, param_ranges_unc, outputs_unc, burn_in=5, dt=0.075, adaptive_search=True, search_width=0.2)
+model_shelf = run_uncertainty(n_runs, param_ranges_unc, outputs_unc, burn_in=5, dt=0.1, adaptive_search=True, search_width=0.2)
 # Notes:
 # adapt for time variant params
 # prevent the algorithm from getting stuck
 # include economics bit after integration of economics with the epi model
 
 
-#spaghetti_plot_uncertainty(model_shelf, 'Fiji')
-
+spaghetti_plot_uncertainty(model_shelf, 'Fiji')
+print 'end'
 
 #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #   #
 #   #  Determine the initial population size (uncomment code below))    #

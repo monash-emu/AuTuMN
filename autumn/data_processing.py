@@ -265,7 +265,7 @@ class Inputs:
 
         # Find diabetes_specific parameters
         if '_diabetes' in self.comorbidities:
-            self.find_diabetes_effects(10.)
+            self.find_diabetes_effects()
 
         # Calculate rates of progression to active disease or late latency
         self.find_progression_rates_from_params()
@@ -708,16 +708,12 @@ class Inputs:
             self.model_constants['tb_prop_casefatality_untreated_extrapul'] \
                 = self.model_constants['tb_prop_casefatality_untreated_smearneg']
 
-    def find_diabetes_effects(self, age_cut_off):
+    def find_diabetes_effects(self):
 
         """
         This code needs generalising to all comorbidities and parameters,
         but is specific to diabetes's effect on progression rates at the moment.
         Currently multiplies progression rate by the relevant multiplier for older age groups.
-
-        Args:
-            age_cut_off: Diabetes-specific parameters will be applied to any age group whose lower bound is greater
-                than this value.
         """
 
         diabetes_parameters = {}
@@ -742,7 +738,7 @@ class Inputs:
                 param_without_age = param[:-len(age_string)]
 
                 # Only apply to adults (i.e. age groups with a lower limit greater than 10)
-                if age_limits[0] >= age_cut_off:
+                if age_limits[0] >= self.model_constants['comorb_startage_diabetes']:
                     diabetes_parameters[param_without_age + '_diabetes' + age_string] \
                         = self.model_constants[param] \
                           * self.model_constants['comorb_multiplier_diabetes_progression']

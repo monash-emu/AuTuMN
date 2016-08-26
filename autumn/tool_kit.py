@@ -2,6 +2,7 @@
 import random
 from matplotlib import pyplot, patches
 from scipy import exp
+import outputs
 
 
 def capitalise_first_letter(old_string):
@@ -595,7 +596,7 @@ def adapt_params_to_stratification(data_breakpoints,
     for i in model_strat_list:
         model_value_list += [model_param_vals[i]]
 
-    plot_comparative_age_parameters(data_strat_list,
+    outputs.plot_comparative_age_parameters(data_strat_list,
                                                     data_value_list,
                                                     model_value_list,
                                                     model_strat_list,

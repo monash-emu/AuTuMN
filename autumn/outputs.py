@@ -956,8 +956,8 @@ def plot_outputs_by_age(model,
 def plot_flows(model, labels, png=None):
 
     colours, patterns, compartment_full_names\
-        = write_outputs.make_related_line_styles(labels)
-    ax = write_outputs.make_axes_with_room_for_legend()
+        = make_related_line_styles(labels)
+    ax = make_axes_with_room_for_legend()
     axis_labels = []
     for i_plot, plot_label in enumerate(labels):
         ax.plot(
@@ -967,17 +967,17 @@ def plot_flows(model, labels, png=None):
             color=colours[plot_label],
             linestyle=patterns[plot_label])
         axis_labels.append(compartment_full_names[plot_label])
-    write_outputs.set_axes_props(ax, 'Year', 'Change per year, thousands',
+    set_axes_props(ax, 'Year', 'Change per year, thousands',
                    'Aggregate flows in/out of compartment',
                    True, axis_labels)
-    write_outputs.save_png(png)
+    save_png(png)
 
 
 def plot_scaleup_fns(model, functions, png=None,
                      start_time_str='start_time', end_time_str='',
                      parameter_type='', country=u'', figure_number=1):
 
-    line_styles = write_outputs.make_default_line_styles(len(functions), True)
+    line_styles = make_default_line_styles(len(functions), True)
     if start_time_str == 'recent_time':
         start_time = model.inputs.model_constants[start_time_str]
     else:
@@ -987,7 +987,7 @@ def plot_scaleup_fns(model, functions, png=None,
 
     pyplot.figure(figure_number)
 
-    ax = write_outputs.make_axes_with_room_for_legend()
+    ax = make_axes_with_room_for_legend()
     for figure_number, function in enumerate(functions):
         ax.plot(x_vals,
                 map(model.scaleup_fns[function],
@@ -1000,13 +1000,13 @@ def plot_scaleup_fns(model, functions, png=None,
     title = str(country) + ' ' + \
             tool_kit.find_title_from_dictionary(parameter_type) + \
             ' parameter' + plural + tool_kit.find_title_from_dictionary(start_time_str)
-    write_outputs.set_axes_props(ax, 'Year', 'Parameter value',
+    set_axes_props(ax, 'Year', 'Parameter value',
                    title, True, functions)
 
-    ylims = write_outputs.relax_y_axis(ax)
+    ylims = relax_y_axis(ax)
     ax.set_ylim(bottom=ylims[0], top=ylims[1])
 
-    write_outputs.save_png(png)
+    save_png(png)
 
 
 def plot_comparative_age_parameters(data_strat_list,
@@ -1034,7 +1034,7 @@ def plot_comparative_age_parameters(data_strat_list,
     width = .6
     ax.bar(x_positions, data_value_list, width)
     ax.set_ylabel('Parameter value',
-                  fontsize=write_outputs.get_nice_font_size(subplot_grid))
+                  fontsize=get_nice_font_size(subplot_grid))
     ax.set_title('Input data', fontsize=12)
     ax.set_xticklabels(data_strat_labels, rotation=45)
     ax.set_xticks(x_positions)
@@ -1061,7 +1061,7 @@ def plot_comparative_age_parameters(data_strat_list,
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
     base = os.path.join(out_dir, parameter_name)
-    write_outputs.save_png(base + '_param_adjustment.png')
+    save_png(base + '_param_adjustment.png')
 
 
 

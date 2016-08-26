@@ -30,7 +30,7 @@ project = w_o.Project(country, inputs)
 base = os.path.join(out_dir, country + '_baseline')
 
 models = {}
-model_shelf = []  # will store the accepted model runs for the uncertainty analysis
+model_shelf= []  # will store the accepted model runs for the uncertainty analysis
 for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
 
     # Name model
@@ -67,14 +67,13 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
     if n == 0:
         print(autumn.tool_kit.describe_model(models, scenario_name))
 
-
     if models[scenario_name].uncertainty:
         # we only need to run uncertainty if this on the baseline scenario. Unless other specification (e.g. for counterfactual)
         if scenario is None or models[scenario_name].uncertainty_for_all_scenarios:
             models[scenario_name].run_uncertainty()
-    else:
-        # Integrate
-        models[scenario_name].integrate()
+
+    # Integrate the rigid parameterization in any case. Indeed, we still need the central estimates for uncertainty
+    models[scenario_name].integrate()
 
     print('Time elapsed to completion of integration is ' + str(datetime.datetime.now() - start_realtime))
 
@@ -101,10 +100,8 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
 
     project.models[scenario_name] = []
     if models[scenario_name].uncertainty:
-        for mod in models[scenario_name].model_shelf:
-            project.models[scenario_name].append(mod)
-    else:
-        project.models[scenario_name].append(models[scenario_name])  # Store the model in the object 'project'
+        project.model_shelf_uncertainty[scenario_name] = models[scenario_name].model_shelf
+    project.models[scenario_name] = models[scenario_name]
 
 # Write to spreadsheets
 project.create_output_dicts()  # Store simplified outputs

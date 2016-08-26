@@ -1086,6 +1086,8 @@ class Project:
         self.out_dir_project = os.path.join('projects', self.name)
         if not os.path.isdir(self.out_dir_project):
             os.makedirs(self.out_dir_project)
+        self.model_shelf_uncertainty = {}
+
 
     #################################
     # General methods for use below #

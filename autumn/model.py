@@ -118,7 +118,7 @@ class ConsolidatedModel(BaseModel):
         self.scaleup_fns = self.inputs.scaleup_fns[self.scenario]
 
         # Here-below is just provisional stuff. Should be read from spreadsheets
-        self.uncertainty = False  # Whether or not to run uncertainty
+        self.uncertainty = True  # Whether or not to run uncertainty
         self.uncertainty_for_all_scenarios = False # If False. Uncertainty is based on baseline only. Scenarios will still include uncertainty
         self.n_runs = 2  # number of accepted runs per scenario
         self.burn_in = 0 # number of accepted runs that we burn
@@ -137,6 +137,10 @@ class ConsolidatedModel(BaseModel):
                 'posterior_width': None
             }
         ]
+
+        self.accepted_parameters = {}
+        self.loglikelihoods = []
+        self.model_shelf = []
 
     def define_model_structure(self):
 
@@ -1307,7 +1311,7 @@ class ConsolidatedModel(BaseModel):
             Returns:
                 master storage unit that will keep track of all accepted parameter sets and associated model objects (with integration run)
             """
-        model_shelf = []  # the master storage unit be returned
+        #model_shelf = []  # the master storage unit be returned
         model_runner = autumn.model_runner.ModelRunner(self)
         print self.inputs.country
         print "Uncertainty analysis"
@@ -1340,9 +1344,9 @@ class ConsolidatedModel(BaseModel):
         normal_char = model_runner.get_normal_char()
 
         # start simulation
-        par_accepted = {}
+
         for par_dict in self.param_ranges_unc:
-            par_accepted[par_dict['key']] = []
+            self.accepted_parameters[par_dict['key']] = []
         n_accepted = 0
         i_candidates = 0
         j = 0
@@ -1401,7 +1405,7 @@ class ConsolidatedModel(BaseModel):
                     n_accepted += 1
                     k = 0
                     for par_dict in self.param_ranges_unc:
-                        par_accepted[par_dict['key']].append(new_params[k])
+                        self.accepted_parameters[par_dict['key']].append(new_params[k])
                         k += 1
                     prev_log_likelihood = log_likelihood
                     params = new_params
@@ -1415,13 +1419,8 @@ class ConsolidatedModel(BaseModel):
                             k += 1
 
                         model_copy = copy.copy(model_runner.model)
-                        model_shelf.append(
-                            {
-                                'model': model_copy,
-                                'params': params_dict,
-                                'log_likelihood': log_likelihood
-                            }
-                        )
+                        self.model_shelf.append(model_copy)
+                        self.loglikelihoods.append(log_likelihood)
 
             i_candidates += 1
             j += 1
@@ -1431,6 +1430,5 @@ class ConsolidatedModel(BaseModel):
                 j = 0
             print (str(n_accepted) + ' accepted / ' + str(i_candidates) + ' candidates')
 
-        return model_shelf
 
 

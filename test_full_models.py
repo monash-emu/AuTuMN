@@ -30,7 +30,6 @@ project = w_o.Project(country, inputs)
 base = os.path.join(out_dir, country + '_baseline')
 
 models = {}
-model_shelf= []  # will store the accepted model runs for the uncertainty analysis
 for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
 
     # Name model

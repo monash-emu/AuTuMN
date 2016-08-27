@@ -97,7 +97,7 @@ class ModelRunner:
                 for year in self.data_to_fit[output_dict['key']].keys():
                     low = self.data_to_fit['incidence_low'][year]
                     high = self.data_to_fit['incidence_high'][year]
-                    sd = (high - low) / (2.0 * 1.96)
+                    sd = output_dict['width_multiplier']*(high - low) / (2.0 * 1.96)
                     mu = 0.5 * (high + low)
                     normal_char[output_dict['key']][year] = [mu, sd]
 

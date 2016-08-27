@@ -127,14 +127,15 @@ class ConsolidatedModel(BaseModel):
         self.param_ranges_unc = [
             {
                 'key': u'tb_n_contact',
-                'bounds': [6.0, 6.2],
+                'bounds': [5.6, 7.0],
                 'distribution': 'uniform'
             }
         ]
         self.outputs_unc = [
             {
                 'key': 'incidence',
-                'posterior_width': None
+                'posterior_width': None,
+                'width_multiplier': 1.5  # for incidence for ex. Width of Normal posterior relative to CI width in data
             }
         ]
 

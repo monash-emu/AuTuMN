@@ -119,16 +119,10 @@ class ConsolidatedModel(BaseModel):
 
         # Here-below is just provisional stuff. Should be read from spreadsheets
         self.n_runs = 2  # number of accepted runs per scenario
-        self.burn_in = 0 # number of accepted runs that we burn
-        self.adaptive_search = True # if True, next candidate generated according to previous position
-        self.search_width = 0.2 # Width of the interval in which next parameter value is likely (95%) to be drawn. Expressed as a proportion of the width defined in bounds
-        self.param_ranges_unc = [
-            {
-                'key': u'tb_n_contact',
-                'bounds': [5.6, 7.0],
-                'distribution': 'uniform'
-            }
-        ]
+        self.burn_in = 0  # number of accepted runs that we burn
+        self.adaptive_search = True  # if True, next candidate generated according to previous position
+        self.search_width = 0.2  # Width of the interval in which next parameter value is likely (95%) to be drawn. Expressed as a proportion of the width defined in bounds
+        self.param_ranges_unc = []
         self.outputs_unc = [
             {
                 'key': 'incidence',
@@ -1293,25 +1287,41 @@ class ConsolidatedModel(BaseModel):
             i += 1
         return (new_pars)
 
+    def find_uncertainty_params(self):
+
+        """
+        Populate a dictionary of uncertainty parameters from the inputs dictionary in a format that matches
+        Romain's code for uncertainty.
+        """
+
+        for param in self.inputs.model_constants:
+            if '_uncertainty' in param and type(self.inputs.model_constants[param]) == dict:
+                self.param_ranges_unc += [{'key': param[:-12],
+                                           'bounds': [self.inputs.model_constants[param]['lower'],
+                                                      self.inputs.model_constants[param]['upper']],
+                                           'distribution': 'uniform'}]
+
     def run_uncertainty(self):
 
         """
-            run the uncertainty analysis for a country
+        Run the uncertainty analysis for a country
 
-            Args:
-                n_runs: number of accepted parameter sets that we want
-                param_ranges_unc: dictionary defining the parameter ranges
-                outputs_unc: dictionary defining the outputs that we are targeting
-                dt: step time for integration. If None, it will be automatically determined to get optimal calculation time
-                adaptive_search: if True, the next candidate is generated from Normal distribution centred around current position
-                                 if False, the prior distribution is used to generate the parameter
-                search_width: relevant when adaptive_search is True. Define the relative width of the 95% SI corresponding to the
-                              new candidate generation from the normal distribution. It is relative to the width of the
-                              attribute 'bounds' of 'param_ranges_unc'. i.e. search_width = 1.0 -> bounds is the 95% SI
-            Returns:
-                master storage unit that will keep track of all accepted parameter sets and associated model objects (with integration run)
-            """
-        #model_shelf = []  # the master storage unit be returned
+        Args:
+            n_runs: number of accepted parameter sets that we want
+            param_ranges_unc: dictionary defining the parameter ranges
+            outputs_unc: dictionary defining the outputs that we are targeting
+            dt: step time for integration. If None, it will be automatically determined to get optimal calculation time
+            adaptive_search: if True, the next candidate is generated from Normal distribution centred around current position
+                             if False, the prior distribution is used to generate the parameter
+            search_width: relevant when adaptive_search is True. Define the relative width of the 95% SI corresponding to the
+                          new candidate generation from the normal distribution. It is relative to the width of the
+                          attribute 'bounds' of 'param_ranges_unc'. i.e. search_width = 1.0 -> bounds is the 95% SI
+        Returns:
+            master storage unit that will keep track of all accepted parameter sets and associated model objects (with integration run)
+        """
+
+        self.find_uncertainty_params()
+
         model_runner = autumn.model_runner.ModelRunner(self)
         print self.inputs.country
         print "Uncertainty analysis"

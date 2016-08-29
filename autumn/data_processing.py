@@ -220,7 +220,7 @@ class Inputs:
         self.add_demo_dictionaries_to_timevariants()
 
         # Add time-variant organ status to time variant parameters
-        if self.time_variants['epi_prop_smearpos']['load_data'] == 'yes':
+        if self.time_variants['epi_prop_smearpos']['load_data'] == u'yes':
             self.add_organ_status_to_timevariants()
 
         # Add outcomes for resistant strains - currently using XDR-TB outcomes for inappropriate treatment
@@ -311,7 +311,7 @@ class Inputs:
         """
 
         # Vaccination
-        if self.time_variants['program_perc_vaccination']['load_data'] == 'yes':
+        if self.time_variants['program_perc_vaccination']['load_data'] == u'yes':
             for year in self.original_data['bcg']:
                 # If not already loaded through the inputs spreadsheet
                 if year not in self.time_variants['program_perc_vaccination']:
@@ -319,7 +319,7 @@ class Inputs:
                         = self.original_data['bcg'][year]
 
         # Case detection
-        if self.time_variants['program_perc_detect']['load_data'] == 'yes':
+        if self.time_variants['program_perc_detect']['load_data'] == u'yes':
             for year in self.original_data['tb']['c_cdr']:
                 # If not already loaded through the inputs spreadsheet
                 if year not in self.time_variants['program_perc_detect']:
@@ -435,7 +435,7 @@ class Inputs:
         for outcome in ['_success', '_death']:
 
             # Populate data
-            if self.time_variants['program_prop_treatment' + outcome]['load_data'] == 'yes':
+            if self.time_variants['program_prop_treatment' + outcome]['load_data'] == u'yes':
 
                 # Correct naming GTB report
                 if outcome == '_success':
@@ -467,7 +467,7 @@ class Inputs:
         """
 
         for demo_parameter in ['life_expectancy', 'rate_birth']:
-            if self.time_variants['demo_' + demo_parameter]['load_data'] == 'yes':
+            if self.time_variants['demo_' + demo_parameter]['load_data'] == u'yes':
                 for year in self.original_data[demo_parameter]:
                     if year not in self.time_variants['demo_' + demo_parameter]:
                         self.time_variants['demo_' + demo_parameter][year] \
@@ -510,7 +510,7 @@ class Inputs:
                                                percent=True))
 
             # Populate MDR and XDR data from outcomes dictionary into time variants where requested and not entered
-            if self.time_variants['program_prop_treatment_success_' + strain]['load_data'] == 'yes':
+            if self.time_variants['program_prop_treatment_success_' + strain]['load_data'] == u'yes':
                 for year in self.derived_data['prop_' + strain + '_succ']:
                     if year not in self.time_variants['program_prop_treatment_success_' + strain]:
                         self.time_variants['program_prop_treatment_success_' + strain][year] \
@@ -810,31 +810,31 @@ class Inputs:
         if self.model_constants['n_organs'] < 2:
             # Leave organ variation as false if no organ stratification and warn if variation requested
             for status in ['pos', 'neg']:
-                if self.time_variants['epi_prop_smear' + status]['time_variant'] == 'yes':
+                if self.time_variants['epi_prop_smear' + status]['time_variant'] == u'yes':
                     warnings.warn('time variant smear-' + status + ' proportion requested, but ' +
                                   'model is not stratified by organ status. Therefore, time variant smear-' + status +
                                   ' status has been turned off.')
-                    self.time_variants['epi_prop_smear' + status]['time_variant'] = 'no'
+                    self.time_variants['epi_prop_smear' + status]['time_variant'] = u'no'
         else:
 
             # Change to organ variation true if organ stratification and smear-positive variation requested
-            if self.time_variants['epi_prop_smearpos']['time_variant'] == 'yes':
+            if self.time_variants['epi_prop_smearpos']['time_variant'] == u'yes':
                 self.is_organvariation = True
                 # Warn if smear-negative variation not requested
-                if self.time_variants['epi_prop_smearneg']['time_variant'] == 'no':
+                if self.time_variants['epi_prop_smearneg']['time_variant'] == u'no':
                     warnings.warn('requested time variant smear-positive status, but ' +
                                   'not time variant smear-negative status. Therefore, changed to time variant ' +
                                   'smear-negative status.')
-                    self.time_variants['epi_prop_smearneg']['time_variant'] = 'yes'
+                    self.time_variants['epi_prop_smearneg']['time_variant'] = u'yes'
 
             # Leave organ variation as false if smear-positive variation not requested
-            elif self.time_variants['epi_prop_smearpos']['time_variant'] == 'no':
+            elif self.time_variants['epi_prop_smearpos']['time_variant'] == u'no':
                 # Warn if smear-negative variation requested
-                if self.time_variants['epi_prop_smearneg']['time_variant'] == 'yes':
+                if self.time_variants['epi_prop_smearneg']['time_variant'] == u'yes':
                     warnings.warn('requested non-time variant smear-positive status, but ' +
                                   'time variant smear-negative status. Therefore, changed to non-time variant ' +
                                   'smear-negative status.')
-                    self.time_variants['epi_prop_smearneg']['time_variant'] = 'no'
+                    self.time_variants['epi_prop_smearneg']['time_variant'] = u'no'
 
         # Set fixed parameters if no organ status variation
         if not self.is_organvariation:
@@ -854,7 +854,7 @@ class Inputs:
         self.time_variants['epi_prop_amplification'] \
             = {self.model_constants['start_mdr_introduce_time']: 0.,
                self.model_constants['end_mdr_introduce_time']: self.model_constants['tb_prop_amplification'],
-               'time_variant': 'yes'}
+               'time_variant': u'yes'}
 
     def find_ipt_params(self):
 
@@ -944,7 +944,7 @@ class Inputs:
                     whether_time_variant[param] = self.scaleup_data[scenario][param].pop('time_variant')
 
                 # If time variant
-                if whether_time_variant[param] == 'yes':
+                if whether_time_variant[param] == u'yes':
 
                     # Extract and remove the smoothness parameter from the dictionary
                     if 'smoothness' in self.scaleup_data[scenario][param]:
@@ -977,7 +977,7 @@ class Inputs:
                                             intervention_start_date=self.model_constants['scenario_start_time'])
 
                 # If no is selected in the time variant column
-                elif whether_time_variant[param] == 'no':
+                elif whether_time_variant[param] == u'no':
 
                     # Get rid of smoothness, which isn't relevant
                     if 'smoothness' in self.scaleup_data[scenario][param]:

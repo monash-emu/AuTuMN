@@ -348,10 +348,11 @@ class DefaultProgramReader:
                     self.data[row[0]][int(self.parlist[i])] = \
                         row[i]
                 elif row[i] != '':
-                    self.data[str(row[0])][self.parlist[i]] = \
+                    self.data[str(row[0])][str(self.parlist[i])] = \
                         row[i]
 
     def get_data(self):
+
         return self.data
 
 

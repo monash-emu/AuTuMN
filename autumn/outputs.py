@@ -671,169 +671,6 @@ def plot_stratified_populations(model, png=None, age_or_comorbidity='age', start
         save_png(png)
 
 
-def plot_outputs_against_gtb(model,
-                             labels,
-                             start_time,
-                             end_time_str='current_time',
-                             png=None,
-                             country='',
-                             scenario=None,
-                             gtb=True,
-                             figure_number=31,
-                             final_run=True):
-
-    """
-    Produces the plot for the main outputs, can handle multiple scenarios (if required).
-    Save as png at the end.
-    Note that if running a series of scenarios, it is expected that the last scenario to
-    be run will be baseline, which should have scenario set to None.
-
-    Args:
-        model: The entire model object
-        labels: A list of the outputs to be plotted
-        start_time: Starting time
-        end_time_str: String to access end time from data
-        png:
-        country: Country being plotted (just need for title)
-        scenario: The scenario being run, number needed for line colour
-
-    """
-
-    # Get standard colours for plotting GTB data against
-    colour, indices, yaxis_label, title, patch_colour = \
-        find_standard_output_styles(labels, lightening_factor=0.3)
-
-    # Get the colours for the model outputs
-    if scenario is None:
-        # Last scenario to run should be baseline and should be run last
-        # to lay a black line over the top for comparison
-        output_colour = ['-k'] * len(labels)
-    else:
-        # Otherwise cycling through colours
-        output_colour = [make_default_line_styles(scenario, False)] * len(labels)
-
-    # Extract the plotting data of interest
-    plotting_data = []
-    for i in range(len(indices)):
-        plotting_data += [{}]
-        for j in model.inputs.original_data['tb']:
-            if indices[i] in j and '_lo' in j:
-                plotting_data[i]['lower_limit'] = model.inputs.original_data['tb'][j]
-            elif indices[i] in j and '_hi' in j:
-                plotting_data[i]['upper_limit'] = model.inputs.original_data['tb'][j]
-            elif indices[i] in j:
-                plotting_data[i]['point_estimate'] = model.inputs.original_data['tb'][j]
-
-    # Truncate data to what you want to look at (rather than going back to the dawn of time)
-    right_xlimit_index, left_xlimit_index = find_truncation_points(model, start_time)
-
-    subplot_grid = find_subplot_numbers(len(labels))
-
-    # Time to plot until
-    end_time = model.inputs.model_constants[end_time_str]
-
-    # Not sure whether we have to specify a figure number
-    fig = pyplot.figure(figure_number)
-
-    # Overall title
-    fig.suptitle(country + ' model outputs', fontsize=12)
-
-    # Truncate notification data to years of interest
-    notification_data = {}
-    for i in model.inputs.original_data['notifications']['c_newinc']:
-        if i > start_time:
-            notification_data[i] = \
-                model.inputs.original_data['notifications']['c_newinc'][i]
-
-    for i, outcome in enumerate(labels):
-
-        ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1)
-
-        # Plot the modelled data
-        ax.plot(
-            model.times[left_xlimit_index: right_xlimit_index],
-            model.get_var_soln(labels[i])[left_xlimit_index: right_xlimit_index],
-            color=output_colour[i][1],
-            linestyle=output_colour[i][0],
-            linewidth=1.5)
-
-        # This is supposed to mean if it's the last scenario, which is the baseline
-        # (provided the function has been called as intended).
-        if scenario is None:
-
-            if gtb:
-            # Plot the GTB data
-            # Notifications are just plotted against raw reported notifications,
-            # as there are no confidence intervals around these values.
-
-                max_modelled_output = max(model.get_var_soln(labels[i])[left_xlimit_index: right_xlimit_index])
-
-                if outcome == 'notifications':
-                    ax.plot(notification_data.keys(), notification_data.values(),
-                            color=colour[i], linewidth=0.5)
-                    max_notifications = max(notification_data.values())
-                    if max_modelled_output > max_notifications:
-                        max_notifications = max_modelled_output
-                    ax.set_ylim((0., max_notifications * 1.1))
-
-                else:
-                    # Central point-estimate
-                    ax.plot(plotting_data[i]['point_estimate'].keys(), plotting_data[i]['point_estimate'].values(),
-                            color=colour[i], linewidth=0.5)
-
-                    # Create the patch array
-                    patch_array = create_patch_from_dictionary(plotting_data[i])
-
-                    # Create the patch image and plot it
-                    patch = patches.Polygon(patch_array, color=patch_colour[i])
-                    ax.add_patch(patch)
-
-                    max_output = max(plotting_data[i]['upper_limit'].values())
-                    if max_modelled_output > max_output:
-                        max_output = max_modelled_output
-
-                    # Make y-axis range extend downwards to zero
-                    ax.set_ylim((0., max_output * 1.1))
-
-            # Set x-ticks
-            xticks = find_reasonable_year_ticks(start_time, end_time)
-            ax.set_xticks(xticks)
-
-            # Adjust size of labels of x-ticks
-            for axis_to_change in [ax.xaxis, ax.yaxis]:
-                for tick in axis_to_change.get_major_ticks():
-                    tick.label.set_fontsize(get_nice_font_size(subplot_grid))
-
-            # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
-            ax.set_title(title[i], fontsize=get_nice_font_size(subplot_grid) + 2.)
-
-            # Label the y axis with the smaller text size
-            ax.set_ylabel(yaxis_label[i], fontsize=get_nice_font_size(subplot_grid))
-
-            # Get the handles, except for the last one, which plots the data
-            scenario_handles = ax.lines[:-1]
-
-            # Make some string labels for these handles
-            # (this code could probably be better)
-            scenario_labels = []
-            for i in range(len(scenario_handles)):
-                if i < len(scenario_handles) - 1:
-                    scenario_labels += ['Scenario ' + str(i + 1)]
-                else:
-                    scenario_labels += ['Baseline']
-
-            # Draw the legend
-            ax.legend(scenario_handles,
-                      scenario_labels,
-                      fontsize=get_nice_font_size(subplot_grid) - 2.,
-                      frameon=False)
-
-    if final_run:
-
-        # Save
-        save_png(png)
-
-
 def plot_outputs_by_age(model,
                         start_time,
                         end_time_str='current_time',
@@ -1134,7 +971,8 @@ class Project:
                 solution = self.models[scenario].get_var_soln(label)
                 self.full_output_dict[scenario][label] = dict(zip(times, solution))
 
-                if len(self.model_shelf_uncertainty) > 0: #uncertainty is on
+                # Add uncertainty data to full dictionary
+                if len(self.model_shelf_uncertainty) > 0:
                     n_runs = len(self.model_shelf_uncertainty[scenario])
                     prov_array = np.empty([len(times), n_runs])  # will store all the estimates across all the runs
                     for run in range(n_runs):
@@ -1160,7 +998,8 @@ class Project:
                         economics_dict['cost_' + intervention][self.models[model].costs['cost_times'][t]] \
                             = self.models[model].costs[intervention]['raw_cost'][t]
 
-                    if len(self.model_shelf_uncertainty) > 0:  # uncertainty is on
+                    # Add uncertainty data to full dictionary
+                    if len(self.model_shelf_uncertainty) > 0:
                         times = self.models[model].costs['cost_times']
                         n_runs = len(self.model_shelf_uncertainty[model])
                         prov_array = np.empty([len(times), n_runs])  # will store all the estimates across all the runs
@@ -1170,6 +1009,7 @@ class Project:
                         cis_high = np.percentile(prov_array, q=100 - 0.5 * (100. - self.ci_percentage), axis=1)
                         economics_dict['cost_' + intervention + '_low'] = dict(zip(times, cis_low))
                         economics_dict['cost_' + intervention + '_high'] = dict(zip(times, cis_high))
+
             self.full_output_dict[model].update(economics_dict)
 
     def extract_integer_dict(self):
@@ -1459,6 +1299,17 @@ class Project:
         if self.inputs.model_constants['output_scaleups']:
             self.plot_classified_scaleups(self.models['baseline'])
 
+        # Plot main outputs
+        base = os.path.join('fullmodel_graphs', self.country + '_baseline')
+        for scenario in self.inputs.model_constants['scenarios_to_run']:
+            self.plot_outputs_against_gtb(
+                ['incidence', 'mortality', 'prevalence', 'notifications'],
+                self.inputs.model_constants['recent_time'],
+                'scenario_end_time',
+                base + '_outputs_gtb.png',
+                self.country,
+                figure_number=31)
+
     def plot_classified_scaleups(self, model):
 
         # Classify scale-up functions
@@ -1578,3 +1429,146 @@ class Project:
 
         save_png(png)
 
+    def plot_outputs_against_gtb(self,
+                                 labels,
+                                 start_time,
+                                 end_time_str='current_time',
+                                 png=None,
+                                 country='',
+                                 figure_number=31):
+
+        """
+        Produces the plot for the main outputs, can handle multiple scenarios (if required).
+        Save as png at the end.
+        Note that if running a series of scenarios, it is expected that the last scenario to
+        be run will be baseline, which should have scenario set to None.
+
+        Args:
+            model: The entire model object
+            labels: A list of the outputs to be plotted
+            start_time: Starting time
+            end_time_str: String to access end time from data
+            png:
+            country: Country being plotted (just need for title)
+            scenario: The scenario being run, number needed for line colour
+
+        """
+
+        # Get standard colours for plotting GTB data against
+        colour, indices, yaxis_label, title, patch_colour = \
+            find_standard_output_styles(labels, lightening_factor=0.3)
+
+        # Extract the plotting data of interest from the GTB loaded data
+        plotting_data = []
+        for i in range(len(indices)):
+            plotting_data += [{}]
+            for j in self.inputs.original_data['tb']:
+                if indices[i] in j and '_lo' in j:
+                    plotting_data[i]['lower_limit'] = self.inputs.original_data['tb'][j]
+                elif indices[i] in j and '_hi' in j:
+                    plotting_data[i]['upper_limit'] = self.inputs.original_data['tb'][j]
+                elif indices[i] in j:
+                    plotting_data[i]['point_estimate'] = self.inputs.original_data['tb'][j]
+        notification_data = {}
+        for i in self.inputs.original_data['notifications']['c_newinc']:
+            if i > start_time:
+                notification_data[i] = \
+                    self.inputs.original_data['notifications']['c_newinc'][i]
+
+        # Find configuration of subplots
+        subplot_grid = find_subplot_numbers(len(labels))
+
+        # Time to plot until
+        end_time = self.inputs.model_constants[end_time_str]
+
+        # Not sure whether we have to specify a figure number
+        fig = pyplot.figure(figure_number)
+
+        # Overall title
+        fig.suptitle(country + ' model outputs', fontsize=12)
+
+        for i, outcome in enumerate(labels):
+
+            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1)
+
+            if outcome == 'notifications':
+                ax.plot(notification_data.keys(), notification_data.values(),
+                        color=colour[i], linewidth=0.5)
+                max_notifications = max(notification_data.values())
+
+            else:
+
+                # Central point-estimate
+                ax.plot(plotting_data[i]['point_estimate'].keys(), plotting_data[i]['point_estimate'].values(),
+                        color=colour[i], linewidth=0.5)
+
+                # Create the patch array
+                patch_array = create_patch_from_dictionary(plotting_data[i])
+
+                # Create the patch image and plot it
+                patch = patches.Polygon(patch_array, color=patch_colour[i])
+                ax.add_patch(patch)
+
+                max_output = max(plotting_data[i]['upper_limit'].values())
+
+            for m, model in enumerate(self.models):
+                # Truncate data to what you want to look at (rather than going back to the dawn of time)
+                right_xlimit_index, left_xlimit_index = find_truncation_points(self.models[model], start_time)
+
+                modelled_data = self.models[model].get_var_soln(labels[i])[left_xlimit_index: right_xlimit_index]
+                max_modelled_output = max(modelled_data)
+
+                if outcome == 'notifications':
+                    if max_modelled_output > max_notifications:
+                        max_notifications = max_modelled_output
+                else:
+                    if max_modelled_output > max_output:
+                        max_output = max_modelled_output
+
+                # Plot the modelled data
+                ax.plot(
+                    self.models[model].times[left_xlimit_index: right_xlimit_index],
+                    modelled_data,
+                    color='k',
+                    linestyle='-',
+                    linewidth=1.5)
+
+            if outcome == 'notifications':
+                ax.set_ylim((0., max_notifications * 1.1))
+            else:
+                ax.set_ylim((0., max_output * 1.1))
+
+            # Set x-ticks
+            xticks = find_reasonable_year_ticks(start_time, end_time)
+            ax.set_xticks(xticks)
+
+            # Adjust size of labels of x-ticks
+            for axis_to_change in [ax.xaxis, ax.yaxis]:
+                for tick in axis_to_change.get_major_ticks():
+                    tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+
+            # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
+            ax.set_title(title[i], fontsize=get_nice_font_size(subplot_grid) + 2.)
+
+            # Label the y axis with the smaller text size
+            ax.set_ylabel(yaxis_label[i], fontsize=get_nice_font_size(subplot_grid))
+
+            # Get the handles, except for the last one, which plots the data
+            scenario_handles = ax.lines[:-1]
+            # Make some string labels for these handles
+            # (this code could probably be better)
+            scenario_labels = []
+            for i in range(len(scenario_handles)):
+                if i < len(scenario_handles) - 1:
+                    scenario_labels += ['Scenario ' + str(i + 1)]
+                else:
+                    scenario_labels += ['Baseline']
+
+            # Draw the legend
+            ax.legend(scenario_handles,
+                      scenario_labels,
+                      fontsize=get_nice_font_size(subplot_grid) - 2.,
+                      frameon=False)
+
+        # Save
+        save_png(png)

@@ -86,15 +86,7 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
 
     print('Time elapsed to completion of integration is ' + str(datetime.datetime.now() - start_realtime))
 
-    autumn.outputs.plot_outputs_against_gtb(
-        models[scenario_name], ['incidence', 'mortality', 'prevalence', 'notifications'],
-        inputs.model_constants['recent_time'],
-        'scenario_end_time',
-        base + '_outputs_gtb.png',
-        country,
-        scenario=scenario,
-        figure_number=31,
-        final_run=final)
+
 
     if inputs.model_constants['output_by_age']:
         autumn.outputs.plot_outputs_by_age(

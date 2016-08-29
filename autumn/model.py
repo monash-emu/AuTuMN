@@ -1377,6 +1377,7 @@ class ConsolidatedModel(BaseModel):
                     new_params = self.update_par(params)
 
             model_runner.run_with_params(new_params)
+
             if not model_runner.is_last_run_success:
                 accepted = 0
             else:
@@ -1428,8 +1429,8 @@ class ConsolidatedModel(BaseModel):
                             params_dict[par_dict['key']] = new_params[k]
                             k += 1
 
-                        model_copy = copy.copy(model_runner.model)
-                        self.model_shelf.append(model_copy)
+                        model_to_store = copy.deepcopy(model_runner.model)
+                        self.model_shelf.append(model_to_store)
                         self.loglikelihoods.append(log_likelihood)
 
             i_candidates += 1

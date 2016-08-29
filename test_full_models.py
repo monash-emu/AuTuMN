@@ -59,6 +59,13 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
             models['baseline'].times[scenario_start_time_index]
         models[scenario_name].loaded_compartments = \
             models['baseline'].load_state(scenario_start_time_index)
+        if models[scenario_name].uncertainty:
+            for count_run in range(len(models['baseline'].model_shelf)):
+                new_model = autumn.model.ConsolidatedModel(scenario, inputs)
+                new_model.start_time = models['baseline'].model_shelf[count_run].times[scenario_start_time_index]
+                new_model.loaded_compartments = models['baseline'].model_shelf[count_run].load_state(scenario_start_time_index)
+                new_model.integrate()
+                models[scenario_name].model_shelf.append(new_model)
 
     # Describe model
     print('Running model "' + scenario_name + '".')

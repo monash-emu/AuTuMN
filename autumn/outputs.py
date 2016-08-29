@@ -1133,6 +1133,7 @@ class Project:
                 times = self.models[scenario].times
                 solution = self.models[scenario].get_var_soln(label)
                 self.full_output_dict[scenario][label] = dict(zip(times, solution))
+
                 if len(self.model_shelf_uncertainty) > 0: #uncertainty is on
                     n_runs = len(self.model_shelf_uncertainty[scenario])
                     prov_array = np.empty([len(times), n_runs])  # will store all the estimates across all the runs
@@ -1140,8 +1141,8 @@ class Project:
                         prov_array[:, run] = self.model_shelf_uncertainty[scenario][run].get_var_soln(label)
                     cis_low = np.percentile(prov_array, q=0.5*(100. - self.ci_percentage), axis=1)
                     cis_high = np.percentile(prov_array, q=100 - 0.5*(100. - self.ci_percentage), axis=1)
-                self.full_output_dict[scenario][label + '_low'] = dict(zip(times, cis_low))
-                self.full_output_dict[scenario][label + '_high'] = dict(zip(times, cis_high))
+                    self.full_output_dict[scenario][label + '_low'] = dict(zip(times, cis_low))
+                    self.full_output_dict[scenario][label + '_high'] = dict(zip(times, cis_high))
 
     def add_full_economics_dict(self):
 
@@ -1158,6 +1159,7 @@ class Project:
                     for t in range(len(self.models[model].costs['cost_times'])):
                         economics_dict['cost_' + intervention][self.models[model].costs['cost_times'][t]] \
                             = self.models[model].costs[intervention]['raw_cost'][t]
+
                     if len(self.model_shelf_uncertainty) > 0:  # uncertainty is on
                         times = self.models[model].costs['cost_times']
                         n_runs = len(self.model_shelf_uncertainty[model])

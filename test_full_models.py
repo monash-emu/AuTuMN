@@ -5,7 +5,7 @@ import datetime
 import autumn.model
 import autumn.tool_kit
 from autumn.spreadsheet import read_input_data_xls
-import autumn.outputs as w_o
+import autumn.outputs as outputs
 import autumn.data_processing
 
 # Start timer
@@ -25,7 +25,7 @@ out_dir = 'fullmodel_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
-project = w_o.Project(country, inputs)
+project = outputs.Project(country, inputs)
 
 base = os.path.join(out_dir, country + '_baseline')
 
@@ -49,7 +49,6 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
 
     models[scenario_name] = autumn.model.ConsolidatedModel(scenario, inputs)
 
-
     if n == 0:
         print(autumn.tool_kit.introduce_model(models, scenario_name))
 
@@ -66,10 +65,14 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
     if n == 0:
         print(autumn.tool_kit.describe_model(models, scenario_name))
 
-    if models[scenario_name].uncertainty:
-        # we only need to run uncertainty if this on the baseline scenario. Unless other specification (e.g. for counterfactual)
-        if scenario is None or models[scenario_name].uncertainty_for_all_scenarios:
-            models[scenario_name].run_uncertainty()
+    # Create Boolean for uncertainty for this run to save re-typing the multi-factorial condition statement
+    uncertainty_this_run = False
+    if (inputs.model_constants['output_uncertainty'] and scenario is None) \
+            or inputs.model_constants['output_uncertainty_all_scenarios']:
+
+        # Generally only run uncertainty if this on the baseline scenario, unless specified otherwise
+        uncertainty_this_run = True
+        models[scenario_name].run_uncertainty()
 
     # Integrate the rigid parameterization in any case. Indeed, we still need the central estimates for uncertainty
     models[scenario_name].integrate()
@@ -98,7 +101,7 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
             final_run=final)
 
     project.models[scenario_name] = []
-    if models[scenario_name].uncertainty:
+    if uncertainty_this_run:
         project.model_shelf_uncertainty[scenario_name] = models[scenario_name].model_shelf
     project.models[scenario_name] = models[scenario_name]
 

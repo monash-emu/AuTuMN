@@ -118,8 +118,6 @@ class ConsolidatedModel(BaseModel):
         self.scaleup_fns = self.inputs.scaleup_fns[self.scenario]
 
         # Here-below is just provisional stuff. Should be read from spreadsheets
-        self.uncertainty = True  # Whether or not to run uncertainty
-        self.uncertainty_for_all_scenarios = False # If False. Uncertainty is based on baseline only. Scenarios will still include uncertainty
         self.n_runs = 2  # number of accepted runs per scenario
         self.burn_in = 0 # number of accepted runs that we burn
         self.adaptive_search = True # if True, next candidate generated according to previous position
@@ -1296,6 +1294,7 @@ class ConsolidatedModel(BaseModel):
         return (new_pars)
 
     def run_uncertainty(self):
+
         """
             run the uncertainty analysis for a country
 

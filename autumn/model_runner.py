@@ -4,8 +4,9 @@ def is_positive_definite(v):
     return isfinite(v) and v > 0.0
 
 class ModelRunner:
+
     def __init__(self,
-                 model = None):
+                 model=None):
 
         self.model = model
         self.mode = 'uncertainty'

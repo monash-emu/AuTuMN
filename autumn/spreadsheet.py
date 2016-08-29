@@ -265,7 +265,6 @@ class ControlPanelReader:
         # Conditionals for model
         elif row[0][:3] == 'is_' or row[0][:11] == 'comorbidity':
             self.data[str(row[0])] = bool(row[1])
-            # self.add_bool_iteration(row)
 
         # Don't set scenarios through the default sheet
         elif row[0] == 'scenarios_to_run':
@@ -286,17 +285,16 @@ class ControlPanelReader:
         else:
             self.data[str(row[0])] = row[1]
 
-    def add_bool_iteration(self, row):
-
-        for i in range(1, len(row)):
-            if not row[i] == '':
-                self.data[str(row[0])] += [bool(row[i])]
-
-    def add_integer_iteration(self, row):
-
-        for i in range(1, len(row)):
-            if not row[i] == '':
-                self.data[str(row[0])] += [int(row[i])]
+        # Uncertainty parameters
+        # Not sure why this if statement needs to be split exactly, but huge bugs seem to occur if it isn't
+        if len(row) >= 4:
+            # If there is an entry in the second column and it is a constant parameter that could potentially
+            # be modified in uncertainty
+            if row[2] != '' and ('tb_' in row[0] or 'program_' in row[0]):
+                uncertainty_dict = {'point': row[1],
+                                    'lower': row[2],
+                                    'upper': row[3]}
+                self.data[str(row[0]) + '_uncertainty'] = uncertainty_dict
 
     def get_data(self):
 
@@ -311,7 +309,6 @@ class FixedParametersReader(ControlPanelReader):
         self.key = 'default_constants'
         self.filename = 'xls/data_default.xlsx'
         self.general_program_intialisations()
-
 
 
 class CountryParametersReader(FixedParametersReader):
@@ -641,10 +638,6 @@ def read_input_data_xls(from_test, sheets_to_read, country=None):
         sheet_readers.append(LaboratoriesReader(country))
     if 'strategy' in sheets_to_read:
         sheet_readers.append(StrategyReader(country))
-    if 'default_economics' in sheets_to_read:
-        sheet_readers.append(DefaultEconomicsReader())
-    if 'country_economics' in sheets_to_read:
-        sheet_readers.append(CountryEconomicsReader(country))
     if 'diabetes' in sheets_to_read:
         sheet_readers.append(DiabetesReportReader(country))
 
@@ -666,7 +659,7 @@ if __name__ == "__main__":
                                          'default_constants',
                                          'tb', 'notifications', 'outcomes',
                                          'country_constants',
-                                         'country_economics', 'default_economics',
+                                         'default_economics',
                                          'country_programs', 'default_programs',
                                          'diabetes'],
                                         country)

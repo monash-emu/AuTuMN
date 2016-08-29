@@ -358,7 +358,9 @@ class Inputs:
                             self.original_data['default_programs'][program_var][year]
 
     def add_model_constant_defaults(self,
-                                    other_sheets_with_constants=('diabetes', 'country_constants', 'default_constants')):
+                                    other_sheets_with_constants=('diabetes',
+                                                                 'country_constants',
+                                                                 'default_constants')):
 
         """
         Populate model_constants with data from control panel, country sheet or default sheet hierarhically

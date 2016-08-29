@@ -1443,9 +1443,8 @@ class Project:
             labels: A list of the outputs to be plotted
         """
 
-        # Outputs filename
+        # Standard preliminaries
         png = os.path.join(self.out_dir_project, self.country + '_main_outputs.png')
-
         start_time = self.inputs.model_constants['plot_start_time']
 
         # Get standard colours for plotting GTB data against
@@ -1453,21 +1452,7 @@ class Project:
             find_standard_output_styles(labels, lightening_factor=0.3)
 
         # Extract the plotting data of interest from the GTB loaded data
-        plotting_data = []
-        for i in range(len(indices)):
-            plotting_data += [{}]
-            for j in self.inputs.original_data['tb']:
-                if indices[i] in j and '_lo' in j:
-                    plotting_data[i]['lower_limit'] = self.inputs.original_data['tb'][j]
-                elif indices[i] in j and '_hi' in j:
-                    plotting_data[i]['upper_limit'] = self.inputs.original_data['tb'][j]
-                elif indices[i] in j:
-                    plotting_data[i]['point_estimate'] = self.inputs.original_data['tb'][j]
-        notification_data = {}
-        for i in self.inputs.original_data['notifications']['c_newinc']:
-            if i > start_time:
-                notification_data[i] = \
-                    self.inputs.original_data['notifications']['c_newinc'][i]
+
 
         # Find configuration of subplots
         subplot_grid = find_subplot_numbers(len(labels))
@@ -1480,25 +1465,42 @@ class Project:
 
         for i, outcome in enumerate(labels):
 
+            print(i)
+            print(outcome)
+
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1)
 
             if outcome == 'notifications':
+                notification_data = {}
+                for j in self.inputs.original_data['notifications']['c_newinc']:
+                    if j > start_time:
+                        notification_data[j] = \
+                            self.inputs.original_data['notifications']['c_newinc'][j]
                 ax.plot(notification_data.keys(), notification_data.values(),
                         color=colour[i], linewidth=0.5)
                 max_notifications = max(notification_data.values())
             else:
                 # Central point-estimate
-                ax.plot(plotting_data[i]['point_estimate'].keys(), plotting_data[i]['point_estimate'].values(),
+                plotting_data = {}
+                for j in self.inputs.original_data['tb']:
+                    if indices[i] in j and '_lo' in j:
+                        plotting_data['lower_limit'] = self.inputs.original_data['tb'][j]
+                    elif indices[i] in j and '_hi' in j:
+                        plotting_data['upper_limit'] = self.inputs.original_data['tb'][j]
+                    elif indices[i] in j:
+                        plotting_data['point_estimate'] = self.inputs.original_data['tb'][j]
+
+                ax.plot(plotting_data['point_estimate'].keys(), plotting_data['point_estimate'].values(),
                         color=colour[i], linewidth=0.5)
 
                 # Create the patch array
-                patch_array = create_patch_from_dictionary(plotting_data[i])
+                patch_array = create_patch_from_dictionary(plotting_data)
 
                 # Create the patch image and plot it
                 patch = patches.Polygon(patch_array, color=patch_colour[i])
                 ax.add_patch(patch)
 
-                max_output = max(plotting_data[i]['upper_limit'].values())
+                max_output = max(plotting_data['upper_limit'].values())
 
             for m, model in enumerate(self.models):
 
@@ -1553,11 +1555,11 @@ class Project:
             scenario_handles = ax.lines[1:]
             # Make some string labels for these handles
             scenario_labels = []
-            for i in range(len(scenario_handles)):
-                if i == 0:
+            for j in range(len(scenario_handles)):
+                if j == 0:
                     scenario_labels += ['Baseline']
                 else:
-                    scenario_labels += ['Scenario ' + str(i)]
+                    scenario_labels += ['Scenario ' + str(j)]
 
             # Draw the legend
             ax.legend(scenario_handles,

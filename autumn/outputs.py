@@ -1552,13 +1552,12 @@ class Project:
             # Get the handles, except for the last one, which plots the data
             scenario_handles = ax.lines[1:]
             # Make some string labels for these handles
-            # (this code could probably be better)
             scenario_labels = []
             for i in range(len(scenario_handles)):
-                if i < len(scenario_handles) - 1:
-                    scenario_labels += ['Scenario ' + str(i + 1)]
-                else:
+                if i == 0:
                     scenario_labels += ['Baseline']
+                else:
+                    scenario_labels += ['Scenario ' + str(i)]
 
             # Draw the legend
             ax.legend(scenario_handles,

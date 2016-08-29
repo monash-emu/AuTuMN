@@ -52,6 +52,14 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
     if n == 0:
         print(autumn.tool_kit.introduce_model(models, scenario_name))
 
+    # Create Boolean for uncertainty for this run to save re-typing the multi-factorial condition statement
+    uncertainty_this_run = False
+    if (inputs.model_constants['output_uncertainty'] and scenario is None) \
+            or inputs.model_constants['output_uncertainty_all_scenarios']:
+
+        # Generally only run uncertainty if this on the baseline scenario, unless specified otherwise
+        uncertainty_this_run = True
+
     if scenario is not None:
         scenario_start_time_index = \
             models['baseline'].find_time_index(inputs.model_constants['scenario_start_time'])
@@ -59,7 +67,7 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
             models['baseline'].times[scenario_start_time_index]
         models[scenario_name].loaded_compartments = \
             models['baseline'].load_state(scenario_start_time_index)
-        if models[scenario_name].uncertainty:
+        if uncertainty_this_run:
             for count_run in range(len(models['baseline'].model_shelf)):
                 new_model = autumn.model.ConsolidatedModel(scenario, inputs)
                 new_model.start_time = models['baseline'].model_shelf[count_run].times[scenario_start_time_index]
@@ -72,13 +80,7 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
     if n == 0:
         print(autumn.tool_kit.describe_model(models, scenario_name))
 
-    # Create Boolean for uncertainty for this run to save re-typing the multi-factorial condition statement
-    uncertainty_this_run = False
-    if (inputs.model_constants['output_uncertainty'] and scenario is None) \
-            or inputs.model_constants['output_uncertainty_all_scenarios']:
-
-        # Generally only run uncertainty if this on the baseline scenario, unless specified otherwise
-        uncertainty_this_run = True
+    if uncertainty_this_run:
         models[scenario_name].run_uncertainty()
 
     # Integrate the rigid parameterization in any case. Indeed, we still need the central estimates for uncertainty

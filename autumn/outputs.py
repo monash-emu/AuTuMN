@@ -13,7 +13,7 @@ import numpy
 import pylab
 import platform
 import os
-
+import warnings
 
 def relax_y_axis(ax):
 
@@ -312,7 +312,7 @@ def make_default_line_styles(n, return_all=True):
     for i in range(n):
         line_styles = []
         for line in ["-", ":", "-.", "--"]:
-            for colour in "rbgkmcy":
+            for colour in "krbgmcy":
                 line_styles.append(line + colour)
 
     if return_all:
@@ -926,7 +926,6 @@ class Project:
         self.model_shelf_uncertainty = {}
         self.ci_percentage = 95.
 
-
     #################################
     # General methods for use below #
     #################################
@@ -979,8 +978,8 @@ class Project:
                         prov_array[:, run] = self.model_shelf_uncertainty[scenario][run].get_var_soln(label)
                     cis_low = np.percentile(prov_array, q=0.5*(100. - self.ci_percentage), axis=1)
                     cis_high = np.percentile(prov_array, q=100 - 0.5*(100. - self.ci_percentage), axis=1)
-                self.full_output_dict[scenario][label + '_low'] = dict(zip(times, cis_low))
-                self.full_output_dict[scenario][label + '_high'] = dict(zip(times, cis_high))
+                    self.full_output_dict[scenario][label + '_low'] = dict(zip(times, cis_low))
+                    self.full_output_dict[scenario][label + '_high'] = dict(zip(times, cis_high))
 
     def add_full_economics_dict(self):
 
@@ -1295,20 +1294,25 @@ class Project:
 
     def run_plotting(self):
 
+        output_colours = make_default_line_styles(5, True)
+
+        self.output_colours = {}
+        for s, scenario in enumerate(self.scenarios):
+            self.output_colours[scenario] = output_colours[s]
+
         # Plot scale-up functions - currently only doing this for the baseline model run
         if self.inputs.model_constants['output_scaleups']:
             self.plot_classified_scaleups(self.models['baseline'])
 
         # Plot main outputs
         base = os.path.join('fullmodel_graphs', self.country + '_baseline')
-        for scenario in self.inputs.model_constants['scenarios_to_run']:
-            self.plot_outputs_against_gtb(
-                ['incidence', 'mortality', 'prevalence', 'notifications'],
-                self.inputs.model_constants['recent_time'],
-                'scenario_end_time',
-                base + '_outputs_gtb.png',
-                self.country,
-                figure_number=31)
+        self.plot_outputs_against_gtb(
+            ['incidence', 'mortality', 'prevalence', 'notifications'],
+            self.inputs.model_constants['recent_time'],
+            'scenario_end_time',
+            base + '_outputs_gtb.png',
+            self.country,
+            figure_number=31)
 
     def plot_classified_scaleups(self, model):
 
@@ -1495,9 +1499,7 @@ class Project:
                 ax.plot(notification_data.keys(), notification_data.values(),
                         color=colour[i], linewidth=0.5)
                 max_notifications = max(notification_data.values())
-
             else:
-
                 # Central point-estimate
                 ax.plot(plotting_data[i]['point_estimate'].keys(), plotting_data[i]['point_estimate'].values(),
                         color=colour[i], linewidth=0.5)
@@ -1512,6 +1514,7 @@ class Project:
                 max_output = max(plotting_data[i]['upper_limit'].values())
 
             for m, model in enumerate(self.models):
+
                 # Truncate data to what you want to look at (rather than going back to the dawn of time)
                 right_xlimit_index, left_xlimit_index = find_truncation_points(self.models[model], start_time)
 
@@ -1529,8 +1532,8 @@ class Project:
                 ax.plot(
                     self.models[model].times[left_xlimit_index: right_xlimit_index],
                     modelled_data,
-                    color='k',
-                    linestyle='-',
+                    color=self.output_colours[model][1],
+                    linestyle=self.output_colours[model][0],
                     linewidth=1.5)
 
             if outcome == 'notifications':
@@ -1554,7 +1557,7 @@ class Project:
             ax.set_ylabel(yaxis_label[i], fontsize=get_nice_font_size(subplot_grid))
 
             # Get the handles, except for the last one, which plots the data
-            scenario_handles = ax.lines[:-1]
+            scenario_handles = ax.lines[1:]
             # Make some string labels for these handles
             # (this code could probably be better)
             scenario_labels = []
@@ -1572,3 +1575,10 @@ class Project:
 
         # Save
         save_png(png)
+
+if __name__ == '__main__':
+
+    temp = make_default_line_styles(5, True)
+
+    print(temp)
+

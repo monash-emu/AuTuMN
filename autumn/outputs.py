@@ -1141,8 +1141,8 @@ class Project:
                         prov_array[:, run] = self.model_shelf_uncertainty[scenario][run].get_var_soln(label)
                     cis_low = np.percentile(prov_array, q=0.5*(100. - self.ci_percentage), axis=1)
                     cis_high = np.percentile(prov_array, q=100 - 0.5*(100. - self.ci_percentage), axis=1)
-                    self.full_output_dict[scenario][label + '_low'] = dict(zip(times, cis_low))
-                    self.full_output_dict[scenario][label + '_high'] = dict(zip(times, cis_high))
+                self.full_output_dict[scenario][label + '_low'] = dict(zip(times, cis_low))
+                self.full_output_dict[scenario][label + '_high'] = dict(zip(times, cis_high))
 
     def add_full_economics_dict(self):
 

@@ -159,6 +159,20 @@ def find_title_from_dictionary(name):
         return name
 
 
+def get_truncated_lists_from_dict(dictionary, left_truncation_point):
+
+    modelled_time_values = dictionary.keys()
+    modelled_time_values.sort()
+    modelled_time = []
+    modelled_values = []
+    for j in modelled_time_values:
+        if j > left_truncation_point:
+            modelled_time += [j]
+            modelled_values += [dictionary[j]]
+
+    return modelled_time, modelled_values
+
+
 def find_string_from_starting_letters(string_to_analyse, string_start_to_find):
 
     # Find the position of the age string
@@ -233,6 +247,7 @@ def find_age_limits_directly_from_string(param_or_compartment):
     age_limits, _ = interrogate_age_string(age_string)
 
     return age_limits
+
 
 def find_age_breakpoints_from_dicts(age_dict):
 

@@ -1305,7 +1305,6 @@ class Project:
             self.plot_classified_scaleups(self.models['baseline'])
 
         # Plot main outputs
-        base = os.path.join('fullmodel_graphs', self.country + '_baseline')
         self.plot_outputs_against_gtb(
             ['incidence', 'mortality', 'prevalence', 'notifications'],
             figure_number=31)
@@ -1430,7 +1429,7 @@ class Project:
         save_png(png)
 
     def plot_outputs_against_gtb(self,
-                                 labels,
+                                 outputs,
                                  figure_number=31):
 
         """
@@ -1440,41 +1439,43 @@ class Project:
         be run will be baseline, which should have scenario set to None.
 
         Args:
-            labels: A list of the outputs to be plotted
+            outputs: A list of the outputs to be plotted
         """
 
         # Standard preliminaries
         png = os.path.join(self.out_dir_project, self.country + '_main_outputs.png')
         start_time = self.inputs.model_constants['plot_start_time']
+        scenario_labels = []
 
         # Get standard colours for plotting GTB data against
         colour, indices, yaxis_label, title, patch_colour = \
-            find_standard_output_styles(labels, lightening_factor=0.3)
+            find_standard_output_styles(outputs, lightening_factor=0.3)
 
         # Find configuration of subplots
-        subplot_grid = find_subplot_numbers(len(labels))
+        subplot_grid = find_subplot_numbers(len(outputs))
 
         # Not sure whether we have to specify a figure number
         fig = pyplot.figure(figure_number)
 
-        # Overall title
-        fig.suptitle(self.country + ' model outputs', fontsize=12)
-
-        for i, outcome in enumerate(labels):
+        # Loop through outputs
+        for i, output in enumerate(outputs):
 
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1)
 
-            if outcome == 'notifications':
-                plotting_data = {}
+            # Plotting of GTB data
+            plotting_data = {}
+
+            # Notifications
+            if output == 'notifications':
                 plotting_data['point_estimate'] = {}
                 for j in self.inputs.original_data['notifications']['c_newinc']:
                     if j > start_time:
                         plotting_data['point_estimate'][j] = \
                             self.inputs.original_data['notifications']['c_newinc'][j]
-                max_notifications = max(plotting_data['point_estimate'].values())
+                max_output = max(plotting_data['point_estimate'].values())
+
+            # Other reported data
             else:
-                # Central point-estimate
-                plotting_data = {}
                 for j in self.inputs.original_data['tb']:
                     if indices[i] in j and '_lo' in j:
                         plotting_data['lower_limit'] = self.inputs.original_data['tb'][j]
@@ -1482,37 +1483,25 @@ class Project:
                         plotting_data['upper_limit'] = self.inputs.original_data['tb'][j]
                     elif indices[i] in j:
                         plotting_data['point_estimate'] = self.inputs.original_data['tb'][j]
+                max_output = max(plotting_data['upper_limit'].values())
 
                 # Create and plot the patch array
                 patch_array = create_patch_from_dictionary(plotting_data)
                 patch = patches.Polygon(patch_array, color=patch_colour[i])
                 ax.add_patch(patch)
 
-                max_output = max(plotting_data['upper_limit'].values())
-
+            # Plot point estimates
             ax.plot(plotting_data['point_estimate'].keys(), plotting_data['point_estimate'].values(),
                     color=colour[i], linewidth=0.5)
 
+            # Loop through scenarios that have been run and plot
             for m, model in enumerate(self.models):
 
-                # Truncate and sort the data to what you want to look at
-                modelled_time_values = self.full_output_dict[model][outcome].keys()
-                modelled_time_values.sort()
-                modelled_time = []
-                modelled_values = []
-                for j in modelled_time_values:
-                    if j > start_time:
-                        modelled_time += [j]
-                        modelled_values += [self.full_output_dict[model][outcome][j]]
+                modelled_time, modelled_values = \
+                    tool_kit.get_truncated_lists_from_dict(self.full_output_dict[model][output], start_time)
 
-                max_modelled_output = max(modelled_values)
-
-                if outcome == 'notifications':
-                    if max_modelled_output > max_notifications:
-                        max_notifications = max_modelled_output
-                else:
-                    if max_modelled_output > max_output:
-                        max_output = max_modelled_output
+                # Update the maximum plot value if it's greater than the GTB data
+                max_output = max(modelled_values + [max_output])
 
                 # Plot the modelled data
                 ax.plot(
@@ -1522,14 +1511,14 @@ class Project:
                     linestyle=self.output_colours[model][0],
                     linewidth=1.5)
 
-            if outcome == 'notifications':
-                ax.set_ylim((0., max_notifications * 1.1))
-            else:
-                ax.set_ylim((0., max_output * 1.1))
+                # Add scenario label
+                scenario_labels += [tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(model))]
+
+            # Set vertical plot axis dimensions
+            ax.set_ylim((0., max_output * 1.1))
 
             # Set x-ticks
-            xticks = find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time'])
-            ax.set_xticks(xticks)
+            ax.set_xticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))
 
             # Adjust size of labels of x-ticks
             for axis_to_change in [ax.xaxis, ax.yaxis]:
@@ -1542,24 +1531,31 @@ class Project:
             # Label the y axis with the smaller text size
             ax.set_ylabel(yaxis_label[i], fontsize=get_nice_font_size(subplot_grid))
 
-            # Get the handles, except for the last one, which plots the data
+            # Add the legend
             scenario_handles = ax.lines[1:]
-            # Make some string labels for these handles
-            scenario_labels = []
-            for j in range(len(scenario_handles)):
-                if j == 0:
-                    scenario_labels += ['Baseline']
-                else:
-                    scenario_labels += ['Scenario ' + str(j)]
-
-            # Draw the legend
             ax.legend(scenario_handles,
                       scenario_labels,
                       fontsize=get_nice_font_size(subplot_grid) - 2.,
                       frameon=False)
 
-        # Save
+        # Add main title and save
+        fig.suptitle(tool_kit.capitalise_first_letter(self.country) + ' model outputs', fontsize=12)
         save_png(png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

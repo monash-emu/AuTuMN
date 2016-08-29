@@ -1294,8 +1294,8 @@ class Project:
 
     def run_plotting(self):
 
+        # Find some general output colours
         output_colours = make_default_line_styles(5, True)
-
         self.output_colours = {}
         for s, scenario in enumerate(self.scenarios):
             self.output_colours[scenario] = output_colours[s]
@@ -1308,10 +1308,7 @@ class Project:
         base = os.path.join('fullmodel_graphs', self.country + '_baseline')
         self.plot_outputs_against_gtb(
             ['incidence', 'mortality', 'prevalence', 'notifications'],
-            self.inputs.model_constants['recent_time'],
-            'scenario_end_time',
             base + '_outputs_gtb.png',
-            self.country,
             figure_number=31)
 
     def plot_classified_scaleups(self, model):
@@ -1435,10 +1432,7 @@ class Project:
 
     def plot_outputs_against_gtb(self,
                                  labels,
-                                 start_time,
-                                 end_time_str='current_time',
                                  png=None,
-                                 country='',
                                  figure_number=31):
 
         """
@@ -1448,15 +1442,11 @@ class Project:
         be run will be baseline, which should have scenario set to None.
 
         Args:
-            model: The entire model object
             labels: A list of the outputs to be plotted
-            start_time: Starting time
-            end_time_str: String to access end time from data
             png:
-            country: Country being plotted (just need for title)
-            scenario: The scenario being run, number needed for line colour
-
         """
+
+        start_time = self.inputs.model_constants['plot_start_time']
 
         # Get standard colours for plotting GTB data against
         colour, indices, yaxis_label, title, patch_colour = \
@@ -1482,14 +1472,11 @@ class Project:
         # Find configuration of subplots
         subplot_grid = find_subplot_numbers(len(labels))
 
-        # Time to plot until
-        end_time = self.inputs.model_constants[end_time_str]
-
         # Not sure whether we have to specify a figure number
         fig = pyplot.figure(figure_number)
 
         # Overall title
-        fig.suptitle(country + ' model outputs', fontsize=12)
+        fig.suptitle(self.country + ' model outputs', fontsize=12)
 
         for i, outcome in enumerate(labels):
 
@@ -1542,7 +1529,7 @@ class Project:
                 ax.set_ylim((0., max_output * 1.1))
 
             # Set x-ticks
-            xticks = find_reasonable_year_ticks(start_time, end_time)
+            xticks = find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time'])
             ax.set_xticks(xticks)
 
             # Adjust size of labels of x-ticks

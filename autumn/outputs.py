@@ -1451,9 +1451,6 @@ class Project:
         colour, indices, yaxis_label, title, patch_colour = \
             find_standard_output_styles(labels, lightening_factor=0.3)
 
-        # Extract the plotting data of interest from the GTB loaded data
-
-
         # Find configuration of subplots
         subplot_grid = find_subplot_numbers(len(labels))
 
@@ -1465,20 +1462,16 @@ class Project:
 
         for i, outcome in enumerate(labels):
 
-            print(i)
-            print(outcome)
-
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1)
 
             if outcome == 'notifications':
-                notification_data = {}
+                plotting_data = {}
+                plotting_data['point_estimate'] = {}
                 for j in self.inputs.original_data['notifications']['c_newinc']:
                     if j > start_time:
-                        notification_data[j] = \
+                        plotting_data['point_estimate'][j] = \
                             self.inputs.original_data['notifications']['c_newinc'][j]
-                ax.plot(notification_data.keys(), notification_data.values(),
-                        color=colour[i], linewidth=0.5)
-                max_notifications = max(notification_data.values())
+                max_notifications = max(plotting_data['point_estimate'].values())
             else:
                 # Central point-estimate
                 plotting_data = {}
@@ -1490,17 +1483,15 @@ class Project:
                     elif indices[i] in j:
                         plotting_data['point_estimate'] = self.inputs.original_data['tb'][j]
 
-                ax.plot(plotting_data['point_estimate'].keys(), plotting_data['point_estimate'].values(),
-                        color=colour[i], linewidth=0.5)
-
-                # Create the patch array
+                # Create and plot the patch array
                 patch_array = create_patch_from_dictionary(plotting_data)
-
-                # Create the patch image and plot it
                 patch = patches.Polygon(patch_array, color=patch_colour[i])
                 ax.add_patch(patch)
 
                 max_output = max(plotting_data['upper_limit'].values())
+
+            ax.plot(plotting_data['point_estimate'].keys(), plotting_data['point_estimate'].values(),
+                    color=colour[i], linewidth=0.5)
 
             for m, model in enumerate(self.models):
 

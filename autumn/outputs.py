@@ -1308,7 +1308,6 @@ class Project:
         base = os.path.join('fullmodel_graphs', self.country + '_baseline')
         self.plot_outputs_against_gtb(
             ['incidence', 'mortality', 'prevalence', 'notifications'],
-            base + '_outputs_gtb.png',
             figure_number=31)
 
     def plot_classified_scaleups(self, model):
@@ -1432,19 +1431,20 @@ class Project:
 
     def plot_outputs_against_gtb(self,
                                  labels,
-                                 png=None,
                                  figure_number=31):
 
         """
-        Produces the plot for the main outputs, can handle multiple scenarios (if required).
+        Produces the plot for the main outputs, can handle multiple scenarios.
         Save as png at the end.
         Note that if running a series of scenarios, it is expected that the last scenario to
         be run will be baseline, which should have scenario set to None.
 
         Args:
             labels: A list of the outputs to be plotted
-            png:
         """
+
+        # Outputs filename
+        png = os.path.join(self.out_dir_project, self.country + '_main_outputs.png')
 
         start_time = self.inputs.model_constants['plot_start_time']
 

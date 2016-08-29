@@ -1502,11 +1502,17 @@ class Project:
 
             for m, model in enumerate(self.models):
 
-                # Truncate data to what you want to look at (rather than going back to the dawn of time)
-                right_xlimit_index, left_xlimit_index = find_truncation_points(self.models[model], start_time)
+                # Truncate and sort the data to what you want to look at
+                modelled_time_values = self.full_output_dict[model][outcome].keys()
+                modelled_time_values.sort()
+                modelled_time = []
+                modelled_values = []
+                for j in modelled_time_values:
+                    if j > start_time:
+                        modelled_time += [j]
+                        modelled_values += [self.full_output_dict[model][outcome][j]]
 
-                modelled_data = self.models[model].get_var_soln(labels[i])[left_xlimit_index: right_xlimit_index]
-                max_modelled_output = max(modelled_data)
+                max_modelled_output = max(modelled_values)
 
                 if outcome == 'notifications':
                     if max_modelled_output > max_notifications:
@@ -1517,8 +1523,8 @@ class Project:
 
                 # Plot the modelled data
                 ax.plot(
-                    self.models[model].times[left_xlimit_index: right_xlimit_index],
-                    modelled_data,
+                    modelled_time,
+                    modelled_values,
                     color=self.output_colours[model][1],
                     linestyle=self.output_colours[model][0],
                     linewidth=1.5)
@@ -1563,9 +1569,5 @@ class Project:
         # Save
         save_png(png)
 
-if __name__ == '__main__':
 
-    temp = make_default_line_styles(5, True)
-
-    print(temp)
 

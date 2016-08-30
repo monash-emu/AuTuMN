@@ -1401,47 +1401,50 @@ class Project:
 
     def plot_scaleup_fns_against_data(self):
 
+        # For each type of scale-up function, create a different figure
         for classification in self.classified_scaleups:
 
+            # Find the list of the scale-up functions to work with and some x-values
             functions = self.classified_scaleups[classification]
 
-            png = os.path.join(self.out_dir_project, self.country + classification + '_scaleups' + '.png')
-
-            # Determine how many subplots to have
-            subplot_grid = find_subplot_numbers(len(functions))
-
+            # Find some x-values
             start_time = self.inputs.model_constants['plot_start_time']
             end_time = self.inputs.model_constants['plot_end_time']
             x_vals = numpy.linspace(start_time, end_time, 1E3)
 
-            # Initialise figure
+            # Standard prelims
+            png = os.path.join(self.out_dir_project, self.country + classification + '_scaleups' + '.png')
+            subplot_grid = find_subplot_numbers(len(functions))
             fig = pyplot.figure(self.figure_number)
             self.figure_number += 1
 
             # Main title for whole figure
             title = self.inputs.model_constants['country'] + ' ' + \
-                    tool_kit.find_title_from_dictionary(classification) + '_parameter'
+                    tool_kit.find_title_from_dictionary(classification) + ' parameter'
             if len(functions) > 1:
                 title += 's'
-
             fig.suptitle(title)
 
             # Iterate through functions
-            for figure_number, function in enumerate(functions):
+            for f, function in enumerate(functions):
 
+                # Initialise subplot area
+                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], f + 1)
+
+                # Iterate through the scenarios
                 scenario_labels = []
-
-                # Initialise subplot areas
-                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], figure_number + 1)
-
                 for model in self.models:
+
                     # Line plot scaling parameters
                     ax.plot(x_vals,
                             map(self.models[model].scaleup_fns[function],
                                 x_vals),
                             color=self.output_colours[model][1])
-                    scenario_labels += [tool_kit.find_title_from_dictionary(model)]
 
+                    # Record the name of the scenario for the legend
+                    scenario_labels += [tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(model))]
+
+                # Plot the raw data from which the scale-up functions were produced
                 data_to_plot = {}
                 for j in self.inputs.scaleup_data[None][function]:
                     if j > start_time:
@@ -1450,31 +1453,26 @@ class Project:
                 # Scatter plot data from which they are derived
                 ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
 
-                # Adjust tick font size
+                # Adjust tick font size and add panel title
                 ax.set_xticks([start_time, end_time])
                 for axis_to_change in [ax.xaxis, ax.yaxis]:
                     for tick in axis_to_change.get_major_ticks():
                         tick.label.set_fontsize(get_nice_font_size(subplot_grid))
-
-                # Truncate parameter names depending on whether it is a
-                # treatment success/death proportion
                 title = tool_kit.find_title_from_dictionary(function)
                 ax.set_title(title, fontsize=get_nice_font_size(subplot_grid))
-
                 ylims = relax_y_axis(ax)
                 ax.set_ylim(bottom=ylims[0], top=ylims[1])
 
+                # Add legend to last plot
                 scenario_handles = ax.lines
-                if figure_number == len(functions) - 1:
+                if f == len(functions) - 1:
                     ax.legend(scenario_handles,
                               scenario_labels,
                               fontsize=get_nice_font_size(subplot_grid) - 2.,
                               frameon=False)
 
-            fig.suptitle('Scale-up functions')
-
+            # Save
             save_png(png)
-
 
     def plot_programmatic_scaleups(self):
 
@@ -1528,16 +1526,5 @@ class Project:
                   frameon=False,
                   prop={'size': 7})
         save_png(png)
-
-
-
-
-
-
-
-
-
-
-
 
 

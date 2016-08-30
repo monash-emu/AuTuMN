@@ -123,16 +123,20 @@ def find_title_from_dictionary(name):
         'econ_cpi':
             'Consumer price index',
         'program_timeperiod_await_treatment_smearpos':
-            'Smear-positive time to treatment',
+            'Smear-positive',
         'program_timeperiod_await_treatment_smearneg':
-            'Smear-negative time to treatment',
+            'Smear-negative',
         'program_timeperiod_await_treatment_extrapul':
-            'Extrapulmonary time to treatment',
+            'Extrapulmonary',
         'program_prop_':
             'programmatic time-variant',
         'econ':
             'economic',
+        'econ_':
+            'economic',
         'demo':
+            'demographic',
+        'demo_':
             'demographic',
         'program_other':
             'unclassified',
@@ -159,7 +163,15 @@ def find_title_from_dictionary(name):
         'program_prop_ipt_age0to5':
             'IPT in under 5s coverage',
         'program_prop_ipt_age5to15':
-            'IPT in 5 to 15s coverage'
+            'IPT in 5 to 15s coverage',
+        'program_timeperiod':
+            'programmatic time to treatment',
+        'epi_':
+            'epidemiological',
+        'epi_prop_smearneg':
+            'Proportion smear-negative',
+        'epi_prop_smearpos':
+            'Proportion smear-positive'
     }
 
     if name in dictionary_of_names:

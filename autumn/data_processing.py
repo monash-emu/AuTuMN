@@ -890,12 +890,16 @@ class Inputs:
                 if time_variant not in self.irrelevant_time_variants:
                     self.scaleup_data[scenario][str(time_variant)] = {}
                     for i in self.time_variants[time_variant]:
-                        if type(i) == int or i == 'time_variant' or i == 'smoothness':
-                            self.scaleup_data[scenario][str(time_variant)][i] \
-                                = self.time_variants[time_variant][i]
-                        elif type(i) == unicode and i == 'scenario_' + str(scenario):
+                        if i == 'scenario_' + str(scenario):
                             self.scaleup_data[scenario][str(time_variant)]['scenario'] = \
                                 self.time_variants[time_variant][i]
+                        elif type(i) == str:
+                            if 'scenario_' not in i:
+                                self.scaleup_data[scenario][str(time_variant)][i] \
+                                    = self.time_variants[time_variant][i]
+                        else:
+                            self.scaleup_data[scenario][str(time_variant)][i] \
+                                = self.time_variants[time_variant][i]
 
     def list_irrelevant_time_variants(self):
 

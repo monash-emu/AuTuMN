@@ -810,9 +810,6 @@ def plot_flows(model, labels, png=None):
     save_png(png)
 
 
-
-
-
 def plot_comparative_age_parameters(data_strat_list,
                                     data_value_list,
                                     model_value_list,
@@ -1275,12 +1272,8 @@ class Project:
 
         # Plot scale-up functions - currently only doing this for the baseline model run
         if self.inputs.model_constants['output_scaleups']:
-
             self.classify_scaleups()
-
-            for c, classification in enumerate(self.classified_scaleups):
-                self.plot_scaleup_fns_against_data(self.classified_scaleups[classification],
-                                                   classification)
+            self.plot_scaleup_fns_against_data()
             self.plot_programmatic_scaleups()
 
     def plot_outputs_against_gtb(self,
@@ -1406,76 +1399,79 @@ class Project:
                 if classification in fn:
                     self.classified_scaleups[classification] += [fn]
 
-    def plot_scaleup_fns_against_data(self,
-                                      functions,
-                                      parameter_type=''):
+    def plot_scaleup_fns_against_data(self):
 
-        png = os.path.join(self.out_dir_project, self.country + parameter_type + '_scaleups' + '.png')
+        for c, classification in enumerate(self.classified_scaleups):
 
-        # Get the colours for the model outputs
-        output_colour = ['k'] * len(functions)
+            functions = self.classified_scaleups[classification]
 
-        # Determine how many subplots to have
-        subplot_grid = find_subplot_numbers(len(functions))
+            png = os.path.join(self.out_dir_project, self.country + classification + '_scaleups' + '.png')
 
-        start_time = self.inputs.model_constants['plot_start_time']
+            # Get the colours for the model outputs
+            output_colour = ['k'] * len(functions)
 
-        end_time = self.inputs.model_constants['plot_end_time']
-        x_vals = numpy.linspace(start_time, end_time, 1E3)
+            # Determine how many subplots to have
+            subplot_grid = find_subplot_numbers(len(functions))
 
-        # Initialise figure
-        fig = pyplot.figure(self.figure_number)
-        self.figure_number += 1
+            start_time = self.inputs.model_constants['plot_start_time']
 
-        # Upper title for whole figure
-        plural = ''
-        if len(functions) > 1:
-            plural += 's'
-        title = self.inputs.model_constants['country'] + ' ' + \
-                tool_kit.find_title_from_dictionary(parameter_type) + \
-                ' parameter' + plural
-        fig.suptitle(title)
+            end_time = self.inputs.model_constants['plot_end_time']
+            x_vals = numpy.linspace(start_time, end_time, 1E3)
 
-        # Iterate through functions
-        for figure_number, function in enumerate(functions):
+            # Initialise figure
+            fig = pyplot.figure(self.figure_number)
+            self.figure_number += 1
 
-            # Initialise subplot areas
-            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], figure_number + 1)
+            # Upper title for whole figure
+            plural = ''
+            if len(functions) > 1:
+                plural += 's'
+            title = self.inputs.model_constants['country'] + ' ' + \
+                    tool_kit.find_title_from_dictionary(classification) + \
+                    ' parameter' + plural
+            fig.suptitle(title)
 
-            # Line plot scaling parameters
-            ax.plot(x_vals,
-                    map(self.models['baseline'].scaleup_fns[function],
-                        x_vals),
-                    color=output_colour[figure_number])
+            # Iterate through functions
+            for figure_number, function in enumerate(functions):
 
-            data_to_plot = {}
-            for j in self.inputs.scaleup_data[None][function]:
-                if j > start_time:
-                    data_to_plot[j] = self.inputs.scaleup_data[None][function][j]
+                # Initialise subplot areas
+                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], figure_number + 1)
 
-            # Scatter plot data from which they are derived
-            ax.scatter(data_to_plot.keys(),
-                       data_to_plot.values(),
-                       color=output_colour[figure_number],
-                       s=6)
+                for model in self.models:
+                    # Line plot scaling parameters
+                    ax.plot(x_vals,
+                            map(self.models[model].scaleup_fns[function],
+                                x_vals),
+                            color=output_colour[figure_number])
 
-            # Adjust tick font size
-            ax.set_xticks([start_time, end_time])
-            for axis_to_change in [ax.xaxis, ax.yaxis]:
-                for tick in axis_to_change.get_major_ticks():
-                    tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+                data_to_plot = {}
+                for j in self.inputs.scaleup_data[None][function]:
+                    if j > start_time:
+                        data_to_plot[j] = self.inputs.scaleup_data[None][function][j]
 
-            # Truncate parameter names depending on whether it is a
-            # treatment success/death proportion
-            title = tool_kit.find_title_from_dictionary(function)
-            ax.set_title(title, fontsize=get_nice_font_size(subplot_grid))
+                # Scatter plot data from which they are derived
+                ax.scatter(data_to_plot.keys(),
+                           data_to_plot.values(),
+                           color='k',
+                           s=6)
 
-            ylims = relax_y_axis(ax)
-            ax.set_ylim(bottom=ylims[0], top=ylims[1])
+                # Adjust tick font size
+                ax.set_xticks([start_time, end_time])
+                for axis_to_change in [ax.xaxis, ax.yaxis]:
+                    for tick in axis_to_change.get_major_ticks():
+                        tick.label.set_fontsize(get_nice_font_size(subplot_grid))
 
-        fig.suptitle('Scale-up functions')
+                # Truncate parameter names depending on whether it is a
+                # treatment success/death proportion
+                title = tool_kit.find_title_from_dictionary(function)
+                ax.set_title(title, fontsize=get_nice_font_size(subplot_grid))
 
-        save_png(png)
+                ylims = relax_y_axis(ax)
+                ax.set_ylim(bottom=ylims[0], top=ylims[1])
+
+            fig.suptitle('Scale-up functions')
+
+            save_png(png)
 
 
     def plot_programmatic_scaleups(self):

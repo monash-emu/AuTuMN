@@ -593,7 +593,8 @@ class Inputs:
                 tool_kit.adapt_params_to_stratification(param_breakpoints,
                                                         model_breakpoints,
                                                         prog_param_vals,
-                                                        parameter_name=param)
+                                                        parameter_name=param,
+                                                        whether_to_plot=self.model_constants['output_age_calculations'])
             for agegroup in self.agegroups:
                 self.model_constants[prog_stem + agegroup] = prog_age_adjusted_params[agegroup]
 

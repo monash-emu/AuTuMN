@@ -566,7 +566,8 @@ def adapt_params_to_stratification(data_breakpoints,
                                    model_breakpoints,
                                    data_param_vals,
                                    assumed_max_params=100.,
-                                   parameter_name=''):
+                                   parameter_name='',
+                                   whether_to_plot=False):
 
     """
     Create a new set of parameters associated to the model stratification given parameter values that are known for
@@ -620,11 +621,12 @@ def adapt_params_to_stratification(data_breakpoints,
     for i in model_strat_list:
         model_value_list += [model_param_vals[i]]
 
-    outputs.plot_comparative_age_parameters(data_strat_list,
-                                                    data_value_list,
-                                                    model_value_list,
-                                                    model_strat_list,
-                                                    parameter_name)
+    if whether_to_plot:
+        outputs.plot_comparative_age_parameters(data_strat_list,
+                                                        data_value_list,
+                                                        model_value_list,
+                                                        model_strat_list,
+                                                        parameter_name)
 
     return(model_param_vals)
 

@@ -103,7 +103,7 @@ def find_title_from_dictionary(name):
         'program_prop_algorithm_sensitivity':
             'Diagnostic algorithm sensitivity',
         'program_prop_ipt':
-            'IPT coverage',
+            'All ages IPT coverage',
         'econ_program_unitcost_ipt':
             'IPT unit cost',
         'program_cost_vaccination':
@@ -149,7 +149,17 @@ def find_title_from_dictionary(name):
         'age':
             'age group',
         'comorbidity':
-            'risk group'
+            'risk group',
+        'program_prop_xpertacf':
+            'Xpert-based ACF coverage',
+        'program_prop_smearacf':
+            'Smear-based ACF coverage',
+        'program_prop_treatment_support':
+            'Treatment support coverage',
+        'program_prop_ipt_age0to5':
+            'IPT in under 5s coverage',
+        'program_prop_ipt_age5to15':
+            'IPT in 5 to 15s coverage'
     }
 
     if name in dictionary_of_names:

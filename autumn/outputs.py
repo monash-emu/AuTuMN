@@ -1275,7 +1275,13 @@ class Project:
 
         # Plot scale-up functions - currently only doing this for the baseline model run
         if self.inputs.model_constants['output_scaleups']:
-            self.plot_classified_scaleups()
+
+            self.classify_scaleups()
+
+            for c, classification in enumerate(self.classified_scaleups):
+                self.plot_scaleup_fns_against_data(self.classified_scaleups[classification],
+                                                   classification)
+            self.plot_programmatic_scaleups()
 
     def plot_outputs_against_gtb(self,
                                  outputs):
@@ -1391,16 +1397,6 @@ class Project:
         fig.suptitle(tool_kit.capitalise_first_letter(self.country) + ' model outputs', fontsize=12)
         save_png(png)
 
-    def plot_classified_scaleups(self):
-
-        self.classify_scaleups()
-
-        # Plot them from the start of the model and from "recent_time"
-        for c, classification in enumerate(self.classified_scaleups):
-            self.plot_scaleup_fns_against_data(self.classified_scaleups[classification],
-                                               classification)
-        self.plot_programmatic_scaleups()
-
     def classify_scaleups(self):
 
         self.classified_scaleups = {}
@@ -1508,14 +1504,16 @@ class Project:
         self.figure_number += 1
 
         # Plot for baseline model run only
+        scenario_labels = []
         ax = make_axes_with_room_for_legend()
         for figure_number, function in enumerate(functions):
             ax.plot(x_vals,
                     map(self.inputs.scaleup_fns[None][function],
                         x_vals), line_styles[figure_number],
                     label=function)
+            scenario_labels += [tool_kit.find_title_from_dictionary(function)]
 
-        # Make title and tidy up
+        # Make title, legend, generally tidy up and save
         title = tool_kit.capitalise_first_letter(self.country) + ' ' + \
                 tool_kit.find_title_from_dictionary('program_prop_') + \
                 ' parameters'
@@ -1523,7 +1521,14 @@ class Project:
                        title, True, functions)
         ylims = relax_y_axis(ax)
         ax.set_ylim(bottom=ylims[0], top=ylims[1])
-
+        scenario_handles = ax.lines
+        ax.legend(scenario_handles,
+                  scenario_labels,
+                  bbox_to_anchor=(1.05, 1),
+                  loc=2,
+                  borderaxespad=0.,
+                  frameon=False,
+                  prop={'size': 7})
         save_png(png)
 
 

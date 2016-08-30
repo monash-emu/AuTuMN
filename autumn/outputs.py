@@ -810,40 +810,7 @@ def plot_flows(model, labels, png=None):
     save_png(png)
 
 
-def plot_scaleup_fns(model, functions, png=None,
-                     start_time_str='start_time', end_time_str='',
-                     parameter_type='', country=u'', figure_number=1):
 
-    line_styles = make_default_line_styles(len(functions), True)
-    if start_time_str == 'recent_time':
-        start_time = model.inputs.model_constants[start_time_str]
-    else:
-        start_time = model.inputs.model_constants[start_time_str]
-    end_time = model.inputs.model_constants[end_time_str]
-    x_vals = numpy.linspace(start_time, end_time, 1E3)
-
-    pyplot.figure(figure_number)
-
-    ax = make_axes_with_room_for_legend()
-    for figure_number, function in enumerate(functions):
-        ax.plot(x_vals,
-                map(model.scaleup_fns[function],
-                    x_vals), line_styles[figure_number],
-                label=function)
-
-    plural = ''
-    if len(functions) > 1:
-        plural += 's'
-    title = str(country) + ' ' + \
-            tool_kit.find_title_from_dictionary(parameter_type) + \
-            ' parameter' + plural + tool_kit.find_title_from_dictionary(start_time_str)
-    set_axes_props(ax, 'Year', 'Parameter value',
-                   title, True, functions)
-
-    ylims = relax_y_axis(ax)
-    ax.set_ylim(bottom=ylims[0], top=ylims[1])
-
-    save_png(png)
 
 
 def plot_comparative_age_parameters(data_strat_list,
@@ -925,6 +892,8 @@ class Project:
             os.makedirs(self.out_dir_project)
         self.model_shelf_uncertainty = {}
         self.ci_percentage = 95.
+        self.figure_number = 1
+        self.classifications = ['demo_', 'econ_', 'epi_', 'program_prop_', 'program_timeperiod']
 
     #################################
     # General methods for use below #
@@ -1300,137 +1269,16 @@ class Project:
         for s, scenario in enumerate(self.scenarios):
             self.output_colours[scenario] = output_colours[s]
 
-        # Plot scale-up functions - currently only doing this for the baseline model run
-        if self.inputs.model_constants['output_scaleups']:
-            self.plot_classified_scaleups(self.models['baseline'])
-
         # Plot main outputs
         self.plot_outputs_against_gtb(
-            ['incidence', 'mortality', 'prevalence', 'notifications'],
-            figure_number=31)
+            ['incidence', 'mortality', 'prevalence', 'notifications'])
 
-    def plot_classified_scaleups(self, model):
-
-        # Classify scale-up functions
-        classifications = ['demo_', 'econ_', 'epi_', 'program_prop_', 'program_timeperiod']
-        classified_scaleups = {}
-        for classification in classifications:
-            classified_scaleups[classification] = []
-            for fn in model.scaleup_fns:
-                if classification in fn:
-                    classified_scaleups[classification] += [fn]
-
-        base = os.path.join(self.out_dir_project, self.country + '_baseline_')
-
-        # Time periods to perform the plots over
-        times_to_plot = ['start_', 'recent_']
-
-        # Plot them from the start of the model and from "recent_time"
-        for c, classification in enumerate(classified_scaleups):
-            if len(classified_scaleups[classification]) > 0:
-                for j, start_time in enumerate(times_to_plot):
-                    self.plot_all_scaleup_fns_against_data(model,
-                                                           classified_scaleups[classification],
-                                                           base + classification + '_datascaleups_from' + start_time[:-1] + '.png',
-                                                           start_time + 'time',
-                                                           'current_time',
-                                                           classification,
-                                                           figure_number=c + j * len(classified_scaleups) + 2)
-                    if classification == 'program_prop':
-                        plot_scaleup_fns(model,
-                                                         classified_scaleups[classification],
-                                                         base + classification + 'scaleups_from' + start_time[:-1] + '.png',
-                                                         start_time + 'time',
-                                                         'current_time',
-                                                         classification,
-                                                         figure_number=c + j * len(classified_scaleups) + 2 + len(classified_scaleups) * len(times_to_plot))
-
-    def plot_all_scaleup_fns_against_data(self, model, functions, png=None,
-                                          start_time_str='start_time',
-                                          end_time_str='',
-                                          parameter_type='',
-                                          scenario=None,
-                                          figure_number=2):
-
-        # Get the colours for the model outputs
-        if scenario is None:
-            # Last scenario to run should be baseline and should be run last
-            # to lay a black line over the top for comparison
-            output_colour = ['k'] * len(functions)
-        else:
-            # Otherwise cycling through colours
-            output_colour = [make_default_line_styles(scenario, False)[1]] * len(functions)
-
-        # Determine how many subplots to have
-        subplot_grid = find_subplot_numbers(len(functions))
-
-        # Set x-values
-        if start_time_str == 'recent_time':
-            start_time = model.inputs.model_constants[start_time_str]
-        else:
-            start_time = model.inputs.model_constants[start_time_str]
-        end_time = model.inputs.model_constants[end_time_str]
-        x_vals = numpy.linspace(start_time, end_time, 1E3)
-
-        # Initialise figure
-        fig = pyplot.figure(figure_number)
-
-        # Upper title for whole figure
-        plural = ''
-        if len(functions) > 1:
-            plural += 's'
-        title = model.inputs.model_constants['country'] + ' ' + \
-                tool_kit.find_title_from_dictionary(parameter_type) + \
-                ' parameter' + plural + tool_kit.find_title_from_dictionary(start_time_str)
-        fig.suptitle(title)
-
-        # Iterate through functions
-        for figure_number, function in enumerate(functions):
-
-            # Initialise subplot areas
-            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], figure_number + 1)
-
-            # Line plot scaling parameters
-            ax.plot(x_vals,
-                    map(model.scaleup_fns[function],
-                        x_vals),
-                    # line_styles[i],
-                    # label=function,
-                    color=output_colour[figure_number])
-
-            if scenario is None:
-                data_to_plot = {}
-                for j in model.inputs.scaleup_data[scenario][function]:
-                    if j > start_time:
-                        data_to_plot[j] = model.inputs.scaleup_data[scenario][function][j]
-
-                # Scatter plot data from which they are derived
-                ax.scatter(data_to_plot.keys(),
-                           data_to_plot.values(),
-                           color=output_colour[figure_number],
-                           s=6)
-
-                # Adjust tick font size
-                ax.set_xticks([start_time, end_time])
-                for axis_to_change in [ax.xaxis, ax.yaxis]:
-                    for tick in axis_to_change.get_major_ticks():
-                        tick.label.set_fontsize(get_nice_font_size(subplot_grid))
-
-                # Truncate parameter names depending on whether it is a
-                # treatment success/death proportion
-                title = tool_kit.find_title_from_dictionary(function)
-                ax.set_title(title, fontsize=get_nice_font_size(subplot_grid))
-
-                ylims = relax_y_axis(ax)
-                ax.set_ylim(bottom=ylims[0], top=ylims[1])
-
-        fig.suptitle('Scale-up functions')
-
-        save_png(png)
+        # Plot scale-up functions - currently only doing this for the baseline model run
+        if self.inputs.model_constants['output_scaleups']:
+            self.plot_classified_scaleups()
 
     def plot_outputs_against_gtb(self,
-                                 outputs,
-                                 figure_number=31):
+                                 outputs):
 
         """
         Produces the plot for the main outputs, can handle multiple scenarios.
@@ -1455,7 +1303,8 @@ class Project:
         subplot_grid = find_subplot_numbers(len(outputs))
 
         # Not sure whether we have to specify a figure number
-        fig = pyplot.figure(figure_number)
+        fig = pyplot.figure(self.figure_number)
+        self.figure_number += 1
 
         # Loop through outputs
         for i, output in enumerate(outputs):
@@ -1542,10 +1391,140 @@ class Project:
         fig.suptitle(tool_kit.capitalise_first_letter(self.country) + ' model outputs', fontsize=12)
         save_png(png)
 
+    def plot_classified_scaleups(self):
+
+        self.classify_scaleups()
+
+        # Plot them from the start of the model and from "recent_time"
+        for c, classification in enumerate(self.classified_scaleups):
+            self.plot_scaleup_fns_against_data(self.classified_scaleups[classification],
+                                               classification)
+        self.plot_programmatic_scaleups()
+
+    def classify_scaleups(self):
+
+        self.classified_scaleups = {}
+        for classification in self.classifications:
+            self.classified_scaleups[classification] = []
+            for fn in self.models['baseline'].scaleup_fns:
+                if classification in fn:
+                    self.classified_scaleups[classification] += [fn]
+
+    def plot_scaleup_fns_against_data(self,
+                                      functions,
+                                      parameter_type=''):
+
+        png = os.path.join(self.out_dir_project, self.country + parameter_type + '_scaleups' + '.png')
+
+        # Get the colours for the model outputs
+        output_colour = ['k'] * len(functions)
+
+        # Determine how many subplots to have
+        subplot_grid = find_subplot_numbers(len(functions))
+
+        start_time = self.inputs.model_constants['plot_start_time']
+
+        end_time = self.inputs.model_constants['plot_end_time']
+        x_vals = numpy.linspace(start_time, end_time, 1E3)
+
+        # Initialise figure
+        fig = pyplot.figure(self.figure_number)
+        self.figure_number += 1
+
+        # Upper title for whole figure
+        plural = ''
+        if len(functions) > 1:
+            plural += 's'
+        title = self.inputs.model_constants['country'] + ' ' + \
+                tool_kit.find_title_from_dictionary(parameter_type) + \
+                ' parameter' + plural
+        fig.suptitle(title)
+
+        # Iterate through functions
+        for figure_number, function in enumerate(functions):
+
+            # Initialise subplot areas
+            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], figure_number + 1)
+
+            # Line plot scaling parameters
+            ax.plot(x_vals,
+                    map(self.models['baseline'].scaleup_fns[function],
+                        x_vals),
+                    color=output_colour[figure_number])
+
+            data_to_plot = {}
+            for j in self.inputs.scaleup_data[None][function]:
+                if j > start_time:
+                    data_to_plot[j] = self.inputs.scaleup_data[None][function][j]
+
+            # Scatter plot data from which they are derived
+            ax.scatter(data_to_plot.keys(),
+                       data_to_plot.values(),
+                       color=output_colour[figure_number],
+                       s=6)
+
+            # Adjust tick font size
+            ax.set_xticks([start_time, end_time])
+            for axis_to_change in [ax.xaxis, ax.yaxis]:
+                for tick in axis_to_change.get_major_ticks():
+                    tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+
+            # Truncate parameter names depending on whether it is a
+            # treatment success/death proportion
+            title = tool_kit.find_title_from_dictionary(function)
+            ax.set_title(title, fontsize=get_nice_font_size(subplot_grid))
+
+            ylims = relax_y_axis(ax)
+            ax.set_ylim(bottom=ylims[0], top=ylims[1])
+
+        fig.suptitle('Scale-up functions')
+
+        save_png(png)
 
 
+    def plot_programmatic_scaleups(self):
 
+        """
+        Plots only the programmatic time-variant functions on a single set of axes
+        """
 
+        # Functions to plot are those in the program_prop_ category of the classified scaleups
+        # (classify_scaleups must have been run)
+        functions = self.classified_scaleups['program_prop_']
+
+        # Standard preliminaries
+        png = os.path.join(self.out_dir_project, self.country + '_programmatic_scaleups' + '.png')
+
+        # Get some styles
+        line_styles = make_default_line_styles(len(functions), True)
+
+        # Get some x values for plotting
+        x_vals = numpy.linspace(self.inputs.model_constants['plot_start_time'],
+                                self.inputs.model_constants['plot_end_time'],
+                                1E3)
+
+        # Standard trick for ensuring figures don't overlap because of numbering
+        pyplot.figure(self.figure_number)
+        self.figure_number += 1
+
+        # Plot for baseline model run only
+        ax = make_axes_with_room_for_legend()
+        for figure_number, function in enumerate(functions):
+            ax.plot(x_vals,
+                    map(self.inputs.scaleup_fns[None][function],
+                        x_vals), line_styles[figure_number],
+                    label=function)
+
+        # Make title and tidy up
+        title = tool_kit.capitalise_first_letter(self.country) + ' ' + \
+                tool_kit.find_title_from_dictionary('program_prop_') + \
+                ' parameters'
+        set_axes_props(ax, 'Year', 'Parameter value',
+                       title, True, functions)
+        ylims = relax_y_axis(ax)
+        ax.set_ylim(bottom=ylims[0], top=ylims[1])
+
+        save_png(png)
 
 
 

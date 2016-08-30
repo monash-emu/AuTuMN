@@ -87,7 +87,6 @@ def find_title_from_dictionary(name):
 
     Returns:
         String for title of plots
-
     """
 
     dictionary_of_names = {
@@ -129,8 +128,8 @@ def find_title_from_dictionary(name):
             'Smear-negative time to treatment',
         'program_timeperiod_await_treatment_extrapul':
             'Extrapulmonary time to treatment',
-        'program_prop':
-            'Programmatic proportion',
+        'program_prop_':
+            'programmatic time-variant',
         'econ':
             'economic',
         'demo':

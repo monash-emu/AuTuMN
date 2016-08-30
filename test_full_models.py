@@ -88,8 +88,6 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
 
     print('Time elapsed to completion of integration is ' + str(datetime.datetime.now() - start_realtime))
 
-
-
     if inputs.model_constants['output_by_age']:
         autumn.outputs.plot_outputs_by_age(
             models[scenario_name],

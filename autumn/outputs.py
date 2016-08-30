@@ -1401,20 +1401,16 @@ class Project:
 
     def plot_scaleup_fns_against_data(self):
 
-        for c, classification in enumerate(self.classified_scaleups):
+        for classification in self.classified_scaleups:
 
             functions = self.classified_scaleups[classification]
 
             png = os.path.join(self.out_dir_project, self.country + classification + '_scaleups' + '.png')
 
-            # Get the colours for the model outputs
-            output_colour = ['k'] * len(functions)
-
             # Determine how many subplots to have
             subplot_grid = find_subplot_numbers(len(functions))
 
             start_time = self.inputs.model_constants['plot_start_time']
-
             end_time = self.inputs.model_constants['plot_end_time']
             x_vals = numpy.linspace(start_time, end_time, 1E3)
 
@@ -1422,17 +1418,18 @@ class Project:
             fig = pyplot.figure(self.figure_number)
             self.figure_number += 1
 
-            # Upper title for whole figure
-            plural = ''
-            if len(functions) > 1:
-                plural += 's'
+            # Main title for whole figure
             title = self.inputs.model_constants['country'] + ' ' + \
-                    tool_kit.find_title_from_dictionary(classification) + \
-                    ' parameter' + plural
+                    tool_kit.find_title_from_dictionary(classification) + '_parameter'
+            if len(functions) > 1:
+                title += 's'
+
             fig.suptitle(title)
 
             # Iterate through functions
             for figure_number, function in enumerate(functions):
+
+                scenario_labels = []
 
                 # Initialise subplot areas
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], figure_number + 1)
@@ -1442,7 +1439,8 @@ class Project:
                     ax.plot(x_vals,
                             map(self.models[model].scaleup_fns[function],
                                 x_vals),
-                            color=output_colour[figure_number])
+                            color=self.output_colours[model][1])
+                    scenario_labels += [tool_kit.find_title_from_dictionary(model)]
 
                 data_to_plot = {}
                 for j in self.inputs.scaleup_data[None][function]:
@@ -1450,10 +1448,7 @@ class Project:
                         data_to_plot[j] = self.inputs.scaleup_data[None][function][j]
 
                 # Scatter plot data from which they are derived
-                ax.scatter(data_to_plot.keys(),
-                           data_to_plot.values(),
-                           color='k',
-                           s=6)
+                ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
 
                 # Adjust tick font size
                 ax.set_xticks([start_time, end_time])
@@ -1468,6 +1463,13 @@ class Project:
 
                 ylims = relax_y_axis(ax)
                 ax.set_ylim(bottom=ylims[0], top=ylims[1])
+
+                scenario_handles = ax.lines
+                if figure_number == len(functions) - 1:
+                    ax.legend(scenario_handles,
+                              scenario_labels,
+                              fontsize=get_nice_font_size(subplot_grid) - 2.,
+                              frameon=False)
 
             fig.suptitle('Scale-up functions')
 

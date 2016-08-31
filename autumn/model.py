@@ -802,7 +802,7 @@ class ConsolidatedModel(BaseModel):
 
     def set_birth_flows(self):
 
-        # Set birth flows (currently evenly distributed between comorbidities)
+        # Set birth flows
         for comorbidity in self.comorbidities:
             self.set_var_entry_rate_flow(
                 'susceptible_fully' + comorbidity + self.agegroups[0], 'births_unvac' + comorbidity)

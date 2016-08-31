@@ -405,6 +405,7 @@ class BaseModel:
         self.calculate_diagnostics()
         if self.run_costing:
             self.calculate_economics_diagnostics()
+
     def calculate_output_vars(self):
         """
         Calculate diagnostic vars that can depend on self.flows as
@@ -620,7 +621,6 @@ class BaseModel:
         for i_label, label in enumerate(self.labels):
             self.compartments[label] = \
                 self.soln_array[i_time, i_label]
-        # self.calculate_vars()
 
         return self.compartments
 

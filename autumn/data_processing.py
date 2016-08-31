@@ -742,6 +742,7 @@ class Inputs:
 
                 # Only apply to adults (i.e. age groups with a lower limit greater than 10)
                 if age_limits[0] >= self.model_constants['comorb_startage_diabetes']:
+
                     diabetes_parameters[param_without_age + '_diabetes' + age_string] \
                         = self.model_constants[param] \
                           * self.model_constants['comorb_multiplier_diabetes_progression']

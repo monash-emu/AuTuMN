@@ -4,7 +4,6 @@ import glob
 import datetime
 import autumn.model
 import autumn.tool_kit
-from autumn.spreadsheet import read_input_data_xls
 import autumn.outputs as outputs
 import autumn.data_processing
 
@@ -12,25 +11,23 @@ import autumn.data_processing
 start_realtime = datetime.datetime.now()
 
 # Import the data
-country = read_input_data_xls(True, ['control_panel'])['control_panel']['country']
-
 inputs = autumn.data_processing.Inputs(True)
 inputs.read_and_load_data()
 
 print('Data have been loaded.')
 print('Time elapsed so far is ' + str(datetime.datetime.now() - start_realtime) + '\n')
 
-# A few basic preliminaries
+# A few basic preliminaries - which will be disposed of once outputs are fully object-oriented
 out_dir = 'fullmodel_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
-project = outputs.Project(country, inputs)
+project = outputs.Project(inputs.country, inputs)
 
-base = os.path.join(out_dir, country + '_baseline')
+base = os.path.join(out_dir, inputs.country + '_baseline')
 
 models = {}
-for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
+for scenario in inputs.model_constants['scenarios_to_run']:
 
     # Name model
     if scenario is None:
@@ -38,18 +35,12 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
     else:
         scenario_name = 'scenario_' + str(scenario)
 
-    # Determine whether this is the final iteration of the loop
-    if scenario == inputs.model_constants['scenarios_to_run'][-1]:
-        final = True
-    else:
-        final = False
-
     # Create an outputs object for use later
     project.scenarios.append(scenario_name)
 
     models[scenario_name] = autumn.model.ConsolidatedModel(scenario, inputs)
 
-    if n == 0:
+    if scenario is None:
         print(autumn.tool_kit.introduce_model(models, scenario_name))
 
     # Create Boolean for uncertainty for this run to save re-typing the multi-factorial condition statement
@@ -77,7 +68,7 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
 
     # Describe model
     print('Running model "' + scenario_name + '".')
-    if n == 0:
+    if scenario is None:
         print(autumn.tool_kit.describe_model(models, scenario_name))
 
     if uncertainty_this_run:
@@ -88,13 +79,13 @@ for n, scenario in enumerate(inputs.model_constants['scenarios_to_run']):
 
     print('Time elapsed to completion of integration is ' + str(datetime.datetime.now() - start_realtime))
 
-    if inputs.model_constants['output_by_age']:
+    if inputs.model_constants['output_by_age'] and scenario == inputs.model_constants['scenarios_to_run'][-1]:
         autumn.outputs.plot_outputs_by_age(
             models[scenario_name],
             inputs.model_constants['recent_time'],
             'scenario_end_time',
             base + '_age_outputs_gtb.png',
-            country,
+            inputs.country,
             scenario=scenario,
             figure_number=21,
             final_run=final)

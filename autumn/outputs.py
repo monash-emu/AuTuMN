@@ -1343,10 +1343,10 @@ class Project:
                     color=colour[i], linewidth=0.5)
 
             # Loop through scenarios that have been run and plot
-            for m, model in enumerate(self.models):
+            for scenario in reversed(self.scenarios):
 
                 modelled_time, modelled_values = \
-                    tool_kit.get_truncated_lists_from_dict(self.full_output_dict[model][output], start_time)
+                    tool_kit.get_truncated_lists_from_dict(self.full_output_dict[scenario][output], start_time)
 
                 # Update the maximum plot value if it's greater than the GTB data
                 max_output = max(modelled_values + [max_output])
@@ -1355,12 +1355,12 @@ class Project:
                 ax.plot(
                     modelled_time,
                     modelled_values,
-                    color=self.output_colours[model][1],
-                    linestyle=self.output_colours[model][0],
+                    color=self.output_colours[scenario][1],
+                    linestyle=self.output_colours[scenario][0],
                     linewidth=1.5)
 
                 # Add scenario label
-                scenario_labels += [tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(model))]
+                scenario_labels += [tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario))]
 
             # Set vertical plot axis dimensions
             ax.set_ylim((0., max_output * 1.1))
@@ -1381,10 +1381,11 @@ class Project:
 
             # Add the legend
             scenario_handles = ax.lines[1:]
-            ax.legend(scenario_handles,
-                      scenario_labels,
-                      fontsize=get_nice_font_size(subplot_grid) - 2.,
-                      frameon=False)
+            if i == len(outputs) - 1:
+                ax.legend(scenario_handles,
+                          scenario_labels,
+                          fontsize=get_nice_font_size(subplot_grid),
+                          frameon=False)
 
         # Add main title and save
         fig.suptitle(tool_kit.capitalise_first_letter(self.country) + ' model outputs', fontsize=12)
@@ -1433,16 +1434,17 @@ class Project:
 
                 # Iterate through the scenarios
                 scenario_labels = []
-                for model in self.models:
+                for scenario in reversed(self.scenarios):
 
                     # Line plot scaling parameters
                     ax.plot(x_vals,
-                            map(self.models[model].scaleup_fns[function],
+                            map(self.models[scenario].scaleup_fns[function],
                                 x_vals),
-                            color=self.output_colours[model][1])
+                            color=self.output_colours[scenario][1])
 
                     # Record the name of the scenario for the legend
-                    scenario_labels += [tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(model))]
+                    scenario_labels \
+                        += [tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario))]
 
                 # Plot the raw data from which the scale-up functions were produced
                 data_to_plot = {}
@@ -1468,7 +1470,7 @@ class Project:
                 if f == len(functions) - 1:
                     ax.legend(scenario_handles,
                               scenario_labels,
-                              fontsize=get_nice_font_size(subplot_grid) - 2.,
+                              fontsize=get_nice_font_size(subplot_grid),
                               frameon=False)
 
             # Save

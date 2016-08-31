@@ -620,7 +620,7 @@ class BaseModel:
         for i_label, label in enumerate(self.labels):
             self.compartments[label] = \
                 self.soln_array[i_time, i_label]
-        self.calculate_vars()
+        # self.calculate_vars()
 
         return self.compartments
 

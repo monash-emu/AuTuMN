@@ -1542,10 +1542,11 @@ class Project:
 
                 subplot_grid = [1, 1]
                 ax = make_axes_with_room_for_legend()
-                divisions = 8
                 scenario_labels = []
-                for t in range(divisions):
-                    time = 2000. + 5 * t
+                times = range(int(self.inputs.model_constants['report_start_time']),
+                              int(self.inputs.model_constants['report_end_time']),
+                              int(self.inputs.model_constants['report_step_time']))
+                for t, time in enumerate(times):
                     time_index = indices(self.models[scenario].times, lambda x: x >= time)[0]
                     y_values = []
                     x_values = []
@@ -1561,7 +1562,7 @@ class Project:
                                                                         scenario].var_labels.index('popsize_' + program)])
                         x_values += [cost]
                         y_values += [i]
-                    darkness = .9 - (float(t) / float(divisions)) * .9
+                    darkness = .9 - (float(t) / float(len(times))) * .9
                     ax.plot(x_values, y_values, color=(darkness, darkness, darkness))
                     scenario_labels += [str(int(time))]
                 scenario_handles = ax.lines

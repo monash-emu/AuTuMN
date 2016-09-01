@@ -1534,15 +1534,19 @@ class Project:
     def plot_cost_coverage_curves(self):
 
         # Standard trick for ensuring figures don't overlap because of numbering
-        pyplot.figure(self.figure_number)
+        fig = pyplot.figure(self.figure_number)
         self.figure_number += 1
 
+        # Plot figures by scenario
         for scenario in self.scenarios:
-            for program in self.models[scenario].interventions_to_cost:
 
-                subplot_grid = [1, 1]
-                ax = make_axes_with_room_for_legend()
+            # Subplots by program
+            subplot_grid = find_subplot_numbers(len(self.models[scenario].interventions_to_cost))
+            for p, program in enumerate(self.models[scenario].interventions_to_cost):
+                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
                 scenario_labels = []
+
+                # Make times that each curve is produced for from control panel inputs
                 times = range(int(self.inputs.model_constants['report_start_time']),
                               int(self.inputs.model_constants['report_end_time']),
                               int(self.inputs.model_constants['report_step_time']))
@@ -1551,6 +1555,8 @@ class Project:
                     y_values = []
                     x_values = []
                     for i in numpy.linspace(0, 1, 101):
+
+                        # Make cost coverage curve
                         cost = economics.get_cost_from_coverage(i,
                                                                 self.inputs.model_constants['econ_inflectioncost_' + program],
                                                                 self.inputs.model_constants['econ_saturation_' + program],
@@ -1565,25 +1571,31 @@ class Project:
                     darkness = .9 - (float(t) / float(len(times))) * .9
                     ax.plot(x_values, y_values, color=(darkness, darkness, darkness))
                     scenario_labels += [str(int(time))]
-                scenario_handles = ax.lines
-                ax.legend(scenario_handles,
-                          scenario_labels,
-                          bbox_to_anchor=(1.05, 1),
-                          loc=2,
-                          borderaxespad=0.,
-                          frameon=False,
-                          prop={'size': 7})
-                ax.set_title(tool_kit.replace_underscore_with_space(tool_kit.capitalise_first_letter(scenario)) + ', '
-                             + tool_kit.find_title_from_dictionary('program_prop_' + program)
-                             + ' cost-coverage curves')
-                ax.set_ylabel('Coverage')
-                ax.set_xlabel('Cost')
+
+                # Legend to last panel
+                if p == len(self.models[scenario].interventions_to_cost) - 1:
+                    scenario_handles = ax.lines
+                    ax.legend(scenario_handles,
+                              scenario_labels,
+                              bbox_to_anchor=(1.05, 1),
+                              loc=2,
+                              borderaxespad=0.,
+                              frameon=False,
+                              prop={'size': 7})
+                ax.set_title(tool_kit.find_title_from_dictionary('program_prop_' + program)[:-9],
+                             fontsize=get_nice_font_size(subplot_grid)+2)
+                ax.set_ylabel('Coverage', fontsize=get_nice_font_size(subplot_grid))
+                ax.set_xlabel('Cost', fontsize=get_nice_font_size(subplot_grid))
                 for axis_to_change in [ax.xaxis, ax.yaxis]:
                     for tick in axis_to_change.get_major_ticks():
                         tick.label.set_fontsize(get_nice_font_size(subplot_grid))
-                png = os.path.join(self.out_dir_project,
-                                   self.country + '_' + program + '_' + scenario + '_costcoverage' + '.png')
-                save_png(png)
+
+            # Finish off with title and save file for scenario
+            fig.suptitle('Cost-coverage curves for ' + tool_kit.replace_underscore_with_space(scenario),
+                         fontsize=13)
+            png = os.path.join(self.out_dir_project,
+                                   self.country + '_' + scenario + '_costcoverage' + '.png')
+            save_png(png)
 
 
 

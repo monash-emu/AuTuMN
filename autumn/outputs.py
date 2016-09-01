@@ -677,8 +677,7 @@ def plot_outputs_by_age(model,
                         png=None,
                         country='',
                         scenario=None,
-                        figure_number=21,
-                        final_run=True):
+                        figure_number=21):
 
     """
     Produces the plot for the main outputs by age, can handle multiple scenarios (if required).
@@ -785,9 +784,7 @@ def plot_outputs_by_age(model,
                           fontsize=get_nice_font_size(subplot_grid) - 2.,
                           frameon=False)
 
-    # Save
-    if final_run:
-        save_png(png)
+    save_png(png)
 
 
 def plot_flows(model, labels, png=None):

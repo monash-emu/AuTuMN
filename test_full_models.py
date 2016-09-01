@@ -87,8 +87,7 @@ for scenario in inputs.model_constants['scenarios_to_run']:
             base + '_age_outputs_gtb.png',
             inputs.country,
             scenario=scenario,
-            figure_number=21,
-            final_run=final)
+            figure_number=21)
 
     project.models[scenario_name] = []
     if uncertainty_this_run:

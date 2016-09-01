@@ -606,6 +606,7 @@ class BaseModel:
         return self.soln_array[:, i_label]
 
     def get_var_soln(self, label):
+
         assert self.var_array is not None, 'calculate_diagnostics has not been run'
         i_label = self.var_labels.index(label)
         return self.var_array[:, i_label]

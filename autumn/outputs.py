@@ -14,6 +14,7 @@ import pylab
 import platform
 import os
 import warnings
+import economics
 
 def relax_y_axis(ax):
 
@@ -1525,5 +1526,61 @@ class Project:
                   frameon=False,
                   prop={'size': 7})
         save_png(png)
+
+    def plot_economics(self, program):
+
+        pyplot.figure(1)
+        subplot_grid = [1, 1]
+        ax = make_axes_with_room_for_legend()
+        divisions = 8
+        scenario_labels = []
+        for t in range(divisions):
+            time = 2000. + 5 * t
+            time_index = indices(self.models['baseline'].times, lambda x: x >= time)[0]
+            y_values = []
+            x_values = []
+            for i in numpy.linspace(0, 1, 101):
+                cost = economics.get_cost_from_coverage(i,
+                                                        self.inputs.model_constants['econ_inflectioncost_' + program],
+                                                        self.inputs.model_constants['econ_saturation_' + program],
+                                                        self.inputs.model_constants['econ_unitcost_' + program],
+                                                        self.models[
+                                                            'baseline'].var_array[
+                                                            time_index,
+                                                            self.models[
+                                                                'baseline'].var_labels.index('popsize_' + program)])
+                x_values += [cost]
+                y_values += [i]
+            darkness = .9 - (float(t) / float(divisions)) * .9
+            ax.plot(x_values, y_values, color=(darkness, darkness, darkness))
+            scenario_labels += [str(int(time))]
+        scenario_handles = ax.lines
+        ax.legend(scenario_handles,
+                  scenario_labels,
+                  bbox_to_anchor=(1.05, 1),
+                  loc=2,
+                  borderaxespad=0.,
+                  frameon=False,
+                  prop={'size': 7})
+        ax.set_title(tool_kit.capitalise_first_letter(program) + ' cost-coverage curve by year')
+        ax.set_ylabel('Coverage')
+        ax.set_xlabel('Cost')
+        for axis_to_change in [ax.xaxis, ax.yaxis]:
+            for tick in axis_to_change.get_major_ticks():
+                tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+        png = os.path.join(self.out_dir_project, self.country + '_costcoverage' + '.png')
+        save_png(png)
+
+
+
+
+
+
+
+
+
+
+
+
 
 

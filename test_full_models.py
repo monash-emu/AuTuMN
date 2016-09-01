@@ -131,7 +131,7 @@ pngs = glob.glob(os.path.join(out_dir, '*png'))
 project.write_spreadsheets()
 project.write_documents()
 project.run_plotting()
-project.plot_economics('vaccination')
+project.plot_economics()
 
 autumn.outputs.open_pngs(pngs)
 

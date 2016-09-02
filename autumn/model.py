@@ -437,9 +437,20 @@ class ConsolidatedModel(BaseModel):
                 for agegroup in self.agegroups:
                     for comorbidity in self.comorbidities:
                         for timing in ['_early', '_late']:
-                            self.vars['tb_rate' + timing + '_progression' + organ + comorbidity + agegroup] \
-                                = self.vars['epi_prop' + organ] \
-                                  * self.params['tb_rate' + timing + '_progression' + comorbidity + agegroup]
+                            if comorbidity == '_diabetes':
+                                rr_diabetes = self.inputs.scaleup_fns[None]['epi_rr_diabetes'](self.time)
+                                self.vars['tb_rate' + timing + '_progression' + organ + comorbidity + agegroup] \
+                                    = self.vars['epi_prop' + organ] \
+                                      * self.params[
+                                          'tb_rate' + timing + '_progression' + '_nocomorb' + agegroup] * rr_diabetes
+                            else:
+                                self.vars['tb_rate' + timing + '_progression' + organ + comorbidity + agegroup] \
+                                    = self.vars['epi_prop' + organ] \
+                                      * self.params['tb_rate' + timing + '_progression' + comorbidity + agegroup]
+
+                            # self.vars['tb_rate' + timing + '_progression' + organ + comorbidity + agegroup] \
+                            #     = self.vars['epi_prop' + organ] \
+                            #       * self.params['tb_rate' + timing + '_progression' + comorbidity + agegroup]
 
     def calculate_acf_rate(self):
 

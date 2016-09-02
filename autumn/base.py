@@ -38,7 +38,8 @@ class BaseModel:
         self.costs = {}
         self.run_costing = True
         self.end_period_costing = 2035
-        self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf']
+        self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
+                                      'ipt_age0to5', 'ipt_age5to15']
 
         self.eco_drives_epi = False
 
@@ -478,6 +479,10 @@ class BaseModel:
         Integration is supposed to have been completed by this point.
         """
 
+        # if model is not age-structures, age-specific IPT does not make sense
+        if len(self.agegroups) < 2:
+            self.interventions_to_cost = [inter for inter in self.interventions_to_cost if inter not in ['ipt_age0to5', 'ipt_age5to15']]
+
         # Find start and end indices for economics calculations
         start_index = indices(self.times, lambda x: x >= self.inputs.model_constants['recent_time'])[0]
         end_index = indices(self.times, lambda x: x >= self.inputs.model_constants['scenario_end_time'])[0]
@@ -508,11 +513,16 @@ class BaseModel:
                 if intervention == self.interventions_to_cost[0]:
                     costs['cost_times'].append(t)
 
+                # for IPT, if the intervention is age-specific, we still use economics data that are not age-specific
+                name_intervention_eco_data = intervention
+                if 'ipt_age' in intervention:
+                    name_intervention_eco_data = 'ipt'
+
                 # Raw cost (which is the uninflated cost)
                 cost = get_cost_from_coverage(self.coverage_over_time('program_prop_' + intervention)(t),
-                                              self.inputs.model_constants['econ_inflectioncost_' + intervention],
-                                              self.inputs.model_constants['econ_saturation_' + intervention],
-                                              self.inputs.model_constants['econ_unitcost_' + intervention],
+                                              self.inputs.model_constants['econ_inflectioncost_' + name_intervention_eco_data],
+                                              self.inputs.model_constants['econ_saturation_' + name_intervention_eco_data],
+                                              self.inputs.model_constants['econ_unitcost_' + name_intervention_eco_data],
                                               self.var_array[i, self.var_labels.index('popsize_' + intervention)])
 
                 # Store uninflated cost

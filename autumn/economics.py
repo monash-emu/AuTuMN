@@ -25,6 +25,8 @@ def get_cost_from_coverage(coverage, c_inflection_cost, saturation, unit_cost, p
         return 0.
     assert 0. <= coverage < saturation, 'coverage must verify 0 <= coverage < saturation'
 
+    if coverage == 0.:
+        return 0.
     # Here's the logistic curve function code
     a = saturation / (1. - 2. ** alpha)
     b = ((2. ** (alpha + 1.)) / (alpha * (saturation - a) * unit_cost * pop_size))

@@ -1018,7 +1018,7 @@ class Project:
     def write_xls_by_output(self):
 
         # Find directory to write to
-        out_dir_project = self.find_or_make_directory()
+        # out_dir_project = self.find_or_make_directory()
 
         # Write a new file for each output
         outputs = self.integer_output_dict['baseline'].keys()
@@ -1599,7 +1599,7 @@ class Project:
             save_png(png)
 
     def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):
-        
+
         """
 
         Eike, 02/09/16

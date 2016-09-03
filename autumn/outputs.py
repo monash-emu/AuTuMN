@@ -8,13 +8,14 @@ import numpy as np
 import openpyxl as xl
 import tool_kit
 from docx import Document
-from matplotlib import pyplot, patches
+from matplotlib import pyplot, patches, style
 import numpy
 import pylab
 import platform
 import os
 import warnings
 import economics
+import pandas
 
 def relax_y_axis(ax):
 
@@ -1597,16 +1598,76 @@ class Project:
                                    self.country + '_' + scenario + '_costcoverage' + '.png')
             save_png(png)
 
+    def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):
+        
+        """
 
+        Eike, 02/09/16
 
+        Function for plotting total cost of interventions under different scenarios over a given range of years.
 
+        Args:
+            year_start: integer, start year of time frame over which to calculate total costs
+            year_end:   integer, end year of time frame over which to calculate total costs (included)
+            horizontal: boolean, plot stacked bar chart horizontally
+            plot_options: dictionary, options for generating plot
 
+        Will throw error if defined year range is not present in economic model outputs!
 
+        """
 
+        # set and check options / data ranges
 
+        defaults = {
+            "interventions": ["smearacf", "treatment_support", "vaccination", "xpert", "xpertacf"],
+            "intervention_names": ["Smear ACF", "Treatment Support", "Vaccination", "GeneXpert", "GeneXpert ACF"],
+            "x_label_rotation": 45,
+            "y_label": "Total Cost ($)\n",
+            "legend_size": 10,
+            "legend_frame": False,
+            "plot_style": "ggplot",
+            "title": "Projected total costs {sy} - {ey}\n".format(sy=year_start, ey=year_end)
+        }
 
+        if plot_options is None:
+            options = defaults
+        else:
+            for key, value in plot_options.items():
+                defaults[key] = value
+            options = defaults
 
+        if options["plot_style"] is not None:
+            style.use(options["plot_style"])
 
+        years = range(year_start, year_end + 1)
 
+        # make data frame (columns: interventions, rows: scenarios)
 
+        data_frame = pandas.DataFrame(index=self.scenarios, columns=options["intervention_names"])
+
+        for scenario in self.scenarios:
+            data_frame.loc[scenario] = [sum([self.integer_output_dict[scenario]["cost_" + intervention][year]
+                                             for year in years]) for intervention in options["interventions"]]
+
+        data_frame.columns = options["intervention_names"]
+
+        # make and style plot
+
+        if horizontal:
+            plot = data_frame.plot.barh(stacked=True, rot=options["x_label_rotation"], title=options["title"])
+            plot.set_xlabel(options["y_label"])
+        else:
+            plot = data_frame.plot.bar(stacked=True, rot=options["x_label_rotation"], title=options["title"])
+            plot.set_ylabel(options["y_label"])
+
+        humanise_y_ticks(plot)
+
+        handles, labels = plot.get_legend_handles_labels()
+        lgd = plot.legend(handles, labels, bbox_to_anchor=(1, 0.5), loc='center left',
+                          fontsize=options["legend_size"], frameon=options["legend_frame"])
+
+        # save plot
+
+        pyplot.savefig(os.path.join(self.out_dir_project, self.country + '_totalcost' + '.png'),
+                       bbox_extra_artists=(lgd,), bbox_inches='tight')
 

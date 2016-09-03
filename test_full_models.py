@@ -132,6 +132,9 @@ project.write_spreadsheets()
 project.write_documents()
 project.run_plotting()
 
+# Added to test total cost plotting - need install of Pandas library for DataFrames (Eike)
+project.plot_intervention_costs_by_scenario(2016, 2025)
+
 autumn.outputs.open_pngs(pngs)
 
 print('Time elapsed in running script is ' + str(datetime.datetime.now() - start_realtime))

@@ -1585,11 +1585,13 @@ class Project:
                               prop={'size': 7})
                 ax.set_title(tool_kit.find_title_from_dictionary('program_prop_' + program)[:-9],
                              fontsize=get_nice_font_size(subplot_grid)+2)
-                ax.set_ylabel('Coverage', fontsize=get_nice_font_size(subplot_grid))
-                ax.set_xlabel('Cost', fontsize=get_nice_font_size(subplot_grid))
+                if program == self.models[scenario].interventions_to_cost[-1]:
+                    ax.set_ylabel('Coverage (proportion)', fontsize=get_nice_font_size(subplot_grid))
+                    ax.set_xlabel('Cost', fontsize=get_nice_font_size(subplot_grid))
                 for axis_to_change in [ax.xaxis, ax.yaxis]:
                     for tick in axis_to_change.get_major_ticks():
                         tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+                        tick.label.set_rotation(45)
 
             # Finish off with title and save file for scenario
             fig.suptitle('Cost-coverage curves for ' + tool_kit.replace_underscore_with_space(scenario),

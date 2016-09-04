@@ -1280,7 +1280,7 @@ class Project:
 
         # Plot economic outputs
         if self.inputs.model_constants['output_plot_economics']:
-            self.plot_cost_coverage_curves()
+            # self.plot_cost_coverage_curves()
             self.plot_cost_over_time()
 
     def plot_outputs_against_gtb(self,
@@ -1606,31 +1606,50 @@ class Project:
 
     def plot_cost_over_time(self):
 
+        # Separate figure for each scenario
         for scenario in self.scenarios:
 
             # Standard trick for ensuring figures don't overlap because of numbering
             fig = pyplot.figure(self.figure_number)
             self.figure_number += 1
 
-            png = os.path.join(self.out_dir_project,
-                               self.country + scenario + '_timecost' + '.png')
+            # Work out number of subplots
+            subplot_grid \
+                = find_subplot_numbers(len(self.models[scenario].costs['vaccination']))
 
-            program_labels = []
-            for p, cost in enumerate(self.models[scenario].costs['vaccination']):
-                subplot_grid \
-                    = find_subplot_numbers(len(self.models[scenario].costs['vaccination']))
-                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
+            # Just using vaccination to get one set of cost keys (should consistently be available)
+            for c, cost in enumerate(self.models[scenario].costs['vaccination']):
+
+                # Plot each type of cost to its own subplot
+                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
+
+                # Empty list for legend
+                program_labels = []
                 for program in self.models[scenario].costs:
+
+                    # Ignore the cost_times key, as it isn't a program
                     if program != 'cost_times':
+
+                        # Plot and add legend key
                         ax.plot(self.models[scenario].costs['cost_times'],
                                 self.models[scenario].costs[program][cost])
                         program_labels \
                             += [tool_kit.find_title_from_dictionary(program)]
-                ax.set_title(cost, fontsize=8)
 
-            fig.suptitle('Individual program costs for ' + tool_kit.replace_underscore_with_space(scenario),
+                # Axis title
+                ax.set_title(tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(cost)),
+                             fontsize=8)
+
+                # Tidy ticks
+                for axis_to_change in [ax.xaxis, ax.yaxis]:
+                    for tick in axis_to_change.get_major_ticks():
+                        tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+
+            # Finishing off
+            fig.suptitle('Individual program costs for ' + tool_kit.find_title_from_dictionary(scenario),
                          fontsize=13)
-
+            png = os.path.join(self.out_dir_project,
+                               self.country + scenario + '_timecost' + '.png')
             save_png(png)
 
     def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):

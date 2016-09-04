@@ -181,11 +181,15 @@ def find_title_from_dictionary(name):
         'treatment_support':
             'Treatment support',
         'xpert':
-            'Xpert replaces smear'
+            'Xpert replaces smear',
+        'baseline':
+            'Baseline scenario'
     }
 
     if name in dictionary_of_names:
         return dictionary_of_names[name]
+    elif 'scenario' in name:
+        return capitalise_first_letter(replace_underscore_with_space(name))
     else:
         return name
 

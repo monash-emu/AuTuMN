@@ -1646,6 +1646,13 @@ class Project:
                     for tick in axis_to_change.get_major_ticks():
                         tick.label.set_fontsize(get_nice_font_size(subplot_grid))
 
+                # Add the legend to last subplot panel
+                if c == len(self.models[scenario].costs['vaccination']) - 1:
+                    ax.legend(ax.lines,
+                              program_labels,
+                              fontsize=get_nice_font_size(subplot_grid),
+                              frameon=False)
+
             # Finishing off
             fig.suptitle('Individual program costs for ' + tool_kit.find_title_from_dictionary(scenario),
                          fontsize=13)

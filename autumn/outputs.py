@@ -881,6 +881,7 @@ class Project:
         self.scenarios = []
         self.models = {}
         self.full_output_dict = {}
+        self.full_output_lists = {}
         self.integer_output_dict = {}
         self.inputs = inputs
         self.out_dir_project = os.path.join('projects', self.name)
@@ -930,10 +931,12 @@ class Project:
 
         for scenario in self.scenarios:
             self.full_output_dict[scenario] = {}
+            self.full_output_lists[scenario] = {}
             for label in outputs:
-                times = self.models[scenario].times
-                solution = self.models[scenario].get_var_soln(label)
-                self.full_output_dict[scenario][label] = dict(zip(times, solution))
+                self.full_output_lists[scenario]['times'] = self.models[scenario].times
+                self.full_output_lists[scenario][label] = self.models[scenario].get_var_soln(label)
+                self.full_output_dict[scenario][label] = dict(zip(self.full_output_lists[scenario]['times'],
+                                                                  self.full_output_lists[scenario][label]))
 
                 # Add uncertainty data to full dictionary
                 if len(self.model_shelf_uncertainty) > 0:
@@ -1278,6 +1281,7 @@ class Project:
         # Plot economic outputs
         if self.inputs.model_constants['output_plot_economics']:
             self.plot_cost_coverage_curves()
+            self.plot_cost_over_time()
 
     def plot_outputs_against_gtb(self,
                                  outputs):
@@ -1534,12 +1538,12 @@ class Project:
 
     def plot_cost_coverage_curves(self):
 
-        # Standard trick for ensuring figures don't overlap because of numbering
-        fig = pyplot.figure(self.figure_number)
-        self.figure_number += 1
-
         # Plot figures by scenario
         for scenario in self.scenarios:
+
+            # Standard trick for ensuring figures don't overlap because of numbering
+            fig = pyplot.figure(self.figure_number)
+            self.figure_number += 1
 
             # Subplots by program
             subplot_grid = find_subplot_numbers(len(self.models[scenario].interventions_to_cost))
@@ -1598,6 +1602,35 @@ class Project:
                          fontsize=13)
             png = os.path.join(self.out_dir_project,
                                    self.country + '_' + scenario + '_costcoverage' + '.png')
+            save_png(png)
+
+    def plot_cost_over_time(self):
+
+        for scenario in self.scenarios:
+
+            # Standard trick for ensuring figures don't overlap because of numbering
+            fig = pyplot.figure(self.figure_number)
+            self.figure_number += 1
+
+            png = os.path.join(self.out_dir_project,
+                               self.country + scenario + '_timecost' + '.png')
+
+            program_labels = []
+            for p, cost in enumerate(self.models[scenario].costs['vaccination']):
+                subplot_grid \
+                    = find_subplot_numbers(len(self.models[scenario].costs['vaccination']))
+                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
+                for program in self.models[scenario].costs:
+                    if program != 'cost_times':
+                        ax.plot(self.models[scenario].costs['cost_times'],
+                                self.models[scenario].costs[program][cost])
+                        program_labels \
+                            += [tool_kit.find_title_from_dictionary(program)]
+                ax.set_title(cost, fontsize=8)
+
+            fig.suptitle('Individual program costs for ' + tool_kit.replace_underscore_with_space(scenario),
+                         fontsize=13)
+
             save_png(png)
 
     def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):

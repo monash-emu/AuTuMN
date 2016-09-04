@@ -171,7 +171,17 @@ def find_title_from_dictionary(name):
         'epi_prop_smearneg':
             'Proportion smear-negative',
         'epi_prop_smearpos':
-            'Proportion smear-positive'
+            'Proportion smear-positive',
+        'xpertacf':
+            'ACF using Xpert',
+        'vaccination':
+            'BCG vaccination',
+        'smearacf':
+            'ACF using sputum smear',
+        'treatment_support':
+            'Treatment support',
+        'xpert':
+            'Xpert replaces smear'
     }
 
     if name in dictionary_of_names:

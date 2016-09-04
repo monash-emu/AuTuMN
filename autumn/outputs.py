@@ -891,6 +891,7 @@ class Project:
         self.ci_percentage = 95.
         self.figure_number = 1
         self.classifications = ['demo_', 'econ_', 'epi_', 'program_prop_', 'program_timeperiod']
+        self.output_colours = {}
 
     #################################
     # General methods for use below #
@@ -1264,7 +1265,6 @@ class Project:
 
         # Find some general output colours
         output_colours = make_default_line_styles(5, True)
-        self.output_colours = {}
         for s, scenario in enumerate(self.scenarios):
             self.output_colours[scenario] = output_colours[s]
 

@@ -1280,7 +1280,7 @@ class Project:
 
         # Plot economic outputs
         if self.inputs.model_constants['output_plot_economics']:
-            # self.plot_cost_coverage_curves()
+            self.plot_cost_coverage_curves()
             self.plot_cost_over_time()
 
     def plot_outputs_against_gtb(self,
@@ -1562,17 +1562,18 @@ class Project:
                     for i in numpy.linspace(0, 1, 101):
 
                         # Make cost coverage curve
-                        cost = economics.get_cost_from_coverage(i,
-                                                                self.inputs.model_constants['econ_inflectioncost_' + program],
-                                                                self.inputs.model_constants['econ_saturation_' + program],
-                                                                self.inputs.model_constants['econ_unitcost_' + program],
-                                                                self.models[
-                                                                    scenario].var_array[
-                                                                    time_index,
+                        if i < self.inputs.model_constants['econ_saturation_' + program]:
+                            cost = economics.get_cost_from_coverage(i,
+                                                                    self.inputs.model_constants['econ_inflectioncost_' + program],
+                                                                    self.inputs.model_constants['econ_saturation_' + program],
+                                                                    self.inputs.model_constants['econ_unitcost_' + program],
                                                                     self.models[
-                                                                        scenario].var_labels.index('popsize_' + program)])
-                        x_values += [cost]
-                        y_values += [i]
+                                                                        scenario].var_array[
+                                                                        time_index,
+                                                                        self.models[
+                                                                            scenario].var_labels.index('popsize_' + program)])
+                            x_values += [cost]
+                            y_values += [i]
                     darkness = .9 - (float(t) / float(len(times))) * .9
                     ax.plot(x_values, y_values, color=(darkness, darkness, darkness))
                     scenario_labels += [str(int(time))]

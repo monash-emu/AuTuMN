@@ -375,7 +375,6 @@ class BaseModel:
                 if time > new_time:
                     dt = new_time - old_time
                     time = new_time
-
                 k1 = numpy.asarray(derivative(y, old_time))
                 y_k2 = y + 0.5 * dt * k1
                 if (y_k2 >= 0).all():
@@ -396,8 +395,17 @@ class BaseModel:
                     dt_is_ok = False
                     continue
 
+                y_candidate = []
                 for i in range(n_compartment):
-                    y[i] = y[i] + (dt/6.0) * (k1[i] + 2.0*k2[i] + 2.0*k3[i] + k4[i])
+                    y_candidate.append(y[i] + (dt/6.0) * (k1[i] + 2.0*k2[i] + 2.0*k3[i] + k4[i]))
+
+                if (numpy.asarray(y_candidate) >= 0).all():
+                    y = y_candidate
+                else:
+                    dt_is_ok = False
+                    continue
+
+
 
 
             if i_time < n_time - 1:

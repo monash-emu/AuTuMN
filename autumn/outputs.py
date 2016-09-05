@@ -1681,8 +1681,9 @@ class Project:
         # set and check options / data ranges
 
         defaults = {
-            "interventions": ["smearacf", "treatment_support", "vaccination", "xpert", "xpertacf"],
-            "intervention_names": ["Smear ACF", "Treatment Support", "Vaccination", "GeneXpert", "GeneXpert ACF"],
+            "interventions": ["vaccination", "xpert", "xpertacf", "smearacf", "treatment_support", "ipt_age0to5", "ipt_age5to15"],
+            "intervention_names": ["Vaccination", "GeneXpert", "GeneXpert ACF", "Smear ACF", "Treatment Support",
+                                   "IPT 0-5 y.o.", "IPT 5-15 y.o."],
             "x_label_rotation": 45,
             "y_label": "Total Cost ($)\n",
             "legend_size": 10,

@@ -38,10 +38,12 @@ class BaseModel:
         self.costs = {}
         self.run_costing = True
         self.end_period_costing = 2035
-        self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
-                                      'ipt_age0to5', 'ipt_age5to15']
+        self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf','ipt_age0to5', 'ipt_age5to15']
 
         self.eco_drives_epi = False
+
+        self.intervention_startdates = {}
+
 
     def make_times(self, start, end, delta):
 
@@ -406,8 +408,6 @@ class BaseModel:
                     continue
 
 
-
-
             if i_time < n_time - 1:
                 self.soln_array[i_time + 1, :] = y
 
@@ -505,30 +505,37 @@ class BaseModel:
 
         # Loop over interventions to be costed
         for intervention in self.interventions_to_cost:
-
             # Initialise output lists
             costs[intervention] = {'raw_cost': [],
                                    'inflated_cost': [],
                                    'discounted_cost': [],
                                    'discounted_inflated_cost': []}
 
+            # for IPT, if the intervention is age-specific, we still use economics data that are not age-specific
+            name_intervention_eco_data = intervention
+            if 'ipt_age' in intervention:
+                name_intervention_eco_data = 'ipt'
+
+            start_inter = self.intervention_startdates[self.scenario][intervention]  # date the intervention started
+            startingcost_duration = self.inputs.model_constants['econ_startingcost_duration_' + name_intervention_eco_data]
+
             # for each step time. We may want to change this bit. No need for all time steps
             # Just add a third argument if you want to decrease the frequency of calculation
             for i in range(start_index, end_index + 1):
                 t = self.times[i]
-
                 # If it's the first intervention, store a list of times
                 if intervention == self.interventions_to_cost[0]:
                     costs['cost_times'].append(t)
 
-                # for IPT, if the intervention is age-specific, we still use economics data that are not age-specific
-                name_intervention_eco_data = intervention
-                if 'ipt_age' in intervention:
-                    name_intervention_eco_data = 'ipt'
+                # Calculate starting_cost according to the time elapsed since the intervention started
+                inflection_cost = 0.
+                if start_inter is not None: # no intervention start
+                    if 0 <= t < (start_inter + startingcost_duration):
+                        inflection_cost = self.inputs.model_constants['econ_inflectioncost_' + name_intervention_eco_data]
 
                 # Raw cost (which is the uninflated cost)
                 cost = get_cost_from_coverage(self.coverage_over_time('program_prop_' + intervention)(t),
-                                              self.inputs.model_constants['econ_inflectioncost_' + name_intervention_eco_data],
+                                             inflection_cost,
                                               self.inputs.model_constants['econ_saturation_' + name_intervention_eco_data],
                                               self.inputs.model_constants['econ_unitcost_' + name_intervention_eco_data],
                                               self.var_array[i, self.var_labels.index('popsize_' + intervention)])
@@ -743,6 +750,29 @@ class BaseModel:
 
         self.graph.render(base)
 
+    def find_intervention_startdates(self):
+        """
+        Find the dates when the different interventions start and populate self.intervention_startdates
+        """
+        for scenario in self.inputs.model_constants['scenarios_to_run']:
+            self.intervention_startdates[scenario] = {}
+            for intervention in self.interventions_to_cost:
+                param_key = 'program_prop_' + intervention
+                param_key2 = 'program_perc_' + intervention
+                param_dict = self.inputs.scaleup_data[scenario][param_key]
+                years_pos_coverage = [key for (key, value) in param_dict.items() if value > 0.] # years after start
+                if len(years_pos_coverage) > 0: # some coverage present at baseline
+                    self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
+                else:
+                    if scenario is not None and ('scenario_' + str(scenario)) in self.inputs.time_variants[param_key2].keys():
+                        # in case a coverage is defined through a scenario
+                        if self.inputs.time_variants[param_key2]['scenario_' + str(scenario)] > 0:
+                            self.intervention_startdates[scenario][intervention] = self.inputs.model_constants[
+                                'scenario_start_time']
+                        else:
+                            self.intervention_startdates[scenario][intervention] = None
+                    else:
+                        self.intervention_startdates[scenario][intervention] = None
 
 def add_unique_tuple_to_list(a_list, a_tuple):
 

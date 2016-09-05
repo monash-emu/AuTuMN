@@ -133,7 +133,10 @@ project.write_documents()
 project.run_plotting()
 
 # Added to test total cost plotting - need install of Pandas library for DataFrames (Eike)
-project.plot_intervention_costs_by_scenario(2016, 2025)
+project.plot_intervention_costs_by_scenario(2016, 2025, plot_options= {
+            "interventions": ["xpert", "xpertacf", "smearacf", "treatment_support", "ipt_age0to5", "ipt_age5to15"],
+            "intervention_names": ["GeneXpert", "GeneXpert ACF", "Smear ACF", "Treatment Support",
+                                   "IPT 0-5 y.o.", "IPT 5-15 y.o."]})
 
 autumn.outputs.open_pngs(pngs)
 

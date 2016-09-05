@@ -135,6 +135,8 @@ class ConsolidatedModel(BaseModel):
         self.loglikelihoods = []
         self.model_shelf = []
 
+        self.find_intervention_startdates()
+
     def define_model_structure(self):
 
         """

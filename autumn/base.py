@@ -236,11 +236,7 @@ class BaseModel:
 
     def init_run(self):
 
-        if self.scenario == None:
-            start_time = self.inputs.model_constants['start_time']
-        else:
-            start_time = self.inputs.model_constants['scenario_start_time']
-        self.make_times(start_time,
+        self.make_times(self.start_time,
                         self.inputs.model_constants['scenario_end_time'],
                         self.inputs.model_constants['time_step'])
         self.initialise_compartments()

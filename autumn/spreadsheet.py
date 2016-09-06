@@ -569,23 +569,17 @@ def read_xls_with_sheet_readers(sheet_readers=[]):
     for reader in sheet_readers:
 
         # Check that the spreadsheet to be read exists
-        try:
-            workbook = open_workbook(reader.filename)
+        workbook = open_workbook(reader.filename)
+        sheet = workbook.sheet_by_name(reader.tab_name)
 
-            # raise Exception('Failed to open spreadsheet: %s' % reader.filename)
-            sheet = workbook.sheet_by_name(reader.tab_name)
-
-            # Read in the direction that the reader expects (either horizontal or vertical)
-            if reader.horizontal:
-                for i_row in range(reader.start_row, sheet.nrows):
-                    reader.parse_row(sheet.row_values(i_row))
-            else:
-                for i_col in range(reader.start_column, sheet.ncols):
-                    reader.parse_col(sheet.col_values(i_col))
-            result[reader.key] = reader.get_data()
-
-        except:
-            warnings.warn('Spreadsheet %s is not available' % reader.filename)
+        # Read in the direction that the reader expects (either horizontal or vertical)
+        if reader.horizontal:
+            for i_row in range(reader.start_row, sheet.nrows):
+                reader.parse_row(sheet.row_values(i_row))
+        else:
+            for i_col in range(reader.start_column, sheet.ncols):
+                reader.parse_col(sheet.col_values(i_col))
+        result[reader.key] = reader.get_data()
 
     return result
 

@@ -51,9 +51,11 @@ for scenario in inputs.model_constants['scenarios_to_run']:
         # Generally only run uncertainty if this on the baseline scenario, unless specified otherwise
         uncertainty_this_run = True
 
-    if scenario is not None:
+    if scenario is None:
+        models[scenario_name].start_time = inputs.model_constants['start_time']
+    else:
         scenario_start_time_index = \
-            models['baseline'].find_time_index(inputs.model_constants['scenario_start_time'])
+            models['baseline'].find_time_index(inputs.model_constants['recent_time'])
         models[scenario_name].start_time = \
             models['baseline'].times[scenario_start_time_index]
         models[scenario_name].loaded_compartments = \

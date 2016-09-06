@@ -192,6 +192,9 @@ class Inputs:
         # Find the proportion of new cases by organ status and start to populate the derived data dictionary
         self.find_organ_proportions()
 
+        # Extract freeze times for scenarios as a separate dictionary
+        self.extract_freeze_times()
+
         # Start to populate the time variants dictionary
         if 'country_programs' in self.original_data:
             self.time_variants.update(self.original_data['country_programs'])
@@ -207,6 +210,8 @@ class Inputs:
 
         # Convert time variants loaded as percentages to proportions
         self.convert_percentages_to_proportions()
+
+        self.create_freeze_time_dictionary()
 
         # Find outcomes for smear-positive DS-TB patients and populate to derived data dictionary
         self.find_ds_outcomes()
@@ -301,6 +306,10 @@ class Inputs:
 
         # Perform checks
         self.checks()
+
+    def extract_freeze_times(self):
+
+        self.freeze_times = self.original_data['country_programs'].pop('freeze_times')
 
     def update_time_variants(self):
 
@@ -401,6 +410,15 @@ class Inputs:
                             = self.time_variants[time_variant][i]
 
         self.time_variants.update(time_variants_converted_to_prop)
+
+    def create_freeze_time_dictionary(self):
+
+        for scenario in self.model_constants['scenarios_to_run']:
+            print(scenario)
+            if scenario is None:
+                self.freeze_times['baseline'] = self.model_constants['current_time']
+            elif 'scenario_' + str(scenario) not in self.freeze_times:
+                self.freeze_times['scenario_' + str(scenario)] = self.model_constants['current_time']
 
     def find_ds_outcomes(self):
 
@@ -898,7 +916,10 @@ class Inputs:
                             if 'scenario_' not in i:
                                 self.scaleup_data[scenario][str(time_variant)][i] \
                                     = self.time_variants[time_variant][i]
-                        else:
+                        elif scenario is None or 'program_' not in time_variant:
+                            self.scaleup_data[scenario][str(time_variant)][i] \
+                                = self.time_variants[time_variant][i]
+                        elif i <= int(self.freeze_times['scenario_' + str(scenario)]):
                             self.scaleup_data[scenario][str(time_variant)][i] \
                                 = self.time_variants[time_variant][i]
 

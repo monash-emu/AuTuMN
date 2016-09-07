@@ -29,19 +29,15 @@ base = os.path.join(out_dir, inputs.country + '_baseline')
 models = {}
 for scenario in inputs.model_constants['scenarios_to_run']:
 
-    # Name model
-    if scenario is None:
-        scenario_name = 'baseline'
-    else:
-        scenario_name = 'scenario_' + str(scenario)
+    # Name and initialise model
+    scenario_name = autumn.tool_kit.find_scenario_string_from_number(scenario)
+    models[scenario_name] = autumn.model.ConsolidatedModel(scenario, inputs)
 
     # Create an outputs object for use later
     project.scenarios.append(scenario_name)
 
-    models[scenario_name] = autumn.model.ConsolidatedModel(scenario, inputs)
-
-    if scenario is None:
-        print(autumn.tool_kit.introduce_model(models, scenario_name))
+    # Introduce model at first run
+    autumn.tool_kit.introduce_model(models, scenario_name)
 
     # Create Boolean for uncertainty for this run to save re-typing the multi-factorial condition statement
     uncertainty_this_run = False
@@ -70,8 +66,7 @@ for scenario in inputs.model_constants['scenarios_to_run']:
 
     # Describe model
     print('Running model "' + scenario_name + '".')
-    if scenario is None:
-        print(autumn.tool_kit.describe_model(models, scenario_name))
+    autumn.tool_kit.describe_model(models, scenario_name)
 
     if uncertainty_this_run:
         models[scenario_name].run_uncertainty()
@@ -135,10 +130,10 @@ project.write_documents()
 project.run_plotting()
 
 # Added to test total cost plotting - need install of Pandas library for DataFrames (Eike)
-project.plot_intervention_costs_by_scenario(2016, 2025, plot_options= {
-            "interventions": ["xpert", "xpertacf", "smearacf", "treatment_support", "ipt_age0to5", "ipt_age5to15"],
-            "intervention_names": ["GeneXpert", "GeneXpert ACF", "Smear ACF", "Treatment Support",
-                                   "IPT 0-5 y.o.", "IPT 5-15 y.o."]})
+# project.plot_intervention_costs_by_scenario(2016, 2025, plot_options= {
+#             "interventions": ["xpert", "xpertacf", "smearacf", "treatment_support", "ipt_age0to5", "ipt_age5to15"],
+#             "intervention_names": ["GeneXpert", "GeneXpert ACF", "Smear ACF", "Treatment Support",
+#                                    "IPT 0-5 y.o.", "IPT 5-15 y.o."]})
 
 autumn.outputs.open_pngs(pngs)
 

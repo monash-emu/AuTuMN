@@ -4,6 +4,31 @@ from matplotlib import pyplot, patches
 from scipy import exp
 import outputs
 
+"""
+Note that this module is intended only to contain stand-alone functions for use by multiple other modules.
+Object-oriented structures are not intended to be kept here.
+"""
+
+
+def find_scenario_string_from_number(scenario):
+
+    if scenario is None:
+        scenario_name = 'baseline'
+    else:
+        scenario_name = 'scenario_' + str(scenario)
+
+    return scenario_name
+
+
+def find_scenario_number_from_string(scenario):
+
+    if scenario == 'baseline':
+        scenario_number = None
+    else:
+        scenario_number = int(scenario[9:])
+
+    return scenario_number
+
 
 def capitalise_first_letter(old_string):
 
@@ -55,25 +80,27 @@ def replace_underscore_with_space(original_string):
 
 def introduce_model(models, model_name):
 
-    return 'Initialising model for ' + capitalise_first_letter(
-        models[model_name].inputs.country) + ' with key "' + model_name + '".'
+    if model_name == 'baseline':
+        print('Initialising model for ' + capitalise_first_letter(
+            models[model_name].inputs.country) + ' with key "' + model_name + '".')
 
 
 def describe_model(models, model_name):
 
-    model = models[model_name]
+    if model_name == 'baseline':
+        model = models[model_name]
 
-    returned_string = 'Model "' + model_name + '" has the following attributes:\n'
-    if model.inputs.model_constants['n_organs'] <= 1:
-        returned_string += 'unstratified by organ involvement,\n'
-    else:
-        returned_string += str(model.inputs.model_constants['n_organs']) + ' organ strata,\n'
-    if model.inputs.model_constants['n_strains'] <= 1:
-        returned_string += 'single strain model.'
-    else:
-        returned_string += str(model.inputs.model_constants['n_strains']) + ' circulating strains.'
+        string_to_print = 'Model "' + model_name + '" has the following attributes:\n'
+        if model.inputs.model_constants['n_organs'] <= 1:
+            string_to_print += 'unstratified by organ involvement,\n'
+        else:
+            string_to_print += str(model.inputs.model_constants['n_organs']) + ' organ strata,\n'
+        if model.inputs.model_constants['n_strains'] <= 1:
+            string_to_print += 'single strain model.'
+        else:
+            string_to_print += str(model.inputs.model_constants['n_strains']) + ' circulating strains.'
 
-    return returned_string
+        print(string_to_print)
 
 
 def find_title_from_dictionary(name):
@@ -700,7 +727,6 @@ if __name__ == "__main__":
                                                  data_param_vals,
                                                  parameter_name='test parameter')
     print(model_param)
-
 
 
 

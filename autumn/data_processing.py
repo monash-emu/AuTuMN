@@ -414,11 +414,12 @@ class Inputs:
     def create_freeze_time_dictionary(self):
 
         for scenario in self.model_constants['scenarios_to_run']:
-            print(scenario)
             if scenario is None:
                 self.freeze_times['baseline'] = self.model_constants['current_time']
             elif 'scenario_' + str(scenario) not in self.freeze_times:
                 self.freeze_times['scenario_' + str(scenario)] = self.model_constants['current_time']
+
+        print()
 
     def find_ds_outcomes(self):
 

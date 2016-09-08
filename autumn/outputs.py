@@ -1283,6 +1283,18 @@ class Project:
             self.plot_cost_coverage_curves()
             self.plot_cost_over_time()
 
+    def set_and_update_figure(self):
+
+        """
+        If called at the start of each plotting function, will create a figure that is numbered according to
+        self.figure_number, which is then updated at each call. This stops figures plotting on the same axis
+        and saves you having to worry about how many figures are being opened.
+        """
+
+        fig = pyplot.figure(self.figure_number)
+        self.figure_number += 1
+        return fig
+
     def plot_outputs_against_gtb(self,
                                  outputs):
 
@@ -1300,22 +1312,15 @@ class Project:
         png = os.path.join(self.out_dir_project, self.country + '_main_outputs.png')
         start_time = self.inputs.model_constants['plot_start_time']
         scenario_labels = []
-
-        # Get standard colours for plotting GTB data against
         colour, indices, yaxis_label, title, patch_colour = \
             find_standard_output_styles(outputs, lightening_factor=0.3)
-
-        # Find configuration of subplots
         subplot_grid = find_subplot_numbers(len(outputs))
-
-        # Not sure whether we have to specify a figure number
-        fig = pyplot.figure(self.figure_number)
-        self.figure_number += 1
+        fig = self.set_and_update_figure()
 
         # Loop through outputs
-        for i, output in enumerate(outputs):
+        for out, output in enumerate(outputs):
 
-            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1)
+            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], out + 1)
 
             # Plotting of GTB data
             plotting_data = {}
@@ -1323,31 +1328,31 @@ class Project:
             # Notifications
             if output == 'notifications':
                 plotting_data['point_estimate'] = {}
-                for j in self.inputs.original_data['notifications']['c_newinc']:
-                    if j > start_time:
-                        plotting_data['point_estimate'][j] = \
-                            self.inputs.original_data['notifications']['c_newinc'][j]
+                for year in self.inputs.original_data['notifications']['c_newinc']:
+                    if year > start_time:
+                        plotting_data['point_estimate'][year] = \
+                            self.inputs.original_data['notifications']['c_newinc'][year]
                 max_output = max(plotting_data['point_estimate'].values())
 
             # Other reported data
             else:
-                for j in self.inputs.original_data['tb']:
-                    if indices[i] in j and '_lo' in j:
-                        plotting_data['lower_limit'] = self.inputs.original_data['tb'][j]
-                    elif indices[i] in j and '_hi' in j:
-                        plotting_data['upper_limit'] = self.inputs.original_data['tb'][j]
-                    elif indices[i] in j:
-                        plotting_data['point_estimate'] = self.inputs.original_data['tb'][j]
+                for indicator in self.inputs.original_data['tb']:
+                    if indices[out] in indicator and '_lo' in indicator:
+                        plotting_data['lower_limit'] = self.inputs.original_data['tb'][indicator]
+                    elif indices[out] in indicator and '_hi' in indicator:
+                        plotting_data['upper_limit'] = self.inputs.original_data['tb'][indicator]
+                    elif indices[out] in indicator:
+                        plotting_data['point_estimate'] = self.inputs.original_data['tb'][indicator]
                 max_output = max(plotting_data['upper_limit'].values())
 
                 # Create and plot the patch array
                 patch_array = create_patch_from_dictionary(plotting_data)
-                patch = patches.Polygon(patch_array, color=patch_colour[i])
+                patch = patches.Polygon(patch_array, color=patch_colour[out])
                 ax.add_patch(patch)
 
             # Plot point estimates
             ax.plot(plotting_data['point_estimate'].keys(), plotting_data['point_estimate'].values(),
-                    color=colour[i], linewidth=0.5)
+                    color=colour[out], linewidth=0.5)
 
             # Loop through scenarios that have been run and plot
             for scenario in reversed(self.scenarios):
@@ -1381,14 +1386,14 @@ class Project:
                     tick.label.set_fontsize(get_nice_font_size(subplot_grid))
 
             # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
-            ax.set_title(title[i], fontsize=get_nice_font_size(subplot_grid) + 2.)
+            ax.set_title(title[out], fontsize=get_nice_font_size(subplot_grid) + 2.)
 
             # Label the y axis with the smaller text size
-            ax.set_ylabel(yaxis_label[i], fontsize=get_nice_font_size(subplot_grid))
+            ax.set_ylabel(yaxis_label[out], fontsize=get_nice_font_size(subplot_grid))
 
             # Add the legend
             scenario_handles = ax.lines[1:]
-            if i == len(outputs) - 1:
+            if out == len(outputs) - 1:
                 ax.legend(scenario_handles,
                           scenario_labels,
                           fontsize=get_nice_font_size(subplot_grid),
@@ -1423,8 +1428,7 @@ class Project:
             # Standard prelims
             png = os.path.join(self.out_dir_project, self.country + classification + '_scaleups' + '.png')
             subplot_grid = find_subplot_numbers(len(functions))
-            fig = pyplot.figure(self.figure_number)
-            self.figure_number += 1
+            fig = self.set_and_update_figure()
 
             # Main title for whole figure
             title = self.inputs.model_constants['country'] + ' ' + \
@@ -1455,9 +1459,9 @@ class Project:
 
                 # Plot the raw data from which the scale-up functions were produced
                 data_to_plot = {}
-                for j in self.inputs.scaleup_data[None][function]:
-                    if j > start_time:
-                        data_to_plot[j] = self.inputs.scaleup_data[None][function][j]
+                for year in self.inputs.scaleup_data[None][function]:
+                    if year > start_time:
+                        data_to_plot[year] = self.inputs.scaleup_data[None][function][year]
 
                 # Scatter plot data from which they are derived
                 ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
@@ -1504,9 +1508,7 @@ class Project:
                                 self.inputs.model_constants['plot_end_time'],
                                 1E3)
 
-        # Standard trick for ensuring figures don't overlap because of numbering
-        pyplot.figure(self.figure_number)
-        self.figure_number += 1
+        self.set_and_update_figure()
 
         # Plot for baseline model run only
         scenario_labels = []
@@ -1541,9 +1543,7 @@ class Project:
         # Plot figures by scenario
         for scenario in self.scenarios:
 
-            # Standard trick for ensuring figures don't overlap because of numbering
-            fig = pyplot.figure(self.figure_number)
-            self.figure_number += 1
+            fig = self.set_and_update_figure()
 
             # Subplots by program
             subplot_grid = find_subplot_numbers(len(self.models[scenario].interventions_to_cost))
@@ -1599,10 +1599,8 @@ class Project:
                         tick.label.set_rotation(45)
 
             # Finish off with title and save file for scenario
-            fig.suptitle('Cost-coverage curves for ' + tool_kit.replace_underscore_with_space(scenario),
-                         fontsize=13)
-            png = os.path.join(self.out_dir_project,
-                                   self.country + '_' + scenario + '_costcoverage' + '.png')
+            fig.suptitle('Cost-coverage curves for ' + tool_kit.replace_underscore_with_space(scenario), fontsize=13)
+            png = os.path.join(self.out_dir_project, self.country + '_' + scenario + '_costcoverage' + '.png')
             save_png(png)
 
     def plot_cost_over_time(self):
@@ -1610,21 +1608,17 @@ class Project:
         # Separate figure for each scenario
         for scenario in self.scenarios:
 
-            # Standard trick for ensuring figures don't overlap because of numbering
-            fig = pyplot.figure(self.figure_number)
-            self.figure_number += 1
+            # Standard prelims
+            fig = self.set_and_update_figure()
+            subplot_grid = find_subplot_numbers(len(self.models[scenario].costs['vaccination']))
 
-            # Work out number of subplots
-            subplot_grid \
-                = find_subplot_numbers(len(self.models[scenario].costs['vaccination']))
-
-            # Just using vaccination to get one set of cost keys (should consistently be available)
+            # Just using vaccination to get one set of cost keys (should hopefully be consistently be available)
             for c, cost in enumerate(self.models[scenario].costs['vaccination']):
 
                 # Plot each type of cost to its own subplot
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
 
-                # Empty list for legend
+                # Create empty list for legend
                 program_labels = []
                 for program in self.models[scenario].costs:
 
@@ -1654,10 +1648,8 @@ class Project:
                               frameon=False)
 
             # Finishing off
-            fig.suptitle('Individual program costs for ' + tool_kit.find_title_from_dictionary(scenario),
-                         fontsize=13)
-            png = os.path.join(self.out_dir_project,
-                               self.country + scenario + '_timecost' + '.png')
+            fig.suptitle('Individual program costs for ' + tool_kit.find_title_from_dictionary(scenario), fontsize=13)
+            png = os.path.join(self.out_dir_project, self.country + scenario + '_timecost' + '.png')
             save_png(png)
 
     def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):

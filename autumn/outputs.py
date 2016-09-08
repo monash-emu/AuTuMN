@@ -1252,6 +1252,10 @@ class Project:
             self.plot_cost_coverage_curves()
             self.plot_cost_over_time()
 
+        # Plot compartment population sizes
+        if self.inputs.model_constants['output_compartment_populations']:
+            self.plot_populations()
+
     def set_and_update_figure(self):
 
         """
@@ -1623,8 +1627,8 @@ class Project:
 
     def plot_populations(self, strain_or_organ='organ'):
 
+        self.set_and_update_figure()
         left_xlimit = self.inputs.model_constants['plot_start_time']
-
         right_xlimit_index, left_xlimit_index = find_truncation_points(self.models['baseline'], left_xlimit)
         colours, patterns, compartment_full_names, markers \
             = make_related_line_styles(self.models['baseline'].labels, strain_or_organ)
@@ -1636,7 +1640,7 @@ class Project:
             'k',
             label="total", linewidth=2)
         axis_labels.append("Number of persons")
-        for i_plot, plot_label in enumerate(self.models['baseline'].labels):
+        for plot_label in self.models['baseline'].labels:
             ax.plot(
                 self.models['baseline'].times[left_xlimit_index: right_xlimit_index],
                 self.models['baseline'].compartment_soln[plot_label][left_xlimit_index: right_xlimit_index],
@@ -1651,7 +1655,6 @@ class Project:
                        axis_labels)
         png = os.path.join(self.out_dir_project, self.country + '_population' + '.png')
         save_png(png)
-
 
     def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):
 

@@ -503,37 +503,6 @@ def open_pngs(pngs):
         os.system('open ' + " ".join(pngs))
 
 
-def plot_populations(model, labels, values, left_xlimit, strain_or_organ, png=None):
-
-    right_xlimit_index, left_xlimit_index = find_truncation_points(model, left_xlimit)
-    colours, patterns, compartment_full_names, markers\
-        = make_related_line_styles(labels, strain_or_organ)
-    ax = make_axes_with_room_for_legend()
-    axis_labels = []
-    ax.plot(
-        model.times[left_xlimit_index: right_xlimit_index],
-        model.get_var_soln("population")[left_xlimit_index: right_xlimit_index],
-        'k',
-        label="total", linewidth=2)
-    axis_labels.append("Number of persons")
-
-    for i_plot, plot_label in enumerate(labels):
-        ax.plot(
-            model.times[left_xlimit_index: right_xlimit_index],
-            values[plot_label][left_xlimit_index: right_xlimit_index],
-            label=plot_label, linewidth=1,
-            color=colours[plot_label],
-            marker=markers[plot_label],
-            linestyle=patterns[plot_label])
-        axis_labels.append(compartment_full_names[plot_label])
-
-    title = make_plot_title(model, labels)
-
-    set_axes_props(ax, 'Year', 'Persons',
-                   'Population, ' + title, True,
-                   axis_labels)
-    save_png(png)
-
 
 def plot_fractions(model, values, left_xlimit, strain_or_organ, png=None, figure_number=30):
 
@@ -1651,6 +1620,38 @@ class Project:
             fig.suptitle('Individual program costs for ' + tool_kit.find_title_from_dictionary(scenario), fontsize=13)
             png = os.path.join(self.out_dir_project, self.country + scenario + '_timecost' + '.png')
             save_png(png)
+
+    def plot_populations(self, left_xlimit, strain_or_organ, png=None):
+
+        right_xlimit_index, left_xlimit_index = find_truncation_points(self.models['baseline'], left_xlimit)
+        colours, patterns, compartment_full_names, markers \
+            = make_related_line_styles(self.models['baseline'].labels, strain_or_organ)
+        ax = make_axes_with_room_for_legend()
+        axis_labels = []
+        ax.plot(
+            self.models['baseline'].times[left_xlimit_index: right_xlimit_index],
+            self.models['baseline'].get_var_soln('population')[left_xlimit_index: right_xlimit_index],
+            'k',
+            label="total", linewidth=2)
+        axis_labels.append("Number of persons")
+
+        for i_plot, plot_label in enumerate(self.models['baseline'].labels):
+            ax.plot(
+                self.models['baseline'].times[left_xlimit_index: right_xlimit_index],
+                self.models['baseline'].compartment_soln[plot_label][left_xlimit_index: right_xlimit_index],
+                label=plot_label, linewidth=1,
+                color=colours[plot_label],
+                marker=markers[plot_label],
+                linestyle=patterns[plot_label])
+            axis_labels.append(compartment_full_names[plot_label])
+
+        title = make_plot_title('baseline', self.models['baseline'].labels)
+
+        set_axes_props(ax, 'Year', 'Persons',
+                       'Population, ' + title, True,
+                       axis_labels)
+        save_png(png)
+
 
     def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):
 

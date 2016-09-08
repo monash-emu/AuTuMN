@@ -1675,11 +1675,11 @@ class Project:
         """
 
         # set and check options / data ranges
+        intervention_names_dict = {"vaccination": "Vaccination", "xpert": "GeneXpert", "xpertacf": "GeneXpert ACF", "smearacf": "Smear ACF",
+                              "treatment_support": "Treatment Support", "ipt_age0to5": "IPT 0-5 y.o.", "ipt_age5to15": "IPT 5-15 y.o."}
 
         defaults = {
-            "interventions": ["vaccination", "xpert", "xpertacf", "smearacf", "treatment_support", "ipt_age0to5", "ipt_age5to15"],
-            "intervention_names": ["Vaccination", "GeneXpert", "GeneXpert ACF", "Smear ACF", "Treatment Support",
-                                   "IPT 0-5 y.o.", "IPT 5-15 y.o."],
+            "interventions": self.models['baseline'].interventions_to_cost,
             "x_label_rotation": 45,
             "y_label": "Total Cost ($)\n",
             "legend_size": 10,
@@ -1695,23 +1695,28 @@ class Project:
                 defaults[key] = value
             options = defaults
 
+        intervention_names = []
+        for i in range(len(options['interventions'])):
+            if options['interventions'][i] in intervention_names_dict.keys():
+                intervention_names.append(intervention_names_dict[options['interventions'][i]])
+            else:
+                intervention_names.append(options['interventions'][i])
+
         if options["plot_style"] is not None:
             style.use(options["plot_style"])
 
         years = range(year_start, year_end + 1)
 
         # make data frame (columns: interventions, rows: scenarios)
-
-        data_frame = pandas.DataFrame(index=self.scenarios, columns=options["intervention_names"])
+        data_frame = pandas.DataFrame(index=self.scenarios, columns=intervention_names)
 
         for scenario in self.scenarios:
             data_frame.loc[scenario] = [sum([self.integer_output_dict[scenario]["cost_" + intervention][year]
                                              for year in years]) for intervention in options["interventions"]]
 
-        data_frame.columns = options["intervention_names"]
+        data_frame.columns = intervention_names
 
         # make and style plot
-
         if horizontal:
             plot = data_frame.plot.barh(stacked=True, rot=options["x_label_rotation"], title=options["title"])
             plot.set_xlabel(options["y_label"])
@@ -1726,7 +1731,6 @@ class Project:
                           fontsize=options["legend_size"], frameon=options["legend_frame"])
 
         # save plot
-
         pyplot.savefig(os.path.join(self.out_dir_project, self.country + '_totalcost' + '.png'),
                        bbox_extra_artists=(lgd,), bbox_inches='tight')
 

@@ -128,7 +128,7 @@ pngs = glob.glob(os.path.join(out_dir, '*png'))
 project.write_spreadsheets()
 project.write_documents()
 project.run_plotting()
-project.plot_populations(1800, '', 'population.png')
+project.plot_populations()
 
 # Added to test total cost plotting - need install of Pandas library for DataFrames (Eike)
 # project.plot_intervention_costs_by_scenario(2016, 2025, plot_options= {

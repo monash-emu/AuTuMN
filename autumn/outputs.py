@@ -1621,7 +1621,9 @@ class Project:
             png = os.path.join(self.out_dir_project, self.country + scenario + '_timecost' + '.png')
             save_png(png)
 
-    def plot_populations(self, left_xlimit, strain_or_organ, png=None):
+    def plot_populations(self, strain_or_organ='organ'):
+
+        left_xlimit = self.inputs.model_constants['plot_start_time']
 
         right_xlimit_index, left_xlimit_index = find_truncation_points(self.models['baseline'], left_xlimit)
         colours, patterns, compartment_full_names, markers \
@@ -1634,7 +1636,6 @@ class Project:
             'k',
             label="total", linewidth=2)
         axis_labels.append("Number of persons")
-
         for i_plot, plot_label in enumerate(self.models['baseline'].labels):
             ax.plot(
                 self.models['baseline'].times[left_xlimit_index: right_xlimit_index],
@@ -1644,12 +1645,11 @@ class Project:
                 marker=markers[plot_label],
                 linestyle=patterns[plot_label])
             axis_labels.append(compartment_full_names[plot_label])
-
         title = make_plot_title('baseline', self.models['baseline'].labels)
-
         set_axes_props(ax, 'Year', 'Persons',
                        'Population, ' + title, True,
                        axis_labels)
+        png = os.path.join(self.out_dir_project, self.country + '_population' + '.png')
         save_png(png)
 
 

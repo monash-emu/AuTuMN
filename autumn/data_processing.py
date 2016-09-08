@@ -211,7 +211,7 @@ class Inputs:
         # Convert time variants loaded as percentages to proportions
         self.convert_percentages_to_proportions()
 
-        self.create_freeze_time_dictionary()
+        self.complete_freeze_time_dictionary()
 
         # Find outcomes for smear-positive DS-TB patients and populate to derived data dictionary
         self.find_ds_outcomes()
@@ -308,6 +308,11 @@ class Inputs:
         self.checks()
 
     def extract_freeze_times(self):
+
+        """
+        Extract the freeze_times for each scenario, if specified. If not specified, will be populated in
+        self.complete_freeze_time_dictionary below.
+        """
 
         self.freeze_times = self.original_data['country_programs'].pop('freeze_times')
 
@@ -411,15 +416,22 @@ class Inputs:
 
         self.time_variants.update(time_variants_converted_to_prop)
 
-    def create_freeze_time_dictionary(self):
+    def complete_freeze_time_dictionary(self):
+
+        """
+        Ensure all scenarios have an entry in the self.freeze_times dictionary, if a time hadn't been
+        specified in self.extract_freeze_times above.
+        """
 
         for scenario in self.model_constants['scenarios_to_run']:
+
+            # Baseline
             if scenario is None:
                 self.freeze_times['baseline'] = self.model_constants['current_time']
+
+            # Scenarios with no time specified
             elif 'scenario_' + str(scenario) not in self.freeze_times:
                 self.freeze_times['scenario_' + str(scenario)] = self.model_constants['current_time']
-
-        print()
 
     def find_ds_outcomes(self):
 

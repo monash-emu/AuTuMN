@@ -98,17 +98,6 @@ project.create_output_dicts()  # Store simplified outputs
 if inputs.model_constants['output_flow_diagram']:
     models['baseline'].make_graph(base + '.workflow')
 
-# Plot over subgroups
-if inputs.model_constants['output_fractions']:
-    subgroup_solns, subgroup_fractions = autumn.tool_kit.find_fractions(models['baseline'])
-    for i, category in enumerate(subgroup_fractions):
-        autumn.outputs.plot_fractions(
-            models['baseline'],
-            subgroup_fractions[category],
-            models['baseline'].inputs.model_constants['recent_time'],
-            'strain', base + '_fraction_' + category + '.png',
-            figure_number=30+i)
-
 # Plot proportions of population
 if inputs.model_constants['output_comorbidity_fractions']:
     autumn.outputs.plot_stratified_populations(models['baseline'],

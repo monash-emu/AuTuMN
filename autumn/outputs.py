@@ -1276,11 +1276,7 @@ class Project:
 
         # Plot fractions
         if self.inputs.model_constants['output_fractions']:
-            subgroup_solns, subgroup_fractions = autumn.tool_kit.find_fractions(self.models['baseline'])
-            for i, category in enumerate(subgroup_fractions):
-                self.plot_fractions(
-                    subgroup_fractions[category],
-                    'strain')
+            self.plot_fractions('strain')
 
     def plot_outputs_against_gtb(self,
                                  outputs):
@@ -1687,7 +1683,7 @@ class Project:
         png = self.get_png_name('_population')
         save_png(png)
 
-    def plot_fractions(self, values, strain_or_organ):
+    def plot_fractions(self, strain_or_organ):
 
         """
         Plot population fractions by the compartment to which they belong.
@@ -1696,37 +1692,42 @@ class Project:
             strain_or_organ: Whether the plotting style should be done by strain or by organ.
         """
 
-        # Standard prelims
-        fig = self.set_and_update_figure()
-        ax = self.make_axes_with_room_for_legend(fig)
+        # Get values to be plotted
+        subgroup_solns, subgroup_fractions = autumn.tool_kit.find_fractions(self.models['baseline'])
+        for i, category in enumerate(subgroup_fractions):
+            values = subgroup_fractions[category]
 
-        # Get plotting styles
-        colours, patterns, compartment_full_names, markers \
-            = make_related_line_styles(values.keys(), strain_or_organ)
+            # Standard prelims
+            fig = self.set_and_update_figure()
+            ax = self.make_axes_with_room_for_legend(fig)
 
-        # Initialise empty list for legend
-        axis_labels = []
+            # Get plotting styles
+            colours, patterns, compartment_full_names, markers \
+                = make_related_line_styles(values.keys(), strain_or_organ)
 
-        # Plot population fractions
-        for plot_label in values.keys():
-            ax.plot(
-                self.models['baseline'].times,
-                values[plot_label],
-                label=plot_label, linewidth=1,
-                color=colours[plot_label],
-                marker=markers[plot_label],
-                linestyle=patterns[plot_label])
-            axis_labels.append(compartment_full_names[plot_label])
+            # Initialise empty list for legend
+            axis_labels = []
 
-        # Finishing touches
-        ax.set_xlim(self.inputs.model_constants['plot_start_time'],
-                    self.inputs.model_constants['plot_end_time'])
-        title = make_plot_title(self.models['baseline'], values.keys())
-        set_axes_props(ax, 'Year', 'Proportion of population', 'Population, ' + title, True, axis_labels)
+            # Plot population fractions
+            for plot_label in values.keys():
+                ax.plot(
+                    self.models['baseline'].times,
+                    values[plot_label],
+                    label=plot_label, linewidth=1,
+                    color=colours[plot_label],
+                    marker=markers[plot_label],
+                    linestyle=patterns[plot_label])
+                axis_labels.append(compartment_full_names[plot_label])
 
-        # Saving
-        png = self.get_png_name('_fraction')
-        save_png(png)
+            # Finishing touches
+            ax.set_xlim(self.inputs.model_constants['plot_start_time'],
+                        self.inputs.model_constants['plot_end_time'])
+            title = make_plot_title(self.models['baseline'], values.keys())
+            set_axes_props(ax, 'Year', 'Proportion of population', 'Population, ' + title, True, axis_labels)
+
+            # Saving
+            png = self.get_png_name('_fraction')
+            save_png(png)
 
     def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):
 

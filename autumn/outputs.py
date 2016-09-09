@@ -910,6 +910,7 @@ class Project:
 
                 # Add uncertainty data to full dictionary
                 if len(self.model_shelf_uncertainty) > 0:
+                    times = self.models[scenario].times
                     n_runs = len(self.model_shelf_uncertainty[scenario])
                     prov_array = np.empty([len(times), n_runs])  # will store all the estimates across all the runs
                     for run in range(n_runs):

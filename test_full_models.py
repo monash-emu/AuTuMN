@@ -56,13 +56,13 @@ for scenario in inputs.model_constants['scenarios_to_run']:
             models['baseline'].times[scenario_start_time_index]
         models[scenario_name].loaded_compartments = \
             models['baseline'].load_state(scenario_start_time_index)
-        if uncertainty_this_run:
-            for count_run in range(len(models['baseline'].model_shelf)):
-                new_model = autumn.model.ConsolidatedModel(scenario, inputs)
-                new_model.start_time = models['baseline'].model_shelf[count_run].times[scenario_start_time_index]
-                new_model.loaded_compartments = models['baseline'].model_shelf[count_run].load_state(scenario_start_time_index)
-                new_model.integrate()
-                models[scenario_name].model_shelf.append(new_model)
+
+        for count_run in range(len(models['baseline'].model_shelf)):
+            new_model = autumn.model.ConsolidatedModel(scenario, inputs)
+            new_model.start_time = models['baseline'].model_shelf[count_run].times[scenario_start_time_index]
+            new_model.loaded_compartments = models['baseline'].model_shelf[count_run].load_state(scenario_start_time_index)
+            new_model.integrate()
+            models[scenario_name].model_shelf.append(new_model)
 
     # Describe model
     print('Running model "' + scenario_name + '".')
@@ -87,8 +87,7 @@ for scenario in inputs.model_constants['scenarios_to_run']:
             figure_number=21)
 
     project.models[scenario_name] = []
-    if uncertainty_this_run:
-        project.model_shelf_uncertainty[scenario_name] = models[scenario_name].model_shelf
+    project.model_shelf_uncertainty[scenario_name] = models[scenario_name].model_shelf
     project.models[scenario_name] = models[scenario_name]
 
 # Write to spreadsheets

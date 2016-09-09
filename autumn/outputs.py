@@ -875,6 +875,47 @@ class Project:
                 years += [y]
         return years
 
+    def set_and_update_figure(self):
+
+        """
+        If called at the start of each plotting function, will create a figure that is numbered according to
+        self.figure_number, which is then updated at each call. This stops figures plotting on the same axis
+        and saves you having to worry about how many figures are being opened.
+        """
+
+        fig = pyplot.figure(self.figure_number)
+        self.figure_number += 1
+        return fig
+
+    def make_axes_with_room_for_legend(self, fig):
+
+        """
+        Create axes for a figure with a single plot with a reasonable
+        amount of space around.
+
+        Returns:
+            ax: The axes that can be plotted on
+        """
+
+        ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
+        return ax
+
+    def get_png_name(self, last_part_of_name_for_figure):
+
+        """
+        Simple method to standardise names for output figure files.
+        Args:
+            last_part_of_name_for_figure: The part of the figure name that is variable and input from the
+                plotting method.
+
+        Returns:
+            png: The name for the figure.
+        """
+
+        png = os.path.join(self.out_dir_project, self.country + last_part_of_name_for_figure + '.png')
+
+        return png
+
     #########################################
     # Methods to collect data for later use #
     #########################################
@@ -1257,18 +1298,6 @@ class Project:
         if self.inputs.model_constants['output_compartment_populations']:
             self.plot_populations()
 
-    def set_and_update_figure(self):
-
-        """
-        If called at the start of each plotting function, will create a figure that is numbered according to
-        self.figure_number, which is then updated at each call. This stops figures plotting on the same axis
-        and saves you having to worry about how many figures are being opened.
-        """
-
-        fig = pyplot.figure(self.figure_number)
-        self.figure_number += 1
-        return fig
-
     def plot_outputs_against_gtb(self,
                                  outputs):
 
@@ -1283,7 +1312,7 @@ class Project:
         """
 
         # Standard preliminaries
-        png = os.path.join(self.out_dir_project, self.country + '_main_outputs.png')
+        png = self.get_png_name('_main_outputs')
         start_time = self.inputs.model_constants['plot_start_time']
         scenario_labels = []
         colour, indices, yaxis_label, title, patch_colour = \
@@ -1400,7 +1429,7 @@ class Project:
             x_vals = numpy.linspace(start_time, end_time, 1E3)
 
             # Standard prelims
-            png = os.path.join(self.out_dir_project, self.country + classification + '_scaleups' + '.png')
+            png = self.get_png_name('_scaleups')
             subplot_grid = find_subplot_numbers(len(functions))
             fig = self.set_and_update_figure()
 
@@ -1472,7 +1501,7 @@ class Project:
         functions = self.classified_scaleups['program_prop_']
 
         # Standard preliminaries
-        png = os.path.join(self.out_dir_project, self.country + '_programmatic_scaleups' + '.png')
+        png = self.get_png_name('_programmatic_scaleups')
 
         # Get some styles
         line_styles = make_default_line_styles(len(functions), True)
@@ -1482,11 +1511,11 @@ class Project:
                                 self.inputs.model_constants['plot_end_time'],
                                 1E3)
 
-        self.set_and_update_figure()
+        fig = self.set_and_update_figure()
 
         # Plot for baseline model run only
         scenario_labels = []
-        ax = make_axes_with_room_for_legend()
+        ax = self.make_axes_with_room_for_legend(fig)
         for figure_number, function in enumerate(functions):
             ax.plot(x_vals,
                     map(self.inputs.scaleup_fns[None][function],
@@ -1574,7 +1603,7 @@ class Project:
 
             # Finish off with title and save file for scenario
             fig.suptitle('Cost-coverage curves for ' + tool_kit.replace_underscore_with_space(scenario), fontsize=13)
-            png = os.path.join(self.out_dir_project, self.country + '_' + scenario + '_costcoverage' + '.png')
+            png = self.get_png_name(scenario + '_costcoverage')
             save_png(png)
 
     def plot_cost_over_time(self):
@@ -1623,38 +1652,55 @@ class Project:
 
             # Finishing off
             fig.suptitle('Individual program costs for ' + tool_kit.find_title_from_dictionary(scenario), fontsize=13)
-            png = os.path.join(self.out_dir_project, self.country + scenario + '_timecost' + '.png')
+            png = self.get_png_name(scenario + '_timecost')
             save_png(png)
 
     def plot_populations(self, strain_or_organ='organ'):
 
-        self.set_and_update_figure()
+        """
+        Plot population by the compartment to which they belong.
+
+        Args:
+            strain_or_organ: Whether the plotting style should be done by strain or by organ.
+        """
+
+        # Standard prelims
+        fig = self.set_and_update_figure()
+        ax = self.make_axes_with_room_for_legend(fig)
+
+        # Get plotting styles
         colours, patterns, compartment_full_names, markers \
             = make_related_line_styles(self.models['baseline'].labels, strain_or_organ)
-        ax = make_axes_with_room_for_legend()
+
+        # Initialise empty list for legend
         axis_labels = []
+
+        # Plot total population
         ax.plot(
             self.models['baseline'].times,
             self.models['baseline'].get_var_soln('population'),
             'k',
             label="total", linewidth=2)
         axis_labels.append("Number of persons")
+
+        # Plot sub-populations
         for plot_label in self.models['baseline'].labels:
-            ax.plot(
-                self.models['baseline'].times,
-                self.models['baseline'].compartment_soln[plot_label],
-                label=plot_label, linewidth=1,
-                color=colours[plot_label],
-                marker=markers[plot_label],
-                linestyle=patterns[plot_label])
+            ax.plot(self.models['baseline'].times,
+                    self.models['baseline'].compartment_soln[plot_label],
+                    label=plot_label, linewidth=1,
+                    color=colours[plot_label],
+                    marker=markers[plot_label],
+                    linestyle=patterns[plot_label])
             axis_labels.append(compartment_full_names[plot_label])
+
+        # Finishing touches
         ax.set_xlim(self.inputs.model_constants['plot_start_time'],
                     self.inputs.model_constants['plot_end_time'])
         title = make_plot_title('baseline', self.models['baseline'].labels)
-        set_axes_props(ax, 'Year', 'Persons',
-                       'Population, ' + title, True,
-                       axis_labels)
-        png = os.path.join(self.out_dir_project, self.country + '_population' + '.png')
+        set_axes_props(ax, 'Year', 'Persons', 'Population, ' + title, True, axis_labels)
+
+        # Saving
+        png = self.get_png_name('_population')
         save_png(png)
 
     def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):

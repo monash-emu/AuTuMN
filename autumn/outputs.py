@@ -1629,27 +1629,27 @@ class Project:
     def plot_populations(self, strain_or_organ='organ'):
 
         self.set_and_update_figure()
-        left_xlimit = self.inputs.model_constants['plot_start_time']
-        right_xlimit_index, left_xlimit_index = find_truncation_points(self.models['baseline'], left_xlimit)
         colours, patterns, compartment_full_names, markers \
             = make_related_line_styles(self.models['baseline'].labels, strain_or_organ)
         ax = make_axes_with_room_for_legend()
         axis_labels = []
         ax.plot(
-            self.models['baseline'].times[left_xlimit_index: right_xlimit_index],
-            self.models['baseline'].get_var_soln('population')[left_xlimit_index: right_xlimit_index],
+            self.models['baseline'].times,
+            self.models['baseline'].get_var_soln('population'),
             'k',
             label="total", linewidth=2)
         axis_labels.append("Number of persons")
         for plot_label in self.models['baseline'].labels:
             ax.plot(
-                self.models['baseline'].times[left_xlimit_index: right_xlimit_index],
-                self.models['baseline'].compartment_soln[plot_label][left_xlimit_index: right_xlimit_index],
+                self.models['baseline'].times,
+                self.models['baseline'].compartment_soln[plot_label],
                 label=plot_label, linewidth=1,
                 color=colours[plot_label],
                 marker=markers[plot_label],
                 linestyle=patterns[plot_label])
             axis_labels.append(compartment_full_names[plot_label])
+        ax.set_xlim(self.inputs.model_constants['plot_start_time'],
+                    self.inputs.model_constants['plot_end_time'])
         title = make_plot_title('baseline', self.models['baseline'].labels)
         set_axes_props(ax, 'Year', 'Persons',
                        'Population, ' + title, True,

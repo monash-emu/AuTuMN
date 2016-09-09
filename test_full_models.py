@@ -87,7 +87,8 @@ for scenario in inputs.model_constants['scenarios_to_run']:
             figure_number=21)
 
     project.models[scenario_name] = []
-    project.model_shelf_uncertainty[scenario_name] = models[scenario_name].model_shelf
+    if inputs.model_constants['output_uncertainty']:
+        project.model_shelf_uncertainty[scenario_name] = models[scenario_name].model_shelf
     project.models[scenario_name] = models[scenario_name]
 
 # Write to spreadsheets

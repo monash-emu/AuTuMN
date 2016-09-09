@@ -1281,13 +1281,7 @@ class Project:
         # Plot outputs by age group
         if self.inputs.model_constants['output_by_age']:
             self.plot_outputs_by_age(
-                self.models['baseline'],
-                self.inputs.model_constants['recent_time'],
-                'scenario_end_time',
-                '_age_outputs_gtb.png',
-                self.inputs.country,
-                scenario=None,
-                figure_number=21)
+                self.inputs.country)
 
     def plot_outputs_against_gtb(self,
                                  outputs):
@@ -1740,14 +1734,7 @@ class Project:
             png = self.get_png_name('_fraction')
             save_png(png)
 
-    def plot_outputs_by_age(self,
-                            model,
-                            start_time,
-                            end_time_str='current_time',
-                            png=None,
-                            country='',
-                            scenario=None,
-                            figure_number=21):
+    def plot_outputs_by_age(self):
 
         """
         Produces the plot for the main outputs by age, can handle multiple scenarios (if required).
@@ -1759,14 +1746,10 @@ class Project:
         ones currently calculated in the model object.
 
         Args:
-            model: The entire model object
-            start_time: Starting time
-            end_time_str: String to access end time from data
-            png: The filename
-            country: Country being plotted (just needed for title)
             scenario: The scenario being run, number needed for line colour
-
         """
+
+        scenario = None
 
         # Get the colours for the model outputs
         if scenario is None:
@@ -1777,87 +1760,78 @@ class Project:
             # Otherwise cycling through colours
             output_colour = [make_default_line_styles(scenario, False)]
 
-        # Truncate data to what you want to look at (rather than going back to the dawn of time)
-        right_xlimit_index, left_xlimit_index = find_truncation_points(model, start_time)
-
-        subplot_grid = find_subplot_numbers(len(model.agegroups) * 2 + 1)
-
-        print(subplot_grid)
-
-        # Time to plot until
-        end_time = model.inputs.model_constants[end_time_str]
+        subplot_grid = find_subplot_numbers(len(self.models['baseline'].agegroups) * 2 + 1)
 
         # Not sure whether we have to specify a figure number
-        fig = pyplot.figure(figure_number)
+        fig = self.set_and_update_figure()
 
         # Overall title
-        fig.suptitle(country + ' burden by age group', fontsize=14)
+        fig.suptitle(self.country + ' burden by age group', fontsize=14)
 
         for output_no, output in enumerate(['incidence', 'mortality']):
 
             # Find the highest incidence value in the time period considered across all age groups
             ymax = 0.
-            for agegroup in model.agegroups:
-                new_ymax = max(model.get_var_soln(output + agegroup)[left_xlimit_index: right_xlimit_index])
+            for agegroup in self.models['baseline'].agegroups:
+                new_ymax = max(self.models['baseline'].get_var_soln(output + agegroup))
                 if new_ymax > ymax:
                     ymax = new_ymax
 
-            for i, agegroup in enumerate(model.agegroups + ['']):
+            for i, agegroup in enumerate(self.models['baseline'].agegroups + ['']):
 
-                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1 + output_no * (len(model.agegroups) + 1))
+                ax = fig.add_subplot(subplot_grid[0],
+                                     subplot_grid[1],
+                                     i + 1 + output_no * (len(self.models['baseline'].agegroups) + 1))
 
                 # Plot the modelled data
                 ax.plot(
-                    model.times[left_xlimit_index: right_xlimit_index],
-                    model.get_var_soln(output + agegroup)[left_xlimit_index: right_xlimit_index],
+                    self.models['baseline'].times,
+                    self.models['baseline'].get_var_soln(output + agegroup),
                     color=output_colour[0][1],
                     linestyle=output_colour[0][0],
                     linewidth=1.5)
 
-                # This is supposed to mean if it's the last scenario, which is the baseline
-                # (provided this function has been called as intended).
-                if scenario is None:
+                # Adjust size of labels of x-ticks
+                for axis_to_change in [ax.xaxis, ax.yaxis]:
+                    for tick in axis_to_change.get_major_ticks():
+                        tick.label.set_fontsize(get_nice_font_size(subplot_grid))
 
-                    # Set x-ticks
-                    xticks = find_reasonable_year_ticks(start_time, end_time)
-                    ax.set_xticks(xticks)
+                # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
+                ax.set_title(tool_kit.capitalise_first_letter(output) + ', '
+                             + tool_kit.turn_strat_into_label(agegroup), fontsize=get_nice_font_size(subplot_grid))
 
-                    # Adjust size of labels of x-ticks
-                    for axis_to_change in [ax.xaxis, ax.yaxis]:
-                        for tick in axis_to_change.get_major_ticks():
-                            tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+                # Label the y axis with the smaller text size
+                if i == 0:
+                    ax.set_ylabel('Per 100,000 per year', fontsize=get_nice_font_size(subplot_grid))
 
-                    # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
-                    ax.set_title(tool_kit.capitalise_first_letter(output) + ', '
-                                 + tool_kit.turn_strat_into_label(agegroup), fontsize=get_nice_font_size(subplot_grid))
+                # Set upper y-limit to the maximum value for any age group during the period of interest
+                ax.set_ylim(bottom=0., top=ymax)
 
-                    # Label the y axis with the smaller text size
-                    if i == 0:
-                        ax.set_ylabel('Per 100,000 per year', fontsize=get_nice_font_size(subplot_grid))
+                # Get the handles, except for the last one, which plots the data
+                scenario_handles = ax.lines[:-1]
 
-                    # Set upper y-limit to the maximum value for any age group during the period of interest
-                    ax.set_ylim(bottom=0., top=ymax)
+                # Make some string labels for these handles
+                # (this code could probably be better)
+                scenario_labels = []
+                for i in range(len(scenario_handles)):
+                    if i < len(scenario_handles) - 1:
+                        scenario_labels += ['Scenario ' + str(i + 1)]
+                    else:
+                        scenario_labels += ['Baseline']
 
-                    # Get the handles, except for the last one, which plots the data
-                    scenario_handles = ax.lines[:-1]
+                # Draw the legend
+                ax.legend(scenario_handles,
+                          scenario_labels,
+                          fontsize=get_nice_font_size(subplot_grid) - 2.,
+                          frameon=False)
 
-                    # Make some string labels for these handles
-                    # (this code could probably be better)
-                    scenario_labels = []
-                    for i in range(len(scenario_handles)):
-                        if i < len(scenario_handles) - 1:
-                            scenario_labels += ['Scenario ' + str(i + 1)]
-                        else:
-                            scenario_labels += ['Baseline']
+                # Finishing touches
+                ax.set_xlim(self.inputs.model_constants['plot_start_time'],
+                            self.inputs.model_constants['plot_end_time'])
 
-                    # Draw the legend
-                    ax.legend(scenario_handles,
-                              scenario_labels,
-                              fontsize=get_nice_font_size(subplot_grid) - 2.,
-                              frameon=False)
-
+        # Saving
+        png = self.get_png_name('_output_by_age')
         save_png(png)
-
 
     def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):
 

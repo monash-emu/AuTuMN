@@ -3,6 +3,7 @@ import random
 from matplotlib import pyplot, patches
 from scipy import exp
 import outputs
+import cPickle as pickle
 
 """
 Note that this module is intended only to contain stand-alone functions for use by multiple other modules.
@@ -708,6 +709,16 @@ def indices(a, func):
 
     """
     return [i for (i, val) in enumerate(a) if func(val)]
+
+
+def pickle_save(object, file):
+    with open(file, 'wb') as output:
+        pickle.dump(object, output)
+
+def pickle_load(file):
+    with open(file, 'rb') as input:
+        loaded_object = pickle.load(input)
+    return loaded_object
 
 
 # * * * * * * * * * * * * * * * * * * * * * *

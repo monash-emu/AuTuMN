@@ -22,6 +22,11 @@ out_dir = 'fullmodel_graphs'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
+out_dir_pickles = 'pickles'
+if not os.path.isdir(out_dir_pickles):
+    os.makedirs(out_dir_pickles)
+
+
 project = outputs.Project(inputs.country, inputs)
 
 base = os.path.join(out_dir, inputs.country + '_baseline')

@@ -76,16 +76,6 @@ for scenario in inputs.model_constants['scenarios_to_run']:
 
     print('Time elapsed to completion of integration is ' + str(datetime.datetime.now() - start_realtime))
 
-    if inputs.model_constants['output_by_age'] and scenario == inputs.model_constants['scenarios_to_run'][-1]:
-        autumn.outputs.plot_outputs_by_age(
-            models[scenario_name],
-            inputs.model_constants['recent_time'],
-            'scenario_end_time',
-            base + '_age_outputs_gtb.png',
-            inputs.country,
-            scenario=scenario,
-            figure_number=21)
-
     project.models[scenario_name] = []
     if inputs.model_constants['output_uncertainty']:
         project.model_shelf_uncertainty[scenario_name] = models[scenario_name].model_shelf

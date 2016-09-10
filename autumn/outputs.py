@@ -892,6 +892,37 @@ class Project:
 
         return png
 
+    def scale_axes(self, max_value):
+
+        """
+        Method to find how much the axis in question should be scaled down by for plotting numbers with high values
+        (especially costs) and provide a string to amend the axis appropriately.
+        Args:
+            max_value: The highest value in the plot (or a group of plots)
+
+        Returns:
+            multiplier: The value to scale the axis by.
+            multiplier_label: The text to add to the y-axis after scaling
+        """
+
+        if max_value < 1e3:
+            multiplier = 1.
+            multiplier_label = ''
+        elif max_value >= 1e3 and max_value < 1e6:
+            multiplier = 1e-3
+            multiplier_label = 'Thousand'
+        elif max_value >= 1e6 and max_value < 1e9:
+            multiplier = 1e-6
+            multiplier_label = 'Million'
+        elif max_value >= 1e9 and max_value < 1e12:
+            multiplier = 1e-9
+            multiplier_label = 'Billion'
+        elif max_value >= 1e12:
+            multiplier = 1e-12
+            multiplier_label = 'Trillion'
+
+        return multiplier, multiplier_label
+
     #########################################
     # Methods to collect data for later use #
     #########################################
@@ -1594,6 +1625,10 @@ class Project:
 
     def plot_cost_over_time(self):
 
+        """
+        Method that plots individual program costs over time with panels being the different types of costs.
+        """
+
         # Separate figure for each scenario
         for scenario in self.scenarios:
 
@@ -1601,8 +1636,20 @@ class Project:
             fig = self.set_and_update_figure()
             subplot_grid = find_subplot_numbers(len(self.models[scenario].costs['vaccination']))
 
+            # Find the maximum of any type of cost across all of the programs
+            max_cost = 0.
+            for program in self.models[scenario].costs:
+                if program != 'cost_times':
+                    for cost in self.models[scenario].costs[program]:
+                        if max(self.models[scenario].costs[program][cost]) > max_cost:
+                            max_cost = max(self.models[scenario].costs[program][cost])
+
+            # Scale vertical axis and amend axis label as appropriate
+            multiplier, multiplier_label = self.scale_axes(max_cost)
+            max_cost *= multiplier
+
             # Just using vaccination to get one set of cost keys (should hopefully be consistently be available)
-            for c, cost in enumerate(self.models[scenario].costs['vaccination']):
+            for c, cost in enumerate(['raw_cost', 'inflated_cost', 'discounted_cost', 'discounted_inflated_cost']):
 
                 # Plot each type of cost to its own subplot
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
@@ -1615,14 +1662,21 @@ class Project:
                     if program != 'cost_times':
 
                         # Plot and add legend key
+                        data_to_plot = [d * multiplier for d in self.models[scenario].costs[program][cost]]
                         ax.plot(self.models[scenario].costs['cost_times'],
-                                self.models[scenario].costs[program][cost])
+                                data_to_plot)
                         program_labels \
                             += [tool_kit.find_title_from_dictionary(program)]
 
-                # Axis title
+                # Axis title and y-axis label
                 ax.set_title(tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(cost)),
                              fontsize=8)
+                ax.set_ylabel(multiplier_label + ' $US',
+                              fontsize=get_nice_font_size(subplot_grid))
+
+                # Set all the panels to have the same upper limit, which is 1.1 times the greatest cost in any of
+                # the panels. (This is intended to make the plot more visually comparable to each other.)
+                ax.set_ylim([0., max_cost * 1.1])
 
                 # Tidy ticks
                 for axis_to_change in [ax.xaxis, ax.yaxis]:

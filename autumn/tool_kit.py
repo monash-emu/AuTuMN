@@ -211,7 +211,11 @@ def find_title_from_dictionary(name):
         'xpert':
             'Xpert replaces smear',
         'baseline':
-            'Baseline scenario'
+            'Baseline scenario',
+        'ipt_age5to15':
+            'IPT in ages 5 to 15',
+        'ipt_age0to5':
+            'IPT in under 5s'
     }
 
     if name in dictionary_of_names:

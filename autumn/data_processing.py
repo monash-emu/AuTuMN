@@ -304,6 +304,8 @@ class Inputs:
         if len(self.organ_status) < 2:
             self.set_fixed_infectious_proportion()
 
+        self.add_missing_economics_for_ipt()
+
         # Perform checks
         self.checks()
 
@@ -1052,6 +1054,21 @@ class Inputs:
         self.model_constants['tb_multiplier_force'] \
             = self.model_constants['epi_prop_smearpos'] \
               + self.model_constants['epi_prop_smearneg'] * self.model_constants['tb_multiplier_force_smearneg']
+
+    def add_missing_economics_for_ipt(self):
+
+        """
+        To avoid errors because no economic values are available for age-stratified IPT, use the unstratified values
+        for each age group for which no value is provided.
+        """
+
+        for agegroup in self.agegroups:
+            for param in ['_saturation', '_inflectioncost', '_unitcost', '_startingcost_duration']:
+                if 'econ' + param + '_ipt' + agegroup not in self.model_constants:
+                    self.model_constants['econ' + param + '_ipt' + agegroup] \
+                        = self.model_constants['econ' + param + '_ipt']
+                    warnings.warn(param + ' value not available for ' + agegroup + ' age group, so unstratified ' +
+                                  'value will be used for this age group.')
 
     def checks(self):
 

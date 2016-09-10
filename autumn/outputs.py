@@ -840,6 +840,7 @@ class Project:
         self.output_colours = {}
         self.program_colours = {}
         self.programs = []
+        self.suptitle_size = 13
 
     #################################
     # General methods for use below #
@@ -1467,7 +1468,7 @@ class Project:
                           frameon=False)
 
         # Add main title and save
-        fig.suptitle(tool_kit.capitalise_first_letter(self.country) + ' model outputs', fontsize=12)
+        fig.suptitle(tool_kit.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         save_png(png)
 
     def classify_scaleups(self):
@@ -1502,7 +1503,7 @@ class Project:
                     tool_kit.find_title_from_dictionary(classification) + ' parameter'
             if len(functions) > 1:
                 title += 's'
-            fig.suptitle(title)
+            fig.suptitle(title, fontsize=self.suptitle_size)
 
             # Iterate through functions
             for f, function in enumerate(functions):
@@ -1666,7 +1667,8 @@ class Project:
                         tick.label.set_rotation(45)
 
             # Finish off with title and save file for scenario
-            fig.suptitle('Cost-coverage curves for ' + tool_kit.replace_underscore_with_space(scenario), fontsize=13)
+            fig.suptitle('Cost-coverage curves for ' + tool_kit.replace_underscore_with_space(scenario),
+                         fontsize=self.suptitle_size)
             png = self.get_png_name(scenario + '_costcoverage')
             save_png(png)
 
@@ -1784,10 +1786,10 @@ class Project:
 
             # Finishing off with title and save
             fig_individual.suptitle('Individual program costs for ' + tool_kit.find_title_from_dictionary(scenario),
-                                    fontsize=13)
+                                    fontsize=self.suptitle_size)
             fig_individual.savefig(self.get_png_name(scenario + '_timecost_individual'), fromat='png')
             fig_stacked.suptitle('Stacked program costs for ' + tool_kit.find_title_from_dictionary(scenario),
-                                 fontsize=13)
+                                 fontsize=self.suptitle_size)
             fig_stacked.savefig(self.get_png_name(scenario + '_timecost_stacked'), fromat='png')
 
     def plot_populations(self, strain_or_organ='organ'):
@@ -1916,7 +1918,7 @@ class Project:
         fig = self.set_and_update_figure()
 
         # Overall title
-        fig.suptitle(self.country + ' burden by age group', fontsize=14)
+        fig.suptitle(self.country + ' burden by age group', fontsize=self.suptitle_size)
 
         for output_no, output in enumerate(['incidence', 'mortality']):
 

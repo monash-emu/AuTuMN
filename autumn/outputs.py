@@ -1280,11 +1280,12 @@ class Project:
 
         # Plot outputs by age group
         if self.inputs.model_constants['output_by_age']:
-            self.plot_outputs_by_age(
-                self.inputs.country)
+            if len(self.inputs.agegroups) > 1:
+                self.plot_outputs_by_age()
+            else:
+                warnings.warn('Requested outputs by age, but model is not age stratified.')
 
-    def plot_outputs_against_gtb(self,
-                                 outputs):
+    def plot_outputs_against_gtb(self, outputs):
 
         """
         Produces the plot for the main outputs, can handle multiple scenarios.

@@ -16,6 +16,7 @@ import os
 import warnings
 import economics
 import pandas
+import copy
 
 def relax_y_axis(ax):
 
@@ -1019,6 +1020,23 @@ class Project:
                     self.integer_output_dict[model][output][int(key)] \
                         = self.full_output_dict[model][output][key]
 
+    def add_total_cost_dict(self):
+
+        """
+        Add a dictionary of total costs that sums over all scenarios to the costs dictionary of each scenario.
+        """
+
+        for scenario in self.scenarios:
+            self.models[scenario].costs['all_programs'] = {}
+            for cost in self.models[scenario].costs['vaccination']:
+                self.models[scenario].costs['all_programs'][cost] \
+                    = [0.] * len(self.models[scenario].costs['cost_times'])
+                for program in self.models[scenario].costs:
+                    if program != 'cost_times' and program != 'all_programs':
+                        for i in range(len(self.models[scenario].costs['cost_times'])):
+                            self.models[scenario].costs['all_programs'][cost][i] \
+                                += self.models[scenario].costs[program][cost][i]
+
     #################################################
     # Methods for outputting to Office applications #
     #################################################
@@ -1629,71 +1647,113 @@ class Project:
         Method that plots individual program costs over time with panels being the different types of costs.
         """
 
-        # Separate figure for each scenario
+        # Add total costs to the programs in the cost attribute of each model (may need to move the call to this
+        # function to a more appropriate place at a later time).
+        self.add_total_cost_dict()
+
+        # Separate figures for each scenario
         for scenario in self.scenarios:
 
             # Standard prelims
-            fig = self.set_and_update_figure()
+            fig_individual = self.set_and_update_figure()
+            fig_stacked = self.set_and_update_figure()
             subplot_grid = find_subplot_numbers(len(self.models[scenario].costs['vaccination']))
+
+            colours = ['k', 'c', 'g', 'r', 'b',
+                       'k', 'c', 'g', 'r', 'b',
+                       'k', 'c', 'g', 'r', 'b']
 
             # Find the maximum of any type of cost across all of the programs
             max_cost = 0.
+            max_stacked_cost = 0.
             for program in self.models[scenario].costs:
                 if program != 'cost_times':
                     for cost in self.models[scenario].costs[program]:
                         if max(self.models[scenario].costs[program][cost]) > max_cost:
                             max_cost = max(self.models[scenario].costs[program][cost])
+            for cost in self.models[scenario].costs['all_programs']:
+                if max(self.models[scenario].costs['all_programs'][cost]) > max_stacked_cost:
+                    max_stacked_cost = max(self.models[scenario].costs['all_programs'][cost])
 
             # Scale vertical axis and amend axis label as appropriate
-            multiplier, multiplier_label = self.scale_axes(max_cost)
-            max_cost *= multiplier
+            multiplier_individual, multiplier_individual_label = self.scale_axes(max_cost)
+            multiplier_stacked, multiplier_stacked_label = self.scale_axes(max_stacked_cost)
+            max_cost *= multiplier_individual
+            max_stacked_cost *= multiplier_stacked
 
             # Just using vaccination to get one set of cost keys (should hopefully be consistently be available)
             for c, cost in enumerate(['raw_cost', 'inflated_cost', 'discounted_cost', 'discounted_inflated_cost']):
 
                 # Plot each type of cost to its own subplot
-                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
+                ax_individual = fig_individual.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
+                ax_stacked = fig_stacked.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
 
                 # Create empty list for legend
                 program_labels = []
-                for program in self.models[scenario].costs:
+                cumulative_data = [0.] * len(self.models[scenario].costs['cost_times'])
+                for p, program in enumerate(self.models[scenario].costs):
 
                     # Ignore the cost_times key, as it isn't a program
-                    if program != 'cost_times':
+                    if program != 'cost_times' and program != 'all_programs':
 
                         # Plot and add legend key
-                        data_to_plot = [d * multiplier for d in self.models[scenario].costs[program][cost]]
-                        ax.plot(self.models[scenario].costs['cost_times'],
-                                data_to_plot)
+                        previous_data = copy.copy(cumulative_data)
+                        for i in range(len(self.models[scenario].costs[program][cost])):
+                            cumulative_data[i] += self.models[scenario].costs[program][cost][i]
+
+                        individual_data \
+                            = [d * multiplier_individual for d in self.models[scenario].costs[program][cost]]
+
+                        cumulative_data_to_plot \
+                            = [d * multiplier_stacked for d in cumulative_data]
+                        previous_data_to_plot \
+                            = [d * multiplier_stacked for d in previous_data]
+
+                        ax_stacked.fill_between(self.models[scenario].costs['cost_times'],
+                                                previous_data_to_plot,
+                                                cumulative_data_to_plot,
+                                                color=colours[p],
+                                                linewidth=0.)
+
+                        ax_individual.plot(self.models[scenario].costs['cost_times'],
+                                           individual_data)
                         program_labels \
                             += [tool_kit.find_title_from_dictionary(program)]
 
                 # Axis title and y-axis label
-                ax.set_title(tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(cost)),
-                             fontsize=8)
-                ax.set_ylabel(multiplier_label + ' $US',
-                              fontsize=get_nice_font_size(subplot_grid))
+                ax_individual.set_title(tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(cost)),
+                                        fontsize=8)
+                ax_stacked.set_title(tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(cost)),
+                                     fontsize=8)
+                ax_individual.set_ylabel(multiplier_individual_label + ' $US',
+                                         fontsize=get_nice_font_size(subplot_grid))
+                ax_stacked.set_ylabel(multiplier_stacked_label + ' $US',
+                                      fontsize=get_nice_font_size(subplot_grid))
 
                 # Set all the panels to have the same upper limit, which is 1.1 times the greatest cost in any of
                 # the panels. (This is intended to make the plot more visually comparable to each other.)
-                ax.set_ylim([0., max_cost * 1.1])
+                ax_individual.set_ylim([0., max_cost * 1.1])
+                ax_stacked.set_ylim([0., max_stacked_cost * 1.1])
 
                 # Tidy ticks
-                for axis_to_change in [ax.xaxis, ax.yaxis]:
+                for axis_to_change in [ax_individual.xaxis, ax_individual.yaxis, ax_stacked.xaxis, ax_stacked.yaxis]:
                     for tick in axis_to_change.get_major_ticks():
                         tick.label.set_fontsize(get_nice_font_size(subplot_grid))
 
                 # Add the legend to last subplot panel
                 if c == len(self.models[scenario].costs['vaccination']) - 1:
-                    ax.legend(ax.lines,
+                    ax_individual.legend(ax_individual.lines,
                               program_labels,
                               fontsize=get_nice_font_size(subplot_grid),
                               frameon=False)
 
-            # Finishing off figure
-            fig.suptitle('Individual program costs for ' + tool_kit.find_title_from_dictionary(scenario), fontsize=13)
-            png = self.get_png_name(scenario + '_timecost')
-            save_png(png)
+            # Finishing off figures
+            fig_individual.suptitle('Individual program costs for ' + tool_kit.find_title_from_dictionary(scenario), fontsize=13)
+            png_individual = self.get_png_name(scenario + '_timecost_individual')
+            fig_individual.savefig(png_individual, fromat='png')
+            fig_stacked.suptitle('Stacked program costs for ' + tool_kit.find_title_from_dictionary(scenario), fontsize=13)
+            png_stacked = self.get_png_name(scenario + '_timecost_stacked')
+            fig_stacked.savefig(png_stacked, fromat='png')
 
     def plot_populations(self, strain_or_organ='organ'):
 

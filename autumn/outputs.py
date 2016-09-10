@@ -1636,7 +1636,7 @@ class Project:
                               fontsize=get_nice_font_size(subplot_grid),
                               frameon=False)
 
-            # Finishing off
+            # Finishing off figure
             fig.suptitle('Individual program costs for ' + tool_kit.find_title_from_dictionary(scenario), fontsize=13)
             png = self.get_png_name(scenario + '_timecost')
             save_png(png)

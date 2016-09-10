@@ -87,7 +87,7 @@ for scenario in inputs.model_constants['scenarios_to_run']:
     project.models[scenario_name] = models[scenario_name]
 
 # Write to spreadsheets
-project.create_output_dicts()  # Store simplified outputs
+project.prepare_for_outputs()  # Store simplified outputs
 
 # Make a flow-diagram
 if inputs.model_constants['output_flow_diagram']:

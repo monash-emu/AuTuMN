@@ -833,7 +833,6 @@ class Project:
         self.out_dir_project = os.path.join('projects', self.name)
         if not os.path.isdir(self.out_dir_project):
             os.makedirs(self.out_dir_project)
-        self.model_shelf_uncertainty = {}
         self.ci_percentage = 95.
         self.figure_number = 1
         self.classifications = ['demo_', 'econ_', 'epi_', 'program_prop_', 'program_timeperiod']
@@ -979,26 +978,22 @@ class Project:
         for scenario in self.scenarios:
             self.full_output_dict[scenario] = {}
             self.full_output_lists[scenario] = {}
+
             for label in outputs:
                 self.full_output_lists[scenario]['times'] = self.models[scenario].times
                 self.full_output_lists[scenario][label] = self.models[scenario].get_var_soln(label)
                 self.full_output_dict[scenario][label] = dict(zip(self.full_output_lists[scenario]['times'],
                                                                   self.full_output_lists[scenario][label]))
-
                 # Add uncertainty data to full dictionary
-                if len(self.model_shelf_uncertainty) > 0:
-                    times = self.models[scenario].times
-                    n_runs = len(self.model_shelf_uncertainty[scenario])
-                    prov_array = np.empty([len(times), n_runs])  # will store all the estimates across all the runs
-                    for run in range(n_runs):
-                        prov_array[:, run] = self.model_shelf_uncertainty[scenario][run].get_var_soln(label)
-                    cis_low = np.percentile(prov_array, q=0.5*(100. - self.ci_percentage), axis=1)
-                    cis_high = np.percentile(prov_array, q=100 - 0.5*(100. - self.ci_percentage), axis=1)
-                    self.full_output_dict[scenario][label + '_low'] = dict(zip(times, cis_low))
-                    self.full_output_dict[scenario][label + '_high'] = dict(zip(times, cis_high))
+                if self.models['baseline'].inputs.model_constants['output_uncertainty']:
+                    self.full_output_dict[scenario][label + '_low'] = {}
+                    self.full_output_dict[scenario][label + '_high'] = {}
+                    for time in self.models[scenario].times:
+                        self.full_output_dict[scenario][label + '_low'][time] = np.percentile(self.models['baseline'].uncertainty_results['baseline'][label][time], q=0.5*(100. - self.ci_percentage))
+                        self.full_output_dict[scenario][label + '_high'][time] = np.percentile(self.models['baseline'].uncertainty_results['baseline'][label][time], q=100 - 0.5*(100. - self.ci_percentage))
+
 
     def add_full_economics_dict(self):
-
         """
         Creates an economics dictionary structure that mirrors that of the epi dictionaries and adds
         this to the main outputs (epi) dictionary
@@ -1006,24 +1001,25 @@ class Project:
 
         for model in self.models:
             economics_dict = {}
-            for intervention in self.models[model].costs:
-                if intervention != 'cost_times':
-                    economics_dict['cost_' + intervention] = {}
-                    for t in range(len(self.models[model].costs['cost_times'])):
-                        economics_dict['cost_' + intervention][self.models[model].costs['cost_times'][t]] \
-                            = self.models[model].costs[intervention]['raw_cost'][t]
+            for intervention in self.models[model].interventions_to_cost:
+                economics_dict['cost_' + intervention] = {}
+                for t in range(len(self.models[model].costs['cost_times'])):
+                    economics_dict['cost_' + intervention][self.models[model].costs['cost_times'][t]] \
+                        = self.models[model].costs[intervention]['raw_cost'][t]
 
-                    # Add uncertainty data to full dictionary
-                    if len(self.model_shelf_uncertainty) > 0:
-                        times = self.models[model].costs['cost_times']
-                        n_runs = len(self.model_shelf_uncertainty[model])
-                        prov_array = np.empty([len(times), n_runs])  # will store all the estimates across all the runs
-                        for run in range(n_runs):
-                            prov_array[:, run] = self.model_shelf_uncertainty[model][run].costs[intervention]['raw_cost']
-                        cis_low = np.percentile(prov_array, q=0.5 * (100. - self.ci_percentage), axis=1)
-                        cis_high = np.percentile(prov_array, q=100 - 0.5 * (100. - self.ci_percentage), axis=1)
-                        economics_dict['cost_' + intervention + '_low'] = dict(zip(times, cis_low))
-                        economics_dict['cost_' + intervention + '_high'] = dict(zip(times, cis_high))
+                # Add uncertainty data to full dictionary
+                if self.models['baseline'].inputs.model_constants['output_uncertainty']:
+                    times = self.models[model].costs['cost_times']
+                    economics_dict['cost_' + intervention + '_low'] = {}
+                    economics_dict['cost_' + intervention + '_high'] = {}
+
+                    for time in times:
+                        economics_dict['cost_' + intervention + '_low'][time] = np.percentile(
+                            self.models['baseline'].uncertainty_results['baseline']['costs'][intervention]['raw_cost'][time],
+                            q=0.5 * (100. - self.ci_percentage))
+                        economics_dict['cost_' + intervention + '_high'][time] = np.percentile(
+                            self.models['baseline'].uncertainty_results['baseline']['costs'][intervention]['raw_cost'][time],
+                            q=100 - 0.5 * (100. - self.ci_percentage))
 
             self.full_output_dict[model].update(economics_dict)
 

@@ -44,14 +44,6 @@ for scenario in inputs.model_constants['scenarios_to_run']:
     # Introduce model at first run
     autumn.tool_kit.introduce_model(models, scenario_name)
 
-    # Create Boolean for uncertainty for this run to save re-typing the multi-factorial condition statement
-    uncertainty_this_run = False
-    if (inputs.model_constants['output_uncertainty'] and scenario is None) \
-            or inputs.model_constants['output_uncertainty_all_scenarios']:
-
-        # Generally only run uncertainty if this on the baseline scenario, unless specified otherwise
-        uncertainty_this_run = True
-
     if scenario is None:
         models[scenario_name].start_time = inputs.model_constants['start_time']
     else:
@@ -62,29 +54,19 @@ for scenario in inputs.model_constants['scenarios_to_run']:
         models[scenario_name].loaded_compartments = \
             models['baseline'].load_state(scenario_start_time_index)
 
-        for count_run in range(len(models['baseline'].model_shelf)):
-            new_model = autumn.model.ConsolidatedModel(scenario, inputs)
-            new_model.start_time = models['baseline'].model_shelf[count_run].times[scenario_start_time_index]
-            new_model.loaded_compartments = models['baseline'].model_shelf[count_run].load_state(scenario_start_time_index)
-            new_model.integrate()
-            models[scenario_name].model_shelf.append(new_model)
-
     # Describe model
     print('Running model "' + scenario_name + '".')
     autumn.tool_kit.describe_model(models, scenario_name)
 
-    if uncertainty_this_run:
-        models[scenario_name].run_uncertainty()
-
-    # Integrate the rigid parameterization in any case. Indeed, we still need the central estimates for uncertainty
     models[scenario_name].integrate()
 
     print('Time elapsed to completion of integration is ' + str(datetime.datetime.now() - start_realtime))
 
-    project.models[scenario_name] = []
-    if inputs.model_constants['output_uncertainty']:
-        project.model_shelf_uncertainty[scenario_name] = models[scenario_name].model_shelf
     project.models[scenario_name] = models[scenario_name]
+
+#   ______ Run uncertainty ____
+if inputs.model_constants['output_uncertainty']:
+    project.models['baseline'].run_uncertainty()
 
 # Write to spreadsheets
 project.prepare_for_outputs()  # Store simplified outputs

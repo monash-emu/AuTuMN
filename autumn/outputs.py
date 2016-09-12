@@ -591,7 +591,7 @@ def plot_stratified_populations(model, png=None, age_or_comorbidity='age', start
                     if i_time == 1:
                         ax.legend(reversed(ax.lines), reversed(legd_text), loc=2, frameon=False, fontsize=8)
 
-                # Plot popuation proportions
+                # Plot population proportions
                 ax = fig.add_subplot(2, 2, 3 + i_time)
                 ax.fill_between(times, lower_plot_margin_fraction, upper_plot_margin_fraction, facecolors=colours[i][1])
 
@@ -1331,7 +1331,7 @@ class Project:
         output_colours = make_default_line_styles(5, True)
         for s, scenario in enumerate(self.scenarios):
             self.output_colours[scenario] = output_colours[s]
-        for p, program in enumerate(self.programs):
+        for p, program in enumerate(self.models['baseline'].interventions_to_cost):
             self.program_colours[program] = output_colours[p]
 
         # Plot main outputs
@@ -1494,7 +1494,6 @@ class Project:
             x_vals = numpy.linspace(start_time, end_time, 1E3)
 
             # Standard prelims
-            png = self.get_png_name('_scaleups')
             subplot_grid = find_subplot_numbers(len(functions))
             fig = self.set_and_update_figure()
 
@@ -1553,7 +1552,7 @@ class Project:
                               frameon=False)
 
             # Save
-            save_png(png)
+            save_png(self.get_png_name('_scaleups'))
 
     def plot_programmatic_scaleups(self):
 
@@ -1564,9 +1563,6 @@ class Project:
         # Functions to plot are those in the program_prop_ category of the classified scaleups
         # (classify_scaleups must have been run)
         functions = self.classified_scaleups['program_prop_']
-
-        # Standard preliminaries
-        png = self.get_png_name('_programmatic_scaleups')
 
         # Get some styles
         line_styles = make_default_line_styles(len(functions), True)
@@ -1604,7 +1600,7 @@ class Project:
                   borderaxespad=0.,
                   frameon=False,
                   prop={'size': 7})
-        save_png(png)
+        save_png(self.get_png_name('_programmatic_scaleups'))
 
     def plot_cost_coverage_curves(self):
 
@@ -1669,8 +1665,7 @@ class Project:
             # Finish off with title and save file for scenario
             fig.suptitle('Cost-coverage curves for ' + tool_kit.replace_underscore_with_space(scenario),
                          fontsize=self.suptitle_size)
-            png = self.get_png_name(scenario + '_costcoverage')
-            save_png(png)
+            save_png(self.get_png_name(scenario + '_costcoverage'))
 
     def plot_cost_over_time(self):
 
@@ -1714,7 +1709,7 @@ class Project:
                 # Create empty list for legend
                 program_labels = []
                 cumulative_data = [0.] * len(self.models[scenario].costs['cost_times'])
-                for program in self.programs:
+                for program in self.models[scenario].interventions_to_cost:
 
                     # Record the previous data for plotting as an independent object for the lower edge of the fill
                     previous_data = copy.copy(cumulative_data)
@@ -1837,8 +1832,7 @@ class Project:
         set_axes_props(ax, 'Year', 'Persons', 'Population, ' + title, True, axis_labels)
 
         # Saving
-        png = self.get_png_name('_population')
-        save_png(png)
+        save_png(self.get_png_name('_population'))
 
     def plot_fractions(self, strain_or_organ):
 
@@ -1883,8 +1877,7 @@ class Project:
             set_axes_props(ax, 'Year', 'Proportion of population', 'Population, ' + title, True, axis_labels)
 
             # Saving
-            png = self.get_png_name('_fraction')
-            save_png(png)
+            save_png(self.get_png_name('_fraction'))
 
     def plot_outputs_by_age(self):
 
@@ -1982,8 +1975,7 @@ class Project:
                             self.inputs.model_constants['plot_end_time'])
 
         # Saving
-        png = self.get_png_name('_output_by_age')
-        save_png(png)
+        save_png(self.get_png_name('_output_by_age'))
 
     def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):
 

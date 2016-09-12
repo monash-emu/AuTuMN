@@ -491,11 +491,15 @@ def create_patch_from_dictionary(dict):
 
 def save_png(png):
 
+    # Should be redundant once Project module complete
+
     if png is not None:
         pylab.savefig(png, dpi=300)
 
 
 def open_pngs(pngs):
+
+    # Should be redundant once Project module complete
 
     operating_system = platform.system()
     if 'Windows' in operating_system:
@@ -879,22 +883,6 @@ class Project:
         ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
         return ax
 
-    def get_png_name(self, last_part_of_name_for_figure):
-
-        """
-        Simple method to standardise names for output figure files.
-        Args:
-            last_part_of_name_for_figure: The part of the figure name that is variable and input from the
-                plotting method.
-
-        Returns:
-            png: The name for the figure.
-        """
-
-        png = os.path.join(self.out_dir_project, self.country + last_part_of_name_for_figure + '.png')
-
-        return png
-
     def scale_axes(self, max_value):
 
         """
@@ -925,6 +913,18 @@ class Project:
             multiplier_label = 'Trillion'
 
         return multiplier, multiplier_label
+
+    def save_figure(self, fig, last_part_of_name_for_figure):
+
+        """
+        Simple method to standardise names for output figure files.
+        Args:
+            last_part_of_name_for_figure: The part of the figure name that is variable and input from the
+                plotting method.
+        """
+
+        png = os.path.join(self.out_dir_project, self.country + last_part_of_name_for_figure + '.png')
+        fig.savefig(png, dpi=300)
 
     #########################################
     # Methods to collect data for later use #
@@ -991,7 +991,6 @@ class Project:
                     for time in self.models[scenario].times:
                         self.full_output_dict[scenario][label + '_low'][time] = np.percentile(self.models['baseline'].uncertainty_results['baseline'][label][time], q=0.5*(100. - self.ci_percentage))
                         self.full_output_dict[scenario][label + '_high'][time] = np.percentile(self.models['baseline'].uncertainty_results['baseline'][label][time], q=100 - 0.5*(100. - self.ci_percentage))
-
 
     def add_full_economics_dict(self):
         """
@@ -1373,13 +1372,13 @@ class Project:
         """
 
         # Standard preliminaries
-        png = self.get_png_name('_main_outputs')
         start_time = self.inputs.model_constants['plot_start_time']
         scenario_labels = []
         colour, indices, yaxis_label, title, patch_colour = \
             find_standard_output_styles(outputs, lightening_factor=0.3)
         subplot_grid = find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
+        # png = self.get_png_name(fig, '_main_outputs')
 
         # Loop through outputs
         for out, output in enumerate(outputs):
@@ -1465,7 +1464,7 @@ class Project:
 
         # Add main title and save
         fig.suptitle(tool_kit.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
-        save_png(png)
+        self.save_figure(fig, '_main_outputs')
 
     def classify_scaleups(self):
 
@@ -1548,7 +1547,7 @@ class Project:
                               frameon=False)
 
             # Save
-            save_png(self.get_png_name('_scaleups'))
+            self.save_figure(fig, '_scale_ups')
 
     def plot_programmatic_scaleups(self):
 
@@ -1596,7 +1595,7 @@ class Project:
                   borderaxespad=0.,
                   frameon=False,
                   prop={'size': 7})
-        save_png(self.get_png_name('_programmatic_scaleups'))
+        self.save_figure(fig, '_programmatic_scale_ups')
 
     def plot_cost_coverage_curves(self):
 
@@ -1661,7 +1660,7 @@ class Project:
             # Finish off with title and save file for scenario
             fig.suptitle('Cost-coverage curves for ' + tool_kit.replace_underscore_with_space(scenario),
                          fontsize=self.suptitle_size)
-            save_png(self.get_png_name(scenario + '_costcoverage'))
+            self.save_figure(fig, scenario + '_cost_coverage')
 
     def plot_cost_over_time(self):
 
@@ -1778,10 +1777,11 @@ class Project:
             # Finishing off with title and save
             fig_individual.suptitle('Individual program costs for ' + tool_kit.find_title_from_dictionary(scenario),
                                     fontsize=self.suptitle_size)
-            fig_individual.savefig(self.get_png_name(scenario + '_timecost_individual'), fromat='png')
+            self.save_figure(fig_individual, scenario + '_timecost_individual')
             fig_stacked.suptitle('Stacked program costs for ' + tool_kit.find_title_from_dictionary(scenario),
                                  fontsize=self.suptitle_size)
-            fig_stacked.savefig(self.get_png_name(scenario + '_timecost_stacked'), fromat='png')
+            self.save_figure(fig_stacked, scenario + '_timecost_stacked')
+
 
     def plot_populations(self, strain_or_organ='organ'):
 
@@ -1828,7 +1828,7 @@ class Project:
         set_axes_props(ax, 'Year', 'Persons', 'Population, ' + title, True, axis_labels)
 
         # Saving
-        save_png(self.get_png_name('_population'))
+        self.save_figure(fig, '_population')
 
     def plot_fractions(self, strain_or_organ):
 
@@ -1873,7 +1873,7 @@ class Project:
             set_axes_props(ax, 'Year', 'Proportion of population', 'Population, ' + title, True, axis_labels)
 
             # Saving
-            save_png(self.get_png_name('_fraction'))
+            self.save_figure(fig, '_fraction')
 
     def plot_outputs_by_age(self):
 
@@ -1971,7 +1971,7 @@ class Project:
                             self.inputs.model_constants['plot_end_time'])
 
         # Saving
-        save_png(self.get_png_name('_output_by_age'))
+        self.save_figure(fig, '_output_by_age')
 
     def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):
 

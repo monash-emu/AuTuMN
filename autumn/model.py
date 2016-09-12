@@ -16,6 +16,7 @@ import autumn.model_runner
 import numpy
 from scipy.stats import norm, beta
 import copy
+import datetime
 
 import warnings
 
@@ -118,7 +119,7 @@ class ConsolidatedModel(BaseModel):
         self.scaleup_fns = self.inputs.scaleup_fns[self.scenario]
 
         # Here-below is just provisional stuff. Should be read from spreadsheets
-        self.n_runs = 2  # number of accepted runs per scenario
+        self.n_runs = 5  # number of accepted runs per scenario
         self.burn_in = 0  # number of accepted runs that we burn
         self.adaptive_search = True  # if True, next candidate generated according to previous position
         self.search_width = 0.2  # Width of the interval in which next parameter value is likely (95%) to be drawn. Expressed as a proportion of the width defined in bounds
@@ -127,13 +128,13 @@ class ConsolidatedModel(BaseModel):
             {
                 'key': 'incidence',
                 'posterior_width': None,
-                'width_multiplier': 1.5  # for incidence for ex. Width of Normal posterior relative to CI width in data
+                'width_multiplier': 3.0  # for incidence for ex. Width of Normal posterior relative to CI width in data
             }
         ]
 
         self.accepted_parameters = {}
         self.loglikelihoods = []
-        self.model_shelf = []
+        self.uncertainty_results = {} # to store uncertainty_results
 
         self.find_intervention_startdates()
 
@@ -1339,9 +1340,6 @@ class ConsolidatedModel(BaseModel):
         print self.inputs.country
         print "Uncertainty analysis"
 
-        # model_runner.param_ranges_unc = param_ranges_unc
-        # model_runner.outputs_unc = outputs_unc
-
         # Parameters candidates generation
         def generate_candidates(nb_candidates, param_ranges_unc):
             par_candidates = {}  # will store the candidates value
@@ -1375,7 +1373,25 @@ class ConsolidatedModel(BaseModel):
         j = 0
         prev_log_likelihood = -1e10
         params = []
+        labels = ['incidence', 'mortality', 'prevalence', 'notifications']
+        cost_types =['raw_cost', 'discounted_cost', 'inflated_cost', 'discounted_inflated_cost']
+
+        # prepare storage of uncertainty
+        for scenario in self.inputs.model_constants['scenarios_to_run']:
+            scenario_name = autumn.tool_kit.find_scenario_string_from_number(scenario)
+            self.uncertainty_results[scenario_name] = {}
+            for label in labels:
+                self.uncertainty_results[scenario_name][label] = {}
+
+            # economics outputs
+            self.uncertainty_results[scenario_name]['costs'] = {}
+            for intervention in self.interventions_to_cost:
+                self.uncertainty_results[scenario_name]['costs'][intervention] = {}
+                for cost_type in cost_types:
+                    self.uncertainty_results[scenario_name]['costs'][intervention][cost_type] = {}
+
         while n_accepted < self.n_runs + self.burn_in:
+            start_timer_run = datetime.datetime.now()
             new_params = []
             if not self.adaptive_search:
                 for par_dict in self.param_ranges_unc:
@@ -1441,10 +1457,55 @@ class ConsolidatedModel(BaseModel):
                         for par_dict in self.param_ranges_unc:
                             params_dict[par_dict['key']] = new_params[k]
                             k += 1
-
-                        model_to_store = copy.deepcopy(model_runner.model)
-                        self.model_shelf.append(model_to_store)
                         self.loglikelihoods.append(log_likelihood)
+
+                        # run other scenarios than baseline and store uncertainty
+                        for scenario in self.inputs.model_constants['scenarios_to_run']:
+                            scenario_name = autumn.tool_kit.find_scenario_string_from_number(scenario)
+                            if scenario is not None:
+                                scenario_model = autumn.model.ConsolidatedModel(scenario, model_runner.model.inputs)
+                                scenario_start_time_index = \
+                                    model_runner.model.find_time_index(
+                                        model_runner.model.inputs.model_constants['recent_time'])
+                                scenario_model.start_time = \
+                                    model_runner.model.times[scenario_start_time_index]
+                                scenario_model.loaded_compartments = \
+                                    model_runner.model.load_state(scenario_start_time_index)
+                                scenario_model.integrate()
+
+                                times = scenario_model.times
+                                costs = scenario_model.costs
+                            else:
+                                times = model_runner.model.times
+                                costs = model_runner.model.costs
+
+                            if n_accepted == 1: # initialise storage by year
+                                for label in labels:
+                                    for time in times:
+                                        self.uncertainty_results[scenario_name][label][time] = []
+                                for intervention in self.interventions_to_cost:
+                                    for cost_type in cost_types:
+                                        for time in costs['cost_times']:
+                                            self.uncertainty_results[scenario_name]['costs'][intervention][cost_type][time] = []
+
+                            for label in labels:
+                                if scenario is None:
+                                    solutions = model_runner.model.get_var_soln(label)
+                                else:
+                                    solutions = scenario_model.get_var_soln(label)
+
+                                j = 0
+                                for time in times:
+                                    self.uncertainty_results[scenario_name][label][time].append(solutions[j])
+                                    j += 1
+
+                            # store costs
+                            for intervention in self.interventions_to_cost:
+                                for cost_type in cost_types:
+                                    j = 0
+                                    for time in costs['cost_times']:
+                                        self.uncertainty_results[scenario_name]['costs'][intervention][cost_type][time].append(costs[intervention][cost_type][j])
+                                        j += 1
 
             i_candidates += 1
             j += 1
@@ -1452,7 +1513,4 @@ class ConsolidatedModel(BaseModel):
                 par_candidates = generate_candidates(nb_candidates=nb_candidates,
                                                      param_ranges_unc=self.param_ranges_unc)
                 j = 0
-            print (str(n_accepted) + ' accepted / ' + str(i_candidates) + ' candidates')
-
-
-
+            print (str(n_accepted) + ' accepted / ' + str(i_candidates) + ' candidates @@@@@@@@ Running time: ' + str(datetime.datetime.now() - start_timer_run))

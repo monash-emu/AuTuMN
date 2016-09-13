@@ -914,6 +914,25 @@ class Project:
 
         return multiplier, multiplier_label
 
+    def make_legend_to_single_axis(self, ax, scenario_handles, scenario_labels):
+
+        """
+        Standardised format to legend at side of single axis plot
+        Args:
+            ax: The axis that needs a legend.
+            scenario_handles:
+            scenario_labels:
+
+        """
+
+        ax.legend(scenario_handles,
+                  scenario_labels,
+                  bbox_to_anchor=(1.05, 1),
+                  loc=2,
+                  borderaxespad=0.,
+                  frameon=False,
+                  prop={'size': 7})
+
     def save_figure(self, fig, last_part_of_name_for_figure):
 
         """
@@ -1378,7 +1397,6 @@ class Project:
             find_standard_output_styles(outputs, lightening_factor=0.3)
         subplot_grid = find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
-        # png = self.get_png_name(fig, '_main_outputs')
 
         # Loop through outputs
         for out, output in enumerate(outputs):
@@ -1477,20 +1495,24 @@ class Project:
 
     def plot_scaleup_fns_against_data(self):
 
-        # For each type of scale-up function, create a different figure
+        """
+        Plot each scale-up function as a separate panel against the data it is fitted to.
+        """
+
+        # Different figure for each type of function
         for classification in self.classified_scaleups:
 
             # Find the list of the scale-up functions to work with and some x-values
             functions = self.classified_scaleups[classification]
 
+            # Standard prelims
+            subplot_grid = find_subplot_numbers(len(functions))
+            fig = self.set_and_update_figure()
+
             # Find some x-values
             start_time = self.inputs.model_constants['plot_start_time']
             end_time = self.inputs.model_constants['plot_end_time']
             x_vals = numpy.linspace(start_time, end_time, 1E3)
-
-            # Standard prelims
-            subplot_grid = find_subplot_numbers(len(functions))
-            fig = self.set_and_update_figure()
 
             # Main title for whole figure
             title = self.inputs.model_constants['country'] + ' ' + \
@@ -1509,7 +1531,7 @@ class Project:
                 scenario_labels = []
                 for scenario in reversed(self.scenarios):
 
-                    # Line plot scaling parameters
+                    # Line plot of scaling parameter functions
                     ax.plot(x_vals,
                             map(self.models[scenario].scaleup_fns[function],
                                 x_vals),
@@ -1547,7 +1569,7 @@ class Project:
                               frameon=False)
 
             # Save
-            self.save_figure(fig, '_scale_ups')
+            self.save_figure(fig, classification + '_scale_ups')
 
     def plot_programmatic_scaleups(self):
 
@@ -1559,7 +1581,8 @@ class Project:
         # (classify_scaleups must have been run)
         functions = self.classified_scaleups['program_prop_']
 
-        # Get some styles
+        # Standard prelims
+        fig = self.set_and_update_figure()
         line_styles = make_default_line_styles(len(functions), True)
 
         # Get some x values for plotting
@@ -1567,9 +1590,7 @@ class Project:
                                 self.inputs.model_constants['plot_end_time'],
                                 1E3)
 
-        fig = self.set_and_update_figure()
-
-        # Plot for baseline model run only
+        # Plot functions for baseline model run only
         scenario_labels = []
         ax = self.make_axes_with_room_for_legend(fig)
         for figure_number, function in enumerate(functions):
@@ -1588,16 +1609,15 @@ class Project:
         ylims = relax_y_axis(ax)
         ax.set_ylim(bottom=ylims[0], top=ylims[1])
         scenario_handles = ax.lines
-        ax.legend(scenario_handles,
-                  scenario_labels,
-                  bbox_to_anchor=(1.05, 1),
-                  loc=2,
-                  borderaxespad=0.,
-                  frameon=False,
-                  prop={'size': 7})
+        self.make_legend_to_single_axis(ax, scenario_handles, scenario_labels)
         self.save_figure(fig, '_programmatic_scale_ups')
 
     def plot_cost_coverage_curves(self):
+
+        """
+        Plots cost-coverage curves at times specified in the report times inputs in control panel.
+
+        """
 
         # Plot figures by scenario
         for scenario in self.scenarios:
@@ -1619,7 +1639,6 @@ class Project:
                     y_values = []
                     x_values = []
                     for i in numpy.linspace(0, 1, 101):
-
                         # Make cost coverage curve
                         if i < self.inputs.model_constants['econ_saturation_' + program]:
                             cost = economics.get_cost_from_coverage(i,
@@ -1640,13 +1659,7 @@ class Project:
                 # Legend to last panel
                 if p == len(self.models[scenario].interventions_to_cost) - 1:
                     scenario_handles = ax.lines
-                    ax.legend(scenario_handles,
-                              scenario_labels,
-                              bbox_to_anchor=(1.05, 1),
-                              loc=2,
-                              borderaxespad=0.,
-                              frameon=False,
-                              prop={'size': 7})
+                    self.make_legend_to_single_axis(ax, scenario_handles, scenario_labels)
                 ax.set_title(tool_kit.find_title_from_dictionary('program_prop_' + program)[:-9],
                              fontsize=get_nice_font_size(subplot_grid)+2)
                 if program == self.models[scenario].interventions_to_cost[-1]:
@@ -1667,6 +1680,7 @@ class Project:
         """
         Method that produces plots for individual and cumulative program costs for each scenario as separate figures.
         Panels of figures are the different sorts of costs (i.e. whether discounting and inflation have been applied).
+
         """
 
         # Separate figures for each scenario
@@ -1781,7 +1795,6 @@ class Project:
             fig_stacked.suptitle('Stacked program costs for ' + tool_kit.find_title_from_dictionary(scenario),
                                  fontsize=self.suptitle_size)
             self.save_figure(fig_stacked, scenario + '_timecost_stacked')
-
 
     def plot_populations(self, strain_or_organ='organ'):
 

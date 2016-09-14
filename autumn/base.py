@@ -670,7 +670,8 @@ class BaseModel:
         #     - self.vars['rate_infection_death']
         # assert abs(sum(self.flows.values()) - population_change ) < error_margin
 
-    def make_graph(self, png):
+    def make_flow_diagram(self, png):
+
         from graphviz import Digraph
 
         styles = {

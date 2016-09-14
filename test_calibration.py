@@ -294,7 +294,7 @@ model_runner = ModelRunner()
 n_step = 40
 base = os.path.join(out_dir, 'mcmc')
 model_runner.mcmc(n_mcmc_step=n_step)
-model_runner.model.make_graph(os.path.join(out_dir, 'workflow.png'))
+model_runner.model.make_flow_diagram(os.path.join(out_dir, 'workflow.png'))
 model_runner.plot_mcmc_params(base)
 
 n_burn_step = .5 * n_step

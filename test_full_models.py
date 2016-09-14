@@ -26,9 +26,7 @@ out_dir_pickles = 'pickles'
 if not os.path.isdir(out_dir_pickles):
     os.makedirs(out_dir_pickles)
 
-
 project = outputs.Project(inputs.country, inputs)
-
 base = os.path.join(out_dir, inputs.country + '_baseline')
 
 models = {}
@@ -70,10 +68,6 @@ if inputs.model_constants['output_uncertainty']:
 
 # Write to spreadsheets
 project.prepare_for_outputs()  # Store simplified outputs
-
-# Make a flow-diagram
-if inputs.model_constants['output_flow_diagram']:
-    models['baseline'].make_graph(base + '.workflow')
 
 # Plot proportions of population
 if inputs.model_constants['output_comorbidity_fractions']:

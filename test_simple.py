@@ -14,7 +14,7 @@ base = os.path.join(out_dir, 'model')
 model = autumn.base.SimpleModel()
 model.make_times(1600, 2050, 0.05)
 model.integrate_explicit()
-model.make_graph(base + '.workflow')
+model.make_flow_diagram(base + '.workflow')
 
 autumn.outputs.plot_fractions(
     model,

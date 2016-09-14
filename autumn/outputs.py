@@ -814,7 +814,6 @@ def plot_comparative_age_parameters(data_strat_list,
     save_png(base + '_param_adjustment.png')
 
 
-
 class Project:
 
     def __init__(self, country, inputs):
@@ -1377,6 +1376,11 @@ class Project:
                 self.plot_outputs_by_age()
             else:
                 warnings.warn('Requested outputs by age, but model is not age stratified.')
+
+        # Make a flow-diagram
+        if self.inputs.model_constants['output_flow_diagram']:
+            png = os.path.join(self.out_dir_project, self.country + '_flow_diagram' + '.png')
+            self.models['baseline'].make_flow_diagram(png)
 
     def plot_outputs_against_gtb(self, outputs):
 

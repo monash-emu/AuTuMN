@@ -1686,6 +1686,7 @@ class Project:
             # Standard prelims, but separate for each type of plot - individual and stacked
             fig_individual = self.set_and_update_figure()
             fig_stacked = self.set_and_update_figure()
+            fig_relative = self.set_and_update_figure()
             subplot_grid = find_subplot_numbers(len(self.models[scenario].costs['vaccination']))
 
             # Find the maximum of any type of cost across all of the programs
@@ -1703,6 +1704,11 @@ class Project:
             multiplier_individual, multiplier_individual_label = self.scale_axes(max_cost)
             multiplier_stacked, multiplier_stacked_label = self.scale_axes(max_stacked_cost)
 
+            # Find the index for the first time after the current time
+            reference_time_index \
+                = next(x[0] for x in enumerate(self.models[scenario].costs['cost_times'])
+                       if x[1] > self.inputs.model_constants['current_time'])
+
             # Just using vaccination to get one set of cost keys (should hopefully be consistently be available)
             for c, cost in enumerate(['raw_cost', 'inflated_cost', 'discounted_cost', 'discounted_inflated_cost']):
 
@@ -1710,17 +1716,22 @@ class Project:
                 if c == 0:
                     ax_individual = fig_individual.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
                     ax_stacked = fig_stacked.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
+                    ax_relative = fig_relative.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
                     ax_individual_first = copy.copy(ax_individual)
                     ax_stacked_first = copy.copy(ax_stacked)
+                    ax_reference_first = copy.copy(ax_relative)
                 else:
                     ax_individual = fig_individual.add_subplot(subplot_grid[0], subplot_grid[1], c + 1,
                                                                sharey=ax_individual_first)
                     ax_stacked = fig_stacked.add_subplot(subplot_grid[0], subplot_grid[1], c + 1,
-                                                               sharey=ax_stacked_first)
+                                                         sharey=ax_stacked_first)
+                    ax_relative = fig_relative.add_subplot(subplot_grid[0], subplot_grid[1], c + 1,
+                                                               sharey=ax_reference_first)
 
                 # Create empty list for legend
                 program_labels = []
                 cumulative_data = [0.] * len(self.models[scenario].costs['cost_times'])
+
                 for program in self.models[scenario].interventions_to_cost:
 
                     # Record the previous data for plotting as an independent object for the lower edge of the fill
@@ -1735,10 +1746,17 @@ class Project:
                     cumulative_data_to_plot = [d * multiplier_stacked for d in cumulative_data]
                     previous_data_to_plot = [d * multiplier_stacked for d in previous_data]
 
+                    reference_cost = self.models[scenario].costs[program][cost][reference_time_index]
+                    relative_data = [(d - reference_cost) * multiplier_individual
+                                     for d in self.models[scenario].costs[program][cost]]
+
                     # Plot lines
                     ax_individual.plot(self.models[scenario].costs['cost_times'],
                                        individual_data,
                                        color=self.program_colours[program][1])
+                    ax_relative.plot(self.models[scenario].costs['cost_times'],
+                                      relative_data,
+                                      color=self.program_colours[program][1])
 
                     # Plot stacked
                     ax_stacked.fill_between(self.models[scenario].costs['cost_times'],
@@ -1756,13 +1774,20 @@ class Project:
                                         fontsize=8)
                 ax_stacked.set_title(tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(cost)),
                                      fontsize=8)
+                ax_relative.set_title(tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(cost)),
+                                      fontsize=8)
                 ax_individual.set_ylabel(multiplier_individual_label + ' $US',
                                          fontsize=get_nice_font_size(subplot_grid))
                 ax_stacked.set_ylabel(multiplier_stacked_label + ' $US',
                                       fontsize=get_nice_font_size(subplot_grid))
+                ax_relative.set_ylabel(multiplier_individual_label + ' $US',
+                                       fontsize=get_nice_font_size(subplot_grid))
 
                 # Tidy ticks
-                for axis_to_change in [ax_individual.xaxis, ax_individual.yaxis, ax_stacked.xaxis, ax_stacked.yaxis]:
+                for axis_to_change in \
+                        [ax_individual.xaxis, ax_individual.yaxis,
+                         ax_stacked.xaxis, ax_stacked.yaxis,
+                         ax_relative.xaxis, ax_relative.yaxis]:
                     for tick in axis_to_change.get_major_ticks():
                         tick.label.set_fontsize(get_nice_font_size(subplot_grid))
 
@@ -1776,11 +1801,17 @@ class Project:
                                       program_labels,
                                       fontsize=get_nice_font_size(subplot_grid),
                                       frameon=False)
+                    ax_relative.legend(ax_individual.lines,
+                                      program_labels,
+                                      fontsize=get_nice_font_size(subplot_grid),
+                                      frameon=False)
 
                 # Set x-limits
                 ax_individual.set_xlim(self.inputs.model_constants['plot_start_time'],
                                        self.inputs.model_constants['plot_end_time'])
                 ax_stacked.set_xlim(self.inputs.model_constants['plot_start_time'],
+                                    self.inputs.model_constants['plot_end_time'])
+                ax_relative.set_xlim(self.inputs.model_constants['plot_start_time'],
                                     self.inputs.model_constants['plot_end_time'])
 
             # Finishing off with title and save
@@ -1790,6 +1821,9 @@ class Project:
             fig_stacked.suptitle('Stacked program costs for ' + tool_kit.find_title_from_dictionary(scenario),
                                  fontsize=self.suptitle_size)
             self.save_figure(fig_stacked, scenario + '_timecost_stacked')
+            fig_relative.suptitle('Relative program costs for ' + tool_kit.find_title_from_dictionary(scenario),
+                                 fontsize=self.suptitle_size)
+            self.save_figure(fig_relative, scenario + '_timecost_relative')
 
     def plot_populations(self, strain_or_organ='organ'):
 

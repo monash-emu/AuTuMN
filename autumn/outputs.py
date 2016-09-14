@@ -1071,6 +1071,20 @@ class Project:
     # Methods for outputting to Office applications #
     #################################################
 
+    def master_outputs_runner(self):
+
+        """
+        Method to work through all the fundamental output methods, which then call all the specific output
+        methods for plotting and writing as required.
+
+        """
+
+        self.prepare_for_outputs()
+        self.write_spreadsheets()
+        self.write_documents()
+        self.run_plotting()
+        self.open_output_directory()
+
     def write_spreadsheets(self):
 
         """
@@ -1366,6 +1380,10 @@ class Project:
                 self.plot_outputs_by_age()
             else:
                 warnings.warn('Requested outputs by age, but model is not age stratified.')
+
+        # Plot proportions of population
+        if self.inputs.model_constants['output_age_fractions']:
+            self.plot_stratified_populations(age_or_comorbidity='age')
 
         # Plot comorbidity proportions
         if self.inputs.model_constants['output_comorbidity_fractions']:
@@ -1727,7 +1745,7 @@ class Project:
                     ax_stacked = fig_stacked.add_subplot(subplot_grid[0], subplot_grid[1], c + 1,
                                                          sharey=ax_stacked_first)
                     ax_relative = fig_relative.add_subplot(subplot_grid[0], subplot_grid[1], c + 1,
-                                                               sharey=ax_reference_first)
+                                                           sharey=ax_reference_first)
 
                 # Create empty list for legend
                 program_labels = []

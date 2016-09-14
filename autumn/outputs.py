@@ -497,17 +497,6 @@ def save_png(png):
         pylab.savefig(png, dpi=300)
 
 
-def open_pngs(pngs):
-
-    # Should be redundant once Project module complete
-
-    operating_system = platform.system()
-    if 'Windows' in operating_system:
-        os.system("start " + " ".join(pngs))
-    elif 'Darwin' in operating_system:
-        os.system('open ' + " ".join(pngs))
-
-
 def plot_stratified_populations(model, png=None, age_or_comorbidity='age', start_time='start_time'):
 
     """
@@ -2066,3 +2055,14 @@ class Project:
         pyplot.savefig(os.path.join(self.out_dir_project, self.country + '_totalcost' + '.png'),
                        bbox_extra_artists=(lgd,), bbox_inches='tight')
 
+    def open_output_directory(self):
+        """
+        Opens the directory into which all the outputs have been placed
+
+        """
+
+        operating_system = platform.system()
+        if 'Windows' in operating_system:
+            os.system('start ' + ' ' + self.out_dir_project)
+        elif 'Darwin' in operating_system:
+            os.system('open ' + ' ' + self.out_dir_project)

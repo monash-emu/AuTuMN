@@ -83,16 +83,14 @@ if inputs.model_constants['output_age_fractions']:
                                                age_or_comorbidity='age',
                                                start_time='early_time')
 
-pngs = glob.glob(os.path.join(out_dir, '*png'))
-
 project.write_spreadsheets()
 project.write_documents()
 project.run_plotting()
+project.open_output_directory()
 
 # Added to test total cost plotting - need install of Pandas library for DataFrames (Eike)
 # project.plot_intervention_costs_by_scenario(2016, 2025)
 #project.plot_intervention_costs_by_scenario(2016, 2025, plot_options= {'interventions': ['xpert', 'treatment_support', 'smearacf', 'xpertacf', 'ipt_age0to5', 'ipt_age5to15']})
 
-autumn.outputs.open_pngs(pngs)
 
 print('Time elapsed in running script is ' + str(datetime.datetime.now() - start_realtime))

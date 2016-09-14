@@ -1705,15 +1705,21 @@ class Project:
             # Scale vertical axis and amend axis label as appropriate
             multiplier_individual, multiplier_individual_label = self.scale_axes(max_cost)
             multiplier_stacked, multiplier_stacked_label = self.scale_axes(max_stacked_cost)
-            max_cost *= multiplier_individual
-            max_stacked_cost *= multiplier_stacked
 
             # Just using vaccination to get one set of cost keys (should hopefully be consistently be available)
             for c, cost in enumerate(['raw_cost', 'inflated_cost', 'discounted_cost', 'discounted_inflated_cost']):
 
-                # Plot each type of cost to its own subplot
-                ax_individual = fig_individual.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
-                ax_stacked = fig_stacked.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
+                # Plot each type of cost to its own subplot and ensure same y-axis scale
+                if c == 0:
+                    ax_individual = fig_individual.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
+                    ax_stacked = fig_stacked.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
+                    ax_individual_first = copy.copy(ax_individual)
+                    ax_stacked_first = copy.copy(ax_stacked)
+                else:
+                    ax_individual = fig_individual.add_subplot(subplot_grid[0], subplot_grid[1], c + 1,
+                                                               sharey=ax_individual_first)
+                    ax_stacked = fig_stacked.add_subplot(subplot_grid[0], subplot_grid[1], c + 1,
+                                                               sharey=ax_stacked_first)
 
                 # Create empty list for legend
                 program_labels = []
@@ -1728,12 +1734,9 @@ class Project:
                         cumulative_data[i] += self.models[scenario].costs[program][cost][i]
 
                     # Scale all the data
-                    individual_data \
-                        = [d * multiplier_individual for d in self.models[scenario].costs[program][cost]]
-                    cumulative_data_to_plot \
-                        = [d * multiplier_stacked for d in cumulative_data]
-                    previous_data_to_plot \
-                        = [d * multiplier_stacked for d in previous_data]
+                    individual_data = [d * multiplier_individual for d in self.models[scenario].costs[program][cost]]
+                    cumulative_data_to_plot = [d * multiplier_stacked for d in cumulative_data]
+                    previous_data_to_plot = [d * multiplier_stacked for d in previous_data]
 
                     # Plot lines
                     ax_individual.plot(self.models[scenario].costs['cost_times'],
@@ -1760,11 +1763,6 @@ class Project:
                                          fontsize=get_nice_font_size(subplot_grid))
                 ax_stacked.set_ylabel(multiplier_stacked_label + ' $US',
                                       fontsize=get_nice_font_size(subplot_grid))
-
-                # Set all the panels to have the same upper limit, which is 1.1 times the greatest cost in any of
-                # the panels. (This is intended to make the plot more visually comparable to each other.)
-                ax_individual.set_ylim([0., max_cost * 1.1])
-                ax_stacked.set_ylim([0., max_stacked_cost * 1.1])
 
                 # Tidy ticks
                 for axis_to_change in [ax_individual.xaxis, ax_individual.yaxis, ax_stacked.xaxis, ax_stacked.yaxis]:

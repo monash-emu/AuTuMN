@@ -1334,7 +1334,8 @@ class Project:
         for s, scenario in enumerate(self.scenarios):
             self.output_colours[scenario] = output_colours[s]
         for p, program in enumerate(self.models['baseline'].interventions_to_cost):
-            self.program_colours[program] = output_colours[p]
+            # +1 is to avoid starting from black, which doesn't look as nice for programs as for baseline scenario
+            self.program_colours[program] = output_colours[p + 1]
 
         # Plot main outputs
         self.plot_outputs_against_gtb(
@@ -1755,8 +1756,8 @@ class Project:
                                        individual_data,
                                        color=self.program_colours[program][1])
                     ax_relative.plot(self.models[scenario].costs['cost_times'],
-                                      relative_data,
-                                      color=self.program_colours[program][1])
+                                     relative_data,
+                                     color=self.program_colours[program][1])
 
                     # Plot stacked
                     ax_stacked.fill_between(self.models[scenario].costs['cost_times'],
@@ -1770,49 +1771,29 @@ class Project:
                         += [tool_kit.find_title_from_dictionary(program)]
 
                 # Axis title and y-axis label
-                ax_individual.set_title(tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(cost)),
-                                        fontsize=8)
-                ax_stacked.set_title(tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(cost)),
-                                     fontsize=8)
-                ax_relative.set_title(tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(cost)),
-                                      fontsize=8)
-                ax_individual.set_ylabel(multiplier_individual_label + ' $US',
-                                         fontsize=get_nice_font_size(subplot_grid))
-                ax_stacked.set_ylabel(multiplier_stacked_label + ' $US',
-                                      fontsize=get_nice_font_size(subplot_grid))
-                ax_relative.set_ylabel(multiplier_individual_label + ' $US',
-                                       fontsize=get_nice_font_size(subplot_grid))
+                for ax in [ax_individual, ax_stacked, ax_relative]:
+                    ax.set_title(tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(cost)),
+                                 fontsize=8)
+                    ax.set_ylabel(multiplier_individual_label + ' $US',
+                                  fontsize=get_nice_font_size(subplot_grid))
 
-                # Tidy ticks
-                for axis_to_change in \
-                        [ax_individual.xaxis, ax_individual.yaxis,
-                         ax_stacked.xaxis, ax_stacked.yaxis,
-                         ax_relative.xaxis, ax_relative.yaxis]:
-                    for tick in axis_to_change.get_major_ticks():
+                    # Tidy ticks
+                    for tick in ax.xaxis.get_major_ticks():
+                        tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+                    for tick in ax.yaxis.get_major_ticks():
                         tick.label.set_fontsize(get_nice_font_size(subplot_grid))
 
-                # Add the legend to last subplot panel
-                if c == len(self.models[scenario].costs['vaccination']) - 1:
-                    ax_individual.legend(ax_individual.lines,
-                                         program_labels,
-                                         fontsize=get_nice_font_size(subplot_grid),
-                                         frameon=False)
-                    ax_stacked.legend(ax_individual.lines,
-                                      program_labels,
-                                      fontsize=get_nice_font_size(subplot_grid),
-                                      frameon=False)
-                    ax_relative.legend(ax_individual.lines,
-                                      program_labels,
-                                      fontsize=get_nice_font_size(subplot_grid),
-                                      frameon=False)
+                    # Add the legend to last subplot panel
+                    if c == len(self.models[scenario].costs['vaccination']) - 1:
+                        ax.legend(ax_individual.lines,
+                                  program_labels,
+                                  fontsize=get_nice_font_size(subplot_grid),
+                                  frameon=False)
 
                 # Set x-limits
-                ax_individual.set_xlim(self.inputs.model_constants['plot_start_time'],
-                                       self.inputs.model_constants['plot_end_time'])
-                ax_stacked.set_xlim(self.inputs.model_constants['plot_start_time'],
-                                    self.inputs.model_constants['plot_end_time'])
-                ax_relative.set_xlim(self.inputs.model_constants['plot_start_time'],
-                                    self.inputs.model_constants['plot_end_time'])
+                for ax in [ax_individual, ax_stacked, ax_relative]:
+                    ax.set_xlim(self.inputs.model_constants['plot_start_time'],
+                                           self.inputs.model_constants['plot_end_time'])
 
             # Finishing off with title and save
             fig_individual.suptitle('Individual program costs for ' + tool_kit.find_title_from_dictionary(scenario),

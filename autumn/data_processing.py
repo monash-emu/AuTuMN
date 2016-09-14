@@ -664,7 +664,7 @@ class Inputs:
         # Create list of comorbidity names
         self.comorbidities = []
         for input in self.model_constants:
-            if 'comorbidity_' in input:
+            if 'comorbidity_' in input and 'output_' not in input:
                 if self.model_constants[input]:
                     self.comorbidities += [input[11:]]
         if len(self.comorbidities) == 0:

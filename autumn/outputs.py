@@ -1366,6 +1366,11 @@ class Project:
             else:
                 warnings.warn('Requested outputs by age, but model is not age stratified.')
 
+        # Plot comorbidity proportions
+        if self.inputs.model_constants['output_comorbidity_fractions']:
+            self.plot_stratified_populations(age_or_comorbidity='comorbidity',
+                                             start_time='early_time')
+
         # Make a flow-diagram
         if self.inputs.model_constants['output_flow_diagram']:
             png = os.path.join(self.out_dir_project, self.country + '_flow_diagram' + '.png')
@@ -1976,6 +1981,120 @@ class Project:
 
         # Saving
         self.save_figure(fig, '_output_by_age')
+
+    def plot_stratified_populations(self, age_or_comorbidity='age', start_time='start_time'):
+
+        """
+        Function to plot population by age group both as raw numbers and as proportions,
+        both from the start of the model and using the input argument
+
+        Args:
+            model: The entire model object being interrogated
+            left_xlimit: Float value representing the time to plot from for the recent plot
+
+        """
+
+        if age_or_comorbidity == 'age':
+            stratification = self.models['baseline'].agegroups
+        elif age_or_comorbidity == 'comorbidity':
+            stratification = self.models['baseline'].comorbidities
+        else:
+            raise NameError('Stratification not permitted')
+
+        if len(stratification) < 2:
+            warnings.warn('No stratification to plot')
+        else:
+            # Open figure
+            fig = pyplot.figure()
+
+            # Extract data
+            stratified_soln, denominator = tool_kit.sum_over_compartments(self.models['baseline'], stratification)
+            stratified_fraction = tool_kit.get_fraction_soln(stratified_soln.keys(), stratified_soln, denominator)
+
+            colours = make_default_line_styles(len(stratification), return_all=True)
+
+            # Loop over starting from the model start and the specified starting time
+            for i_time, plot_left_time in enumerate(['recent_time', start_time]):
+
+                # Find starting times
+                right_xlimit_index, left_xlimit_index \
+                    = find_truncation_points(self.models['baseline'],
+                                             self.inputs.model_constants[plot_left_time])
+                title_time_text = tool_kit.find_title_from_dictionary(plot_left_time)
+
+                # Initialise some variables
+                times = self.models['baseline'].times[left_xlimit_index: right_xlimit_index]
+                lower_plot_margin_count = numpy.zeros(len(times))
+                upper_plot_margin_count = numpy.zeros(len(times))
+                lower_plot_margin_fraction = numpy.zeros(len(times))
+                upper_plot_margin_fraction = numpy.zeros(len(times))
+                legd_text = []
+
+                for i, stratum in enumerate(stratification):
+
+                    # Find numbers or fractions in that group
+                    stratum_count = stratified_soln[stratum][left_xlimit_index: right_xlimit_index]
+                    stratum_fraction = stratified_fraction[stratum][left_xlimit_index: right_xlimit_index]
+
+                    # Add group values to the upper plot range for area plot
+                    for j in range(len(upper_plot_margin_count)):
+                        upper_plot_margin_count[j] += stratum_count[j]
+                        upper_plot_margin_fraction[j] += stratum_fraction[j]
+
+                    # Plot
+                    ax = fig.add_subplot(2, 2, 1 + i_time)
+                    ax.fill_between(times, lower_plot_margin_count, upper_plot_margin_count, facecolors=colours[i][1])
+
+                    # Create proxy for legend
+                    ax.plot([], [], color=colours[i][1], linewidth=6)
+                    if age_or_comorbidity == 'age':
+                        legd_text += [tool_kit.turn_strat_into_label(stratum)]
+                    elif age_or_comorbidity == 'comorbidity':
+                        print(tool_kit.find_title_from_dictionary(stratum))
+                        legd_text += [tool_kit.find_title_from_dictionary(stratum)]
+
+                    # Cosmetic changes at the end
+                    if i == len(stratification) - 1:
+                        ax.set_ylim((0., max(upper_plot_margin_count) * 1.1))
+                        ax.set_xlim(int(self.models['baseline'].times[left_xlimit_index]),
+                                    self.models['baseline'].times[right_xlimit_index])
+                        ax.set_title('Total numbers' + title_time_text, fontsize=8)
+                        xticks = find_reasonable_year_ticks(int(self.models['baseline'].times[left_xlimit_index]),
+                                                            self.models['baseline'].times[right_xlimit_index])
+                        ax.set_xticks(xticks)
+                        for axis_to_change in [ax.xaxis, ax.yaxis]:
+                            for tick in axis_to_change.get_major_ticks():
+                                tick.label.set_fontsize(get_nice_font_size([2]))
+                        if i_time == 1:
+                            ax.legend(reversed(ax.lines), reversed(legd_text), loc=2, frameon=False, fontsize=8)
+
+                    # Plot population proportions
+                    ax = fig.add_subplot(2, 2, 3 + i_time)
+                    ax.fill_between(times, lower_plot_margin_fraction, upper_plot_margin_fraction,
+                                    facecolors=colours[i][1])
+
+                    # Cosmetic changes at the end
+                    if i == len(stratification) - 1:
+                        ax.set_ylim((0., 1.))
+                        ax.set_xlim(int(self.models['baseline'].times[left_xlimit_index]),
+                                    self.models['baseline'].times[right_xlimit_index])
+                        ax.set_title('Proportion of population' + title_time_text, fontsize=8)
+                        xticks = find_reasonable_year_ticks(int(self.models['baseline'].times[left_xlimit_index]),
+                                                            self.models['baseline'].times[right_xlimit_index])
+                        ax.set_xticks(xticks)
+                        for axis_to_change in [ax.xaxis, ax.yaxis]:
+                            for tick in axis_to_change.get_major_ticks():
+                                tick.label.set_fontsize(get_nice_font_size([2]))
+
+                    # Add group values to the lower plot range for next iteration
+                    for j in range(len(lower_plot_margin_count)):
+                        lower_plot_margin_count[j] += stratum_count[j]
+                        lower_plot_margin_fraction[j] += stratum_fraction[j]
+
+            # Finish up
+            fig.suptitle('Population by ' + tool_kit.find_title_from_dictionary(age_or_comorbidity),
+                         fontsize=self.suptitle_size)
+            self.save_figure(fig, '_comorbidity_proportions')
 
     def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):
 

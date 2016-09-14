@@ -70,11 +70,11 @@ if inputs.model_constants['output_uncertainty']:
 project.prepare_for_outputs()  # Store simplified outputs
 
 # Plot proportions of population
-if inputs.model_constants['output_comorbidity_fractions']:
-    autumn.outputs.plot_stratified_populations(models['baseline'],
-                                               png=base + '_comorbidity_fraction.png',
-                                               age_or_comorbidity='comorbidity',
-                                               start_time='early_time')
+# if inputs.model_constants['output_comorbidity_fractions']:
+#     project.outputs.plot_stratified_populations(models['baseline'],
+#                                                 png=base + '_comorbidity_fraction.png',
+#                                                 age_or_comorbidity='comorbidity',
+#                                                 start_time='early_time')
 
 # Plot proportions of population
 if inputs.model_constants['output_age_fractions']:

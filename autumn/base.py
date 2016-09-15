@@ -507,24 +507,24 @@ class BaseModel:
 
         # Loop over interventions to be costed
         for intervention in self.interventions_to_cost:
+
             # Initialise output lists
             costs[intervention] = {'raw_cost': [],
                                    'inflated_cost': [],
                                    'discounted_cost': [],
                                    'discounted_inflated_cost': []}
 
-            # for IPT, if the intervention is age-specific, we still use economics data that are not age-specific
-            name_intervention_eco_data = intervention
-            if 'ipt_age' in intervention:
-                name_intervention_eco_data = 'ipt'
+            # print('econ_startupcost_' + intervention)
+            # print(self.inputs.model_constants['econ_startupcost_' + intervention])
 
             start_inter = self.intervention_startdates[self.scenario][intervention]  # date the intervention started
-            startingcost_duration = self.inputs.model_constants['econ_startingcost_duration_' + name_intervention_eco_data]
+            startingcost_duration = self.inputs.model_constants['econ_startingcost_duration_' + intervention]
 
             # for each step time. We may want to change this bit. No need for all time steps
             # Just add a third argument if you want to decrease the frequency of calculation
             for i in range(start_index, end_index + 1):
                 t = self.times[i]
+
                 # If it's the first intervention, store a list of times
                 if intervention == self.interventions_to_cost[0]:
                     costs['cost_times'].append(t)
@@ -533,13 +533,13 @@ class BaseModel:
                 inflection_cost = 0.
                 if start_inter is not None:  # no intervention start
                     if 0 <= t < (start_inter + startingcost_duration):
-                        inflection_cost = self.inputs.model_constants['econ_inflectioncost_' + name_intervention_eco_data]
+                        inflection_cost = self.inputs.model_constants['econ_inflectioncost_' + intervention]
 
                 # Raw cost (which is the uninflated cost)
                 cost = get_cost_from_coverage(self.coverage_over_time('program_prop_' + intervention)(t),
-                                             inflection_cost,
-                                              self.inputs.model_constants['econ_saturation_' + name_intervention_eco_data],
-                                              self.inputs.model_constants['econ_unitcost_' + name_intervention_eco_data],
+                                              inflection_cost,
+                                              self.inputs.model_constants['econ_saturation_' + intervention],
+                                              self.inputs.model_constants['econ_unitcost_' + intervention],
                                               self.var_array[i, self.var_labels.index('popsize_' + intervention)])
 
                 # Store uninflated cost
@@ -759,9 +759,12 @@ class BaseModel:
         self.graph.render(base)
 
     def find_intervention_startdates(self):
+
         """
         Find the dates when the different interventions start and populate self.intervention_startdates
+
         """
+
         for scenario in self.inputs.model_constants['scenarios_to_run']:
             self.intervention_startdates[scenario] = {}
             for intervention in self.interventions_to_cost:
@@ -855,7 +858,6 @@ class SimpleModel(BaseModel):
         self.set_scaleup_fn(
             'program_rate_detect',
             make_two_step_curve(0, 0.5 * y, y, 1950, 1995, 2015))
-
 
     def set_flows(self):
         self.set_var_entry_rate_flow('susceptible', 'births_unvac')

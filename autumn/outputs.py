@@ -633,6 +633,7 @@ class Project:
         Returns:
             multiplier: The value to scale the axis by.
             multiplier_label: The text to add to the y-axis after scaling
+
         """
 
         if max_value < 1e3:
@@ -1337,7 +1338,7 @@ class Project:
                               frameon=False)
 
             # Save
-            self.save_figure(fig, classification + '_scale_ups')
+            self.save_figure(fig, '_' + classification + '_scale_ups')
 
     def plot_programmatic_scaleups(self):
 
@@ -1395,6 +1396,10 @@ class Project:
             # Subplots by program
             subplot_grid = self.find_subplot_numbers(len(self.models[scenario].interventions_to_cost))
             for p, program in enumerate(self.models[scenario].interventions_to_cost):
+
+                print(program)
+                print(tool_kit.find_title_from_dictionary(program))
+
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
                 scenario_labels = []
 
@@ -1408,26 +1413,31 @@ class Project:
                     y_values = []
                     x_values = []
                     for i in numpy.linspace(0, 1, 101):
+
                         # Make cost coverage curve
                         if i < self.inputs.model_constants['econ_saturation_' + program]:
                             cost = economics.get_cost_from_coverage(i,
-                                                                    self.inputs.model_constants['econ_inflectioncost_' + program],
-                                                                    self.inputs.model_constants['econ_saturation_' + program],
-                                                                    self.inputs.model_constants['econ_unitcost_' + program],
+                                                                    self.inputs.model_constants['econ_inflectioncost_'
+                                                                                                + program],
+                                                                    self.inputs.model_constants['econ_saturation_'
+                                                                                                + program],
+                                                                    self.inputs.model_constants['econ_unitcost_'
+                                                                                                + program],
                                                                     self.models[
                                                                         scenario].var_array[
                                                                         time_index,
                                                                         self.models[
-                                                                            scenario].var_labels.index('popsize_' + program)])
+                                                                            scenario].var_labels.index('popsize_'
+                                                                                                       + program)])
                             x_values += [cost]
                             y_values += [i]
+
+                    # Find darkness
+                    darkness = .9 - (float(t) / float(len(times))) * .9
 
                     # Scale data
                     multiplier, multiplier_label = self.scale_axes(max(x_values))
                     x_values_to_plot = [x * multiplier for x in x_values]
-
-                    # Find darkness
-                    darkness = .9 - (float(t) / float(len(times))) * .9
 
                     # Plot
                     ax.plot(x_values_to_plot, y_values, color=(darkness, darkness, darkness))
@@ -1445,8 +1455,7 @@ class Project:
                     ax.set_ylabel('Coverage (proportion)', fontsize=get_nice_font_size(subplot_grid))
 
                 # If it's the last row, add an x-axis label
-                if p > (subplot_grid[0] - 1) * subplot_grid[1] - 1:
-                    ax.set_xlabel('Cost ' + multiplier_label + ' $US', fontsize=get_nice_font_size(subplot_grid))
+                ax.set_xlabel(multiplier_label + ' $US', fontsize=get_nice_font_size(subplot_grid))
                 for axis_to_change in [ax.xaxis, ax.yaxis]:
                     for tick in axis_to_change.get_major_ticks():
                         tick.label.set_fontsize(get_nice_font_size(subplot_grid))
@@ -1454,7 +1463,7 @@ class Project:
             # Finish off with title and save file for scenario
             fig.suptitle('Cost-coverage curves for ' + tool_kit.replace_underscore_with_space(scenario),
                          fontsize=self.suptitle_size)
-            self.save_figure(fig, scenario + '_cost_coverage')
+            self.save_figure(fig, '_' + scenario + '_cost_coverage')
 
     def plot_cost_over_time(self):
 
@@ -1580,13 +1589,13 @@ class Project:
             # Finishing off with title and save
             fig_individual.suptitle('Individual program costs for ' + tool_kit.find_title_from_dictionary(scenario),
                                     fontsize=self.suptitle_size)
-            self.save_figure(fig_individual, scenario + '_timecost_individual')
+            self.save_figure(fig_individual, '_' + scenario + '_timecost_individual')
             fig_stacked.suptitle('Stacked program costs for ' + tool_kit.find_title_from_dictionary(scenario),
                                  fontsize=self.suptitle_size)
-            self.save_figure(fig_stacked, scenario + '_timecost_stacked')
+            self.save_figure(fig_stacked, '_' + scenario + '_timecost_stacked')
             fig_relative.suptitle('Relative program costs for ' + tool_kit.find_title_from_dictionary(scenario),
                                  fontsize=self.suptitle_size)
-            self.save_figure(fig_relative, scenario + '_timecost_relative')
+            self.save_figure(fig_relative, '_' + scenario + '_timecost_relative')
 
     def plot_populations(self, strain_or_organ='organ'):
 

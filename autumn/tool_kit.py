@@ -221,7 +221,7 @@ def find_title_from_dictionary(name):
         'early_time':
             'start of model run',
         'program_prop_decentralisation':
-            'Decentralisation'
+            'Decentralisation coverage'
     }
 
     if name in dictionary_of_names:

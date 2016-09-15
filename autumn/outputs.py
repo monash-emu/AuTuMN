@@ -42,20 +42,6 @@ def relax_y_axis(ax):
     return ylims
 
 
-def find_subplot_numbers(n):
-
-    # Find a nice number of subplots for a panel plot
-    answer = find_smallest_factors_of_integer(n)
-    i = 0
-    while i < 10:
-        if abs(answer[0] - answer[1]) > 3:
-            n = n + 1
-            answer = find_smallest_factors_of_integer(n)
-        i = i + 1
-
-    return answer
-
-
 def find_smallest_factors_of_integer(n):
 
     """
@@ -295,35 +281,6 @@ def find_standard_output_styles(labels, lightening_factor=1.):
     return colour, indices, yaxis_label, title, patch_colour
 
 
-def make_default_line_styles(n, return_all=True):
-
-    """
-    Produces a standard set of line styles that isn't adapted to
-    the data being plotted.
-
-    Args:
-        n: The number of line-styles
-        return_all: Whether to return all of the styles up to n or just the last one
-
-    Returns:
-        line_styles: A list of standard line-styles, or if return_all is False,
-            then the single item (for methods that are iterating through plots.
-
-    """
-
-    # Iterate through a standard set of line styles
-    for i in range(n):
-        line_styles = []
-        for line in ["-", ":", "-.", "--"]:
-            for colour in "krbgmcy":
-                line_styles.append(line + colour)
-
-    if return_all:
-        return line_styles
-    else:
-        return line_styles[n-1]
-
-
 def make_related_line_styles(labels, strain_or_organ):
 
     colours = {}
@@ -497,237 +454,6 @@ def save_png(png):
         pylab.savefig(png, dpi=300)
 
 
-def plot_stratified_populations(model, png=None, age_or_comorbidity='age', start_time='start_time'):
-
-    """
-    Function to plot population by age group both as raw numbers and as proportions,
-    both from the start of the model and using the input argument
-
-    Args:
-        model: The entire model object being interrogated
-        left_xlimit: Float value representing the time to plot from for the recent plot
-        png: The name of the file to be saved
-
-    """
-
-    if age_or_comorbidity == 'age':
-        stratification = model.agegroups
-    elif age_or_comorbidity == 'comorbidity':
-        stratification = model.comorbidities
-    else:
-        raise NameError('Stratification not permitted')
-
-    if len(stratification) < 2:
-        warnings.warn('No stratification to plot')
-    else:
-        # Open figure
-        fig = pyplot.figure()
-
-        # Extract data
-        stratified_soln, denominator = tool_kit.sum_over_compartments(model, stratification)
-        stratified_fraction = tool_kit.get_fraction_soln(stratified_soln.keys(), stratified_soln, denominator)
-
-        colours = make_default_line_styles(len(stratification), return_all=True)
-
-        # Loop over starting from the model start and the specified starting time
-        for i_time, plot_left_time in enumerate(['recent_time', start_time]):
-
-            # Find starting times
-            right_xlimit_index, left_xlimit_index \
-                = find_truncation_points(model,
-                                         model.inputs['model_constants'][plot_left_time])
-            title_time_text = tool_kit.find_title_from_dictionary(plot_left_time)
-
-            # Initialise some variables
-            times = model.times[left_xlimit_index: right_xlimit_index]
-            lower_plot_margin_count = numpy.zeros(len(times))
-            upper_plot_margin_count = numpy.zeros(len(times))
-            lower_plot_margin_fraction = numpy.zeros(len(times))
-            upper_plot_margin_fraction = numpy.zeros(len(times))
-            legd_text = []
-
-            for i, stratum in enumerate(stratification):
-
-                # Find numbers or fractions in that group
-                stratum_count = stratified_soln[stratum][left_xlimit_index: right_xlimit_index]
-                stratum_fraction = stratified_fraction[stratum][left_xlimit_index: right_xlimit_index]
-
-                # Add group values to the upper plot range for area plot
-                for j in range(len(upper_plot_margin_count)):
-                    upper_plot_margin_count[j] += stratum_count[j]
-                    upper_plot_margin_fraction[j] += stratum_fraction[j]
-
-                # Plot
-                ax = fig.add_subplot(2, 2, 1 + i_time)
-                ax.fill_between(times, lower_plot_margin_count, upper_plot_margin_count, facecolors=colours[i][1])
-
-                # Create proxy for legend
-                ax.plot([], [], color=colours[i][1], linewidth=6)
-                if age_or_comorbidity == 'age':
-                    legd_text += [tool_kit.turn_strat_into_label(stratum)]
-                elif age_or_comorbidity == 'comorbidity':
-                    print(tool_kit.find_title_from_dictionary(stratum))
-                    legd_text += [tool_kit.find_title_from_dictionary(stratum)]
-
-                # Cosmetic changes at the end
-                if i == len(stratification)-1:
-                    ax.set_ylim((0., max(upper_plot_margin_count) * 1.1))
-                    ax.set_xlim(int(model.times[left_xlimit_index]),
-                                model.times[right_xlimit_index])
-                    ax.set_title('Total numbers' + title_time_text, fontsize=8)
-                    xticks = find_reasonable_year_ticks(int(model.times[left_xlimit_index]),
-                                                        model.times[right_xlimit_index])
-                    ax.set_xticks(xticks)
-                    for axis_to_change in [ax.xaxis, ax.yaxis]:
-                        for tick in axis_to_change.get_major_ticks():
-                            tick.label.set_fontsize(get_nice_font_size([2]))
-                    if i_time == 1:
-                        ax.legend(reversed(ax.lines), reversed(legd_text), loc=2, frameon=False, fontsize=8)
-
-                # Plot population proportions
-                ax = fig.add_subplot(2, 2, 3 + i_time)
-                ax.fill_between(times, lower_plot_margin_fraction, upper_plot_margin_fraction, facecolors=colours[i][1])
-
-                # Cosmetic changes at the end
-                if i == len(stratification)-1:
-                    ax.set_ylim((0., 1.))
-                    ax.set_xlim(int(model.times[left_xlimit_index]),
-                                model.times[right_xlimit_index])
-                    ax.set_title('Proportion of population' + title_time_text, fontsize=8)
-                    xticks = find_reasonable_year_ticks(int(model.times[left_xlimit_index]),
-                                                        model.times[right_xlimit_index])
-                    ax.set_xticks(xticks)
-                    for axis_to_change in [ax.xaxis, ax.yaxis]:
-                        for tick in axis_to_change.get_major_ticks():
-                            tick.label.set_fontsize(get_nice_font_size([2]))
-
-                # Add group values to the lower plot range for next iteration
-                for j in range(len(lower_plot_margin_count)):
-                    lower_plot_margin_count[j] += stratum_count[j]
-                    lower_plot_margin_fraction[j] += stratum_fraction[j]
-
-        # Finish up
-        fig.suptitle('Population by ' + tool_kit.find_title_from_dictionary(age_or_comorbidity),
-                     fontsize=13)
-        save_png(png)
-
-
-def plot_outputs_by_age(model,
-                        start_time,
-                        end_time_str='current_time',
-                        png=None,
-                        country='',
-                        scenario=None,
-                        figure_number=21):
-
-    """
-    Produces the plot for the main outputs by age, can handle multiple scenarios (if required).
-    Save as png at the end.
-    Note that if running a series of scenarios, it is expected that the last scenario to
-    be run will be baseline, which should have scenario set to None.
-    This function is a bit less flexible than plot_outputs_against_gtb, in which you can select the
-    outputs you want to plot. This one is constrained to incidence and mortality (which are the only
-    ones currently calculated in the model object.
-
-    Args:
-        model: The entire model object
-        start_time: Starting time
-        end_time_str: String to access end time from data
-        png: The filename
-        country: Country being plotted (just needed for title)
-        scenario: The scenario being run, number needed for line colour
-
-    """
-
-    # Get the colours for the model outputs
-    if scenario is None:
-        # Last scenario to run should be baseline and should be run last
-        # to lay a black line over the top for comparison
-        output_colour = ['-k']
-    else:
-        # Otherwise cycling through colours
-        output_colour = [make_default_line_styles(scenario, False)]
-
-    # Truncate data to what you want to look at (rather than going back to the dawn of time)
-    right_xlimit_index, left_xlimit_index = find_truncation_points(model, start_time)
-
-    subplot_grid = find_subplot_numbers(len(model.agegroups) * 2 + 1)
-
-    # Time to plot until
-    end_time = model.inputs.model_constants[end_time_str]
-
-    # Not sure whether we have to specify a figure number
-    fig = pyplot.figure(figure_number)
-
-    # Overall title
-    fig.suptitle(country + ' burden by age group', fontsize=14)
-
-    for output_no, output in enumerate(['incidence', 'mortality']):
-
-        # Find the highest incidence value in the time period considered across all age groups
-        ymax = 0.
-        for agegroup in model.agegroups:
-            new_ymax = max(model.get_var_soln(output + agegroup)[left_xlimit_index: right_xlimit_index])
-            if new_ymax > ymax:
-                ymax = new_ymax
-
-        for i, agegroup in enumerate(model.agegroups + ['']):
-
-            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1 + output_no * (len(model.agegroups)+1))
-
-            # Plot the modelled data
-            ax.plot(
-                model.times[left_xlimit_index: right_xlimit_index],
-                model.get_var_soln(output + agegroup)[left_xlimit_index: right_xlimit_index],
-                color=output_colour[0][1],
-                linestyle=output_colour[0][0],
-                linewidth=1.5)
-
-            # This is supposed to mean if it's the last scenario, which is the baseline
-            # (provided this function has been called as intended).
-            if scenario is None:
-
-                # Set x-ticks
-                xticks = find_reasonable_year_ticks(start_time, end_time)
-                ax.set_xticks(xticks)
-
-                # Adjust size of labels of x-ticks
-                for axis_to_change in [ax.xaxis, ax.yaxis]:
-                    for tick in axis_to_change.get_major_ticks():
-                        tick.label.set_fontsize(get_nice_font_size(subplot_grid))
-
-                # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
-                ax.set_title(tool_kit.capitalise_first_letter(output) + ', '
-                             + tool_kit.turn_strat_into_label(agegroup), fontsize=get_nice_font_size(subplot_grid))
-
-                # Label the y axis with the smaller text size
-                if i == 0:
-                    ax.set_ylabel('Per 100,000 per year', fontsize=get_nice_font_size(subplot_grid))
-
-                # Set upper y-limit to the maximum value for any age group during the period of interest
-                ax.set_ylim(bottom=0., top=ymax)
-
-                # Get the handles, except for the last one, which plots the data
-                scenario_handles = ax.lines[:-1]
-
-                # Make some string labels for these handles
-                # (this code could probably be better)
-                scenario_labels = []
-                for i in range(len(scenario_handles)):
-                    if i < len(scenario_handles) - 1:
-                        scenario_labels += ['Scenario ' + str(i + 1)]
-                    else:
-                        scenario_labels += ['Baseline']
-
-                # Draw the legend
-                ax.legend(scenario_handles,
-                          scenario_labels,
-                          fontsize=get_nice_font_size(subplot_grid) - 2.,
-                          frameon=False)
-
-    save_png(png)
-
-
 def plot_flows(model, labels, png=None):
 
     colours, patterns, compartment_full_names\
@@ -871,6 +597,47 @@ class Project:
         ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
         return ax
 
+    def make_default_line_styles(self, n, return_all=True):
+
+        """
+        Produces a standard set of line styles that isn't adapted to
+        the data being plotted.
+
+        Args:
+            n: The number of line-styles
+            return_all: Whether to return all of the styles up to n or just the last one
+
+        Returns:
+            line_styles: A list of standard line-styles, or if return_all is False,
+                then the single item (for methods that are iterating through plots.
+
+        """
+
+        # Iterate through a standard set of line styles
+        for i in range(n):
+            line_styles = []
+            for line in ["-", ":", "-.", "--"]:
+                for colour in "krbgmcy":
+                    line_styles.append(line + colour)
+
+        if return_all:
+            return line_styles
+        else:
+            return line_styles[n - 1]
+
+    def find_subplot_numbers(self, n):
+
+        # Find a nice number of subplots for a panel plot
+        answer = find_smallest_factors_of_integer(n)
+        i = 0
+        while i < 10:
+            if abs(answer[0] - answer[1]) > 3:
+                n = n + 1
+                answer = find_smallest_factors_of_integer(n)
+            i = i + 1
+
+        return answer
+
     def scale_axes(self, max_value):
 
         """
@@ -996,8 +763,8 @@ class Project:
                     self.full_output_dict[scenario][label + '_low'] = {}
                     self.full_output_dict[scenario][label + '_high'] = {}
                     for time in self.models[scenario].times:
-                        self.full_output_dict[scenario][label + '_low'][time] = np.percentile(self.models['baseline'].uncertainty_results['baseline'][label][time], q=0.5*(100. - self.ci_percentage))
-                        self.full_output_dict[scenario][label + '_high'][time] = np.percentile(self.models['baseline'].uncertainty_results['baseline'][label][time], q=100 - 0.5*(100. - self.ci_percentage))
+                        self.full_output_dict[scenario][label + '_low'][time] = np.percentile(self.models[scenario].uncertainty_results[label][time], q=0.5*(100. - self.ci_percentage))
+                        self.full_output_dict[scenario][label + '_high'][time] = np.percentile(self.models[scenario].uncertainty_results[label][time], q=100 - 0.5*(100. - self.ci_percentage))
 
     def add_full_economics_dict(self):
         """
@@ -1021,10 +788,10 @@ class Project:
 
                     for time in times:
                         economics_dict['cost_' + intervention + '_low'][time] = np.percentile(
-                            self.models['baseline'].uncertainty_results['baseline']['costs'][intervention]['raw_cost'][time],
+                            self.models[model].uncertainty_results['costs'][intervention]['raw_cost'][time],
                             q=0.5 * (100. - self.ci_percentage))
                         economics_dict['cost_' + intervention + '_high'][time] = np.percentile(
-                            self.models['baseline'].uncertainty_results['baseline']['costs'][intervention]['raw_cost'][time],
+                            self.models[model].uncertainty_results['costs'][intervention]['raw_cost'][time],
                             q=100 - 0.5 * (100. - self.ci_percentage))
 
             self.full_output_dict[model].update(economics_dict)
@@ -1070,6 +837,20 @@ class Project:
     #################################################
     # Methods for outputting to Office applications #
     #################################################
+
+    def master_outputs_runner(self):
+
+        """
+        Method to work through all the fundamental output methods, which then call all the specific output
+        methods for plotting and writing as required.
+
+        """
+
+        self.prepare_for_outputs()
+        self.write_spreadsheets()
+        self.write_documents()
+        self.run_plotting()
+        self.open_output_directory()
 
     def write_spreadsheets(self):
 
@@ -1330,11 +1111,12 @@ class Project:
     def run_plotting(self):
 
         # Find some general output colours
-        output_colours = make_default_line_styles(5, True)
+        output_colours = self.make_default_line_styles(5, True)
         for s, scenario in enumerate(self.scenarios):
             self.output_colours[scenario] = output_colours[s]
         for p, program in enumerate(self.models['baseline'].interventions_to_cost):
-            self.program_colours[program] = output_colours[p]
+            # +1 is to avoid starting from black, which doesn't look as nice for programs as for baseline scenario
+            self.program_colours[program] = output_colours[p + 1]
 
         # Plot main outputs
         self.plot_outputs_against_gtb(
@@ -1366,10 +1148,13 @@ class Project:
             else:
                 warnings.warn('Requested outputs by age, but model is not age stratified.')
 
+        # Plot proportions of population
+        if self.inputs.model_constants['output_age_fractions']:
+            self.plot_stratified_populations(age_or_comorbidity='age')
+
         # Plot comorbidity proportions
         if self.inputs.model_constants['output_comorbidity_fractions']:
-            self.plot_stratified_populations(age_or_comorbidity='comorbidity',
-                                             start_time='early_time')
+            self.plot_stratified_populations(age_or_comorbidity='comorbidity')
 
         # Make a flow-diagram
         if self.inputs.model_constants['output_flow_diagram']:
@@ -1393,7 +1178,7 @@ class Project:
         scenario_labels = []
         colour, indices, yaxis_label, title, patch_colour = \
             find_standard_output_styles(outputs, lightening_factor=0.3)
-        subplot_grid = find_subplot_numbers(len(outputs))
+        subplot_grid = self.find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
 
         # Loop through outputs
@@ -1504,7 +1289,7 @@ class Project:
             functions = self.classified_scaleups[classification]
 
             # Standard prelims
-            subplot_grid = find_subplot_numbers(len(functions))
+            subplot_grid = self.find_subplot_numbers(len(functions))
             fig = self.set_and_update_figure()
 
             # Find some x-values
@@ -1581,7 +1366,7 @@ class Project:
 
         # Standard prelims
         fig = self.set_and_update_figure()
-        line_styles = make_default_line_styles(len(functions), True)
+        line_styles = self.make_default_line_styles(len(functions), True)
 
         # Get some x values for plotting
         x_vals = numpy.linspace(self.inputs.model_constants['plot_start_time'],
@@ -1623,7 +1408,7 @@ class Project:
             fig = self.set_and_update_figure()
 
             # Subplots by program
-            subplot_grid = find_subplot_numbers(len(self.models[scenario].interventions_to_cost))
+            subplot_grid = self.find_subplot_numbers(len(self.models[scenario].interventions_to_cost))
             for p, program in enumerate(self.models[scenario].interventions_to_cost):
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
                 scenario_labels = []
@@ -1687,7 +1472,8 @@ class Project:
             # Standard prelims, but separate for each type of plot - individual and stacked
             fig_individual = self.set_and_update_figure()
             fig_stacked = self.set_and_update_figure()
-            subplot_grid = find_subplot_numbers(len(self.models[scenario].costs['vaccination']))
+            fig_relative = self.set_and_update_figure()
+            subplot_grid = self.find_subplot_numbers(len(self.models[scenario].costs['vaccination']))
 
             # Find the maximum of any type of cost across all of the programs
             max_cost = 0.
@@ -1704,6 +1490,11 @@ class Project:
             multiplier_individual, multiplier_individual_label = self.scale_axes(max_cost)
             multiplier_stacked, multiplier_stacked_label = self.scale_axes(max_stacked_cost)
 
+            # Find the index for the first time after the current time
+            reference_time_index \
+                = next(x[0] for x in enumerate(self.models[scenario].costs['cost_times'])
+                       if x[1] > self.inputs.model_constants['current_time'])
+
             # Just using vaccination to get one set of cost keys (should hopefully be consistently be available)
             for c, cost in enumerate(['raw_cost', 'inflated_cost', 'discounted_cost', 'discounted_inflated_cost']):
 
@@ -1711,17 +1502,22 @@ class Project:
                 if c == 0:
                     ax_individual = fig_individual.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
                     ax_stacked = fig_stacked.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
+                    ax_relative = fig_relative.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
                     ax_individual_first = copy.copy(ax_individual)
                     ax_stacked_first = copy.copy(ax_stacked)
+                    ax_reference_first = copy.copy(ax_relative)
                 else:
                     ax_individual = fig_individual.add_subplot(subplot_grid[0], subplot_grid[1], c + 1,
                                                                sharey=ax_individual_first)
                     ax_stacked = fig_stacked.add_subplot(subplot_grid[0], subplot_grid[1], c + 1,
-                                                               sharey=ax_stacked_first)
+                                                         sharey=ax_stacked_first)
+                    ax_relative = fig_relative.add_subplot(subplot_grid[0], subplot_grid[1], c + 1,
+                                                           sharey=ax_reference_first)
 
                 # Create empty list for legend
                 program_labels = []
                 cumulative_data = [0.] * len(self.models[scenario].costs['cost_times'])
+
                 for program in self.models[scenario].interventions_to_cost:
 
                     # Record the previous data for plotting as an independent object for the lower edge of the fill
@@ -1736,10 +1532,17 @@ class Project:
                     cumulative_data_to_plot = [d * multiplier_stacked for d in cumulative_data]
                     previous_data_to_plot = [d * multiplier_stacked for d in previous_data]
 
+                    reference_cost = self.models[scenario].costs[program][cost][reference_time_index]
+                    relative_data = [(d - reference_cost) * multiplier_individual
+                                     for d in self.models[scenario].costs[program][cost]]
+
                     # Plot lines
                     ax_individual.plot(self.models[scenario].costs['cost_times'],
                                        individual_data,
                                        color=self.program_colours[program][1])
+                    ax_relative.plot(self.models[scenario].costs['cost_times'],
+                                     relative_data,
+                                     color=self.program_colours[program][1])
 
                     # Plot stacked
                     ax_stacked.fill_between(self.models[scenario].costs['cost_times'],
@@ -1753,36 +1556,29 @@ class Project:
                         += [tool_kit.find_title_from_dictionary(program)]
 
                 # Axis title and y-axis label
-                ax_individual.set_title(tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(cost)),
-                                        fontsize=8)
-                ax_stacked.set_title(tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(cost)),
-                                     fontsize=8)
-                ax_individual.set_ylabel(multiplier_individual_label + ' $US',
-                                         fontsize=get_nice_font_size(subplot_grid))
-                ax_stacked.set_ylabel(multiplier_stacked_label + ' $US',
-                                      fontsize=get_nice_font_size(subplot_grid))
+                for ax in [ax_individual, ax_stacked, ax_relative]:
+                    ax.set_title(tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(cost)),
+                                 fontsize=8)
+                    ax.set_ylabel(multiplier_individual_label + ' $US',
+                                  fontsize=get_nice_font_size(subplot_grid))
 
-                # Tidy ticks
-                for axis_to_change in [ax_individual.xaxis, ax_individual.yaxis, ax_stacked.xaxis, ax_stacked.yaxis]:
-                    for tick in axis_to_change.get_major_ticks():
+                    # Tidy ticks
+                    for tick in ax.xaxis.get_major_ticks():
+                        tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+                    for tick in ax.yaxis.get_major_ticks():
                         tick.label.set_fontsize(get_nice_font_size(subplot_grid))
 
-                # Add the legend to last subplot panel
-                if c == len(self.models[scenario].costs['vaccination']) - 1:
-                    ax_individual.legend(ax_individual.lines,
-                                         program_labels,
-                                         fontsize=get_nice_font_size(subplot_grid),
-                                         frameon=False)
-                    ax_stacked.legend(ax_individual.lines,
-                                      program_labels,
-                                      fontsize=get_nice_font_size(subplot_grid),
-                                      frameon=False)
+                    # Add the legend to last subplot panel
+                    if c == len(self.models[scenario].costs['vaccination']) - 1:
+                        ax.legend(ax_individual.lines,
+                                  program_labels,
+                                  fontsize=get_nice_font_size(subplot_grid),
+                                  frameon=False)
 
                 # Set x-limits
-                ax_individual.set_xlim(self.inputs.model_constants['plot_start_time'],
-                                       self.inputs.model_constants['plot_end_time'])
-                ax_stacked.set_xlim(self.inputs.model_constants['plot_start_time'],
-                                    self.inputs.model_constants['plot_end_time'])
+                for ax in [ax_individual, ax_stacked, ax_relative]:
+                    ax.set_xlim(self.inputs.model_constants['plot_start_time'],
+                                           self.inputs.model_constants['plot_end_time'])
 
             # Finishing off with title and save
             fig_individual.suptitle('Individual program costs for ' + tool_kit.find_title_from_dictionary(scenario),
@@ -1791,6 +1587,9 @@ class Project:
             fig_stacked.suptitle('Stacked program costs for ' + tool_kit.find_title_from_dictionary(scenario),
                                  fontsize=self.suptitle_size)
             self.save_figure(fig_stacked, scenario + '_timecost_stacked')
+            fig_relative.suptitle('Relative program costs for ' + tool_kit.find_title_from_dictionary(scenario),
+                                 fontsize=self.suptitle_size)
+            self.save_figure(fig_relative, scenario + '_timecost_relative')
 
     def plot_populations(self, strain_or_organ='organ'):
 
@@ -1908,9 +1707,9 @@ class Project:
             output_colour = ['-k']
         else:
             # Otherwise cycling through colours
-            output_colour = [make_default_line_styles(scenario, False)]
+            output_colour = [self.make_default_line_styles(scenario, False)]
 
-        subplot_grid = find_subplot_numbers(len(self.models['baseline'].agegroups) * 2 + 1)
+        subplot_grid = self.find_subplot_numbers(len(self.models['baseline'].agegroups) * 2 + 1)
 
         # Not sure whether we have to specify a figure number
         fig = self.set_and_update_figure()
@@ -1982,15 +1781,11 @@ class Project:
         # Saving
         self.save_figure(fig, '_output_by_age')
 
-    def plot_stratified_populations(self, age_or_comorbidity='age', start_time='start_time'):
+    def plot_stratified_populations(self, age_or_comorbidity='age'):
 
         """
         Function to plot population by age group both as raw numbers and as proportions,
         both from the start of the model and using the input argument
-
-        Args:
-            model: The entire model object being interrogated
-            left_xlimit: Float value representing the time to plot from for the recent plot
 
         """
 
@@ -1999,31 +1794,29 @@ class Project:
         elif age_or_comorbidity == 'comorbidity':
             stratification = self.models['baseline'].comorbidities
         else:
-            raise NameError('Stratification not permitted')
+            stratification = None
 
-        if len(stratification) < 2:
+        if stratification is None:
+            warnings.warn('Plotting by stratification requested, but type of stratification requested unknown')
+        elif len(stratification) < 2:
             warnings.warn('No stratification to plot')
         else:
-            # Open figure
-            fig = pyplot.figure()
+            # Standard prelims
+            fig = self.set_and_update_figure()
+            colours = self.make_default_line_styles(len(stratification), return_all=True)
 
             # Extract data
             stratified_soln, denominator = tool_kit.sum_over_compartments(self.models['baseline'], stratification)
             stratified_fraction = tool_kit.get_fraction_soln(stratified_soln.keys(), stratified_soln, denominator)
 
-            colours = make_default_line_styles(len(stratification), return_all=True)
-
             # Loop over starting from the model start and the specified starting time
-            for i_time, plot_left_time in enumerate(['recent_time', start_time]):
+            for i_time, plot_left_time in enumerate(['plot_start_time', 'early_time']):
 
                 # Find starting times
-                right_xlimit_index, left_xlimit_index \
-                    = find_truncation_points(self.models['baseline'],
-                                             self.inputs.model_constants[plot_left_time])
                 title_time_text = tool_kit.find_title_from_dictionary(plot_left_time)
 
                 # Initialise some variables
-                times = self.models['baseline'].times[left_xlimit_index: right_xlimit_index]
+                times = self.models['baseline'].times
                 lower_plot_margin_count = numpy.zeros(len(times))
                 upper_plot_margin_count = numpy.zeros(len(times))
                 lower_plot_margin_fraction = numpy.zeros(len(times))
@@ -2033,8 +1826,8 @@ class Project:
                 for i, stratum in enumerate(stratification):
 
                     # Find numbers or fractions in that group
-                    stratum_count = stratified_soln[stratum][left_xlimit_index: right_xlimit_index]
-                    stratum_fraction = stratified_fraction[stratum][left_xlimit_index: right_xlimit_index]
+                    stratum_count = stratified_soln[stratum]
+                    stratum_fraction = stratified_fraction[stratum]
 
                     # Add group values to the upper plot range for area plot
                     for j in range(len(upper_plot_margin_count)):
@@ -2042,54 +1835,49 @@ class Project:
                         upper_plot_margin_fraction[j] += stratum_fraction[j]
 
                     # Plot
-                    ax = fig.add_subplot(2, 2, 1 + i_time)
-                    ax.fill_between(times, lower_plot_margin_count, upper_plot_margin_count, facecolors=colours[i][1])
+                    ax_upper = fig.add_subplot(2, 2, 1 + i_time)
+                    ax_upper.fill_between(times, lower_plot_margin_count, upper_plot_margin_count, facecolors=colours[i][1])
 
                     # Create proxy for legend
-                    ax.plot([], [], color=colours[i][1], linewidth=6)
+                    ax_upper.plot([], [], color=colours[i][1], linewidth=6)
                     if age_or_comorbidity == 'age':
                         legd_text += [tool_kit.turn_strat_into_label(stratum)]
                     elif age_or_comorbidity == 'comorbidity':
-                        print(tool_kit.find_title_from_dictionary(stratum))
                         legd_text += [tool_kit.find_title_from_dictionary(stratum)]
 
                     # Cosmetic changes at the end
                     if i == len(stratification) - 1:
-                        ax.set_ylim((0., max(upper_plot_margin_count) * 1.1))
-                        ax.set_xlim(int(self.models['baseline'].times[left_xlimit_index]),
-                                    self.models['baseline'].times[right_xlimit_index])
-                        ax.set_title('Total numbers' + title_time_text, fontsize=8)
-                        xticks = find_reasonable_year_ticks(int(self.models['baseline'].times[left_xlimit_index]),
-                                                            self.models['baseline'].times[right_xlimit_index])
-                        ax.set_xticks(xticks)
-                        for axis_to_change in [ax.xaxis, ax.yaxis]:
-                            for tick in axis_to_change.get_major_ticks():
-                                tick.label.set_fontsize(get_nice_font_size([2]))
+                        ax_upper.set_title('Total numbers from ' + title_time_text, fontsize=8)
                         if i_time == 1:
-                            ax.legend(reversed(ax.lines), reversed(legd_text), loc=2, frameon=False, fontsize=8)
+                            ax_upper.legend(reversed(ax_upper.lines),
+                                            reversed(legd_text), loc=2, frameon=False, fontsize=8)
 
                     # Plot population proportions
-                    ax = fig.add_subplot(2, 2, 3 + i_time)
-                    ax.fill_between(times, lower_plot_margin_fraction, upper_plot_margin_fraction,
-                                    facecolors=colours[i][1])
+                    ax_lower = fig.add_subplot(2, 2, 3 + i_time)
+                    ax_lower.fill_between(times, lower_plot_margin_fraction, upper_plot_margin_fraction,
+                                          facecolors=colours[i][1])
 
                     # Cosmetic changes at the end
                     if i == len(stratification) - 1:
-                        ax.set_ylim((0., 1.))
-                        ax.set_xlim(int(self.models['baseline'].times[left_xlimit_index]),
-                                    self.models['baseline'].times[right_xlimit_index])
-                        ax.set_title('Proportion of population' + title_time_text, fontsize=8)
-                        xticks = find_reasonable_year_ticks(int(self.models['baseline'].times[left_xlimit_index]),
-                                                            self.models['baseline'].times[right_xlimit_index])
-                        ax.set_xticks(xticks)
-                        for axis_to_change in [ax.xaxis, ax.yaxis]:
-                            for tick in axis_to_change.get_major_ticks():
-                                tick.label.set_fontsize(get_nice_font_size([2]))
+                        ax_lower.set_ylim((0., 1.))
+                        ax_lower.set_title('Proportion of population from ' + title_time_text, fontsize=8)
 
                     # Add group values to the lower plot range for next iteration
                     for j in range(len(lower_plot_margin_count)):
                         lower_plot_margin_count[j] += stratum_count[j]
                         lower_plot_margin_fraction[j] += stratum_fraction[j]
+
+                    for axis_to_change in [ax_upper.xaxis, ax_upper.yaxis]:
+                        for tick in axis_to_change.get_major_ticks():
+                            tick.label.set_fontsize(get_nice_font_size([2]))
+                    for axis_to_change in [ax_lower.xaxis, ax_lower.yaxis]:
+                        for tick in axis_to_change.get_major_ticks():
+                            tick.label.set_fontsize(get_nice_font_size([2]))
+
+                    ax_upper.set_xlim(self.inputs.model_constants[plot_left_time],
+                                      self.inputs.model_constants['plot_end_time'])
+                    ax_lower.set_xlim(self.inputs.model_constants[plot_left_time],
+                                      self.inputs.model_constants['plot_end_time'])
 
             # Finish up
             fig.suptitle('Population by ' + tool_kit.find_title_from_dictionary(age_or_comorbidity),
@@ -2185,3 +1973,11 @@ class Project:
             os.system('start ' + ' ' + self.out_dir_project)
         elif 'Darwin' in operating_system:
             os.system('open ' + ' ' + self.out_dir_project)
+
+    def rearrange_uncertainty(self):
+        """ re-organise the storage of uncertainty"""
+        for scenario in self.scenarios:
+            if scenario == 'baseline':
+                continue
+            self.models[scenario].uncertainty_results = self.models['baseline'].uncertainty_results[scenario]
+        self.models['baseline'].uncertainty_results = self.models['baseline'].uncertainty_results['baseline']

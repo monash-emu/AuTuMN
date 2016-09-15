@@ -215,7 +215,11 @@ def find_title_from_dictionary(name):
         'ipt_age5to15':
             'IPT in ages 5 to 15',
         'ipt_age0to5':
-            'IPT in under 5s'
+            'IPT in under 5s',
+        'plot_start_time':
+            'plotting start time',
+        'early_time':
+            'start of model run'
     }
 
     if name in dictionary_of_names:

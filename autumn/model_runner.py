@@ -1,4 +1,5 @@
 from numpy import isfinite
+import copy
 
 def is_positive_definite(v):
     return isfinite(v) and v > 0.0
@@ -8,7 +9,7 @@ class ModelRunner:
     def __init__(self,
                  model=None):
 
-        self.model = model
+        self.model = copy.deepcopy(model)
         self.mode = 'uncertainty'
         self.is_last_run_success = False
 

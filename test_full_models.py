@@ -54,6 +54,7 @@ for scenario in inputs.model_constants['scenarios_to_run']:
 #   ______ Run uncertainty ____
 if inputs.model_constants['output_uncertainty']:
     project.models['baseline'].run_uncertainty()
+    project.rearrange_uncertainty()
 
 # Work through outputs
 project.master_outputs_runner()

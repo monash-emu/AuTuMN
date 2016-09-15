@@ -896,6 +896,7 @@ class Inputs:
         """
         Calculate number of persons eligible for IPT per person commencing treatment
         and number of persons who receive effective IPT per person assessed for LTBI
+
         """
 
         self.model_constants['ipt_eligible_per_treatment_start'] = (self.model_constants['demo_household_size'] - 1.) \
@@ -1063,7 +1064,7 @@ class Inputs:
         """
 
         for agegroup in self.agegroups:
-            for param in ['_saturation', '_inflectioncost', '_unitcost', '_startingcost_duration']:
+            for param in ['_saturation', '_inflectioncost', '_unitcost', '_startingcost_duration', '_startupcost']:
                 if 'econ' + param + '_ipt' + agegroup not in self.model_constants:
                     self.model_constants['econ' + param + '_ipt' + agegroup] \
                         = self.model_constants['econ' + param + '_ipt']

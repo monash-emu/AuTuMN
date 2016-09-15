@@ -1397,9 +1397,6 @@ class Project:
             subplot_grid = self.find_subplot_numbers(len(self.models[scenario].interventions_to_cost))
             for p, program in enumerate(self.models[scenario].interventions_to_cost):
 
-                print(program)
-                print(tool_kit.find_title_from_dictionary(program))
-
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
                 scenario_labels = []
 

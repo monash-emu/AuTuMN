@@ -45,7 +45,7 @@ class BaseModel:
         self.eco_drives_epi = False
 
         self.intervention_startdates = {}
-
+        self.startups_apply = {}
 
     def make_times(self, start, end, delta):
 
@@ -486,6 +486,8 @@ class BaseModel:
 
         """
 
+        self.determine_whether_startups_apply()
+
         # if model is not age-structures, age-specific IPT does not make sense
         if len(self.agegroups) < 2:
             self.interventions_to_cost = [inter for inter in self.interventions_to_cost
@@ -514,12 +516,6 @@ class BaseModel:
                                    'discounted_cost': [],
                                    'discounted_inflated_cost': []}
 
-            # print('econ_startupcost_' + intervention)
-            # print(self.inputs.model_constants['econ_startupcost_' + intervention])
-
-            start_inter = self.intervention_startdates[self.scenario][intervention]  # date the intervention started
-            startingcost_duration = self.inputs.model_constants['econ_startingcost_duration_' + intervention]
-
             # for each step time. We may want to change this bit. No need for all time steps
             # Just add a third argument if you want to decrease the frequency of calculation
             for i in range(start_index, end_index + 1):
@@ -531,8 +527,9 @@ class BaseModel:
 
                 # Calculate starting_cost according to the time elapsed since the intervention started
                 inflection_cost = 0.
-                if start_inter is not None:  # no intervention start
-                    if 0 <= t < (start_inter + startingcost_duration):
+                if self.startups_apply[intervention]:
+                    if 0 <= t < (self.inputs.model_constants['scenario_start_time']
+                                     + self.inputs.model_constants['econ_startingcost_duration_' + intervention]):
                         inflection_cost = self.inputs.model_constants['econ_inflectioncost_' + intervention]
 
                 # Raw cost (which is the uninflated cost)
@@ -758,32 +755,22 @@ class BaseModel:
 
         self.graph.render(base)
 
-    def find_intervention_startdates(self):
+    def determine_whether_startups_apply(self):
 
         """
-        Find the dates when the different interventions start and populate self.intervention_startdates
+        Determine whether an intervention is applied and has start-up costs in this scenario
 
         """
 
-        for scenario in self.inputs.model_constants['scenarios_to_run']:
-            self.intervention_startdates[scenario] = {}
-            for intervention in self.interventions_to_cost:
-                param_key = 'program_prop_' + intervention
-                param_key2 = 'program_perc_' + intervention
-                param_dict = self.inputs.scaleup_data[scenario][param_key]
-                years_pos_coverage = [key for (key, value) in param_dict.items() if value > 0.] # years after start
-                if len(years_pos_coverage) > 0: # some coverage present at baseline
-                    self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
-                else:
-                    if scenario is not None and ('scenario_' + str(scenario)) in self.inputs.time_variants[param_key2].keys():
-                        # in case a coverage is defined through a scenario
-                        if self.inputs.time_variants[param_key2]['scenario_' + str(scenario)] > 0:
-                            self.intervention_startdates[scenario][intervention] = self.inputs.model_constants[
-                                'scenario_start_time']
-                        else:
-                            self.intervention_startdates[scenario][intervention] = None
-                    else:
-                        self.intervention_startdates[scenario][intervention] = None
+        # Start assuming each costed intervention has no start-up costs in this scenario
+        for program in self.interventions_to_cost:
+            self.startups_apply[program] = False
+
+            # If the program reaches values greater than zero and start-up costs are greater than zero, change to true
+            if sum(self.inputs.scaleup_data[self.scenario]['program_prop_' + program].values()) > 0. \
+                    and self.inputs.model_constants['econ_startupcost_' + program] > 0.:
+                self.startups_apply[program] = True
+
 
 def add_unique_tuple_to_list(a_list, a_tuple):
 

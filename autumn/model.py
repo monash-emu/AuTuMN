@@ -139,10 +139,7 @@ class ConsolidatedModel(BaseModel):
         self.loglikelihoods = []
         self.uncertainty_results = {} # to store uncertainty_results
         self.pickle_uncertainty = None     # options are 'write' (to save), 'read' (to load) and None
-
         self.data_to_fit = {}
-
-        self.find_intervention_startdates()
 
     def define_model_structure(self):
 

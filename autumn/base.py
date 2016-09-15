@@ -6,7 +6,8 @@ from tool_kit import indices
 import tool_kit
 from autumn.curve import make_two_step_curve
 from autumn.economics import get_cost_from_coverage, inflate_cost, discount_cost
-
+import scipy.stats
+import matplotlib.pyplot as pyplot
 
 class BaseModel:
 
@@ -532,12 +533,21 @@ class BaseModel:
                                               self.inputs.model_constants['econ_unitcost_' + intervention],
                                               self.var_array[i, self.var_labels.index('popsize_' + intervention)])
 
+                # Start-up costs
                 if self.startups_apply[intervention] \
                         and self.inputs.model_constants['scenario_start_time'] < t \
                         and t < self.inputs.model_constants['scenario_start_time'] \
                                 + self.inputs.model_constants['econ_startupduration_' + intervention]:
-                    cost += self.inputs.model_constants['econ_startupcost_' + intervention]  \
-                            / self.inputs.model_constants['econ_startupduration_' + intervention]
+                    cost += scipy.stats.beta.pdf((t - self.inputs.model_constants['scenario_start_time'])
+                                                 / self.inputs.model_constants['econ_startupduration_' + intervention],
+                                                 2.,
+                                                 5.) \
+                            / self.inputs.model_constants['econ_startupduration_' + intervention] \
+                            * self.inputs.model_constants['econ_startupcost_' + intervention]
+
+                    # Old code for constant function
+                    # cost += self.inputs.model_constants['econ_startupcost_' + intervention] \
+                    #         / self.inputs.model_constants['econ_startupduration_' + intervention]
 
                 # Store uninflated cost
                 costs[intervention]['raw_cost'].append(cost)
@@ -945,3 +955,5 @@ class SimpleModel(BaseModel):
                 self.vars['prevalence'] += (
                     self.compartments[label]
                      / self.vars['population'] * 1E5)
+
+

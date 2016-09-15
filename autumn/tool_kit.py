@@ -711,17 +711,49 @@ def report_age_specific_parameter_calculations(parameter_name, model_param_vals)
 
 
 def indices(a, func):
+
     """
     Returns the indices of a which verify a condition defined by a lambda function
         example: year = indices(self.model.times, lambda x: x >= 2003)[0]  returns the smallest index where x >=2003
 
     """
+
     return [i for (i, val) in enumerate(a) if func(val)]
+
+
+def find_first_list_element_above_value(list, value):
+
+    """
+    Simple method to return the index of the first element of a list that is greater than a specified value.
+    Args:
+        list: The list of floats.
+        value: The value that the element must be greater than.
+
+    """
+
+    index = next(x[0] for x in enumerate(list) if x[1] > value)
+
+    return index
+
+def find_first_list_element_at_least_value(list, value):
+
+    """
+    Simple method to return the index of the first element of a list that is greater than a specified value.
+    Args:
+        list: The list of floats.
+        value: The value that the element must be greater than.
+
+    """
+
+    index = next(x[0] for x in enumerate(list) if x[1] >= value)
+
+    return index
 
 
 def pickle_save(object, file):
     with open(file, 'wb') as output:
         pickle.dump(object, output)
+
 
 def pickle_load(file):
     with open(file, 'rb') as input:
@@ -746,6 +778,7 @@ if __name__ == "__main__":
                                                  data_param_vals,
                                                  parameter_name='test parameter')
     print(model_param)
+
 
 
 

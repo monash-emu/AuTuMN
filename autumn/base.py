@@ -3,6 +3,7 @@ import os
 import numpy
 from scipy.integrate import odeint
 from tool_kit import indices
+import tool_kit
 from autumn.curve import make_two_step_curve
 from autumn.economics import get_cost_from_coverage, inflate_cost, discount_cost
 
@@ -38,7 +39,8 @@ class BaseModel:
         self.costs = {}
         self.run_costing = True
         self.end_period_costing = 2035
-        self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf','ipt_age0to5', 'ipt_age5to15']
+        self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
+                                      'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
 
         self.eco_drives_epi = False
 
@@ -481,15 +483,19 @@ class BaseModel:
         """
         Run the economics diagnostics associated with a model run.
         Integration is supposed to have been completed by this point.
+
         """
 
         # if model is not age-structures, age-specific IPT does not make sense
         if len(self.agegroups) < 2:
-            self.interventions_to_cost = [inter for inter in self.interventions_to_cost if inter not in ['ipt_age0to5', 'ipt_age5to15']]
+            self.interventions_to_cost = [inter for inter in self.interventions_to_cost
+                                          if inter not in ['ipt_age0to5', 'ipt_age5to15']]
 
         # Find start and end indices for economics calculations
-        start_index = indices(self.times, lambda x: x >= self.inputs.model_constants['recent_time'])[0]
-        end_index = indices(self.times, lambda x: x >= self.inputs.model_constants['scenario_end_time'])[0]
+        start_index = tool_kit.find_first_list_element_at_least_value(self.times,
+                                                                      self.inputs.model_constants['recent_time'])
+        end_index = tool_kit.find_first_list_element_at_least_value(self.times,
+                                                                    self.inputs.model_constants['scenario_end_time'])
 
         # Find the current year and CPI
         year_current = self.inputs.model_constants['current_time']
@@ -525,7 +531,7 @@ class BaseModel:
 
                 # Calculate starting_cost according to the time elapsed since the intervention started
                 inflection_cost = 0.
-                if start_inter is not None: # no intervention start
+                if start_inter is not None:  # no intervention start
                     if 0 <= t < (start_inter + startingcost_duration):
                         inflection_cost = self.inputs.model_constants['econ_inflectioncost_' + name_intervention_eco_data]
 
@@ -562,13 +568,16 @@ class BaseModel:
         self.costs = costs
 
     def update_vars_from_cost(self):
+
         """
         update parameter values according to the funding allocated to each interventions. This process is done during
         integration
         Returns:
         Nothing
         """
+
         def get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.0):
+
             """
             Estimate the coverage associated with a spending in a programme
             Args:
@@ -582,7 +591,9 @@ class BaseModel:
 
             Returns:
                coverage (as a proportion, then lives in 0-1)
+
            """
+
             assert cost >= 0, 'cost must be positive or null'
             if cost <= c_inflection_cost:  # if cost is smaller thar c_inflection_cost, then the starting cost necessary to get coverage has not been reached
                 return 0

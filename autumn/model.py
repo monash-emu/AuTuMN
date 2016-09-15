@@ -505,9 +505,17 @@ class ConsolidatedModel(BaseModel):
         # Note that all organ types are assumed to have the same untreated active
         # sojourn time, so any organ status can be arbitrarily selected (here the first, or smear-positive)
 
-        detect_prop = self.get_constant_or_variable_param('program_prop_detect')
         alg_sens = self.get_constant_or_variable_param('program_prop_algorithm_sensitivity')
         life_expectancy = self.get_constant_or_variable_param('demo_life_expectancy')
+
+        # Calculate detection proportion, allowing for decentralisation coverage if being implemented
+        if self.vars['program_prop_decentralisation'] > 0.:
+            detect_prop = self.get_constant_or_variable_param('program_prop_detect') \
+                          + self.vars['program_prop_decentralisation'] \
+                            * (self.params['program_ideal_detection']
+                               - self.get_constant_or_variable_param('program_prop_detect'))
+        else:
+            detect_prop = self.get_constant_or_variable_param('program_prop_detect')
 
         # If no division by zero
         if alg_sens > 0.:
@@ -774,6 +782,13 @@ class ConsolidatedModel(BaseModel):
                 self.vars['popsize_xpertacf'] \
                     += self.compartments[compartment] \
                        * self.params['program_nns_xpertacf_smearneg']
+
+        # Decentralisation
+        self.vars['popsize_decentralisation'] = 0.
+        for compartment in self.compartments:
+            if 'susceptible_' not in compartment and 'latent_' not in compartment:
+                self.vars['popsize_decentralisation'] \
+                    += self.compartments[compartment]
 
     def calculate_ipt_rate(self):
 

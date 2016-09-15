@@ -1418,7 +1418,7 @@ class Project:
                               int(self.inputs.model_constants['report_end_time']),
                               int(self.inputs.model_constants['report_step_time']))
                 for t, time in enumerate(times):
-                    time_index = indices(self.models[scenario].times, lambda x: x >= time)[0]
+                    time_index = tool_kit.find_first_list_element_above_value(self.models[scenario].times, time)
                     y_values = []
                     x_values = []
                     for i in numpy.linspace(0, 1, 101):
@@ -1491,9 +1491,8 @@ class Project:
             multiplier_stacked, multiplier_stacked_label = self.scale_axes(max_stacked_cost)
 
             # Find the index for the first time after the current time
-            reference_time_index \
-                = next(x[0] for x in enumerate(self.models[scenario].costs['cost_times'])
-                       if x[1] > self.inputs.model_constants['current_time'])
+            reference_time_index = tool_kit.find_first_list_element_above_value(self.models[scenario].costs['cost_times'],
+                                                                                self.inputs.model_constants['current_time'])
 
             # Just using vaccination to get one set of cost keys (should hopefully be consistently be available)
             for c, cost in enumerate(['raw_cost', 'inflated_cost', 'discounted_cost', 'discounted_inflated_cost']):

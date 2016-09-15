@@ -5,6 +5,7 @@ import autumn.model
 import autumn.tool_kit
 import autumn.outputs as outputs
 import autumn.data_processing
+import os
 
 # Start timer
 start_realtime = datetime.datetime.now()
@@ -53,7 +54,20 @@ for scenario in inputs.model_constants['scenarios_to_run']:
 
 #   ______ Run uncertainty ____
 if inputs.model_constants['output_uncertainty']:
-    project.models['baseline'].run_uncertainty()
+    # Prepare directory for eventual pickling
+    out_dir = 'pickles'
+    if not os.path.isdir(out_dir):
+        os.makedirs(out_dir)
+    filename = os.path.join(out_dir, 'uncertainty.pkl')
+    if project.models['baseline'].pickle_uncertainty == 'read':    # we don't run uncertainty but load a saved simulation
+        project.models['baseline'].uncertainty_results = autumn.tool_kit.pickle_load(filename)
+        print "Uncertainty results loaded from previous simulation"
+    else:   # we need to run uncertainty
+        project.models['baseline'].run_uncertainty()
+    if project.models['baseline'].pickle_uncertainty == 'write':
+        autumn.tool_kit.pickle_save(project.models['baseline'].uncertainty_results, filename)
+        print "Uncertainty results written on the disk"
+
     project.rearrange_uncertainty()
 
 # Work through outputs

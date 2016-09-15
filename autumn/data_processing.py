@@ -1061,10 +1061,11 @@ class Inputs:
         """
         To avoid errors because no economic values are available for age-stratified IPT, use the unstratified values
         for each age group for which no value is provided.
+
         """
 
         for agegroup in self.agegroups:
-            for param in ['_saturation', '_inflectioncost', '_unitcost', '_startingcost_duration', '_startupcost']:
+            for param in ['_saturation', '_inflectioncost', '_unitcost', '_startupduration', '_startupcost']:
                 if 'econ' + param + '_ipt' + agegroup not in self.model_constants:
                     self.model_constants['econ' + param + '_ipt' + agegroup] \
                         = self.model_constants['econ' + param + '_ipt']

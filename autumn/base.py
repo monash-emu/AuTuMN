@@ -535,8 +535,9 @@ class BaseModel:
                 if self.startups_apply[intervention] \
                         and self.inputs.model_constants['scenario_start_time'] < t \
                         and t < self.inputs.model_constants['scenario_start_time'] \
-                                + self.inputs.model_constants['econ_startingcost_duration_' + intervention]:
-                    cost += self.inputs.model_constants['econ_startupcost_' + intervention]
+                                + self.inputs.model_constants['econ_startupduration_' + intervention]:
+                    cost += self.inputs.model_constants['econ_startupcost_' + intervention]  \
+                            / self.inputs.model_constants['econ_startupduration_' + intervention]
 
                 # Store uninflated cost
                 costs[intervention]['raw_cost'].append(cost)

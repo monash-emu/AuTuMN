@@ -760,11 +760,19 @@ class ConsolidatedModel(BaseModel):
         self.vars['popsize_smearacf'] = 0.
         for compartment in self.compartments:
             if 'active_' in compartment and '_smearpos' in compartment:
-                self.vars['popsize_smearacf'] += self.compartments[compartment]
+                self.vars['popsize_smearacf'] \
+                    += self.compartments[compartment] \
+                       * self.params['program_nns_smearacf']
         self.vars['popsize_xpertacf'] = 0.
         for compartment in self.compartments:
-            if 'active_' in compartment and ('_smearpos' in compartment or '_smearneg' in compartment):
-                self.vars['popsize_xpertacf'] += self.compartments[compartment]
+            if 'active_' in compartment and '_smearpos' in compartment:
+                self.vars['popsize_xpertacf'] \
+                    += self.compartments[compartment] \
+                       * self.params['program_nns_xpertacf_smearpos']
+            elif 'active_' in compartment and '_smearneg' in compartment:
+                self.vars['popsize_xpertacf'] \
+                    += self.compartments[compartment] \
+                       * self.params['program_nns_xpertacf_smearneg']
 
     def calculate_ipt_rate(self):
 

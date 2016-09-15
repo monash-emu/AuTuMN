@@ -1448,11 +1448,9 @@ class Project:
                     self.make_legend_to_single_axis(ax, scenario_handles, scenario_labels)
                 ax.set_title(tool_kit.find_title_from_dictionary('program_prop_' + program)[:-9],
                              fontsize=get_nice_font_size(subplot_grid)+2)
-                if program == self.models[scenario].interventions_to_cost[-1]:
-                    ax.set_ylabel('Coverage (proportion)', fontsize=get_nice_font_size(subplot_grid))
 
-                # If it's the last row, add an x-axis label
-                ax.set_xlabel(multiplier_label + ' $US', fontsize=get_nice_font_size(subplot_grid))
+                # X-axis label
+                ax.set_xlabel(multiplier_label + ' $US', fontsize=get_nice_font_size(subplot_grid), labelpad=1)
                 for axis_to_change in [ax.xaxis, ax.yaxis]:
                     for tick in axis_to_change.get_major_ticks():
                         tick.label.set_fontsize(get_nice_font_size(subplot_grid))
@@ -1496,7 +1494,7 @@ class Project:
 
             # Find the index for the first time after the current time
             reference_time_index = tool_kit.find_first_list_element_above_value(self.models[scenario].costs['cost_times'],
-                                                                                self.inputs.model_constants['current_time'])
+                                                                                self.inputs.model_constants['reference_time'])
 
             # Just using vaccination to get one set of cost keys (should hopefully be consistently be available)
             for c, cost in enumerate(['raw_cost', 'inflated_cost', 'discounted_cost', 'discounted_inflated_cost']):

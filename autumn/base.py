@@ -488,7 +488,7 @@ class BaseModel:
 
         self.determine_whether_startups_apply()
 
-        # if model is not age-structures, age-specific IPT does not make sense
+        # If model is not age-structured, age-specific IPT does not make sense
         if len(self.agegroups) < 2:
             self.interventions_to_cost = [inter for inter in self.interventions_to_cost
                                           if inter not in ['ipt_age0to5', 'ipt_age5to15']]
@@ -525,19 +525,18 @@ class BaseModel:
                 if intervention == self.interventions_to_cost[0]:
                     costs['cost_times'].append(t)
 
-                # Calculate starting_cost according to the time elapsed since the intervention started
-                inflection_cost = 0.
-                if self.startups_apply[intervention]:
-                    if 0 <= t < (self.inputs.model_constants['scenario_start_time']
-                                     + self.inputs.model_constants['econ_startingcost_duration_' + intervention]):
-                        inflection_cost = self.inputs.model_constants['econ_inflectioncost_' + intervention]
-
-                # Raw cost (which is the uninflated cost)
+                # Raw cost
                 cost = get_cost_from_coverage(self.coverage_over_time('program_prop_' + intervention)(t),
-                                              inflection_cost,
+                                              self.inputs.model_constants['econ_inflectioncost_' + intervention],
                                               self.inputs.model_constants['econ_saturation_' + intervention],
                                               self.inputs.model_constants['econ_unitcost_' + intervention],
                                               self.var_array[i, self.var_labels.index('popsize_' + intervention)])
+
+                if self.startups_apply[intervention] \
+                        and self.inputs.model_constants['scenario_start_time'] < t \
+                        and t < self.inputs.model_constants['scenario_start_time'] \
+                                + self.inputs.model_constants['econ_startingcost_duration_' + intervention]:
+                    cost += self.inputs.model_constants['econ_startupcost_' + intervention]
 
                 # Store uninflated cost
                 costs[intervention]['raw_cost'].append(cost)

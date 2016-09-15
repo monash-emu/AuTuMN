@@ -758,10 +758,11 @@ class ConsolidatedModel(BaseModel):
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
                 for strain in self.strains:
-                    self.vars['popsize_xpert'] += (self.vars['program_rate_detect'] \
+                    self.vars['popsize_xpert'] += (self.vars['program_rate_detect']
                                                    + self.vars['program_rate_missed']) \
-                                                  * self.compartments['active' \
-                                                                      + organ + strain + comorbidity + agegroup]
+                                                  * self.compartments['active'
+                                                                      + organ + strain + comorbidity + agegroup] \
+                                                  * (self.params['program_number_tests_per_tb_presentation'] + 1.)
 
         # ACF
         self.vars['popsize_smearacf'] = 0.

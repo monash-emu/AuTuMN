@@ -8,44 +8,9 @@ class ModelRunner:
 
     def __init__(self,
                  model=None):
-
         self.model = copy.deepcopy(model)
-        self.mode = 'uncertainty'
         self.is_last_run_success = False
-
-        self.param_ranges_unc = self.model.param_ranges_unc
-        self.outputs_unc = self.model.outputs_unc
-
-        for key, value in self.model.inputs.model_constants.items():
-            if type(value) == float:
-                self.model.set_parameter(key, value)
-
-        if self.mode == 'calibration':
-            for props in self.model.param_props_list:
-                self.model.set_parameter(props['key'], props['init'])
-
-        self.data_to_fit = {}
-        self.get_data_to_fit() # collect the data regarding incidence , mortality, etc. from the model object
-        self.best_fit = {}
         self.nb_accepted = 0
-
-    def get_data_to_fit(self):
-        if self.mode == 'calibration':
-            var_to_iterate = self.model.calib_outputs # for calibration
-        elif self.mode == 'uncertainty':
-            var_to_iterate = self.model.outputs_unc
-
-        for output in var_to_iterate:
-            if (output['key']) == 'incidence':
-                self.data_to_fit['incidence'] = self.model.inputs.original_data['tb']['e_inc_100k']
-                self.data_to_fit['incidence_low'] = self.model.inputs.original_data['tb']['e_inc_100k_lo']
-                self.data_to_fit['incidence_high'] = self.model.inputs.original_data['tb']['e_inc_100k_hi']
-            elif (output['key']) == 'mortality':
-                self.data_to_fit['mortality'] = self.model.inputs.original_data['tb']['e_mort_exc_tbhiv_100k']
-                self.data_to_fit['mortality_low'] = self.model.inputs.original_data['tb']['e_mort_exc_tbhiv_100k_lo']
-                self.data_to_fit['mortality_high'] = self.model.inputs.original_data['tb']['e_mort_exc_tbhiv_100k_hi']
-            else:
-                print "Warning: Calibrated output %s is not directly available from the data" % output['key']
 
     def set_model_with_params(self, param_dict):
         n_set = 0
@@ -83,25 +48,3 @@ class ModelRunner:
         except:
             print "Warning: parameters=%s failed with model" % params
             self.is_last_run_success = False
-
-    # define the characteristics of the normal distribution for model outputs (incidence, mortality)
-    def get_normal_char(self):
-        normal_char = {}  # store the characteristics of the normal distributions
-        for output_dict in self.model.outputs_unc:
-            normal_char[output_dict['key']] = {}
-            if output_dict['key'] == 'mortality':
-                sd = output_dict['posterior_width'] / (2.0 * 1.96)
-                for year in self.data_to_fit[output_dict['key']].keys():
-                    mu = self.data_to_fit[output_dict['key']][year]
-                    normal_char[output_dict['key']][year] = [mu, sd]
-
-            elif output_dict['key'] == 'incidence':
-                for year in self.data_to_fit[output_dict['key']].keys():
-                    low = self.data_to_fit['incidence_low'][year]
-                    high = self.data_to_fit['incidence_high'][year]
-                    sd = output_dict['width_multiplier']*(high - low) / (2.0 * 1.96)
-                    mu = 0.5 * (high + low)
-                    normal_char[output_dict['key']][year] = [mu, sd]
-
-        return normal_char
-

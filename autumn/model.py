@@ -119,7 +119,9 @@ class ConsolidatedModel(BaseModel):
         self.scaleup_fns = self.inputs.scaleup_fns[self.scenario]
 
         # Here-below is just provisional stuff. Should be read from spreadsheets
-        self.n_runs = 5  # number of accepted runs per scenario
+        self.mode = 'uncertainty'
+
+        self.n_runs = 2  # number of accepted runs per scenario
         self.burn_in = 0  # number of accepted runs that we burn
         self.adaptive_search = True  # if True, next candidate generated according to previous position
         self.search_width = 0.2  # Width of the interval in which next parameter value is likely (95%) to be drawn. Expressed as a proportion of the width defined in bounds
@@ -135,6 +137,8 @@ class ConsolidatedModel(BaseModel):
         self.accepted_parameters = {}
         self.loglikelihoods = []
         self.uncertainty_results = {} # to store uncertainty_results
+
+        self.data_to_fit = {}
 
         self.find_intervention_startdates()
 
@@ -1315,6 +1319,47 @@ class ConsolidatedModel(BaseModel):
                                                       self.inputs.model_constants[param]['upper']],
                                            'distribution': 'uniform'}]
 
+    def get_data_to_fit(self):
+        if self.mode == 'calibration':
+            var_to_iterate = self.calib_outputs # for calibration
+        elif self.mode == 'uncertainty':
+            var_to_iterate = self.outputs_unc
+
+        for output in var_to_iterate:
+            if (output['key']) == 'incidence':
+                self.data_to_fit['incidence'] = self.inputs.original_data['tb']['e_inc_100k']
+                self.data_to_fit['incidence_low'] = self.inputs.original_data['tb']['e_inc_100k_lo']
+                self.data_to_fit['incidence_high'] = self.inputs.original_data['tb']['e_inc_100k_hi']
+            elif (output['key']) == 'mortality':
+                self.data_to_fit['mortality'] = self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k']
+                self.data_to_fit['mortality_low'] = self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k_lo']
+                self.data_to_fit['mortality_high'] = self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k_hi']
+            else:
+                print "Warning: Calibrated output %s is not directly available from the data" % output['key']
+
+    def get_normal_char(self):
+        """
+        define the characteristics of the normal distribution for model outputs (incidence, mortality)
+        """
+        normal_char = {}  # store the characteristics of the normal distributions
+        for output_dict in self.outputs_unc:
+            normal_char[output_dict['key']] = {}
+            if output_dict['key'] == 'mortality':
+                sd = output_dict['posterior_width'] / (2.0 * 1.96)
+                for year in self.data_to_fit[output_dict['key']].keys():
+                    mu = self.data_to_fit[output_dict['key']][year]
+                    normal_char[output_dict['key']][year] = [mu, sd]
+
+            elif output_dict['key'] == 'incidence':
+                for year in self.data_to_fit[output_dict['key']].keys():
+                    low = self.data_to_fit['incidence_low'][year]
+                    high = self.data_to_fit['incidence_high'][year]
+                    sd = output_dict['width_multiplier'] * (high - low) / (2.0 * 1.96)
+                    mu = 0.5 * (high + low)
+                    normal_char[output_dict['key']][year] = [mu, sd]
+
+        return normal_char
+
     def run_uncertainty(self):
 
         """
@@ -1335,6 +1380,7 @@ class ConsolidatedModel(BaseModel):
         """
 
         self.find_uncertainty_params()
+        self.get_data_to_fit()
 
         model_runner = autumn.model_runner.ModelRunner(self)
         print self.inputs.country
@@ -1362,7 +1408,7 @@ class ConsolidatedModel(BaseModel):
 
         par_candidates = generate_candidates(nb_candidates=nb_candidates, param_ranges_unc=self.param_ranges_unc)
 
-        normal_char = model_runner.get_normal_char()
+        normal_char = self.get_normal_char()
 
         # start simulation
 

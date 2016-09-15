@@ -1402,7 +1402,7 @@ class Project:
                               int(self.inputs.model_constants['report_end_time']),
                               int(self.inputs.model_constants['report_step_time']))
                 for t, time in enumerate(times):
-                    time_index = tool_kit.find_first_list_element_above_value(self.models[scenario].times, time)
+                    time_index = tool_kit.find_first_list_element_at_least_value(self.models[scenario].times, time)
                     y_values = []
                     x_values = []
                     for i in numpy.linspace(0, 1, 101):
@@ -1419,8 +1419,18 @@ class Project:
                                                                             scenario].var_labels.index('popsize_' + program)])
                             x_values += [cost]
                             y_values += [i]
+
+                    # Scale data
+                    multiplier, multiplier_label = self.scale_axes(max(x_values))
+                    x_values_to_plot = [x * multiplier for x in x_values]
+
+                    # Find darkness
                     darkness = .9 - (float(t) / float(len(times))) * .9
-                    ax.plot(x_values, y_values, color=(darkness, darkness, darkness))
+
+                    # Plot
+                    ax.plot(x_values_to_plot, y_values, color=(darkness, darkness, darkness))
+
+                    # Find label for legend
                     scenario_labels += [str(int(time))]
 
                 # Legend to last panel
@@ -1431,11 +1441,10 @@ class Project:
                              fontsize=get_nice_font_size(subplot_grid)+2)
                 if program == self.models[scenario].interventions_to_cost[-1]:
                     ax.set_ylabel('Coverage (proportion)', fontsize=get_nice_font_size(subplot_grid))
-                    ax.set_xlabel('Cost', fontsize=get_nice_font_size(subplot_grid))
+                    ax.set_xlabel('Cost ' + multiplier_label + '$US', fontsize=get_nice_font_size(subplot_grid))
                 for axis_to_change in [ax.xaxis, ax.yaxis]:
                     for tick in axis_to_change.get_major_ticks():
                         tick.label.set_fontsize(get_nice_font_size(subplot_grid))
-                        tick.label.set_rotation(45)
 
             # Finish off with title and save file for scenario
             fig.suptitle('Cost-coverage curves for ' + tool_kit.replace_underscore_with_space(scenario),
@@ -1946,6 +1955,7 @@ class Project:
                        bbox_extra_artists=(lgd,), bbox_inches='tight')
 
     def open_output_directory(self):
+
         """
         Opens the directory into which all the outputs have been placed
 
@@ -1958,7 +1968,9 @@ class Project:
             os.system('open ' + ' ' + self.out_dir_project)
 
     def rearrange_uncertainty(self):
+
         """ re-organise the storage of uncertainty"""
+
         for scenario in self.scenarios:
             if scenario == 'baseline':
                 continue

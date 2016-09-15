@@ -1398,9 +1398,10 @@ class Project:
                 scenario_labels = []
 
                 # Make times that each curve is produced for from control panel inputs
-                times = range(int(self.inputs.model_constants['report_start_time']),
-                              int(self.inputs.model_constants['report_end_time']),
-                              int(self.inputs.model_constants['report_step_time']))
+                times = range(int(self.inputs.model_constants['cost_curve_start_time']),
+                              int(self.inputs.model_constants['cost_curve_end_time']),
+                              int(self.inputs.model_constants['cost_curve_step_time']))
+
                 for t, time in enumerate(times):
                     time_index = tool_kit.find_first_list_element_at_least_value(self.models[scenario].times, time)
                     y_values = []

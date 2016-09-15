@@ -763,8 +763,8 @@ class Project:
                     self.full_output_dict[scenario][label + '_low'] = {}
                     self.full_output_dict[scenario][label + '_high'] = {}
                     for time in self.models[scenario].times:
-                        self.full_output_dict[scenario][label + '_low'][time] = np.percentile(self.models['baseline'].uncertainty_results['baseline'][label][time], q=0.5*(100. - self.ci_percentage))
-                        self.full_output_dict[scenario][label + '_high'][time] = np.percentile(self.models['baseline'].uncertainty_results['baseline'][label][time], q=100 - 0.5*(100. - self.ci_percentage))
+                        self.full_output_dict[scenario][label + '_low'][time] = np.percentile(self.models[scenario].uncertainty_results[label][time], q=0.5*(100. - self.ci_percentage))
+                        self.full_output_dict[scenario][label + '_high'][time] = np.percentile(self.models[scenario].uncertainty_results[label][time], q=100 - 0.5*(100. - self.ci_percentage))
 
     def add_full_economics_dict(self):
         """
@@ -788,10 +788,10 @@ class Project:
 
                     for time in times:
                         economics_dict['cost_' + intervention + '_low'][time] = np.percentile(
-                            self.models['baseline'].uncertainty_results['baseline']['costs'][intervention]['raw_cost'][time],
+                            self.models[model].uncertainty_results['costs'][intervention]['raw_cost'][time],
                             q=0.5 * (100. - self.ci_percentage))
                         economics_dict['cost_' + intervention + '_high'][time] = np.percentile(
-                            self.models['baseline'].uncertainty_results['baseline']['costs'][intervention]['raw_cost'][time],
+                            self.models[model].uncertainty_results['costs'][intervention]['raw_cost'][time],
                             q=100 - 0.5 * (100. - self.ci_percentage))
 
             self.full_output_dict[model].update(economics_dict)
@@ -1973,3 +1973,11 @@ class Project:
             os.system('start ' + ' ' + self.out_dir_project)
         elif 'Darwin' in operating_system:
             os.system('open ' + ' ' + self.out_dir_project)
+
+    def rearrange_uncertainty(self):
+        """ re-organise the storage of uncertainty"""
+        for scenario in self.scenarios:
+            if scenario == 'baseline':
+                continue
+            self.models[scenario].uncertainty_results = self.models['baseline'].uncertainty_results[scenario]
+        self.models['baseline'].uncertainty_results = self.models['baseline'].uncertainty_results['baseline']

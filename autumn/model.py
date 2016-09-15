@@ -128,7 +128,7 @@ class ConsolidatedModel(BaseModel):
             {
                 'key': 'incidence',
                 'posterior_width': None,
-                'width_multiplier': 3.0  # for incidence for ex. Width of Normal posterior relative to CI width in data
+                'width_multiplier': 2.0  # for incidence for ex. Width of Normal posterior relative to CI width in data
             }
         ]
 

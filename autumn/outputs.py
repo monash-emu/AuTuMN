@@ -1264,6 +1264,7 @@ class Project:
 
         """
         Plot each scale-up function as a separate panel against the data it is fitted to.
+
         """
 
         # Different figure for each type of function
@@ -1442,7 +1443,10 @@ class Project:
                              fontsize=get_nice_font_size(subplot_grid)+2)
                 if program == self.models[scenario].interventions_to_cost[-1]:
                     ax.set_ylabel('Coverage (proportion)', fontsize=get_nice_font_size(subplot_grid))
-                    ax.set_xlabel('Cost ' + multiplier_label + '$US', fontsize=get_nice_font_size(subplot_grid))
+
+                # If it's the last row, add an x-axis label
+                if p > (subplot_grid[0] - 1) * subplot_grid[1] - 1:
+                    ax.set_xlabel('Cost ' + multiplier_label + ' $US', fontsize=get_nice_font_size(subplot_grid))
                 for axis_to_change in [ax.xaxis, ax.yaxis]:
                     for tick in axis_to_change.get_major_ticks():
                         tick.label.set_fontsize(get_nice_font_size(subplot_grid))

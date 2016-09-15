@@ -219,7 +219,9 @@ def find_title_from_dictionary(name):
         'plot_start_time':
             'plotting start time',
         'early_time':
-            'start of model run'
+            'start of model run',
+        'program_prop_decentralisation':
+            'Decentralisation'
     }
 
     if name in dictionary_of_names:

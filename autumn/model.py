@@ -17,6 +17,7 @@ import numpy
 from scipy.stats import norm, beta
 import copy
 import datetime
+import tool_kit
 
 import warnings
 
@@ -1499,7 +1500,7 @@ class ConsolidatedModel(BaseModel):
                 for output_dict in self.outputs_unc:
                     dic = normal_char[output_dict['key']]
                     for year in dic.keys():
-                        year_indice = autumn.tool_kit.indices(self.times, lambda x: x >= year)[0]
+                        year_indice = tool_kit.find_first_list_element_at_least_value(self.times, year)
                         y = self.get_var_soln(output_dict['key'])[year_indice]
                         mu, sd = dic[year][0], dic[year][1]
                         posterior_log_likelihood += norm.logpdf(y, mu, sd)

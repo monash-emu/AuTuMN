@@ -167,27 +167,11 @@ def set_axes_props(
     humanise_y_ticks(ax)
 
 
-def indices(a, func):
-    return [i for (i, val) in enumerate(a) if func(val)]
-
-
 def get_nice_font_size(subplot_grid):
 
     # Simple function to return a reasonable font size
     # as appropriate to the number of rows of subplots in the figure
     return 2. + 8. / subplot_grid[0]
-
-
-def find_truncation_points(model, left_xlimit):
-
-    # Not going to argue that the following code is the most elegant approach
-    right_xlimit_index = len(model.times) - 1
-    left_xlimit_index = 0
-    for i in range(len(model.times)):
-        if model.times[i] > left_xlimit:
-            left_xlimit_index = i
-            break
-    return right_xlimit_index, left_xlimit_index
 
 
 def find_reasonable_year_ticks(start_time, end_time):

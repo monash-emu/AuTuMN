@@ -61,9 +61,9 @@ class ModelRunner:
 
 class ModelRunnerNew:
 
-    def __init__(self, inputs):
+    def __init__(self):
 
-        self.inputs = inputs
+        self.inputs = data_processing.Inputs(True)
         self.inputs.read_and_load_data()
         self.project = outputs.Project(self.inputs.country, self.inputs)
         self.model_dict = {}

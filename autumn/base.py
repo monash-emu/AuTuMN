@@ -2,12 +2,10 @@ import os
 
 import numpy
 from scipy.integrate import odeint
-from tool_kit import indices
 import tool_kit
-from autumn.curve import make_two_step_curve
 from autumn.economics import get_cost_from_coverage, inflate_cost, discount_cost
 import scipy.stats
-import matplotlib.pyplot as pyplot
+
 
 class BaseModel:
 

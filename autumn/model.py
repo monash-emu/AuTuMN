@@ -126,7 +126,6 @@ class ConsolidatedModel(BaseModel):
         self.burn_in = 0  # number of accepted runs that we burn
         self.adaptive_search = True  # if True, next candidate generated according to previous position
         self.search_width = 0.2  # Width of the interval in which next parameter value is likely (95%) to be drawn. Expressed as a proportion of the width defined in bounds
-        self.param_ranges_unc = []
         self.outputs_unc = [
             {
                 'key': 'incidence',
@@ -1318,7 +1317,7 @@ class ConsolidatedModel(BaseModel):
         # pars is the former position for the different parameters
         new_pars = []
         i = 0
-        for par_dict in self.param_ranges_unc:
+        for par_dict in self.inputs.param_ranges_unc:
             bounds = par_dict['bounds']
             sd = self.search_width * (bounds[1] - bounds[0]) / (2.0 * 1.96)
             random = -100.
@@ -1327,21 +1326,6 @@ class ConsolidatedModel(BaseModel):
             new_pars.append(random)
             i += 1
         return (new_pars)
-
-    def find_uncertainty_params(self):
-
-        """
-        Populate a dictionary of uncertainty parameters from the inputs dictionary in a format that matches
-        Romain's code for uncertainty.
-
-        """
-
-        for param in self.inputs.model_constants:
-            if '_uncertainty' in param and type(self.inputs.model_constants[param]) == dict:
-                self.param_ranges_unc += [{'key': param[:-12],
-                                           'bounds': [self.inputs.model_constants[param]['lower'],
-                                                      self.inputs.model_constants[param]['upper']],
-                                           'distribution': 'uniform'}]
 
     def get_data_to_fit(self):
         if self.mode == 'calibration':
@@ -1406,7 +1390,6 @@ class ConsolidatedModel(BaseModel):
             master storage unit that will keep track of all accepted parameter sets and associated model objects (with integration run)
         """
 
-        self.find_uncertainty_params()
         self.get_data_to_fit()
 
         model_runner = autumn.model_runner.ModelRunner(self)
@@ -1433,13 +1416,13 @@ class ConsolidatedModel(BaseModel):
         else:
             nb_candidates = 1
 
-        par_candidates = generate_candidates(nb_candidates=nb_candidates, param_ranges_unc=self.param_ranges_unc)
+        par_candidates = generate_candidates(nb_candidates=nb_candidates, param_ranges_unc=self.inputs.param_ranges_unc)
 
         normal_char = self.get_normal_char()
 
         # start simulation
 
-        for par_dict in self.param_ranges_unc:
+        for par_dict in self.inputs.param_ranges_unc:
             self.accepted_parameters[par_dict['key']] = []
         n_accepted = 0
         i_candidates = 0
@@ -1467,12 +1450,12 @@ class ConsolidatedModel(BaseModel):
             start_timer_run = datetime.datetime.now()
             new_params = []
             if not self.adaptive_search:
-                for par_dict in self.param_ranges_unc:
+                for par_dict in self.inputs.param_ranges_unc:
                     new_params.append(par_candidates[par_dict['key']][j])
             else:
                 if i_candidates == 0:
                     new_params = []
-                    for par_dict in self.param_ranges_unc:
+                    for par_dict in self.inputs.param_ranges_unc:
                         new_params.append(par_candidates[par_dict['key']][j])
                         params.append(par_candidates[par_dict['key']][j])
                 else:
@@ -1485,7 +1468,7 @@ class ConsolidatedModel(BaseModel):
             else:
                 prior_log_likelihood = 0.0
                 k = 0
-                for par_dict in self.param_ranges_unc:
+                for par_dict in self.inputs.param_ranges_unc:
                     par_val = new_params[k]
                     # calculate the density of par_val
                     bound_low, bound_high = par_dict['bounds'][0], par_dict['bounds'][1]
@@ -1517,7 +1500,7 @@ class ConsolidatedModel(BaseModel):
                 if accepted == 1:
                     n_accepted += 1
                     k = 0
-                    for par_dict in self.param_ranges_unc:
+                    for par_dict in self.inputs.param_ranges_unc:
                         self.accepted_parameters[par_dict['key']].append(new_params[k])
                         k += 1
                     prev_log_likelihood = log_likelihood
@@ -1527,7 +1510,7 @@ class ConsolidatedModel(BaseModel):
                         # model storage
                         params_dict = {}
                         k = 0
-                        for par_dict in self.param_ranges_unc:
+                        for par_dict in self.inputs.param_ranges_unc:
                             params_dict[par_dict['key']] = new_params[k]
                             k += 1
                         self.loglikelihoods.append(log_likelihood)
@@ -1584,6 +1567,6 @@ class ConsolidatedModel(BaseModel):
             j += 1
             if j >= len(par_candidates.keys()) and not self.adaptive_search:  # we need to generate more candidates
                 par_candidates = generate_candidates(nb_candidates=nb_candidates,
-                                                     param_ranges_unc=self.param_ranges_unc)
+                                                     param_ranges_unc=self.inputs.param_ranges_unc)
                 j = 0
             print (str(n_accepted) + ' accepted / ' + str(i_candidates) + ' candidates @@@@@@@@ Running time: ' + str(datetime.datetime.now() - start_timer_run))

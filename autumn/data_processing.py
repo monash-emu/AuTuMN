@@ -159,6 +159,7 @@ class Inputs:
         self.scaleup_data = {}
         self.scaleup_fns = {}
         self.intervention_applied = {}
+        self.param_ranges_unc = []
 
     def read_and_load_data(self):
 
@@ -306,6 +307,9 @@ class Inputs:
             self.set_fixed_infectious_proportion()
 
         self.add_missing_economics_for_ipt()
+
+
+        self.find_uncertainty_params()
 
         # Perform checks
         self.checks()
@@ -1077,6 +1081,21 @@ class Inputs:
                         = self.model_constants['econ' + param + '_ipt']
                     warnings.warn(param + ' value not available for ' + agegroup + ' age group, so unstratified ' +
                                   'value will be used for this age group.')
+
+    def find_uncertainty_params(self):
+
+        """
+        Populate a dictionary of uncertainty parameters from the inputs dictionary in a format that matches
+        Romain's code for uncertainty.
+
+        """
+
+        for param in self.model_constants:
+            if '_uncertainty' in param and type(self.model_constants[param]) == dict:
+                self.param_ranges_unc += [{'key': param[:-12],
+                                           'bounds': [self.model_constants[param]['lower'],
+                                                      self.model_constants[param]['upper']],
+                                           'distribution': 'uniform'}]
 
     def checks(self):
 

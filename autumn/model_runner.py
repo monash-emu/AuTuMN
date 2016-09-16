@@ -31,7 +31,7 @@ class ModelRunner:
     def convert_param_list_to_dict(self, params):
 
         param_dict = {}
-        for val, props in zip(params, self.model.param_ranges_unc):
+        for val, props in zip(params, self.model.inputs.param_ranges_unc):
             param_dict[props['key']] = val
         return param_dict
 
@@ -42,7 +42,7 @@ class ModelRunner:
                 print "Warning: parameter%d=%f is invalid for model" % (i, p)
                 self.is_last_run_success = False
                 return
-            bounds = self.model.param_ranges_unc[i]["bounds"]
+            bounds = self.model.inputs.param_ranges_unc[i]["bounds"]
             if (p < bounds[0]) or (p > bounds[1]):
                 #print "Warning: parameter%d=%f is outside of the allowed bounds" % (i, p)
                 self.is_last_run_success = False
@@ -142,7 +142,7 @@ class ModelRunnerNew:
     def convert_param_list_to_dict(self, params):
 
         param_dict = {}
-        for val, props in zip(params, self.model.param_ranges_unc):
+        for val, props in zip(params, self.model.inputs.param_ranges_unc):
             param_dict[props['key']] = val
         return param_dict
 
@@ -153,7 +153,7 @@ class ModelRunnerNew:
                 print "Warning: parameter%d=%f is invalid for model" % (i, p)
                 self.is_last_run_success = False
                 return
-            bounds = self.model.param_ranges_unc[i]["bounds"]
+            bounds = self.model.inputs.param_ranges_unc[i]["bounds"]
             if (p < bounds[0]) or (p > bounds[1]):
                 # print "Warning: parameter%d=%f is outside of the allowed bounds" % (i, p)
                 self.is_last_run_success = False

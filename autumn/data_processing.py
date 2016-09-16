@@ -158,6 +158,7 @@ class Inputs:
         self.is_organvariation = False
         self.scaleup_data = {}
         self.scaleup_fns = {}
+        self.intervention_applied = {}
 
     def read_and_load_data(self):
 
@@ -971,6 +972,9 @@ class Inputs:
         # For each scenario to be run
         for scenario in self.model_constants['scenarios_to_run']:
 
+            # Dictionary of whether interventions are applied or not
+            self.intervention_applied[scenario] = {}
+
             # Need dictionary to track whether each parameter is time variant
             whether_time_variant = {}
 
@@ -996,9 +1000,11 @@ class Inputs:
                         smoothness = self.model_constants['default_smoothness']
 
                     # If the parameter is being modified for the scenario being run
+                    self.intervention_applied[scenario][param] = False
                     if 'scenario' in self.scaleup_data[scenario][param]:
                         scenario_for_function = [self.model_constants['scenario_full_time'],
                                     self.scaleup_data[scenario][param].pop('scenario')]
+                        self.intervention_applied[scenario][param] = True
                     else:
                         scenario_for_function = None
 

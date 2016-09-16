@@ -1333,6 +1333,7 @@ class ConsolidatedModel(BaseModel):
         """
         Populate a dictionary of uncertainty parameters from the inputs dictionary in a format that matches
         Romain's code for uncertainty.
+
         """
 
         for param in self.inputs.model_constants:
@@ -1361,9 +1362,12 @@ class ConsolidatedModel(BaseModel):
                 print "Warning: Calibrated output %s is not directly available from the data" % output['key']
 
     def get_normal_char(self):
+
         """
-        define the characteristics of the normal distribution for model outputs (incidence, mortality)
+        Define the characteristics of the normal distribution for model outputs (incidence, mortality)
+
         """
+
         normal_char = {}  # store the characteristics of the normal distributions
         for output_dict in self.outputs_unc:
             normal_char[output_dict['key']] = {}

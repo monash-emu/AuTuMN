@@ -54,19 +54,26 @@ for scenario in inputs.model_constants['scenarios_to_run']:
 
 #   ______ Run uncertainty ____
 if inputs.model_constants['output_uncertainty']:
+
     # Prepare directory for eventual pickling
     out_dir = 'pickles'
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
     filename = os.path.join(out_dir, 'uncertainty.pkl')
-    if project.models['baseline'].pickle_uncertainty == 'read':    # we don't run uncertainty but load a saved simulation
+
+    # Don't run uncertainty but load a saved simulation
+    if project.models['baseline'].pickle_uncertainty == 'read':
         project.models['baseline'].uncertainty_results = autumn.tool_kit.pickle_load(filename)
         print "Uncertainty results loaded from previous simulation"
-    else:   # we need to run uncertainty
+
+    # Run uncertainty
+    else:
         project.models['baseline'].run_uncertainty()
+
+    # Write uncertainty if requested
     if project.models['baseline'].pickle_uncertainty == 'write':
         autumn.tool_kit.pickle_save(project.models['baseline'].uncertainty_results, filename)
-        print "Uncertainty results written on the disk"
+        print "Uncertainty results written on the disc"
 
     project.rearrange_uncertainty()
 

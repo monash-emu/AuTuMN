@@ -48,6 +48,7 @@ class BaseModel:
         self.intervention_startdates = {}
         self.startups_apply = {}
 
+
     def make_times(self, start, end, delta):
 
         "Return steps between start and end every delta"
@@ -779,7 +780,7 @@ class BaseModel:
             self.startups_apply[program] = False
 
             # If the program reaches values greater than zero and start-up costs are greater than zero, change to true
-            if sum(self.inputs.scaleup_data[self.scenario]['program_prop_' + program].values()) > 0. \
+            if self.inputs.intervention_applied[self.scenario]['program_prop_' + program] \
                     and self.inputs.model_constants['econ_startupcost_' + program] > 0.:
                 self.startups_apply[program] = True
 

@@ -45,9 +45,7 @@ class BaseModel:
 
         self.eco_drives_epi = False
 
-        self.intervention_startdates = {}
         self.startups_apply = {}
-
 
     def make_times(self, start, end, delta):
 

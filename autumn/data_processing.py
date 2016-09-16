@@ -306,10 +306,12 @@ class Inputs:
         if len(self.organ_status) < 2:
             self.set_fixed_infectious_proportion()
 
+        # Add parameters for IPT, if and where not specified for the age range being implemented
         self.add_missing_economics_for_ipt()
 
-
-        self.find_uncertainty_params()
+        # Specify the parameters to be used for uncertainty
+        if self.model_constants['output_uncertainty']:
+            self.find_uncertainty_distributions()
 
         # Perform checks
         self.checks()
@@ -1082,7 +1084,7 @@ class Inputs:
                     warnings.warn(param + ' value not available for ' + agegroup + ' age group, so unstratified ' +
                                   'value will be used for this age group.')
 
-    def find_uncertainty_params(self):
+    def find_uncertainty_distributions(self):
 
         """
         Populate a dictionary of uncertainty parameters from the inputs dictionary in a format that matches

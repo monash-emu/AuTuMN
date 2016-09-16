@@ -122,7 +122,7 @@ class ConsolidatedModel(BaseModel):
         # Here-below is just provisional stuff. Should be read from spreadsheets
         self.mode = 'uncertainty'
 
-        self.n_runs = 5  # number of accepted runs per scenario
+        self.n_runs = 2  # number of accepted runs per scenario
         self.burn_in = 0  # number of accepted runs that we burn
         self.adaptive_search = True  # if True, next candidate generated according to previous position
         self.search_width = 0.2  # Width of the interval in which next parameter value is likely (95%) to be drawn. Expressed as a proportion of the width defined in bounds
@@ -137,8 +137,8 @@ class ConsolidatedModel(BaseModel):
 
         self.accepted_parameters = {}
         self.loglikelihoods = []
-        self.uncertainty_results = {} # to store uncertainty_results
-        self.pickle_uncertainty = None     # options are 'write' (to save), 'read' (to load) and None
+        self.uncertainty_results = {}  # to store uncertainty_results
+        self.pickle_uncertainty = None  # options are 'write' (to save), 'read' (to load) and None
         self.data_to_fit = {}
 
     def define_model_structure(self):

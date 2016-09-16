@@ -744,12 +744,12 @@ class Project:
                 self.full_output_dict[scenario][label] = dict(zip(self.full_output_lists[scenario]['times'],
                                                                   self.full_output_lists[scenario][label]))
                 # Add uncertainty data to full dictionary
-                if self.models['baseline'].inputs.model_constants['output_uncertainty']:
-                    self.full_output_dict[scenario][label + '_low'] = {}
-                    self.full_output_dict[scenario][label + '_high'] = {}
-                    for time in self.models[scenario].times:
-                        self.full_output_dict[scenario][label + '_low'][time] = np.percentile(self.models[scenario].uncertainty_results[label][time], q=0.5*(100. - self.ci_percentage))
-                        self.full_output_dict[scenario][label + '_high'][time] = np.percentile(self.models[scenario].uncertainty_results[label][time], q=100 - 0.5*(100. - self.ci_percentage))
+                # if self.models['baseline'].inputs.model_constants['output_uncertainty']:
+                #     self.full_output_dict[scenario][label + '_low'] = {}
+                #     self.full_output_dict[scenario][label + '_high'] = {}
+                #     for time in self.models[scenario].times:
+                #         self.full_output_dict[scenario][label + '_low'][time] = np.percentile(self.models[scenario].uncertainty_results[label][time], q=0.5*(100. - self.ci_percentage))
+                #         self.full_output_dict[scenario][label + '_high'][time] = np.percentile(self.models[scenario].uncertainty_results[label][time], q=100 - 0.5*(100. - self.ci_percentage))
 
     def add_full_economics_dict(self):
         """
@@ -766,18 +766,18 @@ class Project:
                         = self.models[model].costs[intervention]['raw_cost'][t]
 
                 # Add uncertainty data to full dictionary
-                if self.models['baseline'].inputs.model_constants['output_uncertainty']:
-                    times = self.models[model].costs['cost_times']
-                    economics_dict['cost_' + intervention + '_low'] = {}
-                    economics_dict['cost_' + intervention + '_high'] = {}
-
-                    for time in times:
-                        economics_dict['cost_' + intervention + '_low'][time] = np.percentile(
-                            self.models[model].uncertainty_results['costs'][intervention]['raw_cost'][time],
-                            q=0.5 * (100. - self.ci_percentage))
-                        economics_dict['cost_' + intervention + '_high'][time] = np.percentile(
-                            self.models[model].uncertainty_results['costs'][intervention]['raw_cost'][time],
-                            q=100 - 0.5 * (100. - self.ci_percentage))
+                # if self.models['baseline'].inputs.model_constants['output_uncertainty']:
+                #     times = self.models[model].costs['cost_times']
+                #     economics_dict['cost_' + intervention + '_low'] = {}
+                #     economics_dict['cost_' + intervention + '_high'] = {}
+                #
+                #     for time in times:
+                #         economics_dict['cost_' + intervention + '_low'][time] = np.percentile(
+                #             self.models[model].uncertainty_results['costs'][intervention]['raw_cost'][time],
+                #             q=0.5 * (100. - self.ci_percentage))
+                #         economics_dict['cost_' + intervention + '_high'][time] = np.percentile(
+                #             self.models[model].uncertainty_results['costs'][intervention]['raw_cost'][time],
+                #             q=100 - 0.5 * (100. - self.ci_percentage))
 
             self.full_output_dict[model].update(economics_dict)
 

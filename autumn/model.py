@@ -120,8 +120,6 @@ class ConsolidatedModel(BaseModel):
         self.scaleup_fns = self.inputs.scaleup_fns[self.scenario]
 
         # Here-below is just provisional stuff. Should be read from spreadsheets
-        self.mode = 'uncertainty'
-
         self.n_runs = 2  # number of accepted runs per scenario
         self.burn_in = 0  # number of accepted runs that we burn
         self.adaptive_search = True  # if True, next candidate generated according to previous position
@@ -133,7 +131,6 @@ class ConsolidatedModel(BaseModel):
                 'width_multiplier': 2.0  # for incidence for ex. Width of Normal posterior relative to CI width in data
             }
         ]
-
         self.accepted_parameters = {}
         self.loglikelihoods = []
         self.uncertainty_results = {}  # to store uncertainty_results
@@ -1327,24 +1324,6 @@ class ConsolidatedModel(BaseModel):
             i += 1
         return (new_pars)
 
-    def get_data_to_fit(self):
-        if self.mode == 'calibration':
-            var_to_iterate = self.calib_outputs # for calibration
-        elif self.mode == 'uncertainty':
-            var_to_iterate = self.outputs_unc
-
-        for output in var_to_iterate:
-            if (output['key']) == 'incidence':
-                self.data_to_fit['incidence'] = self.inputs.original_data['tb']['e_inc_100k']
-                self.data_to_fit['incidence_low'] = self.inputs.original_data['tb']['e_inc_100k_lo']
-                self.data_to_fit['incidence_high'] = self.inputs.original_data['tb']['e_inc_100k_hi']
-            elif (output['key']) == 'mortality':
-                self.data_to_fit['mortality'] = self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k']
-                self.data_to_fit['mortality_low'] = self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k_lo']
-                self.data_to_fit['mortality_high'] = self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k_hi']
-            else:
-                print "Warning: Calibrated output %s is not directly available from the data" % output['key']
-
     def get_normal_char(self):
 
         """
@@ -1357,19 +1336,44 @@ class ConsolidatedModel(BaseModel):
             normal_char[output_dict['key']] = {}
             if output_dict['key'] == 'mortality':
                 sd = output_dict['posterior_width'] / (2.0 * 1.96)
-                for year in self.data_to_fit[output_dict['key']].keys():
-                    mu = self.data_to_fit[output_dict['key']][year]
+                for year in self.inputs.data_to_fit[output_dict['key']].keys():
+                    mu = self.inputs.data_to_fit[output_dict['key']][year]
                     normal_char[output_dict['key']][year] = [mu, sd]
 
             elif output_dict['key'] == 'incidence':
-                for year in self.data_to_fit[output_dict['key']].keys():
-                    low = self.data_to_fit['incidence_low'][year]
-                    high = self.data_to_fit['incidence_high'][year]
+                for year in self.inputs.data_to_fit[output_dict['key']].keys():
+                    low = self.inputs.data_to_fit['incidence_low'][year]
+                    high = self.inputs.data_to_fit['incidence_high'][year]
                     sd = output_dict['width_multiplier'] * (high - low) / (2.0 * 1.96)
                     mu = 0.5 * (high + low)
                     normal_char[output_dict['key']][year] = [mu, sd]
 
         return normal_char
+
+    def generate_candidates(self, n_candidates, param_ranges_unc):
+
+        """
+        Method for generating candidate parameters
+
+        """
+
+        # Dictionary for storing candidates
+        param_candidates = {}
+        for param_dict in param_ranges_unc:
+
+            # Find bounds of parameter
+            bound_low, bound_high = param_dict['bounds'][0], param_dict['bounds'][1]
+
+            # Draw from distribution
+            if param_dict['distribution'] == 'beta':
+                x = numpy.random.beta(2., 2., n_candidates)
+                x = bound_low + x * (bound_high - bound_low)
+            elif param_dict['distribution'] == 'uniform':
+                x = numpy.random.uniform(bound_low, bound_high, n_candidates)
+
+        # Return values
+            param_candidates[param_dict['key']] = x
+        return param_candidates
 
     def run_uncertainty(self):
 
@@ -1388,40 +1392,18 @@ class ConsolidatedModel(BaseModel):
                           attribute 'bounds' of 'param_ranges_unc'. i.e. search_width = 1.0 -> bounds is the 95% SI
         Returns:
             master storage unit that will keep track of all accepted parameter sets and associated model objects (with integration run)
+
         """
 
-        self.get_data_to_fit()
-
-        model_runner = autumn.model_runner.ModelRunner(self)
-        print self.inputs.country
-        print "Uncertainty analysis"
-
-        # Parameters candidates generation
-        def generate_candidates(nb_candidates, param_ranges_unc):
-            par_candidates = {}  # will store the candidates value
-            for par_dic in param_ranges_unc:
-                bound_low, bound_high = par_dic['bounds'][0], par_dic['bounds'][1]
-                if par_dic['distribution'] == 'beta':
-                    x = numpy.random.beta(2.0, 2.0, nb_candidates)
-                    x = bound_low + x * (bound_high - bound_low)
-                elif par_dic['distribution'] == 'uniform':
-                    x = numpy.random.uniform(bound_low, bound_high, nb_candidates)
-
-                par_candidates[par_dic['key']] = x
-
-            return par_candidates
-
-        if not self.adaptive_search:
-            nb_candidates = self.n_runs * 10
-        else:
+        if self.adaptive_search:
             nb_candidates = 1
+        else:
+            nb_candidates = self.n_runs * 10
 
-        par_candidates = generate_candidates(nb_candidates=nb_candidates, param_ranges_unc=self.inputs.param_ranges_unc)
-
+        par_candidates = self.generate_candidates(n_candidates=nb_candidates, param_ranges_unc=self.inputs.param_ranges_unc)
         normal_char = self.get_normal_char()
 
         # start simulation
-
         for par_dict in self.inputs.param_ranges_unc:
             self.accepted_parameters[par_dict['key']] = []
         n_accepted = 0
@@ -1430,7 +1412,7 @@ class ConsolidatedModel(BaseModel):
         prev_log_likelihood = -1e10
         params = []
         labels = ['incidence', 'mortality', 'prevalence', 'notifications']
-        cost_types =['raw_cost', 'discounted_cost', 'inflated_cost', 'discounted_inflated_cost']
+        cost_types = ['raw_cost', 'discounted_cost', 'inflated_cost', 'discounted_inflated_cost']
 
         # prepare storage of uncertainty
         for scenario in self.inputs.model_constants['scenarios_to_run']:
@@ -1445,6 +1427,8 @@ class ConsolidatedModel(BaseModel):
                 self.uncertainty_results[scenario_name]['costs'][intervention] = {}
                 for cost_type in cost_types:
                     self.uncertainty_results[scenario_name]['costs'][intervention][cost_type] = {}
+
+        model_runner = autumn.model_runner.ModelRunner(self)
 
         while n_accepted < self.n_runs + self.burn_in:
             start_timer_run = datetime.datetime.now()
@@ -1463,110 +1447,107 @@ class ConsolidatedModel(BaseModel):
 
             model_runner.run_with_params(new_params)
 
-            if not model_runner.is_last_run_success:
-                accepted = 0
+            prior_log_likelihood = 0.0
+            k = 0
+            for par_dict in self.inputs.param_ranges_unc:
+                par_val = new_params[k]
+                # calculate the density of par_val
+                bound_low, bound_high = par_dict['bounds'][0], par_dict['bounds'][1]
+                if par_dict['distribution'] == 'beta':
+                    # x = numpy.random.beta(2.0, 2.0, nb_candidates)
+                    x = (par_val - bound_low) / (bound_high - bound_low)
+                    prior_log_likelihood += beta.logpdf(x, 2.0, 2.0)
+                elif par_dict['distribution'] == 'uniform':
+                    prior_log_likelihood += numpy.log(1.0 / (bound_high - bound_low))
+
+                k += 1
+
+            posterior_log_likelihood = 0.0
+            for output_dict in self.outputs_unc:
+                dic = normal_char[output_dict['key']]
+                for year in dic.keys():
+                    year_indice = tool_kit.find_first_list_element_at_least_value(self.times, year)
+                    y = self.get_var_soln(output_dict['key'])[year_indice]
+                    mu, sd = dic[year][0], dic[year][1]
+                    posterior_log_likelihood += norm.logpdf(y, mu, sd)
+
+            log_likelihood = prior_log_likelihood + posterior_log_likelihood
+
+            if log_likelihood >= prev_log_likelihood:
+                accepted = 1
             else:
-                prior_log_likelihood = 0.0
+                accepted = numpy.random.binomial(n=1, p=numpy.exp(log_likelihood - prev_log_likelihood))
+
+            if accepted == 1:
+                n_accepted += 1
                 k = 0
                 for par_dict in self.inputs.param_ranges_unc:
-                    par_val = new_params[k]
-                    # calculate the density of par_val
-                    bound_low, bound_high = par_dict['bounds'][0], par_dict['bounds'][1]
-                    if par_dict['distribution'] == 'beta':
-                        # x = numpy.random.beta(2.0, 2.0, nb_candidates)
-                        x = (par_val - bound_low) / (bound_high - bound_low)
-                        prior_log_likelihood += beta.logpdf(x, 2.0, 2.0)
-                    elif par_dict['distribution'] == 'uniform':
-                        prior_log_likelihood += numpy.log(1.0 / (bound_high - bound_low))
-
+                    self.accepted_parameters[par_dict['key']].append(new_params[k])
                     k += 1
+                prev_log_likelihood = log_likelihood
+                params = new_params
 
-                posterior_log_likelihood = 0.0
-                for output_dict in self.outputs_unc:
-                    dic = normal_char[output_dict['key']]
-                    for year in dic.keys():
-                        year_indice = tool_kit.find_first_list_element_at_least_value(self.times, year)
-                        y = self.get_var_soln(output_dict['key'])[year_indice]
-                        mu, sd = dic[year][0], dic[year][1]
-                        posterior_log_likelihood += norm.logpdf(y, mu, sd)
-
-                log_likelihood = prior_log_likelihood + posterior_log_likelihood
-
-                if log_likelihood >= prev_log_likelihood:
-                    accepted = 1
-                else:
-                    accepted = numpy.random.binomial(n=1, p=numpy.exp(log_likelihood - prev_log_likelihood))
-
-                if accepted == 1:
-                    n_accepted += 1
+                if n_accepted > self.burn_in:
+                    # model storage
+                    params_dict = {}
                     k = 0
                     for par_dict in self.inputs.param_ranges_unc:
-                        self.accepted_parameters[par_dict['key']].append(new_params[k])
+                        params_dict[par_dict['key']] = new_params[k]
                         k += 1
-                    prev_log_likelihood = log_likelihood
-                    params = new_params
+                    self.loglikelihoods.append(log_likelihood)
 
-                    if n_accepted > self.burn_in:
-                        # model storage
-                        params_dict = {}
-                        k = 0
-                        for par_dict in self.inputs.param_ranges_unc:
-                            params_dict[par_dict['key']] = new_params[k]
-                            k += 1
-                        self.loglikelihoods.append(log_likelihood)
+                    # run other scenarios than baseline and store uncertainty
+                    for scenario in self.inputs.model_constants['scenarios_to_run']:
+                        scenario_name = autumn.tool_kit.find_scenario_string_from_number(scenario)
+                        if scenario is not None:
+                            scenario_model = autumn.model.ConsolidatedModel(scenario, model_runner.model.inputs)
+                            scenario_start_time_index = \
+                                model_runner.model.find_time_index(
+                                    model_runner.model.inputs.model_constants['recent_time'])
+                            scenario_model.start_time = \
+                                model_runner.model.times[scenario_start_time_index]
+                            scenario_model.loaded_compartments = \
+                                model_runner.model.load_state(scenario_start_time_index)
+                            scenario_model.integrate()
 
-                        # run other scenarios than baseline and store uncertainty
-                        for scenario in self.inputs.model_constants['scenarios_to_run']:
-                            scenario_name = autumn.tool_kit.find_scenario_string_from_number(scenario)
-                            if scenario is not None:
-                                scenario_model = autumn.model.ConsolidatedModel(scenario, model_runner.model.inputs)
-                                scenario_start_time_index = \
-                                    model_runner.model.find_time_index(
-                                        model_runner.model.inputs.model_constants['recent_time'])
-                                scenario_model.start_time = \
-                                    model_runner.model.times[scenario_start_time_index]
-                                scenario_model.loaded_compartments = \
-                                    model_runner.model.load_state(scenario_start_time_index)
-                                scenario_model.integrate()
+                            times = scenario_model.times
+                            costs = scenario_model.costs
+                        else:
+                            times = model_runner.model.times
+                            costs = model_runner.model.costs
 
-                                times = scenario_model.times
-                                costs = scenario_model.costs
-                            else:
-                                times = model_runner.model.times
-                                costs = model_runner.model.costs
-
-                            if n_accepted == 1: # initialise storage by year
-                                for label in labels:
-                                    for time in times:
-                                        self.uncertainty_results[scenario_name][label][time] = []
-                                for intervention in self.interventions_to_cost:
-                                    for cost_type in cost_types:
-                                        for time in costs['cost_times']:
-                                            self.uncertainty_results[scenario_name]['costs'][intervention][cost_type][time] = []
-
+                        if n_accepted == 1:  # initialise storage by year
                             for label in labels:
-                                if scenario is None:
-                                    solutions = model_runner.model.get_var_soln(label)
-                                else:
-                                    solutions = scenario_model.get_var_soln(label)
-
-                                j = 0
                                 for time in times:
-                                    self.uncertainty_results[scenario_name][label][time].append(solutions[j])
-                                    j += 1
-
-                            # store costs
+                                    self.uncertainty_results[scenario_name][label][time] = []
                             for intervention in self.interventions_to_cost:
                                 for cost_type in cost_types:
-                                    j = 0
                                     for time in costs['cost_times']:
-                                        self.uncertainty_results[scenario_name]['costs'][intervention][cost_type][time].append(costs[intervention][cost_type][j])
-                                        j += 1
+                                        self.uncertainty_results[scenario_name]['costs'][intervention][cost_type][time] = []
+
+                        for label in labels:
+                            if scenario is None:
+                                solutions = model_runner.model.get_var_soln(label)
+                            else:
+                                solutions = scenario_model.get_var_soln(label)
+
+                            j = 0
+                            for time in times:
+                                self.uncertainty_results[scenario_name][label][time].append(solutions[j])
+                                j += 1
+
+                        # store costs
+                        for intervention in self.interventions_to_cost:
+                            for cost_type in cost_types:
+                                j = 0
+                                for time in costs['cost_times']:
+                                    self.uncertainty_results[scenario_name]['costs'][intervention][cost_type][time].append(costs[intervention][cost_type][j])
+                                    j += 1
 
             i_candidates += 1
             j += 1
             if j >= len(par_candidates.keys()) and not self.adaptive_search:  # we need to generate more candidates
-                par_candidates = generate_candidates(nb_candidates=nb_candidates,
-                                                     param_ranges_unc=self.inputs.param_ranges_unc)
+                par_candidates = self.generate_candidates(n_candidates=nb_candidates,
+                                                          param_ranges_unc=self.inputs.param_ranges_unc)
                 j = 0
             print (str(n_accepted) + ' accepted / ' + str(i_candidates) + ' candidates @@@@@@@@ Running time: ' + str(datetime.datetime.now() - start_timer_run))

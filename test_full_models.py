@@ -10,7 +10,7 @@ start_realtime = datetime.datetime.now()
 model_runner = autumn.model_runner.ModelRunnerNew()
 model_runner.run_scenarios()
 model_runner.project.master_outputs_runner()
-model_runner.run_uncertainty()
+model_runner.master_uncertainty()
 
 print('Time elapsed in running script is ' + str(datetime.datetime.now() - start_realtime))
 

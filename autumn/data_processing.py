@@ -160,6 +160,12 @@ class Inputs:
         self.scaleup_fns = {}
         self.intervention_applied = {}
         self.param_ranges_unc = []
+        self.mode = 'uncertainty'
+        self.data_to_fit = {}
+        # For incidence for ex. Width of Normal posterior relative to CI width in data
+        self.outputs_unc = [{'key': 'incidence',
+                             'posterior_width': None,
+                             'width_multiplier': 2.0}]
 
     def read_and_load_data(self):
 
@@ -312,6 +318,7 @@ class Inputs:
         # Specify the parameters to be used for uncertainty
         if self.model_constants['output_uncertainty']:
             self.find_uncertainty_distributions()
+            self.get_data_to_fit()
 
         # Perform checks
         self.checks()
@@ -1098,6 +1105,32 @@ class Inputs:
                                            'bounds': [self.model_constants[param]['lower'],
                                                       self.model_constants[param]['upper']],
                                            'distribution': 'uniform'}]
+
+    def get_data_to_fit(self):
+
+        """
+        Extract the data to be used for model fitting. (Choices currently hard-coded above.)
+
+        """
+
+        # Decide whether calibration or uncertainty analysis is being run
+        if self.mode == 'calibration':
+            var_to_iterate = self.calib_outputs
+        elif self.mode == 'uncertainty':
+            var_to_iterate = self.outputs_unc
+
+        # Work through vars to be used and populate into the data fitting dictionary
+        for output in var_to_iterate:
+            if output['key'] == 'incidence':
+                self.data_to_fit['incidence'] = self.original_data['tb']['e_inc_100k']
+                self.data_to_fit['incidence_low'] = self.original_data['tb']['e_inc_100k_lo']
+                self.data_to_fit['incidence_high'] = self.original_data['tb']['e_inc_100k_hi']
+            elif output['key'] == 'mortality':
+                self.data_to_fit['mortality'] = self.original_data['tb']['e_mort_exc_tbhiv_100k']
+                self.data_to_fit['mortality_low'] = self.original_data['tb']['e_mort_exc_tbhiv_100k_lo']
+                self.data_to_fit['mortality_high'] = self.original_data['tb']['e_mort_exc_tbhiv_100k_hi']
+            else:
+                print 'Warning: Calibrated output %s is not directly available from the data' % output['key']
 
     def checks(self):
 

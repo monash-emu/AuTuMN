@@ -7,7 +7,7 @@ import autumn.model_runner
 start_realtime = datetime.datetime.now()
 
 # Run everything
-model_runner = autumn.model_runner.ModelRunnerNew()
+model_runner = autumn.model_runner.ModelRunner()
 model_runner.run_scenarios()
 model_runner.project.master_outputs_runner()
 model_runner.master_uncertainty()

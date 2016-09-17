@@ -1,5 +1,4 @@
 from numpy import isfinite
-import copy
 import tool_kit
 import model
 import os
@@ -40,7 +39,7 @@ def generate_candidates(n_candidates, param_ranges_unc):
     return param_candidates
 
 
-class ModelRunnerNew:
+class ModelRunner:
 
     def __init__(self):
 
@@ -163,27 +162,6 @@ class ModelRunnerNew:
             #     print "Uncertainty results written on the disc"
             #
             # self.project.rearrange_uncertainty()
-
-    def prepare_uncertainty_storage(self):
-
-        """
-        Prepare structures to store uncertainty outcomes.
-
-        """
-
-        # Epidemiological outputs
-        for scenario in self.inputs.model_constants['scenarios_to_run']:
-            scenario_name = tool_kit.find_scenario_string_from_number(scenario)
-            self.uncertainty_results[scenario_name] = {}
-            for label in self.labels:
-                self.uncertainty_results[scenario_name][label] = {}
-
-            # Economic outputs
-            self.uncertainty_results[scenario_name]['costs'] = {}
-            for intervention in self.interventions_to_cost:
-                self.uncertainty_results[scenario_name]['costs'][intervention] = {}
-                for cost_type in self.cost_types:
-                    self.uncertainty_results[scenario_name]['costs'][intervention][cost_type] = {}
 
     def run_uncertainty(self):
 

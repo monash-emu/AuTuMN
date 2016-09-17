@@ -118,7 +118,7 @@ class ModelRunnerNew:
         # Width of the interval in which next parameter value is likely (95%) to be drawn.
         # (Expressed as a proportion of the width defined in bounds.)
         self.search_width = 0.2
-        self.scenario_results = {}
+        self.results = {}
 
     def run_scenarios(self):
 
@@ -152,9 +152,12 @@ class ModelRunnerNew:
             # Integrate and add result to outputs object
             self.model_dict[scenario_name].integrate()
             self.project.models[scenario_name] = self.model_dict[scenario_name]
-            self.duplicate_scenario_results(scenario_name)
 
-    def duplicate_scenario_results(self, scenario):
+            # Store
+            self.results['scenarios'] = {}
+            self.store_scenario_results(scenario_name)
+
+    def store_scenario_results(self, scenario, scenarios_or_uncertainty='scenarios'):
 
         """
         This method is designed to store all the results that will be needed for later analysis in separate
@@ -164,21 +167,21 @@ class ModelRunnerNew:
 
         """
 
-        self.scenario_results[scenario] = {}
+        self.results[scenarios_or_uncertainty][scenario] = {}
 
-        self.scenario_results[scenario]['compartment_soln'] \
+        self.results[scenarios_or_uncertainty][scenario]['compartment_soln'] \
             = self.model_dict[scenario].compartment_soln
-        self.scenario_results[scenario]['costs'] \
+        self.results[scenarios_or_uncertainty][scenario]['costs'] \
             = self.model_dict[scenario].costs
-        self.scenario_results[scenario]['flow_array'] \
+        self.results[scenarios_or_uncertainty][scenario]['flow_array'] \
             = self.model_dict[scenario].flow_array
-        self.scenario_results[scenario]['fraction_array'] \
+        self.results[scenarios_or_uncertainty][scenario]['fraction_array'] \
             = self.model_dict[scenario].fraction_array
-        self.scenario_results[scenario]['fraction_soln'] \
+        self.results[scenarios_or_uncertainty][scenario]['fraction_soln'] \
             = self.model_dict[scenario].fraction_soln
-        self.scenario_results[scenario]['soln_array'] \
+        self.results[scenarios_or_uncertainty][scenario]['soln_array'] \
             = self.model_dict[scenario].soln_array
-        self.scenario_results[scenario]['var_array'] \
+        self.results[scenarios_or_uncertainty][scenario]['var_array'] \
             = self.model_dict[scenario].var_array
 
     def master_uncertainty(self):
@@ -255,6 +258,15 @@ class ModelRunnerNew:
         j = 0
         prev_log_likelihood = -1e10
         params = []
+        self.results['uncertainty'] = {}
+        self.results['uncertainty']['baseline'] = {}
+        self.results['uncertainty']['baseline']['compartment_soln'] = []
+        self.results['uncertainty']['baseline']['costs'] = []
+        self.results['uncertainty']['baseline']['flow_array'] = []
+        self.results['uncertainty']['baseline']['fraction_array'] = []
+        self.results['uncertainty']['baseline']['fraction_soln'] = []
+        self.results['uncertainty']['baseline']['soln_array'] = []
+        self.results['uncertainty']['baseline']['var_array'] = []
 
         # Until a sufficient number of parameters are accepted
         while n_accepted < self.n_runs + self.burn_in:
@@ -262,7 +274,7 @@ class ModelRunnerNew:
             # Set timer
             start_timer_run = datetime.datetime.now()
 
-            #
+            # Not exactly sure what this does
             new_params = []
             if self.adaptive_search:
                 if i_candidates == 0:
@@ -279,6 +291,22 @@ class ModelRunnerNew:
             # Run the integration
             # (includes checking parameters, setting parameters and recording success/failure of run)
             self.run_with_params(new_params)
+
+            # Store results
+            self.results['uncertainty']['baseline']['compartment_soln'].append(
+                self.model_dict['baseline'].compartment_soln)
+            self.results['uncertainty']['baseline']['costs'].append(
+                self.model_dict['baseline'].costs)
+            self.results['uncertainty']['baseline']['flow_array'].append(
+                self.model_dict['baseline'].flow_array)
+            self.results['uncertainty']['baseline']['fraction_array'].append(
+                self.model_dict['baseline'].fraction_array)
+            self.results['uncertainty']['baseline']['fraction_soln'].append(
+                self.model_dict['baseline'].fraction_soln)
+            self.results['uncertainty']['baseline']['soln_array'].append(
+                self.model_dict['baseline'].soln_array)
+            self.results['uncertainty']['baseline']['var_array'].append(
+                self.model_dict['baseline'].var_array)
 
             # Calculate prior
             prior_log_likelihood = 0.
@@ -345,13 +373,13 @@ class ModelRunnerNew:
                     self.loglikelihoods.append(log_likelihood)
 
                     # Run scenarios other than baseline and store uncertainty
-                    for scenario in self.inputs.model_constants['scenarios_to_run']:
-                        scenario_name = tool_kit.find_scenario_string_from_number(scenario)
-                        if scenario is not None:
-                            scenario_model = model.ConsolidatedModel(scenario, model_runner.model.inputs)
-                            scenario_start_time_index = \
-                                model_runner.model.find_time_index(
-                                    model_runner.model.inputs.model_constants['recent_time'])
+                    # for scenario in self.inputs.model_constants['scenarios_to_run']:
+                    #     scenario_name = tool_kit.find_scenario_string_from_number(scenario)
+                    #     if scenario is not None:
+                    #         scenario_model = model.ConsolidatedModel(scenario, model_runner.model.inputs)
+                    #         scenario_start_time_index = \
+                    #             model_runner.model.find_time_index(
+                    #                 model_runner.model.inputs.model_constants['recent_time'])
                             # scenario_model.start_time = \
                     #             model_runner.model.times[scenario_start_time_index]
                     #         scenario_model.loaded_compartments = \

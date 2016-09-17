@@ -197,21 +197,21 @@ class ModelRunnerNew:
             filename = os.path.join(out_dir, 'uncertainty.pkl')
 
             # Don't run uncertainty but load a saved simulation
-            if self.project.models['baseline'].pickle_uncertainty == 'read':
-                self.project.models['baseline'].uncertainty_results = tool_kit.pickle_load(filename)
-                print "Uncertainty results loaded from previous simulation"
+            # if self.project.models['baseline'].pickle_uncertainty == 'read':
+            #     self.project.models['baseline'].uncertainty_results = tool_kit.pickle_load(filename)
+            #     print "Uncertainty results loaded from previous simulation"
 
             # Run uncertainty
-            else:
+            # else:
                 # self.prepare_uncertainty_storage()
-                self.run_uncertainty()
+            self.run_uncertainty()
 
             # Write uncertainty if requested
-            if self.project.models['baseline'].pickle_uncertainty == 'write':
-                tool_kit.pickle_save(self.project.models['baseline'].uncertainty_results, filename)
-                print "Uncertainty results written on the disc"
-
-            self.project.rearrange_uncertainty()
+            # if self.project.models['baseline'].pickle_uncertainty == 'write':
+            #     tool_kit.pickle_save(self.project.models['baseline'].uncertainty_results, filename)
+            #     print "Uncertainty results written on the disc"
+            #
+            # self.project.rearrange_uncertainty()
 
     def prepare_uncertainty_storage(self):
 
@@ -261,14 +261,7 @@ class ModelRunnerNew:
         prev_log_likelihood = -1e10
         params = []
         self.results['uncertainty'] = {}
-        self.results['uncertainty']['baseline'] = {}
-        self.results['uncertainty']['baseline']['compartment_soln'] = []
-        self.results['uncertainty']['baseline']['costs'] = []
-        self.results['uncertainty']['baseline']['flow_array'] = []
-        self.results['uncertainty']['baseline']['fraction_array'] = []
-        self.results['uncertainty']['baseline']['fraction_soln'] = []
-        self.results['uncertainty']['baseline']['soln_array'] = []
-        self.results['uncertainty']['baseline']['var_array'] = []
+        self.prepare_uncertainty_dictionaries('baseline')
 
         # Until a sufficient number of parameters are accepted
         while n_accepted < self.n_runs + self.burn_in:
@@ -294,21 +287,8 @@ class ModelRunnerNew:
             # (includes checking parameters, setting parameters and recording success/failure of run)
             self.run_with_params(new_params)
 
-            # Store results
-            self.results['uncertainty']['baseline']['compartment_soln'].append(
-                self.model_dict['baseline'].compartment_soln)
-            self.results['uncertainty']['baseline']['costs'].append(
-                self.model_dict['baseline'].costs)
-            self.results['uncertainty']['baseline']['flow_array'].append(
-                self.model_dict['baseline'].flow_array)
-            self.results['uncertainty']['baseline']['fraction_array'].append(
-                self.model_dict['baseline'].fraction_array)
-            self.results['uncertainty']['baseline']['fraction_soln'].append(
-                self.model_dict['baseline'].fraction_soln)
-            self.results['uncertainty']['baseline']['soln_array'].append(
-                self.model_dict['baseline'].soln_array)
-            self.results['uncertainty']['baseline']['var_array'].append(
-                self.model_dict['baseline'].var_array)
+            # Now storing regardless of acceptance
+            self.store_uncertainty_results('baseline')
 
             # Record results in accepted parameter dictionary
             for p, param_dict in enumerate(self.inputs.param_ranges_unc):
@@ -391,29 +371,8 @@ class ModelRunnerNew:
                                 self.model_dict['baseline'].load_state(scenario_start_time_index)
                             self.model_dict[scenario_name].integrate()
 
-                            self.results['uncertainty'][scenario_name] = {}
-                            self.results['uncertainty'][scenario_name]['compartment_soln'] = []
-                            self.results['uncertainty'][scenario_name]['costs'] = []
-                            self.results['uncertainty'][scenario_name]['flow_array'] = []
-                            self.results['uncertainty'][scenario_name]['fraction_array'] = []
-                            self.results['uncertainty'][scenario_name]['fraction_soln'] = []
-                            self.results['uncertainty'][scenario_name]['soln_array'] = []
-                            self.results['uncertainty'][scenario_name]['var_array'] = []
-
-                            self.results['uncertainty'][scenario_name]['compartment_soln'].append(
-                                self.model_dict[scenario_name].compartment_soln)
-                            self.results['uncertainty'][scenario_name]['costs'].append(
-                                self.model_dict[scenario_name].costs)
-                            self.results['uncertainty'][scenario_name]['flow_array'].append(
-                                self.model_dict[scenario_name].flow_array)
-                            self.results['uncertainty'][scenario_name]['fraction_array'].append(
-                                self.model_dict[scenario_name].fraction_array)
-                            self.results['uncertainty'][scenario_name]['fraction_soln'].append(
-                                self.model_dict[scenario_name].fraction_soln)
-                            self.results['uncertainty'][scenario_name]['soln_array'].append(
-                                self.model_dict[scenario_name].soln_array)
-                            self.results['uncertainty'][scenario_name]['var_array'].append(
-                                self.model_dict[scenario_name].var_array)
+                            self.prepare_uncertainty_dictionaries(scenario_name)
+                            self.store_uncertainty_results(scenario_name)
 
             i_candidates += 1
             run += 1
@@ -525,3 +484,32 @@ class ModelRunnerNew:
         except:
             print "Warning: parameters=%s failed with model" % params
             self.is_last_run_success = False
+
+    def prepare_uncertainty_dictionaries(self, scenario):
+
+        self.results['uncertainty'][scenario] = {}
+        self.results['uncertainty'][scenario]['compartment_soln'] = []
+        self.results['uncertainty'][scenario]['costs'] = []
+        self.results['uncertainty'][scenario]['flow_array'] = []
+        self.results['uncertainty'][scenario]['fraction_array'] = []
+        self.results['uncertainty'][scenario]['fraction_soln'] = []
+        self.results['uncertainty'][scenario]['soln_array'] = []
+        self.results['uncertainty'][scenario]['var_array'] = []
+
+    def store_uncertainty_results(self, scenario):
+
+        self.results['uncertainty'][scenario]['compartment_soln'].append(
+            self.model_dict[scenario].compartment_soln)
+        self.results['uncertainty'][scenario]['costs'].append(
+            self.model_dict[scenario].costs)
+        self.results['uncertainty'][scenario]['flow_array'].append(
+            self.model_dict[scenario].flow_array)
+        self.results['uncertainty'][scenario]['fraction_array'].append(
+            self.model_dict[scenario].fraction_array)
+        self.results['uncertainty'][scenario]['fraction_soln'].append(
+            self.model_dict[scenario].fraction_soln)
+        self.results['uncertainty'][scenario]['soln_array'].append(
+            self.model_dict[scenario].soln_array)
+        self.results['uncertainty'][scenario]['var_array'].append(
+            self.model_dict[scenario].var_array)
+

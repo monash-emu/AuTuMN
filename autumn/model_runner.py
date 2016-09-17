@@ -101,7 +101,6 @@ class ModelRunnerNew:
         self.nb_accepted = 0
         self.adaptive_search = True  # If True, next candidate generated according to previous position
         self.accepted_parameters = {}
-        self.uncertainty_results = {}  # to store uncertainty_results
         self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
                                       'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
         self.labels = ['incidence', 'mortality', 'prevalence', 'notifications']
@@ -119,6 +118,9 @@ class ModelRunnerNew:
         # (Expressed as a proportion of the width defined in bounds.)
         self.search_width = 0.2
         self.results = {}
+        self.all_parameters_tried = {}
+        self.whether_accepted_list = []
+
 
     def run_scenarios(self):
 
@@ -202,7 +204,7 @@ class ModelRunnerNew:
 
             # Run uncertainty
             else:
-                self.prepare_uncertainty_storage()
+                # self.prepare_uncertainty_storage()
                 self.run_uncertainty()
 
             # Write uncertainty if requested
@@ -253,9 +255,10 @@ class ModelRunnerNew:
         # Prepare for loop
         for param_dict in self.inputs.param_ranges_unc:
             self.accepted_parameters[param_dict['key']] = []
+            self.all_parameters_tried[param_dict['key']] = []
         n_accepted = 0
         i_candidates = 0
-        j = 0
+        run = 0
         prev_log_likelihood = -1e10
         params = []
         self.results['uncertainty'] = {}
@@ -280,13 +283,13 @@ class ModelRunnerNew:
                 if i_candidates == 0:
                     new_params = []
                     for param_dict in self.inputs.param_ranges_unc:
-                        new_params.append(param_candidates[param_dict['key']][j])
-                        params.append(param_candidates[param_dict['key']][j])
+                        new_params.append(param_candidates[param_dict['key']][run])
+                        params.append(param_candidates[param_dict['key']][run])
                 else:
                     new_params = self.update_param(params)
             else:
                 for param_dict in self.inputs.param_ranges_unc:
-                    new_params.append(param_candidates[param_dict['key']][j])
+                    new_params.append(param_candidates[param_dict['key']][run])
 
             # Run the integration
             # (includes checking parameters, setting parameters and recording success/failure of run)
@@ -307,6 +310,10 @@ class ModelRunnerNew:
                 self.model_dict['baseline'].soln_array)
             self.results['uncertainty']['baseline']['var_array'].append(
                 self.model_dict['baseline'].var_array)
+
+            # Record results in accepted parameter dictionary
+            for p, param_dict in enumerate(self.inputs.param_ranges_unc):
+                self.all_parameters_tried[param_dict['key']].append(new_params[p])
 
             # Calculate prior
             prior_log_likelihood = 0.
@@ -350,9 +357,10 @@ class ModelRunnerNew:
                 accepted = numpy.random.binomial(n=1, p=numpy.exp(log_likelihood - prev_log_likelihood))
 
             # Record information for accepted runs
-            if accepted == 1:
-
-                # Record total number accepted
+            if accepted != 1:
+                self.whether_accepted_list.append(False)
+            elif accepted == 1:
+                self.whether_accepted_list.append(True)
                 n_accepted += 1
 
                 # Record results in accepted parameter dictionary
@@ -373,58 +381,48 @@ class ModelRunnerNew:
                     self.loglikelihoods.append(log_likelihood)
 
                     # Run scenarios other than baseline and store uncertainty
-                    # for scenario in self.inputs.model_constants['scenarios_to_run']:
-                    #     scenario_name = tool_kit.find_scenario_string_from_number(scenario)
-                    #     if scenario is not None:
-                    #         scenario_model = model.ConsolidatedModel(scenario, model_runner.model.inputs)
-                    #         scenario_start_time_index = \
-                    #             model_runner.model.find_time_index(
-                    #                 model_runner.model.inputs.model_constants['recent_time'])
-                            # scenario_model.start_time = \
-                    #             model_runner.model.times[scenario_start_time_index]
-                    #         scenario_model.loaded_compartments = \
-                    #             model_runner.model.load_state(scenario_start_time_index)
-                    #         scenario_model.integrate()
-                    #
-                    #         times = scenario_model.times
-                    #         costs = scenario_model.costs
-                    #     else:
-                    #         times = model_runner.model.times
-                    #         costs = model_runner.model.costs
-                    #
-                    #     if n_accepted == 1:  # initialise storage by year
-                    #         for label in self.labels:
-                    #             for time in times:
-                    #                 self.uncertainty_results[scenario_name][label][time] = []
-                    #         for intervention in self.interventions_to_cost:
-                    #             for cost_type in cost_types:
-                    #                 for time in costs['cost_times']:
-                    #                     self.uncertainty_results[scenario_name]['costs'][intervention][cost_type][time] = []
-                    #
-                    #     for label in self.labels:
-                    #         if scenario is None:
-                    #             solutions = model_runner.model.get_var_soln(label)
-                    #         else:
-                    #             solutions = scenario_model.get_var_soln(label)
-                    #
-                    #         j = 0
-                    #         for time in times:
-                    #             self.uncertainty_results[scenario_name][label][time].append(solutions[j])
-                    #             j += 1
-                    #
-                        # Store costs
-                        # for intervention in self.interventions_to_cost:
-                        #     for cost_type in self.cost_types:
-                        #         j = 0
-                        #         for time in costs['cost_times']:
-                        #             self.uncertainty_results[scenario_name]['costs'][intervention][cost_type][time].append(costs[intervention][cost_type][j])
-                        #             j += 1
+                    for scenario in self.inputs.model_constants['scenarios_to_run']:
+                        scenario_name = tool_kit.find_scenario_string_from_number(scenario)
+                        if scenario is not None:
+                            scenario_start_time_index = \
+                                self.model_dict['baseline'].find_time_index(self.inputs.model_constants['recent_time'])
+                            self.model_dict[scenario_name].start_time = \
+                                self.model_dict['baseline'].times[scenario_start_time_index]
+                            self.model_dict[scenario_name].loaded_compartments = \
+                                self.model_dict['baseline'].load_state(scenario_start_time_index)
+                            self.model_dict[scenario_name].integrate()
+
+                            self.results['uncertainty'][scenario_name] = {}
+                            self.results['uncertainty'][scenario_name]['compartment_soln'] = []
+                            self.results['uncertainty'][scenario_name]['costs'] = []
+                            self.results['uncertainty'][scenario_name]['flow_array'] = []
+                            self.results['uncertainty'][scenario_name]['fraction_array'] = []
+                            self.results['uncertainty'][scenario_name]['fraction_soln'] = []
+                            self.results['uncertainty'][scenario_name]['soln_array'] = []
+                            self.results['uncertainty'][scenario_name]['var_array'] = []
+
+                            self.results['uncertainty'][scenario_name]['compartment_soln'].append(
+                                self.model_dict[scenario_name].compartment_soln)
+                            self.results['uncertainty'][scenario_name]['costs'].append(
+                                self.model_dict[scenario_name].costs)
+                            self.results['uncertainty'][scenario_name]['flow_array'].append(
+                                self.model_dict[scenario_name].flow_array)
+                            self.results['uncertainty'][scenario_name]['fraction_array'].append(
+                                self.model_dict[scenario_name].fraction_array)
+                            self.results['uncertainty'][scenario_name]['fraction_soln'].append(
+                                self.model_dict[scenario_name].fraction_soln)
+                            self.results['uncertainty'][scenario_name]['soln_array'].append(
+                                self.model_dict[scenario_name].soln_array)
+                            self.results['uncertainty'][scenario_name]['var_array'].append(
+                                self.model_dict[scenario_name].var_array)
 
             i_candidates += 1
-            j += 1
-            if j >= len(param_candidates.keys()) and not self.adaptive_search:  # We need to generate more candidates
+            run += 1
+
+            # Generate more candidates if required
+            if not self.adaptive_search and run >= len(param_candidates.keys()):
                 param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
-                j = 0
+                run = 0
             print(str(n_accepted) + ' accepted / ' + str(i_candidates) + ' candidates @@@@@@@@ Running time: '
                   + str(datetime.datetime.now() - start_timer_run))
 

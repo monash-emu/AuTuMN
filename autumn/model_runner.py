@@ -118,6 +118,7 @@ class ModelRunnerNew:
         # Width of the interval in which next parameter value is likely (95%) to be drawn.
         # (Expressed as a proportion of the width defined in bounds.)
         self.search_width = 0.2
+        self.scenario_results = {}
 
     def run_scenarios(self):
 
@@ -163,20 +164,22 @@ class ModelRunnerNew:
 
         """
 
-        self.model_dict[scenario].compartment_soln_pre_uncertainty \
-            = copy.copy(self.model_dict[scenario].compartment_soln)
-        self.model_dict[scenario].costs_pre_uncertainty \
-            = copy.copy(self.model_dict[scenario].costs)
-        self.model_dict[scenario].flow_array_pre_uncertainty \
-            = copy.copy(self.model_dict[scenario].flow_array)
-        self.model_dict[scenario].fraction_array_pre_uncertainty \
-            = copy.copy(self.model_dict[scenario].fraction_array)
-        self.model_dict[scenario].fraction_soln_pre_uncertainty \
-            = copy.copy(self.model_dict[scenario].fraction_soln)
-        self.model_dict[scenario].soln_array_pre_uncertainty \
-            = copy.copy(self.model_dict[scenario].soln_array)
-        self.model_dict[scenario].var_array_pre_uncertainty \
-            = copy.copy(self.model_dict[scenario].var_array)
+        self.scenario_results[scenario] = {}
+
+        self.scenario_results[scenario]['compartment_soln'] \
+            = self.model_dict[scenario].compartment_soln
+        self.scenario_results[scenario]['costs'] \
+            = self.model_dict[scenario].costs
+        self.scenario_results[scenario]['flow_array'] \
+            = self.model_dict[scenario].flow_array
+        self.scenario_results[scenario]['fraction_array'] \
+            = self.model_dict[scenario].fraction_array
+        self.scenario_results[scenario]['fraction_soln'] \
+            = self.model_dict[scenario].fraction_soln
+        self.scenario_results[scenario]['soln_array'] \
+            = self.model_dict[scenario].soln_array
+        self.scenario_results[scenario]['var_array'] \
+            = self.model_dict[scenario].var_array
 
     def master_uncertainty(self):
 

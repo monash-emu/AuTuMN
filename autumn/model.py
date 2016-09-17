@@ -119,24 +119,6 @@ class ConsolidatedModel(BaseModel):
         # Get scaleup functions from input object
         self.scaleup_fns = self.inputs.scaleup_fns[self.scenario]
 
-        # Here-below is just provisional stuff. Should be read from spreadsheets
-        self.n_runs = 2  # number of accepted runs per scenario
-        self.burn_in = 0  # number of accepted runs that we burn
-        self.adaptive_search = True  # if True, next candidate generated according to previous position
-        self.search_width = 0.2  # Width of the interval in which next parameter value is likely (95%) to be drawn. Expressed as a proportion of the width defined in bounds
-        self.outputs_unc = [
-            {
-                'key': 'incidence',
-                'posterior_width': None,
-                'width_multiplier': 2.0  # for incidence for ex. Width of Normal posterior relative to CI width in data
-            }
-        ]
-        self.accepted_parameters = {}
-        self.loglikelihoods = []
-        self.uncertainty_results = {}  # to store uncertainty_results
-        self.pickle_uncertainty = None  # options are 'write' (to save), 'read' (to load) and None
-        self.data_to_fit = {}
-
     def define_model_structure(self):
 
         """

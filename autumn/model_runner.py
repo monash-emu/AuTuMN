@@ -121,7 +121,6 @@ class ModelRunnerNew:
         self.all_parameters_tried = {}
         self.whether_accepted_list = []
 
-
     def run_scenarios(self):
 
         for scenario in self.inputs.model_constants['scenarios_to_run']:
@@ -526,26 +525,3 @@ class ModelRunnerNew:
         except:
             print "Warning: parameters=%s failed with model" % params
             self.is_last_run_success = False
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -136,13 +136,6 @@ class ConsolidatedModel(BaseModel):
         self.uncertainty_results = {}  # to store uncertainty_results
         self.pickle_uncertainty = None  # options are 'write' (to save), 'read' (to load) and None
         self.data_to_fit = {}
-        self.compartment_soln_pre_uncertainty = None
-        self.costs_pre_uncertainty = None
-        self.flow_array_pre_uncertainty = None
-        self.fraction_array_pre_uncertainty = None
-        self.fraction_soln_pre_uncertainty = None
-        self.soln_array_pre_uncertainty = None
-        self.var_array_pre_uncertainty = None
 
     def define_model_structure(self):
 

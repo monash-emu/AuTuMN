@@ -544,11 +544,31 @@ class Project:
         self.suptitle_size = 13
         self.classified_scaleups = {}
 
+        # Find some characteristics from the models within model runner
+        self.scenarios = self.model_runner.model_dict.keys()
+        self.scenarios.reverse()
+        for program in self.model_runner.results['scenarios']['baseline']['costs']:
+            if program != 'cost_times':
+                self.programs += [program]
+        self.costs = self.model_runner.results['scenarios']['baseline']['costs']['vaccination'].keys()
+
     #################################
     # General methods for use below #
     #################################
 
     def find_years_to_write(self, scenario, output, minimum=0, maximum=3000, step=1):
+
+        """
+        Find years that need to be written into a spreadsheet or document.
+
+        Args:
+            scenario: Model scenario to be written.
+            output: Epidemiological or economic output.
+            minimum: First year (integer).
+            maximum: Last year (integer).
+            step: Time step (integer).
+
+        """
 
         requested_years = range(minimum, maximum, step)
         years = []
@@ -578,13 +598,14 @@ class Project:
         If called at the start of each plotting function, will create a figure that is numbered according to
         self.figure_number, which is then updated at each call. This stops figures plotting on the same axis
         and saves you having to worry about how many figures are being opened.
+
         """
 
         fig = pyplot.figure(self.figure_number)
         self.figure_number += 1
         return fig
 
-    def make_axes_with_room_for_legend(self, fig):
+    def make_single_axis(self, fig):
 
         """
         Create axes for a figure with a single plot with a reasonable
@@ -592,10 +613,30 @@ class Project:
 
         Returns:
             ax: The axes that can be plotted on
+
         """
 
         ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
         return ax
+
+    def make_legend_to_single_axis(self, ax, scenario_handles, scenario_labels):
+
+        """
+        Standardised format to legend at side of single axis plot
+        Args:
+            ax: The axis that needs a legend.
+            scenario_handles: The elements for the legend.
+            scenario_labels: List of strings to name the elements of the legend.
+
+        """
+
+        ax.legend(scenario_handles,
+                  scenario_labels,
+                  bbox_to_anchor=(1.05, 1),
+                  loc=2,
+                  borderaxespad=0.,
+                  frameon=False,
+                  prop={'size': 7})
 
     def make_default_line_styles(self, n, return_all=True):
 
@@ -626,6 +667,17 @@ class Project:
             return line_styles[n - 1]
 
     def find_subplot_numbers(self, n):
+
+        """
+        Method to find a good number of rows and columns for subplots of figure.
+
+        Args:
+            n: Total number of subplots.
+
+        Returns:
+            answer: List of two elements, being the rows and columns of the subplots.
+
+        """
 
         # Find a nice number of subplots for a panel plot
         answer = find_smallest_factors_of_integer(n)
@@ -670,25 +722,6 @@ class Project:
 
         return multiplier, multiplier_label
 
-    def make_legend_to_single_axis(self, ax, scenario_handles, scenario_labels):
-
-        """
-        Standardised format to legend at side of single axis plot
-        Args:
-            ax: The axis that needs a legend.
-            scenario_handles:
-            scenario_labels:
-
-        """
-
-        ax.legend(scenario_handles,
-                  scenario_labels,
-                  bbox_to_anchor=(1.05, 1),
-                  loc=2,
-                  borderaxespad=0.,
-                  frameon=False,
-                  prop={'size': 7})
-
     def save_figure(self, fig, last_part_of_name_for_figure):
 
         """
@@ -696,6 +729,7 @@ class Project:
         Args:
             last_part_of_name_for_figure: The part of the figure name that is variable and input from the
                 plotting method.
+
         """
 
         png = os.path.join(self.out_dir_project, self.country + last_part_of_name_for_figure + '.png')
@@ -711,28 +745,11 @@ class Project:
         Calls to all the functions needed to prepare for the plotting and writing methods to be done later.
         """
 
-        # Work out what programs are being run
-        self.find_scenarios_and_program()
-
         # Add total costs to the programs in the cost attribute of each model
         self.add_total_cost_dict()
 
         # Create outputs dictionaries
         self.create_output_dicts()
-
-    def find_scenarios_and_program(self):
-
-        """
-        Finds the scenarios that have been run and collates all the programs being implemented into a list.
-
-        """
-
-        self.scenarios = self.model_runner.model_dict.keys()
-        self.scenarios.reverse()
-
-        for program in self.model_runner.results['scenarios']['baseline']['costs']:
-            if program != 'cost_times':
-                self.programs += [program]
 
     def create_output_dicts(self, outputs=['incidence', 'mortality', 'prevalence', 'notifications']):
 
@@ -842,7 +859,7 @@ class Project:
 
         for scenario in self.model_runner.results['scenarios']:
             self.model_runner.results['scenarios'][scenario]['costs']['all_programs'] = {}
-            for cost in self.model_runner.results['scenarios'][scenario]['costs']['vaccination']:
+            for cost in self.costs:
                 self.model_runner.results['scenarios'][scenario]['costs']['all_programs'][cost] \
                     = [0.] * len(self.model_runner.results['scenarios'][scenario]['costs']['cost_times'])
                 for program in self.programs:
@@ -1394,7 +1411,7 @@ class Project:
 
         # Plot functions for baseline model run only
         scenario_labels = []
-        ax = self.make_axes_with_room_for_legend(fig)
+        ax = self.make_single_axis(fig)
         for figure_number, function in enumerate(functions):
             ax.plot(x_vals,
                     map(self.inputs.scaleup_fns[None][function],
@@ -1509,7 +1526,7 @@ class Project:
             fig_individual = self.set_and_update_figure()
             fig_stacked = self.set_and_update_figure()
             fig_relative = self.set_and_update_figure()
-            subplot_grid = self.find_subplot_numbers(len(self.model_runner.model_dict[scenario].costs['vaccination']))
+            subplot_grid = self.find_subplot_numbers(len(self.costs))
 
             # Find the maximum of any type of cost across all of the programs
             max_cost = 0.
@@ -1529,9 +1546,7 @@ class Project:
             # Find the index for the first time after the current time
             reference_time_index = tool_kit.find_first_list_element_above_value(self.model_runner.model_dict[scenario].costs['cost_times'],
                                                                                 self.inputs.model_constants['reference_time'])
-
-            # Just using vaccination to get one set of cost keys (should hopefully be consistently be available)
-            for c, cost in enumerate(['raw_cost', 'inflated_cost', 'discounted_cost', 'discounted_inflated_cost']):
+            for c, cost in enumerate(self.costs):
 
                 # Plot each type of cost to its own subplot and ensure same y-axis scale
                 if c == 0:
@@ -1604,7 +1619,7 @@ class Project:
                         tick.label.set_fontsize(get_nice_font_size(subplot_grid))
 
                     # Add the legend to last subplot panel
-                    if c == len(self.model_runner.model_dict[scenario].costs['vaccination']) - 1:
+                    if c == len(self.costs) - 1:
                         ax.legend(ax_individual.lines,
                                   program_labels,
                                   fontsize=get_nice_font_size(subplot_grid),
@@ -1637,7 +1652,7 @@ class Project:
 
         # Standard prelims
         fig = self.set_and_update_figure()
-        ax = self.make_axes_with_room_for_legend(fig)
+        ax = self.make_single_axis(fig)
 
         # Get plotting styles
         colours, patterns, compartment_full_names, markers \
@@ -1690,7 +1705,7 @@ class Project:
 
             # Standard prelims
             fig = self.set_and_update_figure()
-            ax = self.make_axes_with_room_for_legend(fig)
+            ax = self.make_single_axis(fig)
 
             # Get plotting styles
             colours, patterns, compartment_full_names, markers \

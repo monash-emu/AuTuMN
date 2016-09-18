@@ -10,6 +10,7 @@ from scipy.stats import norm, beta
 
 
 def is_positive_definite(v):
+
     return isfinite(v) and v > 0.0
 
 
@@ -108,7 +109,7 @@ class ModelRunner:
             self.results['scenarios'] = {}
             self.store_scenario_results(scenario_name)
 
-    def store_scenario_results(self, scenario, scenarios_or_uncertainty='scenarios'):
+    def store_scenario_results(self, scenario):
 
         """
         This method is designed to store all the results that will be needed for later analysis in separate
@@ -118,21 +119,21 @@ class ModelRunner:
 
         """
 
-        self.results[scenarios_or_uncertainty][scenario] = {}
+        self.results['scenarios'][scenario] = {}
 
-        self.results[scenarios_or_uncertainty][scenario]['compartment_soln'] \
+        self.results['scenarios'][scenario]['compartment_soln'] \
             = self.model_dict[scenario].compartment_soln
-        self.results[scenarios_or_uncertainty][scenario]['costs'] \
+        self.results['scenarios'][scenario]['costs'] \
             = self.model_dict[scenario].costs
-        self.results[scenarios_or_uncertainty][scenario]['flow_array'] \
+        self.results['scenarios'][scenario]['flow_array'] \
             = self.model_dict[scenario].flow_array
-        self.results[scenarios_or_uncertainty][scenario]['fraction_array'] \
+        self.results['scenarios'][scenario]['fraction_array'] \
             = self.model_dict[scenario].fraction_array
-        self.results[scenarios_or_uncertainty][scenario]['fraction_soln'] \
+        self.results['scenarios'][scenario]['fraction_soln'] \
             = self.model_dict[scenario].fraction_soln
-        self.results[scenarios_or_uncertainty][scenario]['soln_array'] \
+        self.results['scenarios'][scenario]['soln_array'] \
             = self.model_dict[scenario].soln_array
-        self.results[scenarios_or_uncertainty][scenario]['var_array'] \
+        self.results['scenarios'][scenario]['var_array'] \
             = self.model_dict[scenario].var_array
 
     def master_uncertainty(self):

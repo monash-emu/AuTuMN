@@ -816,21 +816,22 @@ class Project:
         """
         Extracts a dictionary from full_output_dict with only integer years, using the first time value greater than
         the integer year in question.
+
         """
 
-        for model in self.models:
-            self.integer_output_dict[model] = {}
-            for output in self.full_output_dict[model]:
-                self.integer_output_dict[model][output] = {}
-                times = self.full_output_dict[model][output].keys()
+        for scenario in self.scenarios:
+            self.integer_output_dict[scenario] = {}
+            for output in self.full_output_dict[scenario]:
+                self.integer_output_dict[scenario][output] = {}
+                times = self.full_output_dict[scenario][output].keys()
                 times.sort()
                 start = np.floor(times[0])
                 finish = np.floor(times[-1])
                 float_years = np.linspace(start, finish, finish - start + 1.)
                 for year in float_years:
                     key = [t for t in times if t >= year][0]
-                    self.integer_output_dict[model][output][int(key)] \
-                        = self.full_output_dict[model][output][key]
+                    self.integer_output_dict[scenario][output][int(key)] \
+                        = self.full_output_dict[scenario][output][key]
 
     def add_total_cost_dict(self):
 

@@ -557,6 +557,21 @@ class Project:
                 years += [y]
         return years
 
+    def find_var_index(self, var):
+
+        """
+        Finds the index number for a var in the var arrays. (Arbitrarily uses the baseline model from the model runner.)
+
+        Args:
+            var: String for the var that we're looking for.
+
+        Returns:
+            The var's index (unnamed).
+
+        """
+
+        return self.model_runner.model_dict['baseline'].var_labels.index(var)
+
     def set_and_update_figure(self):
 
         """
@@ -733,21 +748,6 @@ class Project:
         self.add_full_economics_dict()
         self.extract_integer_dict()
 
-    def find_var_index(self, var):
-
-        """
-        Finds the index number for a var in the var arrays. (Arbitrarily uses the baseline model from the model runner.)
-
-        Args:
-            var: String for the var that we're looking for.
-
-        Returns:
-            The var's index (unnamed).
-
-        """
-
-        return self.model_runner.model_dict['baseline'].var_labels.index(var)
-
     def create_full_output_dict(self, outputs):
 
         """
@@ -767,42 +767,49 @@ class Project:
                                                                   self.full_output_lists[scenario][label]))
 
                 # Add uncertainty data to full dictionary
-                # if self.models['baseline'].inputs.model_constants['output_uncertainty']:
+                # if self.inputs.model_constants['output_uncertainty']:
                 #     self.full_output_dict[scenario][label + '_low'] = {}
                 #     self.full_output_dict[scenario][label + '_high'] = {}
                 #     for time in self.models[scenario].times:
-                #         self.full_output_dict[scenario][label + '_low'][time] = np.percentile(self.models[scenario].uncertainty_results[label][time], q=0.5*(100. - self.ci_percentage))
-                #         self.full_output_dict[scenario][label + '_high'][time] = np.percentile(self.models[scenario].uncertainty_results[label][time], q=100 - 0.5*(100. - self.ci_percentage))
+                #         self.full_output_dict[scenario][label + '_low'][time] \
+                # = np.percentile(self.models[scenario].uncertainty_results[label][time],
+                # q=0.5*(100. - self.ci_percentage))
+                #         self.full_output_dict[scenario][label + '_high'][time] \
+                # = np.percentile(self.models[scenario].uncertainty_results[label][time],
+                # q=100 - 0.5*(100. - self.ci_percentage))
 
     def add_full_economics_dict(self):
+
         """
         Creates an economics dictionary structure that mirrors that of the epi dictionaries and adds
         this to the main outputs (epi) dictionary
+
         """
 
-        for model in self.models:
+        for scenario in self.scenarios:
             economics_dict = {}
-            for intervention in self.models[model].interventions_to_cost:
+            for intervention in self.programs:
                 economics_dict['cost_' + intervention] = {}
-                for t in range(len(self.models[model].costs['cost_times'])):
-                    economics_dict['cost_' + intervention][self.models[model].costs['cost_times'][t]] \
-                        = self.models[model].costs[intervention]['raw_cost'][t]
+                for t in range(len(self.model_runner.model_dict[scenario].costs['cost_times'])):
+                    economics_dict[
+                        'cost_' + intervention][self.model_runner.model_dict[scenario].costs['cost_times'][t]] \
+                        = self.model_runner.model_dict[scenario].costs[intervention]['raw_cost'][t]
 
                 # Add uncertainty data to full dictionary
                 # if self.models['baseline'].inputs.model_constants['output_uncertainty']:
-                #     times = self.models[model].costs['cost_times']
+                #     times = self.models[scenario].costs['cost_times']
                 #     economics_dict['cost_' + intervention + '_low'] = {}
                 #     economics_dict['cost_' + intervention + '_high'] = {}
                 #
                 #     for time in times:
                 #         economics_dict['cost_' + intervention + '_low'][time] = np.percentile(
-                #             self.models[model].uncertainty_results['costs'][intervention]['raw_cost'][time],
+                #             self.models[scenario].uncertainty_results['costs'][intervention]['raw_cost'][time],
                 #             q=0.5 * (100. - self.ci_percentage))
                 #         economics_dict['cost_' + intervention + '_high'][time] = np.percentile(
-                #             self.models[model].uncertainty_results['costs'][intervention]['raw_cost'][time],
+                #             self.models[scenario].uncertainty_results['costs'][intervention]['raw_cost'][time],
                 #             q=100 - 0.5 * (100. - self.ci_percentage))
 
-            self.full_output_dict[model].update(economics_dict)
+            self.full_output_dict[scenario].update(economics_dict)
 
     def extract_integer_dict(self):
 

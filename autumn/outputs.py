@@ -1171,7 +1171,7 @@ class Project:
         # Make a flow-diagram
         if self.inputs.model_constants['output_flow_diagram']:
             png = os.path.join(self.out_dir_project, self.country + '_flow_diagram' + '.png')
-            self.models['baseline'].make_flow_diagram(png)
+            self.model_runner.model_dict['baseline'].make_flow_diagram(png)
 
     def plot_outputs_against_gtb(self, outputs):
 
@@ -1641,23 +1641,23 @@ class Project:
 
         # Get plotting styles
         colours, patterns, compartment_full_names, markers \
-            = make_related_line_styles(self.models['baseline'].labels, strain_or_organ)
+            = make_related_line_styles(self.model_runner.model_dict['baseline'].labels, strain_or_organ)
 
         # Initialise empty list for legend
         axis_labels = []
 
         # Plot total population
         ax.plot(
-            self.models['baseline'].times,
-            self.models['baseline'].get_var_soln('population'),
+            self.model_runner.model_dict['baseline'].times,
+            self.model_runner.model_dict['baseline'].get_var_soln('population'),
             'k',
             label="total", linewidth=2)
         axis_labels.append("Number of persons")
 
         # Plot sub-populations
-        for plot_label in self.models['baseline'].labels:
-            ax.plot(self.models['baseline'].times,
-                    self.models['baseline'].compartment_soln[plot_label],
+        for plot_label in self.model_runner.model_dict['baseline'].labels:
+            ax.plot(self.model_runner.model_dict['baseline'].times,
+                    self.model_runner.model_dict['baseline'].compartment_soln[plot_label],
                     label=plot_label, linewidth=1,
                     color=colours[plot_label],
                     marker=markers[plot_label],
@@ -1667,7 +1667,7 @@ class Project:
         # Finishing touches
         ax.set_xlim(self.inputs.model_constants['plot_start_time'],
                     self.inputs.model_constants['plot_end_time'])
-        title = make_plot_title('baseline', self.models['baseline'].labels)
+        title = make_plot_title('baseline', self.model_runner.model_dict['baseline'].labels)
         set_axes_props(ax, 'Year', 'Persons', 'Population, ' + title, True, axis_labels)
 
         # Saving
@@ -1680,10 +1680,11 @@ class Project:
 
         Args:
             strain_or_organ: Whether the plotting style should be done by strain or by organ.
+
         """
 
         # Get values to be plotted
-        subgroup_solns, subgroup_fractions = autumn.tool_kit.find_fractions(self.models['baseline'])
+        subgroup_solns, subgroup_fractions = autumn.tool_kit.find_fractions(self.model_runner.model_dict['baseline'])
         for i, category in enumerate(subgroup_fractions):
             values = subgroup_fractions[category]
 
@@ -1701,7 +1702,7 @@ class Project:
             # Plot population fractions
             for plot_label in values.keys():
                 ax.plot(
-                    self.models['baseline'].times,
+                    self.model_runner.model_dict['baseline'].times,
                     values[plot_label],
                     label=plot_label, linewidth=1,
                     color=colours[plot_label],
@@ -1712,7 +1713,7 @@ class Project:
             # Finishing touches
             ax.set_xlim(self.inputs.model_constants['plot_start_time'],
                         self.inputs.model_constants['plot_end_time'])
-            title = make_plot_title(self.models['baseline'], values.keys())
+            title = make_plot_title(self.model_runner.model_dict['baseline'], values.keys())
             set_axes_props(ax, 'Year', 'Proportion of population', 'Population, ' + title, True, axis_labels)
 
             # Saving
@@ -1729,10 +1730,9 @@ class Project:
         outputs you want to plot. This one is constrained to incidence and mortality (which are the only
         ones currently calculated in the model object.
 
-        Args:
-            scenario: The scenario being run, number needed for line colour
         """
 
+        # Old code from when scenario used to be an input argument to this method
         scenario = None
 
         # Get the colours for the model outputs
@@ -1744,7 +1744,7 @@ class Project:
             # Otherwise cycling through colours
             output_colour = [self.make_default_line_styles(scenario, False)]
 
-        subplot_grid = self.find_subplot_numbers(len(self.models['baseline'].agegroups) * 2 + 1)
+        subplot_grid = self.find_subplot_numbers(len(self.model_runner.model_dict['baseline'].agegroups) * 2 + 1)
 
         # Not sure whether we have to specify a figure number
         fig = self.set_and_update_figure()
@@ -1756,21 +1756,21 @@ class Project:
 
             # Find the highest incidence value in the time period considered across all age groups
             ymax = 0.
-            for agegroup in self.models['baseline'].agegroups:
-                new_ymax = max(self.models['baseline'].get_var_soln(output + agegroup))
+            for agegroup in self.model_runner.model_dict['baseline'].agegroups:
+                new_ymax = max(self.model_runner.model_dict['baseline'].get_var_soln(output + agegroup))
                 if new_ymax > ymax:
                     ymax = new_ymax
 
-            for i, agegroup in enumerate(self.models['baseline'].agegroups + ['']):
+            for i, agegroup in enumerate(self.model_runner.model_dict['baseline'].agegroups + ['']):
 
                 ax = fig.add_subplot(subplot_grid[0],
                                      subplot_grid[1],
-                                     i + 1 + output_no * (len(self.models['baseline'].agegroups) + 1))
+                                     i + 1 + output_no * (len(self.model_runner.model_dict['baseline'].agegroups) + 1))
 
                 # Plot the modelled data
                 ax.plot(
-                    self.models['baseline'].times,
-                    self.models['baseline'].get_var_soln(output + agegroup),
+                    self.model_runner.model_dict['baseline'].times,
+                    self.model_runner.model_dict['baseline'].get_var_soln(output + agegroup),
                     color=output_colour[0][1],
                     linestyle=output_colour[0][0],
                     linewidth=1.5)
@@ -1825,9 +1825,9 @@ class Project:
         """
 
         if age_or_comorbidity == 'age':
-            stratification = self.models['baseline'].agegroups
+            stratification = self.model_runner.model_dict['baseline'].agegroups
         elif age_or_comorbidity == 'comorbidity':
-            stratification = self.models['baseline'].comorbidities
+            stratification = self.model_runner.model_dict['baseline'].comorbidities
         else:
             stratification = None
 
@@ -1841,7 +1841,8 @@ class Project:
             colours = self.make_default_line_styles(len(stratification), return_all=True)
 
             # Extract data
-            stratified_soln, denominator = tool_kit.sum_over_compartments(self.models['baseline'], stratification)
+            stratified_soln, denominator \
+                = tool_kit.sum_over_compartments(self.model_runner.model_dict['baseline'], stratification)
             stratified_fraction = tool_kit.get_fraction_soln(stratified_soln.keys(), stratified_soln, denominator)
 
             # Loop over starting from the model start and the specified starting time
@@ -1851,7 +1852,7 @@ class Project:
                 title_time_text = tool_kit.find_title_from_dictionary(plot_left_time)
 
                 # Initialise some variables
-                times = self.models['baseline'].times
+                times = self.model_runner.model_dict['baseline'].times
                 lower_plot_margin_count = numpy.zeros(len(times))
                 upper_plot_margin_count = numpy.zeros(len(times))
                 lower_plot_margin_fraction = numpy.zeros(len(times))

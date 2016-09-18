@@ -46,17 +46,13 @@ class ModelRunner:
 
         self.inputs = data_processing.Inputs(True)
         self.inputs.read_and_load_data()
-        # self.project = outputs.Project(self.inputs.country, self.inputs)
         self.model_dict = {}
         self.is_last_run_success = False
-        self.nb_accepted = 0
         self.adaptive_search = True  # If True, next candidate generated according to previous position
         self.accepted_parameters = {}
         self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
                                       'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
-        self.labels = ['incidence', 'mortality', 'prevalence', 'notifications']
-        self.cost_types = ['raw_cost', 'discounted_cost', 'inflated_cost', 'discounted_inflated_cost']
-        self.n_runs = 5  # Number of accepted runs per scenario
+        self.n_runs = 2  # Number of accepted runs per scenario
         self.burn_in = 0  # Number of accepted runs that we burn
         self.loglikelihoods = []
         self.outputs_unc = [{'key': 'incidence',
@@ -417,6 +413,9 @@ class ModelRunner:
 
         self.results['uncertainty'][scenario] = {}
         self.results['uncertainty'][scenario]['compartment_soln'] = []
+
+        self.results['uncertainty'][scenario]['compartment_soln_array'] = {}
+
         self.results['uncertainty'][scenario]['costs'] = []
         self.results['uncertainty'][scenario]['flow_array'] = []
         self.results['uncertainty'][scenario]['fraction_array'] = []
@@ -428,6 +427,18 @@ class ModelRunner:
 
         self.results['uncertainty'][scenario]['compartment_soln'].append(
             self.model_dict[scenario].compartment_soln)
+
+        #
+        for compartment in self.model_dict[scenario].compartment_soln:
+            if compartment in self.results['uncertainty'][scenario]['compartment_soln_array']:
+                self.results['uncertainty'][scenario]['compartment_soln_array'][compartment] \
+                    = numpy.vstack([self.results['uncertainty'][scenario]['compartment_soln_array'][compartment],
+                                    self.model_dict[scenario].compartment_soln[compartment]])
+            else:
+                self.results['uncertainty'][scenario]['compartment_soln_array'][compartment] \
+                    = self.model_dict[scenario].compartment_soln[compartment]
+
+
         self.results['uncertainty'][scenario]['costs'].append(
             self.model_dict[scenario].costs)
         self.results['uncertainty'][scenario]['flow_array'].append(

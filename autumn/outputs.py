@@ -872,6 +872,7 @@ class Project:
 
         """
         Determine whether to write to spreadsheets by scenario or by output
+
         """
 
         if self.inputs.model_constants['output_spreadsheets']:
@@ -884,12 +885,8 @@ class Project:
 
     def write_xls_by_output(self):
 
-        # Find directory to write to
-        # out_dir_project = self.find_or_make_directory()
-
         # Write a new file for each output
-        outputs = self.integer_output_dict['baseline'].keys()
-        for output in outputs:
+        for output in self.integer_output_dict['baseline'].keys():
 
             # Make filename
             path = os.path.join(self.out_dir_project, output)
@@ -1034,6 +1031,7 @@ class Project:
 
         """
         Determine whether to write to documents by scenario or by output
+
         """
 
         if self.inputs.model_constants['output_documents']:
@@ -1047,9 +1045,7 @@ class Project:
     def write_docs_by_output(self):
 
         # Write a new file for each output
-        outputs = self.integer_output_dict['baseline'].keys()
-
-        for output in outputs:
+        for output in self.integer_output_dict['baseline'].keys():
 
             # Initialise document
             path = os.path.join(self.out_dir_project, output)
@@ -1130,7 +1126,7 @@ class Project:
         output_colours = self.make_default_line_styles(5, True)
         for s, scenario in enumerate(self.scenarios):
             self.output_colours[scenario] = output_colours[s]
-        for p, program in enumerate(self.models['baseline'].interventions_to_cost):
+        for p, program in enumerate(self.program):
             # +1 is to avoid starting from black, which doesn't look as nice for programs as for baseline scenario
             self.program_colours[program] = output_colours[p + 1]
 

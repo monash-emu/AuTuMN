@@ -11,7 +11,7 @@ from scipy.stats import norm, beta
 
 def is_positive_definite(v):
 
-    return isfinite(v) and v > 0.0
+    return isfinite(v) and v > 0.
 
 
 def generate_candidates(n_candidates, param_ranges_unc):
@@ -46,7 +46,7 @@ class ModelRunner:
 
         self.inputs = data_processing.Inputs(True)
         self.inputs.read_and_load_data()
-        self.project = outputs.Project(self.inputs.country, self.inputs)
+        # self.project = outputs.Project(self.inputs.country, self.inputs)
         self.model_dict = {}
         self.is_last_run_success = False
         self.nb_accepted = 0
@@ -59,18 +59,17 @@ class ModelRunner:
         self.n_runs = 5  # Number of accepted runs per scenario
         self.burn_in = 0  # Number of accepted runs that we burn
         self.loglikelihoods = []
-        self.outputs_unc = [
-            {
-                'key': 'incidence',
-                'posterior_width': None,
-                'width_multiplier': 2.0  # for incidence for ex. Width of Normal posterior relative to CI width in data
-            }]
+        self.outputs_unc = [{'key': 'incidence',
+                             'posterior_width': None,
+                             'width_multiplier': 2.  # for incidence for ex. Width of Normal posterior relative to CI width in data
+                             }]
         # Width of the interval in which next parameter value is likely (95%) to be drawn.
         # (Expressed as a proportion of the width defined in bounds.)
         self.search_width = 0.2
         self.results = {}
         self.all_parameters_tried = {}
         self.whether_accepted_list = []
+        self.results['scenarios'] = {}
 
     def run_scenarios(self):
 
@@ -81,7 +80,7 @@ class ModelRunner:
             self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs)
 
             # Create an outputs object for use later
-            self.project.scenarios.append(scenario_name)
+            # self.project.scenarios.append(scenario_name)
 
             # Introduce model at first run
             tool_kit.introduce_model(self.model_dict, scenario_name)
@@ -103,10 +102,9 @@ class ModelRunner:
 
             # Integrate and add result to outputs object
             self.model_dict[scenario_name].integrate()
-            self.project.models[scenario_name] = self.model_dict[scenario_name]
+            # self.project.models[scenario_name] = self.model_dict[scenario_name]
 
             # Store
-            self.results['scenarios'] = {}
             self.store_scenario_results(scenario_name)
 
     def store_scenario_results(self, scenario):

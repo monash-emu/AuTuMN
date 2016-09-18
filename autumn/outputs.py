@@ -515,7 +515,7 @@ def plot_comparative_age_parameters(data_strat_list,
 
 class Project:
 
-    def __init__(self, country, inputs):
+    def __init__(self, model_runner):
 
         """
         Initialises an object of class Project, that will contain all the information (data + outputs) for writing a
@@ -524,14 +524,15 @@ class Project:
             models: dictionary such as: models = {'baseline': model, 'scenario_1': model_1,  ...}
         """
 
-        self.country = country.lower()
+        self.model_runner = model_runner
+        self.country = self.model_runner.inputs.country.lower()
         self.name = 'test_' + self.country
         self.scenarios = []
         self.models = {}
         self.full_output_dict = {}
         self.full_output_lists = {}
         self.integer_output_dict = {}
-        self.inputs = inputs
+        self.inputs = self.model_runner.inputs
         self.out_dir_project = os.path.join('projects', self.name)
         if not os.path.isdir(self.out_dir_project):
             os.makedirs(self.out_dir_project)
@@ -708,9 +709,10 @@ class Project:
 
         """
         Collates all the programs that are being run into a list.
+
         """
 
-        for program in self.models['baseline'].costs:
+        for program in self.model_runner.results['scenarios']['baseline']['costs']:
             if program != 'cost_times':
                 self.programs += [program]
 
@@ -806,18 +808,18 @@ class Project:
 
         """
         Add a dictionary of total costs that sums over all scenarios to the costs dictionary of each scenario.
+
         """
 
-        for scenario in self.scenarios:
-            self.models[scenario].costs['all_programs'] = {}
-            for cost in self.models[scenario].costs['vaccination']:
-                self.models[scenario].costs['all_programs'][cost] \
-                    = [0.] * len(self.models[scenario].costs['cost_times'])
-                for program in self.models[scenario].costs:
-                    if program != 'cost_times' and program != 'all_programs':
-                        for i in range(len(self.models[scenario].costs['cost_times'])):
-                            self.models[scenario].costs['all_programs'][cost][i] \
-                                += self.models[scenario].costs[program][cost][i]
+        for scenario in self.model_runner.results['scenarios']:
+            self.model_runner.results['scenarios'][scenario]['costs']['all_programs'] = {}
+            for cost in self.model_runner.results['scenarios'][scenario]['costs']['vaccination']:
+                self.model_runner.results['scenarios'][scenario]['costs']['all_programs'][cost] \
+                    = [0.] * len(self.model_runner.results['scenarios'][scenario]['costs']['cost_times'])
+                for program in self.programs:
+                    for i in range(len(self.model_runner.results['scenarios'][scenario]['costs']['cost_times'])):
+                        self.model_runner.results['scenarios'][scenario]['costs']['all_programs'][cost][i] \
+                            += self.model_runner.results['scenarios'][scenario]['costs'][program][cost][i]
 
     #################################################
     # Methods for outputting to Office applications #

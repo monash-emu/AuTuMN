@@ -525,24 +525,24 @@ class Project:
         """
 
         self.model_runner = model_runner
-        self.country = self.model_runner.inputs.country.lower()
+        self.inputs = self.model_runner.inputs
+        self.country = self.inputs.country.lower()
         self.name = 'test_' + self.country
         self.scenarios = []
-        self.models = {}
         self.full_output_dict = {}
         self.full_output_lists = {}
         self.integer_output_dict = {}
-        self.inputs = self.model_runner.inputs
         self.out_dir_project = os.path.join('projects', self.name)
         if not os.path.isdir(self.out_dir_project):
             os.makedirs(self.out_dir_project)
         self.ci_percentage = 95.
         self.figure_number = 1
-        self.classifications = ['demo_', 'econ_', 'epi_', 'program_prop_', 'program_timeperiod']
+        self.classifications = ['demo_', 'econ_', 'epi_', 'program_prop_', 'program_timeperiod_']
         self.output_colours = {}
         self.program_colours = {}
         self.programs = []
         self.suptitle_size = 13
+        self.classified_scaleups = {}
 
     #################################
     # General methods for use below #
@@ -1126,7 +1126,7 @@ class Project:
         output_colours = self.make_default_line_styles(5, True)
         for s, scenario in enumerate(self.scenarios):
             self.output_colours[scenario] = output_colours[s]
-        for p, program in enumerate(self.program):
+        for p, program in enumerate(self.programs):
             # +1 is to avoid starting from black, which doesn't look as nice for programs as for baseline scenario
             self.program_colours[program] = output_colours[p + 1]
 
@@ -1183,6 +1183,7 @@ class Project:
 
         Args:
             outputs: A list of the outputs to be plotted
+
         """
 
         # Standard preliminaries
@@ -1281,10 +1282,14 @@ class Project:
 
     def classify_scaleups(self):
 
-        self.classified_scaleups = {}
+        """
+        Classifies the time variant parameters according to their type (e.g. programmatic, economic, demographic, etc.)
+
+        """
+
         for classification in self.classifications:
             self.classified_scaleups[classification] = []
-            for fn in self.models['baseline'].scaleup_fns:
+            for fn in self.model_runner.model_dict['baseline'].scaleup_fns:
                 if classification in fn:
                     self.classified_scaleups[classification] += [fn]
 
@@ -1308,7 +1313,7 @@ class Project:
             # Find some x-values
             start_time = self.inputs.model_constants['plot_start_time']
             end_time = self.inputs.model_constants['plot_end_time']
-            x_vals = numpy.linspace(start_time, end_time, 1E3)
+            x_vals = numpy.linspace(start_time, end_time, 1e3)
 
             # Main title for whole figure
             title = self.inputs.model_constants['country'] + ' ' + \
@@ -1329,7 +1334,7 @@ class Project:
 
                     # Line plot of scaling parameter functions
                     ax.plot(x_vals,
-                            map(self.models[scenario].scaleup_fns[function],
+                            map(self.model_runner.model_dict[scenario].scaleup_fns[function],
                                 x_vals),
                             color=self.output_colours[scenario][1])
 
@@ -1371,6 +1376,7 @@ class Project:
 
         """
         Plots only the programmatic time-variant functions on a single set of axes
+
         """
 
         # Functions to plot are those in the program_prop_ category of the classified scaleups
@@ -1384,7 +1390,7 @@ class Project:
         # Get some x values for plotting
         x_vals = numpy.linspace(self.inputs.model_constants['plot_start_time'],
                                 self.inputs.model_constants['plot_end_time'],
-                                1E3)
+                                1e3)
 
         # Plot functions for baseline model run only
         scenario_labels = []
@@ -1421,8 +1427,8 @@ class Project:
             fig = self.set_and_update_figure()
 
             # Subplots by program
-            subplot_grid = self.find_subplot_numbers(len(self.models[scenario].interventions_to_cost))
-            for p, program in enumerate(self.models[scenario].interventions_to_cost):
+            subplot_grid = self.find_subplot_numbers(len(self.programs))
+            for p, program in enumerate(self.programs):
 
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
                 scenario_labels = []
@@ -1433,7 +1439,8 @@ class Project:
                               int(self.inputs.model_constants['cost_curve_step_time']))
 
                 for t, time in enumerate(times):
-                    time_index = tool_kit.find_first_list_element_at_least_value(self.models[scenario].times, time)
+                    time_index = tool_kit.find_first_list_element_at_least_value(
+                        self.model_runner.model_dict[scenario].times, time)
                     y_values = []
                     x_values = []
                     for i in numpy.linspace(0, 1, 101):
@@ -1447,10 +1454,10 @@ class Project:
                                                                                                 + program],
                                                                     self.inputs.model_constants['econ_unitcost_'
                                                                                                 + program],
-                                                                    self.models[
+                                                                    self.model_runner.model_dict[
                                                                         scenario].var_array[
                                                                         time_index,
-                                                                        self.models[
+                                                                        self.model_runner.model_dict[
                                                                             scenario].var_labels.index('popsize_'
                                                                                                        + program)])
                             x_values += [cost]
@@ -1470,7 +1477,7 @@ class Project:
                     scenario_labels += [str(int(time))]
 
                 # Legend to last panel
-                if p == len(self.models[scenario].interventions_to_cost) - 1:
+                if p == len(self.programs) - 1:
                     scenario_handles = ax.lines
                     self.make_legend_to_single_axis(ax, scenario_handles, scenario_labels)
                 ax.set_title(tool_kit.find_title_from_dictionary('program_prop_' + program)[:-9],
@@ -1502,25 +1509,25 @@ class Project:
             fig_individual = self.set_and_update_figure()
             fig_stacked = self.set_and_update_figure()
             fig_relative = self.set_and_update_figure()
-            subplot_grid = self.find_subplot_numbers(len(self.models[scenario].costs['vaccination']))
+            subplot_grid = self.find_subplot_numbers(len(self.model_runner.model_dict[scenario].costs['vaccination']))
 
             # Find the maximum of any type of cost across all of the programs
             max_cost = 0.
             max_stacked_cost = 0.
             for program in self.programs:
-                for cost in self.models[scenario].costs[program]:
-                    if max(self.models[scenario].costs[program][cost]) > max_cost:
-                        max_cost = max(self.models[scenario].costs[program][cost])
-            for cost in self.models[scenario].costs['all_programs']:
-                if max(self.models[scenario].costs['all_programs'][cost]) > max_stacked_cost:
-                    max_stacked_cost = max(self.models[scenario].costs['all_programs'][cost])
+                for cost in self.model_runner.model_dict[scenario].costs[program]:
+                    if max(self.model_runner.model_dict[scenario].costs[program][cost]) > max_cost:
+                        max_cost = max(self.model_runner.model_dict[scenario].costs[program][cost])
+            for cost in self.model_runner.model_dict[scenario].costs['all_programs']:
+                if max(self.model_runner.model_dict[scenario].costs['all_programs'][cost]) > max_stacked_cost:
+                    max_stacked_cost = max(self.model_runner.model_dict[scenario].costs['all_programs'][cost])
 
             # Scale vertical axis and amend axis label as appropriate
             multiplier_individual, multiplier_individual_label = self.scale_axes(max_cost)
             multiplier_stacked, multiplier_stacked_label = self.scale_axes(max_stacked_cost)
 
             # Find the index for the first time after the current time
-            reference_time_index = tool_kit.find_first_list_element_above_value(self.models[scenario].costs['cost_times'],
+            reference_time_index = tool_kit.find_first_list_element_above_value(self.model_runner.model_dict[scenario].costs['cost_times'],
                                                                                 self.inputs.model_constants['reference_time'])
 
             # Just using vaccination to get one set of cost keys (should hopefully be consistently be available)
@@ -1544,36 +1551,36 @@ class Project:
 
                 # Create empty list for legend
                 program_labels = []
-                cumulative_data = [0.] * len(self.models[scenario].costs['cost_times'])
+                cumulative_data = [0.] * len(self.model_runner.model_dict[scenario].costs['cost_times'])
 
-                for program in self.models[scenario].interventions_to_cost:
+                for program in self.model_runner.model_dict[scenario].interventions_to_cost:
 
                     # Record the previous data for plotting as an independent object for the lower edge of the fill
                     previous_data = copy.copy(cumulative_data)
 
                     # Calculate the cumulative sum for the upper edge of the fill
-                    for i in range(len(self.models[scenario].costs[program][cost])):
-                        cumulative_data[i] += self.models[scenario].costs[program][cost][i]
+                    for i in range(len(self.model_runner.model_dict[scenario].costs[program][cost])):
+                        cumulative_data[i] += self.model_runner.model_dict[scenario].costs[program][cost][i]
 
                     # Scale all the data
-                    individual_data = [d * multiplier_individual for d in self.models[scenario].costs[program][cost]]
+                    individual_data = [d * multiplier_individual for d in self.model_runner.model_dict[scenario].costs[program][cost]]
                     cumulative_data_to_plot = [d * multiplier_stacked for d in cumulative_data]
                     previous_data_to_plot = [d * multiplier_stacked for d in previous_data]
 
-                    reference_cost = self.models[scenario].costs[program][cost][reference_time_index]
+                    reference_cost = self.model_runner.model_dict[scenario].costs[program][cost][reference_time_index]
                     relative_data = [(d - reference_cost) * multiplier_individual
-                                     for d in self.models[scenario].costs[program][cost]]
+                                     for d in self.model_runner.model_dict[scenario].costs[program][cost]]
 
                     # Plot lines
-                    ax_individual.plot(self.models[scenario].costs['cost_times'],
+                    ax_individual.plot(self.model_runner.model_dict[scenario].costs['cost_times'],
                                        individual_data,
                                        color=self.program_colours[program][1])
-                    ax_relative.plot(self.models[scenario].costs['cost_times'],
+                    ax_relative.plot(self.model_runner.model_dict[scenario].costs['cost_times'],
                                      relative_data,
                                      color=self.program_colours[program][1])
 
                     # Plot stacked
-                    ax_stacked.fill_between(self.models[scenario].costs['cost_times'],
+                    ax_stacked.fill_between(self.model_runner.model_dict[scenario].costs['cost_times'],
                                             previous_data_to_plot,
                                             cumulative_data_to_plot,
                                             color=self.program_colours[program][1],
@@ -1597,7 +1604,7 @@ class Project:
                         tick.label.set_fontsize(get_nice_font_size(subplot_grid))
 
                     # Add the legend to last subplot panel
-                    if c == len(self.models[scenario].costs['vaccination']) - 1:
+                    if c == len(self.model_runner.model_dict[scenario].costs['vaccination']) - 1:
                         ax.legend(ax_individual.lines,
                                   program_labels,
                                   fontsize=get_nice_font_size(subplot_grid),
@@ -1616,7 +1623,7 @@ class Project:
                                  fontsize=self.suptitle_size)
             self.save_figure(fig_stacked, '_' + scenario + '_timecost_stacked')
             fig_relative.suptitle('Relative program costs for ' + tool_kit.find_title_from_dictionary(scenario),
-                                 fontsize=self.suptitle_size)
+                                  fontsize=self.suptitle_size)
             self.save_figure(fig_relative, '_' + scenario + '_timecost_relative')
 
     def plot_populations(self, strain_or_organ='organ'):
@@ -2012,3 +2019,4 @@ class Project:
                 continue
             self.models[scenario].uncertainty_results = self.models['baseline'].uncertainty_results[scenario]
         self.models['baseline'].uncertainty_results = self.models['baseline'].uncertainty_results['baseline']
+

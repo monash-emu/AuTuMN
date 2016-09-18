@@ -221,7 +221,9 @@ def find_title_from_dictionary(name):
         'early_time':
             'start of model run',
         'program_prop_decentralisation':
-            'Decentralisation coverage'
+            'Decentralisation coverage',
+        'epi_rr_diabetes':
+            'Diabetes progression relative risk'
     }
 
     if name in dictionary_of_names:

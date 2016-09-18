@@ -697,7 +697,7 @@ class Project:
         """
 
         # Work out what programs are being run
-        self.find_programs()
+        self.find_scenarios_and_program()
 
         # Add total costs to the programs in the cost attribute of each model
         self.add_total_cost_dict()
@@ -705,12 +705,15 @@ class Project:
         # Create outputs dictionaries
         self.create_output_dicts()
 
-    def find_programs(self):
+    def find_scenarios_and_program(self):
 
         """
-        Collates all the programs that are being run into a list.
+        Finds the scenarios that have been run and collates all the programs being implemented into a list.
 
         """
+
+        self.scenarios = self.model_runner.model_dict.keys()
+        self.scenarios.reverse()
 
         for program in self.model_runner.results['scenarios']['baseline']['costs']:
             if program != 'cost_times':
@@ -730,10 +733,26 @@ class Project:
         self.add_full_economics_dict()
         self.extract_integer_dict()
 
+    def find_var_index(self, var):
+
+        """
+        Finds the index number for a var in the var arrays. (Arbitrarily uses the baseline model from the model runner.)
+
+        Args:
+            var: String for the var that we're looking for.
+
+        Returns:
+            The var's index (unnamed).
+
+        """
+
+        return self.model_runner.model_dict['baseline'].var_labels.index(var)
+
     def create_full_output_dict(self, outputs):
 
         """
-        Creates a dictionary for each requested output at every time point in that model's times attribute
+        Creates a dictionary for each requested output at every time point in that model's times attribute.
+
         """
 
         for scenario in self.scenarios:
@@ -741,10 +760,12 @@ class Project:
             self.full_output_lists[scenario] = {}
 
             for label in outputs:
-                self.full_output_lists[scenario]['times'] = self.models[scenario].times
-                self.full_output_lists[scenario][label] = self.models[scenario].get_var_soln(label)
+                self.full_output_lists[scenario]['times'] = self.model_runner.model_dict[scenario].times
+                self.full_output_lists[scenario][label] \
+                    = list(self.model_runner.results['scenarios'][scenario]['var_array'][:, self.find_var_index(label)])
                 self.full_output_dict[scenario][label] = dict(zip(self.full_output_lists[scenario]['times'],
                                                                   self.full_output_lists[scenario][label]))
+
                 # Add uncertainty data to full dictionary
                 # if self.models['baseline'].inputs.model_constants['output_uncertainty']:
                 #     self.full_output_dict[scenario][label + '_low'] = {}

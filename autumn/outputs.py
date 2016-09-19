@@ -791,9 +791,12 @@ class Project:
                     for working_centile in range(101) + [2.5, 97.5]:
                         self.full_uncertainty_dicts[label]['centile_' + str(working_centile)] \
                             = np.percentile(
-                            self.model_runner.results['uncertainty'][scenario]['var_array'][:, index_label, :],
-                            float(working_centile),
-                            axis=1)
+                                self.model_runner.results['uncertainty'][scenario]['var_array'][
+                                    :, index_label, self.model_runner.whether_accepted_list],
+                                float(working_centile),
+                                axis=1)
+
+        print()
 
     def add_full_economics_dict(self):
 

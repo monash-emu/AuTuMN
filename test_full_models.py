@@ -8,8 +8,7 @@ start_realtime = datetime.datetime.now()
 
 # Run everything
 model_runner = autumn.model_runner.ModelRunner()
-model_runner.run_scenarios()
-model_runner.master_uncertainty()
+model_runner.master_runner()
 project = autumn.outputs.Project(model_runner)
 project.master_outputs_runner()
 

@@ -59,8 +59,6 @@ class ModelRunner:
                              'posterior_width': None,
                              'width_multiplier': 2.  # for incidence for ex. Width of Normal posterior relative to CI width in data
                              }]
-        # Width of the interval in which next parameter value is likely (95%) to be drawn.
-        # (Expressed as a proportion of the width defined in bounds.)
         self.search_width = 0.2
         self.results = {}
         self.all_parameters_tried = {}
@@ -71,16 +69,13 @@ class ModelRunner:
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array']
         self.pickle_uncertainty = None
 
-    def run_scenarios(self):
+    def master_runner(self):
 
         for scenario in self.inputs.model_constants['scenarios_to_run']:
 
             # Name and initialise model
             scenario_name = tool_kit.find_scenario_string_from_number(scenario)
             self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs)
-
-            # Create an outputs object for use later
-            # self.project.scenarios.append(scenario_name)
 
             # Introduce model at first run
             tool_kit.introduce_model(self.model_dict, scenario_name)
@@ -106,6 +101,32 @@ class ModelRunner:
 
             # Store
             self.store_scenario_results(scenario_name)
+
+        print('Uncertainty analysis')
+        if self.inputs.model_constants['output_uncertainty']:
+
+            # Prepare directory for eventual pickling
+            out_dir = 'pickles'
+            if not os.path.isdir(out_dir):
+                os.makedirs(out_dir)
+            results_file = os.path.join(out_dir, 'results_uncertainty.pkl')
+            indices_file = os.path.join(out_dir, 'indices_uncertainty.pkl')
+
+            # Don't run uncertainty but load a saved simulation
+            if self.pickle_uncertainty == 'read':
+                self.results['uncertainty'] = tool_kit.pickle_load(results_file)
+                self.accepted_indices = tool_kit.pickle_load(indices_file)
+                print 'Uncertainty results loaded from previous simulation'
+
+            # Run uncertainty
+            else:
+                self.run_uncertainty()
+
+            # Write uncertainty if requested
+            if self.pickle_uncertainty == 'write':
+                tool_kit.pickle_save(self.results['uncertainty'], results_file)
+                tool_kit.pickle_save(self.accepted_indices, indices_file)
+                print 'Uncertainty results written to disc'
 
     def store_scenario_results(self, scenario):
 
@@ -134,34 +155,6 @@ class ModelRunner:
         self.results['scenarios'][scenario]['var_array'] \
             = self.model_dict[scenario].var_array
 
-    def master_uncertainty(self):
-
-        print('Uncertainty analysis')
-        if self.inputs.model_constants['output_uncertainty']:
-
-            # Prepare directory for eventual pickling
-            out_dir = 'pickles'
-            if not os.path.isdir(out_dir):
-                os.makedirs(out_dir)
-            results_file = os.path.join(out_dir, 'results_uncertainty.pkl')
-            indices_file = os.path.join(out_dir, 'indices_uncertainty.pkl')
-
-            # Don't run uncertainty but load a saved simulation
-            if self.pickle_uncertainty == 'read':
-                self.results['uncertainty'] = tool_kit.pickle_load(results_file)
-                self.accepted_indices = tool_kit.pickle_load(indices_file)
-                print 'Uncertainty results loaded from previous simulation'
-
-            # Run uncertainty
-            else:
-                self.run_uncertainty()
-
-            # Write uncertainty if requested
-            if self.pickle_uncertainty == 'write':
-                tool_kit.pickle_save(self.results['uncertainty'], results_file)
-                tool_kit.pickle_save(self.accepted_indices, indices_file)
-                print 'Uncertainty results written to disc'
-
     def run_uncertainty(self):
 
         """
@@ -179,7 +172,7 @@ class ModelRunner:
         param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
         normal_char = self.get_normal_char()
 
-        # Prepare for loop
+        # Prepare for uncertainty loop
         for param_dict in self.inputs.param_ranges_unc:
             self.accepted_parameters[param_dict['key']] = []
             self.all_parameters_tried[param_dict['key']] = []
@@ -334,9 +327,23 @@ class ModelRunner:
 
     def convert_param_list_to_dict(self, params):
 
+        """
+        Extract parameters from list into dictionary that can be used for setting in the model
+        through the set_model_with_params method.
+
+        Args:
+            params: The parameter names for extraction.
+
+        Returns:
+            param_dict: The dictionary returned in appropriate format.
+
+        """
+
         param_dict = {}
+
         for names, vals in zip(self.inputs.param_ranges_unc, params):
             param_dict[names['key']] = vals
+
         return param_dict
 
     def get_normal_char(self):
@@ -355,12 +362,15 @@ class ModelRunner:
         normal_char = {}
         for output_dict in self.inputs.outputs_unc:
             normal_char[output_dict['key']] = {}
+
+            # Mortality
             if output_dict['key'] == 'mortality':
                 sd = output_dict['posterior_width'] / (2.0 * 1.96)
                 for year in self.inputs.data_to_fit[output_dict['key']].keys():
                     mu = self.inputs.data_to_fit[output_dict['key']][year]
                     normal_char[output_dict['key']][year] = [mu, sd]
 
+            # Incidence
             elif output_dict['key'] == 'incidence':
                 for year in self.inputs.data_to_fit[output_dict['key']].keys():
                     low = self.inputs.data_to_fit['incidence_low'][year]
@@ -402,6 +412,14 @@ class ModelRunner:
         return new_params
 
     def run_with_params(self, params):
+
+        """
+        Integrate the model with the proposed parameter set.
+
+        Args:
+            params: The parameters to be set in the model.
+
+        """
 
         # Check whether parameter values are acceptable
         for p, param in enumerate(params):
@@ -491,7 +509,7 @@ class ModelRunner:
                     = numpy.dstack([self.results['uncertainty'][scenario][attribute],
                                     getattr(self.model_dict[scenario], attribute)])
 
-        # Costs (which have a different structure)
+        # For costs (which have a different structure)
         for program in self.model_dict[scenario].costs:
             if program == 'cost_times':
                 if self.results['uncertainty'][scenario]['costs'][program] == []:

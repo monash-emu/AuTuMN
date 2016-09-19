@@ -531,11 +531,11 @@ class Project:
         self.scenarios = []
         self.full_output_dict = {}
         self.full_output_lists = {}
+        self.full_uncertainty_dicts = {}
         self.integer_output_dict = {}
         self.out_dir_project = os.path.join('projects', self.name)
         if not os.path.isdir(self.out_dir_project):
             os.makedirs(self.out_dir_project)
-        self.ci_percentage = 95.
         self.figure_number = 1
         self.classifications = ['demo_', 'econ_', 'epi_', 'program_prop_', 'program_timeperiod_']
         self.output_colours = {}
@@ -544,14 +544,13 @@ class Project:
         self.suptitle_size = 13
         self.classified_scaleups = {}
 
-        # Find some characteristics from the models within model runner
+        # Extract some characteristics from the models within model runner
         self.scenarios = self.model_runner.model_dict.keys()
         self.scenarios.reverse()
         for program in self.model_runner.results['scenarios']['baseline']['costs']:
             if program != 'cost_times':
                 self.programs += [program]
         self.costs = self.model_runner.results['scenarios']['baseline']['costs']['vaccination'].keys()
-        self.full_uncertainty_dicts = {}
 
     #################################
     # General methods for use below #
@@ -816,20 +815,6 @@ class Project:
                     economics_dict[
                         'cost_' + intervention][self.model_runner.model_dict[scenario].costs['cost_times'][t]] \
                         = self.model_runner.model_dict[scenario].costs[intervention]['raw_cost'][t]
-
-                # Add uncertainty data to full dictionary
-                # if self.models['baseline'].inputs.model_constants['output_uncertainty']:
-                #     times = self.models[scenario].costs['cost_times']
-                #     economics_dict['cost_' + intervention + '_low'] = {}
-                #     economics_dict['cost_' + intervention + '_high'] = {}
-                #
-                #     for time in times:
-                #         economics_dict['cost_' + intervention + '_low'][time] = np.percentile(
-                #             self.models[scenario].uncertainty_results['costs'][intervention]['raw_cost'][time],
-                #             q=0.5 * (100. - self.ci_percentage))
-                #         economics_dict['cost_' + intervention + '_high'][time] = np.percentile(
-                #             self.models[scenario].uncertainty_results['costs'][intervention]['raw_cost'][time],
-                #             q=100 - 0.5 * (100. - self.ci_percentage))
 
             self.full_output_dict[scenario].update(economics_dict)
 

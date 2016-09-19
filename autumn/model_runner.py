@@ -411,33 +411,38 @@ class ModelRunner:
 
     def prepare_uncertainty_dictionaries(self, scenario):
 
-        # Not done
         self.results['uncertainty'][scenario] = {}
-        self.results['uncertainty'][scenario]['compartment_soln'] = []
 
         # Done
+        self.results['uncertainty'][scenario]['compartment_soln'] = []
         self.results['uncertainty'][scenario]['compartment_soln_array'] = {}
 
         # Not done
         self.results['uncertainty'][scenario]['costs'] = []
+        self.results['uncertainty'][scenario]['costs_array'] = {}
+        for program in self.model_dict['baseline'].costs:
+            if program == 'cost_times':
+                self.results['uncertainty'][scenario]['costs_array'][program] = []
+            else:
+                self.results['uncertainty'][scenario]['costs_array'][program] = {}
+
+        # Not done, different format
         self.results['uncertainty'][scenario]['flow_array'] = []
         self.results['uncertainty'][scenario]['fraction_array'] = []
-        self.results['uncertainty'][scenario]['fraction_soln'] = []
 
         # Done
+        self.results['uncertainty'][scenario]['fraction_soln'] = []
         self.results['uncertainty'][scenario]['fraction_soln_array'] = {}
 
-        # Not done
+        # Not done, different format
         self.results['uncertainty'][scenario]['soln_array'] = []
         self.results['uncertainty'][scenario]['var_array'] = []
 
     def store_uncertainty_results(self, scenario):
 
-        # Not done
+        # Done
         self.results['uncertainty'][scenario]['compartment_soln'].append(
             self.model_dict[scenario].compartment_soln)
-
-        # Done
         for compartment in self.model_dict[scenario].compartment_soln:
             if compartment in self.results['uncertainty'][scenario]['compartment_soln_array']:
                 self.results['uncertainty'][scenario]['compartment_soln_array'][compartment] \
@@ -447,13 +452,34 @@ class ModelRunner:
                 self.results['uncertainty'][scenario]['compartment_soln_array'][compartment] \
                     = self.model_dict[scenario].compartment_soln[compartment]
 
-        # Not done
+        # Doing
         self.results['uncertainty'][scenario]['costs'].append(
             self.model_dict[scenario].costs)
+        for program in self.model_dict[scenario].costs:
+            if program == 'cost_times':
+                if self.results['uncertainty'][scenario]['costs_array'][program] == []:
+                    self.results['uncertainty'][scenario]['costs_array'][program] \
+                        = self.model_dict[scenario].costs[program]
+                else:
+                    self.results['uncertainty'][scenario]['costs_array'][program] \
+                        = numpy.vstack([self.results['uncertainty'][scenario]['costs_array'][program],
+                                        self.model_dict[scenario].costs[program]])
+            else:
+                for cost in self.model_dict[scenario].costs['vaccination']:
+                    if cost in self.results['uncertainty'][scenario]['costs_array'][program]:
+                        self.results['uncertainty'][scenario]['costs_array'][program][cost] \
+                            = numpy.vstack([self.results['uncertainty'][scenario]['costs_array'][program][cost],
+                                            self.model_dict[scenario].costs[program][cost]])
+                    else:
+                        self.results['uncertainty'][scenario]['costs_array'][program][cost] \
+                            = self.model_dict[scenario].costs[program][cost]
+
         self.results['uncertainty'][scenario]['flow_array'].append(
             self.model_dict[scenario].flow_array)
 
         # Done
+        self.results['uncertainty'][scenario]['fraction_soln'].append(
+            self.model_dict[scenario].fraction_soln)
         for compartment in self.model_dict[scenario].fraction_soln:
             if compartment in self.results['uncertainty'][scenario]['fraction_soln_array']:
                 self.results['uncertainty'][scenario]['fraction_soln_array'][compartment] \
@@ -466,8 +492,6 @@ class ModelRunner:
         # Not done
         self.results['uncertainty'][scenario]['fraction_array'].append(
             self.model_dict[scenario].fraction_array)
-        self.results['uncertainty'][scenario]['fraction_soln'].append(
-            self.model_dict[scenario].fraction_soln)
         self.results['uncertainty'][scenario]['soln_array'].append(
             self.model_dict[scenario].soln_array)
         self.results['uncertainty'][scenario]['var_array'].append(

@@ -66,6 +66,9 @@ class ModelRunner:
         self.all_parameters_tried = {}
         self.whether_accepted_list = []
         self.results['scenarios'] = {}
+        self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
+        self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array']
+        self.pickle_uncertainty = None
 
     def run_scenarios(self):
 
@@ -142,21 +145,18 @@ class ModelRunner:
             filename = os.path.join(out_dir, 'uncertainty.pkl')
 
             # Don't run uncertainty but load a saved simulation
-            # if self.project.models['baseline'].pickle_uncertainty == 'read':
-            #     self.project.models['baseline'].uncertainty_results = tool_kit.pickle_load(filename)
-            #     print "Uncertainty results loaded from previous simulation"
+            if self.pickle_uncertainty == 'read':
+                self.results['uncertainty'] = tool_kit.pickle_load(filename)
+                print 'Uncertainty results loaded from previous simulation'
 
             # Run uncertainty
-            # else:
-                # self.prepare_uncertainty_storage()
-            self.run_uncertainty()
+            else:
+                self.run_uncertainty()
 
             # Write uncertainty if requested
-            # if self.project.models['baseline'].pickle_uncertainty == 'write':
-            #     tool_kit.pickle_save(self.project.models['baseline'].uncertainty_results, filename)
-            #     print "Uncertainty results written on the disc"
-            #
-            # self.project.rearrange_uncertainty()
+            if self.pickle_uncertainty == 'write':
+                tool_kit.pickle_save(self.results['uncertainty'], filename)
+                print 'Uncertainty results written to disc'
 
     def run_uncertainty(self):
 
@@ -411,18 +411,26 @@ class ModelRunner:
 
     def prepare_uncertainty_dictionaries(self, scenario):
 
+        """
+        Prepare dictionaries for uncertainty results to be populated. There are three different formats to deal with,
+        one for "solns", which are dictionary format, one for "arrays", which are numpy ndarray formats and
+        "costs", which are dictionaries of lists.
+
+        Args:
+            scenario: The scenario currently being run.
+
+        """
+
         # First dictionary tier declaration
         self.results['uncertainty'][scenario] = {}
 
         # For dictionary of lists formats
-        self.results['uncertainty'][scenario]['compartment_soln'] = {}
-        self.results['uncertainty'][scenario]['fraction_soln'] = {}
+        for attribute in self.solns_for_extraction:
+            self.results['uncertainty'][scenario][attribute] = {}
 
         # For array formats
-        self.results['uncertainty'][scenario]['flow_array'] = []
-        self.results['uncertainty'][scenario]['fraction_array'] = []
-        self.results['uncertainty'][scenario]['soln_array'] = []
-        self.results['uncertainty'][scenario]['var_array'] = []
+        for attribute in self.arrays_for_extraction:
+            self.results['uncertainty'][scenario][attribute] = []
 
         # Costs (which have a different structure)
         self.results['uncertainty'][scenario]['costs'] = {}
@@ -434,53 +442,34 @@ class ModelRunner:
 
     def store_uncertainty_results(self, scenario):
 
+        """
+        Store the uncertainty results in the dictionaries created in prepare_uncertainty_dictionaries.
+
+        Args:
+            scenario: The scenario that has been run.
+
+        """
+
         # For dictionary of lists formats
-        for compartment in self.model_dict[scenario].compartment_soln:
-            if compartment in self.results['uncertainty'][scenario]['compartment_soln']:
-                self.results['uncertainty'][scenario]['compartment_soln'][compartment] \
-                    = numpy.vstack([self.results['uncertainty'][scenario]['compartment_soln'][compartment],
-                                    self.model_dict[scenario].compartment_soln[compartment]])
-            else:
-                self.results['uncertainty'][scenario]['compartment_soln'][compartment] \
-                    = self.model_dict[scenario].compartment_soln[compartment]
-        for compartment in self.model_dict[scenario].fraction_soln:
-            if compartment in self.results['uncertainty'][scenario]['fraction_soln']:
-                self.results['uncertainty'][scenario]['fraction_soln'][compartment] \
-                    = numpy.vstack([self.results['uncertainty'][scenario]['fraction_soln'][compartment],
-                                    self.model_dict[scenario].fraction_soln[compartment]])
-            else:
-                self.results['uncertainty'][scenario]['fraction_soln'][compartment] \
-                    = self.model_dict[scenario].fraction_soln[compartment]
+        for attribute in self.solns_for_extraction:
+            for compartment in self.model_dict[scenario].compartment_soln:
+                if compartment in self.results['uncertainty'][scenario][attribute]:
+                    self.results['uncertainty'][scenario][attribute][compartment] \
+                        = numpy.vstack([self.results['uncertainty'][scenario][attribute][compartment],
+                                        getattr(self.model_dict[scenario], attribute)[compartment]])
+                else:
+                    self.results['uncertainty'][scenario][attribute][compartment] \
+                        = getattr(self.model_dict[scenario], attribute)[compartment]
 
         # For array formats
-        if self.results['uncertainty'][scenario]['flow_array'] == []:
-            self.results['uncertainty'][scenario]['flow_array'] \
-                = self.model_dict[scenario].flow_array
-        else:
-            self.results['uncertainty'][scenario]['flow_array'] \
-                = numpy.dstack([self.results['uncertainty'][scenario]['flow_array'],
-                                self.model_dict[scenario].flow_array])
-        if self.results['uncertainty'][scenario]['fraction_array'] == []:
-            self.results['uncertainty'][scenario]['fraction_array'] \
-                = self.model_dict[scenario].fraction_array
-        else:
-            self.results['uncertainty'][scenario]['fraction_array'] \
-                = numpy.dstack([self.results['uncertainty'][scenario]['fraction_array'],
-                                self.model_dict[scenario].fraction_array])
-        if self.results['uncertainty'][scenario]['soln_array'] == []:
-            self.results['uncertainty'][scenario]['soln_array'] \
-                = self.model_dict[scenario].soln_array
-        else:
-            self.results['uncertainty'][scenario]['soln_array'] \
-                = numpy.dstack([self.results['uncertainty'][scenario]['soln_array'],
-                                self.model_dict[scenario].soln_array])
-        if self.results['uncertainty'][scenario]['var_array'] == []:
-            self.results['uncertainty'][scenario]['var_array'] \
-                = self.model_dict[scenario].var_array
-        else:
-            self.results['uncertainty'][scenario]['var_array'] \
-                = numpy.dstack([self.results['uncertainty'][scenario]['var_array'],
-                                self.model_dict[scenario].var_array])
+        for attribute in self.arrays_for_extraction:
+            if self.results['uncertainty'][scenario][attribute] == []:
+                self.results['uncertainty'][scenario][attribute] \
+                    = getattr(self.model_dict[scenario], attribute)
+            else:
+                self.results['uncertainty'][scenario][attribute] \
+                    = numpy.dstack([self.results['uncertainty'][scenario][attribute],
+                                    getattr(self.model_dict[scenario], attribute)])
 
         # Costs (which have a different structure)
         for program in self.model_dict[scenario].costs:
@@ -501,5 +490,6 @@ class ModelRunner:
                     else:
                         self.results['uncertainty'][scenario]['costs'][program][cost] \
                             = self.model_dict[scenario].costs[program][cost]
+
 
 

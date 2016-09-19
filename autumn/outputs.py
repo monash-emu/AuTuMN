@@ -551,6 +551,7 @@ class Project:
             if program != 'cost_times':
                 self.programs += [program]
         self.costs = self.model_runner.results['scenarios']['baseline']['costs']['vaccination'].keys()
+        self.full_uncertainty_dicts = {}
 
     #################################
     # General methods for use below #
@@ -784,16 +785,15 @@ class Project:
                                                                   self.full_output_lists[scenario][label]))
 
                 # Add uncertainty data to full dictionary
-                # if self.inputs.model_constants['output_uncertainty']:
-                #     self.full_output_dict[scenario][label + '_low'] = {}
-                #     self.full_output_dict[scenario][label + '_high'] = {}
-                #     for time in self.models[scenario].times:
-                #         self.full_output_dict[scenario][label + '_low'][time] \
-                # = np.percentile(self.models[scenario].uncertainty_results[label][time],
-                # q=0.5*(100. - self.ci_percentage))
-                #         self.full_output_dict[scenario][label + '_high'][time] \
-                # = np.percentile(self.models[scenario].uncertainty_results[label][time],
-                # q=100 - 0.5*(100. - self.ci_percentage))
+                if self.inputs.model_constants['output_uncertainty']:
+                    self.full_uncertainty_dicts[label] = {}
+                    index_label = self.find_var_index(label)
+                    for working_centile in range(101) + [2.5, 97.5]:
+                        self.full_uncertainty_dicts[label]['centile_' + str(working_centile)] \
+                            = np.percentile(
+                            self.model_runner.results['uncertainty'][scenario]['var_array'][:, index_label, :],
+                            float(working_centile),
+                            axis=1)
 
     def add_full_economics_dict(self):
 

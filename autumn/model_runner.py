@@ -52,7 +52,7 @@ class ModelRunner:
         self.accepted_parameters = {}
         self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
                                       'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
-        self.n_runs = 2  # Number of accepted runs per scenario
+        self.n_runs = 5  # Number of accepted runs per scenario
         self.burn_in = 0  # Number of accepted runs that we burn
         self.loglikelihoods = []
         self.outputs_unc = [{'key': 'incidence',
@@ -142,11 +142,13 @@ class ModelRunner:
             out_dir = 'pickles'
             if not os.path.isdir(out_dir):
                 os.makedirs(out_dir)
-            filename = os.path.join(out_dir, 'uncertainty.pkl')
+            results_file = os.path.join(out_dir, 'results_uncertainty.pkl')
+            acceptance_file = os.path.join(out_dir, 'acceptance_uncertainty.pkl')
 
             # Don't run uncertainty but load a saved simulation
             if self.pickle_uncertainty == 'read':
-                self.results['uncertainty'] = tool_kit.pickle_load(filename)
+                self.results['uncertainty'] = tool_kit.pickle_load(results_file)
+                self.whether_accepted_list = tool_kit.pickle_load(acceptance_file)
                 print 'Uncertainty results loaded from previous simulation'
 
             # Run uncertainty
@@ -155,7 +157,8 @@ class ModelRunner:
 
             # Write uncertainty if requested
             if self.pickle_uncertainty == 'write':
-                tool_kit.pickle_save(self.results['uncertainty'], filename)
+                tool_kit.pickle_save(self.results['uncertainty'], results_file)
+                tool_kit.pickle_save(self.whether_accepted_list, acceptance_file)
                 print 'Uncertainty results written to disc'
 
     def run_uncertainty(self):

@@ -776,6 +776,7 @@ class Project:
         for scenario in self.scenarios:
             self.full_output_dict[scenario] = {}
             self.full_output_lists[scenario] = {}
+            self.full_uncertainty_dicts[scenario] = {}
 
             for label in outputs:
                 self.full_output_lists[scenario]['times'] = self.model_runner.model_dict[scenario].times
@@ -786,17 +787,16 @@ class Project:
 
                 # Add uncertainty data to full dictionary
                 if self.inputs.model_constants['output_uncertainty']:
-                    self.full_uncertainty_dicts[label] = {}
+                    self.full_uncertainty_dicts[scenario][label] = {}
                     index_label = self.find_var_index(label)
                     for working_centile in range(101) + [2.5, 97.5]:
-                        self.full_uncertainty_dicts[label]['centile_' + str(working_centile)] \
-                            = np.percentile(
-                                self.model_runner.results['uncertainty'][scenario]['var_array'][
-                                    :, index_label, self.model_runner.whether_accepted_list],
-                                float(working_centile),
-                                axis=1)
-
-        print()
+                        self.full_uncertainty_dicts[scenario][label]['centile_' + str(working_centile)] \
+                            = dict(zip(self.full_output_lists[scenario]['times'],
+                                   np.percentile(
+                                       self.model_runner.results['uncertainty'][scenario]['var_array'][
+                                       :, index_label, :],
+                                       working_centile,
+                                       axis=1)))
 
     def add_full_economics_dict(self):
 
@@ -1254,19 +1254,55 @@ class Project:
             # Loop through scenarios that have been run and plot
             for scenario in reversed(self.scenarios):
 
-                modelled_time, modelled_values = \
-                    tool_kit.get_truncated_lists_from_dict(self.full_output_dict[scenario][output], start_time)
+                if not self.inputs.model_constants['output_uncertainty']:
 
-                # Update the maximum plot value if it's greater than the GTB data
-                max_output = max(modelled_values + [max_output])
+                    modelled_time, modelled_values = \
+                        tool_kit.get_truncated_lists_from_dict(self.full_output_dict[scenario][output], start_time)
 
-                # Plot the modelled data
-                ax.plot(
+                    # Update the maximum plot value if it's greater than the GTB data
+                    max_output = max(modelled_values + [max_output])
+
+                    # Plot the modelled data
+                    ax.plot(
                     modelled_time,
-                    modelled_values,
-                    color=self.output_colours[scenario][1],
-                    linestyle=self.output_colours[scenario][0],
-                    linewidth=1.5)
+                        modelled_values,
+                        color=self.output_colours[scenario][1],
+                        linestyle=self.output_colours[scenario][0],
+                        linewidth=1.5)
+
+                else:
+                    modelled_time, modelled_values = \
+                        tool_kit.get_truncated_lists_from_dict(self.full_uncertainty_dicts[scenario][output]['centile_50'],
+                                                               start_time)
+                    modelled_time_upper, modelled_values_upper = \
+                        tool_kit.get_truncated_lists_from_dict(self.full_uncertainty_dicts[scenario][output]['centile_97.5'],
+                                                               start_time)
+                    modelled_time_lower, modelled_values_lower = \
+                        tool_kit.get_truncated_lists_from_dict(self.full_uncertainty_dicts[scenario][output]['centile_2.5'],
+                                                               start_time)
+
+                    # Update the maximum plot value if it's greater than the GTB data
+                    max_output = max(modelled_values + [max_output])
+
+                    # Plot the modelled data
+                    ax.plot(
+                        modelled_time,
+                        modelled_values,
+                        color=self.output_colours[scenario][1],
+                        linestyle=self.output_colours[scenario][0],
+                        linewidth=1.5)
+                    ax.plot(
+                        modelled_time_upper,
+                        modelled_values_upper,
+                        color=self.output_colours[scenario][1],
+                        linestyle='--',
+                        linewidth=1)
+                    ax.plot(
+                        modelled_time_lower,
+                        modelled_values_lower,
+                        color=self.output_colours[scenario][1],
+                        linestyle='--',
+                        linewidth=1)
 
                 # Add scenario label
                 scenario_labels += [tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario))]

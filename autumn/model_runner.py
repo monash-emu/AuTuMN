@@ -53,7 +53,7 @@ class ModelRunner:
         self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
                                       'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
         self.n_runs = 10  # Number of accepted runs per scenario
-        self.burn_in = 0  # Number of accepted runs that we burn
+        self.burn_in = 0  # Number of runs for burn in
         self.loglikelihoods = []
         self.outputs_unc = [{'key': 'incidence',
                              'posterior_width': None,
@@ -197,7 +197,7 @@ class ModelRunner:
             # Set timer
             start_timer_run = datetime.datetime.now()
 
-            # Not exactly sure what this does
+            # Update parameters
             new_params = []
             if self.adaptive_search:
                 if i_candidates == 0:
@@ -206,7 +206,7 @@ class ModelRunner:
                         new_params.append(param_candidates[param_dict['key']][run])
                         params.append(param_candidates[param_dict['key']][run])
                 else:
-                    new_params = self.update_param(params)
+                    new_params = self.update_params(params)
             else:
                 for param_dict in self.inputs.param_ranges_unc:
                     new_params.append(param_candidates[param_dict['key']][run])
@@ -371,20 +371,35 @@ class ModelRunner:
 
         return normal_char
 
-    def update_param(self, pars):
+    def update_params(self, old_params):
 
-        # pars is the former position for the different parameters
-        new_pars = []
-        i = 0
-        for par_dict in self.inputs.param_ranges_unc:
-            bounds = par_dict['bounds']
+        """
+        Update all the parameter values being used in the uncertainty analysis.
+
+        Args:
+            old_params:
+
+        Returns:
+            new_params: The new parameters to be used in the next model run.
+
+        """
+
+        new_params = []
+
+        # Iterate through the parameters being used
+        for p, param_dict in enumerate(self.inputs.param_ranges_unc):
+            bounds = param_dict['bounds']
             sd = self.search_width * (bounds[1] - bounds[0]) / (2.0 * 1.96)
             random = -100.
+
+            # Search for new parameters
             while random < bounds[0] or random > bounds[1]:
-                random = norm.rvs(loc=pars[i], scale=sd, size=1)
-            new_pars.append(random)
-            i += 1
-        return new_pars
+                random = norm.rvs(loc=old_params[p], scale=sd, size=1)
+
+            # Add them to the dictionary
+            new_params.append(random)
+
+        return new_params
 
     def run_with_params(self, params):
 

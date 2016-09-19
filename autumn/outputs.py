@@ -2026,13 +2026,4 @@ class Project:
         elif 'Darwin' in operating_system:
             os.system('open ' + ' ' + self.out_dir_project)
 
-    def rearrange_uncertainty(self):
-
-        """ re-organise the storage of uncertainty"""
-
-        for scenario in self.scenarios:
-            if scenario == 'baseline':
-                continue
-            self.models[scenario].uncertainty_results = self.models['baseline'].uncertainty_results[scenario]
-        self.models['baseline'].uncertainty_results = self.models['baseline'].uncertainty_results['baseline']
 

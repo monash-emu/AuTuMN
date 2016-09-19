@@ -785,7 +785,7 @@ class Project:
                 self.full_output_dict[scenario][label] = dict(zip(self.full_output_lists[scenario]['times'],
                                                                   self.full_output_lists[scenario][label]))
 
-                # Add uncertainty data to full dictionary
+                # Add centiles of uncertainty data to full dictionary
                 if self.inputs.model_constants['output_uncertainty']:
                     self.full_uncertainty_dicts[scenario][label] = {}
                     index_label = self.find_var_index(label)
@@ -794,9 +794,11 @@ class Project:
                             = dict(zip(self.full_output_lists[scenario]['times'],
                                    np.percentile(
                                        self.model_runner.results['uncertainty'][scenario]['var_array'][
-                                       :, index_label, :],
+                                       :, index_label, self.model_runner.accepted_indices],
                                        working_centile,
-                                       axis=1)))
+                                       axis=1)
+                                       )
+                                   )
 
     def add_full_economics_dict(self):
 

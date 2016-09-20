@@ -2,7 +2,6 @@ from numpy import isfinite
 import tool_kit
 import model
 import os
-import outputs
 import data_processing
 import numpy
 import datetime
@@ -42,8 +41,9 @@ def generate_candidates(n_candidates, param_ranges_unc):
 
 class ModelRunner:
 
-    def __init__(self):
+    def __init__(self, gui_inputs):
 
+        self.gui_inputs = gui_inputs
         self.inputs = data_processing.Inputs(True)
         self.inputs.read_and_load_data()
         self.model_dict = {}

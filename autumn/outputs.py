@@ -1144,41 +1144,41 @@ class Project:
                 ['incidence', 'mortality', 'prevalence', 'notifications'])
 
         # Plot scale-up functions - currently only doing this for the baseline model run
-        if self.inputs.model_constants['output_scaleups']:
+        if self.gui_inputs['output_scaleups']:
             self.classify_scaleups()
             self.plot_scaleup_fns_against_data()
             self.plot_programmatic_scaleups()
 
         # Plot economic outputs
-        if self.inputs.model_constants['output_plot_economics']:
+        if self.gui_inputs['output_plot_economics']:
             self.plot_cost_coverage_curves()
             self.plot_cost_over_time()
 
         # Plot compartment population sizes
-        if self.inputs.model_constants['output_compartment_populations']:
+        if self.gui_inputs['output_compartment_populations']:
             self.plot_populations()
 
         # Plot fractions
-        if self.inputs.model_constants['output_fractions']:
+        if self.gui_inputs['output_fractions']:
             self.plot_fractions('strain')
 
         # Plot outputs by age group
-        if self.inputs.model_constants['output_by_age']:
+        if self.gui_inputs['output_by_age']:
             if len(self.inputs.agegroups) > 1:
                 self.plot_outputs_by_age()
             else:
                 warnings.warn('Requested outputs by age, but model is not age stratified.')
 
         # Plot proportions of population
-        if self.inputs.model_constants['output_age_fractions']:
+        if self.gui_inputs['output_age_fractions']:
             self.plot_stratified_populations(age_or_comorbidity='age')
 
         # Plot comorbidity proportions
-        if self.inputs.model_constants['output_comorbidity_fractions']:
+        if self.gui_inputs['output_comorbidity_fractions']:
             self.plot_stratified_populations(age_or_comorbidity='comorbidity')
 
         # Make a flow-diagram
-        if self.inputs.model_constants['output_flow_diagram']:
+        if self.gui_inputs['output_flow_diagram']:
             png = os.path.join(self.out_dir_project, self.country + '_flow_diagram' + '.png')
             self.model_runner.model_dict['baseline'].make_flow_diagram(png)
 

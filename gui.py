@@ -17,7 +17,23 @@ def find_button_name_from_string(working_string):
                               'output_horizontally':
                                   'Write horizontally (if writing to Excel sheets)',
                               'output_gtb_plots':
-                                  'Plot outcomes against GTB data'}
+                                  'Plot outcomes against GTB data',
+                              'output_compartment_populations':
+                                  'Plot compartment sizes',
+                              'output_by_age':
+                                  'Plot output by age groups',
+                              'output_age_fractions':
+                                  'Plot proportion of population by age group',
+                              'output_comorbidity_fractions':
+                                  'Plot proportion of population by risk group',
+                              'output_flow_diagram':
+                                  'Draw flow diagram of model compartments',
+                              'output_fractions':
+                                  'Plot compartment fractions',
+                              'output_scaleups':
+                                  'Plot scale-up functions (two ways)',
+                              'output_plot_economics':
+                                  'Plot economics graphs (cost-coverage and cost-time)'}
 
     if working_string in button_name_dictionary:
         return button_name_dictionary[working_string]
@@ -36,7 +52,9 @@ class App:
 
         self.boolean_dictionary = {}
         self.boolean_inputs = ['output_uncertainty', 'output_spreadsheets', 'output_documents', 'output_by_scenario',
-                               'output_horizontally', 'output_gtb_plots']
+                               'output_horizontally', 'output_gtb_plots', 'output_compartment_populations',
+                               'output_by_age', 'output_age_fractions', 'output_comorbidity_fractions',
+                               'output_flow_diagram', 'output_fractions', 'output_scaleups', 'output_plot_economics']
         for boolean in self.boolean_inputs:
             self.boolean_dictionary[boolean] = IntVar()
 

@@ -515,7 +515,7 @@ def plot_comparative_age_parameters(data_strat_list,
 
 class Project:
 
-    def __init__(self, model_runner):
+    def __init__(self, model_runner, gui_inputs):
 
         """
         Initialises an object of class Project, that will contain all the information (data + outputs) for writing a
@@ -543,6 +543,7 @@ class Project:
         self.programs = []
         self.suptitle_size = 13
         self.classified_scaleups = {}
+        self.gui_inputs = gui_inputs
 
         # Extract some characteristics from the models within model runner
         self.scenarios = self.model_runner.model_dict.keys()
@@ -785,7 +786,7 @@ class Project:
                                                                   self.full_output_lists[scenario][label]))
 
                 # Add centiles of uncertainty data to full dictionary
-                if self.inputs.model_constants['output_uncertainty']:
+                if self.gui_inputs['output_uncertainty']:
                     self.full_uncertainty_dicts[scenario][label] = {}
                     index_label = self.find_var_index(label)
                     for working_centile in range(101) + [2.5, 97.5]:
@@ -1241,7 +1242,7 @@ class Project:
             # Loop through scenarios that have been run and plot
             for scenario in reversed(self.scenarios):
 
-                if not self.inputs.model_constants['output_uncertainty']:
+                if not self.gui_inputs['output_uncertainty']:
 
                     modelled_time, modelled_values = \
                         tool_kit.get_truncated_lists_from_dict(self.full_output_dict[scenario][output], start_time)

@@ -24,10 +24,10 @@ class App:
                                               text='Write to spreadsheets',
                                               variable=self.output_spreadsheet)
         self.spreadsheet_toggle.pack(side=TOP)
+        self.output_options = {}
 
     def execute(self):
 
-        self.output_options = {}
         self.output_options['output_uncertainty'] = bool(self.output_uncertainty.get())
         self.output_options['output_spreadsheet'] = bool(self.output_spreadsheet.get())
 
@@ -37,7 +37,7 @@ class App:
         # Run everything
         model_runner = autumn.model_runner.ModelRunner(self.output_options)
         model_runner.master_runner()
-        project = autumn.outputs.Project(model_runner)
+        project = autumn.outputs.Project(model_runner, self.output_options)
         project.master_outputs_runner()
 
         print('Time elapsed in running script is ' + str(datetime.datetime.now() - start_realtime))

@@ -97,13 +97,13 @@ class ModelRunner:
 
             # Integrate and add result to outputs object
             self.model_dict[scenario_name].integrate()
-            # self.project.models[scenario_name] = self.model_dict[scenario_name]
 
             # Store
             self.store_scenario_results(scenario_name)
 
-        print('Uncertainty analysis')
-        if self.inputs.model_constants['output_uncertainty']:
+        if self.gui_inputs['output_uncertainty']:
+
+            print('Uncertainty analysis')
 
             # Prepare directory for eventual pickling
             out_dir = 'pickles'

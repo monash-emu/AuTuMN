@@ -316,9 +316,8 @@ class Inputs:
         self.add_missing_economics_for_ipt()
 
         # Specify the parameters to be used for uncertainty
-        if self.model_constants['output_uncertainty']:
-            self.find_uncertainty_distributions()
-            self.get_data_to_fit()
+        self.find_uncertainty_distributions()
+        self.get_data_to_fit()
 
         # Perform checks
         self.checks()

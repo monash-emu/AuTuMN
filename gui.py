@@ -9,13 +9,15 @@ def find_button_name_from_string(working_string):
     button_name_dictionary = {'output_uncertainty':
                                   'Run uncertainty',
                               'output_spreadsheets':
-                              'Write to spreadsheets',
+                                  'Write to spreadsheets',
                               'output_documents':
-                              'Write to documents',
+                                  'Write to documents',
                               'output_by_scenario':
                                   'Output by scenario (as opposed to program)',
                               'output_horizontally':
-                                  'Write horizontally (if writing to Excel sheets)'}
+                                  'Write horizontally (if writing to Excel sheets)',
+                              'output_gtb_plots':
+                                  'Plot outcomes against GTB data'}
 
     if working_string in button_name_dictionary:
         return button_name_dictionary[working_string]
@@ -34,7 +36,7 @@ class App:
 
         self.boolean_dictionary = {}
         self.boolean_inputs = ['output_uncertainty', 'output_spreadsheets', 'output_documents', 'output_by_scenario',
-                               'output_horizontally']
+                               'output_horizontally', 'output_gtb_plots']
         for boolean in self.boolean_inputs:
             self.boolean_dictionary[boolean] = IntVar()
 

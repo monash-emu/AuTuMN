@@ -1139,8 +1139,9 @@ class Project:
             self.program_colours[program] = output_colours[p + 1]
 
         # Plot main outputs
-        self.plot_outputs_against_gtb(
-            ['incidence', 'mortality', 'prevalence', 'notifications'])
+        if self.gui_inputs['output_gtb_plots']:
+            self.plot_outputs_against_gtb(
+                ['incidence', 'mortality', 'prevalence', 'notifications'])
 
         # Plot scale-up functions - currently only doing this for the baseline model run
         if self.inputs.model_constants['output_scaleups']:

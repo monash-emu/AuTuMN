@@ -4,6 +4,24 @@ import autumn.outputs
 import datetime
 
 
+def find_button_name_from_string(working_string):
+
+    button_name_dictionary = {'output_uncertainty':
+                                  'Run uncertainty',
+                              'output_spreadsheets':
+                              'Write to spreadsheets',
+                              'output_documents':
+                              'Write to documents',
+                              'output_by_scenario':
+                                  'Output by scenario (as opposed to program)',
+                              'output_horizontally':
+                                  'Write horizontally (if writing to Excel sheets)'}
+
+    if working_string in button_name_dictionary:
+        return button_name_dictionary[working_string]
+    else:
+        return working_string
+
 class App:
 
     def __init__(self, master):
@@ -12,31 +30,29 @@ class App:
         frame.pack()
         root.minsize(500, 200)
         self.run = Button(frame, text='Run', command=self.execute)
-        self.run.pack(side=LEFT)
+        self.run.grid(row=1, column=0)
 
-        self.output_uncertainty = IntVar()
-        self.output_spreadsheets = IntVar()
-        self.output_documents = IntVar()
-        self.uncertainty_toggle = Checkbutton(frame,
-                                              text='Output uncertainty',
-                                              variable=self.output_uncertainty)
-        self.spreadsheet_toggle = Checkbutton(frame,
-                                              text='Write to spreadsheets',
-                                              variable=self.output_spreadsheets)
-        self.document_toggle = Checkbutton(frame,
-                                              text='Write to documents',
-                                              variable=self.output_documents)
-        self.uncertainty_toggle.pack(side=TOP)
-        self.spreadsheet_toggle.pack(side=TOP)
-        self.document_toggle.pack(side=TOP)
+        self.boolean_dictionary = {}
+        self.boolean_inputs = ['output_uncertainty', 'output_spreadsheets', 'output_documents', 'output_by_scenario',
+                               'output_horizontally']
+        for boolean in self.boolean_inputs:
+            self.boolean_dictionary[boolean] = IntVar()
+
+        self.boolean_toggles = {}
+        for boolean in self.boolean_inputs:
+            self.boolean_toggles[boolean] = Checkbutton(frame,
+                                                        text=find_button_name_from_string(boolean),
+                                                        variable=self.boolean_dictionary[boolean])
+
+        for b, boolean in enumerate(self.boolean_inputs):
+            self.boolean_toggles[boolean].grid(row=b, column=2, sticky=W)
 
         self.output_options = {}
 
     def execute(self):
 
-        self.output_options['output_uncertainty'] = bool(self.output_uncertainty.get())
-        self.output_options['output_spreadsheets'] = bool(self.output_spreadsheets.get())
-        self.output_options['output_documents'] = bool(self.output_documents.get())
+        for boolean in self.boolean_inputs:
+            self.output_options[boolean] = bool(self.boolean_dictionary[boolean].get())
 
         # Start timer
         start_realtime = datetime.datetime.now()

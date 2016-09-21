@@ -884,7 +884,7 @@ class Project:
         """
 
         if self.gui_inputs['output_spreadsheets']:
-            if self.inputs.model_constants['output_by_scenario']:
+            if self.gui_inputs['output_by_scenario']:
                 print('Writing scenario spreadsheets')
                 self.write_xls_by_scenario()
             else:
@@ -922,7 +922,7 @@ class Project:
                                          int(self.inputs.model_constants['report_step_time']))
 
         # Write data
-        if self.inputs.model_constants['output_horizontally']:
+        if self.gui_inputs['output_horizontally']:
             self.write_horizontally_by_scenario(sheet, output, years)
         else:
             self.write_vertically_by_scenario(sheet, output, years)
@@ -1043,7 +1043,7 @@ class Project:
         """
 
         if self.gui_inputs['output_documents']:
-            if self.inputs.model_constants['output_by_scenario']:
+            if self.gui_inputs['output_by_scenario']:
                 print('Writing scenario documents')
                 self.write_docs_by_scenario()
             else:

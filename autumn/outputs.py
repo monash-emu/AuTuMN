@@ -883,7 +883,7 @@ class Project:
 
         """
 
-        if self.inputs.model_constants['output_spreadsheets']:
+        if self.gui_inputs['output_spreadsheets']:
             if self.inputs.model_constants['output_by_scenario']:
                 print('Writing scenario spreadsheets')
                 self.write_xls_by_scenario()
@@ -1042,7 +1042,7 @@ class Project:
 
         """
 
-        if self.inputs.model_constants['output_documents']:
+        if self.gui_inputs['output_documents']:
             if self.inputs.model_constants['output_by_scenario']:
                 print('Writing scenario documents')
                 self.write_docs_by_scenario()

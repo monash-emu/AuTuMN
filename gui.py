@@ -47,14 +47,15 @@ class App:
         frame = Frame(master)
         frame.pack()
         root.minsize(500, 200)
+        root.title('AuTuMN (version 1.0)')
         self.run = Button(frame, text='Run', command=self.execute)
         self.run.grid(row=1, column=0)
 
         self.boolean_dictionary = {}
-        self.boolean_inputs = ['output_uncertainty', 'output_spreadsheets', 'output_documents', 'output_by_scenario',
-                               'output_horizontally', 'output_gtb_plots', 'output_compartment_populations',
-                               'output_by_age', 'output_age_fractions', 'output_comorbidity_fractions',
-                               'output_flow_diagram', 'output_fractions', 'output_scaleups', 'output_plot_economics']
+        self.boolean_inputs = ['output_flow_diagram', 'output_compartment_populations', 'output_comorbidity_fractions',
+                               'output_age_fractions', 'output_by_age', 'output_fractions', 'output_scaleups',
+                               'output_gtb_plots', 'output_plot_economics', 'output_uncertainty', 'output_spreadsheets',
+                               'output_documents', 'output_by_scenario', 'output_horizontally']
         for boolean in self.boolean_inputs:
             self.boolean_dictionary[boolean] = IntVar()
 

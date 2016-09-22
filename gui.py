@@ -89,6 +89,8 @@ class App:
             title.grid(row=0, column=i, sticky=NW)
             title.config(font='Helvetica 10 bold italic')
 
+        for i in range(4):
+            frame.grid_columnconfigure(i, minsize=250)
 
     def execute(self):
 

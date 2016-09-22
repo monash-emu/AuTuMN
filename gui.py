@@ -44,12 +44,12 @@ class App:
 
     def __init__(self, master):
 
+        self.output_options = {}
         frame = Frame(master)
         frame.pack()
-        root.minsize(500, 200)
         root.title('AuTuMN (version 1.0)')
         self.run = Button(frame, text='Run', command=self.execute)
-        self.run.grid(row=1, column=0)
+        self.run.grid(row=1, column=0, sticky=W)
 
         self.boolean_dictionary = {}
         self.boolean_inputs = ['output_flow_diagram', 'output_compartment_populations', 'output_comorbidity_fractions',
@@ -65,10 +65,30 @@ class App:
                                                         text=find_button_name_from_string(boolean),
                                                         variable=self.boolean_dictionary[boolean])
 
-        for b, boolean in enumerate(self.boolean_inputs):
-            self.boolean_toggles[boolean].grid(row=b, column=2, sticky=W)
+        plot_row = 1
+        option_row = 1
+        uncertainty_row = 1
+        for boolean in self.boolean_inputs:
+            if 'Plot ' in find_button_name_from_string(boolean) \
+                    or 'Draw ' in find_button_name_from_string(boolean):
+                self.boolean_toggles[boolean].grid(row=plot_row, column=1, sticky=W)
+                plot_row += 1
+            elif 'uncertainty' in find_button_name_from_string(boolean):
+                self.boolean_toggles[boolean].grid(row=uncertainty_row, column=3, sticky=W)
+                uncertainty_row += 1
+            else:
+                self.boolean_toggles[boolean].grid(row=option_row, column=2, sticky=W)
+                option_row += 1
 
-        self.output_options = {}
+        column_titles = {0: 'Run model',
+                         1: 'Plotting_options',
+                         2: 'MS Office options',
+                         3: 'Uncertainty options'}
+        for i in range(4):
+            title = Label(frame, text=column_titles[i])
+            title.grid(row=0, column=i, sticky=NW)
+            title.config(font='Helvetica 10 bold italic')
+
 
     def execute(self):
 

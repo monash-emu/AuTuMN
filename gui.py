@@ -3,7 +3,6 @@ import autumn.model_runner
 import autumn.outputs
 import datetime
 
-
 def find_button_name_from_string(working_string):
 
     button_name_dictionary = {'output_uncertainty':
@@ -40,6 +39,7 @@ def find_button_name_from_string(working_string):
     else:
         return working_string
 
+
 class App:
 
     def __init__(self, master):
@@ -47,9 +47,10 @@ class App:
         self.output_options = {}
         frame = Frame(master)
         frame.pack()
+
         root.title('AuTuMN (version 1.0)')
         self.run = Button(frame, text='Run', command=self.execute)
-        self.run.grid(row=1, column=0, sticky=W)
+        self.run.grid(row=1, column=0, sticky=W, padx=4)
 
         self.boolean_dictionary = {}
         self.boolean_inputs = ['output_flow_diagram', 'output_compartment_populations', 'output_comorbidity_fractions',
@@ -81,15 +82,13 @@ class App:
                 option_row += 1
 
         column_titles = {0: 'Run model',
-                         1: 'Plotting_options',
+                         1: 'Plotting options',
                          2: 'MS Office options',
                          3: 'Uncertainty options'}
         for i in range(4):
             title = Label(frame, text=column_titles[i])
-            title.grid(row=0, column=i, sticky=NW)
+            title.grid(row=0, column=i, sticky=NW, pady=10)
             title.config(font='Helvetica 10 bold italic')
-
-        for i in range(4):
             frame.grid_columnconfigure(i, minsize=250)
 
     def execute(self):

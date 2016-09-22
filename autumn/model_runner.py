@@ -44,7 +44,7 @@ class ModelRunner:
     def __init__(self, gui_inputs):
 
         self.gui_inputs = gui_inputs
-        self.inputs = data_processing.Inputs(True)
+        self.inputs = data_processing.Inputs(True, gui_inputs)
         self.inputs.read_and_load_data()
         self.model_dict = {}
         self.is_last_run_success = False

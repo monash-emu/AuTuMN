@@ -689,10 +689,10 @@ def adapt_params_to_stratification(data_breakpoints,
 
     if whether_to_plot:
         outputs.plot_comparative_age_parameters(data_strat_list,
-                                                        data_value_list,
-                                                        model_value_list,
-                                                        model_strat_list,
-                                                        parameter_name)
+                                                data_value_list,
+                                                model_value_list,
+                                                model_strat_list,
+                                                parameter_name)
 
     return(model_param_vals)
 

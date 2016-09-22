@@ -32,7 +32,9 @@ def find_button_name_from_string(working_string):
                               'output_scaleups':
                                   'Plot scale-up functions (two ways)',
                               'output_plot_economics':
-                                  'Plot economics graphs (cost-coverage and cost-time)'}
+                                  'Plot economics graphs (cost-coverage and cost-time)',
+                              'output_age_calculations':
+                                  'Plot age calculation weightings'}
 
     if working_string in button_name_dictionary:
         return button_name_dictionary[working_string]
@@ -70,7 +72,8 @@ class App:
         self.boolean_inputs = ['output_flow_diagram', 'output_compartment_populations', 'output_comorbidity_fractions',
                                'output_age_fractions', 'output_by_age', 'output_fractions', 'output_scaleups',
                                'output_gtb_plots', 'output_plot_economics', 'output_uncertainty', 'output_spreadsheets',
-                               'output_documents', 'output_by_scenario', 'output_horizontally']
+                               'output_documents', 'output_by_scenario', 'output_horizontally',
+                               'output_age_calculations']
         for boolean in self.boolean_inputs:
             self.boolean_dictionary[boolean] = IntVar()
 

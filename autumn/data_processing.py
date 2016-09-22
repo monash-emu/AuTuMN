@@ -136,8 +136,9 @@ def remove_nans(dictionary):
 
 class Inputs:
 
-    def __init__(self, from_test=False):
+    def __init__(self, from_test=False, gui_inputs=None):
 
+        self.gui_inputs = gui_inputs
         self.first_read_control_panel = None
         self.country = None
         self.original_data = None
@@ -316,8 +317,9 @@ class Inputs:
         self.add_missing_economics_for_ipt()
 
         # Specify the parameters to be used for uncertainty
-        self.find_uncertainty_distributions()
-        self.get_data_to_fit()
+        if self.gui_inputs['output_uncertainty']:
+            self.find_uncertainty_distributions()
+            self.get_data_to_fit()
 
         # Perform checks
         self.checks()
@@ -640,7 +642,7 @@ class Inputs:
                                                         model_breakpoints,
                                                         prog_param_vals,
                                                         parameter_name=param,
-                                                        whether_to_plot=self.model_constants['output_age_calculations'])
+                                                        whether_to_plot=self.gui_inputs['output_age_calculations'])
             for agegroup in self.agegroups:
                 self.model_constants[prog_stem + agegroup] = prog_age_adjusted_params[agegroup]
 

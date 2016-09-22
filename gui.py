@@ -44,14 +44,28 @@ class App:
 
     def __init__(self, master):
 
+        """
+        All processes involved in setting up the first basic GUI frame are collated here.
+
+        Args:
+            master: The GUI
+
+        """
+
+        # Prepare data structures
         self.output_options = {}
+
+        # Set up first frame
+        self.master = master
         frame = Frame(master)
         frame.pack()
+        self.master.title('AuTuMN (version 1.0)')
 
-        root.title('AuTuMN (version 1.0)')
+        # Model running button
         self.run = Button(frame, text='Run', command=self.execute)
         self.run.grid(row=1, column=0, sticky=W, padx=4)
 
+        # Prepare Boolean data structures
         self.boolean_dictionary = {}
         self.boolean_inputs = ['output_flow_diagram', 'output_compartment_populations', 'output_comorbidity_fractions',
                                'output_age_fractions', 'output_by_age', 'output_fractions', 'output_scaleups',
@@ -60,12 +74,12 @@ class App:
         for boolean in self.boolean_inputs:
             self.boolean_dictionary[boolean] = IntVar()
 
+        # Set and collate checkboxes
         self.boolean_toggles = {}
         for boolean in self.boolean_inputs:
             self.boolean_toggles[boolean] = Checkbutton(frame,
                                                         text=find_button_name_from_string(boolean),
                                                         variable=self.boolean_dictionary[boolean])
-
         plot_row = 1
         option_row = 1
         uncertainty_row = 1
@@ -81,6 +95,7 @@ class App:
                 self.boolean_toggles[boolean].grid(row=option_row, column=2, sticky=W)
                 option_row += 1
 
+        # Column titles
         column_titles = {0: 'Run model',
                          1: 'Plotting options',
                          2: 'MS Office options',
@@ -93,6 +108,12 @@ class App:
 
     def execute(self):
 
+        """
+        This is the main method to run the model. It replaces test_full_models.py
+
+        """
+
+        # Collate check-box boolean options
         for boolean in self.boolean_inputs:
             self.output_options[boolean] = bool(self.boolean_dictionary[boolean].get())
 
@@ -105,6 +126,7 @@ class App:
         project = autumn.outputs.Project(model_runner, self.output_options)
         project.master_outputs_runner()
 
+        # Report time
         print('Time elapsed in running script is ' + str(datetime.datetime.now() - start_realtime))
 
 if __name__ == '__main__':

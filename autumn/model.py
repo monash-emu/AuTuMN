@@ -82,11 +82,13 @@ class ConsolidatedModel(BaseModel):
 
     def __init__(self,
                  scenario=None,
-                 inputs=None):
+                 inputs=None,
+                 gui_inputs=None):
 
         BaseModel.__init__(self)
 
         self.inputs = inputs
+        self.gui_inputs = gui_inputs
 
         # Needed in base.py to work out whether to load a previous model state
         self.loaded_compartments = None
@@ -1285,11 +1287,11 @@ class ConsolidatedModel(BaseModel):
     def integrate(self):
 
         dt_max = 2.0
-        if self.inputs.model_constants['integration'] == 'explicit':
+        if self.gui_inputs['integration_method'] == 'Explicit':
             self.integrate_explicit(dt_max)
-        elif self.inputs.model_constants['integration'] == 'scipy':
+        elif self.gui_inputs['integration_method'] == 'Scipy':
             self.integrate_scipy(dt_max)
-        elif self.inputs.model_constants['integration'] == 'runge_kutta':
+        elif self.gui_inputs['integration_method'] == 'Runge Kutta':
             self.integrate_runge_kutta(dt_max)
 
 

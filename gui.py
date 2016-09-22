@@ -3,6 +3,7 @@ import autumn.model_runner
 import autumn.outputs
 import datetime
 
+
 def find_button_name_from_string(working_string):
 
     button_name_dictionary = {'output_uncertainty':
@@ -56,16 +57,18 @@ class App:
 
         # Prepare data structures
         self.output_options = {}
+        self.multi_option = {}
 
         # Set up first frame
         self.master = master
         frame = Frame(master)
         frame.pack()
+        self.master.minsize(100, 340)
         self.master.title('AuTuMN (version 1.0)')
 
         # Model running button
         self.run = Button(frame, text='Run', command=self.execute)
-        self.run.grid(row=1, column=0, sticky=W, padx=4)
+        self.run.grid(row=1, column=0, sticky=W, padx=6)
 
         # Prepare Boolean data structures
         self.boolean_dictionary = {}
@@ -99,15 +102,20 @@ class App:
                 option_row += 1
 
         # Column titles
-        column_titles = {0: 'Run model',
-                         1: 'Plotting options',
-                         2: 'MS Office options',
-                         3: 'Uncertainty options'}
+        column_titles = {0: 'Run',
+                         1: 'Plotting',
+                         2: 'MS Office outputting',
+                         3: 'Uncertainty'}
         for i in range(4):
             title = Label(frame, text=column_titles[i])
             title.grid(row=0, column=i, sticky=NW, pady=10)
             title.config(font='Helvetica 10 bold italic')
             frame.grid_columnconfigure(i, minsize=250)
+
+        self.multi_option['integration_method'] = StringVar()
+        self.multi_option['integration_method'].set('Runge Kutta')
+        menu = OptionMenu(frame, self.multi_option['integration_method'], 'Runge Kutta', 'Scipy', 'Explicit')
+        menu.grid(row=2, column=0, sticky=W, padx=4)
 
     def execute(self):
 
@@ -119,6 +127,9 @@ class App:
         # Collate check-box boolean options
         for boolean in self.boolean_inputs:
             self.output_options[boolean] = bool(self.boolean_dictionary[boolean].get())
+
+        # Collate drop-down box options
+        self.output_options['integration_method'] = self.multi_option['integration_method'].get()
 
         # Start timer
         start_realtime = datetime.datetime.now()

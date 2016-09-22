@@ -75,7 +75,7 @@ class ModelRunner:
 
             # Name and initialise model
             scenario_name = tool_kit.find_scenario_string_from_number(scenario)
-            self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs)
+            self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
             # Introduce model at first run
             tool_kit.introduce_model(self.model_dict, scenario_name)

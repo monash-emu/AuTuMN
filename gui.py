@@ -2,6 +2,7 @@ from Tkinter import *
 import autumn.model_runner
 import autumn.outputs
 import datetime
+import autumn.tool_kit
 
 
 def find_button_name_from_string(working_string):
@@ -13,27 +14,27 @@ def find_button_name_from_string(working_string):
                               'output_documents':
                                   'Write to documents',
                               'output_by_scenario':
-                                  'Output by scenario (as opposed to program)',
+                                  'Output by scenario',
                               'output_horizontally':
-                                  'Write horizontally (if writing to Excel sheets)',
+                                  'Write horizontally',
                               'output_gtb_plots':
-                                  'Plot outcomes against GTB data',
+                                  'Plot outcomes',
                               'output_compartment_populations':
                                   'Plot compartment sizes',
                               'output_by_age':
                                   'Plot output by age groups',
                               'output_age_fractions':
-                                  'Plot proportion of population by age group',
+                                  'Plot proportions by age',
                               'output_comorbidity_fractions':
-                                  'Plot proportion of population by risk group',
+                                  'Plot proportions by risk group',
                               'output_flow_diagram':
-                                  'Draw flow diagram of model compartments',
+                                  'Draw flow diagram',
                               'output_fractions':
                                   'Plot compartment fractions',
                               'output_scaleups':
-                                  'Plot scale-up functions (two ways)',
+                                  'Plot scale-up functions',
                               'output_plot_economics':
-                                  'Plot economics graphs (cost-coverage and cost-time)',
+                                  'Plot economics graphs',
                               'output_age_calculations':
                                   'Plot age calculation weightings',
                               'comorbidity_diabetes':
@@ -51,6 +52,8 @@ def find_button_name_from_string(working_string):
 
     if working_string in button_name_dictionary:
         return button_name_dictionary[working_string]
+    elif 'scenario_' in working_string:
+        return autumn.tool_kit.capitalise_first_letter(autumn.tool_kit.replace_underscore_with_space(working_string))
     else:
         return working_string
 
@@ -77,7 +80,7 @@ class App:
         self.master = master
         frame = Frame(master)
         frame.pack()
-        self.master.minsize(1700, 400)
+        self.master.minsize(1500, 500)
         self.master.title('AuTuMN (version 1.0)')
 
         # Model running button
@@ -93,6 +96,9 @@ class App:
                                'output_documents', 'output_by_scenario', 'output_horizontally',
                                'output_age_calculations', 'comorbidity_diabetes',
                                'is_lowquality', 'is_amplification', 'is_misassignment']
+        for i in range(1, 13):
+            self.boolean_inputs += ['scenario_' + str(i)]
+
         for boolean in self.boolean_inputs:
             self.boolean_dictionary[boolean] = IntVar()
 
@@ -109,13 +115,14 @@ class App:
         comorbidity_row = 1
         elaboration_row = 1
         running_row = 2
+        scenario_row = 1
         for boolean in self.boolean_inputs:
             if 'Plot ' in find_button_name_from_string(boolean) \
                     or 'Draw ' in find_button_name_from_string(boolean):
-                self.boolean_toggles[boolean].grid(row=plot_row, column=4, sticky=W)
+                self.boolean_toggles[boolean].grid(row=plot_row, column=5, sticky=W)
                 plot_row += 1
             elif 'uncertainty' in find_button_name_from_string(boolean):
-                self.boolean_toggles[boolean].grid(row=uncertainty_row, column=3, sticky=W)
+                self.boolean_toggles[boolean].grid(row=uncertainty_row, column=4, sticky=W)
                 uncertainty_row += 1
             elif 'comorbidity_' in boolean or 'n_' in boolean:
                 self.boolean_toggles[boolean].grid(row=comorbidity_row, column=1, sticky=W)
@@ -123,8 +130,11 @@ class App:
             elif 'is_' in boolean:
                 self.boolean_toggles[boolean].grid(row=elaboration_row, column=2, sticky=W)
                 elaboration_row += 1
+            elif 'scenario_' in boolean:
+                self.boolean_toggles[boolean].grid(row=scenario_row, column=3, sticky=W)
+                scenario_row += 1
             else:
-                self.boolean_toggles[boolean].grid(row=option_row, column=5, sticky=W)
+                self.boolean_toggles[boolean].grid(row=option_row, column=6, sticky=W)
                 option_row += 1
 
         # Drop down menus for multiple options
@@ -167,14 +177,15 @@ class App:
         column_titles = {0: 'Model running',
                          1: 'Model stratifications',
                          2: 'Elaborations',
-                         3: 'Uncertainty',
-                         4: 'Plotting',
-                         5: 'MS Office outputs'}
+                         3: 'Scenarios to run',
+                         4: 'Uncertainty',
+                         5: 'Plotting',
+                         6: 'MS Office outputs'}
         for i in range(len(column_titles)):
             title = Label(frame, text=column_titles[i])
             title.grid(row=0, column=i, sticky=NW, pady=10)
             title.config(font='Helvetica 10 bold italic')
-            frame.grid_columnconfigure(i, minsize=250)
+            frame.grid_columnconfigure(i, minsize=200)
 
         # Sliders
         slider_list = ['default_smoothness', 'time_step']
@@ -206,8 +217,13 @@ class App:
         """
 
         # Collate check-box boolean options
+        self.gui_outputs['scenarios_to_run'] = [None]
         for boolean in self.boolean_inputs:
-            self.gui_outputs[boolean] = bool(self.boolean_dictionary[boolean].get())
+            if 'scenario_' in boolean:
+                if self.boolean_dictionary[boolean].get() == 1:
+                    self.gui_outputs['scenarios_to_run'] += [int(boolean[9:])]
+            else:
+                self.gui_outputs[boolean] = bool(self.boolean_dictionary[boolean].get())
 
         # Collate drop-down box options
         organ_stratification_keys = {'Pos / Neg / Extra': 3,

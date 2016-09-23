@@ -71,7 +71,7 @@ class ModelRunner:
 
     def master_runner(self):
 
-        for scenario in self.inputs.model_constants['scenarios_to_run']:
+        for scenario in self.gui_inputs['scenarios_to_run']:
 
             # Name and initialise model
             scenario_name = tool_kit.find_scenario_string_from_number(scenario)
@@ -282,7 +282,7 @@ class ModelRunner:
                     self.loglikelihoods.append(log_likelihood)
 
                     # Run scenarios other than baseline and store uncertainty
-                    for scenario in self.inputs.model_constants['scenarios_to_run']:
+                    for scenario in self.gui_inputs['scenarios_to_run']:
                         scenario_name = tool_kit.find_scenario_string_from_number(scenario)
                         if scenario is not None:
                             scenario_start_time_index = \

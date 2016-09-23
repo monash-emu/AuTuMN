@@ -440,7 +440,7 @@ class Inputs:
         specified in self.extract_freeze_times above.
         """
 
-        for scenario in self.model_constants['scenarios_to_run']:
+        for scenario in self.gui_inputs['scenarios_to_run']:
 
             # Baseline
             if scenario is None:
@@ -932,7 +932,7 @@ class Inputs:
              of keys is the scenario to be run, next is the time variant parameter to be calculated.
         """
 
-        for scenario in self.model_constants['scenarios_to_run']:
+        for scenario in self.gui_inputs['scenarios_to_run']:
 
             self.scaleup_data[scenario] = {}
             # Find the programs that are relevant and load them to the scaleup_data attribute
@@ -984,7 +984,7 @@ class Inputs:
         """
 
         # For each scenario to be run
-        for scenario in self.model_constants['scenarios_to_run']:
+        for scenario in self.gui_inputs['scenarios_to_run']:
 
             # Dictionary of whether interventions are applied or not
             self.intervention_applied[scenario] = {}

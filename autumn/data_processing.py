@@ -175,7 +175,7 @@ class Inputs:
         self.first_read_control_panel = spreadsheet.read_input_data_xls(self.from_test, ['control_panel'])
 
         # Specify the country from the first read
-        self.country = self.first_read_control_panel['control_panel']['country']
+        self.country = self.gui_inputs['country']
 
         # Default keys of sheets to read (ones that should always be read
         keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',

@@ -83,7 +83,7 @@ def introduce_model(models, model_name):
 
     if model_name == 'baseline':
         print('Initialising model for ' + capitalise_first_letter(
-            models[model_name].inputs.country) + ' with key "' + model_name + '".')
+            models[model_name].gui_inputs['country']) + ' with key "' + model_name + '".')
 
 
 def describe_model(models, model_name):

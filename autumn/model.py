@@ -89,6 +89,7 @@ class ConsolidatedModel(BaseModel):
 
         self.inputs = inputs
         self.gui_inputs = gui_inputs
+        self.country = self.gui_inputs['country']
 
         # Needed in base.py to work out whether to load a previous model state
         self.loaded_compartments = None

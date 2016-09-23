@@ -526,7 +526,8 @@ class Project:
 
         self.model_runner = model_runner
         self.inputs = self.model_runner.inputs
-        self.country = self.inputs.country.lower()
+        self.gui_inputs = gui_inputs
+        self.country = self.gui_inputs['country'].lower()
         self.name = 'test_' + self.country
         self.scenarios = []
         self.full_output_dict = {}
@@ -543,7 +544,6 @@ class Project:
         self.programs = []
         self.suptitle_size = 13
         self.classified_scaleups = {}
-        self.gui_inputs = gui_inputs
 
         # Extract some characteristics from the models within model runner
         self.scenarios = self.model_runner.model_dict.keys()

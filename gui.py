@@ -138,11 +138,15 @@ class App:
                 option_row += 1
 
         # Drop down menus for multiple options
-        running_dropdown_list = ['integration_method', 'fitting_method']
+        running_dropdown_list = ['country', 'integration_method', 'fitting_method']
         for dropdown in running_dropdown_list:
             self.raw_outputs[dropdown] = StringVar()
+        self.raw_outputs['country'].set('Fiji')
         self.raw_outputs['integration_method'].set('Runge Kutta')
         self.raw_outputs['fitting_method'].set('Method 5')
+        self.drop_downs['country'] \
+            = OptionMenu(frame, self.raw_outputs['country'],
+                         'Fiji', 'the Philippines', 'Bulgaria')
         self.drop_downs['integration_method'] \
             = OptionMenu(frame, self.raw_outputs['integration_method'],
                          'Runge Kutta', 'Scipy', 'Explicit')

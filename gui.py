@@ -77,7 +77,7 @@ class App:
         # Model running button
         self.run = Button(frame, text='Run', command=self.execute, width=10)
         self.run.grid(row=1, column=0, sticky=W, padx=6)
-        self.run.config(font='Helvetica 10 bold italic', fg='red')
+        self.run.config(font='Helvetica 10 bold italic', fg='red', bg='grey')
 
         # Prepare Boolean data structures
         self.boolean_dictionary = {}
@@ -105,27 +105,27 @@ class App:
         for boolean in self.boolean_inputs:
             if 'Plot ' in find_button_name_from_string(boolean) \
                     or 'Draw ' in find_button_name_from_string(boolean):
-                self.boolean_toggles[boolean].grid(row=plot_row, column=1, sticky=W)
+                self.boolean_toggles[boolean].grid(row=plot_row, column=4, sticky=W)
                 plot_row += 1
             elif 'uncertainty' in find_button_name_from_string(boolean):
                 self.boolean_toggles[boolean].grid(row=uncertainty_row, column=3, sticky=W)
                 uncertainty_row += 1
             elif 'comorbidity_' in boolean:
-                self.boolean_toggles[boolean].grid(row=comorbidity_row, column=4, sticky=W)
+                self.boolean_toggles[boolean].grid(row=comorbidity_row, column=1, sticky=W)
             elif 'is_' in boolean:
-                self.boolean_toggles[boolean].grid(row=elaboration_row, column=5, sticky=W)
+                self.boolean_toggles[boolean].grid(row=elaboration_row, column=2, sticky=W)
                 elaboration_row += 1
             else:
-                self.boolean_toggles[boolean].grid(row=option_row, column=2, sticky=W)
+                self.boolean_toggles[boolean].grid(row=option_row, column=5, sticky=W)
                 option_row += 1
 
         # Column titles
         column_titles = {0: 'Model running',
-                         1: 'Plotting',
-                         2: 'MS Office outputs',
+                         1: 'Risk groups',
+                         2: 'Elaborations',
                          3: 'Uncertainty',
-                         4: 'Risk groups',
-                         5: 'Elaborations'}
+                         4: 'Plotting',
+                         5: 'MS Office outputs'}
         for i in range(len(column_titles)):
             title = Label(frame, text=column_titles[i])
             title.grid(row=0, column=i, sticky=NW, pady=10)

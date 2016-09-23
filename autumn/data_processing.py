@@ -227,7 +227,7 @@ class Inputs:
         self.add_treatment_outcomes()
 
         # Add ds to the naming of the treatment outcomes for multistrain models
-        if self.model_constants['n_strains'] > 1:
+        if self.gui_inputs['n_strains'] > 1:
             self.duplicate_ds_outcomes_for_multistrain()
 
         # Add time variant demographic dictionaries
@@ -255,7 +255,7 @@ class Inputs:
             self.find_fixed_age_specific_parameters()
 
         # Add treatment time periods for single strain model, as only populated for DS-TB to now
-        if self.model_constants['n_strains'] == 0:
+        if self.gui_inputs['n_strains'] == 0:
             self.find_single_strain_timeperiods()
 
         # Define the structuring of comorbidities for the model
@@ -291,7 +291,7 @@ class Inputs:
         self.find_organ_time_variation()
 
         # Create a scale-up dictionary for resistance amplification if appropriate
-        if self.model_constants['n_strains'] > 1:
+        if self.gui_inputs['n_strains'] > 1:
             self.find_amplification_data()
 
         # Derive some basic parameters for IPT
@@ -600,7 +600,7 @@ class Inputs:
         dependent upon loading some parameters in find_functions_or_params)
         """
 
-        if self.model_constants['n_organs'] < 2:
+        if self.gui_inputs['n_organs'] < 2:
             # Proportion progressing to the only infectious compartment for models unstratified by organ status
             self.model_constants['epi_prop'] = 1.
         else:
@@ -712,10 +712,10 @@ class Inputs:
         """
 
         # Need a list of an empty string to be iterable for methods iterating by strain
-        if self.model_constants['n_strains'] == 0:
+        if self.gui_inputs['n_strains'] == 0:
             self.strains = ['']
         else:
-            self.strains = self.available_strains[:self.model_constants['n_strains']]
+            self.strains = self.available_strains[:self.gui_inputs['n_strains']]
 
     def define_organ_structure(self):
 
@@ -725,11 +725,11 @@ class Inputs:
         describe whether patients have smear-positive, smear-negative or extrapulmonary disease.
         """
 
-        if self.model_constants['n_organs'] == 0:
+        if self.gui_inputs['n_organs'] == 0:
             # Need a list of an empty string to be iterable for methods iterating by organ status
             self.organ_status = ['']
         else:
-            self.organ_status = self.available_organs[:self.model_constants['n_organs']]
+            self.organ_status = self.available_organs[:self.gui_inputs['n_organs']]
 
     def find_noninfectious_period(self):
 
@@ -739,7 +739,7 @@ class Inputs:
         """
 
         treatment_outcome_types = self.strains
-        if self.model_constants['n_strains'] > 1 and self.is_misassignment:
+        if self.gui_inputs['n_strains'] > 1 and self.is_misassignment:
             treatment_outcome_types += ['_inappropriate']
 
         for strain in treatment_outcome_types:
@@ -857,7 +857,7 @@ class Inputs:
         """
 
         # If no organ stratification
-        if self.model_constants['n_organs'] < 2:
+        if self.gui_inputs['n_organs'] < 2:
             # Leave organ variation as false if no organ stratification and warn if variation requested
             for status in ['pos', 'neg']:
                 if self.time_variants['epi_prop_smear' + status]['time_variant'] == u'yes':
@@ -966,14 +966,14 @@ class Inputs:
             for strain in self.available_strains:
                 if strain not in self.strains and strain in time_variant and '_dst' not in time_variant:
                     self.irrelevant_time_variants += [time_variant]
-            if self.model_constants['n_strains'] < 2 \
+            if self.gui_inputs['n_strains'] < 2 \
                     and ('line_dst' in time_variant or '_inappropriate' in time_variant):
                 self.irrelevant_time_variants += [time_variant]
-            elif self.model_constants['n_strains'] == 2 and 'secondline_dst' in time_variant:
+            elif self.gui_inputs['n_strains'] == 2 and 'secondline_dst' in time_variant:
                 self.irrelevant_time_variants += [time_variant]
-            elif self.model_constants['n_strains'] == 2 and 'smearneg' in time_variant:
+            elif self.gui_inputs['n_strains'] == 2 and 'smearneg' in time_variant:
                 self.irrelevant_time_variants += [time_variant]
-            if 'lowquality' in time_variant and not self.model_constants['is_lowquality']:
+            if 'lowquality' in time_variant and not self.gui_inputs['is_lowquality']:
                 self.irrelevant_time_variants += [time_variant]
 
     def find_functions_or_params(self):

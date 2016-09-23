@@ -92,14 +92,14 @@ def describe_model(models, model_name):
         model = models[model_name]
 
         string_to_print = 'Model "' + model_name + '" has the following attributes:\n'
-        if model.inputs.model_constants['n_organs'] <= 1:
+        if model.gui_inputs['n_organs'] <= 1:
             string_to_print += 'unstratified by organ involvement,\n'
         else:
-            string_to_print += str(model.inputs.model_constants['n_organs']) + ' organ strata,\n'
-        if model.inputs.model_constants['n_strains'] <= 1:
+            string_to_print += str(model.gui_inputs['n_organs']) + ' organ strata,\n'
+        if model.gui_inputs['n_strains'] <= 1:
             string_to_print += 'single strain model.'
         else:
-            string_to_print += str(model.inputs.model_constants['n_strains']) + ' circulating strains.'
+            string_to_print += str(model.gui_inputs['n_strains']) + ' circulating strains.'
 
         print(string_to_print)
 

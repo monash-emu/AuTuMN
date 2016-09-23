@@ -43,7 +43,11 @@ def find_button_name_from_string(working_string):
                               'is_amplification':
                                   'Resistance amplification',
                               'is_misassignment':
-                                  'Strain mis-assignment'}
+                                  'Strain mis-assignment',
+                              'n_organs':
+                                  'Number of organ strata',
+                              'n_strains':
+                                  'Number of strains'}
 
     if working_string in button_name_dictionary:
         return button_name_dictionary[working_string]
@@ -64,14 +68,15 @@ class App:
         """
 
         # Prepare data structures
-        self.output_options = {}
+        self.gui_outputs = {}
         self.multi_option = {}
+        self.drop_downs = {}
 
         # Set up first frame
         self.master = master
         frame = Frame(master)
         frame.pack()
-        self.master.minsize(1550, 400)
+        self.master.minsize(1700, 400)
         self.master.title('AuTuMN (version 1.0)')
 
         # Model running button
@@ -110,8 +115,9 @@ class App:
             elif 'uncertainty' in find_button_name_from_string(boolean):
                 self.boolean_toggles[boolean].grid(row=uncertainty_row, column=3, sticky=W)
                 uncertainty_row += 1
-            elif 'comorbidity_' in boolean:
+            elif 'comorbidity_' in boolean or 'n_' in boolean:
                 self.boolean_toggles[boolean].grid(row=comorbidity_row, column=1, sticky=W)
+                comorbidity_row += 1
             elif 'is_' in boolean:
                 self.boolean_toggles[boolean].grid(row=elaboration_row, column=2, sticky=W)
                 elaboration_row += 1
@@ -119,9 +125,43 @@ class App:
                 self.boolean_toggles[boolean].grid(row=option_row, column=5, sticky=W)
                 option_row += 1
 
+        # Drop down menus for multiple options
+        self.multi_option['integration_method'] = StringVar()
+        self.multi_option['fitting_method'] = StringVar()
+        self.multi_option['integration_method'].set('Runge Kutta')
+        self.multi_option['fitting_method'].set('Method 5')
+        self.drop_downs['integration_menu'] \
+            = OptionMenu(frame, self.multi_option['integration_method'],
+                         'Runge Kutta', 'Scipy', 'Explicit')
+        self.drop_downs['fitting_menu'] \
+            = OptionMenu(frame, self.multi_option['fitting_method'],
+                         'Method 1', 'Method 2', 'Method 3', 'Method 4', 'Method 5')
+        for d, drop_down in enumerate(self.drop_downs):
+            self.drop_downs[drop_down].grid(row=d+2, column=0, sticky=W, padx=4)
+
+        # Model stratifications options
+        numerical_stratification_inputs = ['n_organs', 'n_strains']
+        for option in numerical_stratification_inputs:
+            self.multi_option[option] = StringVar()
+        self.multi_option['n_organs'].set('Pos / Neg / Extra')
+        self.multi_option['n_strains'].set('Single strain')
+        self.drop_downs['n_organs'] = OptionMenu(frame, self.multi_option['n_organs'],
+                                                 'Pos / Neg / Extra',
+                                                 'Pos / Neg',
+                                                 'Unstratified')
+        self.drop_downs['n_strains'] = OptionMenu(frame, self.multi_option['n_strains'],
+                                                  'Single strain', 'DS / MDR', 'DS / MDR / XDR')
+        for option in numerical_stratification_inputs:
+            self.drop_downs[option].grid(row=comorbidity_row, column=1, sticky=W, padx=4)
+            comorbidity_row += 1
+
+        # Consistent width to drop-down menus
+        for d, drop_down in enumerate(self.drop_downs):
+            self.drop_downs[drop_down].config(width=15)
+
         # Column titles
         column_titles = {0: 'Model running',
-                         1: 'Risk groups',
+                         1: 'Model stratifications',
                          2: 'Elaborations',
                          3: 'Uncertainty',
                          4: 'Plotting',
@@ -132,21 +172,6 @@ class App:
             title.config(font='Helvetica 10 bold italic')
             frame.grid_columnconfigure(i, minsize=250)
 
-        self.multi_option['integration_method'] = StringVar()
-        self.multi_option['fitting_method'] = IntVar()
-        self.multi_option['integration_method'].set('Runge Kutta')
-        self.multi_option['fitting_method'].set(5)
-        self.drop_downs = {}
-        self.drop_downs['integration_menu'] \
-            = OptionMenu(frame, self.multi_option['integration_method'],
-                         'Runge Kutta', 'Scipy', 'Explicit')
-        self.drop_downs['fitting_menu'] \
-            = OptionMenu(frame, self.multi_option['fitting_method'],
-                         1, 2, 3, 4, 5)
-        for d, drop_down in enumerate(self.drop_downs):
-            self.drop_downs[drop_down].config(width=12)
-            self.drop_downs[drop_down].grid(row=d+2, column=0, sticky=W, padx=4)
-
     def execute(self):
 
         """
@@ -156,19 +181,33 @@ class App:
 
         # Collate check-box boolean options
         for boolean in self.boolean_inputs:
-            self.output_options[boolean] = bool(self.boolean_dictionary[boolean].get())
+            self.gui_outputs[boolean] = bool(self.boolean_dictionary[boolean].get())
 
         # Collate drop-down box options
+        organ_stratification_keys = {'Pos / Neg / Extra': 3,
+                                     'Pos / Neg': 2,
+                                     'Unstratified': 0}
+        strain_stratification_keys = {'Single strain': 0,
+                                      'DS / MDR': 2,
+                                      'DS / MDR / XDR': 3}
+
         for option in self.multi_option:
-            self.output_options[option] = self.multi_option[option].get()
+            if option == 'fitting_method':
+                self.gui_outputs[option] = int(self.multi_option[option].get()[-1])
+            elif option == 'n_organs':
+                self.gui_outputs[option] = organ_stratification_keys[self.multi_option[option].get()]
+            elif option == 'n_strains':
+                self.gui_outputs[option] = strain_stratification_keys[self.multi_option[option].get()]
+            else:
+                self.gui_outputs[option] = self.multi_option[option].get()
 
         # Start timer
         start_realtime = datetime.datetime.now()
 
         # Run everything
-        model_runner = autumn.model_runner.ModelRunner(self.output_options)
+        model_runner = autumn.model_runner.ModelRunner(self.gui_outputs)
         model_runner.master_runner()
-        project = autumn.outputs.Project(model_runner, self.output_options)
+        project = autumn.outputs.Project(model_runner, self.gui_outputs)
         project.master_outputs_runner()
 
         # Report time

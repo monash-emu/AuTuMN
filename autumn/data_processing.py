@@ -185,7 +185,7 @@ class Inputs:
 
         # Add the optional ones (this is intended to be the standard approach to reading additional
         # data to the data object - currently not that useful as it only applies to diabetes)
-        if 'comorbidity_diabetes' in self.first_read_control_panel['control_panel']:
+        if 'comorbidity_diabetes' in self.gui_inputs:
             keys_of_sheets_to_read += ['diabetes']
 
         # Read all the original data required
@@ -1032,7 +1032,7 @@ class Inputs:
                     self.scaleup_fns[scenario][param] \
                         = scale_up_function(self.scaleup_data[scenario][param].keys(),
                                             self.scaleup_data[scenario][param].values(),
-                                            self.model_constants['fitting_method'],
+                                            self.gui_inputs['fitting_method'],
                                             smoothness,
                                             bound_low=0.,
                                             bound_up=upper_bound,

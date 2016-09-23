@@ -35,7 +35,9 @@ def find_button_name_from_string(working_string):
                               'output_plot_economics':
                                   'Plot economics graphs (cost-coverage and cost-time)',
                               'output_age_calculations':
-                                  'Plot age calculation weightings'}
+                                  'Plot age calculation weightings',
+                              'comorbidity_diabetes':
+                                  'Type II diabetes'}
 
     if working_string in button_name_dictionary:
         return button_name_dictionary[working_string]
@@ -63,11 +65,11 @@ class App:
         self.master = master
         frame = Frame(master)
         frame.pack()
-        self.master.minsize(100, 340)
+        self.master.minsize(1250, 340)
         self.master.title('AuTuMN (version 1.0)')
 
         # Model running button
-        self.run = Button(frame, text='Run', command=self.execute)
+        self.run = Button(frame, text='Run', command=self.execute, width=10)
         self.run.grid(row=1, column=0, sticky=W, padx=6)
 
         # Prepare Boolean data structures
@@ -76,7 +78,7 @@ class App:
                                'output_age_fractions', 'output_by_age', 'output_fractions', 'output_scaleups',
                                'output_gtb_plots', 'output_plot_economics', 'output_uncertainty', 'output_spreadsheets',
                                'output_documents', 'output_by_scenario', 'output_horizontally',
-                               'output_age_calculations']
+                               'output_age_calculations', 'comorbidity_diabetes']
         for boolean in self.boolean_inputs:
             self.boolean_dictionary[boolean] = IntVar()
 
@@ -89,6 +91,7 @@ class App:
         plot_row = 1
         option_row = 1
         uncertainty_row = 1
+        comorbidity_row = 1
         for boolean in self.boolean_inputs:
             if 'Plot ' in find_button_name_from_string(boolean) \
                     or 'Draw ' in find_button_name_from_string(boolean):
@@ -97,25 +100,38 @@ class App:
             elif 'uncertainty' in find_button_name_from_string(boolean):
                 self.boolean_toggles[boolean].grid(row=uncertainty_row, column=3, sticky=W)
                 uncertainty_row += 1
+            elif 'comorbidity_' in boolean:
+                self.boolean_toggles[boolean].grid(row=comorbidity_row, column=4, sticky=W)
             else:
                 self.boolean_toggles[boolean].grid(row=option_row, column=2, sticky=W)
                 option_row += 1
 
         # Column titles
-        column_titles = {0: 'Run',
+        column_titles = {0: 'Model running',
                          1: 'Plotting',
-                         2: 'MS Office outputting',
-                         3: 'Uncertainty'}
-        for i in range(4):
+                         2: 'MS Office outputs',
+                         3: 'Uncertainty',
+                         4: 'Risk groups'}
+        for i in range(len(column_titles)):
             title = Label(frame, text=column_titles[i])
             title.grid(row=0, column=i, sticky=NW, pady=10)
             title.config(font='Helvetica 10 bold italic')
             frame.grid_columnconfigure(i, minsize=250)
 
         self.multi_option['integration_method'] = StringVar()
+        self.multi_option['fitting_method'] = IntVar()
         self.multi_option['integration_method'].set('Runge Kutta')
-        menu = OptionMenu(frame, self.multi_option['integration_method'], 'Runge Kutta', 'Scipy', 'Explicit')
-        menu.grid(row=2, column=0, sticky=W, padx=4)
+        self.multi_option['fitting_method'].set(5)
+        self.drop_downs = {}
+        self.drop_downs['integration_menu'] \
+            = OptionMenu(frame, self.multi_option['integration_method'],
+                         'Runge Kutta', 'Scipy', 'Explicit')
+        self.drop_downs['fitting_menu'] \
+            = OptionMenu(frame, self.multi_option['fitting_method'],
+                         1, 2, 3, 4, 5)
+        for d, drop_down in enumerate(self.drop_downs):
+            self.drop_downs[drop_down].config(width=12)
+            self.drop_downs[drop_down].grid(row=d+2, column=0, sticky=W, padx=4)
 
     def execute(self):
 
@@ -129,7 +145,8 @@ class App:
             self.output_options[boolean] = bool(self.boolean_dictionary[boolean].get())
 
         # Collate drop-down box options
-        self.output_options['integration_method'] = self.multi_option['integration_method'].get()
+        for option in self.multi_option:
+            self.output_options[option] = self.multi_option[option].get()
 
         # Start timer
         start_realtime = datetime.datetime.now()

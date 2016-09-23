@@ -139,8 +139,7 @@ class Inputs:
     def __init__(self, from_test=False, gui_inputs=None):
 
         self.gui_inputs = gui_inputs
-        self.first_read_control_panel = None
-        self.country = None
+        self.country = gui_inputs['country']
         self.original_data = None
         self.from_test = from_test
         self.derived_data = {}
@@ -172,13 +171,9 @@ class Inputs:
 
         # Create a "first read" attribute, which can later be used to determine whether other
         # elements of the control pane need to be read.
-        self.first_read_control_panel = spreadsheet.read_input_data_xls(self.from_test, ['control_panel'])
-
-        # Specify the country from the first read
-        self.country = self.gui_inputs['country']
 
         # Default keys of sheets to read (ones that should always be read
-        keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
+        keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy',
                                   'default_parameters', 'tb', 'notifications', 'outcomes',
                                   'country_constants', 'default_constants',
                                   'country_programs', 'default_programs']
@@ -401,15 +396,15 @@ class Inputs:
         """
 
         # First take control panel values
-        self.model_constants = self.original_data['control_panel']
+        # self.model_constants = self.original_data['control_panel']
 
         # Populate from country_constants if available and default_constants if not
         for other_sheet in other_sheets_with_constants:
             if other_sheet in self.original_data:
                 for item in self.original_data[other_sheet]:
-                    if item not in self.original_data['control_panel']:
-                        self.model_constants[item] = \
-                            self.original_data[other_sheet][item]
+                    # if item not in self.original_data['control_panel']:
+                    self.model_constants[item] = \
+                        self.original_data[other_sheet][item]
 
     def convert_percentages_to_proportions(self):
 

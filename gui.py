@@ -69,8 +69,9 @@ class App:
 
         # Prepare data structures
         self.gui_outputs = {}
-        self.multi_option = {}
+        self.raw_outputs = {}
         self.drop_downs = {}
+        self.numeric_entry = {}
 
         # Set up first frame
         self.master = master
@@ -81,7 +82,7 @@ class App:
 
         # Model running button
         self.run = Button(frame, text='Run', command=self.execute, width=10)
-        self.run.grid(row=1, column=0, sticky=W, padx=6)
+        self.run.grid(row=1, column=0, sticky=W, padx=2)
         self.run.config(font='Helvetica 10 bold italic', fg='red', bg='grey')
 
         # Prepare Boolean data structures
@@ -107,6 +108,7 @@ class App:
         uncertainty_row = 1
         comorbidity_row = 1
         elaboration_row = 1
+        running_row = 2
         for boolean in self.boolean_inputs:
             if 'Plot ' in find_button_name_from_string(boolean) \
                     or 'Draw ' in find_button_name_from_string(boolean):
@@ -126,37 +128,39 @@ class App:
                 option_row += 1
 
         # Drop down menus for multiple options
-        self.multi_option['integration_method'] = StringVar()
-        self.multi_option['fitting_method'] = StringVar()
-        self.multi_option['integration_method'].set('Runge Kutta')
-        self.multi_option['fitting_method'].set('Method 5')
-        self.drop_downs['integration_menu'] \
-            = OptionMenu(frame, self.multi_option['integration_method'],
+        running_dropdown_list = ['integration_method', 'fitting_method']
+        for dropdown in running_dropdown_list:
+            self.raw_outputs[dropdown] = StringVar()
+        self.raw_outputs['integration_method'].set('Runge Kutta')
+        self.raw_outputs['fitting_method'].set('Method 5')
+        self.drop_downs['integration_method'] \
+            = OptionMenu(frame, self.raw_outputs['integration_method'],
                          'Runge Kutta', 'Scipy', 'Explicit')
-        self.drop_downs['fitting_menu'] \
-            = OptionMenu(frame, self.multi_option['fitting_method'],
+        self.drop_downs['fitting_method'] \
+            = OptionMenu(frame, self.raw_outputs['fitting_method'],
                          'Method 1', 'Method 2', 'Method 3', 'Method 4', 'Method 5')
-        for d, drop_down in enumerate(self.drop_downs):
-            self.drop_downs[drop_down].grid(row=d+2, column=0, sticky=W, padx=4)
+        for drop_down in running_dropdown_list:
+            self.drop_downs[drop_down].grid(row=running_row, column=0, sticky=W)
+            running_row += 1
 
         # Model stratifications options
         numerical_stratification_inputs = ['n_organs', 'n_strains']
         for option in numerical_stratification_inputs:
-            self.multi_option[option] = StringVar()
-        self.multi_option['n_organs'].set('Pos / Neg / Extra')
-        self.multi_option['n_strains'].set('Single strain')
-        self.drop_downs['n_organs'] = OptionMenu(frame, self.multi_option['n_organs'],
+            self.raw_outputs[option] = StringVar()
+        self.raw_outputs['n_organs'].set('Pos / Neg / Extra')
+        self.raw_outputs['n_strains'].set('Single strain')
+        self.drop_downs['n_organs'] = OptionMenu(frame, self.raw_outputs['n_organs'],
                                                  'Pos / Neg / Extra',
                                                  'Pos / Neg',
                                                  'Unstratified')
-        self.drop_downs['n_strains'] = OptionMenu(frame, self.multi_option['n_strains'],
+        self.drop_downs['n_strains'] = OptionMenu(frame, self.raw_outputs['n_strains'],
                                                   'Single strain', 'DS / MDR', 'DS / MDR / XDR')
         for option in numerical_stratification_inputs:
-            self.drop_downs[option].grid(row=comorbidity_row, column=1, sticky=W, padx=4)
+            self.drop_downs[option].grid(row=comorbidity_row, column=1, sticky=W)
             comorbidity_row += 1
 
         # Consistent width to drop-down menus
-        for d, drop_down in enumerate(self.drop_downs):
+        for drop_down in self.drop_downs:
             self.drop_downs[drop_down].config(width=15)
 
         # Column titles
@@ -171,6 +175,28 @@ class App:
             title.grid(row=0, column=i, sticky=NW, pady=10)
             title.config(font='Helvetica 10 bold italic')
             frame.grid_columnconfigure(i, minsize=250)
+
+        # Sliders
+        slider_list = ['default_smoothness', 'time_step']
+        sliders = {}
+        for slide in slider_list:
+            self.raw_outputs[slide] = DoubleVar()
+        self.raw_outputs['default_smoothness'].set(1.)
+        self.raw_outputs['time_step'].set(.01)
+        slider_labels = {'default_smoothness':
+                             Label(frame, text='Default fitting smoothness:', font='Helvetica 9 italic'),
+                         'time_step':
+                             Label(frame, text='Integration time step:', font='Helvetica 9 italic')}
+        sliders['default_smoothness'] = Scale(frame, from_=0, to=5, resolution=.1, orient=HORIZONTAL,
+                                              width=10, length=130, sliderlength=20,
+                                              variable=self.raw_outputs['default_smoothness'])
+        sliders['time_step'] = Scale(frame, from_=0.005, to=.5, resolution=.005, orient=HORIZONTAL,
+                                     width=10, length=130, sliderlength=20, variable=self.raw_outputs['time_step'])
+        for l, label in enumerate(slider_list):
+            slider_labels[label].grid(row=running_row, column=0, sticky=SW)
+            running_row += 1
+            sliders[label].grid(row=running_row, column=0, sticky=NW)
+            running_row += 1
 
     def execute(self):
 
@@ -191,15 +217,15 @@ class App:
                                       'DS / MDR': 2,
                                       'DS / MDR / XDR': 3}
 
-        for option in self.multi_option:
+        for option in self.raw_outputs:
             if option == 'fitting_method':
-                self.gui_outputs[option] = int(self.multi_option[option].get()[-1])
+                self.gui_outputs[option] = int(self.raw_outputs[option].get()[-1])
             elif option == 'n_organs':
-                self.gui_outputs[option] = organ_stratification_keys[self.multi_option[option].get()]
+                self.gui_outputs[option] = organ_stratification_keys[self.raw_outputs[option].get()]
             elif option == 'n_strains':
-                self.gui_outputs[option] = strain_stratification_keys[self.multi_option[option].get()]
+                self.gui_outputs[option] = strain_stratification_keys[self.raw_outputs[option].get()]
             else:
-                self.gui_outputs[option] = self.multi_option[option].get()
+                self.gui_outputs[option] = self.raw_outputs[option].get()
 
         # Start timer
         start_realtime = datetime.datetime.now()

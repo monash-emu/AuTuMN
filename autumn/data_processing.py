@@ -1011,7 +1011,7 @@ class Inputs:
                     if 'smoothness' in self.scaleup_data[scenario][param]:
                         smoothness = self.scaleup_data[scenario][param].pop('smoothness')
                     else:
-                        smoothness = self.model_constants['default_smoothness']
+                        smoothness = self.gui_inputs['default_smoothness']
 
                     # If the parameter is being modified for the scenario being run
                     self.intervention_applied[scenario][param] = False

@@ -238,7 +238,7 @@ class BaseModel:
 
         self.make_times(self.start_time,
                         self.inputs.model_constants['scenario_end_time'],
-                        self.inputs.model_constants['time_step'])
+                        self.gui_inputs['time_step'])
         self.initialise_compartments()
         self.set_flows()
         self.var_labels = None

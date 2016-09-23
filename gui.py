@@ -173,14 +173,9 @@ class App:
         for drop_down in self.drop_downs:
             self.drop_downs[drop_down].config(width=15)
 
-        # Column titles
-        column_titles = {0: 'Model running',
-                         1: 'Model stratifications',
-                         2: 'Elaborations',
-                         3: 'Scenarios to run',
-                         4: 'Uncertainty',
-                         5: 'Plotting',
-                         6: 'MS Office outputs'}
+        # Column titles (order important)
+        column_titles = ['Model running', 'Model stratifications', 'Elaborations', 'Scenarios to run', 'Uncertainty',
+                         'Plotting', 'MS Office outputs']
         for i in range(len(column_titles)):
             title = Label(frame, text=column_titles[i])
             title.grid(row=0, column=i, sticky=NW, pady=10)

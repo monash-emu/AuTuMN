@@ -37,7 +37,13 @@ def find_button_name_from_string(working_string):
                               'output_age_calculations':
                                   'Plot age calculation weightings',
                               'comorbidity_diabetes':
-                                  'Type II diabetes'}
+                                  'Type II diabetes',
+                              'is_lowquality':
+                                  'Low quality care',
+                              'is_amplification':
+                                  'Resistance amplification',
+                              'is_misassignment':
+                                  'Strain mis-assignment'}
 
     if working_string in button_name_dictionary:
         return button_name_dictionary[working_string]
@@ -65,12 +71,13 @@ class App:
         self.master = master
         frame = Frame(master)
         frame.pack()
-        self.master.minsize(1250, 340)
+        self.master.minsize(1550, 400)
         self.master.title('AuTuMN (version 1.0)')
 
         # Model running button
         self.run = Button(frame, text='Run', command=self.execute, width=10)
         self.run.grid(row=1, column=0, sticky=W, padx=6)
+        self.run.config(font='Helvetica 10 bold italic', fg='red')
 
         # Prepare Boolean data structures
         self.boolean_dictionary = {}
@@ -78,7 +85,8 @@ class App:
                                'output_age_fractions', 'output_by_age', 'output_fractions', 'output_scaleups',
                                'output_gtb_plots', 'output_plot_economics', 'output_uncertainty', 'output_spreadsheets',
                                'output_documents', 'output_by_scenario', 'output_horizontally',
-                               'output_age_calculations', 'comorbidity_diabetes']
+                               'output_age_calculations', 'comorbidity_diabetes',
+                               'is_lowquality', 'is_amplification', 'is_misassignment']
         for boolean in self.boolean_inputs:
             self.boolean_dictionary[boolean] = IntVar()
 
@@ -87,11 +95,13 @@ class App:
         for boolean in self.boolean_inputs:
             self.boolean_toggles[boolean] = Checkbutton(frame,
                                                         text=find_button_name_from_string(boolean),
-                                                        variable=self.boolean_dictionary[boolean])
+                                                        variable=self.boolean_dictionary[boolean],
+                                                        pady=5)
         plot_row = 1
         option_row = 1
         uncertainty_row = 1
         comorbidity_row = 1
+        elaboration_row = 1
         for boolean in self.boolean_inputs:
             if 'Plot ' in find_button_name_from_string(boolean) \
                     or 'Draw ' in find_button_name_from_string(boolean):
@@ -102,6 +112,9 @@ class App:
                 uncertainty_row += 1
             elif 'comorbidity_' in boolean:
                 self.boolean_toggles[boolean].grid(row=comorbidity_row, column=4, sticky=W)
+            elif 'is_' in boolean:
+                self.boolean_toggles[boolean].grid(row=elaboration_row, column=5, sticky=W)
+                elaboration_row += 1
             else:
                 self.boolean_toggles[boolean].grid(row=option_row, column=2, sticky=W)
                 option_row += 1
@@ -111,7 +124,8 @@ class App:
                          1: 'Plotting',
                          2: 'MS Office outputs',
                          3: 'Uncertainty',
-                         4: 'Risk groups'}
+                         4: 'Risk groups',
+                         5: 'Elaborations'}
         for i in range(len(column_titles)):
             title = Label(frame, text=column_titles[i])
             title.grid(row=0, column=i, sticky=NW, pady=10)

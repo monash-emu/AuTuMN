@@ -94,9 +94,9 @@ class ConsolidatedModel(BaseModel):
         self.loaded_compartments = None
 
         # Set Boolean conditionals for model structure and additional diagnostics
-        self.is_lowquality = self.inputs.model_constants['is_lowquality']
-        self.is_amplification = self.inputs.model_constants['is_amplification']
-        self.is_misassignment = self.inputs.model_constants['is_misassignment']
+        self.is_lowquality = self.gui_inputs['is_lowquality']
+        self.is_amplification = self.gui_inputs['is_amplification']
+        self.is_misassignment = self.gui_inputs['is_misassignment']
         if self.is_misassignment:
             assert self.is_amplification, 'Misassignment requested without amplification'
 

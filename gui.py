@@ -251,13 +251,22 @@ class App:
         # Start timer
         start_realtime = datetime.datetime.now()
 
-        self.runtime_outputs.insert(END, 'Model run commenced')
+        self.runtime_outputs.insert(END, 'Model run commenced\n')
         # self.runtime_outputs.see(END)
 
+        # Use multiple threads to deal with multiple user calls to run the model through the run button
+        execution_threads = []
         execution_thread = threading.Thread(target=self.run_model)
+        execution_threads.append(execution_thread)
         execution_thread.start()
 
     def run_model(self):
+
+        """
+        Here the the objects to actually perform the model run are called after the thread has been initialised in the
+        execute method above.
+
+        """
 
         model_runner = autumn.model_runner.ModelRunner(self.gui_outputs)
         model_runner.master_runner()

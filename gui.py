@@ -83,7 +83,7 @@ class App:
         self.frame = Frame(master)
         self.frame.pack()
         self.master.minsize(1500, 500)
-        self.master.title('AuTuMN (version 1.0)')
+        self.master.title('AuTuMN - version 1.0')
 
         # Model running button
         self.run = Button(self.frame, text='Run', command=self.execute, width=10)
@@ -256,7 +256,7 @@ class App:
         self.thread_number += 1
 
         # Indicate processing has started
-        self.runtime_outputs.insert(END, 'Model run commenced using thread number ' + str(self.thread_number) + '\n')
+        self.runtime_outputs.insert(END, 'Model run commenced using thread #%d.\n' % self.thread_number)
 
         # Use multiple threads to deal with multiple user calls to run the model through the run button
         execution_threads = []

@@ -256,7 +256,7 @@ class Inputs:
                     agegroups_to_print += str(agegroup)
                 else:
                     agegroups_to_print += str(agegroup) + ', '
-            self.runtime_outputs.insert(END, 'Age breakpoints are at: ' + agegroups_to_print)
+            self.runtime_outputs.insert(END, 'Age breakpoints are at: %s' % agegroups_to_print)
         else:
             self.runtime_outputs.insert(END, 'Model is not stratified by age.\n')
 
@@ -269,8 +269,8 @@ class Inputs:
         if len(self.comorbidities) == 2:
             self.runtime_outputs.insert(END, 'Model incorporates one additional risk group.\n')
         else:
-            self.runtime_outputs.insert(END, 'Model incorporates ' + str(len(self.comorbidities) - 1)
-                                        + ' additional risk groups.\n')
+            self.runtime_outputs.insert(END, 'Model incorporates %d additional risk groups.\n'
+                                        % len(self.comorbidities) - 1)
 
         # Define the strain structure for the model
         self.define_strain_structure()
@@ -304,7 +304,7 @@ class Inputs:
         # Create a scale-up dictionary for resistance amplification if appropriate
         if self.gui_inputs['n_strains'] > 1:
             self.find_amplification_data()
-            self.runtime_outputs.insert(END, 'Model simulating ' + str(self.gui_inputs['n_strains']) + ' strains.\n')
+            self.runtime_outputs.insert(END, 'Model simulating %d strains.\n' % self.gui_inputs['n_strains'])
         else:
             self.runtime_outputs.insert(END, 'Model simulating single strain only.\n')
 
@@ -876,10 +876,10 @@ class Inputs:
             for status in ['pos', 'neg']:
                 if self.time_variants['epi_prop_smear' + status]['time_variant'] == u'yes':
                     self.runtime_outputs.insert(END,
-                                                'Time variant smear-' + status + ' proportion requested, but ' +
+                                                'Time variant smear-%s proportion requested, but ' +
                                                 'model is not stratified by organ status. ' +
-                                                'Therefore, time variant smear-' + status +
-                                                ' status has been changed to off.\n')
+                                                'Therefore, time variant smear-%s' +
+                                                ' status has been changed to off.\n' % status)
                     self.time_variants['epi_prop_smear' + status]['time_variant'] = u'no'
         else:
 
@@ -1110,14 +1110,14 @@ class Inputs:
                     limits, _ = tool_kit.interrogate_age_string(agegroup)
                     if limits[1] == float('Inf'):
                         self.runtime_outputs.insert(END,
-                                                    '"' + param[1:] + '" parameter not available for ' +
+                                                    '"' + param[1:] + '" parameter unavailable for ' +
                                                     str(int(limits[0])) + ' and up ' +
-                                                    ' age-group, so unstratified value used.\n')
+                                                    'age-group, so unstratified value used.\n')
                     else:
                         self.runtime_outputs.insert(END,
-                                                    '"' + param[1:] + '" parameter not available for ' +
+                                                    '"' + param[1:] + '" parameter unavailable for ' +
                                                     str(int(limits[0])) + ' to ' + str(int(limits[1])) +
-                                                    ' age-group, so unstratified value used.\n')
+                                                    'age-group, so unstratified value used.\n')
 
     def find_uncertainty_distributions(self):
 

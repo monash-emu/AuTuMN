@@ -266,10 +266,12 @@ class Inputs:
 
         # Define the structuring of comorbidities for the model
         self.define_comorbidity_structure()
-        if len(self.comorbidities) == 2:
+        if len(self.comorbidities) == 1:
+            self.runtime_outputs.insert(END, 'Model does not incorporate any additional risk groups.\n')
+        elif len(self.comorbidities) == 2:
             self.runtime_outputs.insert(END, 'Model incorporates one additional risk group.\n')
-        else:
-            self.runtime_outputs.insert(END, 'Model incorporates %d additional risk groups.\n'
+        elif len(self.comorbidities) > 2:
+            self.runtime_outputs.insert(END, 'Model incorporates %s additional risk groups.\n'
                                         % len(self.comorbidities) - 1)
 
         # Define the strain structure for the model
@@ -876,10 +878,10 @@ class Inputs:
             for status in ['pos', 'neg']:
                 if self.time_variants['epi_prop_smear' + status]['time_variant'] == u'yes':
                     self.runtime_outputs.insert(END,
-                                                'Time variant smear-%s proportion requested, but ' +
+                                                'Time variant smear-' + status + ' proportion requested, but ' +
                                                 'model is not stratified by organ status. ' +
-                                                'Therefore, time variant smear-%s' +
-                                                ' status has been changed to off.\n' % status)
+                                                'Therefore, time variant smear-' + status +
+                                                ' status has been changed to off.\n')
                     self.time_variants['epi_prop_smear' + status]['time_variant'] = u'no'
         else:
 

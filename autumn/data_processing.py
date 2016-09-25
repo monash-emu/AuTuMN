@@ -2,7 +2,6 @@
 import autumn.spreadsheet as spreadsheet
 import copy
 import numpy
-import warnings
 import tool_kit
 from curve import scale_up_function
 from Tkinter import *
@@ -876,9 +875,11 @@ class Inputs:
             # Leave organ variation as false if no organ stratification and warn if variation requested
             for status in ['pos', 'neg']:
                 if self.time_variants['epi_prop_smear' + status]['time_variant'] == u'yes':
-                    warnings.warn('time variant smear-' + status + ' proportion requested, but ' +
-                                  'model is not stratified by organ status. Therefore, time variant smear-' + status +
-                                  ' status has been turned off.')
+                    self.runtime_outputs.insert(END,
+                                                'Time variant smear-' + status + ' proportion requested, but ' +
+                                                'model is not stratified by organ status. ' +
+                                                'Therefore, time variant smear-' + status +
+                                                ' status has been changed to off.\n')
                     self.time_variants['epi_prop_smear' + status]['time_variant'] = u'no'
         else:
 
@@ -887,18 +888,20 @@ class Inputs:
                 self.is_organvariation = True
                 # Warn if smear-negative variation not requested
                 if self.time_variants['epi_prop_smearneg']['time_variant'] == u'no':
-                    warnings.warn('requested time variant smear-positive status, but ' +
-                                  'not time variant smear-negative status. Therefore, changed to time variant ' +
-                                  'smear-negative status.')
+                    self.runtime_outputs.insert(END,
+                                                'Requested time variant smear-positive status, but ' +
+                                                'not time variant smear-negative status. ' +
+                                                'Therefore, changed to time variant smear-negative status.\n')
                     self.time_variants['epi_prop_smearneg']['time_variant'] = u'yes'
 
             # Leave organ variation as false if smear-positive variation not requested
             elif self.time_variants['epi_prop_smearpos']['time_variant'] == u'no':
                 # Warn if smear-negative variation requested
                 if self.time_variants['epi_prop_smearneg']['time_variant'] == u'yes':
-                    warnings.warn('requested non-time variant smear-positive status, but ' +
-                                  'time variant smear-negative status. Therefore, changed to non-time variant ' +
-                                  'smear-negative status.')
+                    self.runtime_outputs.insert(END,
+                                                'Requested non-time variant smear-positive status, but ' +
+                                                'time variant smear-negative status. ' +
+                                                'Therefore, changed to non-time variant smear-negative status.\n')
                     self.time_variants['epi_prop_smearneg']['time_variant'] = u'no'
 
         # Set fixed parameters if no organ status variation
@@ -1104,8 +1107,17 @@ class Inputs:
                 if 'econ' + param + '_ipt' + agegroup not in self.model_constants:
                     self.model_constants['econ' + param + '_ipt' + agegroup] \
                         = self.model_constants['econ' + param + '_ipt']
-                    warnings.warn(param + ' value not available for ' + agegroup + ' age group, so unstratified ' +
-                                  'value will be used for this age group.')
+                    limits, _ = tool_kit.interrogate_age_string(agegroup)
+                    if limits[1] == float('Inf'):
+                        self.runtime_outputs.insert(END,
+                                                    '"' + param[1:] + '" parameter not available for ' +
+                                                    str(int(limits[0])) + ' and up ' +
+                                                    ' age-group, so unstratified value used.\n')
+                    else:
+                        self.runtime_outputs.insert(END,
+                                                    '"' + param[1:] + '" parameter not available for ' +
+                                                    str(int(limits[0])) + ' to ' + str(int(limits[1])) +
+                                                    ' age-group, so unstratified value used.\n')
 
     def find_uncertainty_distributions(self):
 

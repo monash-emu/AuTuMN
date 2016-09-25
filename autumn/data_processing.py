@@ -1178,12 +1178,3 @@ class Inputs:
                 assert self.model_constants[time] >= self.model_constants['start_time'], \
                     '% is before model start time' % self.model_constants[time]
 
-if __name__ == '__main__':
-
-    inputs = Inputs()
-    inputs.read_and_load_data()
-    print()
-
-
-
-

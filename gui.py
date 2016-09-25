@@ -3,6 +3,7 @@ import autumn.model_runner
 import autumn.outputs
 import datetime
 import autumn.tool_kit
+import threading
 
 
 def find_button_name_from_string(working_string):
@@ -87,6 +88,11 @@ class App:
         self.run = Button(frame, text='Run', command=self.execute, width=10)
         self.run.grid(row=1, column=0, sticky=W, padx=2)
         self.run.config(font='Helvetica 10 bold italic', fg='red', bg='grey')
+
+        # Creating main output window
+        self.runtime_outputs = Text(frame)
+        self.runtime_outputs.grid(row=9, column=0, rowspan=4, columnspan=3)
+        self.runtime_outputs.config(height=8)
 
         # Prepare Boolean data structures
         self.boolean_dictionary = {}
@@ -245,14 +251,19 @@ class App:
         # Start timer
         start_realtime = datetime.datetime.now()
 
-        # Run everything
+        self.runtime_outputs.insert(END, 'Model run commenced')
+        # self.runtime_outputs.see(END)
+
+        execution_thread = threading.Thread(target=self.run_model)
+        execution_thread.start()
+
+    def run_model(self):
+
         model_runner = autumn.model_runner.ModelRunner(self.gui_outputs)
         model_runner.master_runner()
         project = autumn.outputs.Project(model_runner, self.gui_outputs)
         project.master_outputs_runner()
 
-        # Report time
-        print('Time elapsed in running script is ' + str(datetime.datetime.now() - start_realtime))
 
 if __name__ == '__main__':
 

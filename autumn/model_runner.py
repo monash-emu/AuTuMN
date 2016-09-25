@@ -6,6 +6,7 @@ import data_processing
 import numpy
 import datetime
 from scipy.stats import norm, beta
+from Tkinter import *
 
 
 def is_positive_definite(v):
@@ -41,10 +42,11 @@ def generate_candidates(n_candidates, param_ranges_unc):
 
 class ModelRunner:
 
-    def __init__(self, gui_inputs):
+    def __init__(self, gui_inputs, runtime_outputs):
 
         self.gui_inputs = gui_inputs
-        self.inputs = data_processing.Inputs(True, gui_inputs)
+        self.runtime_outputs = runtime_outputs
+        self.inputs = data_processing.Inputs(gui_inputs, runtime_outputs, from_test=True)
         self.inputs.read_and_load_data()
         self.model_dict = {}
         self.is_last_run_success = False
@@ -77,9 +79,6 @@ class ModelRunner:
             scenario_name = tool_kit.find_scenario_string_from_number(scenario)
             self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
-            # Introduce model at first run
-            tool_kit.introduce_model(self.model_dict, scenario_name)
-
             # Sort out times for scenario runs
             if scenario is None:
                 self.model_dict[scenario_name].start_time = self.inputs.model_constants['start_time']
@@ -92,8 +91,8 @@ class ModelRunner:
                     self.model_dict['baseline'].load_state(scenario_start_time_index)
 
             # Describe model
-            print('Running model "' + scenario_name + '".')
-            tool_kit.describe_model(self.model_dict, scenario_name)
+            self.runtime_outputs.insert(END, 'Running ' + scenario_name + ' conditions for '
+                                        + self.gui_inputs['country'] + ' using point estimates for parameters.\n')
 
             # Integrate and add result to outputs object
             self.model_dict[scenario_name].integrate()

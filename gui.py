@@ -76,21 +76,22 @@ class App:
         self.raw_outputs = {}
         self.drop_downs = {}
         self.numeric_entry = {}
+        self.thread_number = 0
 
         # Set up first frame
         self.master = master
-        frame = Frame(master)
-        frame.pack()
+        self.frame = Frame(master)
+        self.frame.pack()
         self.master.minsize(1500, 500)
         self.master.title('AuTuMN (version 1.0)')
 
         # Model running button
-        self.run = Button(frame, text='Run', command=self.execute, width=10)
+        self.run = Button(self.frame, text='Run', command=self.execute, width=10)
         self.run.grid(row=1, column=0, sticky=W, padx=2)
         self.run.config(font='Helvetica 10 bold italic', fg='red', bg='grey')
 
         # Creating main output window
-        self.runtime_outputs = Text(frame)
+        self.runtime_outputs = Text(self.frame)
         self.runtime_outputs.grid(row=9, column=0, rowspan=4, columnspan=3)
         self.runtime_outputs.config(height=8)
 
@@ -111,7 +112,7 @@ class App:
         # Set and collate checkboxes
         self.boolean_toggles = {}
         for boolean in self.boolean_inputs:
-            self.boolean_toggles[boolean] = Checkbutton(frame,
+            self.boolean_toggles[boolean] = Checkbutton(self.frame,
                                                         text=find_button_name_from_string(boolean),
                                                         variable=self.boolean_dictionary[boolean],
                                                         pady=5)
@@ -151,13 +152,13 @@ class App:
         self.raw_outputs['integration_method'].set('Runge Kutta')
         self.raw_outputs['fitting_method'].set('Method 5')
         self.drop_downs['country'] \
-            = OptionMenu(frame, self.raw_outputs['country'],
+            = OptionMenu(self.frame, self.raw_outputs['country'],
                          'Fiji', 'the Philippines', 'Bulgaria')
         self.drop_downs['integration_method'] \
-            = OptionMenu(frame, self.raw_outputs['integration_method'],
+            = OptionMenu(self.frame, self.raw_outputs['integration_method'],
                          'Runge Kutta', 'Scipy', 'Explicit')
         self.drop_downs['fitting_method'] \
-            = OptionMenu(frame, self.raw_outputs['fitting_method'],
+            = OptionMenu(self.frame, self.raw_outputs['fitting_method'],
                          'Method 1', 'Method 2', 'Method 3', 'Method 4', 'Method 5')
         for drop_down in running_dropdown_list:
             self.drop_downs[drop_down].grid(row=running_row, column=0, sticky=W)
@@ -169,11 +170,11 @@ class App:
             self.raw_outputs[option] = StringVar()
         self.raw_outputs['n_organs'].set('Pos / Neg / Extra')
         self.raw_outputs['n_strains'].set('Single strain')
-        self.drop_downs['n_organs'] = OptionMenu(frame, self.raw_outputs['n_organs'],
+        self.drop_downs['n_organs'] = OptionMenu(self.frame, self.raw_outputs['n_organs'],
                                                  'Pos / Neg / Extra',
                                                  'Pos / Neg',
                                                  'Unstratified')
-        self.drop_downs['n_strains'] = OptionMenu(frame, self.raw_outputs['n_strains'],
+        self.drop_downs['n_strains'] = OptionMenu(self.frame, self.raw_outputs['n_strains'],
                                                   'Single strain', 'DS / MDR', 'DS / MDR / XDR')
         for option in numerical_stratification_inputs:
             self.drop_downs[option].grid(row=comorbidity_row, column=1, sticky=W)
@@ -187,10 +188,10 @@ class App:
         column_titles = ['Model running', 'Model stratifications', 'Elaborations', 'Scenarios to run', 'Uncertainty',
                          'Plotting', 'MS Office outputs']
         for i in range(len(column_titles)):
-            title = Label(frame, text=column_titles[i])
+            title = Label(self.frame, text=column_titles[i])
             title.grid(row=0, column=i, sticky=NW, pady=10)
             title.config(font='Helvetica 10 bold italic')
-            frame.grid_columnconfigure(i, minsize=200)
+            self.frame.grid_columnconfigure(i, minsize=200)
 
         # Sliders
         slider_list = ['default_smoothness', 'time_step']
@@ -200,13 +201,13 @@ class App:
         self.raw_outputs['default_smoothness'].set(1.)
         self.raw_outputs['time_step'].set(.01)
         slider_labels = {'default_smoothness':
-                             Label(frame, text='Default fitting smoothness:', font='Helvetica 9 italic'),
+                             Label(self.frame, text='Default fitting smoothness:', font='Helvetica 9 italic'),
                          'time_step':
-                             Label(frame, text='Integration time step:', font='Helvetica 9 italic')}
-        sliders['default_smoothness'] = Scale(frame, from_=0, to=5, resolution=.1, orient=HORIZONTAL,
+                             Label(self.frame, text='Integration time step:', font='Helvetica 9 italic')}
+        sliders['default_smoothness'] = Scale(self.frame, from_=0, to=5, resolution=.1, orient=HORIZONTAL,
                                               width=10, length=130, sliderlength=20,
                                               variable=self.raw_outputs['default_smoothness'])
-        sliders['time_step'] = Scale(frame, from_=0.005, to=.5, resolution=.005, orient=HORIZONTAL,
+        sliders['time_step'] = Scale(self.frame, from_=0.005, to=.5, resolution=.005, orient=HORIZONTAL,
                                      width=10, length=130, sliderlength=20, variable=self.raw_outputs['time_step'])
         for l, label in enumerate(slider_list):
             slider_labels[label].grid(row=running_row, column=0, sticky=SW)
@@ -251,8 +252,11 @@ class App:
         # Start timer
         start_realtime = datetime.datetime.now()
 
-        self.runtime_outputs.insert(END, 'Model run commenced\n')
-        # self.runtime_outputs.see(END)
+        # Record thread number
+        self.thread_number += 1
+
+        # Indicate processing has started
+        self.runtime_outputs.insert(END, 'Model run commenced using thread number ' + str(self.thread_number) + '\n')
 
         # Use multiple threads to deal with multiple user calls to run the model through the run button
         execution_threads = []
@@ -268,7 +272,7 @@ class App:
 
         """
 
-        model_runner = autumn.model_runner.ModelRunner(self.gui_outputs)
+        model_runner = autumn.model_runner.ModelRunner(self.gui_outputs, self.runtime_outputs)
         model_runner.master_runner()
         project = autumn.outputs.Project(model_runner, self.gui_outputs)
         project.master_outputs_runner()

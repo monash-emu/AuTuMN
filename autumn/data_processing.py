@@ -5,6 +5,7 @@ import numpy
 import warnings
 import tool_kit
 from curve import scale_up_function
+from Tkinter import *
 
 def calculate_proportion_dict(data, indices, percent=False):
 
@@ -136,10 +137,11 @@ def remove_nans(dictionary):
 
 class Inputs:
 
-    def __init__(self, from_test=False, gui_inputs=None):
+    def __init__(self, gui_inputs, runtime_outputs, from_test=False):
 
         self.gui_inputs = gui_inputs
         self.country = gui_inputs['country']
+        self.runtime_outputs = runtime_outputs
         self.original_data = None
         self.from_test = from_test
         self.derived_data = {}
@@ -169,10 +171,8 @@ class Inputs:
 
     def read_and_load_data(self):
 
-        # Create a "first read" attribute, which can later be used to determine whether other
-        # elements of the control pane need to be read.
-
-        # Default keys of sheets to read (ones that should always be read
+        # Default keys of sheets to read (ones that should always be read)
+        self.runtime_outputs.insert(END, 'Reading Excel sheets with input data.\n')
         keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy',
                                   'default_parameters', 'tb', 'notifications', 'outcomes',
                                   'country_constants', 'default_constants',
@@ -215,6 +215,7 @@ class Inputs:
         # Convert time variants loaded as percentages to proportions
         self.convert_percentages_to_proportions()
 
+        # Populate freeze time dictionary with defaults where unavailable
         self.complete_freeze_time_dictionary()
 
         # Find outcomes for smear-positive DS-TB patients and populate to derived data dictionary
@@ -241,13 +242,24 @@ class Inputs:
         # Add hard-coded parameters that are universal to all models that require them
         self.add_universal_parameters()
 
-        # Work out age stratification structure for model from the list of age breakpoints
+        # Describe and work out age stratification structure for model from the list of age breakpoints
         self.agegroups, _ = tool_kit.get_agegroups_from_breakpoints(self.model_constants['age_breakpoints'])
 
         # Find ageing rates and age-weighted parameters
         if len(self.agegroups) > 1:
             self.find_ageing_rates()
             self.find_fixed_age_specific_parameters()
+            agegroups_to_print = ''
+            for a, agegroup in enumerate(self.model_constants['age_breakpoints']):
+                if a == len(self.model_constants['age_breakpoints']) - 1:
+                    agegroups_to_print += ' and ' + str(agegroup) + '.\n'
+                elif a == len(self.model_constants['age_breakpoints']) - 2:
+                    agegroups_to_print += str(agegroup)
+                else:
+                    agegroups_to_print += str(agegroup) + ', '
+            self.runtime_outputs.insert(END, 'Age breakpoints are at: ' + agegroups_to_print)
+        else:
+            self.runtime_outputs.insert(END, 'Model is not stratified by age.\n')
 
         # Add treatment time periods for single strain model, as only populated for DS-TB to now
         if self.gui_inputs['n_strains'] == 0:
@@ -255,6 +267,11 @@ class Inputs:
 
         # Define the structuring of comorbidities for the model
         self.define_comorbidity_structure()
+        if len(self.comorbidities) == 2:
+            self.runtime_outputs.insert(END, 'Model incorporates one additional risk group.\n')
+        else:
+            self.runtime_outputs.insert(END, 'Model incorporates ' + str(len(self.comorbidities) - 1)
+                                        + ' additional risk groups.\n')
 
         # Define the strain structure for the model
         self.define_strain_structure()
@@ -288,6 +305,9 @@ class Inputs:
         # Create a scale-up dictionary for resistance amplification if appropriate
         if self.gui_inputs['n_strains'] > 1:
             self.find_amplification_data()
+            self.runtime_outputs.insert(END, 'Model simulating ' + str(self.gui_inputs['n_strains']) + ' strains.\n')
+        else:
+            self.runtime_outputs.insert(END, 'Model simulating single strain only.\n')
 
         # Derive some basic parameters for IPT
         self.find_ipt_params()
@@ -357,10 +377,11 @@ class Inputs:
         """
         Calculates dictionaries with proportion of cases progressing to each organ status by year,
         and adds these to the derived_data attribute of the object.
+
         """
 
         self.derived_data.update(calculate_proportion_dict(self.original_data['notifications'],
-                                                                ['new_sp', 'new_sn', 'new_ep']))
+                                                           ['new_sp', 'new_sn', 'new_ep']))
 
     def add_time_variant_defaults(self):
 
@@ -395,16 +416,15 @@ class Inputs:
             other_sheets_with_constants: The sheets of original_data which contain model constants
         """
 
-        # First take control panel values
-        # self.model_constants = self.original_data['control_panel']
-
         # Populate from country_constants if available and default_constants if not
         for other_sheet in other_sheets_with_constants:
             if other_sheet in self.original_data:
                 for item in self.original_data[other_sheet]:
-                    # if item not in self.original_data['control_panel']:
-                    self.model_constants[item] = \
-                        self.original_data[other_sheet][item]
+
+                    # Only add the item if it hasn't been added yet
+                    if item not in self.model_constants:
+                        self.model_constants[item] = \
+                            self.original_data[other_sheet][item]
 
     def convert_percentages_to_proportions(self):
 

@@ -92,8 +92,8 @@ class App:
 
         # Creating main output window
         self.runtime_outputs = Text(self.frame)
-        self.runtime_outputs.grid(row=9, column=0, rowspan=4, columnspan=3)
-        self.runtime_outputs.config(height=8)
+        self.runtime_outputs.grid(row=10, column=0, rowspan=5, columnspan=3)
+        self.runtime_outputs.config(height=9)
 
         # Prepare Boolean data structures
         self.boolean_dictionary = {}
@@ -103,7 +103,7 @@ class App:
                                'output_documents', 'output_by_scenario', 'output_horizontally',
                                'output_age_calculations', 'comorbidity_diabetes',
                                'is_lowquality', 'is_amplification', 'is_misassignment']
-        for i in range(1, 13):
+        for i in range(1, 15):
             self.boolean_inputs += ['scenario_' + str(i)]
 
         for boolean in self.boolean_inputs:
@@ -200,10 +200,11 @@ class App:
             self.raw_outputs[slide] = DoubleVar()
         self.raw_outputs['default_smoothness'].set(1.)
         self.raw_outputs['time_step'].set(.01)
+        label_font = 'Helvetica 9 italic'
         slider_labels = {'default_smoothness':
-                             Label(self.frame, text='Default fitting smoothness:', font='Helvetica 9 italic'),
+                             Label(self.frame, text='Default fitting smoothness:', font=label_font),
                          'time_step':
-                             Label(self.frame, text='Integration time step:', font='Helvetica 9 italic')}
+                             Label(self.frame, text='Integration time step:', font=label_font)}
         sliders['default_smoothness'] = Scale(self.frame, from_=0, to=5, resolution=.1, orient=HORIZONTAL,
                                               width=10, length=130, sliderlength=20,
                                               variable=self.raw_outputs['default_smoothness'])
@@ -214,6 +215,8 @@ class App:
             running_row += 1
             sliders[label].grid(row=running_row, column=0, sticky=NW)
             running_row += 1
+        console_label = Label(self.frame, text='Runtime outupts console:', font=label_font)
+        console_label.grid(row=running_row, column=0, sticky=SW)
 
     def execute(self):
 

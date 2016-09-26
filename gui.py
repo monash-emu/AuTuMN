@@ -200,11 +200,11 @@ class App:
             self.raw_outputs[slide] = DoubleVar()
         self.raw_outputs['default_smoothness'].set(1.)
         self.raw_outputs['time_step'].set(.01)
-        label_font = 'Helvetica 9 italic'
+        label_font = 'Helvetica 9 bold italic'
         slider_labels = {'default_smoothness':
-                             Label(self.frame, text='Default fitting smoothness:', font=label_font),
+                             Label(self.frame, text='Default fitting smoothness', font=label_font),
                          'time_step':
-                             Label(self.frame, text='Integration time step:', font=label_font)}
+                             Label(self.frame, text='Integration time step', font=label_font)}
         sliders['default_smoothness'] = Scale(self.frame, from_=0, to=5, resolution=.1, orient=HORIZONTAL,
                                               width=10, length=130, sliderlength=20,
                                               variable=self.raw_outputs['default_smoothness'])
@@ -215,7 +215,7 @@ class App:
             running_row += 1
             sliders[label].grid(row=running_row, column=0, sticky=NW)
             running_row += 1
-        console_label = Label(self.frame, text='Runtime outupts console:', font=label_font)
+        console_label = Label(self.frame, text='Runtime outputs console', font=label_font)
         console_label.grid(row=running_row, column=0, sticky=SW)
 
     def execute(self):

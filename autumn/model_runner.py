@@ -51,7 +51,6 @@ class ModelRunner:
         self.model_dict = {}
         self.is_last_run_success = False
         self.adaptive_search = True  # If True, next candidate generated according to previous position
-        self.accepted_parameters = {}
         self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
                                       'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
         self.n_runs = 10  # Number of accepted runs per scenario
@@ -102,7 +101,9 @@ class ModelRunner:
 
         if self.gui_inputs['output_uncertainty']:
 
-            print('Uncertainty analysis')
+            # Describe process
+            self.runtime_outputs.insert(END, 'Uncertainty analysis commenced')
+            self.runtime_outputs.see(END)
 
             # Prepare directory for eventual pickling
             out_dir = 'pickles'
@@ -113,9 +114,10 @@ class ModelRunner:
 
             # Don't run uncertainty but load a saved simulation
             if self.pickle_uncertainty == 'read':
+                self.runtime_outputs.insert(END, 'Uncertainty results loaded from previous simulation')
+                self.runtime_outputs.see(END)
                 self.results['uncertainty'] = tool_kit.pickle_load(results_file)
                 self.accepted_indices = tool_kit.pickle_load(indices_file)
-                print 'Uncertainty results loaded from previous simulation'
 
             # Run uncertainty
             else:
@@ -125,7 +127,8 @@ class ModelRunner:
             if self.pickle_uncertainty == 'write':
                 tool_kit.pickle_save(self.results['uncertainty'], results_file)
                 tool_kit.pickle_save(self.accepted_indices, indices_file)
-                print 'Uncertainty results written to disc'
+                self.runtime_outputs.insert(END, 'Uncertainty results saved to disc')
+                self.runtime_outputs.see(END)
 
     def store_scenario_results(self, scenario):
 
@@ -173,7 +176,6 @@ class ModelRunner:
 
         # Prepare for uncertainty loop
         for param_dict in self.inputs.param_ranges_unc:
-            self.accepted_parameters[param_dict['key']] = []
             self.all_parameters_tried[param_dict['key']] = []
         n_accepted = 0
         i_candidates = 0
@@ -211,14 +213,11 @@ class ModelRunner:
             if self.is_last_run_success:
                 self.store_uncertainty_results('baseline')
 
-                # Record results in accepted parameter dictionary
-                for p, param_dict in enumerate(self.inputs.param_ranges_unc):
-                    self.all_parameters_tried[param_dict['key']].append(new_params[p])
-
                 # Calculate prior
                 prior_log_likelihood = 0.
                 for p, param_dict in enumerate(self.inputs.param_ranges_unc):
                     param_val = new_params[p]
+                    self.all_parameters_tried[param_dict['key']].append(new_params[p])
 
                     # Calculate the density of param_val
                     bound_low, bound_high = param_dict['bounds'][0], param_dict['bounds'][1]
@@ -264,10 +263,6 @@ class ModelRunner:
                     self.accepted_indices += [run]
                     n_accepted += 1
 
-                    # Record results in accepted parameter dictionary
-                    for p, param_dict in enumerate(self.inputs.param_ranges_unc):
-                        self.accepted_parameters[param_dict['key']].append(new_params[p])
-
                     # Update likelihood and parameter set for next run
                     prev_log_likelihood = log_likelihood
                     params = new_params
@@ -286,7 +281,8 @@ class ModelRunner:
                             scenario_name = tool_kit.find_scenario_string_from_number(scenario)
                             if scenario is not None:
                                 scenario_start_time_index = \
-                                    self.model_dict['baseline'].find_time_index(self.inputs.model_constants['recent_time'])
+                                    self.model_dict['baseline'].find_time_index(
+                                        self.inputs.model_constants['recent_time'])
                                 self.model_dict[scenario_name].start_time = \
                                     self.model_dict['baseline'].times[scenario_start_time_index]
                                 self.model_dict[scenario_name].loaded_compartments = \
@@ -407,7 +403,7 @@ class ModelRunner:
                 random = norm.rvs(loc=old_params[p], scale=sd, size=1)
 
             # Add them to the dictionary
-            new_params.append(random)
+            new_params.append(random[0])
 
         return new_params
 

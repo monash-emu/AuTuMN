@@ -3,7 +3,7 @@ import autumn.spreadsheet as spreadsheet
 import copy
 import numpy
 import tool_kit
-from curve import scale_up_function
+from curve import scale_up_function, freeze_curve
 from Tkinter import *
 
 def calculate_proportion_dict(data, indices, percent=False):
@@ -982,7 +982,8 @@ class Inputs:
                         elif scenario is None or 'program_' not in time_variant:
                             self.scaleup_data[scenario][str(time_variant)][i] \
                                 = self.time_variants[time_variant][i]
-                        elif i <= int(self.freeze_times['scenario_' + str(scenario)]):
+                       # elif i <= int(self.freeze_times['scenario_' + str(scenario)]):
+                        else:
                             self.scaleup_data[scenario][str(time_variant)][i] \
                                 = self.time_variants[time_variant][i]
 
@@ -1070,6 +1071,11 @@ class Inputs:
                                             bound_up=upper_bound,
                                             intervention_end=scenario_for_function,
                                             intervention_start_date=self.model_constants['scenario_start_time'])
+
+                    if scenario is not None:
+                        freeze_time = self.freeze_times['scenario_' + str(scenario)]
+                        if freeze_time < self.model_constants['current_time']:
+                            self.scaleup_fns[scenario][param] = freeze_curve(self.scaleup_fns[scenario][param], freeze_time)
 
                 # If no is selected in the time variant column
                 elif whether_time_variant[param] == u'no':

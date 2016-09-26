@@ -264,10 +264,15 @@ class App:
         self.runtime_outputs.see(END)
 
         # Use multiple threads to deal with multiple user calls to run the model through the run button
-        execution_threads = []
-        execution_thread = threading.Thread(target=self.run_model)
-        execution_threads.append(execution_thread)
-        execution_thread.start()
+        is_romain = True # just for Romain. Leave it False
+        if is_romain:
+            self.run_model()
+        else:
+            execution_threads = []
+            execution_thread = threading.Thread(target=self.run_model)
+            execution_threads.append(execution_thread)
+            execution_thread.start()
+
 
     def run_model(self):
 

@@ -680,6 +680,7 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
             return y_t
 
         return curve
+
     else:
         print('method ' + method + 'does not exist.')
 
@@ -702,6 +703,13 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
             return y_t
 
     return curve
+def freeze_curve(curve, freeze_time):
+
+    def frozen_curve(t):
+        return curve(min(t, freeze_time))
+
+    return frozen_curve
+
 
 
 if __name__ == "__main__":

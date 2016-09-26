@@ -1114,12 +1114,12 @@ class Inputs:
                         self.runtime_outputs.insert(END,
                                                     '"' + param[1:] + '" parameter unavailable for ' +
                                                     str(int(limits[0])) + ' and up ' +
-                                                    'age-group, so unstratified value used.\n')
+                                                    'age-group, so default value used.\n')
                     else:
                         self.runtime_outputs.insert(END,
                                                     '"' + param[1:] + '" parameter unavailable for ' +
                                                     str(int(limits[0])) + ' to ' + str(int(limits[1])) +
-                                                    'age-group, so unstratified value used.\n')
+                                                    ' age-group, so default value used.\n')
 
     def find_uncertainty_distributions(self):
 

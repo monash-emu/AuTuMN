@@ -208,95 +208,96 @@ class ModelRunner:
             self.run_with_params(new_params)
 
             # Now storing regardless of acceptance
-            self.store_uncertainty_results('baseline')
-
-            # Record results in accepted parameter dictionary
-            for p, param_dict in enumerate(self.inputs.param_ranges_unc):
-                self.all_parameters_tried[param_dict['key']].append(new_params[p])
-
-            # Calculate prior
-            prior_log_likelihood = 0.
-            for p, param_dict in enumerate(self.inputs.param_ranges_unc):
-                param_val = new_params[p]
-
-                # Calculate the density of param_val
-                bound_low, bound_high = param_dict['bounds'][0], param_dict['bounds'][1]
-
-                # Normalise value and find log of PDF from beta distribution
-                if param_dict['distribution'] == 'beta':
-                    prior_log_likelihood \
-                        += beta.logpdf((param_val - bound_low) / (bound_high - bound_low),
-                                       2., 2.)
-
-                # Find log of PDF from uniform distribution
-                elif param_dict['distribution'] == 'uniform':
-                    prior_log_likelihood \
-                        += numpy.log(1. / (bound_high - bound_low))
-
-            # Calculate posterior
-            posterior_log_likelihood = 0.
-            for output_dict in self.outputs_unc:
-                working_output_dictionary = normal_char[output_dict['key']]
-                for year in working_output_dictionary.keys():
-                    year_index \
-                        = tool_kit.find_first_list_element_at_least_value(self.model_dict['baseline'].times,
-                                                                          year)
-                    model_result_for_output \
-                        = self.model_dict['baseline'].get_var_soln(output_dict['key'])[year_index]
-                    mu, sd = working_output_dictionary[year][0], working_output_dictionary[year][1]
-                    posterior_log_likelihood += norm.logpdf(model_result_for_output, mu, sd)
-
-            # Sum for overall likelihood of run
-            log_likelihood = prior_log_likelihood + posterior_log_likelihood
-
-            # Determine acceptance
-            if log_likelihood >= prev_log_likelihood:
-                accepted = 1
-            else:
-                accepted = numpy.random.binomial(n=1, p=numpy.exp(log_likelihood - prev_log_likelihood))
-
-            # Record information for accepted runs
-            if accepted != 1:
-                self.whether_accepted_list.append(False)
-            elif accepted == 1:
-                self.whether_accepted_list.append(True)
-                self.accepted_indices += [run]
-                n_accepted += 1
+            if self.is_last_run_success:
+                self.store_uncertainty_results('baseline')
 
                 # Record results in accepted parameter dictionary
                 for p, param_dict in enumerate(self.inputs.param_ranges_unc):
-                    self.accepted_parameters[param_dict['key']].append(new_params[p])
+                    self.all_parameters_tried[param_dict['key']].append(new_params[p])
 
-                # Update likelihood and parameter set for next run
-                prev_log_likelihood = log_likelihood
-                params = new_params
+                # Calculate prior
+                prior_log_likelihood = 0.
+                for p, param_dict in enumerate(self.inputs.param_ranges_unc):
+                    param_val = new_params[p]
 
-                # Store outputs once burn-in complete
-                if n_accepted > self.burn_in:
+                    # Calculate the density of param_val
+                    bound_low, bound_high = param_dict['bounds'][0], param_dict['bounds'][1]
 
-                    # Model storage
-                    params_dict = {}
+                    # Normalise value and find log of PDF from beta distribution
+                    if param_dict['distribution'] == 'beta':
+                        prior_log_likelihood \
+                            += beta.logpdf((param_val - bound_low) / (bound_high - bound_low),
+                                           2., 2.)
+
+                    # Find log of PDF from uniform distribution
+                    elif param_dict['distribution'] == 'uniform':
+                        prior_log_likelihood \
+                            += numpy.log(1. / (bound_high - bound_low))
+
+                # Calculate posterior
+                posterior_log_likelihood = 0.
+                for output_dict in self.outputs_unc:
+                    working_output_dictionary = normal_char[output_dict['key']]
+                    for year in working_output_dictionary.keys():
+                        year_index \
+                            = tool_kit.find_first_list_element_at_least_value(self.model_dict['baseline'].times,
+                                                                              year)
+                        model_result_for_output \
+                            = self.model_dict['baseline'].get_var_soln(output_dict['key'])[year_index]
+                        mu, sd = working_output_dictionary[year][0], working_output_dictionary[year][1]
+                        posterior_log_likelihood += norm.logpdf(model_result_for_output, mu, sd)
+
+                # Sum for overall likelihood of run
+                log_likelihood = prior_log_likelihood + posterior_log_likelihood
+
+                # Determine acceptance
+                if log_likelihood >= prev_log_likelihood:
+                    accepted = 1
+                else:
+                    accepted = numpy.random.binomial(n=1, p=numpy.exp(log_likelihood - prev_log_likelihood))
+
+                # Record information for accepted runs
+                if accepted != 1:
+                    self.whether_accepted_list.append(False)
+                elif accepted == 1:
+                    self.whether_accepted_list.append(True)
+                    self.accepted_indices += [run]
+                    n_accepted += 1
+
+                    # Record results in accepted parameter dictionary
                     for p, param_dict in enumerate(self.inputs.param_ranges_unc):
-                        params_dict[param_dict['key']] = new_params[p]
-                    self.loglikelihoods.append(log_likelihood)
+                        self.accepted_parameters[param_dict['key']].append(new_params[p])
 
-                    # Run scenarios other than baseline and store uncertainty
-                    for scenario in self.gui_inputs['scenarios_to_run']:
-                        scenario_name = tool_kit.find_scenario_string_from_number(scenario)
-                        if scenario is not None:
-                            scenario_start_time_index = \
-                                self.model_dict['baseline'].find_time_index(self.inputs.model_constants['recent_time'])
-                            self.model_dict[scenario_name].start_time = \
-                                self.model_dict['baseline'].times[scenario_start_time_index]
-                            self.model_dict[scenario_name].loaded_compartments = \
-                                self.model_dict['baseline'].load_state(scenario_start_time_index)
-                            self.model_dict[scenario_name].integrate()
+                    # Update likelihood and parameter set for next run
+                    prev_log_likelihood = log_likelihood
+                    params = new_params
 
-                            self.prepare_uncertainty_dictionaries(scenario_name)
-                            self.store_uncertainty_results(scenario_name)
+                    # Store outputs once burn-in complete
+                    if n_accepted > self.burn_in:
 
-            i_candidates += 1
-            run += 1
+                        # Model storage
+                        params_dict = {}
+                        for p, param_dict in enumerate(self.inputs.param_ranges_unc):
+                            params_dict[param_dict['key']] = new_params[p]
+                        self.loglikelihoods.append(log_likelihood)
+
+                        # Run scenarios other than baseline and store uncertainty
+                        for scenario in self.gui_inputs['scenarios_to_run']:
+                            scenario_name = tool_kit.find_scenario_string_from_number(scenario)
+                            if scenario is not None:
+                                scenario_start_time_index = \
+                                    self.model_dict['baseline'].find_time_index(self.inputs.model_constants['recent_time'])
+                                self.model_dict[scenario_name].start_time = \
+                                    self.model_dict['baseline'].times[scenario_start_time_index]
+                                self.model_dict[scenario_name].loaded_compartments = \
+                                    self.model_dict['baseline'].load_state(scenario_start_time_index)
+                                self.model_dict[scenario_name].integrate()
+
+                                self.prepare_uncertainty_dictionaries(scenario_name)
+                                self.store_uncertainty_results(scenario_name)
+
+                i_candidates += 1
+                run += 1
 
             # Generate more candidates if required
             if not self.adaptive_search and run >= len(param_candidates.keys()):
@@ -527,6 +528,5 @@ class ModelRunner:
                     else:
                         self.results['uncertainty'][scenario]['costs'][program][cost] \
                             = self.model_dict[scenario].costs[program][cost]
-
 
 

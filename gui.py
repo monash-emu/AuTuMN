@@ -256,7 +256,8 @@ class App:
         self.thread_number += 1
 
         # Indicate processing has started
-        self.runtime_outputs.insert(END, 'Model run commenced using thread #%d.\n' % self.thread_number)
+        self.runtime_outputs.insert(END, '_____________________________________________\n' +
+                                    'Model run commenced using thread #%d.\n' % self.thread_number)
 
         # Use multiple threads to deal with multiple user calls to run the model through the run button
         execution_threads = []

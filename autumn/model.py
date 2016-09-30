@@ -121,6 +121,7 @@ class ConsolidatedModel(BaseModel):
 
         # Get scaleup functions from input object
         self.scaleup_fns = self.inputs.scaleup_fns[self.scenario]
+        self.find_intervention_startdates()
 
     def define_model_structure(self):
 

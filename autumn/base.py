@@ -44,6 +44,7 @@ class BaseModel:
         self.eco_drives_epi = False
 
         self.startups_apply = {}
+        self.intervention_startdates = {}
 
     def make_times(self, start, end, delta):
 
@@ -613,29 +614,44 @@ class BaseModel:
                 (1 + numpy.exp((-b) * (cost - c_inflection_cost))) ** alpha)
             return coverage_estimated
 
-        interventions = self.interventions_to_cost 
-
-        vars_key_base = 'program_prop_'
-        popsize_label_base = 'popsize_'
-        c_inflection_cost_base = 'econ_program_inflectioncost_'
-        unitcost_base = 'econ_program_unitcost_'
-        cost_base = 'econ_program_totalcost_'
-
+        interventions = self.interventions_to_cost
         for int in interventions:
-            vars_key = vars_key_base + int
+            if (int in ['ipt_age0to5', 'ipt_age5to15']) and (len(self.agegroups) < 2):
+                continue
 
-            cost = self.vars[cost_base + int]
-            unit_cost = self.vars[unitcost_base + int]
-            c_inflection_cost = self.vars[c_inflection_cost_base + int]
-            saturation = 0.9  # dummy   provisional
-
-            popsize_key = popsize_label_base + int
-            if popsize_key in self.vars.keys():
-                pop_size = self.vars[popsize_key]
+            vars_key = 'program_prop_' + int
+            cost = 1000000.
+            if cost == 0:
+                coverage = 0
             else:
-                pop_size = 0
+                unit_cost = self.inputs.model_constants['econ_unitcost_' + int]
+                c_inflection_cost = self.inputs.model_constants['econ_inflectioncost_' + int]
+                saturation = self.inputs.model_constants['econ_saturation_' + int]
+                popsize_key = 'popsize_' + int
+                if popsize_key in self.vars.keys():
+                    pop_size = self.vars[popsize_key]
+                else:
+                    pop_size = 0
 
-            coverage = get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.0)
+                # starting costs
+                # is a programm starting right now? In that case, update intervention_startdates
+                if self.intervention_startdates[int] is None: # means intervention hadn't started yet
+                    self.intervention_startdates[int] = self.time
+
+                # calculate current starting cost
+                current_start_cost = 0.
+                if self.intervention_startdates[int] <= self.time <= self.intervention_startdates[int] + self.inputs.model_constants['econ_startupduration_' + int]:
+                    current_start_cost = scipy.stats.beta.pdf((self.time - self.intervention_startdates[int])
+                                                     / self.inputs.model_constants['econ_startupduration_' + int],
+                                                     2.,
+                                                     5.) \
+                                / self.inputs.model_constants['econ_startupduration_' + int] \
+                                * self.inputs.model_constants['econ_startupcost_' + int]
+
+                remaining_money = cost - current_start_cost
+                assert remaining_money >= 0, 'available funding is not enough to cover starting costs of ' + int + ' at time ' + str(self.time)
+
+                coverage = get_coverage_from_cost(remaining_money, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.0)
             self.vars[vars_key] = coverage
 
     def get_compartment_soln(self, label):
@@ -780,6 +796,19 @@ class BaseModel:
                     and self.inputs.model_constants['econ_startupcost_' + program] > 0.:
                 self.startups_apply[program] = True
 
+    def find_intervention_startdates(self):
+        """
+        Find the dates when the different interventions start and populate self.intervention_startdates
+        """
+        scenario = self.scenario
+        for intervention in self.interventions_to_cost:
+            self.intervention_startdates[intervention] = None
+            param_key = 'program_prop_' + intervention
+            param_key2 = 'program_perc_' + intervention
+            param_dict = self.inputs.scaleup_data[scenario][param_key]
+            years_pos_coverage = [key for (key, value) in param_dict.items() if value > 0.]  # years after start
+            if len(years_pos_coverage) > 0:  # some coverage present at baseline
+                self.intervention_startdates[intervention] = min(years_pos_coverage)
 
 def add_unique_tuple_to_list(a_list, a_tuple):
 

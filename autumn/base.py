@@ -39,9 +39,12 @@ class BaseModel:
         self.run_costing = True
         self.end_period_costing = 2035
         self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
-                                      'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
+                                     'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
 
         self.eco_drives_epi = False
+
+        self.available_funding = {}
+        self.annual_available_funding = {}
 
         self.startups_apply = {}
         self.intervention_startdates = {}
@@ -487,11 +490,6 @@ class BaseModel:
 
         self.determine_whether_startups_apply()
 
-        # If model is not age-structured, age-specific IPT does not make sense
-        if len(self.agegroups) < 2:
-            self.interventions_to_cost = [inter for inter in self.interventions_to_cost
-                                          if inter not in ['ipt_age0to5', 'ipt_age5to15']]
-
         # Find start and end indices for economics calculations
         start_index = tool_kit.find_first_list_element_at_least_value(self.times,
                                                                       self.inputs.model_constants['recent_time'])
@@ -582,7 +580,6 @@ class BaseModel:
         Returns:
         Nothing
         """
-
         def get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.0):
 
             """
@@ -620,7 +617,7 @@ class BaseModel:
                 continue
 
             vars_key = 'program_prop_' + int
-            cost = 1000000.
+            cost = self.annual_available_funding[int]
             if cost == 0:
                 coverage = 0
             else:
@@ -638,20 +635,8 @@ class BaseModel:
                 if self.intervention_startdates[int] is None: # means intervention hadn't started yet
                     self.intervention_startdates[int] = self.time
 
-                # calculate current starting cost
-                current_start_cost = 0.
-                if self.intervention_startdates[int] <= self.time <= self.intervention_startdates[int] + self.inputs.model_constants['econ_startupduration_' + int]:
-                    current_start_cost = scipy.stats.beta.pdf((self.time - self.intervention_startdates[int])
-                                                     / self.inputs.model_constants['econ_startupduration_' + int],
-                                                     2.,
-                                                     5.) \
-                                / self.inputs.model_constants['econ_startupduration_' + int] \
-                                * self.inputs.model_constants['econ_startupcost_' + int]
-
-                remaining_money = cost - current_start_cost
-                assert remaining_money >= 0, 'available funding is not enough to cover starting costs of ' + int + ' at time ' + str(self.time)
-
-                coverage = get_coverage_from_cost(remaining_money, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.0)
+                # starting cost has already been taken into account in 'distribute_funding_across_years'
+                coverage = get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.0)
             self.vars[vars_key] = coverage
 
     def get_compartment_soln(self, label):
@@ -780,6 +765,12 @@ class BaseModel:
 
         self.graph.render(base)
 
+    def check_list_of_interventions(self):
+        # If model is not age-structured, age-specific IPT does not make sense
+        if len(self.agegroups) < 2:
+            self.interventions_to_cost = [inter for inter in self.interventions_to_cost
+                                          if inter not in ['ipt_age0to5', 'ipt_age5to15']]
+
     def determine_whether_startups_apply(self):
 
         """
@@ -809,6 +800,21 @@ class BaseModel:
             years_pos_coverage = [key for (key, value) in param_dict.items() if value > 0.]  # years after start
             if len(years_pos_coverage) > 0:  # some coverage present at baseline
                 self.intervention_startdates[intervention] = min(years_pos_coverage)
+
+    def distribute_funding_across_years(self):
+        nb_years = self.end_period_costing - self.inputs.model_constants['scenario_start_time'] # nb of years to fund
+        for int in self.interventions_to_cost:
+            self.annual_available_funding[int] = 0
+            if self.intervention_startdates[int] is None:  # means intervention hadn't started yet
+                if self.available_funding[int] < self.inputs.model_constants['econ_startupcost_' + int]:
+                    print 'available_funding insufficient to cover starting costs of ' + int
+                else:
+                    self.intervention_startdates[int] = self.inputs.model_constants['scenario_start_time']
+                    self.annual_available_funding[int] = (self.available_funding[int] - self.inputs.model_constants['econ_startupcost_' + int])/nb_years
+            else:
+                self.annual_available_funding[int] = (self.available_funding[int])/nb_years
+
+
 
 def add_unique_tuple_to_list(a_list, a_tuple):
 

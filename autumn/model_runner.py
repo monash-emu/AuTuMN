@@ -7,6 +7,8 @@ import numpy
 import datetime
 from scipy.stats import norm, beta
 from Tkinter import *
+from scipy.optimize import minimize
+from random import uniform
 
 
 def is_positive_definite(v):
@@ -53,7 +55,7 @@ class ModelRunner:
         self.adaptive_search = True  # If True, next candidate generated according to previous position
         self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
                                       'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
-        self.n_runs = 10  # Number of accepted runs per scenario
+        self.n_runs = 2  # Number of accepted runs per scenario
         self.burn_in = 0  # Number of runs for burn in
         self.loglikelihoods = []
         self.outputs_unc = [{'key': 'incidence',
@@ -69,6 +71,9 @@ class ModelRunner:
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array']
         self.pickle_uncertainty = None
+
+        self.optimization = False
+        self.total_funding = 1e7
 
     def master_runner(self):
 
@@ -129,6 +134,9 @@ class ModelRunner:
                 tool_kit.pickle_save(self.accepted_indices, indices_file)
                 self.runtime_outputs.insert(END, 'Uncertainty results saved to disc')
                 self.runtime_outputs.see(END)
+
+        if self.optimization:
+            self.run_optimization()
 
     def store_scenario_results(self, scenario):
 
@@ -525,4 +533,84 @@ class ModelRunner:
                         self.results['uncertainty'][scenario]['costs'][program][cost] \
                             = self.model_dict[scenario].costs[program][cost]
 
+    def run_optimization(self):
+        print 'Start optimization'
 
+        # Initialise a new model that will be run from 'recent_time' for optimisation
+        opti_model_init = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
+        start_time_index = \
+            self.model_dict['baseline'].find_time_index(self.inputs.model_constants['recent_time'])
+        opti_model_init.start_time = \
+            self.model_dict['baseline'].times[start_time_index]
+        opti_model_init.loaded_compartments = \
+            self.model_dict['baseline'].load_state(start_time_index)
+
+        opti_model_init.eco_drives_epi = True
+
+        nb_int = len(self.model_dict['baseline'].interventions_to_cost)
+
+        # function to minimize: incidence in 2035
+        def func(x):
+            """
+            Args:
+                x: defines the resource allocation (as absolute funding over the total period (2015 - 2035))
+
+            Returns:
+                predicted incidence for 2035
+            """
+            i = 0
+            for int in self.model_dict['baseline'].interventions_to_cost:
+                opti_model_init.available_funding[int] = x[i]*self.total_funding
+                i += 1
+            opti_model_init.distribute_funding_across_years()
+            opti_model_init.integrate()
+            print opti_model_init.get_var_soln('incidence')[-1]
+            return opti_model_init.get_var_soln('incidence')[-1]
+
+        use_packages = False
+        if use_packages:
+            # Some initial funding
+            x_0 = []
+            for i in range(nb_int):
+                x_0.append(1./nb_int)
+
+            #######  define constraints   #######
+            # Equality constraint:  Sum(x)=Total funding
+            cons =[{'type':'ineq',
+                   # 'fun' : lambda x: sum(x) - self.total_funding,    # if x is absolute funding
+                    'fun': lambda x: 1-sum(x),    # if x is proportion
+                    'jac' : lambda x: -numpy.ones(nb_int-1)}]
+
+            # # Each funding must be positive or null
+            for i in range(nb_int-1):
+                jac_array = numpy.zeros(nb_int-1)
+                jac_array[i] = 1.
+                cons.append({'type': 'ineq',
+                             'fun': lambda x: x[i],
+                             'jac': lambda x: jac_array})
+
+            bnds = []
+            for int in range(nb_int-1):
+                bnds.append((0, None))
+            # Ready to run optimization
+            res = minimize(func, x_0, constraints=cons, method='SLSQP', options={'disp': True})
+        else:
+            n_random = 5
+            best_x = None
+            best_objective = 1e9
+            for i in range(n_random):
+                x = numpy.zeros(nb_int)
+                sum_generated = 0
+                for j in range(nb_int-1):
+                    x[j] = uniform(0., 1.-sum_generated)
+                    sum_generated += x[j]
+                x[nb_int-1] = 1. - sum_generated
+                objective = func(x)
+                print x
+                print objective
+                if objective < best_objective:
+                    best_x = x
+                    best_objective = objective
+
+            print 'The best allocation is:'
+            print best_x

@@ -121,7 +121,12 @@ class ConsolidatedModel(BaseModel):
 
         # Get scaleup functions from input object
         self.scaleup_fns = self.inputs.scaleup_fns[self.scenario]
+
+        self.check_list_of_interventions()
         self.find_intervention_startdates()
+        if self.eco_drives_epi:
+           # self.populate_fundings()
+            self.distribute_funding_across_years()
 
     def define_model_structure(self):
 

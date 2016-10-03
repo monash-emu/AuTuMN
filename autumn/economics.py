@@ -64,3 +64,21 @@ def discount_cost(cost_uninflated, discount_rate, t_into_future):
 
     assert t_into_future >= 0, 't_into_future must be >= 0'
     return cost_uninflated / ((1 + discount_rate) ** t_into_future)
+
+
+def get_adjusted_cost(raw_cost, type, current_cpi=None, cpi_time_variant=None,discount_rate=None, t_into_future=None):
+    """
+    calculate the adjusted cost corresponding to a given type
+    Args:
+        raw_cost: the raw cost
+        type: one of ['inflated', 'discounted', 'discounted_inflated']
+
+    Returns: the adjusted cost
+    """
+    if type == 'inflated':
+        return inflate_cost(raw_cost, current_cpi, cpi_time_variant)
+    elif type == 'discounted':
+        return discount_cost(raw_cost, discount_rate, t_into_future)
+    elif type == 'discounted_inflated':
+        inflated_cost = inflate_cost(raw_cost, current_cpi, cpi_time_variant)
+        return discount_cost(inflated_cost, discount_rate, t_into_future)

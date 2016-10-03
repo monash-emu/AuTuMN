@@ -35,7 +35,8 @@ class BaseModel:
         self.var_flows = []
         self.var_infection_death_rate_flows = []
 
-        self.costs = {}
+        self.cost_times = []
+        self.costs = None
         self.run_costing = True
         self.end_period_costing = 2035
         self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
@@ -485,6 +486,7 @@ class BaseModel:
         """
         Run the economics diagnostics associated with a model run.
         Integration is supposed to have been completed by this point.
+        Only the raw costs are stored in the model object. The other costs will be calculated when generating outputs
 
         """
 
@@ -495,40 +497,19 @@ class BaseModel:
                                                                       self.inputs.model_constants['recent_time'])
         end_index = tool_kit.find_first_list_element_at_least_value(self.times,
                                                                     self.inputs.model_constants['scenario_end_time'])
-
-        # Find the current year and CPI
-        year_current = self.inputs.model_constants['current_time']
-        current_cpi = self.scaleup_fns['econ_cpi'](year_current)
-
-        # Prepare the storage object. 'costs' will store the costs for each program being costed
-        # and will be added to the current object instance.
-        costs = {'cost_times': []}
+        self.cost_times = self.times[start_index:]
+        self.costs = numpy.zeros((len(self.cost_times), len(self.interventions_to_cost)))
 
         # Loop over interventions to be costed
-        for intervention in self.interventions_to_cost:
-
-            # Initialise output lists
-            costs[intervention] = {'raw_cost': [],
-                                   'inflated_cost': [],
-                                   'discounted_cost': [],
-                                   'discounted_inflated_cost': []}
-
+        for int_index, intervention in enumerate(self.interventions_to_cost):
             # for each step time. We may want to change this bit. No need for all time steps
             # Just add a third argument if you want to decrease the frequency of calculation
-            for i in range(start_index, end_index + 1):
-                t = self.times[i]
-
-                # If it's the first intervention, store a list of times
-                if intervention == self.interventions_to_cost[0]:
-                    costs['cost_times'].append(t)
-
-                # Raw cost
+            for i, t in enumerate(self.cost_times):
                 cost = get_cost_from_coverage(self.coverage_over_time('program_prop_' + intervention)(t),
                                               self.inputs.model_constants['econ_inflectioncost_' + intervention],
                                               self.inputs.model_constants['econ_saturation_' + intervention],
                                               self.inputs.model_constants['econ_unitcost_' + intervention],
                                               self.var_array[i, self.var_labels.index('popsize_' + intervention)])
-
                 # Start-up costs
                 if self.startups_apply[intervention] \
                         and self.inputs.model_constants['scenario_start_time'] < t \
@@ -543,34 +524,7 @@ class BaseModel:
                             / self.inputs.model_constants['econ_startupduration_' + intervention] \
                             * self.inputs.model_constants['econ_startupcost_' + intervention]
 
-                    # Old code for constant function
-                    # cost += self.inputs.model_constants['econ_startupcost_' + intervention] \
-                    #         / self.inputs.model_constants['econ_startupduration_' + intervention]
-
-                # Store uninflated cost
-                costs[intervention]['raw_cost'].append(cost)
-
-                # Calculate and store inflated cost
-                cpi_time_variant = self.scaleup_fns['econ_cpi'](t)
-                inflated_cost = inflate_cost(cost,
-                                             current_cpi,
-                                             cpi_time_variant)
-                costs[intervention]['inflated_cost'].append(inflated_cost)
-
-                # Calculate and store discounted cost
-                t_into_future = max(0, (t - year_current))
-                discounted_cost = discount_cost(cost,
-                                                self.params['econ_discount_rate'],
-                                                t_into_future)
-                costs[intervention]['discounted_cost'].append(discounted_cost)
-
-                # Calculate and store discounted-inflated cost
-                discounted_inflated_cost = discount_cost(inflated_cost,
-                                                self.params['econ_discount_rate'],
-                                                t_into_future)
-                costs[intervention]['discounted_inflated_cost'].append(discounted_inflated_cost)
-
-        self.costs = costs
+                self.costs[i, int_index] = cost
 
     def update_vars_from_cost(self):
 

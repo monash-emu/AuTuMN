@@ -10,6 +10,8 @@ def find_button_name_from_string(working_string):
 
     button_name_dictionary = {'output_uncertainty':
                                   'Run uncertainty',
+                              'adaptive_uncertainty':
+                                  'Adaptive search',
                               'output_spreadsheets':
                                   'Write to spreadsheets',
                               'output_documents':
@@ -98,7 +100,9 @@ class App:
         self.boolean_dictionary = {}
         self.boolean_inputs = ['output_flow_diagram', 'output_compartment_populations', 'output_comorbidity_fractions',
                                'output_age_fractions', 'output_by_age', 'output_fractions', 'output_scaleups',
-                               'output_gtb_plots', 'output_plot_economics', 'output_uncertainty', 'output_spreadsheets',
+                               'output_gtb_plots', 'output_plot_economics',
+                               'output_uncertainty', 'adaptive_uncertainty',
+                               'output_spreadsheets',
                                'output_documents', 'output_by_scenario', 'output_horizontally',
                                'output_age_calculations', 'comorbidity_diabetes',
                                'is_lowquality', 'is_amplification', 'is_misassignment']
@@ -127,7 +131,7 @@ class App:
                     or 'Draw ' in find_button_name_from_string(boolean):
                 self.boolean_toggles[boolean].grid(row=plot_row, column=5, sticky=W)
                 plot_row += 1
-            elif 'uncertainty' in find_button_name_from_string(boolean):
+            elif 'uncertainty' in find_button_name_from_string(boolean) or 'uncertainty' in boolean:
                 self.boolean_toggles[boolean].grid(row=uncertainty_row, column=4, sticky=W)
                 uncertainty_row += 1
             elif 'comorbidity_' in boolean or 'n_' in boolean:
@@ -221,6 +225,7 @@ class App:
         uncertainty_numeric_list = {'uncertainty_runs': ['Number of uncertainty runs', 10],
                                     'burn_in_runs': ['Number of burn-in runs', 4],
                                     'search_width': ['Relative search width', .2]}
+        self.boolean_dictionary['adaptive_uncertainty'].set(True)
         for numeric in uncertainty_numeric_list.keys():
             numeric_label = Label(self.frame, text=uncertainty_numeric_list[numeric][0], font=label_font)
             numeric_label.grid(row=uncertainty_row, column=4, sticky=SW)

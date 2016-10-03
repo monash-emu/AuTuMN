@@ -52,7 +52,6 @@ class ModelRunner:
         self.inputs.read_and_load_data()
         self.model_dict = {}
         self.is_last_run_success = False
-        self.adaptive_search = True  # If True, next candidate generated according to previous position
         self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
                                       'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
         self.loglikelihoods = []
@@ -165,7 +164,7 @@ class ModelRunner:
         """
 
         # If not doing an adaptive search, only need to start with a single parameter set
-        if self.adaptive_search:
+        if self.gui_inputs['adaptive_uncertainty']:
             n_candidates = 1
         else:
             n_candidates = self.gui_inputs['uncertainty_runs'] * 10
@@ -193,7 +192,7 @@ class ModelRunner:
 
             # Update parameters
             new_params = []
-            if self.adaptive_search:
+            if self.gui_inputs['adaptive_uncertainty']:
                 if i_candidates == 0:
                     new_params = []
                     for param_dict in self.inputs.param_ranges_unc:
@@ -296,7 +295,7 @@ class ModelRunner:
                 run += 1
 
             # Generate more candidates if required
-            if not self.adaptive_search and run >= len(param_candidates.keys()):
+            if not self.gui_inputs['adaptive_uncertainty'] and run >= len(param_candidates.keys()):
                 param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
                 run = 0
             print(str(n_accepted) + ' accepted / ' + str(i_candidates) + ' candidates @@@@@@@@ Running time: '

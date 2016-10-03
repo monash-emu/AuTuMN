@@ -223,7 +223,9 @@ def find_title_from_dictionary(name):
         'program_prop_decentralisation':
             'Decentralisation coverage',
         'epi_rr_diabetes':
-            'Diabetes progression relative risk'
+            'Diabetes progression relative risk',
+        'tb_n_contact':
+            'Effective contact rate'
     }
 
     if name in dictionary_of_names:

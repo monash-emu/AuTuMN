@@ -629,15 +629,25 @@ class ModelRunner:
         for p, param in enumerate(self.all_parameters_tried):
             ax = figure.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
             ax.plot(range(1, run + 1), self.all_parameters_tried[param])
-            ax.set_xlim((0., self.gui_inputs['uncertainty_runs']))
+            ax.set_xlim((1., self.gui_inputs['uncertainty_runs']))
 
             # Find the y-limits from the parameter bounds and the parameter values tried
             for param_number in range(len(self.inputs.param_ranges_unc)):
                 if self.inputs.param_ranges_unc[param_number]['key'] == param:
                     bounds = self.inputs.param_ranges_unc[param_number]['bounds']
+            ylim_margins = .1
             min_ylimit = min(self.all_parameters_tried[param] + [bounds[0]])
             max_ylimit = max(self.all_parameters_tried[param] + [bounds[1]])
-            ax.set_ylim((min_ylimit, max_ylimit))
+            ax.set_ylim((min_ylimit * (1 - ylim_margins), max_ylimit * (1 + ylim_margins)))
+
+            # Indicate the prior bounds
+            ax.plot([1, self.gui_inputs['uncertainty_runs']], [min_ylimit, min_ylimit], color='0.8')
+            ax.plot([1, self.gui_inputs['uncertainty_runs']], [max_ylimit, max_ylimit], color='0.8')
+
+            # Label
+            ax.set_title(tool_kit.find_title_from_dictionary(param))
+            ax.set_ylabel('Value')
+            ax.set_xlabel('Model runs')
 
             # Finalise
             parameter_plots.show()

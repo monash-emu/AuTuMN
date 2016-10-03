@@ -55,7 +55,6 @@ class ModelRunner:
         self.adaptive_search = True  # If True, next candidate generated according to previous position
         self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
                                       'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
-        self.burn_in = 0  # Number of runs for burn in
         self.loglikelihoods = []
         self.outputs_unc = [{'key': 'incidence',
                              'posterior_width': None,
@@ -70,7 +69,6 @@ class ModelRunner:
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array']
         self.pickle_uncertainty = None
-
         self.optimization = False
         self.total_funding = 1e7
 
@@ -190,7 +188,7 @@ class ModelRunner:
         self.prepare_uncertainty_dictionaries('baseline')
 
         # Until a sufficient number of parameters are accepted
-        while n_accepted < self.gui_inputs['uncertainty_runs'] + self.burn_in:
+        while n_accepted < self.gui_inputs['uncertainty_runs'] + self.gui_inputs['burn_in_runs']:
 
             # Set timer
             start_timer_run = datetime.datetime.now()
@@ -272,7 +270,7 @@ class ModelRunner:
                     params = new_params
 
                     # Store outputs once burn-in complete
-                    if n_accepted > self.burn_in:
+                    if n_accepted > self.gui_inputs['burn_in_runs']:
 
                         # Model storage
                         params_dict = {}

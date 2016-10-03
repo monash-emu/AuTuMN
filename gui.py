@@ -218,14 +218,17 @@ class App:
         console_label.grid(row=running_row, column=0, sticky=SW)
 
         # Numeric entry box
-        runs_label = Label(self.frame, text='Number of uncertainty runs', font=label_font)
-        runs_label.grid(row=uncertainty_row, column=4, sticky=SW)
-        uncertainty_row += 1
-        self.raw_outputs['uncertainty_runs'] = IntVar()
-        self.raw_outputs['uncertainty_runs'].set(10)
-        runs = Entry(self.frame, textvariable=self.raw_outputs['uncertainty_runs'])
-        runs.grid(row=uncertainty_row, column=4, sticky=NW)
-        uncertainty_row += 1
+        uncertainty_numeric_list = {'uncertainty_runs': ['Number of uncertainty runs', 10],
+                                    'burn_in_runs': ['Number of burn-in runs', 4]}
+        for numeric in uncertainty_numeric_list.keys():
+            numeric_label = Label(self.frame, text=uncertainty_numeric_list[numeric][0], font=label_font)
+            numeric_label.grid(row=uncertainty_row, column=4, sticky=SW)
+            uncertainty_row += 1
+            self.raw_outputs[numeric] = IntVar()
+            self.raw_outputs[numeric].set(uncertainty_numeric_list[numeric][1])
+            runs = Entry(self.frame, textvariable=self.raw_outputs[numeric])
+            runs.grid(row=uncertainty_row, column=4, sticky=NW)
+            uncertainty_row += 1
 
     def execute(self):
 

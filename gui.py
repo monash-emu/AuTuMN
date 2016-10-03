@@ -83,6 +83,8 @@ class App:
         self.master = master
         self.frame = Frame(master)
         self.frame.pack()
+        self.figure_frame = Toplevel(master)
+        # self.figure_frame.withdraw()
         self.master.minsize(1500, 500)
         self.master.title('AuTuMN - version 1.0')
 
@@ -202,7 +204,7 @@ class App:
         for slide in slider_list:
             self.raw_outputs[slide] = DoubleVar()
         self.raw_outputs['default_smoothness'].set(1.)
-        self.raw_outputs['time_step'].set(.01)
+        self.raw_outputs['time_step'].set(.1)
         label_font = 'Helvetica 9 bold italic'
         slider_labels = {'default_smoothness':
                              Label(self.frame, text='Default fitting smoothness', font=label_font),
@@ -226,6 +228,7 @@ class App:
                                     'burn_in_runs': ['Number of burn-in runs', 4],
                                     'search_width': ['Relative search width', .2]}
         self.boolean_dictionary['adaptive_uncertainty'].set(True)
+        self.boolean_dictionary['output_uncertainty'].set(True)
         for numeric in uncertainty_numeric_list.keys():
             numeric_label = Label(self.frame, text=uncertainty_numeric_list[numeric][0], font=label_font)
             numeric_label.grid(row=uncertainty_row, column=4, sticky=SW)
@@ -314,7 +317,10 @@ class App:
 
         """
 
-        model_runner = autumn.model_runner.ModelRunner(self.gui_outputs, self.runtime_outputs)
+        if not self.gui_outputs['output_uncertainty']:
+            self.figure_frame.withdraw()
+
+        model_runner = autumn.model_runner.ModelRunner(self.gui_outputs, self.runtime_outputs, self.figure_frame)
         model_runner.master_runner()
         project = autumn.outputs.Project(model_runner, self.gui_outputs)
         project.master_outputs_runner()

@@ -9,6 +9,8 @@ from scipy.stats import norm, beta
 from Tkinter import *
 from scipy.optimize import minimize
 from random import uniform
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
 def is_positive_definite(v):
@@ -44,10 +46,11 @@ def generate_candidates(n_candidates, param_ranges_unc):
 
 class ModelRunner:
 
-    def __init__(self, gui_inputs, runtime_outputs):
+    def __init__(self, gui_inputs, runtime_outputs, figure_frame):
 
         self.gui_inputs = gui_inputs
         self.runtime_outputs = runtime_outputs
+        self.figure_frame = figure_frame
         self.inputs = data_processing.Inputs(gui_inputs, runtime_outputs, from_test=True)
         self.inputs.read_and_load_data()
         self.model_dict = {}
@@ -294,12 +297,15 @@ class ModelRunner:
                 i_candidates += 1
                 run += 1
 
+            self.plot_progressive_parameters(run)
+
             # Generate more candidates if required
             if not self.gui_inputs['adaptive_uncertainty'] and run >= len(param_candidates.keys()):
                 param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
                 run = 0
-            print(str(n_accepted) + ' accepted / ' + str(i_candidates) + ' candidates @@@@@@@@ Running time: '
-                  + str(datetime.datetime.now() - start_timer_run))
+            self.add_comment_to_gui_window(str(n_accepted) + ' accepted / ' + str(i_candidates) +
+                                           ' candidates. Running time: '
+                                           + str(datetime.datetime.now() - start_timer_run))
 
     def set_model_with_params(self, param_dict):
 
@@ -610,5 +616,16 @@ class ModelRunner:
 
         self.runtime_outputs.insert(END, comment + '\n')
         self.runtime_outputs.see(END)
+
+    def plot_progressive_parameters(self, run):
+
+        figure = plt.Figure()
+        parameter_plots = FigureCanvasTkAgg(figure, master=self.figure_frame)
+        ax = figure.add_subplot(111)
+        ax.plot(range(1, run + 1), self.all_parameters_tried['tb_n_contact'])
+        parameter_plots.show()
+        parameter_plots.draw()
+        parameter_plots.get_tk_widget().grid(row=1, column=1)
+
 
 

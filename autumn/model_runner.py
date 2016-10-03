@@ -55,7 +55,6 @@ class ModelRunner:
         self.adaptive_search = True  # If True, next candidate generated according to previous position
         self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
                                       'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
-        self.n_runs = 2  # Number of accepted runs per scenario
         self.burn_in = 0  # Number of runs for burn in
         self.loglikelihoods = []
         self.outputs_unc = [{'key': 'incidence',
@@ -173,7 +172,7 @@ class ModelRunner:
         if self.adaptive_search:
             n_candidates = 1
         else:
-            n_candidates = self.n_runs * 10
+            n_candidates = self.gui_inputs['uncertainty_runs'] * 10
 
         # Define an initial set of parameter candidates only
         param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
@@ -191,7 +190,7 @@ class ModelRunner:
         self.prepare_uncertainty_dictionaries('baseline')
 
         # Until a sufficient number of parameters are accepted
-        while n_accepted < self.n_runs + self.burn_in:
+        while n_accepted < self.gui_inputs['uncertainty_runs'] + self.burn_in:
 
             # Set timer
             start_timer_run = datetime.datetime.now()

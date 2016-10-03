@@ -75,7 +75,6 @@ class App:
         self.gui_outputs = {}
         self.raw_outputs = {}
         self.drop_downs = {}
-        self.numeric_entry = {}
         self.thread_number = 0
 
         # Set up first frame
@@ -217,6 +216,16 @@ class App:
             running_row += 1
         console_label = Label(self.frame, text='Runtime outputs console', font=label_font)
         console_label.grid(row=running_row, column=0, sticky=SW)
+
+        # Numeric entry box
+        runs_label = Label(self.frame, text='Number of uncertainty runs', font=label_font)
+        runs_label.grid(row=uncertainty_row, column=4, sticky=SW)
+        uncertainty_row += 1
+        self.raw_outputs['uncertainty_runs'] = IntVar()
+        self.raw_outputs['uncertainty_runs'].set(10)
+        runs = Entry(self.frame, textvariable=self.raw_outputs['uncertainty_runs'])
+        runs.grid(row=uncertainty_row, column=4, sticky=NW)
+        uncertainty_row += 1
 
     def execute(self):
 

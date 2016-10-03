@@ -10,6 +10,8 @@ def find_button_name_from_string(working_string):
 
     button_name_dictionary = {'output_uncertainty':
                                   'Run uncertainty',
+                              'adaptive_uncertainty':
+                                  'Adaptive search',
                               'output_spreadsheets':
                                   'Write to spreadsheets',
                               'output_documents':
@@ -75,13 +77,14 @@ class App:
         self.gui_outputs = {}
         self.raw_outputs = {}
         self.drop_downs = {}
-        self.numeric_entry = {}
         self.thread_number = 0
 
         # Set up first frame
         self.master = master
         self.frame = Frame(master)
         self.frame.pack()
+        self.figure_frame = Toplevel(master)
+        # self.figure_frame.withdraw()
         self.master.minsize(1500, 500)
         self.master.title('AuTuMN - version 1.0')
 
@@ -99,7 +102,9 @@ class App:
         self.boolean_dictionary = {}
         self.boolean_inputs = ['output_flow_diagram', 'output_compartment_populations', 'output_comorbidity_fractions',
                                'output_age_fractions', 'output_by_age', 'output_fractions', 'output_scaleups',
-                               'output_gtb_plots', 'output_plot_economics', 'output_uncertainty', 'output_spreadsheets',
+                               'output_gtb_plots', 'output_plot_economics',
+                               'output_uncertainty', 'adaptive_uncertainty',
+                               'output_spreadsheets',
                                'output_documents', 'output_by_scenario', 'output_horizontally',
                                'output_age_calculations', 'comorbidity_diabetes',
                                'is_lowquality', 'is_amplification', 'is_misassignment']
@@ -128,7 +133,7 @@ class App:
                     or 'Draw ' in find_button_name_from_string(boolean):
                 self.boolean_toggles[boolean].grid(row=plot_row, column=5, sticky=W)
                 plot_row += 1
-            elif 'uncertainty' in find_button_name_from_string(boolean):
+            elif 'uncertainty' in find_button_name_from_string(boolean) or 'uncertainty' in boolean:
                 self.boolean_toggles[boolean].grid(row=uncertainty_row, column=4, sticky=W)
                 uncertainty_row += 1
             elif 'comorbidity_' in boolean or 'n_' in boolean:
@@ -199,7 +204,7 @@ class App:
         for slide in slider_list:
             self.raw_outputs[slide] = DoubleVar()
         self.raw_outputs['default_smoothness'].set(1.)
-        self.raw_outputs['time_step'].set(.01)
+        self.raw_outputs['time_step'].set(.1)
         label_font = 'Helvetica 9 bold italic'
         slider_labels = {'default_smoothness':
                              Label(self.frame, text='Default fitting smoothness', font=label_font),
@@ -217,6 +222,37 @@ class App:
             running_row += 1
         console_label = Label(self.frame, text='Runtime outputs console', font=label_font)
         console_label.grid(row=running_row, column=0, sticky=SW)
+
+        # Numeric entry box
+        uncertainty_numeric_list = {'uncertainty_runs': ['Number of uncertainty runs', 10],
+                                    'burn_in_runs': ['Number of burn-in runs', 4],
+                                    'search_width': ['Relative search width', .2]}
+        self.boolean_dictionary['adaptive_uncertainty'].set(True)
+        self.boolean_dictionary['output_uncertainty'].set(True)
+        for numeric in uncertainty_numeric_list.keys():
+            numeric_label = Label(self.frame, text=uncertainty_numeric_list[numeric][0], font=label_font)
+            numeric_label.grid(row=uncertainty_row, column=4, sticky=SW)
+            uncertainty_row += 1
+            if numeric == 'search_width':
+                self.raw_outputs[numeric] = DoubleVar()
+            else:
+                self.raw_outputs[numeric] = IntVar()
+            self.raw_outputs[numeric].set(uncertainty_numeric_list[numeric][1])
+            runs = Entry(self.frame, textvariable=self.raw_outputs[numeric])
+            runs.grid(row=uncertainty_row, column=4, sticky=NW)
+            uncertainty_row += 1
+
+        # Pickling options
+        uncertainty_dropdown_list = ['pickle_uncertainty']
+        for dropdown in uncertainty_dropdown_list:
+            self.raw_outputs[dropdown] = StringVar()
+        self.raw_outputs['pickle_uncertainty'].set('No saving or loading')
+        self.drop_downs['pickle_uncertainty'] \
+            = OptionMenu(self.frame, self.raw_outputs['pickle_uncertainty'],
+                         'No saving or loading', 'Load', 'Save')
+        for drop_down in uncertainty_dropdown_list:
+            self.drop_downs[drop_down].grid(row=uncertainty_row, column=4, sticky=W)
+            uncertainty_row += 1
 
     def execute(self):
 
@@ -264,7 +300,7 @@ class App:
         self.runtime_outputs.see(END)
 
         # Use multiple threads to deal with multiple user calls to run the model through the run button
-        is_romain = True # just for Romain. Leave it False
+        is_romain = False  # Set True for Romain. Leave it False
         if is_romain:
             self.run_model()
         else:
@@ -272,7 +308,6 @@ class App:
             execution_thread = threading.Thread(target=self.run_model)
             execution_threads.append(execution_thread)
             execution_thread.start()
-
 
     def run_model(self):
 
@@ -282,7 +317,10 @@ class App:
 
         """
 
-        model_runner = autumn.model_runner.ModelRunner(self.gui_outputs, self.runtime_outputs)
+        if not self.gui_outputs['output_uncertainty']:
+            self.figure_frame.withdraw()
+
+        model_runner = autumn.model_runner.ModelRunner(self.gui_outputs, self.runtime_outputs, self.figure_frame)
         model_runner.master_runner()
         project = autumn.outputs.Project(model_runner, self.gui_outputs)
         project.master_outputs_runner()

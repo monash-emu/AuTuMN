@@ -9,6 +9,8 @@ from scipy.stats import norm, beta
 from Tkinter import *
 from scipy.optimize import minimize
 from random import uniform
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
 def is_positive_definite(v):
@@ -44,25 +46,22 @@ def generate_candidates(n_candidates, param_ranges_unc):
 
 class ModelRunner:
 
-    def __init__(self, gui_inputs, runtime_outputs):
+    def __init__(self, gui_inputs, runtime_outputs, figure_frame):
 
         self.gui_inputs = gui_inputs
         self.runtime_outputs = runtime_outputs
+        self.figure_frame = figure_frame
         self.inputs = data_processing.Inputs(gui_inputs, runtime_outputs, from_test=True)
         self.inputs.read_and_load_data()
         self.model_dict = {}
         self.is_last_run_success = False
-        self.adaptive_search = True  # If True, next candidate generated according to previous position
         self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
                                       'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
-        self.n_runs = 2  # Number of accepted runs per scenario
-        self.burn_in = 0  # Number of runs for burn in
         self.loglikelihoods = []
         self.outputs_unc = [{'key': 'incidence',
                              'posterior_width': None,
                              'width_multiplier': 2.  # for incidence for ex. Width of Normal posterior relative to CI width in data
                              }]
-        self.search_width = 0.2
         self.results = {}
         self.all_parameters_tried = {}
         self.whether_accepted_list = []
@@ -70,8 +69,6 @@ class ModelRunner:
         self.results['scenarios'] = {}
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array']
-        self.pickle_uncertainty = None
-
         self.optimization = False
         self.total_funding = 1e7
 
@@ -95,8 +92,8 @@ class ModelRunner:
                     self.model_dict['baseline'].load_state(scenario_start_time_index)
 
             # Describe model
-            self.runtime_outputs.insert(END, 'Running ' + scenario_name + ' conditions for '
-                                        + self.gui_inputs['country'] + ' using point estimates for parameters.\n')
+            self.add_comment_to_gui_window('Running ' + scenario_name + ' conditions for ' + self.gui_inputs['country']
+                                           + ' using point estimates for parameters.')
 
             # Integrate and add result to outputs object
             self.model_dict[scenario_name].integrate()
@@ -107,8 +104,7 @@ class ModelRunner:
         if self.gui_inputs['output_uncertainty']:
 
             # Describe process
-            self.runtime_outputs.insert(END, 'Uncertainty analysis commenced')
-            self.runtime_outputs.see(END)
+            self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
             # Prepare directory for eventual pickling
             out_dir = 'pickles'
@@ -118,9 +114,8 @@ class ModelRunner:
             indices_file = os.path.join(out_dir, 'indices_uncertainty.pkl')
 
             # Don't run uncertainty but load a saved simulation
-            if self.pickle_uncertainty == 'read':
-                self.runtime_outputs.insert(END, 'Uncertainty results loaded from previous simulation')
-                self.runtime_outputs.see(END)
+            if self.gui_inputs['pickle_uncertainty'] == 'Load':
+                self.add_comment_to_gui_window('Uncertainty results loaded from previous simulation')
                 self.results['uncertainty'] = tool_kit.pickle_load(results_file)
                 self.accepted_indices = tool_kit.pickle_load(indices_file)
 
@@ -129,11 +124,10 @@ class ModelRunner:
                 self.run_uncertainty()
 
             # Write uncertainty if requested
-            if self.pickle_uncertainty == 'write':
+            if self.gui_inputs['pickle_uncertainty'] == 'Save':
                 tool_kit.pickle_save(self.results['uncertainty'], results_file)
                 tool_kit.pickle_save(self.accepted_indices, indices_file)
-                self.runtime_outputs.insert(END, 'Uncertainty results saved to disc')
-                self.runtime_outputs.see(END)
+                self.add_comment_to_gui_window('Uncertainty results saved to disc')
 
         if self.optimization:
             self.run_optimization()
@@ -173,10 +167,10 @@ class ModelRunner:
         """
 
         # If not doing an adaptive search, only need to start with a single parameter set
-        if self.adaptive_search:
+        if self.gui_inputs['adaptive_uncertainty']:
             n_candidates = 1
         else:
-            n_candidates = self.n_runs * 10
+            n_candidates = self.gui_inputs['uncertainty_runs'] * 10
 
         # Define an initial set of parameter candidates only
         param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
@@ -194,14 +188,14 @@ class ModelRunner:
         self.prepare_uncertainty_dictionaries('baseline')
 
         # Until a sufficient number of parameters are accepted
-        while n_accepted < self.n_runs + self.burn_in:
+        while n_accepted < self.gui_inputs['uncertainty_runs'] + self.gui_inputs['burn_in_runs']:
 
             # Set timer
             start_timer_run = datetime.datetime.now()
 
             # Update parameters
             new_params = []
-            if self.adaptive_search:
+            if self.gui_inputs['adaptive_uncertainty']:
                 if i_candidates == 0:
                     new_params = []
                     for param_dict in self.inputs.param_ranges_unc:
@@ -276,7 +270,7 @@ class ModelRunner:
                     params = new_params
 
                     # Store outputs once burn-in complete
-                    if n_accepted > self.burn_in:
+                    if n_accepted > self.gui_inputs['burn_in_runs']:
 
                         # Model storage
                         params_dict = {}
@@ -303,12 +297,15 @@ class ModelRunner:
                 i_candidates += 1
                 run += 1
 
+            self.plot_progressive_parameters(run)
+
             # Generate more candidates if required
-            if not self.adaptive_search and run >= len(param_candidates.keys()):
+            if not self.gui_inputs['adaptive_uncertainty'] and run >= len(param_candidates.keys()):
                 param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
                 run = 0
-            print(str(n_accepted) + ' accepted / ' + str(i_candidates) + ' candidates @@@@@@@@ Running time: '
-                  + str(datetime.datetime.now() - start_timer_run))
+            self.add_comment_to_gui_window(str(n_accepted) + ' accepted / ' + str(i_candidates) +
+                                           ' candidates. Running time: '
+                                           + str(datetime.datetime.now() - start_timer_run))
 
     def set_model_with_params(self, param_dict):
 
@@ -403,7 +400,7 @@ class ModelRunner:
         # Iterate through the parameters being used
         for p, param_dict in enumerate(self.inputs.param_ranges_unc):
             bounds = param_dict['bounds']
-            sd = self.search_width * (bounds[1] - bounds[0]) / (2.0 * 1.96)
+            sd = self.gui_inputs['search_width'] * (bounds[1] - bounds[0]) / (2.0 * 1.96)
             random = -100.
 
             # Search for new parameters
@@ -614,3 +611,21 @@ class ModelRunner:
 
             print 'The best allocation is:'
             print best_x
+
+    def add_comment_to_gui_window(self, comment):
+
+        self.runtime_outputs.insert(END, comment + '\n')
+        self.runtime_outputs.see(END)
+
+    def plot_progressive_parameters(self, run):
+
+        figure = plt.Figure()
+        parameter_plots = FigureCanvasTkAgg(figure, master=self.figure_frame)
+        ax = figure.add_subplot(111)
+        ax.plot(range(1, run + 1), self.all_parameters_tried['tb_n_contact'])
+        parameter_plots.show()
+        parameter_plots.draw()
+        parameter_plots.get_tk_widget().grid(row=1, column=1)
+
+
+

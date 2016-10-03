@@ -67,7 +67,6 @@ class ModelRunner:
         self.results['scenarios'] = {}
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array']
-        self.pickle_uncertainty = None
         self.optimization = False
         self.total_funding = 1e7
 
@@ -113,7 +112,7 @@ class ModelRunner:
             indices_file = os.path.join(out_dir, 'indices_uncertainty.pkl')
 
             # Don't run uncertainty but load a saved simulation
-            if self.pickle_uncertainty == 'read':
+            if self.gui_inputs['pickle_uncertainty'] == 'Load':
                 self.add_comment_to_gui_window('Uncertainty results loaded from previous simulation')
                 self.results['uncertainty'] = tool_kit.pickle_load(results_file)
                 self.accepted_indices = tool_kit.pickle_load(indices_file)
@@ -123,7 +122,7 @@ class ModelRunner:
                 self.run_uncertainty()
 
             # Write uncertainty if requested
-            if self.pickle_uncertainty == 'write':
+            if self.gui_inputs['pickle_uncertainty'] == 'Save':
                 tool_kit.pickle_save(self.results['uncertainty'], results_file)
                 tool_kit.pickle_save(self.accepted_indices, indices_file)
                 self.add_comment_to_gui_window('Uncertainty results saved to disc')

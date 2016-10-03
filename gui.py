@@ -234,6 +234,18 @@ class App:
             runs.grid(row=uncertainty_row, column=4, sticky=NW)
             uncertainty_row += 1
 
+        # Pickling options
+        uncertainty_dropdown_list = ['pickle_uncertainty']
+        for dropdown in uncertainty_dropdown_list:
+            self.raw_outputs[dropdown] = StringVar()
+        self.raw_outputs['pickle_uncertainty'].set('No saving or loading')
+        self.drop_downs['pickle_uncertainty'] \
+            = OptionMenu(self.frame, self.raw_outputs['pickle_uncertainty'],
+                         'No saving or loading', 'Load', 'Save')
+        for drop_down in uncertainty_dropdown_list:
+            self.drop_downs[drop_down].grid(row=uncertainty_row, column=4, sticky=W)
+            uncertainty_row += 1
+
     def execute(self):
 
         """

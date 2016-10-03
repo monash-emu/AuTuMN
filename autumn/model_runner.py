@@ -95,8 +95,8 @@ class ModelRunner:
                     self.model_dict['baseline'].load_state(scenario_start_time_index)
 
             # Describe model
-            self.runtime_outputs.insert(END, 'Running ' + scenario_name + ' conditions for '
-                                        + self.gui_inputs['country'] + ' using point estimates for parameters.\n')
+            self.add_comment_to_gui_window('Running ' + scenario_name + ' conditions for ' + self.gui_inputs['country']
+                                           + ' using point estimates for parameters.')
 
             # Integrate and add result to outputs object
             self.model_dict[scenario_name].integrate()
@@ -107,8 +107,7 @@ class ModelRunner:
         if self.gui_inputs['output_uncertainty']:
 
             # Describe process
-            self.runtime_outputs.insert(END, 'Uncertainty analysis commenced')
-            self.runtime_outputs.see(END)
+            self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
             # Prepare directory for eventual pickling
             out_dir = 'pickles'
@@ -119,8 +118,7 @@ class ModelRunner:
 
             # Don't run uncertainty but load a saved simulation
             if self.pickle_uncertainty == 'read':
-                self.runtime_outputs.insert(END, 'Uncertainty results loaded from previous simulation')
-                self.runtime_outputs.see(END)
+                self.add_comment_to_gui_window('Uncertainty results loaded from previous simulation')
                 self.results['uncertainty'] = tool_kit.pickle_load(results_file)
                 self.accepted_indices = tool_kit.pickle_load(indices_file)
 
@@ -132,8 +130,7 @@ class ModelRunner:
             if self.pickle_uncertainty == 'write':
                 tool_kit.pickle_save(self.results['uncertainty'], results_file)
                 tool_kit.pickle_save(self.accepted_indices, indices_file)
-                self.runtime_outputs.insert(END, 'Uncertainty results saved to disc')
-                self.runtime_outputs.see(END)
+                self.add_comment_to_gui_window('Uncertainty results saved to disc')
 
         if self.optimization:
             self.run_optimization()
@@ -614,3 +611,10 @@ class ModelRunner:
 
             print 'The best allocation is:'
             print best_x
+
+    def add_comment_to_gui_window(self, comment):
+
+        self.runtime_outputs.insert(END, comment + '\n')
+        self.runtime_outputs.see(END)
+
+

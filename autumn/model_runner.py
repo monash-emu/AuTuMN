@@ -60,7 +60,6 @@ class ModelRunner:
                              'posterior_width': None,
                              'width_multiplier': 2.  # for incidence for ex. Width of Normal posterior relative to CI width in data
                              }]
-        self.search_width = 0.2
         self.results = {}
         self.all_parameters_tried = {}
         self.whether_accepted_list = []
@@ -397,7 +396,7 @@ class ModelRunner:
         # Iterate through the parameters being used
         for p, param_dict in enumerate(self.inputs.param_ranges_unc):
             bounds = param_dict['bounds']
-            sd = self.search_width * (bounds[1] - bounds[0]) / (2.0 * 1.96)
+            sd = self.gui_inputs['search_width'] * (bounds[1] - bounds[0]) / (2.0 * 1.96)
             random = -100.
 
             # Search for new parameters

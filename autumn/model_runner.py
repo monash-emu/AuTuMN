@@ -12,6 +12,7 @@ from random import uniform
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import outputs
+from itertools import compress
 
 
 def is_positive_definite(v):
@@ -627,8 +628,13 @@ class ModelRunner:
 
         # Cycle through parameters with one subplot for each parameter
         for p, param in enumerate(self.all_parameters_tried):
+
+            # Extract accepted params from all tried params
+            accepted_params = list(compress(self.all_parameters_tried[param], self.whether_accepted_list))
+
+            # Plot
             ax = figure.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
-            ax.plot(range(1, run + 1), self.all_parameters_tried[param])
+            ax.plot(range(1, len(accepted_params) + 1), accepted_params)
             ax.set_xlim((1., self.gui_inputs['uncertainty_runs']))
 
             # Find the y-limits from the parameter bounds and the parameter values tried
@@ -636,8 +642,8 @@ class ModelRunner:
                 if self.inputs.param_ranges_unc[param_number]['key'] == param:
                     bounds = self.inputs.param_ranges_unc[param_number]['bounds']
             ylim_margins = .1
-            min_ylimit = min(self.all_parameters_tried[param] + [bounds[0]])
-            max_ylimit = max(self.all_parameters_tried[param] + [bounds[1]])
+            min_ylimit = min(accepted_params + [bounds[0]])
+            max_ylimit = max(accepted_params + [bounds[1]])
             ax.set_ylim((min_ylimit * (1 - ylim_margins), max_ylimit * (1 + ylim_margins)))
 
             # Indicate the prior bounds
@@ -647,12 +653,13 @@ class ModelRunner:
             # Label
             ax.set_title(tool_kit.find_title_from_dictionary(param))
             ax.set_ylabel('Value')
-            ax.set_xlabel('Model runs')
+            ax.set_xlabel('Accepted model runs')
 
             # Finalise
             parameter_plots.show()
             parameter_plots.draw()
             parameter_plots.get_tk_widget().grid(row=1, column=1)
+
 
 
 

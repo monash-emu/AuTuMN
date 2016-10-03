@@ -5,30 +5,18 @@ AuTuMN
 This is a set of Python models that modularises the development of dynamic transmission models and allows a
 pluggable API to other system. Applied to Tuberculosis.
 
-# Files
-  
-- model.py: underlying transmission dynamic model.  
-- plotting.py: plotting results of the model  
-- spreadsheet.py: reads data from input.xlsx  
-
-
 # TODO
-  
-# James TODO:
-- Xpert improvement in diagnostic algorithm
-- allow scenarios to be scaled-up over varying time periods
-- population stratification for at-risk groups (partially done)
-- would be nice to include assertion check of age-stratified variables
-    to ensure that each age group starts where the last one left off
-
-
-# Bigger outstanding tasks TODO
-- incorporate all the analysis tools, including plotting, report writing, etc. into one
-    big analysis object (I think this is probably the more elegant way to have this coded)
-- GUI
-- Automatic calibration
-- new/retreatment stratification (possibly)
-
+- philosophically, "consolidate" code to ensure all the structures are as robust, consistent and final as possible,
+    - including:
+        - convert cost code to being consistent with epi data structures
+        - remove unnecessary calculations during integration - including fraction calculations
+        - discuss optimal GUI with Eike - to make sure we're not heading in the wrong direction using Tkinter
+        - discuss optimisation with Eike - to make sure we can iron out Romain's bugs
+- add epidemiological functionality, including:
+    - better structure for maintaining comorbidity (i.e. risk group) populations at target values
+    - get second strain incorporated properly (for Philippines application)
+    - implement HIV with appropriate parameters
+    - (new/retreatment stratification - possibly one day)
 
 
 

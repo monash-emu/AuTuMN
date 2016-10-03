@@ -620,13 +620,26 @@ class ModelRunner:
 
     def plot_progressive_parameters(self, run):
 
+        # Initialise plotting
         figure = plt.Figure()
         parameter_plots = FigureCanvasTkAgg(figure, master=self.figure_frame)
         subplot_grid = outputs.find_subplot_numbers(len(self.all_parameters_tried))
-        print(subplot_grid)
+
+        # Cycle through parameters with one subplot for each parameter
         for p, param in enumerate(self.all_parameters_tried):
             ax = figure.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
             ax.plot(range(1, run + 1), self.all_parameters_tried[param])
+            ax.set_xlim((0., self.gui_inputs['uncertainty_runs']))
+
+            # Find the y-limits from the parameter bounds and the parameter values tried
+            for param_number in range(len(self.inputs.param_ranges_unc)):
+                if self.inputs.param_ranges_unc[param_number]['key'] == param:
+                    bounds = self.inputs.param_ranges_unc[param_number]['bounds']
+            min_ylimit = min(self.all_parameters_tried[param] + [bounds[0]])
+            max_ylimit = max(self.all_parameters_tried[param] + [bounds[1]])
+            ax.set_ylim((min_ylimit, max_ylimit))
+
+            # Finalise
             parameter_plots.show()
             parameter_plots.draw()
             parameter_plots.get_tk_widget().grid(row=1, column=1)

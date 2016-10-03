@@ -84,7 +84,7 @@ class App:
         self.frame = Frame(master)
         self.frame.pack()
         self.figure_frame = Toplevel(master)
-        # self.figure_frame.withdraw()
+        self.figure_frame.title('Tracking parameters over model runs')
         self.master.minsize(1500, 500)
         self.master.title('AuTuMN - version 1.0')
 

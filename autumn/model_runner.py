@@ -11,6 +11,7 @@ from scipy.optimize import minimize
 from random import uniform
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import outputs
 
 
 def is_positive_definite(v):
@@ -621,11 +622,14 @@ class ModelRunner:
 
         figure = plt.Figure()
         parameter_plots = FigureCanvasTkAgg(figure, master=self.figure_frame)
-        ax = figure.add_subplot(111)
-        ax.plot(range(1, run + 1), self.all_parameters_tried['tb_n_contact'])
-        parameter_plots.show()
-        parameter_plots.draw()
-        parameter_plots.get_tk_widget().grid(row=1, column=1)
+        subplot_grid = outputs.find_subplot_numbers(len(self.all_parameters_tried))
+        print(subplot_grid)
+        for p, param in enumerate(self.all_parameters_tried):
+            ax = figure.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
+            ax.plot(range(1, run + 1), self.all_parameters_tried[param])
+            parameter_plots.show()
+            parameter_plots.draw()
+            parameter_plots.get_tk_widget().grid(row=1, column=1)
 
 
 

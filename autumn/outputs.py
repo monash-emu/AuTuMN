@@ -514,6 +514,30 @@ def plot_comparative_age_parameters(data_strat_list,
     save_png(base + '_param_adjustment.png')
 
 
+def find_subplot_numbers(n):
+    """
+    Method to find a good number of rows and columns for subplots of figure.
+
+    Args:
+        n: Total number of subplots.
+
+    Returns:
+        answer: List of two elements, being the rows and columns of the subplots.
+
+    """
+
+    # Find a nice number of subplots for a panel plot
+    answer = find_smallest_factors_of_integer(n)
+    i = 0
+    while i < 10:
+        if abs(answer[0] - answer[1]) > 3:
+            n = n + 1
+            answer = find_smallest_factors_of_integer(n)
+        i = i + 1
+
+    return answer
+
+
 class Project:
 
     def __init__(self, model_runner, gui_inputs):
@@ -664,30 +688,6 @@ class Project:
             return line_styles
         else:
             return line_styles[n - 1]
-
-    def find_subplot_numbers(self, n):
-
-        """
-        Method to find a good number of rows and columns for subplots of figure.
-
-        Args:
-            n: Total number of subplots.
-
-        Returns:
-            answer: List of two elements, being the rows and columns of the subplots.
-
-        """
-
-        # Find a nice number of subplots for a panel plot
-        answer = find_smallest_factors_of_integer(n)
-        i = 0
-        while i < 10:
-            if abs(answer[0] - answer[1]) > 3:
-                n = n + 1
-                answer = find_smallest_factors_of_integer(n)
-            i = i + 1
-
-        return answer
 
     def scale_axes(self, max_value):
 
@@ -1232,7 +1232,7 @@ class Project:
         scenario_labels = []
         colour, indices, yaxis_label, title, patch_colour = \
             find_standard_output_styles(outputs, lightening_factor=0.3)
-        subplot_grid = self.find_subplot_numbers(len(outputs))
+        subplot_grid = find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
 
         # Loop through outputs
@@ -1384,7 +1384,7 @@ class Project:
             functions = self.classified_scaleups[classification]
 
             # Standard prelims
-            subplot_grid = self.find_subplot_numbers(len(functions))
+            subplot_grid = find_subplot_numbers(len(functions))
             fig = self.set_and_update_figure()
 
             # Find some x-values
@@ -1504,7 +1504,7 @@ class Project:
             fig = self.set_and_update_figure()
 
             # Subplots by program
-            subplot_grid = self.find_subplot_numbers(len(self.programs))
+            subplot_grid = find_subplot_numbers(len(self.programs))
             for p, program in enumerate(self.programs):
 
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
@@ -1587,7 +1587,7 @@ class Project:
             fig_individual = self.set_and_update_figure()
             fig_stacked = self.set_and_update_figure()
             fig_relative = self.set_and_update_figure()
-            subplot_grid = self.find_subplot_numbers(len(cost_types))
+            subplot_grid = find_subplot_numbers(len(cost_types))
 
             # Find the maximum of any type of cost across all of the programs
             max_cost = 0.
@@ -1829,7 +1829,7 @@ class Project:
             # Otherwise cycling through colours
             output_colour = [self.make_default_line_styles(scenario, False)]
 
-        subplot_grid = self.find_subplot_numbers(len(self.model_runner.model_dict['baseline'].agegroups) * 2 + 1)
+        subplot_grid = find_subplot_numbers(len(self.model_runner.model_dict['baseline'].agegroups) * 2 + 1)
 
         # Not sure whether we have to specify a figure number
         fig = self.set_and_update_figure()

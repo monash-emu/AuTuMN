@@ -267,6 +267,8 @@ class ModelRunner:
                 else:
                     accepted = numpy.random.binomial(n=1, p=numpy.exp(log_likelihood - prev_log_likelihood))
 
+                print(accepted)
+
                 # Record information for all runs
                 if accepted != 1:
                     self.whether_accepted_list.append(False)
@@ -642,7 +644,8 @@ class ModelRunner:
 
             # Plot
             ax = figure.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
-            ax.plot(range(1, len(accepted_params) + 1), accepted_params, linewidth=2, marker='o', markersize=3)
+            ax.plot(range(1, len(accepted_params) + 1), accepted_params, linewidth=2, marker='o', markersize=4,
+                    mec='b', mfc='b')
             ax.set_xlim((1., self.gui_inputs['uncertainty_runs']))
 
             # Find the y-limits from the parameter bounds and the parameter values tried
@@ -660,8 +663,9 @@ class ModelRunner:
 
             # Plot rejected parameters
             for run, rejected_params in self.rejection_dict[param].items():
-                if self.rejection_dict[param][run] != []:
-                    ax.plot([run + 1] * len(rejected_params), rejected_params, 'k.')
+                if self.rejection_dict[param][run]:
+                    ax.plot([run + 1] * len(rejected_params), rejected_params, marker='o', linestyle='None',
+                            mec='0.5', mfc='0.5', markersize=3)
                     for r in range(len(rejected_params)):
                         ax.plot([run, run + 1], [self.acceptance_dict[param][run], rejected_params[r]], color='0.5',
                                 linestyle='--')

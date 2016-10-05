@@ -267,14 +267,12 @@ class ModelRunner:
                 else:
                     accepted = numpy.random.binomial(n=1, p=numpy.exp(log_likelihood - prev_log_likelihood))
 
-                print(accepted)
-
                 # Record information for all runs
-                if accepted != 1:
+                if not bool(accepted):
                     self.whether_accepted_list.append(False)
                     for p, param_dict in enumerate(self.inputs.param_ranges_unc):
                         self.rejection_dict[param_dict['key']][n_accepted].append(new_params[p])
-                elif accepted == 1:
+                elif bool(accepted):
                     self.whether_accepted_list.append(True)
                     self.accepted_indices += [run]
                     n_accepted += 1
@@ -672,8 +670,8 @@ class ModelRunner:
 
             # Label
             ax.set_title(tool_kit.find_title_from_dictionary(param))
-            ax.set_ylabel('Value')
-            ax.set_xlabel('Accepted model runs')
+            if p > len(self.all_parameters_tried) - subplot_grid[1] - 1:
+                ax.set_xlabel('Accepted model runs')
 
             # Finalise
             parameter_plots.show()

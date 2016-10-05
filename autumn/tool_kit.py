@@ -225,7 +225,19 @@ def find_title_from_dictionary(name):
         'epi_rr_diabetes':
             'Diabetes progression relative risk',
         'tb_n_contact':
-            'Effective contact rate'
+            'Effective contact rate',
+        'tb_prop_early_progression':
+            'Early progression proportion',
+        'tb_prop_amplification':
+            'Amplification proportion',
+        'tb_rate_late_progression':
+            'Late progression rate',
+        'tb_prop_casefatality_untreated':
+            'Untreated case fatality',
+        'tb_prop_casefatality_untreated_smearpos':
+            'Untreated smear-positive case fatality',
+        'tb_prop_casefatality_untreated_smearneg':
+            'Untreated smear-negative case fatality'
     }
 
     if name in dictionary_of_names:

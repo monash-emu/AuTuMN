@@ -2068,7 +2068,7 @@ class Project:
         # make and style plot
         if horizontal:
             plot = data_frame.plot.barh(stacked=True, rot=options["x_label_rotation"], title=options["title"])
-            plot.set_xlabel(options["y_label"])
+            plot.set_xlabel(options['y_label'])
         else:
             plot = data_frame.plot.bar(stacked=True, rot=options["x_label_rotation"], title=options["title"])
             plot.set_ylabel(options["y_label"])

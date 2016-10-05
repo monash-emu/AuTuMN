@@ -52,21 +52,18 @@ class BaseModel:
 
     def make_times(self, start, end, delta):
 
-        "Return steps between start and end every delta"
+        """
+        Simple method to return time steps for reporting of outputs.
+
+        Args:
+            start: Start time for integration.
+            end: End time for integration.
+            delta: Step size.
+
+        """
 
         self.times = []
         step = start
-        while step <= end:
-            self.times.append(step)
-            step += delta
-        if self.times[-1] < end:
-            self.times.append(end)
-
-    def make_times_with_n_step(self, start, end, n):
-        "Return steps between start and in n increments"
-        self.times = []
-        step = start
-        delta = (end - start) / float(n)
         while step <= end:
             self.times.append(step)
             step += delta

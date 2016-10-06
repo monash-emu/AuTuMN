@@ -317,8 +317,9 @@ class App:
 
         """
 
-        if not self.gui_outputs['output_uncertainty']:
-            self.figure_frame.withdraw()
+        # For some unknown reason, this code has started bugging - commented out
+        # if not self.gui_outputs['output_uncertainty']:
+        #     self.figure_frame.withdraw()
 
         model_runner = autumn.model_runner.ModelRunner(self.gui_outputs, self.runtime_outputs, self.figure_frame)
         model_runner.master_runner()

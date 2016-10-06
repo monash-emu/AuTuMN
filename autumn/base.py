@@ -33,8 +33,10 @@ class BaseModel:
 
         self.labels = []
         self.init_compartments = {}
+        self.compartments = None
         self.params = {}
         self.times = None
+        self.time = None
         self.start_time = None
         self.cost_times = []
 
@@ -56,6 +58,8 @@ class BaseModel:
         self.var_transfer_rate_flows = []
         self.var_entry_rate_flows = []
         self.var_infection_death_rate_flows = []
+
+        self.agegroups = None
 
         self.costs = None
         self.run_costing = True
@@ -514,7 +518,7 @@ class BaseModel:
         """
 
         self.init_run()
-        init_y = self.get_init_list()
+        y = self.get_init_list()
         derivative = self.make_derivative_fn()
 
         # All calculation times and list of corresponding indices
@@ -533,20 +537,24 @@ class BaseModel:
                 if time == new_time:
                     tt_record.append(i_tt)
 
-        sol = odeint(derivative, init_y, tt, mxstep=int(5e6))
+        sol = odeint(derivative, y, tt, mxstep=int(5e6))
         self.soln_array = sol[tt_record, :]
 
         self.calculate_diagnostics()
         if self.run_costing:
-            self.calculate_economics_diagnostics(self.end_period_costing)
+            self.calculate_economics_diagnostics()
 
     def integrate_explicit(self, dt_max=0.05):
 
-        """ Uses Euler Explicit method.
-            Input:
-            min_dt: represents the time step for calculation points. The attribute self.times will also be used to make sure
-            that a solution is affected to the time points known by the model
         """
+        Integrate with Euler Explicit method.
+
+        Input:
+            min_dt: represents the time step for calculation points. The attribute self.times will also be used to make
+                sure that a solution is affected to the time points known by the model
+
+        """
+
         self.init_run()
         y = self.get_init_list()
         y_candidate = numpy.zeros((len(y)))
@@ -562,7 +570,7 @@ class BaseModel:
         for i_time, new_time in enumerate(self.times):
             while time < new_time:
                 if not dt_is_ok:
-                    adaptive_dt_max = dt / 2.0
+                    adaptive_dt_max = dt / 2.
                 else:
                     adaptive_dt_max = dt_max
                     old_time = time
@@ -585,7 +593,6 @@ class BaseModel:
                 else:
                     dt_is_ok = False
 
-
             if i_time < n_time - 1:
                 self.soln_array[i_time+1, :] = y
 
@@ -598,9 +605,10 @@ class BaseModel:
         """
         Uses Runge-Kutta 4 method.
 
-            Input:
-                min_dt: represents the time step for calculation points. The attribute self.times will also be used to make
+        Input:
+            min_dt: represents the time step for calculation points. The attribute self.times will also be used to make
                 sure that a solution is affected to the time points known by the model
+
         """
 
         self.init_run()
@@ -622,7 +630,6 @@ class BaseModel:
                     old_time = time
                     adaptive_dt_max = dt_max
                 dt_is_ok = True
-                #old_time = time
                 time = old_time + adaptive_dt_max
                 dt = adaptive_dt_max
                 if time > new_time:
@@ -658,7 +665,6 @@ class BaseModel:
                     dt_is_ok = False
                     continue
 
-
             if i_time < n_time - 1:
                 self.soln_array[i_time + 1, :] = y
 
@@ -666,45 +672,56 @@ class BaseModel:
         if self.run_costing:
             self.calculate_economics_diagnostics()
 
+    ######################################
+    ### Output/diagnostic calculations ###
+    ######################################
+
     def calculate_output_vars(self):
+
         """
-        Calculate diagnostic vars that can depend on self.flows as
-        well as self.vars calculated in calculate_vars
+        Calculate diagnostic vars that can depend on self.flows, as well as self.vars calculated in calculate_vars.
+
         """
+
         pass
 
     def calculate_diagnostics(self):
 
+        # Populate the self.compartment_soln dictionary
         self.compartment_soln = {}
         for label in self.labels:
             if label in self.compartment_soln:
                 continue
             self.compartment_soln[label] = self.get_compartment_soln(label)
 
+        # Run through the integration times
         n_time = len(self.times)
-        for i in range(n_time):
+        for t in range(n_time):
 
-            self.time = self.times[i]
+            # Replicate the times that occurred during integration
+            self.time = self.times[t]
 
+            # Replicate the compartment values that occurred during integration
             for label in self.labels:
-                self.compartments[label] = self.compartment_soln[label][i]
+                self.compartments[label] = self.compartment_soln[label][t]
 
+            # Prepare the vars as during integration
             self.prepare_vars_flows()
             self.calculate_output_vars()
 
-            # only set after self.calculate_diagnostic_vars is
-            # run so that we have all var_labels, including
-            # the ones in calculate_diagnostic_vars
+            # Initialise arrays if not already done
             if self.var_labels is None:
                 self.var_labels = self.vars.keys()
                 self.var_array = numpy.zeros((n_time, len(self.var_labels)))
                 self.flow_array = numpy.zeros((n_time, len(self.labels)))
 
+            # Populate arrays
             for i_label, label in enumerate(self.var_labels):
-                self.var_array[i, i_label] = self.vars[label]
+                self.var_array[t, i_label] = self.vars[label]
             for i_label, label in enumerate(self.labels):
-                self.flow_array[i, i_label] = self.flows[label]
+                self.flow_array[t, i_label] = self.flows[label]
 
+        # Thinking of getting rid of this section - should be possible to calculate in model_runner rather than model
         self.fraction_array = numpy.zeros((n_time, len(self.labels)))
         self.fraction_soln = {}
         for i_label, label in enumerate(self.labels):
@@ -716,26 +733,11 @@ class BaseModel:
                     self.get_var_soln('population'))]
             self.fraction_array[:, i_label] = self.fraction_soln[label]
 
-    def coverage_over_time(self, param_key):
-
-        """
-        Define a function which returns the coverage over time associated with an intervention
-        Args:
-            model: model object, after integration
-            param_key: the key of the parameter associated with the intervention
-
-        Returns:
-            a function which takes a time for argument an will return a coverage
-        """
-
-        coverage_function = self.scaleup_fns[param_key]
-        return coverage_function
-
     def calculate_economics_diagnostics(self):
 
         """
         Run the economics diagnostics associated with a model run.
-        Integration is supposed to have been completed by this point.
+        Integration has been completed by this point.
         Only the raw costs are stored in the model object. The other costs will be calculated when generating outputs
 
         """
@@ -755,7 +757,7 @@ class BaseModel:
             # for each step time. We may want to change this bit. No need for all time steps
             # Just add a third argument if you want to decrease the frequency of calculation
             for i, t in enumerate(self.cost_times):
-                cost = get_cost_from_coverage(self.coverage_over_time('program_prop_' + intervention)(t),
+                cost = get_cost_from_coverage(self.scaleup_fns['program_prop_' + intervention](t),
                                               self.inputs.model_constants['econ_inflectioncost_' + intervention],
                                               self.inputs.model_constants['econ_saturation_' + intervention],
                                               self.inputs.model_constants['econ_unitcost_' + intervention],
@@ -844,29 +846,73 @@ class BaseModel:
             self.vars[vars_key] = coverage
 
     def get_compartment_soln(self, label):
+
+        """
+        Get the column of soln_array that pertains to a particular compartment.
+
+        Args:
+            label: String of the compartment.
+
+        Returns:
+            The solution for the compartment.
+
+        """
+
         assert self.soln_array is not None, 'calculate_diagnostics has not been run'
         i_label = self.labels.index(label)
         return self.soln_array[:, i_label]
 
     def get_var_soln(self, label):
 
+        """
+        Get the column of var_array that pertains to a particular compartment.
+
+        Args:
+            label: String of the var.
+
+        Returns:
+            The solution for the var.
+
+        """
+
         assert self.var_array is not None, 'calculate_diagnostics has not been run'
         i_label = self.var_labels.index(label)
         return self.var_array[:, i_label]
 
     def get_flow_soln(self, label):
+
+        """
+        Get the column of flow_array that pertains to a particular compartment.
+
+        Args:
+            label: String of the flow.
+
+        Returns:
+            The solution for the flow.
+
+        """
+
         assert self.flow_array is not None, 'calculate_diagnostics has not been run'
         i_label = self.labels.index(label)
         return self.flow_array[:, i_label]
 
     def load_state(self, i_time):
 
-        self.time = self.times[i_time]
-        for i_label, label in enumerate(self.labels):
-            self.compartments[label] = \
-                self.soln_array[i_time, i_label]
+        """
+        Returns the recorded compartment values at a particular point in time for the model.
 
-        return self.compartments
+        Args:
+            i_time: Time from which the compartment values are to be loaded.
+
+        Returns:
+            state_compartments: The compartment values from that time in the model's integration.
+
+        """
+
+        state_compartments = {}
+        for i_label, label in enumerate(self.labels):
+            state_compartments[label] = self.soln_array[i_time, i_label]
+        return state_compartments
 
     def checks(self, error_margin=0.1):
 
@@ -970,6 +1016,7 @@ class BaseModel:
         self.graph.render(base)
 
     def check_list_of_interventions(self):
+
         # If model is not age-structured, age-specific IPT does not make sense
         if len(self.agegroups) < 2:
             self.interventions_to_cost = [inter for inter in self.interventions_to_cost

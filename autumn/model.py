@@ -1155,8 +1155,8 @@ class ConsolidatedModel(BaseModel):
     def calculate_output_vars(self):
 
         """
-        Method similarly structured to calculate_output_vars,
-        just replicated by strains
+        Method similarly structured to calculate_output_vars, just replicated by strains
+
         """
 
         # Initialise dictionaries

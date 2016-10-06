@@ -30,7 +30,6 @@ class BaseModel:
 
         self.inputs = None
         self.gui_inputs = None
-
         self.labels = []
         self.init_compartments = {}
         self.compartments = None
@@ -39,18 +38,14 @@ class BaseModel:
         self.time = None
         self.start_time = None
         self.cost_times = []
-
         self.scaleup_fns = {}
         self.vars = {}
-
         self.soln_array = None
         self.var_labels = None
         self.var_array = None
         self.flow_array = None
         self.fraction_array = None
-
         self.is_additional_diagnostics = False
-
         self.flows = {}
         self.fixed_transfer_rate_flows = []
         self.linked_transfer_rate_flows = []
@@ -58,22 +53,19 @@ class BaseModel:
         self.var_transfer_rate_flows = []
         self.var_entry_rate_flows = []
         self.var_infection_death_rate_flows = []
-
         self.agegroups = None
-
         self.costs = None
+        self.intervention = None
         self.run_costing = True
         self.end_period_costing = 2035
         self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
                                      'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
-
         self.eco_drives_epi = False
-
         self.available_funding = {}
         self.annual_available_funding = {}
-
         self.startups_apply = {}
         self.intervention_startdates = {}
+        self.graph = None
 
     ##############################
     ### Time-related functions ###
@@ -140,6 +132,29 @@ class BaseModel:
         """
 
         self.params[label] = val
+
+    def get_constant_or_variable_param(self, param):
+
+        """
+        Simple function to look first in vars then params for a parameter value and
+        raise an error if the parameter is not found.
+
+        Args:
+            param: String for the parameter (should be the same in either vars or params)
+
+        Returns:
+            param_value: The value of the parameter
+
+        """
+
+        if param in self.vars:
+            param_value = self.vars[param]
+        elif param in self.params:
+            param_value = self.params[param]
+        else:
+            raise NameError('Parameter "' + param + '" not found in either vars or params.')
+
+        return param_value
 
     def set_compartment(self, label, init_val=0.):
 
@@ -379,51 +394,50 @@ class BaseModel:
         pass
 
     def calculate_flows(self):
+
         """
         Calculate flows, which should only depend on compartment values
         and self.vars calculated in calculate_variable_rates.
-        """
-        for label in self.labels:
-            self.flows[label] = 0.0
 
-        # birth flows
+        """
+
+        for label in self.labels:
+            self.flows[label] = 0.
+
+        # Birth flows
         for label, vars_label in self.var_entry_rate_flows:
             self.flows[label] += self.vars[vars_label]
 
-        # dynamic transmission flows
+        # Dynamic transmission flows
         for from_label, to_label, vars_label in self.var_transfer_rate_flows:
             val = self.compartments[from_label] * self.vars[vars_label]
             self.flows[from_label] -= val
             self.flows[to_label] += val
 
-        # fixed-rate flows
+        # Fixed-rate flows
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
             val = self.compartments[from_label] * rate
             self.flows[from_label] -= val
             self.flows[to_label] += val
 
-        # linked flows
+        # Linked flows
         for from_label, to_label, vars_label in self.linked_transfer_rate_flows:
             val = self.vars[vars_label]
             self.flows[from_label] -= val
             self.flows[to_label] += val
 
-        # normal death flows
-        # This might be naughty - but now changed to access one of the parameters
+        # Normal death flows
+        # Note that there has to be a param or a var with the label 'demo_life_expectancy'
         # (which has to have this name). Saves on creating a separate model attribute
         # just for population death. I think it makes more sense for it to be just
         # another parameter.
-        # Now works if the death rate is selected to be constant or time-variant
         self.vars['rate_death'] = 0.
         for label in self.labels:
-            if self.inputs.time_variants['demo_life_expectancy'][u'time_variant'] == u'no':
-                val = self.compartments[label] / self.params['demo_life_expectancy']
-            elif self.inputs.time_variants['demo_life_expectancy'][u'time_variant'] == u'yes':
-                val = self.compartments[label] / self.vars['demo_life_expectancy']
+            val = self.compartments[label] / self.get_constant_or_variable_param('demo_life_expectancy')
             self.flows[label] -= val
             self.vars['rate_death'] += val
 
-        # extra death flows
+        # Extra death flows
         self.vars['rate_infection_death'] = 0.
         for label, rate in self.fixed_infection_death_rate_flows:
             val = self.compartments[label] * rate
@@ -469,6 +483,20 @@ class BaseModel:
 
         pass
 
+    def set_ageing_flows(self):
+
+        """
+        Set ageing flows for any number of age stratifications.
+
+        """
+
+        for label in self.labels:
+            for number_agegroup in range(len(self.agegroups)):
+                if self.agegroups[number_agegroup] in label and number_agegroup < len(self.agegroups) - 1:
+                    self.set_fixed_transfer_rate_flow(
+                        label, label[0: label.find('_age')] + self.agegroups[number_agegroup + 1],
+                        'ageing_rate' + self.agegroups[number_agegroup])
+
     ################################
     ### Main integration methods ###
     ################################
@@ -484,6 +512,7 @@ class BaseModel:
                         self.inputs.model_constants['scenario_end_time'],
                         self.gui_inputs['time_step'])
         self.initialise_compartments()
+        if len(self.agegroups) > 0: self.set_ageing_flows()
         self.set_flows()
         assert self.times is not None, 'Times have not been set yet'
 
@@ -503,6 +532,22 @@ class BaseModel:
             return flow_vector
 
         return derivative_fn
+
+    def integrate(self):
+
+        """
+        Method to select integration approach, using request from GUI.
+
+        """
+
+
+        dt_max = 2.
+        if self.gui_inputs['integration_method'] == 'Explicit':
+            self.integrate_explicit(dt_max)
+        elif self.gui_inputs['integration_method'] == 'Scipy':
+            self.integrate_scipy(dt_max)
+        elif self.gui_inputs['integration_method'] == 'Runge Kutta':
+            self.integrate_runge_kutta(dt_max)
 
     def integrate_scipy(self, dt_max=0.05):
 
@@ -671,6 +716,20 @@ class BaseModel:
         self.calculate_diagnostics()
         if self.run_costing:
             self.calculate_economics_diagnostics()
+
+    def checks(self):
+
+        """
+        Assertion run during the simulation.
+
+        Args:
+            error_margin: acceptable difference between target invariants
+
+        """
+
+        # Check all compartments are positive
+        for label in self.labels:
+            assert self.compartments[label] >= 0.
 
     ######################################
     ### Output/diagnostic calculations ###
@@ -914,29 +973,9 @@ class BaseModel:
             state_compartments[label] = self.soln_array[i_time, i_label]
         return state_compartments
 
-    def checks(self, error_margin=0.1):
-
-        """
-        Assertion run during the simulation, should be overridden
-        for each model.
-
-        Args:
-            error_margin: acceptable difference between target invariants
-
-        Returns:
-
-        """
-
-        # Check all compartments are positive
-        for label in self.labels:
-            assert self.compartments[label] >= 0.
-        # Check population is conserved across compartments
-        # population_change = \
-        #       self.vars['births_vac'] \
-        #     - self.vars['births_unvac'] \
-        #     - self.vars['rate_death'] \
-        #     - self.vars['rate_infection_death']
-        # assert abs(sum(self.flows.values()) - population_change ) < error_margin
+    ###############################
+    ### Flow diagram production ###
+    ###############################
 
     def make_flow_diagram(self, png):
 
@@ -1015,7 +1054,16 @@ class BaseModel:
 
         self.graph.render(base)
 
+    ####################################
+    ### Intervention-related methods ###
+    ####################################
+
     def check_list_of_interventions(self):
+
+        """
+        Find list of feasible interventions given model structure.
+
+        """
 
         # If model is not age-structured, age-specific IPT does not make sense
         if len(self.agegroups) < 2:
@@ -1025,7 +1073,7 @@ class BaseModel:
     def determine_whether_startups_apply(self):
 
         """
-        Determine whether an intervention is applied and has start-up costs in this scenario
+        Determine whether an intervention is applied and has start-up costs in the scenario being run.
 
         """
 
@@ -1033,15 +1081,18 @@ class BaseModel:
         for program in self.interventions_to_cost:
             self.startups_apply[program] = False
 
-            # If the program reaches values greater than zero and start-up costs are greater than zero, change to true
+            # If the program reaches values greater than zero and start-up costs are greater than zero, change to True
             if self.inputs.intervention_applied[self.scenario]['program_prop_' + program] \
                     and self.inputs.model_constants['econ_startupcost_' + program] > 0.:
                 self.startups_apply[program] = True
 
     def find_intervention_startdates(self):
+
         """
         Find the dates when the different interventions start and populate self.intervention_startdates
+
         """
+
         scenario = self.scenario
         for intervention in self.interventions_to_cost:
             self.intervention_startdates[intervention] = None
@@ -1053,17 +1104,22 @@ class BaseModel:
                 self.intervention_startdates[intervention] = min(years_pos_coverage)
 
     def distribute_funding_across_years(self):
-        nb_years = self.end_period_costing - self.inputs.model_constants['scenario_start_time'] # nb of years to fund
+
+        # Number of years to fund
+        n_years = self.end_period_costing - self.inputs.model_constants['scenario_start_time']
         for int in self.interventions_to_cost:
             self.annual_available_funding[int] = 0
-            if self.intervention_startdates[int] is None:  # means intervention hadn't started yet
+            # If intervention hasn't started
+            if self.intervention_startdates[int] is None:
                 if self.available_funding[int] < self.inputs.model_constants['econ_startupcost_' + int]:
                     print 'available_funding insufficient to cover starting costs of ' + int
                 else:
                     self.intervention_startdates[int] = self.inputs.model_constants['scenario_start_time']
-                    self.annual_available_funding[int] = (self.available_funding[int] - self.inputs.model_constants['econ_startupcost_' + int])/nb_years
+                    self.annual_available_funding[int] \
+                        = (self.available_funding[int] - self.inputs.model_constants['econ_startupcost_' + int]) \
+                          / n_years
             else:
-                self.annual_available_funding[int] = (self.available_funding[int])/nb_years
+                self.annual_available_funding[int] = (self.available_funding[int])/n_years
 
 
 

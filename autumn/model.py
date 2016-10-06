@@ -12,14 +12,6 @@ Compartment unit throughout: patients
 
 from scipy import exp, log
 from autumn.base import BaseModel
-import autumn.model_runner
-import numpy
-from scipy.stats import norm, beta
-import copy
-import datetime
-import tool_kit
-
-import warnings
 
 
 def label_intersects_tags(label, tags):
@@ -253,32 +245,6 @@ class ConsolidatedModel(BaseModel):
                                                      / len(self.organ_status)  # Split equally by organ statuses,
                                                      * self.comorb_props[comorbidity]
                                                      / len(self.agegroups))  # and split equally by age-groups
-
-    ############################################################
-    # General underlying methods for use by other methods
-
-    def get_constant_or_variable_param(self, param):
-
-        """
-        Simple function to look first in vars then params for a parameter value and
-        raise an error if the parameter is not found.
-
-        Args:
-            param: String for the parameter (should be the same in either vars or params)
-
-        Returns:
-            param_value: The value of the parameter
-
-        """
-
-        if param in self.vars:
-            param_value = self.vars[param]
-        elif param in self.params:
-            param_value = self.params[param]
-        else:
-            raise NameError('Parameter "' + param + '" not found in either vars or params.')
-
-        return param_value
 
     ##################################################################
     # Methods that calculate variables to be used in calculating flows
@@ -810,8 +776,6 @@ class ConsolidatedModel(BaseModel):
 
         self.set_birth_flows()
 
-        if len(self.agegroups) > 0: self.set_ageing_flows()
-
         self.set_infection_flows()
 
         self.set_progression_flows()
@@ -836,16 +800,6 @@ class ConsolidatedModel(BaseModel):
                 'susceptible_fully' + comorbidity + self.agegroups[0], 'births_unvac' + comorbidity)
             self.set_var_entry_rate_flow(
                 'susceptible_vac' + comorbidity + self.agegroups[0], 'births_vac' + comorbidity)
-
-    def set_ageing_flows(self):
-
-        # Set simple ageing flows for any number of strata
-        for label in self.labels:
-            for number_agegroup in range(len(self.agegroups)):
-                if self.agegroups[number_agegroup] in label and number_agegroup < len(self.agegroups) - 1:
-                    self.set_fixed_transfer_rate_flow(
-                        label, label[0: label.find('_age')] + self.agegroups[number_agegroup + 1],
-                               'ageing_rate' + self.agegroups[number_agegroup])
 
     def set_infection_flows(self):
 
@@ -1286,19 +1240,5 @@ class ConsolidatedModel(BaseModel):
                     self.vars['prevalence' + agegroup] \
                         += (self.compartments[label]
                         / self.vars['population' + agegroup] * 1E5)
-
-    ##################################################################
-    # Methods to call base integration function depending on the type of
-    # integration required
-
-    def integrate(self):
-
-        dt_max = 2.0
-        if self.gui_inputs['integration_method'] == 'Explicit':
-            self.integrate_explicit(dt_max)
-        elif self.gui_inputs['integration_method'] == 'Scipy':
-            self.integrate_scipy(dt_max)
-        elif self.gui_inputs['integration_method'] == 'Runge Kutta':
-            self.integrate_runge_kutta(dt_max)
 
 

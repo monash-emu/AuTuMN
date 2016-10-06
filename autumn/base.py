@@ -1,10 +1,27 @@
-import os
 
+import os
 import numpy
 from scipy.integrate import odeint
 import tool_kit
-from autumn.economics import get_cost_from_coverage, inflate_cost, discount_cost
+from autumn.economics import get_cost_from_coverage
 import scipy.stats
+
+
+def add_unique_tuple_to_list(a_list, a_tuple):
+
+    """
+    Adds or modifies a list of tuples, compares only the items
+    before the last in the tuples, the last value in the tuple
+    is assumed to be a value.
+
+    """
+
+    for i, test_tuple in enumerate(a_list):
+        if test_tuple[:-1] == a_tuple[:-1]:
+            a_list[i] = a_tuple
+            break
+    else:
+        a_list.append(a_tuple)
 
 
 class BaseModel:
@@ -15,6 +32,7 @@ class BaseModel:
         self.init_compartments = {}
         self.params = {}
         self.times = None
+        self.cost_times = []
 
         self.scaleup_fns = {}
         self.vars = {}
@@ -32,10 +50,9 @@ class BaseModel:
         self.linked_transfer_rate_flows = []
         self.fixed_infection_death_rate_flows = []
         self.var_transfer_rate_flows = []
-        self.var_flows = []
+        self.var_entry_rate_flows = []
         self.var_infection_death_rate_flows = []
 
-        self.cost_times = []
         self.costs = None
         self.run_costing = True
         self.end_period_costing = 2035
@@ -50,15 +67,22 @@ class BaseModel:
         self.startups_apply = {}
         self.intervention_startdates = {}
 
+    ##############################
+    ### Time-related functions ###
+    ##############################
+
     def make_times(self, start, end, delta):
 
         """
-        Simple method to return time steps for reporting of outputs.
+        Simple method to create time steps for reporting of outputs.
 
         Args:
             start: Start time for integration.
             end: End time for integration.
             delta: Step size.
+
+        Creates:
+            self.times: List of model time steps.
 
         """
 
@@ -72,80 +96,269 @@ class BaseModel:
 
     def find_time_index(self, time):
 
+        """
+        Method to find first time point in times list after a certain specified time point.
+
+        Args:
+            time: The time point for interrogation.
+
+        Returns:
+            index: The index of the self.times list that refers to the time point argument.
+
+        """
+
         for index, model_time in enumerate(self.times):
             if model_time > time:
                 return index
 
         raise ValueError('Time not found')
 
-    def set_compartment(self, label, init_val=0.0):
+    #####################################################
+    ### Methods to set values to aspects of the model ###
+    #####################################################
+
+    def set_compartment(self, label, init_val=0.):
+
+        """
+        Assign an initial value to a compartment.
+
+        Args:
+            label: The name of the compartment.
+            init_val: The starting size of this compartment.
+
+        Modifies:
+            self.init_compartments: Assigns init_val to the compartment specified.
+
+        """
+
+        assert init_val >= 0., 'Start with negative compartment not permitted'
         if label not in self.labels:
             self.labels.append(label)
         self.init_compartments[label] = init_val
-        assert init_val >= 0, 'Start with negative compartment not permitted'
 
     def set_parameter(self, label, val):
+
+        """
+        Almost to simple to need a method. Sets a single parameter value.
+
+        Args:
+            label: Parameter name.
+            val: Parameter value.
+
+        Modifies:
+            self.params: Adds a parameter value to this dictionary.
+
+        """
+
         self.params[label] = val
 
-    def convert_list_to_compartments(self, vec):
-        return {l: vec[i] for i, l in enumerate(self.labels)}
+    ####################################################
+    ### Methods to manipulate compartment data items ###
+    ####################################################
 
-    def convert_compartments_to_list(self, compartments):
-        return [compartments[l] for l in self.labels]
+    def convert_list_to_compartments(self, compartment_vector):
+
+        """
+        Uses self.labels to convert list of compartments to dictionary.
+
+        Args:
+            compartment_vector: List of compartment values.
+
+        Returns:
+            Dictionary with keys the compartment names (from the strings in self.labels) and values the elements
+                from compartment_vector.
+        """
+
+        return {l: compartment_vector[i] for i, l in enumerate(self.labels)}
+
+    def convert_compartments_to_list(self, compartment_dict):
+
+        """
+        Reverse of previous method. Converts
+
+        Args:
+            compartment_dict: Dictionary with keys strings of compartment names.
+
+        Returns:
+            List of compartment values ordered according to self.labels.
+
+        """
+
+        return [compartment_dict[l] for l in self.labels]
 
     def get_init_list(self):
+
+        """
+        Sets starting state for model run according to whether initial conditions are specified, or
+        whether we are taking up from where a previous run left off.
+
+        Returns:
+            List of compartment values.
+
+        """
 
         if self.loaded_compartments is None:
             return self.convert_compartments_to_list(self.init_compartments)
         else:
             return self.convert_compartments_to_list(self.loaded_compartments)
 
-    def set_population_death_rate(self, death_label):
+    ############################################################
+    ### Methods to add intercompartmental flows to the model ###
+    ############################################################
 
-        # Currently inactive (although Bosco might not be pleased about this)
-        self.death_rate = self.params[death_label]
+    def set_var_entry_rate_flow(self, label, var_label):
+
+        """
+        Set variable entry/birth/recruitment flow.
+
+        Args:
+            label: String for the compartment to which the entry rate applies.
+            var_label: String to index the parameters dictionary.
+
+        Returns:
+            Adds to self.var_flows, which apply variable birth rates to susceptible (generally) compartments.
+
+        """
+
+        add_unique_tuple_to_list(
+            self.var_entry_rate_flows,
+            (label, var_label))
 
     def set_fixed_infection_death_rate_flow(self, label, param_label):
+
+        """
+        Set fixed infection death rate flow.
+
+        Args:
+            label: String for the compartment to which the death rate applies.
+            param_label: String to index the parameters dictionary.
+
+        Returns:
+            Adds to self.fixed_infection_death_rate_flows, which apply single death rates to active infection
+                compartments.
+
+        """
+
         add_unique_tuple_to_list(
             self.fixed_infection_death_rate_flows,
             (label, self.params[param_label]))
 
-    def set_var_infection_death_rate_flow(self, label, vars_label):
+    def set_var_infection_death_rate_flow(self, label, var_label):
+
+        """
+        Set variable infection death rate flow.
+
+        Args:
+            label: String for the compartment to which the death rate applies.
+            var_label: String to index the parameters dictionary.
+
+        Returns:
+            Adds to self.var_infection_death_rate_flows, which apply single variable death rates to active infection
+                compartments.
+
+        """
+
         add_unique_tuple_to_list(
             self.var_infection_death_rate_flows,
-            (label, vars_label))
+            (label, var_label))
 
     def set_fixed_transfer_rate_flow(self, from_label, to_label, param_label):
+
+        """
+        Set fixed inter-compartmental transfer rate flows.
+
+        Args:
+            from_label: String for the compartment from which this flow comes.
+            to_label: String for the compartment to which this flow goes.
+            param_label: String to index the parameters dictionary.
+
+        Returns:
+            Adds to self.fixed_transfer_rate_flows, which apply single fixed intercompartmental transfer rates to
+                two compartments.
+
+        """
+
         add_unique_tuple_to_list(
             self.fixed_transfer_rate_flows,
             (from_label, to_label, self.params[param_label]))
 
-    def set_linked_transfer_rate_flow(self, from_label, to_label, vars_label):
+    def set_linked_transfer_rate_flow(self, from_label, to_label, var_label):
+
+        """
+        Set linked inter-compartmental transfer rate flows, where the flow between two compartments is dependent upon
+        a flow between another two compartments.
+
+        Args:
+            from_label: String for the compartment from which this flow comes.
+            to_label: String for the compartment to which this flow goes.
+            var_label: String to index the vars dictionary.
+
+        Returns:
+            Adds to self.linked_transfer_rate_flows, which apply variable, linked intercompartmental transfer rates to
+                two compartments.
+
+        """
+
         add_unique_tuple_to_list(
             self.linked_transfer_rate_flows,
-            (from_label, to_label, vars_label))
+            (from_label, to_label, var_label))
 
-    def set_var_transfer_rate_flow(self, from_label, to_label, vars_label):
+    def set_var_transfer_rate_flow(self, from_label, to_label, var_label):
+
+        """
+        Set variable inter-compartmental transfer rate flows.
+
+        Args:
+            from_label: String for the compartment from which this flow comes.
+            to_label: String for the compartment to which this flow goes.
+            var_label: String to index the vars dictionary.
+
+        Returns:
+            Adds to self.var_transfer_rate_flows, which apply variable intercompartmental transfer rates to
+                two compartments.
+
+        """
+
         add_unique_tuple_to_list(
             self.var_transfer_rate_flows,
-            (from_label, to_label, vars_label))
+            (from_label, to_label, var_label))
+
+    #########################################
+    ### Scale-up function-related methods ###
+    #########################################
 
     def set_scaleup_fn(self, label, fn):
+
+        """
+        Simple method to add a scale-up function to the dictionary of scale-ups.
+
+        Args:
+            label: String for name of function.
+            fn: The function to be added.
+
+        """
+
         self.scaleup_fns[label] = fn
 
-    def set_var_entry_rate_flow(self, label, vars_label):
-        add_unique_tuple_to_list(
-            self.var_flows,
-            (label, vars_label))
+    def calculate_scaleup_vars(self):
 
-    def calculate_vars_of_scaleup_fns(self):
+        """
+        Find the values of the scale-up functions at a specific point in time.
+        Called within the integration process.
+
+        """
+
         for label, fn in self.scaleup_fns.iteritems():
             self.vars[label] = fn(self.time)
 
     def calculate_vars(self):
+
         """
-        Calculate self.vars that only depend on compartment values
+        Calculate the self.vars that depend on current model conditions (compartment sizes) rather than scale-up
+        functions. (Model-specific, so currently just "pass".)
+
         """
+
         pass
 
     def calculate_flows(self):
@@ -157,7 +370,7 @@ class BaseModel:
             self.flows[label] = 0.0
 
         # birth flows
-        for label, vars_label in self.var_flows:
+        for label, vars_label in self.var_entry_rate_flows:
             self.flows[label] += self.vars[vars_label]
 
         # dynamic transmission flows
@@ -204,6 +417,9 @@ class BaseModel:
             self.flows[label] -= val
             self.vars['rate_infection_death'] += val
 
+
+
+
     def prepare_vars_flows(self):
 
         # This function collects some other functions that
@@ -220,7 +436,7 @@ class BaseModel:
 
         self.vars.clear() # clear all the vars
         self.vars = saved_vars # re-populate the saved vars
-        self.calculate_vars_of_scaleup_fns()
+        self.calculate_scaleup_vars()
         self.calculate_vars()
         self.calculate_flows()
 
@@ -767,18 +983,5 @@ class BaseModel:
 
 
 
-def add_unique_tuple_to_list(a_list, a_tuple):
 
-    """
-    Adds or modifies a list of tuples, compares only the items
-    before the last in the tuples, the last value in the tuple
-    is assumed to be a value.
-    """
-
-    for i, test_tuple in enumerate(a_list):
-        if test_tuple[:-1] == a_tuple[:-1]:
-            a_list[i] = a_tuple
-            break
-    else:
-        a_list.append(a_tuple)
 

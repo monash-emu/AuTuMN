@@ -28,10 +28,14 @@ class BaseModel:
 
     def __init__(self):
 
+        self.inputs = None
+        self.gui_inputs = None
+
         self.labels = []
         self.init_compartments = {}
         self.params = {}
         self.times = None
+        self.start_time = None
         self.cost_times = []
 
         self.scaleup_fns = {}
@@ -117,6 +121,22 @@ class BaseModel:
     ### Methods to set values to aspects of the model ###
     #####################################################
 
+    def set_parameter(self, label, val):
+
+        """
+        Almost to simple to need a method. Sets a single parameter value.
+
+        Args:
+            label: Parameter name.
+            val: Parameter value.
+
+        Modifies:
+            self.params: Adds a parameter value to this dictionary.
+
+        """
+
+        self.params[label] = val
+
     def set_compartment(self, label, init_val=0.):
 
         """
@@ -136,21 +156,14 @@ class BaseModel:
             self.labels.append(label)
         self.init_compartments[label] = init_val
 
-    def set_parameter(self, label, val):
+    def initialise_compartments(self):
 
         """
-        Almost to simple to need a method. Sets a single parameter value.
-
-        Args:
-            label: Parameter name.
-            val: Parameter value.
-
-        Modifies:
-            self.params: Adds a parameter value to this dictionary.
+        Initialise compartments to starting values.
 
         """
 
-        self.params[label] = val
+        pass
 
     ####################################################
     ### Methods to manipulate compartment data items ###
@@ -324,7 +337,7 @@ class BaseModel:
             (from_label, to_label, var_label))
 
     #########################################
-    ### Scale-up function-related methods ###
+    ### Variable and flow-related methods ###
     #########################################
 
     def set_scaleup_fn(self, label, fn):
@@ -417,30 +430,65 @@ class BaseModel:
             self.flows[label] -= val
             self.vars['rate_infection_death'] += val
 
-
-
-
     def prepare_vars_flows(self):
 
-        # This function collects some other functions that
-        # previously led to a bug because not all of them
-        # were called in the diagnostics round.
-        # (Written by James, not Bosco)
+        """
+        This function collects some other functions that previously led to a bug because not all of them were called
+        in the diagnostics round.
 
-        # Before clearing vars, we need to save the ones that are population sizes as its needed for the economics
+        """
+
+        # Before clearing vars, we need to save the popsize vars for economics calculations
         saved_vars = {}
         if self.eco_drives_epi:
             for key in self.vars.keys():
                 if 'popsize' in key:
                     saved_vars[key] = self.vars[key]
 
-        self.vars.clear() # clear all the vars
-        self.vars = saved_vars # re-populate the saved vars
+        # Clear previously populated vars dictionary
+        self.vars.clear()
+
+        # Re-populated from saved vars
+        self.vars = saved_vars
+
+        # Calculate vars and flows sequentially
         self.calculate_scaleup_vars()
         self.calculate_vars()
         self.calculate_flows()
 
-    def make_derivate_fn(self):
+    def set_flows(self):
+
+        """
+        Main method to work through setting all intercompartmental flows.
+
+        """
+
+        pass
+
+    ################################
+    ### Main integration methods ###
+    ################################
+
+    def init_run(self):
+
+        """
+        Works through the main methods in needed for the integration process.
+
+        """
+
+        self.make_times(self.start_time,
+                        self.inputs.model_constants['scenario_end_time'],
+                        self.gui_inputs['time_step'])
+        self.initialise_compartments()
+        self.set_flows()
+        assert self.times is not None, 'Times have not been set yet'
+
+    def make_derivative_fn(self):
+
+        """
+        Create the main derivative function
+
+        """
 
         def derivative_fn(y, t):
             self.time = t
@@ -452,43 +500,32 @@ class BaseModel:
 
         return derivative_fn
 
-    def init_run(self):
-
-        self.make_times(self.start_time,
-                        self.inputs.model_constants['scenario_end_time'],
-                        self.gui_inputs['time_step'])
-        self.initialise_compartments()
-        self.set_flows()
-        self.var_labels = None
-        self.soln_array = None
-        self.var_array = None
-        self.flow_array = None
-        self.fraction_array = None
-        assert not self.times is None, 'Times have not been set yet'
-
     def integrate_scipy(self, dt_max=0.05):
 
-        """ Uses Adams method coded in the LSODA Fortran package. This method is programmed to "slow down" when a tricky
-        point is encountered. Then we need to allow for a high maximal number of iterations (mxstep)so that the
+        """
+        Uses Adams method coded in the LSODA Fortran package. This method is programmed to "slow down" when a tricky
+        point is encountered. Then we need to allow for a high maximal number of iterations (mxstep) so that the
         algorithm does not get stuck.
+
         Input:
             min_dt: represents the time step for calculation points. The attribute self.times will also be used to make sure
             that a solution is affected to the time points known by the model
+
         """
+
         self.init_run()
         init_y = self.get_init_list()
-        derivative = self.make_derivate_fn()
+        derivative = self.make_derivative_fn()
 
-        tt = [] # all the calculation times
-        tt_record = [] # store the indices of tt corresponding to the calculation times to be stored
-
+        # All calculation times and list of corresponding indices
         time = self.times[0]
-        tt.append(time)
-        tt_record.append(0)
+        tt = [time]
+        tt_record = [0]
+
         i_tt = 0
         for i_time, new_time in enumerate(self.times):
             while time < new_time:
-                time = time + dt_max
+                time += dt_max
                 if time > new_time:
                     time = new_time
                 i_tt += 1
@@ -496,7 +533,7 @@ class BaseModel:
                 if time == new_time:
                     tt_record.append(i_tt)
 
-        sol = odeint(derivative, init_y, tt, mxstep=5000000)
+        sol = odeint(derivative, init_y, tt, mxstep=int(5e6))
         self.soln_array = sol[tt_record, :]
 
         self.calculate_diagnostics()
@@ -517,7 +554,7 @@ class BaseModel:
         n_time = len(self.times)
         self.soln_array = numpy.zeros((n_time, n_compartment))
 
-        derivative = self.make_derivate_fn()
+        derivative = self.make_derivative_fn()
         old_time = self.times[0]
         time = old_time
         self.soln_array[0, :] = y
@@ -572,7 +609,7 @@ class BaseModel:
         n_time = len(self.times)
         self.soln_array = numpy.zeros((n_time, n_compartment))
 
-        derivative = self.make_derivate_fn()
+        derivative = self.make_derivative_fn()
         old_time = self.times[0]
         time = self.times[0]
         self.soln_array[0, :] = y

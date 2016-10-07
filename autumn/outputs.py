@@ -846,6 +846,7 @@ class Project:
             economics_dict = {}
             for type in ['inflated', 'discounted', 'discounted_inflated']:
                 economics_dict[type + '_cost_all_programs'] = {}
+
                 for i, t in enumerate(self.model_runner.model_dict[scenario].cost_times):
                     cost_all_programs = 0
                     cpi_time_variant = self.model_runner.model_dict[scenario].scaleup_fns['econ_cpi'](t)
@@ -858,6 +859,24 @@ class Project:
                                                                type, current_cpi, cpi_time_variant, discount_rate, t_into_future)
                         cost_all_programs += economics_dict[type + '_cost_' + intervention][t]
                     economics_dict[type + '_cost_all_programs'][t] = cost_all_programs
+
+                # if uncertainty is on
+                if self.gui_inputs['output_uncertainty']:
+                    for intervention_index, intervention in enumerate(self.programs):
+                        self.full_uncertainty_dicts[scenario][type + '_costs_' + intervention] = {}
+                        for working_centile in range(101) + [2.5, 97.5]:
+                            self.full_uncertainty_dicts[scenario][type + '_costs_' + intervention]['centile_' + str(working_centile)] \
+                                = dict(zip(self.full_output_lists[scenario]['cost_times'],
+                                           np.percentile(
+                                               self.model_runner.results['uncertainty'][scenario]['costs'][
+                                               :, intervention_index, self.model_runner.accepted_indices],
+                                               working_centile,
+                                               axis=1)
+                                           )
+                                       )
+
+
+
 
             self.full_output_dict[scenario].update(economics_dict)
 

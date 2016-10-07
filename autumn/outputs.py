@@ -1611,14 +1611,6 @@ class Project:
                 if max(self.full_output_dict[scenario][cost_type + '_cost_all_programs'].values()) > max_stacked_cost:
                     max_stacked_cost = max(self.full_output_dict[scenario][cost_type + '_cost_all_programs'].values())
 
-            # for program in self.programs:
-            #     for cost in self.model_runner.model_dict[scenario].costs[program]:
-            #         if max(self.model_runner.model_dict[scenario].costs[program][cost]) > max_cost:
-            #             max_cost = max(self.model_runner.model_dict[scenario].costs[program][cost])
-            # for cost in self.model_runner.model_dict[scenario].costs['all_programs']:
-            #     if max(self.model_runner.model_dict[scenario].costs['all_programs'][cost]) > max_stacked_cost:
-            #         max_stacked_cost = max(self.model_runner.model_dict[scenario].costs['all_programs'][cost])
-
             # Scale vertical axis and amend axis label as appropriate
             multiplier_individual, multiplier_individual_label = self.scale_axes(max_cost)
             multiplier_stacked, multiplier_stacked_label = self.scale_axes(max_stacked_cost)

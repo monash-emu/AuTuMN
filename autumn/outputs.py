@@ -612,7 +612,6 @@ class Project:
             The var's index (unnamed).
 
         """
-
         return self.model_runner.model_dict['baseline'].var_labels.index(var)
 
     def set_and_update_figure(self):
@@ -760,6 +759,9 @@ class Project:
             outputs: The outputs to be populated to the dictionaries
         """
 
+        # add labels for economic outputs
+        for intervention in self.programs:
+            outputs.append('costs_' + intervention)
         self.create_full_output_dict(outputs)
         self.add_raw_economics_dict()
         self.add_other_costs_dict()
@@ -779,18 +781,26 @@ class Project:
 
             for label in outputs:
                 self.full_output_lists[scenario]['times'] = self.model_runner.model_dict[scenario].times
+                self.full_output_lists[scenario]['cost_times'] = self.model_runner.model_dict[scenario].cost_times
+                if 'costs_' not in label:
+                    array_name = 'var_array'
+                    times_name = 'times'
+                    index_label = self.find_var_index(label)
+                else:
+                    array_name = 'costs'
+                    times_name = 'cost_times'
+                    index_label = self.model_runner.model_dict[scenario].interventions_to_cost.index(label[6:])
                 self.full_output_lists[scenario][label] \
-                    = list(self.model_runner.results['scenarios'][scenario]['var_array'][:, self.find_var_index(label)])
-                self.full_output_dict[scenario][label] = dict(zip(self.full_output_lists[scenario]['times'],
+                    = list(self.model_runner.results['scenarios'][scenario][array_name][:, index_label])
+                self.full_output_dict[scenario][label] = dict(zip(self.full_output_lists[scenario][times_name],
                                                                   self.full_output_lists[scenario][label]))
 
                 # Add centiles of uncertainty data to full dictionary
                 if self.gui_inputs['output_uncertainty']:
                     self.full_uncertainty_dicts[scenario][label] = {}
-                    index_label = self.find_var_index(label)
                     for working_centile in range(101) + [2.5, 97.5]:
                         self.full_uncertainty_dicts[scenario][label]['centile_' + str(working_centile)] \
-                            = dict(zip(self.full_output_lists[scenario]['times'],
+                            = dict(zip(self.full_output_lists[scenario][times_name],
                                    np.percentile(
                                        self.model_runner.results['uncertainty'][scenario]['var_array'][
                                        :, index_label, self.model_runner.accepted_indices],

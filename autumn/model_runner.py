@@ -69,7 +69,7 @@ class ModelRunner:
         self.accepted_indices = []
         self.results['scenarios'] = {}
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
-        self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array']
+        self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
         self.optimization = False
         self.total_funding = 1e7
         self.acceptance_dict = {}
@@ -480,14 +480,6 @@ class ModelRunner:
         for attribute in self.arrays_for_extraction:
             self.results['uncertainty'][scenario][attribute] = []
 
-        # Costs (which have a different structure)
-        # self.results['uncertainty'][scenario]['costs'] = {}
-        # for program in self.model_dict['baseline'].costs:
-        #     if program == 'cost_times':
-        #         self.results['uncertainty'][scenario]['costs'][program] = []
-        #     else:
-        #         self.results['uncertainty'][scenario]['costs'][program] = {}
-
     def store_uncertainty_results(self, scenario):
 
         """
@@ -518,26 +510,6 @@ class ModelRunner:
                 self.results['uncertainty'][scenario][attribute] \
                     = numpy.dstack([self.results['uncertainty'][scenario][attribute],
                                     getattr(self.model_dict[scenario], attribute)])
-
-        # # For costs (which have a different structure)
-        # for program in self.model_dict[scenario].costs:
-        #     if program == 'cost_times':
-        #         if self.results['uncertainty'][scenario]['costs'][program] == []:
-        #             self.results['uncertainty'][scenario]['costs'][program] \
-        #                 = self.model_dict[scenario].costs[program]
-        #         else:
-        #             self.results['uncertainty'][scenario]['costs'][program] \
-        #                 = numpy.vstack([self.results['uncertainty'][scenario]['costs'][program],
-        #                                 self.model_dict[scenario].costs[program]])
-        #     else:
-        #         for cost in self.model_dict[scenario].costs['vaccination']:
-        #             if cost in self.results['uncertainty'][scenario]['costs'][program]:
-        #                 self.results['uncertainty'][scenario]['costs'][program][cost] \
-        #                     = numpy.vstack([self.results['uncertainty'][scenario]['costs'][program][cost],
-        #                                     self.model_dict[scenario].costs[program][cost]])
-        #             else:
-        #                 self.results['uncertainty'][scenario]['costs'][program][cost] \
-        #                     = self.model_dict[scenario].costs[program][cost]
 
     def run_optimization(self):
         print 'Start optimization'

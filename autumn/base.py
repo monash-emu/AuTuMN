@@ -516,6 +516,10 @@ class BaseModel:
         self.set_flows()
         assert self.times is not None, 'Times have not been set yet'
 
+    def adjust_comorbidity_sizes(self):
+
+        pass
+
     def make_derivative_fn(self):
 
         """
@@ -526,6 +530,7 @@ class BaseModel:
         def derivative_fn(y, t):
             self.time = t
             self.compartments = self.convert_list_to_compartments(y)
+            self.adjust_comorbidity_sizes()
             self.prepare_vars_flows()
             flow_vector = self.convert_compartments_to_list(self.flows)
             self.checks()

@@ -280,7 +280,6 @@ class Inputs:
                                         % len(self.comorbidities) - 1)
             self.runtime_outputs.see(END)
 
-
         # Define the strain structure for the model
         self.define_strain_structure()
 
@@ -398,6 +397,7 @@ class Inputs:
         """
         Populates time variant parameters with defaults if those values aren't found
         in the manually entered country-specific data.
+
         """
 
         for program_var in self.original_data['default_programs']:
@@ -440,20 +440,22 @@ class Inputs:
 
         """
         Converts time-variant dictionaries to proportions if they are loaded as percentages in their raw form.
+
         """
 
         time_variants_converted_to_prop = {}
         for time_variant in self.time_variants:
+
             # If the entered data is a percentage
-            if 'program_perc_' in time_variant:
-                time_variants_converted_to_prop['program_prop_' + time_variant[13:]] = {}
+            if 'perc_' in time_variant:
+                time_variants_converted_to_prop[time_variant.replace('perc_', 'prop_')] = {}
                 for i in self.time_variants[time_variant]:
                     # If it's a year or scenario
                     if type(i) == int or 'scenario' in i:
-                        time_variants_converted_to_prop['program_prop_' + time_variant[13:]][i] \
-                            = self.time_variants[time_variant][i] / 1E2
+                        time_variants_converted_to_prop[time_variant.replace('perc_', 'prop_')][i] \
+                            = self.time_variants[time_variant][i] / 1e2
                     else:
-                        time_variants_converted_to_prop['program_prop_' + time_variant[13:]][i] \
+                        time_variants_converted_to_prop[time_variant.replace('perc_', 'prop_')][i] \
                             = self.time_variants[time_variant][i]
 
         self.time_variants.update(time_variants_converted_to_prop)
@@ -1059,7 +1061,7 @@ class Inputs:
                     if 'prop' in param:
                         upper_bound = 1.
                     else:
-                        upper_bound = 1E7
+                        upper_bound = None
 
                     # Calculate the scaling function
                     self.scaleup_fns[scenario][param] \
@@ -1075,7 +1077,8 @@ class Inputs:
                     if scenario is not None:
                         freeze_time = self.freeze_times['scenario_' + str(scenario)]
                         if freeze_time < self.model_constants['current_time']:
-                            self.scaleup_fns[scenario][param] = freeze_curve(self.scaleup_fns[scenario][param], freeze_time)
+                            self.scaleup_fns[scenario][param] = freeze_curve(self.scaleup_fns[scenario][param],
+                                                                             freeze_time)
 
                 # If no is selected in the time variant column
                 elif whether_time_variant[param] == u'no':

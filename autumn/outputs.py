@@ -612,7 +612,6 @@ class Project:
             The var's index (unnamed).
 
         """
-
         return self.model_runner.model_dict['baseline'].var_labels.index(var)
 
     def set_and_update_figure(self):
@@ -760,6 +759,9 @@ class Project:
             outputs: The outputs to be populated to the dictionaries
         """
 
+        # add labels for economic outputs
+        for intervention in self.programs:
+            outputs.append('costs_' + intervention)
         self.create_full_output_dict(outputs)
         self.add_raw_economics_dict()
         self.add_other_costs_dict()
@@ -779,18 +781,26 @@ class Project:
 
             for label in outputs:
                 self.full_output_lists[scenario]['times'] = self.model_runner.model_dict[scenario].times
+                self.full_output_lists[scenario]['cost_times'] = self.model_runner.model_dict[scenario].cost_times
+                if 'costs_' not in label:
+                    array_name = 'var_array'
+                    times_name = 'times'
+                    index_label = self.find_var_index(label)
+                else:
+                    array_name = 'costs'
+                    times_name = 'cost_times'
+                    index_label = self.model_runner.model_dict[scenario].interventions_to_cost.index(label[6:])
                 self.full_output_lists[scenario][label] \
-                    = list(self.model_runner.results['scenarios'][scenario]['var_array'][:, self.find_var_index(label)])
-                self.full_output_dict[scenario][label] = dict(zip(self.full_output_lists[scenario]['times'],
+                    = list(self.model_runner.results['scenarios'][scenario][array_name][:, index_label])
+                self.full_output_dict[scenario][label] = dict(zip(self.full_output_lists[scenario][times_name],
                                                                   self.full_output_lists[scenario][label]))
 
                 # Add centiles of uncertainty data to full dictionary
                 if self.gui_inputs['output_uncertainty']:
                     self.full_uncertainty_dicts[scenario][label] = {}
-                    index_label = self.find_var_index(label)
                     for working_centile in range(101) + [2.5, 97.5]:
                         self.full_uncertainty_dicts[scenario][label]['centile_' + str(working_centile)] \
-                            = dict(zip(self.full_output_lists[scenario]['times'],
+                            = dict(zip(self.full_output_lists[scenario][times_name],
                                    np.percentile(
                                        self.model_runner.results['uncertainty'][scenario]['var_array'][
                                        :, index_label, self.model_runner.accepted_indices],
@@ -836,6 +846,7 @@ class Project:
             economics_dict = {}
             for type in ['inflated', 'discounted', 'discounted_inflated']:
                 economics_dict[type + '_cost_all_programs'] = {}
+
                 for i, t in enumerate(self.model_runner.model_dict[scenario].cost_times):
                     cost_all_programs = 0
                     cpi_time_variant = self.model_runner.model_dict[scenario].scaleup_fns['econ_cpi'](t)
@@ -848,6 +859,24 @@ class Project:
                                                                type, current_cpi, cpi_time_variant, discount_rate, t_into_future)
                         cost_all_programs += economics_dict[type + '_cost_' + intervention][t]
                     economics_dict[type + '_cost_all_programs'][t] = cost_all_programs
+
+                # if uncertainty is on
+                if self.gui_inputs['output_uncertainty']:
+                    for intervention_index, intervention in enumerate(self.programs):
+                        self.full_uncertainty_dicts[scenario][type + '_costs_' + intervention] = {}
+                        for working_centile in range(101) + [2.5, 97.5]:
+                            self.full_uncertainty_dicts[scenario][type + '_costs_' + intervention]['centile_' + str(working_centile)] \
+                                = dict(zip(self.full_output_lists[scenario]['cost_times'],
+                                           np.percentile(
+                                               self.model_runner.results['uncertainty'][scenario]['costs'][
+                                               :, intervention_index, self.model_runner.accepted_indices],
+                                               working_centile,
+                                               axis=1)
+                                           )
+                                       )
+
+
+
 
             self.full_output_dict[scenario].update(economics_dict)
 
@@ -1600,14 +1629,6 @@ class Project:
             for cost_type in cost_types:
                 if max(self.full_output_dict[scenario][cost_type + '_cost_all_programs'].values()) > max_stacked_cost:
                     max_stacked_cost = max(self.full_output_dict[scenario][cost_type + '_cost_all_programs'].values())
-
-            # for program in self.programs:
-            #     for cost in self.model_runner.model_dict[scenario].costs[program]:
-            #         if max(self.model_runner.model_dict[scenario].costs[program][cost]) > max_cost:
-            #             max_cost = max(self.model_runner.model_dict[scenario].costs[program][cost])
-            # for cost in self.model_runner.model_dict[scenario].costs['all_programs']:
-            #     if max(self.model_runner.model_dict[scenario].costs['all_programs'][cost]) > max_stacked_cost:
-            #         max_stacked_cost = max(self.model_runner.model_dict[scenario].costs['all_programs'][cost])
 
             # Scale vertical axis and amend axis label as appropriate
             multiplier_individual, multiplier_individual_label = self.scale_axes(max_cost)

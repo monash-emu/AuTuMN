@@ -3,7 +3,7 @@ import os
 import numpy
 from scipy.integrate import odeint
 import tool_kit
-from autumn.economics import get_cost_from_coverage
+from autumn.economics import get_cost_from_coverage, get_coverage_from_cost
 import scipy.stats
 
 
@@ -850,37 +850,6 @@ class BaseModel:
         Returns:
         Nothing
         """
-        def get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.0):
-
-            """
-            Estimate the coverage associated with a spending in a programme
-            Args:
-               cost: the amount of money allocated to a programme (absolute number, not a proportion of global funding)
-               c_inflection_cost: cost at which inflection occurs on the curve. It's also the configuration leading to the
-                                   best efficiency.
-               saturation: maximal acceptable coverage, ie upper asymptote
-               unit_cost: unit cost of the intervention
-               pop_size: size of the population targeted by the intervention
-               alpha: steepness parameter
-
-            Returns:
-               coverage (as a proportion, then lives in 0-1)
-
-           """
-
-            assert cost >= 0, 'cost must be positive or null'
-            if cost <= c_inflection_cost:  # if cost is smaller thar c_inflection_cost, then the starting cost necessary to get coverage has not been reached
-                return 0
-
-            if pop_size * unit_cost == 0:  # if unit cost or pop_size is null, return 0
-                return 0
-
-            a = saturation / (1.0 - 2 ** alpha)
-            b = ((2.0 ** (alpha + 1.0)) / (alpha * (saturation - a) * unit_cost * pop_size))
-            coverage_estimated = a + (saturation - a) / (
-                (1 + numpy.exp((-b) * (cost - c_inflection_cost))) ** alpha)
-            return coverage_estimated
-
         interventions = self.interventions_to_cost
         for int in interventions:
             if (int in ['ipt_age0to5', 'ipt_age5to15']) and (len(self.agegroups) < 2):

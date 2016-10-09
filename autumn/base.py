@@ -518,7 +518,15 @@ class BaseModel:
 
     def adjust_comorbidity_sizes(self):
 
-        pass
+        self.actual_comorb_props = {}
+        for comorbidity in self.comorbidities:
+            self.actual_comorb_props[comorbidity] = 0.
+            for c in self.compartments:
+                if comorbidity in c:
+                    self.actual_comorb_props[comorbidity] += self.compartments[c]
+        population = sum(self.actual_comorb_props.values())
+        for comorbidity in self.comorbidities:
+            self.actual_comorb_props[comorbidity] /= population
 
     def make_derivative_fn(self):
 

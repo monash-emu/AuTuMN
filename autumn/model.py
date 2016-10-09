@@ -277,8 +277,6 @@ class ConsolidatedModel(BaseModel):
 
         self.vars['population'] = sum(self.compartments.values())
 
-        self.calculate_target_comorb_vars()
-
         self.calculate_birth_rates_vars()
 
         self.calculate_force_infection_vars()
@@ -308,7 +306,7 @@ class ConsolidatedModel(BaseModel):
         """
 
         # Get the parameters depending on whether constant or time variant
-        rate_birth = self.get_constant_or_variable_param('demo_rate_birth') / 1E3
+        rate_birth = self.get_constant_or_variable_param('demo_rate_birth') / 1e3
         prop_vacc = self.get_constant_or_variable_param('program_prop_vaccination')
 
         # Calculate total births first, so that it can be tracked for interventions as well

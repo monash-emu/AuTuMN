@@ -301,24 +301,6 @@ class ConsolidatedModel(BaseModel):
 
         self.calculate_ipt_rate()
 
-    def calculate_target_comorb_vars(self):
-
-        """
-        Calculate the target values for the comorbidity proportions at each model time step.
-
-        """
-
-        if len(self.comorbidities) == 1:
-            self.target_comorb_props[''] = 1.
-        else:
-            self.target_comorb_props['_nocomorb'] = 1.
-            for comorbidity in self.comorbidities:
-                if comorbidity != '_nocomorb':
-                    self.target_comorb_props[comorbidity] \
-                        = self.get_constant_or_variable_param('comorb_prop' + comorbidity)
-                    self.target_comorb_props['_nocomorb'] \
-                        -= self.target_comorb_props[comorbidity]
-
     def calculate_birth_rates_vars(self):
 
         """

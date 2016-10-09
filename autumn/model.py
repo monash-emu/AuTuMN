@@ -117,8 +117,8 @@ class ConsolidatedModel(BaseModel):
         self.check_list_of_interventions()
         self.find_intervention_startdates()
         if self.eco_drives_epi:
-           # self.populate_fundings()
             self.distribute_funding_across_years()
+        self.target_comorb_props = {}
 
     def define_model_structure(self):
 
@@ -164,7 +164,6 @@ class ConsolidatedModel(BaseModel):
         self.strains = self.inputs.strains
 
         self.comorbidities = self.inputs.comorbidities
-        self.comorb_props = self.inputs.comorb_props
 
         # Age stratification
         self.agegroups = self.inputs.agegroups
@@ -221,6 +220,17 @@ class ConsolidatedModel(BaseModel):
         # The equal splits will need to be adjusted, but the important thing is not to
         # initialise multiple strains too early, so that MDR-TB doesn't overtake the model
 
+        if len(self.comorbidities) == 1:
+            start_comorb_prop = {'': 1.}
+        else:
+            start_comorb_prop = {'_nocomorb': 1.}
+            for comorbidity in self.comorbidities:
+                if comorbidity != '_nocomorb':
+                    start_comorb_prop[comorbidity] \
+                        = self.scaleup_fns['comorb_prop' + comorbidity](self.inputs.model_constants['start_time'])
+                    start_comorb_prop['_nocomorb'] \
+                        -= start_comorb_prop[comorbidity]
+
         for compartment in self.compartment_types:
             if compartment in self.initial_compartments:
                 for agegroup in self.agegroups:
@@ -229,13 +239,13 @@ class ConsolidatedModel(BaseModel):
                             # Split equally by comorbidities and age-groups
                             self.set_compartment(compartment + comorbidity + agegroup,
                                                  self.initial_compartments[compartment]
-                                                 * self.comorb_props[comorbidity]
+                                                 * start_comorb_prop[comorbidity]
                                                  / len(self.agegroups))
                         elif 'latent' in compartment:
                             # Assign all to DS-TB, split equally by comorbidities and age-groups
                             self.set_compartment(compartment + default_start_strain + comorbidity + agegroup,
                                                  self.initial_compartments[compartment]
-                                                 * self.comorb_props[comorbidity]
+                                                 * start_comorb_prop[comorbidity]
                                                  / len(self.agegroups))
                         else:
                             for organ in self.organ_status:
@@ -243,7 +253,7 @@ class ConsolidatedModel(BaseModel):
                                                      organ + default_start_strain + comorbidity + agegroup,
                                                      self.initial_compartments[compartment]
                                                      / len(self.organ_status)  # Split equally by organ statuses,
-                                                     * self.comorb_props[comorbidity]
+                                                     * start_comorb_prop[comorbidity]
                                                      / len(self.agegroups))  # and split equally by age-groups
 
     ##################################################################
@@ -267,6 +277,8 @@ class ConsolidatedModel(BaseModel):
 
         self.vars['population'] = sum(self.compartments.values())
 
+        self.calculate_target_comorb_vars()
+
         self.calculate_birth_rates_vars()
 
         self.calculate_force_infection_vars()
@@ -288,6 +300,24 @@ class ConsolidatedModel(BaseModel):
         self.calculate_population_sizes()
 
         self.calculate_ipt_rate()
+
+    def calculate_target_comorb_vars(self):
+
+        """
+        Calculate the target values for the comorbidity proportions at each model time step.
+
+        """
+
+        if len(self.comorbidities) == 1:
+            self.target_comorb_props[''] = 1.
+        else:
+            self.target_comorb_props['_nocomorb'] = 1.
+            for comorbidity in self.comorbidities:
+                if comorbidity != '_nocomorb':
+                    self.target_comorb_props[comorbidity] \
+                        = self.get_constant_or_variable_param('comorb_prop' + comorbidity)
+                    self.target_comorb_props['_nocomorb'] \
+                        -= self.target_comorb_props[comorbidity]
 
     def calculate_birth_rates_vars(self):
 
@@ -311,11 +341,11 @@ class ConsolidatedModel(BaseModel):
             self.vars['births_unvac' + comorbidity] = \
                 (1. - prop_vacc) \
                 * self.vars['births_total'] \
-                * self.comorb_props[comorbidity]
+                * self.target_comorb_props[comorbidity]
             self.vars['births_vac' + comorbidity] = \
                 prop_vacc \
                 * self.vars['births_total'] \
-                * self.comorb_props[comorbidity]
+                * self.target_comorb_props[comorbidity]
 
     def calculate_force_infection_vars(self):
 

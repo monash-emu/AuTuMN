@@ -705,31 +705,13 @@ class Inputs:
 
         # Create list of comorbidity names
         self.comorbidities = []
-        for input in self.model_constants:
-            if 'comorbidity_' in input and 'output_' not in input:
-                if self.model_constants[input]:
-                    self.comorbidities += [input[11:]]
+        for time_variant in self.time_variants:
+            if 'comorb_prop_' in time_variant and self.gui_inputs['comorbidity' + time_variant[11:]]:
+                self.comorbidities += [time_variant[11:]]
         if len(self.comorbidities) == 0:
             self.comorbidities += ['']
         else:
             self.comorbidities += ['_nocomorb']
-
-        # Create dictionary of proportions
-        self.comorb_props = {}
-        remainder = 1.
-        for comorbidity in self.comorbidities:
-            if comorbidity != '' and comorbidity != '_nocomorb':
-                assert self.model_constants['comorb_prop' + comorbidity] > 0., \
-                    'Please ensure all comorbidity sub-groups are greater than 0%'
-                self.comorb_props[comorbidity] = self.model_constants['comorb_prop' + comorbidity]
-                remainder -= self.model_constants['comorb_prop' + comorbidity]
-
-        # Calculate remainder of population to have no comorbidities
-        assert remainder > 0., NameError('Total of the proportions of risk groups is greater than 1.')
-        if '_nocomorb' in self.comorbidities:
-            self.comorb_props['_nocomorb'] = remainder
-        if self.comorbidities == ['']:
-            self.comorb_props[''] = 1.
 
     def define_strain_structure(self):
 
@@ -964,6 +946,7 @@ class Inputs:
             Creates self.scaleup_data, a dictionary of the relevant scale-up data for creating
              scale-up functions in set_scaleup_functions within the model object. First tier
              of keys is the scenario to be run, next is the time variant parameter to be calculated.
+
         """
 
         for scenario in self.gui_inputs['scenarios_to_run']:
@@ -984,7 +967,6 @@ class Inputs:
                         elif scenario is None or 'program_' not in time_variant:
                             self.scaleup_data[scenario][str(time_variant)][i] \
                                 = self.time_variants[time_variant][i]
-                       # elif i <= int(self.freeze_times['scenario_' + str(scenario)]):
                         else:
                             self.scaleup_data[scenario][str(time_variant)][i] \
                                 = self.time_variants[time_variant][i]
@@ -1016,6 +998,7 @@ class Inputs:
         """
         Calculate the scale-up functions from the scale-up data attribute and populate to
         a dictionary with keys of the scenarios to be run.
+
         """
 
         # For each scenario to be run

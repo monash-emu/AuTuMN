@@ -263,12 +263,25 @@ class ConsolidatedModel(BaseModel):
     # I think we have to put any calculations that are dependent upon vars
     # into this section
 
+    def find_target_comorb_props(self):
+
+        # Find target comorbidity proportions
+        self.target_comorb_props['_nocomorb'] = 1.
+        for comorbidity in self.comorbidities:
+            if comorbidity != '_nocomorb':
+                self.target_comorb_props[comorbidity] \
+                    = self.get_constant_or_variable_param('comorb_prop' + comorbidity)
+                self.target_comorb_props['_nocomorb'] \
+                    -= self.target_comorb_props[comorbidity]
+
     def calculate_vars(self):
 
         """
         The master method that calls all the other methods for the calculations of
         variable rates
         """
+
+        self.find_target_comorb_props()
 
         # the parameter values are calculated from the costs, but only in the future
         if self.eco_drives_epi:

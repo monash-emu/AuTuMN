@@ -518,15 +518,6 @@ class BaseModel:
 
     def adjust_comorbidity_sizes(self):
 
-        # Find target comorbidity proportions
-        self.target_comorb_props['_nocomorb'] = 1.
-        for comorbidity in self.comorbidities:
-            if comorbidity != '_nocomorb':
-                self.target_comorb_props[comorbidity] \
-                    = self.get_constant_or_variable_param('comorb_prop' + comorbidity)
-                self.target_comorb_props['_nocomorb'] \
-                    -= self.target_comorb_props[comorbidity]
-
         # Find the actual proportions in each comorbidity stratum
         self.actual_comorb_props = {}
         for comorbidity in self.comorbidities:

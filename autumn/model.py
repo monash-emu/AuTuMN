@@ -78,13 +78,12 @@ class ConsolidatedModel(StratifiedModel):
                  gui_inputs=None):
 
         BaseModel.__init__(self)
+        StratifiedModel.__init__(self)
 
+        self.scenario = scenario
         self.inputs = inputs
         self.gui_inputs = gui_inputs
         self.country = self.gui_inputs['country']
-
-        # Needed in base.py to work out whether to load a previous model state
-        self.loaded_compartments = None
 
         # Set Boolean conditionals for model structure and additional diagnostics
         self.is_lowquality = self.gui_inputs['is_lowquality']
@@ -92,8 +91,6 @@ class ConsolidatedModel(StratifiedModel):
         self.is_misassignment = self.gui_inputs['is_misassignment']
         if self.is_misassignment:
             assert self.is_amplification, 'Misassignment requested without amplification'
-
-        self.scenario = scenario
 
         # Define model compartmental structure
         # (note that compartment initialisation has now been shifted to base.py)
@@ -116,8 +113,7 @@ class ConsolidatedModel(StratifiedModel):
 
         self.check_list_of_interventions()
         self.find_intervention_startdates()
-        if self.eco_drives_epi:
-            self.distribute_funding_across_years()
+        if self.eco_drives_epi: self.distribute_funding_across_years()
 
     def define_model_structure(self):
 
@@ -785,6 +781,8 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         self.set_birth_flows()
+
+        if len(self.agegroups) > 0: self.set_ageing_flows()
 
         self.set_infection_flows()
 

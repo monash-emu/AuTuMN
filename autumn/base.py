@@ -52,7 +52,6 @@ class BaseModel:
         self.var_transfer_rate_flows = []
         self.var_entry_rate_flows = []
         self.var_infection_death_rate_flows = []
-        self.agegroups = []
         self.costs = None
         self.intervention = None
         self.run_costing = True
@@ -65,10 +64,8 @@ class BaseModel:
         self.startups_apply = {}
         self.intervention_startdates = {}
         self.graph = None
-        self.comorbidities = []
-        self.actual_comorb_props = {}
-        self.target_comorb_props = {}
         self.loaded_compartments = None
+        self.scenario = None
 
     ##############################
     ### Time-related functions ###
@@ -430,10 +427,8 @@ class BaseModel:
             self.flows[to_label] += val
 
         # Normal death flows
-        # Note that there has to be a param or a var with the label 'demo_life_expectancy'
-        # (which has to have this name). Saves on creating a separate model attribute
-        # just for population death. I think it makes more sense for it to be just
-        # another parameter.
+        # *** Note that there has to be a param or a var with the label 'demo_life_expectancy'.
+        # (This saves on creating a separate model attribute for population death.) ***
         self.vars['rate_death'] = 0.
         for label in self.labels:
             val = self.compartments[label] / self.get_constant_or_variable_param('demo_life_expectancy')
@@ -485,20 +480,6 @@ class BaseModel:
 
         pass
 
-    def set_ageing_flows(self):
-
-        """
-        Set ageing flows for any number of age stratifications.
-
-        """
-
-        for label in self.labels:
-            for number_agegroup in range(len(self.agegroups)):
-                if self.agegroups[number_agegroup] in label and number_agegroup < len(self.agegroups) - 1:
-                    self.set_fixed_transfer_rate_flow(
-                        label, label[0: label.find('_age')] + self.agegroups[number_agegroup + 1],
-                        'ageing_rate' + self.agegroups[number_agegroup])
-
     ################################
     ### Main integration methods ###
     ################################
@@ -510,18 +491,18 @@ class BaseModel:
 
         """
 
+        # More code that is dependent on correct naming of inputs, but should be universal to models based on this class
         self.make_times(self.start_time,
                         self.inputs.model_constants['scenario_end_time'],
                         self.gui_inputs['time_step'])
         self.initialise_compartments()
-        if len(self.agegroups) > 0: self.set_ageing_flows()
         self.set_flows()
         assert self.times is not None, 'Times have not been set yet'
 
     def make_derivative_fn(self):
 
         """
-        Create the main derivative function
+        Create the main derivative function.
 
         """
 
@@ -599,8 +580,7 @@ class BaseModel:
 
             if i_time < n_time - 1:
                 self.soln_array[i_time+1, :] = y
-                self.prepare_comorb_adjustments()
-                y = self.adjust_compartment_size(y)
+                y = self.make_adjustments_during_integration(y)
 
         self.calculate_diagnostics()
         if self.run_costing:
@@ -673,12 +653,15 @@ class BaseModel:
 
             if i_time < n_time - 1:
                 self.soln_array[i_time + 1, :] = y
-                self.prepare_comorb_adjustments()
-                y = self.adjust_compartment_size(y)
+                y = self.make_adjustments_during_integration(y)
 
         self.calculate_diagnostics()
         if self.run_costing:
             self.calculate_economics_diagnostics()
+
+    def make_adjustments_during_integration(self, y):
+
+        pass
 
     def checks(self):
 
@@ -769,8 +752,6 @@ class BaseModel:
         # Find start and end indices for economics calculations
         start_index = tool_kit.find_first_list_element_at_least_value(self.times,
                                                                       self.inputs.model_constants['recent_time'])
-        end_index = tool_kit.find_first_list_element_at_least_value(self.times,
-                                                                    self.inputs.model_constants['scenario_end_time'])
         self.cost_times = self.times[start_index:]
         self.costs = numpy.zeros((len(self.cost_times), len(self.interventions_to_cost)))
 
@@ -784,11 +765,12 @@ class BaseModel:
                                               self.inputs.model_constants['econ_saturation_' + intervention],
                                               self.inputs.model_constants['econ_unitcost_' + intervention],
                                               self.var_array[i, self.var_labels.index('popsize_' + intervention)])
+
                 # Start-up costs
                 if self.startups_apply[intervention] \
                         and self.inputs.model_constants['scenario_start_time'] < t \
-                        and t < self.inputs.model_constants['scenario_start_time'] \
-                                + self.inputs.model_constants['econ_startupduration_' + intervention]:
+                                < self.inputs.model_constants['scenario_start_time'] \
+                                        + self.inputs.model_constants['econ_startupduration_' + intervention]:
 
                     # New code with beta PDF used to smooth out scale-up costs
                     cost += scipy.stats.beta.pdf((t - self.inputs.model_constants['scenario_start_time'])
@@ -803,11 +785,14 @@ class BaseModel:
     def update_vars_from_cost(self):
 
         """
-        update parameter values according to the funding allocated to each interventions. This process is done during
-        integration
+        Update parameter values according to the funding allocated to each interventions. This process is done during
+        integration.
+
         Returns:
-        Nothing
+            Nothing
+
         """
+
         interventions = self.interventions_to_cost
         for int in interventions:
             if (int in ['ipt_age0to5', 'ipt_age5to15']) and (len(self.agegroups) < 2):
@@ -827,13 +812,13 @@ class BaseModel:
                 else:
                     pop_size = 0
 
-                # starting costs
-                # is a programm starting right now? In that case, update intervention_startdates
-                if self.intervention_startdates[int] is None: # means intervention hadn't started yet
+                # Starting costs
+                # Is a programm starting right now? In that case, update intervention_startdates
+                if self.intervention_startdates[int] is None:  # means intervention hadn't started yet
                     self.intervention_startdates[int] = self.time
 
                 # starting cost has already been taken into account in 'distribute_funding_across_years'
-                coverage = get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.0)
+                coverage = get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.)
             self.vars[vars_key] = coverage
 
     def get_compartment_soln(self, label):
@@ -990,18 +975,6 @@ class BaseModel:
     ### Intervention-related methods ###
     ####################################
 
-    def check_list_of_interventions(self):
-
-        """
-        Find list of feasible interventions given model structure.
-
-        """
-
-        # If model is not age-structured, age-specific IPT does not make sense
-        if len(self.agegroups) < 2:
-            self.interventions_to_cost = [inter for inter in self.interventions_to_cost
-                                          if inter not in ['ipt_age0to5', 'ipt_age5to15']]
-
     def determine_whether_startups_apply(self):
 
         """
@@ -1056,10 +1029,25 @@ class BaseModel:
 
 class StratifiedModel(BaseModel):
 
-    def prepare_comorb_adjustments(self):
+    def __init__(self):
+
+        BaseModel.__init__(self)
+        self.agegroups = []
+        self.comorbidities = []
+        self.actual_comorb_props = {}
+        self.target_comorb_props = {}
+
+    def make_adjustments_during_integration(self, y):
 
         """
-        Find the target and actual proportion of the population in the risk groups/comorbidities being run in the model.
+        Adjusts the proportions of the population in each comorbidity group according to the calculations
+        made in assess_comorbidity_props above.
+
+        Args:
+            y: The original compartment vector y to be adjusted.
+
+        Returns:
+            The adjusted compartment vector (y).
 
         """
 
@@ -1102,20 +1090,6 @@ class StratifiedModel(BaseModel):
                 self.target_comorb_props[''] = []
             self.target_comorb_props[''].append(1.)
 
-    def adjust_compartment_size(self, y):
-
-        """
-        Adjusts the proportions of the population in each comorbidity group according to the calculations
-        made in assess_comorbidity_props above.
-
-        Args:
-            y: The original compartment vector y to be adjusted.
-
-        Returns:
-            The adjusted compartment vector (y).
-
-        """
-
         if hasattr(self, 'comorb_adjustment_factor'):
             compartments = self.convert_list_to_compartments(y)
             for c in compartments:
@@ -1127,5 +1101,28 @@ class StratifiedModel(BaseModel):
         else:
             return y
 
+    def set_ageing_flows(self):
 
+        """
+        Set ageing flows for any number of age stratifications.
 
+        """
+
+        for label in self.labels:
+            for number_agegroup in range(len(self.agegroups)):
+                if self.agegroups[number_agegroup] in label and number_agegroup < len(self.agegroups) - 1:
+                    self.set_fixed_transfer_rate_flow(
+                        label, label[0: label.find('_age')] + self.agegroups[number_agegroup + 1],
+                               'ageing_rate' + self.agegroups[number_agegroup])
+
+    def check_list_of_interventions(self):
+
+        """
+        Find list of feasible interventions given model structure.
+
+        """
+
+        # If model is not age-structured, age-specific IPT does not make sense
+        if len(self.agegroups) < 2:
+            self.interventions_to_cost = [inter for inter in self.interventions_to_cost
+                                          if inter not in ['ipt_age0to5', 'ipt_age5to15']]

@@ -19,6 +19,7 @@ import economics
 import pandas
 import copy
 
+
 def relax_y_axis(ax):
 
     """

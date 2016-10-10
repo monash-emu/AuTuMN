@@ -11,7 +11,7 @@ Compartment unit throughout: patients
 """
 
 from scipy import exp, log
-from autumn.base import BaseModel
+from autumn.base import BaseModel, StratifiedModel
 
 
 def label_intersects_tags(label, tags):
@@ -49,7 +49,7 @@ def find_outcome_proportions_by_period(
     return early_proportion, late_proportion
 
 
-class ConsolidatedModel(BaseModel):
+class ConsolidatedModel(StratifiedModel):
 
     """
     The transmission dynamic model to underpin all AuTuMN analyses

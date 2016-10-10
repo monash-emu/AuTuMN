@@ -74,6 +74,7 @@ class ModelRunner:
         self.total_funding = 1e7
         self.acceptance_dict = {}
         self.rejection_dict = {}
+        self.optimal_allocation = {}
 
     def master_runner(self):
 
@@ -521,11 +522,11 @@ class ModelRunner:
         opti_model_init.start_time = \
             self.model_dict['baseline'].times[start_time_index]
         opti_model_init.loaded_compartments = \
-            self.model_dict['baseline'].load_state(start_time_index)
+            self.model_dict['baseline'] .load_state(start_time_index)
 
         opti_model_init.eco_drives_epi = True
 
-        nb_int = len(self.model_dict['baseline'].interventions_to_cost)
+        nb_int = len(self.model_dict['baseline'].interventions_to_cost) # number of interventions
 
         # function to minimize: incidence in 2035
         def func(x):
@@ -542,36 +543,25 @@ class ModelRunner:
                 i += 1
             opti_model_init.distribute_funding_across_years()
             opti_model_init.integrate()
-            print opti_model_init.get_var_soln('incidence')[-1]
             return opti_model_init.get_var_soln('incidence')[-1]
 
-        use_packages = False
+        use_packages = True
         if use_packages:
             # Some initial funding
             x_0 = []
             for i in range(nb_int):
                 x_0.append(1./nb_int)
 
-            #######  define constraints   #######
             # Equality constraint:  Sum(x)=Total funding
             cons =[{'type':'ineq',
-                   # 'fun' : lambda x: sum(x) - self.total_funding,    # if x is absolute funding
                     'fun': lambda x: 1-sum(x),    # if x is proportion
-                    'jac' : lambda x: -numpy.ones(nb_int-1)}]
-
-            # # Each funding must be positive or null
-            for i in range(nb_int-1):
-                jac_array = numpy.zeros(nb_int-1)
-                jac_array[i] = 1.
-                cons.append({'type': 'ineq',
-                             'fun': lambda x: x[i],
-                             'jac': lambda x: jac_array})
-
+                    'jac': lambda x: -numpy.ones(len(x))}]
             bnds = []
-            for int in range(nb_int-1):
-                bnds.append((0, None))
+            for int in range(nb_int):
+                bnds.append((0, 1.0))
             # Ready to run optimization
-            res = minimize(func, x_0, constraints=cons, method='SLSQP', options={'disp': True})
+            res = minimize(func, x_0, jac=None, bounds=bnds, constraints=cons, method='SLSQP', options={'disp': True})
+            best_x = res.x
         else:
             n_random = 5
             best_x = None
@@ -584,14 +574,15 @@ class ModelRunner:
                     sum_generated += x[j]
                 x[nb_int-1] = 1. - sum_generated
                 objective = func(x)
-                print x
-                print objective
                 if objective < best_objective:
                     best_x = x
                     best_objective = objective
 
-            print 'The best allocation is:'
-            print best_x
+        # update self.optimal_allocation
+        for ind, intervention in enumerate(self.model_dict['baseline'].interventions_to_cost):
+            self.optimal_allocation[intervention] = best_x[ind]
+
+        print self.optimal_allocation
 
     def add_comment_to_gui_window(self, comment):
 

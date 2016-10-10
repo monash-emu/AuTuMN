@@ -67,7 +67,9 @@ class BaseModel:
         self.graph = None
         self.comorbidities = []
         self.actual_comorb_props = {}
+        self.actual_comorb_prop_lists = {}
         self.target_comorb_props = {}
+        self.target_comorb_prop_lists = {}
 
     ##############################
     ### Time-related functions ###
@@ -518,7 +520,7 @@ class BaseModel:
         self.set_flows()
         assert self.times is not None, 'Times have not been set yet'
 
-    def find_target_comorb_props(self):
+    def prepare_comorb_adjustments(self):
 
         """
         Find the target and actual proportion of the population in the risk groups/comorbidities being run in the model.
@@ -527,15 +529,20 @@ class BaseModel:
 
         # Find the target proportions for each comorbidity stratum
         if len(self.comorbidities) > 1:
-            self.target_comorb_props['_nocomorb'] = 1.
+            for comorbidity in self.comorbidities:
+                if comorbidity not in self.target_comorb_prop_lists:
+                    self.target_comorb_prop_lists[comorbidity] = []
+            self.target_comorb_prop_lists['_nocomorb'].append(1.)
             for comorbidity in self.comorbidities:
                 if comorbidity != '_nocomorb':
-                    self.target_comorb_props[comorbidity] \
-                        = self.get_constant_or_variable_param('comorb_prop' + comorbidity)
-                    self.target_comorb_props['_nocomorb'] \
-                        -= self.target_comorb_props[comorbidity]
+                    self.target_comorb_prop_lists[comorbidity].append(
+                        self.get_constant_or_variable_param('comorb_prop' + comorbidity))
+                    self.target_comorb_prop_lists['_nocomorb'][-1] \
+                        -= self.target_comorb_prop_lists[comorbidity][-1]
         else:
-            self.target_comorb_props[''] = 1.
+            if '' not in self.target_comorb_prop_lists:
+                self.target_comorb_prop_lists[''] = []
+            self.target_comorb_prop_lists[''].append(1.)
 
             # If integration has started properly
             if self.compartments:
@@ -553,7 +560,7 @@ class BaseModel:
                 self.comorb_adjustment_factor = {}
                 for comorbidity in self.comorbidities:
                     if self.actual_comorb_props[comorbidity] > 0.:
-                        self.comorb_adjustment_factor[comorbidity] = self.target_comorb_props[comorbidity] \
+                        self.comorb_adjustment_factor[comorbidity] = self.target_comorb_prop_lists[comorbidity][-1] \
                                                                      / self.actual_comorb_props[comorbidity]
                     else:
                         self.comorb_adjustment_factor[comorbidity] = 1.
@@ -593,7 +600,7 @@ class BaseModel:
         def derivative_fn(y, t):
             self.time = t
             self.compartments = self.convert_list_to_compartments(y)
-            self.find_target_comorb_props()
+            self.prepare_comorb_adjustments()
             self.prepare_vars_flows()
             flow_vector = self.convert_compartments_to_list(self.flows)
             self.checks()

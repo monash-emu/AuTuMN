@@ -118,7 +118,6 @@ class ConsolidatedModel(BaseModel):
         self.find_intervention_startdates()
         if self.eco_drives_epi:
             self.distribute_funding_across_years()
-        self.target_comorb_props = {}
 
     def define_model_structure(self):
 
@@ -322,11 +321,11 @@ class ConsolidatedModel(BaseModel):
             self.vars['births_unvac' + comorbidity] = \
                 (1. - prop_vacc) \
                 * self.vars['births_total'] \
-                * self.target_comorb_props[comorbidity]
+                * self.target_comorb_prop_lists[comorbidity][-1]
             self.vars['births_vac' + comorbidity] = \
                 prop_vacc \
                 * self.vars['births_total'] \
-                * self.target_comorb_props[comorbidity]
+                * self.target_comorb_prop_lists[comorbidity][-1]
 
     def calculate_force_infection_vars(self):
 

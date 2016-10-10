@@ -1243,6 +1243,8 @@ class Project:
             png = os.path.join(self.out_dir_project, self.country + '_flow_diagram' + '.png')
             self.model_runner.model_dict['baseline'].make_flow_diagram(png)
 
+        # self.plot_comorb_checks()
+
     def plot_outputs_against_gtb(self, outputs):
 
         """
@@ -2104,6 +2106,23 @@ class Project:
         pyplot.savefig(os.path.join(self.out_dir_project, self.country + '_totalcost' + '.png'),
                        bbox_extra_artists=(lgd,), bbox_inches='tight')
 
+    def plot_comorb_checks(self):
+
+        """
+        Plots actual comorbidity fractions against targets.
+
+        """
+
+        fig = self.set_and_update_figure()
+        ax = fig.add_axes([.1, .1, .8, .8])
+        for comorb in self.model_runner.model_dict['baseline'].comorbidities:
+            ax.plot(self.model_runner.model_dict['baseline'].times[2:],
+                    self.model_runner.model_dict['baseline'].actual_comorb_props[comorb], 'g-')
+            ax.plot(self.model_runner.model_dict['baseline'].times[1:],
+                    self.model_runner.model_dict['baseline'].target_comorb_props[comorb], 'k--')
+            ax.set_xlim([self.inputs.model_constants['recent_time'], self.inputs.model_constants['current_time']])
+        self.save_figure(fig, '_comorb_checks')
+
     def open_output_directory(self):
 
         """
@@ -2116,5 +2135,14 @@ class Project:
             os.system('start ' + ' ' + self.out_dir_project)
         elif 'Darwin' in operating_system:
             os.system('open ' + ' ' + self.out_dir_project)
+
+
+
+
+
+
+
+
+
 
 

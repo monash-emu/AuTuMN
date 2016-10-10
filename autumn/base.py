@@ -572,13 +572,16 @@ class BaseModel:
 
         """
 
-        compartments = self.convert_list_to_compartments(y)
-        for c in compartments:
-            for comorbidity in self.comorbidities:
-                if comorbidity in c:
-                    compartments[c] *= self.comorb_adjustment_factor[comorbidity]
+        if hasattr(self, 'comorb_adjustment_factor'):
+            compartments = self.convert_list_to_compartments(y)
+            for c in compartments:
+                for comorbidity in self.comorbidities:
+                    if comorbidity in c:
+                        compartments[c] *= self.comorb_adjustment_factor[comorbidity]
 
-        return self.convert_compartments_to_list(compartments)
+            return self.convert_compartments_to_list(compartments)
+        else:
+            return y
 
     def make_derivative_fn(self):
 
@@ -662,7 +665,7 @@ class BaseModel:
 
             if i_time < n_time - 1:
                 self.soln_array[i_time+1, :] = y
-                if hasattr(self, 'comorb_adjustment_factor'): y = self.adjust_compartment_size(y)
+                y = self.adjust_compartment_size(y)
 
         self.calculate_diagnostics()
         if self.run_costing:
@@ -735,7 +738,7 @@ class BaseModel:
 
             if i_time < n_time - 1:
                 self.soln_array[i_time + 1, :] = y
-                if hasattr(self, 'comorb_adjustment_factor'): y = self.adjust_compartment_size(y)
+                y = self.adjust_compartment_size(y)
 
         self.calculate_diagnostics()
         if self.run_costing:

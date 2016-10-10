@@ -41,11 +41,10 @@ class BaseModel:
         self.scaleup_fns = {}
         self.vars = {}
         self.soln_array = None
-        self.var_labels = []
+        self.var_labels = None
         self.var_array = None
         self.flow_array = None
         self.fraction_array = None
-        self.is_additional_diagnostics = False
         self.flows = {}
         self.fixed_transfer_rate_flows = []
         self.linked_transfer_rate_flows = []
@@ -67,6 +66,8 @@ class BaseModel:
         self.intervention_startdates = {}
         self.graph = None
         self.comorbidities = []
+        self.actual_comorb_props = {}
+        self.target_comorb_props = {}
 
     ##############################
     ### Time-related functions ###
@@ -517,30 +518,45 @@ class BaseModel:
         self.set_flows()
         assert self.times is not None, 'Times have not been set yet'
 
-    def assess_comorbidity_props(self):
+    def find_target_comorb_props(self):
 
         """
-        Compare the proportion of the population in a particular risk group to the target proportion.
+        Find the target and actual proportion of the population in the risk groups/comorbidities being run in the model.
 
         """
 
-        # Find the actual proportions in each comorbidity stratum
-        population = sum(self.compartments.values())
-        self.actual_comorb_props = {}
-        for comorbidity in self.comorbidities:
-            self.actual_comorb_props[comorbidity] = 0.
-            for c in self.compartments:
-                if comorbidity in c:
-                    self.actual_comorb_props[comorbidity] += self.compartments[c] / population
+        # Find the target proportions for each comorbidity stratum
+        if len(self.comorbidities) > 1:
+            self.target_comorb_props['_nocomorb'] = 1.
+            for comorbidity in self.comorbidities:
+                if comorbidity != '_nocomorb':
+                    self.target_comorb_props[comorbidity] \
+                        = self.get_constant_or_variable_param('comorb_prop' + comorbidity)
+                    self.target_comorb_props['_nocomorb'] \
+                        -= self.target_comorb_props[comorbidity]
+        else:
+            self.target_comorb_props[''] = 1.
 
-        # Find the scaling factor for the risk group in question
-        self.comorb_adjustment_factor = {}
-        for comorbidity in self.comorbidities:
-            if self.actual_comorb_props[comorbidity] > 0.:
-                self.comorb_adjustment_factor[comorbidity] = self.target_comorb_props[comorbidity] \
-                                                             / self.actual_comorb_props[comorbidity]
-            else:
-                self.comorb_adjustment_factor[comorbidity] = 1.
+            # If integration has started properly
+            if self.compartments:
+
+                # Find the actual proportions in each comorbidity stratum
+                population = sum(self.compartments.values())
+                self.actual_comorb_props = {}
+                for comorbidity in self.comorbidities:
+                    self.actual_comorb_props[comorbidity] = 0.
+                    for c in self.compartments:
+                        if comorbidity in c:
+                            self.actual_comorb_props[comorbidity] += self.compartments[c] / population
+
+                # Find the scaling factor for the risk group in question
+                self.comorb_adjustment_factor = {}
+                for comorbidity in self.comorbidities:
+                    if self.actual_comorb_props[comorbidity] > 0.:
+                        self.comorb_adjustment_factor[comorbidity] = self.target_comorb_props[comorbidity] \
+                                                                     / self.actual_comorb_props[comorbidity]
+                    else:
+                        self.comorb_adjustment_factor[comorbidity] = 1.
 
     def adjust_compartment_size(self, y):
 
@@ -575,7 +591,6 @@ class BaseModel:
             self.time = t
             self.compartments = self.convert_list_to_compartments(y)
             self.find_target_comorb_props()
-            if len(self.comorbidities) > 1 and self.compartments: self.assess_comorbidity_props()
             self.prepare_vars_flows()
             flow_vector = self.convert_compartments_to_list(self.flows)
             self.checks()
@@ -590,54 +605,11 @@ class BaseModel:
 
         """
 
-
         dt_max = 2.
         if self.gui_inputs['integration_method'] == 'Explicit':
             self.integrate_explicit(dt_max)
-        elif self.gui_inputs['integration_method'] == 'Scipy':
-            self.integrate_scipy(dt_max)
         elif self.gui_inputs['integration_method'] == 'Runge Kutta':
             self.integrate_runge_kutta(dt_max)
-
-    def integrate_scipy(self, dt_max=0.05):
-
-        """
-        Uses Adams method coded in the LSODA Fortran package. This method is programmed to "slow down" when a tricky
-        point is encountered. Then we need to allow for a high maximal number of iterations (mxstep) so that the
-        algorithm does not get stuck.
-
-        Input:
-            min_dt: represents the time step for calculation points. The attribute self.times will also be used to make sure
-            that a solution is affected to the time points known by the model
-
-        """
-
-        self.init_run()
-        y = self.get_init_list()
-        derivative = self.make_derivative_fn()
-
-        # All calculation times and list of corresponding indices
-        time = self.times[0]
-        tt = [time]
-        tt_record = [0]
-
-        i_tt = 0
-        for i_time, new_time in enumerate(self.times):
-            while time < new_time:
-                time += dt_max
-                if time > new_time:
-                    time = new_time
-                i_tt += 1
-                tt.append(time)
-                if time == new_time:
-                    tt_record.append(i_tt)
-
-        sol = odeint(derivative, y, tt, mxstep=int(5e6))
-        self.soln_array = sol[tt_record, :]
-
-        self.calculate_diagnostics()
-        if self.run_costing:
-            self.calculate_economics_diagnostics()
 
     def integrate_explicit(self, dt_max=0.05):
 

@@ -1243,7 +1243,10 @@ class Project:
             png = os.path.join(self.out_dir_project, self.country + '_flow_diagram' + '.png')
             self.model_runner.model_dict['baseline'].make_flow_diagram(png)
 
-        # self.plot_comorb_checks()
+        # Plot comorbidity proportions
+        if self.gui_inputs['output_plot_comorbidity_checks'] \
+                and len(self.model_runner.model_dict['baseline'].comorbidities) > 1:
+            self.plot_comorb_checks()
 
     def plot_outputs_against_gtb(self, outputs):
 
@@ -2113,14 +2116,25 @@ class Project:
 
         """
 
+        # Initial bits
         fig = self.set_and_update_figure()
-        ax = fig.add_axes([.1, .1, .8, .8])
+        ax = self.make_single_axis(fig)
+
+        # Plotting
         for comorb in self.model_runner.model_dict['baseline'].comorbidities:
             ax.plot(self.model_runner.model_dict['baseline'].times[2:],
                     self.model_runner.model_dict['baseline'].actual_comorb_props[comorb], 'g-')
             ax.plot(self.model_runner.model_dict['baseline'].times[1:],
                     self.model_runner.model_dict['baseline'].target_comorb_props[comorb], 'k--')
             ax.set_xlim([self.inputs.model_constants['recent_time'], self.inputs.model_constants['current_time']])
+
+        # End bits
+        fig.suptitle('Population by comorbidity', fontsize=self.suptitle_size)
+        ax.set_xlabel('Year', fontsize=get_nice_font_size([1, 1]), labelpad=1)
+        ax.set_ylabel('Proportion', fontsize=get_nice_font_size([1, 1]), labelpad=1)
+        for axis_to_change in [ax.xaxis, ax.yaxis]:
+            for tick in axis_to_change.get_major_ticks():
+                tick.label.set_fontsize(get_nice_font_size([1, 1]))
         self.save_figure(fig, '_comorb_checks')
 
     def open_output_directory(self):

@@ -519,15 +519,13 @@ class BaseModel:
     def adjust_comorbidity_sizes(self):
 
         # Find the actual proportions in each comorbidity stratum
+        population = sum(self.compartments.values())
         self.actual_comorb_props = {}
         for comorbidity in self.comorbidities:
             self.actual_comorb_props[comorbidity] = 0.
             for c in self.compartments:
                 if comorbidity in c:
-                    self.actual_comorb_props[comorbidity] += self.compartments[c]
-        population = sum(self.actual_comorb_props.values())
-        for comorbidity in self.comorbidities:
-            self.actual_comorb_props[comorbidity] /= population
+                    self.actual_comorb_props[comorbidity] += self.compartments[c] / population
 
         # Find the value that each population stratum should be multiplied by
         self.comorb_adjustment_factor = {}
@@ -538,11 +536,20 @@ class BaseModel:
             else:
                 self.comorb_adjustment_factor[comorbidity] = 1.
 
+    def adjust_compartment_size(self, y):
+
+        compartments = self.convert_list_to_compartments(y)
+        print()
+
         # Now adjust the compartment sizes according to these factors - this code isn't working yet *****
-        for c in self.compartments:
+        for c in compartments:
             for comorbidity in self.comorbidities:
                 if comorbidity in c:
-                    self.compartments[c] = self.compartments[c] * self.comorb_adjustment_factor[comorbidity]
+                    compartments[c] = compartments[c] * self.comorb_adjustment_factor[comorbidity]
+
+        compartment_list = self.convert_compartments_to_list(compartments)
+
+        return compartment_list
 
     def make_derivative_fn(self):
 
@@ -555,7 +562,7 @@ class BaseModel:
             self.time = t
             self.compartments = self.convert_list_to_compartments(y)
             self.find_target_comorb_props()
-            if len(self.comorbidities) > 1: self.adjust_comorbidity_sizes()
+            if len(self.comorbidities) > 1 and self.compartments: self.adjust_comorbidity_sizes()
             self.prepare_vars_flows()
             flow_vector = self.convert_compartments_to_list(self.flows)
             self.checks()
@@ -670,7 +677,7 @@ class BaseModel:
 
             if i_time < n_time - 1:
                 self.soln_array[i_time+1, :] = y
-            ### Here
+                if hasattr(self, 'comorb_adjustment_factor'): y = self.adjust_compartment_size(y)
 
         self.calculate_diagnostics()
         if self.run_costing:
@@ -743,7 +750,7 @@ class BaseModel:
 
             if i_time < n_time - 1:
                 self.soln_array[i_time + 1, :] = y
-                ### Here
+                if hasattr(self, 'comorb_adjustment_factor'): y = self.adjust_compartment_size(y)
 
         self.calculate_diagnostics()
         if self.run_costing:

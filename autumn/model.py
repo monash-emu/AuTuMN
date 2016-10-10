@@ -317,6 +317,7 @@ class ConsolidatedModel(BaseModel):
 
         """
         Calculate birth rates into vaccinated and unvaccinated compartments
+
         """
 
         # Get the parameters depending on whether constant or time variant

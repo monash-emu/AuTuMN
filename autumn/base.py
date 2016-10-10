@@ -516,7 +516,12 @@ class BaseModel:
         self.set_flows()
         assert self.times is not None, 'Times have not been set yet'
 
-    def adjust_comorbidity_sizes(self):
+    def assess_comorbidity_props(self):
+
+        """
+        Compare the proportion of the population in a particular risk group to the target proportion.
+
+        """
 
         # Find the actual proportions in each comorbidity stratum
         population = sum(self.compartments.values())
@@ -527,7 +532,7 @@ class BaseModel:
                 if comorbidity in c:
                     self.actual_comorb_props[comorbidity] += self.compartments[c] / population
 
-        # Find the value that each population stratum should be multiplied by
+        # Find the scaling factor for the risk group in question
         self.comorb_adjustment_factor = {}
         for comorbidity in self.comorbidities:
             if self.actual_comorb_props[comorbidity] > 0.:
@@ -538,18 +543,25 @@ class BaseModel:
 
     def adjust_compartment_size(self, y):
 
-        compartments = self.convert_list_to_compartments(y)
-        print()
+        """
+        Adjusts the proportions of the population in each comorbidity group according to the calculations
+        made in assess_comorbidity_props above.
 
-        # Now adjust the compartment sizes according to these factors - this code isn't working yet *****
+        Args:
+            y: The original compartment vector y to be adjusted.
+
+        Returns:
+            The adjusted compartment vector (y).
+
+        """
+
+        compartments = self.convert_list_to_compartments(y)
         for c in compartments:
             for comorbidity in self.comorbidities:
                 if comorbidity in c:
-                    compartments[c] = compartments[c] * self.comorb_adjustment_factor[comorbidity]
+                    compartments[c] *= self.comorb_adjustment_factor[comorbidity]
 
-        compartment_list = self.convert_compartments_to_list(compartments)
-
-        return compartment_list
+        return self.convert_compartments_to_list(compartments)
 
     def make_derivative_fn(self):
 
@@ -562,7 +574,7 @@ class BaseModel:
             self.time = t
             self.compartments = self.convert_list_to_compartments(y)
             self.find_target_comorb_props()
-            if len(self.comorbidities) > 1 and self.compartments: self.adjust_comorbidity_sizes()
+            if len(self.comorbidities) > 1 and self.compartments: self.assess_comorbidity_props()
             self.prepare_vars_flows()
             flow_vector = self.convert_compartments_to_list(self.flows)
             self.checks()

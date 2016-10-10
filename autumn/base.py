@@ -537,11 +537,6 @@ class BaseModel:
                         self.get_constant_or_variable_param('comorb_prop' + comorbidity))
                     self.target_comorb_props['_nocomorb'][-1] \
                         -= self.target_comorb_props[comorbidity][-1]
-        else:
-            if '' not in self.target_comorb_props:
-                self.target_comorb_props[''] = []
-            self.target_comorb_props[''].append(1.)
-
             # If integration has started properly
             if self.compartments:
 
@@ -563,6 +558,11 @@ class BaseModel:
                                                                      / self.actual_comorb_props[comorbidity][-1]
                     else:
                         self.comorb_adjustment_factor[comorbidity] = 1.
+        else:
+            # Otherwise, it's just a list of ones
+            if '' not in self.target_comorb_props:
+                self.target_comorb_props[''] = []
+            self.target_comorb_props[''].append(1.)
 
     def adjust_compartment_size(self, y):
 

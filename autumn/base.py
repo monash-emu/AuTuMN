@@ -539,10 +539,10 @@ class BaseModel:
                 self.comorb_adjustment_factor[comorbidity] = 1.
 
         # Now adjust the compartment sizes according to these factors - this code isn't working yet *****
-        # for c in self.compartments:
-        #     for comorbidity in self.comorbidities:
-        #         if comorbidity in c:
-        #             self.compartments[c] = self.compartments[c] * self.comorb_adjustment_factor[comorbidity]
+        for c in self.compartments:
+            for comorbidity in self.comorbidities:
+                if comorbidity in c:
+                    self.compartments[c] = self.compartments[c] * self.comorb_adjustment_factor[comorbidity]
 
     def make_derivative_fn(self):
 
@@ -554,7 +554,8 @@ class BaseModel:
         def derivative_fn(y, t):
             self.time = t
             self.compartments = self.convert_list_to_compartments(y)
-            # if len(self.comorbidities) > 1: self.adjust_comorbidity_sizes()
+            self.find_target_comorb_props()
+            if len(self.comorbidities) > 1: self.adjust_comorbidity_sizes()
             self.prepare_vars_flows()
             flow_vector = self.convert_compartments_to_list(self.flows)
             self.checks()
@@ -669,6 +670,7 @@ class BaseModel:
 
             if i_time < n_time - 1:
                 self.soln_array[i_time+1, :] = y
+            ### Here
 
         self.calculate_diagnostics()
         if self.run_costing:
@@ -741,6 +743,7 @@ class BaseModel:
 
             if i_time < n_time - 1:
                 self.soln_array[i_time + 1, :] = y
+                ### Here
 
         self.calculate_diagnostics()
         if self.run_costing:

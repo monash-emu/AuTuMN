@@ -321,11 +321,11 @@ class ConsolidatedModel(BaseModel):
             self.vars['births_unvac' + comorbidity] = \
                 (1. - prop_vacc) \
                 * self.vars['births_total'] \
-                * self.target_comorb_prop_lists[comorbidity][-1]
+                * self.target_comorb_props[comorbidity][-1]
             self.vars['births_vac' + comorbidity] = \
                 prop_vacc \
                 * self.vars['births_total'] \
-                * self.target_comorb_prop_lists[comorbidity][-1]
+                * self.target_comorb_props[comorbidity][-1]
 
     def calculate_force_infection_vars(self):
 

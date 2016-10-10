@@ -67,9 +67,7 @@ class BaseModel:
         self.graph = None
         self.comorbidities = []
         self.actual_comorb_props = {}
-        self.actual_comorb_prop_lists = {}
         self.target_comorb_props = {}
-        self.target_comorb_prop_lists = {}
 
     ##############################
     ### Time-related functions ###
@@ -530,38 +528,39 @@ class BaseModel:
         # Find the target proportions for each comorbidity stratum
         if len(self.comorbidities) > 1:
             for comorbidity in self.comorbidities:
-                if comorbidity not in self.target_comorb_prop_lists:
-                    self.target_comorb_prop_lists[comorbidity] = []
-            self.target_comorb_prop_lists['_nocomorb'].append(1.)
+                if comorbidity not in self.target_comorb_props:
+                    self.target_comorb_props[comorbidity] = []
+            self.target_comorb_props['_nocomorb'].append(1.)
             for comorbidity in self.comorbidities:
                 if comorbidity != '_nocomorb':
-                    self.target_comorb_prop_lists[comorbidity].append(
+                    self.target_comorb_props[comorbidity].append(
                         self.get_constant_or_variable_param('comorb_prop' + comorbidity))
-                    self.target_comorb_prop_lists['_nocomorb'][-1] \
-                        -= self.target_comorb_prop_lists[comorbidity][-1]
+                    self.target_comorb_props['_nocomorb'][-1] \
+                        -= self.target_comorb_props[comorbidity][-1]
         else:
-            if '' not in self.target_comorb_prop_lists:
-                self.target_comorb_prop_lists[''] = []
-            self.target_comorb_prop_lists[''].append(1.)
+            if '' not in self.target_comorb_props:
+                self.target_comorb_props[''] = []
+            self.target_comorb_props[''].append(1.)
 
             # If integration has started properly
             if self.compartments:
 
                 # Find the actual proportions in each comorbidity stratum
                 population = sum(self.compartments.values())
-                self.actual_comorb_props = {}
                 for comorbidity in self.comorbidities:
-                    self.actual_comorb_props[comorbidity] = 0.
+                    if comorbidity not in self.actual_comorb_props:
+                        self.actual_comorb_props[comorbidity] = []
+                    self.actual_comorb_props[comorbidity].append(0.)
                     for c in self.compartments:
                         if comorbidity in c:
-                            self.actual_comorb_props[comorbidity] += self.compartments[c] / population
+                            self.actual_comorb_props[comorbidity][-1] += self.compartments[c] / population
 
                 # Find the scaling factor for the risk group in question
                 self.comorb_adjustment_factor = {}
                 for comorbidity in self.comorbidities:
-                    if self.actual_comorb_props[comorbidity] > 0.:
-                        self.comorb_adjustment_factor[comorbidity] = self.target_comorb_prop_lists[comorbidity][-1] \
-                                                                     / self.actual_comorb_props[comorbidity]
+                    if self.actual_comorb_props[comorbidity][-1] > 0.:
+                        self.comorb_adjustment_factor[comorbidity] = self.target_comorb_props[comorbidity][-1] \
+                                                                     / self.actual_comorb_props[comorbidity][-1]
                     else:
                         self.comorb_adjustment_factor[comorbidity] = 1.
 

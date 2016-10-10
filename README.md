@@ -8,15 +8,14 @@ pluggable API to other system. Applied to Tuberculosis.
 # TODO
 - philosophically, "consolidate" code to ensure all the structures are as robust, consistent and final as possible,
     - including:
-        - convert cost code to being consistent with epi data structures
         - remove unnecessary calculations during integration - including fraction calculations
-        - discuss optimal GUI with Eike - to make sure we're not heading in the wrong direction using Tkinter
-        - discuss optimisation with Eike - to make sure we can iron out Romain's bugs
+        - consolidate calculation and collation of model outputs to occur mostly towards the end of model_runner
+            execution (rather than at the start of outputs execution) - meaning that the outputs module would be
+            just for producing output structure from alreday interpreted models
 - add epidemiological functionality, including:
-    - better structure for maintaining comorbidity (i.e. risk group) populations at target values
     - get second strain incorporated properly (for Philippines application)
     - implement HIV with appropriate parameters
     - (new/retreatment stratification - possibly one day)
-
+- debug the problem Emma found with storage of scenarios after uncertainty
 
 

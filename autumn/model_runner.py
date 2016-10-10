@@ -70,8 +70,8 @@ class ModelRunner:
         self.results['scenarios'] = {}
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
-        self.optimization = False
-        self.total_funding = 1e7
+        self.optimization = True
+        self.total_funding = 6.6e6 # if None, will consider equivalent funding as baseline
         self.acceptance_dict = {}
         self.rejection_dict = {}
         self.optimal_allocation = {}
@@ -134,7 +134,28 @@ class ModelRunner:
                 self.add_comment_to_gui_window('Uncertainty results saved to disc')
 
         if self.optimization:
+            if self.total_funding is None:
+                start_cost_indice = tool_kit.find_first_list_element_at_least_value(self.model_dict['baseline'].cost_times, \
+                                                                                    self.model_dict['baseline'].inputs.model_constants['scenario_start_time'])
+                self.total_funding = numpy.sum(self.model_dict['baseline'].costs[start_cost_indice:, :])/ \
+                                     (self.model_dict['baseline'].inputs.model_constants['report_end_time'] - \
+                                      self.model_dict['baseline'].inputs.model_constants['scenario_start_time'])
+
             self.run_optimization()
+            self.model_dict['optimized'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
+            start_time_index = \
+                self.model_dict['baseline'].find_time_index(self.inputs.model_constants['recent_time'])
+            self.model_dict['optimized'].start_time = \
+                self.model_dict['baseline'].times[start_time_index]
+            self.model_dict['optimized'].loaded_compartments = \
+                self.model_dict['baseline'].load_state(start_time_index)
+            self.model_dict['optimized'].eco_drives_epi = True
+            for intervention in self.model_dict['baseline'].interventions_to_cost:
+                self.model_dict['optimized'].available_funding[intervention] = self.optimal_allocation[intervention] * \
+                                                                               self.total_funding
+            self.model_dict['optimized'].distribute_funding_across_years()
+            self.model_dict['optimized'].integrate()
+            self.store_scenario_results('optimized')
 
     def store_scenario_results(self, scenario):
 

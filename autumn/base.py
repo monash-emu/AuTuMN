@@ -29,19 +29,19 @@ class BaseModel:
     def __init__(self):
 
         self.inputs = None
-        self.gui_inputs = None
+        self.gui_inputs = {}
         self.labels = []
         self.init_compartments = {}
-        self.compartments = None
+        self.compartments = {}
         self.params = {}
-        self.times = None
-        self.time = None
-        self.start_time = None
+        self.times = []
+        self.time = 0.
+        self.start_time = 0.
         self.cost_times = []
         self.scaleup_fns = {}
         self.vars = {}
         self.soln_array = None
-        self.var_labels = None
+        self.var_labels = []
         self.var_array = None
         self.flow_array = None
         self.fraction_array = None
@@ -53,7 +53,7 @@ class BaseModel:
         self.var_transfer_rate_flows = []
         self.var_entry_rate_flows = []
         self.var_infection_death_rate_flows = []
-        self.agegroups = None
+        self.agegroups = []
         self.costs = None
         self.intervention = None
         self.run_costing = True
@@ -66,6 +66,7 @@ class BaseModel:
         self.startups_apply = {}
         self.intervention_startdates = {}
         self.graph = None
+        self.comorbidities = []
 
     ##############################
     ### Time-related functions ###

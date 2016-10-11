@@ -197,52 +197,44 @@ class ModelRunner:
                                          self.outputs[model]['incidence'])
             for from_label, to_label, rate in self.model_dict[model].fixed_transfer_rate_flows:
                 if 'latent' in from_label and 'active' in to_label:
-                    increment \
-                        = self.model_dict[model].get_compartment_soln(from_label) \
-                          * rate \
-                          / self.outputs[model]['population'] \
-                          * 1e5
-                    self.outputs[model]['incidence']\
-                        = [sum(x) for x in zip(self.outputs[model]['incidence'], increment)]
+                    self.outputs[model]['incidence'] \
+                        = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                                         * rate \
+                                         / self.outputs[model]['population'] \
+                                         * 1e5,
+                                         self.outputs[model]['incidence'])
 
             # Notifications
             for from_label, to_label, rate in self.model_dict[model].var_transfer_rate_flows:
                 if 'active' in from_label and 'detect' in to_label:
-                    increment \
-                        = self.model_dict[model].get_compartment_soln(from_label) \
-                          * self.model_dict[model].get_var_soln(rate)
                     self.outputs[model]['notifications'] \
-                        = [sum(x) for x in zip(self.outputs[model]['notifications'], increment)]
+                        = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                                         * self.model_dict[model].get_var_soln(rate),
+                                         self.outputs[model]['notifications'])
 
             # Mortality
             for from_label, rate in self.model_dict[model].fixed_infection_death_rate_flows:
                 # Under-reporting factor included for those deaths not occurring on treatment
-                increment \
-                    = self.model_dict[model].get_compartment_soln(from_label) \
-                      * rate \
-                      * self.model_dict[model].params['program_prop_death_reporting']\
-                      / self.outputs[model]['population'] \
-                      * 1e5
                 self.outputs[model]['mortality'] \
-                    = [sum(x) for x in zip(self.outputs[model]['mortality'], increment)]
+                    = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                                     * rate \
+                                     * self.model_dict[model].params['program_prop_death_reporting'] \
+                                     / self.outputs[model]['population'] \
+                                     * 1e5, self.outputs[model]['mortality'])
             for from_label, rate in self.model_dict[model].var_infection_death_rate_flows:
-                increment \
-                    = self.model_dict[model].get_compartment_soln(from_label) \
-                      * self.model_dict[model].get_var_soln(rate) \
-                      / self.outputs[model]['population'] \
-                      * 1e5
                 self.outputs[model]['mortality'] \
-                    = [sum(x) for x in zip(self.outputs[model]['mortality'], increment)]
+                    = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                                     * self.model_dict[model].get_var_soln(rate) \
+                                     / self.outputs[model]['population'] \
+                                     * 1e5, self.outputs[model]['mortality'])
 
             # Prevalence
             for label in self.model_dict[model].labels:
                 if 'susceptible' not in label and 'latent' not in label:
-                    increment \
-                        = self.model_dict[model].get_compartment_soln(label) \
-                           / self.outputs[model]['population'] \
-                           * 1e5
                     self.outputs[model]['prevalence'] \
-                        = [sum(x) for x in zip(self.outputs[model]['prevalence'], increment)]
+                        = increment_list(self.model_dict[model].get_compartment_soln(label) \
+                                         / self.outputs[model]['population'] \
+                                         * 1e5, self.outputs[model]['prevalence'])
 
             # Outputs by age group
             if len(self.model_dict[model].agegroups) > 1:
@@ -252,64 +244,56 @@ class ModelRunner:
                     self.outputs[model]['population' + agegroup] = [0.] * len(self.model_dict[model].times)
                     for compartment in self.model_dict[model].compartments:
                         if agegroup in compartment:
-                            increment \
-                                = self.model_dict[model].get_compartment_soln(compartment)
                             self.outputs[model]['population' + agegroup] \
-                                = [sum(x) for x in zip(self.outputs[model]['population' + agegroup], increment)]
+                                = increment_list(self.model_dict[model].get_compartment_soln(compartment),
+                                                 self.outputs[model]['population' + agegroup])
 
                     # Incidence
                     for from_label, to_label, rate in self.model_dict[model].var_transfer_rate_flows:
                         if 'latent' in from_label and 'active' in to_label and agegroup in label:
-                            increment \
-                                = self.model_dict[model].get_compartment_soln(from_label) \
-                                  * self.model_dict[model].get_var_soln(rate) \
-                                  / self.outputs[model]['population' + agegroup] \
-                                  * 1e5
                             self.outputs[model]['incidence' + agegroup] \
-                                = [sum(x) for x in zip(self.outputs[model]['incidence' + agegroup], increment)]
+                                = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                                                 * self.model_dict[model].get_var_soln(rate) \
+                                                 / self.outputs[model]['population' + agegroup] \
+                                                 * 1e5,
+                                                 self.outputs[model]['incidence' + agegroup])
                     for from_label, to_label, rate in self.model_dict[model].fixed_transfer_rate_flows:
                         if 'latent' in from_label and 'active' in to_label and agegroup in label:
-                            increment \
-                                = self.model_dict[model].get_compartment_soln(from_label) \
-                                  * rate \
-                                  / self.outputs[model]['population' + agegroup] \
-                                  * 1e5
                             self.outputs[model]['incidence' + agegroup] \
-                                = [sum(x) for x in zip(self.outputs[model]['incidence' + agegroup], increment)]
+                                = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                                                 * rate \
+                                                 / self.outputs[model]['population' + agegroup] \
+                                                 * 1e5,
+                                                 self.outputs[model]['incidence' + agegroup])\
 
                     # Mortality
                     for from_label, rate in self.model_dict[model].fixed_infection_death_rate_flows:
                         if agegroup in from_label:
                             # Under-reporting factor included for those deaths not occurring on treatment
-                            increment \
-                                = self.model_dict[model].get_compartment_soln(from_label) \
-                                  * rate \
-                                  * self.model_dict[model].params['program_prop_death_reporting'] \
-                                  * self.outputs[model]['population' + agegroup] \
-                                  * 1e5
                             self.outputs[model]['mortality' + agegroup] \
-                                = [sum(x) for x in zip(self.outputs[model]['mortality' + agegroup], increment)]
+                                = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                                                 * rate \
+                                                 * self.model_dict[model].params['program_prop_death_reporting'] \
+                                                 * self.outputs[model]['population' + agegroup] \
+                                                 * 1e5,
+                                                 self.outputs[model]['mortality' + agegroup])
                     for from_label, rate in self.model_dict[model].var_infection_death_rate_flows:
                         if agegroup in from_label:
-                            increment \
-                                = self.model_dict[model].get_compartment_soln(from_label) \
-                                  * self.model_dict[model].get_var_soln(rate) \
-                                  / self.outputs[model]['population' + agegroup] \
-                                  * 1e5
                             self.outputs[model]['mortality' + agegroup] \
-                                = [sum(x) for x in zip(self.outputs[model]['mortality' + agegroup], increment)]
+                                = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                                                 * self.model_dict[model].get_var_soln(rate) \
+                                                 / self.outputs[model]['population' + agegroup] \
+                                                 * 1e5,
+                                                 self.outputs[model]['mortality' + agegroup])
 
                     # Prevalence
                     self.outputs[model]['prevalence' + agegroup] = [0.] * len(self.model_dict[model].times)
                     for label in self.model_dict[model].labels:
                         if 'susceptible' not in label and 'latent' not in label and agegroup in label:
-                            increment \
-                                = self.model_dict[model].get_compartment_soln(label) \
-                                  / self.outputs[model]['population' + agegroup] \
-                                  * 1e5
                             self.outputs[model]['prevalence' + agegroup] \
-                                = [sum(x) for x in zip(self.outputs[model]['prevalence' + agegroup],
-                                                       increment)]
+                                = increment_list(self.model_dict[model].get_compartment_soln(label) \
+                                                 / self.outputs[model]['population' + agegroup] \
+                                                 * 1e5, self.outputs[model]['prevalence' + agegroup])
 
             # Summing MDR and XDR to get the total of all MDRs
             # if len(self.model_dict[model].strains) > 1:

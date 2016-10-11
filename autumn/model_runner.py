@@ -176,12 +176,13 @@ class ModelRunner:
 
         for model in self.model_dict:
             self.outputs[model] = {}
+            self.outputs[model]['times'] = self.model_dict[model].times
 
             # Unstratified outputs
 
             # Initialise lists
             for output in outputs_to_analyse:
-                self.outputs[model][output] = [0.] * len(self.model_dict[model].times)
+                self.outputs[model][output] = [0.] * len(self.outputs[model]['times'])
 
             # Population
             for compartment in self.model_dict[model].compartments:
@@ -247,7 +248,7 @@ class ModelRunner:
 
                         # Initialise lists
                         for output in outputs_to_analyse:
-                            self.outputs[model][output + stratum] = [0.] * len(self.model_dict[model].times)
+                            self.outputs[model][output + stratum] = [0.] * len(self.outputs[model]['times'])
 
                         # Population
                         for compartment in self.model_dict[model].compartments:

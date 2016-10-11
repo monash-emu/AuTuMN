@@ -1367,6 +1367,7 @@ class Project:
 
             # Set vertical plot axis dimensions
             ax.set_ylim((0., max_output * 1.1))
+            ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
 
             # Set x-ticks
             ax.set_xticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))

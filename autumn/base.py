@@ -1051,6 +1051,8 @@ class StratifiedModel(BaseModel):
 
         """
 
+        comorb_adjustment_factor = {}
+
         # Find the target proportions for each comorbidity stratum
         if len(self.comorbidities) > 1:
             for comorbidity in self.comorbidities:
@@ -1077,25 +1079,24 @@ class StratifiedModel(BaseModel):
                             self.actual_comorb_props[comorbidity][-1] += self.compartments[c] / population
 
                 # Find the scaling factor for the risk group in question
-                self.comorb_adjustment_factor = {}
                 for comorbidity in self.comorbidities:
                     if self.actual_comorb_props[comorbidity][-1] > 0.:
-                        self.comorb_adjustment_factor[comorbidity] = self.target_comorb_props[comorbidity][-1] \
+                        comorb_adjustment_factor[comorbidity] = self.target_comorb_props[comorbidity][-1] \
                                                                      / self.actual_comorb_props[comorbidity][-1]
                     else:
-                        self.comorb_adjustment_factor[comorbidity] = 1.
+                        comorb_adjustment_factor[comorbidity] = 1.
         else:
             # Otherwise, it's just a list of ones
             if '' not in self.target_comorb_props:
                 self.target_comorb_props[''] = []
             self.target_comorb_props[''].append(1.)
 
-        if hasattr(self, 'comorb_adjustment_factor'):
+        if comorb_adjustment_factor != {}:
             compartments = self.convert_list_to_compartments(y)
             for c in compartments:
                 for comorbidity in self.comorbidities:
                     if comorbidity in c:
-                        compartments[c] *= self.comorb_adjustment_factor[comorbidity]
+                        compartments[c] *= comorb_adjustment_factor[comorbidity]
 
             return self.convert_compartments_to_list(compartments)
         else:

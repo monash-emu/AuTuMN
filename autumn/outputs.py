@@ -1312,15 +1312,17 @@ class Project:
 
                 if not self.gui_inputs['output_uncertainty']:
 
-                    modelled_time, modelled_values = \
-                        tool_kit.get_truncated_lists_from_dict(self.full_output_dict[scenario][output], start_time)
+                    # modelled_time, modelled_values = \
+                    #     tool_kit.get_truncated_lists_from_dict(self.full_output_dict[scenario][output], start_time)
+                    modelled_time = self.model_runner.model_dict[scenario].times
+                    modelled_values = self.model_runner.outputs[scenario][output]
 
                     # Update the maximum plot value if it's greater than the GTB data
                     max_output = max(modelled_values + [max_output])
 
                     # Plot the modelled data
                     ax.plot(
-                    modelled_time,
+                        modelled_time,
                         modelled_values,
                         color=self.output_colours[scenario][1],
                         linestyle=self.output_colours[scenario][0],

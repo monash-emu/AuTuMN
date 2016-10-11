@@ -75,10 +75,7 @@ class ModelRunner:
         self.acceptance_dict = {}
         self.rejection_dict = {}
         self.optimal_allocation = {}
-        self.rate_incidence = {}
-        self.rate_mortality = {}
-        self.rate_notifications = {}
-        self.prevalence = {}
+        self.outputs = {}
 
     def master_runner(self):
 
@@ -174,29 +171,29 @@ class ModelRunner:
         # By strain
         for model in self.model_dict:
 
-            self.rate_incidence[model] = {}
-            self.rate_mortality[model] = {}
-            self.rate_notifications[model] = {}
-            self.prevalence[model] = {}
+            self.outputs[model] = {}
 
             for strain in self.model_dict[model].strains:
 
+                self.outputs[model][strain] = {}
+
                 # Initialise scalars
-                self.rate_incidence[model][strain] = 0.
-                self.rate_mortality[model][strain] = 0.
-                self.rate_notifications[model][strain] = 0.
+                self.outputs[model][strain]['rate_incidence'] = 0.
+                self.outputs[model][strain]['rate_mortality'] = 0.
+                self.outputs[model][strain]['number_notifications'] = 0.
+                self.outputs[model][strain]['prevalence'] = [0.] * len(self.model_dict[model].times)
 
                 # Incidence
                 for from_label, to_label, rate in self.model_dict[model].var_transfer_rate_flows:
                     if 'latent' in from_label and 'active' in to_label and strain in to_label:
-                        self.rate_incidence[model][strain] \
+                        self.outputs[model][strain]['rate_incidence'] \
                             += self.model_dict[model].get_compartment_soln(from_label) \
                                * self.model_dict[model].get_var_soln(rate) \
                                / self.model_dict[model].get_var_soln('population') \
                                * 1e5
                 for from_label, to_label, rate in self.model_dict[model].fixed_transfer_rate_flows:
                     if 'latent' in from_label and 'active' in to_label and strain in to_label:
-                        self.rate_incidence[model][strain] \
+                        self.outputs[model][strain]['rate_incidence'] \
                             += self.model_dict[model].get_compartment_soln(from_label) \
                                * rate \
                                / self.model_dict[model].get_var_soln('population') \
@@ -205,7 +202,7 @@ class ModelRunner:
                 # Notifications
                 for from_label, to_label, rate in self.model_dict[model].var_transfer_rate_flows:
                     if 'active' in from_label and 'detect' in to_label and strain in from_label:
-                        self.rate_notifications[model][strain] \
+                        self.outputs[model][strain]['number_notifications'] \
                             += self.model_dict[model].get_compartment_soln(from_label) \
                                * self.model_dict[model].get_var_soln(rate)
 
@@ -213,20 +210,19 @@ class ModelRunner:
                 for from_label, rate in self.model_dict[model].fixed_infection_death_rate_flows:
                     # Under-reporting factor included for those deaths not occurring on treatment
                     if strain in from_label:
-                        self.rate_mortality[model][strain] \
+                        self.outputs[model][strain]['rate_mortality'] \
                             += self.model_dict[model].get_compartment_soln(from_label) \
                                * rate \
                                * self.model_dict[model].params['program_prop_death_reporting']
                 for from_label, rate in self.model_dict[model].var_infection_death_rate_flows:
                     if strain in from_label:
-                        self.rate_mortality[model][strain] \
+                        self.outputs[model][strain]['rate_mortality'] \
                             += self.model_dict[model].get_compartment_soln(from_label) \
                                * self.model_dict[model].get_var_soln(rate) \
                                / self.model_dict[model].get_var_soln('population') \
                                * 1e5
 
                 # Prevalence
-                self.prevalence[model][strain] = [0.] * len(self.model_dict[model].times)
                 for label in self.model_dict[model].labels:
                     if 'susceptible' not in label and \
                                     'latent' not in label and strain in label:
@@ -234,8 +230,8 @@ class ModelRunner:
                             = self.model_dict[model].get_compartment_soln(label) \
                                / self.model_dict[model].get_var_soln('population') \
                                * 1e5
-                        self.prevalence[model][strain] \
-                            = [sum(x) for x in zip(self.prevalence[model][strain], additional_prevalence)]
+                        self.outputs[model][strain]['prevalence'] \
+                            = [sum(x) for x in zip(self.outputs[model][strain]['prevalence'], additional_prevalence)]
 
             # Summing MDR and XDR to get the total of all MDRs
             # if len(self.model_dict[model].strains) > 1:

@@ -841,7 +841,7 @@ class BaseModel:
     def get_var_soln(self, label):
 
         """
-        Get the column of var_array that pertains to a particular compartment.
+        Get the column of var_array that pertains to a particular var.
 
         Args:
             label: String of the var.

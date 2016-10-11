@@ -12,6 +12,7 @@ pluggable API to other system. Applied to Tuberculosis.
         - consolidate calculation and collation of model outputs to occur mostly towards the end of model_runner
             execution (rather than at the start of outputs execution) - meaning that the outputs module would be
             just for producing output structure from alreday interpreted models
+        - ensure code runs with defaults for countries without country-specific spreadsheets
 - add epidemiological functionality, including:
     - get second strain incorporated properly (for Philippines application)
     - implement HIV with appropriate parameters

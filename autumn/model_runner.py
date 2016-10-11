@@ -45,6 +45,10 @@ def generate_candidates(n_candidates, param_ranges_unc):
     return param_candidates
 
 
+def increment_list(increment, list_to_increment):
+
+    return [sum(x) for x in zip(list_to_increment, increment)]
+
 class ModelRunner:
 
     def __init__(self, gui_inputs, runtime_outputs, figure_frame):
@@ -173,29 +177,24 @@ class ModelRunner:
             self.outputs[model] = {}
 
             # Initialise lists
-            self.outputs[model]['population'] = [0.] * len(self.model_dict[model].times)
-            self.outputs[model]['incidence'] = [0.] * len(self.model_dict[model].times)
-            self.outputs[model]['mortality'] = [0.] * len(self.model_dict[model].times)
-            self.outputs[model]['notifications'] = [0.] * len(self.model_dict[model].times)
-            self.outputs[model]['prevalence'] = [0.] * len(self.model_dict[model].times)
+            for output in ['population', 'incidence', 'mortality', 'notifications', 'prevalence']:
+                self.outputs[model][output] = [0.] * len(self.model_dict[model].times)
 
             # Population
             for compartment in self.model_dict[model].compartments:
-                increment \
-                    = self.model_dict[model].get_compartment_soln(compartment)
                 self.outputs[model]['population'] \
-                    = [sum(x) for x in zip(self.outputs[model]['population'], increment)]
+                    = increment_list(self.model_dict[model].get_compartment_soln(compartment),
+                                          self.outputs[model]['population'])
 
             # Incidence
             for from_label, to_label, rate in self.model_dict[model].var_transfer_rate_flows:
                 if 'latent' in from_label and 'active' in to_label:
-                    increment \
-                        = self.model_dict[model].get_compartment_soln(from_label) \
-                          * self.model_dict[model].get_var_soln(rate) \
-                          / self.outputs[model]['population'] \
-                          * 1e5
                     self.outputs[model]['incidence'] \
-                        = [sum(x) for x in zip(self.outputs[model]['incidence'], increment)]
+                        = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                                         * self.model_dict[model].get_var_soln(rate) \
+                                         / self.outputs[model]['population'] \
+                                         * 1e5,
+                                         self.outputs[model]['incidence'])
             for from_label, to_label, rate in self.model_dict[model].fixed_transfer_rate_flows:
                 if 'latent' in from_label and 'active' in to_label:
                     increment \

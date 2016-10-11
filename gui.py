@@ -160,7 +160,7 @@ class App:
         self.raw_outputs['fitting_method'].set('Method 5')
         self.drop_downs['country'] \
             = OptionMenu(self.frame, self.raw_outputs['country'],
-                         'Fiji', 'the Philippines', 'Bulgaria')
+                         'Fiji', 'Philippines', 'Bulgaria')
         self.drop_downs['integration_method'] \
             = OptionMenu(self.frame, self.raw_outputs['integration_method'],
                          'Runge Kutta', 'Explicit')

@@ -1962,7 +1962,7 @@ class Project:
 
                     # Find numbers or fractions in that group
                     stratum_count = self.model_runner.outputs['baseline']['population' + stratum]
-                    stratum_fraction = stratified_fraction[stratum]
+                    stratum_fraction = self.model_runner.outputs['baseline']['fraction' + stratum]
 
                     # Add group values to the upper plot range for area plot
                     for j in range(len(upper_plot_margin_count)):

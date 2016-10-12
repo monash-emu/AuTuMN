@@ -49,6 +49,12 @@ def increment_list(increment, list_to_increment):
 
     return [sum(x) for x in zip(list_to_increment, increment)]
 
+
+def elementwise_list_division(numerator, denominator):
+
+    return [n / d for n, d in zip(numerator, denominator)]
+
+
 class ModelRunner:
 
     def __init__(self, gui_inputs, runtime_outputs, figure_frame):
@@ -112,6 +118,7 @@ class ModelRunner:
 
             # New model interpretation code
             self.calculate_output_vars()
+            self.find_population_fractions()
 
         if self.gui_inputs['output_uncertainty']:
 
@@ -318,6 +325,22 @@ class ModelRunner:
             #     Convert to percentage
                 # self.vars['proportion_mdr'] \
                 #     = self.vars['all_mdr_strains'] / self.vars['incidence'] * 1E2
+
+    def find_population_fractions(self):
+
+        """
+        Find the proportion of the population in various stratifications.
+        The stratifications must apply to the entire population, so not to be used for strains, etc.
+
+        """
+
+        for model in self.model_dict:
+            for stratification in [self.model_dict[model].agegroups, self.model_dict[model].comorbidities]:
+                if len(stratification) > 1:
+                    for stratum in stratification:
+                        self.outputs[model]['fraction' + stratum] \
+                            = elementwise_list_division(self.outputs[model]['population' + stratum],
+                                                        self.outputs[model]['population'])
 
     def store_scenario_results(self, scenario):
 

@@ -742,10 +742,11 @@ class Project:
 
         """
         Calls to all the functions needed to prepare for the plotting and writing methods to be done later.
+
         """
 
         # Add total costs to the programs in the cost attribute of each model
-       # self.add_total_cost_dict()
+        # self.add_total_cost_dict()
 
         # Create outputs dictionaries
         self.create_output_dicts()
@@ -1280,12 +1281,7 @@ class Project:
 
             # Notifications
             if output == 'notifications':
-                plotting_data['point_estimate'] = {}
-                for year in self.inputs.original_data['notifications']['c_newinc']:
-                    if year > start_time:
-                        plotting_data['point_estimate'][year] = \
-                            self.inputs.original_data['notifications']['c_newinc'][year]
-                max_output = max(plotting_data['point_estimate'].values())
+                plotting_data['point_estimate'] = self.inputs.original_data['notifications']['c_newinc']
 
             # Other reported data
             else:
@@ -1296,7 +1292,6 @@ class Project:
                         plotting_data['upper_limit'] = self.inputs.original_data['tb'][indicator]
                     elif indices[out] in indicator:
                         plotting_data['point_estimate'] = self.inputs.original_data['tb'][indicator]
-                max_output = max(plotting_data['upper_limit'].values())
 
                 # Create and plot the patch array
                 patch_array = create_patch_from_dictionary(plotting_data)
@@ -1312,18 +1307,10 @@ class Project:
 
                 if not self.gui_inputs['output_uncertainty']:
 
-                    # modelled_time, modelled_values = \
-                    #     tool_kit.get_truncated_lists_from_dict(self.full_output_dict[scenario][output], start_time)
-                    modelled_time = self.model_runner.model_dict[scenario].times
-                    modelled_values = self.model_runner.outputs[scenario][output]
-
-                    # Update the maximum plot value if it's greater than the GTB data
-                    max_output = max(modelled_values + [max_output])
-
                     # Plot the modelled data
                     ax.plot(
-                        modelled_time,
-                        modelled_values,
+                        self.model_runner.model_dict[scenario].times,
+                        self.model_runner.outputs[scenario][output],
                         color=self.output_colours[scenario][1],
                         linestyle=self.output_colours[scenario][0],
                         linewidth=1.5)
@@ -1338,9 +1325,6 @@ class Project:
                     modelled_time_lower, modelled_values_lower = \
                         tool_kit.get_truncated_lists_from_dict(self.full_uncertainty_dicts[scenario][output]['centile_2.5'],
                                                                start_time)
-
-                    # Update the maximum plot value if it's greater than the GTB data
-                    max_output = max(modelled_values + [max_output])
 
                     # Plot the modelled data
                     ax.plot(
@@ -1366,7 +1350,6 @@ class Project:
                 scenario_labels += [tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario))]
 
             # Set vertical plot axis dimensions
-            ax.set_ylim((0., max_output * 1.1))
             ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
 
             # Set x-ticks

@@ -1731,6 +1731,7 @@ class Project:
 
         Args:
             strain_or_organ: Whether the plotting style should be done by strain or by organ.
+
         """
 
         # Standard prelims
@@ -1746,15 +1747,15 @@ class Project:
 
         # Plot total population
         ax.plot(
-            self.model_runner.model_dict['baseline'].times,
-            self.model_runner.model_dict['baseline'].get_var_soln('population'),
+            self.model_runner.outputs['baseline']['times'],
+            self.model_runner.outputs['baseline']['population'],
             'k',
             label="total", linewidth=2)
         axis_labels.append("Number of persons")
 
         # Plot sub-populations
         for plot_label in self.model_runner.model_dict['baseline'].labels:
-            ax.plot(self.model_runner.model_dict['baseline'].times,
+            ax.plot(self.model_runner.outputs['baseline']['times'],
                     self.model_runner.model_dict['baseline'].compartment_soln[plot_label],
                     label=plot_label, linewidth=1,
                     color=colours[plot_label],
@@ -1855,7 +1856,7 @@ class Project:
             # Find the highest incidence value in the time period considered across all age groups
             ymax = 0.
             for agegroup in self.model_runner.model_dict['baseline'].agegroups:
-                new_ymax = max(self.model_runner.model_dict['baseline'].get_var_soln(output + agegroup))
+                new_ymax = max(self.model_runner.outputs['baseline'][output + agegroup])
                 if new_ymax > ymax:
                     ymax = new_ymax
 
@@ -1863,12 +1864,12 @@ class Project:
 
                 ax = fig.add_subplot(subplot_grid[0],
                                      subplot_grid[1],
-                                     i + 1 + output_no * (len(self.model_runner.model_dict['baseline'].agegroups) + 1))
+                                     i + output_no * (len(self.model_runner.model_dict['baseline'].agegroups) + 1))
 
                 # Plot the modelled data
                 ax.plot(
-                    self.model_runner.model_dict['baseline'].times,
-                    self.model_runner.model_dict['baseline'].get_var_soln(output + agegroup),
+                    self.model_runner.outputs['baseline']['times'],
+                    self.model_runner.outputs['baseline'][output + agegroup],
                     color=output_colour[0][1],
                     linestyle=output_colour[0][0],
                     linewidth=1.5)
@@ -1895,9 +1896,9 @@ class Project:
                 # Make some string labels for these handles
                 # (this code could probably be better)
                 scenario_labels = []
-                for i in range(len(scenario_handles)):
-                    if i < len(scenario_handles) - 1:
-                        scenario_labels += ['Scenario ' + str(i + 1)]
+                for s in range(len(scenario_handles)):
+                    if s < len(scenario_handles) - 1:
+                        scenario_labels += ['Scenario ' + str(s + 1)]
                     else:
                         scenario_labels += ['Baseline']
 
@@ -1960,7 +1961,7 @@ class Project:
                 for i, stratum in enumerate(stratification):
 
                     # Find numbers or fractions in that group
-                    stratum_count = stratified_soln[stratum]
+                    stratum_count = self.model_runner.outputs['baseline']['population' + stratum]
                     stratum_fraction = stratified_fraction[stratum]
 
                     # Add group values to the upper plot range for area plot
@@ -1970,7 +1971,10 @@ class Project:
 
                     # Plot
                     ax_upper = fig.add_subplot(2, 2, 1 + i_time)
-                    ax_upper.fill_between(times, lower_plot_margin_count, upper_plot_margin_count, facecolors=colours[i][1])
+                    ax_upper.fill_between(times,
+                                          lower_plot_margin_count,
+                                          upper_plot_margin_count,
+                                          facecolors=colours[i][1])
 
                     # Create proxy for legend
                     ax_upper.plot([], [], color=colours[i][1], linewidth=6)

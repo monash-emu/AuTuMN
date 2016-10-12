@@ -764,10 +764,10 @@ class Project:
         # add labels for economic outputs
         for intervention in self.programs:
             outputs.append('costs_' + intervention)
-        self.create_full_output_dict(outputs)
-        self.add_raw_economics_dict()
-        self.add_other_costs_dict()
-        self.extract_integer_dict()
+        # self.create_full_output_dict(outputs)
+        # self.add_raw_economics_dict()
+        # self.add_other_costs_dict()
+        # self.extract_integer_dict()
 
     def create_full_output_dict(self, outputs):
 
@@ -836,51 +836,50 @@ class Project:
             self.full_output_dict[scenario].update(economics_dict)
 
     def add_other_costs_dict(self):
+
         """
-            Populates the dictionary with inflated, discounted and discounted_inflated costs
+        Populates the dictionary with inflated, discounted and discounted_inflated costs
+
         """
+
         # some preliminary parameters
         year_current = self.model_runner.model_dict['baseline'].inputs.model_constants['current_time']
         current_cpi = self.model_runner.model_dict['baseline'].scaleup_fns['econ_cpi'](year_current)
         discount_rate = self.model_runner.model_dict['baseline'].params['econ_discount_rate']
 
-        for scenario in self.scenarios:
+        for model in self.scenarios:
             economics_dict = {}
-            for type in ['inflated', 'discounted', 'discounted_inflated']:
-                economics_dict[type + '_cost_all_programs'] = {}
-
-                for i, t in enumerate(self.model_runner.model_dict[scenario].cost_times):
+            for cost_type in ['inflated', 'discounted', 'discounted_inflated']:
+                economics_dict[cost_type + '_cost_all_programs'] = {}
+                for t, time in enumerate(self.model_runner.model_dict[model].cost_times):
                     cost_all_programs = 0
-                    cpi_time_variant = self.model_runner.model_dict[scenario].scaleup_fns['econ_cpi'](t)
-                    t_into_future = max(0, (t - year_current))
-                    for intervention_index, intervention in enumerate(self.programs):
-                        if i == 0:
-                            economics_dict[type + '_cost_' + intervention] = {}
-                        economics_dict[type + '_cost_' + intervention][t] = \
-                            autumn.economics.get_adjusted_cost(self.full_output_dict[scenario]['raw_cost_' + intervention][t], \
-                                                               type, current_cpi, cpi_time_variant, discount_rate, t_into_future)
-                        cost_all_programs += economics_dict[type + '_cost_' + intervention][t]
-                    economics_dict[type + '_cost_all_programs'][t] = cost_all_programs
+                    cpi_time_variant = self.model_runner.model_dict[model].scaleup_fns['econ_cpi'](time)
+                    t_into_future = max(0, (time - year_current))
+                    for int, intervention in enumerate(self.programs):
+                        if t == 0:
+                            economics_dict[cost_type + '_cost_' + intervention] = {}
+                        economics_dict[cost_type + '_cost_' + intervention][time] = \
+                            autumn.economics.get_adjusted_cost(self.full_output_dict[model]['raw_cost_' + intervention][time], \
+                                                               cost_type, current_cpi, cpi_time_variant, discount_rate, t_into_future)
+                        cost_all_programs += economics_dict[cost_type + '_cost_' + intervention][time]
+                    economics_dict[cost_type + '_cost_all_programs'][time] = cost_all_programs
 
                 # if uncertainty is on
                 if self.gui_inputs['output_uncertainty']:
-                    for intervention_index, intervention in enumerate(self.programs):
-                        self.full_uncertainty_dicts[scenario][type + '_costs_' + intervention] = {}
+                    for int, intervention in enumerate(self.programs):
+                        self.full_uncertainty_dicts[model][cost_type + '_costs_' + intervention] = {}
                         for working_centile in range(101) + [2.5, 97.5]:
-                            self.full_uncertainty_dicts[scenario][type + '_costs_' + intervention]['centile_' + str(working_centile)] \
-                                = dict(zip(self.full_output_lists[scenario]['cost_times'],
+                            self.full_uncertainty_dicts[model][cost_type + '_costs_' + intervention]['centile_' + str(working_centile)] \
+                                = dict(zip(self.full_output_lists[model]['cost_times'],
                                            np.percentile(
-                                               self.model_runner.results['uncertainty'][scenario]['costs'][
-                                               :, intervention_index, self.model_runner.accepted_indices],
+                                               self.model_runner.results['uncertainty'][model]['costs'][
+                                               :, int, self.model_runner.accepted_indices],
                                                working_centile,
                                                axis=1)
                                            )
                                        )
 
-
-
-
-            self.full_output_dict[scenario].update(economics_dict)
+            self.full_output_dict[model].update(economics_dict)
 
     def extract_integer_dict(self):
 
@@ -1414,7 +1413,7 @@ class Project:
             x_vals = numpy.linspace(start_time, end_time, 1e3)
 
             # Main title for whole figure
-            title = self.inputs.model_constants['country'] + ' ' + \
+            title = self.inputs.country + ' ' + \
                     tool_kit.find_title_from_dictionary(classification) + ' parameter'
             if len(functions) > 1:
                 title += 's'
@@ -1599,6 +1598,7 @@ class Project:
         Panels of figures are the different sorts of costs (i.e. whether discounting and inflation have been applied).
 
         """
+
         cost_types = ['discounted_inflated', 'inflated', 'discounted', 'raw']
 
         # Separate figures for each scenario
@@ -1616,19 +1616,20 @@ class Project:
 
             for program in self.programs:
                 for cost_type in cost_types:
-                    if max(self.full_output_dict[scenario][cost_type + '_cost_' + program].values()) > max_cost:
-                        max_cost = max(self.full_output_dict[scenario][cost_type + '_cost_' + program].values())
-            for cost_type in cost_types:
-                if max(self.full_output_dict[scenario][cost_type + '_cost_all_programs'].values()) > max_stacked_cost:
-                    max_stacked_cost = max(self.full_output_dict[scenario][cost_type + '_cost_all_programs'].values())
+                    if max(self.model_runner.outputs[scenario][cost_type + '_cost_' + program]) > max_cost:
+                        max_cost = max(self.model_runner.outputs[scenario][cost_type + '_cost_' + program])
+            # for cost_type in cost_types:
+            #     if max(self.model_runner.outputs[scenario][cost_type + '_cost_all_programs']) > max_stacked_cost:
+            #         max_stacked_cost = max(self.model_runner.outputs[scenario][cost_type + '_cost_all_programs'])
 
             # Scale vertical axis and amend axis label as appropriate
             multiplier_individual, multiplier_individual_label = self.scale_axes(max_cost)
-            multiplier_stacked, multiplier_stacked_label = self.scale_axes(max_stacked_cost)
+            # multiplier_stacked, multiplier_stacked_label = self.scale_axes(max_stacked_cost)
 
             # Find the index for the first time after the current time
-            reference_time_index = tool_kit.find_first_list_element_above_value(self.model_runner.model_dict[scenario].cost_times,
-                                                                                self.inputs.model_constants['reference_time'])
+            reference_time_index \
+                = tool_kit.find_first_list_element_above_value(self.model_runner.outputs[scenario]['cost_times'],
+                                                               self.inputs.model_constants['reference_time'])
             for c, cost_type in enumerate(cost_types):
 
                 # Plot each type of cost to its own subplot and ensure same y-axis scale
@@ -1649,44 +1650,45 @@ class Project:
 
                 # Create empty list for legend
                 program_labels = []
-                cumulative_data = [0.] * len(self.model_runner.model_dict[scenario].cost_times)
+                cumulative_data = [0.] * len(self.model_runner.outputs[scenario]['cost_times'])
 
                 for program in self.model_runner.model_dict[scenario].interventions_to_cost:
+
                     # Record the previous data for plotting as an independent object for the lower edge of the fill
                     previous_data = copy.copy(cumulative_data)
 
                     # Calculate the cumulative sum for the upper edge of the fill
-                    for i, t in enumerate(self.model_runner.model_dict[scenario].cost_times):
-                        cumulative_data[i] += self.full_output_dict[scenario][cost_type + '_cost_' + program][t]
+                    for i in range(len(self.model_runner.outputs[scenario]['cost_times'])):
+                        cumulative_data[i] += self.model_runner.outputs[scenario][cost_type + '_cost_' + program][i]
 
                     # Scale all the data
-                    data = [self.full_output_dict[scenario][cost_type + '_cost_' + program][time] for time in self.model_runner.model_dict[scenario].cost_times ]
-                    individual_data = [d * multiplier_individual for d in data]
-                    cumulative_data_to_plot = [d * multiplier_stacked for d in cumulative_data]
-                    previous_data_to_plot = [d * multiplier_stacked for d in previous_data]
+                    data = self.model_runner.outputs[scenario][cost_type + '_cost_' + program]
 
-                    reference_cost = self.full_output_dict[scenario][cost_type + '_cost_' + program][self.model_runner.model_dict[scenario].cost_times[reference_time_index]]
-                    relative_data = [(d - reference_cost) * multiplier_individual
-                                     for d in data]
+                    individual_data = [d * multiplier_individual for d in data]
+                    # cumulative_data_to_plot = [d * multiplier_stacked for d in cumulative_data]
+                    # previous_data_to_plot = [d * multiplier_stacked for d in previous_data]
+
+                    reference_cost \
+                        = self.model_runner.outputs[scenario][cost_type + '_cost_' + program][reference_time_index]
+                    relative_data = [(d - reference_cost) * multiplier_individual for d in data]
 
                     # Plot lines
-                    ax_individual.plot(self.model_runner.model_dict[scenario].cost_times,
+                    ax_individual.plot(self.model_runner.outputs[scenario]['cost_times'],
                                        individual_data,
                                        color=self.program_colours[program][1])
-                    ax_relative.plot(self.model_runner.model_dict[scenario].cost_times,
+                    ax_relative.plot(self.model_runner.outputs[scenario]['cost_times'],
                                      relative_data,
                                      color=self.program_colours[program][1])
 
                     # Plot stacked
-                    ax_stacked.fill_between(self.model_runner.model_dict[scenario].cost_times,
-                                            previous_data_to_plot,
-                                            cumulative_data_to_plot,
-                                            color=self.program_colours[program][1],
-                                            linewidth=0.)
+                    # ax_stacked.fill_between(self.model_runner.model_dict[scenario].cost_times,
+                    #                         previous_data_to_plot,
+                    #                         cumulative_data_to_plot,
+                    #                         color=self.program_colours[program][1],
+                    #                         linewidth=0.)
 
                     # Record label for legend
-                    program_labels \
-                        += [tool_kit.find_title_from_dictionary(program)]
+                    program_labels += [tool_kit.find_title_from_dictionary(program)]
 
                 # Axis title and y-axis label
                 for ax in [ax_individual, ax_stacked, ax_relative]:
@@ -1711,7 +1713,7 @@ class Project:
                 # Set x-limits
                 for ax in [ax_individual, ax_stacked, ax_relative]:
                     ax.set_xlim(self.inputs.model_constants['plot_start_time'],
-                                           self.inputs.model_constants['plot_end_time'])
+                                self.inputs.model_constants['plot_end_time'])
 
             # Finishing off with title and save
             fig_individual.suptitle('Individual program costs for ' + tool_kit.find_title_from_dictionary(scenario),
@@ -1938,11 +1940,6 @@ class Project:
             # Standard prelims
             fig = self.set_and_update_figure()
             colours = self.make_default_line_styles(len(stratification), return_all=True)
-
-            # Extract data
-            stratified_soln, denominator \
-                = tool_kit.sum_over_compartments(self.model_runner.model_dict['baseline'], stratification)
-            stratified_fraction = tool_kit.get_fraction_soln(stratified_soln.keys(), stratified_soln, denominator)
 
             # Loop over starting from the model start and the specified starting time
             for i_time, plot_left_time in enumerate(['plot_start_time', 'early_time']):

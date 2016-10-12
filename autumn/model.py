@@ -1123,16 +1123,12 @@ class ConsolidatedModel(StratifiedModel):
 
         # Initialise dictionaries
         rate_incidence = {}
-        rate_mortality = {}
-        rate_notifications = {}
 
         # By strain
         for strain in self.strains:
 
             # Initialise scalars
             rate_incidence[strain] = 0.
-            rate_mortality[strain] = 0.
-            rate_notifications[strain] = 0.
 
             # Incidence
             for from_label, to_label, rate in self.var_transfer_rate_flows:
@@ -1146,107 +1142,4 @@ class ConsolidatedModel(StratifiedModel):
 
             self.vars['incidence' + strain] \
                 = rate_incidence[strain] / self.vars['population'] * 1E5
-
-            # Notifications
-            for from_label, to_label, rate in self.var_transfer_rate_flows:
-                if 'active' in from_label and 'detect' in to_label and strain in from_label:
-                    rate_notifications[strain] \
-                        += self.compartments[from_label] * self.vars[rate]
-            self.vars['notifications' + strain] \
-                = rate_notifications[strain]
-
-            # Mortality
-            for from_label, rate in self.fixed_infection_death_rate_flows:
-                # Under-reporting factor included for those deaths not occurring on treatment
-                if strain in from_label:
-                    rate_mortality[strain] \
-                        += self.compartments[from_label] * rate \
-                            * self.params['program_prop_death_reporting']
-            for from_label, rate in self.var_infection_death_rate_flows:
-                if strain in from_label:
-                    rate_mortality[strain] \
-                        += self.compartments[from_label] * self.vars[rate]
-            self.vars['mortality' + strain] \
-                = rate_mortality[strain] / self.vars['population'] * 1E5
-
-        # Prevalence
-        for strain in self.strains:
-            self.vars['prevalence' + strain] = 0.
-            for label in self.labels:
-                if 'susceptible' not in label and \
-                                'latent' not in label and strain in label:
-                    self.vars['prevalence' + strain] \
-                        += (self.compartments[label]
-                        / self.vars['population'] * 1E5)
-
-        # Summing MDR and XDR to get the total of all MDRs
-        if len(self.strains) > 1:
-            rate_incidence['all_mdr_strains'] = 0.
-            if len(self.strains) > 1:
-                for actual_strain_number in range(len(self.strains)):
-                    strain = self.strains[actual_strain_number]
-                    if actual_strain_number > 0:
-                        rate_incidence['all_mdr_strains'] \
-                            += rate_incidence[strain]
-            self.vars['all_mdr_strains'] \
-                = rate_incidence['all_mdr_strains'] / self.vars['population'] * 1E5
-            # Convert to percentage
-            self.vars['proportion_mdr'] \
-                = self.vars['all_mdr_strains'] / self.vars['incidence'] * 1E2
-
-        # By age group
-        if len(self.agegroups) > 1:
-            # Calculate outputs by age group - note that this code is fundamentally different
-            # to the code above even though it looks similar, because the denominator
-            # changes for age group, whereas it remains the whole population for strain calculations
-            # (although should be able to use this code for comorbidities).
-            for agegroup in self.agegroups:
-
-                # Find age group denominator
-                self.vars['population' + agegroup] = 0.
-                for compartment in self.compartments:
-                    if agegroup in compartment:
-                        self.vars['population' + agegroup] \
-                            += self.compartments[compartment]
-
-                # Initialise scalars
-                rate_incidence[agegroup] = 0.
-                rate_mortality[agegroup] = 0.
-
-                # Incidence
-                for from_label, to_label, rate in self.var_transfer_rate_flows:
-                    if 'latent' in from_label and 'active' in to_label and agegroup in to_label:
-                        rate_incidence[agegroup] \
-                            += self.compartments[from_label] * self.vars[rate]
-                for from_label, to_label, rate in self.fixed_transfer_rate_flows:
-                    if 'latent' in from_label and 'active' in to_label and agegroup in to_label:
-                        rate_incidence[agegroup] \
-                            += self.compartments[from_label] * rate
-                self.vars['incidence' + agegroup] \
-                    = rate_incidence[agegroup] / self.vars['population' + agegroup] * 1E5
-
-                # Mortality
-                for from_label, rate in self.fixed_infection_death_rate_flows:
-                    # Under-reporting factor included for those deaths not occurring on treatment
-                    if agegroup in from_label:
-                        rate_mortality[agegroup] \
-                            += self.compartments[from_label] * rate \
-                               * self.params['program_prop_death_reporting']
-                for from_label, rate in self.var_infection_death_rate_flows:
-                    if agegroup in from_label:
-                        rate_mortality[agegroup] \
-                            += self.compartments[from_label] * self.vars[rate]
-                self.vars['mortality' + agegroup] \
-                    = rate_mortality[agegroup] / self.vars['population' + agegroup] * 1E5
-
-        # Prevalence
-        for agegroup in self.agegroups:
-            self.vars['prevalence' + agegroup] = 0.
-            for label in self.labels:
-                if 'susceptible' not in label and \
-                                'latent' not in label and agegroup in label:
-                    self.vars['prevalence' + agegroup] \
-                        += (self.compartments[label]
-                        / self.vars['population' + agegroup] * 1E5)
-
 

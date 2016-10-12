@@ -12,6 +12,8 @@ from random import uniform
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import outputs
+import autumn.economics
+
 
 
 def is_positive_definite(v):
@@ -117,8 +119,10 @@ class ModelRunner:
             self.store_scenario_results(scenario_name)
 
             # New model interpretation code
-            self.calculate_output_vars()
+            self.find_epi_outputs()
             self.find_population_fractions()
+            self.find_cost_outputs()
+            self.find_adjusted_costs()
 
         if self.gui_inputs['output_uncertainty']:
 
@@ -172,7 +176,7 @@ class ModelRunner:
             self.model_dict['optimized'].integrate()
             self.store_scenario_results('optimized')
 
-    def calculate_output_vars(self):
+    def find_epi_outputs(self):
 
         """
         Method similarly structured to calculate_output_vars, just replicated by strains
@@ -341,6 +345,43 @@ class ModelRunner:
                         self.outputs[model]['fraction' + stratum] \
                             = elementwise_list_division(self.outputs[model]['population' + stratum],
                                                         self.outputs[model]['population'])
+
+    def find_cost_outputs(self):
+
+        """
+        Add cost dictionaries to output attribute.
+
+        """
+
+        for model in self.model_dict:
+            self.outputs[model]['cost_times'] = self.model_dict[model].cost_times
+            for i, intervention in enumerate(self.model_dict[model].interventions_to_cost):
+                self.outputs[model]['raw_cost_' + intervention] = self.model_dict[model].costs[:, i]
+
+    def find_adjusted_costs(self):
+
+        # Get some preliminary parameters
+        year_current = self.model_dict['baseline'].inputs.model_constants['current_time']
+        current_cpi = self.model_dict['baseline'].scaleup_fns['econ_cpi'](year_current)
+        discount_rate = self.model_dict['baseline'].params['econ_discount_rate']
+
+        for model in self.model_dict:
+
+            # Work through adjusted costs
+            for cost_type in ['inflated', 'discounted', 'discounted_inflated']:
+                self.outputs[model][cost_type + '_cost_all_programs'] = []
+                for t, time in enumerate(self.outputs[model]['cost_times']):
+                    cost_all_programs = 0.
+                    cpi_time_variant = self.model_dict[model].scaleup_fns['econ_cpi'](time)
+                    t_into_future = max(0., (time - year_current))
+                    for int, intervention in enumerate(self.model_dict[model].interventions_to_cost):
+                        if t == 0: self.outputs[model][cost_type + '_cost_' + intervention] = []
+                        self.outputs[model][cost_type + '_cost_' + intervention].append(
+                            autumn.economics.get_adjusted_cost(self.outputs[model]['raw_cost_' + intervention][t],
+                                                               cost_type, current_cpi, cpi_time_variant, discount_rate,
+                                                               t_into_future))
+                        cost_all_programs += self.outputs[model][cost_type + '_cost_' + intervention][-1]
+                    self.outputs[model][cost_type + '_cost_all_programs'].append(cost_all_programs)
 
     def store_scenario_results(self, scenario):
 
@@ -719,6 +760,7 @@ class ModelRunner:
                                     getattr(self.model_dict[scenario], attribute)])
 
     def run_optimization(self):
+
         print 'Start optimization'
 
         # Initialise a new model that will be run from 'recent_time' for optimisation
@@ -736,17 +778,18 @@ class ModelRunner:
 
         # function to minimize: incidence in 2035
         def func(x):
+
             """
             Args:
                 x: defines the resource allocation (as absolute funding over the total period (2015 - 2035))
 
             Returns:
                 predicted incidence for 2035
+
             """
-            i = 0
-            for int in self.model_dict['baseline'].interventions_to_cost:
+
+            for i, int in enumerate(self.model_dict['baseline'].interventions_to_cost):
                 opti_model_init.available_funding[int] = x[i]*self.total_funding
-                i += 1
             opti_model_init.distribute_funding_across_years()
             opti_model_init.integrate()
             return opti_model_init.get_var_soln('incidence')[-1]

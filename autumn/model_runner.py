@@ -88,6 +88,7 @@ class ModelRunner:
         self.rejection_dict = {}
         self.optimal_allocation = {}
         self.outputs = {}
+        self.outputs_to_analyse = ['population', 'incidence', 'mortality', 'notifications', 'prevalence']
 
     def master_runner(self):
 
@@ -123,6 +124,7 @@ class ModelRunner:
             self.find_population_fractions()
             self.find_cost_outputs()
             self.find_adjusted_costs()
+            self.get_output_dicts_from_lists()
 
         if self.gui_inputs['output_uncertainty']:
 
@@ -183,8 +185,6 @@ class ModelRunner:
 
         """
 
-        outputs_to_analyse = ['population', 'incidence', 'mortality', 'notifications', 'prevalence']
-
         for model in self.model_dict:
             self.outputs[model] = {}
             self.outputs[model]['times'] = self.model_dict[model].times
@@ -192,7 +192,7 @@ class ModelRunner:
             # Unstratified outputs
 
             # Initialise lists
-            for output in outputs_to_analyse:
+            for output in self.outputs_to_analyse:
                 self.outputs[model][output] = [0.] * len(self.outputs[model]['times'])
 
             # Population
@@ -258,7 +258,7 @@ class ModelRunner:
                     for stratum in stratification:
 
                         # Initialise lists
-                        for output in outputs_to_analyse:
+                        for output in self.outputs_to_analyse:
                             self.outputs[model][output + stratum] = [0.] * len(self.outputs[model]['times'])
 
                         # Population
@@ -330,6 +330,26 @@ class ModelRunner:
                 # self.vars['proportion_mdr'] \
                 #     = self.vars['all_mdr_strains'] / self.vars['incidence'] * 1E2
 
+    def get_output_dicts_from_lists(self):
+
+        """
+        Convert output lists to dictionaries.
+
+        """
+
+        updated_dict = {}
+        for model in self.model_dict:
+            updated_dict[model] = {}
+            for output in self.outputs[model]:
+                if 'cost_' in output:
+                    updated_dict[model][output + '_dict'] = dict(zip(self.outputs[model]['cost_times'],
+                                                       self.outputs[model][output]))
+                else:
+                    updated_dict[model][output + '_dict'] = dict(zip(self.outputs[model]['times'],
+                                                       self.outputs[model][output]))
+        for model in self.model_dict:
+            self.outputs[model].update(updated_dict[model])
+
     def find_population_fractions(self):
 
         """
@@ -370,6 +390,9 @@ class ModelRunner:
             # Work through adjusted costs
             for cost_type in ['inflated', 'discounted', 'discounted_inflated']:
                 self.outputs[model][cost_type + '_cost_all_programs'] = []
+
+                # Maybe not ideal that the outer loop is time and the inner interventions here
+                # - may reverse at some point.
                 for t, time in enumerate(self.outputs[model]['cost_times']):
                     cost_all_programs = 0.
                     cpi_time_variant = self.model_dict[model].scaleup_fns['econ_cpi'](time)

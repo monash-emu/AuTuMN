@@ -125,6 +125,7 @@ class ModelRunner:
             self.find_cost_outputs()
             self.find_adjusted_costs()
             self.get_output_dicts_from_lists()
+            self.extract_integer_dict()
 
         if self.gui_inputs['output_uncertainty']:
 
@@ -343,12 +344,35 @@ class ModelRunner:
             for output in self.outputs[model]:
                 if 'cost_' in output:
                     updated_dict[model][output + '_dict'] = dict(zip(self.outputs[model]['cost_times'],
-                                                       self.outputs[model][output]))
+                                                                     self.outputs[model][output]))
                 else:
                     updated_dict[model][output + '_dict'] = dict(zip(self.outputs[model]['times'],
-                                                       self.outputs[model][output]))
+                                                                     self.outputs[model][output]))
         for model in self.model_dict:
             self.outputs[model].update(updated_dict[model])
+
+    def extract_integer_dict(self):
+
+        """
+        Extracts a dictionary from full_output_dict with only integer years, using the first time value greater than
+        the integer year in question.
+
+        """
+
+        integer_output_dict = {}
+        for model in self.model_dict:
+            integer_output_dict[model] = {}
+            for output in self.outputs[model]:
+                if '_dict' in output and 'cost' not in output:
+                    integer_output_dict[model][output + '_integer'] = {}
+                    times = self.outputs[model]['times']
+                    start = numpy.floor(times[0])
+                    finish = numpy.floor(times[-1])
+                    float_years = numpy.linspace(start, finish, finish - start + 1.)
+                    for year in float_years:
+                        key = [t for t in times if t >= year][0]
+                        integer_output_dict[model][output + '_integer'][int(key)] \
+                            = self.outputs[model][output][key]
 
     def find_population_fractions(self):
 

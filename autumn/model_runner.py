@@ -98,7 +98,7 @@ class ModelRunner:
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
         self.optimization = False
-        self.total_funding = 6.6e6 # if None, will consider equivalent funding as baseline
+        self.total_funding = 6.6e6  # if None, will consider equivalent funding as baseline
         self.acceptance_dict = {}
         self.rejection_dict = {}
         self.optimal_allocation = {}
@@ -138,13 +138,21 @@ class ModelRunner:
             # Store
             self.store_scenario_results(scenario_name)
 
-        # New model interpretation code
+        # New model interpretation code - should be completely flexible and reusable by uncertainty and optimisation
         self.epi_outputs \
-            = self.find_epi_outputs(['population', 'incidence', 'mortality', 'notifications', 'prevalence'],
-                                    [self.model_dict['baseline'].agegroups, self.model_dict['baseline'].comorbidities])
-        self.find_population_fractions()
-        self.find_cost_outputs()
-        self.find_adjusted_costs()
+            = self.find_epi_outputs(outputs_to_analyse=['population',
+                                                        'incidence',
+                                                        'mortality',
+                                                        'notifications',
+                                                        'prevalence'],
+                                    stratifications=[self.model_dict['baseline'].agegroups,
+                                                     self.model_dict['baseline'].comorbidities])
+        self.find_population_fractions(stratifications=[self.model_dict['baseline'].agegroups,
+                                                        self.model_dict['baseline'].comorbidities])
+        self.find_cost_outputs(interventions_to_cost=self.model_dict['baseline'].interventions_to_cost)
+        self.find_adjusted_costs(cost_types=['inflated',
+                                             'discounted',
+                                             'discounted_inflated'])
         self.get_output_dicts_from_lists()
         self.extract_integer_dicts()
 
@@ -214,8 +222,7 @@ class ModelRunner:
             epi_outputs[model] = {}
             epi_outputs[model]['times'] = self.model_dict[model].times
 
-            # Unstratified outputs
-
+            # Unstratified outputs______________________________________________________________________________________
             # Initialise lists
             for output in outputs_to_analyse:
                 epi_outputs[model][output] = [0.] * len(epi_outputs[model]['times'])
@@ -281,8 +288,7 @@ class ModelRunner:
                                              / epi_outputs[model]['population'] \
                                              * 1e5, epi_outputs[model]['prevalence'])
 
-            # Stratified outputs
-
+            # Stratified outputs________________________________________________________________________________________
             for stratification in stratifications:
                 if len(stratification) > 1:
                     for stratum in stratification:
@@ -366,7 +372,7 @@ class ModelRunner:
                 # self.vars['proportion_mdr'] \
                 #     = self.vars['all_mdr_strains'] / self.vars['incidence'] * 1E2
 
-    def find_population_fractions(self):
+    def find_population_fractions(self, stratifications=[]):
 
         """
         Find the proportion of the population in various stratifications.
@@ -382,7 +388,7 @@ class ModelRunner:
                             = elementwise_list_division(self.epi_outputs[model]['population' + stratum],
                                                         self.epi_outputs[model]['population'])
 
-    def find_cost_outputs(self):
+    def find_cost_outputs(self, interventions_to_cost=[]):
 
         """
         Add cost dictionaries to cost_outputs attribute.
@@ -392,10 +398,10 @@ class ModelRunner:
         for model in self.model_dict:
             self.cost_outputs[model] = {}
             self.cost_outputs[model]['times'] = self.model_dict[model].cost_times
-            for i, intervention in enumerate(self.model_dict[model].interventions_to_cost):
+            for i, intervention in enumerate(interventions_to_cost):
                 self.cost_outputs[model]['raw_cost_' + intervention] = self.model_dict[model].costs[:, i]
 
-    def find_adjusted_costs(self):
+    def find_adjusted_costs(self, cost_types=[]):
 
         # Get some preliminary parameters
         year_current = self.model_dict['baseline'].inputs.model_constants['current_time']
@@ -405,7 +411,7 @@ class ModelRunner:
         for model in self.model_dict:
 
             # Work through adjusted costs
-            for cost_type in ['inflated', 'discounted', 'discounted_inflated']:
+            for cost_type in cost_types:
                 self.cost_outputs[model][cost_type + '_cost_all_programs'] = []
 
                 # Maybe not ideal that the outer loop is time and the inner interventions here

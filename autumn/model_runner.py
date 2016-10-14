@@ -57,6 +57,21 @@ def elementwise_list_division(numerator, denominator):
     return [n / d for n, d in zip(numerator, denominator)]
 
 
+def find_integer_dict_from_float_dict(float_dict):
+
+    integer_dict = {}
+    times = float_dict.keys()
+    times.sort()
+    start = numpy.floor(times[0])
+    finish = numpy.floor(times[-1])
+    float_years = numpy.linspace(start, finish, finish - start + 1.)
+    for year in float_years:
+        key = [t for t in times if t >= year][0]
+        integer_dict[int(key)] = float_dict[key]
+
+    return integer_dict
+
+
 class ModelRunner:
 
     def __init__(self, gui_inputs, runtime_outputs, figure_frame):
@@ -89,9 +104,10 @@ class ModelRunner:
         self.optimal_allocation = {}
         self.epi_outputs = {}
         self.epi_outputs_dict = {}
+        self.epi_outputs_integer_dict = {}
         self.cost_outputs = {}
         self.cost_outputs_dict = {}
-        self.outputs_to_analyse = ['population', 'incidence', 'mortality', 'notifications', 'prevalence']
+        self.cost_outputs_integer_dict = {}
 
     def master_runner(self):
 
@@ -122,41 +138,44 @@ class ModelRunner:
             # Store
             self.store_scenario_results(scenario_name)
 
-            # New model interpretation code
-            self.find_epi_outputs()
-            self.find_population_fractions()
-            self.find_cost_outputs()
-            self.find_adjusted_costs()
-            self.get_output_dicts_from_lists()
-            self.extract_integer_dicts()
+        # New model interpretation code
+        self.epi_outputs \
+            = self.find_epi_outputs(['population', 'incidence', 'mortality', 'notifications', 'prevalence'],
+                                    [self.model_dict['baseline'].agegroups, self.model_dict['baseline'].comorbidities])
+        self.find_population_fractions()
+        self.find_cost_outputs()
+        self.find_adjusted_costs()
+        self.get_output_dicts_from_lists()
+        self.extract_integer_dicts()
 
         if self.gui_inputs['output_uncertainty']:
 
             # Describe process
             self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
-            # Prepare directory for eventual pickling
-            out_dir = 'pickles'
-            if not os.path.isdir(out_dir):
-                os.makedirs(out_dir)
-            results_file = os.path.join(out_dir, 'results_uncertainty.pkl')
-            indices_file = os.path.join(out_dir, 'indices_uncertainty.pkl')
+            # # Prepare directory for eventual pickling
+            # out_dir = 'pickles'
+            # if not os.path.isdir(out_dir):
+            #     os.makedirs(out_dir)
+            # results_file = os.path.join(out_dir, 'results_uncertainty.pkl')
+            # indices_file = os.path.join(out_dir, 'indices_uncertainty.pkl')
 
-            # Don't run uncertainty but load a saved simulation
-            if self.gui_inputs['pickle_uncertainty'] == 'Load':
-                self.add_comment_to_gui_window('Uncertainty results loaded from previous simulation')
-                self.results['uncertainty'] = tool_kit.pickle_load(results_file)
-                self.accepted_indices = tool_kit.pickle_load(indices_file)
+            # # Don't run uncertainty but load a saved simulation
+            # if self.gui_inputs['pickle_uncertainty'] == 'Load':
+            #     self.add_comment_to_gui_window('Uncertainty results loaded from previous simulation')
+            #     self.results['uncertainty'] = tool_kit.pickle_load(results_file)
+            #     self.accepted_indices = tool_kit.pickle_load(indices_file)
 
             # Run uncertainty
-            else:
-                self.run_uncertainty()
+            # else:
 
-            # Write uncertainty if requested
-            if self.gui_inputs['pickle_uncertainty'] == 'Save':
-                tool_kit.pickle_save(self.results['uncertainty'], results_file)
-                tool_kit.pickle_save(self.accepted_indices, indices_file)
-                self.add_comment_to_gui_window('Uncertainty results saved to disc')
+            self.run_uncertainty()
+
+            # # Write uncertainty if requested
+            # if self.gui_inputs['pickle_uncertainty'] == 'Save':
+            #     tool_kit.pickle_save(self.results['uncertainty'], results_file)
+            #     tool_kit.pickle_save(self.accepted_indices, indices_file)
+            #     self.add_comment_to_gui_window('Uncertainty results saved to disc')
 
         if self.optimization:
             if self.total_funding is None:
@@ -182,141 +201,154 @@ class ModelRunner:
             self.model_dict['optimized'].integrate()
             self.store_scenario_results('optimized')
 
-    def find_epi_outputs(self):
+    def find_epi_outputs(self, outputs_to_analyse=[], stratifications=[]):
 
         """
-        Method similarly structured to calculate_output_vars, just replicated by strains
+        Method to extract all requested epidemiological outputs from the models. Intended ultimately to be flexible\
+        enough for use for analysis of scenarios, uncertainty and optimisation.
 
         """
 
+        epi_outputs = {}
         for model in self.model_dict:
-            self.epi_outputs[model] = {}
-            self.epi_outputs[model]['times'] = self.model_dict[model].times
+            epi_outputs[model] = {}
+            epi_outputs[model]['times'] = self.model_dict[model].times
 
             # Unstratified outputs
 
             # Initialise lists
-            for output in self.outputs_to_analyse:
-                self.epi_outputs[model][output] = [0.] * len(self.epi_outputs[model]['times'])
+            for output in outputs_to_analyse:
+                epi_outputs[model][output] = [0.] * len(epi_outputs[model]['times'])
 
             # Population
-            for compartment in self.model_dict[model].compartments:
-                self.epi_outputs[model]['population'] \
-                    = increment_list(self.model_dict[model].get_compartment_soln(compartment),
-                                     self.epi_outputs[model]['population'])
+            if 'population' in outputs_to_analyse:
+                for compartment in self.model_dict[model].compartments:
+                    epi_outputs[model]['population'] \
+                        = increment_list(self.model_dict[model].get_compartment_soln(compartment),
+                                         epi_outputs[model]['population'])
 
             # Incidence
-            for from_label, to_label, rate in self.model_dict[model].var_transfer_rate_flows:
-                if 'latent' in from_label and 'active' in to_label:
-                    self.epi_outputs[model]['incidence'] \
-                        = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
-                                         * self.model_dict[model].get_var_soln(rate) \
-                                         / self.epi_outputs[model]['population'] \
-                                         * 1e5,
-                                         self.epi_outputs[model]['incidence'])
-            for from_label, to_label, rate in self.model_dict[model].fixed_transfer_rate_flows:
-                if 'latent' in from_label and 'active' in to_label:
-                    self.epi_outputs[model]['incidence'] \
-                        = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
-                                         * rate \
-                                         / self.epi_outputs[model]['population'] \
-                                         * 1e5,
-                                         self.epi_outputs[model]['incidence'])
+            if 'incidence' in outputs_to_analyse:
+                for from_label, to_label, rate in self.model_dict[model].var_transfer_rate_flows:
+                    if 'latent' in from_label and 'active' in to_label:
+                        epi_outputs[model]['incidence'] \
+                            = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                                             * self.model_dict[model].get_var_soln(rate) \
+                                             / epi_outputs[model]['population'] \
+                                             * 1e5,
+                                             epi_outputs[model]['incidence'])
+                for from_label, to_label, rate in self.model_dict[model].fixed_transfer_rate_flows:
+                    if 'latent' in from_label and 'active' in to_label:
+                        epi_outputs[model]['incidence'] \
+                            = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                                             * rate \
+                                             / epi_outputs[model]['population'] \
+                                             * 1e5,
+                                             epi_outputs[model]['incidence'])
 
             # Notifications
-            for from_label, to_label, rate in self.model_dict[model].var_transfer_rate_flows:
-                if 'active' in from_label and 'detect' in to_label:
-                    self.epi_outputs[model]['notifications'] \
-                        = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
-                                         * self.model_dict[model].get_var_soln(rate),
-                                         self.epi_outputs[model]['notifications'])
+            if 'notifications' in outputs_to_analyse:
+                for from_label, to_label, rate in self.model_dict[model].var_transfer_rate_flows:
+                    if 'active' in from_label and 'detect' in to_label:
+                        epi_outputs[model]['notifications'] \
+                            = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                                             * self.model_dict[model].get_var_soln(rate),
+                                             epi_outputs[model]['notifications'])
 
             # Mortality
-            for from_label, rate in self.model_dict[model].fixed_infection_death_rate_flows:
-                # Under-reporting factor included for those deaths not occurring on treatment
-                self.epi_outputs[model]['mortality'] \
-                    = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
-                                     * rate \
-                                     * self.model_dict[model].params['program_prop_death_reporting'] \
-                                     / self.epi_outputs[model]['population'] \
-                                     * 1e5, self.epi_outputs[model]['mortality'])
-            for from_label, rate in self.model_dict[model].var_infection_death_rate_flows:
-                self.epi_outputs[model]['mortality'] \
-                    = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
-                                     * self.model_dict[model].get_var_soln(rate) \
-                                     / self.epi_outputs[model]['population'] \
-                                     * 1e5, self.epi_outputs[model]['mortality'])
+            if 'mortality' in outputs_to_analyse:
+                for from_label, rate in self.model_dict[model].fixed_infection_death_rate_flows:
+                    # Under-reporting factor included for those deaths not occurring on treatment
+                    epi_outputs[model]['mortality'] \
+                        = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                                         * rate \
+                                         * self.model_dict[model].params['program_prop_death_reporting'] \
+                                         / epi_outputs[model]['population'] \
+                                         * 1e5, epi_outputs[model]['mortality'])
+                for from_label, rate in self.model_dict[model].var_infection_death_rate_flows:
+                    epi_outputs[model]['mortality'] \
+                        = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                                         * self.model_dict[model].get_var_soln(rate) \
+                                         / epi_outputs[model]['population'] \
+                                         * 1e5, epi_outputs[model]['mortality'])
 
             # Prevalence
-            for label in self.model_dict[model].labels:
-                if 'susceptible' not in label and 'latent' not in label:
-                    self.epi_outputs[model]['prevalence'] \
-                        = increment_list(self.model_dict[model].get_compartment_soln(label) \
-                                         / self.epi_outputs[model]['population'] \
-                                         * 1e5, self.epi_outputs[model]['prevalence'])
+            if 'prevalence' in outputs_to_analyse:
+                for label in self.model_dict[model].labels:
+                    if 'susceptible' not in label and 'latent' not in label:
+                        epi_outputs[model]['prevalence'] \
+                            = increment_list(self.model_dict[model].get_compartment_soln(label) \
+                                             / epi_outputs[model]['population'] \
+                                             * 1e5, epi_outputs[model]['prevalence'])
 
             # Stratified outputs
 
-            for stratification in [self.model_dict[model].agegroups, self.model_dict[model].comorbidities]:
+            for stratification in stratifications:
                 if len(stratification) > 1:
                     for stratum in stratification:
 
                         # Initialise lists
-                        for output in self.outputs_to_analyse:
-                            self.epi_outputs[model][output + stratum] = [0.] * len(self.epi_outputs[model]['times'])
+                        for output in outputs_to_analyse:
+                            epi_outputs[model][output + stratum] = [0.] * len(epi_outputs[model]['times'])
 
                         # Population
-                        for compartment in self.model_dict[model].compartments:
-                            if stratum in compartment:
-                                self.epi_outputs[model]['population' + stratum] \
-                                    = increment_list(self.model_dict[model].get_compartment_soln(compartment),
-                                                     self.epi_outputs[model]['population' + stratum])
+                        if 'population' in outputs_to_analyse:
+                            for compartment in self.model_dict[model].compartments:
+                                if stratum in compartment:
+                                    epi_outputs[model]['population' + stratum] \
+                                        = increment_list(self.model_dict[model].get_compartment_soln(compartment),
+                                                         epi_outputs[model]['population' + stratum])
 
                         # Incidence
-                        for from_label, to_label, rate in self.model_dict[model].var_transfer_rate_flows:
-                            if 'latent' in from_label and 'active' in to_label and stratum in label:
-                                self.epi_outputs[model]['incidence' + stratum] \
-                                    = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
-                                                     * self.model_dict[model].get_var_soln(rate) \
-                                                     / self.epi_outputs[model]['population' + stratum] \
-                                                     * 1e5,
-                                                     self.epi_outputs[model]['incidence' + stratum])
-                        for from_label, to_label, rate in self.model_dict[model].fixed_transfer_rate_flows:
-                            if 'latent' in from_label and 'active' in to_label and stratum in label:
-                                self.epi_outputs[model]['incidence' + stratum] \
-                                    = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
-                                                     * rate \
-                                                     / self.epi_outputs[model]['population' + stratum] \
-                                                     * 1e5,
-                                                     self.epi_outputs[model]['incidence' + stratum])\
+                        if 'incidence' in outputs_to_analyse:
+                            for from_label, to_label, rate in self.model_dict[model].var_transfer_rate_flows:
+                                if 'latent' in from_label and 'active' in to_label and stratum in label:
+                                    epi_outputs[model]['incidence' + stratum] \
+                                        = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                                                         * self.model_dict[model].get_var_soln(rate) \
+                                                         / epi_outputs[model]['population' + stratum] \
+                                                         * 1e5,
+                                                         epi_outputs[model]['incidence' + stratum])
+                            for from_label, to_label, rate in self.model_dict[model].fixed_transfer_rate_flows:
+                                if 'latent' in from_label and 'active' in to_label and stratum in label:
+                                    epi_outputs[model]['incidence' + stratum] \
+                                        = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                                                         * rate \
+                                                         / epi_outputs[model]['population' + stratum] \
+                                                         * 1e5,
+                                                         epi_outputs[model]['incidence' + stratum])
 
                         # Mortality
-                        for from_label, rate in self.model_dict[model].fixed_infection_death_rate_flows:
-                            if stratum in from_label:
-                                # Under-reporting factor included for those deaths not occurring on treatment
-                                self.epi_outputs[model]['mortality' + stratum] \
-                                    = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
-                                                     * rate \
-                                                     * self.model_dict[model].params['program_prop_death_reporting'] \
-                                                     * self.epi_outputs[model]['population' + stratum] \
-                                                     * 1e5,
-                                                     self.epi_outputs[model]['mortality' + stratum])
-                        for from_label, rate in self.model_dict[model].var_infection_death_rate_flows:
-                            if stratum in from_label:
-                                self.epi_outputs[model]['mortality' + stratum] \
-                                    = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
-                                                     * self.model_dict[model].get_var_soln(rate) \
-                                                     / self.epi_outputs[model]['population' + stratum] \
-                                                     * 1e5,
-                                                     self.epi_outputs[model]['mortality' + stratum])
+                        if 'mortality' in outputs_to_analyse:
+                            for from_label, rate in self.model_dict[model].fixed_infection_death_rate_flows:
+                                if stratum in from_label:
+                                    # Under-reporting factor included for those deaths not occurring on treatment
+                                    epi_outputs[model]['mortality' + stratum] \
+                                        = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                                                         * rate \
+                                                         * self.model_dict[model].params['program_prop_death_reporting'] \
+                                                         * epi_outputs[model]['population' + stratum] \
+                                                         * 1e5,
+                                                         epi_outputs[model]['mortality' + stratum])
+                            for from_label, rate in self.model_dict[model].var_infection_death_rate_flows:
+                                if stratum in from_label:
+                                    epi_outputs[model]['mortality' + stratum] \
+                                        = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                                                         * self.model_dict[model].get_var_soln(rate) \
+                                                         / epi_outputs[model]['population' + stratum] \
+                                                         * 1e5,
+                                                         epi_outputs[model]['mortality' + stratum])
 
                         # Prevalence
-                        for label in self.model_dict[model].labels:
-                            if 'susceptible' not in label and 'latent' not in label and stratum in label:
-                                self.epi_outputs[model]['prevalence' + stratum] \
-                                    = increment_list(self.model_dict[model].get_compartment_soln(label) \
-                                                     / self.epi_outputs[model]['population' + stratum] \
-                                                     * 1e5, self.epi_outputs[model]['prevalence' + stratum])
+                        if 'prevalence' in outputs_to_analyse:
+                            for label in self.model_dict[model].labels:
+                                if 'susceptible' not in label and 'latent' not in label and stratum in label:
+                                    epi_outputs[model]['prevalence' + stratum] \
+                                        = increment_list(self.model_dict[model].get_compartment_soln(label) \
+                                                         / epi_outputs[model]['population' + stratum] \
+                                                         * 1e5, epi_outputs[model]['prevalence' + stratum])
+
+        return epi_outputs
 
             # Old code from model.py - for fixing later when strains are implemented
             # Summing MDR and XDR to get the total of all MDRs
@@ -333,46 +365,6 @@ class ModelRunner:
             #     Convert to percentage
                 # self.vars['proportion_mdr'] \
                 #     = self.vars['all_mdr_strains'] / self.vars['incidence'] * 1E2
-
-    def get_output_dicts_from_lists(self):
-
-        """
-        Convert output lists to dictionaries.
-
-        """
-
-        for model in self.model_dict:
-            self.epi_outputs_dict[model] = {}
-            self.cost_outputs_dict[model] = {}
-            for output in self.epi_outputs[model]:
-                self.epi_outputs_dict[model][output + '_dict'] = dict(zip(self.epi_outputs[model]['times'],
-                                                                          self.epi_outputs[model][output]))
-            for output in self.cost_outputs[model]:
-                self.cost_outputs_dict[model][output + '_dict'] = dict(zip(self.cost_outputs[model]['times'],
-                                                                           self.cost_outputs[model][output]))
-
-    def extract_integer_dicts(self):
-
-        """
-        Extracts a dictionary from full_output_dict with only integer years, using the first time value greater than
-        the integer year in question.
-
-        """
-
-        integer_output_dict = {}
-        for model in self.model_dict:
-            integer_output_dict[model] = {}
-            for output in self.epi_outputs[model]:
-                if '_dict' in output:
-                    integer_output_dict[model][output + '_integer'] = {}
-                    times = self.epi_outputs[model]['times']
-                    start = numpy.floor(times[0])
-                    finish = numpy.floor(times[-1])
-                    float_years = numpy.linspace(start, finish, finish - start + 1.)
-                    for year in float_years:
-                        key = [t for t in times if t >= year][0]
-                        integer_output_dict[model][output + '_integer'][int(key)] \
-                            = self.epi_outputs[model][output][key]
 
     def find_population_fractions(self):
 
@@ -430,6 +422,44 @@ class ModelRunner:
                                                                t_into_future))
                         cost_all_programs += self.cost_outputs[model][cost_type + '_cost_' + intervention][-1]
                     self.cost_outputs[model][cost_type + '_cost_all_programs'].append(cost_all_programs)
+
+    def get_output_dicts_from_lists(self):
+
+        """
+        Convert output lists to dictionaries. This may actually not be that necessary - but the code is pretty short
+        and elegant, so easy enough to include/remove as needed.
+
+        """
+
+        for model in self.model_dict:
+            self.epi_outputs_dict[model] = {}
+            self.cost_outputs_dict[model] = {}
+            for output in self.epi_outputs[model]:
+                self.epi_outputs_dict[model][output + '_dict'] = dict(zip(self.epi_outputs[model]['times'],
+                                                                          self.epi_outputs[model][output]))
+            for output in self.cost_outputs[model]:
+                self.cost_outputs_dict[model][output + '_dict'] = dict(zip(self.cost_outputs[model]['times'],
+                                                                           self.cost_outputs[model][output]))
+
+    def extract_integer_dicts(self):
+
+        """
+        Extracts a dictionary from full_output_dict with only integer years, using the first time value greater than
+        the integer year in question.
+
+        """
+
+        for model in self.model_dict:
+
+            self.epi_outputs_integer_dict[model] = {}
+            for output in self.epi_outputs_dict[model]:
+                self.epi_outputs_integer_dict[model][output] \
+                    = find_integer_dict_from_float_dict(self.epi_outputs_dict[model][output])
+
+            self.cost_outputs_integer_dict[model] = {}
+            for output in self.cost_outputs_dict[model]:
+                self.cost_outputs_integer_dict[model][output] \
+                    = find_integer_dict_from_float_dict(self.cost_outputs_dict[model][output])
 
     def store_scenario_results(self, scenario):
 

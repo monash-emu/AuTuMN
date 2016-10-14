@@ -141,7 +141,8 @@ class ModelRunner:
 
         # New model interpretation code - should be completely flexible and reusable by uncertainty and optimisation
         self.epi_outputs \
-            = self.find_epi_outputs(outputs_to_analyse=['population',
+            = self.find_epi_outputs(models_to_analyse=self.model_dict,
+                                    outputs_to_analyse=['population',
                                                         'incidence',
                                                         'mortality',
                                                         'notifications',
@@ -154,8 +155,16 @@ class ModelRunner:
         self.find_adjusted_costs(cost_types=['inflated',
                                              'discounted',
                                              'discounted_inflated'])
-        self.get_output_dicts_from_lists()
-        self.extract_integer_dicts()
+
+        # If you want some dictionaries based on the lists created above (may not be necessary)
+        self.epi_outputs_dict.update(self.get_output_dicts_from_lists(models_to_analyse=self.model_dict,
+                                                                      output_dict_of_lists=self.epi_outputs))
+        self.cost_outputs_dict.update(self.get_output_dicts_from_lists(models_to_analyse=self.model_dict,
+                                                                       output_dict_of_lists=self.cost_outputs))
+
+        # If you want some integer-based dictionaries
+        self.epi_outputs_integer_dict.update(self.extract_integer_dicts(self.epi_outputs_dict))
+        self.cost_outputs_integer_dict.update(self.extract_integer_dicts(self.cost_outputs_dict))
 
         if self.gui_inputs['output_uncertainty']:
 
@@ -210,7 +219,7 @@ class ModelRunner:
             self.model_dict['optimized'].integrate()
             self.store_scenario_results('optimized')
 
-    def find_epi_outputs(self, outputs_to_analyse=[], stratifications=[]):
+    def find_epi_outputs(self, models_to_analyse={}, outputs_to_analyse=[], stratifications=[]):
 
         """
         Method to extract all requested epidemiological outputs from the models. Intended ultimately to be flexible\
@@ -219,7 +228,7 @@ class ModelRunner:
         """
 
         epi_outputs = {}
-        for model in self.model_dict:
+        for model in models_to_analyse:
             epi_outputs[model] = {}
             epi_outputs[model]['times'] = self.model_dict[model].times
 
@@ -430,7 +439,7 @@ class ModelRunner:
                         cost_all_programs += self.cost_outputs[model][cost_type + '_cost_' + intervention][-1]
                     self.cost_outputs[model][cost_type + '_cost_all_programs'].append(cost_all_programs)
 
-    def get_output_dicts_from_lists(self):
+    def get_output_dicts_from_lists(self, models_to_analyse={}, output_dict_of_lists={}):
 
         """
         Convert output lists to dictionaries. This may actually not be that necessary - but the code is pretty short
@@ -438,35 +447,25 @@ class ModelRunner:
 
         """
 
+        output_dictionary = {}
+        for model in models_to_analyse:
+            output_dictionary[model] = {}
+            for output in output_dict_of_lists[model]:
+                if output != 'times':
+                    output_dictionary[model][output] = dict(zip(output_dict_of_lists[model]['times'],
+                                                                output_dict_of_lists[model][output]))
+        return output_dictionary
+
+    def extract_integer_dicts(self, dict_to_extract_from):
+
+        integer_dict = {}
         for model in self.model_dict:
-            self.epi_outputs_dict[model] = {}
-            self.cost_outputs_dict[model] = {}
-            for output in self.epi_outputs[model]:
-                self.epi_outputs_dict[model][output + '_dict'] = dict(zip(self.epi_outputs[model]['times'],
-                                                                          self.epi_outputs[model][output]))
-            for output in self.cost_outputs[model]:
-                self.cost_outputs_dict[model][output + '_dict'] = dict(zip(self.cost_outputs[model]['times'],
-                                                                           self.cost_outputs[model][output]))
+            integer_dict[model] = {}
+            for output in dict_to_extract_from[model]:
+                integer_dict[model][output] \
+                    = find_integer_dict_from_float_dict(dict_to_extract_from[model][output])
 
-    def extract_integer_dicts(self):
-
-        """
-        Extracts a dictionary from full_output_dict with only integer years, using the first time value greater than
-        the integer year in question.
-
-        """
-
-        for model in self.model_dict:
-
-            self.epi_outputs_integer_dict[model] = {}
-            for output in self.epi_outputs_dict[model]:
-                self.epi_outputs_integer_dict[model][output] \
-                    = find_integer_dict_from_float_dict(self.epi_outputs_dict[model][output])
-
-            self.cost_outputs_integer_dict[model] = {}
-            for output in self.cost_outputs_dict[model]:
-                self.cost_outputs_integer_dict[model][output] \
-                    = find_integer_dict_from_float_dict(self.cost_outputs_dict[model][output])
+        return integer_dict
 
     def store_scenario_results(self, scenario):
 
@@ -561,8 +560,12 @@ class ModelRunner:
                 self.store_uncertainty_results('baseline')
 
                 # New code
-                self.store_uncertainty('baseline', self.find_epi_outputs(outputs_to_analyse=['population',
-                                                                                             'incidence']))
+                output_list = self.find_epi_outputs(['baseline'],
+                                                    outputs_to_analyse=['population',
+                                                                        'incidence'])
+                self.store_uncertainty('baseline', output_list)
+
+                print(output_list['baseline']['incidence'])
 
                 # Calculate prior
                 prior_log_likelihood = 0.
@@ -587,6 +590,8 @@ class ModelRunner:
                 # Calculate posterior
                 posterior_log_likelihood = 0.
                 for output_dict in self.outputs_unc:
+
+                    # The GTB values for the output of interest
                     working_output_dictionary = normal_char[output_dict['key']]
                     for year in working_output_dictionary.keys():
                         year_index \
@@ -594,6 +599,9 @@ class ModelRunner:
                                                                               year)
                         model_result_for_output \
                             = self.model_dict['baseline'].get_var_soln(output_dict['key'])[year_index]
+                        print(year)
+                        print(model_result_for_output)
+
                         mu, sd = working_output_dictionary[year][0], working_output_dictionary[year][1]
                         posterior_log_likelihood += norm.logpdf(model_result_for_output, mu, sd)
 
@@ -851,6 +859,19 @@ class ModelRunner:
                                     getattr(self.model_dict[scenario], attribute)])
 
     def store_uncertainty(self, model, new_results, outputs_to_analyse=['population', 'incidence']):
+
+        """
+        Add model results from one uncertainty run to the appropriate outputs dictionary.
+
+        Args:
+            model: The scenario being run.
+            new_results: The results from that model run.
+            outputs_to_analyse: The epidemiological outputs of interest.
+
+        Updates:
+            self.epi_outputs_uncertainty
+
+        """
 
         # Create first column of dictionaries
         if self.epi_outputs_uncertainty == {}:

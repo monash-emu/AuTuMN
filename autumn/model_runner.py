@@ -105,6 +105,7 @@ class ModelRunner:
         self.epi_outputs = {}
         self.epi_outputs_dict = {}
         self.epi_outputs_integer_dict = {}
+        self.epi_outputs_uncertainty = {}
         self.cost_outputs = {}
         self.cost_outputs_dict = {}
         self.cost_outputs_integer_dict = {}
@@ -555,7 +556,13 @@ class ModelRunner:
 
             # Now storing regardless of acceptance
             if self.is_last_run_success:
+
+                # Old code
                 self.store_uncertainty_results('baseline')
+
+                # New code
+                self.store_uncertainty('baseline', self.find_epi_outputs(outputs_to_analyse=['population',
+                                                                                             'incidence']))
 
                 # Calculate prior
                 prior_log_likelihood = 0.
@@ -842,6 +849,21 @@ class ModelRunner:
                 self.results['uncertainty'][scenario][attribute] \
                     = numpy.dstack([self.results['uncertainty'][scenario][attribute],
                                     getattr(self.model_dict[scenario], attribute)])
+
+    def store_uncertainty(self, model, new_results, outputs_to_analyse=['population', 'incidence']):
+
+        # Create first column of dictionaries
+        if self.epi_outputs_uncertainty == {}:
+            self.epi_outputs_uncertainty[model] = {}
+            for output in outputs_to_analyse:
+                self.epi_outputs_uncertainty[model][output] = new_results[model][output]
+
+        # Add additional columns to uncertainty output dictionaries
+        else:
+            for output in outputs_to_analyse:
+                self.epi_outputs_uncertainty[model][output] \
+                    = numpy.vstack([self.epi_outputs_uncertainty[model][output],
+                                   new_results[model][output]])
 
     def run_optimization(self):
 

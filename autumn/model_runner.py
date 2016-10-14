@@ -550,9 +550,9 @@ class ModelRunner:
                 for param_dict in self.inputs.param_ranges_unc:
                     new_params.append(param_candidates[param_dict['key']][run])
 
-            # Run the integration
+            # Run the baseline integration
             # (includes checking parameters, setting parameters and recording success/failure of run)
-            self.run_with_params(new_params)
+            self.run_with_params(new_params, 'baseline')
 
             # Now storing regardless of acceptance
             if self.is_last_run_success:
@@ -636,13 +636,12 @@ class ModelRunner:
                         scenario_name = tool_kit.find_scenario_string_from_number(scenario)
                         if scenario is not None:
                             scenario_start_time_index = \
-                                self.model_dict['baseline'].find_time_index(
-                                    self.inputs.model_constants['recent_time'])
+                                self.model_dict['baseline'].find_time_index(self.inputs.model_constants['recent_time'])
                             self.model_dict[scenario_name].start_time = \
                                 self.model_dict['baseline'].times[scenario_start_time_index]
                             self.model_dict[scenario_name].loaded_compartments = \
                                 self.model_dict['baseline'].load_state(scenario_start_time_index)
-                            self.model_dict[scenario_name].integrate()
+                            self.run_with_params(new_params, model=scenario_name)
 
                             self.prepare_uncertainty_dictionaries(scenario_name)
                             self.store_uncertainty_results(scenario_name)
@@ -660,7 +659,7 @@ class ModelRunner:
                                            ' candidates. Running time: '
                                            + str(datetime.datetime.now() - start_timer_run))
 
-    def set_model_with_params(self, param_dict):
+    def set_model_with_params(self, param_dict, model='baseline'):
 
         """
         Populates baseline model with params from uncertainty calculations.
@@ -673,9 +672,9 @@ class ModelRunner:
 
         n_set = 0
         for key in param_dict:
-            if key in self.model_dict['baseline'].params:
+            if key in self.model_dict[model].params:
                 n_set += 1
-                self.model_dict['baseline'].set_parameter(key, param_dict[key])
+                self.model_dict[model].set_parameter(key, param_dict[key])
             else:
                 raise ValueError("%s not in model params" % key)
 
@@ -765,7 +764,7 @@ class ModelRunner:
 
         return new_params
 
-    def run_with_params(self, params):
+    def run_with_params(self, params, model='baseline'):
 
         """
         Integrate the model with the proposed parameter set.
@@ -793,10 +792,10 @@ class ModelRunner:
 
         param_dict = self.convert_param_list_to_dict(params)
 
-        self.set_model_with_params(param_dict)
+        self.set_model_with_params(param_dict, model)
         self.is_last_run_success = True
         try:
-            self.model_dict['baseline'].integrate()
+            self.model_dict[model].integrate()
         except:
             print "Warning: parameters=%s failed with model" % params
             self.is_last_run_success = False

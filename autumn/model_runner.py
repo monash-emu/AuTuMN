@@ -109,7 +109,7 @@ class ModelRunner:
         self.results['scenarios'] = {}
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
-        self.optimization = True
+        self.optimisation = False
         self.total_funding = 6.6e6  # if None, will consider equivalent funding as baseline
         self.acceptance_dict = {}
         self.rejection_dict = {}
@@ -207,29 +207,31 @@ class ModelRunner:
             #     tool_kit.pickle_save(self.accepted_indices, indices_file)
             #     self.add_comment_to_gui_window('Uncertainty results saved to disc')
 
-        if self.optimization:
+        if self.optimisation:
             if self.total_funding is None:
-                start_cost_indice = tool_kit.find_first_list_element_at_least_value(self.model_dict['baseline'].cost_times, \
-                                                                                    self.model_dict['baseline'].inputs.model_constants['scenario_start_time'])
-                self.total_funding = numpy.sum(self.model_dict['baseline'].costs[start_cost_indice:, :])/ \
-                                     (self.model_dict['baseline'].inputs.model_constants['report_end_time'] - \
-                                      self.model_dict['baseline'].inputs.model_constants['scenario_start_time'])
+                start_cost_index \
+                    = tool_kit.find_first_list_element_at_least_value(
+                    self.model_dict['baseline'].cost_times,
+                    self.model_dict['baseline'].inputs.model_constants['scenario_start_time'])
+                self.total_funding = numpy.sum(self.model_dict['baseline'].costs[start_cost_index:, :]) \
+                                     / (self.model_dict['baseline'].inputs.model_constants['report_end_time'] -
+                                        self.model_dict['baseline'].inputs.model_constants['scenario_start_time'])
 
-            self.run_optimization()
-            self.model_dict['optimized'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
+            self.run_optimisation()
+            self.model_dict['optimised'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
             start_time_index = \
                 self.model_dict['baseline'].find_time_index(self.inputs.model_constants['recent_time'])
-            self.model_dict['optimized'].start_time = \
+            self.model_dict['optimised'].start_time = \
                 self.model_dict['baseline'].times[start_time_index]
-            self.model_dict['optimized'].loaded_compartments = \
+            self.model_dict['optimised'].loaded_compartments = \
                 self.model_dict['baseline'].load_state(start_time_index)
-            self.model_dict['optimized'].eco_drives_epi = True
+            self.model_dict['optimised'].eco_drives_epi = True
             for intervention in self.model_dict['baseline'].interventions_to_cost:
-                self.model_dict['optimized'].available_funding[intervention] = self.optimal_allocation[intervention] * \
-                                                                               self.total_funding
-            self.model_dict['optimized'].distribute_funding_across_years()
-            self.model_dict['optimized'].integrate()
-            self.store_scenario_results('optimized')
+                self.model_dict['optimised'].available_funding[intervention] = self.optimal_allocation[intervention] \
+                                                                               * self.total_funding
+            self.model_dict['optimised'].distribute_funding_across_years()
+            self.model_dict['optimised'].integrate()
+            self.store_scenario_results('optimised')
 
     def find_epi_outputs(self, models_to_analyse={}, outputs_to_analyse=[], stratifications=[]):
 
@@ -888,9 +890,9 @@ class ModelRunner:
                     = numpy.vstack([self.epi_outputs_uncertainty[model][output],
                                    new_results[model][output]])
 
-    def run_optimization(self):
+    def run_optimisation(self):
 
-        print 'Start optimization'
+        print 'Start optimisation'
 
         # Initialise a new model that will be run from 'recent_time' for optimisation
         self.model_dict['optimisation'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
@@ -940,7 +942,7 @@ class ModelRunner:
             bnds = []
             for int in range(n_interventions):
                 bnds.append((0, 1.0))
-            # Ready to run optimization
+            # Ready to run optimisation
             res = minimize(func, x_0, jac=None, bounds=bnds, constraints=cons, method='SLSQP', options={'disp': True})
             best_x = res.x
         else:

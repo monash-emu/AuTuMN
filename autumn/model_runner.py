@@ -611,7 +611,7 @@ class ModelRunner:
                 else:
                     accepted = numpy.random.binomial(n=1, p=numpy.exp(log_likelihood - prev_log_likelihood))
 
-                # Record information for all runs
+                # Record some information for all runs
                 if not bool(accepted):
                     self.whether_accepted_list.append(False)
                     for p, param_dict in enumerate(self.inputs.param_ranges_unc):
@@ -621,7 +621,6 @@ class ModelRunner:
                     self.accepted_indices += [run]
                     n_accepted += 1
                     for p, param_dict in enumerate(self.inputs.param_ranges_unc):
-                        # This line wrong
                         self.acceptance_dict[param_dict['key']][n_accepted] = new_params[p]
                         self.rejection_dict[param_dict['key']][n_accepted] = []
 
@@ -631,7 +630,7 @@ class ModelRunner:
 
                     self.loglikelihoods.append(log_likelihood)
 
-                    # Run scenarios other than baseline and store uncertainty
+                    # Run scenarios other than baseline and store uncertainty - currently only if accepted
                     for scenario in self.gui_inputs['scenarios_to_run']:
                         scenario_name = tool_kit.find_scenario_string_from_number(scenario)
                         if scenario is not None:
@@ -643,8 +642,15 @@ class ModelRunner:
                                 self.model_dict['baseline'].load_state(scenario_start_time_index)
                             self.run_with_params(new_params, model=scenario_name)
 
+                            # Old storage
                             self.prepare_uncertainty_dictionaries(scenario_name)
                             self.store_uncertainty_results(scenario_name)
+
+                            # New storage
+                            output_list = self.find_epi_outputs([scenario_name],
+                                                                outputs_to_analyse=['population',
+                                                                                    'incidence'])
+                            self.store_uncertainty(scenario_name, output_list)
 
                 i_candidates += 1
                 run += 1
@@ -870,7 +876,7 @@ class ModelRunner:
         """
 
         # Create first column of dictionaries
-        if self.epi_outputs_uncertainty == {}:
+        if model not in self.epi_outputs_uncertainty:
             self.epi_outputs_uncertainty[model] = {}
             for output in outputs_to_analyse:
                 self.epi_outputs_uncertainty[model][output] = new_results[model][output]

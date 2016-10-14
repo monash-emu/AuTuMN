@@ -109,7 +109,7 @@ class ModelRunner:
         self.results['scenarios'] = {}
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
-        self.optimization = False
+        self.optimization = True
         self.total_funding = 6.6e6  # if None, will consider equivalent funding as baseline
         self.acceptance_dict = {}
         self.rejection_dict = {}
@@ -893,17 +893,17 @@ class ModelRunner:
         print 'Start optimization'
 
         # Initialise a new model that will be run from 'recent_time' for optimisation
-        opti_model_init = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
+        self.model_dict['optimisation'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
         start_time_index = \
             self.model_dict['baseline'].find_time_index(self.inputs.model_constants['recent_time'])
-        opti_model_init.start_time = \
+        self.model_dict['optimisation'].start_time = \
             self.model_dict['baseline'].times[start_time_index]
-        opti_model_init.loaded_compartments = \
-            self.model_dict['baseline'] .load_state(start_time_index)
+        self.model_dict['optimisation'].loaded_compartments = \
+            self.model_dict['baseline'].load_state(start_time_index)
 
-        opti_model_init.eco_drives_epi = True
+        self.model_dict['optimisation'].eco_drives_epi = True
 
-        nb_int = len(self.model_dict['baseline'].interventions_to_cost) # number of interventions
+        n_interventions = len(self.model_dict['baseline'].interventions_to_cost)  # number of interventions
 
         # function to minimize: incidence in 2035
         def func(x):
@@ -918,24 +918,27 @@ class ModelRunner:
             """
 
             for i, int in enumerate(self.model_dict['baseline'].interventions_to_cost):
-                opti_model_init.available_funding[int] = x[i]*self.total_funding
-            opti_model_init.distribute_funding_across_years()
-            opti_model_init.integrate()
-            return opti_model_init.get_var_soln('incidence')[-1]
+                self.model_dict['optimisation'].available_funding[int] = x[i]*self.total_funding
+            self.model_dict['optimisation'].distribute_funding_across_years()
+            self.model_dict['optimisation'].integrate()
+            output_list = self.find_epi_outputs(['optimisation'],
+                                                outputs_to_analyse=['population',
+                                                                    'incidence'])
+            return output_list['optimisation']['incidence'][-1]
 
         use_packages = True
         if use_packages:
             # Some initial funding
             x_0 = []
-            for i in range(nb_int):
-                x_0.append(1./nb_int)
+            for i in range(n_interventions):
+                x_0.append(1./n_interventions)
 
             # Equality constraint:  Sum(x)=Total funding
             cons =[{'type':'ineq',
                     'fun': lambda x: 1-sum(x),    # if x is proportion
                     'jac': lambda x: -numpy.ones(len(x))}]
             bnds = []
-            for int in range(nb_int):
+            for int in range(n_interventions):
                 bnds.append((0, 1.0))
             # Ready to run optimization
             res = minimize(func, x_0, jac=None, bounds=bnds, constraints=cons, method='SLSQP', options={'disp': True})
@@ -945,20 +948,20 @@ class ModelRunner:
             best_x = None
             best_objective = 1e9
             for i in range(n_random):
-                x = numpy.zeros(nb_int)
+                x = numpy.zeros(n_interventions)
                 sum_generated = 0
-                for j in range(nb_int-1):
+                for j in range(n_interventions-1):
                     x[j] = uniform(0., 1.-sum_generated)
                     sum_generated += x[j]
-                x[nb_int-1] = 1. - sum_generated
+                x[n_interventions-1] = 1. - sum_generated
                 objective = func(x)
                 if objective < best_objective:
                     best_x = x
                     best_objective = objective
 
-        # update self.optimal_allocation
-        for ind, intervention in enumerate(self.model_dict['baseline'].interventions_to_cost):
-            self.optimal_allocation[intervention] = best_x[ind]
+        # Update self.optimal_allocation
+        for inter, intervention in enumerate(self.model_dict['baseline'].interventions_to_cost):
+            self.optimal_allocation[intervention] = best_x[inter]
 
         print self.optimal_allocation
 
@@ -1012,7 +1015,7 @@ class ModelRunner:
             # Label
             ax.set_title(tool_kit.find_title_from_dictionary(param))
             if p > len(self.all_parameters_tried) - subplot_grid[1] - 1:
-                ax.set_xlabel('Accepted model runs')
+                ax.set_xlabel('Accepted runs')
 
             # Finalise
             parameter_plots.show()

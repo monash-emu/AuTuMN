@@ -381,7 +381,7 @@ class ModelRunner:
         """
 
         for model in self.model_dict:
-            for stratification in [self.model_dict[model].agegroups, self.model_dict[model].comorbidities]:
+            for stratification in stratifications:
                 if len(stratification) > 1:
                     for stratum in stratification:
                         self.epi_outputs[model]['fraction' + stratum] \

@@ -72,6 +72,18 @@ def find_integer_dict_from_float_dict(float_dict):
     return integer_dict
 
 
+def extract_integer_dicts(models_to_analyse={}, dict_to_extract_from={}):
+
+    integer_dict = {}
+    for model in models_to_analyse:
+        integer_dict[model] = {}
+        for output in dict_to_extract_from[model]:
+            integer_dict[model][output] \
+                = find_integer_dict_from_float_dict(dict_to_extract_from[model][output])
+
+    return integer_dict
+
+
 class ModelRunner:
 
     def __init__(self, gui_inputs, runtime_outputs, figure_frame):
@@ -163,8 +175,8 @@ class ModelRunner:
                                                                        output_dict_of_lists=self.cost_outputs))
 
         # If you want some integer-based dictionaries
-        self.epi_outputs_integer_dict.update(self.extract_integer_dicts(self.epi_outputs_dict))
-        self.cost_outputs_integer_dict.update(self.extract_integer_dicts(self.cost_outputs_dict))
+        self.epi_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.epi_outputs_dict))
+        self.cost_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.cost_outputs_dict))
 
         if self.gui_inputs['output_uncertainty']:
 
@@ -456,17 +468,6 @@ class ModelRunner:
                                                                 output_dict_of_lists[model][output]))
         return output_dictionary
 
-    def extract_integer_dicts(self, dict_to_extract_from):
-
-        integer_dict = {}
-        for model in self.model_dict:
-            integer_dict[model] = {}
-            for output in dict_to_extract_from[model]:
-                integer_dict[model][output] \
-                    = find_integer_dict_from_float_dict(dict_to_extract_from[model][output])
-
-        return integer_dict
-
     def store_scenario_results(self, scenario):
 
         """
@@ -564,8 +565,10 @@ class ModelRunner:
                                                     outputs_to_analyse=['population',
                                                                         'incidence'])
                 self.store_uncertainty('baseline', output_list)
-
-                print(output_list['baseline']['incidence'])
+                integer_dictionary \
+                    = extract_integer_dicts(['baseline'],
+                                            self.get_output_dicts_from_lists(models_to_analyse=['baseline'],
+                                                                             output_dict_of_lists=output_list))
 
                 # Calculate prior
                 prior_log_likelihood = 0.
@@ -594,14 +597,8 @@ class ModelRunner:
                     # The GTB values for the output of interest
                     working_output_dictionary = normal_char[output_dict['key']]
                     for year in working_output_dictionary.keys():
-                        year_index \
-                            = tool_kit.find_first_list_element_at_least_value(self.model_dict['baseline'].times,
-                                                                              year)
                         model_result_for_output \
-                            = self.model_dict['baseline'].get_var_soln(output_dict['key'])[year_index]
-                        print(year)
-                        print(model_result_for_output)
-
+                            = integer_dictionary['baseline']['incidence'][year]
                         mu, sd = working_output_dictionary[year][0], working_output_dictionary[year][1]
                         posterior_log_likelihood += norm.logpdf(model_result_for_output, mu, sd)
 
@@ -619,7 +616,7 @@ class ModelRunner:
                     self.whether_accepted_list.append(False)
                     for p, param_dict in enumerate(self.inputs.param_ranges_unc):
                         self.rejection_dict[param_dict['key']][n_accepted].append(new_params[p])
-                elif bool(accepted):
+                else:
                     self.whether_accepted_list.append(True)
                     self.accepted_indices += [run]
                     n_accepted += 1

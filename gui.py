@@ -93,7 +93,7 @@ class App:
         # Model running button
         self.run = Button(self.frame, text='Run', command=self.execute, width=10)
         self.run.grid(row=1, column=0, sticky=W, padx=2)
-        self.run.config(font='Helvetica 10 bold italic', fg='red', bg='grey')
+        self.run.config(font='Helvetica 10 bold italic', fg='darkgreen', bg='grey')
 
         # Creating main output window
         self.runtime_outputs = Text(self.frame)
@@ -229,7 +229,7 @@ class App:
         uncertainty_numeric_list = {'uncertainty_runs': ['Number of uncertainty runs', 10],
                                     'burn_in_runs': ['Number of burn-in runs', 4],
                                     'search_width': ['Relative search width', .2]}
-        # self.boolean_dictionary['output_uncertainty'].set(True)
+        self.boolean_dictionary['output_uncertainty'].set(True)
         self.boolean_dictionary['adaptive_uncertainty'].set(True)
         for numeric in uncertainty_numeric_list.keys():
             numeric_label = Label(self.frame, text=uncertainty_numeric_list[numeric][0], font=label_font)

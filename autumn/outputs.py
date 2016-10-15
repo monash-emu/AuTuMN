@@ -1083,7 +1083,7 @@ class Project:
     def write_docs_by_output(self):
 
         # Write a new file for each output
-        for output in self.integer_output_dict['baseline'].keys():
+        for output in self.model_runner.epi_outputs_integer_dict['baseline']:
 
             # Initialise document
             path = os.path.join(self.out_dir_project, output)
@@ -1094,8 +1094,8 @@ class Project:
             # Write headers
             header_cells = table.rows[0].cells
             header_cells[0].text = 'Year'
-            for scenario_no, scenario in enumerate(self.scenarios):
-                header_cells[scenario_no + 1].text \
+            for s, scenario in enumerate(self.scenarios):
+                header_cells[s + 1].text \
                     = tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario))
 
             # Find years to write
@@ -1111,9 +1111,10 @@ class Project:
                 row_cells = table.add_row().cells
                 row_cells[0].text = str(year)
 
-                for sc, scenario in enumerate(self.scenarios):
-                    if year in self.integer_output_dict[scenario][output]:
-                        row_cells[sc + 1].text = '%.2f' % self.integer_output_dict[scenario][output][year]
+                for s, scenario in enumerate(self.scenarios):
+                    if year in self.model_runner.epi_outputs_integer_dict[scenario][output]:
+                        row_cells[s + 1].text = '%.2f' % self.model_runner.epi_outputs_integer_dict[
+                            scenario][output][year]
 
             # Save document
             document.save(path)
@@ -1121,7 +1122,7 @@ class Project:
     def write_docs_by_scenario(self):
 
         # Write a new file for each output
-        outputs = self.integer_output_dict['baseline'].keys()
+        outputs = self.model_runner.epi_outputs_integer_dict['baseline'].keys()
 
         for scenario in self.scenarios:
 
@@ -1134,8 +1135,8 @@ class Project:
             # Write headers
             header_cells = table.rows[0].cells
             header_cells[0].text = 'Year'
-            for output_no, output in enumerate(outputs):
-                header_cells[output_no + 1].text \
+            for o, output in enumerate(outputs):
+                header_cells[o + 1].text \
                     = tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(output))
 
             # Find years to write
@@ -1151,9 +1152,10 @@ class Project:
                 row_cells = table.add_row().cells
                 row_cells[0].text = str(year)
 
-                for out, output in enumerate(outputs):
-                    if year in self.integer_output_dict[scenario][output]:
-                        row_cells[out + 1].text = '%.2f' % self.integer_output_dict[scenario][output][year]
+                for o, output in enumerate(outputs):
+                    if year in self.model_runner.epi_outputs_integer_dict[scenario][output]:
+                        row_cells[o + 1].text = '%.2f' % self.model_runner.epi_outputs_integer_dict[
+                            scenario][output][year]
 
             # Save document
             document.save(path)
@@ -1821,7 +1823,7 @@ class Project:
         # Overall title
         fig.suptitle(self.country + ' burden by age group', fontsize=self.suptitle_size)
 
-        for output_no, output in enumerate(['incidence', 'mortality']):
+        for o, output in enumerate(['incidence', 'mortality']):
 
             # Find the highest incidence value in the time period considered across all age groups
             ymax = 0.

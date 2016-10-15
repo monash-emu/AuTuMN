@@ -572,6 +572,10 @@ class Project:
         self.scenarios.reverse()
         self.programs = self.model_runner.model_dict['baseline'].interventions_to_cost
 
+        self.uncertainty_percentiles = {}
+        self.percentiles = [2.5, 50, 97.5]
+
+
     #################################
     # General methods for use below #
     #################################
@@ -735,47 +739,16 @@ class Project:
     # Methods to collect data for later use #
     #########################################
 
-    def create_full_output_dict(self, outputs):
-
-        """
-        Creates a dictionary for each requested output at every time point in that model's times attribute.
-
-        """
+    def find_uncertainty_centiles(self):
 
         for scenario in self.scenarios:
-            self.full_output_dict[scenario] = {}
-            self.full_output_lists[scenario] = {}
-            self.full_uncertainty_dicts[scenario] = {}
-
-            for label in outputs:
-                self.full_output_lists[scenario]['times'] = self.model_runner.model_dict[scenario].times
-                self.full_output_lists[scenario]['cost_times'] = self.model_runner.model_dict[scenario].cost_times
-                if 'costs_' not in label:
-                    array_name = 'var_array'
-                    times_name = 'times'
-                    index_label = self.find_var_index(label)
-                else:
-                    array_name = 'costs'
-                    times_name = 'cost_times'
-                    index_label = self.model_runner.model_dict[scenario].interventions_to_cost.index(label[6:])
-                self.full_output_lists[scenario][label] \
-                    = list(self.model_runner.results['scenarios'][scenario][array_name][:, index_label])
-                self.full_output_dict[scenario][label] = dict(zip(self.full_output_lists[scenario][times_name],
-                                                                  self.full_output_lists[scenario][label]))
-
-                # Add centiles of uncertainty data to full dictionary
-                if self.gui_inputs['output_uncertainty']:
-                    self.full_uncertainty_dicts[scenario][label] = {}
-                    for working_centile in range(101) + [2.5, 97.5]:
-                        self.full_uncertainty_dicts[scenario][label]['centile_' + str(working_centile)] \
-                            = dict(zip(self.full_output_lists[scenario][times_name],
-                                   np.percentile(
-                                       self.model_runner.results['uncertainty'][scenario]['var_array'][
-                                       :, index_label, self.model_runner.accepted_indices],
-                                       working_centile,
-                                       axis=1)
-                                       )
-                                   )
+            self.uncertainty_percentiles[scenario] = {}
+            for output in self.model_runner.epi_outputs_uncertainty[scenario]:
+                self.uncertainty_percentiles[scenario][output] \
+                    = np.percentile(self.model_runner.epi_outputs_uncertainty[
+                                        scenario][output][self.model_runner.accepted_indices, :],
+                                    self.percentiles,
+                                    axis=0)
 
     #################################################
     # Methods for outputting to Office applications #
@@ -785,10 +758,14 @@ class Project:
 
         """
         Method to work through all the fundamental output methods, which then call all the specific output
-        methods for plotting and writing as required.
+        methods for further data processing, plotting and writing as required.
 
         """
 
+        # Processing methods that are only required for outputs (noting that most processing now done in ModelRunner)
+        self.find_uncertainty_centiles()
+
+        # Master methods for each type of outputs
         self.write_spreadsheets()
         self.write_documents()
         self.run_plotting()

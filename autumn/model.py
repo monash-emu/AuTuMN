@@ -1,14 +1,16 @@
-# -*- coding: utf-8 -*-
-
 
 """
 
-The TB-specific model, or models, should be coded in this file
+The TB-specific model (or models) should be coded in this file.
 
 Time unit throughout: years
 Compartment unit throughout: patients
 
+Nested inheritance from BaseModel and StratifiedModel in base.py - the former sets some fundamental methods for
+creating intercompartmental flows, costs, etc., while the latter sets down the approach to population stratification.
+
 """
+
 
 from scipy import exp, log
 from autumn.base import BaseModel, StratifiedModel

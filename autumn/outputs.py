@@ -596,7 +596,7 @@ class Project:
 
         requested_years = range(minimum, maximum, step)
         years = []
-        for y in self.integer_output_dict[scenario][output].keys():
+        for y in self.model_runner.epi_outputs_integer_dict[scenario][output]:
             if y in requested_years:
                 years += [y]
         return years
@@ -956,7 +956,7 @@ class Project:
     def write_xls_by_output(self):
 
         # Write a new file for each output
-        for output in self.integer_output_dict['baseline'].keys():
+        for output in self.model_runner.epi_outputs_integer_dict['baseline']:
 
             # Make filename
             path = os.path.join(self.out_dir_project, output)
@@ -968,7 +968,7 @@ class Project:
             sheet.title = output
 
             # Write a new file for each epidemiological indicator
-            for scenario in self.integer_output_dict.keys():
+            for scenario in self.model_runner.epi_outputs_integer_dict:
                 self.write_xls_column_or_row(sheet, scenario, output)
 
             # Save workbook
@@ -992,8 +992,7 @@ class Project:
     def write_xls_by_scenario(self):
 
         # Write a new file for each scenario
-        scenarios = self.integer_output_dict.keys()
-        for scenario in scenarios:
+        for scenario in self.model_runner.epi_outputs_integer_dict:
 
             # Make filename
             path = os.path.join(self.out_dir_project, scenario)
@@ -1004,7 +1003,7 @@ class Project:
             sheet = wb.active
             sheet.title = scenario
 
-            for output in self.integer_output_dict['baseline'].keys():
+            for output in self.model_runner.epi_outputs_integer_dict['baseline']:
                 self.write_xls_column_or_row(sheet, scenario, output)
 
             # Save workbook
@@ -1013,89 +1012,58 @@ class Project:
     def write_horizontally_by_scenario(self, sheet, output, years):
 
         sheet.cell(row=1, column=1).value = 'Year'
-
-        col = 1
-        for y in years:
-            col += 1
-            sheet.cell(row=1, column=col).value = y
-
-        r = 1
-        for scenario in self.scenarios:
-            r += 1
-            sheet.cell(row=r, column=1).value = \
+        for y, year in enumerate(years):
+            sheet.cell(row=1, column=y+1).value = year
+        for s, scenario in enumerate(self.scenarios):
+            sheet.cell(row=s+1, column=1).value = \
                 tool_kit.replace_underscore_with_space(
                     tool_kit.capitalise_first_letter(scenario))
-            col = 1
-            for y in years:
-                col += 1
-                if y in self.integer_output_dict[scenario][output]:
-                    sheet.cell(row=r, column=col).value \
-                        = self.integer_output_dict[scenario][output][y]
+            for y, year in enumerate(years):
+                if year in self.model_runner.epi_outputs_integer_dict[scenario][output]:
+                    sheet.cell(row=s+1, column=y+1).value \
+                        = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
 
     def write_horizontally_by_output(self, sheet, scenario, years):
 
         sheet.cell(row=1, column=1).value = 'Year'
-
-        col = 1
-        for y in years:
-            col += 1
-            sheet.cell(row=1, column=col).value = y
-
-        r = 1
-        for output in self.integer_output_dict['baseline'].keys():
-            r += 1
-            sheet.cell(row=r, column=1).value = \
+        for y, year in enumerate(years):
+            sheet.cell(row=1, column=y+1).value = year
+        for o, output in enumerate(self.model_runner.epi_outputs_integer_dict['baseline']):
+            sheet.cell(row=o+1, column=1).value = \
                 tool_kit.replace_underscore_with_space(
                     tool_kit.capitalise_first_letter(output))
-            col = 1
-            for y in years:
-                col += 1
-                if y in self.integer_output_dict[scenario][output]:
-                    sheet.cell(row=r, column=col).value \
-                        = self.integer_output_dict[scenario][output][y]
+            for y, year in enumerate(years):
+                if year in self.model_runner.epi_outputs_integer_dict[scenario][output]:
+                    sheet.cell(row=r, column=y+1).value \
+                        = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
 
     def write_vertically_by_scenario(self, sheet, output, years):
 
         sheet.cell(row=1, column=1).value = 'Year'
-
-        row = 1
-        for y in years:
-            row += 1
-            sheet.cell(row=row, column=1).value = y
-
-        col = 1
-        for scenario in self.scenarios:
-            col += 1
-            sheet.cell(row=1, column=col).value = \
+        for y, year in enumerate(years):
+            sheet.cell(row=y+1, column=1).value = year
+        for s, scenario in enumerate(self.scenarios):
+            sheet.cell(row=1, column=s+1).value = \
                 tool_kit.replace_underscore_with_space(
                     tool_kit.capitalise_first_letter(scenario))
-            row = 1
-            for y in years:
-                row += 1
-                if y in self.integer_output_dict[scenario][output]:
-                    sheet.cell(row=row, column=col).value = self.integer_output_dict[scenario][output][y]
+            for y, year in enumerate(years):
+                if year in self.model_runner.epi_outputs_integer_dict[scenario][output]:
+                    sheet.cell(row=y+1, column=s+1).value \
+                        = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
 
     def write_vertically_by_output(self, sheet, scenario, years):
 
         sheet.cell(row=1, column=1).value = 'Year'
-
-        row = 1
-        for y in years:
-            row += 1
-            sheet.cell(row=row, column=1).value = y
-
-        col = 1
-        for output in self.integer_output_dict['baseline'].keys():
-            col += 1
-            sheet.cell(row=1, column=col).value = \
+        for y, year in enumerate(years):
+            sheet.cell(row=y+1, column=1).value = year
+        for o, output in enumerate(self.model_runner.epi_outputs_integer_dict['baseline']):
+            sheet.cell(row=1, column=o+1).value = \
                 tool_kit.replace_underscore_with_space(
                     tool_kit.capitalise_first_letter(output))
-            row = 1
-            for y in years:
-                row += 1
-                if y in self.integer_output_dict[scenario][output]:
-                    sheet.cell(row=row, column=col).value \
-                        = self.integer_output_dict[scenario][output][y]
+            for y, year in enumerate(years):
+                if year in self.integer_output_dict[scenario][output]:
+                    sheet.cell(row=y+1, column=o+1).value \
+                        = self.integer_output_dict[scenario][output][year]
 
     def write_documents(self):
 

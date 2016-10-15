@@ -1111,35 +1111,3 @@ class ConsolidatedModel(StratifiedModel):
                                                        'susceptible_vac' + strain + comorbidity + agegroup,
                                                        'ipt_effective_treatments' + agegroup)
 
-    ##################################################################
-    # Methods that calculate the output vars and diagnostic properties
-
-    def calculate_output_vars(self):
-
-        """
-        Method similarly structured to calculate_output_vars, just replicated by strains
-
-        """
-
-        # Initialise dictionaries
-        rate_incidence = {}
-
-        # By strain
-        for strain in self.strains:
-
-            # Initialise scalars
-            rate_incidence[strain] = 0.
-
-            # Incidence
-            for from_label, to_label, rate in self.var_transfer_rate_flows:
-                if 'latent' in from_label and 'active' in to_label and strain in to_label:
-                    rate_incidence[strain] \
-                        += self.compartments[from_label] * self.vars[rate]
-            for from_label, to_label, rate in self.fixed_transfer_rate_flows:
-                if 'latent' in from_label and 'active' in to_label and strain in to_label:
-                    rate_incidence[strain] \
-                        += self.compartments[from_label] * rate
-
-            self.vars['incidence' + strain] \
-                = rate_incidence[strain] / self.vars['population'] * 1E5
-

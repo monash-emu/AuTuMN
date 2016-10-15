@@ -571,10 +571,8 @@ class Project:
         self.scenarios = self.model_runner.model_dict.keys()
         self.scenarios.reverse()
         self.programs = self.model_runner.model_dict['baseline'].interventions_to_cost
-
         self.uncertainty_percentiles = {}
         self.percentiles = [2.5, 50, 97.5]
-
 
     #################################
     # General methods for use below #
@@ -740,6 +738,14 @@ class Project:
     #########################################
 
     def find_uncertainty_centiles(self):
+
+        """
+        Find percentiles from uncertainty dictionaries.
+
+        Modifies:
+            self.percentiles: Adds all the required percentiles to this dictionary.
+
+        """
 
         for scenario in self.scenarios:
             self.uncertainty_percentiles[scenario] = {}
@@ -1118,15 +1124,12 @@ class Project:
                         linewidth=1.5)
 
                 else:
-                    modelled_time, modelled_values = \
-                        tool_kit.get_truncated_lists_from_dict(self.full_uncertainty_dicts[scenario][output]['centile_50'],
-                                                               start_time)
-                    modelled_time_upper, modelled_values_upper = \
-                        tool_kit.get_truncated_lists_from_dict(self.full_uncertainty_dicts[scenario][output]['centile_97.5'],
-                                                               start_time)
-                    modelled_time_lower, modelled_values_lower = \
-                        tool_kit.get_truncated_lists_from_dict(self.full_uncertainty_dicts[scenario][output]['centile_2.5'],
-                                                               start_time)
+                    modelled_time = self.model_runner.epi_outputs[scenario]['times']
+                    modelled_values = self.uncertainty_percentiles[scenario][output][1, :]
+                    modelled_time_upper = self.model_runner.epi_outputs[scenario]['times']
+                    modelled_values_upper = self.uncertainty_percentiles[scenario][output][2, :]
+                    modelled_time_lower = self.model_runner.epi_outputs[scenario]['times']
+                    modelled_values_lower = self.uncertainty_percentiles[scenario][output][0, :]
 
                     # Plot the modelled data
                     ax.plot(

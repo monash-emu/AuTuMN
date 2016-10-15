@@ -15,7 +15,6 @@ import outputs
 import autumn.economics
 
 
-
 def is_positive_definite(v):
 
     return isfinite(v) and v > 0.
@@ -122,6 +121,10 @@ class ModelRunner:
         self.cost_outputs_dict = {}
         self.cost_outputs_integer_dict = {}
 
+    ##############################################
+    ### Master method to run all other methods ###
+    ##############################################
+
     def master_runner(self):
 
         for scenario in self.gui_inputs['scenarios_to_run']:
@@ -147,9 +150,6 @@ class ModelRunner:
 
             # Integrate and add result to outputs object
             self.model_dict[scenario_name].integrate()
-
-            # Store
-            self.store_scenario_results(scenario_name)
 
         # New model interpretation code - should be completely flexible and reusable by uncertainty and optimisation
         self.epi_outputs \
@@ -231,7 +231,10 @@ class ModelRunner:
                                                                                * self.total_funding
             self.model_dict['optimised'].distribute_funding_across_years()
             self.model_dict['optimised'].integrate()
-            self.store_scenario_results('optimised')
+
+    ####################################
+    ### Model interpretation methods ###
+    ####################################
 
     def find_epi_outputs(self, models_to_analyse={}, outputs_to_analyse=[], stratifications=[]):
 
@@ -470,32 +473,9 @@ class ModelRunner:
                                                                 output_dict_of_lists[model][output]))
         return output_dictionary
 
-    def store_scenario_results(self, scenario):
-
-        """
-        This method is designed to store all the results that will be needed for later analysis in separate
-        attributes to the individual models, to avoid them being over-written during the uncertainty process.
-        Args:
-            scenario: The name of the model run.
-
-        """
-
-        self.results['scenarios'][scenario] = {}
-
-        self.results['scenarios'][scenario]['compartment_soln'] \
-            = self.model_dict[scenario].compartment_soln
-        self.results['scenarios'][scenario]['costs'] \
-            = self.model_dict[scenario].costs
-        self.results['scenarios'][scenario]['flow_array'] \
-            = self.model_dict[scenario].flow_array
-        self.results['scenarios'][scenario]['fraction_array'] \
-            = self.model_dict[scenario].fraction_array
-        self.results['scenarios'][scenario]['fraction_soln'] \
-            = self.model_dict[scenario].fraction_soln
-        self.results['scenarios'][scenario]['soln_array'] \
-            = self.model_dict[scenario].soln_array
-        self.results['scenarios'][scenario]['var_array'] \
-            = self.model_dict[scenario].var_array
+    ###########################
+    ### Uncertainty methods ###
+    ###########################
 
     def run_uncertainty(self):
 
@@ -523,7 +503,6 @@ class ModelRunner:
         prev_log_likelihood = -1e10
         params = []
         self.results['uncertainty'] = {}
-        self.prepare_uncertainty_dictionaries('baseline')
 
         for param_dict in self.inputs.param_ranges_unc:
             self.acceptance_dict[param_dict['key']] = {}
@@ -559,10 +538,7 @@ class ModelRunner:
             # Now storing regardless of acceptance
             if self.is_last_run_success:
 
-                # Old code
-                self.store_uncertainty_results('baseline')
-
-                # New code
+                # Storage
                 output_list = self.find_epi_outputs(['baseline'],
                                                     outputs_to_analyse=['population',
                                                                         'incidence'])
@@ -644,11 +620,7 @@ class ModelRunner:
                                 self.model_dict['baseline'].load_state(scenario_start_time_index)
                             self.run_with_params(new_params, model=scenario_name)
 
-                            # Old storage
-                            self.prepare_uncertainty_dictionaries(scenario_name)
-                            self.store_uncertainty_results(scenario_name)
-
-                            # New storage
+                            # Storage
                             output_list = self.find_epi_outputs([scenario_name],
                                                                 outputs_to_analyse=['population',
                                                                                     'incidence'])
@@ -808,60 +780,6 @@ class ModelRunner:
             print "Warning: parameters=%s failed with model" % params
             self.is_last_run_success = False
 
-    def prepare_uncertainty_dictionaries(self, scenario):
-
-        """
-        Prepare dictionaries for uncertainty results to be populated. There are three different formats to deal with,
-        one for "solns", which are dictionary format, one for "arrays", which are numpy ndarray formats and
-        "costs", which are dictionaries of lists.
-
-        Args:
-            scenario: The scenario currently being run.
-
-        """
-
-        # First dictionary tier declaration
-        self.results['uncertainty'][scenario] = {}
-
-        # For dictionary of lists formats
-        for attribute in self.solns_for_extraction:
-            self.results['uncertainty'][scenario][attribute] = {}
-
-        # For array formats
-        for attribute in self.arrays_for_extraction:
-            self.results['uncertainty'][scenario][attribute] = []
-
-    def store_uncertainty_results(self, scenario):
-
-        """
-        Store the uncertainty results in the dictionaries created in prepare_uncertainty_dictionaries.
-
-        Args:
-            scenario: The scenario that has been run.
-
-        """
-
-        # For dictionary of lists formats
-        for attribute in self.solns_for_extraction:
-            for compartment in self.model_dict[scenario].compartment_soln:
-                if compartment in self.results['uncertainty'][scenario][attribute]:
-                    self.results['uncertainty'][scenario][attribute][compartment] \
-                        = numpy.vstack([self.results['uncertainty'][scenario][attribute][compartment],
-                                        getattr(self.model_dict[scenario], attribute)[compartment]])
-                else:
-                    self.results['uncertainty'][scenario][attribute][compartment] \
-                        = getattr(self.model_dict[scenario], attribute)[compartment]
-
-        # For array formats
-        for attribute in self.arrays_for_extraction:
-            if self.results['uncertainty'][scenario][attribute] == []:
-                self.results['uncertainty'][scenario][attribute] \
-                    = getattr(self.model_dict[scenario], attribute)
-            else:
-                self.results['uncertainty'][scenario][attribute] \
-                    = numpy.dstack([self.results['uncertainty'][scenario][attribute],
-                                    getattr(self.model_dict[scenario], attribute)])
-
     def store_uncertainty(self, model, new_results, outputs_to_analyse=['population', 'incidence']):
 
         """
@@ -889,6 +807,10 @@ class ModelRunner:
                 self.epi_outputs_uncertainty[model][output] \
                     = numpy.vstack([self.epi_outputs_uncertainty[model][output],
                                    new_results[model][output]])
+
+    ############################
+    ### Optimisation methods ###
+    ############################
 
     def run_optimisation(self):
 
@@ -966,6 +888,10 @@ class ModelRunner:
             self.optimal_allocation[intervention] = best_x[inter]
 
         print self.optimal_allocation
+
+    ###########################
+    ### GUI-related methods ###
+    ###########################
 
     def add_comment_to_gui_window(self, comment):
 

@@ -572,7 +572,6 @@ class Project:
         self.scenarios.reverse()
         self.programs = self.model_runner.model_dict['baseline'].interventions_to_cost
         self.uncertainty_percentiles = {}
-        self.percentiles = [2.5, 50, 97.5]
 
     #################################
     # General methods for use below #
@@ -769,8 +768,8 @@ class Project:
         """
 
         # Processing methods that are only required for outputs (noting that most processing now done in ModelRunner)
-        if self.gui_inputs['output_uncertainty']:
-            self.find_uncertainty_centiles()
+        # if self.gui_inputs['output_uncertainty']:
+        #     self.find_uncertainty_centiles()
 
         # Master methods for each type of outputs
         self.write_spreadsheets()

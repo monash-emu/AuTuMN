@@ -117,10 +117,14 @@ class ModelRunner:
         self.epi_outputs_dict = {}
         self.epi_outputs_integer_dict = {}
         self.epi_outputs_uncertainty = {}
+        self.epi_outputs_uncertainty_centiles = {}
         self.cost_outputs = {}
         self.cost_outputs_dict = {}
         self.cost_outputs_integer_dict = {}
         self.cost_outputs_uncertainty = {}
+        self.cost_outputs_uncertainty_centiles = {}
+        self.uncertainty_percentiles = {}
+        self.percentiles = [2.5, 50, 97.5]
 
     ##############################################
     ### Master method to run all other methods ###
@@ -212,6 +216,11 @@ class ModelRunner:
                 tool_kit.pickle_save(self.cost_outputs_uncertainty, cost_file)
                 tool_kit.pickle_save(self.accepted_indices, indices_file)
                 self.add_comment_to_gui_window('Uncertainty results saved to disc')
+
+        # Processing methods that are only required for outputs (noting that most processing now done in ModelRunner)
+        if self.gui_inputs['output_uncertainty']:
+            self.epi_outputs_uncertainty_centiles.update(self.find_uncertainty_centiles(self.epi_outputs_uncertainty))
+            self.cost_outputs_uncertainty_centiles.update(self.find_uncertainty_centiles(self.cost_outputs_uncertainty))
 
         if self.optimisation:
             if self.total_funding is None:
@@ -466,6 +475,26 @@ class ModelRunner:
                     output_dictionary[model][output] = dict(zip(output_dict_of_lists[model]['times'],
                                                                 output_dict_of_lists[model][output]))
         return output_dictionary
+
+    def find_uncertainty_centiles(self, full_uncertainty_outputs):
+
+        """
+        Find percentiles from uncertainty dictionaries.
+
+        Modifies:
+            self.percentiles: Adds all the required percentiles to this dictionary.
+
+        """
+
+        uncertainty_percentiles = {}
+        for scenario in self.model_dict:
+            uncertainty_percentiles[scenario] = {}
+            for output in full_uncertainty_outputs[scenario]:
+                uncertainty_percentiles[scenario][output] \
+                    = numpy.percentile(full_uncertainty_outputs[scenario][output][self.accepted_indices, :],
+                                       self.percentiles,
+                                       axis=0)
+        return uncertainty_percentiles
 
     ###########################
     ### Uncertainty methods ###

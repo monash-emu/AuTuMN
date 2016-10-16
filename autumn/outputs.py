@@ -1051,71 +1051,70 @@ class Project:
         fig = self.set_and_update_figure()
 
         # Loop through outputs
-        for out, output in enumerate(outputs):
+        for o, output in enumerate(outputs):
 
-            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], out + 1)
+            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
 
-            # Plotting of GTB data
-            plotting_data = {}
+            # Plotting GTB data_________________________________________________________________________________________
+            gtb_data = {}
 
             # Notifications
             if output == 'notifications':
-                plotting_data['point_estimate'] = self.inputs.original_data['notifications']['c_newinc']
+                gtb_data['point_estimate'] = self.inputs.original_data['notifications']['c_newinc']
 
-            # Other reported data
+            # Other indicators (incidence, prevalence, mortality)
             else:
+
+                # Extract the relevant data
                 for indicator in self.inputs.original_data['tb']:
-                    if indices[out] in indicator and '_lo' in indicator:
-                        plotting_data['lower_limit'] = self.inputs.original_data['tb'][indicator]
-                    elif indices[out] in indicator and '_hi' in indicator:
-                        plotting_data['upper_limit'] = self.inputs.original_data['tb'][indicator]
-                    elif indices[out] in indicator:
-                        plotting_data['point_estimate'] = self.inputs.original_data['tb'][indicator]
+                    if indices[o] in indicator and '_lo' in indicator:
+                        gtb_data['lower_limit'] = self.inputs.original_data['tb'][indicator]
+                    elif indices[o] in indicator and '_hi' in indicator:
+                        gtb_data['upper_limit'] = self.inputs.original_data['tb'][indicator]
+                    elif indices[o] in indicator:
+                        gtb_data['point_estimate'] = self.inputs.original_data['tb'][indicator]
 
                 # Create and plot the patch array
-                patch_array = create_patch_from_dictionary(plotting_data)
-                patch = patches.Polygon(patch_array, color=patch_colour[out])
+                patch_array = create_patch_from_dictionary(gtb_data)
+                patch = patches.Polygon(patch_array, color=patch_colour[o])
                 ax.add_patch(patch)
 
             # Plot point estimates
-            ax.plot(plotting_data['point_estimate'].keys(), plotting_data['point_estimate'].values(),
-                    color=colour[out], linewidth=0.5)
+            ax.plot(gtb_data['point_estimate'].keys(), gtb_data['point_estimate'].values(),
+                    color=colour[o], linewidth=0.5)
 
-            # Loop through scenarios that have been run and plot
+            # Plotting modelled data____________________________________________________________________________________
+            # Reversed ensures black baseline is plotted over the top at the end
             for scenario in reversed(self.scenarios):
 
+                # Plot without uncertainty
                 if not self.gui_inputs['output_uncertainty']:
-
-                    # Plot the modelled data
                     ax.plot(
-                        self.model_runner.model_dict[scenario].times,
+                        self.model_runner.epi_outputs[scenario]['times'],
                         self.model_runner.epi_outputs[scenario][output],
                         color=self.output_colours[scenario][1],
                         linestyle=self.output_colours[scenario][0],
                         linewidth=1.5)
 
+                # Plot with uncertainty
                 else:
-                    modelled_time = self.model_runner.epi_outputs[scenario]['times']
-                    modelled_values = self.model_runner.epi_outputs_uncertainty_centiles[scenario][output][1, :]
-                    modelled_values_upper = self.model_runner.epi_outputs_uncertainty_centiles[scenario][output][2, :]
-                    modelled_values_lower = self.model_runner.epi_outputs_uncertainty_centiles[scenario][output][0, :]
 
                     # Plot the modelled data
                     ax.plot(
-                        modelled_time,
-                        modelled_values,
+                        self.model_runner.epi_outputs[scenario]['times'],
+                        self.model_runner.epi_outputs_uncertainty_centiles[scenario][output][1, :],
                         color=self.output_colours[scenario][1],
                         linestyle=self.output_colours[scenario][0],
                         linewidth=1.5)
                     ax.plot(
-                        modelled_time,
-                        modelled_values_upper,
+                        self.model_runner.epi_outputs[scenario]['times'],
+                        self.model_runner.epi_outputs_uncertainty_centiles[scenario][output][2, :],
                         color=self.output_colours[scenario][1],
                         linestyle='--',
                         linewidth=1)
                     ax.plot(
-                        modelled_time,
-                        modelled_values_lower,
+                        self.model_runner.epi_outputs[scenario]['times'],
+                        self.model_runner.epi_outputs_uncertainty_centiles[scenario][output][0, :],
                         color=self.output_colours[scenario][1],
                         linestyle='--',
                         linewidth=1)
@@ -1135,14 +1134,14 @@ class Project:
                     tick.label.set_fontsize(get_nice_font_size(subplot_grid))
 
             # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
-            ax.set_title(title[out], fontsize=get_nice_font_size(subplot_grid) + 2.)
+            ax.set_title(title[o], fontsize=get_nice_font_size(subplot_grid) + 2.)
 
             # Label the y axis with the smaller text size
-            ax.set_ylabel(yaxis_label[out], fontsize=get_nice_font_size(subplot_grid))
+            ax.set_ylabel(yaxis_label[o], fontsize=get_nice_font_size(subplot_grid))
 
             # Add the legend
             scenario_handles = ax.lines[1:]
-            if out == len(outputs) - 1:
+            if o == len(outputs) - 1:
                 ax.legend(scenario_handles,
                           scenario_labels,
                           fontsize=get_nice_font_size(subplot_grid),

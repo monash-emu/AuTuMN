@@ -192,12 +192,14 @@ class ModelRunner:
             if not os.path.isdir(out_dir):
                 os.makedirs(out_dir)
             results_file = os.path.join(out_dir, 'results_uncertainty.pkl')
+            cost_file = os.path.join(out_dir, 'cost_uncertainty.pkl')
             indices_file = os.path.join(out_dir, 'indices_uncertainty.pkl')
 
             # Don't run uncertainty but load a saved simulation
             if self.gui_inputs['pickle_uncertainty'] == 'Load':
                 self.add_comment_to_gui_window('Uncertainty results loaded from previous simulation')
                 self.epi_outputs_uncertainty = tool_kit.pickle_load(results_file)
+                self.cost_outputs_uncertainty = tool_kit.pickle_load(cost_file)
                 self.accepted_indices = tool_kit.pickle_load(indices_file)
 
             # Run uncertainty
@@ -207,6 +209,7 @@ class ModelRunner:
             # Write uncertainty if requested
             if self.gui_inputs['pickle_uncertainty'] == 'Save':
                 tool_kit.pickle_save(self.epi_outputs_uncertainty, results_file)
+                tool_kit.pickle_save(self.cost_outputs_uncertainty, cost_file)
                 tool_kit.pickle_save(self.accepted_indices, indices_file)
                 self.add_comment_to_gui_window('Uncertainty results saved to disc')
 

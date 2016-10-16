@@ -873,7 +873,7 @@ class Project:
                     tool_kit.capitalise_first_letter(output))
             for y, year in enumerate(years):
                 if year in self.model_runner.epi_outputs_integer_dict[scenario][output]:
-                    sheet.cell(row=r, column=y+1).value \
+                    sheet.cell(row=o+1, column=y+1).value \
                         = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
 
     def write_vertically_by_scenario(self, sheet, output, years):
@@ -1537,6 +1537,10 @@ class Project:
         """
         Plot population by the compartment to which they belong.
 
+        *** Needs a bit of work - compartment duplication by risk group not really working properly
+        (same compartment with different risk group should be added to that compartment), and classifying
+        multiple compartments into one more general compartment not running.
+
         Args:
             strain_or_organ: Whether the plotting style should be done by strain or by organ.
 
@@ -1585,6 +1589,9 @@ class Project:
         """
         Plot population fractions by the compartment to which they belong.
 
+        *** Also needs some work to fit with model interpretation code - ideally shouldn't be running directly from
+        the model objects as is currently happening.
+
         Args:
             strain_or_organ: Whether the plotting style should be done by strain or by organ.
 
@@ -1630,7 +1637,6 @@ class Project:
 
         """
         Produces the plot for the main outputs by age, can handle multiple scenarios (if required).
-        Save as png at the end.
         Note that if running a series of scenarios, it is expected that the last scenario to
         be run will be baseline, which should have scenario set to None.
         This function is a bit less flexible than plot_outputs_against_gtb, in which you can select the

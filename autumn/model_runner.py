@@ -74,11 +74,11 @@ def find_integer_dict_from_float_dict(float_dict):
 def extract_integer_dicts(models_to_analyse={}, dict_to_extract_from={}):
 
     integer_dict = {}
-    for model in models_to_analyse:
-        integer_dict[model] = {}
-        for output in dict_to_extract_from[model]:
-            integer_dict[model][output] \
-                = find_integer_dict_from_float_dict(dict_to_extract_from[model][output])
+    for scenario in models_to_analyse:
+        integer_dict[scenario] = {}
+        for output in dict_to_extract_from[scenario]:
+            integer_dict[scenario][output] \
+                = find_integer_dict_from_float_dict(dict_to_extract_from[scenario][output])
 
     return integer_dict
 
@@ -259,75 +259,75 @@ class ModelRunner:
         """
 
         epi_outputs = {}
-        for model in models_to_analyse:
-            epi_outputs[model] = {}
-            epi_outputs[model]['times'] = self.model_dict[model].times
+        for scenario in models_to_analyse:
+            epi_outputs[scenario] = {}
+            epi_outputs[scenario]['times'] = self.model_dict[scenario].times
 
             # Unstratified outputs______________________________________________________________________________________
             # Initialise lists
             for output in outputs_to_analyse:
-                epi_outputs[model][output] = [0.] * len(epi_outputs[model]['times'])
+                epi_outputs[scenario][output] = [0.] * len(epi_outputs[scenario]['times'])
 
             # Population
             if 'population' in outputs_to_analyse:
-                for compartment in self.model_dict[model].compartments:
-                    epi_outputs[model]['population'] \
-                        = increment_list(self.model_dict[model].get_compartment_soln(compartment),
-                                         epi_outputs[model]['population'])
+                for compartment in self.model_dict[scenario].compartments:
+                    epi_outputs[scenario]['population'] \
+                        = increment_list(self.model_dict[scenario].get_compartment_soln(compartment),
+                                         epi_outputs[scenario]['population'])
 
             # Incidence
             if 'incidence' in outputs_to_analyse:
-                for from_label, to_label, rate in self.model_dict[model].var_transfer_rate_flows:
+                for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
                     if 'latent' in from_label and 'active' in to_label:
-                        epi_outputs[model]['incidence'] \
-                            = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
-                                             * self.model_dict[model].get_var_soln(rate) \
-                                             / epi_outputs[model]['population'] \
+                        epi_outputs[scenario]['incidence'] \
+                            = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
+                                             * self.model_dict[scenario].get_var_soln(rate) \
+                                             / epi_outputs[scenario]['population'] \
                                              * 1e5,
-                                             epi_outputs[model]['incidence'])
-                for from_label, to_label, rate in self.model_dict[model].fixed_transfer_rate_flows:
+                                             epi_outputs[scenario]['incidence'])
+                for from_label, to_label, rate in self.model_dict[scenario].fixed_transfer_rate_flows:
                     if 'latent' in from_label and 'active' in to_label:
-                        epi_outputs[model]['incidence'] \
-                            = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                        epi_outputs[scenario]['incidence'] \
+                            = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
                                              * rate \
-                                             / epi_outputs[model]['population'] \
+                                             / epi_outputs[scenario]['population'] \
                                              * 1e5,
-                                             epi_outputs[model]['incidence'])
+                                             epi_outputs[scenario]['incidence'])
 
             # Notifications
             if 'notifications' in outputs_to_analyse:
-                for from_label, to_label, rate in self.model_dict[model].var_transfer_rate_flows:
+                for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
                     if 'active' in from_label and 'detect' in to_label:
-                        epi_outputs[model]['notifications'] \
-                            = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
-                                             * self.model_dict[model].get_var_soln(rate),
-                                             epi_outputs[model]['notifications'])
+                        epi_outputs[scenario]['notifications'] \
+                            = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
+                                             * self.model_dict[scenario].get_var_soln(rate),
+                                             epi_outputs[scenario]['notifications'])
 
             # Mortality
             if 'mortality' in outputs_to_analyse:
-                for from_label, rate in self.model_dict[model].fixed_infection_death_rate_flows:
+                for from_label, rate in self.model_dict[scenario].fixed_infection_death_rate_flows:
                     # Under-reporting factor included for those deaths not occurring on treatment
-                    epi_outputs[model]['mortality'] \
-                        = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                    epi_outputs[scenario]['mortality'] \
+                        = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
                                          * rate \
-                                         * self.model_dict[model].params['program_prop_death_reporting'] \
-                                         / epi_outputs[model]['population'] \
-                                         * 1e5, epi_outputs[model]['mortality'])
-                for from_label, rate in self.model_dict[model].var_infection_death_rate_flows:
-                    epi_outputs[model]['mortality'] \
-                        = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
-                                         * self.model_dict[model].get_var_soln(rate) \
-                                         / epi_outputs[model]['population'] \
-                                         * 1e5, epi_outputs[model]['mortality'])
+                                         * self.model_dict[scenario].params['program_prop_death_reporting'] \
+                                         / epi_outputs[scenario]['population'] \
+                                         * 1e5, epi_outputs[scenario]['mortality'])
+                for from_label, rate in self.model_dict[scenario].var_infection_death_rate_flows:
+                    epi_outputs[scenario]['mortality'] \
+                        = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
+                                         * self.model_dict[scenario].get_var_soln(rate) \
+                                         / epi_outputs[scenario]['population'] \
+                                         * 1e5, epi_outputs[scenario]['mortality'])
 
             # Prevalence
             if 'prevalence' in outputs_to_analyse:
-                for label in self.model_dict[model].labels:
+                for label in self.model_dict[scenario].labels:
                     if 'susceptible' not in label and 'latent' not in label:
-                        epi_outputs[model]['prevalence'] \
-                            = increment_list(self.model_dict[model].get_compartment_soln(label) \
-                                             / epi_outputs[model]['population'] \
-                                             * 1e5, epi_outputs[model]['prevalence'])
+                        epi_outputs[scenario]['prevalence'] \
+                            = increment_list(self.model_dict[scenario].get_compartment_soln(label) \
+                                             / epi_outputs[scenario]['population'] \
+                                             * 1e5, epi_outputs[scenario]['prevalence'])
 
             # Stratified outputs________________________________________________________________________________________
             for stratification in stratifications:
@@ -336,64 +336,64 @@ class ModelRunner:
 
                         # Initialise lists
                         for output in outputs_to_analyse:
-                            epi_outputs[model][output + stratum] = [0.] * len(epi_outputs[model]['times'])
+                            epi_outputs[scenario][output + stratum] = [0.] * len(epi_outputs[scenario]['times'])
 
                         # Population
                         if 'population' in outputs_to_analyse:
-                            for compartment in self.model_dict[model].compartments:
+                            for compartment in self.model_dict[scenario].compartments:
                                 if stratum in compartment:
-                                    epi_outputs[model]['population' + stratum] \
-                                        = increment_list(self.model_dict[model].get_compartment_soln(compartment),
-                                                         epi_outputs[model]['population' + stratum])
+                                    epi_outputs[scenario]['population' + stratum] \
+                                        = increment_list(self.model_dict[scenario].get_compartment_soln(compartment),
+                                                         epi_outputs[scenario]['population' + stratum])
 
                         # Incidence
                         if 'incidence' in outputs_to_analyse:
-                            for from_label, to_label, rate in self.model_dict[model].var_transfer_rate_flows:
+                            for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
                                 if 'latent' in from_label and 'active' in to_label and stratum in label:
-                                    epi_outputs[model]['incidence' + stratum] \
-                                        = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
-                                                         * self.model_dict[model].get_var_soln(rate) \
-                                                         / epi_outputs[model]['population' + stratum] \
+                                    epi_outputs[scenario]['incidence' + stratum] \
+                                        = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
+                                                         * self.model_dict[scenario].get_var_soln(rate) \
+                                                         / epi_outputs[scenario]['population' + stratum] \
                                                          * 1e5,
-                                                         epi_outputs[model]['incidence' + stratum])
-                            for from_label, to_label, rate in self.model_dict[model].fixed_transfer_rate_flows:
+                                                         epi_outputs[scenario]['incidence' + stratum])
+                            for from_label, to_label, rate in self.model_dict[scenario].fixed_transfer_rate_flows:
                                 if 'latent' in from_label and 'active' in to_label and stratum in label:
-                                    epi_outputs[model]['incidence' + stratum] \
-                                        = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                                    epi_outputs[scenario]['incidence' + stratum] \
+                                        = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
                                                          * rate \
-                                                         / epi_outputs[model]['population' + stratum] \
+                                                         / epi_outputs[scenario]['population' + stratum] \
                                                          * 1e5,
-                                                         epi_outputs[model]['incidence' + stratum])
+                                                         epi_outputs[scenario]['incidence' + stratum])
 
                         # Mortality
                         if 'mortality' in outputs_to_analyse:
-                            for from_label, rate in self.model_dict[model].fixed_infection_death_rate_flows:
+                            for from_label, rate in self.model_dict[scenario].fixed_infection_death_rate_flows:
                                 if stratum in from_label:
                                     # Under-reporting factor included for those deaths not occurring on treatment
-                                    epi_outputs[model]['mortality' + stratum] \
-                                        = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
+                                    epi_outputs[scenario]['mortality' + stratum] \
+                                        = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
                                                          * rate \
-                                                         * self.model_dict[model].params['program_prop_death_reporting'] \
-                                                         * epi_outputs[model]['population' + stratum] \
+                                                         * self.model_dict[scenario].params['program_prop_death_reporting'] \
+                                                         * epi_outputs[scenario]['population' + stratum] \
                                                          * 1e5,
-                                                         epi_outputs[model]['mortality' + stratum])
-                            for from_label, rate in self.model_dict[model].var_infection_death_rate_flows:
+                                                         epi_outputs[scenario]['mortality' + stratum])
+                            for from_label, rate in self.model_dict[scenario].var_infection_death_rate_flows:
                                 if stratum in from_label:
-                                    epi_outputs[model]['mortality' + stratum] \
-                                        = increment_list(self.model_dict[model].get_compartment_soln(from_label) \
-                                                         * self.model_dict[model].get_var_soln(rate) \
-                                                         / epi_outputs[model]['population' + stratum] \
+                                    epi_outputs[scenario]['mortality' + stratum] \
+                                        = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
+                                                         * self.model_dict[scenario].get_var_soln(rate) \
+                                                         / epi_outputs[scenario]['population' + stratum] \
                                                          * 1e5,
-                                                         epi_outputs[model]['mortality' + stratum])
+                                                         epi_outputs[scenario]['mortality' + stratum])
 
                         # Prevalence
                         if 'prevalence' in outputs_to_analyse:
-                            for label in self.model_dict[model].labels:
+                            for label in self.model_dict[scenario].labels:
                                 if 'susceptible' not in label and 'latent' not in label and stratum in label:
-                                    epi_outputs[model]['prevalence' + stratum] \
-                                        = increment_list(self.model_dict[model].get_compartment_soln(label) \
-                                                         / epi_outputs[model]['population' + stratum] \
-                                                         * 1e5, epi_outputs[model]['prevalence' + stratum])
+                                    epi_outputs[scenario]['prevalence' + stratum] \
+                                        = increment_list(self.model_dict[scenario].get_compartment_soln(label) \
+                                                         / epi_outputs[scenario]['population' + stratum] \
+                                                         * 1e5, epi_outputs[scenario]['prevalence' + stratum])
         return epi_outputs
 
     def find_population_fractions(self, stratifications=[]):
@@ -404,13 +404,13 @@ class ModelRunner:
 
         """
 
-        for model in self.model_dict:
+        for scenario in self.model_dict:
             for stratification in stratifications:
                 if len(stratification) > 1:
                     for stratum in stratification:
-                        self.epi_outputs[model]['fraction' + stratum] \
-                            = elementwise_list_division(self.epi_outputs[model]['population' + stratum],
-                                                        self.epi_outputs[model]['population'])
+                        self.epi_outputs[scenario]['fraction' + stratum] \
+                            = elementwise_list_division(self.epi_outputs[scenario]['population' + stratum],
+                                                        self.epi_outputs[scenario]['population'])
 
     def find_cost_outputs(self, interventions_to_cost=[]):
 
@@ -420,11 +420,11 @@ class ModelRunner:
         """
 
         cost_outputs = {}
-        for model in self.model_dict:
-            cost_outputs[model] = {}
-            cost_outputs[model]['times'] = self.model_dict[model].cost_times
+        for scenario in self.model_dict:
+            cost_outputs[scenario] = {}
+            cost_outputs[scenario]['times'] = self.model_dict[scenario].cost_times
             for i, intervention in enumerate(interventions_to_cost):
-                cost_outputs[model]['raw_cost_' + intervention] = self.model_dict[model].costs[:, i]
+                cost_outputs[scenario]['raw_cost_' + intervention] = self.model_dict[scenario].costs[:, i]
         return cost_outputs
 
     def find_adjusted_costs(self, cost_types=[]):
@@ -436,27 +436,27 @@ class ModelRunner:
         current_cpi = self.model_dict['baseline'].scaleup_fns['econ_cpi'](year_current)
         discount_rate = self.model_dict['baseline'].params['econ_discount_rate']
 
-        for model in self.model_dict:
-            cost_outputs[model] = {}
+        for scenario in self.model_dict:
+            cost_outputs[scenario] = {}
 
             # Work through adjusted costs
             for cost_type in cost_types:
-                cost_outputs[model][cost_type + '_cost_all_programs'] = []
+                cost_outputs[scenario][cost_type + '_cost_all_programs'] = []
 
                 # Maybe not ideal that the outer loop is time and the inner interventions here
                 # - may reverse at some point.
-                for t, time in enumerate(self.cost_outputs[model]['times']):
+                for t, time in enumerate(self.cost_outputs[scenario]['times']):
                     cost_all_programs = 0.
-                    cpi_time_variant = self.model_dict[model].scaleup_fns['econ_cpi'](time)
+                    cpi_time_variant = self.model_dict[scenario].scaleup_fns['econ_cpi'](time)
                     t_into_future = max(0., (time - year_current))
-                    for int, intervention in enumerate(self.model_dict[model].interventions_to_cost):
-                        if t == 0: cost_outputs[model][cost_type + '_cost_' + intervention] = []
-                        cost_outputs[model][cost_type + '_cost_' + intervention].append(
-                            autumn.economics.get_adjusted_cost(self.cost_outputs[model]['raw_cost_' + intervention][t],
+                    for int, intervention in enumerate(self.model_dict[scenario].interventions_to_cost):
+                        if t == 0: cost_outputs[scenario][cost_type + '_cost_' + intervention] = []
+                        cost_outputs[scenario][cost_type + '_cost_' + intervention].append(
+                            autumn.economics.get_adjusted_cost(self.cost_outputs[scenario]['raw_cost_' + intervention][t],
                                                                cost_type, current_cpi, cpi_time_variant, discount_rate,
                                                                t_into_future))
-                        cost_all_programs += cost_outputs[model][cost_type + '_cost_' + intervention][-1]
-                    cost_outputs[model][cost_type + '_cost_all_programs'].append(cost_all_programs)
+                        cost_all_programs += cost_outputs[scenario][cost_type + '_cost_' + intervention][-1]
+                    cost_outputs[scenario][cost_type + '_cost_all_programs'].append(cost_all_programs)
         return cost_outputs
 
     def get_output_dicts_from_lists(self, models_to_analyse={}, output_dict_of_lists={}):
@@ -468,12 +468,12 @@ class ModelRunner:
         """
 
         output_dictionary = {}
-        for model in models_to_analyse:
-            output_dictionary[model] = {}
-            for output in output_dict_of_lists[model]:
+        for scenario in models_to_analyse:
+            output_dictionary[scenario] = {}
+            for output in output_dict_of_lists[scenario]:
                 if output != 'times':
-                    output_dictionary[model][output] = dict(zip(output_dict_of_lists[model]['times'],
-                                                                output_dict_of_lists[model][output]))
+                    output_dictionary[scenario][output] = dict(zip(output_dict_of_lists[scenario]['times'],
+                                                                output_dict_of_lists[scenario][output]))
         return output_dictionary
 
     def find_uncertainty_centiles(self, full_uncertainty_outputs):
@@ -556,7 +556,7 @@ class ModelRunner:
 
             # Run the baseline integration
             # (includes checking parameters, setting parameters and recording success/failure of run)
-            self.run_with_params(new_params, 'baseline')
+            self.run_with_params(new_params, model_object='baseline')
 
             # Now storing regardless of acceptance
             if self.is_last_run_success:
@@ -643,7 +643,7 @@ class ModelRunner:
                                 self.model_dict['baseline'].times[scenario_start_time_index]
                             self.model_dict[scenario_name].loaded_compartments = \
                                 self.model_dict['baseline'].load_state(scenario_start_time_index)
-                            self.run_with_params(new_params, model=scenario_name)
+                            self.run_with_params(new_params, model_object=scenario_name)
 
                             # Storage
                             epi_outputs = self.find_epi_outputs([scenario_name],
@@ -667,7 +667,7 @@ class ModelRunner:
                                            ' candidates. Running time: '
                                            + str(datetime.datetime.now() - start_timer_run))
 
-    def set_model_with_params(self, param_dict, model='baseline'):
+    def set_model_with_params(self, param_dict, model_object='baseline'):
 
         """
         Populates baseline model with params from uncertainty calculations.
@@ -680,11 +680,11 @@ class ModelRunner:
 
         n_set = 0
         for key in param_dict:
-            if key in self.model_dict[model].params:
+            if key in self.model_dict[model_object].params:
                 n_set += 1
-                self.model_dict[model].set_parameter(key, param_dict[key])
+                self.model_dict[model_object].set_parameter(key, param_dict[key])
             else:
-                raise ValueError("%s not in model params" % key)
+                raise ValueError("%s not in model_object params" % key)
 
     def convert_param_list_to_dict(self, params):
 
@@ -772,7 +772,7 @@ class ModelRunner:
 
         return new_params
 
-    def run_with_params(self, params, model='baseline'):
+    def run_with_params(self, params, model_object='baseline'):
 
         """
         Integrate the model with the proposed parameter set.
@@ -800,21 +800,21 @@ class ModelRunner:
 
         param_dict = self.convert_param_list_to_dict(params)
 
-        self.set_model_with_params(param_dict, model)
+        self.set_model_with_params(param_dict, model_object)
         self.is_last_run_success = True
         try:
-            self.model_dict[model].integrate()
+            self.model_dict[model_object].integrate()
         except:
             print "Warning: parameters=%s failed with model" % params
             self.is_last_run_success = False
 
-    def store_uncertainty(self, model, epi_results, cost_outputs, epi_outputs_to_analyse=['population', 'incidence']):
+    def store_uncertainty(self, scenario, epi_results, cost_outputs, epi_outputs_to_analyse=['population', 'incidence']):
 
         """
         Add model results from one uncertainty run to the appropriate outputs dictionary.
 
         Args:
-            model: The scenario being run.
+            scenario: The scenario being run.
             epi_results: The results from that model run.
             epi_outputs_to_analyse: The epidemiological outputs of interest.
 
@@ -824,24 +824,24 @@ class ModelRunner:
         """
 
         # Create first column of dictionaries
-        if model not in self.epi_outputs_uncertainty:
-            self.epi_outputs_uncertainty[model] = {}
-            self.cost_outputs_uncertainty[model] = {}
+        if scenario not in self.epi_outputs_uncertainty:
+            self.epi_outputs_uncertainty[scenario] = {}
+            self.cost_outputs_uncertainty[scenario] = {}
             for output in epi_outputs_to_analyse:
-                self.epi_outputs_uncertainty[model][output] = epi_results[model][output]
-            for output in cost_outputs[model]:
-                self.cost_outputs_uncertainty[model][output] = cost_outputs[model][output]
+                self.epi_outputs_uncertainty[scenario][output] = epi_results[scenario][output]
+            for output in cost_outputs[scenario]:
+                self.cost_outputs_uncertainty[scenario][output] = cost_outputs[scenario][output]
 
         # Add additional columns to uncertainty output dictionaries
         else:
             for output in epi_outputs_to_analyse:
-                self.epi_outputs_uncertainty[model][output] \
-                    = numpy.vstack([self.epi_outputs_uncertainty[model][output],
-                                    epi_results[model][output]])
-            for output in cost_outputs[model]:
-                self.cost_outputs_uncertainty[model][output] \
-                    = numpy.vstack([self.cost_outputs_uncertainty[model][output],
-                                    cost_outputs[model][output]])
+                self.epi_outputs_uncertainty[scenario][output] \
+                    = numpy.vstack([self.epi_outputs_uncertainty[scenario][output],
+                                    epi_results[scenario][output]])
+            for output in cost_outputs[scenario]:
+                self.cost_outputs_uncertainty[scenario][output] \
+                    = numpy.vstack([self.cost_outputs_uncertainty[scenario][output],
+                                    cost_outputs[scenario][output]])
 
     ############################
     ### Optimisation methods ###

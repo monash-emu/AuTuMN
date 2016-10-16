@@ -166,9 +166,11 @@ class ModelRunner:
                                                         self.model_dict['baseline'].comorbidities])
         self.cost_outputs \
             = self.find_cost_outputs(interventions_to_cost=self.model_dict['baseline'].interventions_to_cost)
-        self.find_adjusted_costs(cost_types=['inflated',
-                                             'discounted',
-                                             'discounted_inflated'])
+        adjusted_costs = self.find_adjusted_costs(cost_types=['inflated',
+                                                              'discounted',
+                                                              'discounted_inflated'])
+        for scenario in self.model_dict:
+            self.cost_outputs[scenario].update(adjusted_costs[scenario])
 
         # If you want some dictionaries based on the lists created above (may not be necessary)
         self.epi_outputs_dict.update(self.get_output_dicts_from_lists(models_to_analyse=self.model_dict,
@@ -217,7 +219,6 @@ class ModelRunner:
                 self.total_funding = numpy.sum(self.model_dict['baseline'].costs[start_cost_index:, :]) \
                                      / (self.model_dict['baseline'].inputs.model_constants['report_end_time'] -
                                         self.model_dict['baseline'].inputs.model_constants['scenario_start_time'])
-
             self.run_optimisation()
             self.model_dict['optimised'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
             start_time_index = \
@@ -416,16 +417,19 @@ class ModelRunner:
 
     def find_adjusted_costs(self, cost_types=[]):
 
+        cost_outputs = {}
+
         # Get some preliminary parameters
         year_current = self.model_dict['baseline'].inputs.model_constants['current_time']
         current_cpi = self.model_dict['baseline'].scaleup_fns['econ_cpi'](year_current)
         discount_rate = self.model_dict['baseline'].params['econ_discount_rate']
 
         for model in self.model_dict:
+            cost_outputs[model] = {}
 
             # Work through adjusted costs
             for cost_type in cost_types:
-                self.cost_outputs[model][cost_type + '_cost_all_programs'] = []
+                cost_outputs[model][cost_type + '_cost_all_programs'] = []
 
                 # Maybe not ideal that the outer loop is time and the inner interventions here
                 # - may reverse at some point.
@@ -434,13 +438,14 @@ class ModelRunner:
                     cpi_time_variant = self.model_dict[model].scaleup_fns['econ_cpi'](time)
                     t_into_future = max(0., (time - year_current))
                     for int, intervention in enumerate(self.model_dict[model].interventions_to_cost):
-                        if t == 0: self.cost_outputs[model][cost_type + '_cost_' + intervention] = []
-                        self.cost_outputs[model][cost_type + '_cost_' + intervention].append(
+                        if t == 0: cost_outputs[model][cost_type + '_cost_' + intervention] = []
+                        cost_outputs[model][cost_type + '_cost_' + intervention].append(
                             autumn.economics.get_adjusted_cost(self.cost_outputs[model]['raw_cost_' + intervention][t],
                                                                cost_type, current_cpi, cpi_time_variant, discount_rate,
                                                                t_into_future))
-                        cost_all_programs += self.cost_outputs[model][cost_type + '_cost_' + intervention][-1]
-                    self.cost_outputs[model][cost_type + '_cost_all_programs'].append(cost_all_programs)
+                        cost_all_programs += cost_outputs[model][cost_type + '_cost_' + intervention][-1]
+                    cost_outputs[model][cost_type + '_cost_all_programs'].append(cost_all_programs)
+        return cost_outputs
 
     def get_output_dicts_from_lists(self, models_to_analyse={}, output_dict_of_lists={}):
 
@@ -525,15 +530,16 @@ class ModelRunner:
             if self.is_last_run_success:
 
                 # Storage
-                output_list = self.find_epi_outputs(['baseline'],
+                epi_outputs = self.find_epi_outputs(['baseline'],
                                                     outputs_to_analyse=['population',
                                                                         'incidence'])
-
-                self.store_uncertainty('baseline', output_list)
+                cost_outputs \
+                    = self.find_cost_outputs(interventions_to_cost=self.model_dict['baseline'].interventions_to_cost)
+                self.store_uncertainty('baseline', epi_outputs, cost_outputs)
                 integer_dictionary \
                     = extract_integer_dicts(['baseline'],
                                             self.get_output_dicts_from_lists(models_to_analyse=['baseline'],
-                                                                             output_dict_of_lists=output_list))
+                                                                             output_dict_of_lists=epi_outputs))
 
                 # Calculate prior
                 prior_log_likelihood = 0.
@@ -608,10 +614,13 @@ class ModelRunner:
                             self.run_with_params(new_params, model=scenario_name)
 
                             # Storage
-                            output_list = self.find_epi_outputs([scenario_name],
+                            epi_outputs = self.find_epi_outputs([scenario_name],
                                                                 outputs_to_analyse=['population',
                                                                                     'incidence'])
-                            self.store_uncertainty(scenario_name, output_list)
+                            cost_outputs \
+                                = self.find_cost_outputs(
+                                interventions_to_cost=self.model_dict[scenario_name].interventions_to_cost)
+                            self.store_uncertainty(scenario_name, epi_outputs, cost_outputs)
 
                 i_candidates += 1
                 run += 1
@@ -767,15 +776,15 @@ class ModelRunner:
             print "Warning: parameters=%s failed with model" % params
             self.is_last_run_success = False
 
-    def store_uncertainty(self, model, new_results, outputs_to_analyse=['population', 'incidence']):
+    def store_uncertainty(self, model, epi_results, cost_outputs, epi_outputs_to_analyse=['population', 'incidence']):
 
         """
         Add model results from one uncertainty run to the appropriate outputs dictionary.
 
         Args:
             model: The scenario being run.
-            new_results: The results from that model run.
-            outputs_to_analyse: The epidemiological outputs of interest.
+            epi_results: The results from that model run.
+            epi_outputs_to_analyse: The epidemiological outputs of interest.
 
         Updates:
             self.epi_outputs_uncertainty
@@ -786,15 +795,21 @@ class ModelRunner:
         if model not in self.epi_outputs_uncertainty:
             self.epi_outputs_uncertainty[model] = {}
             self.cost_outputs_uncertainty[model] = {}
-            for output in outputs_to_analyse:
-                self.epi_outputs_uncertainty[model][output] = new_results[model][output]
+            for output in epi_outputs_to_analyse:
+                self.epi_outputs_uncertainty[model][output] = epi_results[model][output]
+            for output in cost_outputs[model]:
+                self.cost_outputs_uncertainty[model][output] = cost_outputs[model][output]
 
         # Add additional columns to uncertainty output dictionaries
         else:
-            for output in outputs_to_analyse:
+            for output in epi_outputs_to_analyse:
                 self.epi_outputs_uncertainty[model][output] \
                     = numpy.vstack([self.epi_outputs_uncertainty[model][output],
-                                   new_results[model][output]])
+                                    epi_results[model][output]])
+            for output in cost_outputs[model]:
+                self.cost_outputs_uncertainty[model][output] \
+                    = numpy.vstack([self.cost_outputs_uncertainty[model][output],
+                                    cost_outputs[model][output]])
 
     ############################
     ### Optimisation methods ###

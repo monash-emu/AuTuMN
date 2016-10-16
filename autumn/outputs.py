@@ -1100,24 +1100,23 @@ class Project:
                 else:
 
                     # Plot the modelled data
+                    # Median
                     ax.plot(
                         self.model_runner.epi_outputs[scenario]['times'],
-                        self.model_runner.epi_outputs_uncertainty_centiles[scenario][output][1, :],
+                        self.model_runner.epi_outputs_uncertainty_centiles[scenario][output][
+                        self.model_runner.percentiles.index(50), :],
                         color=self.output_colours[scenario][1],
                         linestyle=self.output_colours[scenario][0],
                         linewidth=1.5)
-                    ax.plot(
-                        self.model_runner.epi_outputs[scenario]['times'],
-                        self.model_runner.epi_outputs_uncertainty_centiles[scenario][output][2, :],
-                        color=self.output_colours[scenario][1],
-                        linestyle='--',
-                        linewidth=1)
-                    ax.plot(
-                        self.model_runner.epi_outputs[scenario]['times'],
-                        self.model_runner.epi_outputs_uncertainty_centiles[scenario][output][0, :],
-                        color=self.output_colours[scenario][1],
-                        linestyle='--',
-                        linewidth=1)
+                    # Upper and lower confidence bounds
+                    for centile in [2.5, 97.5]:
+                        ax.plot(
+                            self.model_runner.epi_outputs[scenario]['times'],
+                            self.model_runner.epi_outputs_uncertainty_centiles[scenario][output][
+                            self.model_runner.percentiles.index(centile), :],
+                            color=self.output_colours[scenario][1],
+                            linestyle='--',
+                            linewidth=1)
 
                 # Add scenario label
                 scenario_labels += [tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario))]

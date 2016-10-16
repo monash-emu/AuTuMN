@@ -769,7 +769,8 @@ class Project:
         """
 
         # Processing methods that are only required for outputs (noting that most processing now done in ModelRunner)
-        self.find_uncertainty_centiles()
+        if self.gui_inputs['output_uncertainty']:
+            self.find_uncertainty_centiles()
 
         # Master methods for each type of outputs
         self.write_spreadsheets()

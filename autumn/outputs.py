@@ -1034,7 +1034,6 @@ class Project:
 
         """
         Produces the plot for the main outputs, can handle multiple scenarios.
-        Save as png at the end.
         Note that if running a series of scenarios, it is expected that the last scenario to
         be run will be baseline, which should have scenario set to None.
 
@@ -1097,11 +1096,9 @@ class Project:
 
                 else:
                     modelled_time = self.model_runner.epi_outputs[scenario]['times']
-                    modelled_values = self.model_runner.uncertainty_percentiles[scenario][output][1, :]
-                    modelled_time_upper = self.model_runner.epi_outputs[scenario]['times']
-                    modelled_values_upper = self.model_runner.uncertainty_percentiles[scenario][output][2, :]
-                    modelled_time_lower = self.model_runner.epi_outputs[scenario]['times']
-                    modelled_values_lower = self.model_runner.uncertainty_percentiles[scenario][output][0, :]
+                    modelled_values = self.model_runner.epi_outputs_uncertainty_centiles[scenario][output][1, :]
+                    modelled_values_upper = self.model_runner.epi_outputs_uncertainty_centiles[scenario][output][2, :]
+                    modelled_values_lower = self.model_runner.epi_outputs_uncertainty_centiles[scenario][output][0, :]
 
                     # Plot the modelled data
                     ax.plot(
@@ -1111,13 +1108,13 @@ class Project:
                         linestyle=self.output_colours[scenario][0],
                         linewidth=1.5)
                     ax.plot(
-                        modelled_time_upper,
+                        modelled_time,
                         modelled_values_upper,
                         color=self.output_colours[scenario][1],
                         linestyle='--',
                         linewidth=1)
                     ax.plot(
-                        modelled_time_lower,
+                        modelled_time,
                         modelled_values_lower,
                         color=self.output_colours[scenario][1],
                         linestyle='--',

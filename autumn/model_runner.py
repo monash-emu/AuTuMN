@@ -130,6 +130,7 @@ class ModelRunner:
         self.acceptance_dict = {}
         self.rejection_dict = {}
         self.optimal_allocation = {}
+        self.epi_outputs_to_analyse = ['population', 'incidence', 'prevalence', 'mortality', 'notifications']
         self.epi_outputs = {}
         self.epi_outputs_dict = {}
         self.epi_outputs_integer_dict = {}
@@ -176,11 +177,7 @@ class ModelRunner:
         # New model interpretation code - should be flexible and is now used by uncertainty and optimisation
         self.epi_outputs \
             = self.find_epi_outputs(models_to_analyse=self.model_dict,
-                                    outputs_to_analyse=['population',
-                                                        'incidence',
-                                                        'mortality',
-                                                        'notifications',
-                                                        'prevalence'],
+                                    outputs_to_analyse=self.epi_outputs_to_analyse,
                                     stratifications=[self.model_dict['baseline'].agegroups,
                                                      self.model_dict['baseline'].comorbidities])
         self.find_population_fractions(stratifications=[self.model_dict['baseline'].agegroups,
@@ -490,6 +487,7 @@ class ModelRunner:
         for scenario in self.model_dict:
             uncertainty_percentiles[scenario] = {}
             for output in full_uncertainty_outputs[scenario]:
+                print(output)
                 uncertainty_percentiles[scenario][output] \
                     = numpy.percentile(full_uncertainty_outputs[scenario][output][self.accepted_indices, :],
                                        self.percentiles,
@@ -563,15 +561,17 @@ class ModelRunner:
 
                 # Storage
                 epi_outputs = self.find_epi_outputs(['baseline'],
-                                                    outputs_to_analyse=['population',
-                                                                        'incidence'])
+                                                    outputs_to_analyse=self.epi_outputs_to_analyse)
                 cost_outputs \
                     = self.find_cost_outputs(interventions_to_cost=self.model_dict['baseline'].interventions_to_cost)
-                self.store_uncertainty('baseline', epi_outputs, cost_outputs)
+                self.store_uncertainty('baseline',
+                                       epi_outputs,
+                                       cost_outputs,
+                                       epi_outputs_to_analyse=self.epi_outputs_to_analyse)
                 integer_dictionary \
                     = extract_integer_dicts(['baseline'],
                                             get_output_dicts_from_lists(models_to_analyse=['baseline'],
-                                                                             output_dict_of_lists=epi_outputs))
+                                                                        output_dict_of_lists=epi_outputs))
 
                 # Calculate prior
                 prior_log_likelihood = 0.
@@ -647,12 +647,14 @@ class ModelRunner:
 
                             # Storage
                             epi_outputs = self.find_epi_outputs([scenario_name],
-                                                                outputs_to_analyse=['population',
-                                                                                    'incidence'])
+                                                                outputs_to_analyse=self.epi_outputs_to_analyse)
                             cost_outputs \
                                 = self.find_cost_outputs(
                                 interventions_to_cost=self.model_dict[scenario_name].interventions_to_cost)
-                            self.store_uncertainty(scenario_name, epi_outputs, cost_outputs)
+                            self.store_uncertainty(scenario_name,
+                                                   epi_outputs,
+                                                   cost_outputs,
+                                                   epi_outputs_to_analyse=self.epi_outputs_to_analyse)
 
                 i_candidates += 1
                 run += 1

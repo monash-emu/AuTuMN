@@ -120,6 +120,7 @@ class ModelRunner:
         self.cost_outputs = {}
         self.cost_outputs_dict = {}
         self.cost_outputs_integer_dict = {}
+        self.cost_outputs_uncertainty = {}
 
     ##############################################
     ### Master method to run all other methods ###
@@ -151,7 +152,7 @@ class ModelRunner:
             # Integrate and add result to outputs object
             self.model_dict[scenario_name].integrate()
 
-        # New model interpretation code - should be completely flexible and reusable by uncertainty and optimisation
+        # New model interpretation code - should be flexible and is now used by uncertainty and optimisation
         self.epi_outputs \
             = self.find_epi_outputs(models_to_analyse=self.model_dict,
                                     outputs_to_analyse=['population',
@@ -163,7 +164,8 @@ class ModelRunner:
                                                      self.model_dict['baseline'].comorbidities])
         self.find_population_fractions(stratifications=[self.model_dict['baseline'].agegroups,
                                                         self.model_dict['baseline'].comorbidities])
-        self.find_cost_outputs(interventions_to_cost=self.model_dict['baseline'].interventions_to_cost)
+        self.cost_outputs \
+            = self.find_cost_outputs(interventions_to_cost=self.model_dict['baseline'].interventions_to_cost)
         self.find_adjusted_costs(cost_types=['inflated',
                                              'discounted',
                                              'discounted_inflated'])
@@ -379,24 +381,7 @@ class ModelRunner:
                                         = increment_list(self.model_dict[model].get_compartment_soln(label) \
                                                          / epi_outputs[model]['population' + stratum] \
                                                          * 1e5, epi_outputs[model]['prevalence' + stratum])
-
         return epi_outputs
-
-            # Old code from model.py - for fixing later when strains are implemented
-            # Summing MDR and XDR to get the total of all MDRs
-            # if len(self.model_dict[model].strains) > 1:
-            #     rate_incidence['all_mdr_strains'] = 0.
-            #     if len(self.strains) > 1:
-            #         for actual_strain_number in range(len(self.strains)):
-            #             strain = self.strains[actual_strain_number]
-            #             if actual_strain_number > 0:
-            #                 rate_incidence['all_mdr_strains'] \
-            #                     += rate_incidence[strain]
-            #     self.vars['all_mdr_strains'] \
-            #         = rate_incidence['all_mdr_strains'] / self.vars['population'] * 1E5
-            #     Convert to percentage
-                # self.vars['proportion_mdr'] \
-                #     = self.vars['all_mdr_strains'] / self.vars['incidence'] * 1E2
 
     def find_population_fractions(self, stratifications=[]):
 
@@ -421,11 +406,13 @@ class ModelRunner:
 
         """
 
+        cost_outputs = {}
         for model in self.model_dict:
-            self.cost_outputs[model] = {}
-            self.cost_outputs[model]['times'] = self.model_dict[model].cost_times
+            cost_outputs[model] = {}
+            cost_outputs[model]['times'] = self.model_dict[model].cost_times
             for i, intervention in enumerate(interventions_to_cost):
-                self.cost_outputs[model]['raw_cost_' + intervention] = self.model_dict[model].costs[:, i]
+                cost_outputs[model]['raw_cost_' + intervention] = self.model_dict[model].costs[:, i]
+        return cost_outputs
 
     def find_adjusted_costs(self, cost_types=[]):
 
@@ -541,6 +528,7 @@ class ModelRunner:
                 output_list = self.find_epi_outputs(['baseline'],
                                                     outputs_to_analyse=['population',
                                                                         'incidence'])
+
                 self.store_uncertainty('baseline', output_list)
                 integer_dictionary \
                     = extract_integer_dicts(['baseline'],
@@ -797,6 +785,7 @@ class ModelRunner:
         # Create first column of dictionaries
         if model not in self.epi_outputs_uncertainty:
             self.epi_outputs_uncertainty[model] = {}
+            self.cost_outputs_uncertainty[model] = {}
             for output in outputs_to_analyse:
                 self.epi_outputs_uncertainty[model][output] = new_results[model][output]
 

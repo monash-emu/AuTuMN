@@ -571,7 +571,6 @@ class Project:
         self.scenarios = self.model_runner.model_dict.keys()
         self.scenarios.reverse()
         self.programs = self.model_runner.model_dict['baseline'].interventions_to_cost
-        self.uncertainty_percentiles = {}
 
     #################################
     # General methods for use below #
@@ -732,29 +731,6 @@ class Project:
         png = os.path.join(self.out_dir_project, self.country + last_part_of_name_for_figure + '.png')
         fig.savefig(png, dpi=300)
 
-    #########################################
-    # Methods to collect data for later use #
-    #########################################
-
-    def find_uncertainty_centiles(self):
-
-        """
-        Find percentiles from uncertainty dictionaries.
-
-        Modifies:
-            self.percentiles: Adds all the required percentiles to this dictionary.
-
-        """
-
-        for scenario in self.scenarios:
-            self.uncertainty_percentiles[scenario] = {}
-            for output in self.model_runner.epi_outputs_uncertainty[scenario]:
-                self.uncertainty_percentiles[scenario][output] \
-                    = np.percentile(self.model_runner.epi_outputs_uncertainty[
-                                        scenario][output][self.model_runner.accepted_indices, :],
-                                    self.percentiles,
-                                    axis=0)
-
     #################################################
     # Methods for outputting to Office applications #
     #################################################
@@ -763,13 +739,9 @@ class Project:
 
         """
         Method to work through all the fundamental output methods, which then call all the specific output
-        methods for further data processing, plotting and writing as required.
+        methods for plotting and writing as required.
 
         """
-
-        # Processing methods that are only required for outputs (noting that most processing now done in ModelRunner)
-        # if self.gui_inputs['output_uncertainty']:
-        #     self.find_uncertainty_centiles()
 
         # Master methods for each type of outputs
         self.write_spreadsheets()
@@ -1125,11 +1097,11 @@ class Project:
 
                 else:
                     modelled_time = self.model_runner.epi_outputs[scenario]['times']
-                    modelled_values = self.uncertainty_percentiles[scenario][output][1, :]
+                    modelled_values = self.model_runner.uncertainty_percentiles[scenario][output][1, :]
                     modelled_time_upper = self.model_runner.epi_outputs[scenario]['times']
-                    modelled_values_upper = self.uncertainty_percentiles[scenario][output][2, :]
+                    modelled_values_upper = self.model_runner.uncertainty_percentiles[scenario][output][2, :]
                     modelled_time_lower = self.model_runner.epi_outputs[scenario]['times']
-                    modelled_values_lower = self.uncertainty_percentiles[scenario][output][0, :]
+                    modelled_values_lower = self.model_runner.uncertainty_percentiles[scenario][output][0, :]
 
                     # Plot the modelled data
                     ax.plot(

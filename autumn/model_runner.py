@@ -79,8 +79,25 @@ def extract_integer_dicts(models_to_analyse={}, dict_to_extract_from={}):
         for output in dict_to_extract_from[scenario]:
             integer_dict[scenario][output] \
                 = find_integer_dict_from_float_dict(dict_to_extract_from[scenario][output])
-
     return integer_dict
+
+
+def get_output_dicts_from_lists(models_to_analyse={}, output_dict_of_lists={}):
+
+    """
+    Convert output lists to dictionaries. This may actually not be that necessary - but the code is pretty short
+    and elegant, so easy enough to include/remove as needed.
+
+    """
+
+    output_dictionary = {}
+    for scenario in models_to_analyse:
+        output_dictionary[scenario] = {}
+        for output in output_dict_of_lists[scenario]:
+            if output != 'times':
+                output_dictionary[scenario][output] = dict(zip(output_dict_of_lists[scenario]['times'],
+                                                               output_dict_of_lists[scenario][output]))
+    return output_dictionary
 
 
 class ModelRunner:
@@ -177,10 +194,10 @@ class ModelRunner:
             self.cost_outputs[scenario].update(adjusted_costs[scenario])
 
         # If you want some dictionaries based on the lists created above (may not be necessary)
-        self.epi_outputs_dict.update(self.get_output_dicts_from_lists(models_to_analyse=self.model_dict,
-                                                                      output_dict_of_lists=self.epi_outputs))
-        self.cost_outputs_dict.update(self.get_output_dicts_from_lists(models_to_analyse=self.model_dict,
-                                                                       output_dict_of_lists=self.cost_outputs))
+        self.epi_outputs_dict.update(get_output_dicts_from_lists(models_to_analyse=self.model_dict,
+                                                                 output_dict_of_lists=self.epi_outputs))
+        self.cost_outputs_dict.update(get_output_dicts_from_lists(models_to_analyse=self.model_dict,
+                                                                  output_dict_of_lists=self.cost_outputs))
 
         # If you want some integer-based dictionaries
         self.epi_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.epi_outputs_dict))
@@ -459,23 +476,6 @@ class ModelRunner:
                     cost_outputs[scenario][cost_type + '_cost_all_programs'].append(cost_all_programs)
         return cost_outputs
 
-    def get_output_dicts_from_lists(self, models_to_analyse={}, output_dict_of_lists={}):
-
-        """
-        Convert output lists to dictionaries. This may actually not be that necessary - but the code is pretty short
-        and elegant, so easy enough to include/remove as needed.
-
-        """
-
-        output_dictionary = {}
-        for scenario in models_to_analyse:
-            output_dictionary[scenario] = {}
-            for output in output_dict_of_lists[scenario]:
-                if output != 'times':
-                    output_dictionary[scenario][output] = dict(zip(output_dict_of_lists[scenario]['times'],
-                                                                output_dict_of_lists[scenario][output]))
-        return output_dictionary
-
     def find_uncertainty_centiles(self, full_uncertainty_outputs):
 
         """
@@ -570,7 +570,7 @@ class ModelRunner:
                 self.store_uncertainty('baseline', epi_outputs, cost_outputs)
                 integer_dictionary \
                     = extract_integer_dicts(['baseline'],
-                                            self.get_output_dicts_from_lists(models_to_analyse=['baseline'],
+                                            get_output_dicts_from_lists(models_to_analyse=['baseline'],
                                                                              output_dict_of_lists=epi_outputs))
 
                 # Calculate prior

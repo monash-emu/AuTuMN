@@ -1044,13 +1044,12 @@ class Project:
 
         # Standard preliminaries
         start_time = self.inputs.model_constants['plot_start_time']
-        scenario_labels = []
         colour, indices, yaxis_label, title, patch_colour = \
             find_standard_output_styles(outputs, lightening_factor=0.3)
         subplot_grid = find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
 
-        # Loop through outputs
+        # Loop through indicators
         for o, output in enumerate(outputs):
 
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
@@ -1081,25 +1080,25 @@ class Project:
 
             # Plot point estimates
             ax.plot(gtb_data['point_estimate'].keys(), gtb_data['point_estimate'].values(),
-                    color=colour[o], linewidth=0.5)
+                    color=colour[o], linewidth=0.5, label=None)
 
             # Plotting modelled data____________________________________________________________________________________
             # Reversed ensures black baseline is plotted over the top at the end
-            for scenario in reversed(self.scenarios):
-
-                # Plot without uncertainty
-                if not self.gui_inputs['output_uncertainty']:
+            # Plot without uncertainty
+            if not self.gui_inputs['output_uncertainty']:
+                for scenario in reversed(self.scenarios):
                     ax.plot(
                         self.model_runner.epi_outputs[scenario]['times'],
                         self.model_runner.epi_outputs[scenario][output],
                         color=self.output_colours[scenario][1],
                         linestyle=self.output_colours[scenario][0],
-                        linewidth=1.5)
+                        linewidth=1.5,
+                        label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario)))
 
-                # Plot with uncertainty
-                else:
+            # Plot with uncertainty
+            else:
+                for scenario in self.model_runner.epi_outputs_uncertainty_centiles:
 
-                    # Plot the modelled data
                     # Median
                     ax.plot(
                         self.model_runner.epi_outputs[scenario]['times'],
@@ -1107,7 +1106,9 @@ class Project:
                         self.model_runner.percentiles.index(50), :],
                         color=self.output_colours[scenario][1],
                         linestyle=self.output_colours[scenario][0],
-                        linewidth=1.5)
+                        linewidth=1.5,
+                        label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario)))
+
                     # Upper and lower confidence bounds
                     for centile in [2.5, 97.5]:
                         ax.plot(
@@ -1116,10 +1117,12 @@ class Project:
                             self.model_runner.percentiles.index(centile), :],
                             color=self.output_colours[scenario][1],
                             linestyle='--',
-                            linewidth=1)
+                            linewidth=1,
+                            label=None)
 
-                # Add scenario label
-                scenario_labels += [tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario))]
+            # Add legend
+            if o == len(outputs) - 1:
+                ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False)
 
             # Set vertical plot axis dimensions
             ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
@@ -1137,14 +1140,6 @@ class Project:
 
             # Label the y axis with the smaller text size
             ax.set_ylabel(yaxis_label[o], fontsize=get_nice_font_size(subplot_grid))
-
-            # Add the legend
-            scenario_handles = ax.lines[1:]
-            if o == len(outputs) - 1:
-                ax.legend(scenario_handles,
-                          scenario_labels,
-                          fontsize=get_nice_font_size(subplot_grid),
-                          frameon=False)
 
         # Add main title and save
         fig.suptitle(tool_kit.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)

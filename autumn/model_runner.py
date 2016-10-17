@@ -483,15 +483,26 @@ class ModelRunner:
 
         """
 
+        # Loop through scenarios and outputs
         uncertainty_percentiles = {}
-        for scenario in self.model_dict:
+        for scenario in full_uncertainty_outputs:
             uncertainty_percentiles[scenario] = {}
             for output in full_uncertainty_outputs[scenario]:
-                print(output)
+
+                # Code to deal with the fact that we are currently saving all baseline runs but only accepted
+                # scenario runs:
+                if scenario == 'baseline':
+                    matrix_to_analyse = full_uncertainty_outputs[scenario][output][self.accepted_indices, :]
+                else:
+                    matrix_to_analyse = full_uncertainty_outputs[scenario][output]
+
+                # Find the actual centiles
                 uncertainty_percentiles[scenario][output] \
-                    = numpy.percentile(full_uncertainty_outputs[scenario][output][self.accepted_indices, :],
+                    = numpy.percentile(matrix_to_analyse,
                                        self.percentiles,
                                        axis=0)
+
+        # Return result to make usable in other situations
         return uncertainty_percentiles
 
     ###########################

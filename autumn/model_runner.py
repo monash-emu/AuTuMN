@@ -839,7 +839,9 @@ class ModelRunner:
         # Create first column of dictionaries
         if scenario not in self.epi_outputs_uncertainty:
             self.epi_outputs_uncertainty[scenario] = {}
+            self.epi_outputs_uncertainty[scenario]['times'] = self.epi_outputs[scenario]['times']
             self.cost_outputs_uncertainty[scenario] = {}
+            self.cost_outputs_uncertainty[scenario]['times'] = self.cost_outputs[scenario]['times']
             for output in epi_outputs_to_analyse:
                 self.epi_outputs_uncertainty[scenario][output] = epi_results[scenario][output]
             for output in cost_outputs[scenario]:

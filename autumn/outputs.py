@@ -1083,10 +1083,10 @@ class Project:
                     color=colour[o], linewidth=0.5, label=None)
 
             # Plotting modelled data____________________________________________________________________________________
-            # Reversed ensures black baseline is plotted over the top at the end
+
             # Plot without uncertainty
             if not self.gui_inputs['output_uncertainty']:
-                for scenario in reversed(self.scenarios):
+                for scenario in reversed(self.scenarios):  # Reversed ensures black baseline plotted over top
                     ax.plot(
                         self.model_runner.epi_outputs[scenario]['times'],
                         self.model_runner.epi_outputs[scenario][output],
@@ -1120,24 +1120,16 @@ class Project:
                             linewidth=1,
                             label=None)
 
-            # Add legend
+            # Make cosmetic changes
             if o == len(outputs) - 1:
                 ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False)
-
-            # Set vertical plot axis dimensions
             ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
-
-            # Set x-ticks
             ax.set_xticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))
-
-            # Adjust size of labels of x-ticks
             for axis_to_change in [ax.xaxis, ax.yaxis]:
                 for tick in axis_to_change.get_major_ticks():
                     tick.label.set_fontsize(get_nice_font_size(subplot_grid))
-
             # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
             ax.set_title(title[o], fontsize=get_nice_font_size(subplot_grid) + 2.)
-
             # Label the y axis with the smaller text size
             ax.set_ylabel(yaxis_label[o], fontsize=get_nice_font_size(subplot_grid))
 

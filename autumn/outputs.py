@@ -978,6 +978,7 @@ class Project:
         output_colours = self.make_default_line_styles(5, True)
         for s, scenario in enumerate(self.scenarios):
             self.output_colours[scenario] = output_colours[s]
+        # Make sure there are enough for uncertainty plots too - if it has a different structure to the scenarios
         for s, scenario in enumerate(self.model_runner.epi_outputs_uncertainty):
             self.uncertainty_output_colours[scenario] = output_colours[s]
 

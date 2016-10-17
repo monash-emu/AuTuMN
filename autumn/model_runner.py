@@ -174,7 +174,7 @@ class ModelRunner:
             # Integrate and add result to outputs object
             self.model_dict[scenario_name].integrate()
 
-        # New model interpretation code - should be flexible and is now used by uncertainty and optimisation
+        # Model interpretation code - should be flexible and is now used by uncertainty and optimisation
         self.epi_outputs \
             = self.find_epi_outputs(models_to_analyse=self.model_dict,
                                     outputs_to_analyse=self.epi_outputs_to_analyse,
@@ -184,9 +184,9 @@ class ModelRunner:
                                                         self.model_dict['baseline'].comorbidities])
         self.cost_outputs \
             = self.find_cost_outputs(interventions_to_cost=self.model_dict['baseline'].interventions_to_cost)
-        adjusted_costs = self.find_adjusted_costs(cost_types=['inflated',
-                                                              'discounted',
-                                                              'discounted_inflated'])
+        adjusted_costs = self.find_adjusted_costs(raw_costs=self.cost_outputs, cost_types=['inflated',
+                                                                                           'discounted',
+                                                                                           'discounted_inflated'])
         for scenario in self.model_dict:
             self.cost_outputs[scenario].update(adjusted_costs[scenario])
 
@@ -441,7 +441,7 @@ class ModelRunner:
                 cost_outputs[scenario]['raw_cost_' + intervention] = self.model_dict[scenario].costs[:, i]
         return cost_outputs
 
-    def find_adjusted_costs(self, cost_types=[]):
+    def find_adjusted_costs(self, raw_costs, cost_types=[]):
 
         cost_outputs = {}
 
@@ -466,7 +466,7 @@ class ModelRunner:
                     for int, intervention in enumerate(self.model_dict[scenario].interventions_to_cost):
                         if t == 0: cost_outputs[scenario][cost_type + '_cost_' + intervention] = []
                         cost_outputs[scenario][cost_type + '_cost_' + intervention].append(
-                            autumn.economics.get_adjusted_cost(self.cost_outputs[scenario]['raw_cost_' + intervention][t],
+                            autumn.economics.get_adjusted_cost(raw_costs[scenario]['raw_cost_' + intervention][t],
                                                                cost_type, current_cpi, cpi_time_variant, discount_rate,
                                                                t_into_future))
                         cost_all_programs += cost_outputs[scenario][cost_type + '_cost_' + intervention][-1]
@@ -575,6 +575,10 @@ class ModelRunner:
                                                     outputs_to_analyse=self.epi_outputs_to_analyse)
                 cost_outputs \
                     = self.find_cost_outputs(interventions_to_cost=self.model_dict['baseline'].interventions_to_cost)
+                adjusted_costs = self.find_adjusted_costs(raw_costs=cost_outputs, cost_types=['inflated',
+                                                                                              'discounted',
+                                                                                              'discounted_inflated'])
+                cost_outputs['baseline'].update(adjusted_costs['baseline'])
                 self.store_uncertainty('baseline',
                                        epi_outputs,
                                        cost_outputs,
@@ -662,6 +666,11 @@ class ModelRunner:
                             cost_outputs \
                                 = self.find_cost_outputs(
                                 interventions_to_cost=self.model_dict[scenario_name].interventions_to_cost)
+                            adjusted_costs = self.find_adjusted_costs(raw_costs=cost_outputs,
+                                                                      cost_types=['inflated',
+                                                                                  'discounted',
+                                                                                  'discounted_inflated'])
+                            cost_outputs[scenario_name].update(adjusted_costs['baseline'])
                             self.store_uncertainty(scenario_name,
                                                    epi_outputs,
                                                    cost_outputs,
@@ -821,7 +830,8 @@ class ModelRunner:
             print "Warning: parameters=%s failed with model" % params
             self.is_last_run_success = False
 
-    def store_uncertainty(self, scenario, epi_results, cost_outputs, epi_outputs_to_analyse=['population', 'incidence']):
+    def store_uncertainty(self, scenario, epi_results, cost_outputs,
+                          epi_outputs_to_analyse=['population', 'incidence']):
 
         """
         Add model results from one uncertainty run to the appropriate outputs dictionary.

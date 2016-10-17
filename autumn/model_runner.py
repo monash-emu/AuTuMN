@@ -231,7 +231,7 @@ class ModelRunner:
                 tool_kit.pickle_save(self.accepted_indices, indices_file)
                 self.add_comment_to_gui_window('Uncertainty results saved to disc')
 
-        # Processing methods that are only required for outputs (noting that most processing now done in ModelRunner)
+        # Processing methods that are only required for outputs
         if self.gui_inputs['output_uncertainty']:
             self.epi_outputs_uncertainty_centiles.update(self.find_uncertainty_centiles(self.epi_outputs_uncertainty))
             self.cost_outputs_uncertainty_centiles.update(self.find_uncertainty_centiles(self.cost_outputs_uncertainty))
@@ -488,19 +488,19 @@ class ModelRunner:
         for scenario in full_uncertainty_outputs:
             uncertainty_percentiles[scenario] = {}
             for output in full_uncertainty_outputs[scenario]:
+                if output != 'times':
+                    # Code to deal with the fact that we are currently saving all baseline runs but only accepted
+                    # scenario runs:
+                    if scenario == 'baseline':
+                        matrix_to_analyse = full_uncertainty_outputs[scenario][output][self.accepted_indices, :]
+                    else:
+                        matrix_to_analyse = full_uncertainty_outputs[scenario][output]
 
-                # Code to deal with the fact that we are currently saving all baseline runs but only accepted
-                # scenario runs:
-                if scenario == 'baseline':
-                    matrix_to_analyse = full_uncertainty_outputs[scenario][output][self.accepted_indices, :]
-                else:
-                    matrix_to_analyse = full_uncertainty_outputs[scenario][output]
-
-                # Find the actual centiles
-                uncertainty_percentiles[scenario][output] \
-                    = numpy.percentile(matrix_to_analyse,
-                                       self.percentiles,
-                                       axis=0)
+                    # Find the actual centiles
+                    uncertainty_percentiles[scenario][output] \
+                        = numpy.percentile(matrix_to_analyse,
+                                           self.percentiles,
+                                           axis=0)
 
         # Return result to make usable in other situations
         return uncertainty_percentiles

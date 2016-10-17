@@ -10,9 +10,8 @@ import scipy.stats
 def add_unique_tuple_to_list(a_list, a_tuple):
 
     """
-    Adds or modifies a list of tuples, compares only the items
-    before the last in the tuples, the last value in the tuple
-    is assumed to be a value.
+    Adds or modifies a list of tuples, comparing only the items before the last in the tuples
+    (i.e. the compartments), with the last value in the tuple assumed to be the value for the flow rate.
 
     """
 

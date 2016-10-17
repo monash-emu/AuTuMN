@@ -562,6 +562,7 @@ class Project:
         self.figure_number = 1
         self.classifications = ['demo_', 'econ_', 'epi_', 'program_prop_', 'program_timeperiod_']
         self.output_colours = {}
+        self.uncertainty_output_colours = {}
         self.program_colours = {}
         self.programs = []
         self.suptitle_size = 13
@@ -977,6 +978,9 @@ class Project:
         output_colours = self.make_default_line_styles(5, True)
         for s, scenario in enumerate(self.scenarios):
             self.output_colours[scenario] = output_colours[s]
+        for s, scenario in enumerate(self.model_runner.epi_outputs_uncertainty):
+            self.uncertainty_output_colours[scenario] = output_colours[s]
+
         for p, program in enumerate(self.programs):
             # +1 is to avoid starting from black, which doesn't look as nice for programs as for baseline scenario
             self.program_colours[program] = output_colours[p + 1]
@@ -1036,6 +1040,8 @@ class Project:
         Produces the plot for the main outputs, can handle multiple scenarios.
         Note that if running a series of scenarios, it is expected that the last scenario to
         be run will be baseline, which should have scenario set to None.
+
+        *** Need to sort out y-axis limits
 
         Args:
             outputs: A list of the outputs to be plotted
@@ -1101,23 +1107,23 @@ class Project:
 
                     # Median
                     ax.plot(
-                        self.model_runner.epi_outputs[scenario]['times'],
+                        self.model_runner.epi_outputs_uncertainty[scenario]['times'],
                         self.model_runner.epi_outputs_uncertainty_centiles[scenario][output][
                         self.model_runner.percentiles.index(50), :],
-                        color=self.output_colours[scenario][1],
-                        linestyle=self.output_colours[scenario][0],
+                        color=self.uncertainty_output_colours[scenario][1],
+                        linestyle=self.uncertainty_output_colours[scenario][0],
                         linewidth=1.5,
                         label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario)))
 
                     # Upper and lower confidence bounds
                     for centile in [2.5, 97.5]:
                         ax.plot(
-                            self.model_runner.epi_outputs[scenario]['times'],
+                            self.model_runner.epi_outputs_uncertainty[scenario]['times'],
                             self.model_runner.epi_outputs_uncertainty_centiles[scenario][output][
                             self.model_runner.percentiles.index(centile), :],
-                            color=self.output_colours[scenario][1],
+                            color=self.uncertainty_output_colours[scenario][1],
                             linestyle='--',
-                            linewidth=1,
+                            linewidth=.5,
                             label=None)
 
             # Make cosmetic changes

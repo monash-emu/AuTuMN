@@ -217,6 +217,7 @@ class ModelRunner:
             whether_file = os.path.join(out_dir, 'whether.pkl')
             accept_file = os.path.join(out_dir, 'accept.pkl')
             burn_in_file = os.path.join(out_dir, 'burnin.pkl')
+            rejection_file = os.path.join(out_dir, 'rejection.pkl')
 
             # Don't run uncertainty but load a saved simulation
             if self.gui_inputs['pickle_uncertainty'] == 'Load':
@@ -228,6 +229,7 @@ class ModelRunner:
                 self.whether_accepted_list = tool_kit.pickle_load(whether_file)
                 self.acceptance_dict = tool_kit.pickle_load(accept_file)
                 self.accepted_no_burn_in_indices = tool_kit.pickle_load(burn_in_file)
+                self.rejection_dict = tool_kit.pickle_load(rejection_file)
 
             # Run uncertainty
             else:
@@ -242,6 +244,7 @@ class ModelRunner:
                 tool_kit.pickle_save(self.whether_accepted_list, whether_file)
                 tool_kit.pickle_save(self.acceptance_dict, accept_file)
                 tool_kit.pickle_save(self.accepted_no_burn_in_indices, burn_in_file)
+                tool_kit.pickle_save(self.rejection_dict, rejection_file)
                 self.add_comment_to_gui_window('Uncertainty results saved to disc')
 
         # Processing methods that are only required for outputs
@@ -973,13 +976,15 @@ class ModelRunner:
         self.runtime_outputs.insert(END, comment + '\n')
         self.runtime_outputs.see(END)
 
-    def plot_progressive_parameters(self, from_runner=True):
+    def plot_progressive_parameters(self, from_runner=True, input_figure=None):
 
         # Initialise plotting
-        param_tracking_figure = plt.Figure()
-
         if from_runner:
+            param_tracking_figure = plt.Figure()
             parameter_plots = FigureCanvasTkAgg(param_tracking_figure, master=self.figure_frame)
+
+        else:
+            param_tracking_figure = input_figure
 
         subplot_grid = outputs.find_subplot_numbers(len(self.all_parameters_tried))
 
@@ -993,7 +998,7 @@ class ModelRunner:
             ax = param_tracking_figure.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
             ax.plot(range(1, len(accepted_params) + 1), accepted_params, linewidth=2, marker='o', markersize=4,
                     mec='b', mfc='b')
-            ax.set_xlim((1., self.gui_inputs['uncertainty_runs']))
+            ax.set_xlim((1., len(self.accepted_indices)))
 
             # Find the y-limits from the parameter bounds and the parameter values tried
             for param_number in range(len(self.inputs.param_ranges_unc)):
@@ -1024,13 +1029,13 @@ class ModelRunner:
 
             if from_runner:
 
-                # Finalise
+                # Output to GUI window
                 parameter_plots.show()
                 parameter_plots.draw()
                 parameter_plots.get_tk_widget().grid(row=1, column=1)
 
-            else:
-                return param_tracking_figure
+        if not from_runner:
+            return param_tracking_figure
 
 
 

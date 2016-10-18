@@ -1035,6 +1035,13 @@ class Project:
                 and len(self.model_runner.model_dict['baseline'].comorbidities) > 1:
             self.plot_comorb_checks()
 
+        # Save figure that is produced in the uncertainty running process
+        if self.gui_inputs['output_param_plots']:
+            param_tracking_figure = self.set_and_update_figure()
+            param_tracking_figure = self.model_runner.plot_progressive_parameters(from_runner=False,
+                                                                                  input_figure=param_tracking_figure)
+            self.save_figure(param_tracking_figure, '_param_tracking')
+
     def plot_outputs_against_gtb(self, outputs):
 
         """

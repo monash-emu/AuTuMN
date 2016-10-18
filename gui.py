@@ -42,6 +42,8 @@ def find_button_name_from_string(working_string):
                                   'Plot comorbidity checks',
                               'output_age_calculations':
                                   'Plot age calculation weightings',
+                              'output_param_plots':
+                                  'Plot parameter progression',
                               'comorbidity_diabetes':
                                   'Type II diabetes',
                               'is_lowquality':
@@ -105,6 +107,7 @@ class App:
         self.boolean_inputs = ['output_flow_diagram', 'output_compartment_populations', 'output_comorbidity_fractions',
                                'output_age_fractions', 'output_by_age', 'output_fractions', 'output_scaleups',
                                'output_gtb_plots', 'output_plot_economics', 'output_plot_comorbidity_checks',
+                               'output_param_plots',
                                'output_uncertainty', 'adaptive_uncertainty',
                                'output_spreadsheets',
                                'output_documents', 'output_by_scenario', 'output_horizontally',
@@ -229,7 +232,7 @@ class App:
         uncertainty_numeric_list = {'uncertainty_runs': ['Number of uncertainty runs', 10],
                                     'burn_in_runs': ['Number of burn-in runs', 4],
                                     'search_width': ['Relative search width', .2]}
-        self.boolean_dictionary['output_uncertainty'].set(True)
+        # self.boolean_dictionary['output_uncertainty'].set(True)
         self.boolean_dictionary['adaptive_uncertainty'].set(True)
         for numeric in uncertainty_numeric_list.keys():
             numeric_label = Label(self.frame, text=uncertainty_numeric_list[numeric][0], font=label_font)

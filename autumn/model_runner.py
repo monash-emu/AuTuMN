@@ -998,7 +998,7 @@ class ModelRunner:
             ax = param_tracking_figure.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
             ax.plot(range(1, len(accepted_params) + 1), accepted_params, linewidth=2, marker='o', markersize=4,
                     mec='b', mfc='b')
-            ax.set_xlim((1., len(self.accepted_indices)))
+            ax.set_xlim((1., len(self.accepted_indices) + 1))
 
             # Find the y-limits from the parameter bounds and the parameter values tried
             for param_number in range(len(self.inputs.param_ranges_unc)):
@@ -1010,8 +1010,8 @@ class ModelRunner:
             ax.set_ylim((min_ylimit * (1 - ylim_margins), max_ylimit * (1 + ylim_margins)))
 
             # Indicate the prior bounds
-            ax.plot([1, self.gui_inputs['uncertainty_runs']], [min_ylimit, min_ylimit], color='0.8')
-            ax.plot([1, self.gui_inputs['uncertainty_runs']], [max_ylimit, max_ylimit], color='0.8')
+            ax.plot([1, len(self.accepted_indices) + 1], [min_ylimit, min_ylimit], color='0.8')
+            ax.plot([1, len(self.accepted_indices) + 1], [max_ylimit, max_ylimit], color='0.8')
 
             # Plot rejected parameters
             for run, rejected_params in self.rejection_dict[param].items():

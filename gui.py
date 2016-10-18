@@ -230,7 +230,7 @@ class App:
 
         # Numeric entry box
         uncertainty_numeric_list = {'uncertainty_runs': ['Number of uncertainty runs', 10],
-                                    'burn_in_runs': ['Number of burn-in runs', 4],
+                                    'burn_in_runs': ['Number of burn-in runs', 0],
                                     'search_width': ['Relative search width', .2]}
         # self.boolean_dictionary['output_uncertainty'].set(True)
         self.boolean_dictionary['adaptive_uncertainty'].set(True)

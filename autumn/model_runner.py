@@ -143,6 +143,7 @@ class ModelRunner:
         self.cost_outputs_uncertainty_centiles = {}
         self.uncertainty_percentiles = {}
         self.percentiles = [2.5, 50, 97.5]
+        self.accepted_no_burn_in_indices = []
 
     ##############################################
     ### Master method to run all other methods ###
@@ -443,8 +444,6 @@ class ModelRunner:
 
     def find_adjusted_costs(self, raw_costs, cost_types=[]):
 
-    
-
         cost_outputs = {}
 
         # Get some preliminary parameters
@@ -487,6 +486,9 @@ class ModelRunner:
 
         # Loop through scenarios and outputs
         uncertainty_percentiles = {}
+        self.accepted_no_burn_in_indices \
+            = [i for i in self.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
+
         for scenario in full_uncertainty_outputs:
             uncertainty_percentiles[scenario] = {}
             for output in full_uncertainty_outputs[scenario]:
@@ -494,7 +496,8 @@ class ModelRunner:
                     # Code to deal with the fact that we are currently saving all baseline runs but only accepted
                     # scenario runs:
                     if scenario == 'baseline':
-                        matrix_to_analyse = full_uncertainty_outputs[scenario][output][self.accepted_indices, :]
+                        matrix_to_analyse = full_uncertainty_outputs[scenario][output][
+                                            self.accepted_no_burn_in_indices, :]
                     else:
                         matrix_to_analyse = full_uncertainty_outputs[scenario][output]
 

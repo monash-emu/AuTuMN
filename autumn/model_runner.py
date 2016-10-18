@@ -213,6 +213,10 @@ class ModelRunner:
             results_file = os.path.join(out_dir, 'results_uncertainty.pkl')
             cost_file = os.path.join(out_dir, 'cost_uncertainty.pkl')
             indices_file = os.path.join(out_dir, 'indices_uncertainty.pkl')
+            all_tried_file = os.path.join(out_dir, 'all_tried.pkl')
+            whether_file = os.path.join(out_dir, 'whether.pkl')
+            accept_file = os.path.join(out_dir, 'accept.pkl')
+            burn_in_file = os.path.join(out_dir, 'burnin.pkl')
 
             # Don't run uncertainty but load a saved simulation
             if self.gui_inputs['pickle_uncertainty'] == 'Load':
@@ -220,6 +224,10 @@ class ModelRunner:
                 self.epi_outputs_uncertainty = tool_kit.pickle_load(results_file)
                 self.cost_outputs_uncertainty = tool_kit.pickle_load(cost_file)
                 self.accepted_indices = tool_kit.pickle_load(indices_file)
+                self.all_parameters_tried = tool_kit.pickle_load(all_tried_file)
+                self.whether_accepted_list = tool_kit.pickle_load(whether_file)
+                self.acceptance_dict = tool_kit.pickle_load(accept_file)
+                self.accepted_no_burn_in_indices = tool_kit.pickle_load(burn_in_file)
 
             # Run uncertainty
             else:
@@ -230,6 +238,10 @@ class ModelRunner:
                 tool_kit.pickle_save(self.epi_outputs_uncertainty, results_file)
                 tool_kit.pickle_save(self.cost_outputs_uncertainty, cost_file)
                 tool_kit.pickle_save(self.accepted_indices, indices_file)
+                tool_kit.pickle_save(self.all_parameters_tried, all_tried_file)
+                tool_kit.pickle_save(self.whether_accepted_list, whether_file)
+                tool_kit.pickle_save(self.acceptance_dict, accept_file)
+                tool_kit.pickle_save(self.accepted_no_burn_in_indices, burn_in_file)
                 self.add_comment_to_gui_window('Uncertainty results saved to disc')
 
         # Processing methods that are only required for outputs
@@ -684,7 +696,7 @@ class ModelRunner:
                 i_candidates += 1
                 run += 1
 
-            self.plot_progressive_parameters()
+            self.plot_progressive_parameters(from_runner=True)
 
             # Generate more candidates if required
             if not self.gui_inputs['adaptive_uncertainty'] and run >= len(param_candidates.keys()):
@@ -961,22 +973,24 @@ class ModelRunner:
         self.runtime_outputs.insert(END, comment + '\n')
         self.runtime_outputs.see(END)
 
-    def plot_progressive_parameters(self):
+    def plot_progressive_parameters(self, from_runner=True):
 
         # Initialise plotting
-        figure = plt.Figure()
-        parameter_plots = FigureCanvasTkAgg(figure, master=self.figure_frame)
+        param_tracking_figure = plt.Figure()
+
+        if from_runner:
+            parameter_plots = FigureCanvasTkAgg(param_tracking_figure, master=self.figure_frame)
+
         subplot_grid = outputs.find_subplot_numbers(len(self.all_parameters_tried))
 
         # Cycle through parameters with one subplot for each parameter
         for p, param in enumerate(self.all_parameters_tried):
 
             # Extract accepted params from all tried params
-            accepted_params = list(p for p, a in zip(self.all_parameters_tried[param], self.whether_accepted_list)
-                                   if a)
+            accepted_params = list(p for p, a in zip(self.all_parameters_tried[param], self.whether_accepted_list) if a)
 
             # Plot
-            ax = figure.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
+            ax = param_tracking_figure.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
             ax.plot(range(1, len(accepted_params) + 1), accepted_params, linewidth=2, marker='o', markersize=4,
                     mec='b', mfc='b')
             ax.set_xlim((1., self.gui_inputs['uncertainty_runs']))
@@ -1008,10 +1022,15 @@ class ModelRunner:
             if p > len(self.all_parameters_tried) - subplot_grid[1] - 1:
                 ax.set_xlabel('Accepted runs')
 
-            # Finalise
-            parameter_plots.show()
-            parameter_plots.draw()
-            parameter_plots.get_tk_widget().grid(row=1, column=1)
+            if from_runner:
+
+                # Finalise
+                parameter_plots.show()
+                parameter_plots.draw()
+                parameter_plots.get_tk_widget().grid(row=1, column=1)
+
+            else:
+                return param_tracking_figure
 
 
 

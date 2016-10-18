@@ -1041,6 +1041,7 @@ class Project:
             param_tracking_figure = self.model_runner.plot_progressive_parameters(from_runner=False,
                                                                                   input_figure=param_tracking_figure)
             self.save_figure(param_tracking_figure, '_param_tracking')
+            self.plot_param_histograms()
 
     def plot_outputs_against_gtb(self, outputs):
 
@@ -1905,6 +1906,19 @@ class Project:
                 tick.label.set_fontsize(get_nice_font_size([1, 1]))
         self.save_figure(fig, '_comorb_checks')
 
+    def plot_param_histograms(self):
+
+        fig = self.set_and_update_figure()
+        subplot_grid = find_subplot_numbers(len(self.model_runner.all_parameters_tried))
+        for p, param in enumerate(self.model_runner.all_parameters_tried):
+            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p)
+            param_values = \
+                [self.model_runner.all_parameters_tried[param][i]
+                 for i in self.model_runner.accepted_no_burn_in_indices]
+            ax.hist(param_values)
+            ax.set_title(tool_kit.find_title_from_dictionary(param))
+        self.save_figure(fig, '_param_histogram')
+
     def open_output_directory(self):
 
         """
@@ -1917,7 +1931,6 @@ class Project:
             os.system('start ' + ' ' + self.out_dir_project)
         elif 'Darwin' in operating_system:
             os.system('open ' + ' ' + self.out_dir_project)
-
 
 
 

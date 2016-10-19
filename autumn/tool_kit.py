@@ -237,7 +237,11 @@ def find_title_from_dictionary(name):
         'tb_prop_casefatality_untreated_smearpos':
             'Untreated smear-positive case fatality',
         'tb_prop_casefatality_untreated_smearneg':
-            'Untreated smear-negative case fatality'
+            'Untreated smear-negative case fatality',
+        'decentralisation':
+            'Decentralisation',
+        'ipt':
+            'IPT'
     }
 
     if name in dictionary_of_names:

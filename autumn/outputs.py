@@ -1043,6 +1043,10 @@ class Project:
             self.save_figure(param_tracking_figure, '_param_tracking')
             self.plot_param_histograms()
 
+        # Plot popsizes for checking cost-coverage curves
+        if self.gui_inputs['output_popsize_plot']:
+            self.plot_popsizes()
+
     def plot_outputs_against_gtb(self, outputs):
 
         """
@@ -1931,12 +1935,35 @@ class Project:
             ax.set_title(tool_kit.find_title_from_dictionary(param))
         self.save_figure(fig, '_param_histogram')
 
+    def plot_popsizes(self):
+
+        """
+        Plot popsizes over recent time for each program in baseline scenario.
+
+        """
+
+        fig = self.set_and_update_figure()
+        ax = self.make_single_axis(fig)
+        scenario_labels = []
+        for var in self.model_runner.model_dict['baseline'].var_labels:
+            if 'popsize_' in var:
+                ax.plot(self.model_runner.model_dict['baseline'].times,
+                        self.model_runner.model_dict['baseline'].get_var_soln(var))
+                scenario_labels += [tool_kit.find_title_from_dictionary(var[8:])]
+        ax.set_xlim([self.inputs.model_constants['recent_time'],
+                     self.inputs.model_constants['scenario_end_time']])
+        fig.suptitle('Population sizes for cost-coverage curves under baseline scenario')
+        self.make_legend_to_single_axis(ax, ax.lines, scenario_labels)
+        self.save_figure(fig, '_popsizes')
+
     def open_output_directory(self):
 
         """
         Opens the directory into which all the outputs have been placed
 
         """
+
+
 
         operating_system = platform.system()
         if 'Windows' in operating_system:

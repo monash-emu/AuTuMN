@@ -44,6 +44,8 @@ def find_button_name_from_string(working_string):
                                   'Plot age calculation weightings',
                               'output_param_plots':
                                   'Plot parameter progression',
+                              'output_popsize_plot':
+                                  'Plot "popsizes" for cost-coverage curves',
                               'comorbidity_diabetes':
                                   'Type II diabetes',
                               'is_lowquality':
@@ -107,7 +109,7 @@ class App:
         self.boolean_inputs = ['output_flow_diagram', 'output_compartment_populations', 'output_comorbidity_fractions',
                                'output_age_fractions', 'output_by_age', 'output_fractions', 'output_scaleups',
                                'output_gtb_plots', 'output_plot_economics', 'output_plot_comorbidity_checks',
-                               'output_param_plots',
+                               'output_param_plots', 'output_popsize_plot',
                                'output_uncertainty', 'adaptive_uncertainty',
                                'output_spreadsheets',
                                'output_documents', 'output_by_scenario', 'output_horizontally',

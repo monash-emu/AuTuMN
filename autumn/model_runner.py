@@ -144,6 +144,14 @@ class ModelRunner:
         self.uncertainty_percentiles = {}
         self.percentiles = [2.5, 50, 97.5]
         self.accepted_no_burn_in_indices = []
+        self.uncertainty_attributes = ['epi_outputs_uncertainty',
+                                       'cost_outputs_uncertainty',
+                                       'accepted_indices',
+                                       'all_parameters_tried',
+                                       'whether_accepted_list',
+                                       'acceptance_dict',
+                                       'accepted_no_burn_in_indices',
+                                       'rejection_dict']
 
     ##############################################
     ### Master method to run all other methods ###
@@ -207,44 +215,29 @@ class ModelRunner:
             self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
             # Prepare directory for eventual pickling
-            out_dir = 'pickles'
+            out_dir = 'saved_uncertainty_analyses'
             if not os.path.isdir(out_dir):
                 os.makedirs(out_dir)
-            results_file = os.path.join(out_dir, 'results_uncertainty.pkl')
-            cost_file = os.path.join(out_dir, 'cost_uncertainty.pkl')
-            indices_file = os.path.join(out_dir, 'indices_uncertainty.pkl')
-            all_tried_file = os.path.join(out_dir, 'all_tried.pkl')
-            whether_file = os.path.join(out_dir, 'whether.pkl')
-            accept_file = os.path.join(out_dir, 'accept.pkl')
-            burn_in_file = os.path.join(out_dir, 'burnin.pkl')
-            rejection_file = os.path.join(out_dir, 'rejection.pkl')
+            storage_file_names = {}
+            for attribute in self.uncertainty_attributes:
+                storage_file_names[attribute] = os.path.join(out_dir, attribute + '.pkl')
 
             # Don't run uncertainty but load a saved simulation
             if self.gui_inputs['pickle_uncertainty'] == 'Load':
                 self.add_comment_to_gui_window('Uncertainty results loaded from previous simulation')
-                self.epi_outputs_uncertainty = tool_kit.pickle_load(results_file)
-                self.cost_outputs_uncertainty = tool_kit.pickle_load(cost_file)
-                self.accepted_indices = tool_kit.pickle_load(indices_file)
-                self.all_parameters_tried = tool_kit.pickle_load(all_tried_file)
-                self.whether_accepted_list = tool_kit.pickle_load(whether_file)
-                self.acceptance_dict = tool_kit.pickle_load(accept_file)
-                self.accepted_no_burn_in_indices = tool_kit.pickle_load(burn_in_file)
-                self.rejection_dict = tool_kit.pickle_load(rejection_file)
+                for attribute in self.uncertainty_attributes:
+                    setattr(self, attribute,
+                            tool_kit.pickle_load(storage_file_names[attribute]))
 
             # Run uncertainty
             else:
                 self.run_uncertainty()
 
-            # Write uncertainty if requested
+            # Save uncertainty if requested
             if self.gui_inputs['pickle_uncertainty'] == 'Save':
-                tool_kit.pickle_save(self.epi_outputs_uncertainty, results_file)
-                tool_kit.pickle_save(self.cost_outputs_uncertainty, cost_file)
-                tool_kit.pickle_save(self.accepted_indices, indices_file)
-                tool_kit.pickle_save(self.all_parameters_tried, all_tried_file)
-                tool_kit.pickle_save(self.whether_accepted_list, whether_file)
-                tool_kit.pickle_save(self.acceptance_dict, accept_file)
-                tool_kit.pickle_save(self.accepted_no_burn_in_indices, burn_in_file)
-                tool_kit.pickle_save(self.rejection_dict, rejection_file)
+                for attribute in self.uncertainty_attributes:
+                    tool_kit.pickle_save(getattr(self, attribute),
+                                         storage_file_names[attribute])
                 self.add_comment_to_gui_window('Uncertainty results saved to disc')
 
         # Processing methods that are only required for outputs

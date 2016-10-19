@@ -523,10 +523,15 @@ class BaseModel:
         """
 
         dt_max = 2.
+        self.process_uncertainty_params()
         if self.gui_inputs['integration_method'] == 'Explicit':
             self.integrate_explicit(dt_max)
         elif self.gui_inputs['integration_method'] == 'Runge Kutta':
             self.integrate_runge_kutta(dt_max)
+
+    def process_uncertainty_params(self):
+
+        pass
 
     def integrate_explicit(self, dt_max=0.05):
 

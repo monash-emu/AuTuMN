@@ -126,7 +126,7 @@ class ModelRunner:
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
         self.optimisation = False
-        self.total_funding = 6.6e6  # if None, will consider equivalent funding as baseline
+        self.total_funding = 6.6e6  # If None, will consider equivalent funding as baseline
         self.acceptance_dict = {}
         self.rejection_dict = {}
         self.optimal_allocation = {}

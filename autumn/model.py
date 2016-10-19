@@ -253,6 +253,37 @@ class ConsolidatedModel(StratifiedModel):
                                                      * start_comorb_prop[comorbidity]
                                                      / len(self.agegroups))  # and split equally by age-groups
 
+    #######################################################
+    ### Single method to process uncertainty parameters ###
+    #######################################################
+
+    def process_uncertainty_params(self):
+
+        """
+        Perform some parameter processing - just for those that are used as uncertainty parameters and so can't be
+        processed in the data_processing module.
+
+        """
+
+        # Find the case fatality of smear-negative TB using the relative case fatality
+        # (previously the parameter was entered as the absolute case fatality)
+        self.params['tb_prop_casefatality_untreated_smearneg'] = \
+            self.params['tb_prop_casefatality_untreated_smearpos'] \
+            * self.params['tb_relative_casefatality_untreated_smearneg']
+
+        # Add the extrapulmonary case fatality (currently not entered from the spreadsheets)
+        self.params['tb_prop_casefatality_untreated_extrapul'] \
+            = self.params['tb_prop_casefatality_untreated_smearneg']
+
+        # Calculate the rates of death and recovery from the above parameters
+        for organ in self.organ_status:
+            self.params['tb_rate_death' + organ] \
+                = self.params['tb_prop_casefatality_untreated' + organ] \
+                  / self.params['tb_timeperiod_activeuntreated']
+            self.params['tb_rate_recover' + organ] \
+                = (1 - self.params['tb_prop_casefatality_untreated' + organ]) \
+                  / self.params['tb_timeperiod_activeuntreated']
+
     ##################################################################
     # Methods that calculate variables to be used in calculating flows
     # Note: all scaleup_fns are calculated and put into self.vars before
@@ -414,10 +445,6 @@ class ConsolidatedModel(StratifiedModel):
                                 self.vars['tb_rate' + timing + '_progression' + organ + comorbidity + agegroup] \
                                     = self.vars['epi_prop' + organ] \
                                       * self.params['tb_rate' + timing + '_progression' + comorbidity + agegroup]
-
-                            # self.vars['tb_rate' + timing + '_progression' + organ + comorbidity + agegroup] \
-                            #     = self.vars['epi_prop' + organ] \
-                            #       * self.params['tb_rate' + timing + '_progression' + comorbidity + agegroup]
 
     def calculate_acf_rate(self):
 
@@ -890,55 +917,55 @@ class ConsolidatedModel(StratifiedModel):
                     for organ in self.organ_status:
 
                         # Recovery, base compartments
+                        self.set_fixed_transfer_rate_flow(
+                            'active' + organ + strain + comorbidity + agegroup,
+                            'latent_late' + strain + comorbidity + agegroup,
+                            'tb_rate_recover' + organ)
+                        self.set_fixed_transfer_rate_flow(
+                            'missed' + organ + strain + comorbidity + agegroup,
+                            'latent_late' + strain + comorbidity + agegroup,
+                            'tb_rate_recover' + organ)
+
+                        # Death, base compartments
+                        self.set_fixed_infection_death_rate_flow(
+                            'active' + organ + strain + comorbidity + agegroup,
+                            'tb_rate_death' + organ)
+                        self.set_fixed_infection_death_rate_flow(
+                            'missed' + organ + strain + comorbidity + agegroup,
+                            'tb_rate_death' + organ)
+
+                        # Extra low-quality compartments
+                        if self.is_lowquality:
                             self.set_fixed_transfer_rate_flow(
-                                'active' + organ + strain + comorbidity + agegroup,
+                                'lowquality' + organ + strain + comorbidity + agegroup,
                                 'latent_late' + strain + comorbidity + agegroup,
                                 'tb_rate_recover' + organ)
+                            self.set_fixed_infection_death_rate_flow(
+                                'lowquality' + organ + strain + comorbidity + agegroup,
+                                'tb_rate_death' + organ)
+
+                        # Detected, with misassignment
+                        if self.is_misassignment:
+                            for assigned_strain in self.strains:
+                                self.set_fixed_infection_death_rate_flow(
+                                    'detect' +
+                                    organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup,
+                                    'tb_rate_death' + organ)
+                                self.set_fixed_transfer_rate_flow(
+                                    'detect' +
+                                    organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup,
+                                    'latent_late' + strain + comorbidity + agegroup,
+                                    'tb_rate_recover' + organ)
+
+                        # Detected, without misassignment
+                        else:
                             self.set_fixed_transfer_rate_flow(
-                                'missed' + organ + strain + comorbidity + agegroup,
+                                'detect' + organ + strain + comorbidity + agegroup,
                                 'latent_late' + strain + comorbidity + agegroup,
                                 'tb_rate_recover' + organ)
-
-                            # Death, base compartments
                             self.set_fixed_infection_death_rate_flow(
-                                'active' + organ + strain + comorbidity + agegroup,
+                                'detect' + organ + strain + comorbidity + agegroup,
                                 'tb_rate_death' + organ)
-                            self.set_fixed_infection_death_rate_flow(
-                                'missed' + organ + strain + comorbidity + agegroup,
-                                'tb_rate_death' + organ)
-
-                            # Extra low-quality compartments
-                            if self.is_lowquality:
-                                self.set_fixed_transfer_rate_flow(
-                                    'lowquality' + organ + strain + comorbidity + agegroup,
-                                    'latent_late' + strain + comorbidity + agegroup,
-                                    'tb_rate_recover' + organ)
-                                self.set_fixed_infection_death_rate_flow(
-                                    'lowquality' + organ + strain + comorbidity + agegroup,
-                                    'tb_rate_death' + organ)
-
-                            # Detected, with misassignment
-                            if self.is_misassignment:
-                                for assigned_strain in self.strains:
-                                    self.set_fixed_infection_death_rate_flow(
-                                        'detect' +
-                                        organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup,
-                                        'tb_rate_death' + organ)
-                                    self.set_fixed_transfer_rate_flow(
-                                        'detect' +
-                                        organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup,
-                                        'latent_late' + strain + comorbidity + agegroup,
-                                        'tb_rate_recover' + organ)
-
-                            # Detected, without misassignment
-                            else:
-                                self.set_fixed_transfer_rate_flow(
-                                    'detect' + organ + strain + comorbidity + agegroup,
-                                    'latent_late' + strain + comorbidity + agegroup,
-                                    'tb_rate_recover' + organ)
-                                self.set_fixed_infection_death_rate_flow(
-                                    'detect' + organ + strain + comorbidity + agegroup,
-                                    'tb_rate_death' + organ)
 
     def set_fixed_programmatic_flows(self):
 

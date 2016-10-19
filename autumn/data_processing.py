@@ -292,19 +292,12 @@ class Inputs:
         # List all the time variant parameters that are not relevant to this model structure
         self.list_irrelevant_time_variants()
 
-        # Populate extrapulmonary case fatality from smear-negative if not provided
-        if '_extrapul' in self.organ_status:
-            self.find_extrapul_casefatality_if_not_provided()
-
         # Find diabetes_specific parameters
         if '_diabetes' in self.comorbidities:
             self.find_diabetes_effects()
 
         # Calculate rates of progression to active disease or late latency
         self.find_progression_rates_from_params()
-
-        # Find rates of progression untreated from case fatality and untreated time period parameters
-        self.find_active_natural_history_rates()
 
         # Work through whether organ status should be time variant
         self.find_organ_time_variation()
@@ -758,16 +751,6 @@ class Inputs:
                 = self.model_constants['tb_timeperiod_treatment' + strain] \
                   - self.model_constants['tb_timeperiod_infect_ontreatment' + strain]
 
-    def find_extrapul_casefatality_if_not_provided(self):
-
-        """
-        If extrapulmonary case-fatality not provided as a parameter, use smear-negative case-fatality
-        """
-
-        if 'tb_prop_casefatality_untreated_extrapul' not in self.model_constants:
-            self.model_constants['tb_prop_casefatality_untreated_extrapul'] \
-                = self.model_constants['tb_prop_casefatality_untreated_smearneg']
-
     def find_diabetes_effects(self):
 
         """
@@ -842,20 +825,6 @@ class Inputs:
                     self.model_constants['tb_rate_stabilise' + comorbidity + agegroup] \
                         = (1. - self.model_constants['tb_prop_early_progression' + comorbidity + agegroup]) \
                           / self.model_constants['tb_timeperiod_early_latent']
-
-    def find_active_natural_history_rates(self):
-
-        """
-        Find the natural history rates from the case fatality and time untreated parameters by organ status
-        """
-
-        for organ in self.organ_status:
-            self.model_constants['tb_rate_death' + organ] \
-                = self.model_constants['tb_prop_casefatality_untreated' + organ] \
-                  / self.model_constants['tb_timeperiod_activeuntreated']
-            self.model_constants['tb_rate_recover' + organ] \
-                = (1 - self.model_constants['tb_prop_casefatality_untreated' + organ]) \
-                  / self.model_constants['tb_timeperiod_activeuntreated']
 
     def find_organ_time_variation(self):
 

@@ -1908,13 +1908,25 @@ class Project:
 
     def plot_param_histograms(self):
 
+        """
+        Simple function to plot histograms of parameter values used in uncertainty analysis.
+
+        """
+
+        # Preliminaries
         fig = self.set_and_update_figure()
         subplot_grid = find_subplot_numbers(len(self.model_runner.all_parameters_tried))
+
+        # Loop through parameters used in uncertainty
         for p, param in enumerate(self.model_runner.all_parameters_tried):
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p)
+
+            # Restrict to those accepted and after burn-in complete
             param_values = \
                 [self.model_runner.all_parameters_tried[param][i]
                  for i in self.model_runner.accepted_no_burn_in_indices]
+
+            # Plot
             ax.hist(param_values)
             ax.set_title(tool_kit.find_title_from_dictionary(param))
         self.save_figure(fig, '_param_histogram')

@@ -130,6 +130,7 @@ class ModelRunner:
         self.acceptable_combinations = []
         self.acceptance_dict = {}
         self.rejection_dict = {}
+        self.optimized_combinations = []
         self.optimal_allocation = {}
         self.epi_outputs_to_analyse = ['population', 'incidence', 'prevalence', 'mortality', 'notifications']
         self.epi_outputs = {}
@@ -919,67 +920,92 @@ class ModelRunner:
 
         self.model_dict['optimisation'].eco_drives_epi = True
 
-        n_interventions = len(self.model_dict['baseline'].interventions_to_cost)  # number of interventions
+        self.get_acceptable_combinations()
 
-        # function to minimize: incidence in 2035
-        def func(x):
+        for combi in self.acceptable_combinations: # for each acceptable combination of interventions
+            # prepare storage
+            dict_optimized_combi = {'interventions': [], 'distribution': [], 'objective': None}
 
-            """
-            Args:
-                x: defines the resource allocation (as absolute funding over the total period (2015 - 2035))
+            for i in range(len(combi)):
+                intervention = self.model_dict['baseline'].interventions_to_cost[combi[i]]
+                dict_optimized_combi['interventions'].append(intervention)
 
-            Returns:
-                predicted incidence for 2035
+            print "Optimization of the distribution across: "
+            print dict_optimized_combi['interventions']
 
-            """
+            # function to minimize: incidence in 2035
+            def func(x):
+                """
+                Args:
+                    x: defines the resource allocation (as absolute funding over the total period (2015 - 2035))
+                Returns:
+                    x has same length as combi
+                    predicted incidence for 2035
+                """
+                #initialise funding at 0 for each intervention
+                for intervention in self.model_dict['baseline'].interventions_to_cost:
+                    self.model_dict['optimisation'].available_funding[intervention] = 0.
 
-            for i, int in enumerate(self.model_dict['baseline'].interventions_to_cost):
-                self.model_dict['optimisation'].available_funding[int] = x[i]*self.total_funding
-            self.model_dict['optimisation'].distribute_funding_across_years()
-            self.model_dict['optimisation'].integrate()
-            output_list = self.find_epi_outputs(['optimisation'],
-                                                outputs_to_analyse=['population',
-                                                                    'incidence'])
-            return output_list['optimisation']['incidence'][-1]
+                # input values from x
+                for i in range(len(x)):
+                    intervention = self.model_dict['baseline'].interventions_to_cost[combi[i]]
+                    self.model_dict['optimisation'].available_funding[intervention] = x[i] * self.total_funding
+                self.model_dict['optimisation'].distribute_funding_across_years()
+                self.model_dict['optimisation'].integrate()
+                output_list = self.find_epi_outputs(['optimisation'],
+                                                    outputs_to_analyse=['population',
+                                                                        'incidence'])
+                print x
+                print output_list['optimisation']['incidence'][-1]
+                return output_list['optimisation']['incidence'][-1]
 
-        use_packages = True
-        if use_packages:
-            # Some initial funding
-            x_0 = []
-            for i in range(n_interventions):
-                x_0.append(1./n_interventions)
+            if len(combi) == 1: # the distribution result is obvious
+                dict_optimized_combi['distribution'] = [1.]
+                dict_optimized_combi['objective'] = func([1.])
+            else:
+                # initial guess
+                x_0 = []
+                for i in range(len(combi)):
+                    x_0.append(1./len(combi))
 
-            # Equality constraint:  Sum(x)=Total funding
-            cons =[{'type':'ineq',
-                    'fun': lambda x: 1-sum(x),    # if x is proportion
-                    'jac': lambda x: -numpy.ones(len(x))}]
-            bnds = []
-            for int in range(n_interventions):
-                bnds.append((0, 1.0))
-            # Ready to run optimisation
-            res = minimize(func, x_0, jac=None, bounds=bnds, constraints=cons, method='SLSQP', options={'disp': True})
-            best_x = res.x
-        else:
-            n_random = 5
-            best_x = None
-            best_objective = 1e9
-            for i in range(n_random):
-                x = numpy.zeros(n_interventions)
-                sum_generated = 0
-                for j in range(n_interventions-1):
-                    x[j] = uniform(0., 1.-sum_generated)
-                    sum_generated += x[j]
-                x[n_interventions-1] = 1. - sum_generated
-                objective = func(x)
-                if objective < best_objective:
-                    best_x = x
-                    best_objective = objective
+                # Equality constraint:  Sum(x)=Total funding
+                cons = [{'type': 'ineq',
+                         'fun': lambda x: 1 - sum(x),  # if x is proportion
+                         'jac': lambda x: -numpy.ones(len(x))}]
+                bnds = []
+                for i in range(len(combi)):
+                    minimal_allocation = 0.
+                    if self.model_dict['baseline'].intervention_startdates[
+                        self.model_dict['baseline'].interventions_to_cost[
+                            combi[i]]] is None:  # start-up costs apply
+                        minimal_allocation = self.model_dict['baseline'].inputs.model_constants['econ_startupcost_' + \
+                                                self.model_dict['baseline'].interventions_to_cost[combi[i]]] / self.total_funding
+                    bnds.append((minimal_allocation, 1.0))
+                print 'bounds'
+                print bnds
+                # Ready to run optimisation
+                res = minimize(func, x_0, jac=None, bounds=bnds, constraints=cons, method='SLSQP',
+                               options={'disp': True, 'ftol': 0.001})
+                dict_optimized_combi['distribution'] = res.x
+                dict_optimized_combi['objective'] = res.fun
+
+            self.optimized_combinations.append(dict_optimized_combi)
+
+        print self.optimized_combinations
 
         # Update self.optimal_allocation
-        for inter, intervention in enumerate(self.model_dict['baseline'].interventions_to_cost):
-            self.optimal_allocation[intervention] = best_x[inter]
+        best_dict = {}
+        best_obj = 1e10
+        for i, dict_opti in enumerate(self.optimized_combinations):
+            if dict_opti['objective'] < best_obj:
+                best_dict = dict_opti
+                best_obj = dict_opti['objective']
 
-        print self.optimal_allocation
+        for intervention in self.model_dict['baseline'].interventions_to_cost:
+            self.optimal_allocation[intervention] = 0.
+
+        for i, intervention in enumerate(best_dict['interventions']):
+            self.optimal_allocation[intervention] = best_dict['distribution'][i]
 
     ###########################
     ### GUI-related methods ###

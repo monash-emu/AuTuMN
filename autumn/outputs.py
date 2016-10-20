@@ -1966,10 +1966,10 @@ class Project:
 
         fig = self.set_and_update_figure()
         ax = self.make_single_axis(fig)
-        log_likelihoods = \
-            [self.model_runner.loglikelihoods[i]
-             for i in self.model_runner.accepted_no_burn_in_indices]
-        ax.plot(log_likelihoods)
+        accepted_log_likelihoods = [self.model_runner.loglikelihoods[i] for i in self.model_runner.accepted_indices]
+        rejected_log_likelihoods = [self.model_runner.loglikelihoods[i] for i in self.model_runner.rejected_indices]
+        ax.plot(self.model_runner.accepted_indices, accepted_log_likelihoods)
+        ax.scatter(self.model_runner.rejected_indices, rejected_log_likelihoods)
         self.save_figure(fig, '_likelihoods')
 
 

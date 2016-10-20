@@ -122,6 +122,7 @@ class ModelRunner:
         self.all_parameters_tried = {}
         self.whether_accepted_list = []
         self.accepted_indices = []
+        self.rejected_indices = []
         self.results['scenarios'] = {}
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
@@ -651,6 +652,7 @@ class ModelRunner:
                     self.whether_accepted_list.append(False)
                     for p, param_dict in enumerate(self.inputs.param_ranges_unc):
                         self.rejection_dict[param_dict['key']][n_accepted].append(new_params[p])
+                    self.rejected_indices += [run]
                 else:
                     self.whether_accepted_list.append(True)
                     self.accepted_indices += [run]

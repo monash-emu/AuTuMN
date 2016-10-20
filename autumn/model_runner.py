@@ -153,7 +153,8 @@ class ModelRunner:
                                        'whether_accepted_list',
                                        'acceptance_dict',
                                        'accepted_no_burn_in_indices',
-                                       'rejection_dict']
+                                       'rejection_dict',
+                                       'loglikelihoods']
 
     ##############################################
     ### Master method to run all other methods ###
@@ -643,6 +644,7 @@ class ModelRunner:
                     accepted = 1
                 else:
                     accepted = numpy.random.binomial(n=1, p=numpy.exp(log_likelihood - prev_log_likelihood))
+                self.loglikelihoods.append(log_likelihood)
 
                 # Record some information for all runs
                 if not bool(accepted):
@@ -660,8 +662,6 @@ class ModelRunner:
                     # Update likelihood and parameter set for next run
                     prev_log_likelihood = log_likelihood
                     params = new_params
-
-                    self.loglikelihoods.append(log_likelihood)
 
                     # Run scenarios other than baseline and store uncertainty - currently only if accepted
                     for scenario in self.gui_inputs['scenarios_to_run']:

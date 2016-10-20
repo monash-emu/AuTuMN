@@ -56,7 +56,7 @@ class BaseModel:
         self.run_costing = True
         self.end_period_costing = 2035
         self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
-                                     'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
+                                      'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
         self.eco_drives_epi = False
         self.available_funding = {}
         self.annual_available_funding = {}
@@ -1021,7 +1021,8 @@ class BaseModel:
             # If intervention hasn't started
             if self.intervention_startdates[int] is None:
                 if self.available_funding[int] < self.inputs.model_constants['econ_startupcost_' + int]:
-                    print 'available_funding insufficient to cover starting costs of ' + int
+                    # print 'available_funding insufficient to cover starting costs of ' + int
+                    pass
                 else:
                     self.intervention_startdates[int] = self.inputs.model_constants['scenario_start_time']
                     self.annual_available_funding[int] \

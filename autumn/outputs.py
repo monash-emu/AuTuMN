@@ -1047,6 +1047,9 @@ class Project:
         if self.gui_inputs['output_popsize_plot']:
             self.plot_popsizes()
 
+        if self.model_runner.optimisation:
+            self.plot_piecharts_opti()
+
     def plot_outputs_against_gtb(self, outputs):
 
         """
@@ -1955,6 +1958,18 @@ class Project:
         fig.suptitle('Population sizes for cost-coverage curves under baseline scenario')
         self.make_legend_to_single_axis(ax, ax.lines, scenario_labels)
         self.save_figure(fig, '_popsizes')
+
+    def plot_piecharts_opti(self):
+        fig = self.set_and_update_figure()
+        ax = self.make_single_axis(fig)
+
+        # The slices will be ordered and plotted counter-clockwise.
+        labels = self.model_runner.optimal_allocation.keys()
+        fracs = self.model_runner.optimal_allocation.values()
+        colors = ['#000037', '#7398B5', '#D94700', '#DBE4E9', '#62000E', '#3D5F00', '#240445', 'black'] # AuTuMN colors
+        ax.pie(fracs,  labels=labels, autopct='%1.1f%%', startangle=90, colors=colors, textprops={'backgroundcolor': 'white'})
+        fig.suptitle('Optimal allocation of resource')
+        self.save_figure(fig, '_optimal_allocation')
 
     def open_output_directory(self):
 

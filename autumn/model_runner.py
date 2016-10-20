@@ -126,7 +126,7 @@ class ModelRunner:
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
         self.optimisation = False
-        self.total_funding = 6.6e6  # If None, will consider equivalent funding as baseline
+        self.total_funding = 6.6e6  # Total funding for the entire period
         self.acceptable_combinations = []
         self.acceptance_dict = {}
         self.rejection_dict = {}
@@ -955,8 +955,6 @@ class ModelRunner:
                 output_list = self.find_epi_outputs(['optimisation'],
                                                     outputs_to_analyse=['population',
                                                                         'incidence'])
-                print x
-                print output_list['optimisation']['incidence'][-1]
                 return output_list['optimisation']['incidence'][-1]
 
             if len(combi) == 1: # the distribution result is obvious
@@ -981,17 +979,13 @@ class ModelRunner:
                         minimal_allocation = self.model_dict['baseline'].inputs.model_constants['econ_startupcost_' + \
                                                 self.model_dict['baseline'].interventions_to_cost[combi[i]]] / self.total_funding
                     bnds.append((minimal_allocation, 1.0))
-                print 'bounds'
-                print bnds
                 # Ready to run optimisation
                 res = minimize(func, x_0, jac=None, bounds=bnds, constraints=cons, method='SLSQP',
-                               options={'disp': True, 'ftol': 0.001})
+                               options={'disp': True, 'ftol': 0.5})
                 dict_optimized_combi['distribution'] = res.x
                 dict_optimized_combi['objective'] = res.fun
 
             self.optimized_combinations.append(dict_optimized_combi)
-
-        print self.optimized_combinations
 
         # Update self.optimal_allocation
         best_dict = {}

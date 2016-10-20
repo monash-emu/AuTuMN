@@ -1047,6 +1047,9 @@ class Project:
         if self.gui_inputs['output_popsize_plot']:
             self.plot_popsizes()
 
+        if self.gui_inputs['output_likelihood_plot']:
+            self.plot_likelihoods()
+
         if self.model_runner.optimisation:
             self.plot_piecharts_opti()
 
@@ -1958,6 +1961,17 @@ class Project:
         fig.suptitle('Population sizes for cost-coverage curves under baseline scenario')
         self.make_legend_to_single_axis(ax, ax.lines, scenario_labels)
         self.save_figure(fig, '_popsizes')
+
+    def plot_likelihoods(self):
+
+        fig = self.set_and_update_figure()
+        ax = self.make_single_axis(fig)
+        log_likelihoods = \
+            [self.model_runner.loglikelihoods[i]
+             for i in self.model_runner.accepted_no_burn_in_indices]
+        ax.plot(log_likelihoods)
+        self.save_figure(fig, '_likelihoods')
+
 
     def plot_piecharts_opti(self):
         fig = self.set_and_update_figure()

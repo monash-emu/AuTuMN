@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import outputs
 import autumn.economics
-
+import itertools
 
 def is_positive_definite(v):
 
@@ -127,6 +127,7 @@ class ModelRunner:
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
         self.optimisation = False
         self.total_funding = 6.6e6  # If None, will consider equivalent funding as baseline
+        self.acceptable_combinations = []
         self.acceptance_dict = {}
         self.rejection_dict = {}
         self.optimal_allocation = {}
@@ -883,6 +884,26 @@ class ModelRunner:
     ### Optimisation methods ###
     ############################
 
+    def get_acceptable_combinations(self):
+        """
+        determines the acceptable combinations of interventions according to the related starting costs and given a total
+        ammount of funding
+        populates the attribute 'acceptable_combinations' of model_runner.
+        """
+        n_interventions = len(self.model_dict['baseline'].interventions_to_cost)
+        full_set = range(n_interventions)
+        canditate_combinations = list(itertools.chain.from_iterable(itertools.combinations(full_set, n) \
+                                                                    for n in range(n_interventions + 1)[1:]))
+
+        for combi in canditate_combinations:
+            total_start_cost = 0
+            for ind_intervention in combi:
+                if self.model_dict['baseline'].intervention_startdates[self.model_dict['baseline'].interventions_to_cost[ind_intervention]] is None: # start-up costs apply
+                    total_start_cost += self.model_dict['baseline'].inputs.model_constants['econ_startupcost_' + \
+                                                self.model_dict['baseline'].interventions_to_cost[ind_intervention]]
+            if total_start_cost <= self.total_funding:
+                self.acceptable_combinations.append(combi)
+
     def run_optimisation(self):
 
         print 'Start optimisation'
@@ -1029,7 +1050,3 @@ class ModelRunner:
 
         if not from_runner:
             return param_tracking_figure
-
-
-
-

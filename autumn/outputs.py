@@ -1972,7 +1972,6 @@ class Project:
         ax.scatter(self.model_runner.rejected_indices, rejected_log_likelihoods)
         self.save_figure(fig, '_likelihoods')
 
-
     def plot_piecharts_opti(self):
         fig = self.set_and_update_figure()
         ax = self.make_single_axis(fig)

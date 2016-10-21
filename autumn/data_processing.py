@@ -166,7 +166,10 @@ class Inputs:
         # For incidence for ex. Width of Normal posterior relative to CI width in data
         self.outputs_unc = [{'key': 'incidence',
                              'posterior_width': None,
-                             'width_multiplier': 2.0}]
+                             'width_multiplier': 4.}]
+        self.potential_interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
+                                      'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
+        self.interventions_to_cost = []
 
     def read_and_load_data(self):
 
@@ -332,6 +335,8 @@ class Inputs:
 
         # Add parameters for IPT, if and where not specified for the age range being implemented
         self.add_missing_economics_for_ipt()
+
+        self.find_interventions_to_cost()
 
         # Specify the parameters to be used for uncertainty
         if self.gui_inputs['output_uncertainty']:
@@ -1136,6 +1141,20 @@ class Inputs:
                 self.data_to_fit['mortality_high'] = self.original_data['tb']['e_mort_exc_tbhiv_100k_hi']
             else:
                 print 'Warning: Calibrated output %s is not directly available from the data' % output['key']
+
+    def find_interventions_to_cost(self):
+
+        """
+        Work out which interventions should be costed.
+
+        """
+
+        for intervention in self.potential_interventions_to_cost:
+
+            # If it's an intervention from the time variants and the model is age stratified if it's age-specific
+            if 'program_prop_' + intervention in self.time_variants and \
+                    ('_age' not in intervention or len(self.agegroups) > 1):
+                self.interventions_to_cost += [intervention]
 
     def checks(self):
 

@@ -55,8 +55,7 @@ class BaseModel:
         self.intervention = None
         self.run_costing = True
         self.end_period_costing = 2035
-        self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
-                                      'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
+        self.interventions_to_cost = []
         self.eco_drives_epi = False
         self.available_funding = {}
         self.annual_available_funding = {}

@@ -111,8 +111,7 @@ class ModelRunner:
         self.inputs.read_and_load_data()
         self.model_dict = {}
         self.is_last_run_success = False
-        self.interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
-                                      'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
+        self.interventions_to_cost = self.inputs.interventions_to_cost
         self.loglikelihoods = []
         self.outputs_unc = [{'key': 'incidence',
                              'posterior_width': None,

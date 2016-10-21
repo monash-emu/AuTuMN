@@ -215,6 +215,9 @@ class Inputs:
         # Populate constant model values hierarchically
         self.add_model_constant_defaults()
 
+        # Temporary code because the proportion of the population with HIV can't yet be loaded
+        self.model_constants['comorb_prop_hiv'] = 0.
+
         # Convert time variants loaded as percentages to proportions
         self.convert_percentages_to_proportions()
 
@@ -280,7 +283,7 @@ class Inputs:
             self.runtime_outputs.see(END)
         elif len(self.comorbidities) > 2:
             self.runtime_outputs.insert(END, 'Model incorporates %s additional risk groups.\n'
-                                        % len(self.comorbidities) - 1)
+                                        % str(len(self.comorbidities) - 1))
             self.runtime_outputs.see(END)
 
         # Define the strain structure for the model
@@ -808,13 +811,14 @@ class Inputs:
         """
         Find early progression rates by age group and by comorbidity status - i.e. early progression to
         active TB and stabilisation into late latency.
+
         """
 
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
 
                 # If no comorbidity, use the original parameter value
-                if comorbidity is '_nocomorb':
+                if comorbidity != '_diabetes':
                     self.model_constants['tb_rate_early_progression' + comorbidity + agegroup] \
                         = self.model_constants['tb_prop_early_progression' + agegroup] \
                           / self.model_constants['tb_timeperiod_early_latent']

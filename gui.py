@@ -50,6 +50,8 @@ def find_button_name_from_string(working_string):
                                   'Plot log likelihoods over runs',
                               'comorbidity_diabetes':
                                   'Type II diabetes',
+                              'comorbidity_hiv':
+                                  'HIV',
                               'is_lowquality':
                                   'Low quality care',
                               'is_amplification':
@@ -115,7 +117,7 @@ class App:
                                'output_uncertainty', 'adaptive_uncertainty',
                                'output_spreadsheets',
                                'output_documents', 'output_by_scenario', 'output_horizontally',
-                               'output_age_calculations', 'comorbidity_diabetes',
+                               'output_age_calculations', 'comorbidity_diabetes', 'comorbidity_hiv',
                                'is_lowquality', 'is_amplification', 'is_misassignment']
         for i in range(1, 15):
             self.boolean_inputs += ['scenario_' + str(i)]

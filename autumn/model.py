@@ -416,7 +416,7 @@ class ConsolidatedModel(StratifiedModel):
 
         if self.is_organvariation:
 
-            # If unstratified (self.organ_status should have length 0, but length 1 OK)
+            # If unstratified (self.organ_status should have length 0, but length 1 OK) - ??
             if len(self.organ_status) < 2:
                 self.vars['epi_prop'] = 1.
 
@@ -436,11 +436,10 @@ class ConsolidatedModel(StratifiedModel):
                     for comorbidity in self.comorbidities:
                         for timing in ['_early', '_late']:
                             if comorbidity == '_diabetes':
-                                rr_diabetes = self.inputs.scaleup_fns[None]['epi_rr_diabetes'](self.time)
                                 self.vars['tb_rate' + timing + '_progression' + organ + comorbidity + agegroup] \
                                     = self.vars['epi_prop' + organ] \
-                                      * self.params[
-                                          'tb_rate' + timing + '_progression' + '_nocomorb' + agegroup] * rr_diabetes
+                                      * self.params['tb_rate' + timing + '_progression' + '_nocomorb' + agegroup] \
+                                      * self.params['comorb_multiplier_diabetes_progression']
                             else:
                                 self.vars['tb_rate' + timing + '_progression' + organ + comorbidity + agegroup] \
                                     = self.vars['epi_prop' + organ] \

@@ -298,8 +298,8 @@ class Inputs:
         # List all the time variant parameters that are not relevant to this model structure
         self.list_irrelevant_time_variants()
 
-        # Find diabetes_specific parameters
-        if '_diabetes' in self.comorbidities:
+        # Find comorbidity-specific parameters
+        if len(self.comorbidities) > 1:
             self.find_comorb_progressions()
 
         # Calculate rates of progression to active disease or late latency
@@ -768,6 +768,7 @@ class Inputs:
 
         """
 
+        # Initialise dictionary of additional adjusted parameters to avoid dictionary changing size during iterations
         comorb_adjusted_parameters = {}
         for comorb in self.comorbidities:
             for param in self.model_constants:
@@ -775,20 +776,29 @@ class Inputs:
                 # Start from the assumption that parameter is not being adjusted
                 whether_to_adjust = False
 
+                # For age-stratified parameters
                 if '_age' in param:
+
                     # Find the age string, the lower and upper age limits and the parameter name without the age string
                     age_string, _ = tool_kit.find_string_from_starting_letters(param, '_age')
                     age_limits, _ = tool_kit.interrogate_age_string(age_string)
                     param_without_age = param[:-len(age_string)]
 
+                    # Diabetes progression rates only start from age groups with lower limit above the start age
+                    # and apply to both early and late progression.
                     if comorb == '_diabetes' and '_progression' in param \
                             and age_limits[0] >= self.model_constants['comorb_startage' + comorb]:
                         whether_to_adjust = True
+
+                    # HIV applies to all age groups, but only late progression
                     elif comorb == '_hiv' and '_late_progression' in param:
                         whether_to_adjust = True
-                    if '_multiplier' in param: whether_to_adjust = False
-                    if 'tb_' not in param: whether_to_adjust = False
 
+                    # Shouldn't apply this to the multiplier parameters or non-TB-specific parameters
+                    if '_multiplier' in param or 'tb_' not in param:
+                        whether_to_adjust = False
+
+                    # Now adjust the age-stratified parameter values
                     if whether_to_adjust:
                         comorb_adjusted_parameters[param_without_age + comorb + age_string] \
                             = self.model_constants[param] \
@@ -797,15 +807,18 @@ class Inputs:
                         comorb_adjusted_parameters[param_without_age + comorb + age_string] \
                             = self.model_constants[param]
 
+                # Parameters not stratified by age
                 else:
 
+                    # Explanation as above
                     if comorb == '_diabetes' and '_progression' in param:
                         whether_to_adjust = True
                     elif comorb == '_hiv' and '_late_progression' in param:
                         whether_to_adjust = True
-                    if '_multiplier' in param: whether_to_adjust = False
-                    if 'tb_' not in param: whether_to_adjust = False
+                    if '_multiplier' in param or 'tb_' not in param:
+                        whether_to_adjust = False
 
+                    # Adjustment as above, except age string not included
                     if whether_to_adjust:
                         comorb_adjusted_parameters[param + comorb] \
                             = self.model_constants[param] \

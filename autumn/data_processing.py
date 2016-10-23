@@ -762,9 +762,7 @@ class Inputs:
     def find_comorb_progressions(self):
 
         """
-        This code needs generalising to all comorbidities and parameters,
-        but is specific to diabetes's effect on progression rates at the moment.
-        Currently multiplies progression rate by the relevant multiplier for older age groups.
+        Code to adjust the progression rates to active disease for various comorbidities - so far diabetes and HIV.
 
         """
 

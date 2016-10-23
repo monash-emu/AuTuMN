@@ -169,7 +169,12 @@ class App:
         self.raw_outputs['fitting_method'].set('Method 5')
         self.drop_downs['country'] \
             = OptionMenu(self.frame, self.raw_outputs['country'],
-                         'Fiji', 'Philippines', 'Bulgaria')
+                         'Afghanistan', 'Albania', 'Angola', 'Argentina', 'Armenia', 'Australia', 'Austria',
+                         'Azerbaijan', 'Bahrain', 'Bangladesh', 'Belarus', 'Belgium', 'Benin',
+                         'Bhutan', 'Botswana', 'Brazil', 'Bulgaria', 'Burundi', 'Cameroon', 'Chad',
+                         'Chile', 'Croatia', 'Djibouti', 'Ecuador', 'Estonia', 'Ethiopia', 'Fiji', 'Gabon', 'Georgia',
+                         'Ghana', 'Guatemala', 'Guinea',
+                         'Philippines', 'Romania')
         self.drop_downs['integration_method'] \
             = OptionMenu(self.frame, self.raw_outputs['integration_method'],
                          'Runge Kutta', 'Explicit')

@@ -113,7 +113,7 @@ class ConsolidatedModel(StratifiedModel):
         # Get scaleup functions from input object
         self.scaleup_fns = self.inputs.scaleup_fns[self.scenario]
 
-        self.check_list_of_interventions()
+        self.interventions_to_cost = self.inputs.interventions_to_cost
         self.find_intervention_startdates()
         if self.eco_drives_epi: self.distribute_funding_across_years()
 

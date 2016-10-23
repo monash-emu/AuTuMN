@@ -1120,14 +1120,4 @@ class StratifiedModel(BaseModel):
                         label, label[0: label.find('_age')] + self.agegroups[number_agegroup + 1],
                                'ageing_rate' + self.agegroups[number_agegroup])
 
-    def check_list_of_interventions(self):
 
-        """
-        Find list of feasible interventions given model structure.
-
-        """
-
-        # If model is not age-structured, age-specific IPT does not make sense
-        if len(self.agegroups) < 2:
-            self.interventions_to_cost = [inter for inter in self.interventions_to_cost
-                                          if inter not in ['ipt_age0to5', 'ipt_age5to15']]

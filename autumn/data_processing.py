@@ -300,7 +300,7 @@ class Inputs:
 
         # Find diabetes_specific parameters
         if '_diabetes' in self.comorbidities:
-            self.find_diabetes_effects()
+            self.find_comorb_progressions()
 
         # Calculate rates of progression to active disease or late latency
         self.find_progression_rates_from_params()
@@ -759,56 +759,62 @@ class Inputs:
                 = self.model_constants['tb_timeperiod_treatment' + strain] \
                   - self.model_constants['tb_timeperiod_infect_ontreatment' + strain]
 
-    def find_diabetes_effects(self):
+    def find_comorb_progressions(self):
 
         """
         This code needs generalising to all comorbidities and parameters,
         but is specific to diabetes's effect on progression rates at the moment.
         Currently multiplies progression rate by the relevant multiplier for older age groups.
+
         """
 
+        comorb_adjusted_parameters = {}
         for comorb in self.comorbidities:
-            if comorb != '_nocomorb':
+            for param in self.model_constants:
 
-                diabetes_parameters = {}
+                # Start from the assumption that parameter is not being adjusted
+                whether_to_adjust = False
 
-                for param in self.model_constants:
+                if '_age' in param:
+                    # Find the age string, the lower and upper age limits and the parameter name without the age string
+                    age_string, _ = tool_kit.find_string_from_starting_letters(param, '_age')
+                    age_limits, _ = tool_kit.interrogate_age_string(age_string)
+                    param_without_age = param[:-len(age_string)]
 
-                    # For non-age stratified parameters
-                    if '_progression' in param \
-                            and '_age' not in param \
-                            and '_multiplier' not in param:  # Prevent the process being performed for the multiplier itself
-                        diabetes_parameters[param + comorb] \
+                    if comorb == '_diabetes' and '_progression' in param \
+                            and age_limits[0] >= self.model_constants['comorb_startage' + comorb]:
+                        whether_to_adjust = True
+                    elif comorb == '_hiv' and '_late_progression' in param:
+                        whether_to_adjust = True
+                    if '_multiplier' in param: whether_to_adjust = False
+                    if 'tb_' not in param: whether_to_adjust = False
+
+                    if whether_to_adjust:
+                        comorb_adjusted_parameters[param_without_age + comorb + age_string] \
                             = self.model_constants[param] \
                               * self.model_constants['comorb_multiplier' + comorb + '_progression']
-                        diabetes_parameters[param + '_nocomorb'] \
+                    else:
+                        comorb_adjusted_parameters[param_without_age + comorb + age_string] \
                             = self.model_constants[param]
 
-                    # For age-stratified parameters
-                    elif '_progression' in param \
-                            and '_age' in param \
-                            and '_multiplier' not in param:
-                        age_string, _ = tool_kit.find_string_from_starting_letters(param, '_age')
-                        age_limits, _ = tool_kit.interrogate_age_string(age_string)
-                        param_without_age = param[:-len(age_string)]
+                else:
 
-                        # Only apply to adults (i.e. age groups with a lower limit greater than 10)
-                        if age_limits[0] >= self.model_constants['comorb_startage' + comorb]:
+                    if comorb == '_diabetes' and '_progression' in param:
+                        whether_to_adjust = True
+                    elif comorb == '_hiv' and '_late_progression' in param:
+                        whether_to_adjust = True
+                    if '_multiplier' in param: whether_to_adjust = False
+                    if 'tb_' not in param: whether_to_adjust = False
 
-                            diabetes_parameters[param_without_age + comorb + age_string] \
-                                = self.model_constants[param] \
-                                  * self.model_constants['comorb_multiplier' + comorb + '_progression']
-                            diabetes_parameters[param_without_age + '_nocomorb' + age_string] \
-                                = self.model_constants[param]
+                    if whether_to_adjust:
+                        comorb_adjusted_parameters[param + comorb] \
+                            = self.model_constants[param] \
+                              * self.model_constants['comorb_multiplier' + comorb + '_progression']
+                    else:
+                        comorb_adjusted_parameters[param + comorb] \
+                            = self.model_constants[param]
 
-                        # Otherwise just accept the original parameter
-                        else:
-                            diabetes_parameters[param_without_age + comorb + age_string] \
-                                = self.model_constants[param]
-                            diabetes_parameters[param_without_age + '_nocomorb' + age_string] \
-                                = self.model_constants[param]
-
-                self.model_constants.update(diabetes_parameters)
+        self.model_constants.update(comorb_adjusted_parameters)
 
     def find_progression_rates_from_params(self):
 
@@ -821,23 +827,15 @@ class Inputs:
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
 
-                # If no comorbidity, use the original parameter value
-                if comorbidity != '_diabetes':
-                    self.model_constants['tb_rate_early_progression' + comorbidity + agegroup] \
-                        = self.model_constants['tb_prop_early_progression' + agegroup] \
-                          / self.model_constants['tb_timeperiod_early_latent']
-                    self.model_constants['tb_rate_stabilise' + comorbidity + agegroup] \
-                        = (1. - self.model_constants['tb_prop_early_progression' + agegroup]) \
-                          / self.model_constants['tb_timeperiod_early_latent']
+                # Early progression rate is early progression proportion divided by early time period
+                self.model_constants['tb_rate_early_progression' + comorbidity + agegroup] \
+                    = self.model_constants['tb_prop_early_progression' + comorbidity + agegroup] \
+                      / self.model_constants['tb_timeperiod_early_latent']
 
-                # Otherwise, use the newly derived one
-                else:
-                    self.model_constants['tb_rate_early_progression' + comorbidity + agegroup] \
-                        = self.model_constants['tb_prop_early_progression' + comorbidity + agegroup] \
-                          / self.model_constants['tb_timeperiod_early_latent']
-                    self.model_constants['tb_rate_stabilise' + comorbidity + agegroup] \
-                        = (1. - self.model_constants['tb_prop_early_progression' + comorbidity + agegroup]) \
-                          / self.model_constants['tb_timeperiod_early_latent']
+                # Stabilisation rate is one minus early progression proportion divided by early time period
+                self.model_constants['tb_rate_stabilise' + comorbidity + agegroup] \
+                    = (1. - self.model_constants['tb_prop_early_progression' + comorbidity + agegroup]) \
+                      / self.model_constants['tb_timeperiod_early_latent']
 
     def find_organ_time_variation(self):
 

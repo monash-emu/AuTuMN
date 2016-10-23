@@ -206,11 +206,11 @@ class Inputs:
         if 'country_programs' in self.original_data:
             self.time_variants.update(self.original_data['country_programs'])
 
-        # Add vaccination and case detection time variants to time variant dictionary
-        self.update_time_variants()
-
         # Populate time variant dictionary with defaults where not present in country-specific data
         self.add_time_variant_defaults()
+
+        # Add vaccination and case detection time variants to time variant dictionary
+        self.update_time_variants()
 
         # Populate constant model values hierarchically
         self.add_model_constant_defaults()
@@ -356,7 +356,10 @@ class Inputs:
         self.complete_freeze_time_dictionary below.
         """
 
-        self.freeze_times = self.original_data['country_programs'].pop('freeze_times')
+        if 'country_programs' in self.original_data:
+            self.freeze_times = self.original_data['country_programs'].pop('freeze_times')
+        else:
+            self.freeze_times = {}
 
     def update_time_variants(self):
 

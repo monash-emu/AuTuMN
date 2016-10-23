@@ -494,7 +494,7 @@ class ConsolidatedModel(StratifiedModel):
         life_expectancy = self.get_constant_or_variable_param('demo_life_expectancy')
 
         # Calculate detection proportion, allowing for decentralisation coverage if being implemented
-        if self.vars['program_prop_decentralisation'] > 0.:
+        if 'program_prop_decentralisation' in self.vars and self.vars['program_prop_decentralisation'] > 0.:
             detect_prop = self.get_constant_or_variable_param('program_prop_detect') \
                           + self.vars['program_prop_decentralisation'] \
                             * (self.params['program_ideal_detection']

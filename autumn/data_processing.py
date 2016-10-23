@@ -767,44 +767,48 @@ class Inputs:
         Currently multiplies progression rate by the relevant multiplier for older age groups.
         """
 
-        diabetes_parameters = {}
-        for param in self.model_constants:
+        for comorb in self.comorbidities:
+            if comorb != '_nocomorb':
 
-            # For non-age stratified parameters
-            if '_progression' in param \
-                    and '_age' not in param \
-                    and '_multiplier' not in param:  # Prevent the process being performed for the multiplier itself
-                diabetes_parameters[param + '_diabetes'] \
-                    = self.model_constants[param] \
-                      * self.model_constants['comorb_multiplier_diabetes_progression']
-                diabetes_parameters[param + '_nocomorb'] \
-                    = self.model_constants[param]
+                diabetes_parameters = {}
 
-            # For age-stratified parameters
-            elif '_progression' in param \
-                    and '_age' in param \
-                    and '_multiplier' not in param:
-                age_string, _ = tool_kit.find_string_from_starting_letters(param, '_age')
-                age_limits, _ = tool_kit.interrogate_age_string(age_string)
-                param_without_age = param[:-len(age_string)]
+                for param in self.model_constants:
 
-                # Only apply to adults (i.e. age groups with a lower limit greater than 10)
-                if age_limits[0] >= self.model_constants['comorb_startage_diabetes']:
+                    # For non-age stratified parameters
+                    if '_progression' in param \
+                            and '_age' not in param \
+                            and '_multiplier' not in param:  # Prevent the process being performed for the multiplier itself
+                        diabetes_parameters[param + comorb] \
+                            = self.model_constants[param] \
+                              * self.model_constants['comorb_multiplier' + comorb + '_progression']
+                        diabetes_parameters[param + '_nocomorb'] \
+                            = self.model_constants[param]
 
-                    diabetes_parameters[param_without_age + '_diabetes' + age_string] \
-                        = self.model_constants[param] \
-                          * self.model_constants['comorb_multiplier_diabetes_progression']
-                    diabetes_parameters[param_without_age + '_nocomorb' + age_string] \
-                        = self.model_constants[param]
+                    # For age-stratified parameters
+                    elif '_progression' in param \
+                            and '_age' in param \
+                            and '_multiplier' not in param:
+                        age_string, _ = tool_kit.find_string_from_starting_letters(param, '_age')
+                        age_limits, _ = tool_kit.interrogate_age_string(age_string)
+                        param_without_age = param[:-len(age_string)]
 
-                # Otherwise just accept the original parameter
-                else:
-                    diabetes_parameters[param_without_age + '_diabetes' + age_string] \
-                        = self.model_constants[param]
-                    diabetes_parameters[param_without_age + '_nocomorb' + age_string] \
-                        = self.model_constants[param]
+                        # Only apply to adults (i.e. age groups with a lower limit greater than 10)
+                        if age_limits[0] >= self.model_constants['comorb_startage' + comorb]:
 
-        self.model_constants.update(diabetes_parameters)
+                            diabetes_parameters[param_without_age + comorb + age_string] \
+                                = self.model_constants[param] \
+                                  * self.model_constants['comorb_multiplier' + comorb + '_progression']
+                            diabetes_parameters[param_without_age + '_nocomorb' + age_string] \
+                                = self.model_constants[param]
+
+                        # Otherwise just accept the original parameter
+                        else:
+                            diabetes_parameters[param_without_age + comorb + age_string] \
+                                = self.model_constants[param]
+                            diabetes_parameters[param_without_age + '_nocomorb' + age_string] \
+                                = self.model_constants[param]
+
+                self.model_constants.update(diabetes_parameters)
 
     def find_progression_rates_from_params(self):
 

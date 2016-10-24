@@ -780,25 +780,10 @@ class Project:
 
             # Write a new file for each epidemiological indicator
             for scenario in self.model_runner.epi_outputs_integer_dict:
-                self.write_xls_column_or_row(sheet, scenario, output)
+                self.write_xls_column_or_row_by_scenario(sheet, scenario, output)
 
             # Save workbook
             wb.save(path)
-
-    def write_xls_column_or_row(self, sheet, scenario, output):
-
-        # Find years to write
-        years = self.find_years_to_write(scenario,
-                                         output,
-                                         int(self.inputs.model_constants['report_start_time']),
-                                         int(self.inputs.model_constants['report_end_time']),
-                                         int(self.inputs.model_constants['report_step_time']))
-
-        # Write data
-        if self.gui_inputs['output_horizontally']:
-            self.write_horizontally_by_scenario(sheet, output, years)
-        else:
-            self.write_vertically_by_scenario(sheet, output, years)
 
     def write_xls_by_scenario(self):
 
@@ -815,37 +800,99 @@ class Project:
             sheet.title = scenario
 
             for output in self.model_runner.epi_outputs_integer_dict['baseline']:
-                self.write_xls_column_or_row(sheet, scenario, output)
+                self.write_xls_column_or_row_by_output(sheet, scenario, output)
 
             # Save workbook
             wb.save(path)
 
+    def write_xls_column_or_row_by_scenario(self, sheet, scenario, output):
+
+        # Find years to write
+        years = self.find_years_to_write(scenario,
+                                         output,
+                                         int(self.inputs.model_constants['report_start_time']),
+                                         int(self.inputs.model_constants['report_end_time']),
+                                         int(self.inputs.model_constants['report_step_time']))
+
+        # Write data
+        if self.gui_inputs['output_horizontally']:
+            self.write_horizontally_by_scenario(sheet, output, years)
+        else:
+            self.write_vertically_by_scenario(sheet, output, years)
+
+    def write_xls_column_or_row_by_output(self, sheet, scenario, output):
+
+        # Find years to write
+        years = self.find_years_to_write(scenario,
+                                         output,
+                                         int(self.inputs.model_constants['report_start_time']),
+                                         int(self.inputs.model_constants['report_end_time']),
+                                         int(self.inputs.model_constants['report_step_time']))
+
+        # Write data
+        if self.gui_inputs['output_horizontally']:
+            self.write_horizontally_by_output(sheet, scenario, years)
+        else:
+            self.write_vertically_by_output(sheet, scenario, years)
+
     def write_horizontally_by_scenario(self, sheet, output, years):
 
-        sheet.cell(row=1, column=1).value = 'Year'
+        """
+        Output to spreadsheets horizontally by epidemiological indicator.
+        Args:
+            sheet: The sheet to be written to.
+            output: The output to be written.
+            years: A list of integers representing the years to be written.
+        """
+
+        # Write the year text cell
+        sheet.cell(row=0, column=0).value = 'Year'
+
+        # Write the year text column
         for y, year in enumerate(years):
-            sheet.cell(row=1, column=y+2).value = year
+            sheet.cell(row=0, column=y+1).value = year
+
         for s, scenario in enumerate(self.scenarios):
-            sheet.cell(row=s+2, column=1).value = \
+
+            # Write the scenario names
+            sheet.cell(row=s+1, column=0).value = \
                 tool_kit.replace_underscore_with_space(
                     tool_kit.capitalise_first_letter(scenario))
+
+            # Write the columns of data
             for y, year in enumerate(years):
                 if year in self.model_runner.epi_outputs_integer_dict[scenario][output]:
-                    sheet.cell(row=s+2, column=y+2).value \
+                    sheet.cell(row=s+1, column=y+1).value \
                         = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
 
     def write_horizontally_by_output(self, sheet, scenario, years):
 
-        sheet.cell(row=1, column=1).value = 'Year'
+        """
+        Output to spreadsheets horizontally by epidemiological indicator.
+        Args:
+            sheet: The sheet to be written to.
+            scenario: The model/scenario to be written.
+            years: A list of integers representing the years to be written.
+        """
+
+        # Write the year text cell
+        sheet.cell(row=0, column=0).value = 'Year'
+
+        # Write the year text column
         for y, year in enumerate(years):
-            sheet.cell(row=1, column=y+2).value = year
+            sheet.cell(row=0, column=y+1).value = year
+
         for o, output in enumerate(self.model_runner.epi_outputs_integer_dict['baseline']):
-            sheet.cell(row=o+2, column=1).value = \
+
+            # Write the output names
+            sheet.cell(row=o+1, column=0).value = \
                 tool_kit.replace_underscore_with_space(
                     tool_kit.capitalise_first_letter(output))
+
+            # Write the columns of data
             for y, year in enumerate(years):
                 if year in self.model_runner.epi_outputs_integer_dict[scenario][output]:
-                    sheet.cell(row=o+2, column=y+2).value \
+                    sheet.cell(row=o+1, column=y+1).value \
                         = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
 
     def write_vertically_by_scenario(self, sheet, output, years):
@@ -865,8 +912,9 @@ class Project:
         for y, year in enumerate(years):
             sheet.cell(row=y+1, column=0).value = year
 
-        # Write the scenario names
         for s, scenario in enumerate(self.gui_inputs['scenario_names_to_run']):
+
+            # Write the scenario names
             sheet.cell(row=0, column=s+1).value = \
                 tool_kit.replace_underscore_with_space(
                     tool_kit.capitalise_first_letter(scenario))

@@ -579,7 +579,8 @@ class Project:
 
     def find_years_to_write(self,
                             scenario,
-                            output):
+                            output,
+                            epi=True):
 
         """
         Find years that need to be written into a spreadsheet or document.
@@ -587,17 +588,18 @@ class Project:
         Args:
             scenario: Model scenario to be written.
             output: Epidemiological or economic output.
-            minimum: First year (integer).
-            maximum: Last year (integer).
-            step: Time step (integer).
-
         """
+
+        if epi:
+            integer_dict = self.model_runner.epi_outputs_integer_dict[scenario][output]
+        else:
+            integer_dict = self.model_runner.cost_outputs_integer_dict[scenario][output]
 
         requested_years = range(int(self.inputs.model_constants['report_start_time']),
                                 int(self.inputs.model_constants['report_end_time']),
                                 int(self.inputs.model_constants['report_step_time']))
         years = []
-        for y in self.model_runner.epi_outputs_integer_dict[scenario][output]:
+        for y in integer_dict:
             if y in requested_years:
                 years += [y]
         return years
@@ -775,7 +777,7 @@ class Project:
         """
 
         # Write a new file for each scenario
-        for scenario in self.model_runner.epi_outputs_integer_dict:
+        for scenario in self.gui_inputs['scenario_names_to_run']:
 
             # Make filename
             path = os.path.join(self.out_dir_project, scenario)
@@ -852,9 +854,8 @@ class Project:
 
             # Write the columns of data
             for y, year in enumerate(years):
-                if year in self.model_runner.epi_outputs_integer_dict[scenario][output]:
-                    sheet.cell(row=y+1, column=s+1).value \
-                        = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
+                sheet.cell(row=y+1, column=s+1).value \
+                    = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
 
     def write_vertically_by_output(self, sheet, scenario, years):
 
@@ -882,9 +883,8 @@ class Project:
 
             # Write the columns of data
             for y, year in enumerate(years):
-                if year in self.model_runner.epi_outputs_integer_dict[scenario][output]:
-                    sheet.cell(row=y+1, column=o+1).value \
-                        = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
+                sheet.cell(row=y+1, column=o+1).value \
+                    = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
 
     def write_horizontally_by_scenario(self, sheet, output, years):
 
@@ -912,14 +912,14 @@ class Project:
 
             # Write the columns of data
             for y, year in enumerate(years):
-                if year in self.model_runner.epi_outputs_integer_dict[scenario][output]:
-                    sheet.cell(row=s+1, column=y+1).value \
-                        = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
+                sheet.cell(row=s+1, column=y+1).value \
+                    = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
 
     def write_horizontally_by_output(self, sheet, scenario, years):
 
         """
         Output to spreadsheets horizontally by epidemiological indicator.
+
         Args:
             sheet: The sheet to be written to.
             scenario: The model/scenario to be written.
@@ -942,15 +942,13 @@ class Project:
 
             # Write the columns of data
             for y, year in enumerate(years):
-                if year in self.model_runner.epi_outputs_integer_dict[scenario][output]:
-                    sheet.cell(row=o+1, column=y+1).value \
-                        = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
+                sheet.cell(row=o+1, column=y+1).value \
+                    = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
 
     def write_documents(self):
 
         """
-        Determine whether to write to documents by scenario or by output
-
+        Determine whether to write to documents by scenario or by output.
         """
 
         if self.gui_inputs['output_documents']:

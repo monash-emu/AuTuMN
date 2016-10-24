@@ -274,7 +274,6 @@ class App:
 
         """
         This is the main method to run the model. It replaces test_full_models.py
-
         """
 
         # Collate check-box boolean options

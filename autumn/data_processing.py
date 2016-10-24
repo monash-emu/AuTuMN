@@ -168,7 +168,7 @@ class Inputs:
                              'posterior_width': None,
                              'width_multiplier': 4.}]
         self.potential_interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
-                                      'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
+                                                'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
         self.interventions_to_cost = []
 
     def read_and_load_data(self):

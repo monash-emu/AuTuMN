@@ -593,7 +593,7 @@ class Project:
         if epi:
             integer_dict = self.model_runner.epi_outputs_integer_dict[scenario][output]
         else:
-            integer_dict = self.model_runner.cost_outputs_integer_dict[scenario][output]
+            integer_dict = self.model_runner.cost_outputs_integer_dict[scenario]['raw_cost_' + output]
 
         requested_years = range(int(self.inputs.model_constants['report_start_time']),
                                 int(self.inputs.model_constants['report_end_time']),
@@ -777,27 +777,33 @@ class Project:
         """
 
         # Write a new file for each scenario
-        for scenario in self.gui_inputs['scenario_names_to_run']:
+        for result_type in ['epi_', 'raw_cost_', 'inflated_cost_', 'discounted_cost_', 'discounted_inflated_cost_']:
+            for scenario in self.gui_inputs['scenario_names_to_run']:
 
-            # Make filename
-            path = os.path.join(self.out_dir_project, scenario)
-            path += '.xlsx'
+                # Make filename
+                path = os.path.join(self.out_dir_project, result_type + scenario)
+                path += '.xlsx'
 
-            # Get active sheet
-            wb = xl.Workbook()
-            sheet = wb.active
-            sheet.title = scenario
+                # Get active sheet
+                wb = xl.Workbook()
+                sheet = wb.active
+                sheet.title = scenario
 
-            # Call the function to write the rows or columns of the sheet
-            for output in self.model_runner.epi_outputs_to_analyse:
-                years = self.find_years_to_write(scenario, output)
-                if self.gui_inputs['output_horizontally']:
-                    self.write_horizontally_by_output(sheet, scenario, years)
-                else:
-                    self.write_vertically_by_output(sheet, scenario, years)
+                # Call the function to write the rows or columns of the sheet
+                if result_type == 'epi_':
+                    for output in self.model_runner.epi_outputs_to_analyse:
+                        years = self.find_years_to_write(scenario, output, epi=True)
+                        if self.gui_inputs['output_horizontally']:
+                            self.write_horizontally_by_output(sheet, scenario, years)
+                        else:
+                            self.write_vertically_by_output(sheet, scenario, years)
+                elif 'cost_' in result_type:
+                    for output in self.inputs.interventions_to_cost:
+                        years = self.find_years_to_write(scenario, output, epi=False)
+                        self.write_cost_vertically_by_output(sheet, scenario, years, result_type)
 
-            # Save workbook
-            wb.save(path)
+                # Save workbook
+                wb.save(path)
 
     def write_xls_by_output(self):
 
@@ -806,11 +812,11 @@ class Project:
         """
 
         # Write a new file for each output
-        for output in self.model_runner.epi_outputs_integer_dict['baseline']:
+        for output in self.model_runner.epi_outputs_to_analyse:
 
             # Make filename
             path = os.path.join(self.out_dir_project, output)
-            path += ".xlsx"
+            path += '.xlsx'
 
             # Get active sheet
             wb = xl.Workbook()
@@ -874,7 +880,7 @@ class Project:
         for y, year in enumerate(years):
             sheet.cell(row=y+1, column=0).value = year
 
-        for o, output in enumerate(self.model_runner.epi_outputs_integer_dict['baseline']):
+        for o, output in enumerate(self.model_runner.epi_outputs_to_analyse):
 
             # Write the output names
             sheet.cell(row=0, column=o+1).value = \
@@ -885,6 +891,35 @@ class Project:
             for y, year in enumerate(years):
                 sheet.cell(row=y+1, column=o+1).value \
                     = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
+
+    def write_cost_vertically_by_output(self, sheet, scenario, years, cost_type):
+
+        """
+        Output cost results to spreadsheets vertically by epidemiological indicator.
+        Args:
+            sheet: The sheet to be written to.
+            scenario: The model/scenario to be written.
+            years: A list of integers representing the years to be written.
+        """
+
+        # Write the year text cell
+        sheet.cell(row=0, column=0).value = 'Year'
+
+        # Write the year text column
+        for y, year in enumerate(years):
+            sheet.cell(row=y+1, column=0).value = year
+
+        for o, output in enumerate(self.inputs.interventions_to_cost):
+
+            # Write the output names
+            sheet.cell(row=0, column=o+1).value = \
+                tool_kit.replace_underscore_with_space(
+                    tool_kit.capitalise_first_letter(output))
+
+            # Write the columns of data
+            for y, year in enumerate(years):
+                sheet.cell(row=y+1, column=o+1).value \
+                    = self.model_runner.cost_outputs_integer_dict[scenario][cost_type + output][year]
 
     def write_horizontally_by_scenario(self, sheet, output, years):
 
@@ -933,7 +968,7 @@ class Project:
         for y, year in enumerate(years):
             sheet.cell(row=0, column=y+1).value = year
 
-        for o, output in enumerate(self.model_runner.epi_outputs_integer_dict['baseline']):
+        for o, output in enumerate(self.model_runner.epi_outputs_to_analyse):
 
             # Write the output names
             sheet.cell(row=o+1, column=0).value = \

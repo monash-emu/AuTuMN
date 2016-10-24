@@ -956,6 +956,7 @@ class Project:
             sheet: The sheet to be written to.
             scenario: The model/scenario to be written.
             years: A list of integers representing the years to be written.
+            cost_type: Whether cost is raw, discounted, inflated or discounted and inflated.
         """
 
         # Write the year text cell
@@ -1075,6 +1076,7 @@ class Project:
             sheet: The sheet to be written to.
             scenario: The model/scenario to be written.
             years: A list of integers representing the years to be written.
+            cost_type: Whether cost is raw, discounted, inflated or discounted and inflated.
         """
 
         # Write the year text cell

@@ -1381,10 +1381,9 @@ class Project:
         """
         Method that produces plots for individual and cumulative program costs for each scenario as separate figures.
         Panels of figures are the different sorts of costs (i.e. whether discounting and inflation have been applied).
-
         """
 
-        cost_types = ['discounted_inflated', 'inflated', 'discounted', 'raw']
+        cost_types = ['raw', 'discounted_inflated', 'inflated', 'discounted']
 
         # Separate figures for each scenario
         for scenario in self.scenarios:
@@ -1403,13 +1402,14 @@ class Project:
                 for cost_type in cost_types:
                     if max(self.model_runner.cost_outputs[scenario][cost_type + '_cost_' + program]) > max_cost:
                         max_cost = max(self.model_runner.cost_outputs[scenario][cost_type + '_cost_' + program])
-            # for cost_type in cost_types:
-            #     if max(self.model_runner.outputs[scenario][cost_type + '_cost_all_programs']) > max_stacked_cost:
-            #         max_stacked_cost = max(self.model_runner.outputs[scenario][cost_type + '_cost_all_programs'])
+
+            for cost_type in cost_types:
+                if max(self.model_runner.cost_outputs[scenario][cost_type + '_cost_all_programs']) > max_stacked_cost:
+                    max_stacked_cost = max(self.model_runner.cost_outputs[scenario][cost_type + '_cost_all_programs'])
 
             # Scale vertical axis and amend axis label as appropriate
             multiplier_individual, multiplier_individual_label = self.scale_axes(max_cost)
-            # multiplier_stacked, multiplier_stacked_label = self.scale_axes(max_stacked_cost)
+            multiplier_stacked, multiplier_stacked_label = self.scale_axes(max_stacked_cost)
 
             # Find the index for the first time after the current time
             reference_time_index \
@@ -1450,8 +1450,8 @@ class Project:
                     data = self.model_runner.cost_outputs[scenario][cost_type + '_cost_' + program]
 
                     individual_data = [d * multiplier_individual for d in data]
-                    # cumulative_data_to_plot = [d * multiplier_stacked for d in cumulative_data]
-                    # previous_data_to_plot = [d * multiplier_stacked for d in previous_data]
+                    cumulative_data_to_plot = [d * multiplier_stacked for d in cumulative_data]
+                    previous_data_to_plot = [d * multiplier_stacked for d in previous_data]
 
                     reference_cost \
                         = self.model_runner.cost_outputs[scenario][cost_type + '_cost_' + program][reference_time_index]
@@ -1466,11 +1466,11 @@ class Project:
                                      color=self.program_colours[program][1])
 
                     # Plot stacked
-                    # ax_stacked.fill_between(self.model_runner.model_dict[scenario].cost_times,
-                    #                         previous_data_to_plot,
-                    #                         cumulative_data_to_plot,
-                    #                         color=self.program_colours[program][1],
-                    #                         linewidth=0.)
+                    ax_stacked.fill_between(self.model_runner.model_dict[scenario].cost_times,
+                                            previous_data_to_plot,
+                                            cumulative_data_to_plot,
+                                            color=self.program_colours[program][1],
+                                            linewidth=0.)
 
                     # Record label for legend
                     program_labels += [tool_kit.find_title_from_dictionary(program)]

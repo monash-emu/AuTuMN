@@ -279,12 +279,17 @@ class App:
 
         # Collate check-box boolean options
         self.gui_outputs['scenarios_to_run'] = [None]
+        self.gui_outputs['scenario_names_to_run'] = ['baseline']
         for boolean in self.boolean_inputs:
             if 'scenario_' in boolean:
                 if self.boolean_dictionary[boolean].get() == 1:
-                    self.gui_outputs['scenarios_to_run'] += [int(boolean[9:])]
+                    self.gui_outputs['scenarios_to_run'] \
+                        += [int(boolean[9:])]
+                    self.gui_outputs['scenario_names_to_run'] \
+                        += [autumn.tool_kit.find_scenario_string_from_number(int(boolean[9:]))]
             else:
                 self.gui_outputs[boolean] = bool(self.boolean_dictionary[boolean].get())
+
 
         # Collate drop-down box options
         organ_stratification_keys = {'Pos / Neg / Extra': 3,

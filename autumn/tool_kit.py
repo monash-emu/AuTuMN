@@ -176,6 +176,8 @@ def find_title_from_dictionary(name):
             ' over recent years',
         '_diabetes':
             'Diabetes',
+        '_hiv':
+            'HIV',
         '_nocomorb':
             'No risk group',
         'age':

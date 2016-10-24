@@ -195,10 +195,14 @@ class ModelRunner:
         self.find_population_fractions(stratifications=[self.model_dict['baseline'].agegroups,
                                                         self.model_dict['baseline'].comorbidities])
         self.cost_outputs \
-            = self.find_cost_outputs(interventions_to_cost=self.model_dict['baseline'].interventions_to_cost)
-        adjusted_costs = self.find_adjusted_costs(raw_costs=self.cost_outputs, cost_types=['inflated',
-                                                                                           'discounted',
-                                                                                           'discounted_inflated'])
+            = self.find_cost_outputs(models_to_analyse=self.model_dict,
+                                     interventions_to_cost=self.model_dict['baseline'].interventions_to_cost)
+        costs_all_programs = self.find_costs_all_programs(models_to_analyse=self.model_dict)
+        for scenario in self.model_dict:
+            self.cost_outputs[scenario].update(costs_all_programs[scenario])
+        adjusted_costs = self.find_adjusted_costs(models_to_analyse=self.model_dict,
+                                                  raw_costs=self.cost_outputs,
+                                                  cost_types=['inflated', 'discounted', 'discounted_inflated'])
         for scenario in self.model_dict:
             self.cost_outputs[scenario].update(adjusted_costs[scenario])
 
@@ -438,22 +442,37 @@ class ModelRunner:
                             = elementwise_list_division(self.epi_outputs[scenario]['population' + stratum],
                                                         self.epi_outputs[scenario]['population'])
 
-    def find_cost_outputs(self, interventions_to_cost=[]):
+    def find_cost_outputs(self, models_to_analyse={}, interventions_to_cost=[]):
 
         """
         Add cost dictionaries to cost_outputs attribute.
-
         """
 
         cost_outputs = {}
-        for scenario in self.model_dict:
+        for scenario in models_to_analyse:
             cost_outputs[scenario] = {}
             cost_outputs[scenario]['times'] = self.model_dict[scenario].cost_times
             for i, intervention in enumerate(interventions_to_cost):
                 cost_outputs[scenario]['raw_cost_' + intervention] = self.model_dict[scenario].costs[:, i]
         return cost_outputs
 
-    def find_adjusted_costs(self, raw_costs, cost_types=[]):
+    def find_costs_all_programs(self, models_to_analyse={}):
+
+        """
+        Sum costs across all programs and populate to cost_outputs dictionary for each scenario.
+        """
+
+        costs_all_programs = {}
+        for scenario in models_to_analyse:
+            costs_all_programs[scenario] = {'raw_cost_all_programs':
+                                                [0.] * len(self.cost_outputs[scenario]['raw_cost_vaccination'])}
+            for i in self.interventions_to_cost:
+                costs_all_programs[scenario]['raw_cost_all_programs'] \
+                    = increment_list(self.cost_outputs[scenario]['raw_cost_' + i],
+                                     costs_all_programs[scenario]['raw_cost_all_programs'])
+        return costs_all_programs
+
+    def find_adjusted_costs(self, models_to_analyse={}, raw_costs={}, cost_types=[]):
 
         cost_outputs = {}
 
@@ -462,27 +481,24 @@ class ModelRunner:
         current_cpi = self.model_dict['baseline'].scaleup_fns['econ_cpi'](year_current)
         discount_rate = self.model_dict['baseline'].params['econ_discount_rate']
 
-        for scenario in self.model_dict:
+        for scenario in models_to_analyse:
             cost_outputs[scenario] = {}
 
             # Work through adjusted costs
             for cost_type in cost_types:
-                cost_outputs[scenario][cost_type + '_cost_all_programs'] = []
 
                 # Maybe not ideal that the outer loop is time and the inner interventions here
                 # - may reverse at some point.
                 for t, time in enumerate(self.cost_outputs[scenario]['times']):
-                    cost_all_programs = 0.
                     cpi_time_variant = self.model_dict[scenario].scaleup_fns['econ_cpi'](time)
                     t_into_future = max(0., (time - year_current))
-                    for int, intervention in enumerate(self.model_dict[scenario].interventions_to_cost):
+                    for intervention in self.model_dict[scenario].interventions_to_cost + ['all_programs']:
                         if t == 0: cost_outputs[scenario][cost_type + '_cost_' + intervention] = []
                         cost_outputs[scenario][cost_type + '_cost_' + intervention].append(
                             autumn.economics.get_adjusted_cost(raw_costs[scenario]['raw_cost_' + intervention][t],
                                                                cost_type, current_cpi, cpi_time_variant, discount_rate,
                                                                t_into_future))
-                        cost_all_programs += cost_outputs[scenario][cost_type + '_cost_' + intervention][-1]
-                    cost_outputs[scenario][cost_type + '_cost_all_programs'].append(cost_all_programs)
+
         return cost_outputs
 
     def find_uncertainty_centiles(self, full_uncertainty_outputs):
@@ -590,10 +606,13 @@ class ModelRunner:
                 epi_outputs = self.find_epi_outputs(['baseline'],
                                                     outputs_to_analyse=self.epi_outputs_to_analyse)
                 cost_outputs \
-                    = self.find_cost_outputs(interventions_to_cost=self.model_dict['baseline'].interventions_to_cost)
-                adjusted_costs = self.find_adjusted_costs(raw_costs=cost_outputs, cost_types=['inflated',
-                                                                                              'discounted',
-                                                                                              'discounted_inflated'])
+                    = self.find_cost_outputs(models_to_analyse=['baseline'],
+                                             interventions_to_cost=self.model_dict['baseline'].interventions_to_cost)
+                costs_all_programs = self.find_costs_all_programs(['baseline'])
+                cost_outputs['baseline'].update(costs_all_programs['baseline'])
+                adjusted_costs = self.find_adjusted_costs(models_to_analyse=['baseline'],
+                                                          raw_costs=cost_outputs,
+                                                          cost_types=['inflated', 'discounted', 'discounted_inflated'])
                 cost_outputs['baseline'].update(adjusted_costs['baseline'])
                 self.store_uncertainty('baseline',
                                        epi_outputs,
@@ -680,13 +699,16 @@ class ModelRunner:
                             epi_outputs = self.find_epi_outputs([scenario_name],
                                                                 outputs_to_analyse=self.epi_outputs_to_analyse)
                             cost_outputs \
-                                = self.find_cost_outputs(
-                                interventions_to_cost=self.model_dict[scenario_name].interventions_to_cost)
-                            adjusted_costs = self.find_adjusted_costs(raw_costs=cost_outputs,
-                                                                      cost_types=['inflated',
-                                                                                  'discounted',
+                                = self.find_cost_outputs(models_to_analyse=[scenario_name],
+                                                         interventions_to_cost=
+                                                         self.model_dict[scenario_name].interventions_to_cost)
+                            costs_all_programs = self.find_costs_all_programs([scenario_name])
+                            cost_outputs[scenario_name].update(costs_all_programs[scenario_name])
+                            adjusted_costs = self.find_adjusted_costs(models_to_analyse=[scenario_name],
+                                                                      raw_costs=cost_outputs,
+                                                                      cost_types=['inflated', 'discounted',
                                                                                   'discounted_inflated'])
-                            cost_outputs[scenario_name].update(adjusted_costs['baseline'])
+                            cost_outputs.update(adjusted_costs)
                             self.store_uncertainty(scenario_name,
                                                    epi_outputs,
                                                    cost_outputs,

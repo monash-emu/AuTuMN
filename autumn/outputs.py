@@ -1827,56 +1827,34 @@ class Project:
     def plot_outputs_by_age(self):
 
         """
-        Produces the plot for the main outputs by age, can handle multiple scenarios (if required).
-        Note that if running a series of scenarios, it is expected that the last scenario to
-        be run will be baseline, which should have scenario set to None.
-        This function is a bit less flexible than plot_outputs_against_gtb, in which you can select the
-        outputs you want to plot. This one is constrained to incidence and mortality (which are the only
-        ones currently calculated in the model object.
-
         """
 
-        # Old code from when scenario used to be an input argument to this method
-        scenario = None
-
-        # Get the colours for the model outputs
-        if scenario is None:
-            # Last scenario to run should be baseline and should be run last
-            # to lay a black line over the top for comparison
-            output_colour = ['-k']
-        else:
-            # Otherwise cycling through colours
-            output_colour = [self.make_default_line_styles(scenario, False)]
-
-        subplot_grid = find_subplot_numbers(len(self.model_runner.model_dict['baseline'].agegroups) * 2 + 1)
+        outputs_to_plot = ['incidence', 'mortality']
 
         # Not sure whether we have to specify a figure number
         fig = self.set_and_update_figure()
+        subplot_grid = [len(outputs_to_plot), len(self.inputs.agegroups)]
 
-        # Overall title
-        fig.suptitle(self.country + ' burden by age group', fontsize=self.suptitle_size)
-
-        for o, output in enumerate(['incidence', 'mortality']):
+        for o, output in enumerate(outputs_to_plot):
 
             # Find the highest incidence value in the time period considered across all age groups
             ymax = 0.
-            for agegroup in self.model_runner.model_dict['baseline'].agegroups:
+            for agegroup in self.inputs.agegroups:
                 new_ymax = max(self.model_runner.epi_outputs['baseline'][output + agegroup])
                 if new_ymax > ymax:
                     ymax = new_ymax
 
-            for i, agegroup in enumerate(self.model_runner.model_dict['baseline'].agegroups + ['']):
+            for i, agegroup in enumerate(self.inputs.agegroups):
 
-                ax = fig.add_subplot(subplot_grid[0],
-                                     subplot_grid[1],
-                                     i + o * (len(self.model_runner.model_dict['baseline'].agegroups) + 1))
+                # i+1 gives the
+                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i+1 + o*len(self.inputs.agegroups))
 
                 # Plot the modelled data
                 ax.plot(
                     self.model_runner.epi_outputs['baseline']['times'],
                     self.model_runner.epi_outputs['baseline'][output + agegroup],
-                    color=output_colour[0][1],
-                    linestyle=output_colour[0][0],
+                    color=self.output_colours['baseline'][1],
+                    linestyle=self.output_colours['baseline'][0],
                     linewidth=1.5)
 
                 # Adjust size of labels of x-ticks
@@ -1917,7 +1895,8 @@ class Project:
                 ax.set_xlim(self.inputs.model_constants['plot_start_time'],
                             self.inputs.model_constants['plot_end_time'])
 
-        # Saving
+        # Finish up
+        fig.suptitle(self.country + ' burden by age group', fontsize=self.suptitle_size)
         self.save_figure(fig, '_output_by_age')
 
     def plot_stratified_populations(self, age_or_comorbidity='age'):

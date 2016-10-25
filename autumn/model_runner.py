@@ -143,6 +143,8 @@ class ModelRunner:
         self.cost_outputs_integer_dict = {}
         self.cost_outputs_uncertainty = {}
         self.cost_outputs_uncertainty_centiles = {}
+        self.additional_cost_types = ['inflated', 'discounted', 'discounted_inflated']
+        self.cost_types = self.additional_cost_types + ['raw']
         self.uncertainty_percentiles = {}
         self.percentiles = [2.5, 50, 97.5]
         self.accepted_no_burn_in_indices = []
@@ -202,7 +204,7 @@ class ModelRunner:
             self.cost_outputs[scenario].update(costs_all_programs[scenario])
         adjusted_costs = self.find_adjusted_costs(models_to_analyse=self.model_dict,
                                                   raw_costs=self.cost_outputs,
-                                                  cost_types=['inflated', 'discounted', 'discounted_inflated'])
+                                                  cost_types=self.additional_cost_types)
         for scenario in self.model_dict:
             self.cost_outputs[scenario].update(adjusted_costs[scenario])
 
@@ -612,7 +614,7 @@ class ModelRunner:
                 cost_outputs['baseline'].update(costs_all_programs['baseline'])
                 adjusted_costs = self.find_adjusted_costs(models_to_analyse=['baseline'],
                                                           raw_costs=cost_outputs,
-                                                          cost_types=['inflated', 'discounted', 'discounted_inflated'])
+                                                          cost_types=self.additional_cost_types)
                 cost_outputs['baseline'].update(adjusted_costs['baseline'])
                 self.store_uncertainty('baseline',
                                        epi_outputs,
@@ -706,8 +708,7 @@ class ModelRunner:
                             cost_outputs[scenario_name].update(costs_all_programs[scenario_name])
                             adjusted_costs = self.find_adjusted_costs(models_to_analyse=[scenario_name],
                                                                       raw_costs=cost_outputs,
-                                                                      cost_types=['inflated', 'discounted',
-                                                                                  'discounted_inflated'])
+                                                                      cost_types=self.additional_cost_types)
                             cost_outputs.update(adjusted_costs)
                             self.store_uncertainty(scenario_name,
                                                    epi_outputs,

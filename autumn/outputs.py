@@ -1597,8 +1597,6 @@ class Project:
         Panels of figures are the different sorts of costs (i.e. whether discounting and inflation have been applied).
         """
 
-        cost_types = ['raw', 'discounted_inflated', 'inflated', 'discounted']
-
         # Separate figures for each scenario
         for scenario in self.scenarios:
 
@@ -1606,18 +1604,18 @@ class Project:
             fig_individual = self.set_and_update_figure()
             fig_stacked = self.set_and_update_figure()
             fig_relative = self.set_and_update_figure()
-            subplot_grid = find_subplot_numbers(len(cost_types))
+            subplot_grid = find_subplot_numbers(len(self.model_runner.cost_types))
 
             # Find the maximum of any type of cost across all of the programs
             max_cost = 0.
             max_stacked_cost = 0.
 
             for program in self.programs:
-                for cost_type in cost_types:
+                for cost_type in self.model_runner.cost_types:
                     if max(self.model_runner.cost_outputs[scenario][cost_type + '_cost_' + program]) > max_cost:
                         max_cost = max(self.model_runner.cost_outputs[scenario][cost_type + '_cost_' + program])
 
-            for cost_type in cost_types:
+            for cost_type in self.model_runner.cost_types:
                 if max(self.model_runner.cost_outputs[scenario][cost_type + '_cost_all_programs']) > max_stacked_cost:
                     max_stacked_cost = max(self.model_runner.cost_outputs[scenario][cost_type + '_cost_all_programs'])
 
@@ -1629,7 +1627,7 @@ class Project:
             reference_time_index \
                 = tool_kit.find_first_list_element_above_value(self.model_runner.cost_outputs[scenario]['times'],
                                                                self.inputs.model_constants['reference_time'])
-            for c, cost_type in enumerate(cost_types):
+            for c, cost_type in enumerate(self.model_runner.cost_types):
 
                 # Plot each type of cost to its own subplot and ensure same y-axis scale
                 if c == 0:
@@ -1703,7 +1701,7 @@ class Project:
                         tick.label.set_fontsize(get_nice_font_size(subplot_grid))
 
                     # Add the legend to last subplot panel
-                    if c == len(cost_types) - 1:
+                    if c == len(self.model_runner.cost_types) - 1:
                         ax.legend(ax_individual.lines,
                                   program_labels,
                                   fontsize=get_nice_font_size(subplot_grid),

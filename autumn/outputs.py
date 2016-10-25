@@ -871,22 +871,22 @@ class Project:
         """
 
         # Write the year text cell
-        sheet.cell(row=0, column=0).value = 'Year'
+        sheet.cell(row=1, column=1).value = 'Year'
 
         # Write the year text column
         for y, year in enumerate(years):
-            sheet.cell(row=y+1, column=0).value = year
+            sheet.cell(row=y+2, column=1).value = year
 
         for s, scenario in enumerate(self.gui_inputs['scenario_names_to_run']):
 
             # Write the scenario names
-            sheet.cell(row=0, column=s+1).value = \
+            sheet.cell(row=1, column=s+2).value = \
                 tool_kit.replace_underscore_with_space(
                     tool_kit.capitalise_first_letter(scenario))
 
             # Write the columns of data
             for y, year in enumerate(years):
-                sheet.cell(row=y+1, column=s+1).value \
+                sheet.cell(row=y+2, column=s+2).value \
                     = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
 
     def write_cost_vertically_by_scenario(self, sheet, output, years, cost_type):
@@ -901,22 +901,22 @@ class Project:
         """
 
         # Write the year text cell
-        sheet.cell(row=0, column=0).value = 'Year'
+        sheet.cell(row=1, column=1).value = 'Year'
 
         # Write the year text column
         for y, year in enumerate(years):
-            sheet.cell(row=y+1, column=0).value = year
+            sheet.cell(row=y+2, column=1).value = year
 
         for s, scenario in enumerate(self.gui_inputs['scenario_names_to_run']):
 
             # Write the scenario names
-            sheet.cell(row=0, column=s+1).value = \
+            sheet.cell(row=1, column=s+2).value = \
                 tool_kit.replace_underscore_with_space(
                     tool_kit.capitalise_first_letter(scenario))
 
             # Write the columns of data
             for y, year in enumerate(years):
-                sheet.cell(row=y+1, column=s+1).value \
+                sheet.cell(row=y+2, column=s+2).value \
                     = self.model_runner.cost_outputs_integer_dict[scenario][cost_type + output][year]
 
     def write_vertically_by_output(self, sheet, scenario, years):
@@ -930,22 +930,22 @@ class Project:
         """
 
         # Write the year text cell
-        sheet.cell(row=0, column=0).value = 'Year'
+        sheet.cell(row=1, column=1).value = 'Year'
 
         # Write the year text column
         for y, year in enumerate(years):
-            sheet.cell(row=y+1, column=0).value = year
+            sheet.cell(row=y+2, column=1).value = year
 
         for o, output in enumerate(self.model_runner.epi_outputs_to_analyse):
 
             # Write the output names
-            sheet.cell(row=0, column=o+1).value = \
+            sheet.cell(row=1, column=o+2).value = \
                 tool_kit.replace_underscore_with_space(
                     tool_kit.capitalise_first_letter(output))
 
             # Write the columns of data
             for y, year in enumerate(years):
-                sheet.cell(row=y+1, column=o+1).value \
+                sheet.cell(row=y+2, column=o+2).value \
                     = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
 
     def write_cost_vertically_by_output(self, sheet, scenario, years, cost_type):
@@ -960,22 +960,22 @@ class Project:
         """
 
         # Write the year text cell
-        sheet.cell(row=0, column=0).value = 'Year'
+        sheet.cell(row=1, column=1).value = 'Year'
 
         # Write the year text column
         for y, year in enumerate(years):
-            sheet.cell(row=y+1, column=0).value = year
+            sheet.cell(row=y+2, column=1).value = year
 
         for o, output in enumerate(self.inputs.interventions_to_cost):
 
             # Write the output names
-            sheet.cell(row=0, column=o+1).value = \
+            sheet.cell(row=1, column=o+2).value = \
                 tool_kit.replace_underscore_with_space(
                     tool_kit.capitalise_first_letter(output))
 
             # Write the columns of data
             for y, year in enumerate(years):
-                sheet.cell(row=y+1, column=o+1).value \
+                sheet.cell(row=y+2, column=o+2).value \
                     = self.model_runner.cost_outputs_integer_dict[scenario][cost_type + output][year]
 
     def write_horizontally_by_scenario(self, sheet, output, years):
@@ -989,22 +989,22 @@ class Project:
         """
 
         # Write the year text cell
-        sheet.cell(row=0, column=0).value = 'Year'
+        sheet.cell(row=1, column=1).value = 'Year'
 
         # Write the year text column
         for y, year in enumerate(years):
-            sheet.cell(row=0, column=y+1).value = year
+            sheet.cell(row=1, column=y+2).value = year
 
         for s, scenario in enumerate(self.gui_inputs['scenario_names_to_run']):
 
             # Write the scenario names
-            sheet.cell(row=s+1, column=0).value = \
+            sheet.cell(row=s+2, column=1).value = \
                 tool_kit.replace_underscore_with_space(
                     tool_kit.capitalise_first_letter(scenario))
 
             # Write the columns of data
             for y, year in enumerate(years):
-                sheet.cell(row=s+1, column=y+1).value \
+                sheet.cell(row=s+2, column=y+2).value \
                     = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
 
     def write_cost_horizontally_by_scenario(self, sheet, output, years, cost_type):
@@ -1019,22 +1019,22 @@ class Project:
         """
 
         # Write the year text cell
-        sheet.cell(row=0, column=0).value = 'Year'
+        sheet.cell(row=1, column=1).value = 'Year'
 
         # Write the year text column
         for y, year in enumerate(years):
-            sheet.cell(row=0, column=y+1).value = year
+            sheet.cell(row=1, column=y+2).value = year
 
         for s, scenario in enumerate(self.gui_inputs['scenario_names_to_run']):
 
             # Write the scenario names
-            sheet.cell(row=s+1, column=0).value = \
+            sheet.cell(row=s+2, column=1).value = \
                 tool_kit.replace_underscore_with_space(
                     tool_kit.capitalise_first_letter(scenario))
 
             # Write the columns of data
             for y, year in enumerate(years):
-                sheet.cell(row=s+1, column=y+1).value \
+                sheet.cell(row=s+2, column=y+2).value \
                     = self.model_runner.cost_outputs_integer_dict[scenario][cost_type + output][year]
 
     def write_horizontally_by_output(self, sheet, scenario, years):
@@ -1049,22 +1049,22 @@ class Project:
         """
 
         # Write the year text cell
-        sheet.cell(row=0, column=0).value = 'Year'
+        sheet.cell(row=1, column=1).value = 'Year'
 
         # Write the year text column
         for y, year in enumerate(years):
-            sheet.cell(row=0, column=y+1).value = year
+            sheet.cell(row=1, column=y+2).value = year
 
         for o, output in enumerate(self.model_runner.epi_outputs_to_analyse):
 
             # Write the output names
-            sheet.cell(row=o+1, column=0).value = \
+            sheet.cell(row=o+2, column=1).value = \
                 tool_kit.replace_underscore_with_space(
                     tool_kit.capitalise_first_letter(output))
 
             # Write the columns of data
             for y, year in enumerate(years):
-                sheet.cell(row=o+1, column=y+1).value \
+                sheet.cell(row=o+2, column=y+2).value \
                     = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
 
     def write_cost_horizontally_by_output(self, sheet, scenario, years, cost_type):
@@ -1080,22 +1080,22 @@ class Project:
         """
 
         # Write the year text cell
-        sheet.cell(row=0, column=0).value = 'Year'
+        sheet.cell(row=1, column=1).value = 'Year'
 
         # Write the year text column
         for y, year in enumerate(years):
-            sheet.cell(row=0, column=y+1).value = year
+            sheet.cell(row=1, column=y+2).value = year
 
         for o, output in enumerate(self.inputs.interventions_to_cost):
 
             # Write the output names
-            sheet.cell(row=o+1, column=0).value = \
+            sheet.cell(row=o+2, column=1).value = \
                 tool_kit.replace_underscore_with_space(
                     tool_kit.capitalise_first_letter(output))
 
             # Write the columns of data
             for y, year in enumerate(years):
-                sheet.cell(row=o+1, column=y+1).value \
+                sheet.cell(row=o+2, column=y+2).value \
                     = self.model_runner.cost_outputs_integer_dict[scenario][cost_type + output][year]
 
     def write_documents(self):

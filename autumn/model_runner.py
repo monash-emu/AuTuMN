@@ -381,7 +381,7 @@ class ModelRunner:
                         # Incidence
                         if 'incidence' in outputs_to_analyse:
                             for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
-                                if 'latent' in from_label and 'active' in to_label and stratum in label:
+                                if 'latent' in from_label and 'active' in to_label and stratum in from_label:
                                     epi_outputs[scenario]['incidence' + stratum] \
                                         = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
                                                          * self.model_dict[scenario].get_var_soln(rate) \
@@ -389,7 +389,7 @@ class ModelRunner:
                                                          * 1e5,
                                                          epi_outputs[scenario]['incidence' + stratum])
                             for from_label, to_label, rate in self.model_dict[scenario].fixed_transfer_rate_flows:
-                                if 'latent' in from_label and 'active' in to_label and stratum in label:
+                                if 'latent' in from_label and 'active' in to_label and stratum in from_label:
                                     epi_outputs[scenario]['incidence' + stratum] \
                                         = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
                                                          * rate \

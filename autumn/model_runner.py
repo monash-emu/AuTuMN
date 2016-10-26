@@ -151,6 +151,7 @@ class ModelRunner:
         self.uncertainty_attributes = ['epi_outputs_uncertainty',
                                        'cost_outputs_uncertainty',
                                        'accepted_indices',
+                                       'rejected_indices',
                                        'all_parameters_tried',
                                        'whether_accepted_list',
                                        'acceptance_dict',
@@ -702,8 +703,7 @@ class ModelRunner:
                                                                 outputs_to_analyse=self.epi_outputs_to_analyse)
                             cost_outputs \
                                 = self.find_cost_outputs(models_to_analyse=[scenario_name],
-                                                         interventions_to_cost=
-                                                         self.model_dict[scenario_name].interventions_to_cost)
+                                                         interventions_to_cost=self.interventions_to_cost)
                             costs_all_programs = self.find_costs_all_programs([scenario_name])
                             cost_outputs[scenario_name].update(costs_all_programs[scenario_name])
                             adjusted_costs = self.find_adjusted_costs(models_to_analyse=[scenario_name],

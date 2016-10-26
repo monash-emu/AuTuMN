@@ -2182,9 +2182,12 @@ class Project:
         fig = self.set_and_update_figure()
         ax = self.make_single_axis(fig)
         accepted_log_likelihoods = [self.model_runner.loglikelihoods[i] for i in self.model_runner.accepted_indices]
-        rejected_log_likelihoods = [self.model_runner.loglikelihoods[i] for i in self.model_runner.rejected_indices]
         ax.plot(self.model_runner.accepted_indices, accepted_log_likelihoods)
-        ax.scatter(self.model_runner.rejected_indices, rejected_log_likelihoods)
+        for i in self.model_runner.rejected_indices:
+            last_acceptance_before = [j for j in self.model_runner.accepted_indices if j < i][-1]
+            ax.plot([last_acceptance_before, i],
+                    [self.model_runner.loglikelihoods[last_acceptance_before],
+                     self.model_runner.loglikelihoods[i]], 'k-')
         self.save_figure(fig, '_likelihoods')
 
     def plot_piecharts_opti(self):

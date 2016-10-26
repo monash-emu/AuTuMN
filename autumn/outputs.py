@@ -1200,8 +1200,10 @@ class Project:
 
         # Plot main outputs
         if self.gui_inputs['output_gtb_plots']:
-            self.plot_outputs_against_gtb(
-                ['incidence', 'mortality', 'prevalence', 'notifications'])
+            self.plot_outputs_against_gtb(['incidence', 'mortality', 'prevalence', 'notifications'], ci_plot=None)
+            if self.gui_inputs['output_uncertainty']:
+                self.plot_outputs_against_gtb(['incidence', 'mortality', 'prevalence', 'notifications'], ci_plot=True)
+                self.plot_outputs_against_gtb(['incidence', 'mortality', 'prevalence', 'notifications'], ci_plot=False)
 
         # Plot scale-up functions - currently only doing this for the baseline model run
         if self.gui_inputs['output_scaleups']:
@@ -1267,7 +1269,7 @@ class Project:
         if self.model_runner.optimisation:
             self.plot_piecharts_opti()
 
-    def plot_outputs_against_gtb(self, outputs):
+    def plot_outputs_against_gtb(self, outputs, ci_plot=None):
 
         """
         Produces the plot for the main outputs, can handle multiple scenarios.
@@ -1278,7 +1280,6 @@ class Project:
 
         Args:
             outputs: A list of the outputs to be plotted
-
         """
 
         # Standard preliminaries
@@ -1324,7 +1325,8 @@ class Project:
             # Plotting modelled data____________________________________________________________________________________
 
             # Plot without uncertainty
-            if not self.gui_inputs['output_uncertainty']:
+            if ci_plot is None:
+                end_filename = '_scenario'
                 for scenario in reversed(self.scenarios):  # Reversed ensures black baseline plotted over top
                     ax.plot(
                         self.model_runner.epi_outputs[scenario]['times'],
@@ -1334,8 +1336,9 @@ class Project:
                         linewidth=1.5,
                         label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario)))
 
-            # Plot with uncertainty
-            else:
+            # Plot with uncertainty confidence intervals
+            elif ci_plot and self.gui_inputs['output_uncertainty']:
+                end_filename = '_ci'
                 for scenario in self.model_runner.epi_outputs_uncertainty_centiles:
 
                     # Median
@@ -1358,9 +1361,30 @@ class Project:
                             linestyle='--',
                             linewidth=.5,
                             label=None)
+            elif self.gui_inputs['output_uncertainty']:
+                end_filename = '_progress'
+                for run in range(len(self.model_runner.epi_outputs_uncertainty['baseline'][output])):
+                    if run not in self.model_runner.accepted_indices:
+                        # Change over the commented code to show the rejected runs (in thin yellow lines at the back)
+                        pass
+                        # ax.plot(
+                        #     self.model_runner.epi_outputs_uncertainty['baseline']['times'],
+                        #     self.model_runner.epi_outputs_uncertainty['baseline'][output][run, :],
+                        #     linewidth=.2,
+                        #     color='y',
+                        #     label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space('baseline')))
+                    else:
+                        ax.plot(
+                            self.model_runner.epi_outputs_uncertainty['baseline']['times'],
+                            self.model_runner.epi_outputs_uncertainty['baseline'][output][run, :],
+                            linewidth=1.2,
+                            color=str(1.
+                                      - float(run)
+                                      / float(len(self.model_runner.epi_outputs_uncertainty['baseline'][output]))),
+                            label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space('baseline')))
 
             # Make cosmetic changes
-            if o == len(outputs) - 1:
+            if o == len(outputs) - 1 and ci_plot:
                 ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False)
             ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
             ax.set_xticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))
@@ -1374,7 +1398,7 @@ class Project:
 
         # Add main title and save
         fig.suptitle(tool_kit.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
-        self.save_figure(fig, '_main_outputs')
+        self.save_figure(fig, '_gtb' + end_filename)
 
     def classify_scaleups(self):
 

@@ -2185,7 +2185,7 @@ class Project:
 
         # Plotting prelims
         fig = self.set_and_update_figure()
-        ax = self.make_single_axis(fig)
+        ax = fig.add_subplot(1, 1, 1)
 
         # Find accepted likelihoods
         accepted_log_likelihoods = [self.model_runner.loglikelihoods[i] for i in self.model_runner.accepted_indices]

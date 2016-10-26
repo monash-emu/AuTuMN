@@ -2179,15 +2179,35 @@ class Project:
 
     def plot_likelihoods(self):
 
+        """
+        Method to plot likelihoods over runs, differentiating accepted and rejected runs to illustrate progression.
+        """
+
+        # Plotting prelims
         fig = self.set_and_update_figure()
         ax = self.make_single_axis(fig)
+
+        # Find accepted likelihoods
         accepted_log_likelihoods = [self.model_runner.loglikelihoods[i] for i in self.model_runner.accepted_indices]
-        ax.plot(self.model_runner.accepted_indices, accepted_log_likelihoods)
+
+        # Plot the rejected values
         for i in self.model_runner.rejected_indices:
+
+            # Find the index of the last accepted index before the rejected one we're currently interested in
             last_acceptance_before = [j for j in self.model_runner.accepted_indices if j < i][-1]
+
+            # Plot from the previous acceptance to the current rejection
             ax.plot([last_acceptance_before, i],
                     [self.model_runner.loglikelihoods[last_acceptance_before],
-                     self.model_runner.loglikelihoods[i]], 'k-')
+                     self.model_runner.loglikelihoods[i]], marker='o', linestyle='--', color='.5')
+
+        # Plot the accepted values
+        ax.plot(self.model_runner.accepted_indices, accepted_log_likelihoods, marker='o', color='k')
+
+        # Finishing up
+        fig.suptitle('Progression of likelihood', fontsize=self.suptitle_size)
+        ax.set_xlabel('All runs', fontsize=get_nice_font_size([1, 1]), labelpad=1)
+        ax.set_ylabel('Likelihood', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         self.save_figure(fig, '_likelihoods')
 
     def plot_piecharts_opti(self):

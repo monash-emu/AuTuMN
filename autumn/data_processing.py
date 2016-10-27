@@ -166,7 +166,7 @@ class Inputs:
         # For incidence for ex. Width of Normal posterior relative to CI width in data
         self.outputs_unc = [{'key': 'incidence',
                              'posterior_width': None,
-                             'width_multiplier': 4.}]
+                             'width_multiplier': 2.}]
         self.potential_interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
                                                 'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
         self.interventions_to_cost = []

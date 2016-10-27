@@ -6,7 +6,6 @@ This is a set of Python models that modularises the development of dynamic trans
 pluggable API to other system. Applied to tuberculosis.
 
 # TODO
-- debug cost storage for uncertainty
 - debug remaining plotting functions, including:
     - Plot compartment fractions
     - Plot scale-up functions

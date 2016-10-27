@@ -788,6 +788,21 @@ def pickle_load(file):
     return loaded_object
 
 
+def prepare_denominator(list_to_prepare):
+
+    """
+    Method to safely divide a list of numbers while ignoring zero denominators.
+
+    Args:
+        list_to_prepare: The list to be used as a denominator.
+
+    Returns:
+        The list with zeros replaced with small numbers.
+    """
+
+    return [list_to_prepare[i] if list_to_prepare[i] > 0. else 1e-10 for i in range(len(list_to_prepare))]
+
+
 # * * * * * * * * * * * * * * * * * * * * * *
 #                   Test age-stratification
 

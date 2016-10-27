@@ -122,6 +122,7 @@ def linearly_increasing_weights(list, start_weight=1., end_weight=2.):
 
     return weights
 
+
 class ModelRunner:
 
     def __init__(self, gui_inputs, runtime_outputs, figure_frame):
@@ -258,8 +259,7 @@ class ModelRunner:
             if self.gui_inputs['pickle_uncertainty'] == 'Load':
                 self.add_comment_to_gui_window('Uncertainty results loaded from previous simulation')
                 for attribute in self.uncertainty_attributes:
-                    setattr(self, attribute,
-                            tool_kit.pickle_load(storage_file_names[attribute]))
+                    setattr(self, attribute, tool_kit.pickle_load(storage_file_names[attribute]))
 
             # Run uncertainty
             else:
@@ -310,7 +310,6 @@ class ModelRunner:
         """
         Method to extract all requested epidemiological outputs from the models. Intended ultimately to be flexible\
         enough for use for analysis of scenarios, uncertainty and optimisation.
-
         """
 
         epi_outputs = {}
@@ -330,6 +329,9 @@ class ModelRunner:
                         = increment_list(self.model_dict[scenario].get_compartment_soln(compartment),
                                          epi_outputs[scenario]['population'])
 
+            # The population denominator to be used with zeros replaced with small numbers
+            total_denominator = tool_kit.prepare_denominator(epi_outputs[scenario]['population'])
+
             # Incidence
             if 'incidence' in outputs_to_analyse:
                 for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
@@ -337,7 +339,7 @@ class ModelRunner:
                         epi_outputs[scenario]['incidence'] \
                             = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
                                              * self.model_dict[scenario].get_var_soln(rate) \
-                                             / epi_outputs[scenario]['population'] \
+                                             / total_denominator \
                                              * 1e5,
                                              epi_outputs[scenario]['incidence'])
                 for from_label, to_label, rate in self.model_dict[scenario].fixed_transfer_rate_flows:
@@ -345,7 +347,7 @@ class ModelRunner:
                         epi_outputs[scenario]['incidence'] \
                             = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
                                              * rate \
-                                             / epi_outputs[scenario]['population'] \
+                                             / total_denominator \
                                              * 1e5,
                                              epi_outputs[scenario]['incidence'])
 
@@ -366,13 +368,13 @@ class ModelRunner:
                         = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
                                          * rate \
                                          * self.model_dict[scenario].params['program_prop_death_reporting'] \
-                                         / epi_outputs[scenario]['population'] \
+                                         / total_denominator \
                                          * 1e5, epi_outputs[scenario]['mortality'])
                 for from_label, rate in self.model_dict[scenario].var_infection_death_rate_flows:
                     epi_outputs[scenario]['mortality'] \
                         = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
                                          * self.model_dict[scenario].get_var_soln(rate) \
-                                         / epi_outputs[scenario]['population'] \
+                                         / total_denominator \
                                          * 1e5, epi_outputs[scenario]['mortality'])
 
             # Prevalence
@@ -381,7 +383,7 @@ class ModelRunner:
                     if 'susceptible' not in label and 'latent' not in label:
                         epi_outputs[scenario]['prevalence'] \
                             = increment_list(self.model_dict[scenario].get_compartment_soln(label) \
-                                             / epi_outputs[scenario]['population'] \
+                                             / total_denominator \
                                              * 1e5, epi_outputs[scenario]['prevalence'])
 
             # Stratified outputs________________________________________________________________________________________
@@ -401,6 +403,9 @@ class ModelRunner:
                                         = increment_list(self.model_dict[scenario].get_compartment_soln(compartment),
                                                          epi_outputs[scenario]['population' + stratum])
 
+                        # The population denominator to be used with zeros replaced with small numbers
+                        stratum_denominator = tool_kit.prepare_denominator(epi_outputs[scenario]['population' + stratum])
+
                         # Incidence
                         if 'incidence' in outputs_to_analyse:
                             for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
@@ -408,7 +413,7 @@ class ModelRunner:
                                     epi_outputs[scenario]['incidence' + stratum] \
                                         = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
                                                          * self.model_dict[scenario].get_var_soln(rate) \
-                                                         / epi_outputs[scenario]['population' + stratum] \
+                                                         / stratum_denominator \
                                                          * 1e5,
                                                          epi_outputs[scenario]['incidence' + stratum])
                             for from_label, to_label, rate in self.model_dict[scenario].fixed_transfer_rate_flows:
@@ -416,7 +421,7 @@ class ModelRunner:
                                     epi_outputs[scenario]['incidence' + stratum] \
                                         = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
                                                          * rate \
-                                                         / epi_outputs[scenario]['population' + stratum] \
+                                                         / stratum_denominator \
                                                          * 1e5,
                                                          epi_outputs[scenario]['incidence' + stratum])
 
@@ -429,7 +434,7 @@ class ModelRunner:
                                         = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
                                                          * rate \
                                                          * self.model_dict[scenario].params['program_prop_death_reporting'] \
-                                                         * epi_outputs[scenario]['population' + stratum] \
+                                                         * stratum_denominator \
                                                          * 1e5,
                                                          epi_outputs[scenario]['mortality' + stratum])
                             for from_label, rate in self.model_dict[scenario].var_infection_death_rate_flows:
@@ -437,7 +442,7 @@ class ModelRunner:
                                     epi_outputs[scenario]['mortality' + stratum] \
                                         = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
                                                          * self.model_dict[scenario].get_var_soln(rate) \
-                                                         / epi_outputs[scenario]['population' + stratum] \
+                                                         / stratum_denominator \
                                                          * 1e5,
                                                          epi_outputs[scenario]['mortality' + stratum])
 
@@ -447,7 +452,7 @@ class ModelRunner:
                                 if 'susceptible' not in label and 'latent' not in label and stratum in label:
                                     epi_outputs[scenario]['prevalence' + stratum] \
                                         = increment_list(self.model_dict[scenario].get_compartment_soln(label) \
-                                                         / epi_outputs[scenario]['population' + stratum] \
+                                                         / stratum_denominator \
                                                          * 1e5, epi_outputs[scenario]['prevalence' + stratum])
         return epi_outputs
 

@@ -642,25 +642,25 @@ class ModelRunner:
             if self.is_last_run_success:
 
                 # Storage
-                epi_outputs = self.find_epi_outputs(['baseline'],
-                                                    outputs_to_analyse=self.epi_outputs_to_analyse)
-                cost_outputs \
+                self.epi_outputs = self.find_epi_outputs(['baseline'],
+                                                         outputs_to_analyse=self.epi_outputs_to_analyse)
+                self.cost_outputs \
                     = self.find_cost_outputs(models_to_analyse=['baseline'],
                                              interventions_to_cost=self.model_dict['baseline'].interventions_to_cost)
                 costs_all_programs = self.find_costs_all_programs(['baseline'])
-                cost_outputs['baseline'].update(costs_all_programs['baseline'])
+                self.cost_outputs['baseline'].update(costs_all_programs['baseline'])
                 adjusted_costs = self.find_adjusted_costs(models_to_analyse=['baseline'],
-                                                          raw_costs=cost_outputs,
+                                                          raw_costs=self.cost_outputs,
                                                           cost_types=self.additional_cost_types)
-                cost_outputs['baseline'].update(adjusted_costs['baseline'])
+                self.cost_outputs['baseline'].update(adjusted_costs['baseline'])
                 self.store_uncertainty('baseline',
-                                       epi_outputs,
-                                       cost_outputs,
+                                       self.epi_outputs,
+                                       self.cost_outputs,
                                        epi_outputs_to_analyse=self.epi_outputs_to_analyse)
                 integer_dictionary \
                     = extract_integer_dicts(['baseline'],
                                             get_output_dicts_from_lists(models_to_analyse=['baseline'],
-                                                                        output_dict_of_lists=epi_outputs))
+                                                                        output_dict_of_lists=self.epi_outputs))
 
                 # Calculate prior
                 prior_log_likelihood = 0.
@@ -749,20 +749,20 @@ class ModelRunner:
                             self.run_with_params(new_params, model_object=scenario_name)
 
                             # Storage
-                            epi_outputs = self.find_epi_outputs([scenario_name],
-                                                                outputs_to_analyse=self.epi_outputs_to_analyse)
-                            cost_outputs \
+                            self.epi_outputs = self.find_epi_outputs([scenario_name],
+                                                                     outputs_to_analyse=self.epi_outputs_to_analyse)
+                            self.cost_outputs \
                                 = self.find_cost_outputs(models_to_analyse=[scenario_name],
                                                          interventions_to_cost=self.interventions_to_cost)
                             costs_all_programs = self.find_costs_all_programs([scenario_name])
-                            cost_outputs[scenario_name].update(costs_all_programs[scenario_name])
+                            self.cost_outputs[scenario_name].update(costs_all_programs[scenario_name])
                             adjusted_costs = self.find_adjusted_costs(models_to_analyse=[scenario_name],
-                                                                      raw_costs=cost_outputs,
+                                                                      raw_costs=self.cost_outputs,
                                                                       cost_types=self.additional_cost_types)
-                            cost_outputs.update(adjusted_costs)
+                            self.cost_outputs[scenario_name].update(adjusted_costs[scenario_name])
                             self.store_uncertainty(scenario_name,
-                                                   epi_outputs,
-                                                   cost_outputs,
+                                                   self.epi_outputs,
+                                                   self.cost_outputs,
                                                    epi_outputs_to_analyse=self.epi_outputs_to_analyse)
 
                 i_candidates += 1

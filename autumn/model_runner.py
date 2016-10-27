@@ -100,6 +100,28 @@ def get_output_dicts_from_lists(models_to_analyse={}, output_dict_of_lists={}):
     return output_dictionary
 
 
+def linearly_increasing_weights(list, start_weight=1., end_weight=2.):
+
+    """
+
+
+    Args:
+        years:
+        start_weight:
+        end_weight:
+    """
+
+    weights = []
+
+    if len(list) == 1:
+        weights = [1.]
+    else:
+        for y in range(len(list)):
+            weights.append(start_weight + (end_weight - start_weight) / float(len(list)-1) * y)
+        weights = [i / sum(weights) for i in weights]
+
+    return weights
+
 class ModelRunner:
 
     def __init__(self, gui_inputs, runtime_outputs, figure_frame):
@@ -568,6 +590,12 @@ class ModelRunner:
 
         normal_char = self.get_normal_char()
         years_to_compare = [2014]
+        # years_to_compare = range(1990, 2015)
+        # weights = [1.] * len(years_to_compare)
+        weights = [1. / len(years_to_compare)] * len(years_to_compare)
+        # weights = linearly_increasing_weights(years_to_compare)
+        print('"weights"')
+        print(weights)
 
         # Prepare for uncertainty loop
         for param_dict in self.inputs.param_ranges_unc:
@@ -660,12 +688,12 @@ class ModelRunner:
 
                     # The GTB values for the output of interest
                     working_output_dictionary = normal_char[output_dict['key']]
-                    for year in working_output_dictionary.keys():
-                        if year in years_to_compare:
+                    for y, year in enumerate(years_to_compare):
+                        if year in working_output_dictionary.keys():
                             model_result_for_output \
                                 = integer_dictionary['baseline']['incidence'][year]
                             mu, sd = working_output_dictionary[year][0], working_output_dictionary[year][1]
-                            posterior_log_likelihood += norm.logpdf(model_result_for_output, mu, sd)
+                            posterior_log_likelihood += norm.logpdf(model_result_for_output, mu, sd) * weights[y]
 
                 # Sum for overall likelihood of run
                 log_likelihood = prior_log_likelihood + posterior_log_likelihood
@@ -676,6 +704,7 @@ class ModelRunner:
                 else:
                     accepted = numpy.random.binomial(n=1, p=numpy.exp(log_likelihood - prev_log_likelihood))
 
+                # Possibly temporary code to explain what's happening with progression of the likelihood
                 print('prev_log_likelihood')
                 print(prev_log_likelihood)
                 print('log_likelihood')
@@ -1114,3 +1143,4 @@ class ModelRunner:
 
         if not from_runner:
             return param_tracking_figure
+

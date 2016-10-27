@@ -548,7 +548,6 @@ class ModelRunner:
 
         """
         Main method to run all the uncertainty processes.
-
         """
 
         # If not doing an adaptive search, only need to start with a single parameter set
@@ -557,9 +556,18 @@ class ModelRunner:
         else:
             n_candidates = self.gui_inputs['uncertainty_runs'] * 10
 
-        # Define an initial set of parameter candidates only
-        param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
+        # Define an initial set of parameter candidates only - comment out as required
+
+        # To start from a random point in the parameter range:
+        # param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
+
+        # To start from the manually calibrated values:
+        param_candidates = {}
+        for param_dict in self.inputs.param_ranges_unc:
+            param_candidates[param_dict['key']] = [self.inputs.model_constants[param_dict['key']]]
+
         normal_char = self.get_normal_char()
+        years_to_compare = [2014]
 
         # Prepare for uncertainty loop
         for param_dict in self.inputs.param_ranges_unc:
@@ -653,10 +661,11 @@ class ModelRunner:
                     # The GTB values for the output of interest
                     working_output_dictionary = normal_char[output_dict['key']]
                     for year in working_output_dictionary.keys():
-                        model_result_for_output \
-                            = integer_dictionary['baseline']['incidence'][year]
-                        mu, sd = working_output_dictionary[year][0], working_output_dictionary[year][1]
-                        posterior_log_likelihood += norm.logpdf(model_result_for_output, mu, sd)
+                        if year in years_to_compare:
+                            model_result_for_output \
+                                = integer_dictionary['baseline']['incidence'][year]
+                            mu, sd = working_output_dictionary[year][0], working_output_dictionary[year][1]
+                            posterior_log_likelihood += norm.logpdf(model_result_for_output, mu, sd)
 
                 # Sum for overall likelihood of run
                 log_likelihood = prior_log_likelihood + posterior_log_likelihood
@@ -666,6 +675,18 @@ class ModelRunner:
                     accepted = 1
                 else:
                     accepted = numpy.random.binomial(n=1, p=numpy.exp(log_likelihood - prev_log_likelihood))
+
+                print('prev_log_likelihood')
+                print(prev_log_likelihood)
+                print('log_likelihood')
+                print(log_likelihood)
+                print('log_likelihood - prev_log_likelihood')
+                print(log_likelihood - prev_log_likelihood)
+                print('exp(log_likelihood - prev_log_likelihood) - i.e. acceptance probability')
+                print(numpy.exp(log_likelihood - prev_log_likelihood))
+                print('whether accepted')
+                print(bool(accepted))
+                print('______')
                 self.loglikelihoods.append(log_likelihood)
 
                 # Record some information for all runs
@@ -777,7 +798,6 @@ class ModelRunner:
         Returns:
             normal_char: Dictionary with keys outputs and values dictionaries. Sub-dictionaries have keys years
                 and values lists, with first element of list means and second standard deviations.
-
         """
 
         # Dictionary storing the characteristics of the normal distributions
@@ -787,7 +807,7 @@ class ModelRunner:
 
             # Mortality
             if output_dict['key'] == 'mortality':
-                sd = output_dict['posterior_width'] / (2.0 * 1.96)
+                sd = output_dict['posterior_width'] / (2. * 1.96)
                 for year in self.inputs.data_to_fit[output_dict['key']].keys():
                     mu = self.inputs.data_to_fit[output_dict['key']][year]
                     normal_char[output_dict['key']][year] = [mu, sd]
@@ -797,7 +817,7 @@ class ModelRunner:
                 for year in self.inputs.data_to_fit[output_dict['key']].keys():
                     low = self.inputs.data_to_fit['incidence_low'][year]
                     high = self.inputs.data_to_fit['incidence_high'][year]
-                    sd = output_dict['width_multiplier'] * (high - low) / (2.0 * 1.96)
+                    sd = output_dict['width_multiplier'] * (high - low) / (2. * 1.96)
                     mu = (high + low) / 2.
                     normal_char[output_dict['key']][year] = [mu, sd]
 

@@ -272,15 +272,19 @@ class ModelRunner:
             out_dir = 'saved_uncertainty_analyses'
             if not os.path.isdir(out_dir):
                 os.makedirs(out_dir)
-            storage_file_names = {}
-            for attribute in self.uncertainty_attributes:
-                storage_file_names[attribute] = os.path.join(out_dir, attribute + '.pkl')
+            # storage_file_names = {}
+            # for attribute in self.uncertainty_attributes:
+            #     storage_file_names[attribute] = os.path.join(out_dir, attribute + '.pkl')
+            storage_file_name = os.path.join(out_dir, 'store.pkl')
 
             # Don't run uncertainty but load a saved simulation
             if self.gui_inputs['pickle_uncertainty'] == 'Load':
                 self.add_comment_to_gui_window('Uncertainty results loaded from previous simulation')
-                for attribute in self.uncertainty_attributes:
-                    setattr(self, attribute, tool_kit.pickle_load(storage_file_names[attribute]))
+                loaded_data = tool_kit.pickle_load(storage_file_name)
+                for attribute in loaded_data:
+                    setattr(self, attribute, loaded_data[attribute])
+                # for attribute in self.uncertainty_attributes:
+                #     setattr(self, attribute, tool_kit.pickle_load(storage_file_names[attribute]))
 
             # Run uncertainty
             else:
@@ -288,9 +292,13 @@ class ModelRunner:
 
             # Save uncertainty if requested
             if self.gui_inputs['pickle_uncertainty'] == 'Save':
+                data_to_save = {}
                 for attribute in self.uncertainty_attributes:
-                    tool_kit.pickle_save(getattr(self, attribute),
-                                         storage_file_names[attribute])
+                    data_to_save[attribute] = getattr(self, attribute)
+                tool_kit.pickle_save(data_to_save, storage_file_name)
+                # for attribute in self.uncertainty_attributes:
+                #     tool_kit.pickle_save(getattr(self, attribute),
+                #                          storage_file_names[attribute])
                 self.add_comment_to_gui_window('Uncertainty results saved to disc')
 
         # Processing methods that are only required for outputs
@@ -625,7 +633,7 @@ class ModelRunner:
         for param_dict in self.inputs.param_ranges_unc:
             param_candidates[param_dict['key']] = [self.inputs.model_constants[param_dict['key']]]
 
-        normal_char = self.get_normal_char()
+        normal_char = self.get_fitting_data()
         years_to_compare = range(1990, 2015)
         weights = find_uncertainty_output_weights(years_to_compare, 1, [1., 2.])
         print('"weights"')
@@ -732,15 +740,11 @@ class ModelRunner:
                     accepted = numpy.random.binomial(n=1, p=numpy.exp(log_likelihood - prev_log_likelihood))
 
                 # Possibly temporary code to explain what's happening with progression of the likelihood
-                self.add_comment_to_gui_window('Previous log likelihood:')
-                self.add_comment_to_gui_window(str(prev_log_likelihood))
-                self.add_comment_to_gui_window('Log likelihood this run:')
-                self.add_comment_to_gui_window(str(log_likelihood))
-                self.add_comment_to_gui_window('Acceptance probability:')
-                self.add_comment_to_gui_window(str(numpy.exp(log_likelihood - prev_log_likelihood)))
-                self.add_comment_to_gui_window('Whether accepted:')
-                self.add_comment_to_gui_window(bool(accepted))
-                self.add_comment_to_gui_window('______')
+                self.add_comment_to_gui_window('Previous log likelihood:\n' + str(prev_log_likelihood)
+                                               + 'Log likelihood this run:\n' + str(log_likelihood)
+                                               + 'Acceptance probability:\n'
+                                               + str(numpy.exp(log_likelihood - prev_log_likelihood))
+                                               + 'Whether accepted:\n' + str(bool(accepted)) + '\n______')
                 self.loglikelihoods.append(log_likelihood)
 
                 # Record some information for all runs
@@ -832,7 +836,7 @@ class ModelRunner:
 
         return param_dict
 
-    def get_normal_char(self):
+    def get_fitting_data(self):
 
         """
         Define the characteristics (mean and standard deviation) of the normal distribution for model outputs

@@ -465,7 +465,7 @@ class ConsolidatedModel(StratifiedModel):
         # Additional detection rate for smear-negative TB
         self.vars['program_rate_acf_smearneg'] \
             = self.vars['program_prop_xpertacf'] \
-              * self.params['tb_prop_ltbi_test_sensitivity'] \
+              * self.params['tb_prop_xpert_smearneg_sensitivity'] \
               * self.params['program_prop_acf_detections_per_round'] \
               / self.params['program_timeperiod_acf_rounds']
 

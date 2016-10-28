@@ -732,17 +732,15 @@ class ModelRunner:
                     accepted = numpy.random.binomial(n=1, p=numpy.exp(log_likelihood - prev_log_likelihood))
 
                 # Possibly temporary code to explain what's happening with progression of the likelihood
-                print('prev_log_likelihood')
-                print(prev_log_likelihood)
-                print('log_likelihood')
-                print(log_likelihood)
-                print('log_likelihood - prev_log_likelihood')
-                print(log_likelihood - prev_log_likelihood)
-                print('exp(log_likelihood - prev_log_likelihood) - i.e. acceptance probability')
-                print(str(numpy.exp(log_likelihood - prev_log_likelihood)))
-                print('whether accepted')
-                print(bool(accepted))
-                print('______')
+                self.add_comment_to_gui_window('Previous log likelihood:')
+                self.add_comment_to_gui_window(str(prev_log_likelihood))
+                self.add_comment_to_gui_window('Log likelihood this run:')
+                self.add_comment_to_gui_window(str(log_likelihood))
+                self.add_comment_to_gui_window('Acceptance probability:')
+                self.add_comment_to_gui_window(str(numpy.exp(log_likelihood - prev_log_likelihood)))
+                self.add_comment_to_gui_window('Whether accepted:')
+                self.add_comment_to_gui_window(bool(accepted))
+                self.add_comment_to_gui_window('______')
                 self.loglikelihoods.append(log_likelihood)
 
                 # Record some information for all runs

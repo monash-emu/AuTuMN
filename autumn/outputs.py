@@ -1272,7 +1272,7 @@ class Project:
     def plot_outputs_against_gtb(self, outputs, ci_plot=None):
 
         """
-        Produces the plot for the main outputs, can handle multiple scenarios.
+        Produces the plot for the main outputs, can handle multiple scenarios and .
         Note that if running a series of scenarios, it is expected that the last scenario to
         be run will be baseline, which should have scenario set to None.
 
@@ -1325,50 +1325,53 @@ class Project:
             # Plot without uncertainty
             if ci_plot is None:
                 end_filename = '_scenario'
-                for scenario in reversed(self.scenarios):  # Reversed ensures black baseline plotted over top
+                # Reversed ensures black baseline plotted over top
+                for scenario in reversed(self.gui_inputs['scenarios_to_run']):
+                    scenario_name = tool_kit.find_scenario_string_from_number(scenario)
                     ax.plot(
-                        self.model_runner.epi_outputs[scenario]['times'],
-                        self.model_runner.epi_outputs[scenario][output],
-                        color=self.output_colours[scenario][1],
-                        linestyle=self.output_colours[scenario][0],
+                        self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
+                        self.model_runner.epi_outputs['manual_' + scenario_name][output],
+                        color=self.output_colours['manual_' + scenario_name][1],
+                        linestyle=self.output_colours['manual_' + scenario_name][0],
                         linewidth=1.5,
-                        label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario)))
+                        label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario_name)))
                 if output == 'mortality':
                     ax.plot(
-                        self.model_runner.epi_outputs[scenario]['times'],
-                        self.model_runner.epi_outputs[scenario]['true_' + output],
-                        color=self.output_colours[scenario][1],
+                        self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
+                        self.model_runner.epi_outputs['manual_' + scenario_name]['true_' + output],
+                        color=self.output_colours['manual_' + scenario_name][1],
                         linestyle=':',
                         linewidth=1)
 
             # Plot with uncertainty confidence intervals
             elif ci_plot and self.gui_inputs['output_uncertainty']:
                 end_filename = '_ci'
-                for scenario in self.model_runner.epi_outputs_uncertainty_centiles:
+                for scenario in self.gui_inputs['scenarios_to_run']:
+                    scenario_name = tool_kit.find_scenario_string_from_number(scenario)
 
                     # Median
                     ax.plot(
-                        self.model_runner.epi_outputs_uncertainty[scenario]['times'],
-                        self.model_runner.epi_outputs_uncertainty_centiles[scenario][output][
+                        self.model_runner.epi_outputs_uncertainty['uncertainty_' + scenario_name]['times'],
+                        self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_' + scenario_name][output][
                         self.model_runner.percentiles.index(50), :],
-                        color=self.uncertainty_output_colours[scenario][1],
-                        linestyle=self.uncertainty_output_colours[scenario][0],
+                        color=self.output_colours['manual_' + scenario_name][1],
+                        linestyle=self.output_colours['manual_' + scenario_name][0],
                         linewidth=1.5,
-                        label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario)))
+                        label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario_name)))
 
                     # Upper and lower confidence bounds
                     for centile in [2.5, 97.5]:
                         ax.plot(
-                            self.model_runner.epi_outputs_uncertainty[scenario]['times'],
-                            self.model_runner.epi_outputs_uncertainty_centiles[scenario][output][
+                            self.model_runner.epi_outputs_uncertainty['uncertainty_' + scenario_name]['times'],
+                            self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_' + scenario_name][output][
                             self.model_runner.percentiles.index(centile), :],
-                            color=self.uncertainty_output_colours[scenario][1],
+                            color=self.output_colours['manual_' + scenario_name][1],
                             linestyle='--',
                             linewidth=.5,
                             label=None)
             elif self.gui_inputs['output_uncertainty']:
                 end_filename = '_progress'
-                for run in range(len(self.model_runner.epi_outputs_uncertainty['baseline'][output])):
+                for run in range(len(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output])):
                     if run not in self.model_runner.accepted_indices:
                         # Change over the commented code to show the rejected runs (in thin yellow lines at the back)
                         pass
@@ -1380,12 +1383,12 @@ class Project:
                         #     label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space('baseline')))
                     else:
                         ax.plot(
-                            self.model_runner.epi_outputs_uncertainty['baseline']['times'],
-                            self.model_runner.epi_outputs_uncertainty['baseline'][output][run, :],
+                            self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['times'],
+                            self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output][run, :],
                             linewidth=1.2,
                             color=str(1.
                                       - float(run)
-                                      / float(len(self.model_runner.epi_outputs_uncertainty['baseline'][output]))),
+                                      / float(len(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output]))),
                             label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space('baseline')))
 
             # Make cosmetic changes

@@ -731,7 +731,7 @@ class ModelRunner:
                 print('log_likelihood - prev_log_likelihood')
                 print(log_likelihood - prev_log_likelihood)
                 print('exp(log_likelihood - prev_log_likelihood) - i.e. acceptance probability')
-                print(numpy.exp(log_likelihood - prev_log_likelihood))
+                print(str(numpy.exp(log_likelihood - prev_log_likelihood)))
                 print('whether accepted')
                 print(bool(accepted))
                 print('______')

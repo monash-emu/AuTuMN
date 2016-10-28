@@ -804,7 +804,7 @@ class Inputs:
                         comorb_adjusted_parameters[param_without_age + comorb + age_string] \
                             = self.model_constants[param] \
                               * self.model_constants['comorb_multiplier' + comorb + '_progression']
-                    else:
+                    elif '_progression' in param:
                         comorb_adjusted_parameters[param_without_age + comorb + age_string] \
                             = self.model_constants[param]
 
@@ -824,7 +824,7 @@ class Inputs:
                         comorb_adjusted_parameters[param + comorb] \
                             = self.model_constants[param] \
                               * self.model_constants['comorb_multiplier' + comorb + '_progression']
-                    else:
+                    elif '_progression' in param:
                         comorb_adjusted_parameters[param + comorb] \
                             = self.model_constants[param]
 

@@ -182,16 +182,26 @@ class ModelRunner:
                                        'rejection_dict',
                                        'loglikelihoods']
 
-    ##############################################
-    ### Master method to run all other methods ###
-    ##############################################
+    ###############################################
+    ### Master methods to run all other methods ###
+    ###############################################
 
     def master_runner(self):
+
+        """
+        Calls methods to run model with each of the three fundamental approaches.
+        """
+
+        self.run_manual_calibration()
+        self.run_uncertainty()
+        self.run_optimisation()
+
+    def run_manual_calibration(self):
 
         for scenario in self.gui_inputs['scenarios_to_run']:
 
             # Name and initialise model
-            scenario_name = tool_kit.find_scenario_string_from_number(scenario)
+            scenario_name = 'manual_' + tool_kit.find_scenario_string_from_number(scenario)
             self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
             # Sort out times for scenario runs
@@ -199,15 +209,15 @@ class ModelRunner:
                 self.model_dict[scenario_name].start_time = self.inputs.model_constants['start_time']
             else:
                 scenario_start_time_index = \
-                    self.model_dict['baseline'].find_time_index(self.inputs.model_constants['recent_time'])
+                    self.model_dict['manual_baseline'].find_time_index(self.inputs.model_constants['recent_time'])
                 self.model_dict[scenario_name].start_time = \
-                    self.model_dict['baseline'].times[scenario_start_time_index]
+                    self.model_dict['manual_baseline'].times[scenario_start_time_index]
                 self.model_dict[scenario_name].loaded_compartments = \
-                    self.model_dict['baseline'].load_state(scenario_start_time_index)
+                    self.model_dict['manual_baseline'].load_state(scenario_start_time_index)
 
             # Describe model
-            self.add_comment_to_gui_window('Running ' + scenario_name + ' conditions for ' + self.gui_inputs['country']
-                                           + ' using point estimates for parameters.')
+            self.add_comment_to_gui_window('Running ' + scenario_name[7:] + ' conditions for '
+                                           + self.gui_inputs['country'] + ' using point estimates for parameters.')
 
             # Integrate and add result to outputs object
             self.model_dict[scenario_name].integrate()
@@ -216,13 +226,13 @@ class ModelRunner:
         self.epi_outputs \
             = self.find_epi_outputs(models_to_analyse=self.model_dict,
                                     outputs_to_analyse=self.epi_outputs_to_analyse,
-                                    stratifications=[self.model_dict['baseline'].agegroups,
-                                                     self.model_dict['baseline'].comorbidities])
-        self.find_population_fractions(stratifications=[self.model_dict['baseline'].agegroups,
-                                                        self.model_dict['baseline'].comorbidities])
+                                    stratifications=[self.model_dict[scenario_name].agegroups,
+                                                     self.model_dict[scenario_name].comorbidities])
+        self.find_population_fractions(stratifications=[self.model_dict[scenario_name].agegroups,
+                                                        self.model_dict[scenario_name].comorbidities])
         self.cost_outputs \
             = self.find_cost_outputs(models_to_analyse=self.model_dict,
-                                     interventions_to_cost=self.model_dict['baseline'].interventions_to_cost)
+                                     interventions_to_cost=self.interventions_to_cost)
         costs_all_programs = self.find_costs_all_programs(models_to_analyse=self.model_dict)
         for scenario in self.model_dict:
             self.cost_outputs[scenario].update(costs_all_programs[scenario])
@@ -241,6 +251,8 @@ class ModelRunner:
         # If you want some integer-based dictionaries
         self.epi_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.epi_outputs_dict))
         self.cost_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.cost_outputs_dict))
+
+    def run_uncertainty(self):
 
         if self.gui_inputs['output_uncertainty']:
 
@@ -263,7 +275,7 @@ class ModelRunner:
 
             # Run uncertainty
             else:
-                self.run_uncertainty()
+                self.execute_uncertainty()
 
             # Save uncertainty if requested
             if self.gui_inputs['pickle_uncertainty'] == 'Save':
@@ -277,6 +289,8 @@ class ModelRunner:
             self.epi_outputs_uncertainty_centiles.update(self.find_uncertainty_centiles(self.epi_outputs_uncertainty))
             self.cost_outputs_uncertainty_centiles.update(self.find_uncertainty_centiles(self.cost_outputs_uncertainty))
 
+    def run_optimisation(self):
+
         if self.optimisation:
             if self.total_funding is None:
                 start_cost_index \
@@ -286,7 +300,7 @@ class ModelRunner:
                 self.total_funding = numpy.sum(self.model_dict['baseline'].costs[start_cost_index:, :]) \
                                      / (self.model_dict['baseline'].inputs.model_constants['report_end_time'] -
                                         self.model_dict['baseline'].inputs.model_constants['scenario_start_time'])
-            self.run_optimisation()
+            self.execute_optimisation()
             self.model_dict['optimised'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
             start_time_index = \
                 self.model_dict['baseline'].find_time_index(self.inputs.model_constants['recent_time'])
@@ -295,7 +309,7 @@ class ModelRunner:
             self.model_dict['optimised'].loaded_compartments = \
                 self.model_dict['baseline'].load_state(start_time_index)
             self.model_dict['optimised'].eco_drives_epi = True
-            for intervention in self.model_dict['baseline'].interventions_to_cost:
+            for intervention in self.interventions_to_cost:
                 self.model_dict['optimised'].available_funding[intervention] = self.optimal_allocation[intervention] \
                                                                                * self.total_funding
             self.model_dict['optimised'].distribute_funding_across_years()
@@ -461,7 +475,6 @@ class ModelRunner:
         """
         Find the proportion of the population in various stratifications.
         The stratifications must apply to the entire population, so not to be used for strains, etc.
-
         """
 
         for scenario in self.model_dict:
@@ -507,27 +520,23 @@ class ModelRunner:
         cost_outputs = {}
 
         # Get some preliminary parameters
-        year_current = self.model_dict['baseline'].inputs.model_constants['current_time']
-        current_cpi = self.model_dict['baseline'].scaleup_fns['econ_cpi'](year_current)
-        discount_rate = self.model_dict['baseline'].params['econ_discount_rate']
+        year_current = self.inputs.model_constants['current_time']
+        current_cpi = self.inputs.scaleup_fns[None]['econ_cpi'](year_current)
+        discount_rate = self.inputs.model_constants['econ_discount_rate']
 
         for scenario in models_to_analyse:
             cost_outputs[scenario] = {}
-
-            # Work through adjusted costs
             for cost_type in cost_types:
-
-                # Maybe not ideal that the outer loop is time and the inner interventions here
-                # - may reverse at some point.
-                for t, time in enumerate(self.cost_outputs[scenario]['times']):
-                    cpi_time_variant = self.model_dict[scenario].scaleup_fns['econ_cpi'](time)
-                    t_into_future = max(0., (time - year_current))
-                    for intervention in self.model_dict[scenario].interventions_to_cost + ['all_programs']:
-                        if t == 0: cost_outputs[scenario][cost_type + '_cost_' + intervention] = []
+                for intervention in self.interventions_to_cost + ['all_programs']:
+                    cost_outputs[scenario][cost_type + '_cost_' + intervention] = []
+                    for t, time in enumerate(self.cost_outputs[scenario]['times']):
                         cost_outputs[scenario][cost_type + '_cost_' + intervention].append(
                             autumn.economics.get_adjusted_cost(raw_costs[scenario]['raw_cost_' + intervention][t],
-                                                               cost_type, current_cpi, cpi_time_variant, discount_rate,
-                                                               t_into_future))
+                                                               cost_type,
+                                                               current_cpi,
+                                                               self.inputs.scaleup_fns[None]['econ_cpi'](time),
+                                                               discount_rate,
+                                                               max(0., (time - year_current))))
 
         return cost_outputs
 
@@ -571,7 +580,7 @@ class ModelRunner:
     ### Uncertainty methods ###
     ###########################
 
-    def run_uncertainty(self):
+    def execute_uncertainty(self):
 
         """
         Main method to run all the uncertainty processes.
@@ -619,6 +628,11 @@ class ModelRunner:
             self.rejection_dict[param_dict['key']] = {}
             self.rejection_dict[param_dict['key']][n_accepted] = []
 
+        # Instantiate uncertainty model objects
+        for scenario in self.gui_inputs['scenarios_to_run']:
+            scenario_name = 'uncertainty_' + tool_kit.find_scenario_string_from_number(scenario)
+            self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
+
         # Until a sufficient number of parameters are accepted
         while n_accepted < self.gui_inputs['uncertainty_runs']:
 
@@ -641,30 +655,31 @@ class ModelRunner:
 
             # Run the baseline integration
             # (includes checking parameters, setting parameters and recording success/failure of run)
-            self.run_with_params(new_params, model_object='baseline')
+            self.run_with_params(new_params, model_object='uncertainty_baseline')
 
             # Now storing regardless of acceptance
             if self.is_last_run_success:
 
                 # Storage
-                self.epi_outputs = self.find_epi_outputs(['baseline'],
-                                                         outputs_to_analyse=self.epi_outputs_to_analyse)
-                self.cost_outputs \
-                    = self.find_cost_outputs(models_to_analyse=['baseline'],
-                                             interventions_to_cost=self.model_dict['baseline'].interventions_to_cost)
-                costs_all_programs = self.find_costs_all_programs(['baseline'])
-                self.cost_outputs['baseline'].update(costs_all_programs['baseline'])
-                adjusted_costs = self.find_adjusted_costs(models_to_analyse=['baseline'],
+                self.epi_outputs.update(self.find_epi_outputs(['uncertainty_baseline'],
+                                                              outputs_to_analyse=self.epi_outputs_to_analyse))
+                self.cost_outputs.update(self.find_cost_outputs(models_to_analyse=['uncertainty_baseline'],
+                                                                interventions_to_cost=
+                                                                self.model_dict[
+                                                                    'uncertainty_baseline'].interventions_to_cost))
+                costs_all_programs = self.find_costs_all_programs(['uncertainty_baseline'])
+                self.cost_outputs['uncertainty_baseline'].update(costs_all_programs['uncertainty_baseline'])
+                adjusted_costs = self.find_adjusted_costs(models_to_analyse=['uncertainty_baseline'],
                                                           raw_costs=self.cost_outputs,
                                                           cost_types=self.additional_cost_types)
-                self.cost_outputs['baseline'].update(adjusted_costs['baseline'])
-                self.store_uncertainty('baseline',
+                self.cost_outputs['uncertainty_baseline'].update(adjusted_costs['uncertainty_baseline'])
+                self.store_uncertainty('uncertainty_baseline',
                                        self.epi_outputs,
                                        self.cost_outputs,
                                        epi_outputs_to_analyse=self.epi_outputs_to_analyse)
                 integer_dictionary \
-                    = extract_integer_dicts(['baseline'],
-                                            get_output_dicts_from_lists(models_to_analyse=['baseline'],
+                    = extract_integer_dicts(['uncertainty_baseline'],
+                                            get_output_dicts_from_lists(models_to_analyse=['uncertainty_baseline'],
                                                                         output_dict_of_lists=self.epi_outputs))
 
                 # Calculate prior
@@ -695,8 +710,7 @@ class ModelRunner:
                     working_output_dictionary = normal_char[output_dict['key']]
                     for y, year in enumerate(years_to_compare):
                         if year in working_output_dictionary.keys():
-                            model_result_for_output \
-                                = integer_dictionary['baseline']['incidence'][year]
+                            model_result_for_output = integer_dictionary['uncertainty_baseline']['incidence'][year]
                             mu, sd = working_output_dictionary[year][0], working_output_dictionary[year][1]
                             posterior_log_likelihood += norm.logpdf(model_result_for_output, mu, sd) * weights[y]
 
@@ -743,14 +757,15 @@ class ModelRunner:
 
                     # Run scenarios other than baseline and store uncertainty - currently only if accepted
                     for scenario in self.gui_inputs['scenarios_to_run']:
-                        scenario_name = tool_kit.find_scenario_string_from_number(scenario)
                         if scenario is not None:
+                            scenario_name = 'uncertainty_' + tool_kit.find_scenario_string_from_number(scenario)
                             scenario_start_time_index = \
-                                self.model_dict['baseline'].find_time_index(self.inputs.model_constants['recent_time'])
+                                self.model_dict['uncertainty_baseline'].find_time_index(
+                                    self.inputs.model_constants['recent_time'])
                             self.model_dict[scenario_name].start_time = \
-                                self.model_dict['baseline'].times[scenario_start_time_index]
+                                self.model_dict['uncertainty_baseline'].times[scenario_start_time_index]
                             self.model_dict[scenario_name].loaded_compartments = \
-                                self.model_dict['baseline'].load_state(scenario_start_time_index)
+                                self.model_dict['uncertainty_baseline'].load_state(scenario_start_time_index)
                             self.run_with_params(new_params, model_object=scenario_name)
 
                             # Storage
@@ -791,7 +806,6 @@ class ModelRunner:
         Args:
             param_dict: Dictionary of the parameters to be set within the model (keys parameter name strings and values
                 parameter values).
-
         """
 
         n_set = 0
@@ -887,14 +901,13 @@ class ModelRunner:
 
         return new_params
 
-    def run_with_params(self, params, model_object='baseline'):
+    def run_with_params(self, params, model_object='uncertainty_baseline'):
 
         """
         Integrate the model with the proposed parameter set.
 
         Args:
             params: The parameters to be set in the model.
-
         """
 
         # Check whether parameter values are acceptable
@@ -936,7 +949,6 @@ class ModelRunner:
 
         Updates:
             self.epi_outputs_uncertainty
-
         """
 
         # Create first column of dictionaries
@@ -964,12 +976,14 @@ class ModelRunner:
     ############################
 
     def get_acceptable_combinations(self):
+
         """
         determines the acceptable combinations of interventions according to the related starting costs and given a total
         ammount of funding
         populates the attribute 'acceptable_combinations' of model_runner.
         """
-        n_interventions = len(self.model_dict['baseline'].interventions_to_cost)
+
+        n_interventions = len(self.interventions_to_cost)
         full_set = range(n_interventions)
         canditate_combinations = list(itertools.chain.from_iterable(itertools.combinations(full_set, n) \
                                                                     for n in range(n_interventions + 1)[1:]))
@@ -977,24 +991,26 @@ class ModelRunner:
         for combi in canditate_combinations:
             total_start_cost = 0
             for ind_intervention in combi:
-                if self.model_dict['baseline'].intervention_startdates[self.model_dict['baseline'].interventions_to_cost[ind_intervention]] is None: # start-up costs apply
-                    total_start_cost += self.model_dict['baseline'].inputs.model_constants['econ_startupcost_' + \
-                                                self.model_dict['baseline'].interventions_to_cost[ind_intervention]]
+                # Start-up costs apply
+                if self.model_dict['manual_baseline'].intervention_startdates[self.interventions_to_cost[ind_intervention]] is None:
+                    total_start_cost \
+                        += self.inputs.model_constants['econ_startupcost_' +
+                                                       self.interventions_to_cost[ind_intervention]]
             if total_start_cost <= self.total_funding:
                 self.acceptable_combinations.append(combi)
 
-    def run_optimisation(self):
+    def execute_optimisation(self):
 
         print 'Start optimisation'
 
         # Initialise a new model that will be run from 'recent_time' for optimisation
         self.model_dict['optimisation'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
         start_time_index = \
-            self.model_dict['baseline'].find_time_index(self.inputs.model_constants['recent_time'])
+            self.model_dict['manual_baseline'].find_time_index(self.inputs.model_constants['recent_time'])
         self.model_dict['optimisation'].start_time = \
-            self.model_dict['baseline'].times[start_time_index]
+            self.model_dict['manual_baseline'].times[start_time_index]
         self.model_dict['optimisation'].loaded_compartments = \
-            self.model_dict['baseline'].load_state(start_time_index)
+            self.model_dict['manual_baseline'].load_state(start_time_index)
 
         self.model_dict['optimisation'].eco_drives_epi = True
 

@@ -571,7 +571,7 @@ class Project:
         # Extract some characteristics from the models within model runner
         self.scenarios = self.model_runner.model_dict.keys()
         self.scenarios.reverse()
-        self.programs = self.model_runner.model_dict['baseline'].interventions_to_cost
+        self.programs = self.model_runner.model_dict['manual_baseline'].interventions_to_cost
 
     #################################
     # General methods for use below #
@@ -617,7 +617,7 @@ class Project:
 
         """
 
-        return self.model_runner.model_dict['baseline'].var_labels.index(var)
+        return self.model_runner.model_dict['manual_baseline'].var_labels.index(var)
 
     def set_and_update_figure(self):
 
@@ -792,18 +792,18 @@ class Project:
                 # Call the function to write the rows or columns of the sheet
                 if result_type == 'epi_':
                     for output in self.model_runner.epi_outputs_to_analyse:
-                        years = self.find_years_to_write(scenario, output, epi=True)
+                        years = self.find_years_to_write('manual_' + scenario, output, epi=True)
                         if self.gui_inputs['output_horizontally']:
-                            self.write_horizontally_by_output(sheet, scenario, years)
+                            self.write_horizontally_by_output(sheet, 'manual_' + scenario, years)
                         else:
-                            self.write_vertically_by_output(sheet, scenario, years)
+                            self.write_vertically_by_output(sheet, 'manual_' + scenario, years)
                 elif 'cost_' in result_type:
                     for output in self.inputs.interventions_to_cost:
-                        years = self.find_years_to_write(scenario, output, epi=False)
+                        years = self.find_years_to_write('manual_' + scenario, output, epi=False)
                         if self.gui_inputs['output_horizontally']:
-                            self.write_cost_horizontally_by_output(sheet, scenario, years, result_type)
+                            self.write_cost_horizontally_by_output(sheet, 'manual_' + scenario, years, result_type)
                         else:
-                            self.write_cost_vertically_by_output(sheet, scenario, years, result_type)
+                            self.write_cost_vertically_by_output(sheet, 'manual_' + scenario, years, result_type)
 
                 # Save workbook
                 wb.save(path)
@@ -828,7 +828,7 @@ class Project:
 
             # Call the function to write the rows or columns of the sheet
             for scenario in self.gui_inputs['scenario_names_to_run']:
-                years = self.find_years_to_write(scenario, output, epi=True)
+                years = self.find_years_to_write('manual_' + scenario, output, epi=True)
                 if self.gui_inputs['output_horizontally']:
                     self.write_horizontally_by_scenario(sheet, output, years)
                 else:
@@ -851,7 +851,7 @@ class Project:
                 sheet.title = output
 
                 for scenario in self.gui_inputs['scenario_names_to_run']:
-                    years = self.find_years_to_write(scenario, output, epi=False)
+                    years = self.find_years_to_write('manual_' + scenario, output, epi=False)
                     if self.gui_inputs['output_horizontally']:
                         self.write_cost_horizontally_by_scenario(sheet, output, years, cost_type)
                     else:
@@ -887,7 +887,7 @@ class Project:
             # Write the columns of data
             for y, year in enumerate(years):
                 sheet.cell(row=y+2, column=s+2).value \
-                    = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
+                    = self.model_runner.epi_outputs_integer_dict['manual_' + scenario][output][year]
 
     def write_cost_vertically_by_scenario(self, sheet, output, years, cost_type):
 
@@ -917,7 +917,7 @@ class Project:
             # Write the columns of data
             for y, year in enumerate(years):
                 sheet.cell(row=y+2, column=s+2).value \
-                    = self.model_runner.cost_outputs_integer_dict[scenario][cost_type + output][year]
+                    = self.model_runner.cost_outputs_integer_dict['manual_' + scenario][cost_type + output][year]
 
     def write_vertically_by_output(self, sheet, scenario, years):
 
@@ -1005,7 +1005,7 @@ class Project:
             # Write the columns of data
             for y, year in enumerate(years):
                 sheet.cell(row=s+2, column=y+2).value \
-                    = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
+                    = self.model_runner.epi_outputs_integer_dict['manual_' + scenario][output][year]
 
     def write_cost_horizontally_by_scenario(self, sheet, output, years, cost_type):
 
@@ -1035,7 +1035,7 @@ class Project:
             # Write the columns of data
             for y, year in enumerate(years):
                 sheet.cell(row=s+2, column=y+2).value \
-                    = self.model_runner.cost_outputs_integer_dict[scenario][cost_type + output][year]
+                    = self.model_runner.cost_outputs_integer_dict['manual_' + scenario][cost_type + output][year]
 
     def write_horizontally_by_output(self, sheet, scenario, years):
 
@@ -1115,7 +1115,7 @@ class Project:
     def write_docs_by_output(self):
 
         # Write a new file for each output
-        for output in self.model_runner.epi_outputs_integer_dict['baseline']:
+        for output in self.model_runner.epi_outputs_integer_dict['manual_baseline']:
 
             # Initialise document
             path = os.path.join(self.out_dir_project, output)
@@ -1131,7 +1131,7 @@ class Project:
                     = tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario))
 
             # Find years to write
-            years = self.find_years_to_write('baseline', output)
+            years = self.find_years_to_write('manual_baseline', output)
 
             for year in years:
 
@@ -1150,7 +1150,7 @@ class Project:
     def write_docs_by_scenario(self):
 
         # Write a new file for each output
-        outputs = self.model_runner.epi_outputs_integer_dict['baseline'].keys()
+        outputs = self.model_runner.epi_outputs_integer_dict['manual_baseline'].keys()
 
         for scenario in self.scenarios:
 
@@ -1168,7 +1168,7 @@ class Project:
                     = tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(output))
 
             # Find years to write
-            years = self.find_years_to_write(scenario, output)
+            years = self.find_years_to_write('manual_' + scenario, output)
 
             for year in years:
 
@@ -1242,11 +1242,11 @@ class Project:
         # Make a flow-diagram
         if self.gui_inputs['output_flow_diagram']:
             png = os.path.join(self.out_dir_project, self.country + '_flow_diagram' + '.png')
-            self.model_runner.model_dict['baseline'].make_flow_diagram(png)
+            self.model_runner.model_dict['manual_baseline'].make_flow_diagram(png)
 
         # Plot comorbidity proportions
         if self.gui_inputs['output_plot_comorbidity_checks'] \
-                and len(self.model_runner.model_dict['baseline'].comorbidities) > 1:
+                and len(self.model_runner.model_dict['manual_baseline'].comorbidities) > 1:
             self.plot_comorb_checks()
 
         # Save figure that is produced in the uncertainty running process
@@ -1275,8 +1275,6 @@ class Project:
         Produces the plot for the main outputs, can handle multiple scenarios.
         Note that if running a series of scenarios, it is expected that the last scenario to
         be run will be baseline, which should have scenario set to None.
-
-        *** Need to sort out y-axis limits
 
         Args:
             outputs: A list of the outputs to be plotted

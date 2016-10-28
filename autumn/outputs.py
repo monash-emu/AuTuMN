@@ -1765,23 +1765,23 @@ class Project:
 
         # Get plotting styles
         colours, patterns, compartment_full_names, markers \
-            = make_related_line_styles(self.model_runner.model_dict['baseline'].labels, strain_or_organ)
+            = make_related_line_styles(self.model_runner.model_dict['manual_baseline'].labels, strain_or_organ)
 
         # Initialise empty list for legend
         axis_labels = []
 
         # Plot total population
         ax.plot(
-            self.model_runner.epi_outputs['baseline']['times'],
-            self.model_runner.epi_outputs['baseline']['population'],
+            self.model_runner.epi_outputs['manual_baseline']['times'],
+            self.model_runner.epi_outputs['manual_baseline']['population'],
             'k',
             label='total', linewidth=2)
         axis_labels.append('Number of persons')
 
         # Plot sub-populations
-        for plot_label in self.model_runner.model_dict['baseline'].labels:
-            ax.plot(self.model_runner.epi_outputs['baseline']['times'],
-                    self.model_runner.model_dict['baseline'].compartment_soln[plot_label],
+        for plot_label in self.model_runner.model_dict['manual_baseline'].labels:
+            ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'],
+                    self.model_runner.model_dict['manual_baseline'].compartment_soln[plot_label],
                     label=plot_label, linewidth=1,
                     color=colours[plot_label],
                     marker=markers[plot_label],
@@ -1791,7 +1791,7 @@ class Project:
         # Finishing touches
         ax.set_xlim(self.inputs.model_constants['plot_start_time'],
                     self.inputs.model_constants['plot_end_time'])
-        title = make_plot_title('baseline', self.model_runner.model_dict['baseline'].labels)
+        title = make_plot_title('manual_baseline', self.model_runner.model_dict['manual_baseline'].labels)
         set_axes_props(ax, 'Year', 'Persons', 'Population, ' + title, True, axis_labels)
 
         # Saving
@@ -1862,7 +1862,7 @@ class Project:
             # Find the highest incidence value in the time period considered across all age groups
             ymax = 0.
             for agegroup in self.inputs.agegroups:
-                new_ymax = max(self.model_runner.epi_outputs['baseline'][output + agegroup])
+                new_ymax = max(self.model_runner.epi_outputs['manual_baseline'][output + agegroup])
                 if new_ymax > ymax:
                     ymax = new_ymax
 
@@ -1873,10 +1873,10 @@ class Project:
 
                 # Plot the modelled data
                 ax.plot(
-                    self.model_runner.epi_outputs['baseline']['times'],
-                    self.model_runner.epi_outputs['baseline'][output + agegroup],
-                    color=self.output_colours['baseline'][1],
-                    linestyle=self.output_colours['baseline'][0],
+                    self.model_runner.epi_outputs['manual_baseline']['times'],
+                    self.model_runner.epi_outputs['manual_baseline'][output + agegroup],
+                    color=self.output_colours['manual_baseline'][1],
+                    linestyle=self.output_colours['manual_baseline'][0],
                     linewidth=1.5)
 
                 # Adjust size of labels of x-ticks
@@ -1930,9 +1930,9 @@ class Project:
         """
 
         if age_or_comorbidity == 'age':
-            stratification = self.model_runner.model_dict['baseline'].agegroups
+            stratification = self.model_runner.model_dict['manual_baseline'].agegroups
         elif age_or_comorbidity == 'comorbidity':
-            stratification = self.model_runner.model_dict['baseline'].comorbidities
+            stratification = self.model_runner.model_dict['manual_baseline'].comorbidities
         else:
             stratification = None
 
@@ -1952,7 +1952,7 @@ class Project:
                 title_time_text = tool_kit.find_title_from_dictionary(plot_left_time)
 
                 # Initialise some variables
-                times = self.model_runner.model_dict['baseline'].times
+                times = self.model_runner.model_dict['manual_baseline'].times
                 lower_plot_margin_count = numpy.zeros(len(times))
                 upper_plot_margin_count = numpy.zeros(len(times))
                 lower_plot_margin_fraction = numpy.zeros(len(times))
@@ -1962,8 +1962,8 @@ class Project:
                 for i, stratum in enumerate(stratification):
 
                     # Find numbers or fractions in that group
-                    stratum_count = self.model_runner.epi_outputs['baseline']['population' + stratum]
-                    stratum_fraction = self.model_runner.epi_outputs['baseline']['fraction' + stratum]
+                    stratum_count = self.model_runner.epi_outputs['manual_baseline']['population' + stratum]
+                    stratum_fraction = self.model_runner.epi_outputs['manual_baseline']['fraction' + stratum]
 
                     # Add group values to the upper plot range for area plot
                     for j in range(len(upper_plot_margin_count)):
@@ -2046,7 +2046,7 @@ class Project:
                               "treatment_support": "Treatment Support", "ipt_age0to5": "IPT 0-5 y.o.", "ipt_age5to15": "IPT 5-15 y.o."}
 
         defaults = {
-            "interventions": self.models['baseline'].interventions_to_cost,
+            "interventions": self.inputs.interventions_to_cost,
             "x_label_rotation": 45,
             "y_label": "Total Cost ($)\n",
             "legend_size": 10,

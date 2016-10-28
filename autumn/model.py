@@ -331,7 +331,6 @@ class ConsolidatedModel(StratifiedModel):
 
         """
         Calculate birth rates into vaccinated and unvaccinated compartments
-
         """
 
         # Get the parameters depending on whether constant or time variant
@@ -780,7 +779,7 @@ class ConsolidatedModel(StratifiedModel):
 
         """
         Uses the popsize to which IPT is applicable, which was calculated in calculate_population_sizes
-         to determine the actual number of persons who should be shifted across compartments.
+        to determine the actual number of persons who should be shifted across compartments.
         """
 
         for agegroup in self.agegroups:

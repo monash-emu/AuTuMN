@@ -676,18 +676,6 @@ class ModelRunner:
             if self.is_last_run_success:
 
                 # Storage
-                self.epi_outputs.update(self.find_epi_outputs(['uncertainty_baseline'],
-                                                              outputs_to_analyse=self.epi_outputs_to_analyse))
-                self.cost_outputs.update(self.find_cost_outputs(models_to_analyse=['uncertainty_baseline'],
-                                                                interventions_to_cost=
-                                                                self.model_dict[
-                                                                    'uncertainty_baseline'].interventions_to_cost))
-                costs_all_programs = self.find_costs_all_programs(['uncertainty_baseline'])
-                self.cost_outputs['uncertainty_baseline'].update(costs_all_programs['uncertainty_baseline'])
-                adjusted_costs = self.find_adjusted_costs(models_to_analyse=['uncertainty_baseline'],
-                                                          raw_costs=self.cost_outputs,
-                                                          cost_types=self.additional_cost_types)
-                self.cost_outputs['uncertainty_baseline'].update(adjusted_costs['uncertainty_baseline'])
                 self.store_uncertainty('uncertainty_baseline',
                                        self.epi_outputs,
                                        self.cost_outputs,
@@ -784,17 +772,6 @@ class ModelRunner:
                             self.run_with_params(new_params, model_object=scenario_name)
 
                             # Storage
-                            self.epi_outputs = self.find_epi_outputs([scenario_name],
-                                                                     outputs_to_analyse=self.epi_outputs_to_analyse)
-                            self.cost_outputs \
-                                = self.find_cost_outputs(models_to_analyse=[scenario_name],
-                                                         interventions_to_cost=self.interventions_to_cost)
-                            costs_all_programs = self.find_costs_all_programs([scenario_name])
-                            self.cost_outputs[scenario_name].update(costs_all_programs[scenario_name])
-                            adjusted_costs = self.find_adjusted_costs(models_to_analyse=[scenario_name],
-                                                                      raw_costs=self.cost_outputs,
-                                                                      cost_types=self.additional_cost_types)
-                            self.cost_outputs[scenario_name].update(adjusted_costs[scenario_name])
                             self.store_uncertainty(scenario_name,
                                                    self.epi_outputs,
                                                    self.cost_outputs,
@@ -965,6 +942,18 @@ class ModelRunner:
         Updates:
             self.epi_outputs_uncertainty
         """
+
+        self.epi_outputs.update(self.find_epi_outputs([scenario],
+                                                      outputs_to_analyse=self.epi_outputs_to_analyse))
+        self.cost_outputs.update(self.find_cost_outputs(models_to_analyse=[scenario],
+                                                        interventions_to_cost=
+                                                        self.interventions_to_cost))
+        costs_all_programs = self.find_costs_all_programs([scenario])
+        self.cost_outputs[scenario].update(costs_all_programs[scenario])
+        adjusted_costs = self.find_adjusted_costs(models_to_analyse=[scenario],
+                                                  raw_costs=self.cost_outputs,
+                                                  cost_types=self.additional_cost_types)
+        self.cost_outputs[scenario].update(adjusted_costs[scenario])
 
         # Create first column of dictionaries
         if scenario not in self.epi_outputs_uncertainty:

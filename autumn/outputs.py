@@ -1333,6 +1333,13 @@ class Project:
                         linestyle=self.output_colours[scenario][0],
                         linewidth=1.5,
                         label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario)))
+                if output == 'mortality':
+                    ax.plot(
+                        self.model_runner.epi_outputs[scenario]['times'],
+                        self.model_runner.epi_outputs[scenario]['true_' + output],
+                        color=self.output_colours[scenario][1],
+                        linestyle=':',
+                        linewidth=1)
 
             # Plot with uncertainty confidence intervals
             elif ci_plot and self.gui_inputs['output_uncertainty']:

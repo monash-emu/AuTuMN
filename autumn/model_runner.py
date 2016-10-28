@@ -155,7 +155,8 @@ class ModelRunner:
         self.rejection_dict = {}
         self.optimized_combinations = []
         self.optimal_allocation = {}
-        self.epi_outputs_to_analyse = ['population', 'incidence', 'prevalence', 'mortality', 'notifications']
+        self.epi_outputs_to_analyse = ['population', 'incidence', 'prevalence', 'mortality', 'true_mortality',
+                                       'notifications']
         self.epi_outputs = {}
         self.epi_outputs_dict = {}
         self.epi_outputs_integer_dict = {}
@@ -378,18 +379,26 @@ class ModelRunner:
             if 'mortality' in outputs_to_analyse:
                 for from_label, rate in self.model_dict[scenario].fixed_infection_death_rate_flows:
                     # Under-reporting factor included for those deaths not occurring on treatment
+                    mortality_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
+                                          * rate \
+                                          / total_denominator \
+                                          * 1e5
                     epi_outputs[scenario]['mortality'] \
-                        = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
-                                         * rate \
-                                         * self.model_dict[scenario].params['program_prop_death_reporting'] \
-                                         / total_denominator \
-                                         * 1e5, epi_outputs[scenario]['mortality'])
+                        = increment_list(mortality_increment
+                                         * self.model_dict[scenario].params['program_prop_death_reporting'],
+                                         epi_outputs[scenario]['mortality'])
+                    epi_outputs[scenario]['true_mortality'] \
+                        = increment_list(mortality_increment,
+                                         epi_outputs[scenario]['true_mortality'])
                 for from_label, rate in self.model_dict[scenario].var_infection_death_rate_flows:
-                    epi_outputs[scenario]['mortality'] \
-                        = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
-                                         * self.model_dict[scenario].get_var_soln(rate) \
-                                         / total_denominator \
-                                         * 1e5, epi_outputs[scenario]['mortality'])
+                    mortality_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
+                                          * self.model_dict[scenario].get_var_soln(rate) \
+                                          / total_denominator \
+                                          * 1e5
+                    for output in ['mortality', 'true_mortality']:
+                        epi_outputs[scenario][output] \
+                            = increment_list(mortality_increment,
+                                             epi_outputs[scenario][output])
 
             # Prevalence
             if 'prevalence' in outputs_to_analyse:
@@ -443,22 +452,28 @@ class ModelRunner:
                         if 'mortality' in outputs_to_analyse:
                             for from_label, rate in self.model_dict[scenario].fixed_infection_death_rate_flows:
                                 if stratum in from_label:
+                                    mortality_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
+                                                          * rate \
+                                                          * stratum_denominator \
+                                                          * 1e5
                                     # Under-reporting factor included for those deaths not occurring on treatment
                                     epi_outputs[scenario]['mortality' + stratum] \
-                                        = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
-                                                         * rate \
-                                                         * self.model_dict[scenario].params['program_prop_death_reporting'] \
-                                                         * stratum_denominator \
-                                                         * 1e5,
+                                        = increment_list(mortality_increment
+                                                         * self.model_dict[scenario].params['program_prop_death_reporting'],
+                                                         epi_outputs[scenario]['mortality' + stratum])
+                                    epi_outputs[scenario]['true_mortality' + stratum] \
+                                        = increment_list(mortality_increment,
                                                          epi_outputs[scenario]['mortality' + stratum])
                             for from_label, rate in self.model_dict[scenario].var_infection_death_rate_flows:
                                 if stratum in from_label:
-                                    epi_outputs[scenario]['mortality' + stratum] \
-                                        = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
-                                                         * self.model_dict[scenario].get_var_soln(rate) \
-                                                         / stratum_denominator \
-                                                         * 1e5,
-                                                         epi_outputs[scenario]['mortality' + stratum])
+                                    mortality_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
+                                                          * self.model_dict[scenario].get_var_soln(rate) \
+                                                          / stratum_denominator \
+                                                          * 1e5
+                                    for output in ['mortality', 'true_mortality']:
+                                        epi_outputs[scenario][output + stratum] \
+                                            = increment_list(mortality_increment,
+                                                             epi_outputs[scenario][output + stratum])
 
                         # Prevalence
                         if 'prevalence' in outputs_to_analyse:

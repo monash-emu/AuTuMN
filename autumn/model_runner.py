@@ -100,28 +100,36 @@ def get_output_dicts_from_lists(models_to_analyse={}, output_dict_of_lists={}):
     return output_dictionary
 
 
-def linearly_increasing_weights(list, start_weight=1., end_weight=2.):
+def find_uncertainty_output_weights(list, method, relative_weights=[1., 2.]):
 
     """
-
+    Creates a set of "weights" to determine the proportion of the log-likelihood to be contributed by the years
+    considered in the calibration.
 
     Args:
-        years:
-        start_weight:
-        end_weight:
+        list: A list of the years that the weights are to be applied to.
+        method: Choice of method.
+        relative_weights: Relative size of the starting and ending weights if method is 1.
     """
 
-    weights = []
+    # Linearly scaling weights summing to one
+    if method == 1:
+        weights = []
+        if len(list) == 1:
+            weights = [1.]
+        else:
+            for y in range(len(list)):
+                weights.append(relative_weights[0]
+                               + (relative_weights[1] - relative_weights[0]) / float(len(list)-1) * y)
+            return [i / sum(weights) for i in weights]
 
-    if len(list) == 1:
-        weights = [1.]
-    else:
-        for y in range(len(list)):
-            weights.append(start_weight + (end_weight - start_weight) / float(len(list)-1) * y)
-        weights = [i / sum(weights) for i in weights]
+    # Equally distributed weights summing to one
+    elif method == 2:
+        return [1. / float(len(list))] * len(list)
 
-    return weights
-
+    # All ones
+    elif method == 3:
+        return [1.] * len(list)
 
 class ModelRunner:
 
@@ -618,11 +626,8 @@ class ModelRunner:
             param_candidates[param_dict['key']] = [self.inputs.model_constants[param_dict['key']]]
 
         normal_char = self.get_normal_char()
-        years_to_compare = [2014]
-        # years_to_compare = range(1990, 2015)
-        # weights = [1.] * len(years_to_compare)
-        weights = [1. / len(years_to_compare)] * len(years_to_compare)
-        # weights = linearly_increasing_weights(years_to_compare)
+        years_to_compare = range(1990, 2015)
+        weights = find_uncertainty_output_weights(years_to_compare, 1, [1., 2.])
         print('"weights"')
         print(weights)
 
@@ -1168,4 +1173,6 @@ class ModelRunner:
 
         if not from_runner:
             return param_tracking_figure
+
+
 

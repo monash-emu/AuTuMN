@@ -2113,11 +2113,11 @@ class Project:
         ax = self.make_single_axis(fig)
 
         # Plotting
-        for comorb in self.model_runner.model_dict['baseline'].comorbidities:
-            ax.plot(self.model_runner.model_dict['baseline'].times[2:],
-                    self.model_runner.model_dict['baseline'].actual_comorb_props[comorb], 'g-')
-            ax.plot(self.model_runner.model_dict['baseline'].times[1:],
-                    self.model_runner.model_dict['baseline'].target_comorb_props[comorb], 'k--')
+        for comorb in self.model_runner.model_dict['manual_baseline'].comorbidities:
+            ax.plot(self.model_runner.model_dict['manual_baseline'].times[2:],
+                    self.model_runner.model_dict['manual_baseline'].actual_comorb_props[comorb], 'g-')
+            ax.plot(self.model_runner.model_dict['manual_baseline'].times[1:],
+                    self.model_runner.model_dict['manual_baseline'].target_comorb_props[comorb], 'k--')
             ax.set_xlim([self.inputs.model_constants['recent_time'], self.inputs.model_constants['current_time']])
 
         # End bits
@@ -2164,10 +2164,10 @@ class Project:
         fig = self.set_and_update_figure()
         ax = self.make_single_axis(fig)
         scenario_labels = []
-        for var in self.model_runner.model_dict['baseline'].var_labels:
+        for var in self.model_runner.model_dict['manual_baseline'].var_labels:
             if 'popsize_' in var:
-                ax.plot(self.model_runner.model_dict['baseline'].times,
-                        self.model_runner.model_dict['baseline'].get_var_soln(var))
+                ax.plot(self.model_runner.model_dict['manual_baseline'].times,
+                        self.model_runner.model_dict['manual_baseline'].get_var_soln(var))
                 scenario_labels += [tool_kit.find_title_from_dictionary(var[8:])]
         ax.set_xlim([self.inputs.model_constants['recent_time'],
                      self.inputs.model_constants['scenario_end_time']])

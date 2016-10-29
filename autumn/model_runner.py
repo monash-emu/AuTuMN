@@ -148,12 +148,10 @@ class ModelRunner:
                              'posterior_width': None,
                              'width_multiplier': 2.  # for incidence for ex. Width of Normal posterior relative to CI width in data
                              }]
-        self.results = {}
         self.all_parameters_tried = {}
         self.whether_accepted_list = []
         self.accepted_indices = []
         self.rejected_indices = []
-        self.results['scenarios'] = {}
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
         self.optimisation = False
@@ -180,16 +178,22 @@ class ModelRunner:
         self.uncertainty_percentiles = {}
         self.percentiles = [2.5, 50, 97.5]
         self.accepted_no_burn_in_indices = []
-        self.uncertainty_attributes = ['epi_outputs_uncertainty',
-                                       'cost_outputs_uncertainty',
-                                       'accepted_indices',
-                                       'rejected_indices',
-                                       'all_parameters_tried',
-                                       'whether_accepted_list',
-                                       'acceptance_dict',
-                                       'accepted_no_burn_in_indices',
-                                       'rejection_dict',
-                                       'loglikelihoods']
+        self.attributes_to_save = ['epi_outputs',
+                                   'epi_outputs_dict',
+                                   'epi_outputs_integer_dict',
+                                   'epi_outputs_uncertainty',
+                                   'cost_outputs',
+                                   'cost_outputs_dict',
+                                   'cost_outputs_integer_dict',
+                                   'cost_outputs_uncertainty',
+                                   'accepted_indices',
+                                   'rejected_indices',
+                                   'all_parameters_tried',
+                                   'whether_accepted_list',
+                                   'acceptance_dict',
+                                   'accepted_no_burn_in_indices',
+                                   'rejection_dict',
+                                   'loglikelihoods']
 
     ###############################################
     ### Master methods to run all other methods ###
@@ -201,8 +205,33 @@ class ModelRunner:
         Calls methods to run model with each of the three fundamental approaches.
         """
 
-        self.run_manual_calibration()
-        self.run_uncertainty()
+        # Prepare directory for saving
+        out_dir = 'saved_uncertainty_analyses'
+        if not os.path.isdir(out_dir):
+            os.makedirs(out_dir)
+        storage_file_name = os.path.join(out_dir, 'store.pkl')
+
+        # Load a saved simulation
+        if self.gui_inputs['pickle_uncertainty'] == 'Load':
+            self.add_comment_to_gui_window('Results loaded from previous simulation')
+            loaded_data = tool_kit.pickle_load(storage_file_name)
+            for attribute in loaded_data:
+                setattr(self, attribute, loaded_data[attribute])
+        else:
+            # Or run the models as requested
+            self.run_manual_calibration()
+            if self.gui_inputs['output_uncertainty']:
+                self.run_uncertainty()
+
+        # Save uncertainty if requested
+        if self.gui_inputs['pickle_uncertainty'] == 'Save':
+            data_to_save = {}
+            for attribute in self.attributes_to_save:
+                data_to_save[attribute] = getattr(self, attribute)
+            tool_kit.pickle_save(data_to_save, storage_file_name)
+            self.add_comment_to_gui_window('Uncertainty results saved to disc')
+
+        # Master optimisation method
         self.run_optimisation()
 
     def run_manual_calibration(self):
@@ -260,51 +289,6 @@ class ModelRunner:
         # If you want some integer-based dictionaries
         self.epi_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.epi_outputs_dict))
         self.cost_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.cost_outputs_dict))
-
-    def run_uncertainty(self):
-
-        if self.gui_inputs['output_uncertainty']:
-
-            # Describe process
-            self.add_comment_to_gui_window('Uncertainty analysis commenced')
-
-            # Prepare directory for eventual pickling
-            out_dir = 'saved_uncertainty_analyses'
-            if not os.path.isdir(out_dir):
-                os.makedirs(out_dir)
-            # storage_file_names = {}
-            # for attribute in self.uncertainty_attributes:
-            #     storage_file_names[attribute] = os.path.join(out_dir, attribute + '.pkl')
-            storage_file_name = os.path.join(out_dir, 'store.pkl')
-
-            # Don't run uncertainty but load a saved simulation
-            if self.gui_inputs['pickle_uncertainty'] == 'Load':
-                self.add_comment_to_gui_window('Uncertainty results loaded from previous simulation')
-                loaded_data = tool_kit.pickle_load(storage_file_name)
-                for attribute in loaded_data:
-                    setattr(self, attribute, loaded_data[attribute])
-                # for attribute in self.uncertainty_attributes:
-                #     setattr(self, attribute, tool_kit.pickle_load(storage_file_names[attribute]))
-
-            # Run uncertainty
-            else:
-                self.execute_uncertainty()
-
-            # Save uncertainty if requested
-            if self.gui_inputs['pickle_uncertainty'] == 'Save':
-                data_to_save = {}
-                for attribute in self.uncertainty_attributes:
-                    data_to_save[attribute] = getattr(self, attribute)
-                tool_kit.pickle_save(data_to_save, storage_file_name)
-                # for attribute in self.uncertainty_attributes:
-                #     tool_kit.pickle_save(getattr(self, attribute),
-                #                          storage_file_names[attribute])
-                self.add_comment_to_gui_window('Uncertainty results saved to disc')
-
-        # Processing methods that are only required for outputs
-        if self.gui_inputs['output_uncertainty']:
-            self.epi_outputs_uncertainty_centiles.update(self.find_uncertainty_centiles(self.epi_outputs_uncertainty))
-            self.cost_outputs_uncertainty_centiles.update(self.find_uncertainty_centiles(self.cost_outputs_uncertainty))
 
     def run_optimisation(self):
 
@@ -611,11 +595,13 @@ class ModelRunner:
     ### Uncertainty methods ###
     ###########################
 
-    def execute_uncertainty(self):
+    def run_uncertainty(self):
 
         """
         Main method to run all the uncertainty processes.
         """
+
+        self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
         # If not doing an adaptive search, only need to start with a single parameter set
         if self.gui_inputs['adaptive_uncertainty']:
@@ -647,7 +633,6 @@ class ModelRunner:
         run = 0
         prev_log_likelihood = -1e10
         params = []
-        self.results['uncertainty'] = {}
 
         for param_dict in self.inputs.param_ranges_unc:
             self.acceptance_dict[param_dict['key']] = {}
@@ -741,10 +726,10 @@ class ModelRunner:
 
                 # Possibly temporary code to explain what's happening with progression of the likelihood
                 self.add_comment_to_gui_window('Previous log likelihood:\n' + str(prev_log_likelihood)
-                                               + 'Log likelihood this run:\n' + str(log_likelihood)
-                                               + 'Acceptance probability:\n'
+                                               + '\nLog likelihood this run:\n' + str(log_likelihood)
+                                               + '\nAcceptance probability:\n'
                                                + str(numpy.exp(log_likelihood - prev_log_likelihood))
-                                               + 'Whether accepted:\n' + str(bool(accepted)) + '\n______')
+                                               + '\nWhether accepted:\n' + str(bool(accepted)) + '\n________________\n')
                 self.loglikelihoods.append(log_likelihood)
 
                 # Record some information for all runs
@@ -796,6 +781,10 @@ class ModelRunner:
             self.add_comment_to_gui_window(str(n_accepted) + ' accepted / ' + str(i_candidates) +
                                            ' candidates. Running time: '
                                            + str(datetime.datetime.now() - start_timer_run))
+
+        # Processing methods that are only required for outputs
+        self.epi_outputs_uncertainty_centiles.update(self.find_uncertainty_centiles(self.epi_outputs_uncertainty))
+        self.cost_outputs_uncertainty_centiles.update(self.find_uncertainty_centiles(self.cost_outputs_uncertainty))
 
     def set_model_with_params(self, param_dict, model_object='baseline'):
 

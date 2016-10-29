@@ -569,9 +569,9 @@ class Project:
         self.classified_scaleups = {}
 
         # Extract some characteristics from the models within model runner
-        self.scenarios = self.model_runner.model_dict.keys()
+        self.scenarios = self.gui_inputs['scenarios_to_run']
         self.scenarios.reverse()
-        self.programs = self.model_runner.model_dict['manual_baseline'].interventions_to_cost
+        self.programs = self.inputs.interventions_to_cost
 
     #################################
     # General methods for use below #
@@ -1331,15 +1331,15 @@ class Project:
                     ax.plot(
                         self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
                         self.model_runner.epi_outputs['manual_' + scenario_name][output],
-                        color=self.output_colours['manual_' + scenario_name][1],
-                        linestyle=self.output_colours['manual_' + scenario_name][0],
+                        color=self.output_colours[scenario][1],
+                        linestyle=self.output_colours[scenario][0],
                         linewidth=1.5,
                         label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario_name)))
                 if output == 'mortality':
                     ax.plot(
                         self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
                         self.model_runner.epi_outputs['manual_' + scenario_name]['true_' + output],
-                        color=self.output_colours['manual_' + scenario_name][1],
+                        color=self.output_colours[scenario][1],
                         linestyle=':',
                         linewidth=1)
 
@@ -1354,8 +1354,8 @@ class Project:
                         self.model_runner.epi_outputs_uncertainty['uncertainty_' + scenario_name]['times'],
                         self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_' + scenario_name][output][
                         self.model_runner.percentiles.index(50), :],
-                        color=self.output_colours['manual_' + scenario_name][1],
-                        linestyle=self.output_colours['manual_' + scenario_name][0],
+                        color=self.output_colours[scenario][1],
+                        linestyle=self.output_colours[scenario][0],
                         linewidth=1.5,
                         label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario_name)))
 
@@ -1365,7 +1365,7 @@ class Project:
                             self.model_runner.epi_outputs_uncertainty['uncertainty_' + scenario_name]['times'],
                             self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_' + scenario_name][output][
                             self.model_runner.percentiles.index(centile), :],
-                            color=self.output_colours['manual_' + scenario_name][1],
+                            color=self.output_colours[scenario][1],
                             linestyle='--',
                             linewidth=.5,
                             label=None)
@@ -1885,8 +1885,8 @@ class Project:
                 ax.plot(
                     self.model_runner.epi_outputs['manual_baseline']['times'],
                     self.model_runner.epi_outputs['manual_baseline'][output + agegroup],
-                    color=self.output_colours['manual_baseline'][1],
-                    linestyle=self.output_colours['manual_baseline'][0],
+                    color=self.output_colours[None][1],
+                    linestyle=self.output_colours[None][0],
                     linewidth=1.5)
 
                 # Adjust size of labels of x-ticks

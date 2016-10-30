@@ -238,6 +238,8 @@ class ModelRunner:
         # Master optimisation method
         self.run_optimisation()
 
+        self.add_comment_to_gui_window('All done')
+
     def run_manual_calibration(self):
 
         for scenario in self.gui_inputs['scenarios_to_run']:
@@ -649,6 +651,7 @@ class ModelRunner:
         for scenario in self.gui_inputs['scenarios_to_run']:
             scenario_name = 'uncertainty_' + tool_kit.find_scenario_string_from_number(scenario)
             self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
+            self.model_dict[scenario_name].start_time = self.inputs.model_constants['start_time']
 
         # Until a sufficient number of parameters are accepted
         while n_accepted < self.gui_inputs['uncertainty_runs']:

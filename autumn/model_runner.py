@@ -264,6 +264,7 @@ class ModelRunner:
                                            + self.gui_inputs['country'] + ' using point estimates for parameters.')
 
             # Integrate and add result to outputs object
+            print(scenario_name)
             self.model_dict[scenario_name].integrate()
 
         # Model interpretation code - should be flexible and is now used by uncertainty and optimisation
@@ -568,21 +569,18 @@ class ModelRunner:
 
         Modifies:
             self.percentiles: Adds all the required percentiles to this dictionary.
-
         """
 
         # Loop through scenarios and outputs
         uncertainty_percentiles = {}
-        self.accepted_no_burn_in_indices \
-            = [i for i in self.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
+        self.accepted_no_burn_in_indices = [i for i in self.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
 
         for scenario in full_uncertainty_outputs:
             uncertainty_percentiles[scenario] = {}
             for output in full_uncertainty_outputs[scenario]:
                 if output != 'times':
-                    # Code to deal with the fact that we are currently saving all baseline runs but only accepted
-                    # scenario runs:
-                    if scenario == 'baseline':
+                    # Dealing with the fact that we are currently saving all baseline runs but only accepted scenarios:
+                    if scenario == 'uncertainty_baseline':
                         matrix_to_analyse = full_uncertainty_outputs[scenario][output][
                                             self.accepted_no_burn_in_indices, :]
                     else:

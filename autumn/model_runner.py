@@ -231,6 +231,10 @@ class ModelRunner:
             tool_kit.pickle_save(data_to_save, storage_file_name)
             self.add_comment_to_gui_window('Uncertainty results saved to disc')
 
+        # Processing methods that are only required for outputs
+        self.epi_outputs_uncertainty_centiles.update(self.find_uncertainty_centiles(self.epi_outputs_uncertainty))
+        self.cost_outputs_uncertainty_centiles.update(self.find_uncertainty_centiles(self.cost_outputs_uncertainty))
+
         # Master optimisation method
         self.run_optimisation()
 
@@ -781,10 +785,6 @@ class ModelRunner:
             self.add_comment_to_gui_window(str(n_accepted) + ' accepted / ' + str(i_candidates) +
                                            ' candidates. Running time: '
                                            + str(datetime.datetime.now() - start_timer_run))
-
-        # Processing methods that are only required for outputs
-        self.epi_outputs_uncertainty_centiles.update(self.find_uncertainty_centiles(self.epi_outputs_uncertainty))
-        self.cost_outputs_uncertainty_centiles.update(self.find_uncertainty_centiles(self.cost_outputs_uncertainty))
 
     def set_model_with_params(self, param_dict, model_object='baseline'):
 

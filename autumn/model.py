@@ -129,6 +129,7 @@ class ConsolidatedModel(StratifiedModel):
         self.compartment_types = [
             'susceptible_fully',
             'susceptible_vac',
+            'susceptible_novelvac',
             'susceptible_treated',
             'latent_early',
             'latent_late',
@@ -262,7 +263,6 @@ class ConsolidatedModel(StratifiedModel):
         """
         Perform some parameter processing - just for those that are used as uncertainty parameters and so can't be
         processed in the data_processing module.
-
         """
 
         # Find the case fatality of smear-negative TB using the relative case fatality
@@ -335,25 +335,30 @@ class ConsolidatedModel(StratifiedModel):
 
         # Get the parameters depending on whether constant or time variant
         rate_birth = self.get_constant_or_variable_param('demo_rate_birth') / 1e3
-        prop_vacc = self.get_constant_or_variable_param('program_prop_vaccination')
+        prop_vacc = self.get_constant_or_variable_param('program_prop_vaccination') \
+                    * (1. - self.vars['program_prop_novel_vaccination'])
+        prop_novel_vacc = self.get_constant_or_variable_param('program_prop_vaccination') \
+                          * self.vars['program_prop_novel_vaccination']
 
         # Calculate total births first, so that it can be tracked for interventions as well
-        self.vars['births_total'] = \
-            rate_birth \
-            * self.vars['population']
+        self.vars['births_total'] = rate_birth * self.vars['population']
 
         # Calculate the birth rates by compartment
         for comorbidity in self.comorbidities:
 
-            # Then split for model implementation
-            self.vars['births_unvac' + comorbidity] = \
-                (1. - prop_vacc) \
+            # Then split by vaccination status
+            self.vars['births_unvac' + comorbidity] \
+                = (1. - prop_vacc - prop_novel_vacc) \
                 * self.vars['births_total'] \
                 * self.target_comorb_props[comorbidity][-1]
-            self.vars['births_vac' + comorbidity] = \
-                prop_vacc \
+            self.vars['births_vac' + comorbidity] \
+                = prop_vacc \
                 * self.vars['births_total'] \
                 * self.target_comorb_props[comorbidity][-1]
+            self.vars['births_novelvac' + comorbidity] \
+                = prop_novel_vacc \
+                  * self.vars['births_total'] \
+                  * self.target_comorb_props[comorbidity][-1]
 
     def calculate_force_infection_vars(self):
 
@@ -397,12 +402,15 @@ class ConsolidatedModel(StratifiedModel):
                 / self.vars['population']
 
             # Adjust for immunity
-            self.vars['rate_force_vacc' + strain] = \
-                self.params['tb_multiplier_bcg_protection'] \
+            self.vars['rate_force_vacc' + strain] \
+                = self.params['tb_multiplier_bcg_protection'] \
                 * self.vars['rate_force' + strain]
-            self.vars['rate_force_latent' + strain] = \
-                self.params['tb_multiplier_latency_protection'] \
+            self.vars['rate_force_latent' + strain] \
+                = self.params['tb_multiplier_latency_protection'] \
                 * self.vars['rate_force' + strain]
+            self.vars['rate_force_novelvacc' + strain] \
+                = self.params['tb_multiplier_novelvac_protection'] \
+                  * self.vars['rate_force' + strain]
 
     def calculate_progression_vars(self):
 
@@ -851,6 +859,8 @@ class ConsolidatedModel(StratifiedModel):
                 'susceptible_fully' + comorbidity + self.agegroups[0], 'births_unvac' + comorbidity)
             self.set_var_entry_rate_flow(
                 'susceptible_vac' + comorbidity + self.agegroups[0], 'births_vac' + comorbidity)
+            self.set_var_entry_rate_flow(
+                'susceptible_novelvac' + comorbidity + self.agegroups[0], 'births_novelvac' + comorbidity)
 
     def set_infection_flows(self):
 
@@ -878,6 +888,12 @@ class ConsolidatedModel(StratifiedModel):
                         'latent_late' + strain + comorbidity + agegroup,
                         'latent_early' + strain + comorbidity + agegroup,
                         'rate_force_latent' + strain)
+
+                    # For novel vaccination
+                    self.set_var_transfer_rate_flow(
+                        'susceptible_novelvac' + comorbidity + agegroup,
+                        'latent_early' + strain + comorbidity + agegroup,
+                        'rate_force_novelvacc' + strain)
 
     def set_progression_flows(self):
 

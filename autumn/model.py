@@ -792,11 +792,27 @@ class ConsolidatedModel(StratifiedModel):
             elif 'program_prop_ipt' in self.vars and prop_ipt < self.vars['program_prop_ipt']:
                 prop_ipt += self.vars['program_prop_ipt']
 
-            # Multiply by the eligible population and by the number of effective treatments per person assessed
-            self.vars['ipt_effective_treatments' + agegroup] = prop_ipt \
-                                                               * self.vars['popsize_ipt' + agegroup] \
-                                                               * self.inputs.model_constants[
-                                                                   'ipt_effective_per_assessment']
+            # Then for the "game-changing" novel version of IPT
+            prop_novel_ipt = 0.
+            if 'program_prop_novel_ipt' + agegroup in self.vars:
+                prop_novel_ipt += self.vars['program_prop_novel_ipt' + agegroup]
+            elif 'program_prop_novel_ipt' in self.vars and prop_ipt < self.vars['program_prop_novel_ipt']:
+                prop_novel_ipt += self.vars['program_prop_novel_ipt']
+
+            # Calculate the number of effective treatments
+            self.vars['standard_ipt_effective_treatments' + agegroup] = prop_ipt \
+                                                                        * self.vars['popsize_ipt' + agegroup] \
+                                                                        * self.inputs.model_constants[
+                                                                            'ipt_effective_per_assessment']
+            self.vars['novel_ipt_effective_treatments' + agegroup] = prop_novel_ipt \
+                                                                   * self.vars['popsize_ipt' + agegroup] \
+                                                                   * self.inputs.model_constants[
+                                                                       'novel_ipt_effective_per_assessment']
+
+            # Calculate the total number of effective treatments across both forms of IPT
+            self.vars['ipt_effective_treatments' + agegroup]\
+                = max([self.vars['novel_ipt_effective_treatments' + agegroup],
+                       self.vars['standard_ipt_effective_treatments' + agegroup]])
 
     ##################################################################
     # Methods that calculate the flows of all the compartments

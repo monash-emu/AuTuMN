@@ -919,15 +919,17 @@ class Inputs:
     def find_ipt_params(self):
 
         """
-        Calculate number of persons eligible for IPT per person commencing treatment
-        and number of persons who receive effective IPT per person assessed for LTBI
-
+        Calculate number of persons eligible for IPT per person commencing treatment and then the number of persons
+        who receive effective IPT per person assessed for LTBI.
         """
 
         self.model_constants['ipt_eligible_per_treatment_start'] = (self.model_constants['demo_household_size'] - 1.) \
                                                                    * self.model_constants['tb_prop_contacts_infected']
-        self.model_constants['ipt_effective_per_assessment'] = self.model_constants['tb_prop_ltbi_test_sensitivity'] \
-                                                               * self.model_constants['tb_prop_ipt_effectiveness']
+
+        for ipt_type in ['', 'novel_']:
+            self.model_constants[ipt_type + 'ipt_effective_per_assessment'] \
+                = self.model_constants['tb_prop_ltbi_test_sensitivity'] \
+                  * self.model_constants['tb_prop_' + ipt_type + 'ipt_effectiveness']
 
     def find_data_for_functions_or_params(self):
 

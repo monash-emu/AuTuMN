@@ -401,13 +401,17 @@ class ConsolidatedModel(StratifiedModel):
                 * self.vars['infectious_population' + strain] \
                 / self.vars['population']
 
+            # Special case for scenario 11 is cessation of transmission
+            if self.scenario == 11:
+                self.vars['rate_force' + strain] *= self.vars['transmission_modifier']
+
             # Adjust for immunity
             self.vars['rate_force_vacc' + strain] \
                 = self.params['tb_multiplier_bcg_protection'] \
-                * self.vars['rate_force' + strain]
+                  * self.vars['rate_force' + strain]
             self.vars['rate_force_latent' + strain] \
                 = self.params['tb_multiplier_latency_protection'] \
-                * self.vars['rate_force' + strain]
+                  * self.vars['rate_force' + strain]
             self.vars['rate_force_novelvacc' + strain] \
                 = self.params['tb_multiplier_novelvac_protection'] \
                   * self.vars['rate_force' + strain]

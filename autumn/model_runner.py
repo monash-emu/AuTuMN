@@ -167,12 +167,12 @@ class ModelRunner:
         self.epi_outputs_dict = {}
         self.epi_outputs_integer_dict = {}
         self.epi_outputs_uncertainty = {}
-        self.epi_outputs_uncertainty_centiles = {}
+        self.epi_outputs_uncertainty_centiles = None
         self.cost_outputs = {}
         self.cost_outputs_dict = {}
         self.cost_outputs_integer_dict = {}
         self.cost_outputs_uncertainty = {}
-        self.cost_outputs_uncertainty_centiles = {}
+        self.cost_outputs_uncertainty_centiles = None
         self.additional_cost_types = ['inflated', 'discounted', 'discounted_inflated']
         self.cost_types = self.additional_cost_types + ['raw']
         self.uncertainty_percentiles = {}
@@ -213,8 +213,9 @@ class ModelRunner:
 
         # Load a saved simulation
         if self.gui_inputs['pickle_uncertainty'] == 'Load':
-            self.add_comment_to_gui_window('Results loaded from previous simulation')
+            self.add_comment_to_gui_window('Results loading from previous simulation')
             loaded_data = tool_kit.pickle_load(storage_file_name)
+            self.add_comment_to_gui_window('Loading finished')
             for attribute in loaded_data:
                 setattr(self, attribute, loaded_data[attribute])
         else:
@@ -232,13 +233,13 @@ class ModelRunner:
             self.add_comment_to_gui_window('Uncertainty results saved to disc')
 
         # Processing methods that are only required for outputs
-        self.epi_outputs_uncertainty_centiles.update(self.find_uncertainty_centiles(self.epi_outputs_uncertainty))
-        self.cost_outputs_uncertainty_centiles.update(self.find_uncertainty_centiles(self.cost_outputs_uncertainty))
+        self.epi_outputs_uncertainty_centiles = self.find_uncertainty_centiles(self.epi_outputs_uncertainty)
+        self.cost_outputs_uncertainty_centiles = self.find_uncertainty_centiles(self.cost_outputs_uncertainty)
 
         # Master optimisation method
         self.run_optimisation()
 
-        self.add_comment_to_gui_window('All done')
+        self.add_comment_to_gui_window('Finished')
 
     def run_manual_calibration(self):
 
@@ -264,7 +265,6 @@ class ModelRunner:
                                            + self.gui_inputs['country'] + ' using point estimates for parameters.')
 
             # Integrate and add result to outputs object
-            print(scenario_name)
             self.model_dict[scenario_name].integrate()
 
         # Model interpretation code - should be flexible and is now used by uncertainty and optimisation
@@ -588,9 +588,7 @@ class ModelRunner:
 
                     # Find the actual centiles
                     uncertainty_percentiles[scenario][output] \
-                        = numpy.percentile(matrix_to_analyse,
-                                           self.percentiles,
-                                           axis=0)
+                        = numpy.percentile(matrix_to_analyse, self.percentiles, axis=0)
 
         # Return result to make usable in other situations
         return uncertainty_percentiles

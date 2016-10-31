@@ -555,7 +555,6 @@ class Project:
         self.gui_inputs = gui_inputs
         self.country = self.gui_inputs['country'].lower()
         self.name = 'test_' + self.country
-        self.scenarios = []
         self.out_dir_project = os.path.join('projects', self.name)
         if not os.path.isdir(self.out_dir_project):
             os.makedirs(self.out_dir_project)
@@ -564,13 +563,11 @@ class Project:
         self.output_colours = {}
         self.uncertainty_output_colours = {}
         self.program_colours = {}
-        self.programs = []
         self.suptitle_size = 13
         self.classified_scaleups = {}
 
         # Extract some characteristics from the models within model runner
         self.scenarios = self.gui_inputs['scenarios_to_run']
-        self.scenarios.reverse()
         self.programs = self.inputs.interventions_to_cost
 
     #################################
@@ -1190,10 +1187,6 @@ class Project:
         output_colours = self.make_default_line_styles(5, True)
         for s, scenario in enumerate(self.scenarios):
             self.output_colours[scenario] = output_colours[s]
-        # Make sure there are enough for uncertainty plots too - if it has a different structure to the scenarios
-        for s, scenario in enumerate(self.model_runner.epi_outputs_uncertainty):
-            self.uncertainty_output_colours[scenario] = output_colours[s]
-
         for p, program in enumerate(self.programs):
             # +1 is to avoid starting from black, which doesn't look as nice for programs as for baseline scenario
             self.program_colours[program] = output_colours[p + 1]
@@ -1272,12 +1265,11 @@ class Project:
     def plot_outputs_against_gtb(self, outputs, ci_plot=None):
 
         """
-        Produces the plot for the main outputs, can handle multiple scenarios and .
-        Note that if running a series of scenarios, it is expected that the last scenario to
-        be run will be baseline, which should have scenario set to None.
+        Produces the plot for the main outputs, can handle multiple scenarios.
 
         Args:
             outputs: A list of the outputs to be plotted
+            ci_plot: Whether the
         """
 
         # Standard preliminaries
@@ -1326,7 +1318,7 @@ class Project:
             if ci_plot is None:
                 end_filename = '_scenario'
                 # Reversed ensures black baseline plotted over top
-                for scenario in reversed(self.gui_inputs['scenarios_to_run']):
+                for scenario in self.scenarios[::-1]:
                     scenario_name = tool_kit.find_scenario_string_from_number(scenario)
                     ax.plot(
                         self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
@@ -1346,7 +1338,7 @@ class Project:
             # Plot with uncertainty confidence intervals
             elif ci_plot and self.gui_inputs['output_uncertainty']:
                 end_filename = '_ci'
-                for scenario in self.gui_inputs['scenarios_to_run']:
+                for scenario in self.scenarios[::-1]:
                     scenario_name = tool_kit.find_scenario_string_from_number(scenario)
 
                     # Median
@@ -1392,8 +1384,8 @@ class Project:
                             label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space('baseline')))
 
             # Make cosmetic changes
-            if o == len(outputs) - 1 and ci_plot:
-                ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False)
+            # if o == len(outputs) - 1 and ci_plot:
+            #     ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False)
             ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
             ax.set_xticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))
             for axis_to_change in [ax.xaxis, ax.yaxis]:

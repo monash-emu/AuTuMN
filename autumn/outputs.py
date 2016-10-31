@@ -775,32 +775,34 @@ class Project:
 
         # Write a new file for each scenario
         for result_type in ['epi_', 'raw_cost_', 'inflated_cost_', 'discounted_cost_', 'discounted_inflated_cost_']:
-            for scenario in self.gui_inputs['scenario_names_to_run']:
+            for scenario in self.scenarios:
+
+                scenario_name = tool_kit.find_scenario_string_from_number(scenario)
 
                 # Make filename
-                path = os.path.join(self.out_dir_project, result_type + scenario)
+                path = os.path.join(self.out_dir_project, result_type + scenario_name)
                 path += '.xlsx'
 
                 # Get active sheet
                 wb = xl.Workbook()
                 sheet = wb.active
-                sheet.title = scenario
+                sheet.title = scenario_name
 
                 # Call the function to write the rows or columns of the sheet
                 if result_type == 'epi_':
                     for output in self.model_runner.epi_outputs_to_analyse:
-                        years = self.find_years_to_write('manual_' + scenario, output, epi=True)
+                        years = self.find_years_to_write('manual_' + scenario_name, output, epi=True)
                         if self.gui_inputs['output_horizontally']:
-                            self.write_horizontally_by_output(sheet, 'manual_' + scenario, years)
+                            self.write_horizontally_by_output(sheet, scenario_name, years)
                         else:
-                            self.write_vertically_by_output(sheet, 'manual_' + scenario, years)
+                            self.write_vertically_by_output(sheet, scenario_name, years)
                 elif 'cost_' in result_type:
                     for output in self.inputs.interventions_to_cost:
-                        years = self.find_years_to_write('manual_' + scenario, output, epi=False)
+                        years = self.find_years_to_write('manual_' + scenario_name, output, epi=False)
                         if self.gui_inputs['output_horizontally']:
-                            self.write_cost_horizontally_by_output(sheet, 'manual_' + scenario, years, result_type)
+                            self.write_cost_horizontally_by_output(sheet, 'manual_' + scenario_name, years, result_type)
                         else:
-                            self.write_cost_vertically_by_output(sheet, 'manual_' + scenario, years, result_type)
+                            self.write_cost_vertically_by_output(sheet, 'manual_' + scenario_name, years, result_type)
 
                 # Save workbook
                 wb.save(path)
@@ -874,17 +876,44 @@ class Project:
         for y, year in enumerate(years):
             sheet.cell(row=y+2, column=1).value = year
 
-        for s, scenario in enumerate(self.gui_inputs['scenario_names_to_run']):
+        for s, scenario in enumerate(self.scenarios):
 
-            # Write the scenario names
-            sheet.cell(row=1, column=s+2).value = \
-                tool_kit.replace_underscore_with_space(
-                    tool_kit.capitalise_first_letter(scenario))
+            scenario_name = tool_kit.find_scenario_string_from_number(scenario)
 
-            # Write the columns of data
-            for y, year in enumerate(years):
-                sheet.cell(row=y+2, column=s+2).value \
-                    = self.model_runner.epi_outputs_integer_dict['manual_' + scenario][output][year]
+            if not self.gui_inputs['output_uncertainty']:
+
+                # Write the scenario names
+                sheet.cell(row=1, column=s+2).value = \
+                    tool_kit.replace_underscore_with_space(
+                        tool_kit.capitalise_first_letter(scenario_name))
+
+                # Write the columns of data
+                for y, year in enumerate(years):
+                    sheet.cell(row=y+2, column=s+2).value \
+                        = self.model_runner.epi_outputs_integer_dict['manual_' + scenario_name][output][year]
+
+            else:
+
+                order_to_write = [1, 0, 2]  # 1, 0, 2 indicates point estimate, lower limit, upper limit
+
+                # Write the scenario names and confidence interval titles
+                sheet.cell(row=1, column=s*3+2).value = \
+                    tool_kit.replace_underscore_with_space(
+                        tool_kit.capitalise_first_letter(scenario_name))
+                sheet.cell(row=1, column=s*3+3).value = 'Lower'
+                sheet.cell(row=1, column=s*3+4).value = 'Upper'
+
+                # Write the columns of data
+                for y, year in enumerate(years):
+                    year_index \
+                        = tool_kit.find_first_list_element_at_least_value(
+                        self.model_runner.epi_outputs['uncertainty_' + scenario_name]['times'],
+                        year)
+                    for o, order in enumerate(order_to_write):
+                        sheet.cell(row=y+2, column=s*3+2+o).value \
+                            = self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_'
+                                                                                 + scenario_name][output][order,
+                                                                                                          year_index]
 
     def write_cost_vertically_by_scenario(self, sheet, output, years, cost_type):
 
@@ -916,13 +945,13 @@ class Project:
                 sheet.cell(row=y+2, column=s+2).value \
                     = self.model_runner.cost_outputs_integer_dict['manual_' + scenario][cost_type + output][year]
 
-    def write_vertically_by_output(self, sheet, scenario, years):
+    def write_vertically_by_output(self, sheet, scenario_name, years):
 
         """
         Output to spreadsheets vertically by epidemiological indicator.
         Args:
             sheet: The sheet to be written to.
-            scenario: The model/scenario to be written.
+            scenario_name: The model/scenario to be written.
             years: A list of integers representing the years to be written.
         """
 
@@ -935,15 +964,39 @@ class Project:
 
         for o, output in enumerate(self.model_runner.epi_outputs_to_analyse):
 
-            # Write the output names
-            sheet.cell(row=1, column=o+2).value = \
-                tool_kit.replace_underscore_with_space(
-                    tool_kit.capitalise_first_letter(output))
+            if not self.gui_inputs['output_uncertainty']:
 
-            # Write the columns of data
-            for y, year in enumerate(years):
-                sheet.cell(row=y+2, column=o+2).value \
-                    = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
+                # Write the output names
+                sheet.cell(row=1, column=o+2).value = \
+                    tool_kit.replace_underscore_with_space(
+                        tool_kit.capitalise_first_letter(output))
+
+                # Write the columns of data
+                for y, year in enumerate(years):
+                    sheet.cell(row=y+2, column=o+2).value \
+                        = self.model_runner.epi_outputs_integer_dict['manual_' + scenario_name][output][year]
+
+            else:
+
+                order_to_write = [1, 0, 2]  # 1, 0, 2 indicates point estimate, lower limit, upper limit
+
+                # Write the scenario names and confidence interval titles
+                sheet.cell(row=1, column=o*3+2).value = \
+                    tool_kit.replace_underscore_with_space(
+                        tool_kit.capitalise_first_letter(output))
+                sheet.cell(row=1, column=o*3+3).value = 'Lower'
+                sheet.cell(row=1, column=o*3+4).value = 'Upper'
+
+                # Write the columns of data
+                for y, year in enumerate(years):
+                    year_index \
+                        = tool_kit.find_first_list_element_at_least_value(
+                        self.model_runner.epi_outputs['uncertainty_' + scenario_name]['times'], year)
+                    for ord, order in enumerate(order_to_write):
+                        sheet.cell(row=y+2, column=o*3+2+ord).value \
+                            = self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_'
+                                                                                 + scenario_name][output][order,
+                                                                                                          year_index]
 
     def write_cost_vertically_by_output(self, sheet, scenario, years, cost_type):
 
@@ -992,17 +1045,44 @@ class Project:
         for y, year in enumerate(years):
             sheet.cell(row=1, column=y+2).value = year
 
-        for s, scenario in enumerate(self.gui_inputs['scenario_names_to_run']):
+        for s, scenario in enumerate(self.scenarios):
 
-            # Write the scenario names
-            sheet.cell(row=s+2, column=1).value = \
-                tool_kit.replace_underscore_with_space(
-                    tool_kit.capitalise_first_letter(scenario))
+            scenario_name = tool_kit.find_scenario_string_from_number(scenario)
 
-            # Write the columns of data
-            for y, year in enumerate(years):
-                sheet.cell(row=s+2, column=y+2).value \
-                    = self.model_runner.epi_outputs_integer_dict['manual_' + scenario][output][year]
+            if not self.gui_inputs['output_uncertainty']:
+
+                # Write the scenario names
+                sheet.cell(row=s+2, column=1).value = \
+                    tool_kit.replace_underscore_with_space(
+                        tool_kit.capitalise_first_letter(scenario_name))
+
+                # Write the columns of data
+                for y, year in enumerate(years):
+                    sheet.cell(row=s+2, column=y+2).value \
+                        = self.model_runner.epi_outputs_integer_dict['manual_' + scenario_name][output][year]
+
+            else:
+
+                order_to_write = [1, 0, 2]  # 1, 0, 2 indicates point estimate, lower limit, upper limit
+
+                # Write the scenario names and confidence interval titles
+                sheet.cell(row=s*3+2, column=1).value = \
+                    tool_kit.replace_underscore_with_space(
+                        tool_kit.capitalise_first_letter(scenario_name))
+                sheet.cell(row=s*3+3, column=1).value = 'Lower'
+                sheet.cell(row=s*3+4, column=1).value = 'Upper'
+
+                # Write the columns of data
+                for y, year in enumerate(years):
+                    year_index \
+                        = tool_kit.find_first_list_element_at_least_value(
+                        self.model_runner.epi_outputs['uncertainty_' + scenario_name]['times'],
+                        year)
+                    for o, order in enumerate(order_to_write):
+                        sheet.cell(row=s*3+2+o, column=y+2).value \
+                            = self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_'
+                                                                                 + scenario_name][output][order,
+                                                                                                          year_index]
 
     def write_cost_horizontally_by_scenario(self, sheet, output, years, cost_type):
 
@@ -1034,14 +1114,14 @@ class Project:
                 sheet.cell(row=s+2, column=y+2).value \
                     = self.model_runner.cost_outputs_integer_dict['manual_' + scenario][cost_type + output][year]
 
-    def write_horizontally_by_output(self, sheet, scenario, years):
+    def write_horizontally_by_output(self, sheet, scenario_name, years):
 
         """
         Output to spreadsheets horizontally by epidemiological indicator.
 
         Args:
             sheet: The sheet to be written to.
-            scenario: The model/scenario to be written.
+            scenario_name: The model/scenario to be written.
             years: A list of integers representing the years to be written.
         """
 
@@ -1054,15 +1134,39 @@ class Project:
 
         for o, output in enumerate(self.model_runner.epi_outputs_to_analyse):
 
-            # Write the output names
-            sheet.cell(row=o+2, column=1).value = \
-                tool_kit.replace_underscore_with_space(
-                    tool_kit.capitalise_first_letter(output))
+            if not self.gui_inputs['output_uncertainty']:
 
-            # Write the columns of data
-            for y, year in enumerate(years):
-                sheet.cell(row=o+2, column=y+2).value \
-                    = self.model_runner.epi_outputs_integer_dict[scenario][output][year]
+                # Write the output names
+                sheet.cell(row=o+2, column=1).value = \
+                    tool_kit.replace_underscore_with_space(
+                        tool_kit.capitalise_first_letter(output))
+
+                # Write the columns of data
+                for y, year in enumerate(years):
+                    sheet.cell(row=o+2, column=y+2).value \
+                        = self.model_runner.epi_outputs_integer_dict['manual_' + scenario_name][output][year]
+
+            else:
+
+                order_to_write = [1, 0, 2]  # 1, 0, 2 indicates point estimate, lower limit, upper limit
+
+                # Write the scenario names and confidence interval titles
+                sheet.cell(row=o*3+2, column=1).value = \
+                    tool_kit.replace_underscore_with_space(
+                        tool_kit.capitalise_first_letter(output))
+                sheet.cell(row=o*3+3, column=1).value = 'Lower'
+                sheet.cell(row=o*3+4, column=1).value = 'Upper'
+
+                # Write the columns of data
+                for y, year in enumerate(years):
+                    year_index \
+                        = tool_kit.find_first_list_element_at_least_value(
+                        self.model_runner.epi_outputs['uncertainty_' + scenario_name]['times'], year)
+                    for ord, order in enumerate(order_to_write):
+                        sheet.cell(row=o*3+2+ord, column=y+2).value \
+                            = self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_'
+                                                                                 + scenario_name][output][order,
+                                                                                                          year_index]
 
     def write_cost_horizontally_by_output(self, sheet, scenario, years, cost_type):
 

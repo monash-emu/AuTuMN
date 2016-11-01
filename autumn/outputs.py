@@ -826,7 +826,7 @@ class Project:
             # Call the function to write the rows or columns of the sheet
             for scenario in self.gui_inputs['scenario_names_to_run']:
                 years = self.find_years_to_write('manual_' + scenario, output, epi=True)
-                self.write_by_scenario(sheet, output, years, vertical=not self.gui_inputs['output_horizontally'])
+                self.write_by_scenario(sheet, output, years, horizontal=self.gui_inputs['output_horizontally'])
 
             # Save workbook
             wb.save(path)
@@ -854,7 +854,7 @@ class Project:
                 # Save workbook
                 wb.save(path)
 
-    def write_by_scenario(self, sheet, output, years, vertical=True):
+    def write_by_scenario(self, sheet, output, years, horizontal=False):
 
         """
         Output to spreadsheets vertically by epidemiological indicator.
@@ -871,10 +871,9 @@ class Project:
         for y, year in enumerate(years):
             row = y + 2
             column = 1
-            if vertical:
-                sheet.cell(row=row, column=column).value = year
-            else:
-                sheet.cell(row=column, column=row).value = year
+            if horizontal:
+                column, row = row, column
+            sheet.cell(row=row, column=column).value = year
 
         for s, scenario in enumerate(self.scenarios):
 
@@ -883,56 +882,43 @@ class Project:
             if not self.gui_inputs['output_uncertainty']:
                 row = 1
                 column = s + 2
-                if vertical:
-                    # Write the scenario names
-                    sheet.cell(row=row, column=column).value = \
-                        tool_kit.replace_underscore_with_space(
-                            tool_kit.capitalise_first_letter(scenario_name))
-                else:
-                    sheet.cell(row=column, column=row).value = \
-                        tool_kit.replace_underscore_with_space(
-                            tool_kit.capitalise_first_letter(scenario_name))
+                if horizontal:
+                    column, row = row, column
+
+                # Write the scenario names
+                sheet.cell(row=row, column=column).value = \
+                    tool_kit.replace_underscore_with_space(
+                        tool_kit.capitalise_first_letter(scenario_name))
 
                 # Write the columns of data
                 for y, year in enumerate(years):
                     row = y + 2
                     column = s + 2
-                    if vertical:
-                        sheet.cell(row=row, column=column).value \
-                            = self.model_runner.epi_outputs_integer_dict['manual_' + scenario_name][output][year]
-                    else:
-                        sheet.cell(row=column, column=row).value \
-                            = self.model_runner.epi_outputs_integer_dict['manual_' + scenario_name][output][year]
-
+                    if horizontal:
+                        column, row = row, column
+                    sheet.cell(row=row, column=column).value \
+                        = self.model_runner.epi_outputs_integer_dict['manual_' + scenario_name][output][year]
             else:
-
                 order_to_write = [1, 0, 2]  # 1, 0, 2 indicates point estimate, lower limit, upper limit
-
                 row = 1
                 column = s * 3 + 2
-                if vertical:
-                    # Write the scenario names and confidence interval titles
-                    sheet.cell(row=row, column=column).value = \
-                        tool_kit.replace_underscore_with_space(
-                            tool_kit.capitalise_first_letter(scenario_name))
-                else:
-                    sheet.cell(row=column, column=row).value = \
-                        tool_kit.replace_underscore_with_space(
-                            tool_kit.capitalise_first_letter(scenario_name))
+                if horizontal:
+                    column, row = row, column
 
+                # Write the scenario names and confidence interval titles
+                sheet.cell(row=row, column=column).value = \
+                    tool_kit.replace_underscore_with_space(
+                        tool_kit.capitalise_first_letter(scenario_name))
                 row = 1
                 column = s * 3 + 3
-                if vertical:
-                    sheet.cell(row=row, column=column).value = 'Lower'
-                else:
-                    sheet.cell(row=column, column=row).value = 'Lower'
-
+                if horizontal:
+                    column, row = row, column
+                sheet.cell(row=row, column=column).value = 'Lower'
                 row = 1
                 column = s * 3 + 4
-                if vertical:
-                    sheet.cell(row=row, column=column).value = 'Upper'
-                else:
-                    sheet.cell(row=column, column=row).value = 'Upper'
+                if horizontal:
+                    column, row = row, column
+                sheet.cell(row=row, column=column).value = 'Upper'
 
                 # Write the columns of data
                 for y, year in enumerate(years):
@@ -942,20 +928,14 @@ class Project:
                         year)
 
                     for o, order in enumerate(order_to_write):
-
                         row = y + 2
                         column = s * 3 + 2 + o
-
-                        if vertical:
-                            sheet.cell(row=row, column=column).value \
-                                = self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_'
-                                                                                     + scenario_name][output][order,
-                                                                                                              year_index]
-                        else:
-                            sheet.cell(row=column, column=row).value \
-                                = self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_'
-                                                                                     + scenario_name][output][order,
-                                                                                                              year_index]
+                        if horizontal:
+                            column, row = row, column
+                        sheet.cell(row=row, column=column).value \
+                            = self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_'
+                                                                                 + scenario_name][output][order,
+                                                                                                          year_index]
 
     def write_cost_vertically_by_scenario(self, sheet, output, years, cost_type):
 
@@ -1113,62 +1093,6 @@ class Project:
             for y, year in enumerate(years):
                 sheet.cell(row=y+2, column=o+2).value \
                     = self.model_runner.cost_outputs_integer_dict[scenario][cost_type + output][year]
-
-    def write_horizontally_by_scenario(self, sheet, output, years):
-
-        """
-        Output to spreadsheets horizontally by epidemiological indicator.
-        Args:
-            sheet: The sheet to be written to.
-            output: The output to be written.
-            years: A list of integers representing the years to be written.
-        """
-
-        # Write the year text cell
-        sheet.cell(row=1, column=1).value = 'Year'
-
-        # Write the year text column
-        for y, year in enumerate(years):
-            sheet.cell(row=1, column=y+2).value = year
-
-        for s, scenario in enumerate(self.scenarios):
-
-            scenario_name = tool_kit.find_scenario_string_from_number(scenario)
-
-            if not self.gui_inputs['output_uncertainty']:
-
-                # Write the scenario names
-                sheet.cell(row=s+2, column=1).value = \
-                    tool_kit.replace_underscore_with_space(
-                        tool_kit.capitalise_first_letter(scenario_name))
-
-                # Write the columns of data
-                for y, year in enumerate(years):
-                    sheet.cell(row=s+2, column=y+2).value \
-                        = self.model_runner.epi_outputs_integer_dict['manual_' + scenario_name][output][year]
-
-            else:
-
-                order_to_write = [1, 0, 2]  # 1, 0, 2 indicates point estimate, lower limit, upper limit
-
-                # Write the scenario names and confidence interval titles
-                sheet.cell(row=s*3+2, column=1).value = \
-                    tool_kit.replace_underscore_with_space(
-                        tool_kit.capitalise_first_letter(scenario_name))
-                sheet.cell(row=s*3+3, column=1).value = 'Lower'
-                sheet.cell(row=s*3+4, column=1).value = 'Upper'
-
-                # Write the columns of data
-                for y, year in enumerate(years):
-                    year_index \
-                        = tool_kit.find_first_list_element_at_least_value(
-                        self.model_runner.epi_outputs['uncertainty_' + scenario_name]['times'],
-                        year)
-                    for o, order in enumerate(order_to_write):
-                        sheet.cell(row=s*3+2+o, column=y+2).value \
-                            = self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_'
-                                                                                 + scenario_name][output][order,
-                                                                                                          year_index]
 
     def write_cost_horizontally_by_scenario(self, sheet, output, years, cost_type):
 

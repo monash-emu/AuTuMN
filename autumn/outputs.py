@@ -785,15 +785,15 @@ class Project:
                 sheet = wb.active
                 sheet.title = scenario
 
+                # Write the year text cell
+                sheet.cell(row=1, column=1).value = 'Year'
+
                 # For epidemiological outputs (for which uncertainty is fully finished)
                 if result_type == 'epi_':
                     for output in self.model_runner.epi_outputs_to_analyse:
 
                         # Find years to write
                         years = self.find_years_to_write('manual_' + scenario, output, epi=True)
-
-                        # Write the year text cell
-                        sheet.cell(row=1, column=1).value = 'Year'
 
                         # Write the year column
                         for y, year in enumerate(years):
@@ -1095,26 +1095,30 @@ class Project:
 
     def write_docs_by_scenario(self):
 
-        # Write a new file for each output
-        outputs = self.model_runner.epi_outputs_integer_dict['manual_baseline'].keys()
-
-        for scenario in self.scenarios:
+        for scenario in self.scenario_names:
 
             # Initialise document
             path = os.path.join(self.out_dir_project, scenario)
             path += ".docx"
+
+            # Make table
             document = Document()
-            table = document.add_table(rows=1, cols=len(outputs) + 1)
+            table = document.add_table(rows=1, cols=len(self.model_runner.epi_outputs_to_analyse) + 1)
 
             # Write headers
             header_cells = table.rows[0].cells
+
+            # Write the year text cell
             header_cells[0].text = 'Year'
-            for o, output in enumerate(outputs):
+
+            # Only working for epidemiological outputs
+            for o, output in enumerate(self.model_runner.epi_outputs_to_analyse):
+
+                # Find years to write
+                years = self.find_years_to_write('manual_' + scenario, output, epi=True)
+
                 header_cells[o + 1].text \
                     = tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(output))
-
-            # Find years to write
-            years = self.find_years_to_write('manual_' + scenario, output)
 
             for year in years:
 
@@ -1122,10 +1126,9 @@ class Project:
                 row_cells = table.add_row().cells
                 row_cells[0].text = str(year)
 
-                for o, output in enumerate(outputs):
-                    if year in self.model_runner.epi_outputs_integer_dict[scenario][output]:
-                        row_cells[o + 1].text = '%.2f' % self.model_runner.epi_outputs_integer_dict[
-                            scenario][output][year]
+                for o, output in enumerate(self.model_runner.epi_outputs_to_analyse):
+                    row_cells[o + 1].text = '%.2f' % self.model_runner.epi_outputs_integer_dict[
+                        'manual_' + scenario][output][year]
 
             # Save document
             document.save(path)

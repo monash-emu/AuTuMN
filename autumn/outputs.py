@@ -1101,32 +1101,29 @@ class Project:
             path = os.path.join(self.out_dir_project, scenario)
             path += ".docx"
 
+            # Find years to write
+            years = self.find_years_to_write('manual_' + scenario, 'population', epi=True)
+
             # Make table
             document = Document()
-            table = document.add_table(rows=1, cols=len(self.model_runner.epi_outputs_to_analyse) + 1)
+            table = document.add_table(rows=len(years) + 1, cols=len(self.model_runner.epi_outputs_to_analyse) + 1)
 
             # Write headers
-            header_cells = table.rows[0].cells
+            row_cells = table.rows[0].cells
 
             # Write the year text cell
-            header_cells[0].text = 'Year'
+            row_cells[0].text = 'Year'
 
             # Only working for epidemiological outputs
             for o, output in enumerate(self.model_runner.epi_outputs_to_analyse):
 
-                # Find years to write
-                years = self.find_years_to_write('manual_' + scenario, output, epi=True)
-
-                header_cells[o + 1].text \
+                # Write outputs across the top
+                row_cells[o + 1].text \
                     = tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(output))
 
-            for year in years:
-
-                # Add row to table
-                row_cells = table.add_row().cells
-                row_cells[0].text = str(year)
-
-                for o, output in enumerate(self.model_runner.epi_outputs_to_analyse):
+                for y, year in enumerate(years):
+                    row_cells = table.rows[y + 1].cells
+                    row_cells[0].text = str(year)
                     row_cells[o + 1].text = '%.2f' % self.model_runner.epi_outputs_integer_dict[
                         'manual_' + scenario][output][year]
 

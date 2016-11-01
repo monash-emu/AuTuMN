@@ -769,7 +769,10 @@ class Project:
         Write a spreadsheet with the sheet referring to one scenario.
         """
 
-        # Write a new file for each scenario
+        # Whether to write horizontally
+        horizontal = self.gui_inputs['output_horizontally']
+
+        # Write a new file for each scenario and for each general type of output
         for result_type in ['epi_', 'raw_cost_', 'inflated_cost_', 'discounted_cost_', 'discounted_inflated_cost_']:
             for scenario in self.scenario_names:
 
@@ -782,36 +785,38 @@ class Project:
                 sheet = wb.active
                 sheet.title = scenario
 
-                # Call the function to write the rows or columns of the sheet
+                # For epidemiological outputs (for which uncertainty is fully finished)
                 if result_type == 'epi_':
                     for output in self.model_runner.epi_outputs_to_analyse:
+
+                        # Find years to write
                         years = self.find_years_to_write('manual_' + scenario, output, epi=True)
-                        horizontal = self.gui_inputs['output_horizontally']
 
                         # Write the year text cell
                         sheet.cell(row=1, column=1).value = 'Year'
 
-                        # Write the year text column
+                        # Write the year column
                         for y, year in enumerate(years):
                             row = y + 2
                             column = 1
                             if horizontal: column, row = row, column
                             sheet.cell(row=row, column=column).value = year
 
+                        # Cycle over outputs
                         for o, output in enumerate(self.model_runner.epi_outputs_to_analyse):
 
+                            # Without uncertainty
                             if not self.gui_inputs['output_uncertainty']:
 
+                                # Write output names across first row
                                 row = 1
                                 column = o + 2
                                 if horizontal: column, row = row, column
-
-                                # Write the output names
                                 sheet.cell(row=row, column=column).value = \
                                     tool_kit.replace_underscore_with_space(
                                         tool_kit.capitalise_first_letter(output))
 
-                                # Write the columns of data
+                                # Write columns of data
                                 for y, year in enumerate(years):
                                     row = y + 2
                                     column = o + 2
@@ -820,26 +825,23 @@ class Project:
                                         = self.model_runner.epi_outputs_integer_dict['manual_' + scenario][output][
                                         year]
 
+                            # With uncertainty
                             else:
 
                                 # 1, 0, 2 indicates point estimate, lower limit, upper limit
                                 order_to_write = [1, 0, 2]
 
+                                # Write the scenario names and confidence interval titles
                                 row = 1
                                 column = o * 3 + 2
-
                                 if horizontal: column, row = row, column
-
-                                # Write the scenario names and confidence interval titles
                                 sheet.cell(row=row, column=column).value = \
                                     tool_kit.replace_underscore_with_space(
                                         tool_kit.capitalise_first_letter(output))
-
                                 row = 1
                                 column = o * 3 + 3
                                 if horizontal: column, row = row, column
                                 sheet.cell(row=row, column=column).value = 'Lower'
-
                                 row = 1
                                 column = o * 3 + 4
                                 if horizontal: column, row = row, column
@@ -860,13 +862,14 @@ class Project:
                                             output][order,
                                                     year_index]
 
+                # For economic outputs (uncertainty not yet fully finished)
                 elif 'cost_' in result_type:
                     for output in self.inputs.interventions_to_cost:
+
+                        # Find years to write
                         years = self.find_years_to_write('manual_' + scenario, output, epi=False)
 
-                        horizontal = self.gui_inputs['output_horizontally']
-
-                        # Write the year text cell
+                        # Write the year cell
                         sheet.cell(row=1, column=1).value = 'Year'
 
                         # Write the year text column
@@ -874,16 +877,15 @@ class Project:
                             row = y + 2
                             column = 1
                             if horizontal: column, row = row, column
-
                             sheet.cell(row=row, column=column).value = year
 
+                        # For each intervention
                         for o, output in enumerate(self.inputs.interventions_to_cost):
 
+                            # Write output names across the top
                             row = 1
                             column = o + 2
                             if horizontal: column, row = row, column
-
-                            # Write the output names
                             sheet.cell(row=row, column=column).value = \
                                 tool_kit.replace_underscore_with_space(
                                     tool_kit.capitalise_first_letter(output))
@@ -893,7 +895,6 @@ class Project:
                                 row = y + 2
                                 column = o + 2
                                 if horizontal: column, row = row, column
-
                                 sheet.cell(row=row, column=column).value \
                                     = self.model_runner.cost_outputs_integer_dict['manual_' + scenario][result_type + output][year]
 
@@ -906,6 +907,7 @@ class Project:
         Write a spreadsheet with the sheet referring to one output.
         """
 
+        # Whether to write horizontally
         horizontal = self.gui_inputs['output_horizontally']
 
         # Write a new file for each output
@@ -920,50 +922,53 @@ class Project:
             sheet = wb.active
             sheet.title = output
 
-            # Call the function to write the rows or columns of the sheet
+            # For each scenario
             for scenario in self.scenario_names:
+
+                # Find years to write
                 years = self.find_years_to_write('manual_' + scenario, output, epi=True)
 
-                # Write year text in the top left cell
+                # Write the year text cell
                 sheet.cell(row=1, column=1).value = 'Year'
 
-                # Write the year text column (or row)
+                # Write the year column
                 for y, year in enumerate(years):
                     row = y + 2
                     column = 1
                     if horizontal: column, row = row, column
                     sheet.cell(row=row, column=column).value = year
 
-                for s, scenario in enumerate(self.scenarios):
+                # Cycle over scenarios
+                for s, scenario in enumerate(self.scenario_names):
 
-                    scenario = tool_kit.find_scenario_string_from_number(scenario)
-
+                    # Without uncertainty
                     if not self.gui_inputs['output_uncertainty']:
 
+                        # Write scneario names across first row
                         row = 1
                         column = s + 2
                         if horizontal: column, row = row, column
-
-                        # Write the scenario names
                         sheet.cell(row=row, column=column).value = \
                             tool_kit.replace_underscore_with_space(
                                 tool_kit.capitalise_first_letter(scenario))
 
-                        # Write the columns of data
+                        # Write columns of data
                         for y, year in enumerate(years):
                             row = y + 2
                             column = s + 2
                             if horizontal: column, row = row, column
                             sheet.cell(row=row, column=column).value \
                                 = self.model_runner.epi_outputs_integer_dict['manual_' + scenario][output][year]
+
+                    # With uncertainty
                     else:
                         # 1, 0, 2 indicates point estimate, lower limit, upper limit
                         order_to_write = [1, 0, 2]
+
+                        # Write the scenario names and confidence interval titles
                         row = 1
                         column = s * 3 + 2
                         if horizontal: column, row = row, column
-
-                        # Write the scenario names and confidence interval titles
                         sheet.cell(row=row, column=column).value = \
                             tool_kit.replace_underscore_with_space(
                                 tool_kit.capitalise_first_letter(scenario))
@@ -981,7 +986,6 @@ class Project:
                             year_index \
                                 = tool_kit.find_first_list_element_at_least_value(
                                 self.model_runner.epi_outputs['uncertainty_' + scenario]['times'], year)
-
                             for o, order in enumerate(order_to_write):
                                 row = y + 2
                                 column = s * 3 + 2 + o
@@ -995,6 +999,8 @@ class Project:
 
         for output in self.inputs.interventions_to_cost:
 
+            years = self.find_years_to_write('manual_baseline', output, epi=False)
+
             for cost_type in ['raw_cost_', 'inflated_cost_', 'discounted_cost_', 'discounted_inflated_cost_']:
 
                 # Make filename
@@ -1006,10 +1012,6 @@ class Project:
                 sheet = wb.active
                 sheet.title = output
 
-                years = self.find_years_to_write('manual_baseline', output, epi=False)
-
-                horizontal = self.gui_inputs['output_horizontally']
-
                 # Write the year text cell
                 sheet.cell(row=1, column=1).value = 'Year'
 
@@ -1018,16 +1020,15 @@ class Project:
                     row = y + 2
                     column = 1
                     if horizontal: column, row = row, column
-
                     sheet.cell(row=row, column=column).value = year
 
+                # Cycle over scenarios
                 for s, scenario in enumerate(self.scenario_names):
 
                     # Write the scenario names
                     row = 1
                     column = s + 2
                     if horizontal: column, row = row, column
-
                     sheet.cell(row=row, column=column).value \
                         = tool_kit.replace_underscore_with_space(tool_kit.capitalise_first_letter(scenario))
 
@@ -1036,7 +1037,6 @@ class Project:
                         row = y + 2
                         column = s + 2
                         if horizontal: column, row = row, column
-
                         sheet.cell(row=row, column=column).value \
                             = self.model_runner.cost_outputs_integer_dict['manual_'
                                                                           + scenario][cost_type + output][year]

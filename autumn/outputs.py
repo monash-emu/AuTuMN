@@ -1054,35 +1054,46 @@ class Project:
 
     def write_docs_by_output(self):
 
+        """
+        Write word documents using the docx package. Writes with or without uncertainty according to whether Run
+        uncertainty selected in the GUI.
+        """
+
         # Write a new file for each output
-        for output in self.model_runner.epi_outputs_integer_dict['manual_baseline']:
+        for output in self.model_runner.epi_outputs_to_analyse:
 
             # Initialise document
             path = os.path.join(self.out_dir_project, output)
             path += ".docx"
-            document = Document()
-            table = document.add_table(rows=1, cols=len(self.scenarios) + 1)
-
-            # Write headers
-            header_cells = table.rows[0].cells
-            header_cells[0].text = 'Year'
-            for s, scenario in enumerate(self.scenarios):
-                header_cells[s + 1].text \
-                    = tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario))
 
             # Find years to write
-            years = self.find_years_to_write('manual_baseline', output)
+            years = self.find_years_to_write('manual_baseline', output, epi=True)
 
-            for year in years:
+            # Make table
+            document = Document()
+            table = document.add_table(rows=len(years) + 1, cols=len(self.scenario_names) + 1)
 
-                # Add row to table
-                row_cells = table.add_row().cells
-                row_cells[0].text = str(year)
+            for s, scenario in enumerate(self.scenario_names):
 
-                for s, scenario in enumerate(self.scenarios):
-                    if year in self.model_runner.epi_outputs_integer_dict[scenario][output]:
-                        row_cells[s + 1].text = '%.2f' % self.model_runner.epi_outputs_integer_dict[
-                            scenario][output][year]
+                # Write outputs across the top
+                row_cells = table.rows[0].cells
+                row_cells[0].text = 'Year'
+                row_cells[s + 1].text \
+                    = tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario))
+
+                for y, year in enumerate(years):
+                    year_index \
+                        = tool_kit.find_first_list_element_at_least_value(
+                        self.model_runner.epi_outputs['uncertainty_' + scenario]['times'], year)
+                    row_cells = table.rows[y + 1].cells
+                    row_cells[0].text = str(year)
+                    if self.gui_inputs['output_uncertainty']:
+                        (lower_limit, point_estimate, upper_limit) = self.model_runner.epi_outputs_uncertainty_centiles[
+                            'uncertainty_' + scenario][output][0:3, year_index]
+                        row_cells[s + 1].text = '%.2f (%.2f to %.2f)' % (point_estimate, lower_limit, upper_limit)
+                    else:
+                        point_estimate = self.model_runner.epi_outputs_integer_dict['manual_' + scenario][output][year]
+                        row_cells[s + 1].text = '%.2f' % point_estimate
 
             # Save document
             document.save(path)

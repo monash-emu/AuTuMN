@@ -1118,14 +1118,24 @@ class Project:
             for o, output in enumerate(self.model_runner.epi_outputs_to_analyse):
 
                 # Write outputs across the top
+                row_cells = table.rows[0].cells
                 row_cells[o + 1].text \
                     = tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(output))
 
                 for y, year in enumerate(years):
+                    year_index \
+                        = tool_kit.find_first_list_element_at_least_value(
+                        self.model_runner.epi_outputs['uncertainty_' + scenario]['times'], year)
+
                     row_cells = table.rows[y + 1].cells
                     row_cells[0].text = str(year)
-                    row_cells[o + 1].text = '%.2f' % self.model_runner.epi_outputs_integer_dict[
-                        'manual_' + scenario][output][year]
+                    if self.gui_inputs['output_uncertainty']:
+                        (lower_limit, point_estimate, upper_limit) = self.model_runner.epi_outputs_uncertainty_centiles[
+                            'uncertainty_' + scenario][output][0:3, year_index]
+                        row_cells[o + 1].text = '%.2f (%.2f to %.2f)' % (point_estimate, lower_limit, upper_limit)
+                    else:
+                        point_estimate = self.model_runner.epi_outputs_integer_dict['manual_' + scenario][output][year]
+                        row_cells[o + 1].text = '%.2f' % point_estimate
 
             # Save document
             document.save(path)
@@ -2185,8 +2195,6 @@ class Project:
             os.system('start ' + ' ' + self.out_dir_project)
         elif 'Darwin' in operating_system:
             os.system('open ' + ' ' + self.out_dir_project)
-
-
 
 
 

@@ -759,7 +759,15 @@ class Project:
                 print('Writing output indicator spreadsheets')
                 self.write_xls_by_output()
 
-        self.write_documents()
+        # Write documents - with document for each scenario or each output
+        if self.gui_inputs['output_documents']:
+            if self.gui_inputs['output_by_scenario']:
+                print('Writing scenario documents')
+                self.write_docs_by_scenario()
+            else:
+                print('Writing output indicator documents')
+                self.write_docs_by_output()
+
         self.run_plotting()
         self.open_output_directory()
 
@@ -1044,20 +1052,6 @@ class Project:
                 # Save workbook
                 wb.save(path)
 
-    def write_documents(self):
-
-        """
-        Determine whether to write to documents by scenario or by output.
-        """
-
-        if self.gui_inputs['output_documents']:
-            if self.gui_inputs['output_by_scenario']:
-                print('Writing scenario documents')
-                self.write_docs_by_scenario()
-            else:
-                print('Writing output indicator documents')
-                self.write_docs_by_output()
-
     def write_docs_by_output(self):
 
         # Write a new file for each output
@@ -1095,6 +1089,11 @@ class Project:
 
     def write_docs_by_scenario(self):
 
+        """
+        Write word documents using the docx package. Writes with or without uncertainty according to whether Run
+        uncertainty selected in the GUI.
+        """
+
         for scenario in self.scenario_names:
 
             # Initialise document
@@ -1108,17 +1107,12 @@ class Project:
             document = Document()
             table = document.add_table(rows=len(years) + 1, cols=len(self.model_runner.epi_outputs_to_analyse) + 1)
 
-            # Write headers
-            row_cells = table.rows[0].cells
-
-            # Write the year text cell
-            row_cells[0].text = 'Year'
-
             # Only working for epidemiological outputs
             for o, output in enumerate(self.model_runner.epi_outputs_to_analyse):
 
                 # Write outputs across the top
                 row_cells = table.rows[0].cells
+                row_cells[0].text = 'Year'
                 row_cells[o + 1].text \
                     = tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(output))
 

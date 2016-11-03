@@ -158,6 +158,7 @@ class ModelRunner:
         self.optimisation = False
         self.save_opti = True
         self.total_funding = 6.6e6 * (2035 - self.inputs.model_constants['recent_time'])  # Total funding for the entire period
+        self.year_end_opti = 2020 # model is run until that date during optimization
         self.acceptable_combinations = []
         self.acceptance_dict = {}
         self.rejection_dict = {}
@@ -1006,7 +1007,11 @@ class ModelRunner:
         start_timer_opti = datetime.datetime.now()
 
         # Initialise a new model that will be run from 'recent_time' for optimisation
-        self.model_dict['optimisation'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
+
+        inputs_opti = self.inputs
+        inputs_opti.model_constants['scenario_end_time'] = self.year_end_opti
+
+        self.model_dict['optimisation'] = model.ConsolidatedModel(None, inputs_opti, self.gui_inputs)
         start_time_index = \
             self.model_dict['manual_baseline'].find_time_index(self.inputs.model_constants['recent_time'])
         self.model_dict['optimisation'].start_time = \

@@ -155,7 +155,8 @@ class ModelRunner:
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
         self.optimisation = False
-        self.total_funding = 6.6e6  # Total funding for the entire period
+        self.save_opti = True
+        self.total_funding = 6.6e6 * (2035 - self.inputs.model_constants['recent_time'])  # Total funding for the entire period
         self.acceptable_combinations = []
         self.acceptance_dict = {}
         self.rejection_dict = {}
@@ -303,19 +304,19 @@ class ModelRunner:
             if self.total_funding is None:
                 start_cost_index \
                     = tool_kit.find_first_list_element_at_least_value(
-                    self.model_dict['baseline'].cost_times,
-                    self.model_dict['baseline'].inputs.model_constants['scenario_start_time'])
-                self.total_funding = numpy.sum(self.model_dict['baseline'].costs[start_cost_index:, :]) \
-                                     / (self.model_dict['baseline'].inputs.model_constants['report_end_time'] -
-                                        self.model_dict['baseline'].inputs.model_constants['scenario_start_time'])
+                    self.model_dict['manual_baseline'].cost_times,
+                    self.model_dict['manual_baseline'].inputs.model_constants['scenario_start_time'])
+                self.total_funding = numpy.sum(self.model_dict['manual_baseline'].costs[start_cost_index:, :]) \
+                                     / (self.model_dict['manual_baseline'].inputs.model_constants['report_end_time'] -
+                                        self.model_dict['manual_baseline'].inputs.model_constants['scenario_start_time'])
             self.execute_optimisation()
             self.model_dict['optimised'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
             start_time_index = \
-                self.model_dict['baseline'].find_time_index(self.inputs.model_constants['recent_time'])
+                self.model_dict['manual_baseline'].find_time_index(self.inputs.model_constants['recent_time'])
             self.model_dict['optimised'].start_time = \
-                self.model_dict['baseline'].times[start_time_index]
+                self.model_dict['manual_baseline'].times[start_time_index]
             self.model_dict['optimised'].loaded_compartments = \
-                self.model_dict['baseline'].load_state(start_time_index)
+                self.model_dict['manual_baseline'].load_state(start_time_index)
             self.model_dict['optimised'].eco_drives_epi = True
             for intervention in self.interventions_to_cost:
                 self.model_dict['optimised'].available_funding[intervention] = self.optimal_allocation[intervention] \
@@ -1020,7 +1021,7 @@ class ModelRunner:
             dict_optimized_combi = {'interventions': [], 'distribution': [], 'objective': None}
 
             for i in range(len(combi)):
-                intervention = self.model_dict['baseline'].interventions_to_cost[combi[i]]
+                intervention = self.model_dict['manual_baseline'].interventions_to_cost[combi[i]]
                 dict_optimized_combi['interventions'].append(intervention)
 
             print "Optimization of the distribution across: "
@@ -1036,12 +1037,12 @@ class ModelRunner:
                     predicted incidence for 2035
                 """
                 #initialise funding at 0 for each intervention
-                for intervention in self.model_dict['baseline'].interventions_to_cost:
+                for intervention in self.model_dict['manual_baseline'].interventions_to_cost:
                     self.model_dict['optimisation'].available_funding[intervention] = 0.
 
                 # input values from x
                 for i in range(len(x)):
-                    intervention = self.model_dict['baseline'].interventions_to_cost[combi[i]]
+                    intervention = self.model_dict['manual_baseline'].interventions_to_cost[combi[i]]
                     self.model_dict['optimisation'].available_funding[intervention] = x[i] * self.total_funding
                 self.model_dict['optimisation'].distribute_funding_across_years()
                 self.model_dict['optimisation'].integrate()
@@ -1066,11 +1067,11 @@ class ModelRunner:
                 bnds = []
                 for i in range(len(combi)):
                     minimal_allocation = 0.
-                    if self.model_dict['baseline'].intervention_startdates[
-                        self.model_dict['baseline'].interventions_to_cost[
+                    if self.model_dict['manual_baseline'].intervention_startdates[
+                        self.model_dict['manual_baseline'].interventions_to_cost[
                             combi[i]]] is None:  # start-up costs apply
-                        minimal_allocation = self.model_dict['baseline'].inputs.model_constants['econ_startupcost_' + \
-                                                self.model_dict['baseline'].interventions_to_cost[combi[i]]] / self.total_funding
+                        minimal_allocation = self.model_dict['manual_baseline'].inputs.model_constants['econ_startupcost_' + \
+                                                self.model_dict['manual_baseline'].interventions_to_cost[combi[i]]] / self.total_funding
                     bnds.append((minimal_allocation, 1.0))
                 # Ready to run optimisation
                 res = minimize(func, x_0, jac=None, bounds=bnds, constraints=cons, method='SLSQP',
@@ -1088,7 +1089,7 @@ class ModelRunner:
                 best_dict = dict_opti
                 best_obj = dict_opti['objective']
 
-        for intervention in self.model_dict['baseline'].interventions_to_cost:
+        for intervention in self.model_dict['manual_baseline'].interventions_to_cost:
             self.optimal_allocation[intervention] = 0.
 
         for i, intervention in enumerate(best_dict['interventions']):

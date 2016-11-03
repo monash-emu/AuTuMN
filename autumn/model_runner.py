@@ -154,6 +154,7 @@ class ModelRunner:
         self.rejected_indices = []
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
+
         self.optimisation = False
         self.save_opti = True
         self.total_funding = 6.6e6 * (2035 - self.inputs.model_constants['recent_time'])  # Total funding for the entire period
@@ -1002,6 +1003,7 @@ class ModelRunner:
     def execute_optimisation(self):
 
         print 'Start optimisation'
+        start_timer_opti = datetime.datetime.now()
 
         # Initialise a new model that will be run from 'recent_time' for optimisation
         self.model_dict['optimisation'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
@@ -1015,8 +1017,8 @@ class ModelRunner:
         self.model_dict['optimisation'].eco_drives_epi = True
 
         self.get_acceptable_combinations()
-
-        for combi in self.acceptable_combinations: # for each acceptable combination of interventions
+        print "Number of combinations to consider: " + str(len(self.acceptable_combinations))
+        for j, combi in enumerate(self.acceptable_combinations): # for each acceptable combination of interventions
             # prepare storage
             dict_optimized_combi = {'interventions': [], 'distribution': [], 'objective': None}
 
@@ -1080,6 +1082,7 @@ class ModelRunner:
                 dict_optimized_combi['objective'] = res.fun
 
             self.optimized_combinations.append(dict_optimized_combi)
+            print "Combination " + str(j + 1) + "/" + str(len(self.acceptable_combinations)) + "completed."
 
         # Update self.optimal_allocation
         best_dict = {}
@@ -1094,6 +1097,15 @@ class ModelRunner:
 
         for i, intervention in enumerate(best_dict['interventions']):
             self.optimal_allocation[intervention] = best_dict['distribution'][i]
+
+        print "End optimisation after " + str(datetime.datetime.now() - start_timer_opti)
+        print self.optimized_combinations
+        if self.save_opti:
+            out_dir = 'saved_optimization_results'
+            if not os.path.isdir(out_dir):
+                os.makedirs(out_dir)
+            filename = os.path.join(out_dir, 'opti_outputs.pkl')
+            tool_kit.pickle_save(self.optimized_combinations, filename)
 
     ###########################
     ### GUI-related methods ###

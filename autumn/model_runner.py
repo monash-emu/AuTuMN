@@ -271,16 +271,14 @@ class ModelRunner:
             self.model_dict[scenario_name].integrate()
 
         # Model interpretation code - should be flexible and is now used by uncertainty and optimisation
-        self.epi_outputs \
-            = self.find_epi_outputs(models_to_analyse=self.model_dict,
-                                    outputs_to_analyse=self.epi_outputs_to_analyse,
-                                    stratifications=[self.model_dict[scenario_name].agegroups,
-                                                     self.model_dict[scenario_name].comorbidities])
-        self.find_population_fractions(stratifications=[self.model_dict[scenario_name].agegroups,
-                                                        self.model_dict[scenario_name].comorbidities])
-        self.cost_outputs \
-            = self.find_cost_outputs(models_to_analyse=self.model_dict,
-                                     interventions_to_cost=self.interventions_to_cost)
+        self.epi_outputs = self.find_epi_outputs(models_to_analyse=self.model_dict,
+                                                 outputs_to_analyse=self.epi_outputs_to_analyse,
+                                                 stratifications=[self.model_dict['manual_baseline'].agegroups,
+                                                                  self.model_dict['manual_baseline'].comorbidities])
+        self.cost_outputs = self.find_cost_outputs(models_to_analyse=self.model_dict,
+                                                   interventions_to_cost=self.interventions_to_cost)
+        self.find_population_fractions(stratifications=[self.model_dict['manual_baseline'].agegroups,
+                                                        self.model_dict['manual_baseline'].comorbidities])
         costs_all_programs = self.find_costs_all_programs(models_to_analyse=self.model_dict)
         for scenario in self.model_dict:
             self.cost_outputs[scenario].update(costs_all_programs[scenario])

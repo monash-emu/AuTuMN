@@ -157,8 +157,8 @@ class ModelRunner:
 
         self.optimisation = False
         self.save_opti = True
-        self.total_funding = 6.6e6 * (2035 - self.inputs.model_constants['recent_time'])  # Total funding for the entire period
-        self.year_end_opti = 2020 # model is run until that date during optimization
+        self.total_funding = 3.3e6 * (2035 - self.inputs.model_constants['recent_time'])  # Total funding for the entire period
+        self.year_end_opti = 2018 # model is run until that date during optimization
         self.acceptable_combinations = []
         self.acceptance_dict = {}
         self.rejection_dict = {}
@@ -533,7 +533,7 @@ class ModelRunner:
         costs_all_programs = {}
         for scenario in models_to_analyse:
             costs_all_programs[scenario] = {'raw_cost_all_programs':
-                                                [0.] * len(self.cost_outputs[scenario]['raw_cost_vaccination'])}
+                                                [0.] * len(self.cost_outputs[scenario]['raw_cost_' + self.interventions_to_cost[0]])}
             for i in self.interventions_to_cost:
                 costs_all_programs[scenario]['raw_cost_all_programs'] \
                     = increment_list(self.cost_outputs[scenario]['raw_cost_' + i],
@@ -984,11 +984,27 @@ class ModelRunner:
         ammount of funding
         populates the attribute 'acceptable_combinations' of model_runner.
         """
+        # Determine list of interventions with and without startup costs
+        interventions_without_startup = []
+        interventions_with_startup = []
+
+        for i, intervention in enumerate(self.interventions_to_cost):
+            start_cost = 0.
+            if self.model_dict['manual_baseline'].intervention_startdates[
+                intervention] is None:
+                start_cost = self.inputs.model_constants['econ_startupcost_' + intervention]
+            if start_cost == 0:
+                interventions_without_startup.append(intervention)
+            else:
+                interventions_with_startup.append(intervention)
+
+        # to be completed
 
         n_interventions = len(self.interventions_to_cost)
         full_set = range(n_interventions)
         canditate_combinations = list(itertools.chain.from_iterable(itertools.combinations(full_set, n) \
                                                                     for n in range(n_interventions + 1)[1:]))
+
 
         for combi in canditate_combinations:
             total_start_cost = 0
@@ -1022,6 +1038,16 @@ class ModelRunner:
         self.model_dict['optimisation'].eco_drives_epi = True
 
         self.get_acceptable_combinations()
+
+        # Keep only combinations involving ipt_age0to5 as starting costs are 0 in the case of Fiji (IPT already implemented before)
+        if 'ipt_age0to5' in self.interventions_to_cost:
+            ind_ipt_age0to5 = self.interventions_to_cost.index('ipt_age0to5')
+            updated_acceptable_combinations = []
+            for combi in self.acceptable_combinations:
+                if ind_ipt_age0to5 in combi:
+                    updated_acceptable_combinations.append(combi)
+            self.acceptable_combinations = updated_acceptable_combinations
+
         print "Number of combinations to consider: " + str(len(self.acceptable_combinations))
         for j, combi in enumerate(self.acceptable_combinations): # for each acceptable combination of interventions
             # prepare storage
@@ -1087,7 +1113,7 @@ class ModelRunner:
                 dict_optimized_combi['objective'] = res.fun
 
             self.optimized_combinations.append(dict_optimized_combi)
-            print "Combination " + str(j + 1) + "/" + str(len(self.acceptable_combinations)) + "completed."
+            print "Combination " + str(j + 1) + "/" + str(len(self.acceptable_combinations)) + " completed."
 
         # Update self.optimal_allocation
         best_dict = {}

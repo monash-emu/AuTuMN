@@ -157,7 +157,7 @@ class ModelRunner:
 
         self.optimisation = False
         self.save_opti = True
-        self.total_funding = 0.5e6 * (2035 - self.inputs.model_constants['recent_time'])  # Total funding for the entire period
+        self.total_funding = 1.3e6 * (2035 - self.inputs.model_constants['recent_time'])  # Total funding for the entire period
         self.year_end_opti = 2020 # model is run until that date during optimization
         self.acceptable_combinations = []
         self.acceptance_dict = {}
@@ -309,7 +309,7 @@ class ModelRunner:
                 self.total_funding = numpy.sum(self.model_dict['manual_baseline'].costs[start_cost_index:, :]) \
                                      / (self.model_dict['manual_baseline'].inputs.model_constants['report_end_time'] -
                                         self.model_dict['manual_baseline'].inputs.model_constants['scenario_start_time'])
-            annual_envelope = [1.0e6, 1.3e6, 1.6e6, 1.9e6, 2.2e6, 2.5e6]
+            annual_envelope = [0.5e6, 0.75e6, 1e6, 1.3e6, 1.6e6, 1.9e6, 2.2e6, 2.5e6]
             for env in annual_envelope:
                 print "*****************************************************************"
                 print "Annual total envelope of:" + str(env)
@@ -1046,19 +1046,23 @@ class ModelRunner:
 
         self.get_acceptable_combinations()
 
-        # Keep only combinations involving ipt_age0to5 as starting costs are 0 in the case of Fiji (IPT already implemented before)
-        if 'ipt_age0to5' in self.interventions_to_cost:
-            ind_ipt_age0to5 = self.interventions_to_cost.index('ipt_age0to5')
-            updated_acceptable_combinations = []
-            for combi in self.acceptable_combinations:
-                if ind_ipt_age0to5 in combi:
-                    updated_acceptable_combinations.append(combi)
-            self.acceptable_combinations = updated_acceptable_combinations
+        def force_presence_intervention(intervention):
+            # keeps only combinations including intervention
+            if intervention in self.interventions_to_cost:
+                ind_intervention = self.interventions_to_cost.index(intervention)
+                updated_acceptable_combinations = []
+                for combi in self.acceptable_combinations:
+                    if ind_intervention in combi:
+                        updated_acceptable_combinations.append(combi)
+                return updated_acceptable_combinations
+            else:
+                return self.acceptable_combinations
+
+        self.acceptable_combinations = force_presence_intervention('ipt_age0to5') # ipt has no startup costs
 
         print "Number of combinations to consider: " + str(len(self.acceptable_combinations))
 
         for j, combi in enumerate(self.acceptable_combinations): # for each acceptable combination of interventions
-            #if j == (len(self.acceptable_combinations)-1):
             # prepare storage
             dict_optimized_combi = {'interventions': [], 'distribution': [], 'objective': None}
 

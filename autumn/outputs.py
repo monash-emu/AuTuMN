@@ -1373,7 +1373,7 @@ class Project:
 
         for classification in self.classifications:
             self.classified_scaleups[classification] = []
-            for fn in self.model_runner.model_dict['baseline'].scaleup_fns:
+            for fn in self.model_runner.model_dict['manual_baseline'].scaleup_fns:
                 if classification in fn:
                     self.classified_scaleups[classification] += [fn]
 
@@ -1415,16 +1415,16 @@ class Project:
                 # Iterate through the scenarios
                 scenario_labels = []
                 for scenario in reversed(self.scenarios):
+                    scenario_name = tool_kit.find_scenario_string_from_number(scenario)
 
                     # Line plot of scaling parameter functions
                     ax.plot(x_vals,
-                            map(self.model_runner.model_dict[scenario].scaleup_fns[function],
-                                x_vals),
+                            map(self.model_runner.model_dict['manual_' + scenario_name].scaleup_fns[function], x_vals),
                             color=self.output_colours[scenario][1])
 
                     # Record the name of the scenario for the legend
                     scenario_labels \
-                        += [tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario))]
+                        += [tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario_name))]
 
                 # Plot the raw data from which the scale-up functions were produced
                 data_to_plot = {}

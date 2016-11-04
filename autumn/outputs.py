@@ -1840,16 +1840,21 @@ class Project:
 
             for i, agegroup in enumerate(self.inputs.agegroups):
 
-                # i+1 gives the
+                # i+1 gives the column, o the row
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i+1 + o*len(self.inputs.agegroups))
 
                 # Plot the modelled data
-                ax.plot(
-                    self.model_runner.epi_outputs['manual_baseline']['times'],
-                    self.model_runner.epi_outputs['manual_baseline'][output + agegroup],
-                    color=self.output_colours[None][1],
-                    linestyle=self.output_colours[None][0],
-                    linewidth=1.5)
+                scenario_labels = []
+                for scenario in self.scenarios:
+                    scenario_name = tool_kit.find_scenario_string_from_number(scenario)
+                    ax.plot(
+                        self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
+                        self.model_runner.epi_outputs['manual_' + scenario_name][output + agegroup],
+                        color=self.output_colours[scenario][1],
+                        linestyle=self.output_colours[scenario][0],
+                        linewidth=1.5)
+                    scenario_labels \
+                        += [tool_kit.replace_underscore_with_space(tool_kit.capitalise_first_letter(scenario_name))]
 
                 # Adjust size of labels of x-ticks
                 for axis_to_change in [ax.xaxis, ax.yaxis]:
@@ -1867,19 +1872,8 @@ class Project:
                 # Set upper y-limit to the maximum value for any age group during the period of interest
                 ax.set_ylim(bottom=0., top=ymax)
 
-                # Get the handles, except for the last one, which plots the data
-                scenario_handles = ax.lines[:-1]
-
-                # Make some string labels for these handles
-                # (this code could probably be better)
-                scenario_labels = []
-                for s in range(len(scenario_handles)):
-                    if s < len(scenario_handles) - 1:
-                        scenario_labels += ['Scenario ' + str(s + 1)]
-                    else:
-                        scenario_labels += ['Baseline']
-
                 # Draw the legend
+                scenario_handles = ax.lines
                 ax.legend(scenario_handles,
                           scenario_labels,
                           fontsize=get_nice_font_size(subplot_grid) - 2.,

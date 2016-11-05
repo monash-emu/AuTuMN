@@ -1373,7 +1373,7 @@ class Project:
 
         for classification in self.classifications:
             self.classified_scaleups[classification] = []
-            for fn in self.model_runner.model_dict['baseline'].scaleup_fns:
+            for fn in self.model_runner.model_dict['manual_baseline'].scaleup_fns:
                 if classification in fn:
                     self.classified_scaleups[classification] += [fn]
 
@@ -1415,16 +1415,16 @@ class Project:
                 # Iterate through the scenarios
                 scenario_labels = []
                 for scenario in reversed(self.scenarios):
+                    scenario_name = tool_kit.find_scenario_string_from_number(scenario)
 
                     # Line plot of scaling parameter functions
                     ax.plot(x_vals,
-                            map(self.model_runner.model_dict[scenario].scaleup_fns[function],
-                                x_vals),
+                            map(self.model_runner.model_dict['manual_' + scenario_name].scaleup_fns[function], x_vals),
                             color=self.output_colours[scenario][1])
 
                     # Record the name of the scenario for the legend
                     scenario_labels \
-                        += [tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario))]
+                        += [tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario_name))]
 
                 # Plot the raw data from which the scale-up functions were produced
                 data_to_plot = {}
@@ -1506,7 +1506,7 @@ class Project:
         """
 
         # Plot figures by scenario
-        for scenario in self.scenarios:
+        for scenario in self.scenario_names:
 
             fig = self.set_and_update_figure()
 
@@ -1524,7 +1524,7 @@ class Project:
 
                 for t, time in enumerate(times):
                     time_index = tool_kit.find_first_list_element_at_least_value(
-                        self.model_runner.model_dict[scenario].times, time)
+                        self.model_runner.model_dict['manual_' + scenario].times, time)
                     y_values = []
                     x_values = []
                     for i in numpy.linspace(0, 1, 101):
@@ -1539,11 +1539,12 @@ class Project:
                                                                     self.inputs.model_constants['econ_unitcost_'
                                                                                                 + program],
                                                                     self.model_runner.model_dict[
-                                                                        scenario].var_array[
+                                                                        'manual_' + scenario].var_array[
                                                                         time_index,
                                                                         self.model_runner.model_dict[
-                                                                            scenario].var_labels.index('popsize_'
-                                                                                                       + program)])
+                                                                            'manual_'
+                                                                            + scenario].var_labels.index('popsize_'
+                                                                                                         + program)])
                             x_values += [cost]
                             y_values += [i]
 
@@ -1586,7 +1587,7 @@ class Project:
         """
 
         # Separate figures for each scenario
-        for scenario in self.scenarios:
+        for scenario in self.scenario_names:
 
             # Standard prelims, but separate for each type of plot - individual and stacked
             fig_individual = self.set_and_update_figure()
@@ -1600,12 +1601,14 @@ class Project:
 
             for program in self.programs:
                 for cost_type in self.model_runner.cost_types:
-                    if max(self.model_runner.cost_outputs[scenario][cost_type + '_cost_' + program]) > max_cost:
-                        max_cost = max(self.model_runner.cost_outputs[scenario][cost_type + '_cost_' + program])
+                    if max(self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_' + program]) > max_cost:
+                        max_cost = max(self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_' + program])
 
             for cost_type in self.model_runner.cost_types:
-                if max(self.model_runner.cost_outputs[scenario][cost_type + '_cost_all_programs']) > max_stacked_cost:
-                    max_stacked_cost = max(self.model_runner.cost_outputs[scenario][cost_type + '_cost_all_programs'])
+                if max(self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_all_programs']) \
+                        > max_stacked_cost:
+                    max_stacked_cost \
+                        = max(self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_all_programs'])
 
             # Scale vertical axis and amend axis label as appropriate
             multiplier_individual, multiplier_individual_label = self.scale_axes(max_cost)
@@ -1613,7 +1616,8 @@ class Project:
 
             # Find the index for the first time after the current time
             reference_time_index \
-                = tool_kit.find_first_list_element_above_value(self.model_runner.cost_outputs[scenario]['times'],
+                = tool_kit.find_first_list_element_above_value(self.model_runner.cost_outputs['manual_'
+                                                                                              + scenario]['times'],
                                                                self.inputs.model_constants['reference_time'])
             for c, cost_type in enumerate(self.model_runner.cost_types):
 
@@ -1635,38 +1639,40 @@ class Project:
 
                 # Create empty list for legend
                 program_labels = []
-                cumulative_data = [0.] * len(self.model_runner.cost_outputs[scenario]['times'])
+                cumulative_data = [0.] * len(self.model_runner.cost_outputs['manual_' + scenario]['times'])
 
-                for program in self.model_runner.model_dict[scenario].interventions_to_cost:
+                for program in self.inputs.interventions_to_cost:
 
                     # Record the previous data for plotting as an independent object for the lower edge of the fill
                     previous_data = copy.copy(cumulative_data)
 
                     # Calculate the cumulative sum for the upper edge of the fill
-                    for i in range(len(self.model_runner.cost_outputs[scenario]['times'])):
-                        cumulative_data[i] += self.model_runner.cost_outputs[scenario][cost_type + '_cost_' + program][i]
+                    for i in range(len(self.model_runner.cost_outputs['manual_' + scenario]['times'])):
+                        cumulative_data[i] += self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_' + program][i]
 
                     # Scale all the data
-                    data = self.model_runner.cost_outputs[scenario][cost_type + '_cost_' + program]
+                    data = self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_' + program]
 
                     individual_data = [d * multiplier_individual for d in data]
                     cumulative_data_to_plot = [d * multiplier_stacked for d in cumulative_data]
                     previous_data_to_plot = [d * multiplier_stacked for d in previous_data]
 
                     reference_cost \
-                        = self.model_runner.cost_outputs[scenario][cost_type + '_cost_' + program][reference_time_index]
+                        = self.model_runner.cost_outputs['manual_'
+                                                         + scenario][cost_type
+                                                                     + '_cost_' + program][reference_time_index]
                     relative_data = [(d - reference_cost) * multiplier_individual for d in data]
 
                     # Plot lines
-                    ax_individual.plot(self.model_runner.cost_outputs[scenario]['times'],
+                    ax_individual.plot(self.model_runner.cost_outputs['manual_' + scenario]['times'],
                                        individual_data,
                                        color=self.program_colours[program][1])
-                    ax_relative.plot(self.model_runner.cost_outputs[scenario]['times'],
+                    ax_relative.plot(self.model_runner.cost_outputs['manual_' + scenario]['times'],
                                      relative_data,
                                      color=self.program_colours[program][1])
 
                     # Plot stacked
-                    ax_stacked.fill_between(self.model_runner.model_dict[scenario].cost_times,
+                    ax_stacked.fill_between(self.model_runner.model_dict['manual_' + scenario].cost_times,
                                             previous_data_to_plot,
                                             cumulative_data_to_plot,
                                             color=self.program_colours[program][1],
@@ -1834,16 +1840,21 @@ class Project:
 
             for i, agegroup in enumerate(self.inputs.agegroups):
 
-                # i+1 gives the
+                # i+1 gives the column, o the row
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i+1 + o*len(self.inputs.agegroups))
 
                 # Plot the modelled data
-                ax.plot(
-                    self.model_runner.epi_outputs['manual_baseline']['times'],
-                    self.model_runner.epi_outputs['manual_baseline'][output + agegroup],
-                    color=self.output_colours[None][1],
-                    linestyle=self.output_colours[None][0],
-                    linewidth=1.5)
+                scenario_labels = []
+                for scenario in self.scenarios:
+                    scenario_name = tool_kit.find_scenario_string_from_number(scenario)
+                    ax.plot(
+                        self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
+                        self.model_runner.epi_outputs['manual_' + scenario_name][output + agegroup],
+                        color=self.output_colours[scenario][1],
+                        linestyle=self.output_colours[scenario][0],
+                        linewidth=1.5)
+                    scenario_labels \
+                        += [tool_kit.replace_underscore_with_space(tool_kit.capitalise_first_letter(scenario_name))]
 
                 # Adjust size of labels of x-ticks
                 for axis_to_change in [ax.xaxis, ax.yaxis]:
@@ -1861,19 +1872,8 @@ class Project:
                 # Set upper y-limit to the maximum value for any age group during the period of interest
                 ax.set_ylim(bottom=0., top=ymax)
 
-                # Get the handles, except for the last one, which plots the data
-                scenario_handles = ax.lines[:-1]
-
-                # Make some string labels for these handles
-                # (this code could probably be better)
-                scenario_labels = []
-                for s in range(len(scenario_handles)):
-                    if s < len(scenario_handles) - 1:
-                        scenario_labels += ['Scenario ' + str(s + 1)]
-                    else:
-                        scenario_labels += ['Baseline']
-
                 # Draw the legend
+                scenario_handles = ax.lines
                 ax.legend(scenario_handles,
                           scenario_labels,
                           fontsize=get_nice_font_size(subplot_grid) - 2.,

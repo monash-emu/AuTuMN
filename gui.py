@@ -25,7 +25,7 @@ def find_button_name_from_string(working_string):
                               'output_compartment_populations':
                                   'Plot compartment sizes',
                               'output_by_age':
-                                  'Plot output by age groups',
+                                  'Plot outcomes by age groups',
                               'output_age_fractions':
                                   'Plot proportions by age',
                               'output_comorbidity_fractions':

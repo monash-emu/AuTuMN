@@ -821,10 +821,17 @@ class ConsolidatedModel(StratifiedModel):
                                                                    * self.inputs.model_constants[
                                                                        'novel_ipt_effective_per_assessment']
 
+
+            # check size of latency compartments
+            early_latent = 0
+            for comorbidity in self.comorbidities:
+                early_latent += self.compartments['latent_early' + comorbidity + agegroup]
+
             # Calculate the total number of effective treatments across both forms of IPT
             self.vars['ipt_effective_treatments' + agegroup]\
-                = max([self.vars['novel_ipt_effective_treatments' + agegroup],
-                       self.vars['standard_ipt_effective_treatments' + agegroup]])
+                = min([max([self.vars['novel_ipt_effective_treatments' + agegroup],
+                       self.vars['standard_ipt_effective_treatments' + agegroup],]),
+                        early_latent])
 
     ##################################################################
     # Methods that calculate the flows of all the compartments

@@ -424,6 +424,17 @@ class ModelRunner:
                                              / total_denominator \
                                              * 1e5, epi_outputs[scenario]['prevalence'])
 
+            # Infections (absolute number)
+            if 'infections' in outputs_to_analyse:
+                for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
+                    if 'latent_early' in to_label:
+                        epi_outputs[scenario]['infections'] \
+                            = increment_list(self.model_dict[scenario].get_compartment_soln(from_label)
+                                             * self.model_dict[scenario].get_var_soln(rate),
+                                             epi_outputs[scenario]['infections'])
+                epi_outputs[scenario]['annual_risk_infection'] \
+                    = [i / j * 1e2 for i, j in zip(epi_outputs[scenario]['infections'], total_denominator)]
+
             # Stratified outputs________________________________________________________________________________________
             for stratification in stratifications:
                 if len(stratification) > 1:
@@ -498,6 +509,19 @@ class ModelRunner:
                                         = increment_list(self.model_dict[scenario].get_compartment_soln(label) \
                                                          / stratum_denominator \
                                                          * 1e5, epi_outputs[scenario]['prevalence' + stratum])
+
+                        # Infections (absolute number)
+                        if 'infections' in outputs_to_analyse:
+                            for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
+                                if 'latent_early' in to_label and stratum in from_label:
+                                    epi_outputs[scenario]['infections' + stratum] \
+                                        = increment_list(self.model_dict[scenario].get_compartment_soln(from_label)
+                                                         * self.model_dict[scenario].get_var_soln(rate),
+                                                         epi_outputs[scenario]['infections' + stratum])
+                            epi_outputs[scenario]['annual_risk_infection' + stratum] \
+                                = [i / j * 1e2 for i, j in zip(epi_outputs[scenario]['infections' + stratum],
+                                                               stratum_denominator)]
+
         return epi_outputs
 
     def find_population_fractions(self, stratifications=[]):

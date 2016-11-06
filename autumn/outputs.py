@@ -1774,8 +1774,7 @@ class Project:
         """
         Plot population fractions by the compartment to which they belong.
 
-        *** Also needs some work to fit with model interpretation code - ideally shouldn't be running directly from
-        the model objects as is currently happening.
+        *** Ideally shouldn't be running directly from the model objects as is currently happening.
 
         Args:
             strain_or_organ: Whether the plotting style should be done by strain or by organ.
@@ -1783,7 +1782,8 @@ class Project:
         """
 
         # Get values to be plotted
-        subgroup_solns, subgroup_fractions = autumn.tool_kit.find_fractions(self.model_runner.model_dict['baseline'])
+        subgroup_solns, subgroup_fractions \
+            = autumn.tool_kit.find_fractions(self.model_runner.model_dict['manual_baseline'])
         for i, category in enumerate(subgroup_fractions):
             values = subgroup_fractions[category]
 
@@ -1801,7 +1801,7 @@ class Project:
             # Plot population fractions
             for plot_label in values.keys():
                 ax.plot(
-                    self.model_runner.model_dict['baseline'].times,
+                    self.model_runner.model_dict['manual_baseline'].times,
                     values[plot_label],
                     label=plot_label, linewidth=1,
                     color=colours[plot_label],
@@ -1812,7 +1812,7 @@ class Project:
             # Finishing touches
             ax.set_xlim(self.inputs.model_constants['plot_start_time'],
                         self.inputs.model_constants['plot_end_time'])
-            title = make_plot_title(self.model_runner.model_dict['baseline'], values.keys())
+            title = make_plot_title(self.model_runner.model_dict['manual_baseline'], values.keys())
             set_axes_props(ax, 'Year', 'Proportion of population', 'Population, ' + title, True, axis_labels)
 
             # Saving

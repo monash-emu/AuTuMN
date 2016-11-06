@@ -1774,8 +1774,7 @@ class Project:
         """
         Plot population fractions by the compartment to which they belong.
 
-        *** Also needs some work to fit with model interpretation code - ideally shouldn't be running directly from
-        the model objects as is currently happening.
+        *** Ideally shouldn't be running directly from the model objects as is currently happening.
 
         Args:
             strain_or_organ: Whether the plotting style should be done by strain or by organ.

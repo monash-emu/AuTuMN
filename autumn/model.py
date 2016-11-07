@@ -402,7 +402,7 @@ class ConsolidatedModel(StratifiedModel):
                 / self.vars['population']
 
             # Special case for scenario 11 is cessation of transmission
-            if self.scenario == 11:
+            if self.scenario == 11 or self.country == 'Philippines':
                 self.vars['rate_force' + strain] *= self.vars['transmission_modifier']
 
             # Adjust for immunity

@@ -38,6 +38,7 @@ def get_cost_from_coverage(coverage, c_inflection_cost, saturation, unit_cost, p
 
 
 def get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.0):
+
     """
     Estimate the coverage associated with a spending in a programme
     Args:
@@ -51,7 +52,6 @@ def get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_s
 
     Returns:
        coverage (as a proportion, then lives in 0-1)
-
    """
 
     assert cost >= 0, 'cost must be positive or null'
@@ -99,6 +99,7 @@ def discount_cost(cost_uninflated, discount_rate, t_into_future):
 
 
 def get_adjusted_cost(raw_cost, type, current_cpi=None, cpi_time_variant=None,discount_rate=None, t_into_future=None):
+
     """
     calculate the adjusted cost corresponding to a given type
     Args:

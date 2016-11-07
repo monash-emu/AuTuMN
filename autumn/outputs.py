@@ -559,7 +559,10 @@ class Project:
         if not os.path.isdir(self.out_dir_project):
             os.makedirs(self.out_dir_project)
         self.figure_number = 1
-        self.classifications = ['demo_', 'econ_', 'epi_', 'program_prop_', 'program_timeperiod_']
+        self.classifications = ['demo_', 'econ_', 'epi_prop', 'epi_rr', 'program_prop_', 'program_timeperiod_',
+                                'program_prop_novel', 'program_prop_treatment', 'program_prop_detect',
+                                'program_prop_vaccination', 'program_prop_treatment_success',
+                                'program_prop_treatment_death', 'transmission_modifier']
         self.output_colours = {}
         self.uncertainty_output_colours = {}
         self.program_colours = {}
@@ -570,6 +573,7 @@ class Project:
         self.scenarios = self.gui_inputs['scenarios_to_run']
         self.scenario_names = self.gui_inputs['scenario_names_to_run']
         self.programs = self.inputs.interventions_to_cost
+        self.gtb_available_outputs = ['notifications', 'incidence', 'prevalence', 'mortality']
 
     #################################
     # General methods for use below #
@@ -1238,6 +1242,9 @@ class Project:
 
         # Standard preliminaries
         start_time = self.inputs.model_constants['plot_start_time']
+        start_time_index \
+            = tool_kit.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
+                                                              start_time)
         colour, indices, yaxis_label, title, patch_colour = \
             find_standard_output_styles(outputs, lightening_factor=0.3)
         subplot_grid = find_subplot_numbers(len(outputs))
@@ -1256,7 +1263,7 @@ class Project:
                 gtb_data['point_estimate'] = self.inputs.original_data['notifications']['c_newinc']
 
             # Other indicators (incidence, prevalence, mortality)
-            else:
+            elif output in self.gtb_available_outputs:
 
                 # Extract the relevant data
                 for indicator in self.inputs.original_data['tb']:
@@ -1273,20 +1280,26 @@ class Project:
                 ax.add_patch(patch)
 
             # Plot point estimates
-            ax.plot(gtb_data['point_estimate'].keys(), gtb_data['point_estimate'].values(),
-                    color=colour[o], linewidth=0.5, label=None)
+            if output in self.gtb_available_outputs:
+                ax.plot(gtb_data['point_estimate'].keys(), gtb_data['point_estimate'].values(),
+                        color=colour[o], linewidth=0.5, label=None)
 
             # Plotting modelled data____________________________________________________________________________________
 
             # Plot without uncertainty
             if ci_plot is None:
+
                 end_filename = '_scenario'
-                # Reversed ensures black baseline plotted over top
+                max_data = max(self.model_runner.epi_outputs['manual_baseline'][output][start_time_index:])
+
+                # Reversing ensures black baseline plotted over top
                 for scenario in self.scenarios[::-1]:
                     scenario_name = tool_kit.find_scenario_string_from_number(scenario)
+                    data_to_plot = self.model_runner.epi_outputs['manual_' + scenario_name][output]
+                    max_data = max(self.model_runner.epi_outputs['manual_baseline'][output][start_time_index:])
                     ax.plot(
                         self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
-                        self.model_runner.epi_outputs['manual_' + scenario_name][output],
+                        data_to_plot,
                         color=self.output_colours[scenario][1],
                         linestyle=self.output_colours[scenario][0],
                         linewidth=1.5,
@@ -1350,6 +1363,7 @@ class Project:
             # Make cosmetic changes
             # if o == len(outputs) - 1 and ci_plot:
             #     ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False)
+            ax.set_ylim((0., max_data * 1.2))
             ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
             ax.set_xticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))
             for axis_to_change in [ax.xaxis, ax.yaxis]:

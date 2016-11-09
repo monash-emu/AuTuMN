@@ -156,6 +156,7 @@ class ModelRunner:
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
 
         self.optimisation = False
+        self.indicator_to_minimize = 'mortality'
         self.save_opti = True
         self.total_funding = 1.3e6 * (2035 - self.inputs.model_constants['recent_time'])  # Total funding for the entire period
         self.year_end_opti = 2020 # model is run until that date during optimization
@@ -309,7 +310,7 @@ class ModelRunner:
                 self.total_funding = numpy.sum(self.model_dict['manual_baseline'].costs[start_cost_index:, :]) \
                                      / (self.model_dict['manual_baseline'].inputs.model_constants['report_end_time'] -
                                         self.model_dict['manual_baseline'].inputs.model_constants['scenario_start_time'])
-            annual_envelope = [0.5e6, 0.75e6, 1e6, 1.3e6, 1.6e6, 1.9e6, 2.2e6, 2.5e6]
+            annual_envelope = [0.7e6, 1e6, 1.3e6, 1.6e6, 1.9e6, 2e6, 2.2e6, 2.5e6]
             for env in annual_envelope:
                 print "*****************************************************************"
                 print "Annual total envelope of:" + str(env)
@@ -1052,7 +1053,7 @@ class ModelRunner:
 
         print 'Start optimisation'
         start_timer_opti = datetime.datetime.now()
-
+        self.optimized_combinations=[]
         # Initialise a new model that will be run from 'recent_time' for optimisation
 
         inputs_opti = self.inputs
@@ -1083,6 +1084,12 @@ class ModelRunner:
                 return self.acceptable_combinations
 
         self.acceptable_combinations = force_presence_intervention('ipt_age0to5') # ipt has no startup costs
+        self.acceptable_combinations = force_presence_intervention('ipt_age5to15') # ipt has no startup costs
+        self.acceptable_combinations = force_presence_intervention('xpertacf') # ipt has no startup costs
+        self.acceptable_combinations = force_presence_intervention('decentralisation') # ipt has no startup costs
+        self.acceptable_combinations = force_presence_intervention('treatment_support') # ipt has no startup costs
+
+
 
         print "Number of combinations to consider: " + str(len(self.acceptable_combinations))
 
@@ -1117,9 +1124,8 @@ class ModelRunner:
                 self.model_dict['optimisation'].distribute_funding_across_years()
                 self.model_dict['optimisation'].integrate()
                 output_list = self.find_epi_outputs(['optimisation'],
-                                                    outputs_to_analyse=['population',
-                                                                        'incidence'])
-                return output_list['optimisation']['incidence'][-1]
+                                                    outputs_to_analyse=['population', 'incidence', 'mortality', 'true_mortality'])
+                return output_list['optimisation'][self.indicator_to_minimize][-1]
 
             if len(combi) == 1: # the distribution result is obvious
                 dict_optimized_combi['distribution'] = [1.]
@@ -1144,8 +1150,9 @@ class ModelRunner:
                                                 self.model_dict['manual_baseline'].interventions_to_cost[combi[i]]] / self.total_funding
                     bnds.append((minimal_allocation, 1.0))
                 # Ready to run optimisation
+                f_tol={'incidence': 0.5, 'mortality': 0.05} # stopping condition: tolerance differs according to indicator
                 res = minimize(func, x_0, jac=None, bounds=bnds, constraints=cons, method='SLSQP',
-                               options={'disp': False, 'ftol': 0.5})
+                               options={'disp': False, 'ftol': f_tol[self.indicator_to_minimize]})
                 dict_optimized_combi['distribution'] = res.x
                 print res.x
                 dict_optimized_combi['objective'] = res.fun
@@ -1200,10 +1207,13 @@ class ModelRunner:
 
         print "Situation in 2035 under the optimal allocation: "
         output_list = self.find_epi_outputs(['optimisation'],
-                                            outputs_to_analyse=['population',
-                                                                'incidence'])
+                                            outputs_to_analyse=['population', 'incidence', 'mortality', 'true_mortality'])
         print "incidence"
         print output_list['optimisation']['incidence'][-1]
+        print "mortality"
+        print output_list['optimisation']['mortality'][-1]
+        print "best allocation"
+        print self.optimal_allocation
 
 
         del self.model_dict['optimisation']

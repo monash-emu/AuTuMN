@@ -165,8 +165,8 @@ class ModelRunner:
         self.rejection_dict = {}
         self.optimized_combinations = []
         self.optimal_allocation = {}
-        self.epi_outputs_to_analyse = ['population', 'incidence', 'prevalence', 'mortality', 'true_mortality',
-                                       'notifications']
+        self.epi_outputs_to_analyse = ['population', 'incidence', 'true_incidence', 'prevalence', 'true_prevalence',
+                                       'mortality', 'true_mortality', 'notifications']
         self.epi_outputs = {}
         self.epi_outputs_dict = {}
         self.epi_outputs_integer_dict = {}
@@ -367,20 +367,33 @@ class ModelRunner:
             if 'incidence' in outputs_to_analyse:
                 for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
                     if 'latent' in from_label and 'active' in to_label:
+                        incidence_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
+                                                 * self.model_dict[scenario].get_var_soln(rate) \
+                                                 / total_denominator \
+                                                 * 1e5
+                        epi_outputs[scenario]['true_incidence'] \
+                            = increment_list(incidence_increment,
+                                             epi_outputs[scenario]['true_incidence'])
+                        if '_age' in from_label and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
+                            incidence_increment *= self.inputs.model_constants['program_prop_child_reporting']
                         epi_outputs[scenario]['incidence'] \
-                            = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
-                                             * self.model_dict[scenario].get_var_soln(rate) \
-                                             / total_denominator \
-                                             * 1e5,
+                            = increment_list(incidence_increment,
                                              epi_outputs[scenario]['incidence'])
+
                 for from_label, to_label, rate in self.model_dict[scenario].fixed_transfer_rate_flows:
                     if 'latent' in from_label and 'active' in to_label:
-                        epi_outputs[scenario]['incidence'] \
-                            = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
-                                             * rate \
-                                             / total_denominator \
-                                             * 1e5,
+                        incidence_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
+                                                 * self.model_dict[scenario].get_var_soln(rate) \
+                                                 / total_denominator \
+                                                 * 1e5
+                        epi_outputs[scenario]['true_incidence'] \
+                            = increment_list(incidence_increment,
                                              epi_outputs[scenario]['incidence'])
+                        if '_age' in from_label and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
+                            incidence_increment *= self.inputs.model_constants['program_prop_child_reporting']
+                        epi_outputs[scenario]['incidence'] \
+                            = increment_list(incidence_increment,
+                                             epi_outputs[scenario]['true_incidence'])
 
             # Notifications
             if 'notifications' in outputs_to_analyse:
@@ -399,31 +412,45 @@ class ModelRunner:
                                           * rate \
                                           / total_denominator \
                                           * 1e5
+                    epi_outputs[scenario]['true_mortality'] \
+                        = increment_list(mortality_increment,
+                                         epi_outputs[scenario]['true_mortality'])
+                    if '_age' in from_label and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
+                        mortality_increment *= self.inputs.model_constants['program_prop_child_reporting']
                     epi_outputs[scenario]['mortality'] \
                         = increment_list(mortality_increment
                                          * self.model_dict[scenario].params['program_prop_death_reporting'],
                                          epi_outputs[scenario]['mortality'])
-                    epi_outputs[scenario]['true_mortality'] \
-                        = increment_list(mortality_increment,
-                                         epi_outputs[scenario]['true_mortality'])
+
                 for from_label, rate in self.model_dict[scenario].var_infection_death_rate_flows:
                     mortality_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
                                           * self.model_dict[scenario].get_var_soln(rate) \
                                           / total_denominator \
                                           * 1e5
-                    for mortality_type in ['mortality', 'true_mortality']:
-                        epi_outputs[scenario][mortality_type] \
-                            = increment_list(mortality_increment,
-                                             epi_outputs[scenario][mortality_type])
+                    epi_outputs[scenario]['true_mortality'] \
+                        = increment_list(mortality_increment,
+                                         epi_outputs[scenario]['true_mortality'])
+                    if '_age' in from_label and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
+                        mortality_increment *= self.inputs.model_constants['program_prop_child_reporting']
+                    epi_outputs[scenario]['mortality'] \
+                        = increment_list(mortality_increment,
+                                         epi_outputs[scenario]['mortality'])
 
             # Prevalence
             if 'prevalence' in outputs_to_analyse:
                 for label in self.model_dict[scenario].labels:
                     if 'susceptible' not in label and 'latent' not in label:
+                        prevalence_increment = self.model_dict[scenario].get_compartment_soln(label) \
+                                               / total_denominator \
+                                               * 1e5
+                        epi_outputs[scenario]['true_prevalence'] \
+                            = increment_list(prevalence_increment,
+                                             epi_outputs[scenario]['true_prevalence'])
+                        if '_age' in label and tool_kit.is_upper_age_limit_at_or_below(label, 15.):
+                            prevalence_increment *= self.inputs.model_constants['program_prop_child_reporting']
                         epi_outputs[scenario]['prevalence'] \
-                            = increment_list(self.model_dict[scenario].get_compartment_soln(label) \
-                                             / total_denominator \
-                                             * 1e5, epi_outputs[scenario]['prevalence'])
+                            = increment_list(prevalence_increment,
+                                             epi_outputs[scenario]['prevalence'])
 
             # Infections (absolute number)
             if 'infections' in outputs_to_analyse:
@@ -460,19 +487,34 @@ class ModelRunner:
                         if 'incidence' in outputs_to_analyse:
                             for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
                                 if 'latent' in from_label and 'active' in to_label and stratum in from_label:
+                                    incidence_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
+                                                          * self.model_dict[scenario].get_var_soln(rate) \
+                                                          / stratum_denominator \
+                                                          * 1e5
+                                    epi_outputs[scenario]['true_incidence' + stratum] \
+                                        = increment_list(incidence_increment,
+                                                         epi_outputs[scenario]['true_incidence' + stratum])
+                                    if '_age' in from_label \
+                                            and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
+                                        incidence_increment *= self.inputs.model_constants[
+                                            'program_prop_child_reporting']
                                     epi_outputs[scenario]['incidence' + stratum] \
-                                        = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
-                                                         * self.model_dict[scenario].get_var_soln(rate) \
-                                                         / stratum_denominator \
-                                                         * 1e5,
+                                        = increment_list(incidence_increment,
                                                          epi_outputs[scenario]['incidence' + stratum])
                             for from_label, to_label, rate in self.model_dict[scenario].fixed_transfer_rate_flows:
                                 if 'latent' in from_label and 'active' in to_label and stratum in from_label:
+                                    incidence_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
+                                                          * rate \
+                                                          / stratum_denominator \
+                                                          * 1e5
+                                    epi_outputs[scenario]['true_incidence' + stratum] \
+                                        = increment_list(incidence_increment,
+                                                         epi_outputs[scenario]['true_incidence' + stratum])
+                                    if '_age' in from_label and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
+                                        incidence_increment *= self.inputs.model_constants[
+                                            'program_prop_child_reporting']
                                     epi_outputs[scenario]['incidence' + stratum] \
-                                        = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
-                                                         * rate \
-                                                         / stratum_denominator \
-                                                         * 1e5,
+                                        = increment_list(incidence_increment,
                                                          epi_outputs[scenario]['incidence' + stratum])
 
                         # Mortality
@@ -483,33 +525,52 @@ class ModelRunner:
                                                           * rate \
                                                           / stratum_denominator \
                                                           * 1e5
-                                    # Under-reporting factor included for those deaths not occurring on treatment
-                                    epi_outputs[scenario]['mortality' + stratum] \
-                                        = increment_list(mortality_increment
-                                                         * self.model_dict[scenario].params['program_prop_death_reporting'],
-                                                         epi_outputs[scenario]['mortality' + stratum])
                                     epi_outputs[scenario]['true_mortality' + stratum] \
                                         = increment_list(mortality_increment,
                                                          epi_outputs[scenario]['true_mortality' + stratum])
+                                    if '_age' in from_label \
+                                            and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
+                                        mortality_increment *= self.inputs.model_constants[
+                                            'program_prop_child_reporting']
+                                    epi_outputs[scenario]['mortality' + stratum] \
+                                        = increment_list(mortality_increment
+                                                         * self.model_dict[scenario].params[
+                                                             'program_prop_death_reporting'],
+                                                         epi_outputs[scenario]['mortality' + stratum])
                             for from_label, rate in self.model_dict[scenario].var_infection_death_rate_flows:
                                 if stratum in from_label:
                                     mortality_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
                                                           * self.model_dict[scenario].get_var_soln(rate) \
                                                           / stratum_denominator \
                                                           * 1e5
-                                    for mortality_type in ['mortality', 'true_mortality']:
-                                        epi_outputs[scenario][mortality_type + stratum] \
-                                            = increment_list(mortality_increment,
-                                                             epi_outputs[scenario][mortality_type + stratum])
+                                    epi_outputs[scenario]['true_mortality' + stratum] \
+                                        = increment_list(mortality_increment,
+                                                         epi_outputs[scenario]['true_mortality' + stratum])
+                                    if '_age' in from_label \
+                                            and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
+                                        mortality_increment *= self.inputs.model_constants[
+                                            'program_prop_child_reporting']
+                                    epi_outputs[scenario]['mortality' + stratum] \
+                                        = increment_list(mortality_increment
+                                                         * self.model_dict[scenario].params[
+                                                             'program_prop_death_reporting'],
+                                                         epi_outputs[scenario]['mortality' + stratum])
 
                         # Prevalence
                         if 'prevalence' in outputs_to_analyse:
                             for label in self.model_dict[scenario].labels:
                                 if 'susceptible' not in label and 'latent' not in label and stratum in label:
-                                    epi_outputs[scenario]['prevalence' + stratum] \
-                                        = increment_list(self.model_dict[scenario].get_compartment_soln(label) \
-                                                         / stratum_denominator \
-                                                         * 1e5, epi_outputs[scenario]['prevalence' + stratum])
+                                    prevalence_increment = self.model_dict[scenario].get_compartment_soln(label) \
+                                                           / stratum_denominator \
+                                                           * 1e5
+                                    epi_outputs[scenario]['true_prevalence' + stratum] \
+                                        = increment_list(prevalence_increment,
+                                                         epi_outputs[scenario]['true_prevalence' + stratum])
+                                if '_age' in label and tool_kit.is_upper_age_limit_at_or_below(label, 15.):
+                                    prevalence_increment *= self.inputs.model_constants['program_prop_child_reporting']
+                                epi_outputs[scenario]['prevalence' + stratum] \
+                                    = increment_list(prevalence_increment,
+                                                     epi_outputs[scenario]['prevalence' + stratum])
 
                         # Infections (absolute number)
                         if 'infections' in outputs_to_analyse:

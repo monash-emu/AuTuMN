@@ -1304,7 +1304,7 @@ class Project:
                         linestyle=self.output_colours[scenario][0],
                         linewidth=1.5,
                         label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario_name)))
-                if output == 'mortality':
+                if output in ['incidence', 'mortality']:
                     ax.plot(
                         self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
                         self.model_runner.epi_outputs['manual_' + scenario_name]['true_' + output],

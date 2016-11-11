@@ -803,6 +803,23 @@ def prepare_denominator(list_to_prepare):
     return [list_to_prepare[i] if list_to_prepare[i] > 0. else 1e-10 for i in range(len(list_to_prepare))]
 
 
+def is_upper_age_limit_at_or_below(compartment_string, age_value):
+
+    """
+    Return boolean for whether the upper limit of the age string is below a certain value. Expected to be used for
+    determining whether an age-group is entirely paediatric.
+
+    Args:
+        compartment_string: The compartment string to analyse.
+        age_value: The age to compare against.
+
+    Returns:
+        Boolean for whether the upper limit of age-group is below age_value
+    """
+
+    return interrogate_age_string(find_string_from_starting_letters(compartment_string, '_age')[0])[0][1] <= age_value
+
+
 # * * * * * * * * * * * * * * * * * * * * * *
 #                   Test age-stratification
 

@@ -752,7 +752,7 @@ class Inputs:
         """
 
         treatment_outcome_types = self.strains
-        if self.gui_inputs['n_strains'] > 1 and self.is_misassignment:
+        if self.gui_inputs['n_strains'] > 1 and self.gui_inputs['is_misassignment']:
             treatment_outcome_types += ['_inappropriate']
 
         for strain in treatment_outcome_types:

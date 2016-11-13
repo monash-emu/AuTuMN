@@ -248,7 +248,7 @@ class ModelRunner:
 
     def run_manual_calibration(self):
 
-        costs_all_programs = {}
+        adjusted_costs = {}
 
         for scenario in self.gui_inputs['scenarios_to_run']:
 
@@ -282,14 +282,7 @@ class ModelRunner:
                                                          self.model_dict[scenario_name].comorbidities])
             self.cost_outputs[scenario_name] = self.find_cost_outputs(scenario_name)
             self.cost_outputs[scenario_name]['raw_cost_all_programs'] = self.find_costs_all_programs(scenario_name)
-
-
-        adjusted_costs = self.find_adjusted_costs(models_to_analyse=self.model_dict,
-                                                  raw_costs=self.cost_outputs,
-                                                  cost_types=self.additional_cost_types)
-        for scenario in self.model_dict:
-            self.cost_outputs[scenario].update(adjusted_costs[scenario])
-
+            self.cost_outputs[scenario_name].update(self.find_adjusted_costs(scenario_name))
 
         self.find_population_fractions(stratifications=[self.model_dict['manual_baseline'].agegroups,
                                                         self.model_dict['manual_baseline'].comorbidities])
@@ -645,28 +638,24 @@ class ModelRunner:
             costs_all_programs = increment_list(self.cost_outputs[scenario]['raw_cost_' + i], costs_all_programs)
         return costs_all_programs
 
-    def find_adjusted_costs(self, models_to_analyse={}, raw_costs={}, cost_types=[]):
-
-        cost_outputs = {}
+    def find_adjusted_costs(self, scenario):
 
         # Get some preliminary parameters
         year_current = self.inputs.model_constants['current_time']
         current_cpi = self.inputs.scaleup_fns[None]['econ_cpi'](year_current)
         discount_rate = self.inputs.model_constants['econ_discount_rate']
-
-        for scenario in models_to_analyse:
-            cost_outputs[scenario] = {}
-            for cost_type in cost_types:
-                for intervention in self.interventions_to_cost + ['all_programs']:
-                    cost_outputs[scenario][cost_type + '_cost_' + intervention] = []
-                    for t, time in enumerate(self.cost_outputs[scenario]['times']):
-                        cost_outputs[scenario][cost_type + '_cost_' + intervention].append(
-                            autumn.economics.get_adjusted_cost(raw_costs[scenario]['raw_cost_' + intervention][t],
-                                                               cost_type,
-                                                               current_cpi,
-                                                               self.inputs.scaleup_fns[None]['econ_cpi'](time),
-                                                               discount_rate,
-                                                               max(0., (time - year_current))))
+        cost_outputs = {}
+        for cost_type in self.additional_cost_types:
+            for intervention in self.interventions_to_cost + ['all_programs']:
+                cost_outputs[cost_type + '_cost_' + intervention] = []
+                for t, time in enumerate(self.cost_outputs[scenario]['times']):
+                    cost_outputs[cost_type + '_cost_' + intervention].append(
+                        autumn.economics.get_adjusted_cost(self.cost_outputs[scenario]['raw_cost_' + intervention][t],
+                                                           cost_type,
+                                                           current_cpi,
+                                                           self.inputs.scaleup_fns[None]['econ_cpi'](time),
+                                                           discount_rate,
+                                                           max(0., (time - year_current))))
 
         return cost_outputs
 
@@ -1049,11 +1038,7 @@ class ModelRunner:
         self.epi_outputs[scenario] = self.find_epi_outputs(scenario, outputs_to_analyse=self.epi_outputs_to_analyse)
         self.cost_outputs[scenario] = self.find_cost_outputs(scenario)
         self.cost_outputs[scenario]['raw_cost_all_programs'] = self.find_costs_all_programs(scenario)
-
-        adjusted_costs = self.find_adjusted_costs(models_to_analyse=[scenario],
-                                                  raw_costs=self.cost_outputs,
-                                                  cost_types=self.additional_cost_types)
-        self.cost_outputs[scenario].update(adjusted_costs[scenario])
+        self.cost_outputs[scenario].update(self.find_adjusted_costs(scenario))
 
         # Create first column of dictionaries
         if scenario not in self.epi_outputs_uncertainty:

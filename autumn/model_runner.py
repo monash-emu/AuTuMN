@@ -248,6 +248,8 @@ class ModelRunner:
 
     def run_manual_calibration(self):
 
+        costs_all_programs = {}
+
         for scenario in self.gui_inputs['scenarios_to_run']:
 
             # Name and initialise model
@@ -279,17 +281,18 @@ class ModelRunner:
                                         stratifications=[self.model_dict[scenario_name].agegroups,
                                                          self.model_dict[scenario_name].comorbidities])
             self.cost_outputs[scenario_name] = self.find_cost_outputs(scenario_name)
+            self.cost_outputs[scenario_name]['raw_cost_all_programs'] = self.find_costs_all_programs(scenario_name)
 
-        self.find_population_fractions(stratifications=[self.model_dict['manual_baseline'].agegroups,
-                                                        self.model_dict['manual_baseline'].comorbidities])
-        costs_all_programs = self.find_costs_all_programs(models_to_analyse=self.model_dict)
-        for scenario in self.model_dict:
-            self.cost_outputs[scenario].update(costs_all_programs[scenario])
+
         adjusted_costs = self.find_adjusted_costs(models_to_analyse=self.model_dict,
                                                   raw_costs=self.cost_outputs,
                                                   cost_types=self.additional_cost_types)
         for scenario in self.model_dict:
             self.cost_outputs[scenario].update(adjusted_costs[scenario])
+
+
+        self.find_population_fractions(stratifications=[self.model_dict['manual_baseline'].agegroups,
+                                                        self.model_dict['manual_baseline'].comorbidities])
 
         # If you want some dictionaries based on the lists created above (may not be necessary)
         self.epi_outputs_dict.update(get_output_dicts_from_lists(models_to_analyse=self.model_dict,
@@ -631,20 +634,15 @@ class ModelRunner:
             cost_outputs['raw_cost_' + intervention] = self.model_dict[scenario].costs[:, i]
         return cost_outputs
 
-    def find_costs_all_programs(self, models_to_analyse={}):
+    def find_costs_all_programs(self, scenario):
 
         """
         Sum costs across all programs and populate to cost_outputs dictionary for each scenario.
         """
 
-        costs_all_programs = {}
-        for scenario in models_to_analyse:
-            costs_all_programs[scenario] = {'raw_cost_all_programs':
-                                                [0.] * len(self.cost_outputs[scenario]['raw_cost_' + self.interventions_to_cost[0]])}
-            for i in self.interventions_to_cost:
-                costs_all_programs[scenario]['raw_cost_all_programs'] \
-                    = increment_list(self.cost_outputs[scenario]['raw_cost_' + i],
-                                     costs_all_programs[scenario]['raw_cost_all_programs'])
+        costs_all_programs = [0.] * len(self.cost_outputs[scenario]['raw_cost_' + self.interventions_to_cost[0]])
+        for i in self.interventions_to_cost:
+            costs_all_programs = increment_list(self.cost_outputs[scenario]['raw_cost_' + i], costs_all_programs)
         return costs_all_programs
 
     def find_adjusted_costs(self, models_to_analyse={}, raw_costs={}, cost_types=[]):
@@ -1050,9 +1048,8 @@ class ModelRunner:
 
         self.epi_outputs[scenario] = self.find_epi_outputs(scenario, outputs_to_analyse=self.epi_outputs_to_analyse)
         self.cost_outputs[scenario] = self.find_cost_outputs(scenario)
+        self.cost_outputs[scenario]['raw_cost_all_programs'] = self.find_costs_all_programs(scenario)
 
-        costs_all_programs = self.find_costs_all_programs([scenario])
-        self.cost_outputs[scenario].update(costs_all_programs[scenario])
         adjusted_costs = self.find_adjusted_costs(models_to_analyse=[scenario],
                                                   raw_costs=self.cost_outputs,
                                                   cost_types=self.additional_cost_types)

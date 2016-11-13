@@ -278,9 +278,8 @@ class ModelRunner:
                                         outputs_to_analyse=self.epi_outputs_to_analyse,
                                         stratifications=[self.model_dict[scenario_name].agegroups,
                                                          self.model_dict[scenario_name].comorbidities])
+            self.cost_outputs[scenario_name] = self.find_cost_outputs(scenario_name)
 
-        self.cost_outputs = self.find_cost_outputs(models_to_analyse=self.model_dict,
-                                                   interventions_to_cost=self.interventions_to_cost)
         self.find_population_fractions(stratifications=[self.model_dict['manual_baseline'].agegroups,
                                                         self.model_dict['manual_baseline'].comorbidities])
         costs_all_programs = self.find_costs_all_programs(models_to_analyse=self.model_dict)
@@ -621,18 +620,15 @@ class ModelRunner:
                             = elementwise_list_division(self.epi_outputs[scenario]['population' + stratum],
                                                         self.epi_outputs[scenario]['population'])
 
-    def find_cost_outputs(self, models_to_analyse={}, interventions_to_cost=[]):
+    def find_cost_outputs(self, scenario):
 
         """
         Add cost dictionaries to cost_outputs attribute.
         """
 
-        cost_outputs = {}
-        for scenario in models_to_analyse:
-            cost_outputs[scenario] = {}
-            cost_outputs[scenario]['times'] = self.model_dict[scenario].cost_times
-            for i, intervention in enumerate(interventions_to_cost):
-                cost_outputs[scenario]['raw_cost_' + intervention] = self.model_dict[scenario].costs[:, i]
+        cost_outputs = {'times': self.model_dict[scenario].cost_times}
+        for i, intervention in enumerate(self.interventions_to_cost):
+            cost_outputs['raw_cost_' + intervention] = self.model_dict[scenario].costs[:, i]
         return cost_outputs
 
     def find_costs_all_programs(self, models_to_analyse={}):
@@ -1052,11 +1048,9 @@ class ModelRunner:
             self.epi_outputs_uncertainty
         """
 
-        self.epi_outputs[scenario] = self.find_epi_outputs(scenario,
-                                                           outputs_to_analyse=self.epi_outputs_to_analyse)
-        self.cost_outputs.update(self.find_cost_outputs(models_to_analyse=[scenario],
-                                                        interventions_to_cost=
-                                                        self.interventions_to_cost))
+        self.epi_outputs[scenario] = self.find_epi_outputs(scenario, outputs_to_analyse=self.epi_outputs_to_analyse)
+        self.cost_outputs[scenario] = self.find_cost_outputs(scenario)
+
         costs_all_programs = self.find_costs_all_programs([scenario])
         self.cost_outputs[scenario].update(costs_all_programs[scenario])
         adjusted_costs = self.find_adjusted_costs(models_to_analyse=[scenario],
@@ -1265,8 +1259,10 @@ class ModelRunner:
             tool_kit.pickle_save(self.optimised_combinations, filename)
 
     def get_full_results_opti(self):
+
         ###################################################
         # Provisional and ugly - to calculate the incidence in 2035
+
         self.model_dict['optimisation'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
         start_time_index = \
             self.model_dict['manual_baseline'].find_time_index(self.inputs.model_constants['recent_time'])

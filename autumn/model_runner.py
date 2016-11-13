@@ -248,8 +248,6 @@ class ModelRunner:
 
     def run_manual_calibration(self):
 
-        adjusted_costs = {}
-
         for scenario in self.gui_inputs['scenarios_to_run']:
 
             # Name and initialise model
@@ -280,9 +278,7 @@ class ModelRunner:
                                         outputs_to_analyse=self.epi_outputs_to_analyse,
                                         stratifications=[self.model_dict[scenario_name].agegroups,
                                                          self.model_dict[scenario_name].comorbidities])
-            self.cost_outputs[scenario_name] = self.find_cost_outputs(scenario_name)
-            self.cost_outputs[scenario_name]['raw_cost_all_programs'] = self.find_costs_all_programs(scenario_name)
-            self.cost_outputs[scenario_name].update(self.find_adjusted_costs(scenario_name))
+            self.find_cost_outputs(scenario_name)
 
         self.find_population_fractions(stratifications=[self.model_dict['manual_baseline'].agegroups,
                                                         self.model_dict['manual_baseline'].comorbidities])
@@ -616,29 +612,42 @@ class ModelRunner:
                             = elementwise_list_division(self.epi_outputs[scenario]['population' + stratum],
                                                         self.epi_outputs[scenario]['population'])
 
-    def find_cost_outputs(self, scenario):
+    def find_cost_outputs(self, scenario_name):
+
+        """
+        Master method to call methods to find and update costs below.
+
+        Args:
+            scenario_name: String for the name of the model being costed.
+        """
+
+        self.cost_outputs[scenario_name] = self.find_raw_cost_outputs(scenario_name)
+        self.cost_outputs[scenario_name]['raw_cost_all_programs'] = self.find_costs_all_programs(scenario_name)
+        self.cost_outputs[scenario_name].update(self.find_adjusted_costs(scenario_name))
+
+    def find_raw_cost_outputs(self, scenario_name):
 
         """
         Add cost dictionaries to cost_outputs attribute.
         """
 
-        cost_outputs = {'times': self.model_dict[scenario].cost_times}
+        cost_outputs = {'times': self.model_dict[scenario_name].cost_times}
         for i, intervention in enumerate(self.interventions_to_cost):
-            cost_outputs['raw_cost_' + intervention] = self.model_dict[scenario].costs[:, i]
+            cost_outputs['raw_cost_' + intervention] = self.model_dict[scenario_name].costs[:, i]
         return cost_outputs
 
-    def find_costs_all_programs(self, scenario):
+    def find_costs_all_programs(self, scenario_name):
 
         """
         Sum costs across all programs and populate to cost_outputs dictionary for each scenario.
         """
 
-        costs_all_programs = [0.] * len(self.cost_outputs[scenario]['raw_cost_' + self.interventions_to_cost[0]])
+        costs_all_programs = [0.] * len(self.cost_outputs[scenario_name]['raw_cost_' + self.interventions_to_cost[0]])
         for i in self.interventions_to_cost:
-            costs_all_programs = increment_list(self.cost_outputs[scenario]['raw_cost_' + i], costs_all_programs)
+            costs_all_programs = increment_list(self.cost_outputs[scenario_name]['raw_cost_' + i], costs_all_programs)
         return costs_all_programs
 
-    def find_adjusted_costs(self, scenario):
+    def find_adjusted_costs(self, scenario_name):
 
         # Get some preliminary parameters
         year_current = self.inputs.model_constants['current_time']
@@ -648,9 +657,9 @@ class ModelRunner:
         for cost_type in self.additional_cost_types:
             for intervention in self.interventions_to_cost + ['all_programs']:
                 cost_outputs[cost_type + '_cost_' + intervention] = []
-                for t, time in enumerate(self.cost_outputs[scenario]['times']):
+                for t, time in enumerate(self.cost_outputs[scenario_name]['times']):
                     cost_outputs[cost_type + '_cost_' + intervention].append(
-                        autumn.economics.get_adjusted_cost(self.cost_outputs[scenario]['raw_cost_' + intervention][t],
+                        autumn.economics.get_adjusted_cost(self.cost_outputs[scenario_name]['raw_cost_' + intervention][t],
                                                            cost_type,
                                                            current_cpi,
                                                            self.inputs.scaleup_fns[None]['econ_cpi'](time),
@@ -1020,14 +1029,14 @@ class ModelRunner:
             print "Warning: parameters=%s failed with model" % params
             self.is_last_run_success = False
 
-    def store_uncertainty(self, scenario, epi_results, cost_outputs,
+    def store_uncertainty(self, scenario_name, epi_results, cost_outputs,
                           epi_outputs_to_analyse=['population', 'incidence']):
 
         """
         Add model results from one uncertainty run to the appropriate outputs dictionary.
 
         Args:
-            scenario: The scenario being run.
+            scenario_name: The scenario being run.
             epi_results: The results from that model run.
             epi_outputs_to_analyse: The epidemiological outputs of interest.
 
@@ -1035,30 +1044,29 @@ class ModelRunner:
             self.epi_outputs_uncertainty
         """
 
-        self.epi_outputs[scenario] = self.find_epi_outputs(scenario, outputs_to_analyse=self.epi_outputs_to_analyse)
-        self.cost_outputs[scenario] = self.find_cost_outputs(scenario)
-        self.cost_outputs[scenario]['raw_cost_all_programs'] = self.find_costs_all_programs(scenario)
-        self.cost_outputs[scenario].update(self.find_adjusted_costs(scenario))
+        self.epi_outputs[scenario_name] = self.find_epi_outputs(scenario_name,
+                                                                outputs_to_analyse=self.epi_outputs_to_analyse)
+        self.find_cost_outputs(scenario_name)
 
         # Create first column of dictionaries
-        if scenario not in self.epi_outputs_uncertainty:
-            self.epi_outputs_uncertainty[scenario] = {'times': self.epi_outputs[scenario]['times']}
-            self.cost_outputs_uncertainty[scenario] = {'times': self.cost_outputs[scenario]['times']}
+        if scenario_name not in self.epi_outputs_uncertainty:
+            self.epi_outputs_uncertainty[scenario_name] = {'times': self.epi_outputs[scenario_name]['times']}
+            self.cost_outputs_uncertainty[scenario_name] = {'times': self.cost_outputs[scenario_name]['times']}
             for output in epi_outputs_to_analyse:
-                self.epi_outputs_uncertainty[scenario][output] = epi_results[scenario][output]
-            for output in cost_outputs[scenario]:
-                self.cost_outputs_uncertainty[scenario][output] = cost_outputs[scenario][output]
+                self.epi_outputs_uncertainty[scenario_name][output] = epi_results[scenario_name][output]
+            for output in cost_outputs[scenario_name]:
+                self.cost_outputs_uncertainty[scenario_name][output] = cost_outputs[scenario_name][output]
 
         # Add additional columns to uncertainty output dictionaries
         else:
             for output in epi_outputs_to_analyse:
-                self.epi_outputs_uncertainty[scenario][output] \
-                    = numpy.vstack([self.epi_outputs_uncertainty[scenario][output],
-                                    epi_results[scenario][output]])
-            for output in cost_outputs[scenario]:
-                self.cost_outputs_uncertainty[scenario][output] \
-                    = numpy.vstack([self.cost_outputs_uncertainty[scenario][output],
-                                    cost_outputs[scenario][output]])
+                self.epi_outputs_uncertainty[scenario_name][output] \
+                    = numpy.vstack([self.epi_outputs_uncertainty[scenario_name][output],
+                                    epi_results[scenario_name][output]])
+            for output in cost_outputs[scenario_name]:
+                self.cost_outputs_uncertainty[scenario_name][output] \
+                    = numpy.vstack([self.cost_outputs_uncertainty[scenario_name][output],
+                                    cost_outputs[scenario_name][output]])
 
     ############################
     ### Optimisation methods ###

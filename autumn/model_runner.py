@@ -338,15 +338,14 @@ class ModelRunner:
     ### Model interpretation methods ###
     ####################################
 
-    def find_epi_outputs(self, scenario, outputs_to_analyse=[], stratifications=[]):
+    def find_epi_outputs(self, scenario, outputs_to_analyse, stratifications=[]):
 
         """
         Method to extract all requested epidemiological outputs from the models. Intended ultimately to be flexible\
         enough for use for analysis of scenarios, uncertainty and optimisation.
         """
 
-        epi_outputs = {}
-        epi_outputs['times'] = self.model_dict[scenario].times
+        epi_outputs = {'times': self.model_dict[scenario].times}
 
         # Unstratified outputs______________________________________________________________________________________
         # Initialise lists
@@ -1205,8 +1204,8 @@ class ModelRunner:
                 self.model_dict['optimisation'].integrate()
                 output_list \
                     = self.find_epi_outputs('optimisation',
-                                            outputs_to_analyse=
-                                            ['population', 'incidence', 'true_incidence', 'mortality', 'true_mortality'])
+                                            outputs_to_analyse=['population', 'incidence', 'true_incidence',
+                                                                'mortality', 'true_mortality'])
                 return output_list[self.indicator_to_minimize][-1]
 
             if len(combi) == 1: # the distribution result is obvious
@@ -1289,7 +1288,8 @@ class ModelRunner:
 
         print 'Situation in 2035 under the optimal allocation: '
         output_list = self.find_epi_outputs('optimisation',
-                                            outputs_to_analyse=['population', 'incidence', 'mortality', 'true_mortality'])
+                                            outputs_to_analyse=['population', 'incidence',
+                                                                'mortality', 'true_mortality'])
         print 'incidence'
         print output_list['incidence'][-1]
         print 'mortality'

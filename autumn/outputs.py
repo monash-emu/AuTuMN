@@ -1165,7 +1165,7 @@ class Project:
             if self.gui_inputs['output_uncertainty']:
                 self.plot_outputs_against_gtb(['incidence', 'mortality', 'prevalence', 'notifications'], ci_plot=True)
                 self.plot_outputs_against_gtb(['incidence', 'mortality', 'prevalence', 'notifications'], ci_plot=False)
-            self.plot_resistant_strain_outputs()
+            self.plot_resistant_strain_outputs(['incidence', 'mortality', 'prevalence', 'notifications'])
 
         # Plot scale-up functions - currently only doing this for the baseline model run
         if self.gui_inputs['output_scaleups']:
@@ -1379,16 +1379,20 @@ class Project:
         fig.suptitle(tool_kit.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb' + end_filename)
 
-    def plot_resistant_strain_outputs(self):
+    def plot_resistant_strain_outputs(self, outputs):
 
+        subplot_grid = find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
-        ax = fig.add_subplot(1, 1, 1)
-        for scenario in self.scenarios[::-1]:
-            scenario_name = tool_kit.find_scenario_string_from_number(scenario)
-            ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
-                    self.model_runner.epi_outputs['manual_' + scenario_name]['incidence_mdr'],
-                    color=self.output_colours[scenario][1],
-                    linestyle=self.output_colours[scenario][0])
+        for o, output in enumerate(outputs):
+            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
+            for scenario in self.scenarios[::-1]:
+                scenario_name = tool_kit.find_scenario_string_from_number(scenario)
+                ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
+                        self.model_runner.epi_outputs['manual_' + scenario_name][output + '_mdr'],
+                        color=self.output_colours[scenario][1],
+                        linestyle=self.output_colours[scenario][0])
+            ax.set_xlim([self.inputs.model_constants['start_mdr_introduce_time'],
+                        self.inputs.model_constants['plot_end_time']])
         self.save_figure(fig, '_resistant_strain')
 
     def classify_scaleups(self):

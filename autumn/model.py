@@ -1177,6 +1177,6 @@ class ConsolidatedModel(StratifiedModel):
             for comorbidity in self.comorbidities:
                 for strain in self.strains:
                     self.set_linked_transfer_rate_flow('latent_early' + strain + comorbidity + agegroup,
-                                                       'susceptible_vac' + strain + comorbidity + agegroup,
+                                                       'susceptible_vac' + comorbidity + agegroup,
                                                        'ipt_effective_treatments' + agegroup)
 

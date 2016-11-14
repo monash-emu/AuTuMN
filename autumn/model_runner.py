@@ -159,8 +159,8 @@ class ModelRunner:
         self.optimisation = False
         self.indicator_to_minimize = 'mortality'
         self.save_opti = True
-        self.total_funding = 1.3e6 * (2035 - self.inputs.model_constants['recent_time'])  # Total funding for the entire period
-        self.year_end_opti = 2020 # model is run until that date during optimisation
+        self.total_funding = 1.3e6 * (2035. - self.inputs.model_constants['recent_time'])  # Funding for entire period
+        self.year_end_opti = 2020.  # model is run until that date during optimisation
         self.acceptable_combinations = []
         self.acceptance_dict = {}
         self.rejection_dict = {}
@@ -1044,8 +1044,8 @@ class ModelRunner:
             self.epi_outputs_uncertainty
         """
 
-        self.epi_outputs[scenario_name] = self.find_epi_outputs(scenario_name,
-                                                                outputs_to_analyse=self.epi_outputs_to_analyse)
+        self.epi_outputs[scenario_name] \
+            = self.find_epi_outputs(scenario_name, outputs_to_analyse=self.epi_outputs_to_analyse)
         self.find_cost_outputs(scenario_name)
 
         # Create first column of dictionaries

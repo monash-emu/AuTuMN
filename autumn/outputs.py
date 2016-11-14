@@ -1165,6 +1165,7 @@ class Project:
             if self.gui_inputs['output_uncertainty']:
                 self.plot_outputs_against_gtb(['incidence', 'mortality', 'prevalence', 'notifications'], ci_plot=True)
                 self.plot_outputs_against_gtb(['incidence', 'mortality', 'prevalence', 'notifications'], ci_plot=False)
+            self.plot_resistant_strain_outputs()
 
         # Plot scale-up functions - currently only doing this for the baseline model run
         if self.gui_inputs['output_scaleups']:
@@ -1377,6 +1378,18 @@ class Project:
         # Add main title and save
         fig.suptitle(tool_kit.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb' + end_filename)
+
+    def plot_resistant_strain_outputs(self):
+
+        fig = self.set_and_update_figure()
+        ax = fig.add_subplot(1, 1, 1)
+        for scenario in self.scenarios[::-1]:
+            scenario_name = tool_kit.find_scenario_string_from_number(scenario)
+            ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
+                    self.model_runner.epi_outputs['manual_' + scenario_name]['incidence_mdr'],
+                    color=self.output_colours[scenario][1],
+                    linestyle=self.output_colours[scenario][0])
+        self.save_figure(fig, '_resistant_strain')
 
     def classify_scaleups(self):
 

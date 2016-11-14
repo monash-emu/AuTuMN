@@ -59,7 +59,7 @@ class ConsolidatedModel(StratifiedModel):
     All TB-specific methods and structures are contained in this model
     Methods are written to be adaptable to any model structure selected through the __init__ arguments
 
-    The work-flow of the simulation is structured into the following parts:
+    The work-flow of the simulation is structured in the following order:
         1. Defining the model structure
         2. Initialising the compartments
         3. Setting parameters (needs a lot more work)
@@ -197,8 +197,7 @@ class ConsolidatedModel(StratifiedModel):
                     # Replicate treatment classes for
                     # age-groups, comorbidities, strains, organ status and assigned strain
                     else:
-                        for actual_strain_number in range(len(self.strains)):
-                            strain = self.strains[actual_strain_number]
+                        for strain in self.strains:
                             for organ in self.organ_status:
                                 if self.is_misassignment:
                                     for assigned_strain_number in range(len(self.strains)):
@@ -657,7 +656,7 @@ class ConsolidatedModel(StratifiedModel):
 
         # May need to adjust this - a bit of a patch for now
         treatments = self.strains
-        if len(self.strains) > 1:
+        if len(self.strains) > 1 and self.gui_inputs['is_misassignment']:
             treatments += ['_inappropriate']
 
         for strain in treatments:
@@ -822,10 +821,11 @@ class ConsolidatedModel(StratifiedModel):
                                                                        'novel_ipt_effective_per_assessment']
 
 
-            # check size of latency compartments
+            # Check size of latency compartments
             early_latent = 0
             for comorbidity in self.comorbidities:
-                early_latent += self.compartments['latent_early' + comorbidity + agegroup]
+                for strain in self.strains:
+                    early_latent += self.compartments['latent_early' + strain + comorbidity + agegroup]
 
             # Calculate the total number of effective treatments across both forms of IPT
             self.vars['ipt_effective_treatments' + agegroup]\
@@ -1039,15 +1039,14 @@ class ConsolidatedModel(StratifiedModel):
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
                 for organ in self.organ_status:
-                    for actual_strain_number in range(len(self.strains)):
-                        strain = self.strains[actual_strain_number]
+                    for strain_number, strain in enumerate(self.strains):
 
                         # With misassignment
                         if self.is_misassignment:
                             for assigned_strain_number in range(len(self.strains)):
                                 as_assigned_strain = '_as' + self.strains[assigned_strain_number][1:]
                                 # If the strain is equally or more resistant than its assignment
-                                if actual_strain_number >= assigned_strain_number:
+                                if strain_number >= assigned_strain_number:
                                     self.set_var_transfer_rate_flow(
                                         'active' + organ + strain + comorbidity + agegroup,
                                         'detect' + organ + strain + as_assigned_strain + comorbidity + agegroup,
@@ -1058,7 +1057,7 @@ class ConsolidatedModel(StratifiedModel):
                             self.set_var_transfer_rate_flow(
                                 'active' + organ + strain + comorbidity + agegroup,
                                 'detect' + organ + strain + comorbidity + agegroup,
-                                'program_rate_detect' + organ)
+                                'program_rate_detect' + organ + strain)
 
     def set_variable_programmatic_flows(self):
 

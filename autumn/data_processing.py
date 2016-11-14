@@ -970,10 +970,10 @@ class Inputs:
     def list_irrelevant_time_variants(self):
 
         """
-        List all the time-variant parameters that are not relevant to the current model structure
+        List all the time-variant parameters that are not relevant to the current model structure.
         """
 
-        for time_variant in self.time_variants.keys():
+        for time_variant in self.time_variants:
             if 'perc_' in time_variant:
                 self.irrelevant_time_variants += [time_variant]
             for strain in self.available_strains:

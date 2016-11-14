@@ -244,7 +244,7 @@ class App:
                                     'burn_in_runs': ['Number of burn-in runs', 0],
                                     'search_width': ['Relative search width', .08]}
         self.boolean_dictionary['adaptive_uncertainty'].set(True)
-        self.boolean_dictionary['is_amplification'].set(True)
+        # self.boolean_dictionary['is_amplification'].set(True)
         for numeric in uncertainty_numeric_list.keys():
             numeric_label = Label(self.frame, text=uncertainty_numeric_list[numeric][0], font=label_font)
             numeric_label.grid(row=uncertainty_row, column=4, sticky=SW)

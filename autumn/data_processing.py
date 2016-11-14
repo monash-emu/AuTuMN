@@ -585,8 +585,8 @@ class Inputs:
         for strain in ['mdr', 'xdr']:
             self.derived_data.update(
                 calculate_proportion_dict(self.original_data['outcomes'],
-                                               [strain + '_succ', strain + '_fail', strain + '_died', strain + '_lost'],
-                                               percent=True))
+                                          [strain + '_succ', strain + '_fail', strain + '_died', strain + '_lost'],
+                                          percent=False))
 
             # Populate MDR and XDR data from outcomes dictionary into time variants where requested and not entered
             if self.time_variants['program_prop_treatment_success_' + strain]['load_data'] == u'yes':

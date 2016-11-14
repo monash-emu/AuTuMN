@@ -392,6 +392,12 @@ class ModelRunner:
                         epi_outputs['incidence' + strain] \
                             = increment_list(incidence_increment,
                                              epi_outputs['true_incidence' + strain])
+            # Find percentage incidence by strain
+            if len(self.model_dict[scenario].strains) > 1:
+                for strain in self.model_dict[scenario].strains:
+                    epi_outputs['perc_incidence' + strain] \
+                        = [i / j * 1e2 for i, j in zip(epi_outputs['incidence' + strain],
+                                                       tool_kit.prepare_denominator(epi_outputs['incidence']))]
 
         # Notifications
         if 'notifications' in outputs_to_analyse:

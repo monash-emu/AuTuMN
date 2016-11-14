@@ -1165,7 +1165,7 @@ class Project:
             if self.gui_inputs['output_uncertainty']:
                 self.plot_outputs_against_gtb(['incidence', 'mortality', 'prevalence', 'notifications'], ci_plot=True)
                 self.plot_outputs_against_gtb(['incidence', 'mortality', 'prevalence', 'notifications'], ci_plot=False)
-            self.plot_resistant_strain_outputs(['incidence', 'mortality', 'prevalence', 'notifications'])
+            self.plot_resistant_strain_outputs(['incidence', 'mortality', 'prevalence', 'perc_incidence'])
 
         # Plot scale-up functions - currently only doing this for the baseline model run
         if self.gui_inputs['output_scaleups']:

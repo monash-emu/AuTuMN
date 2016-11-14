@@ -979,8 +979,10 @@ class Inputs:
             for strain in self.available_strains:
                 if strain not in self.strains and strain in time_variant and '_dst' not in time_variant:
                     self.irrelevant_time_variants += [time_variant]
-            if self.gui_inputs['n_strains'] < 2 \
-                    and ('line_dst' in time_variant or '_inappropriate' in time_variant):
+            if self.gui_inputs['n_strains'] < 2 and 'line_dst' in time_variant:
+                self.irrelevant_time_variants += [time_variant]
+            elif '_inappropriate' in time_variant \
+                    and (self.gui_inputs['n_strains'] < 2 or not self.gui_inputs['is_misassignment']):
                 self.irrelevant_time_variants += [time_variant]
             elif self.gui_inputs['n_strains'] == 2 and 'secondline_dst' in time_variant:
                 self.irrelevant_time_variants += [time_variant]

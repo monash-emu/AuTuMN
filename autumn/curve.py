@@ -96,6 +96,7 @@ def test_a(a, x_min, x_max, x_peak, bound_low, bound_up):
 
 
 def get_spare_fit(indice, x_peak, bound, side, f, cut_off_dict, bound_low, bound_up, a_init, a_f, x, y):
+
     """
     When a portion of the curve was detected outside of the bounds, we have tried to replace it by a portion that will
     reach an extremum on the bound that was overcome. However, in some cases, this new fit presents a singularity where
@@ -106,6 +107,7 @@ def get_spare_fit(indice, x_peak, bound, side, f, cut_off_dict, bound_low, bound
     In the worst case, this algorithm will stop by itself when reaching a point with a null gradient as this will
     represent a valid candidate.
     """
+
     ok = 0
     sg = 1.0
     if side == 'left':

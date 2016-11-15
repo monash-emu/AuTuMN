@@ -238,25 +238,29 @@ def find_standard_output_styles(labels, lightening_factor=1.):
     title = []
     patch_colour = []
 
-    if "incidence" in labels:
+    if 'incidence' in labels:
         colour += [(lightening_factor, lightening_factor, lightening_factor)]
         indices += ['e_inc_100k']
         yaxis_label += ['Per 100,000 per year']
-        title += ["Incidence"]
-    if "mortality" in labels:
+        title += ['Incidence']
+    if 'mortality' in labels:
         colour += [(1., lightening_factor, lightening_factor)]
         indices += ['e_mort_exc_tbhiv_100k']
         yaxis_label += ['Per 100,000 per year']
-        title += ["Mortality"]
-    if "prevalence" in labels:
+        title += ['Mortality']
+    if 'prevalence' in labels:
         colour += [(lightening_factor, 0.5 + 0.5 * lightening_factor, lightening_factor)]
         indices += ['e_prev_100k']
         yaxis_label += ['Per 100,000']
-        title += ["Prevalence"]
-    if "notifications" in labels:
+        title += ['Prevalence']
+    if 'notifications' in labels:
         colour += [(lightening_factor, lightening_factor, 0.5 + 0.5 * lightening_factor)]
         yaxis_label += ['']
-        title += ["Notifications"]
+        title += ['Notifications']
+    if 'perc_incidence' in labels:
+        colour += [(lightening_factor, lightening_factor, lightening_factor)]
+        yaxis_label += ['Percentage']
+        title += ['Proportion of incidence']
 
     # Create a colour half-way between the line colour and white for patches
     for i in range(len(colour)):
@@ -287,70 +291,70 @@ def get_line_style(label, strain_or_organ):
 
     # Unassigned groups remain black
     colour = (0, 0, 0)
-    if "susceptible_vac" in label:  # susceptible_unvac remains black
+    if 'susceptible_vac' in label:  # susceptible_unvac remains black
         colour = (0.3, 0.3, 0.3)
-    elif "susceptible_treated" in label:
+    elif 'susceptible_treated' in label:
         colour = (0.6, 0.6, 0.6)
-    if "latent" in label:  # latent_early remains as for latent
+    if 'latent' in label:  # latent_early remains as for latent
         colour = (0, 0.4, 0.8)
-    if "latent_late" in label:
+    if 'latent_late' in label:
         colour = (0, 0.2, 0.4)
-    if "active" in label:
+    if 'active' in label:
         colour = (0.9, 0, 0)
-    elif "detect" in label:
+    elif 'detect' in label:
         colour = (0, 0.5, 0)
-    elif "missed" in label:
+    elif 'missed' in label:
         colour = (0.5, 0, 0.5)
-    if "treatment" in label:  # treatment_infect remains as for treatment
+    if 'treatment' in label:  # treatment_infect remains as for treatment
         colour = (1, 0.5, 0)
-    if "treatment_noninfect" in label:
+    if 'treatment_noninfect' in label:
         colour = (1, 1, 0)
 
     pattern = get_line_pattern(label, strain_or_organ)
 
     category_full_name = label
-    if "susceptible" in label:
-        category_full_name = "Susceptible"
-    if "susceptible_fully" in label:
-        category_full_name = "Fully susceptible"
-    elif "susceptible_vac" in label:
-        category_full_name = "BCG vaccinated, susceptible"
-    elif "susceptible_treated" in label:
-        category_full_name = "Previously treated, susceptible"
-    if "latent" in label:
-        category_full_name = "Latent"
-    if "latent_early" in label:
-        category_full_name = "Early latent"
-    elif "latent_late" in label:
-        category_full_name = "Late latent"
-    if "active" in label:
-        category_full_name = "Active, yet to present"
-    elif "detect" in label:
-        category_full_name = "Detected"
-    elif "missed" in label:
-        category_full_name = "Missed"
-    if "treatment" in label:
-        category_full_name = "Under treatment"
-    if "treatment_infect" in label:
-        category_full_name = "Infectious under treatment"
-    elif "treatment_noninfect" in label:
-        category_full_name = "Non-infectious under treatment"
+    if 'susceptible' in label:
+        category_full_name = 'Susceptible'
+    if 'susceptible_fully' in label:
+        category_full_name = 'Fully susceptible'
+    elif 'susceptible_vac' in label:
+        category_full_name = 'BCG vaccinated, susceptible'
+    elif 'susceptible_treated' in label:
+        category_full_name = 'Previously treated, susceptible'
+    if 'latent' in label:
+        category_full_name = 'Latent'
+    if 'latent_early' in label:
+        category_full_name = 'Early latent'
+    elif 'latent_late' in label:
+        category_full_name = 'Late latent'
+    if 'active' in label:
+        category_full_name = 'Active, yet to present'
+    elif 'detect' in label:
+        category_full_name = 'Detected'
+    elif 'missed' in label:
+        category_full_name = 'Missed'
+    if 'treatment' in label:
+        category_full_name = 'Under treatment'
+    if 'treatment_infect' in label:
+        category_full_name = 'Infectious under treatment'
+    elif 'treatment_noninfect' in label:
+        category_full_name = 'Non-infectious under treatment'
 
-    if "smearpos" in label:
-        category_full_name += ", \nsmear-positive"
-    elif "smearneg" in label:
-        category_full_name += ", \nsmear-negative"
-    elif "extrapul" in label:
-        category_full_name += ", \nextrapulmonary"
+    if 'smearpos' in label:
+        category_full_name += ', \nsmear-positive'
+    elif 'smearneg' in label:
+        category_full_name += ', \nsmear-negative'
+    elif 'extrapul' in label:
+        category_full_name += ', \nextrapulmonary'
 
-    if "_ds" in label:
-        category_full_name += ", \nDS-TB"
-    elif "_mdr" in label:
-        category_full_name += ", \nMDR-TB"
-    elif "_xdr" in label:
-        category_full_name += ", \nXDR-TB"
+    if '_ds' in label:
+        category_full_name += ', \nDS-TB'
+    elif '_mdr' in label:
+        category_full_name += ', \nMDR-TB'
+    elif '_xdr' in label:
+        category_full_name += ', \nXDR-TB'
 
-    marker = ""
+    marker = ''
 
     return colour, pattern, category_full_name, marker
 
@@ -1384,6 +1388,7 @@ class Project:
 
         subplot_grid = find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
+        colour, indices, yaxis_label, title, _ = find_standard_output_styles(outputs)
         for o, output in enumerate(outputs):
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
             for scenario in self.scenarios[::-1]:
@@ -1392,8 +1397,18 @@ class Project:
                         self.model_runner.epi_outputs['manual_' + scenario_name][output + '_mdr'],
                         color=self.output_colours[scenario][1],
                         linestyle=self.output_colours[scenario][0])
+            ax.set_title(title[o], fontsize=get_nice_font_size(subplot_grid) + 2.)
+            ax.set_xticks(find_reasonable_year_ticks(self.inputs.model_constants['start_mdr_introduce_time'],
+                                                     self.inputs.model_constants['plot_end_time']))
+            for axis_to_change in [ax.xaxis, ax.yaxis]:
+                for tick in axis_to_change.get_major_ticks():
+                    tick.label.set_fontsize(get_nice_font_size(subplot_grid))
             ax.set_xlim([self.inputs.model_constants['start_mdr_introduce_time'],
                         self.inputs.model_constants['plot_end_time']])
+            ax.set_ylabel(yaxis_label[o], fontsize=get_nice_font_size(subplot_grid))
+
+        fig.suptitle(tool_kit.capitalise_first_letter(self.country) + ' resistant strain outputs',
+                     fontsize=self.suptitle_size)
         self.save_figure(fig, '_resistant_strain')
 
     def classify_scaleups(self):

@@ -799,10 +799,7 @@ class ModelRunner:
             if self.is_last_run_success:
 
                 # Storage
-                self.store_uncertainty('uncertainty_baseline',
-                                       self.epi_outputs,
-                                       self.cost_outputs,
-                                       epi_outputs_to_analyse=self.epi_outputs_to_analyse)
+                self.store_uncertainty('uncertainty_baseline', epi_outputs_to_analyse=self.epi_outputs_to_analyse)
                 integer_dictionary \
                     = extract_integer_dicts(['uncertainty_baseline'],
                                             get_output_dicts_from_lists(models_to_analyse=['uncertainty_baseline'],
@@ -887,12 +884,7 @@ class ModelRunner:
                             self.model_dict[scenario_name].loaded_compartments = \
                                 self.model_dict['uncertainty_baseline'].load_state(scenario_start_time_index)
                             self.run_with_params(new_params, model_object=scenario_name)
-
-                            # Storage
-                            self.store_uncertainty(scenario_name,
-                                                   self.epi_outputs,
-                                                   self.cost_outputs,
-                                                   epi_outputs_to_analyse=self.epi_outputs_to_analyse)
+                            self.store_uncertainty(scenario_name, epi_outputs_to_analyse=self.epi_outputs_to_analyse)
 
                 i_candidates += 1
                 run += 1
@@ -1045,44 +1037,45 @@ class ModelRunner:
             print "Warning: parameters=%s failed with model" % params
             self.is_last_run_success = False
 
-    def store_uncertainty(self, scenario_name, epi_results, cost_outputs,
-                          epi_outputs_to_analyse=['population', 'incidence']):
+    def store_uncertainty(self, scenario_name, epi_outputs_to_analyse):
 
         """
-        Add model results from one uncertainty run to the appropriate outputs dictionary.
+        Add model results from one uncertainty run to the appropriate outputs dictionary, vertically stacking
+        results on to the previous matrix.
 
         Args:
             scenario_name: The scenario being run.
-            epi_results: The results from that model run.
             epi_outputs_to_analyse: The epidemiological outputs of interest.
 
         Updates:
             self.epi_outputs_uncertainty
+            self.cost_outputs_uncertainty
         """
 
         self.epi_outputs[scenario_name] \
             = self.find_epi_outputs(scenario_name, outputs_to_analyse=self.epi_outputs_to_analyse)
         self.find_cost_outputs(scenario_name)
 
-        # Create first column of dictionaries
+        # Initialise dictionaries
         if scenario_name not in self.epi_outputs_uncertainty:
             self.epi_outputs_uncertainty[scenario_name] = {'times': self.epi_outputs[scenario_name]['times']}
             self.cost_outputs_uncertainty[scenario_name] = {'times': self.cost_outputs[scenario_name]['times']}
             for output in epi_outputs_to_analyse:
-                self.epi_outputs_uncertainty[scenario_name][output] = epi_results[scenario_name][output]
-            for output in cost_outputs[scenario_name]:
-                self.cost_outputs_uncertainty[scenario_name][output] = cost_outputs[scenario_name][output]
-
-        # Add additional columns to uncertainty output dictionaries
-        else:
-            for output in epi_outputs_to_analyse:
                 self.epi_outputs_uncertainty[scenario_name][output] \
-                    = numpy.vstack([self.epi_outputs_uncertainty[scenario_name][output],
-                                    epi_results[scenario_name][output]])
-            for output in cost_outputs[scenario_name]:
+                    = numpy.empty(shape=[0, len(self.epi_outputs[scenario_name]['times'])])
+            for output in self.cost_outputs[scenario_name]:
                 self.cost_outputs_uncertainty[scenario_name][output] \
-                    = numpy.vstack([self.cost_outputs_uncertainty[scenario_name][output],
-                                    cost_outputs[scenario_name][output]])
+                    = numpy.empty(shape=[0, len(self.cost_outputs[scenario_name]['times'])])
+
+        # Add uncertainty data to dictionaries
+        for output in epi_outputs_to_analyse:
+            self.epi_outputs_uncertainty[scenario_name][output] \
+                = numpy.vstack([self.epi_outputs_uncertainty[scenario_name][output],
+                                self.epi_outputs[scenario_name][output]])
+        for output in self.cost_outputs[scenario_name]:
+            self.cost_outputs_uncertainty[scenario_name][output] \
+                = numpy.vstack([self.cost_outputs_uncertainty[scenario_name][output],
+                                self.cost_outputs[scenario_name][output]])
 
     ############################
     ### Optimisation methods ###

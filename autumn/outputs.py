@@ -1242,8 +1242,8 @@ class Project:
         Produces the plot for the main outputs, can handle multiple scenarios.
 
         Args:
-            outputs: A list of the outputs to be plotted
-            ci_plot: Whether the
+            outputs: A list of the outputs to be plotted.
+            ci_plot: Whether to plot uncertainty intervals around the estimates generated from uncertainty runs.
         """
 
         # Standard preliminaries
@@ -1348,7 +1348,7 @@ class Project:
                 end_filename = '_progress'
                 for run in range(len(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output])):
                     if run not in self.model_runner.accepted_indices:
-                        # Change over the commented code to show the rejected runs (in thin yellow lines at the back)
+                        # Switch over the commented code to show the rejected runs (in thin yellow lines at the back)
                         pass
                         # ax.plot(
                         #     self.model_runner.epi_outputs_uncertainty['baseline']['times'],
@@ -1386,9 +1386,21 @@ class Project:
 
     def plot_resistant_strain_outputs(self, outputs):
 
+        """
+        Plot outputs for MDR-TB. Will extend to all resistant strains as needed, which should be pretty easy.
+        Sparsely commented because largely shadows plot_outputs_against_gtb (without plotting the patch for the GTB
+        outputs).
+
+        Args:
+            outputs: The outputs to be plotted (after adding the strain name to the end).
+        """
+
+        # Prelims
         subplot_grid = find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
         colour, indices, yaxis_label, title, _ = find_standard_output_styles(outputs)
+
+        # Cycle over each output and plot
         for o, output in enumerate(outputs):
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
             for scenario in self.scenarios[::-1]:
@@ -1400,6 +1412,8 @@ class Project:
             ax.set_title(title[o], fontsize=get_nice_font_size(subplot_grid) + 2.)
             ax.set_xticks(find_reasonable_year_ticks(self.inputs.model_constants['start_mdr_introduce_time'],
                                                      self.inputs.model_constants['plot_end_time']))
+
+            # Tidy axis
             for axis_to_change in [ax.xaxis, ax.yaxis]:
                 for tick in axis_to_change.get_major_ticks():
                     tick.label.set_fontsize(get_nice_font_size(subplot_grid))
@@ -1407,6 +1421,7 @@ class Project:
                         self.inputs.model_constants['plot_end_time']])
             ax.set_ylabel(yaxis_label[o], fontsize=get_nice_font_size(subplot_grid))
 
+        # Finish off
         fig.suptitle(tool_kit.capitalise_first_letter(self.country) + ' resistant strain outputs',
                      fontsize=self.suptitle_size)
         self.save_figure(fig, '_resistant_strain')

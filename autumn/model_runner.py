@@ -255,9 +255,7 @@ class ModelRunner:
             self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
             # Sort out times for scenario runs
-            if scenario is None:
-                self.model_dict[scenario_name].start_time = self.inputs.model_constants['start_time']
-            else:
+            if scenario is not None:
                 scenario_start_time_index = \
                     self.model_dict['manual_baseline'].find_time_index(self.inputs.model_constants['recent_time'])
                 self.model_dict[scenario_name].start_time = \
@@ -772,7 +770,6 @@ class ModelRunner:
         for scenario in self.gui_inputs['scenarios_to_run']:
             scenario_name = 'uncertainty_' + tool_kit.find_scenario_string_from_number(scenario)
             self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
-            self.model_dict[scenario_name].start_time = self.inputs.model_constants['start_time']
 
         # Until a sufficient number of parameters are accepted
         while n_accepted < self.gui_inputs['uncertainty_runs']:

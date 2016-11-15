@@ -86,6 +86,7 @@ class ConsolidatedModel(StratifiedModel):
         self.inputs = inputs
         self.gui_inputs = gui_inputs
         self.country = self.gui_inputs['country']
+        self.start_time = self.inputs.model_constants['start_time']
 
         # Set Boolean conditionals for model structure and additional diagnostics
         self.is_lowquality = self.gui_inputs['is_lowquality']

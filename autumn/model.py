@@ -326,6 +326,8 @@ class ConsolidatedModel(StratifiedModel):
 
         self.calculate_ipt_rate()
 
+        self.calculate_community_ipt_rate()
+
     def calculate_birth_rates_vars(self):
 
         """
@@ -820,9 +822,8 @@ class ConsolidatedModel(StratifiedModel):
                                                                    * self.inputs.model_constants[
                                                                        'novel_ipt_effective_per_assessment']
 
-
             # Check size of latency compartments
-            early_latent = 0
+            early_latent = 0.
             for comorbidity in self.comorbidities:
                 for strain in self.strains:
                     early_latent += self.compartments['latent_early' + strain + comorbidity + agegroup]
@@ -832,6 +833,14 @@ class ConsolidatedModel(StratifiedModel):
                 = min([max([self.vars['novel_ipt_effective_treatments' + agegroup],
                        self.vars['standard_ipt_effective_treatments' + agegroup],]),
                         early_latent])
+
+    def calculate_community_ipt_rate(self):
+
+        if 'program_prop_community_ipt' in self.scaleup_fns:
+            self.vars['rate_community_ipt'] \
+                = self.vars['program_prop_community_ipt'] \
+                  * self.inputs.model_constants['ipt_effective_per_assessment'] \
+                  / self.inputs.model_constants['program_timeperiod_community_ipt_round']
 
     ##################################################################
     # Methods that calculate the flows of all the compartments
@@ -1179,4 +1188,11 @@ class ConsolidatedModel(StratifiedModel):
                     self.set_linked_transfer_rate_flow('latent_early' + strain + comorbidity + agegroup,
                                                        'susceptible_vac' + comorbidity + agegroup,
                                                        'ipt_effective_treatments' + agegroup)
+                    if 'program_prop_community_ipt' in self.scaleup_fns:
+                        self.set_var_transfer_rate_flow('latent_early' + strain + comorbidity + agegroup,
+                                                        'susceptible_vac' + comorbidity + agegroup,
+                                                        'rate_community_ipt')
+                        self.set_var_transfer_rate_flow('latent_late' + strain + comorbidity + agegroup,
+                                                        'susceptible_vac' + comorbidity + agegroup,
+                                                        'rate_community_ipt')
 

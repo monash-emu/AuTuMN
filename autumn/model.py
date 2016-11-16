@@ -14,6 +14,7 @@ creating intercompartmental flows, costs, etc., while the latter sets down the a
 
 from scipy import exp, log
 from autumn.base import BaseModel, StratifiedModel
+import copy
 
 
 def label_intersects_tags(label, tags):
@@ -517,7 +518,7 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         # If not stratified by organ status, use the smear-positive value
-        if len(self.organ_status) < 2:
+        if len(self.organ_status) == 1:
             self.vars['program_timeperiod_await_treatment'] = \
                 self.get_constant_or_variable_param('program_timeperiod_await_treatment_smearpos')
 
@@ -530,7 +531,7 @@ class ConsolidatedModel(StratifiedModel):
         prop_xpert = self.get_constant_or_variable_param('program_prop_xpert')
 
         # If only one organ stratum
-        if len(self.organ_status) < 2:
+        if len(self.organ_status) == 1:
             self.vars['program_rate_start_treatment'] = \
                 1. / self.vars['program_timeperiod_await_treatment']
         else:
@@ -538,7 +539,7 @@ class ConsolidatedModel(StratifiedModel):
                 if organ == '_smearneg':
                     self.vars['program_rate_start_treatment_smearneg'] = \
                         1. / (self.vars['program_timeperiod_await_treatment_smearneg'] * (1. - prop_xpert)
-                            + self.params['program_timeperiod_await_treatment_smearneg_xpert'] * prop_xpert)
+                              + self.params['program_timeperiod_await_treatment_smearneg_xpert'] * prop_xpert)
                 else:
                     self.vars['program_rate_start_treatment' + organ] = \
                         1. / self.vars['program_timeperiod_await_treatment' + organ]
@@ -564,58 +565,40 @@ class ConsolidatedModel(StratifiedModel):
     def calculate_proportionate_detection_vars(self):
 
         """
-        Calculate the proportions of patients assigned to each strain
+        Calculate the proportions of patients assigned to each strain. (Note that second-line DST availability refers to
+        the proportion of those with first-line DST who also have second-line DST available.)
         """
 
         # With misassignment:
-
-        # Note that second-line DST availability refers to the proportion
-        # of those with first-line DST who also have second-line DST available
-        # (rather than the proportion of all presentations with second line
-        # treatment available)
         if self.is_misassignment:
 
+            # If there are exactly two strains (DS and MDR)
             prop_firstline = self.get_constant_or_variable_param('program_prop_firstline_dst')
-            prop_secondline = self.get_constant_or_variable_param('program_prop_secondline_dst')
-
-            # DS-TB
-            self.vars['program_rate_detect_ds_asds'] = \
-                self.vars['program_rate_detect']
+            self.vars['program_rate_detect_ds_asds'] = self.vars['program_rate_detect']
             self.vars['program_rate_detect_ds_asmdr'] = 0.
-            self.vars['program_rate_detect_ds_asxdr'] = 0.
+            self.vars['program_rate_detect_mdr_asds'] = (1. - prop_firstline) * self.vars['program_rate_detect']
+            self.vars['program_rate_detect_mdr_asmdr'] = prop_firstline * self.vars['program_rate_detect']
 
-            # MDR-TB
-            self.vars['program_rate_detect_mdr_asds'] = \
-                (1. - prop_firstline) \
-                * self.vars['program_rate_detect']
-            self.vars['program_rate_detect_mdr_asmdr'] = \
-                prop_firstline \
-                * self.vars['program_rate_detect']
-            self.vars['program_rate_detect_mdr_asxdr'] = 0.
+            # If a third strain is present
+            if len(self.strains) > 2:
+                prop_secondline = self.get_constant_or_variable_param('program_prop_secondline_dst')
+                self.vars['program_rate_detect_ds_asxdr'] = 0.
+                self.vars['program_rate_detect_mdr_asxdr'] = 0.
+                self.vars['program_rate_detect_xdr_asds'] = (1. - prop_firstline) * self.vars['program_rate_detect']
+                self.vars['program_rate_detect_xdr_asmdr'] = prop_firstline \
+                                                             * (1. - prop_secondline) * self.vars['program_rate_detect']
+                self.vars['program_rate_detect_xdr_asxdr'] = prop_firstline \
+                                                             * prop_secondline * self.vars['program_rate_detect']
 
-            # XDR-TB
-            self.vars['program_rate_detect_xdr_asds'] = \
-                (1. - prop_firstline) \
-                 * self.vars['program_rate_detect']
-            self.vars['program_rate_detect_xdr_asmdr'] = \
-                prop_firstline \
-                * (1. - prop_secondline)\
-                * self.vars['program_rate_detect']
-            self.vars['program_rate_detect_xdr_asxdr'] = \
-                prop_firstline \
-                * prop_secondline \
-                * self.vars['program_rate_detect']
-
-        # Without misassignment:
+        # Without misassignment everyone is correctly allocated
         else:
             for strain in self.strains:
-                self.vars['program_rate_detect' + strain + '_as'+strain[1:]] = \
-                    self.vars['program_rate_detect']
+                self.vars['program_rate_detect' + strain + '_as'+strain[1:]] = self.vars['program_rate_detect']
 
     def calculate_treatment_rates_vars(self):
 
         # May need to adjust this - a bit of a patch for now
-        treatments = self.strains
+        treatments = copy.copy(self.strains)
         if len(self.strains) > 1 and self.gui_inputs['is_misassignment']:
             treatments += ['_inappropriate']
 
@@ -714,6 +697,8 @@ class ConsolidatedModel(StratifiedModel):
         self.vars['popsize_xpert'] = 0.
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
+                print('im here')
+                print(self.strains)
                 for strain in self.strains:
                     self.vars['popsize_xpert'] += (self.vars['program_rate_detect']
                                                    + self.vars['program_rate_missed']) \

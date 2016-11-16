@@ -384,6 +384,7 @@ class ConsolidatedModel(StratifiedModel):
         so need to calculate the remaining proportions.
         """
 
+        # This may need some work, as adjusting for comorbidities won't work if is_organvariation is False
         if self.is_organvariation:
 
             # If unstratified (self.organ_status should have length 0, but length 1 OK) - ??
@@ -494,17 +495,16 @@ class ConsolidatedModel(StratifiedModel):
             self.vars['program_rate_detect'] = 0.
             self.vars['program_rate_missed'] = 0.
 
-        # Repeat for each strain
-        for strain in self.strains:
-            for organ in self.organ_status:
-                for programmatic_rate in ['_detect', '_missed']:
-                    self.vars['program_rate' + programmatic_rate + strain + organ] \
-                        = self.vars['program_rate' + programmatic_rate]
+        # Calculate detection rates by organ stratum (should be the same for each strain)
+        for organ in self.organ_status:
+            for programmatic_rate in ['_detect', '_missed']:
+                self.vars['program_rate' + programmatic_rate + organ] \
+                    = self.vars['program_rate' + programmatic_rate]
 
-                    # Add active case finding rate to standard DOTS-based detection rate
-                    if programmatic_rate == '_detect' and len(self.organ_status) >= 2:
-                        self.vars['program_rate' + programmatic_rate + strain + organ] \
-                            += self.vars['program_rate_acf' + organ]
+                # Add active case finding rate to standard DOTS-based detection rate
+                if programmatic_rate == '_detect' and len(self.organ_status) > 1:
+                    self.vars['program_rate' + programmatic_rate + organ] \
+                        += self.vars['program_rate_acf' + organ]
 
     def calculate_await_treatment_var(self):
 
@@ -1024,7 +1024,7 @@ class ConsolidatedModel(StratifiedModel):
                             self.set_var_transfer_rate_flow(
                                 'active' + organ + strain + comorbidity + agegroup,
                                 'detect' + organ + strain + comorbidity + agegroup,
-                                'program_rate_detect' + strain + organ)
+                                'program_rate_detect' + organ)
 
     def set_variable_programmatic_flows(self):
 

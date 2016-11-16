@@ -256,8 +256,7 @@ class ConsolidatedModel(StratifiedModel):
     def calculate_vars(self):
 
         """
-        The master method that calls all the other methods for the calculations of
-        variable rates
+        The master method that calls all the other methods for the calculations of variable rates
         """
 
         # The parameter values are calculated from the costs, but only in the future
@@ -294,7 +293,7 @@ class ConsolidatedModel(StratifiedModel):
     def calculate_birth_rates_vars(self):
 
         """
-        Calculate birth rates into vaccinated and unvaccinated compartments
+        Calculate birth rates into vaccinated and unvaccinated compartments.
         """
 
         # Get the parameters depending on whether constant or time variant
@@ -326,8 +325,11 @@ class ConsolidatedModel(StratifiedModel):
 
     def calculate_force_infection_vars(self):
 
-        # Calculate force of infection by strain,
-        # incorporating partial immunity and infectiousness
+        """
+        Calculate force of infection for each strain, incorporating partial immunity and infectiousness.
+        First calculates the effective infectious population (incorporating infectiousness by organ involvement), then
+        calculates the raw force of infection, then adjusts for various levels of susceptibility.
+        """
 
         for strain in self.strains:
 
@@ -336,49 +338,42 @@ class ConsolidatedModel(StratifiedModel):
             for organ in self.organ_status:
                 for label in self.labels:
 
-                    # If we haven't reached the part of the model divided by organ status
-                    # and we're not doing the organ status of interest.
+                    # If model is organ-stratified, but we haven't yet reached the organ of interest
                     if organ not in label and organ != '':
                         continue
 
-                    # If we haven't reached the part of the model divided by strain
-                    # and we're not doing the strain of interest.
+                    # If model is strain-stratified, but we haven't yet reached the strain of interest
                     if strain not in label and strain != '':
                         continue
 
-                    # If the compartment is non-infectious
+                    # If the compartment is infectious
                     if label_intersects_tags(label, self.infectious_tags):
 
                         # Allow modification for infectiousness by age
                         for agegroup in self.agegroups:
                             if agegroup in label:
 
-                                # Calculate the effective infectious population
+                                # Add to the effective infectious population, adjusting for organ involvement and age
                                 self.vars['infectious_population' + strain] += \
                                     self.params['tb_multiplier_force' + organ] \
                                     * self.params['tb_multiplier_child_infectiousness' + agegroup] \
                                     * self.compartments[label]
 
-            # Calculate non-immune force of infection
+            # Calculate force of infection unadjusted for immunity/susceptibility
             self.vars['rate_force' + strain] = \
-                self.params['tb_n_contact'] \
-                * self.vars['infectious_population' + strain] \
-                / self.vars['population']
+                self.params['tb_n_contact'] * self.vars['infectious_population' + strain] / self.vars['population']
 
-            # Special case for scenario 11 is cessation of transmission
+            # Special case for scenario 11 is cessation of transmission *** this is inelegant and temporary
             if self.scenario == 11 or self.country == 'Philippines':
                 self.vars['rate_force' + strain] *= self.vars['transmission_modifier']
 
-            # Adjust for immunity
+            # Adjust for immunity in various groups
             self.vars['rate_force_vacc' + strain] \
-                = self.params['tb_multiplier_bcg_protection'] \
-                  * self.vars['rate_force' + strain]
+                = self.params['tb_multiplier_bcg_protection'] * self.vars['rate_force' + strain]
             self.vars['rate_force_latent' + strain] \
-                = self.params['tb_multiplier_latency_protection'] \
-                  * self.vars['rate_force' + strain]
+                = self.params['tb_multiplier_latency_protection'] * self.vars['rate_force' + strain]
             self.vars['rate_force_novelvacc' + strain] \
-                = self.params['tb_multiplier_novelvac_protection'] \
-                  * self.vars['rate_force' + strain]
+                = self.params['tb_multiplier_novelvac_protection'] * self.vars['rate_force' + strain]
 
     def calculate_progression_vars(self):
 

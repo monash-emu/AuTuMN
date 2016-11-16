@@ -74,46 +74,39 @@ class ConsolidatedModel(StratifiedModel):
         7. Calculating the diagnostic solutions
     """
 
-    def __init__(self,
-                 scenario=None,
-                 inputs=None,
-                 gui_inputs=None):
+    def __init__(self, scenario=None, inputs=None, gui_inputs=None):
 
+        # Inherited initialisations
         BaseModel.__init__(self)
         StratifiedModel.__init__(self)
 
+        # Fundamental attributes of model
         self.scenario = scenario
         self.inputs = inputs
         self.gui_inputs = gui_inputs
-        self.country = self.gui_inputs['country']
         self.start_time = self.inputs.model_constants['start_time']
 
-        # Set Boolean conditionals for model structure and additional diagnostics
-        self.is_lowquality = self.gui_inputs['is_lowquality']
-        self.is_amplification = self.gui_inputs['is_amplification']
-        self.is_misassignment = self.gui_inputs['is_misassignment']
-        if self.is_misassignment:
-            assert self.is_amplification, 'Misassignment requested without amplification'
+        # Set some model characteristics directly from the GUI inputs
+        for attribute in ['is_lowquality', 'is_amplification', 'is_misassignment', 'country']:
+            setattr(self, attribute, self.gui_inputs[attribute])
+        if self.is_misassignment: assert self.is_amplification, 'Misassignment requested without amplification'
 
-        # Define model compartmental structure
-        # (note that compartment initialisation has now been shifted to base.py)
-        self.define_model_structure()
-
-        # Set other fixed parameters
+        # Set fixed parameters
         for key, value in self.inputs.model_constants.items():
             if type(value) == float:
                 self.set_parameter(key, value)
 
-        # Treatment outcomes that will be universal to all models
-        # Global TB outcomes of "completion" and "cure" can be considered "_success",
-        # "death" is "_death" (of course), "failure" and "default" are considered "_default"
-        # and "transfer out" is removed from denominator calculations.
+        # Define model compartmental structure (compartment initialisation is now in base.py)
+        self.define_model_structure()
+
+        # Treatment outcomes
         self.outcomes = ['_success', '_death', '_default']
-        self.non_success_outcomes = self.outcomes[1: 3]
+        self.non_success_outcomes = self.outcomes[1:]
 
         # Get scaleup functions from input object
         self.scaleup_fns = self.inputs.scaleup_fns[self.scenario]
 
+        # Intervention and economics-related initialisiations
         self.interventions_to_cost = self.inputs.interventions_to_cost
         self.find_intervention_startdates()
         if self.eco_drives_epi: self.distribute_funding_across_years()

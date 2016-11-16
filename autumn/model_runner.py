@@ -378,9 +378,7 @@ class ModelRunner:
                 for from_label, to_label, rate in self.model_dict[scenario].fixed_transfer_rate_flows:
                     if 'latent' in from_label and 'active' in to_label and strain in to_label:
                         incidence_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
-                                                 * self.model_dict[scenario].get_var_soln(rate) \
-                                                 / total_denominator \
-                                                 * 1e5
+                                                 * rate / total_denominator * 1e5
                         epi_outputs['true_incidence' + strain] \
                             = increment_list(incidence_increment,
                                              epi_outputs['incidence' + strain])

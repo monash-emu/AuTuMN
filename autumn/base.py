@@ -99,15 +99,9 @@ class BaseModel:
 
         Args:
             time: The time point for interrogation.
-
-        Returns:
-            index: The index of the self.times list that refers to the time point argument.
-
         """
 
-        for index, model_time in enumerate(self.times):
-            if model_time > time:
-                return index
+        return [i for i, j in enumerate(self.times) if j >= time][0]
 
         raise ValueError('Time not found')
 

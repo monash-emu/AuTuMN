@@ -697,8 +697,6 @@ class ConsolidatedModel(StratifiedModel):
         self.vars['popsize_xpert'] = 0.
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
-                print('im here')
-                print(self.strains)
                 for strain in self.strains:
                     self.vars['popsize_xpert'] += (self.vars['program_rate_detect']
                                                    + self.vars['program_rate_missed']) \

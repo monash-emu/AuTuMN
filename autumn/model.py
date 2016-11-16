@@ -113,53 +113,23 @@ class ConsolidatedModel(StratifiedModel):
 
     def define_model_structure(self):
 
-        """
-        Args:
-            All arguments are set through __init__
-            Please refer to __init__ method comments above
-        """
-
         # All compartmental disease stages
-        self.compartment_types = [
-            'susceptible_fully',
-            'susceptible_vac',
-            'susceptible_novelvac',
-            'susceptible_treated',
-            'latent_early',
-            'latent_late',
-            'active',
-            'detect',
-            'missed',
-            'treatment_infect',
-            'treatment_noninfect']
+        self.compartment_types = ['susceptible_fully', 'susceptible_vac', 'susceptible_novelvac', 'susceptible_treated',
+                                  'latent_early', 'latent_late', 'active', 'detect', 'missed', 'treatment_infect',
+                                  'treatment_noninfect']
         if self.is_lowquality: self.compartment_types += ['lowquality']
 
-        # Broader stages for calculating outputs later
-        # Now thinking this should eventually go into the plotting module
-
         # Stages in progression through treatment
-        self.treatment_stages = [
-            '_infect',
-            '_noninfect']
+        self.treatment_stages = ['_infect', '_noninfect']
 
         # Compartments that contribute to force of infection calculations
-        self.infectious_tags = [
-            'active',
-            'missed',
-            'detect',
-            'treatment_infect']
-        if self.is_lowquality: self.infectious_tags += ['lowquality']
+        self.infectious_tags = ['active', 'missed', 'detect', 'treatment_infect', 'lowquality']
 
         # Get organ stratification and strains from inputs objects
-        self.organ_status = self.inputs.organ_status
-        self.is_organvariation = self.inputs.is_organvariation
-        self.strains = self.inputs.strains
+        for attribute in ['organ_status', 'strains', 'comorbidities', 'is_organvariation', 'agegroups']:
+            setattr(self, attribute, getattr(self.inputs, attribute))
 
-        self.comorbidities = self.inputs.comorbidities
-
-        # Age stratification
-        self.agegroups = self.inputs.agegroups
-
+        # Initialise compartments
         self.initial_compartments = {}
         for compartment in self.compartment_types:
             if compartment in self.inputs.model_constants:
@@ -194,11 +164,10 @@ class ConsolidatedModel(StratifiedModel):
                         for strain in self.strains:
                             for organ in self.organ_status:
                                 if self.is_misassignment:
-                                    for assigned_strain_number in range(len(self.strains)):
-                                        self.set_compartment(
-                                            compartment + organ + strain +
-                                            '_as' + self.strains[assigned_strain_number][1:] +
-                                            comorbidity + agegroup, 0.)
+                                    for assigned_strain in self.strains:
+                                        self.set_compartment(compartment + organ + strain +
+                                                             '_as' + assigned_strain[1:] + comorbidity + agegroup,
+                                                             0.)
                                 else:
                                     self.set_compartment(compartment +
                                                          organ + strain + comorbidity + agegroup, 0.)
@@ -227,13 +196,13 @@ class ConsolidatedModel(StratifiedModel):
                 for agegroup in self.agegroups:
                     for comorbidity in self.comorbidities:
                         if 'susceptible_fully' in compartment:
-                            # Split equally by comorbidities and age-groups
+                            # Split equally by age-groups
                             self.set_compartment(compartment + comorbidity + agegroup,
                                                  self.initial_compartments[compartment]
                                                  * start_comorb_prop[comorbidity]
                                                  / len(self.agegroups))
                         elif 'latent' in compartment:
-                            # Assign all to DS-TB, split equally by comorbidities and age-groups
+                            # Assign all to DS-TB, split equally by age-groups
                             self.set_compartment(compartment + default_start_strain + comorbidity + agegroup,
                                                  self.initial_compartments[compartment]
                                                  * start_comorb_prop[comorbidity]
@@ -243,9 +212,9 @@ class ConsolidatedModel(StratifiedModel):
                                 self.set_compartment(compartment +
                                                      organ + default_start_strain + comorbidity + agegroup,
                                                      self.initial_compartments[compartment]
-                                                     / len(self.organ_status)  # Split equally by organ statuses,
+                                                     / len(self.organ_status)
                                                      * start_comorb_prop[comorbidity]
-                                                     / len(self.agegroups))  # and split equally by age-groups
+                                                     / len(self.agegroups))
 
     #######################################################
     ### Single method to process uncertainty parameters ###

@@ -475,6 +475,27 @@ class ConsolidatedModel(StratifiedModel):
         else:
             detect_prop = self.get_constant_or_variable_param('program_prop_detect')
 
+
+        # Weighting detection and algorithm sensitivity rates by organ status
+        # self.vars['program_prop_detect_smearpos'] \
+        #     = detect_prop \
+        #       / (self.vars['epi_prop_smearpos']
+        #          + self.params['program_prop_snep_relative_algorithm'] * (1. - self.vars['epi_prop_smearpos']))
+        # self.vars['program_prop_detect_smearneg'] \
+        #     = self.vars['program_prop_detect_smearpos'] * self.params['program_prop_snep_relative_algorithm']
+        # self.vars['program_prop_detect_extrapul'] = self.vars['program_prop_detect_smearneg']
+        #
+        # alg_sens_by_organ = {}
+        # alg_sens_by_organ['program_prop_detect_smearpos'] \
+        #     = detect_prop \
+        #       / (self.vars['epi_prop_smearpos']
+        #          + self.params['program_prop_snep_relative_algorithm'] * (1. - self.vars['epi_prop_smearpos']))
+        # alg_sens_by_organ['program_prop_detect_smearneg'] \
+        #     = alg_sens_by_organ['program_prop_detect_smearpos'] * self.params['program_prop_snep_relative_algorithm']
+        # alg_sens_by_organ['program_prop_detect_extrapul'] = alg_sens_by_organ['program_prop_detect_smearneg']
+
+
+
         # Detections
         self.vars['program_rate_detect'] \
             = - detect_prop \

@@ -459,6 +459,8 @@ class ConsolidatedModel(StratifiedModel):
                 / (detection rate + spont recover rate + tb death rate + natural death rate)
         """
 
+        vary_by_organ = False
+
         # Detection
         # Note that all organ types are assumed to have the same untreated active
         # sojourn time, so any organ status can be arbitrarily selected (here the first, or smear-positive)
@@ -475,46 +477,55 @@ class ConsolidatedModel(StratifiedModel):
         else:
             detect_prop = self.get_constant_or_variable_param('program_prop_detect')
 
-
         # Weighting detection and algorithm sensitivity rates by organ status
-        # self.vars['program_prop_detect_smearpos'] \
-        #     = detect_prop \
-        #       / (self.vars['epi_prop_smearpos']
-        #          + self.params['program_prop_snep_relative_algorithm'] * (1. - self.vars['epi_prop_smearpos']))
-        # self.vars['program_prop_detect_smearneg'] \
-        #     = self.vars['program_prop_detect_smearpos'] * self.params['program_prop_snep_relative_algorithm']
-        # self.vars['program_prop_detect_extrapul'] = self.vars['program_prop_detect_smearneg']
-        #
-        # alg_sens_by_organ = {}
-        # alg_sens_by_organ['program_prop_detect_smearpos'] \
-        #     = detect_prop \
-        #       / (self.vars['epi_prop_smearpos']
-        #          + self.params['program_prop_snep_relative_algorithm'] * (1. - self.vars['epi_prop_smearpos']))
-        # alg_sens_by_organ['program_prop_detect_smearneg'] \
-        #     = alg_sens_by_organ['program_prop_detect_smearpos'] * self.params['program_prop_snep_relative_algorithm']
-        # alg_sens_by_organ['program_prop_detect_extrapul'] = alg_sens_by_organ['program_prop_detect_smearneg']
+        if vary_by_organ:
 
+            detect_prop_by_organ = {}
+            detect_prop_by_organ['_smearpos'] \
+                = detect_prop \
+                  / (self.vars['epi_prop_smearpos']
+                     + self.params['program_prop_snep_relative_algorithm'] * (1. - self.vars['epi_prop_smearpos']))
+            detect_prop_by_organ['_smearneg'] \
+                = detect_prop_by_organ['_smearpos'] * self.params['program_prop_snep_relative_algorithm']
+            detect_prop_by_organ['_extrapul'] = detect_prop_by_organ['_smearneg']
 
+            alg_sens_by_organ = {}
+            alg_sens_by_organ['_smearpos'] \
+                = detect_prop \
+                  / (self.vars['epi_prop_smearpos']
+                     + self.params['program_prop_snep_relative_algorithm'] * (1. - self.vars['epi_prop_smearpos']))
+            alg_sens_by_organ['_smearneg'] \
+                = alg_sens_by_organ['_smearpos'] * self.params['program_prop_snep_relative_algorithm']
+            alg_sens_by_organ['_extrapul'] = alg_sens_by_organ['_smearneg']
 
-        # Detections
+            for organ in self.organ_status:
+                self.vars['program_rate_detect' + organ] \
+                    = - detect_prop_by_organ[organ] \
+                      * (1. / self.params['tb_timeperiod_activeuntreated'] + 1. / life_expectancy) \
+                      / (detect_prop_by_organ[organ] - 1.)
+                self.vars['program_rate_missed' + organ] \
+                    = self.vars['program_rate_detect' + organ] \
+                      * (1. - alg_sens_by_organ[organ]) / max(alg_sens_by_organ[organ], 1e-6)
+
+        # Without weighting
         self.vars['program_rate_detect'] \
             = - detect_prop \
               * (1. / self.params['tb_timeperiod_activeuntreated'] + 1. / life_expectancy) \
               / (detect_prop - 1.)
-
         # Missed (avoid division by zero alg_sens with max)
         self.vars['program_rate_missed'] = self.vars['program_rate_detect'] * (1. - alg_sens) / max(alg_sens, 1e-6)
 
         # Calculate detection rates by organ stratum (should be the same for each strain)
         for organ in self.organ_status:
-            for programmatic_rate in ['_detect', '_missed']:
-                self.vars['program_rate' + programmatic_rate + organ] \
-                    = self.vars['program_rate' + programmatic_rate]
-
-                # Add active case finding rate to standard DOTS-based detection rate
-                if programmatic_rate == '_detect' and len(self.organ_status) > 1:
+            if not vary_by_organ:
+                for programmatic_rate in ['_detect', '_missed']:
                     self.vars['program_rate' + programmatic_rate + organ] \
-                        += self.vars['program_rate_acf' + organ]
+                        = self.vars['program_rate' + programmatic_rate]
+
+            # Add active case finding rate to standard DOTS-based detection rate
+            if len(self.organ_status) > 1:
+                self.vars['program_rate_detect' + organ] \
+                    += self.vars['program_rate_acf' + organ]
 
     def calculate_await_treatment_var(self):
 

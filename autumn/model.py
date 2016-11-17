@@ -455,7 +455,8 @@ class ConsolidatedModel(StratifiedModel):
         Derived from original formulas of by solving the simultaneous equations:
           algorithm sensitivity = detection rate / (detection rate + missed rate)
           - and -
-          detection proportion = detection rate / (detection rate + spont recover rate + tb death rate + natural death rate)
+          detection proportion = detection rate
+                / (detection rate + spont recover rate + tb death rate + natural death rate)
         """
 
         # Detection
@@ -475,18 +476,13 @@ class ConsolidatedModel(StratifiedModel):
             detect_prop = self.get_constant_or_variable_param('program_prop_detect')
 
         # Detections
-        self.vars['program_rate_detect'] = \
-            - detect_prop \
-            * (self.params['tb_rate_recover' + self.organ_status[0]] +
-               self.params['tb_rate_death' + self.organ_status[0]] +
-               1. / life_expectancy) \
-            / (detect_prop - 1.)
+        self.vars['program_rate_detect'] \
+            = - detect_prop \
+              * (1. / self.params['tb_timeperiod_activeuntreated'] + 1. / life_expectancy) \
+              / (detect_prop - 1.)
 
-        # Missed
-        self.vars['program_rate_missed'] = \
-            self.vars['program_rate_detect'] \
-            * (1. - alg_sens) \
-            / max(alg_sens, 1e-6)  # Avoid division by zero
+        # Missed (avoid division by zero alg_sens with max)
+        self.vars['program_rate_missed'] = self.vars['program_rate_detect'] * (1. - alg_sens) / max(alg_sens, 1e-6)
 
         # Calculate detection rates by organ stratum (should be the same for each strain)
         for organ in self.organ_status:

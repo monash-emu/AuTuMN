@@ -491,7 +491,7 @@ class ConsolidatedModel(StratifiedModel):
 
             alg_sens_by_organ = {}
             alg_sens_by_organ['_smearpos'] \
-                = detect_prop \
+                = alg_sens \
                   / (self.vars['epi_prop_smearpos']
                      + self.params['program_prop_snep_relative_algorithm'] * (1. - self.vars['epi_prop_smearpos']))
             alg_sens_by_organ['_smearneg'] \

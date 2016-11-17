@@ -480,23 +480,20 @@ class ConsolidatedModel(StratifiedModel):
         # Weighting detection and algorithm sensitivity rates by organ status
         if vary_by_organ:
 
-            detect_prop_by_organ = {}
-            detect_prop_by_organ['_smearpos'] \
-                = detect_prop \
-                  / (self.vars['epi_prop_smearpos']
-                     + self.params['program_prop_snep_relative_algorithm'] * (1. - self.vars['epi_prop_smearpos']))
-            detect_prop_by_organ['_smearneg'] \
-                = detect_prop_by_organ['_smearpos'] * self.params['program_prop_snep_relative_algorithm']
-            detect_prop_by_organ['_extrapul'] = detect_prop_by_organ['_smearneg']
+            def weight_by_organ_status(baseline_value):
 
-            alg_sens_by_organ = {}
-            alg_sens_by_organ['_smearpos'] \
-                = alg_sens \
-                  / (self.vars['epi_prop_smearpos']
-                     + self.params['program_prop_snep_relative_algorithm'] * (1. - self.vars['epi_prop_smearpos']))
-            alg_sens_by_organ['_smearneg'] \
-                = alg_sens_by_organ['_smearpos'] * self.params['program_prop_snep_relative_algorithm']
-            alg_sens_by_organ['_extrapul'] = alg_sens_by_organ['_smearneg']
+                weighted_dict = {}
+                weighted_dict['_smearpos'] \
+                    = baseline_value \
+                      / (self.vars['epi_prop_smearpos']
+                         + self.params['program_prop_snep_relative_algorithm'] * (1. - self.vars['epi_prop_smearpos']))
+                weighted_dict['_smearneg'] \
+                    = weighted_dict['_smearpos'] * self.params['program_prop_snep_relative_algorithm']
+                weighted_dict['_extrapul'] = weighted_dict['_smearneg']
+                return weighted_dict
+
+            detect_prop_by_organ = weight_by_organ_status(detect_prop)
+            alg_sens_by_organ = weight_by_organ_status(alg_sens)
 
             for organ in self.organ_status:
                 self.vars['program_rate_detect' + organ] \

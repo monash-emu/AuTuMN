@@ -474,27 +474,19 @@ class ConsolidatedModel(StratifiedModel):
         else:
             detect_prop = self.get_constant_or_variable_param('program_prop_detect')
 
-        # If no division by zero
-        if alg_sens > 0.:
+        # Detections
+        self.vars['program_rate_detect'] = \
+            - detect_prop \
+            * (self.params['tb_rate_recover' + self.organ_status[0]] +
+               self.params['tb_rate_death' + self.organ_status[0]] +
+               1. / life_expectancy) \
+            / (detect_prop - 1.)
 
-            # Detections
-            self.vars['program_rate_detect'] = \
-                - detect_prop \
-                * (self.params['tb_rate_recover' + self.organ_status[0]] +
-                   self.params['tb_rate_death' + self.organ_status[0]] +
-                   1. / life_expectancy) \
-                / (detect_prop - 1.)
-
-            # Missed
-            self.vars['program_rate_missed'] = \
-                self.vars['program_rate_detect'] \
-                * (1. - alg_sens) \
-                / alg_sens
-
-        # Otherwise just assign detection and missed rates to zero
-        else:
-            self.vars['program_rate_detect'] = 0.
-            self.vars['program_rate_missed'] = 0.
+        # Missed
+        self.vars['program_rate_missed'] = \
+            self.vars['program_rate_detect'] \
+            * (1. - alg_sens) \
+            / max(alg_sens, 1e-6)  # Avoid division by zero
 
         # Calculate detection rates by organ stratum (should be the same for each strain)
         for organ in self.organ_status:
@@ -574,6 +566,8 @@ class ConsolidatedModel(StratifiedModel):
 
             # If there are exactly two strains (DS and MDR)
             prop_firstline = self.get_constant_or_variable_param('program_prop_firstline_dst')
+
+            # Add effect of Xpert on identification, assuming that it is distributed independently to conventional DST
             if 'program_prop_xpert' in self.vars:
                 prop_firstline += (1. - prop_firstline) * self.vars['program_prop_xpert']
 

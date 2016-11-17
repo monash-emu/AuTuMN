@@ -95,10 +95,10 @@ class BaseModel:
     def find_time_index(self, time):
 
         """
-        Method to find first time point in times list after a certain specified time point.
+        Method to find first time point in times list at or after a certain specified time point.
 
         Args:
-            time: The time point for interrogation.
+            time: Float for the time point of interest.
         """
 
         return [i for i, j in enumerate(self.times) if j >= time][0]

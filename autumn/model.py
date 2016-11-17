@@ -277,7 +277,7 @@ class ConsolidatedModel(StratifiedModel):
 
         self.calculate_detect_missed_vars()
 
-        self.calculate_proportionate_detection_vars()
+        self.calculate_misassignment_detection_vars()
 
         if self.is_lowquality: self.calculate_lowquality_detection_vars()
 
@@ -562,7 +562,7 @@ class ConsolidatedModel(StratifiedModel):
             * prop_lowqual \
             / (1. - prop_lowqual)
 
-    def calculate_proportionate_detection_vars(self):
+    def calculate_misassignment_detection_vars(self):
 
         """
         Calculate the proportions of patients assigned to each strain. (Note that second-line DST availability refers to
@@ -574,6 +574,9 @@ class ConsolidatedModel(StratifiedModel):
 
             # If there are exactly two strains (DS and MDR)
             prop_firstline = self.get_constant_or_variable_param('program_prop_firstline_dst')
+            if 'program_prop_xpert' in self.vars:
+                prop_firstline += (1. - prop_firstline) * self.vars['program_prop_xpert']
+
             self.vars['program_rate_detect_ds_asds'] = self.vars['program_rate_detect']
             self.vars['program_rate_detect_ds_asmdr'] = 0.
             self.vars['program_rate_detect_mdr_asds'] = (1. - prop_firstline) * self.vars['program_rate_detect']

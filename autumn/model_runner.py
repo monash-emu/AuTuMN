@@ -15,6 +15,10 @@ import outputs
 import autumn.economics
 import itertools
 
+import time
+import eventlet
+from flask_socketio import emit
+
 def is_positive_definite(v):
 
     return isfinite(v) and v > 0.
@@ -134,12 +138,12 @@ def find_uncertainty_output_weights(list, method, relative_weights=[1., 2.]):
 
 class ModelRunner:
 
-    def __init__(self, gui_inputs, runtime_outputs, figure_frame):
+    def __init__(self, gui_inputs, runtime_outputs, figure_frame, js_gui=False):
 
         self.gui_inputs = gui_inputs
         self.runtime_outputs = runtime_outputs
         self.figure_frame = figure_frame
-        self.inputs = data_processing.Inputs(gui_inputs, runtime_outputs, from_test=True)
+        self.inputs = data_processing.Inputs(gui_inputs, runtime_outputs, from_test=True, js_gui=js_gui)
         self.inputs.read_and_load_data()
         self.model_dict = {}
         self.is_last_run_success = False
@@ -199,6 +203,13 @@ class ModelRunner:
                                    'accepted_no_burn_in_indices',
                                    'rejection_dict',
                                    'loglikelihoods']
+
+        self.emit_delay = 0.1
+        self.plot_count = 0
+        self.js_gui = js_gui
+
+        if self.js_gui:
+            eventlet.monkey_patch()
 
     ###############################################
     ### Master methods to run all other methods ###
@@ -322,6 +333,23 @@ class ModelRunner:
             #                                                                    * self.total_funding
             # self.model_dict['optimised'].distribute_funding_across_years()
             # self.model_dict['optimised'].integrate()
+
+    ##################################################
+    ### JavaScript GUI methods parallel to Tkinter ###
+    ##################################################
+
+    def plot_progressive_parameters_js(self):
+
+        accepted_params = [
+            list(p for p, a in zip(self.all_parameters_tried[param], self.whether_accepted_list) if a)[-1]
+            for p, param in enumerate(self.all_parameters_tried)]
+
+        names = [tool_kit.find_title_from_dictionary(param) for p, param in
+                 enumerate(self.all_parameters_tried)]
+
+        emit('uncertainty_graph', {"data": accepted_params, "names": names, "count": self.plot_count})
+
+        self.plot_count += 1
 
     ####################################
     ### Model interpretation methods ###
@@ -887,7 +915,10 @@ class ModelRunner:
                 i_candidates += 1
                 run += 1
 
-            self.plot_progressive_parameters(from_runner=True)
+            if self.js_gui:
+                self.plot_progressive_parameters_js()
+            else:
+                self.plot_progressive_parameters(from_runner=True)
 
             # Generate more candidates if required
             if not self.gui_inputs['adaptive_uncertainty'] and run >= len(param_candidates.keys()):
@@ -1296,10 +1327,17 @@ class ModelRunner:
     ### GUI-related methods ###
     ###########################
 
-    def add_comment_to_gui_window(self, comment):
+    def add_comment_to_gui_window(self, comment, target='console'):
 
-        self.runtime_outputs.insert(END, comment + '\n')
-        self.runtime_outputs.see(END)
+        if self.js_gui:
+            emit(target, {"message": comment})
+            time.sleep(self.emit_delay)
+
+            print "Emitting:", comment
+
+        else:
+            self.runtime_outputs.insert(END, comment + '\n')
+            self.runtime_outputs.see(END)
 
     def plot_progressive_parameters(self, from_runner=True, input_figure=None):
 

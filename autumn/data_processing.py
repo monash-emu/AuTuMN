@@ -6,6 +6,10 @@ import tool_kit
 from curve import scale_up_function, freeze_curve
 from Tkinter import *
 
+import time
+import eventlet
+from flask_socketio import emit
+
 def calculate_proportion_dict(data, indices, percent=False):
 
     """
@@ -136,7 +140,7 @@ def remove_nans(dictionary):
 
 class Inputs:
 
-    def __init__(self, gui_inputs, runtime_outputs, from_test=False):
+    def __init__(self, gui_inputs, runtime_outputs, from_test=False, js_gui=False):
 
         self.gui_inputs = gui_inputs
         self.country = gui_inputs['country']
@@ -171,11 +175,18 @@ class Inputs:
                                                 'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
         self.interventions_to_cost = []
 
+        self.emit_delay = 0.1
+        self.plot_count = 0
+
+        self.js_gui = js_gui
+
+        if self.js_gui:
+            eventlet.monkey_patch()
+
     def read_and_load_data(self):
 
         # Default keys of sheets to read (ones that should always be read)
-        self.runtime_outputs.insert(END, 'Reading Excel sheets with input data.\n')
-        self.runtime_outputs.see(END)
+        self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
         keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy',
                                   'default_parameters', 'tb', 'notifications', 'outcomes',
                                   'country_constants', 'default_constants',
@@ -263,11 +274,9 @@ class Inputs:
                     agegroups_to_print += str(agegroup)
                 else:
                     agegroups_to_print += str(agegroup) + ', '
-            self.runtime_outputs.insert(END, 'Age breakpoints are at: %s' % agegroups_to_print)
-            self.runtime_outputs.see(END)
+            self.add_comment_to_gui_window('Age breakpoints are at: %s' % agegroups_to_print)
         else:
-            self.runtime_outputs.insert(END, 'Model is not stratified by age.\n')
-            self.runtime_outputs.see(END)
+            self.add_comment_to_gui_window('Model is not stratified by age.\n')
 
         # Add treatment time periods for single strain model, as only populated for DS-TB to now
         if self.gui_inputs['n_strains'] == 0:
@@ -276,15 +285,12 @@ class Inputs:
         # Define the structuring of comorbidities for the model
         self.define_comorbidity_structure()
         if len(self.comorbidities) == 1:
-            self.runtime_outputs.insert(END, 'Model does not incorporate any additional risk groups.\n')
-            self.runtime_outputs.see(END)
+            self.add_comment_to_gui_window('Model does not incorporate any additional risk groups.\n')
         elif len(self.comorbidities) == 2:
-            self.runtime_outputs.insert(END, 'Model incorporates one additional risk group.\n')
-            self.runtime_outputs.see(END)
+            self.add_comment_to_gui_window('Model incorporates one additional risk group.\n')
         elif len(self.comorbidities) > 2:
-            self.runtime_outputs.insert(END, 'Model incorporates %s additional risk groups.\n'
+            self.add_comment_to_gui_window('Model incorporates %s additional risk groups.\n'
                                         % str(len(self.comorbidities) - 1))
-            self.runtime_outputs.see(END)
 
         # Define the strain structure for the model
         self.define_strain_structure()
@@ -311,11 +317,9 @@ class Inputs:
         # Create a scale-up dictionary for resistance amplification if appropriate
         if self.gui_inputs['n_strains'] > 1:
             self.find_amplification_data()
-            self.runtime_outputs.insert(END, 'Model simulating %d strains.\n' % self.gui_inputs['n_strains'])
-            self.runtime_outputs.see(END)
+            self.add_comment_to_gui_window('Model simulating %d strains.\n' % self.gui_inputs['n_strains'])
         else:
-            self.runtime_outputs.insert(END, 'Model simulating single strain only.\n')
-            self.runtime_outputs.see(END)
+            self.add_comment_to_gui_window('Model simulating single strain only.\n')
 
         # Derive some basic parameters for IPT
         self.find_ipt_params()
@@ -864,12 +868,12 @@ class Inputs:
             # Leave organ variation as false if no organ stratification and warn if variation requested
             for status in ['pos', 'neg']:
                 if self.time_variants['epi_prop_smear' + status]['time_variant'] == u'yes':
-                    self.runtime_outputs.insert(END,
+                    self.add_comment_to_gui_window(
                                                 'Time variant smear-' + status + ' proportion requested, but ' +
                                                 'model is not stratified by organ status. ' +
                                                 'Therefore, time variant smear-' + status +
                                                 ' status has been changed to off.\n')
-                    self.runtime_outputs.see(END)
+
                     self.time_variants['epi_prop_smear' + status]['time_variant'] = u'no'
         else:
 
@@ -878,22 +882,22 @@ class Inputs:
                 self.is_organvariation = True
                 # Warn if smear-negative variation not requested
                 if self.time_variants['epi_prop_smearneg']['time_variant'] == u'no':
-                    self.runtime_outputs.insert(END,
+                    self.add_comment_to_gui_window(
                                                 'Requested time variant smear-positive status, but ' +
                                                 'not time variant smear-negative status. ' +
                                                 'Therefore, changed to time variant smear-negative status.\n')
-                    self.runtime_outputs.see(END)
+
                     self.time_variants['epi_prop_smearneg']['time_variant'] = u'yes'
 
             # Leave organ variation as false if smear-positive variation not requested
             elif self.time_variants['epi_prop_smearpos']['time_variant'] == u'no':
                 # Warn if smear-negative variation requested
                 if self.time_variants['epi_prop_smearneg']['time_variant'] == u'yes':
-                    self.runtime_outputs.insert(END,
+                    sself.add_comment_to_gui_window(
                                                 'Requested non-time variant smear-positive status, but ' +
                                                 'time variant smear-negative status. ' +
                                                 'Therefore, changed to non-time variant smear-negative status.\n')
-                    self.runtime_outputs.see(END)
+
                     self.time_variants['epi_prop_smearneg']['time_variant'] = u'no'
 
         # Set fixed parameters if no organ status variation
@@ -1113,17 +1117,17 @@ class Inputs:
                         = self.model_constants['econ' + param + '_ipt']
                     limits, _ = tool_kit.interrogate_age_string(agegroup)
                     if limits[1] == float('Inf'):
-                        self.runtime_outputs.insert(END,
+                        self.add_comment_to_gui_window(
                                                     '"' + param[1:] + '" parameter unavailable for ' +
                                                     str(int(limits[0])) + ' and up ' +
                                                     'age-group, so default value used.\n')
-                        self.runtime_outputs.see(END)
+
                     else:
-                        self.runtime_outputs.insert(END,
+                        self.add_comment_to_gui_window(
                                                     '"' + param[1:] + '" parameter unavailable for ' +
                                                     str(int(limits[0])) + ' to ' + str(int(limits[1])) +
                                                     ' age-group, so default value used.\n')
-                        self.runtime_outputs.see(END)
+
 
     def find_uncertainty_distributions(self):
 
@@ -1198,3 +1202,14 @@ class Inputs:
                 assert self.model_constants[time] >= self.model_constants['start_time'], \
                     '% is before model start time' % self.model_constants[time]
 
+    def add_comment_to_gui_window(self, comment, target='console'):
+
+        if self.js_gui:
+            emit(target, {"message": comment})
+            time.sleep(self.emit_delay)
+
+            print "Emitting:", comment
+
+        else:
+            self.runtime_outputs.insert(END, comment + '\n')
+            self.runtime_outputs.see(END)

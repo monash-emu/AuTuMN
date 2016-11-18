@@ -85,10 +85,10 @@ class BaseModel:
         """
 
         self.times = []
-        step = start
-        while step <= end:
-            self.times.append(step)
-            step += delta
+        time = start
+        while time <= end:
+            self.times.append(time)
+            time += delta
         if self.times[-1] < end:
             self.times.append(end)
 
@@ -101,7 +101,7 @@ class BaseModel:
             time: Float for the time point of interest.
         """
 
-        return [i for i, j in enumerate(self.times) if j >= time][0]
+        return [i for i, j in enumerate(self.times) if j >= time][0] - 1
 
         raise ValueError('Time not found')
 

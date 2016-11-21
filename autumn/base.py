@@ -52,7 +52,6 @@ class BaseModel:
         self.var_entry_rate_flows = []
         self.var_infection_death_rate_flows = []
         self.costs = None
-        self.intervention = None
         self.run_costing = True
         self.end_period_costing = 2035
         self.interventions_to_cost = []
@@ -484,9 +483,7 @@ class BaseModel:
         """
 
         # More code that is dependent on correct naming of inputs, but should be universal to models based on this class
-        self.make_times(self.start_time,
-                        self.inputs.model_constants['scenario_end_time'],
-                        self.gui_inputs['time_step'])
+        self.make_times(self.start_time, self.inputs.model_constants['scenario_end_time'], self.gui_inputs['time_step'])
         self.initialise_compartments()
         self.set_flows()
         assert self.times is not None, 'Times have not been set yet'
@@ -608,7 +605,7 @@ class BaseModel:
         for i_time, new_time in enumerate(self.times):
             while time < new_time:
                 if not dt_is_ok:
-                    adaptive_dt_max = dt/2.0
+                    adaptive_dt_max = dt/2.
                 else:
                     old_time = time
                     adaptive_dt_max = dt_max

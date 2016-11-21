@@ -101,7 +101,7 @@ class ConsolidatedModel(StratifiedModel):
         self.optional_timevariants = []
         for timevariant in ['program_prop_novel_vaccination', 'transmission_modifier',
                             'program_prop_smearacf', 'program_prop_xpertacf',
-                            'program_prop_decentralisation']:
+                            'program_prop_decentralisation', 'program_prop_xpert']:
             if timevariant in self.inputs.scaleup_fns[scenario]:
                 self.optional_timevariants += [timevariant]
 
@@ -535,32 +535,27 @@ class ConsolidatedModel(StratifiedModel):
         Also weight the time period
         """
 
-        # If not stratified by organ status, use the smear-positive value
+        # If only one organ stratum
         if len(self.organ_status) == 1:
             self.vars['program_timeperiod_await_treatment'] = \
                 self.get_constant_or_variable_param('program_timeperiod_await_treatment_smearpos')
+            self.vars['program_rate_start_treatment'] = 1. / self.vars['program_timeperiod_await_treatment']
 
-        # Otherwise, use the organ-specific value
+        # Organ stratification
         else:
             for organ in self.organ_status:
-                self.vars['program_timeperiod_await_treatment' + organ] = \
-                    self.get_constant_or_variable_param('program_timeperiod_await_treatment' + organ)
 
-        prop_xpert = self.get_constant_or_variable_param('program_prop_xpert')
-
-        # If only one organ stratum
-        if len(self.organ_status) == 1:
-            self.vars['program_rate_start_treatment'] = \
-                1. / self.vars['program_timeperiod_await_treatment']
-        else:
-            for organ in self.organ_status:
-                if organ == '_smearneg':
+                # Adjust smear-negative for Xpert coverage
+                if organ == '_smearneg' and 'program_prop_xpert' in self.optional_timevariants:
+                    prop_xpert = self.get_constant_or_variable_param('program_prop_xpert')
                     self.vars['program_rate_start_treatment_smearneg'] = \
                         1. / (self.vars['program_timeperiod_await_treatment_smearneg'] * (1. - prop_xpert)
                               + self.params['program_timeperiod_await_treatment_smearneg_xpert'] * prop_xpert)
+
+                # Do other organ stratifications (including smear-negative if Xpert not an intervention)
                 else:
                     self.vars['program_rate_start_treatment' + organ] = \
-                        1. / self.vars['program_timeperiod_await_treatment' + organ]
+                        1. / self.get_constant_or_variable_param('program_timeperiod_await_treatment' + organ)
 
     def calculate_lowquality_detection_vars(self):
 
@@ -594,7 +589,7 @@ class ConsolidatedModel(StratifiedModel):
             prop_firstline = self.get_constant_or_variable_param('program_prop_firstline_dst')
 
             # Add effect of Xpert on identification, assuming that it is distributed independently to conventional DST
-            if 'program_prop_xpert' in self.vars:
+            if 'program_prop_xpert' in self.optional_timevariants:
                 prop_firstline += (1. - prop_firstline) * self.vars['program_prop_xpert']
 
             self.vars['program_rate_detect_ds_asds'] = self.vars['program_rate_detect']

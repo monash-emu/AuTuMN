@@ -101,7 +101,7 @@ class ConsolidatedModel(StratifiedModel):
         self.optional_timevariants = []
         for timevariant in ['program_prop_novel_vaccination', 'transmission_modifier',
                             'program_prop_smearacf', 'program_prop_xpertacf',
-                            'program_prop_decentralisation', 'program_prop_xpert']:
+                            'program_prop_decentralisation', 'program_prop_xpert', 'program_prop_treatment_support']:
             if timevariant in self.inputs.scaleup_fns[scenario]:
                 self.optional_timevariants += [timevariant]
 
@@ -608,7 +608,7 @@ class ConsolidatedModel(StratifiedModel):
                 self.vars['program_rate_detect_xdr_asxdr'] = prop_firstline \
                                                              * prop_secondline * self.vars['program_rate_detect']
 
-        # Without misassignment everyone is correctly allocated
+        # Without misassignment, everyone is correctly allocated
         else:
             for strain in self.strains:
                 self.vars['program_rate_detect' + strain + '_as'+strain[1:]] = self.vars['program_rate_detect']
@@ -624,16 +624,15 @@ class ConsolidatedModel(StratifiedModel):
 
             # Get treatment success proportion from vars if possible and from params if not
             for outcome in ['_success', '_death']:
-                if 'program_prop_treatment'+outcome+strain in self.vars:
+                if 'program_prop_treatment' + outcome + strain in self.vars:
                     pass
-                elif 'program_prop_treatment'+outcome+strain in self.params:
-                    self.vars['program_prop_treatment' + outcome] = \
-                        self.params['program_prop_treatment' + outcome]
+                elif 'program_prop_treatment' + outcome + strain in self.params:
+                    self.vars['program_prop_treatment' + outcome] = self.params['program_prop_treatment' + outcome]
                 else:
                     raise NameError('program_prop_treatment' + outcome + strain + ' not found in vars or params')
 
             # Add some extra treatment success if the treatment support program is active
-            if 'program_prop_treatment_support' in self.vars and self.vars['program_prop_treatment_support'] > 0.:
+            if 'program_prop_treatment_support' in self.optional_timevariants:
                 self.vars['program_prop_treatment_success' + strain] \
                     += (1. - self.vars['program_prop_treatment_success' + strain]) \
                        * self.params['program_prop_treatment_support_improvement'] \

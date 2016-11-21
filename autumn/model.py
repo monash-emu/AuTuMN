@@ -97,6 +97,11 @@ class ConsolidatedModel(StratifiedModel):
             if type(value) == float:
                 self.set_parameter(key, value)
 
+        # Track list of included additional interventions
+        self.additional_interventions = []
+        if 'program_prop_novel_vaccination' in self.inputs.scaleup_fns[self.scenario]:
+            self.additional_interventions += ['novel_vaccination']
+
         # Define model compartmental structure (compartment initialisation is now in base.py)
         self.define_model_structure()
 
@@ -119,7 +124,7 @@ class ConsolidatedModel(StratifiedModel):
                                   'latent_late', 'active', 'detect', 'missed', 'treatment_infect',
                                   'treatment_noninfect']
         if self.is_lowquality: self.compartment_types += ['lowquality']
-        if 'program_prop_novel_vaccination' in self.inputs.scaleup_fns[self.scenario]:
+        if 'novel_vaccination' in self.additional_interventions:
             self.compartment_types += ['susceptible_novelvac']
 
         # Stages in progression through treatment
@@ -299,39 +304,24 @@ class ConsolidatedModel(StratifiedModel):
         Calculate birth rates into vaccinated and unvaccinated compartments.
         """
 
-        # Get the parameters depending on whether constant or time variant
-        rate_birth = self.get_constant_or_variable_param('demo_rate_birth') / 1e3
-        if 'program_prop_novel_vaccination' in self.inputs.scaleup_fns[self.scenario]:
-            prop_vacc = self.get_constant_or_variable_param('program_prop_vaccination') \
-                        * (1. - self.vars['program_prop_novel_vaccination'])
-            prop_novel_vacc = self.get_constant_or_variable_param('program_prop_vaccination') \
-                              * self.vars['program_prop_novel_vaccination']
-        else:
-            prop_vacc = self.get_constant_or_variable_param('program_prop_vaccination')
-
         # Calculate total births first, so that it can be tracked for interventions as well
-        self.vars['births_total'] = rate_birth * self.vars['population']
+        self.vars['births_total'] = self.get_constant_or_variable_param('demo_rate_birth') / 1e3 \
+                                    * self.vars['population']
+
+        # Get the parameters depending on whether constant or time variant
+        vac_props = {'vac': self.get_constant_or_variable_param('program_prop_vaccination')}
+        vac_props['unvac'] = 1. - vac_props['vac']
+
+        if 'novel_vaccination' in self.additional_interventions:
+            vac_props['novelvac'] = self.get_constant_or_variable_param('program_prop_vaccination') \
+                                     * self.vars['program_prop_novel_vaccination']
+            vac_props['vac'] -= vac_props['novelvac']
 
         # Calculate the birth rates by compartment
         for comorbidity in self.comorbidities:
-
-            # Then split by vaccination status
-            self.vars['births_vac' + comorbidity] \
-                = prop_vacc \
-                * self.vars['births_total'] \
-                * self.target_comorb_props[comorbidity][-1]
-            if 'program_prop_novel_vaccination' in self.inputs.scaleup_fns[self.scenario]:
-                self.vars['births_novelvac' + comorbidity] \
-                    = prop_novel_vacc \
-                      * self.vars['births_total'] \
-                      * self.target_comorb_props[comorbidity][-1]
-                self.vars['births_unvac' + comorbidity] \
-                    = (1. - prop_vacc - prop_novel_vacc) \
-                      * self.vars['births_total'] \
-                      * self.target_comorb_props[comorbidity][-1]
-            else:
-                self.vars['births_unvac' + comorbidity] \
-                    = (1. - prop_vacc) \
+            for vac_status in vac_props:
+                self.vars['births_' + vac_status + comorbidity] \
+                    = vac_props[vac_status] \
                       * self.vars['births_total'] \
                       * self.target_comorb_props[comorbidity][-1]
 
@@ -853,7 +843,7 @@ class ConsolidatedModel(StratifiedModel):
                 'susceptible_fully' + comorbidity + self.agegroups[0], 'births_unvac' + comorbidity)
             self.set_var_entry_rate_flow(
                 'susceptible_vac' + comorbidity + self.agegroups[0], 'births_vac' + comorbidity)
-            if 'program_prop_novel_vaccination' in self.inputs.scaleup_fns[self.scenario]:
+            if 'novel_vaccination' in self.additional_interventions:
                 self.set_var_entry_rate_flow(
                     'susceptible_novelvac' + comorbidity + self.agegroups[0], 'births_novelvac' + comorbidity)
 
@@ -885,7 +875,7 @@ class ConsolidatedModel(StratifiedModel):
                         'rate_force_latent' + strain)
 
                     # For novel vaccination
-                    if 'program_prop_novel_vaccination' in self.inputs.scaleup_fns[self.scenario]:
+                    if 'novel_vaccination' in self.additional_interventions:
                         self.set_var_transfer_rate_flow(
                             'susceptible_novelvac' + comorbidity + agegroup,
                             'latent_early' + strain + comorbidity + agegroup,

@@ -98,9 +98,10 @@ class ConsolidatedModel(StratifiedModel):
                 self.set_parameter(key, value)
 
         # Track list of included additional interventions
-        self.additional_interventions = []
-        if 'program_prop_novel_vaccination' in self.inputs.scaleup_fns[self.scenario]:
-            self.additional_interventions += ['novel_vaccination']
+        self.optional_timevariants = []
+        for timevariant in ['program_prop_novel_vaccination', 'transmission_modifier']:
+            if timevariant in self.inputs.scaleup_fns[scenario]:
+                self.optional_timevariants += [timevariant]
 
         # Define model compartmental structure (compartment initialisation is now in base.py)
         self.define_model_structure()
@@ -124,7 +125,7 @@ class ConsolidatedModel(StratifiedModel):
                                   'latent_late', 'active', 'detect', 'missed', 'treatment_infect',
                                   'treatment_noninfect']
         if self.is_lowquality: self.compartment_types += ['lowquality']
-        if 'novel_vaccination' in self.additional_interventions:
+        if 'program_prop_novel_vaccination' in self.optional_timevariants:
             self.compartment_types += ['susceptible_novelvac']
 
         # Stages in progression through treatment
@@ -312,9 +313,9 @@ class ConsolidatedModel(StratifiedModel):
         vac_props = {'vac': self.get_constant_or_variable_param('program_prop_vaccination')}
         vac_props['unvac'] = 1. - vac_props['vac']
 
-        if 'novel_vaccination' in self.additional_interventions:
+        if 'program_prop_novel_vaccination' in self.optional_timevariants:
             vac_props['novelvac'] = self.get_constant_or_variable_param('program_prop_vaccination') \
-                                     * self.vars['program_prop_novel_vaccination']
+                                    * self.vars['program_prop_novel_vaccination']
             vac_props['vac'] -= vac_props['novelvac']
 
         # Calculate the birth rates by compartment
@@ -365,8 +366,8 @@ class ConsolidatedModel(StratifiedModel):
             self.vars['rate_force' + strain] = \
                 self.params['tb_n_contact'] * self.vars['infectious_population' + strain] / self.vars['population']
 
-            # Special case for scenario 11 is cessation of transmission *** this is inelegant and temporary
-            if self.scenario == 11 or self.country == 'Philippines':
+            # If any modifications to transmission parameter to be made over time
+            if 'transmission_modifier' in self.optional_timevariants:
                 self.vars['rate_force' + strain] *= self.vars['transmission_modifier']
 
             # Adjust for immunity in various groups
@@ -843,7 +844,7 @@ class ConsolidatedModel(StratifiedModel):
                 'susceptible_fully' + comorbidity + self.agegroups[0], 'births_unvac' + comorbidity)
             self.set_var_entry_rate_flow(
                 'susceptible_vac' + comorbidity + self.agegroups[0], 'births_vac' + comorbidity)
-            if 'novel_vaccination' in self.additional_interventions:
+            if 'program_prop_novel_vaccination' in self.optional_timevariants:
                 self.set_var_entry_rate_flow(
                     'susceptible_novelvac' + comorbidity + self.agegroups[0], 'births_novelvac' + comorbidity)
 
@@ -875,7 +876,7 @@ class ConsolidatedModel(StratifiedModel):
                         'rate_force_latent' + strain)
 
                     # For novel vaccination
-                    if 'novel_vaccination' in self.additional_interventions:
+                    if 'program_prop_novel_vaccination' in self.optional_timevariants:
                         self.set_var_transfer_rate_flow(
                             'susceptible_novelvac' + comorbidity + agegroup,
                             'latent_early' + strain + comorbidity + agegroup,

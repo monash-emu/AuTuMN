@@ -279,7 +279,7 @@ class ConsolidatedModel(StratifiedModel):
 
         self.calculate_force_infection_vars()
 
-        self.calculate_progression_vars()
+        if self.is_organvariation: self.calculate_progression_vars()
 
         self.calculate_acf_rate()
 
@@ -387,37 +387,32 @@ class ConsolidatedModel(StratifiedModel):
         so need to calculate the remaining proportions.
         """
 
-        # This may need some work, as adjusting for comorbidities won't work if is_organvariation is False
-        if self.is_organvariation:
+        # If unstratified (self.organ_status should have length 0, but length 1 OK) - ??
+        if len(self.organ_status) < 2:
+            self.vars['epi_prop'] = 1.
 
-            # If unstratified (self.organ_status should have length 0, but length 1 OK) - ??
-            if len(self.organ_status) < 2:
-                self.vars['epi_prop'] = 1.
+        # Stratified into smear-positive and smear-negative
+        elif len(self.organ_status) == 2:
+            self.vars['epi_prop_smearneg'] = 1. - self.vars['epi_prop_smearpos']
 
-            # Stratified into smear-positive and smear-negative
-            elif len(self.organ_status) == 2:
-                self.vars['epi_prop_smearneg'] = \
-                    1. - self.vars['epi_prop_smearpos']
+        # Fully stratified into smear-positive, smear-negative and extra-pulmonary
+        elif len(self.organ_status) > 2:
+            self.vars['epi_prop_extrapul'] = 1. - self.vars['epi_prop_smearpos'] - self.vars['epi_prop_smearneg']
 
-            # Fully stratified into smear-positive, smear-negative and extra-pulmonary
-            elif len(self.organ_status) > 2:
-                self.vars['epi_prop_extrapul'] = \
-                    1. - self.vars['epi_prop_smearpos'] - self.vars['epi_prop_smearneg']
-
-            # Determine variable progression rates
-            for organ in self.organ_status:
-                for agegroup in self.agegroups:
-                    for comorbidity in self.comorbidities:
-                        for timing in ['_early', '_late']:
-                            if comorbidity == '_diabetes':
-                                self.vars['tb_rate' + timing + '_progression' + organ + comorbidity + agegroup] \
-                                    = self.vars['epi_prop' + organ] \
-                                      * self.params['tb_rate' + timing + '_progression' + '_nocomorb' + agegroup] \
-                                      * self.params['comorb_multiplier_diabetes_progression']
-                            else:
-                                self.vars['tb_rate' + timing + '_progression' + organ + comorbidity + agegroup] \
-                                    = self.vars['epi_prop' + organ] \
-                                      * self.params['tb_rate' + timing + '_progression' + comorbidity + agegroup]
+        # Determine variable progression rates
+        for organ in self.organ_status:
+            for agegroup in self.agegroups:
+                for comorbidity in self.comorbidities:
+                    for timing in ['_early', '_late']:
+                        if comorbidity == '_diabetes':
+                            self.vars['tb_rate' + timing + '_progression' + organ + comorbidity + agegroup] \
+                                = self.vars['epi_prop' + organ] \
+                                  * self.params['tb_rate' + timing + '_progression' + '_nocomorb' + agegroup] \
+                                  * self.params['comorb_multiplier_diabetes_progression']
+                        else:
+                            self.vars['tb_rate' + timing + '_progression' + organ + comorbidity + agegroup] \
+                                = self.vars['epi_prop' + organ] \
+                                  * self.params['tb_rate' + timing + '_progression' + comorbidity + agegroup]
 
     def calculate_acf_rate(self):
 

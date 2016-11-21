@@ -100,7 +100,8 @@ class ConsolidatedModel(StratifiedModel):
         # Track list of included additional interventions
         self.optional_timevariants = []
         for timevariant in ['program_prop_novel_vaccination', 'transmission_modifier',
-                            'program_prop_smearacf', 'program_prop_xpertacf']:
+                            'program_prop_smearacf', 'program_prop_xpertacf',
+                            'program_prop_decentralisation']:
             if timevariant in self.inputs.scaleup_fns[scenario]:
                 self.optional_timevariants += [timevariant]
 
@@ -469,13 +470,11 @@ class ConsolidatedModel(StratifiedModel):
         life_expectancy = self.get_constant_or_variable_param('demo_life_expectancy')
 
         # Calculate detection proportion, allowing for decentralisation coverage if being implemented
-        if 'program_prop_decentralisation' in self.vars and self.vars['program_prop_decentralisation'] > 0.:
-            detect_prop = self.get_constant_or_variable_param('program_prop_detect') \
-                          + self.vars['program_prop_decentralisation'] \
-                            * (self.params['program_ideal_detection']
-                               - self.get_constant_or_variable_param('program_prop_detect'))
-        else:
-            detect_prop = self.get_constant_or_variable_param('program_prop_detect')
+        detect_prop = self.get_constant_or_variable_param('program_prop_detect')
+        if 'program_prop_decentralisation' in self.optional_timevariants:
+            detect_prop += self.vars['program_prop_decentralisation'] \
+                           * (self.params['program_ideal_detection']
+                              - self.get_constant_or_variable_param('program_prop_detect'))
 
         # Weighting detection and algorithm sensitivity rates by organ status
         if vary_by_organ:
@@ -749,11 +748,12 @@ class ConsolidatedModel(StratifiedModel):
                            * self.params['program_nns_xpertacf_smearneg']
 
         # Decentralisation
-        self.vars['popsize_decentralisation'] = 0.
-        for compartment in self.compartments:
-            if 'susceptible_' not in compartment and 'latent_' not in compartment:
-                self.vars['popsize_decentralisation'] \
-                    += self.compartments[compartment]
+        if 'program_prop_decentralisation' in self.optional_timevariants:
+            self.vars['popsize_decentralisation'] = 0.
+            for compartment in self.compartments:
+                if 'susceptible_' not in compartment and 'latent_' not in compartment:
+                    self.vars['popsize_decentralisation'] \
+                        += self.compartments[compartment]
 
     def calculate_ipt_rate(self):
 

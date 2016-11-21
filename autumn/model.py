@@ -99,7 +99,8 @@ class ConsolidatedModel(StratifiedModel):
 
         # Track list of included additional interventions
         self.optional_timevariants = []
-        for timevariant in ['program_prop_novel_vaccination', 'transmission_modifier']:
+        for timevariant in ['program_prop_novel_vaccination', 'transmission_modifier',
+                            'program_prop_smearacf', 'program_prop_xpertacf']:
             if timevariant in self.inputs.scaleup_fns[scenario]:
                 self.optional_timevariants += [timevariant]
 
@@ -425,22 +426,24 @@ class ConsolidatedModel(StratifiedModel):
         for smear-negative disease. (Extrapulmonary disease can't be detected through ACF.
         """
 
-        # Additional detection rate for smear-positive TB
-        self.vars['program_rate_acf_smearpos'] \
-            = (self.vars['program_prop_smearacf'] + self.vars['program_prop_xpertacf']) \
-              * self.params['program_prop_acf_detections_per_round'] \
-              / self.params['program_timeperiod_acf_rounds']
+        for organ in self.organ_status:
+            self.vars['program_rate_acf' + organ] = 0.
 
-        # Additional detection rate for smear-negative TB
-        self.vars['program_rate_acf_smearneg'] \
-            = self.vars['program_prop_xpertacf'] \
-              * self.params['tb_prop_xpert_smearneg_sensitivity'] \
-              * self.params['program_prop_acf_detections_per_round'] \
-              / self.params['program_timeperiod_acf_rounds']
-
-        # No additional detection rate for extra-pulmonary TB, but add a var to allow loops to operate
-        self.vars['program_rate_acf_extrapul'] \
-            = 0.
+        if 'program_prop_xpertacf' in self.optional_timevariants:
+            self.vars['program_rate_acf_smearpos'] \
+                += self.vars['program_prop_smearacf'] \
+                   * self.params['program_prop_acf_detections_per_round'] \
+                   / self.params['program_timeperiod_acf_rounds']
+            self.vars['program_rate_acf_smearpos'] \
+                += self.vars['program_prop_xpertacf'] \
+                   * self.params['program_prop_acf_detections_per_round'] \
+                   / self.params['program_timeperiod_acf_rounds']
+        if 'program_prop_smear_acf' in self.optional_timevariants:
+            self.vars['program_rate_acf_smearneg'] \
+                += self.vars['program_prop_xpertacf'] \
+                   * self.params['tb_prop_xpert_smearneg_sensitivity'] \
+                   * self.params['program_prop_acf_detections_per_round'] \
+                   / self.params['program_timeperiod_acf_rounds']
 
     def calculate_detect_missed_vars(self):
 
@@ -517,7 +520,9 @@ class ConsolidatedModel(StratifiedModel):
                         = self.vars['program_rate' + programmatic_rate]
 
             # Add active case finding rate to standard DOTS-based detection rate
-            if len(self.organ_status) > 1:
+            if len(self.organ_status) > 1 \
+                and ('program_prop_smearacf' in self.optional_timevariants
+                     or 'program_prop_xpertacf' in self.optional_timevariants):
                 self.vars['program_rate_detect' + organ] \
                     += self.vars['program_rate_acf' + organ]
 
@@ -724,22 +729,24 @@ class ConsolidatedModel(StratifiedModel):
                                                   * (self.params['program_number_tests_per_tb_presentation'] + 1.)
 
         # ACF
-        self.vars['popsize_smearacf'] = 0.
-        for compartment in self.compartments:
-            if 'active_' in compartment and '_smearpos' in compartment:
-                self.vars['popsize_smearacf'] \
-                    += self.compartments[compartment] \
-                       * self.params['program_nns_smearacf']
-        self.vars['popsize_xpertacf'] = 0.
-        for compartment in self.compartments:
-            if 'active_' in compartment and '_smearpos' in compartment:
-                self.vars['popsize_xpertacf'] \
-                    += self.compartments[compartment] \
-                       * self.params['program_nns_xpertacf_smearpos']
-            elif 'active_' in compartment and '_smearneg' in compartment:
-                self.vars['popsize_xpertacf'] \
-                    += self.compartments[compartment] \
-                       * self.params['program_nns_xpertacf_smearneg']
+        if 'program_prop_smearacf' in self.optional_timevariants:
+            self.vars['popsize_smearacf'] = 0.
+            for compartment in self.compartments:
+                if 'active_' in compartment and '_smearpos' in compartment:
+                    self.vars['popsize_smearacf'] \
+                        += self.compartments[compartment] \
+                           * self.params['program_nns_smearacf']
+        if 'program_prop_xpertacf' in self.optional_timevariants:
+            self.vars['popsize_xpertacf'] = 0.
+            for compartment in self.compartments:
+                if 'active_' in compartment and '_smearpos' in compartment:
+                    self.vars['popsize_xpertacf'] \
+                        += self.compartments[compartment] \
+                           * self.params['program_nns_xpertacf_smearpos']
+                elif 'active_' in compartment and '_smearneg' in compartment:
+                    self.vars['popsize_xpertacf'] \
+                        += self.compartments[compartment] \
+                           * self.params['program_nns_xpertacf_smearneg']
 
         # Decentralisation
         self.vars['popsize_decentralisation'] = 0.

@@ -101,7 +101,8 @@ class ConsolidatedModel(StratifiedModel):
         self.optional_timevariants = []
         for timevariant in ['program_prop_novel_vaccination', 'transmission_modifier',
                             'program_prop_smearacf', 'program_prop_xpertacf',
-                            'program_prop_decentralisation', 'program_prop_xpert', 'program_prop_treatment_support']:
+                            'program_prop_decentralisation', 'program_prop_xpert', 'program_prop_treatment_support',
+                            'program_prop_community_ipt']:
             if timevariant in self.inputs.scaleup_fns[scenario]:
                 self.optional_timevariants += [timevariant]
         for timevariant in self.inputs.scaleup_fns[scenario]:
@@ -766,7 +767,6 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         prop_ipt = {}
-
         for agegroup in self.agegroups:
 
             # Find IPT coverage for the age group as the maximum of the coverage in that age group
@@ -798,7 +798,7 @@ class ConsolidatedModel(StratifiedModel):
 
     def calculate_community_ipt_rate(self):
 
-        if 'program_prop_community_ipt' in self.scaleup_fns:
+        if 'program_prop_community_ipt' in self.optional_timevariants:
             self.vars['rate_community_ipt'] \
                 = self.vars['program_prop_community_ipt'] \
                   * self.inputs.model_constants['ipt_effective_per_assessment'] \
@@ -1149,10 +1149,11 @@ class ConsolidatedModel(StratifiedModel):
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
                 for strain in self.strains:
-                    self.set_linked_transfer_rate_flow('latent_early' + strain + comorbidity + agegroup,
-                                                       'susceptible_vac' + comorbidity + agegroup,
-                                                       'ipt_effective_treatments' + agegroup)
-                    if 'program_prop_community_ipt' in self.scaleup_fns:
+                    if 'agestratified_ipt' in self.optional_timevariants or 'ipt' in self.optional_timevariants:
+                        self.set_linked_transfer_rate_flow('latent_early' + strain + comorbidity + agegroup,
+                                                           'susceptible_vac' + comorbidity + agegroup,
+                                                           'ipt_effective_treatments' + agegroup)
+                    if 'program_prop_community_ipt' in self.optional_timevariants:
                         self.set_var_transfer_rate_flow('latent_early' + strain + comorbidity + agegroup,
                                                         'susceptible_vac' + comorbidity + agegroup,
                                                         'rate_community_ipt')

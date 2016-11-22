@@ -1,14 +1,12 @@
 
 """
-
-The TB-specific model (or models) should be coded in this file.
+All TB-specific model (or models) should be coded in this file, including the interventions applied to them.
 
 Time unit throughout: years
 Compartment unit throughout: patients
 
 Nested inheritance from BaseModel and StratifiedModel in base.py - the former sets some fundamental methods for
 creating intercompartmental flows, costs, etc., while the latter sets down the approach to population stratification.
-
 """
 
 
@@ -18,6 +16,15 @@ import copy
 
 
 def label_intersects_tags(label, tags):
+
+    """
+    For use in force of infection calculation to determine whether a compartment is infectious.
+
+    label: Generally a compartment label.
+    tags: Tag for whether label is to be counted.
+    return: Boolean for whether any of the tags are in the label.
+    """
+
     for tag in tags:
         if tag in label:
             return True
@@ -30,6 +37,7 @@ def find_outcome_proportions_by_period(
     """
     Split one outcome proportion (e.g. default, death) over multiple
     periods
+
     Args:
         proportion: Total proportion to be split
         early_period: Early time period

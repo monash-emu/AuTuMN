@@ -31,12 +31,10 @@ def label_intersects_tags(label, tags):
     return False
 
 
-def find_outcome_proportions_by_period(
-        proportion, early_period, total_period):
+def find_outcome_proportions_by_period(proportion, early_period, total_period):
 
     """
-    Split one outcome proportion (e.g. default, death) over multiple
-    periods
+    Split one outcome proportion (e.g. default, death) over multiple time periods.
 
     Args:
         proportion: Total proportion to be split
@@ -49,9 +47,8 @@ def find_outcome_proportions_by_period(
 
     if proportion > 1. or proportion < 0.:
         raise Exception('Proportion greater than one or less than zero')
+    # The following is to avoid errors where the proportion is one, although the function isn't intended for this.
     elif proportion == 1.:
-        # This is just to avoid warnings or errors where the proportion
-        # is one. However, this function isn't really intended for this situation.
         early_proportion = 0.5
     else:
         early_proportion \
@@ -63,15 +60,18 @@ def find_outcome_proportions_by_period(
 class ConsolidatedModel(StratifiedModel):
 
     """
-    The transmission dynamic model to underpin all AuTuMN analyses
-    Inherits from BaseModel, which is intended to be general to any infectious disease
-    All TB-specific methods and structures are contained in this model
-    Methods are written to be adaptable to any model structure selected through the __init__ arguments
+    The transmission dynamic model to underpin all AuTuMN analyses.
+    Inherits from BaseModel, which is intended to be general to any infectious disease.
+    All TB-specific methods and structures are contained in this model.
+    Methods are written to be adaptable to any model structure selected through the __init__ arguments.
+    Time variant parameters that are optional (which mostly consists of optional interventions that will be required in
+    some countries and not others) are written as "plug-ins" wherever possible (meaning that the model should still run
+    if the parameter isn't included in inputs).
 
     The work-flow of the simulation is structured in the following order:
         1. Defining the model structure
         2. Initialising the compartments
-        3. Setting parameters (needs a lot more work)
+        3. Setting parameters
         4. Calculating derived parameters and setting scale-up functions
         5. Assigning flows from either parameters or functions
         6. Main loop over simulation time-points:
@@ -85,11 +85,20 @@ class ConsolidatedModel(StratifiedModel):
 
     def __init__(self, scenario=None, inputs=None, gui_inputs=None):
 
+        """
+        Instantiation, partly inherited from the lower level model objects through nested inheritance.
+
+        Args:
+            scenario: Single number for the scenario to run (with None meaning baseline)
+            inputs: Non-GUI inputs from data_processing
+            gui_inputs: GUI inputs from Tkinter or JS GUI
+        """
+
         # Inherited initialisations
         BaseModel.__init__(self)
         StratifiedModel.__init__(self)
 
-        # Fundamental attributes of model
+        # Fundamental attributes of and inputs to model
         self.scenario = scenario
         self.inputs = inputs
         self.gui_inputs = gui_inputs
@@ -106,7 +115,7 @@ class ConsolidatedModel(StratifiedModel):
             if type(value) == float:
                 self.set_parameter(key, value)
 
-        # Track list of included additional interventions
+        # Track list of included optional parameters (mostly interventions)
         self.optional_timevariants = []
         for timevariant in ['program_prop_novel_vaccination', 'transmission_modifier',
                             'program_prop_smearacf', 'program_prop_xpertacf',

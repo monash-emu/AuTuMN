@@ -435,16 +435,17 @@ class ConsolidatedModel(StratifiedModel):
         for organ in self.organ_status:
             self.vars['program_rate_acf' + organ] = 0.
 
-        if 'program_prop_xpertacf' in self.optional_timevariants:
+        if 'program_prop_smear_acf' in self.optional_timevariants:
             self.vars['program_rate_acf_smearpos'] \
                 += self.vars['program_prop_smearacf'] \
                    * self.params['program_prop_acf_detections_per_round'] \
                    / self.params['program_timeperiod_acf_rounds']
+
+        if 'program_prop_xpertacf' in self.optional_timevariants:
             self.vars['program_rate_acf_smearpos'] \
                 += self.vars['program_prop_xpertacf'] \
                    * self.params['program_prop_acf_detections_per_round'] \
                    / self.params['program_timeperiod_acf_rounds']
-        if 'program_prop_smear_acf' in self.optional_timevariants:
             self.vars['program_rate_acf_smearneg'] \
                 += self.vars['program_prop_xpertacf'] \
                    * self.params['tb_prop_xpert_smearneg_sensitivity'] \

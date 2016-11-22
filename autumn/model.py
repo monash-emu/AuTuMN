@@ -104,6 +104,11 @@ class ConsolidatedModel(StratifiedModel):
                             'program_prop_decentralisation', 'program_prop_xpert', 'program_prop_treatment_support']:
             if timevariant in self.inputs.scaleup_fns[scenario]:
                 self.optional_timevariants += [timevariant]
+        for timevariant in self.inputs.scaleup_fns[scenario]:
+            if '_ipt_age' in timevariant:
+                self.optional_timevariants += ['agestratified_ipt']
+            elif '_ipt' in timevariant and 'community_ipt' not in timevariant:
+                self.optional_timevariants += ['ipt']
 
         # Define model compartmental structure (compartment initialisation is now in base.py)
         self.define_model_structure()
@@ -297,7 +302,8 @@ class ConsolidatedModel(StratifiedModel):
 
         self.calculate_population_sizes()
 
-        self.calculate_ipt_rate()
+        if 'agestratified_ipt' in self.optional_timevariants or 'ipt' in self.optional_timevariants:
+            self.calculate_ipt_rate()
 
         self.calculate_community_ipt_rate()
 

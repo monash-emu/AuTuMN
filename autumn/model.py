@@ -656,8 +656,9 @@ class ConsolidatedModel(StratifiedModel):
                 self.vars['program_prop_treatment' + outcome + '_infect' + strain] = early_proportion
                 self.vars['program_prop_treatment' + outcome + '_noninfect' + strain] = late_proportion
 
-            # Find the success proportions
             for treatment_stage in self.treatment_stages:
+
+                # Find the success proportions
                 self.vars['program_prop_treatment_success' + treatment_stage + strain] = \
                     1. - self.vars['program_prop_treatment_default' + treatment_stage + strain] \
                     - self.vars['program_prop_treatment_death' + treatment_stage + strain]
@@ -682,10 +683,11 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         # Treatment support
-        self.vars['popsize_treatment_support'] = 0.
-        for compartment in self.compartments:
-            if 'treatment_' in compartment:
-                self.vars['popsize_treatment_support'] += self.compartments[compartment]
+        if 'program_prop_treatment_support' in self.optional_timevariants:
+            self.vars['popsize_treatment_support'] = 0.
+            for compartment in self.compartments:
+                if 'treatment_' in compartment:
+                    self.vars['popsize_treatment_support'] += self.compartments[compartment]
 
         # IPT
         for agegroup in self.agegroups:
@@ -711,15 +713,16 @@ class ConsolidatedModel(StratifiedModel):
         self.vars['popsize_vaccination'] = self.vars['births_total']
 
         # Xpert - all presentations with active TB
-        self.vars['popsize_xpert'] = 0.
-        for agegroup in self.agegroups:
-            for comorbidity in self.comorbidities:
-                for strain in self.strains:
-                    self.vars['popsize_xpert'] += (self.vars['program_rate_detect']
-                                                   + self.vars['program_rate_missed']) \
-                                                  * self.compartments['active'
-                                                                      + organ + strain + comorbidity + agegroup] \
-                                                  * (self.params['program_number_tests_per_tb_presentation'] + 1.)
+        if 'program_prop_xpert' in self.optional_timevariants:
+            self.vars['popsize_xpert'] = 0.
+            for agegroup in self.agegroups:
+                for comorbidity in self.comorbidities:
+                    for strain in self.strains:
+                        self.vars['popsize_xpert'] += (self.vars['program_rate_detect']
+                                                       + self.vars['program_rate_missed']) \
+                                                      * self.compartments['active'
+                                                                          + organ + strain + comorbidity + agegroup] \
+                                                      * (self.params['program_number_tests_per_tb_presentation'] + 1.)
 
         # ACF
         if 'program_prop_smearacf' in self.optional_timevariants:

@@ -766,15 +766,15 @@ class ConsolidatedModel(StratifiedModel):
             prop_ipt = 0.
             if 'program_prop_ipt' + agegroup in self.vars:
                 prop_ipt += self.vars['program_prop_ipt' + agegroup]
-            elif 'program_prop_ipt' in self.vars and prop_ipt < self.vars['program_prop_ipt']:
-                prop_ipt += self.vars['program_prop_ipt']
+            if 'program_prop_ipt' in self.vars:
+                prop_ipt = max([self.vars['program_prop_ipt'], prop_ipt])
 
             # Then for the "game-changing" novel version of IPT
             prop_novel_ipt = 0.
             if 'program_prop_novel_ipt' + agegroup in self.vars:
                 prop_novel_ipt += self.vars['program_prop_novel_ipt' + agegroup]
-            elif 'program_prop_novel_ipt' in self.vars and prop_ipt < self.vars['program_prop_novel_ipt']:
-                prop_novel_ipt += self.vars['program_prop_novel_ipt']
+            elif 'program_prop_novel_ipt' in self.vars:
+                prop_novel_ipt = max([self.vars['program_prop_novel_ipt'], prop_novel_ipt])
 
             # Calculate the number of effective treatments
             self.vars['standard_ipt_effective_treatments' + agegroup] = prop_ipt \
@@ -782,21 +782,21 @@ class ConsolidatedModel(StratifiedModel):
                                                                         * self.inputs.model_constants[
                                                                             'ipt_effective_per_assessment']
             self.vars['novel_ipt_effective_treatments' + agegroup] = prop_novel_ipt \
-                                                                   * self.vars['popsize_ipt' + agegroup] \
-                                                                   * self.inputs.model_constants[
-                                                                       'novel_ipt_effective_per_assessment']
+                                                                     * self.vars['popsize_ipt' + agegroup] \
+                                                                     * self.inputs.model_constants[
+                                                                         'novel_ipt_effective_per_assessment']
 
             # Check size of latency compartments
-            early_latent = 0.
-            for comorbidity in self.comorbidities:
-                for strain in self.strains:
-                    early_latent += self.compartments['latent_early' + strain + comorbidity + agegroup]
+            latent_early = 0.
+            for compartment in self.compartments:
+                if 'latent_early' in compartment and agegroup in compartment:
+                    latent_early += self.compartments[compartment]
 
-            # Calculate the total number of effective treatments across both forms of IPT
+            # Calculate the total number of effective treatments across both forms of IPT, limiting at all latents
             self.vars['ipt_effective_treatments' + agegroup]\
                 = min([max([self.vars['novel_ipt_effective_treatments' + agegroup],
-                       self.vars['standard_ipt_effective_treatments' + agegroup],]),
-                        early_latent])
+                            self.vars['standard_ipt_effective_treatments' + agegroup]]),
+                       latent_early])
 
     def calculate_community_ipt_rate(self):
 

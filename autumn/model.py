@@ -86,6 +86,7 @@ class ConsolidatedModel(StratifiedModel):
         self.inputs = inputs
         self.gui_inputs = gui_inputs
         self.start_time = self.inputs.model_constants['start_time']
+        self.scaleup_fns = self.inputs.scaleup_fns[self.scenario]
 
         # Set some model characteristics directly from the GUI inputs
         for attribute in ['is_lowquality', 'is_amplification', 'is_misassignment', 'country']:
@@ -103,9 +104,9 @@ class ConsolidatedModel(StratifiedModel):
                             'program_prop_smearacf', 'program_prop_xpertacf',
                             'program_prop_decentralisation', 'program_prop_xpert', 'program_prop_treatment_support',
                             'program_prop_community_ipt']:
-            if timevariant in self.inputs.scaleup_fns[scenario]:
+            if timevariant in self.scaleup_fns:
                 self.optional_timevariants += [timevariant]
-        for timevariant in self.inputs.scaleup_fns[scenario]:
+        for timevariant in self.scaleup_fns:
             if '_ipt_age' in timevariant:
                 self.optional_timevariants += ['agestratified_ipt']
             elif '_ipt' in timevariant and 'community_ipt' not in timevariant:
@@ -117,9 +118,6 @@ class ConsolidatedModel(StratifiedModel):
         # Treatment outcomes
         self.outcomes = ['_success', '_death', '_default']
         self.non_success_outcomes = self.outcomes[1:]
-
-        # Get scaleup functions from input object
-        self.scaleup_fns = self.inputs.scaleup_fns[self.scenario]
 
         # Intervention and economics-related initialisiations
         self.interventions_to_cost = self.inputs.interventions_to_cost

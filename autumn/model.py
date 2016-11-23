@@ -134,7 +134,6 @@ class ConsolidatedModel(StratifiedModel):
 
         # Treatment outcomes
         self.outcomes = ['_success', '_death', '_default']
-        self.non_success_outcomes = self.outcomes[1:]
 
         # Intervention and economics-related initialisiations
         self.interventions_to_cost = self.inputs.interventions_to_cost
@@ -353,9 +352,9 @@ class ConsolidatedModel(StratifiedModel):
     def calculate_force_infection_vars(self):
 
         """
-        Calculate force of infection for each strain, incorporating partial immunity and infectiousness.
-        First calculates the effective infectious population (incorporating infectiousness by organ involvement), then
-        calculates the raw force of infection, then adjusts for various levels of susceptibility.
+        Calculate force of infection independently for each strain, incorporating partial immunity and infectiousness.
+        First calculate the effective infectious population (incorporating infectiousness by organ involvement), then
+        calculate the raw force of infection, then adjust for various levels of susceptibility.
         """
 
         for strain in self.strains:
@@ -411,7 +410,7 @@ class ConsolidatedModel(StratifiedModel):
         so need to calculate the remaining proportions.
         """
 
-        # If unstratified (self.organ_status should have length 0, but length 1 OK) - ??
+        # Unstratified (self.organ_status should have length 0, but length 1 OK)
         if len(self.organ_status) < 2:
             self.vars['epi_prop'] = 1.
 
@@ -420,7 +419,7 @@ class ConsolidatedModel(StratifiedModel):
             self.vars['epi_prop_smearneg'] = 1. - self.vars['epi_prop_smearpos']
 
         # Fully stratified into smear-positive, smear-negative and extra-pulmonary
-        elif len(self.organ_status) > 2:
+        else:
             self.vars['epi_prop_extrapul'] = 1. - self.vars['epi_prop_smearpos'] - self.vars['epi_prop_smearneg']
 
         # Determine variable progression rates
@@ -441,23 +440,26 @@ class ConsolidatedModel(StratifiedModel):
     def calculate_acf_rate(self):
 
         """
-        Calculates rates of ACF from the proportion of programmatic coverage of both
-        smear-based and Xpert-based ACF (both presuming symptom-based screening before this,
-        as in the studies on which this is based).
-        Smear-based screening only detects smear-positive disease, while Xpert-based screening
-        detects some smear-negative disease, with a multiplier for the sensitivity of Xpert
-        for smear-negative disease. (Extrapulmonary disease can't be detected through ACF.
+        Calculates rates of ACF from the proportion of programmatic coverage of both smear-based and Xpert-based ACF
+        (both presuming symptom-based screening before this, as in the studies on which this is based).
+        Smear-based screening only detects smear-positive disease, while Xpert-based screening detects some
+        smear-negative disease (incorporating a multiplier for the sensitivity of Xpert for smear-negative disease).
+        (Extrapulmonary disease can't be detected through ACF.)
         """
 
-        for organ in self.organ_status:
-            self.vars['program_rate_acf' + organ] = 0.
+        # The following can't be written as a loop, as it won't work for models that aren't fully stratified if it is
+        self.vars['program_rate_acf_smearpos'] = 0.
+        self.vars['program_rate_acf_smearneg'] = 0.
+        self.vars['program_rate_acf_extrapul'] = 0.
 
+        # Smear-based ACF rate
         if 'program_prop_smear_acf' in self.optional_timevariants:
             self.vars['program_rate_acf_smearpos'] \
                 += self.vars['program_prop_smearacf'] \
                    * self.params['program_prop_acf_detections_per_round'] \
                    / self.params['program_timeperiod_acf_rounds']
 
+        # Xpert-based ACF rate
         if 'program_prop_xpertacf' in self.optional_timevariants:
             self.vars['program_rate_acf_smearpos'] \
                 += self.vars['program_prop_xpertacf'] \
@@ -472,6 +474,7 @@ class ConsolidatedModel(StratifiedModel):
     def calculate_detect_missed_vars(self):
 
         """"
+        *** Still a bit of a work in progress ***
         Calculate rates of detection and failure of detection
         from the programmatic report of the case detection "rate"
         (which is actually a proportion and referred to as program_prop_detect here)
@@ -560,9 +563,8 @@ class ConsolidatedModel(StratifiedModel):
 
         # If only one organ stratum
         if len(self.organ_status) == 1:
-            self.vars['program_timeperiod_await_treatment'] = \
-                self.get_constant_or_variable_param('program_timeperiod_await_treatment_smearpos')
-            self.vars['program_rate_start_treatment'] = 1. / self.vars['program_timeperiod_await_treatment']
+            self.vars['program_rate_start_treatment'] \
+                = 1. / self.get_constant_or_variable_param('program_timeperiod_await_treatment_smearpos')
 
         # Organ stratification
         else:
@@ -583,20 +585,14 @@ class ConsolidatedModel(StratifiedModel):
     def calculate_lowquality_detection_vars(self):
 
         """
-        Calculate rate of entry to low-quality care,
-        form the proportion of treatment administered in low-quality sector
-
-        Note that this now means that the case detection proportion only
-        applies to those with access to care and so that proportion of all
-        cases isn't actually detected
+        Calculate rate of entry to low-quality care ffom the proportion of treatment administered in low-quality sector.
+        Note that this now means that the case detection proportion only applies to those with access to care, so
+        that proportion of all cases isn't actually detected.
         """
 
         prop_lowqual = self.get_constant_or_variable_param('program_prop_lowquality')
-
-        self.vars['program_rate_enterlowquality'] = \
-            self.vars['program_rate_detect'] \
-            * prop_lowqual \
-            / (1. - prop_lowqual)
+        self.vars['program_rate_enterlowquality'] \
+            = self.vars['program_rate_detect'] * prop_lowqual / (1. - prop_lowqual)
 
     def calculate_misassignment_detection_vars(self):
 
@@ -638,10 +634,18 @@ class ConsolidatedModel(StratifiedModel):
 
     def calculate_treatment_rates_vars(self):
 
-        # May need to adjust this - a bit of a patch for now
+        """
+        Work out rates of progression through treatment by stage of treatment from the proportions provided for success
+        and death.
+        """
+
+        # Add inappropriate treatments to strains to create a list of all outcomes of interest
         treatments = copy.copy(self.strains)
         if len(self.strains) > 1 and self.gui_inputs['is_misassignment']:
             treatments += ['_inappropriate']
+
+        # The outcomes other than success (i.e. death and default)
+        non_success_outcomes = self.outcomes[1:]
 
         for strain in treatments:
 
@@ -665,13 +669,14 @@ class ConsolidatedModel(StratifiedModel):
                         * self.params['program_prop_treatment_support_improvement'] \
                         * self.vars['program_prop_treatment_support']
 
+            # Calculate the default proportion as that left over after success and death subtracted from one
             self.vars['program_prop_treatment_default' + strain] \
                 = 1. \
                   - self.vars['program_prop_treatment_success' + strain] \
                   - self.vars['program_prop_treatment_death' + strain]
 
             # Find the proportion of deaths/defaults during the infectious and non-infectious stages
-            for outcome in self.non_success_outcomes:
+            for outcome in non_success_outcomes:
                 early_proportion, late_proportion = find_outcome_proportions_by_period(
                     self.vars['program_prop_treatment' + outcome + strain],
                     self.params['tb_timeperiod_infect_ontreatment' + strain],
@@ -702,7 +707,8 @@ class ConsolidatedModel(StratifiedModel):
     def calculate_population_sizes(self):
 
         """
-        Calculate the size of the populations to which each intervention is applicable
+        Calculate the size of the populations to which each intervention is applicable, for use in generating
+        cost-coverage curves.
         """
 
         # Treatment support
@@ -732,7 +738,7 @@ class ConsolidatedModel(StratifiedModel):
                                        * self.compartments['detect' + organ + strain + comorbidity + agegroup] \
                                        * self.inputs.model_constants['ipt_eligible_per_treatment_start']
 
-        # BCG (So simple that it's possibly unnecessary, but may be needed for loops over programs)
+        # BCG (So simple that it's almost unnecessary, but needed for loops over programs)
         self.vars['popsize_vaccination'] = self.vars['births_total']
 
         # Xpert - all presentations with active TB
@@ -785,8 +791,7 @@ class ConsolidatedModel(StratifiedModel):
         prop_ipt = {}
         for agegroup in self.agegroups:
 
-            # Find IPT coverage for the age group as the maximum of the coverage in that age group
-            # and the overall coverage.
+            # Find IPT coverage for the age group as the maximum of the coverage in that age group and overall coverage.
             for ipt_type in ['ipt', 'novel_ipt']:
                 prop_ipt[ipt_type] = 0.
                 if 'program_prop_' + ipt_type + agegroup in self.vars:
@@ -801,18 +806,23 @@ class ConsolidatedModel(StratifiedModel):
                       * self.inputs.model_constants[ipt_type + '_effective_per_assessment']
 
             # Check size of latency compartments
-            latent_early = 0.
+            latent_early_pop = 0.
             for compartment in self.compartments:
                 if 'latent_early' in compartment and agegroup in compartment:
-                    latent_early += self.compartments[compartment]
+                    latent_early_pop += self.compartments[compartment]
 
             # Calculate the total number of effective treatments across both forms of IPT, limiting at all latents
             self.vars['ipt_effective_treatments' + agegroup] \
                 = min([max([self.vars['ipt_effective_treatments' + agegroup],
                             self.vars['novel_ipt_effective_treatments' + agegroup]]),
-                       latent_early])
+                       latent_early_pop])
 
     def calculate_community_ipt_rate(self):
+
+        """
+        Implements the community IPT intervention, which is not limited to contacts of persons starting treatment for
+        active disease, but rather involves screening of an entire population.
+        """
 
         if 'program_prop_community_ipt' in self.optional_timevariants:
             self.vars['rate_community_ipt'] \
@@ -820,36 +830,32 @@ class ConsolidatedModel(StratifiedModel):
                   * self.inputs.model_constants['ipt_effective_per_assessment'] \
                   / self.inputs.model_constants['program_timeperiod_community_ipt_round']
 
-    ##################################################################
-    # Methods that calculate the flows of all the compartments
+    ################################################################
+    ### Methods that calculate the flows of all the compartments ###
+    ################################################################
 
     def set_flows(self):
 
         """
-        Call all the rate setting methods
+        Call all the rate setting methods in turn.
         """
 
         self.set_birth_flows()
-
         if len(self.agegroups) > 0: self.set_ageing_flows()
-
         self.set_infection_flows()
-
         self.set_progression_flows()
-
         self.set_natural_history_flows()
-
         self.set_fixed_programmatic_flows()
-
         self.set_variable_programmatic_flows()
-
         self.set_detection_flows()
-
         self.set_treatment_flows()
-
         self.set_ipt_flows()
 
     def set_birth_flows(self):
+
+        """
+        Set birth (or recruitment) flows by vaccination status (including novel vaccination if implemented).
+        """
 
         # Set birth flows
         for comorbidity in self.comorbidities:
@@ -863,7 +869,10 @@ class ConsolidatedModel(StratifiedModel):
 
     def set_infection_flows(self):
 
-        # Set force of infection flows
+        """
+        Set force of infection flows that were estimated by strain in calculate_force_infection_vars above.
+        """
+
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
                 for strain in self.strains:
@@ -888,7 +897,7 @@ class ConsolidatedModel(StratifiedModel):
                         'latent_early' + strain + comorbidity + agegroup,
                         'rate_force_latent' + strain)
 
-                    # For novel vaccination
+                    # Novel vaccination
                     if 'program_prop_novel_vaccination' in self.optional_timevariants:
                         self.set_var_transfer_rate_flow(
                             'susceptible_novelvac' + comorbidity + agegroup,
@@ -896,6 +905,11 @@ class ConsolidatedModel(StratifiedModel):
                             'rate_force_novelvacc' + strain)
 
     def set_progression_flows(self):
+
+        """
+        Set rates of progression from latency to active disease, with rates differing by organ status, which will
+        usually be time variant.
+        """
 
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
@@ -940,6 +954,10 @@ class ConsolidatedModel(StratifiedModel):
                                     'tb_rate_late_progression' + organ + comorbidity + agegroup)
 
     def set_natural_history_flows(self):
+
+        """
+        Set flows for progression through active disease to either recovery or death.
+        """
 
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
@@ -999,6 +1017,11 @@ class ConsolidatedModel(StratifiedModel):
 
     def set_fixed_programmatic_flows(self):
 
+        """
+        Set rates of return to active disease for patients who presented for health care and were missed and for
+        patients who were in the low-quality health care sector.
+        """
+
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
                 for strain in self.strains:
@@ -1020,9 +1043,8 @@ class ConsolidatedModel(StratifiedModel):
     def set_detection_flows(self):
 
         """
-        Set previously calculated detection rates
-        Either assuming everyone is correctly identified if misassignment not permitted
-        or with proportional misassignment
+        Set previously calculated detection rates (either assuming everyone is correctly identified if misassignment
+        not permitted or with proportional misassignment).
         """
 
         for agegroup in self.agegroups:
@@ -1041,7 +1063,7 @@ class ConsolidatedModel(StratifiedModel):
                                         'detect' + organ + strain + as_assigned_strain + comorbidity + agegroup,
                                         'program_rate_detect' + strain + as_assigned_strain + organ)
 
-                        # Without misassignment - everyone is correctly identified by strain
+                        # Without misassignment
                         else:
                             self.set_var_transfer_rate_flow(
                                 'active' + organ + strain + comorbidity + agegroup,
@@ -1049,6 +1071,12 @@ class ConsolidatedModel(StratifiedModel):
                                 'program_rate_detect' + organ)
 
     def set_variable_programmatic_flows(self):
+
+        """
+        Set rate of missed diagnosis (which is variable as the algorithm sensitivity typically will be), rate of
+        presentation to low quality health care (which is variable as the extent of this health system typically will
+        be) and rate of treatment commencement (which is variable and depends on the diagnostics available).
+        """
 
         # Set rate of missed diagnoses and entry to low-quality health care
         for agegroup in self.agegroups:
@@ -1085,9 +1113,10 @@ class ConsolidatedModel(StratifiedModel):
     def set_treatment_flows(self):
 
         """
-        Set rates of progression through treatment stages
-        Accommodates with and without amplification, and with and without misassignment
+        Set rates of progression through treatment stages - dealing with amplification, as well as misassignment if
+        either or both are implemented.
         """
+
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
                 for organ in self.organ_status:
@@ -1147,7 +1176,8 @@ class ConsolidatedModel(StratifiedModel):
                                         'treatment' +
                                         treatment_stage + organ + strain + as_assigned_strain + comorbidity + agegroup,
                                         'active' + organ + strain + comorbidity + agegroup,
-                                        'program_rate_default' + treatment_stage + '_noamplify' + strain_or_inappropriate)
+                                        'program_rate_default' + treatment_stage + '_noamplify'
+                                        + strain_or_inappropriate)
                                     self.set_var_transfer_rate_flow(
                                         'treatment' +
                                         treatment_stage + organ + strain + as_assigned_strain + comorbidity + agegroup,
@@ -1157,9 +1187,8 @@ class ConsolidatedModel(StratifiedModel):
     def set_ipt_flows(self):
 
         """
-        Sets a flow from the early latent compartment to the partially immune susceptible compartment
-        that is determined by report_numbers_starting_treatment above and is not linked to the
-        'from_label' compartment.
+        Sets a flow from the early latent compartment to the partially immune susceptible compartment that is determined
+        by report_numbers_starting_treatment above and is not linked to the 'from_label' compartment.
         """
 
         for agegroup in self.agegroups:

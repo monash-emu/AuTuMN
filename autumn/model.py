@@ -148,6 +148,8 @@ class ConsolidatedModel(StratifiedModel):
         else:
             self.organ_statuses_for_detection = ['']
 
+        self.shortcourse_improves_outcomes = True
+
     def define_model_structure(self):
 
         # All compartmental disease stages
@@ -469,7 +471,6 @@ class ConsolidatedModel(StratifiedModel):
     def calculate_detect_missed_vars(self):
 
         """"
-        *** Still a work in progress ***
         Calculate rates of detection and failure of detection
         from the programmatic report of the case detection "rate"
         (which is actually a proportion and referred to as program_prop_detect here)
@@ -670,10 +671,17 @@ class ConsolidatedModel(StratifiedModel):
             # Adapt treatment periods for short course regimen
             if strain == '_mdr' and 'program_prop_shortcourse_mdr' in self.optional_timevariants:
                 relative_treatment_duration_mdr = 1. - self.vars['program_prop_shortcourse_mdr'] \
-                                           + (self.params['program_prop_shortcourse_mdr_relativeduration']
-                                              * self.vars['program_prop_shortcourse_mdr'])
+                                                  + (self.params['program_prop_shortcourse_mdr_relativeduration']
+                                                     * self.vars['program_prop_shortcourse_mdr'])
                 tb_timeperiod_treatment *= relative_treatment_duration_mdr
                 tb_timeperiod_infect_ontreatment *= relative_treatment_duration_mdr
+
+                # Adapt treatment outcomes for short course regimen
+                if self.shortcourse_improves_outcomes:
+                    self.vars['program_prop_treatment_success_mdr'] \
+                        += (self.params['program_prop_treatment_success_shortcoursemdr']
+                            - self.vars['program_prop_treatment_success_mdr']) \
+                           * self.vars['program_prop_shortcourse_mdr']
 
             # Get treatment success proportion from vars if possible and from params if not
             for outcome in ['_success', '_death']:

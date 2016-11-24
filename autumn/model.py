@@ -13,6 +13,7 @@ creating intercompartmental flows, costs, etc., while the latter sets down the a
 from scipy import exp, log
 from autumn.base import BaseModel, StratifiedModel
 import copy
+import warnings
 
 
 def label_intersects_tags(label, tags):
@@ -139,6 +140,13 @@ class ConsolidatedModel(StratifiedModel):
         self.interventions_to_cost = self.inputs.interventions_to_cost
         self.find_intervention_startdates()
         if self.eco_drives_epi: self.distribute_funding_across_years()
+
+        # Probably temporary code as vary by organ detection should be incorporated into the GUI ultimately
+        self.vary_detection_by_organ = True
+        if self.vary_detection_by_organ:
+            self.organ_statuses_for_detection = copy.copy(self.organ_status)
+        else:
+            self.organ_statuses_for_detection = ['']
 
     def define_model_structure(self):
 
@@ -294,32 +302,19 @@ class ConsolidatedModel(StratifiedModel):
         if self.eco_drives_epi:
             if self.time > self.inputs.model_constants['current_time']:
                 self.update_vars_from_cost()
-
         self.vars['population'] = sum(self.compartments.values())
-
         self.calculate_birth_rates_vars()
-
         self.calculate_force_infection_vars()
-
         if self.is_organvariation: self.calculate_progression_vars()
-
         self.calculate_acf_rate()
-
         self.calculate_detect_missed_vars()
-
         self.calculate_misassignment_detection_vars()
-
         if self.is_lowquality: self.calculate_lowquality_detection_vars()
-
         self.calculate_await_treatment_var()
-
         self.calculate_treatment_rates_vars()
-
         self.calculate_population_sizes()
-
         if 'agestratified_ipt' in self.optional_timevariants or 'ipt' in self.optional_timevariants:
             self.calculate_ipt_rate()
-
         self.calculate_community_ipt_rate()
 
     def calculate_birth_rates_vars(self):
@@ -474,7 +469,7 @@ class ConsolidatedModel(StratifiedModel):
     def calculate_detect_missed_vars(self):
 
         """"
-        *** Still a bit of a work in progress ***
+        *** Still a work in progress ***
         Calculate rates of detection and failure of detection
         from the programmatic report of the case detection "rate"
         (which is actually a proportion and referred to as program_prop_detect here)
@@ -485,8 +480,6 @@ class ConsolidatedModel(StratifiedModel):
           detection proportion = detection rate
                 / (detection rate + spont recover rate + tb death rate + natural death rate)
         """
-
-        vary_by_organ = False
 
         # Detection
         # Note that all organ types are assumed to have the same untreated active
@@ -503,11 +496,12 @@ class ConsolidatedModel(StratifiedModel):
                               - self.get_constant_or_variable_param('program_prop_detect'))
 
         # Weighting detection and algorithm sensitivity rates by organ status
-        if vary_by_organ:
+        if self.vary_detection_by_organ:
 
+            # Simple weighting on the assumption that the smear-negative and extra-pulmonary rates are less than the
+            # smear-positive rate by a proportion specified in program_prop_snep_relative_algorithm.
             def weight_by_organ_status(baseline_value):
-
-                weighted_dict = {}
+                weighted_dict = {'': baseline_value}
                 weighted_dict['_smearpos'] \
                     = baseline_value \
                       / (self.vars['epi_prop_smearpos']
@@ -515,12 +509,29 @@ class ConsolidatedModel(StratifiedModel):
                 weighted_dict['_smearneg'] \
                     = weighted_dict['_smearpos'] * self.params['program_prop_snep_relative_algorithm']
                 weighted_dict['_extrapul'] = weighted_dict['_smearneg']
+
+                # Set ceiling to prevent values exceeding one (which algorithm sensitivity is more likely to do)
+                for organ in weighted_dict:
+                    if weighted_dict[organ] > .9:
+                        weighted_dict[organ] = .9
+                        warnings.warn('Case detection or algorithm sensitivity exceeds maximum, so limit applied.')
                 return weighted_dict
 
             detect_prop_by_organ = weight_by_organ_status(detect_prop)
             alg_sens_by_organ = weight_by_organ_status(alg_sens)
 
-            for organ in self.organ_status:
+            # Adjust case case detection and algorithm sensitivity for Xpert (will only work with weighting)
+            if 'program_prop_xpert' in self.optional_timevariants:
+                detect_prop_by_organ['_smearneg'] \
+                    += (detect_prop_by_organ['_smearpos'] - detect_prop_by_organ['_smearneg']) \
+                       * self.params['tb_prop_xpert_smearneg_sensitivity'] \
+                       * self.vars['program_prop_xpert']
+                alg_sens_by_organ['_smearneg'] \
+                    += (alg_sens_by_organ['_smearpos'] - alg_sens_by_organ['_smearneg']) \
+                       * self.params['tb_prop_xpert_smearneg_sensitivity'] \
+                       * self.vars['program_prop_xpert']
+
+            for organ in detect_prop_by_organ:
                 self.vars['program_rate_detect' + organ] \
                     = - detect_prop_by_organ[organ] \
                       * (1. / self.params['tb_timeperiod_activeuntreated'] + 1. / life_expectancy) \
@@ -529,27 +540,23 @@ class ConsolidatedModel(StratifiedModel):
                     = self.vars['program_rate_detect' + organ] \
                       * (1. - alg_sens_by_organ[organ]) / max(alg_sens_by_organ[organ], 1e-6)
 
+            # Add ACF rate to standard DOTS-based detection rate if detection rates differ by organ
+            for organ in self.organ_status:
+                if len(self.organ_status) > 1 \
+                        and ('program_prop_smearacf' in self.optional_timevariants
+                             or 'program_prop_xpertacf' in self.optional_timevariants):
+                    self.vars['program_rate_detect' + organ] \
+                        += self.vars['program_rate_acf' + organ]
+
         # Without weighting
-        self.vars['program_rate_detect'] \
-            = - detect_prop \
-              * (1. / self.params['tb_timeperiod_activeuntreated'] + 1. / life_expectancy) \
-              / (detect_prop - 1.)
-        # Missed (avoid division by zero alg_sens with max)
-        self.vars['program_rate_missed'] = self.vars['program_rate_detect'] * (1. - alg_sens) / max(alg_sens, 1e-6)
-
-        # Calculate detection rates by organ stratum (should be the same for each strain)
-        for organ in self.organ_status:
-            if not vary_by_organ:
-                for programmatic_rate in ['_detect', '_missed']:
-                    self.vars['program_rate' + programmatic_rate + organ] \
-                        = self.vars['program_rate' + programmatic_rate]
-
-            # Add active case finding rate to standard DOTS-based detection rate
-            if len(self.organ_status) > 1 \
-                and ('program_prop_smearacf' in self.optional_timevariants
-                     or 'program_prop_xpertacf' in self.optional_timevariants):
-                self.vars['program_rate_detect' + organ] \
-                    += self.vars['program_rate_acf' + organ]
+        else:
+            self.vars['program_rate_detect'] \
+                = - detect_prop \
+                  * (1. / self.params['tb_timeperiod_activeuntreated'] + 1. / life_expectancy) \
+                  / (detect_prop - 1.)
+            # Missed (avoid division by zero alg_sens with max)
+            self.vars['program_rate_missed'] \
+                = self.vars['program_rate_detect'] * (1. - alg_sens) / max(alg_sens, 1e-6)
 
     def calculate_await_treatment_var(self):
 
@@ -591,6 +598,7 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         prop_lowqual = self.get_constant_or_variable_param('program_prop_lowquality')
+        # Note that there should still be a program_rate_detect var even if detection is being varied by organ
         self.vars['program_rate_enterlowquality'] \
             = self.vars['program_rate_detect'] * prop_lowqual / (1. - prop_lowqual)
 
@@ -604,33 +612,40 @@ class ConsolidatedModel(StratifiedModel):
         # With misassignment:
         if self.is_misassignment:
 
-            # If there are exactly two strains (DS and MDR)
-            prop_firstline = self.get_constant_or_variable_param('program_prop_firstline_dst')
+            for organ in self.organ_statuses_for_detection:
 
-            # Add effect of Xpert on identification, assuming that it is distributed independently to conventional DST
-            if 'program_prop_xpert' in self.optional_timevariants:
-                prop_firstline += (1. - prop_firstline) * self.vars['program_prop_xpert']
+                # If there are exactly two strains (DS and MDR)
+                prop_firstline = self.get_constant_or_variable_param('program_prop_firstline_dst')
 
-            self.vars['program_rate_detect_ds_asds'] = self.vars['program_rate_detect']
-            self.vars['program_rate_detect_ds_asmdr'] = 0.
-            self.vars['program_rate_detect_mdr_asds'] = (1. - prop_firstline) * self.vars['program_rate_detect']
-            self.vars['program_rate_detect_mdr_asmdr'] = prop_firstline * self.vars['program_rate_detect']
+                # Add effect of Xpert on identification, assuming that independent distribution to conventional DST
+                if 'program_prop_xpert' in self.optional_timevariants:
+                    prop_firstline += (1. - prop_firstline) * self.vars['program_prop_xpert']
 
-            # If a third strain is present
-            if len(self.strains) > 2:
-                prop_secondline = self.get_constant_or_variable_param('program_prop_secondline_dst')
-                self.vars['program_rate_detect_ds_asxdr'] = 0.
-                self.vars['program_rate_detect_mdr_asxdr'] = 0.
-                self.vars['program_rate_detect_xdr_asds'] = (1. - prop_firstline) * self.vars['program_rate_detect']
-                self.vars['program_rate_detect_xdr_asmdr'] = prop_firstline \
-                                                             * (1. - prop_secondline) * self.vars['program_rate_detect']
-                self.vars['program_rate_detect_xdr_asxdr'] = prop_firstline \
-                                                             * prop_secondline * self.vars['program_rate_detect']
+                self.vars['program_rate_detect' + organ + '_ds_asds'] = self.vars['program_rate_detect' + organ]
+                self.vars['program_rate_detect' + organ + '_ds_asmdr'] = 0.
+                self.vars['program_rate_detect' + organ + '_mdr_asds'] \
+                    = (1. - prop_firstline) * self.vars['program_rate_detect' + organ]
+                self.vars['program_rate_detect' + organ + '_mdr_asmdr'] \
+                    = prop_firstline * self.vars['program_rate_detect' + organ]
+
+                # If a third strain is present
+                if len(self.strains) > 2:
+                    prop_secondline = self.get_constant_or_variable_param('program_prop_secondline_dst')
+                    self.vars['program_rate_detect' + organ + '_ds_asxdr'] = 0.
+                    self.vars['program_rate_detect' + organ + '_mdr_asxdr'] = 0.
+                    self.vars['program_rate_detect' + organ + '_xdr_asds'] \
+                        = (1. - prop_firstline) * self.vars['program_rate_detect' + organ]
+                    self.vars['program_rate_detect' + organ + '_xdr_asmdr'] \
+                        = prop_firstline * (1. - prop_secondline) * self.vars['program_rate_detect' + organ]
+                    self.vars['program_rate_detect' + organ + '_xdr_asxdr'] \
+                        = prop_firstline * prop_secondline * self.vars['program_rate_detect' + organ]
 
         # Without misassignment, everyone is correctly allocated
         else:
             for strain in self.strains:
-                self.vars['program_rate_detect' + strain + '_as'+strain[1:]] = self.vars['program_rate_detect']
+                for organ in self.organ_statuses_for_detection:
+                    self.vars['program_rate_detect' + organ + strain + '_as'+strain[1:]] \
+                        = self.vars['program_rate_detect' + organ]
 
     def calculate_treatment_rates_vars(self):
 
@@ -747,11 +762,17 @@ class ConsolidatedModel(StratifiedModel):
             for agegroup in self.agegroups:
                 for comorbidity in self.comorbidities:
                     for strain in self.strains:
-                        self.vars['popsize_xpert'] += (self.vars['program_rate_detect']
-                                                       + self.vars['program_rate_missed']) \
-                                                      * self.compartments['active'
-                                                                          + organ + strain + comorbidity + agegroup] \
-                                                      * (self.params['program_number_tests_per_tb_presentation'] + 1.)
+                        for organ in self.organ_status:
+                            if self.vary_detection_by_organ:
+                                detection_organ = organ
+                            else:
+                                detection_organ = ''
+                            self.vars['popsize_xpert'] += (self.vars['program_rate_detect' + detection_organ]
+                                                           + self.vars['program_rate_missed' + detection_organ]) \
+                                                          * self.compartments['active' + organ + strain
+                                                                              + comorbidity + agegroup] \
+                                                          * (self.params['program_number_tests_per_tb_presentation']
+                                                             + 1.)
 
         # ACF
         if 'program_prop_smearacf' in self.optional_timevariants:
@@ -1050,6 +1071,8 @@ class ConsolidatedModel(StratifiedModel):
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
                 for organ in self.organ_status:
+                    detection_organ = ''
+                    if self.vary_detection_by_organ: detection_organ = organ
                     for strain_number, strain in enumerate(self.strains):
 
                         # With misassignment
@@ -1061,14 +1084,14 @@ class ConsolidatedModel(StratifiedModel):
                                     self.set_var_transfer_rate_flow(
                                         'active' + organ + strain + comorbidity + agegroup,
                                         'detect' + organ + strain + as_assigned_strain + comorbidity + agegroup,
-                                        'program_rate_detect' + strain + as_assigned_strain + organ)
+                                        'program_rate_detect' + detection_organ + strain + as_assigned_strain)
 
                         # Without misassignment
                         else:
                             self.set_var_transfer_rate_flow(
                                 'active' + organ + strain + comorbidity + agegroup,
                                 'detect' + organ + strain + comorbidity + agegroup,
-                                'program_rate_detect' + organ)
+                                'program_rate_detect' + detection_organ)
 
     def set_variable_programmatic_flows(self):
 
@@ -1083,11 +1106,14 @@ class ConsolidatedModel(StratifiedModel):
             for comorbidity in self.comorbidities:
                 for strain in self.strains:
                     for organ in self.organ_status:
+                        detection_organ = ''
+                        if self.vary_detection_by_organ: detection_organ = organ
                         self.set_var_transfer_rate_flow(
                             'active' + organ + strain + comorbidity + agegroup,
                             'missed' + organ + strain + comorbidity + agegroup,
-                            'program_rate_missed')
-                        # Detection, with and without misassignment
+                            'program_rate_missed' + detection_organ)
+
+                        # Treatment commencement, with and without misassignment
                         if self.is_misassignment:
                             for assigned_strain in self.strains:
                                 # Following line only for models incorporating mis-assignment
@@ -1098,7 +1124,6 @@ class ConsolidatedModel(StratifiedModel):
                                     organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup,
                                     'program_rate_start_treatment' + organ)
                         else:
-                            # Following line is the currently running line (without mis-assignment)
                             self.set_var_transfer_rate_flow(
                                 'detect' + organ + strain + comorbidity + agegroup,
                                 'treatment_infect' + organ + strain + comorbidity + agegroup,

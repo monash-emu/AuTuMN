@@ -192,7 +192,7 @@ class App:
         for option in numerical_stratification_inputs:
             self.raw_outputs[option] = StringVar()
         self.raw_outputs['n_organs'].set('Pos / Neg / Extra')
-        self.raw_outputs['n_strains'].set('Single strain')
+        self.raw_outputs['n_strains'].set('DS / MDR')
         self.drop_downs['n_organs'] = OptionMenu(self.frame, self.raw_outputs['n_organs'],
                                                  'Pos / Neg / Extra',
                                                  'Pos / Neg',
@@ -246,7 +246,10 @@ class App:
                                     'burn_in_runs': ['Number of burn-in runs', 0],
                                     'search_width': ['Relative search width', .08]}
         self.boolean_dictionary['adaptive_uncertainty'].set(True)
-        # self.boolean_dictionary['is_amplification'].set(True)
+        self.boolean_dictionary['is_amplification'].set(True)
+        self.boolean_dictionary['is_misassignment'].set(True)
+        self.boolean_dictionary['is_lowquality'].set(True)
+        self.boolean_dictionary['comorbidity_prison'].set(True)
         for numeric in uncertainty_numeric_list.keys():
             numeric_label = Label(self.frame, text=uncertainty_numeric_list[numeric][0], font=label_font)
             numeric_label.grid(row=uncertainty_row, column=4, sticky=SW)

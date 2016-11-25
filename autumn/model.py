@@ -453,29 +453,34 @@ class ConsolidatedModel(StratifiedModel):
         (Extrapulmonary disease can't be detected through ACF.)
         """
 
-        # The following can't be written as a loop, as it won't work for models that aren't fully stratified if it is
-        self.vars['program_rate_acf_smearpos'] = 0.
-        self.vars['program_rate_acf_smearneg'] = 0.
-        self.vars['program_rate_acf_extrapul'] = 0.
+        for comorbidity in [''] + self.comorbidities:
 
-        # Smear-based ACF rate
-        if 'program_prop_smear_acf' in self.optional_timevariants:
-            self.vars['program_rate_acf_smearpos'] \
-                += self.vars['program_prop_smearacf'] \
-                   * self.params['program_prop_acf_detections_per_round'] \
-                   / self.params['program_timeperiod_acf_rounds']
+            if 'program_prop_smearacf' + comorbidity in self.optional_timevariants \
+                or 'program_prop_xpertacf' + comorbidity in self.optional_timevariants:
 
-        # Xpert-based ACF rate
-        if 'program_prop_xpertacf' in self.optional_timevariants:
-            self.vars['program_rate_acf_smearpos'] \
-                += self.vars['program_prop_xpertacf'] \
-                   * self.params['program_prop_acf_detections_per_round'] \
-                   / self.params['program_timeperiod_acf_rounds']
-            self.vars['program_rate_acf_smearneg'] \
-                += self.vars['program_prop_xpertacf'] \
-                   * self.params['tb_prop_xpert_smearneg_sensitivity'] \
-                   * self.params['program_prop_acf_detections_per_round'] \
-                   / self.params['program_timeperiod_acf_rounds']
+                # The following can't be written as a loop, as it won't work for models that aren't fully stratified
+                self.vars['program_rate_acf_smearpos' + comorbidity] = 0.
+                self.vars['program_rate_acf_smearneg' + comorbidity] = 0.
+                self.vars['program_rate_acf_extrapul' + comorbidity] = 0.
+
+                # Smear-based ACF rate
+                if 'program_prop_smearacf' + comorbidity in self.optional_timevariants:
+                    self.vars['program_rate_acf_smearpos' + comorbidity] \
+                        += self.vars['program_prop_smearacf' + comorbidity] \
+                           * self.params['program_prop_acf_detections_per_round'] \
+                           / self.params['program_timeperiod_acf_rounds']
+
+                # Xpert-based ACF rate
+                if 'program_prop_xpertacf' + comorbidity in self.optional_timevariants:
+                    self.vars['program_rate_acf_smearpos' + comorbidity] \
+                        += self.vars['program_prop_xpertacf' + comorbidity] \
+                           * self.params['program_prop_acf_detections_per_round'] \
+                           / self.params['program_timeperiod_acf_rounds']
+                    self.vars['program_rate_acf_smearneg' + comorbidity] \
+                        += self.vars['program_prop_xpertacf' + comorbidity] \
+                           * self.params['tb_prop_xpert_smearneg_sensitivity'] \
+                           * self.params['program_prop_acf_detections_per_round'] \
+                           / self.params['program_timeperiod_acf_rounds']
 
     def calculate_detect_missed_vars(self):
 
@@ -542,21 +547,27 @@ class ConsolidatedModel(StratifiedModel):
                        * self.vars['program_prop_xpert']
 
             for organ in detect_prop_by_organ:
-                self.vars['program_rate_detect' + organ] \
-                    = - detect_prop_by_organ[organ] \
-                      * (1. / self.params['tb_timeperiod_activeuntreated'] + 1. / life_expectancy) \
-                      / (detect_prop_by_organ[organ] - 1.)
+                for comorbidity in [''] + self.comorbidities:
+                    self.vars['program_rate_detect' + organ + comorbidity] \
+                        = - detect_prop_by_organ[organ] \
+                          * (1. / self.params['tb_timeperiod_activeuntreated'] + 1. / life_expectancy) \
+                          / (detect_prop_by_organ[organ] - 1.)
                 self.vars['program_rate_missed' + organ] \
                     = self.vars['program_rate_detect' + organ] \
                       * (1. - alg_sens_by_organ[organ]) / max(alg_sens_by_organ[organ], 1e-6)
 
             # Add ACF rate to standard DOTS-based detection rate if detection rates differ by organ
-            for organ in self.organ_status:
-                if len(self.organ_status) > 1 \
-                        and ('program_prop_smearacf' in self.optional_timevariants
-                             or 'program_prop_xpertacf' in self.optional_timevariants):
-                    self.vars['program_rate_detect' + organ] \
-                        += self.vars['program_rate_acf' + organ]
+            if len(self.organ_status) > 1:
+                for organ in self.organ_status:
+                    for comorbidity in self.comorbidities:
+                        if 'program_prop_smearacf' + comorbidity in self.optional_timevariants \
+                                or 'program_prop_xpertacf' + comorbidity in self.optional_timevariants:
+                            self.vars['program_rate_detect' + organ + comorbidity] \
+                                += self.vars['program_rate_acf' + organ + comorbidity]
+                        if 'program_prop_smearacf' in self.optional_timevariants \
+                                or 'program_prop_xpertacf' in self.optional_timevariants:
+                            self.vars['program_rate_detect' + organ + comorbidity] \
+                                += self.vars['program_rate_acf' + organ]
 
         # Without weighting
         else:
@@ -620,42 +631,42 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         # With misassignment:
-        if self.is_misassignment:
 
-            for organ in self.organ_statuses_for_detection:
+        for organ in self.organ_statuses_for_detection:
+            for comorbidity in self.comorbidities:
+                if self.is_misassignment:
 
-                # If there are exactly two strains (DS and MDR)
-                prop_firstline = self.get_constant_or_variable_param('program_prop_firstline_dst')
+                    # If there are exactly two strains (DS and MDR)
+                    prop_firstline = self.get_constant_or_variable_param('program_prop_firstline_dst')
 
-                # Add effect of Xpert on identification, assuming that independent distribution to conventional DST
-                if 'program_prop_xpert' in self.optional_timevariants:
-                    prop_firstline += (1. - prop_firstline) * self.vars['program_prop_xpert']
+                    # Add effect of Xpert on identification, assuming that independent distribution to conventional DST
+                    if 'program_prop_xpert' in self.optional_timevariants:
+                        prop_firstline += (1. - prop_firstline) * self.vars['program_prop_xpert']
 
-                self.vars['program_rate_detect' + organ + '_ds_asds'] = self.vars['program_rate_detect' + organ]
-                self.vars['program_rate_detect' + organ + '_ds_asmdr'] = 0.
-                self.vars['program_rate_detect' + organ + '_mdr_asds'] \
-                    = (1. - prop_firstline) * self.vars['program_rate_detect' + organ]
-                self.vars['program_rate_detect' + organ + '_mdr_asmdr'] \
-                    = prop_firstline * self.vars['program_rate_detect' + organ]
+                    self.vars['program_rate_detect' + organ + comorbidity + '_ds_asds'] = self.vars['program_rate_detect' + organ]
+                    self.vars['program_rate_detect' + organ + comorbidity + '_ds_asmdr'] = 0.
+                    self.vars['program_rate_detect' + organ + comorbidity + '_mdr_asds'] \
+                        = (1. - prop_firstline) * self.vars['program_rate_detect' + organ + comorbidity]
+                    self.vars['program_rate_detect' + organ + comorbidity + '_mdr_asmdr'] \
+                        = prop_firstline * self.vars['program_rate_detect' + organ + comorbidity]
 
-                # If a third strain is present
-                if len(self.strains) > 2:
-                    prop_secondline = self.get_constant_or_variable_param('program_prop_secondline_dst')
-                    self.vars['program_rate_detect' + organ + '_ds_asxdr'] = 0.
-                    self.vars['program_rate_detect' + organ + '_mdr_asxdr'] = 0.
-                    self.vars['program_rate_detect' + organ + '_xdr_asds'] \
-                        = (1. - prop_firstline) * self.vars['program_rate_detect' + organ]
-                    self.vars['program_rate_detect' + organ + '_xdr_asmdr'] \
-                        = prop_firstline * (1. - prop_secondline) * self.vars['program_rate_detect' + organ]
-                    self.vars['program_rate_detect' + organ + '_xdr_asxdr'] \
-                        = prop_firstline * prop_secondline * self.vars['program_rate_detect' + organ]
+                    # If a third strain is present
+                    if len(self.strains) > 2:
+                        prop_secondline = self.get_constant_or_variable_param('program_prop_secondline_dst')
+                        self.vars['program_rate_detect' + organ + comorbidity + '_ds_asxdr'] = 0.
+                        self.vars['program_rate_detect' + organ + comorbidity + '_mdr_asxdr'] = 0.
+                        self.vars['program_rate_detect' + organ + comorbidity + '_xdr_asds'] \
+                            = (1. - prop_firstline) * self.vars['program_rate_detect' + organ + comorbidity]
+                        self.vars['program_rate_detect' + organ + comorbidity + '_xdr_asmdr'] \
+                            = prop_firstline * (1. - prop_secondline) * self.vars['program_rate_detect' + organ + comorbidity]
+                        self.vars['program_rate_detect' + organ + comorbidity + '_xdr_asxdr'] \
+                            = prop_firstline * prop_secondline * self.vars['program_rate_detect' + organ + comorbidity]
 
-        # Without misassignment, everyone is correctly allocated
-        else:
-            for strain in self.strains:
-                for organ in self.organ_statuses_for_detection:
-                    self.vars['program_rate_detect' + organ + strain + '_as'+strain[1:]] \
-                        = self.vars['program_rate_detect' + organ]
+                # Without misassignment, everyone is correctly allocated
+                else:
+                    for strain in self.strains:
+                        self.vars['program_rate_detect' + organ + comorbidity + strain + '_as'+strain[1:]] \
+                            = self.vars['program_rate_detect' + organ + comorbidity]
 
     def calculate_treatment_rates_vars(self):
 

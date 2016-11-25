@@ -643,7 +643,8 @@ class ConsolidatedModel(StratifiedModel):
                     if 'program_prop_xpert' in self.optional_timevariants:
                         prop_firstline += (1. - prop_firstline) * self.vars['program_prop_xpert']
 
-                    self.vars['program_rate_detect' + organ + comorbidity + '_ds_asds'] = self.vars['program_rate_detect' + organ]
+                    self.vars['program_rate_detect' + organ + comorbidity + '_ds_asds'] \
+                        = self.vars['program_rate_detect' + organ]
                     self.vars['program_rate_detect' + organ + comorbidity + '_ds_asmdr'] = 0.
                     self.vars['program_rate_detect' + organ + comorbidity + '_mdr_asds'] \
                         = (1. - prop_firstline) * self.vars['program_rate_detect' + organ + comorbidity]
@@ -665,7 +666,7 @@ class ConsolidatedModel(StratifiedModel):
                 # Without misassignment, everyone is correctly allocated
                 else:
                     for strain in self.strains:
-                        self.vars['program_rate_detect' + organ + comorbidity + strain + '_as'+strain[1:]] \
+                        self.vars['program_rate_detect' + organ + comorbidity + strain + '_as' + strain[1:]] \
                             = self.vars['program_rate_detect' + organ + comorbidity]
 
     def calculate_treatment_rates_vars(self):
@@ -806,12 +807,11 @@ class ConsolidatedModel(StratifiedModel):
                                 detection_organ = organ
                             else:
                                 detection_organ = ''
-                            self.vars['popsize_xpert'] += (self.vars['program_rate_detect' + detection_organ]
-                                                           + self.vars['program_rate_missed' + detection_organ]) \
-                                                          * self.compartments['active' + organ + strain
-                                                                              + comorbidity + agegroup] \
-                                                          * (self.params['program_number_tests_per_tb_presentation']
-                                                             + 1.)
+                            self.vars['popsize_xpert'] \
+                                += (self.vars['program_rate_detect' + detection_organ + comorbidity]
+                                    + self.vars['program_rate_missed' + detection_organ]) \
+                                   * self.compartments['active' + organ + strain + comorbidity + agegroup] \
+                                   * (self.params['program_number_tests_per_tb_presentation'] + 1.)
 
         # ACF
         if 'program_prop_smearacf' in self.optional_timevariants:
@@ -1123,14 +1123,15 @@ class ConsolidatedModel(StratifiedModel):
                                     self.set_var_transfer_rate_flow(
                                         'active' + organ + strain + comorbidity + agegroup,
                                         'detect' + organ + strain + as_assigned_strain + comorbidity + agegroup,
-                                        'program_rate_detect' + detection_organ + strain + as_assigned_strain)
+                                        'program_rate_detect' + detection_organ + comorbidity
+                                        + strain + as_assigned_strain)
 
                         # Without misassignment
                         else:
                             self.set_var_transfer_rate_flow(
                                 'active' + organ + strain + comorbidity + agegroup,
                                 'detect' + organ + strain + comorbidity + agegroup,
-                                'program_rate_detect' + detection_organ)
+                                'program_rate_detect' + detection_organ + comorbidity)
 
     def set_variable_programmatic_flows(self):
 

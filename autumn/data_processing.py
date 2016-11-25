@@ -226,10 +226,6 @@ class Inputs:
         # Populate constant model values hierarchically
         self.add_model_constant_defaults()
 
-        # Temporary code because the proportion of the population with HIV can't yet be loaded
-        self.model_constants['comorb_prop_hiv'] = 0.
-        self.model_constants['comorb_prop_prison'] = 0.01
-
         # Convert time variants loaded as percentages to proportions
         self.convert_percentages_to_proportions()
 
@@ -292,6 +288,11 @@ class Inputs:
         elif len(self.comorbidities) > 2:
             self.add_comment_to_gui_window('Model incorporates %s additional risk groups.\n'
                                         % str(len(self.comorbidities) - 1))
+
+        # Code to ensure some starting proportion of births go to the comorbidity stratum if value not loaded earlier
+        for comorbidity in self.comorbidities:
+            if 'comorb_prop' + comorbidity not in self.model_constants:
+                self.model_constants['comorb_prop' + comorbidity] = 0.
 
         # Define the strain structure for the model
         self.define_strain_structure()

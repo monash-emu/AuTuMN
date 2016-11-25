@@ -391,12 +391,21 @@ class ConsolidatedModel(StratifiedModel):
                 self.vars['rate_force' + strain] *= self.vars['transmission_modifier']
 
             # Adjust for immunity in various groups
-            self.vars['rate_force_vacc' + strain] \
+            self.vars['rate_force_vac' + strain] \
                 = self.params['tb_multiplier_bcg_protection'] * self.vars['rate_force' + strain]
             self.vars['rate_force_latent' + strain] \
                 = self.params['tb_multiplier_latency_protection'] * self.vars['rate_force' + strain]
-            self.vars['rate_force_novelvacc' + strain] \
+            self.vars['rate_force_novelvac' + strain] \
                 = self.params['tb_multiplier_novelvac_protection'] * self.vars['rate_force' + strain]
+
+            # Adjust at-risk group's force of infection as required
+            for comorbidity in self.comorbidities:
+                for force_type in ['', '_vac', '_latent', '_novelvac']:
+                    self.vars['rate_force' + force_type + strain + comorbidity] \
+                        = self.vars['rate_force' + force_type + strain]
+                    if 'comorb_multiplier_force_infection' + comorbidity in self.params:
+                        self.vars['rate_force' + force_type + strain + comorbidity] \
+                            *= self.params['comorb_multiplier_force_infection' + comorbidity]
 
     def calculate_progression_vars(self):
 
@@ -921,28 +930,28 @@ class ConsolidatedModel(StratifiedModel):
                     self.set_var_transfer_rate_flow(
                         'susceptible_fully' + comorbidity + agegroup,
                         'latent_early' + strain + comorbidity + agegroup,
-                        'rate_force' + strain)
+                        'rate_force' + strain + comorbidity)
 
                     # Partially immune
                     self.set_var_transfer_rate_flow(
                         'susceptible_vac' + comorbidity + agegroup,
                         'latent_early' + strain + comorbidity + agegroup,
-                        'rate_force_vacc' + strain)
+                        'rate_force_vac' + strain + comorbidity)
                     self.set_var_transfer_rate_flow(
                         'susceptible_treated' + comorbidity + agegroup,
                         'latent_early' + strain + comorbidity + agegroup,
-                        'rate_force_vacc' + strain)
+                        'rate_force_vac' + strain + comorbidity)
                     self.set_var_transfer_rate_flow(
                         'latent_late' + strain + comorbidity + agegroup,
                         'latent_early' + strain + comorbidity + agegroup,
-                        'rate_force_latent' + strain)
+                        'rate_force_latent' + strain + comorbidity)
 
                     # Novel vaccination
                     if 'program_prop_novel_vaccination' in self.optional_timevariants:
                         self.set_var_transfer_rate_flow(
                             'susceptible_novelvac' + comorbidity + agegroup,
                             'latent_early' + strain + comorbidity + agegroup,
-                            'rate_force_novelvacc' + strain)
+                            'rate_force_novelvac' + strain + comorbidity)
 
     def set_progression_flows(self):
 

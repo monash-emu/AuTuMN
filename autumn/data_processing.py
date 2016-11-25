@@ -228,6 +228,7 @@ class Inputs:
 
         # Temporary code because the proportion of the population with HIV can't yet be loaded
         self.model_constants['comorb_prop_hiv'] = 0.
+        self.model_constants['comorb_prop_prison'] = 0.01
 
         # Convert time variants loaded as percentages to proportions
         self.convert_percentages_to_proportions()
@@ -1127,7 +1128,6 @@ class Inputs:
                                                     '"' + param[1:] + '" parameter unavailable for ' +
                                                     str(int(limits[0])) + ' to ' + str(int(limits[1])) +
                                                     ' age-group, so default value used.\n')
-
 
     def find_uncertainty_distributions(self):
 

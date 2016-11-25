@@ -52,6 +52,8 @@ def find_button_name_from_string(working_string):
                                   'Type II diabetes',
                               'comorbidity_hiv':
                                   'HIV',
+                              'comorbidity_prison':
+                                  'Prison',
                               'is_lowquality':
                                   'Low quality care',
                               'is_amplification':
@@ -80,7 +82,6 @@ class App:
 
         Args:
             master: The GUI
-
         """
 
         # Prepare data structures
@@ -118,6 +119,7 @@ class App:
                                'output_spreadsheets',
                                'output_documents', 'output_by_scenario', 'output_horizontally',
                                'output_age_calculations', 'comorbidity_diabetes', 'comorbidity_hiv',
+                               'comorbidity_prison',
                                'is_lowquality', 'is_amplification', 'is_misassignment']
         for i in range(1, 15):
             self.boolean_inputs += ['scenario_' + str(i)]
@@ -164,7 +166,7 @@ class App:
         running_dropdown_list = ['country', 'integration_method', 'fitting_method']
         for dropdown in running_dropdown_list:
             self.raw_outputs[dropdown] = StringVar()
-        self.raw_outputs['country'].set('Fiji')
+        self.raw_outputs['country'].set('Philippines')
         self.raw_outputs['integration_method'].set('Runge Kutta')
         self.raw_outputs['fitting_method'].set('Method 5')
         self.drop_downs['country'] \

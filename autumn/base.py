@@ -512,69 +512,62 @@ class BaseModel:
 
         """
 
-        dt_max = 2.
         self.process_uncertainty_params()
         if self.gui_inputs['integration_method'] == 'Explicit':
-            self.integrate_explicit(dt_max)
+            self.integrate_explicit()
         elif self.gui_inputs['integration_method'] == 'Runge Kutta':
-            self.integrate_runge_kutta(dt_max)
+            self.integrate_runge_kutta()
 
     def process_uncertainty_params(self):
 
         pass
 
-    def integrate_explicit(self, dt_max=0.05):
+    def integrate_explicit(self):
 
         """
         Integrate with Euler Explicit method.
-
-        Input:
-            min_dt: represents the time step for calculation points. The attribute self.times will also be used to make
-                sure that a solution is affected to the time points known by the model
-
         """
-
         self.init_run()
-        y = self.get_init_list()
+        y = self.get_init_list() # get initial conditions (loaded compartments for scenarios)
+        y = self.make_adjustments_during_integration(y)
+        # prepare storage
         y_candidate = numpy.zeros((len(y)))
         n_compartment = len(y)
         n_time = len(self.times)
         self.soln_array = numpy.zeros((n_time, n_compartment))
 
         derivative = self.make_derivative_fn()
-        old_time = self.times[0]
-        time = old_time
-        self.soln_array[0, :] = y
-        dt_is_ok = True
-        for i_time, new_time in enumerate(self.times):
-            while time < new_time:
-                if not dt_is_ok:
-                    adaptive_dt_max = dt / 2.
-                else:
-                    adaptive_dt_max = dt_max
-                    old_time = time
-                dt_is_ok = True
+        prev_time = self.times[0]  # time of the latest successful integration step (not necessarily stored)
+        self.soln_array[0, :] = y  # store initial conditions
+        dt_is_ok = True  # boolean to indicate whether previous proposed integration time was successfully passed
+        for i_time, next_time in enumerate(self.times[1:]): # for each time as stored in self.times
+            store_step = False  # indicates whether the calculated time has to be stored (i.e. appears in self.times)
+            while store_step is False:
+                if not dt_is_ok:  # previous proposed time step was too wide
+                    adaptive_dt /= 2.
+                    is_temp_time_in_times = False   # indicates whether the upcoming calculation step corresponds to next_time
+                else:  # previous time step was accepted
+                    adaptive_dt = next_time - prev_time
+                    is_temp_time_in_times = True  # the upcoming attempted integration step corresponds to next_time
+                    f = derivative(y, prev_time) # evaluate function at previous successful step
 
-                f = derivative(y, time)
-                time = old_time + adaptive_dt_max
-                dt = adaptive_dt_max
-                if time > new_time:
-                    dt = new_time - old_time
-                    time = new_time
+                temp_time = prev_time + adaptive_dt # new attempted calculation time
 
                 for i in range(n_compartment):
-                    y_candidate[i] = y[i] + dt * f[i]
+                    y_candidate[i] = y[i] + adaptive_dt * f[i]  # Explicit Euler process
 
-                if (numpy.asarray(y_candidate) >= 0).all():
+                if (numpy.asarray(y_candidate) >= 0).all():  # we accept the new integration step temp_time
                     dt_is_ok = True
+                    prev_time = temp_time
                     for i in range(n_compartment):
                         y[i] = y_candidate[i]
-                else:
+                    if is_temp_time_in_times:
+                        store_step = True  # will make the while loop end, and then update i_time
+                else:  # integration failed at proposed step. need to reduce time step
                     dt_is_ok = False
 
-            if i_time < n_time - 1:
-                self.soln_array[i_time+1, :] = y
-                y = self.make_adjustments_during_integration(y)
+            self.soln_array[i_time, :] = y  # store solution
+            y = self.make_adjustments_during_integration(y)
 
         self.calculate_diagnostics()
         if self.run_costing:

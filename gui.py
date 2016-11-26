@@ -54,6 +54,8 @@ def find_button_name_from_string(working_string):
                                   'HIV',
                               'comorbidity_prison':
                                   'Prison',
+                              'comorbidity_indigenous':
+                                  'Indigenous',
                               'is_lowquality':
                                   'Low quality care',
                               'is_amplification':
@@ -119,7 +121,7 @@ class App:
                                'output_spreadsheets',
                                'output_documents', 'output_by_scenario', 'output_horizontally',
                                'output_age_calculations', 'comorbidity_diabetes', 'comorbidity_hiv',
-                               'comorbidity_prison',
+                               'comorbidity_prison', 'comorbidity_indigenous',
                                'is_lowquality', 'is_amplification', 'is_misassignment']
         for i in range(1, 15):
             self.boolean_inputs += ['scenario_' + str(i)]
@@ -249,7 +251,6 @@ class App:
         self.boolean_dictionary['is_amplification'].set(True)
         self.boolean_dictionary['is_misassignment'].set(True)
         self.boolean_dictionary['is_lowquality'].set(True)
-        self.boolean_dictionary['comorbidity_prison'].set(True)
         for numeric in uncertainty_numeric_list.keys():
             numeric_label = Label(self.frame, text=uncertainty_numeric_list[numeric][0], font=label_font)
             numeric_label.grid(row=uncertainty_row, column=4, sticky=SW)

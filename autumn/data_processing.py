@@ -362,7 +362,7 @@ class Inputs:
         self.complete_freeze_time_dictionary below.
         """
 
-        if 'country_programs' in self.original_data:
+        if 'country_programs' in self.original_data and 'freeze_times' in self.original_data['country_programs']:
             self.freeze_times = self.original_data['country_programs'].pop('freeze_times')
         else:
             self.freeze_times = {}

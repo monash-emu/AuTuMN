@@ -428,10 +428,13 @@ class ModelRunner:
             for strain in strains:
                 for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
                     if 'active' in from_label and 'detect' in to_label and strain in to_label:
+                        notifications_increment \
+                            = self.model_dict[scenario].get_compartment_soln(from_label) \
+                              * self.model_dict[scenario].get_var_soln(rate)
+                        if '_age' in from_label and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
+                            notifications_increment *= self.inputs.model_constants['program_prop_child_reporting']
                         epi_outputs['notifications' + strain] \
-                            = increment_list(self.model_dict[scenario].get_compartment_soln(from_label) \
-                                             * self.model_dict[scenario].get_var_soln(rate),
-                                             epi_outputs['notifications' + strain])
+                            = increment_list(notifications_increment, epi_outputs['notifications' + strain])
 
         # Mortality
         if 'mortality' in outputs_to_analyse:

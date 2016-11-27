@@ -175,48 +175,42 @@ class ConsolidatedModel(StratifiedModel):
 
     def initialise_compartments(self):
 
-        # First initialise all compartments to zero
+        """
+        Initialise all compartments to zero and then populate with the requested values.
+        """
+
+        # Initialise to zero
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
                 for compartment in self.compartment_types:
 
                     # Replicate susceptible for age-groups and comorbidities
-                    if 'susceptible' in compartment:
-                        self.set_compartment(compartment + comorbidity + agegroup, 0.)
+                    if 'susceptible' in compartment: self.set_compartment(compartment + comorbidity + agegroup, 0.)
 
                     # Replicate latent classes for age-groups, comorbidities and strains
                     elif 'latent' in compartment:
                         for strain in self.strains:
                             self.set_compartment(compartment + strain + comorbidity + agegroup, 0.)
 
-                    # Replicate active classes for age-groups, comorbidities, strains and organ status
+                    # Replicate active classes for age-groups, comorbidities, strains and organs
                     elif 'active' in compartment or 'missed' in compartment or 'lowquality' in compartment:
                         for strain in self.strains:
                             for organ in self.organ_status:
                                 self.set_compartment(compartment + organ + strain + comorbidity + agegroup, 0.)
 
-                    # Replicate treatment classes for
-                    # age-groups, comorbidities, strains, organ status and assigned strain
+                    # Replicate treatment classes for age-groups, comorbidities, strains, organs and assigned strains
                     else:
                         for strain in self.strains:
                             for organ in self.organ_status:
                                 if self.is_misassignment:
                                     for assigned_strain in self.strains:
-                                        self.set_compartment(compartment + organ + strain +
-                                                             '_as' + assigned_strain[1:] + comorbidity + agegroup,
+                                        self.set_compartment(compartment + organ + strain + '_as' + assigned_strain[1:]
+                                                             + comorbidity + agegroup,
                                                              0.)
                                 else:
-                                    self.set_compartment(compartment +
-                                                         organ + strain + comorbidity + agegroup, 0.)
+                                    self.set_compartment(compartment + organ + strain + comorbidity + agegroup, 0.)
 
-        # Populate input_compartments
-        # Initialise to DS-TB or no strain if single-strain model
-        default_start_strain = '_ds'
-        if self.strains == ['']: default_start_strain = ''
-
-        # The equal splits will need to be adjusted, but the important thing is not to
-        # initialise multiple strains too early, so that MDR-TB doesn't overtake the model
-
+        # Find starting proportions for risk groups
         if len(self.comorbidities) == 1:
             start_comorb_prop = {'': 1.}
         else:
@@ -225,33 +219,34 @@ class ConsolidatedModel(StratifiedModel):
                 if comorbidity != '_nocomorb':
                     start_comorb_prop[comorbidity] \
                         = self.scaleup_fns['comorb_prop' + comorbidity](self.inputs.model_constants['start_time'])
-                    start_comorb_prop['_nocomorb'] \
-                        -= start_comorb_prop[comorbidity]
+                    start_comorb_prop['_nocomorb'] -= start_comorb_prop[comorbidity]
 
+        # Find starting strain for compartment initialisation
+        if self.strains == ['']:
+            default_start_strain = ''
+        else:
+            default_start_strain = '_ds'
+
+        # Arbitrarily split equally by age-groups and organ status, but avoid starting with any resistant strains
         for compartment in self.compartment_types:
             if compartment in self.initial_compartments:
                 for agegroup in self.agegroups:
                     for comorbidity in self.comorbidities:
                         if 'susceptible_fully' in compartment:
-                            # Split equally by age-groups
                             self.set_compartment(compartment + comorbidity + agegroup,
-                                                 self.initial_compartments[compartment]
-                                                 * start_comorb_prop[comorbidity]
+                                                 self.initial_compartments[compartment] * start_comorb_prop[comorbidity]
                                                  / len(self.agegroups))
                         elif 'latent' in compartment:
-                            # Assign all to DS-TB, split equally by age-groups
                             self.set_compartment(compartment + default_start_strain + comorbidity + agegroup,
-                                                 self.initial_compartments[compartment]
-                                                 * start_comorb_prop[comorbidity]
+                                                 self.initial_compartments[compartment] * start_comorb_prop[comorbidity]
                                                  / len(self.agegroups))
                         else:
                             for organ in self.organ_status:
-                                self.set_compartment(compartment +
-                                                     organ + default_start_strain + comorbidity + agegroup,
+                                self.set_compartment(compartment + organ + default_start_strain + comorbidity
+                                                     + agegroup,
                                                      self.initial_compartments[compartment]
-                                                     / len(self.organ_status)
                                                      * start_comorb_prop[comorbidity]
-                                                     / len(self.agegroups))
+                                                     / len(self.organ_status) / len(self.agegroups))
 
     #######################################################
     ### Single method to process uncertainty parameters ###

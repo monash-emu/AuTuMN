@@ -28,7 +28,6 @@ class BaseModel:
     def __init__(self):
 
         self.inputs = None
-        self.gui_inputs = {}
         self.labels = []
         self.init_compartments = {}
         self.compartments = {}
@@ -483,7 +482,7 @@ class BaseModel:
         """
 
         # More code that is dependent on correct naming of inputs, but should be universal to models based on this class
-        self.make_times(self.start_time, self.inputs.model_constants['scenario_end_time'], self.gui_inputs['time_step'])
+        self.make_times(self.start_time, self.inputs.model_constants['scenario_end_time'], self.time_step)
         self.initialise_compartments()
         self.set_flows()
         assert self.times is not None, 'Times have not been set yet'
@@ -513,9 +512,9 @@ class BaseModel:
         """
 
         self.process_uncertainty_params()
-        if self.gui_inputs['integration_method'] == 'Explicit':
+        if self.integration_method == 'Explicit':
             self.integrate_explicit()
-        elif self.gui_inputs['integration_method'] == 'Runge Kutta':
+        elif self.integration_method == 'Runge Kutta':
             self.integrate_runge_kutta()
 
     def process_uncertainty_params(self):

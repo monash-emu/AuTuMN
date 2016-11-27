@@ -19,23 +19,24 @@ import warnings
 def label_intersects_tags(label, tags):
 
     """
-    For use in force of infection calculation to determine whether a compartment is infectious.
+    Primarily for use in force of infection calculation to determine whether a compartment is infectious.
 
-    label: Generally a compartment label.
-    tags: Tag for whether label is to be counted.
-    return: Boolean for whether any of the tags are in the label.
+    Args:
+        label: Generally a compartment label.
+        tags: Tag for whether label is to be counted.
+    Returns:
+        Boolean for whether any of the tags are in the label.
     """
 
     for tag in tags:
-        if tag in label:
-            return True
+        if tag in label: return True
     return False
 
 
 def find_outcome_proportions_by_period(proportion, early_period, total_period):
 
     """
-    Split one outcome proportion (e.g. default, death) over multiple time periods.
+    Split one treatment outcome proportion (e.g. default, death) over multiple time periods.
 
     Args:
         proportion: Total proportion to be split
@@ -47,13 +48,12 @@ def find_outcome_proportions_by_period(proportion, early_period, total_period):
     """
 
     if proportion > 1. or proportion < 0.:
-        raise Exception('Proportion greater than one or less than zero')
-    # The following is to avoid errors where the proportion is one, although the function isn't intended for this.
-    elif proportion == 1.:
-        early_proportion = 0.5
+        raise Exception('Proportion parameter not between zero and one.')
+    # To avoid errors where the proportion is exactly one (although the function isn't really intended for this):
+    elif proportion > .99:
+        early_proportion = 0.99
     else:
-        early_proportion \
-            = 1. - exp(log(1. - proportion) * early_period / total_period)
+        early_proportion = 1. - exp(log(1. - proportion) * early_period / total_period)
     late_proportion = proportion - early_proportion
     return early_proportion, late_proportion
 
@@ -62,20 +62,20 @@ class ConsolidatedModel(StratifiedModel):
 
     """
     The transmission dynamic model to underpin all AuTuMN analyses.
-    Inherits from BaseModel, which is intended to be general to any infectious disease.
+    Inherits from BaseModel and then StratifiedModel, which is intended to be general to any infectious disease.
     All TB-specific methods and structures are contained in this model.
-    Methods are written to be adaptable to any model structure selected through the __init__ arguments.
+    Methods are written to be adaptable to any model structure selected (through the __init__ arguments).
     Time variant parameters that are optional (which mostly consists of optional interventions that will be required in
     some countries and not others) are written as "plug-ins" wherever possible (meaning that the model should still run
     if the parameter isn't included in inputs).
 
-    The work-flow of the simulation is structured in the following order:
+    The workflow of the simulation is structured in the following order:
         1. Defining the model structure
-        2. Initialising the compartments
+        2. Initialising compartments
         3. Setting parameters
-        4. Calculating derived parameters and setting scale-up functions
-        5. Assigning flows from either parameters or functions
-        6. Main loop over simulation time-points:
+        4. Calculating derived parameters
+        5. Assigning names to intercompartmental flows
+        6. The main loop over simulation time-points:
                 a. Extracting scale-up variables
                 b. Calculating variable flow rates
                 c. Calculating diagnostic variables
@@ -102,13 +102,13 @@ class ConsolidatedModel(StratifiedModel):
         # Fundamental attributes of and inputs to model
         self.scenario = scenario
         self.inputs = inputs
-        self.gui_inputs = gui_inputs
         self.start_time = self.inputs.model_constants['start_time']
         self.scaleup_fns = self.inputs.scaleup_fns[self.scenario]
 
         # Set some model characteristics directly from the GUI inputs
-        for attribute in ['is_lowquality', 'is_amplification', 'is_misassignment', 'country']:
-            setattr(self, attribute, self.gui_inputs[attribute])
+        for attribute in \
+                ['is_lowquality', 'is_amplification', 'is_misassignment', 'country', 'time_step', 'integration_method']:
+            setattr(self, attribute, gui_inputs[attribute])
         if self.is_misassignment: assert self.is_amplification, 'Misassignment requested without amplification'
 
         # Set fixed parameters
@@ -676,7 +676,7 @@ class ConsolidatedModel(StratifiedModel):
 
         # Add inappropriate treatments to strains to create a list of all outcomes of interest
         treatments = copy.copy(self.strains)
-        if len(self.strains) > 1 and self.gui_inputs['is_misassignment']:
+        if len(self.strains) > 1 and self.is_misassignment:
             treatments += ['_inappropriate']
 
         # The outcomes other than success (i.e. death and default)

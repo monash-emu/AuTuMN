@@ -255,12 +255,11 @@ class ConsolidatedModel(StratifiedModel):
     def process_uncertainty_params(self):
 
         """
-        Perform some parameter processing - just for those that are used as uncertainty parameters and so can't be
-        processed in the data_processing module.
+        Perform some simple parameter processing - just for those that are used as uncertainty parameters and so can't
+        be processed in the data_processing module.
         """
 
         # Find the case fatality of smear-negative TB using the relative case fatality
-        # (previously the parameter was entered as the absolute case fatality)
         self.params['tb_prop_casefatality_untreated_smearneg'] = \
             self.params['tb_prop_casefatality_untreated_smearpos'] \
             * self.params['tb_relative_casefatality_untreated_smearneg']
@@ -275,15 +274,13 @@ class ConsolidatedModel(StratifiedModel):
                 = self.params['tb_prop_casefatality_untreated' + organ] \
                   / self.params['tb_timeperiod_activeuntreated']
             self.params['tb_rate_recover' + organ] \
-                = (1 - self.params['tb_prop_casefatality_untreated' + organ]) \
+                = (1. - self.params['tb_prop_casefatality_untreated' + organ]) \
                   / self.params['tb_timeperiod_activeuntreated']
 
-    ##################################################################
-    # Methods that calculate variables to be used in calculating flows
-    # Note: all scaleup_fns are calculated and put into self.vars before
-    # calculate_vars
-    # I think we have to put any calculations that are dependent upon vars
-    # into this section
+    ########################################################################
+    ### Methods that calculate variables to be used in calculating flows ###
+    ### (Note that all scaleup_fns have already been calculated.)        ###
+    ########################################################################
 
     def calculate_vars(self):
 
@@ -306,7 +303,7 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_population_sizes()
         if 'agestratified_ipt' in self.optional_timevariants or 'ipt' in self.optional_timevariants:
             self.calculate_ipt_rate()
-        self.calculate_community_ipt_rate()
+        if 'program_prop_community_ipt' in self.optional_timevariants: self.calculate_community_ipt_rate()
 
     def calculate_birth_rates_vars(self):
 
@@ -314,26 +311,23 @@ class ConsolidatedModel(StratifiedModel):
         Calculate birth rates into vaccinated and unvaccinated compartments.
         """
 
-        # Calculate total births first, so that it can be tracked for interventions as well
+        # Calculate total births (also for tracking for for interventions)
         self.vars['births_total'] = self.get_constant_or_variable_param('demo_rate_birth') / 1e3 \
                                     * self.vars['population']
 
-        # Get the parameters depending on whether constant or time variant
+        # Determine vaccinated and unvaccinated proportions
         vac_props = {'vac': self.get_constant_or_variable_param('program_prop_vaccination')}
         vac_props['unvac'] = 1. - vac_props['vac']
-
         if 'program_prop_novel_vaccination' in self.optional_timevariants:
             vac_props['novelvac'] = self.get_constant_or_variable_param('program_prop_vaccination') \
                                     * self.vars['program_prop_novel_vaccination']
             vac_props['vac'] -= vac_props['novelvac']
 
-        # Calculate the birth rates by compartment
+        # Calculate birth rates
         for comorbidity in self.comorbidities:
             for vac_status in vac_props:
                 self.vars['births_' + vac_status + comorbidity] \
-                    = vac_props[vac_status] \
-                      * self.vars['births_total'] \
-                      * self.target_comorb_props[comorbidity][-1]
+                    = vac_props[vac_status] * self.vars['births_total'] * self.target_comorb_props[comorbidity][-1]
 
     def calculate_force_infection_vars(self):
 
@@ -568,50 +562,6 @@ class ConsolidatedModel(StratifiedModel):
             self.vars['program_rate_missed'] \
                 = self.vars['program_rate_detect'] * (1. - alg_sens) / max(alg_sens, 1e-6)
 
-    def calculate_await_treatment_var(self):
-
-        """
-        Take the reciprocal of the waiting times to calculate the flow rate to start
-        treatment after detection.
-        Note that the default behaviour for a single strain model is to use the
-        waiting time for smear-positive patients.
-        Also weight the time period
-        """
-
-        # If only one organ stratum
-        if len(self.organ_status) == 1:
-            self.vars['program_rate_start_treatment'] \
-                = 1. / self.get_constant_or_variable_param('program_timeperiod_await_treatment_smearpos')
-
-        # Organ stratification
-        else:
-            for organ in self.organ_status:
-
-                # Adjust smear-negative for Xpert coverage
-                if organ == '_smearneg' and 'program_prop_xpert' in self.optional_timevariants:
-                    prop_xpert = self.get_constant_or_variable_param('program_prop_xpert')
-                    self.vars['program_rate_start_treatment_smearneg'] = \
-                        1. / (self.vars['program_timeperiod_await_treatment_smearneg'] * (1. - prop_xpert)
-                              + self.params['program_timeperiod_await_treatment_smearneg_xpert'] * prop_xpert)
-
-                # Do other organ stratifications (including smear-negative if Xpert not an intervention)
-                else:
-                    self.vars['program_rate_start_treatment' + organ] = \
-                        1. / self.get_constant_or_variable_param('program_timeperiod_await_treatment' + organ)
-
-    def calculate_lowquality_detection_vars(self):
-
-        """
-        Calculate rate of entry to low-quality care ffom the proportion of treatment administered in low-quality sector.
-        Note that this now means that the case detection proportion only applies to those with access to care, so
-        that proportion of all cases isn't actually detected.
-        """
-
-        prop_lowqual = self.get_constant_or_variable_param('program_prop_lowquality')
-        # Note that there should still be a program_rate_detect var even if detection is being varied by organ
-        self.vars['program_rate_enterlowquality'] \
-            = self.vars['program_rate_detect'] * prop_lowqual / (1. - prop_lowqual)
-
     def calculate_misassignment_detection_vars(self):
 
         """
@@ -657,6 +607,50 @@ class ConsolidatedModel(StratifiedModel):
                     for strain in self.strains:
                         self.vars['program_rate_detect' + organ + comorbidity + strain + '_as' + strain[1:]] \
                             = self.vars['program_rate_detect' + organ + comorbidity]
+
+    def calculate_await_treatment_var(self):
+
+        """
+        Take the reciprocal of the waiting times to calculate the flow rate to start
+        treatment after detection.
+        Note that the default behaviour for a single strain model is to use the
+        waiting time for smear-positive patients.
+        Also weight the time period
+        """
+
+        # If only one organ stratum
+        if len(self.organ_status) == 1:
+            self.vars['program_rate_start_treatment'] \
+                = 1. / self.get_constant_or_variable_param('program_timeperiod_await_treatment_smearpos')
+
+        # Organ stratification
+        else:
+            for organ in self.organ_status:
+
+                # Adjust smear-negative for Xpert coverage
+                if organ == '_smearneg' and 'program_prop_xpert' in self.optional_timevariants:
+                    prop_xpert = self.get_constant_or_variable_param('program_prop_xpert')
+                    self.vars['program_rate_start_treatment_smearneg'] = \
+                        1. / (self.vars['program_timeperiod_await_treatment_smearneg'] * (1. - prop_xpert)
+                              + self.params['program_timeperiod_await_treatment_smearneg_xpert'] * prop_xpert)
+
+                # Do other organ stratifications (including smear-negative if Xpert not an intervention)
+                else:
+                    self.vars['program_rate_start_treatment' + organ] = \
+                        1. / self.get_constant_or_variable_param('program_timeperiod_await_treatment' + organ)
+
+    def calculate_lowquality_detection_vars(self):
+
+        """
+        Calculate rate of entry to low-quality care ffom the proportion of treatment administered in low-quality sector.
+        Note that this now means that the case detection proportion only applies to those with access to care, so
+        that proportion of all cases isn't actually detected.
+        """
+
+        prop_lowqual = self.get_constant_or_variable_param('program_prop_lowquality')
+        # Note that there should still be a program_rate_detect var even if detection is being varied by organ
+        self.vars['program_rate_enterlowquality'] \
+            = self.vars['program_rate_detect'] * prop_lowqual / (1. - prop_lowqual)
 
     def calculate_treatment_rates_vars(self):
 
@@ -873,11 +867,10 @@ class ConsolidatedModel(StratifiedModel):
         active disease, but rather involves screening of an entire population.
         """
 
-        if 'program_prop_community_ipt' in self.optional_timevariants:
-            self.vars['rate_community_ipt'] \
-                = self.vars['program_prop_community_ipt'] \
-                  * self.inputs.model_constants['ipt_effective_per_assessment'] \
-                  / self.inputs.model_constants['program_timeperiod_community_ipt_round']
+        self.vars['rate_community_ipt'] \
+            = self.vars['program_prop_community_ipt'] \
+              * self.inputs.model_constants['ipt_effective_per_assessment'] \
+              / self.inputs.model_constants['program_timeperiod_community_ipt_round']
 
     ################################################################
     ### Methods that calculate the flows of all the compartments ###

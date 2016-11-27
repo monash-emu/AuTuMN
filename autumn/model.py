@@ -101,29 +101,30 @@ class ConsolidatedModel(StratifiedModel):
 
         # Fundamental attributes of and inputs to model
         self.scenario = scenario
-        self.inputs = inputs
-        self.start_time = self.inputs.model_constants['start_time']
-        self.scaleup_fns = self.inputs.scaleup_fns[self.scenario]
 
-        # Set some model characteristics directly from the GUI inputs
+        # Get organ stratification and strains from inputs objects
+        self.inputs = inputs
+        for attribute in ['organ_status', 'strains', 'comorbidities', 'is_organvariation', 'agegroups']:
+            setattr(self, attribute, getattr(inputs, attribute))
+        self.scaleup_fns = inputs.scaleup_fns[self.scenario]
+
+        # Set model characteristics directly from GUI inputs
         for attribute in \
                 ['is_lowquality', 'is_amplification', 'is_misassignment', 'country', 'time_step', 'integration_method']:
             setattr(self, attribute, gui_inputs[attribute])
         if self.is_misassignment: assert self.is_amplification, 'Misassignment requested without amplification'
 
         # Set fixed parameters
-        for key, value in self.inputs.model_constants.items():
-            if type(value) == float:
-                self.set_parameter(key, value)
+        for key, value in inputs.model_constants.items():
+            if type(value) == float: self.set_parameter(key, value)
 
         # Track list of included optional parameters (mostly interventions)
         self.optional_timevariants = []
-        for timevariant in ['program_prop_novel_vaccination', 'transmission_modifier',
-                            'program_prop_smearacf', 'program_prop_xpertacf',
-                            'program_prop_decentralisation', 'program_prop_xpert', 'program_prop_treatment_support',
-                            'program_prop_community_ipt', 'program_prop_shortcourse_mdr']:
-            if timevariant in self.scaleup_fns:
-                self.optional_timevariants += [timevariant]
+        for timevariant in \
+                ['program_prop_novel_vaccination', 'transmission_modifier', 'program_prop_smearacf',
+                 'program_prop_xpertacf', 'program_prop_decentralisation', 'program_prop_xpert',
+                 'program_prop_treatment_support', 'program_prop_community_ipt', 'program_prop_shortcourse_mdr']:
+            if timevariant in self.scaleup_fns: self.optional_timevariants += [timevariant]
         for timevariant in self.scaleup_fns:
             if '_ipt_age' in timevariant:
                 self.optional_timevariants += ['agestratified_ipt']
@@ -135,19 +136,21 @@ class ConsolidatedModel(StratifiedModel):
 
         # Treatment outcomes
         self.outcomes = ['_success', '_death', '_default']
+        self.treatment_stages = ['_infect', '_noninfect']
 
         # Intervention and economics-related initialisiations
-        self.interventions_to_cost = self.inputs.interventions_to_cost
+        self.interventions_to_cost = inputs.interventions_to_cost
         self.find_intervention_startdates()
         if self.eco_drives_epi: self.distribute_funding_across_years()
 
-        # Probably temporary code as vary by organ detection should be incorporated into the GUI ultimately
+        # Temporarily hard coded option to allow different detection rates by smear/organ status
         self.vary_detection_by_organ = True
         if self.vary_detection_by_organ:
             self.organ_statuses_for_detection = copy.copy(self.organ_status)
         else:
             self.organ_statuses_for_detection = ['']
 
+        # Temporarily hard coded option for short course MDR-TB regimens to improve outcomes
         self.shortcourse_improves_outcomes = True
 
     def define_model_structure(self):
@@ -160,15 +163,8 @@ class ConsolidatedModel(StratifiedModel):
         if 'program_prop_novel_vaccination' in self.optional_timevariants:
             self.compartment_types += ['susceptible_novelvac']
 
-        # Stages in progression through treatment
-        self.treatment_stages = ['_infect', '_noninfect']
-
         # Compartments that contribute to force of infection calculations
         self.infectious_tags = ['active', 'missed', 'detect', 'treatment_infect', 'lowquality']
-
-        # Get organ stratification and strains from inputs objects
-        for attribute in ['organ_status', 'strains', 'comorbidities', 'is_organvariation', 'agegroups']:
-            setattr(self, attribute, getattr(self.inputs, attribute))
 
         # Initialise compartments
         self.initial_compartments = {}

@@ -34,7 +34,6 @@ class BaseModel:
         self.params = {}
         self.times = []
         self.time = 0.
-        self.start_time = 0.
         self.cost_times = []
         self.scaleup_fns = {}
         self.vars = {}
@@ -482,7 +481,9 @@ class BaseModel:
         """
 
         # More code that is dependent on correct naming of inputs, but should be universal to models based on this class
-        self.make_times(self.start_time, self.inputs.model_constants['scenario_end_time'], self.time_step)
+        self.make_times(self.inputs.model_constants['start_time'],
+                        self.inputs.model_constants['scenario_end_time'],
+                        self.time_step)
         self.initialise_compartments()
         self.set_flows()
         assert self.times is not None, 'Times have not been set yet'

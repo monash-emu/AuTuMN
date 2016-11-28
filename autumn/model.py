@@ -458,11 +458,10 @@ class ConsolidatedModel(StratifiedModel):
                   / (self.vars['epi_prop_smearpos']
                      + self.params['program_prop_snep_relative_algorithm']
                      * (1. - self.vars['epi_prop_smearpos']))
-            self.vars['program_prop' + parameter + '_smearneg'] \
-                = self.vars['program_prop' + parameter + '_smearpos'] * self.params[
-                'program_prop_snep_relative_algorithm']
-            self.vars['program_prop' + parameter + '_extrapul'] \
-                = self.vars['program_prop' + parameter + '_smearneg']
+            for organ in ['_smearneg', '_extrapul']:
+                self.vars['program_prop' + parameter + organ] \
+                    = self.vars['program_prop' + parameter + '_smearpos'] \
+                      * self.params['program_prop_snep_relative_algorithm']
 
         # Set ceiling to prevent values exceeding one (which algorithm sensitivity is more likely to do)
         for organ in self.organ_status:

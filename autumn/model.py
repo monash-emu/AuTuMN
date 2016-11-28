@@ -627,10 +627,8 @@ class ConsolidatedModel(StratifiedModel):
     def calculate_await_treatment_var(self):
 
         """
-        Take the reciprocal of the waiting times to calculate the flow rate to start
-        treatment after detection.
-        Note that the default behaviour for a single strain model is to use the
-        waiting time for smear-positive patients.
+        Take the reciprocal of the waiting times to calculate the flow rate to start treatment after detection.
+        Note that the default behaviour for a single strain model is to use the waiting time for smear-positives.
         Also weight the time period
         """
 
@@ -664,7 +662,7 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         prop_lowqual = self.get_constant_or_variable_param('program_prop_lowquality')
-        # Note that there should still be a program_rate_detect var even if detection is being varied by organ
+        # Note that there is still a program_rate_detect var even if detection is varied by organ and/or comorbidity
         self.vars['program_rate_enterlowquality'] \
             = self.vars['program_rate_detect'] * prop_lowqual / (1. - prop_lowqual)
 
@@ -682,9 +680,7 @@ class ConsolidatedModel(StratifiedModel):
 
         # The outcomes other than success (i.e. death and default)
         non_success_outcomes = self.outcomes[1:]
-
         for strain in treatments:
-
             tb_timeperiod_treatment = self.params['tb_timeperiod_treatment' + strain]
             tb_timeperiod_infect_ontreatment = self.params['tb_timeperiod_infect_ontreatment' + strain]
 
@@ -725,8 +721,7 @@ class ConsolidatedModel(StratifiedModel):
 
             # Calculate the default proportion as that left over after success and death subtracted from one
             self.vars['program_prop_treatment_default' + strain] \
-                = 1. \
-                  - self.vars['program_prop_treatment_success' + strain] \
+                = 1. - self.vars['program_prop_treatment_success' + strain] \
                   - self.vars['program_prop_treatment_death' + strain]
 
             # Find the proportion of deaths/defaults during the infectious and non-infectious stages

@@ -148,7 +148,7 @@ class ConsolidatedModel(StratifiedModel):
         self.vary_detection_by_organ = gui_inputs['is_vary_detection_by_organ']
         if 'program_prop_xpert' in self.optional_timevariants:
             self.vary_detection_by_organ = True
-            print('Variation of case detection by organ status added as elaboration because Xpert implemented,'
+            print('Variation of case detection by organ status added as elaboration because Xpert implemented, '
                   'although not requested through GUI.')
         self.detection_algorithm_ceiling = .85
         self.organs_for_detection = ['']
@@ -787,7 +787,7 @@ class ConsolidatedModel(StratifiedModel):
                                        * self.compartments['detect' + organ + strain + comorbidity + agegroup] \
                                        * self.inputs.model_constants['ipt_eligible_per_treatment_start']
 
-        # BCG (So simple that it's almost unnecessary, but needed for loops over programs)
+        # BCG (So simple that it's almost unnecessary, but needed for loops over program names)
         self.vars['popsize_vaccination'] = self.vars['births_total']
 
         # Xpert - all presentations with active TB
@@ -890,7 +890,7 @@ class ConsolidatedModel(StratifiedModel):
     def set_flows(self):
 
         """
-        Call all the rate setting methods in turn.
+        Call all the intercompartmental flow setting methods in turn.
         """
 
         self.set_birth_flows()
@@ -902,7 +902,8 @@ class ConsolidatedModel(StratifiedModel):
         self.set_variable_programmatic_flows()
         self.set_detection_flows()
         self.set_treatment_flows()
-        self.set_ipt_flows()
+        if 'agestratified_ipt' in self.optional_timevariants or 'ipt' in self.optional_timevariants:
+            self.set_ipt_flows()
 
     def set_birth_flows(self):
 
@@ -910,15 +911,14 @@ class ConsolidatedModel(StratifiedModel):
         Set birth (or recruitment) flows by vaccination status (including novel vaccination if implemented).
         """
 
-        # Set birth flows
         for comorbidity in self.comorbidities:
             self.set_var_entry_rate_flow(
                 'susceptible_fully' + comorbidity + self.agegroups[0], 'births_unvac' + comorbidity)
             self.set_var_entry_rate_flow(
                 'susceptible_vac' + comorbidity + self.agegroups[0], 'births_vac' + comorbidity)
             if 'program_prop_novel_vaccination' in self.optional_timevariants:
-                self.set_var_entry_rate_flow(
-                    'susceptible_novelvac' + comorbidity + self.agegroups[0], 'births_novelvac' + comorbidity)
+                self.set_var_entry_rate_flow('susceptible_novelvac'
+                                             + comorbidity + self.agegroups[0], 'births_novelvac' + comorbidity)
 
     def set_infection_flows(self):
 

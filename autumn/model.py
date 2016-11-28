@@ -960,8 +960,7 @@ class ConsolidatedModel(StratifiedModel):
     def set_progression_flows(self):
 
         """
-        Set rates of progression from latency to active disease, with rates differing by organ status, which will
-        usually be time variant.
+        Set rates of progression from latency to active disease, with rates differing by organ status.
         """
 
         for agegroup in self.agegroups:
@@ -976,17 +975,13 @@ class ConsolidatedModel(StratifiedModel):
 
                         for organ in self.organ_status:
 
-                            # If organ scale-ups available, set flows as variable
-                            # (if epi_prop_smearpos is in self.scaleup_fns, then epi_prop_smearneg
-                            # should be too)
+                            # If organ scale-ups available, set flows as variable (if epi_prop_smearpos is in
+                            # self.scaleup_fns, then epi_prop_smearneg should be too)
                             if self.is_organvariation:
-                                # Early progression
                                 self.set_var_transfer_rate_flow(
                                     'latent_early' + strain + comorbidity + agegroup,
                                     'active' + organ + strain + comorbidity + agegroup,
                                     'tb_rate_early_progression' + organ + comorbidity + agegroup)
-
-                                # Late progression
                                 self.set_var_transfer_rate_flow(
                                     'latent_late' + strain + comorbidity + agegroup,
                                     'active' + organ + strain + comorbidity + agegroup,
@@ -1012,61 +1007,40 @@ class ConsolidatedModel(StratifiedModel):
         Set flows for progression through active disease to either recovery or death.
         """
 
+        # Determine the compartments to which natural history flows apply
+        active_compartments = ['active', 'missed']
+        if self.is_lowquality:
+            active_compartments += ['lowquality']
+        if not self.is_misassignment:
+            active_compartments += ['detect']
+
+        # Apply flows
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
                 for strain in self.strains:
                     for organ in self.organ_status:
+                        for compartment in active_compartments:
 
-                        # Recovery, base compartments
-                        self.set_fixed_transfer_rate_flow(
-                            'active' + organ + strain + comorbidity + agegroup,
-                            'latent_late' + strain + comorbidity + agegroup,
-                            'tb_rate_recover' + organ)
-                        self.set_fixed_transfer_rate_flow(
-                            'missed' + organ + strain + comorbidity + agegroup,
-                            'latent_late' + strain + comorbidity + agegroup,
-                            'tb_rate_recover' + organ)
+                            # Recovery
+                            self.set_fixed_transfer_rate_flow(compartment + organ + strain + comorbidity + agegroup,
+                                                              'latent_late' + strain + comorbidity + agegroup,
+                                                              'tb_rate_recover' + organ)
 
-                        # Death, base compartments
-                        self.set_fixed_infection_death_rate_flow(
-                            'active' + organ + strain + comorbidity + agegroup,
-                            'tb_rate_death' + organ)
-                        self.set_fixed_infection_death_rate_flow(
-                            'missed' + organ + strain + comorbidity + agegroup,
-                            'tb_rate_death' + organ)
-
-                        # Extra low-quality compartments
-                        if self.is_lowquality:
-                            self.set_fixed_transfer_rate_flow(
-                                'lowquality' + organ + strain + comorbidity + agegroup,
-                                'latent_late' + strain + comorbidity + agegroup,
-                                'tb_rate_recover' + organ)
-                            self.set_fixed_infection_death_rate_flow(
-                                'lowquality' + organ + strain + comorbidity + agegroup,
-                                'tb_rate_death' + organ)
+                            # Death
+                            self.set_fixed_infection_death_rate_flow(compartment + organ + strain + comorbidity
+                                                                     + agegroup,
+                                                                     'tb_rate_death' + organ)
 
                         # Detected, with misassignment
                         if self.is_misassignment:
                             for assigned_strain in self.strains:
-                                self.set_fixed_infection_death_rate_flow(
-                                    'detect' +
-                                    organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup,
-                                    'tb_rate_death' + organ)
-                                self.set_fixed_transfer_rate_flow(
-                                    'detect' +
-                                    organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup,
-                                    'latent_late' + strain + comorbidity + agegroup,
-                                    'tb_rate_recover' + organ)
-
-                        # Detected, without misassignment
-                        else:
-                            self.set_fixed_transfer_rate_flow(
-                                'detect' + organ + strain + comorbidity + agegroup,
-                                'latent_late' + strain + comorbidity + agegroup,
-                                'tb_rate_recover' + organ)
-                            self.set_fixed_infection_death_rate_flow(
-                                'detect' + organ + strain + comorbidity + agegroup,
-                                'tb_rate_death' + organ)
+                                self.set_fixed_infection_death_rate_flow('detect' + organ + strain + '_as'
+                                                                         + assigned_strain[1:] + comorbidity + agegroup,
+                                                                         'tb_rate_death' + organ)
+                                self.set_fixed_transfer_rate_flow('detect' + organ + strain + '_as'
+                                                                  + assigned_strain[1:] + comorbidity + agegroup,
+                                                                  'latent_late' + strain + comorbidity + agegroup,
+                                                                  'tb_rate_recover' + organ)
 
     def set_fixed_programmatic_flows(self):
 

@@ -505,19 +505,18 @@ class ConsolidatedModel(StratifiedModel):
                         warnings.warn('Case detection or algorithm sensitivity exceeds maximum, so limit applied.')
                 return weighted_dict
 
-            detect_prop_by_organ = weight_by_organ_status(detect_prop)
-            alg_sens_by_organ = weight_by_organ_status(alg_sens)
+            detect_prop_by_organ = weight_by_organ_status(detect_prop, .9)
+            alg_sens_by_organ = weight_by_organ_status(alg_sens, .9)
 
             # Adjust case case detection and algorithm sensitivity for Xpert (will only work with weighting)
             if 'program_prop_xpert' in self.optional_timevariants:
-                detect_prop_by_organ['_smearneg'] \
-                    += (detect_prop_by_organ['_smearpos'] - detect_prop_by_organ['_smearneg']) \
-                       * self.params['tb_prop_xpert_smearneg_sensitivity'] \
-                       * self.vars['program_prop_xpert']
-                alg_sens_by_organ['_smearneg'] \
-                    += (alg_sens_by_organ['_smearpos'] - alg_sens_by_organ['_smearneg']) \
-                       * self.params['tb_prop_xpert_smearneg_sensitivity'] \
-                       * self.vars['program_prop_xpert']
+                def adjust_smear_neg_for_xpert(det_or_alg):
+                    det_or_alg['_smearneg'] \
+                        += (det_or_alg['_smearpos'] - det_or_alg['_smearneg']) \
+                           * self.params['tb_prop_xpert_smearneg_sensitivity'] * self.vars['program_prop_xpert']
+                    return det_or_alg
+                detect_prop_by_organ = adjust_smear_neg_for_xpert(detect_prop_by_organ)
+                alg_sens_by_organ = adjust_smear_neg_for_xpert(alg_sens_by_organ)
 
             for organ in detect_prop_by_organ:
                 for comorbidity in [''] + self.comorbidities:

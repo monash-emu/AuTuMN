@@ -1060,7 +1060,7 @@ class ConsolidatedModel(StratifiedModel):
                             'active' + organ + strain + comorbidity + agegroup,
                             'program_rate_restart_presenting')
 
-                        # Give up on the hopeless low-quality health system
+                        # Giving up on the hopeless low-quality health system
                         if self.is_lowquality:
                             self.set_fixed_transfer_rate_flow(
                                 'lowquality' + organ + strain + comorbidity + agegroup,
@@ -1117,32 +1117,29 @@ class ConsolidatedModel(StratifiedModel):
                     for organ in self.organ_status:
                         detection_organ = ''
                         if self.vary_detection_by_organ: detection_organ = organ
-                        self.set_var_transfer_rate_flow(
-                            'active' + organ + strain + comorbidity + agegroup,
-                            'missed' + organ + strain + comorbidity + agegroup,
-                            'program_rate_missed' + detection_organ)
+                        self.set_var_transfer_rate_flow('active' + organ + strain + comorbidity + agegroup,
+                                                        'missed' + organ + strain + comorbidity + agegroup,
+                                                        'program_rate_missed' + detection_organ)
 
                         # Treatment commencement, with and without misassignment
                         if self.is_misassignment:
                             for assigned_strain in self.strains:
-                                # Following line only for models incorporating mis-assignment
-                                self.set_var_transfer_rate_flow(
-                                    'detect' +
-                                    organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup,
-                                    'treatment_infect' +
-                                    organ + strain + '_as' + assigned_strain[1:] + comorbidity + agegroup,
-                                    'program_rate_start_treatment' + organ)
+                                self.set_var_transfer_rate_flow('detect' + organ + strain + '_as' + assigned_strain[1:]
+                                                                + comorbidity + agegroup,
+                                                                'treatment_infect' + organ + strain + '_as'
+                                                                + assigned_strain[1:] + comorbidity + agegroup,
+                                                                'program_rate_start_treatment' + organ)
                         else:
-                            self.set_var_transfer_rate_flow(
-                                'detect' + organ + strain + comorbidity + agegroup,
-                                'treatment_infect' + organ + strain + comorbidity + agegroup,
-                                'program_rate_start_treatment' + organ)
+                            self.set_var_transfer_rate_flow('detect' + organ + strain + comorbidity + agegroup,
+                                                            'treatment_infect' + organ + strain + comorbidity
+                                                            + agegroup,
+                                                            'program_rate_start_treatment' + organ)
 
+                        # Enter the low quality health care system
                         if self.is_lowquality:
-                            self.set_var_transfer_rate_flow(
-                                'active' + organ + strain + comorbidity + agegroup,
-                                'lowquality' + organ + strain + comorbidity + agegroup,
-                                'program_rate_enterlowquality')
+                            self.set_var_transfer_rate_flow('active' + organ + strain + comorbidity + agegroup,
+                                                            'lowquality' + organ + strain + comorbidity + agegroup,
+                                                            'program_rate_enterlowquality')
 
     def set_treatment_flows(self):
 
@@ -1154,28 +1151,24 @@ class ConsolidatedModel(StratifiedModel):
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
                 for organ in self.organ_status:
+                    for strain_number, strain in enumerate(self.strains):
 
-                    for actual_strain_number in range(len(self.strains)):
-                        strain = self.strains[actual_strain_number]
+                        # Which strains to loop over for strain assignment
+                        assignment_strains = ['']
                         if self.is_misassignment:
-                            assignment_strains = range(len(self.strains))
-                        else:
-                            assignment_strains = ['']
-                        for assigned_strain_number in assignment_strains:
+                            assignment_strains = self.strains
+                        for assigned_strain_number, assigned_strain in enumerate(assignment_strains):
+                            as_assigned_strain = ''
+                            strain_or_inappropriate = strain
                             if self.is_misassignment:
-                                as_assigned_strain = '_as' + self.strains[assigned_strain_number][1:]
+                                as_assigned_strain = '_as' + assigned_strain[1:]
 
                                 # Which treatment parameters to use - for the strain or for inappropriate treatment
-                                if actual_strain_number > assigned_strain_number:
+                                strain_or_inappropriate = assigned_strain
+                                if strain_number > assigned_strain_number:
                                     strain_or_inappropriate = '_inappropriate'
-                                else:
-                                    strain_or_inappropriate = self.strains[assigned_strain_number]
 
-                            else:
-                                as_assigned_strain = ''
-                                strain_or_inappropriate = self.strains[actual_strain_number]
-
-                            # Success at either treatment stage
+                            # Success by treatment stage
                             self.set_var_transfer_rate_flow(
                                 'treatment_infect' + organ + strain + as_assigned_strain + comorbidity + agegroup,
                                 'treatment_noninfect' + organ + strain + as_assigned_strain + comorbidity + agegroup,
@@ -1185,10 +1178,9 @@ class ConsolidatedModel(StratifiedModel):
                                 'susceptible_treated' + comorbidity + agegroup,
                                 'program_rate_success_noninfect' + strain_or_inappropriate)
 
-                            # Rates of death on treatment
+                            # Death on treatment
                             for treatment_stage in self.treatment_stages:
-                                self.set_var_infection_death_rate_flow(
-                                    'treatment' +
+                                self.set_var_infection_death_rate_flow('treatment' +
                                     treatment_stage + organ + strain + as_assigned_strain + comorbidity + agegroup,
                                     'program_rate_death' + treatment_stage + strain_or_inappropriate)
 
@@ -1196,16 +1188,16 @@ class ConsolidatedModel(StratifiedModel):
                             for treatment_stage in self.treatment_stages:
 
                                 # If it's either the most resistant strain available or amplification is not active:
-                                if actual_strain_number == len(self.strains) - 1 or not self.is_amplification:
+                                if strain_number == len(self.strains) - 1 or not self.is_amplification:
                                     self.set_var_transfer_rate_flow(
                                         'treatment' +
                                         treatment_stage + organ + strain + as_assigned_strain + comorbidity + agegroup,
                                         'active' + organ + strain + comorbidity + agegroup,
                                         'program_rate_default' + treatment_stage + strain_or_inappropriate)
 
-                                # Otherwise
+                                # Otherwise with amplification
                                 else:
-                                    amplify_to_strain = self.strains[actual_strain_number + 1]
+                                    amplify_to_strain = self.strains[strain_number + 1]
                                     self.set_var_transfer_rate_flow(
                                         'treatment' +
                                         treatment_stage + organ + strain + as_assigned_strain + comorbidity + agegroup,

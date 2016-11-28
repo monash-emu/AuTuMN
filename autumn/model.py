@@ -102,11 +102,12 @@ class ConsolidatedModel(StratifiedModel):
         # Fundamental attributes of and inputs to model
         self.scenario = scenario
 
-        # Get organ stratification and strains from inputs objects
+        # Get organ stratification, strains and starting time from inputs objects
         self.inputs = inputs
         for attribute in ['organ_status', 'strains', 'comorbidities', 'is_organvariation', 'agegroups']:
             setattr(self, attribute, getattr(inputs, attribute))
         self.scaleup_fns = inputs.scaleup_fns[self.scenario]
+        self.start_time = inputs.model_constants['start_time']
 
         # Set model characteristics directly from GUI inputs
         for attribute in \

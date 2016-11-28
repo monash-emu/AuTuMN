@@ -145,18 +145,23 @@ class ConsolidatedModel(StratifiedModel):
         if self.eco_drives_epi: self.distribute_funding_across_years()
 
         # Temporarily hard coded option to allow different detection rates by smear/organ status
-        self.vary_detection_by_organ = False
-        self.detection_algorithm_ceiling = .9
+        self.vary_detection_by_organ = gui_inputs['is_vary_detection_by_organ']
+        if 'program_prop_xpert' in self.optional_timevariants:
+            self.vary_detection_by_organ = True
+            print('Variation of case detection by organ status added as elaboration because Xpert implemented,'
+                  'although not requested through GUI.')
+        self.detection_algorithm_ceiling = .85
         self.organs_for_detection = ['']
         if self.vary_detection_by_organ:
-            self.organs_for_detection = copy.copy(self.organ_status)
+            self.organs_for_detection = self.organ_status
 
+        # Boolean is automatically set according to whether any form of ACF is being implemented
         self.vary_detection_by_comorbidity = False
         for timevariant in self.scaleup_fns:
             if 'acf' in timevariant: self.vary_detection_by_comorbidity = True
         self.comorbidities_for_detection = ['']
         if self.vary_detection_by_comorbidity:
-            self.comorbidities_for_detection = copy.copy(self.comorbidities)
+            self.comorbidities_for_detection = self.comorbidities
 
         # Temporarily hard coded option for short course MDR-TB regimens to improve outcomes
         self.shortcourse_improves_outcomes = True
@@ -302,9 +307,9 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_birth_rates_vars()
         self.calculate_force_infection_vars()
         if self.is_organvariation: self.calculate_progression_vars()
-        if 'program_prop_decentralisation' in self.optional_timevariants: self.adjust_for_decentralisation()
+        if 'program_prop_decentralisation' in self.optional_timevariants: self.adjust_case_detection_for_decentralisation()
         if self.vary_detection_by_organ:
-            self.adjust_case_detection_by_organ()
+            self.calculate_case_detection_by_organ()
             if 'program_prop_xpert' in self.optional_timevariants:
                 self.adjust_smearneg_detection_for_xpert()
         self.calculate_detect_missed_vars()
@@ -436,7 +441,7 @@ class ConsolidatedModel(StratifiedModel):
                                 = self.vars['epi_prop' + organ] \
                                   * self.params['tb_rate' + timing + '_progression' + comorbidity + agegroup]
 
-    def adjust_for_decentralisation(self):
+    def adjust_case_detection_for_decentralisation(self):
 
         """
         Implement the decentralisation intervention, which narrows the case detection gap between the current values
@@ -447,16 +452,17 @@ class ConsolidatedModel(StratifiedModel):
             += self.vars['program_prop_decentralisation'] \
                * (self.params['program_ideal_detection'] - self.vars['program_prop_detect'])
 
-    def adjust_case_detection_by_organ(self):
+    def calculate_case_detection_by_organ(self):
 
         """
         Method to perform simple weighting on the assumption that the smear-negative and extra-pulmonary rates are less
         than the smear-positive rate by a proportion specified in program_prop_snep_relative_algorithm.
+        Places a ceiling on these values, to prevent the smear-positive one going too close to (or above) one.
         """
 
         for parameter in ['_detect', '_algorithm_sensitivity']:
             self.vars['program_prop' + parameter + '_smearpos'] \
-                = max(self.vars['program_prop' + parameter + ''] \
+                = min(self.vars['program_prop' + parameter + '']
                       / (self.vars['epi_prop_smearpos']
                          + self.params['program_prop_snep_relative_algorithm']
                          * (1. - self.vars['epi_prop_smearpos'])), self.detection_algorithm_ceiling)
@@ -492,7 +498,7 @@ class ConsolidatedModel(StratifiedModel):
                 / (detection rate + spont recover rate + tb death rate + natural death rate)
         """
 
-        organs = self.organs_for_detection
+        organs = copy.copy(self.organs_for_detection)
         if self.vary_detection_by_organ:
             organs += ['']
         for organ in organs:

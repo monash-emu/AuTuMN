@@ -62,6 +62,8 @@ def find_button_name_from_string(working_string):
                                   'Resistance amplification',
                               'is_misassignment':
                                   'Strain mis-assignment',
+                              'is_vary_detection_by_organ':
+                                  'Vary case detection by organ status',
                               'n_organs':
                                   'Number of organ strata',
                               'n_strains':
@@ -122,7 +124,7 @@ class App:
                                'output_documents', 'output_by_scenario', 'output_horizontally',
                                'output_age_calculations', 'comorbidity_diabetes', 'comorbidity_hiv',
                                'comorbidity_prison', 'comorbidity_indigenous',
-                               'is_lowquality', 'is_amplification', 'is_misassignment']
+                               'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ']
         for i in range(1, 15):
             self.boolean_inputs += ['scenario_' + str(i)]
 
@@ -151,12 +153,12 @@ class App:
             elif 'uncertainty' in find_button_name_from_string(boolean) or 'uncertainty' in boolean:
                 self.boolean_toggles[boolean].grid(row=uncertainty_row, column=4, sticky=W)
                 uncertainty_row += 1
-            elif 'comorbidity_' in boolean or 'n_' in boolean:
-                self.boolean_toggles[boolean].grid(row=comorbidity_row, column=1, sticky=W)
-                comorbidity_row += 1
             elif 'is_' in boolean:
                 self.boolean_toggles[boolean].grid(row=elaboration_row, column=2, sticky=W)
                 elaboration_row += 1
+            elif 'comorbidity_' in boolean or 'n_' in boolean:
+                self.boolean_toggles[boolean].grid(row=comorbidity_row, column=1, sticky=W)
+                comorbidity_row += 1
             elif 'scenario_' in boolean:
                 self.boolean_toggles[boolean].grid(row=scenario_row, column=3, sticky=W)
                 scenario_row += 1
@@ -294,7 +296,6 @@ class App:
                         += [autumn.tool_kit.find_scenario_string_from_number(int(boolean[9:]))]
             else:
                 self.gui_outputs[boolean] = bool(self.boolean_dictionary[boolean].get())
-
 
         # Collate drop-down box options
         organ_stratification_keys = {'Pos / Neg / Extra': 3,

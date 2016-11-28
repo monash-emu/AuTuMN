@@ -528,6 +528,7 @@ class ConsolidatedModel(StratifiedModel):
         Creates vars for both ACF in specific risk groups and for ACF in the general community (which uses '').
         """
 
+        # Loop covers risk groups and community-wide ACF
         for comorbidity in [''] + self.comorbidities:
             if 'program_prop_smearacf' + comorbidity in self.optional_timevariants \
                     or 'program_prop_xpertacf' + comorbidity in self.optional_timevariants:
@@ -589,15 +590,15 @@ class ConsolidatedModel(StratifiedModel):
             for comorbidity in self.comorbidities_for_detection:
                 if self.is_misassignment:
 
-                    # If there are exactly two strains (DS and MDR)
                     prop_firstline = self.get_constant_or_variable_param('program_prop_firstline_dst')
 
                     # Add effect of Xpert on identification, assuming that independent distribution to conventional DST
                     if 'program_prop_xpert' in self.optional_timevariants:
                         prop_firstline += (1. - prop_firstline) * self.vars['program_prop_xpert']
 
+                    # Determine rates of identification/misidentification as each strain
                     self.vars['program_rate_detect' + organ + comorbidity + '_ds_asds'] \
-                        = self.vars['program_rate_detect' + organ]
+                        = self.vars['program_rate_detect' + organ + comorbidity]
                     self.vars['program_rate_detect' + organ + comorbidity + '_ds_asmdr'] = 0.
                     self.vars['program_rate_detect' + organ + comorbidity + '_mdr_asds'] \
                         = (1. - prop_firstline) * self.vars['program_rate_detect' + organ + comorbidity]

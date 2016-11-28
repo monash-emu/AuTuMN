@@ -145,6 +145,7 @@ class ConsolidatedModel(StratifiedModel):
 
         # Temporarily hard coded option to allow different detection rates by smear/organ status
         self.vary_detection_by_organ = False
+        self.detection_algorithm_ceiling = .9
         self.organs_for_detection = ['']
         if self.vary_detection_by_organ:
             self.organs_for_detection = copy.copy(self.organ_status)
@@ -300,15 +301,15 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_birth_rates_vars()
         self.calculate_force_infection_vars()
         if self.is_organvariation: self.calculate_progression_vars()
-        if 'program_prop_decentralisation' in self.optional_timevariants: self.implement_decentralisation()
+        if 'program_prop_decentralisation' in self.optional_timevariants: self.adjust_for_decentralisation()
         if self.vary_detection_by_organ:
-            self.vary_case_detection_by_organ()
+            self.adjust_case_detection_by_organ()
             if 'program_prop_xpert' in self.optional_timevariants:
                 self.adjust_smearneg_detection_for_xpert()
         self.calculate_detect_missed_vars()
         if self.vary_detection_by_comorbidity:
             self.calculate_acf_rate()
-            self.add_acf_rates_to_detection()
+            self.adjust_case_detection_for_acf()
         self.calculate_misassignment_detection_vars()
         if self.is_lowquality: self.calculate_lowquality_detection_vars()
         self.calculate_await_treatment_var()
@@ -434,7 +435,7 @@ class ConsolidatedModel(StratifiedModel):
                                 = self.vars['epi_prop' + organ] \
                                   * self.params['tb_rate' + timing + '_progression' + comorbidity + agegroup]
 
-    def implement_decentralisation(self):
+    def adjust_for_decentralisation(self):
 
         """
         Implement the decentralisation intervention, which narrows the case detection gap between the current values
@@ -445,7 +446,7 @@ class ConsolidatedModel(StratifiedModel):
             += self.vars['program_prop_decentralisation'] \
                * (self.params['program_ideal_detection'] - self.vars['program_prop_detect'])
 
-    def vary_case_detection_by_organ(self):
+    def adjust_case_detection_by_organ(self):
 
         """
         Method to perform simple weighting on the assumption that the smear-negative and extra-pulmonary rates are less
@@ -454,27 +455,20 @@ class ConsolidatedModel(StratifiedModel):
 
         for parameter in ['_detect', '_algorithm_sensitivity']:
             self.vars['program_prop' + parameter + '_smearpos'] \
-                = self.vars['program_prop' + parameter + ''] \
-                  / (self.vars['epi_prop_smearpos']
-                     + self.params['program_prop_snep_relative_algorithm']
-                     * (1. - self.vars['epi_prop_smearpos']))
+                = max(self.vars['program_prop' + parameter + ''] \
+                      / (self.vars['epi_prop_smearpos']
+                         + self.params['program_prop_snep_relative_algorithm']
+                         * (1. - self.vars['epi_prop_smearpos'])), self.detection_algorithm_ceiling)
             for organ in ['_smearneg', '_extrapul']:
                 self.vars['program_prop' + parameter + organ] \
                     = self.vars['program_prop' + parameter + '_smearpos'] \
                       * self.params['program_prop_snep_relative_algorithm']
 
-        # Set ceiling to prevent values exceeding one (which algorithm sensitivity is more likely to do)
-        for organ in self.organ_status:
-            for parameter in ['_detect', '_algorithm_sensitivity']:
-                if self.vars['program_prop' + parameter + organ] > .9:
-                    self.vars['program_prop' + parameter + organ] = .9
-                    warnings.warn('Case detection or algorithm sensitivity exceeds maximum, so limit applied.')
-
     def adjust_smearneg_detection_for_xpert(self):
 
         """
         Adjust case case detection and algorithm sensitivity for Xpert (will only work with weighting and so is grouped
-        with the previous method).
+        with the previous method in calculate_vars).
         """
 
         for parameter in ['_detect', '_algorithm_sensitivity']:
@@ -554,7 +548,7 @@ class ConsolidatedModel(StratifiedModel):
                     self.vars['program_rate_acf_smearneg' + comorbidity] \
                         *= self.params['tb_prop_xpert_smearneg_sensitivity']
 
-    def add_acf_rates_to_detection(self):
+    def adjust_case_detection_for_acf(self):
 
         """
         Add ACF detection rates to previously calculated passive case detection rates, creating vars for case detection

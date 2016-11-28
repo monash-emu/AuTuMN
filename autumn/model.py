@@ -144,11 +144,7 @@ class ConsolidatedModel(StratifiedModel):
         if self.eco_drives_epi: self.distribute_funding_across_years()
 
         # Temporarily hard coded option to allow different detection rates by smear/organ status
-        self.vary_detection_by_organ = False
-        if self.vary_detection_by_organ:
-            self.organ_statuses_for_detection = copy.copy(self.organ_status)
-        else:
-            self.organ_statuses_for_detection = ['']
+        self.vary_detection_by_organ = True
 
         # Temporarily hard coded option for short course MDR-TB regimens to improve outcomes
         self.shortcourse_improves_outcomes = True
@@ -295,7 +291,9 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_force_infection_vars()
         if self.is_organvariation: self.calculate_progression_vars()
         self.calculate_acf_rate()
+        if 'program_prop_decentralisation' in self.optional_timevariants: self.implement_decentralisation()
         self.calculate_detect_missed_vars()
+        self.add_acf_rates_to_detection()
         self.calculate_misassignment_detection_vars()
         if self.is_lowquality: self.calculate_lowquality_detection_vars()
         self.calculate_await_treatment_var()
@@ -459,6 +457,17 @@ class ConsolidatedModel(StratifiedModel):
                     self.vars['program_rate_acf_smearneg' + comorbidity] \
                         *= self.params['tb_prop_xpert_smearneg_sensitivity']
 
+    def implement_decentralisation(self):
+
+        """
+        Implement the decentralisation intervention, which narrows the case detection gap between the current values
+        and the idealised estimated value.
+        """
+
+        self.vars['program_prop_detect'] \
+            += self.vars['program_prop_decentralisation'] \
+               * (self.params['program_ideal_detection'] - self.vars['program_prop_detect'])
+
     def calculate_detect_missed_vars(self):
 
         """"
@@ -475,13 +484,7 @@ class ConsolidatedModel(StratifiedModel):
 
         alg_sens = self.get_constant_or_variable_param('program_prop_algorithm_sensitivity')
         life_expectancy = self.get_constant_or_variable_param('demo_life_expectancy')
-
-        # Calculate detection proportion, allowing for decentralisation coverage if being implemented
-        detect_prop = self.get_constant_or_variable_param('program_prop_detect')
-        if 'program_prop_decentralisation' in self.optional_timevariants:
-            detect_prop += self.vars['program_prop_decentralisation'] \
-                           * (self.params['program_ideal_detection']
-                              - self.get_constant_or_variable_param('program_prop_detect'))
+        detect_prop = self.vars['program_prop_detect']
 
         # Weighting detection and algorithm sensitivity rates by organ status
         if self.vary_detection_by_organ:
@@ -531,13 +534,23 @@ class ConsolidatedModel(StratifiedModel):
             self.vars['program_rate_missed' + organ] \
                 = self.vars['program_rate_detect' + organ] * (1. - alg_sens) / max(alg_sens, 1e-6)
 
-        # Add ACF rate to standard DOTS-based detection rate if detection rates differ by organ
+    def add_acf_rates_to_detection(self):
+
+        """
+        Add ACF detection rates to previously calculated passive case detection rates, creating vars for case detection
+        that are specific for organs.
+        """
+
         for organ in self.organ_status:
             for comorbidity in self.comorbidities:
+
+                # ACF in risk groups
                 if 'program_prop_smearacf' + comorbidity in self.optional_timevariants \
                         or 'program_prop_xpertacf' + comorbidity in self.optional_timevariants:
                     self.vars['program_rate_detect' + organ + comorbidity] \
                         += self.vars['program_rate_acf' + organ + comorbidity]
+
+                # ACF in the general community
                 if 'program_prop_smearacf' in self.optional_timevariants \
                         or 'program_prop_xpertacf' in self.optional_timevariants:
                     self.vars['program_rate_detect' + organ + comorbidity] \

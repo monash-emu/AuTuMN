@@ -62,6 +62,8 @@ class BaseModel:
         self.loaded_compartments = None
         self.scenario = None
 
+        self.old_integration = False  # will trigger the former integration methods if set to True
+
     ##############################
     ### Time-related functions ###
     ##############################
@@ -513,10 +515,13 @@ class BaseModel:
         """
 
         self.process_uncertainty_params()
-        if self.integration_method == 'Explicit':
-            self.integrate_explicit()
-        elif self.integration_method == 'Runge Kutta':
-            self.integrate_runge_kutta()
+        if self.old_integration:
+            if self.integration_method == 'Explicit':
+                self.integrate_explicit()
+            elif self.integration_method == 'Runge Kutta':
+                self.integrate_runge_kutta()
+        else:
+            self.integrate_flex()
 
     def process_uncertainty_params(self):
 
@@ -569,7 +574,7 @@ class BaseModel:
             self.soln_array[i_time, :] = y  # store solution
             y = self.make_adjustments_during_integration(y)
 
-        self.calculate_diagnostics()
+        self.calculate_diagnostics_old()
         if self.run_costing:
             self.calculate_economics_diagnostics()
 
@@ -642,6 +647,113 @@ class BaseModel:
                 self.soln_array[i_time + 1, :] = y
                 y = self.make_adjustments_during_integration(y)
 
+        self.calculate_diagnostics_old()
+        if self.run_costing:
+            self.calculate_economics_diagnostics()
+
+    def integrate_flex(self):
+        """
+            Numerical integration. This version also includes storage of compartment / vars / flows solutions
+            which was previously done in calculate_diagnostics
+            Currently implemented with Explicit Euler and Runge-Kutta 4 methods
+            """
+        self.init_run()
+        y = self.get_init_list()  # get initial conditions (loaded compartments for scenarios)
+        y = self.make_adjustments_during_integration(y)
+
+        # prepare storage objects
+        n_compartment = len(y)
+        n_time = len(self.times)
+        self.compartment_soln = {}
+        self.soln_array = numpy.zeros((n_time, n_compartment))
+        self.flow_array = numpy.zeros((n_time, len(self.labels)))
+
+        derivative = self.make_derivative_fn()
+        self.soln_array[0, :] = y  # store initial conditions
+
+        #  previously done in calculate_diagnostics
+        for i, label in enumerate(self.labels):
+            self.compartment_soln[label] = [None] * n_time  # initialize lists
+            self.compartment_soln[label][0] = y[i]  # store initial state
+
+        k1 = derivative(y, self.times[0])  # we need to run derivative here to get the initial vars
+        self.var_labels = self.vars.keys()
+        self.var_array = numpy.zeros((n_time, len(self.var_labels)))
+
+        # Populate arrays for initial state
+        for i_label, var_label in enumerate(self.var_labels):
+            self.var_array[0, i_label] = self.vars[var_label]
+        for i_label, label in enumerate(self.labels):
+            self.flow_array[0, i_label] = self.flows[label]
+
+        # initialization of iterative objects that will be used during integration
+        y_candidate = numpy.zeros((len(y)))
+        prev_time = self.times[0]  # time of the latest successful integration step (not necessarily stored)
+        dt_is_ok = True  # boolean to indicate whether previous proposed integration time was successfully passed
+        for i_time, next_time in enumerate(
+                self.times[1:]):  # for each time as stored in self.times, except the first one
+            store_step = False  # indicates whether the calculated time has to be stored (i.e. appears in self.times)
+            while store_step is False:
+                if not dt_is_ok:  # previous proposed time step was too wide
+                    adaptive_dt /= 2.
+                    is_temp_time_in_times = False  # indicates whether the upcoming calculation step corresponds to next_time
+                else:  # previous time step was accepted
+                    adaptive_dt = next_time - prev_time
+                    is_temp_time_in_times = True  # the upcoming attempted integration step corresponds to next_time
+                    k1 = numpy.asarray(derivative(y, prev_time))  # evaluate function at previous successful step
+
+                temp_time = prev_time + adaptive_dt  # new attempted calculation time
+
+                if self.integration_method == 'Explicit':
+                    for i in range(n_compartment):
+                        y_candidate[i] = y[i] + adaptive_dt * k1[i]  # Explicit Euler process
+                elif self.integration_method == 'Runge Kutta':
+                    y_k2 = y + 0.5 * adaptive_dt * k1
+                    if (y_k2 >= 0).all():
+                        k2 = numpy.asarray(derivative(y_k2, prev_time + 0.5 * adaptive_dt))
+                    else:
+                        dt_is_ok = False
+                        continue
+                    y_k3 = y + 0.5 * adaptive_dt * k2
+                    if (y_k3 >= 0).all():
+                        k3 = numpy.asarray(derivative(y_k3, prev_time + 0.5 * adaptive_dt))
+                    else:
+                        dt_is_ok = False
+                        continue
+                    y_k4 = y + adaptive_dt * k3
+                    if (y_k4 >= 0).all():
+                        k4 = numpy.asarray(derivative(y_k4, temp_time))
+                    else:
+                        dt_is_ok = False
+                        continue
+
+                    y_candidate = []
+                    for i in range(n_compartment):
+                        y_candidate.append(y[i] + (adaptive_dt / 6.0) * (k1[i] + 2.0 * k2[i] + 2.0 * k3[i] + k4[i]))
+
+                if (numpy.asarray(
+                        y_candidate) >= 0).all():  # we accept the new integration step temp_time
+                    dt_is_ok = True
+                    prev_time = temp_time
+                    for i in range(n_compartment):
+                        y[i] = y_candidate[i]
+                    if is_temp_time_in_times:
+                        store_step = True  # will make the while loop end, and then update i_time
+                else:  # integration failed at proposed step. need to reduce time step
+                    dt_is_ok = False
+
+            # here below is what is run for the stored steps only
+            self.soln_array[i_time, :] = y  # store y solution
+            # previously done in calculate_diagnostics
+            for i, label in enumerate(self.labels):
+                self.compartment_soln[label][i_time + 1] = y[i]  # store current state
+            for i_label, var_label in enumerate(self.var_labels):
+                self.var_array[i_time + 1, i_label] = self.vars[var_label]
+            for i_label, label in enumerate(self.labels):
+                self.flow_array[i_time + 1, i_label] = self.flows[label]
+
+            y = self.make_adjustments_during_integration(y)  # adjustments for comorbidities
+
         self.calculate_diagnostics()
         if self.run_costing:
             self.calculate_economics_diagnostics()
@@ -677,8 +789,7 @@ class BaseModel:
 
         pass
 
-    def calculate_diagnostics(self):
-
+    def calculate_diagnostics_old(self):
         # Populate the self.compartment_soln dictionary
         self.compartment_soln = {}
         for label in self.labels:
@@ -715,6 +826,19 @@ class BaseModel:
 
         # Thinking of getting rid of this section - should be possible to calculate in model_runner rather than model
         self.fraction_array = numpy.zeros((n_time, len(self.labels)))
+        self.fraction_soln = {}
+        for i_label, label in enumerate(self.labels):
+            self.fraction_soln[label] = [
+                v / t
+                for v, t
+                in zip(
+                    self.compartment_soln[label],
+                    self.get_var_soln('population'))]
+            self.fraction_array[:, i_label] = self.fraction_soln[label]
+
+    def calculate_diagnostics(self):
+        # Thinking of getting rid of this section - should be possible to calculate in model_runner rather than model
+        self.fraction_array = numpy.zeros((len(self.times), len(self.labels)))
         self.fraction_soln = {}
         for i_label, label in enumerate(self.labels):
             self.fraction_soln[label] = [
@@ -874,7 +998,7 @@ class BaseModel:
 
         state_compartments = {}
         for i_label, label in enumerate(self.labels):
-            state_compartments[label] = self.soln_array[i_time, i_label]
+            state_compartments[label] = self.compartment_soln[label][i_time]
         return state_compartments
 
     ###############################

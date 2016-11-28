@@ -144,7 +144,10 @@ class ConsolidatedModel(StratifiedModel):
         if self.eco_drives_epi: self.distribute_funding_across_years()
 
         # Temporarily hard coded option to allow different detection rates by smear/organ status
-        self.vary_detection_by_organ = True
+        self.vary_detection_by_organ = False
+        self.organs_for_detection = ['']
+        if self.vary_detection_by_organ:
+            self.organs_for_detection = copy.copy(self.organ_status)
 
         # Temporarily hard coded option for short course MDR-TB regimens to improve outcomes
         self.shortcourse_improves_outcomes = True
@@ -291,7 +294,10 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_force_infection_vars()
         if self.is_organvariation: self.calculate_progression_vars()
         if 'program_prop_decentralisation' in self.optional_timevariants: self.implement_decentralisation()
-        if self.vary_detection_by_organ: self.vary_case_detection_by_organ()
+        if self.vary_detection_by_organ:
+            self.vary_case_detection_by_organ()
+            if 'program_prop_xpert' in self.optional_timevariants:
+                self.adjust_smearneg_detection_for_xpert()
         self.calculate_detect_missed_vars()
         self.calculate_acf_rate()
         self.add_acf_rates_to_detection()
@@ -433,8 +439,11 @@ class ConsolidatedModel(StratifiedModel):
 
     def vary_case_detection_by_organ(self):
 
-        # Simple weighting on the assumption that the smear-negative and extra-pulmonary rates are less than the
-        # smear-positive rate by a proportion specified in program_prop_snep_relative_algorithm.
+        """
+        Method to perform simple weighting on the assumption that the smear-negative and extra-pulmonary rates are less
+        than the smear-positive rate by a proportion specified in program_prop_snep_relative_algorithm.
+        """
+
         for parameter in ['_detect', '_algorithm_sensitivity']:
             self.vars['program_prop' + parameter + '_smearpos'] \
                 = self.vars['program_prop' + parameter + ''] \
@@ -454,13 +463,18 @@ class ConsolidatedModel(StratifiedModel):
                     self.vars['program_prop' + parameter + organ] = .9
                     warnings.warn('Case detection or algorithm sensitivity exceeds maximum, so limit applied.')
 
-        # Adjust case case detection and algorithm sensitivity for Xpert (will only work with weighting)
-        if 'program_prop_xpert' in self.optional_timevariants:
-            for parameter in ['_detect', '_algorithm_sensitivity']:
-                self.vars['program_prop' + parameter + '_smearneg'] \
-                    += (self.vars['program_prop' + parameter + '_smearpos'] -
-                        self.vars['program_prop' + parameter + '_smearneg']) \
-                       * self.params['tb_prop_xpert_smearneg_sensitivity'] * self.vars['program_prop_xpert']
+    def adjust_smearneg_detection_for_xpert(self):
+
+        """
+        Adjust case case detection and algorithm sensitivity for Xpert (will only work with weighting and so is grouped
+        with the previous method).
+        """
+
+        for parameter in ['_detect', '_algorithm_sensitivity']:
+            self.vars['program_prop' + parameter + '_smearneg'] \
+                += (self.vars['program_prop' + parameter + '_smearpos'] -
+                    self.vars['program_prop' + parameter + '_smearneg']) \
+                   * self.params['tb_prop_xpert_smearneg_sensitivity'] * self.vars['program_prop_xpert']
 
     def calculate_detect_missed_vars(self):
 
@@ -476,19 +490,20 @@ class ConsolidatedModel(StratifiedModel):
                 / (detection rate + spont recover rate + tb death rate + natural death rate)
         """
 
-        # Calculate detection rates by organ status with or without weighting
-
-        organs = ['']
+        organs = self.organs_for_detection
         if self.vary_detection_by_organ:
-            organs = [''] + self.organ_status
+            organs += ['']
         for organ in organs:
             for comorbidity in [''] + self.comorbidities:
+
+                # Detected
                 self.vars['program_rate_detect' + organ + comorbidity] \
                     = - self.vars['program_prop_detect' + organ] \
                       * (1. / self.params['tb_timeperiod_activeuntreated']
                          + 1. / self.vars['demo_life_expectancy']) \
                       / (self.vars['program_prop_detect' + organ] - 1.)
-            # Missed (avoid division by zero alg_sens with max)
+
+            # Missed (no need to loop by comorbidity as ACF is the only difference here, which is applied next)
             self.vars['program_rate_missed' + organ] \
                 = self.vars['program_rate_detect' + organ] \
                   * (1. - self.vars['program_prop_algorithm_sensitivity' + organ]) \
@@ -539,10 +554,7 @@ class ConsolidatedModel(StratifiedModel):
         that are specific for organs.
         """
 
-        organs = ['']
-        if self.vary_detection_by_organ:
-            organs = [''] + self.organ_status
-        for organ in organs:
+        for organ in self.organs_for_detection:
             for comorbidity in self.comorbidities:
 
                 # ACF in risk groups
@@ -565,7 +577,7 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         # With misassignment:
-        for organ in self.organ_status:
+        for organ in self.organs_for_detection:
             for comorbidity in self.comorbidities:
                 if self.is_misassignment:
 
@@ -1087,6 +1099,10 @@ class ConsolidatedModel(StratifiedModel):
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
                 for organ in self.organ_status:
+                    organ_for_detection = organ
+                    if not self.vary_detection_by_organ:
+                        organ_for_detection = ''
+
                     for strain_number, strain in enumerate(self.strains):
 
                         # With misassignment
@@ -1098,7 +1114,7 @@ class ConsolidatedModel(StratifiedModel):
                                     self.set_var_transfer_rate_flow(
                                         'active' + organ + strain + comorbidity + agegroup,
                                         'detect' + organ + strain + as_assigned_strain + comorbidity + agegroup,
-                                        'program_rate_detect' + organ + comorbidity
+                                        'program_rate_detect' + organ_for_detection + comorbidity
                                         + strain + as_assigned_strain)
 
                         # Without misassignment
@@ -1106,7 +1122,7 @@ class ConsolidatedModel(StratifiedModel):
                             self.set_var_transfer_rate_flow(
                                 'active' + organ + strain + comorbidity + agegroup,
                                 'detect' + organ + strain + comorbidity + agegroup,
-                                'program_rate_detect' + organ + comorbidity)
+                                'program_rate_detect' + organ_for_detection + comorbidity)
 
     def set_variable_programmatic_flows(self):
 

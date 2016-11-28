@@ -291,6 +291,7 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_force_infection_vars()
         if self.is_organvariation: self.calculate_progression_vars()
         if 'program_prop_decentralisation' in self.optional_timevariants: self.implement_decentralisation()
+        if self.vary_detection_by_organ: self.vary_case_detection_by_organ()
         self.calculate_detect_missed_vars()
         self.calculate_acf_rate()
         self.add_acf_rates_to_detection()
@@ -430,6 +431,37 @@ class ConsolidatedModel(StratifiedModel):
             += self.vars['program_prop_decentralisation'] \
                * (self.params['program_ideal_detection'] - self.vars['program_prop_detect'])
 
+    def vary_case_detection_by_organ(self):
+
+        # Simple weighting on the assumption that the smear-negative and extra-pulmonary rates are less than the
+        # smear-positive rate by a proportion specified in program_prop_snep_relative_algorithm.
+        for parameter in ['_detect', '_algorithm_sensitivity']:
+            self.vars['program_prop' + parameter + '_smearpos'] \
+                = self.vars['program_prop' + parameter + ''] \
+                  / (self.vars['epi_prop_smearpos']
+                     + self.params['program_prop_snep_relative_algorithm']
+                     * (1. - self.vars['epi_prop_smearpos']))
+            self.vars['program_prop' + parameter + '_smearneg'] \
+                = self.vars['program_prop' + parameter + '_smearpos'] * self.params[
+                'program_prop_snep_relative_algorithm']
+            self.vars['program_prop' + parameter + '_extrapul'] \
+                = self.vars['program_prop' + parameter + '_smearneg']
+
+        # Set ceiling to prevent values exceeding one (which algorithm sensitivity is more likely to do)
+        for organ in self.organ_status:
+            for parameter in ['_detect', '_algorithm_sensitivity']:
+                if self.vars['program_prop' + parameter + organ] > .9:
+                    self.vars['program_prop' + parameter + organ] = .9
+                    warnings.warn('Case detection or algorithm sensitivity exceeds maximum, so limit applied.')
+
+        # Adjust case case detection and algorithm sensitivity for Xpert (will only work with weighting)
+        if 'program_prop_xpert' in self.optional_timevariants:
+            for parameter in ['_detect', '_algorithm_sensitivity']:
+                self.vars['program_prop' + parameter + '_smearneg'] \
+                    += (self.vars['program_prop' + parameter + '_smearpos'] -
+                        self.vars['program_prop' + parameter + '_smearneg']) \
+                       * self.params['tb_prop_xpert_smearneg_sensitivity'] * self.vars['program_prop_xpert']
+
     def calculate_detect_missed_vars(self):
 
         """"
@@ -444,57 +476,23 @@ class ConsolidatedModel(StratifiedModel):
                 / (detection rate + spont recover rate + tb death rate + natural death rate)
         """
 
-        alg_sens = self.get_constant_or_variable_param('program_prop_algorithm_sensitivity')
-        life_expectancy = self.get_constant_or_variable_param('demo_life_expectancy')
-        detect_prop = self.vars['program_prop_detect']
-
-        # Weighting detection and algorithm sensitivity rates by organ status
-        if self.vary_detection_by_organ:
-
-            # Simple weighting on the assumption that the smear-negative and extra-pulmonary rates are less than the
-            # smear-positive rate by a proportion specified in program_prop_snep_relative_algorithm.
-            def weight_by_organ_status(baseline_value, ceiling):
-                weighted_dict = {'': baseline_value,
-                                 '_smearpos': baseline_value
-                                              / (self.vars['epi_prop_smearpos']
-                                                 + self.params['program_prop_snep_relative_algorithm']
-                                                 * (1. - self.vars['epi_prop_smearpos']))}
-                weighted_dict['_smearneg'] \
-                    = weighted_dict['_smearpos'] * self.params['program_prop_snep_relative_algorithm']
-                weighted_dict['_extrapul'] = weighted_dict['_smearneg']
-
-                # Set ceiling to prevent values exceeding one (which algorithm sensitivity is more likely to do)
-                for organ in weighted_dict:
-                    if weighted_dict[organ] > ceiling:
-                        weighted_dict[organ] = ceiling
-                        warnings.warn('Case detection or algorithm sensitivity exceeds maximum, so limit applied.')
-                return weighted_dict
-            detect_prop_by_organ = weight_by_organ_status(detect_prop, .9)
-            alg_sens_by_organ = weight_by_organ_status(alg_sens, .9)
-
-            # Adjust case case detection and algorithm sensitivity for Xpert (will only work with weighting)
-            if 'program_prop_xpert' in self.optional_timevariants:
-                def adjust_smear_neg_for_xpert(det_or_alg):
-                    det_or_alg['_smearneg'] \
-                        += (det_or_alg['_smearpos'] - det_or_alg['_smearneg']) \
-                           * self.params['tb_prop_xpert_smearneg_sensitivity'] * self.vars['program_prop_xpert']
-                    return det_or_alg
-                detect_prop_by_organ = adjust_smear_neg_for_xpert(detect_prop_by_organ)
-                alg_sens_by_organ = adjust_smear_neg_for_xpert(alg_sens_by_organ)
-
         # Calculate detection rates by organ status with or without weighting
-        for organ in [''] + self.organ_status:
-            if self.vary_detection_by_organ:
-                detect_prop = detect_prop_by_organ[organ]
-                alg_sens = alg_sens_by_organ[organ]
+
+        organs = ['']
+        if self.vary_detection_by_organ:
+            organs = [''] + self.organ_status
+        for organ in organs:
             for comorbidity in [''] + self.comorbidities:
                 self.vars['program_rate_detect' + organ + comorbidity] \
-                    = - detect_prop \
-                      * (1. / self.params['tb_timeperiod_activeuntreated'] + 1. / life_expectancy) \
-                      / (detect_prop - 1.)
+                    = - self.vars['program_prop_detect' + organ] \
+                      * (1. / self.params['tb_timeperiod_activeuntreated']
+                         + 1. / self.vars['demo_life_expectancy']) \
+                      / (self.vars['program_prop_detect' + organ] - 1.)
             # Missed (avoid division by zero alg_sens with max)
             self.vars['program_rate_missed' + organ] \
-                = self.vars['program_rate_detect' + organ] * (1. - alg_sens) / max(alg_sens, 1e-6)
+                = self.vars['program_rate_detect' + organ] \
+                  * (1. - self.vars['program_prop_algorithm_sensitivity' + organ]) \
+                  / max(self.vars['program_prop_algorithm_sensitivity' + organ], 1e-6)
 
     def calculate_acf_rate(self):
 
@@ -512,7 +510,7 @@ class ConsolidatedModel(StratifiedModel):
                     or 'program_prop_xpertacf' + comorbidity in self.optional_timevariants:
 
                 # The following can't be written as self.organ_status, as it won't work for non-fully-stratified models
-                for organ in ['_smearpos', '_smearneg', '_extrapul']:
+                for organ in ['', '_smearpos', '_smearneg', '_extrapul']:
                     self.vars['program_rate_acf' + organ + comorbidity] = 0.
 
                 # Smear-based ACF rate
@@ -541,7 +539,10 @@ class ConsolidatedModel(StratifiedModel):
         that are specific for organs.
         """
 
-        for organ in self.organ_status:
+        organs = ['']
+        if self.vary_detection_by_organ:
+            organs = [''] + self.organ_status
+        for organ in organs:
             for comorbidity in self.comorbidities:
 
                 # ACF in risk groups

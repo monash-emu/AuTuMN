@@ -290,9 +290,9 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_birth_rates_vars()
         self.calculate_force_infection_vars()
         if self.is_organvariation: self.calculate_progression_vars()
-        self.calculate_acf_rate()
         if 'program_prop_decentralisation' in self.optional_timevariants: self.implement_decentralisation()
         self.calculate_detect_missed_vars()
+        self.calculate_acf_rate()
         self.add_acf_rates_to_detection()
         self.calculate_misassignment_detection_vars()
         if self.is_lowquality: self.calculate_lowquality_detection_vars()
@@ -419,44 +419,6 @@ class ConsolidatedModel(StratifiedModel):
                                 = self.vars['epi_prop' + organ] \
                                   * self.params['tb_rate' + timing + '_progression' + comorbidity + agegroup]
 
-    def calculate_acf_rate(self):
-
-        """
-        Calculates rates of ACF from the proportion of programmatic coverage of both smear-based and Xpert-based ACF
-        (both presuming symptom-based screening before this, as in the studies on which this is based).
-        Smear-based screening only detects smear-positive disease, while Xpert-based screening detects some
-        smear-negative disease (incorporating a multiplier for the sensitivity of Xpert for smear-negative disease).
-        Extrapulmonary disease can't be detected through ACF.
-        Creates vars for both ACF in specific risk groups and for ACF in the general community (which uses '').
-        """
-
-        for comorbidity in [''] + self.comorbidities:
-            if 'program_prop_smearacf' + comorbidity in self.optional_timevariants \
-                    or 'program_prop_xpertacf' + comorbidity in self.optional_timevariants:
-
-                # The following can't be written as self.organ_status, as it won't work for non-fully-stratified models
-                for organ in ['_smearpos', '_smearneg', '_extrapul']:
-                    self.vars['program_rate_acf' + organ + comorbidity] = 0.
-
-                # Smear-based ACF rate
-                if 'program_prop_smearacf' + comorbidity in self.optional_timevariants:
-                    self.vars['program_rate_acf_smearpos' + comorbidity] \
-                        += self.vars['program_prop_smearacf' + comorbidity] \
-                           * self.params['program_prop_acf_detections_per_round'] \
-                           / self.params['program_timeperiod_acf_rounds']
-
-                # Xpert-based ACF rate for smear-positives and smear-negatives
-                if 'program_prop_xpertacf' + comorbidity in self.optional_timevariants:
-                    for organ in ['_smearpos', '_smearneg']:
-                        self.vars['program_rate_acf' + organ + comorbidity] \
-                            += self.vars['program_prop_xpertacf' + comorbidity] \
-                               * self.params['program_prop_acf_detections_per_round'] \
-                               / self.params['program_timeperiod_acf_rounds']
-
-                    # Adjust smear-negative detections for Xpert's sensitivity for these patients
-                    self.vars['program_rate_acf_smearneg' + comorbidity] \
-                        *= self.params['tb_prop_xpert_smearneg_sensitivity']
-
     def implement_decentralisation(self):
 
         """
@@ -533,6 +495,44 @@ class ConsolidatedModel(StratifiedModel):
             # Missed (avoid division by zero alg_sens with max)
             self.vars['program_rate_missed' + organ] \
                 = self.vars['program_rate_detect' + organ] * (1. - alg_sens) / max(alg_sens, 1e-6)
+
+    def calculate_acf_rate(self):
+
+        """
+        Calculates rates of ACF from the proportion of programmatic coverage of both smear-based and Xpert-based ACF
+        (both presuming symptom-based screening before this, as in the studies on which this is based).
+        Smear-based screening only detects smear-positive disease, while Xpert-based screening detects some
+        smear-negative disease (incorporating a multiplier for the sensitivity of Xpert for smear-negative disease).
+        Extrapulmonary disease can't be detected through ACF.
+        Creates vars for both ACF in specific risk groups and for ACF in the general community (which uses '').
+        """
+
+        for comorbidity in [''] + self.comorbidities:
+            if 'program_prop_smearacf' + comorbidity in self.optional_timevariants \
+                    or 'program_prop_xpertacf' + comorbidity in self.optional_timevariants:
+
+                # The following can't be written as self.organ_status, as it won't work for non-fully-stratified models
+                for organ in ['_smearpos', '_smearneg', '_extrapul']:
+                    self.vars['program_rate_acf' + organ + comorbidity] = 0.
+
+                # Smear-based ACF rate
+                if 'program_prop_smearacf' + comorbidity in self.optional_timevariants:
+                    self.vars['program_rate_acf_smearpos' + comorbidity] \
+                        += self.vars['program_prop_smearacf' + comorbidity] \
+                           * self.params['program_prop_acf_detections_per_round'] \
+                           / self.params['program_timeperiod_acf_rounds']
+
+                # Xpert-based ACF rate for smear-positives and smear-negatives
+                if 'program_prop_xpertacf' + comorbidity in self.optional_timevariants:
+                    for organ in ['_smearpos', '_smearneg']:
+                        self.vars['program_rate_acf' + organ + comorbidity] \
+                            += self.vars['program_prop_xpertacf' + comorbidity] \
+                               * self.params['program_prop_acf_detections_per_round'] \
+                               / self.params['program_timeperiod_acf_rounds']
+
+                    # Adjust smear-negative detections for Xpert's sensitivity for these patients
+                    self.vars['program_rate_acf_smearneg' + comorbidity] \
+                        *= self.params['tb_prop_xpert_smearneg_sensitivity']
 
     def add_acf_rates_to_detection(self):
 

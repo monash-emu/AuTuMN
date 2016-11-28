@@ -37,7 +37,6 @@ class BaseModel:
         self.cost_times = []
         self.scaleup_fns = {}
         self.vars = {}
-        self.soln_array = None
         self.var_labels = None
         self.var_array = None
         self.flow_array = None
@@ -539,11 +538,9 @@ class BaseModel:
         y_candidate = numpy.zeros((len(y)))
         n_compartment = len(y)
         n_time = len(self.times)
-        self.soln_array = numpy.zeros((n_time, n_compartment))
 
         derivative = self.make_derivative_fn()
         prev_time = self.times[0]  # time of the latest successful integration step (not necessarily stored)
-        self.soln_array[0, :] = y  # store initial conditions
         dt_is_ok = True  # boolean to indicate whether previous proposed integration time was successfully passed
         for i_time, next_time in enumerate(self.times[1:]): # for each time as stored in self.times
             store_step = False  # indicates whether the calculated time has to be stored (i.e. appears in self.times)
@@ -571,7 +568,6 @@ class BaseModel:
                 else:  # integration failed at proposed step. need to reduce time step
                     dt_is_ok = False
 
-            self.soln_array[i_time, :] = y  # store solution
             y = self.make_adjustments_during_integration(y)
 
         self.calculate_diagnostics_old()
@@ -593,12 +589,10 @@ class BaseModel:
         y = self.get_init_list()
         n_compartment = len(y)
         n_time = len(self.times)
-        self.soln_array = numpy.zeros((n_time, n_compartment))
 
         derivative = self.make_derivative_fn()
         old_time = self.times[0]
         time = self.times[0]
-        self.soln_array[0, :] = y
         dt_is_ok = True
         for i_time, new_time in enumerate(self.times):
             while time < new_time:
@@ -644,7 +638,6 @@ class BaseModel:
                     continue
 
             if i_time < n_time - 1:
-                self.soln_array[i_time + 1, :] = y
                 y = self.make_adjustments_during_integration(y)
 
         self.calculate_diagnostics_old()
@@ -665,11 +658,9 @@ class BaseModel:
         n_compartment = len(y)
         n_time = len(self.times)
         self.compartment_soln = {}
-        self.soln_array = numpy.zeros((n_time, n_compartment))
         self.flow_array = numpy.zeros((n_time, len(self.labels)))
 
         derivative = self.make_derivative_fn()
-        self.soln_array[0, :] = y  # store initial conditions
 
         #  previously done in calculate_diagnostics
         for i, label in enumerate(self.labels):
@@ -743,8 +734,6 @@ class BaseModel:
                     dt_is_ok = False
 
             # here below is what is run for the stored steps only
-            self.soln_array[i_time, :] = y  # store y solution
-            # previously done in calculate_diagnostics
             for i, label in enumerate(self.labels):
                 self.compartment_soln[label][i_time + 1] = y[i]  # store current state
             for i_label, var_label in enumerate(self.var_labels):
@@ -935,8 +924,6 @@ class BaseModel:
     def get_compartment_soln(self, label):
 
         """
-        Get the column of soln_array that pertains to a particular compartment.
-
         Args:
             label: String of the compartment.
 
@@ -944,10 +931,7 @@ class BaseModel:
             The solution for the compartment.
 
         """
-
-        assert self.soln_array is not None, 'calculate_diagnostics has not been run'
-        i_label = self.labels.index(label)
-        return self.soln_array[:, i_label]
+        return numpy.array(self.compartment_soln[label])
 
     def get_var_soln(self, label):
 

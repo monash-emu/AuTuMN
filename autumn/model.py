@@ -149,6 +149,13 @@ class ConsolidatedModel(StratifiedModel):
         if self.vary_detection_by_organ:
             self.organs_for_detection = copy.copy(self.organ_status)
 
+        self.vary_detection_by_comorbidity = False
+        for timevariant in self.scaleup_fns:
+            if 'acf' in timevariant: self.vary_detection_by_comorbidity = True
+        self.comorbidities_for_detection = ['']
+        if self.vary_detection_by_comorbidity:
+            self.comorbidities_for_detection = copy.copy(self.comorbidities)
+
         # Temporarily hard coded option for short course MDR-TB regimens to improve outcomes
         self.shortcourse_improves_outcomes = True
 
@@ -299,8 +306,9 @@ class ConsolidatedModel(StratifiedModel):
             if 'program_prop_xpert' in self.optional_timevariants:
                 self.adjust_smearneg_detection_for_xpert()
         self.calculate_detect_missed_vars()
-        self.calculate_acf_rate()
-        self.add_acf_rates_to_detection()
+        if self.vary_detection_by_comorbidity:
+            self.calculate_acf_rate()
+            self.add_acf_rates_to_detection()
         self.calculate_misassignment_detection_vars()
         if self.is_lowquality: self.calculate_lowquality_detection_vars()
         self.calculate_await_treatment_var()
@@ -494,7 +502,7 @@ class ConsolidatedModel(StratifiedModel):
         if self.vary_detection_by_organ:
             organs += ['']
         for organ in organs:
-            for comorbidity in [''] + self.comorbidities:
+            for comorbidity in [''] + self.comorbidities_for_detection:
 
                 # Detected
                 self.vars['program_rate_detect' + organ + comorbidity] \
@@ -578,7 +586,7 @@ class ConsolidatedModel(StratifiedModel):
 
         # With misassignment:
         for organ in self.organs_for_detection:
-            for comorbidity in self.comorbidities:
+            for comorbidity in self.comorbidities_for_detection:
                 if self.is_misassignment:
 
                     # If there are exactly two strains (DS and MDR)
@@ -1097,7 +1105,7 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         for agegroup in self.agegroups:
-            for comorbidity in self.comorbidities:
+            for comorbidity in self.comorbidities_for_detection:
                 for organ in self.organ_status:
                     organ_for_detection = organ
                     if not self.vary_detection_by_organ:

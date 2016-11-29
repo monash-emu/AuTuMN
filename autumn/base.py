@@ -404,7 +404,6 @@ class BaseModel:
 
         """
         Works through the main methods in needed for the integration process.
-
         """
 
         # More code that is dependent on correct naming of inputs, but should be universal to models based on this class
@@ -419,7 +418,6 @@ class BaseModel:
 
         """
         Create the main derivative function.
-
         """
 
         def derivative_fn(y, t):
@@ -429,22 +427,22 @@ class BaseModel:
             flow_vector = self.convert_compartments_to_list(self.flows)
             self.checks()
             return flow_vector
-
         return derivative_fn
 
     def integrate(self):
+
         """
-        Numerical integration. This version also includes storage of compartment / vars / flows solutions
-        which was previously done in calculate_diagnostics
+        Numerical integration. This version also includes storage of compartment / vars / flows solutions which was
+        previously done in calculate_diagnostics.
         Currently implemented for Explicit Euler and Runge-Kutta 4 methods
         """
 
         self.process_uncertainty_params()
         self.init_run()
-        y = self.get_init_list()  # get initial conditions (loaded compartments for scenarios)
+        y = self.get_init_list()  # Get initial conditions (loaded compartments for scenarios)
         y = self.make_adjustments_during_integration(y)
 
-        # prepare storage objects
+        # Prepare storage objects
         n_compartment = len(y)
         n_time = len(self.times)
         self.compartment_soln = {}
@@ -452,12 +450,13 @@ class BaseModel:
 
         derivative = self.make_derivative_fn()
 
-        #  previously done in calculate_diagnostics
+        # Previously done in calculate_diagnostics
         for i, label in enumerate(self.labels):
-            self.compartment_soln[label] = [None] * n_time  # initialize lists
-            self.compartment_soln[label][0] = y[i]  # store initial state
+            self.compartment_soln[label] = [None] * n_time  # Initialise lists
+            self.compartment_soln[label][0] = y[i]  # Store initial state
 
-        k1 = derivative(y, self.times[0])  # we need to run derivative here to get the initial vars
+        # Need to run derivative here to get the initial vars
+        k1 = derivative(y, self.times[0])
         self.var_labels = self.vars.keys()
         self.var_array = numpy.zeros((n_time, len(self.var_labels)))
 
@@ -467,27 +466,31 @@ class BaseModel:
         for i_label, label in enumerate(self.labels):
             self.flow_array[0, i_label] = self.flows[label]
 
-        # initialization of iterative objects that will be used during integration
+        # Initialisation of iterative objects that will be used during integration
         y_candidate = numpy.zeros((len(y)))
-        prev_time = self.times[0]  # time of the latest successful integration step (not necessarily stored)
-        dt_is_ok = True  # boolean to indicate whether previous proposed integration time was successfully passed
-        for i_time, next_time in enumerate(
-                self.times[1:]):  # for each time as stored in self.times, except the first one
-            store_step = False  # indicates whether the calculated time has to be stored (i.e. appears in self.times)
+        prev_time = self.times[0]  # Time of the latest successful integration step (not necessarily stored)
+        dt_is_ok = True  # Boolean to indicate whether previous proposed integration time was successfully passed
+
+        # For each time as stored in self.times, except the first one
+        for i_time, next_time in enumerate(self.times[1:]):
+            store_step = False  # Whether the calculated time is to be stored (i.e. appears in self.times)
             while store_step is False:
-                if not dt_is_ok:  # previous proposed time step was too wide
+                if not dt_is_ok:  # Previous proposed time step was too wide
                     adaptive_dt /= 2.
-                    is_temp_time_in_times = False  # indicates whether the upcoming calculation step corresponds to next_time
-                else:  # previous time step was accepted
+                    is_temp_time_in_times = False  # Whether the upcoming calculation step corresponds to next_time
+                else:  # Previous time step was accepted
                     adaptive_dt = next_time - prev_time
-                    is_temp_time_in_times = True  # the upcoming attempted integration step corresponds to next_time
-                    k1 = numpy.asarray(derivative(y, prev_time))  # evaluate function at previous successful step
+                    is_temp_time_in_times = True  # Upcoming attempted integration step corresponds to next_time
+                    k1 = numpy.asarray(derivative(y, prev_time))  # Evaluate function at previous successful step
 
-                temp_time = prev_time + adaptive_dt  # new attempted calculation time
+                temp_time = prev_time + adaptive_dt  # New attempted calculation time
 
+                # Explicit Euler integration
                 if self.integration_method == 'Explicit':
                     for i in range(n_compartment):
-                        y_candidate[i] = y[i] + adaptive_dt * k1[i]  # Explicit Euler process
+                        y_candidate[i] = y[i] + adaptive_dt * k1[i]
+
+                # Runge-Kutta 4 integration
                 elif self.integration_method == 'Runge Kutta':
                     y_k2 = y + 0.5 * adaptive_dt * k1
                     if (y_k2 >= 0).all():
@@ -510,28 +513,28 @@ class BaseModel:
 
                     y_candidate = []
                     for i in range(n_compartment):
-                        y_candidate.append(y[i] + (adaptive_dt / 6.0) * (k1[i] + 2.0 * k2[i] + 2.0 * k3[i] + k4[i]))
+                        y_candidate.append(y[i] + (adaptive_dt / 6.) * (k1[i] + 2. * k2[i] + 2. * k3[i] + k4[i]))
 
-                if (numpy.asarray(
-                        y_candidate) >= 0).all():  # we accept the new integration step temp_time
+                if (numpy.asarray(y_candidate) >= 0).all():  # Accept the new integration step temp_time
                     dt_is_ok = True
                     prev_time = temp_time
                     for i in range(n_compartment):
                         y[i] = y_candidate[i]
                     if is_temp_time_in_times:
-                        store_step = True  # will make the while loop end, and then update i_time
-                else:  # integration failed at proposed step. need to reduce time step
+                        store_step = True  # To end the while loop and update i_time
+                else:  # If integration failed at proposed step, reduce time step
                     dt_is_ok = False
 
-            # here below is what is run for the stored steps only
+            # For stored steps only, store compartment state, vars and intercompartmental flows
             for i, label in enumerate(self.labels):
-                self.compartment_soln[label][i_time + 1] = y[i]  # store current state
+                self.compartment_soln[label][i_time + 1] = y[i]
             for i_label, var_label in enumerate(self.var_labels):
                 self.var_array[i_time + 1, i_label] = self.vars[var_label]
             for i_label, label in enumerate(self.labels):
                 self.flow_array[i_time + 1, i_label] = self.flows[label]
 
-            y = self.make_adjustments_during_integration(y)  # adjustments for comorbidities
+            # Adjustments for comorbidities
+            y = self.make_adjustments_during_integration(y)
 
         self.calculate_diagnostics()
         if self.run_costing:
@@ -539,20 +542,31 @@ class BaseModel:
 
     def process_uncertainty_params(self):
 
+        """
+        Perform some simple parameter processing - just for those that are used as uncertainty parameters and so can't
+        be processed in the data_processing module.
+        """
+
         pass
 
     def make_adjustments_during_integration(self, y):
+
+        """
+        Adjusts the proportions of the population in each comorbidity group according to the calculations
+        made in assess_comorbidity_props.
+
+        Args:
+            y: The original compartment vector y to be adjusted.
+        Returns:
+            The adjusted compartment vector (y).
+        """
 
         pass
 
     def checks(self):
 
         """
-        Assertion run during the simulation.
-
-        Args:
-            error_margin: acceptable difference between target invariants
-
+        Assertion(s) run during simulation.
         """
 
         # Check all compartments are positive
@@ -567,22 +581,17 @@ class BaseModel:
 
         """
         Calculate diagnostic vars that can depend on self.flows, as well as self.vars calculated in calculate_vars.
-
         """
 
         pass
 
     def calculate_diagnostics(self):
-        # Thinking of getting rid of this section - should be possible to calculate in model_runner rather than model
+
         self.fraction_array = numpy.zeros((len(self.times), len(self.labels)))
         self.fraction_soln = {}
         for i_label, label in enumerate(self.labels):
-            self.fraction_soln[label] = [
-                v / t
-                for v, t
-                in zip(
-                    self.compartment_soln[label],
-                    self.get_var_soln('population'))]
+            self.fraction_soln[label] = [v / t
+                                         for v, t in zip(self.compartment_soln[label], self.get_var_soln('population'))]
             self.fraction_array[:, i_label] = self.fraction_soln[label]
 
     def calculate_economics_diagnostics(self):
@@ -891,7 +900,6 @@ class StratifiedModel(BaseModel):
 
         Returns:
             The adjusted compartment vector (y).
-
         """
 
         comorb_adjustment_factor = {}

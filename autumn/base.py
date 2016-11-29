@@ -213,15 +213,9 @@ class BaseModel:
         Args:
             label: String for the compartment to which the entry rate applies.
             var_label: String to index the parameters dictionary.
-
-        Returns:
-            Adds to self.var_flows, which apply variable birth rates to susceptible (generally) compartments.
-
         """
 
-        add_unique_tuple_to_list(
-            self.var_entry_rate_flows,
-            (label, var_label))
+        add_unique_tuple_to_list(self.var_entry_rate_flows, (label, var_label))
 
     def set_fixed_infection_death_rate_flow(self, label, param_label):
 
@@ -231,16 +225,9 @@ class BaseModel:
         Args:
             label: String for the compartment to which the death rate applies.
             param_label: String to index the parameters dictionary.
-
-        Returns:
-            Adds to self.fixed_infection_death_rate_flows, which apply single death rates to active infection
-                compartments.
-
         """
 
-        add_unique_tuple_to_list(
-            self.fixed_infection_death_rate_flows,
-            (label, self.params[param_label]))
+        add_unique_tuple_to_list(self.fixed_infection_death_rate_flows, (label, self.params[param_label]))
 
     def set_var_infection_death_rate_flow(self, label, var_label):
 
@@ -250,16 +237,9 @@ class BaseModel:
         Args:
             label: String for the compartment to which the death rate applies.
             var_label: String to index the parameters dictionary.
-
-        Returns:
-            Adds to self.var_infection_death_rate_flows, which apply single variable death rates to active infection
-                compartments.
-
         """
 
-        add_unique_tuple_to_list(
-            self.var_infection_death_rate_flows,
-            (label, var_label))
+        add_unique_tuple_to_list(self.var_infection_death_rate_flows, (label, var_label))
 
     def set_fixed_transfer_rate_flow(self, from_label, to_label, param_label):
 
@@ -270,16 +250,9 @@ class BaseModel:
             from_label: String for the compartment from which this flow comes.
             to_label: String for the compartment to which this flow goes.
             param_label: String to index the parameters dictionary.
-
-        Returns:
-            Adds to self.fixed_transfer_rate_flows, which apply single fixed intercompartmental transfer rates to
-                two compartments.
-
         """
 
-        add_unique_tuple_to_list(
-            self.fixed_transfer_rate_flows,
-            (from_label, to_label, self.params[param_label]))
+        add_unique_tuple_to_list(self.fixed_transfer_rate_flows, (from_label, to_label, self.params[param_label]))
 
     def set_linked_transfer_rate_flow(self, from_label, to_label, var_label):
 
@@ -291,16 +264,9 @@ class BaseModel:
             from_label: String for the compartment from which this flow comes.
             to_label: String for the compartment to which this flow goes.
             var_label: String to index the vars dictionary.
-
-        Returns:
-            Adds to self.linked_transfer_rate_flows, which apply variable, linked intercompartmental transfer rates to
-                two compartments.
-
         """
 
-        add_unique_tuple_to_list(
-            self.linked_transfer_rate_flows,
-            (from_label, to_label, var_label))
+        add_unique_tuple_to_list(self.linked_transfer_rate_flows, (from_label, to_label, var_label))
 
     def set_var_transfer_rate_flow(self, from_label, to_label, var_label):
 
@@ -311,16 +277,9 @@ class BaseModel:
             from_label: String for the compartment from which this flow comes.
             to_label: String for the compartment to which this flow goes.
             var_label: String to index the vars dictionary.
-
-        Returns:
-            Adds to self.var_transfer_rate_flows, which apply variable intercompartmental transfer rates to
-                two compartments.
-
         """
 
-        add_unique_tuple_to_list(
-            self.var_transfer_rate_flows,
-            (from_label, to_label, var_label))
+        add_unique_tuple_to_list(self.var_transfer_rate_flows, (from_label, to_label, var_label))
 
     #########################################
     ### Variable and flow-related methods ###
@@ -334,7 +293,6 @@ class BaseModel:
         Args:
             label: String for name of function.
             fn: The function to be added.
-
         """
 
         self.scaleup_fns[label] = fn
@@ -342,20 +300,16 @@ class BaseModel:
     def calculate_scaleup_vars(self):
 
         """
-        Find the values of the scale-up functions at a specific point in time.
-        Called within the integration process.
-
+        Find the values of the scale-up functions at a specific point in time. Called within the integration process.
         """
 
-        for label, fn in self.scaleup_fns.iteritems():
-            self.vars[label] = fn(self.time)
+        for label, fn in self.scaleup_fns.iteritems(): self.vars[label] = fn(self.time)
 
     def calculate_vars(self):
 
         """
         Calculate the self.vars that depend on current model conditions (compartment sizes) rather than scale-up
         functions. (Model-specific, so currently just "pass".)
-
         """
 
         pass
@@ -363,9 +317,8 @@ class BaseModel:
     def calculate_flows(self):
 
         """
-        Calculate flows, which should only depend on compartment values
-        and self.vars calculated in calculate_variable_rates.
-
+        Calculate flows, which should only depend on compartment values and self.vars calculated in
+        calculate_variable_rates.
         """
 
         for label in self.labels:
@@ -393,9 +346,7 @@ class BaseModel:
             self.flows[from_label] -= val
             self.flows[to_label] += val
 
-        # Normal death flows
-        # *** Note that there has to be a param or a var with the label 'demo_life_expectancy'.
-        # (This saves on creating a separate model attribute for population death.) ***
+        # Normal death flows - note that there has to be a param or a var with the label 'demo_life_expectancy'
         self.vars['rate_death'] = 0.
         for label in self.labels:
             val = self.compartments[label] / self.get_constant_or_variable_param('demo_life_expectancy')
@@ -418,7 +369,6 @@ class BaseModel:
         """
         This function collects some other functions that previously led to a bug because not all of them were called
         in the diagnostics round.
-
         """
 
         # Before clearing vars, we need to save the popsize vars for economics calculations
@@ -442,7 +392,6 @@ class BaseModel:
 
         """
         Main method to work through setting all intercompartmental flows.
-
         """
 
         pass

@@ -726,25 +726,23 @@ class BaseModel:
 
     def make_flow_diagram(self, png):
 
+        """
+        Use graphviz module to create flow diagram of compartments and intercompartmental flows.
+        """
+
         from graphviz import Digraph
 
         styles = {
-            'graph': {
-                'label': 'Dynamic Transmission Model',
-                'fontsize': '16',
-            },
-            'nodes': {
-                'fontname': 'Helvetica',
-                'shape': 'box',
-                'style': 'filled',
-                'fillcolor': '#CCDDFF',
-            },
-            'edges': {
-                'style': 'dotted',
-                'arrowhead': 'open',
-                'fontname': 'Courier',
-                'fontsize': '10',
-            }
+            'graph': {'label': 'Dynamic Transmission Model',
+                      'fontsize': '16',},
+            'nodes': {'fontname': 'Helvetica',
+                      'shape': 'box',
+                      'style': 'filled',
+                      'fillcolor': '#CCDDFF',},
+            'edges': {'style': 'dotted',
+                      'arrowhead': 'open',
+                      'fontname': 'Courier',
+                      'fontsize': '10',}
         }
 
         def apply_styles(graph, styles):
@@ -803,7 +801,6 @@ class BaseModel:
 
         """
         Determine whether an intervention is applied and has start-up costs in the scenario being run.
-
         """
 
         # Start assuming each costed intervention has no start-up costs in this scenario
@@ -819,17 +816,15 @@ class BaseModel:
 
         """
         Find the dates when the different interventions start and populate self.intervention_startdates
-
         """
 
         scenario = self.scenario
         for intervention in self.interventions_to_cost:
             self.intervention_startdates[intervention] = None
             param_key = 'program_prop_' + intervention
-            param_key2 = 'program_perc_' + intervention
             param_dict = self.inputs.scaleup_data[scenario][param_key]
-            years_pos_coverage = [key for (key, value) in param_dict.items() if value > 0.]  # years after start
-            if len(years_pos_coverage) > 0:  # some coverage present at baseline
+            years_pos_coverage = [key for (key, value) in param_dict.items() if value > 0.]  # Years from start
+            if len(years_pos_coverage) > 0:  # Some coverage present at baseline
                 self.intervention_startdates[intervention] = min(years_pos_coverage)
 
     def distribute_funding_across_years(self):
@@ -870,7 +865,6 @@ class StratifiedModel(BaseModel):
 
         Args:
             y: The original compartment vector y to be adjusted.
-
         Returns:
             The adjusted compartment vector (y).
         """
@@ -889,6 +883,7 @@ class StratifiedModel(BaseModel):
                         self.get_constant_or_variable_param('comorb_prop' + comorbidity))
                     self.target_comorb_props['_nocomorb'][-1] \
                         -= self.target_comorb_props[comorbidity][-1]
+
             # If integration has started properly
             if self.compartments:
 
@@ -910,6 +905,7 @@ class StratifiedModel(BaseModel):
                     else:
                         comorb_adjustment_factor[comorbidity] = 1.
         else:
+
             # Otherwise, it's just a list of ones
             if '' not in self.target_comorb_props:
                 self.target_comorb_props[''] = []
@@ -921,7 +917,6 @@ class StratifiedModel(BaseModel):
                 for comorbidity in self.comorbidities:
                     if comorbidity in c:
                         compartments[c] *= comorb_adjustment_factor[comorbidity]
-
             return self.convert_compartments_to_list(compartments)
         else:
             return y
@@ -930,14 +925,13 @@ class StratifiedModel(BaseModel):
 
         """
         Set ageing flows for any number of age stratifications.
-
         """
 
         for label in self.labels:
-            for number_agegroup in range(len(self.agegroups)):
-                if self.agegroups[number_agegroup] in label and number_agegroup < len(self.agegroups) - 1:
+            for n_agegroup, agegroup in enumerate(self.agegroups):
+                if agegroup in label and n_agegroup < len(self.agegroups) - 1:
                     self.set_fixed_transfer_rate_flow(
-                        label, label[0: label.find('_age')] + self.agegroups[number_agegroup + 1],
-                               'ageing_rate' + self.agegroups[number_agegroup])
+                        label, label[0: label.find('_age')] + self.agegroups[n_agegroup + 1],
+                        'ageing_rate' + self.agegroups[n_agegroup])
 
 

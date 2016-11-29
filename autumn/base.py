@@ -536,7 +536,7 @@ class BaseModel:
             # Adjustments for comorbidities
             y = self.make_adjustments_during_integration(y)
 
-        self.calculate_diagnostics()
+        # self.calculate_diagnostics()
         if self.run_costing:
             self.calculate_economics_diagnostics()
 
@@ -585,22 +585,12 @@ class BaseModel:
 
         pass
 
-    def calculate_diagnostics(self):
-
-        self.fraction_array = numpy.zeros((len(self.times), len(self.labels)))
-        self.fraction_soln = {}
-        for i_label, label in enumerate(self.labels):
-            self.fraction_soln[label] = [v / t
-                                         for v, t in zip(self.compartment_soln[label], self.get_var_soln('population'))]
-            self.fraction_array[:, i_label] = self.fraction_soln[label]
-
     def calculate_economics_diagnostics(self):
 
         """
         Run the economics diagnostics associated with a model run.
         Integration has been completed by this point.
         Only the raw costs are stored in the model object. The other costs will be calculated when generating outputs
-
         """
 
         self.determine_whether_startups_apply()
@@ -613,8 +603,8 @@ class BaseModel:
 
         # Loop over interventions to be costed
         for int_index, intervention in enumerate(self.interventions_to_cost):
-            # for each step time. We may want to change this bit. No need for all time steps
-            # Just add a third argument if you want to decrease the frequency of calculation
+
+            # Loop over times to be costed
             for i, t in enumerate(self.cost_times):
                 cost = get_cost_from_coverage(self.scaleup_fns['program_prop_' + intervention](t),
                                               self.inputs.model_constants['econ_inflectioncost_' + intervention],
@@ -643,10 +633,6 @@ class BaseModel:
         """
         Update parameter values according to the funding allocated to each interventions. This process is done during
         integration.
-
-        Returns:
-            Nothing
-
         """
 
         interventions = self.interventions_to_cost
@@ -670,56 +656,51 @@ class BaseModel:
 
                 # Starting costs
                 # Is a programm starting right now? In that case, update intervention_startdates
-                if self.intervention_startdates[int] is None:  # means intervention hadn't started yet
+                if self.intervention_startdates[int] is None:  # Intervention hadn't started yet
                     self.intervention_startdates[int] = self.time
 
-                # starting cost has already been taken into account in 'distribute_funding_across_years'
+                # Starting cost has already been taken into account in 'distribute_funding_across_years'
                 coverage = get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.)
             self.vars[vars_key] = coverage
 
     def get_compartment_soln(self, label):
 
         """
+        Extract the column of the compartment array pertaining to a particular compartment.
+
         Args:
             label: String of the compartment.
-
         Returns:
             The solution for the compartment.
-
         """
+
         return numpy.array(self.compartment_soln[label])
 
     def get_var_soln(self, label):
 
         """
-        Get the column of var_array that pertains to a particular var.
+        Extract the column of var_array that pertains to a particular var.
 
         Args:
-            label: String of the var.
-
+            label: String of the var
         Returns:
-            The solution for the var.
-
+            The solution for the var
         """
 
-        assert self.var_array is not None, 'calculate_diagnostics has not been run'
         i_label = self.var_labels.index(label)
         return self.var_array[:, i_label]
 
     def get_flow_soln(self, label):
 
         """
-        Get the column of flow_array that pertains to a particular compartment.
+        Extract the column of flow_array that pertains to a particular intercompartmental flow.
 
         Args:
-            label: String of the flow.
-
+            label: String of the flow
         Returns:
-            The solution for the flow.
-
+            The solution for the flow
         """
 
-        assert self.flow_array is not None, 'calculate_diagnostics has not been run'
         i_label = self.labels.index(label)
         return self.flow_array[:, i_label]
 
@@ -729,15 +710,13 @@ class BaseModel:
         Returns the recorded compartment values at a particular point in time for the model.
 
         Args:
-            i_time: Time from which the compartment values are to be loaded.
-
+            i_time: Time from which the compartment values are to be loade
         Returns:
-            state_compartments: The compartment values from that time in the model's integration.
-
+            state_compartments: The compartment values from that time in the model's integration
         """
 
         state_compartments = {}
-        for i_label, label in enumerate(self.labels):
+        for label in self.labels:
             state_compartments[label] = self.compartment_soln[label][i_time]
         return state_compartments
 
@@ -769,15 +748,9 @@ class BaseModel:
         }
 
         def apply_styles(graph, styles):
-            graph.graph_attr.update(
-                ('graph' in styles and styles['graph']) or {}
-            )
-            graph.node_attr.update(
-                ('nodes' in styles and styles['nodes']) or {}
-            )
-            graph.edge_attr.update(
-                ('edges' in styles and styles['edges']) or {}
-            )
+            graph.graph_attr.update(('graph' in styles and styles['graph']) or {})
+            graph.node_attr.update(('nodes' in styles and styles['nodes']) or {})
+            graph.edge_attr.update(('edges' in styles and styles['edges']) or {})
             return graph
 
         def num_str(f):

@@ -12,7 +12,6 @@ def add_unique_tuple_to_list(a_list, a_tuple):
     """
     Adds or modifies a list of tuples, comparing only the items before the last in the tuples
     (i.e. the compartments), with the last value in the tuple assumed to be the value for the flow rate.
-
     """
 
     for i, test_tuple in enumerate(a_list):
@@ -75,10 +74,6 @@ class BaseModel:
             start: Start time for integration.
             end: End time for integration.
             delta: Step size.
-
-        Creates:
-            self.times: List of model time steps.
-
         """
 
         self.times = []
@@ -99,7 +94,6 @@ class BaseModel:
         """
 
         return [i for i, j in enumerate(self.times) if j >= time][0] - 1
-
         raise ValueError('Time not found')
 
     #####################################################
@@ -114,10 +108,6 @@ class BaseModel:
         Args:
             label: Parameter name.
             val: Parameter value.
-
-        Modifies:
-            self.params: Adds a parameter value to this dictionary.
-
         """
 
         self.params[label] = val
@@ -130,10 +120,8 @@ class BaseModel:
 
         Args:
             param: String for the parameter (should be the same in either vars or params)
-
         Returns:
             param_value: The value of the parameter
-
         """
 
         if param in self.vars:
@@ -142,7 +130,6 @@ class BaseModel:
             param_value = self.params[param]
         else:
             raise NameError('Parameter "' + param + '" not found in either vars or params.')
-
         return param_value
 
     def set_compartment(self, label, init_val=0.):
@@ -153,22 +140,16 @@ class BaseModel:
         Args:
             label: The name of the compartment.
             init_val: The starting size of this compartment.
-
-        Modifies:
-            self.init_compartments: Assigns init_val to the compartment specified.
-
         """
 
         assert init_val >= 0., 'Start with negative compartment not permitted'
-        if label not in self.labels:
-            self.labels.append(label)
+        if label not in self.labels: self.labels.append(label)
         self.init_compartments[label] = init_val
 
     def initialise_compartments(self):
 
         """
         Initialise compartments to starting values.
-
         """
 
         pass
@@ -198,11 +179,9 @@ class BaseModel:
         Reverse of previous method. Converts
 
         Args:
-            compartment_dict: Dictionary with keys strings of compartment names.
-
+            compartment_dict: Dictionary with keys strings of compartment names
         Returns:
-            List of compartment values ordered according to self.labels.
-
+            List of compartment values ordered according to self.labels
         """
 
         return [compartment_dict[l] for l in self.labels]
@@ -215,13 +194,12 @@ class BaseModel:
 
         Returns:
             List of compartment values.
-
         """
 
-        if self.loaded_compartments is None:
-            return self.convert_compartments_to_list(self.init_compartments)
-        else:
+        if self.loaded_compartments:
             return self.convert_compartments_to_list(self.loaded_compartments)
+        else:
+            return self.convert_compartments_to_list(self.init_compartments)
 
     ############################################################
     ### Methods to add intercompartmental flows to the model ###

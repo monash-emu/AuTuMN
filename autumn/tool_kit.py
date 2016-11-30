@@ -4,11 +4,22 @@ from matplotlib import pyplot, patches
 from scipy import exp
 import outputs
 import cPickle as pickle
+from numpy import isfinite
+
 
 """
 Note that this module is intended only to contain stand-alone functions for use by multiple other modules.
 Object-oriented structures are not intended to be kept here.
 """
+
+
+def is_parameter_value_valid(parameter):
+
+    """
+    Determine whether a number (typically a parameter value) is finite and positive.
+    """
+
+    return isfinite(parameter) and parameter > 0.
 
 
 def find_scenario_string_from_number(scenario):

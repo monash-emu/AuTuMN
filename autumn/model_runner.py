@@ -1,4 +1,3 @@
-from numpy import isfinite
 import tool_kit
 import model
 import os
@@ -18,10 +17,6 @@ import itertools
 import time
 import eventlet
 from flask_socketio import emit
-
-def is_positive_definite(v):
-
-    return isfinite(v) and v > 0.
 
 
 def generate_candidates(n_candidates, param_ranges_unc):
@@ -1047,7 +1042,7 @@ class ModelRunner:
         for p, param in enumerate(params):
 
             # Whether the parameter value is valid
-            if not is_positive_definite(param):
+            if not tool_kit.is_parameter_value_valid(param):
                 print 'Warning: parameter%d=%f is invalid for model' % (p, param)
                 self.is_last_run_success = False
                 return

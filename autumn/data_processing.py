@@ -895,7 +895,7 @@ class Inputs:
             elif self.time_variants['epi_prop_smearpos']['time_variant'] == u'no':
                 # Warn if smear-negative variation requested
                 if self.time_variants['epi_prop_smearneg']['time_variant'] == u'yes':
-                    sself.add_comment_to_gui_window(
+                    self.add_comment_to_gui_window(
                                                 'Requested non-time variant smear-positive status, but ' +
                                                 'time variant smear-negative status. ' +
                                                 'Therefore, changed to non-time variant smear-negative status.\n')

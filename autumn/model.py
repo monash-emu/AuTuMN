@@ -873,7 +873,7 @@ class ConsolidatedModel(StratifiedModel):
                 if 'latent_early' in compartment and agegroup in compartment:
                     latent_early_pop += self.compartments[compartment]
 
-            # Calculate the total number of effective treatments across both forms of IPT, limiting at all latents
+            # Calculate the total number of effective treatments across both forms of IPT, limiting at all early latents
             self.vars['ipt_effective_treatments' + agegroup] \
                 = min([max([self.vars['ipt_effective_treatments' + agegroup],
                             self.vars['novel_ipt_effective_treatments' + agegroup]]),

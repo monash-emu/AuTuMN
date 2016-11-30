@@ -1564,7 +1564,6 @@ class Project:
 
         """
         Plots cost-coverage curves at times specified in the report times inputs in control panel.
-
         """
 
         # Plot figures by scenario
@@ -1765,7 +1764,7 @@ class Project:
 
                 # Set x-limits
                 for ax in [ax_individual, ax_stacked, ax_relative]:
-                    ax.set_xlim(self.inputs.model_constants['plot_start_time'],
+                    ax.set_xlim(self.inputs.model_constants['plot_economics_start_time'],
                                 self.inputs.model_constants['plot_end_time'])
 
             # Finishing off with title and save
@@ -2254,8 +2253,6 @@ class Project:
         Opens the directory into which all the outputs have been placed
 
         """
-
-
 
         operating_system = platform.system()
         if 'Windows' in operating_system:

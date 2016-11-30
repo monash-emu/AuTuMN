@@ -1174,13 +1174,11 @@ class Inputs:
     def find_interventions_to_cost(self):
 
         """
-        Work out which interventions should be costed.
-
+        Work out which interventions should be costed, selecting from the ones that can be costed in
+        self.potential_interventions_to_cost.
         """
 
         for intervention in self.potential_interventions_to_cost:
-
-            # If it's an intervention from the time variants and the model is age stratified if it's age-specific
             if 'program_prop_' + intervention in self.time_variants and \
                     ('_age' not in intervention or len(self.agegroups) > 1):
                 self.interventions_to_cost += [intervention]

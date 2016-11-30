@@ -840,8 +840,16 @@ class ConsolidatedModel(StratifiedModel):
             self.vars['popsize_decentralisation'] = 0.
             for compartment in self.compartments:
                 if 'susceptible_' not in compartment and 'latent_' not in compartment:
-                    self.vars['popsize_decentralisation'] \
-                        += self.compartments[compartment]
+                    self.vars['popsize_decentralisation'] += self.compartments[compartment]
+
+        # Shortcourse MDR-TB regimen
+        if 'program_prop_shortcourse_mdr' in self.optional_timevariants:
+            self.vars['popsize_shortcourse_mdr'] = 0.
+            for compartment in self.compartments:
+                if 'treatment' in compartment and '_mdr' in compartment:
+                    self.vars['popsize_shortcourse_mdr'] += self.compartments[compartment]
+
+
 
     def calculate_ipt_rate(self):
 

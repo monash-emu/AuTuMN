@@ -694,18 +694,18 @@ class ConsolidatedModel(StratifiedModel):
 
             # Adapt treatment periods for short course regimen
             if strain == '_mdr' and 'program_prop_shortcourse_mdr' in self.optional_timevariants:
-                relative_treatment_duration_mdr = 1. - self.vars['program_prop_shortcourse_mdr'] \
-                                                  + (self.params['program_prop_shortcourse_mdr_relativeduration']
-                                                     * self.vars['program_prop_shortcourse_mdr'])
+                relative_treatment_duration_mdr \
+                    = 1. - self.vars['program_prop_shortcourse_mdr'] \
+                           * (1. - self.params['program_prop_shortcourse_mdr_relativeduration'])
                 tb_timeperiod_treatment *= relative_treatment_duration_mdr
                 tb_timeperiod_infect_ontreatment *= relative_treatment_duration_mdr
 
                 # Adapt treatment outcomes for short course regimen
-                if self.shortcourse_improves_outcomes:
-                    self.vars['program_prop_treatment_success_mdr'] \
-                        += (self.params['program_prop_treatment_success_shortcoursemdr']
-                            - self.vars['program_prop_treatment_success_mdr']) \
-                           * self.vars['program_prop_shortcourse_mdr']
+                # if self.shortcourse_improves_outcomes:
+                #     self.vars['program_prop_treatment_success_mdr'] \
+                #         += (self.params['program_prop_treatment_success_shortcoursemdr']
+                #             - self.vars['program_prop_treatment_success_mdr']) \
+                #            * self.vars['program_prop_shortcourse_mdr']
 
             # Get treatment success proportion from vars if possible and from params if not
             for outcome in ['_success', '_death']:
@@ -821,19 +821,16 @@ class ConsolidatedModel(StratifiedModel):
             for compartment in self.compartments:
                 if 'active_' in compartment and '_smearpos' in compartment:
                     self.vars['popsize_smearacf'] \
-                        += self.compartments[compartment] \
-                           * self.params['program_nns_smearacf']
+                        += self.compartments[compartment] * self.params['program_nns_smearacf']
         if 'program_prop_xpertacf' in self.optional_timevariants:
             self.vars['popsize_xpertacf'] = 0.
             for compartment in self.compartments:
                 if 'active_' in compartment and '_smearpos' in compartment:
                     self.vars['popsize_xpertacf'] \
-                        += self.compartments[compartment] \
-                           * self.params['program_nns_xpertacf_smearpos']
+                        += self.compartments[compartment] * self.params['program_nns_xpertacf_smearpos']
                 elif 'active_' in compartment and '_smearneg' in compartment:
                     self.vars['popsize_xpertacf'] \
-                        += self.compartments[compartment] \
-                           * self.params['program_nns_xpertacf_smearneg']
+                        += self.compartments[compartment] * self.params['program_nns_xpertacf_smearneg']
 
         # Decentralisation
         if 'program_prop_decentralisation' in self.optional_timevariants:
@@ -848,8 +845,6 @@ class ConsolidatedModel(StratifiedModel):
             for compartment in self.compartments:
                 if 'treatment' in compartment and '_mdr' in compartment:
                     self.vars['popsize_shortcourse_mdr'] += self.compartments[compartment]
-
-
 
     def calculate_ipt_rate(self):
 

@@ -701,11 +701,13 @@ class ConsolidatedModel(StratifiedModel):
                 tb_timeperiod_infect_ontreatment *= relative_treatment_duration_mdr
 
                 # Adapt treatment outcomes for short course regimen
-                # if self.shortcourse_improves_outcomes:
-                #     self.vars['program_prop_treatment_success_mdr'] \
-                #         += (self.params['program_prop_treatment_success_shortcoursemdr']
-                #             - self.vars['program_prop_treatment_success_mdr']) \
-                #            * self.vars['program_prop_shortcourse_mdr']
+                if self.shortcourse_improves_outcomes:
+                    self.vars['program_prop_treatment_success_mdr'] \
+                        += (self.params['program_prop_treatment_success_shortcoursemdr']
+                            - self.vars['program_prop_treatment_success_mdr']) \
+                           * self.vars['program_prop_shortcourse_mdr']
+                    self.vars['program_prop_treatment_death_mdr'] \
+                        = (1. - self.vars['program_prop_treatment_success_mdr']) / 3.
 
             # Get treatment success proportion from vars if possible and from params if not
             for outcome in ['_success', '_death']:

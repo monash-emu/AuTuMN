@@ -144,12 +144,19 @@ class ConsolidatedModel(StratifiedModel):
         self.find_intervention_startdates()
         if self.eco_drives_epi: self.distribute_funding_across_years()
 
-        # Temporarily hard coded option to allow different detection rates by smear/organ status
+        # Work out what we're doing with organ status and variation of detection rates by organ status
+        # ** This should probably be moved to the data processing module
         self.vary_detection_by_organ = gui_inputs['is_vary_detection_by_organ']
-        if 'program_prop_xpert' in self.optional_timevariants:
+        if len(self.organ_status) == 1 and self.vary_detection_by_organ:
+            self.vary_detection_by_organ = False
+            print('Requested variation by organ status turned off, as model is unstratified by organ status.')
+        if len(self.organ_status) > 1 and 'program_prop_xpert' in self.optional_timevariants \
+                and not self.vary_detection_by_organ:
             self.vary_detection_by_organ = True
-            print('Variation of case detection by organ status added as elaboration because Xpert implemented, '
-                  'although not requested through GUI.')
+            print('Variation in detection by organ status added although not requested, for Xpert implementation.')
+        elif len(self.organ_status) == 1 and 'program_prop_xpert' in self.optional_timevariants:
+            print('Effect of Xpert on smear-negative detection not simulated as model unstratified by organ status.')
+
         self.detection_algorithm_ceiling = .85
         self.organs_for_detection = ['']
         if self.vary_detection_by_organ:
@@ -467,9 +474,10 @@ class ConsolidatedModel(StratifiedModel):
                          + self.params['program_prop_snep_relative_algorithm']
                          * (1. - self.vars['epi_prop_smearpos'])), self.detection_algorithm_ceiling)
             for organ in ['_smearneg', '_extrapul']:
-                self.vars['program_prop' + parameter + organ] \
-                    = self.vars['program_prop' + parameter + '_smearpos'] \
-                      * self.params['program_prop_snep_relative_algorithm']
+                if organ in self.organ_status:
+                    self.vars['program_prop' + parameter + organ] \
+                        = self.vars['program_prop' + parameter + '_smearpos'] \
+                          * self.params['program_prop_snep_relative_algorithm']
 
     def adjust_smearneg_detection_for_xpert(self):
 

@@ -992,7 +992,7 @@ class Inputs:
                 self.irrelevant_time_variants += [time_variant]
             elif self.gui_inputs['n_strains'] == 2 and 'secondline_dst' in time_variant:
                 self.irrelevant_time_variants += [time_variant]
-            elif self.gui_inputs['n_organs'] == 2 and 'smearneg' in time_variant:
+            elif self.gui_inputs['n_organs'] == 1 and 'smearneg' in time_variant:
                 self.irrelevant_time_variants += [time_variant]
             if 'lowquality' in time_variant and not self.gui_inputs['is_lowquality']:
                 self.irrelevant_time_variants += [time_variant]

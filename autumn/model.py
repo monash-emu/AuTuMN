@@ -685,9 +685,6 @@ class ConsolidatedModel(StratifiedModel):
         treatments = copy.copy(self.strains)
         if len(self.strains) > 1 and self.is_misassignment:
             treatments += ['_inappropriate']
-
-        # The outcomes other than success (i.e. death and default)
-        non_success_outcomes = self.outcomes[1:]
         for strain in treatments:
 
             tb_timeperiod_treatment = self.params['tb_timeperiod_treatment' + strain]
@@ -717,42 +714,44 @@ class ConsolidatedModel(StratifiedModel):
                        * self.vars['program_prop_treatment_support']
                 self.vars['program_prop_treatment_death' + strain] \
                     -= self.vars['program_prop_treatment_death' + strain] \
-                        * self.params['program_prop_treatment_support_improvement'] \
-                        * self.vars['program_prop_treatment_support']
+                       * self.params['program_prop_treatment_support_improvement'] \
+                       * self.vars['program_prop_treatment_support']
 
-            # Calculate the default proportion as that left over after success and death subtracted from one
+            # Calculate the default proportion as the remainder from success and death
             self.vars['program_prop_treatment_default' + strain] \
                 = 1. - self.vars['program_prop_treatment_success' + strain] \
                   - self.vars['program_prop_treatment_death' + strain]
 
             # Find the proportion of deaths/defaults during the infectious and non-infectious stages
-            for outcome in non_success_outcomes:
-                early_proportion, late_proportion = find_outcome_proportions_by_period(
-                    self.vars['program_prop_treatment' + outcome + strain],
-                    tb_timeperiod_infect_ontreatment,
-                    tb_timeperiod_treatment)
+            for outcome in self.outcomes[1:]:
+                early_proportion, late_proportion \
+                    = find_outcome_proportions_by_period(self.vars['program_prop_treatment' + outcome + strain],
+                                                         tb_timeperiod_infect_ontreatment,
+                                                         tb_timeperiod_treatment)
                 self.vars['program_prop_treatment' + outcome + '_infect' + strain] = early_proportion
                 self.vars['program_prop_treatment' + outcome + '_noninfect' + strain] = late_proportion
 
             for treatment_stage in self.treatment_stages:
 
                 # Find the success proportions
-                self.vars['program_prop_treatment_success' + treatment_stage + strain] = \
-                    1. - self.vars['program_prop_treatment_default' + treatment_stage + strain] \
-                    - self.vars['program_prop_treatment_death' + treatment_stage + strain]
+                self.vars['program_prop_treatment_success' + treatment_stage + strain] \
+                    = 1. - self.vars['program_prop_treatment_default' + treatment_stage + strain] \
+                      - self.vars['program_prop_treatment_death' + treatment_stage + strain]
 
                 # Find the corresponding rates from the proportions
                 for outcome in self.outcomes:
-                    self.vars['program_rate' + outcome + treatment_stage + strain] = \
-                        1. / self.params['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
-                        * self.vars['program_prop_treatment' + outcome + treatment_stage + strain]
+                    self.vars['program_rate' + outcome + treatment_stage + strain] \
+                        = 1. / self.params['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
+                          * self.vars['program_prop_treatment' + outcome + treatment_stage + strain]
+
+                # Split default according to whether amplification occurs
                 if self.is_amplification:
-                    self.vars['program_rate_default' + treatment_stage + '_amplify' + strain] = \
-                        self.vars['program_rate_default' + treatment_stage + strain] \
-                        * self.vars['epi_prop_amplification']
-                    self.vars['program_rate_default' + treatment_stage + '_noamplify' + strain] = \
-                        self.vars['program_rate_default' + treatment_stage + strain] \
-                        * (1. - self.vars['epi_prop_amplification'])
+                    self.vars['program_rate_default' + treatment_stage + '_amplify' + strain] \
+                        = self.vars['program_rate_default' + treatment_stage + strain] \
+                          * self.vars['epi_prop_amplification']
+                    self.vars['program_rate_default' + treatment_stage + '_noamplify' + strain] \
+                        = self.vars['program_rate_default' + treatment_stage + strain] \
+                          * (1. - self.vars['epi_prop_amplification'])
 
     def calculate_population_sizes(self):
 

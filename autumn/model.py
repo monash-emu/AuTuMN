@@ -689,6 +689,7 @@ class ConsolidatedModel(StratifiedModel):
         # The outcomes other than success (i.e. death and default)
         non_success_outcomes = self.outcomes[1:]
         for strain in treatments:
+
             tb_timeperiod_treatment = self.params['tb_timeperiod_treatment' + strain]
             tb_timeperiod_infect_ontreatment = self.params['tb_timeperiod_infect_ontreatment' + strain]
 
@@ -703,19 +704,10 @@ class ConsolidatedModel(StratifiedModel):
                 # Adapt treatment outcomes for short course regimen
                 if self.shortcourse_improves_outcomes:
                     for outcome in ['_success', '_death']:
-                        self.vars['program_prop_treatment_success_mdr'] \
+                        self.vars['program_prop_treatment' + outcome + '_mdr'] \
                             += (self.params['program_prop_treatment' + outcome + '_shortcoursemdr']
                                 - self.vars['program_prop_treatment' + outcome + '_mdr']) \
                                * self.vars['program_prop_shortcourse_mdr']
-
-            # Get treatment success proportion from vars if possible and from params if not
-            for outcome in ['_success', '_death']:
-                if 'program_prop_treatment' + outcome + strain in self.vars:
-                    pass
-                elif 'program_prop_treatment' + outcome + strain in self.params:
-                    self.vars['program_prop_treatment' + outcome] = self.params['program_prop_treatment' + outcome]
-                else:
-                    raise NameError('program_prop_treatment' + outcome + strain + ' not found in vars or params')
 
             # Add some extra treatment success if the treatment support program is active
             if 'program_prop_treatment_support' in self.optional_timevariants:

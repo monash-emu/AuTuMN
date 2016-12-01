@@ -777,6 +777,7 @@ class Project:
                 self.write_docs_by_output()
 
         self.run_plotting()
+        self.save_opti_results()
         self.open_output_directory()
 
     def write_xls_by_scenario(self):
@@ -2246,6 +2247,14 @@ class Project:
         ax.pie(fracs,  labels=labels, autopct='%1.1f%%', startangle=90, colors=colors, textprops={'backgroundcolor': 'white'})
         fig.suptitle('Optimal allocation of resource')
         self.save_figure(fig, '_optimal_allocation')
+
+    def save_opti_results(self):
+        if self.model_runner.save_opti and self.model_runner.optimisation: # save only if opti has been run and save ordered
+            opti_outputs_dir = os.path.join(self.out_dir_project, 'optimization')
+            if not os.path.isdir(opti_outputs_dir):
+                os.makedirs(opti_outputs_dir)
+            filename = os.path.join(opti_outputs_dir, 'opti_outputs.pkl')
+            tool_kit.pickle_save(self.model_runner.optimised_combinations, filename)
 
     def open_output_directory(self):
 

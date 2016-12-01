@@ -156,7 +156,7 @@ class ModelRunner:
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
 
         self.optimisation = False
-        self.indicator_to_minimize = 'mortality'
+        self.indicator_to_minimize = 'incidence'
         self.annual_envelope = [0.7e6, 1e6, 1.3e6, 1.6e6, 1.9e6, 2e6, 2.2e6, 2.5e6] # funding scenarios to be run
         self.save_opti = True
         self.total_funding = None  # Funding for entire period
@@ -1148,7 +1148,6 @@ class ModelRunner:
         start_timer_opti = datetime.datetime.now()
         self.optimised_combinations=[]
         # Initialise a new model that will be run from 'recent_time' for optimisation
-
         inputs_opti = self.inputs
         inputs_opti.model_constants['scenario_end_time'] = self.year_end_opti
 
@@ -1269,12 +1268,6 @@ class ModelRunner:
 
         print 'End optimisation after ' + str(datetime.datetime.now() - start_timer_opti)
         print self.optimised_combinations
-        if self.save_opti:
-            out_dir = 'saved_optimisation_results'
-            if not os.path.isdir(out_dir):
-                os.makedirs(out_dir)
-            filename = os.path.join(out_dir, 'opti_outputs.pkl')
-            tool_kit.pickle_save(self.optimised_combinations, filename)
 
     def get_full_results_opti(self):
 

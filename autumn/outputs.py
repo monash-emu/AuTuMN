@@ -777,6 +777,7 @@ class Project:
                 self.write_docs_by_output()
 
         self.run_plotting()
+        self.load_opti_results()
         self.save_opti_results()
         self.open_output_directory()
 
@@ -2247,6 +2248,13 @@ class Project:
         ax.pie(fracs,  labels=labels, autopct='%1.1f%%', startangle=90, colors=colors, textprops={'backgroundcolor': 'white'})
         fig.suptitle('Optimal allocation of resource')
         self.save_figure(fig, '_optimal_allocation')
+
+    def load_opti_results(self):
+        if self.model_runner.load_opti:
+            storage_file_name = os.path.join(self.out_dir_project, 'optimization')
+            storage_file_name = os.path.join(storage_file_name, 'opti_outputs.pkl')
+            self.model_runner.optimised_combinations = tool_kit.pickle_load(storage_file_name)
+            print "optimization results loaded"
 
     def save_opti_results(self):
         if self.model_runner.save_opti and self.model_runner.optimisation: # save only if opti has been run and save ordered

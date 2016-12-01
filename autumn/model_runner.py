@@ -159,6 +159,7 @@ class ModelRunner:
         self.indicator_to_minimize = 'incidence'
         self.annual_envelope = [0.7e6, 1e6, 1.3e6, 1.6e6, 1.9e6, 2e6, 2.2e6, 2.5e6] # funding scenarios to be run
         self.save_opti = True
+        self.load_opti = False
         self.total_funding = None  # Funding for entire period
         self.year_end_opti = 2020.  # model is run until that date during optimisation
         self.acceptable_combinations = []

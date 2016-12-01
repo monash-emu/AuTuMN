@@ -157,8 +157,9 @@ class ModelRunner:
 
         self.optimisation = False
         self.indicator_to_minimize = 'mortality'
+        self.annual_envelope = [0.7e6, 1e6, 1.3e6, 1.6e6, 1.9e6, 2e6, 2.2e6, 2.5e6] # funding scenarios to be run
         self.save_opti = True
-        self.total_funding = 1.3e6 * (2035. - self.inputs.model_constants['recent_time'])  # Funding for entire period
+        self.total_funding = None  # Funding for entire period
         self.year_end_opti = 2020.  # model is run until that date during optimisation
         self.acceptable_combinations = []
         self.acceptance_dict = {}
@@ -300,19 +301,10 @@ class ModelRunner:
     def run_optimisation(self):
 
         if self.optimisation:
-            if self.total_funding is None:
-                start_cost_index \
-                    = tool_kit.find_first_list_element_at_least_value(
-                    self.model_dict['manual_baseline'].cost_times,
-                    self.model_dict['manual_baseline'].inputs.model_constants['scenario_start_time'])
-                self.total_funding = numpy.sum(self.model_dict['manual_baseline'].costs[start_cost_index:, :]) \
-                                     / (self.model_dict['manual_baseline'].inputs.model_constants['report_end_time'] -
-                                        self.model_dict['manual_baseline'].inputs.model_constants['scenario_start_time'])
-            annual_envelope = [0.7e6, 1e6, 1.3e6, 1.6e6, 1.9e6, 2e6, 2.2e6, 2.5e6]
-            for env in annual_envelope:
+            for env in self.annual_envelope:
                 print "*****************************************************************"
                 print "Annual total envelope of:" + str(env)
-                self.total_funding = env * (2035 - self.inputs.model_constants['recent_time'])  # Total funding for the entire period
+                self.total_funding = env * (2035 - self.inputs.model_constants['scenario_start_time'])  # Total funding for the entire period
                 self.execute_optimisation()
                 self.get_full_results_opti()
             # self.model_dict['optimised'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
@@ -1310,7 +1302,7 @@ class ModelRunner:
 
         print 'Situation in 2035 under the optimal allocation: '
         output_list = self.find_epi_outputs('optimisation',
-                                            outputs_to_analyse=['population', 'incidence',
+                                            outputs_to_analyse=['population', 'incidence', 'true_incidence',
                                                                 'mortality', 'true_mortality'])
         print 'incidence'
         print output_list['incidence'][-1]

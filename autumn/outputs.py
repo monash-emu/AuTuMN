@@ -782,7 +782,7 @@ class Project:
 
         self.load_opti_results()
         self.save_opti_results()
-        self.write_opti_outputs_spreadsheet()
+        # self.write_opti_outputs_spreadsheet()
 
         self.run_plotting()
 

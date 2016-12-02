@@ -311,10 +311,7 @@ class ConsolidatedModel(StratifiedModel):
         The master method that calls all the other methods for the calculations of variable rates
         """
 
-        if self.time > self.next_time_point:
-            print(int(self.time))
-            self.next_time_point += 10.
-
+        self.ticker()
         # The parameter values are calculated from the costs, but only in the future
         if self.eco_drives_epi and self.time > self.inputs.model_constants['current_time']: self.update_vars_from_cost()
         self.vars['population'] = sum(self.compartments.values())
@@ -338,6 +335,16 @@ class ConsolidatedModel(StratifiedModel):
         if 'agestratified_ipt' in self.optional_timevariants or 'ipt' in self.optional_timevariants:
             self.calculate_ipt_rate()
         if 'program_prop_community_ipt' in self.optional_timevariants: self.calculate_community_ipt_rate()
+
+    def ticker(self):
+
+        """
+        Prints time every ten years.
+        """
+
+        if self.time > self.next_time_point:
+            print(int(self.time))
+            self.next_time_point += 10.
 
     def calculate_birth_rates_vars(self):
 

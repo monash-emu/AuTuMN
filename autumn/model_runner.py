@@ -155,19 +155,20 @@ class ModelRunner:
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
 
-        self.optimisation = False
-        self.indicator_to_minimize = 'incidence'
-        self.annual_envelope = [0.7e6, 1e6, 1.3e6, 1.6e6, 1.9e6, 2e6, 2.2e6, 2.5e6] # funding scenarios to be run
+        self.optimisation = False  # leave it True even if you want to load optimization results
+        self.indicator_to_minimize = 'incidence'  # 'incidence' or 'mortality'
+        self.annual_envelope = [0.7e6, 1e6, 1.3e6, 1.6e6, 1.9e6] # funding scenarios to be run
         self.save_opti = True
-        self.load_opti = False
+        self.load_opti = False  # optimization will not be run if loading is turned on
         self.total_funding = None  # Funding for entire period
         self.year_end_opti = 2020.  # model is run until that date during optimisation
         self.acceptable_combinations = []  # list of intervention combinations that can be envisaged with available funding
         self.opti_results = {}  # store all the results that we need for optimisation
         self.optimised_combinations = []
         self.optimal_allocation = {}
-        self.interventions_considered_for_opti = ['treatment_support', 'decentralisation', 'xpertacf']
-        self.interventions_forced_for_opti = ['treatment_support','xpertacf']  # the ones we do want to appear in the optimal plan.
+        self.interventions_considered_for_opti = ['treatment_support', 'decentralisation', 'xpertacf', \
+                                                  'ipt_age0to5', 'ipt_age5to15']
+        self.interventions_forced_for_opti = ['xpertacf', 'decentralisation', 'treatment_support']  # the ones we do want to appear in the optimal plan.
 
         self.acceptance_dict = {}
         self.rejection_dict = {}
@@ -307,7 +308,7 @@ class ModelRunner:
         """
         Triggers optimization for the different levels of funding defined in self.annual_envelope
         """
-        if self.optimisation:
+        if self.optimisation and not self.load_opti:
             # initialize the optimization output container
             self.opti_results['indicator_to_minimize'] = self.indicator_to_minimize
             self.opti_results['annual_envelope'] = self.annual_envelope

@@ -562,6 +562,10 @@ class Project:
         self.out_dir_project = os.path.join('projects', self.name)
         if not os.path.isdir(self.out_dir_project):
             os.makedirs(self.out_dir_project)
+        self.opti_outputs_dir = os.path.join(self.out_dir_project, 'optimization')
+        if not os.path.isdir(self.opti_outputs_dir):
+            os.makedirs(self.opti_outputs_dir)
+
         self.figure_number = 1
         self.classifications = ['demo_', 'econ_', 'epi_prop', 'epi_rr', 'program_prop_', 'program_timeperiod_',
                                 'program_prop_novel', 'program_prop_treatment', 'program_prop_detect',
@@ -776,7 +780,12 @@ class Project:
                 print('Writing output indicator documents')
                 self.write_docs_by_output()
 
+        self.load_opti_results()
+        self.save_opti_results()
+        self.write_opti_outputs_spreadsheet()
+
         self.run_plotting()
+
         self.open_output_directory()
 
     def write_xls_by_scenario(self):
@@ -1152,6 +1161,40 @@ class Project:
 
             # Save document
             document.save(path)
+
+    def write_opti_outputs_spreadsheet(self):
+        # Make filename
+        path = os.path.join(self.opti_outputs_dir, 'opti_results.xlsx')
+
+        # Get active sheet
+        wb = xl.Workbook()
+        sheet = wb.active
+        sheet.title = 'optimization'
+
+        # write row names
+        sheet.cell(row=1, column=1).value = 'envelope'
+        sheet.cell(row=2, column=1).value = 'incidence'
+        sheet.cell(row=3, column=1).value = 'mortality'
+        n_row = 3
+        row_index = {}
+        for intervention in self.model_runner.interventions_considered_for_opti:
+            n_row += 1
+            sheet.cell(row=n_row, column=1).value = intervention
+            row_index[intervention] = n_row
+        # populate cells with content
+        n_col = 1
+        for i, envelope in enumerate(self.model_runner.opti_results['annual_envelope']):
+            n_col += 1
+            sheet.cell(row=1, column=n_col).value = envelope
+            sheet.cell(row=2, column=n_col).value = self.model_runner.opti_results['incidence'][i]
+            sheet.cell(row=3, column=n_col).value = self.model_runner.opti_results['mortality'][i]
+            for intervention in self.model_runner.opti_results['best_allocation'][i].keys():
+                sheet.cell(row=row_index[intervention], column=n_col).value = \
+                    self.model_runner.opti_results['best_allocation'][i][intervention]
+
+        # Save workbook
+        wb.save(path)
+
 
     def run_plotting(self):
 
@@ -2246,6 +2289,17 @@ class Project:
         ax.pie(fracs,  labels=labels, autopct='%1.1f%%', startangle=90, colors=colors, textprops={'backgroundcolor': 'white'})
         fig.suptitle('Optimal allocation of resource')
         self.save_figure(fig, '_optimal_allocation')
+
+    def load_opti_results(self):
+        if self.model_runner.load_opti:
+            storage_file_name = os.path.join(self.opti_outputs_dir, 'opti_outputs.pkl')
+            self.model_runner.opti_results = tool_kit.pickle_load(storage_file_name)
+            print "optimization results loaded"
+
+    def save_opti_results(self):
+        if self.model_runner.save_opti and self.model_runner.optimisation: # save only if opti has been run and save ordered
+            filename = os.path.join(self.opti_outputs_dir, 'opti_outputs.pkl')
+            tool_kit.pickle_save(self.model_runner.opti_results, filename)
 
     def open_output_directory(self):
 

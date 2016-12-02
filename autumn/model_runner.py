@@ -130,11 +130,8 @@ def find_uncertainty_output_weights(list, method, relative_weights=[1., 2.]):
     elif method == 3:
         return [1.] * len(list)
 
-
 class ModelRunner:
-
     def __init__(self, gui_inputs, runtime_outputs, figure_frame, js_gui=False):
-
         self.gui_inputs = gui_inputs
         self.runtime_outputs = runtime_outputs
         self.figure_frame = figure_frame
@@ -155,16 +152,23 @@ class ModelRunner:
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
 
-        self.optimisation = False
-        self.indicator_to_minimize = 'mortality'
+        self.optimisation = False  # leave it True even if you want to load optimization results
+        self.indicator_to_minimize = 'incidence'  # 'incidence' or 'mortality'
+        self.annual_envelope = [0.7e6, 1e6, 1.3e6, 1.6e6, 1.9e6] # funding scenarios to be run
         self.save_opti = True
-        self.total_funding = 1.3e6 * (2035. - self.inputs.model_constants['recent_time'])  # Funding for entire period
+        self.load_opti = False  # optimization will not be run if loading is turned on
+        self.total_funding = None  # Funding for entire period
         self.year_end_opti = 2020.  # model is run until that date during optimisation
-        self.acceptable_combinations = []
-        self.acceptance_dict = {}
-        self.rejection_dict = {}
+        self.acceptable_combinations = []  # list of intervention combinations that can be envisaged with available funding
+        self.opti_results = {}  # store all the results that we need for optimisation
         self.optimised_combinations = []
         self.optimal_allocation = {}
+        self.interventions_considered_for_opti = ['treatment_support', 'decentralisation', 'xpertacf', \
+                                                  'ipt_age0to5', 'ipt_age5to15']
+        self.interventions_forced_for_opti = ['xpertacf', 'decentralisation', 'treatment_support']  # the ones we do want to appear in the optimal plan.
+
+        self.acceptance_dict = {}
+        self.rejection_dict = {}
         self.epi_outputs_to_analyse = ['population', 'incidence', 'true_incidence', 'prevalence', 'true_prevalence',
                                        'mortality', 'true_mortality', 'notifications']
         self.epi_outputs = {}
@@ -298,36 +302,25 @@ class ModelRunner:
         self.cost_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.cost_outputs_dict))
 
     def run_optimisation(self):
+        """
+        Triggers optimization for the different levels of funding defined in self.annual_envelope
+        """
+        if self.optimisation and not self.load_opti:
+            # initialize the optimization output container
+            self.opti_results['indicator_to_minimize'] = self.indicator_to_minimize
+            self.opti_results['annual_envelope'] = self.annual_envelope
+            self.opti_results['best_allocation'] = []
+            self.opti_results['incidence'] = []
+            self.opti_results['mortality'] = []
 
-        if self.optimisation:
-            if self.total_funding is None:
-                start_cost_index \
-                    = tool_kit.find_first_list_element_at_least_value(
-                    self.model_dict['manual_baseline'].cost_times,
-                    self.model_dict['manual_baseline'].inputs.model_constants['scenario_start_time'])
-                self.total_funding = numpy.sum(self.model_dict['manual_baseline'].costs[start_cost_index:, :]) \
-                                     / (self.model_dict['manual_baseline'].inputs.model_constants['report_end_time'] -
-                                        self.model_dict['manual_baseline'].inputs.model_constants['scenario_start_time'])
-            annual_envelope = [0.7e6, 1e6, 1.3e6, 1.6e6, 1.9e6, 2e6, 2.2e6, 2.5e6]
-            for env in annual_envelope:
-                print "*****************************************************************"
-                print "Annual total envelope of:" + str(env)
-                self.total_funding = env * (2035 - self.inputs.model_constants['recent_time'])  # Total funding for the entire period
+            for env in self.annual_envelope:
+                print "Start optimization for annual total envelope of:" + str(env)
+                self.total_funding = env * (2035 - self.inputs.model_constants['scenario_start_time'])  # Total funding for the entire period
                 self.execute_optimisation()
-                self.get_full_results_opti()
-            # self.model_dict['optimised'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
-            # start_time_index = \
-            #     self.model_dict['manual_baseline'].find_time_index(self.inputs.model_constants['recent_time'])
-            # self.model_dict['optimised'].start_time = \
-            #     self.model_dict['manual_baseline'].times[start_time_index]
-            # self.model_dict['optimised'].loaded_compartments = \
-            #     self.model_dict['manual_baseline'].load_state(start_time_index)
-            # self.model_dict['optimised'].eco_drives_epi = True
-            # for intervention in self.interventions_to_cost:
-            #     self.model_dict['optimised'].available_funding[intervention] = self.optimal_allocation[intervention] \
-            #                                                                    * self.total_funding
-            # self.model_dict['optimised'].distribute_funding_across_years()
-            # self.model_dict['optimised'].integrate()
+                full_results = self.get_full_results_opti()
+                self.opti_results['best_allocation'].append(full_results['best_allocation'])
+                self.opti_results['incidence'].append(full_results['incidence'])
+                self.opti_results['mortality'].append(full_results['mortality'])
 
     ##################################################
     ### JavaScript GUI methods parallel to Tkinter ###
@@ -1121,7 +1114,7 @@ class ModelRunner:
         interventions_without_startup = []
         interventions_with_startup = []
 
-        for i, intervention in enumerate(self.interventions_to_cost):
+        for i, intervention in enumerate(self.interventions_considered_for_opti):
             start_cost = 0.
             if self.model_dict['manual_baseline'].intervention_startdates[
                 intervention] is None:
@@ -1133,7 +1126,7 @@ class ModelRunner:
 
         # to be completed
 
-        n_interventions = len(self.interventions_to_cost)
+        n_interventions = len(self.interventions_considered_for_opti)
         full_set = range(n_interventions)
         canditate_combinations = list(itertools.chain.from_iterable(itertools.combinations(full_set, n) \
                                                                     for n in range(n_interventions + 1)[1:]))
@@ -1143,20 +1136,17 @@ class ModelRunner:
             total_start_cost = 0
             for ind_intervention in combi:
                 # Start-up costs apply
-                if self.model_dict['manual_baseline'].intervention_startdates[self.interventions_to_cost[ind_intervention]] is None:
+                if self.model_dict['manual_baseline'].intervention_startdates[self.interventions_considered_for_opti[ind_intervention]] is None:
                     total_start_cost \
                         += self.inputs.model_constants['econ_startupcost_' +
-                                                       self.interventions_to_cost[ind_intervention]]
+                                                       self.interventions_considered_for_opti[ind_intervention]]
             if total_start_cost <= self.total_funding:
                 self.acceptable_combinations.append(combi)
 
     def execute_optimisation(self):
-
-        print 'Start optimisation'
         start_timer_opti = datetime.datetime.now()
-        self.optimised_combinations=[]
+        self.optimised_combinations = []
         # Initialise a new model that will be run from 'recent_time' for optimisation
-
         inputs_opti = self.inputs
         inputs_opti.model_constants['scenario_end_time'] = self.year_end_opti
 
@@ -1174,8 +1164,8 @@ class ModelRunner:
 
         def force_presence_intervention(intervention):
             # keeps only combinations including intervention
-            if intervention in self.interventions_to_cost:
-                ind_intervention = self.interventions_to_cost.index(intervention)
+            if intervention in self.interventions_considered_for_opti:
+                ind_intervention = self.interventions_considered_for_opti.index(intervention)
                 updated_acceptable_combinations = []
                 for combi in self.acceptable_combinations:
                     if ind_intervention in combi:
@@ -1184,11 +1174,8 @@ class ModelRunner:
             else:
                 return self.acceptable_combinations
 
-        self.acceptable_combinations = force_presence_intervention('ipt_age0to5') # ipt has no startup costs
-        self.acceptable_combinations = force_presence_intervention('ipt_age5to15') # ipt has no startup costs
-        self.acceptable_combinations = force_presence_intervention('xpertacf') # ipt has no startup costs
-        self.acceptable_combinations = force_presence_intervention('decentralisation') # ipt has no startup costs
-        self.acceptable_combinations = force_presence_intervention('treatment_support') # ipt has no startup costs
+        for forced_intervention in self.interventions_forced_for_opti:
+            self.acceptable_combinations = force_presence_intervention(forced_intervention)
 
         print "Number of combinations to consider: " + str(len(self.acceptable_combinations))
 
@@ -1197,7 +1184,7 @@ class ModelRunner:
             dict_optimised_combi = {'interventions': [], 'distribution': [], 'objective': None}
 
             for i in range(len(combi)):
-                intervention = self.model_dict['manual_baseline'].interventions_to_cost[combi[i]]
+                intervention = self.interventions_considered_for_opti[combi[i]]
                 dict_optimised_combi['interventions'].append(intervention)
 
             print "Optimisation of the distribution across: "
@@ -1251,17 +1238,17 @@ class ModelRunner:
                                                 self.model_dict['manual_baseline'].interventions_to_cost[combi[i]]] / self.total_funding
                     bnds.append((minimal_allocation, 1.0))
                 # Ready to run optimisation
-                f_tol={'incidence': 0.5, 'mortality': 0.05} # stopping condition: tolerance differs according to indicator
+                f_tol = {'incidence': 0.5, 'mortality': 0.05} # stopping condition: tolerance differs according to indicator
                 res = minimize(func, x_0, jac=None, bounds=bnds, constraints=cons, method='SLSQP',
                                options={'disp': False, 'ftol': f_tol[self.indicator_to_minimize]})
                 dict_optimised_combi['distribution'] = res.x
-                print res.x
                 dict_optimised_combi['objective'] = res.fun
 
             self.optimised_combinations.append(dict_optimised_combi)
             print "Combination " + str(j + 1) + "/" + str(len(self.acceptable_combinations)) + " completed."
 
         # Update self.optimal_allocation
+        self.optimal_allocation = {}
         best_dict = {}
         best_obj = 1e10
         for i, dict_opti in enumerate(self.optimised_combinations):
@@ -1269,26 +1256,18 @@ class ModelRunner:
                 best_dict = dict_opti
                 best_obj = dict_opti['objective']
 
-        for intervention in self.model_dict['manual_baseline'].interventions_to_cost:
+        for intervention in self.interventions_considered_for_opti:
             self.optimal_allocation[intervention] = 0.
 
         for i, intervention in enumerate(best_dict['interventions']):
             self.optimal_allocation[intervention] = best_dict['distribution'][i]
 
         print 'End optimisation after ' + str(datetime.datetime.now() - start_timer_opti)
-        print self.optimised_combinations
-        if self.save_opti:
-            out_dir = 'saved_optimisation_results'
-            if not os.path.isdir(out_dir):
-                os.makedirs(out_dir)
-            filename = os.path.join(out_dir, 'opti_outputs.pkl')
-            tool_kit.pickle_save(self.optimised_combinations, filename)
 
     def get_full_results_opti(self):
-
-        ###################################################
-        # Provisional and ugly - to calculate the incidence in 2035
-
+        """
+        We need to run the best allocation scenario until 2035 to obtain the final incidence and mortality
+        """
         self.model_dict['optimisation'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
         start_time_index = \
             self.model_dict['manual_baseline'].find_time_index(self.inputs.model_constants['recent_time'])
@@ -1296,7 +1275,6 @@ class ModelRunner:
             self.model_dict['manual_baseline'].times[start_time_index]
         self.model_dict['optimisation'].loaded_compartments = \
             self.model_dict['manual_baseline'].load_state(start_time_index)
-
         self.model_dict['optimisation'].eco_drives_epi = True
 
         # initialise funding at 0 for each intervention
@@ -1308,18 +1286,12 @@ class ModelRunner:
         self.model_dict['optimisation'].distribute_funding_across_years()
         self.model_dict['optimisation'].integrate()
 
-        print 'Situation in 2035 under the optimal allocation: '
         output_list = self.find_epi_outputs('optimisation',
-                                            outputs_to_analyse=['population', 'incidence',
+                                            outputs_to_analyse=['population', 'incidence', 'true_incidence',
                                                                 'mortality', 'true_mortality'])
-        print 'incidence'
-        print output_list['incidence'][-1]
-        print 'mortality'
-        print output_list['mortality'][-1]
-        print 'best allocation'
-        print self.optimal_allocation
-
         del self.model_dict['optimisation']
+        return {'best_allocation': self.optimal_allocation, 'incidence': output_list['incidence'][-1], \
+                'mortality': output_list['mortality'][-1]}
 
     ###########################
     ### GUI-related methods ###

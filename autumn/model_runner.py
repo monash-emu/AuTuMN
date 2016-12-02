@@ -130,11 +130,8 @@ def find_uncertainty_output_weights(list, method, relative_weights=[1., 2.]):
     elif method == 3:
         return [1.] * len(list)
 
-
 class ModelRunner:
-
     def __init__(self, gui_inputs, runtime_outputs, figure_frame, js_gui=False):
-
         self.gui_inputs = gui_inputs
         self.runtime_outputs = runtime_outputs
         self.figure_frame = figure_frame
@@ -1259,7 +1256,7 @@ class ModelRunner:
                 best_dict = dict_opti
                 best_obj = dict_opti['objective']
 
-        for intervention in self.model_dict['manual_baseline'].interventions_to_cost:
+        for intervention in self.interventions_considered_for_opti:
             self.optimal_allocation[intervention] = 0.
 
         for i, intervention in enumerate(best_dict['interventions']):

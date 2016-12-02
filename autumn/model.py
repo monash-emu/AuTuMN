@@ -173,6 +173,9 @@ class ConsolidatedModel(StratifiedModel):
         # Temporarily hard coded option for short course MDR-TB regimens to improve outcomes
         self.shortcourse_improves_outcomes = True
 
+        # Add time ticker
+        self.next_time_point = copy.copy(self.start_time)
+
     def define_model_structure(self):
 
         # All compartmental disease stages
@@ -307,6 +310,10 @@ class ConsolidatedModel(StratifiedModel):
         """
         The master method that calls all the other methods for the calculations of variable rates
         """
+
+        if self.time > self.next_time_point:
+            print(int(self.time))
+            self.next_time_point += 10.
 
         # The parameter values are calculated from the costs, but only in the future
         if self.eco_drives_epi and self.time > self.inputs.model_constants['current_time']: self.update_vars_from_cost()
@@ -802,8 +809,7 @@ class ConsolidatedModel(StratifiedModel):
                             else:
                                 detection_organ = ''
                             self.vars['popsize_xpert'] \
-                                += (self.vars['program_rate_detect' + detection_organ + comorbidity]
-                                    + self.vars['program_rate_missed' + detection_organ]) \
+                                += self.vars['program_rate_detect' + detection_organ + comorbidity]\
                                    * self.compartments['active' + organ + strain + comorbidity + agegroup] \
                                    * (self.params['program_number_tests_per_tb_presentation'] + 1.)
 

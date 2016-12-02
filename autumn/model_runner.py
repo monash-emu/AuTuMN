@@ -162,13 +162,13 @@ class ModelRunner:
         self.load_opti = False
         self.total_funding = None  # Funding for entire period
         self.year_end_opti = 2020.  # model is run until that date during optimisation
-        self.acceptable_combinations = []
-        self.opti_results = {}
+        self.acceptable_combinations = []  # list of intervention combinations that can be envisaged with available funding
+        self.opti_results = {}  # store all the results that we need for optimisation
+        self.optimised_combinations = []
+        self.optimal_allocation = {}
 
         self.acceptance_dict = {}
         self.rejection_dict = {}
-        self.optimised_combinations = []
-        self.optimal_allocation = {}
         self.epi_outputs_to_analyse = ['population', 'incidence', 'true_incidence', 'prevalence', 'true_prevalence',
                                        'mortality', 'true_mortality', 'notifications']
         self.epi_outputs = {}
@@ -314,8 +314,7 @@ class ModelRunner:
             self.opti_results['mortality'] = []
 
             for env in self.annual_envelope:
-                print "*****************************************************************"
-                print "Annual total envelope of:" + str(env)
+                print "Start optimization for annual total envelope of:" + str(env)
                 self.total_funding = env * (2035 - self.inputs.model_constants['scenario_start_time'])  # Total funding for the entire period
                 self.execute_optimisation()
                 full_results = self.get_full_results_opti()
@@ -1145,10 +1144,8 @@ class ModelRunner:
                 self.acceptable_combinations.append(combi)
 
     def execute_optimisation(self):
-
-        print 'Start optimisation'
         start_timer_opti = datetime.datetime.now()
-        self.optimised_combinations=[]
+        self.optimised_combinations = []
         # Initialise a new model that will be run from 'recent_time' for optimisation
         inputs_opti = self.inputs
         inputs_opti.model_constants['scenario_end_time'] = self.year_end_opti
@@ -1248,7 +1245,6 @@ class ModelRunner:
                 res = minimize(func, x_0, jac=None, bounds=bnds, constraints=cons, method='SLSQP',
                                options={'disp': False, 'ftol': f_tol[self.indicator_to_minimize]})
                 dict_optimised_combi['distribution'] = res.x
-                print res.x
                 dict_optimised_combi['objective'] = res.fun
 
             self.optimised_combinations.append(dict_optimised_combi)
@@ -1270,7 +1266,6 @@ class ModelRunner:
             self.optimal_allocation[intervention] = best_dict['distribution'][i]
 
         print 'End optimisation after ' + str(datetime.datetime.now() - start_timer_opti)
-        print self.optimised_combinations
 
     def get_full_results_opti(self):
         """
@@ -1294,14 +1289,12 @@ class ModelRunner:
         self.model_dict['optimisation'].distribute_funding_across_years()
         self.model_dict['optimisation'].integrate()
 
-        print 'Situation in 2035 under the optimal allocation: '
         output_list = self.find_epi_outputs('optimisation',
                                             outputs_to_analyse=['population', 'incidence', 'true_incidence',
                                                                 'mortality', 'true_mortality'])
         del self.model_dict['optimisation']
         return {'best_allocation': self.optimal_allocation, 'incidence': output_list['incidence'][-1], \
                 'mortality': output_list['mortality'][-1]}
-
 
     ###########################
     ### GUI-related methods ###

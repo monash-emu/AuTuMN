@@ -2253,7 +2253,7 @@ class Project:
         if self.model_runner.load_opti:
             storage_file_name = os.path.join(self.out_dir_project, 'optimization')
             storage_file_name = os.path.join(storage_file_name, 'opti_outputs.pkl')
-            self.model_runner.optimised_combinations = tool_kit.pickle_load(storage_file_name)
+            self.model_runner.opti_results = tool_kit.pickle_load(storage_file_name)
             print "optimization results loaded"
 
     def save_opti_results(self):
@@ -2262,7 +2262,7 @@ class Project:
             if not os.path.isdir(opti_outputs_dir):
                 os.makedirs(opti_outputs_dir)
             filename = os.path.join(opti_outputs_dir, 'opti_outputs.pkl')
-            tool_kit.pickle_save(self.model_runner.optimised_combinations, filename)
+            tool_kit.pickle_save(self.model_runner.opti_results, filename)
 
     def open_output_directory(self):
 

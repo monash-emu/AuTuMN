@@ -748,6 +748,12 @@ class Project:
         png = os.path.join(self.out_dir_project, self.country + last_part_of_name_for_figure + '.png')
         fig.savefig(png, dpi=300)
 
+    def save_opti_figure(self, fig, last_part_of_name_for_figure):
+        """
+            Same as previous method, when applied to optimisation outputs
+        """
+        png = os.path.join(self.opti_outputs_dir, self.country + last_part_of_name_for_figure + '.png')
+        fig.savefig(png, dpi=300)
     #################################################
     # Methods for outputting to Office applications #
     #################################################
@@ -1195,7 +1201,6 @@ class Project:
         # Save workbook
         wb.save(path)
 
-
     def run_plotting(self):
 
         # Find some general output colours
@@ -1277,7 +1282,8 @@ class Project:
 
         # Optimisation plotting
         if self.model_runner.optimisation:
-            self.plot_piecharts_opti()
+            self.plot_optimized_epi_outputs()
+            #self.plot_piecharts_opti()
 
     def plot_outputs_against_gtb(self, outputs, ci_plot=None):
 
@@ -2277,6 +2283,17 @@ class Project:
         ax.set_xlabel('All runs', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         ax.set_ylabel('Likelihood', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         self.save_figure(fig, '_likelihoods')
+
+    def plot_optimized_epi_outputs(self):
+        """
+         plot incidence and mortality over funding. This corresponds to the outputs obtained under optimal allocation
+        """
+        fig = self.set_and_update_figure()
+        ax = self.make_single_axis(fig)
+        ax2 = ax.twinx()
+        ax.plot(self.model_runner.opti_results['annual_envelope'], self.model_runner.opti_results['incidence'], 'b-')
+        ax2.plot(self.model_runner.opti_results['annual_envelope'], self.model_runner.opti_results['mortality'], 'r.')
+        self.save_opti_figure(fig, '_optimized_outputs')
 
     def plot_piecharts_opti(self):
         fig = self.set_and_update_figure()

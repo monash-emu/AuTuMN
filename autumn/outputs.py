@@ -749,11 +749,14 @@ class Project:
         fig.savefig(png, dpi=300)
 
     def save_opti_figure(self, fig, last_part_of_name_for_figure):
+
         """
-            Same as previous method, when applied to optimisation outputs
+        Same as previous method, when applied to optimisation outputs
         """
+
         png = os.path.join(self.opti_outputs_dir, self.country + last_part_of_name_for_figure + '.png')
         fig.savefig(png, dpi=300)
+
     #################################################
     # Methods for outputting to Office applications #
     #################################################

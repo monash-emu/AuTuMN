@@ -268,8 +268,9 @@ class ModelRunner:
             if scenario is not None:
                 scenario_start_time_index = \
                     self.model_dict['manual_baseline'].find_time_index(self.inputs.model_constants['recent_time'])
-                self.model_dict[scenario_name].start_time = \
-                    self.model_dict['manual_baseline'].times[scenario_start_time_index]
+                start_time = self.model_dict['manual_baseline'].times[scenario_start_time_index]
+                self.model_dict[scenario_name].start_time = start_time
+                self.model_dict[scenario_name].next_time_point = start_time
                 self.model_dict[scenario_name].loaded_compartments = \
                     self.model_dict['manual_baseline'].load_state(scenario_start_time_index)
 

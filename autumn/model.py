@@ -339,7 +339,7 @@ class ConsolidatedModel(StratifiedModel):
     def ticker(self):
 
         """
-        Prints time every ten years.
+        Prints time every ten years to give a sense of progress through integration.
         """
 
         if self.time > self.next_time_point:

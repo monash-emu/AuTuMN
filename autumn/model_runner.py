@@ -166,6 +166,8 @@ class ModelRunner:
         self.opti_results = {}  # store all the results that we need for optimisation
         self.optimised_combinations = []
         self.optimal_allocation = {}
+        self.interventions_considered_for_opti = ['treatment_support', 'decentralisation', 'xpertacf']
+        self.interventions_forced_for_opti = ['treatment_support','xpertacf']  # the ones we do want to appear in the optimal plan.
 
         self.acceptance_dict = {}
         self.rejection_dict = {}
@@ -1114,7 +1116,7 @@ class ModelRunner:
         interventions_without_startup = []
         interventions_with_startup = []
 
-        for i, intervention in enumerate(self.interventions_to_cost):
+        for i, intervention in enumerate(self.interventions_considered_for_opti):
             start_cost = 0.
             if self.model_dict['manual_baseline'].intervention_startdates[
                 intervention] is None:
@@ -1126,7 +1128,7 @@ class ModelRunner:
 
         # to be completed
 
-        n_interventions = len(self.interventions_to_cost)
+        n_interventions = len(self.interventions_considered_for_opti)
         full_set = range(n_interventions)
         canditate_combinations = list(itertools.chain.from_iterable(itertools.combinations(full_set, n) \
                                                                     for n in range(n_interventions + 1)[1:]))
@@ -1136,10 +1138,10 @@ class ModelRunner:
             total_start_cost = 0
             for ind_intervention in combi:
                 # Start-up costs apply
-                if self.model_dict['manual_baseline'].intervention_startdates[self.interventions_to_cost[ind_intervention]] is None:
+                if self.model_dict['manual_baseline'].intervention_startdates[self.interventions_considered_for_opti[ind_intervention]] is None:
                     total_start_cost \
                         += self.inputs.model_constants['econ_startupcost_' +
-                                                       self.interventions_to_cost[ind_intervention]]
+                                                       self.interventions_considered_for_opti[ind_intervention]]
             if total_start_cost <= self.total_funding:
                 self.acceptable_combinations.append(combi)
 
@@ -1164,8 +1166,8 @@ class ModelRunner:
 
         def force_presence_intervention(intervention):
             # keeps only combinations including intervention
-            if intervention in self.interventions_to_cost:
-                ind_intervention = self.interventions_to_cost.index(intervention)
+            if intervention in self.interventions_considered_for_opti:
+                ind_intervention = self.interventions_considered_for_opti.index(intervention)
                 updated_acceptable_combinations = []
                 for combi in self.acceptable_combinations:
                     if ind_intervention in combi:
@@ -1174,11 +1176,8 @@ class ModelRunner:
             else:
                 return self.acceptable_combinations
 
-        self.acceptable_combinations = force_presence_intervention('ipt_age0to5') # ipt has no startup costs
-        self.acceptable_combinations = force_presence_intervention('ipt_age5to15') # ipt has no startup costs
-        self.acceptable_combinations = force_presence_intervention('xpertacf') # ipt has no startup costs
-        self.acceptable_combinations = force_presence_intervention('decentralisation') # ipt has no startup costs
-        self.acceptable_combinations = force_presence_intervention('treatment_support') # ipt has no startup costs
+        for forced_intervention in self.interventions_forced_for_opti:
+            self.acceptable_combinations = force_presence_intervention(forced_intervention)
 
         print "Number of combinations to consider: " + str(len(self.acceptable_combinations))
 
@@ -1187,7 +1186,7 @@ class ModelRunner:
             dict_optimised_combi = {'interventions': [], 'distribution': [], 'objective': None}
 
             for i in range(len(combi)):
-                intervention = self.model_dict['manual_baseline'].interventions_to_cost[combi[i]]
+                intervention = self.interventions_considered_for_opti[combi[i]]
                 dict_optimised_combi['interventions'].append(intervention)
 
             print "Optimisation of the distribution across: "
@@ -1241,7 +1240,7 @@ class ModelRunner:
                                                 self.model_dict['manual_baseline'].interventions_to_cost[combi[i]]] / self.total_funding
                     bnds.append((minimal_allocation, 1.0))
                 # Ready to run optimisation
-                f_tol={'incidence': 0.5, 'mortality': 0.05} # stopping condition: tolerance differs according to indicator
+                f_tol = {'incidence': 0.5, 'mortality': 0.05} # stopping condition: tolerance differs according to indicator
                 res = minimize(func, x_0, jac=None, bounds=bnds, constraints=cons, method='SLSQP',
                                options={'disp': False, 'ftol': f_tol[self.indicator_to_minimize]})
                 dict_optimised_combi['distribution'] = res.x

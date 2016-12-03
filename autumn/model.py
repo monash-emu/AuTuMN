@@ -701,17 +701,19 @@ class ConsolidatedModel(StratifiedModel):
             treatments += ['_inappropriate']
         for strain in treatments:
 
-            self.vars['tb_timeperiod_ontreatment' + strain] = self.params['tb_timeperiod_ontreatment' + strain]
-            self.vars['tb_timeperiod_infect_ontreatment' + strain] \
-                = self.params['tb_timeperiod_infect_ontreatment' + strain]
+            # Find baseline treatment period for total duration and for period infectious
+            for treatment_stage in ['', '_infect']:
+                self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
+                    = self.params['tb_timeperiod' + treatment_stage + '_ontreatment' + strain]
 
             # Adapt treatment periods for short course regimen
             if strain == '_mdr' and 'program_prop_shortcourse_mdr' in self.optional_timevariants and self.scenario == 6:
                 relative_treatment_duration_mdr \
                     = 1. - self.vars['program_prop_shortcourse_mdr'] \
                            * (1. - self.params['program_prop_shortcourse_mdr_relativeduration'])
-                self.vars['tb_timeperiod_ontreatment' + strain] *= relative_treatment_duration_mdr
-                self.vars['tb_timeperiod_infect_ontreatment' + strain] *= relative_treatment_duration_mdr
+                for treatment_stage in ['', '_infect']:
+                    self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
+                        *= relative_treatment_duration_mdr
 
                 # Adapt treatment outcomes for short course regimen
                 if self.shortcourse_improves_outcomes:

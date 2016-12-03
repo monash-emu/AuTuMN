@@ -745,13 +745,14 @@ class ConsolidatedModel(StratifiedModel):
                   - self.vars['tb_timeperiod_infect_ontreatment' + strain]
 
             # Find the proportion of deaths/defaults during the infectious and non-infectious stages
+            props = {}
             for outcome in self.outcomes[1:]:
-                early_proportion, late_proportion \
+                props['_infect'], props['_noninfect'] \
                     = find_outcome_proportions_by_period(self.vars['program_prop_treatment' + outcome + strain],
                                                          self.vars['tb_timeperiod_infect_ontreatment' + strain],
                                                          self.vars['tb_timeperiod_ontreatment' + strain])
-                self.vars['program_prop_treatment' + outcome + '_infect' + strain] = early_proportion
-                self.vars['program_prop_treatment' + outcome + '_noninfect' + strain] = late_proportion
+                for treatment_stage in props:
+                    self.vars['program_prop_treatment' + outcome + treatment_stage + strain] = props[treatment_stage]
 
             for treatment_stage in self.treatment_stages:
 

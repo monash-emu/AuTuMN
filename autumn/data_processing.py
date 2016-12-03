@@ -703,7 +703,7 @@ class Inputs:
         for DS-TB in this case and not for no strain name.
         """
 
-        for timeperiod in ['tb_timeperiod_infect_ontreatment', 'tb_timeperiod_treatment']:
+        for timeperiod in ['tb_timeperiod_infect_ontreatment', 'tb_timeperiod_ontreatment']:
             self.model_constants[timeperiod] \
                 = self.model_constants[timeperiod + '_ds']
 
@@ -765,7 +765,7 @@ class Inputs:
 
             # Find the non-infectious periods
             self.model_constants['tb_timeperiod_noninfect_ontreatment' + strain] \
-                = self.model_constants['tb_timeperiod_treatment' + strain] \
+                = self.model_constants['tb_timeperiod_ontreatment' + strain] \
                   - self.model_constants['tb_timeperiod_infect_ontreatment' + strain]
 
     def find_comorb_progressions(self):

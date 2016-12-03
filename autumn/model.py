@@ -701,7 +701,7 @@ class ConsolidatedModel(StratifiedModel):
             treatments += ['_inappropriate']
         for strain in treatments:
 
-            self.vars['tb_timeperiod_treatment' + strain] = self.params['tb_timeperiod_treatment' + strain]
+            self.vars['tb_timeperiod_ontreatment' + strain] = self.params['tb_timeperiod_ontreatment' + strain]
             self.vars['tb_timeperiod_infect_ontreatment' + strain] \
                 = self.params['tb_timeperiod_infect_ontreatment' + strain]
 
@@ -710,7 +710,7 @@ class ConsolidatedModel(StratifiedModel):
                 relative_treatment_duration_mdr \
                     = 1. - self.vars['program_prop_shortcourse_mdr'] \
                            * (1. - self.params['program_prop_shortcourse_mdr_relativeduration'])
-                self.vars['tb_timeperiod_treatment' + strain] *= relative_treatment_duration_mdr
+                self.vars['tb_timeperiod_ontreatment' + strain] *= relative_treatment_duration_mdr
                 self.vars['tb_timeperiod_infect_ontreatment' + strain] *= relative_treatment_duration_mdr
 
                 # Adapt treatment outcomes for short course regimen
@@ -739,7 +739,7 @@ class ConsolidatedModel(StratifiedModel):
 
             # Find non-infectious period from infectious and total
             self.vars['tb_timeperiod_noninfect_ontreatment' + strain] \
-                = self.vars['tb_timeperiod_treatment' + strain] \
+                = self.vars['tb_timeperiod_ontreatment' + strain] \
                   - self.vars['tb_timeperiod_infect_ontreatment' + strain]
 
             # Find the proportion of deaths/defaults during the infectious and non-infectious stages
@@ -747,7 +747,7 @@ class ConsolidatedModel(StratifiedModel):
                 early_proportion, late_proportion \
                     = find_outcome_proportions_by_period(self.vars['program_prop_treatment' + outcome + strain],
                                                          self.vars['tb_timeperiod_infect_ontreatment' + strain],
-                                                         self.vars['tb_timeperiod_treatment' + strain])
+                                                         self.vars['tb_timeperiod_ontreatment' + strain])
                 self.vars['program_prop_treatment' + outcome + '_infect' + strain] = early_proportion
                 self.vars['program_prop_treatment' + outcome + '_noninfect' + strain] = late_proportion
 

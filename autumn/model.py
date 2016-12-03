@@ -701,16 +701,17 @@ class ConsolidatedModel(StratifiedModel):
             treatments += ['_inappropriate']
         for strain in treatments:
 
-            tb_timeperiod_treatment = self.params['tb_timeperiod_treatment' + strain]
-            tb_timeperiod_infect_ontreatment = self.params['tb_timeperiod_infect_ontreatment' + strain]
+            self.vars['tb_timeperiod_treatment' + strain] = self.params['tb_timeperiod_treatment' + strain]
+            self.vars['tb_timeperiod_infect_ontreatment' + strain] \
+                = self.params['tb_timeperiod_infect_ontreatment' + strain]
 
             # Adapt treatment periods for short course regimen
-            if strain == '_mdr' and 'program_prop_shortcourse_mdr' in self.optional_timevariants:
+            if strain == '_mdr' and 'program_prop_shortcourse_mdr' in self.optional_timevariants and self.scenario == 6:
                 relative_treatment_duration_mdr \
                     = 1. - self.vars['program_prop_shortcourse_mdr'] \
                            * (1. - self.params['program_prop_shortcourse_mdr_relativeduration'])
-                tb_timeperiod_treatment *= relative_treatment_duration_mdr
-                tb_timeperiod_infect_ontreatment *= relative_treatment_duration_mdr
+                self.vars['tb_timeperiod_treatment' + strain] *= relative_treatment_duration_mdr
+                self.vars['tb_timeperiod_infect_ontreatment' + strain] *= relative_treatment_duration_mdr
 
                 # Adapt treatment outcomes for short course regimen
                 if self.shortcourse_improves_outcomes:
@@ -736,12 +737,17 @@ class ConsolidatedModel(StratifiedModel):
                 = 1. - self.vars['program_prop_treatment_success' + strain] \
                   - self.vars['program_prop_treatment_death' + strain]
 
+            # Find non-infectious period from infectious and total
+            self.vars['tb_timeperiod_noninfect_ontreatment' + strain] \
+                = self.vars['tb_timeperiod_treatment' + strain] \
+                  - self.vars['tb_timeperiod_infect_ontreatment' + strain]
+
             # Find the proportion of deaths/defaults during the infectious and non-infectious stages
             for outcome in self.outcomes[1:]:
                 early_proportion, late_proportion \
                     = find_outcome_proportions_by_period(self.vars['program_prop_treatment' + outcome + strain],
-                                                         tb_timeperiod_infect_ontreatment,
-                                                         tb_timeperiod_treatment)
+                                                         self.vars['tb_timeperiod_infect_ontreatment' + strain],
+                                                         self.vars['tb_timeperiod_treatment' + strain])
                 self.vars['program_prop_treatment' + outcome + '_infect' + strain] = early_proportion
                 self.vars['program_prop_treatment' + outcome + '_noninfect' + strain] = late_proportion
 
@@ -755,7 +761,7 @@ class ConsolidatedModel(StratifiedModel):
                 # Find the corresponding rates from the proportions
                 for outcome in self.outcomes:
                     self.vars['program_rate' + outcome + treatment_stage + strain] \
-                        = 1. / self.params['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
+                        = 1. / self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
                           * self.vars['program_prop_treatment' + outcome + treatment_stage + strain]
 
                 # Split default according to whether amplification occurs

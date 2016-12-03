@@ -124,7 +124,8 @@ class ConsolidatedModel(StratifiedModel):
         for timevariant in \
                 ['program_prop_novel_vaccination', 'transmission_modifier', 'program_prop_smearacf',
                  'program_prop_xpertacf', 'program_prop_decentralisation', 'program_prop_xpert',
-                 'program_prop_treatment_support', 'program_prop_community_ipt', 'program_prop_shortcourse_mdr']:
+                 'program_prop_treatment_support', 'program_prop_community_ipt', 'program_prop_shortcourse_mdr',
+                 'program_prop_xpertacf_indigenous']:
             if timevariant in self.scaleup_fns: self.optional_timevariants += [timevariant]
         for timevariant in self.scaleup_fns:
             if '_ipt_age' in timevariant:
@@ -574,7 +575,7 @@ class ConsolidatedModel(StratifiedModel):
                                * self.params['program_prop_acf_detections_per_round'] \
                                / self.params['program_timeperiod_acf_rounds']
 
-                    # Adjust smear-negative detections for Xpert's sensitivity for these patients
+                    # Adjust smear-negative detections for Xpert's sensitivity
                     self.vars['program_rate_acf_smearneg' + comorbidity] \
                         *= self.params['tb_prop_xpert_smearneg_sensitivity']
 

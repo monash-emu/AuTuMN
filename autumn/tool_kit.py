@@ -143,6 +143,8 @@ def find_title_from_dictionary(name):
             'Diagnostic algorithm sensitivity',
         'program_prop_ipt':
             'All ages IPT coverage',
+        'program_prop_shortcourse_mdr':
+            'Short-course MDR-TB regimen',
         'econ_program_unitcost_ipt':
             'IPT unit cost',
         'program_cost_vaccination':
@@ -223,6 +225,8 @@ def find_title_from_dictionary(name):
             'Treatment support',
         'xpert':
             'Xpert replaces smear',
+        'shortcourse_mdr':
+            'Short-course MDR-TB regimen',
         'baseline':
             'Baseline scenario',
         'ipt_age5to15':

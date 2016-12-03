@@ -1,0 +1,108 @@
+digraph {
+	graph [fontsize=16 label="Dynamic Transmission Model"]
+	node [fillcolor="#CCDDFF" fontname=Helvetica shape=box style=filled]
+	edge [arrowhead=open fontname=Courier fontsize=10 style=dotted]
+		susceptible_fully
+		susceptible_vac
+		susceptible_treated
+		latent_early_ds
+		latent_early_mdr
+		latent_late_ds
+		latent_late_mdr
+		active_ds
+		active_mdr
+		detect_ds_asds
+		detect_ds_asmdr
+		detect_mdr_asds
+		detect_mdr_asmdr
+		missed_ds
+		missed_mdr
+		treatment_infect_ds_asds
+		treatment_infect_ds_asmdr
+		treatment_infect_mdr_asds
+		treatment_infect_mdr_asmdr
+		treatment_noninfect_ds_asds
+		treatment_noninfect_ds_asmdr
+		treatment_noninfect_mdr_asds
+		treatment_noninfect_mdr_asmdr
+		lowquality_ds
+		lowquality_mdr
+		tb_death
+			susceptible_fully -> latent_early_ds [label=rate]
+			susceptible_vac -> latent_early_ds [label=rate]
+			susceptible_treated -> latent_early_ds [label=rate]
+			latent_late_ds -> latent_early_ds [label=rate]
+			susceptible_fully -> latent_early_mdr [label=rate]
+			susceptible_vac -> latent_early_mdr [label=rate]
+			susceptible_treated -> latent_early_mdr [label=rate]
+			latent_late_mdr -> latent_early_mdr [label=rate]
+			active_ds -> missed_ds [label=prog]
+			detect_ds_asds -> treatment_infect_ds_asds [label=prog]
+			detect_ds_asmdr -> treatment_infect_ds_asmdr [label=prog]
+			active_ds -> lowquality_ds [label=prog]
+			active_mdr -> missed_mdr [label=prog]
+			detect_mdr_asds -> treatment_infect_mdr_asds [label=prog]
+			detect_mdr_asmdr -> treatment_infect_mdr_asmdr [label=prog]
+			active_mdr -> lowquality_mdr [label=prog]
+			active_ds -> detect_ds_asds [label=prog]
+			active_mdr -> detect_mdr_asds [label=prog]
+			active_mdr -> detect_mdr_asmdr [label=prog]
+			treatment_infect_ds_asds -> treatment_noninfect_ds_asds [label=prog]
+			treatment_noninfect_ds_asds -> susceptible_treated [label=prog]
+			treatment_infect_ds_asds -> active_ds [label=prog]
+			treatment_infect_ds_asds -> active_mdr [label=prog]
+			treatment_noninfect_ds_asds -> active_ds [label=prog]
+			treatment_noninfect_ds_asds -> active_mdr [label=prog]
+			treatment_infect_ds_asmdr -> treatment_noninfect_ds_asmdr [label=prog]
+			treatment_noninfect_ds_asmdr -> susceptible_treated [label=prog]
+			treatment_infect_ds_asmdr -> active_ds [label=prog]
+			treatment_infect_ds_asmdr -> active_mdr [label=prog]
+			treatment_noninfect_ds_asmdr -> active_ds [label=prog]
+			treatment_noninfect_ds_asmdr -> active_mdr [label=prog]
+			treatment_infect_mdr_asds -> treatment_noninfect_mdr_asds [label=prog]
+			treatment_noninfect_mdr_asds -> susceptible_treated [label=prog]
+			treatment_infect_mdr_asds -> active_mdr [label=prog]
+			treatment_noninfect_mdr_asds -> active_mdr [label=prog]
+			treatment_infect_mdr_asmdr -> treatment_noninfect_mdr_asmdr [label=prog]
+			treatment_noninfect_mdr_asmdr -> susceptible_treated [label=prog]
+			treatment_infect_mdr_asmdr -> active_mdr [label=prog]
+			treatment_noninfect_mdr_asmdr -> active_mdr [label=prog]
+			latent_early_ds -> latent_late_ds [label=5.3]
+			latent_early_ds -> active_ds [label=0.8]
+			latent_late_ds -> active_ds [label=0.0025]
+			latent_early_mdr -> latent_late_mdr [label=5.3]
+			latent_early_mdr -> active_mdr [label=0.8]
+			latent_late_mdr -> active_mdr [label=0.0025]
+			active_ds -> latent_late_ds [label=0.20]
+			missed_ds -> latent_late_ds [label=0.20]
+			lowquality_ds -> latent_late_ds [label=0.20]
+			detect_ds_asds -> latent_late_ds [label=0.20]
+			detect_ds_asmdr -> latent_late_ds [label=0.20]
+			active_mdr -> latent_late_mdr [label=0.20]
+			missed_mdr -> latent_late_mdr [label=0.20]
+			lowquality_mdr -> latent_late_mdr [label=0.20]
+			detect_mdr_asds -> latent_late_mdr [label=0.20]
+			detect_mdr_asmdr -> latent_late_mdr [label=0.20]
+			missed_ds -> active_ds [label=4.0]
+			lowquality_ds -> active_ds [label=0.50]
+			missed_mdr -> active_mdr [label=4.0]
+			lowquality_mdr -> active_mdr [label=0.50]
+			active_ds -> tb_death [label=0.13]
+			missed_ds -> tb_death [label=0.13]
+			lowquality_ds -> tb_death [label=0.13]
+			detect_ds_asds -> tb_death [label=0.13]
+			detect_ds_asmdr -> tb_death [label=0.13]
+			active_mdr -> tb_death [label=0.13]
+			missed_mdr -> tb_death [label=0.13]
+			lowquality_mdr -> tb_death [label=0.13]
+			detect_mdr_asds -> tb_death [label=0.13]
+			detect_mdr_asmdr -> tb_death [label=0.13]
+			treatment_infect_ds_asds -> tb_death [label=prog]
+			treatment_noninfect_ds_asds -> tb_death [label=prog]
+			treatment_infect_ds_asmdr -> tb_death [label=prog]
+			treatment_noninfect_ds_asmdr -> tb_death [label=prog]
+			treatment_infect_mdr_asds -> tb_death [label=prog]
+			treatment_noninfect_mdr_asds -> tb_death [label=prog]
+			treatment_infect_mdr_asmdr -> tb_death [label=prog]
+			treatment_noninfect_mdr_asmdr -> tb_death [label=prog]
+}

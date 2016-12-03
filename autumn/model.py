@@ -707,7 +707,7 @@ class ConsolidatedModel(StratifiedModel):
                     = self.params['tb_timeperiod' + treatment_stage + '_ontreatment' + strain]
 
             # Adapt treatment periods for short course regimen
-            if strain == '_mdr' and 'program_prop_shortcourse_mdr' in self.optional_timevariants and self.scenario == 6:
+            if strain == '_mdr' and 'program_prop_shortcourse_mdr' in self.optional_timevariants:
                 relative_treatment_duration_mdr \
                     = 1. - self.vars['program_prop_shortcourse_mdr'] \
                            * (1. - self.params['program_prop_shortcourse_mdr_relativeduration'])
@@ -767,7 +767,7 @@ class ConsolidatedModel(StratifiedModel):
                         = 1. / self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
                           * self.vars['program_prop_treatment' + outcome + treatment_stage + strain]
 
-                # Split default according to whether amplification occurs
+                # Split default according to whether amplification occurs (if not the most resistant strain)
                 if self.is_amplification:
                     self.vars['program_rate_default' + treatment_stage + '_amplify' + strain] \
                         = self.vars['program_rate_default' + treatment_stage + strain] \
@@ -1213,7 +1213,7 @@ class ConsolidatedModel(StratifiedModel):
                             for treatment_stage in self.treatment_stages:
 
                                 # If it's either the most resistant strain available or amplification is not active:
-                                if strain_number == len(self.strains) - 1 or not self.is_amplification:
+                                if strain == self.strains[-1] or not self.is_amplification:
                                     self.set_var_transfer_rate_flow(
                                         'treatment' +
                                         treatment_stage + organ + strain + as_assigned_strain + comorbidity + agegroup,

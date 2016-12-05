@@ -115,14 +115,15 @@ def make_axes_with_room_for_legend():
 
 def set_axes_props(
         ax, xlabel=None, ylabel=None, title=None, is_legend=True,
-        axis_labels=None):
+        axis_labels=None, side='left'):
 
     frame_colour = "grey"
 
     # Hide top and right border of plot
-    ax.spines['right'].set_visible(False)
+    if side == 'left':
+        ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
-    ax.yaxis.set_ticks_position('left')
+    ax.yaxis.set_ticks_position(side)
     ax.xaxis.set_ticks_position('bottom')
 
     if xlabel is not None:
@@ -2294,8 +2295,15 @@ class Project:
         fig = self.set_and_update_figure()
         ax = self.make_single_axis(fig)
         ax2 = ax.twinx()
-        ax.plot(self.model_runner.opti_results['annual_envelope'], self.model_runner.opti_results['incidence'], 'b-')
-        ax2.plot(self.model_runner.opti_results['annual_envelope'], self.model_runner.opti_results['mortality'], 'r.')
+        ax.plot(self.model_runner.opti_results['annual_envelope'], self.model_runner.opti_results['incidence'], 'b^', \
+                linewidth=2.0)
+        set_axes_props(ax, 'Annual funding (US$)', 'TB incidence (/100,000/year)',
+                       '', True, 'incidence')
+        ax2.plot(self.model_runner.opti_results['annual_envelope'], self.model_runner.opti_results['mortality'], 'r+', \
+                 linewidth=4.0)
+        set_axes_props(ax2, 'Annual funding (US$)', 'TB mortality (/100,000/year)',
+                       '', True, 'mortality', side='right')
+        # need to add a legend !
         self.save_opti_figure(fig, '_optimized_outputs')
 
     def plot_piecharts_opti(self):

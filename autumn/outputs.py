@@ -1226,6 +1226,7 @@ class Project:
 
         # Plot scale-up functions - currently only doing this for the baseline model run
         if self.gui_inputs['output_scaleups']:
+            # self.var_viewer()
             self.classify_scaleups()
             self.plot_scaleup_fns_against_data()
             self.plot_programmatic_scaleups()
@@ -1492,6 +1493,27 @@ class Project:
                 if classification in fn:
                     self.classified_scaleups[classification] += [fn]
 
+    def var_viewer(self, functions=['']):
+
+        """
+        Function that is not currently called, but can be used to visualise a particular var or several vars, by adding
+        them to the function input list.
+        """
+
+        for function in functions:
+            fig = self.set_and_update_figure()
+            ax = fig.add_subplot(1, 1, 1)
+            start_time = self.inputs.model_constants['plot_start_time']
+            end_time = self.inputs.model_constants['plot_end_time']
+            for scenario in reversed(self.scenarios):
+                scenario_name = tool_kit.find_scenario_string_from_number(scenario)
+                ax.plot(self.model_runner.model_dict['manual_' + scenario_name].times,
+                        self.model_runner.model_dict['manual_' + scenario_name].get_var_soln(function),
+                        color=self.output_colours[scenario][1])
+            ax.set_xlim([start_time, end_time])
+            fig.suptitle(function)
+            self.save_figure(fig, '_var_' + function)
+
     def plot_scaleup_fns_against_data(self):
 
         """
@@ -1679,7 +1701,7 @@ class Project:
                 if p == len(self.programs) - 1:
                     scenario_handles = ax.lines
                     self.make_legend_to_single_axis(ax, scenario_handles, scenario_labels)
-                ax.set_title(tool_kit.find_title_from_dictionary('program_prop_' + program)[:-9],
+                ax.set_title(tool_kit.find_title_from_dictionary('program_prop_' + program),
                              fontsize=get_nice_font_size(subplot_grid)+2)
 
                 # X-axis label

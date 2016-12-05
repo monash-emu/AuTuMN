@@ -861,7 +861,7 @@ class ConsolidatedModel(StratifiedModel):
         for compartment in self.compartments:
             if 'susceptible_' not in compartment and 'latent_' not in compartment:
                 all_actives_popsize += self.compartments[compartment]
-        all_actives_interventions = ['program_prop_decentralisation', 'engage_lowquality']
+        all_actives_interventions = ['decentralisation', 'engage_lowquality']
         for intervention in all_actives_interventions:
             if intervention in self.inputs.potential_interventions_to_cost:
                 self.vars['popsize_' + intervention] = all_actives_popsize

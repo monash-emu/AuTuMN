@@ -2359,10 +2359,12 @@ class Project:
         for i, intervention in enumerate(self.model_runner.interventions_considered_for_opti):
             color_dict[intervention] = colors[i]
 
+        interventions_for_legend = []
         for i, funding in enumerate(self.model_runner.opti_results['annual_envelope']):
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i+1)
-            labels = self.model_runner.opti_results['best_allocation'][i].keys()
-            fracs = self.model_runner.opti_results['best_allocation'][i].values()
+            temp_dict = self.model_runner.opti_results['best_allocation'][i]
+            labels = temp_dict.keys()
+            fracs = temp_dict.values()
             dynamic_colors = [color_dict[lab] for lab in labels]
             ax.pie(fracs, autopct='%1.1f%%', startangle=90, pctdistance=0.8, radius=0.8, colors=dynamic_colors, \
                    textprops={'backgroundcolor': 'white', 'fontsize': font_size})
@@ -2370,9 +2372,28 @@ class Project:
             circle = pyplot.Circle((0, 0), 0.4, color='w')
             ax.add_artist(circle)
             ax.text(0, 0, get_string_for_funding(funding), horizontalalignment='center', verticalalignment='center')
+            if len(interventions_for_legend) == 0:
+                # the legend will contain interventions sorted by proportion of funding for the smallest funding
+                interventions_for_legend = sorted(temp_dict, key=temp_dict.get, reverse=True)
+            else:
+                # we need to add interventions that were not selected for lower funding amounts
+                for intervention in temp_dict.keys():
+                    if intervention not in interventions_for_legend:
+                        interventions_for_legend.append(intervention)
 
+        # generate a gost pie chart that include all interventions to be able to build the full legend
+        ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], n_envelopes + 1)
+        fracs = numpy.random.uniform(0, 1, size=len(interventions_for_legend))
+        dynamic_colors = [color_dict[lab] for lab in interventions_for_legend]
+        patches, texts = ax.pie(fracs, colors=dynamic_colors)
+        ax.cla() # clear the gost pie chart
+
+        ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], n_envelopes + 1)
+        ax.legend(patches, interventions_for_legend, loc='right')
+        ax.axis('off')
         fig.tight_layout() # reduces the margins to maximize the size of the pies
         fig.suptitle('Optimal allocation of resource')
+
         self.save_opti_figure(fig, '_optimal_allocation')
 
     def load_opti_results(self):

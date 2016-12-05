@@ -543,6 +543,26 @@ def find_subplot_numbers(n):
 
     return answer
 
+def get_string_for_funding(funding):
+    """
+    Returns an easy to read string corresponding to a level of funding (ex 9,000,000 becomes $9M)
+    """
+    s = '$'
+    if funding >= 1e9:
+        letter = 'B'
+        factor = 9
+    elif funding >= 1e6:
+        letter = 'M'
+        factor = 6
+    elif funding >=1e3:
+        letter = 'K'
+        factor = 3
+    else:
+        letter = ''
+        factor = 0
+    number = funding / (10**factor)
+    s += str(number) + letter
+    return s
 
 class Project:
 
@@ -792,7 +812,7 @@ class Project:
 
         self.load_opti_results()
         self.save_opti_results()
-        # self.write_opti_outputs_spreadsheet()
+        #self.write_opti_outputs_spreadsheet()
 
         self.run_plotting()
 
@@ -1288,7 +1308,7 @@ class Project:
         # Optimisation plotting
         if self.model_runner.optimisation:
             self.plot_optimized_epi_outputs()
-            #self.plot_piecharts_opti()
+            self.plot_piecharts_opti()
 
     def plot_outputs_against_gtb(self, outputs, ci_plot=None):
 
@@ -2329,16 +2349,31 @@ class Project:
         self.save_opti_figure(fig, '_optimized_outputs')
 
     def plot_piecharts_opti(self):
-        fig = self.set_and_update_figure()
-        ax = self.make_single_axis(fig)
+        n_envelopes = len(self.model_runner.opti_results['annual_envelope'])
+        subplot_grid = find_subplot_numbers(n_envelopes + 1)
+        font_size = get_nice_font_size(subplot_grid)
 
-        # The slices will be ordered and plotted counter-clockwise.
-        labels = self.model_runner.optimal_allocation.keys()
-        fracs = self.model_runner.optimal_allocation.values()
-        colors = ['#000037', '#7398B5', '#D94700', '#DBE4E9', '#62000E', '#3D5F00', '#240445', 'black'] # AuTuMN colors
-        ax.pie(fracs,  labels=labels, autopct='%1.1f%%', startangle=90, colors=colors, textprops={'backgroundcolor': 'white'})
+        fig = self.set_and_update_figure()
+        colors = ['#000037', '#7398B5', '#D94700', '#DBE4E9', '#62000E', '#3D5F00', '#240445', 'black', 'red', 'yellow', 'blue']  # AuTuMN colors
+        color_dict = {}
+        for i, intervention in enumerate(self.model_runner.interventions_considered_for_opti):
+            color_dict[intervention] = colors[i]
+
+        for i, funding in enumerate(self.model_runner.opti_results['annual_envelope']):
+            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i+1)
+            labels = self.model_runner.opti_results['best_allocation'][i].keys()
+            fracs = self.model_runner.opti_results['best_allocation'][i].values()
+            dynamic_colors = [color_dict[lab] for lab in labels]
+            ax.pie(fracs, autopct='%1.1f%%', startangle=90, pctdistance=0.8, radius=0.8, colors=dynamic_colors, \
+                   textprops={'backgroundcolor': 'white', 'fontsize': font_size})
+            ax.axis('equal')
+            circle = pyplot.Circle((0, 0), 0.4, color='w')
+            ax.add_artist(circle)
+            ax.text(0, 0, get_string_for_funding(funding), horizontalalignment='center', verticalalignment='center')
+
+        fig.tight_layout() # reduces the margins to maximize the size of the pies
         fig.suptitle('Optimal allocation of resource')
-        self.save_figure(fig, '_optimal_allocation')
+        self.save_opti_figure(fig, '_optimal_allocation')
 
     def load_opti_results(self):
         if self.model_runner.load_opti:

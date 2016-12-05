@@ -213,6 +213,10 @@ def find_title_from_dictionary(name):
             'Engage low-quality sector',
         'engage_lowquality':
             'Engage low-quality sector',
+        'program_prop_xpertacf_prison':
+            'Prison ACF',
+        'program_prop_xpertacf_indigenous':
+            'Indigenous ACF',
         'epi_':
             'epidemiological',
         'epi_prop_smearneg':

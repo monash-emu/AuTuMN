@@ -226,7 +226,7 @@ class App:
         for slide in slider_list:
             self.raw_outputs[slide] = DoubleVar()
         self.raw_outputs['default_smoothness'].set(1.)
-        self.raw_outputs['time_step'].set(.1)
+        self.raw_outputs['time_step'].set(.5)
         label_font = 'Helvetica 9 bold italic'
         slider_labels = {'default_smoothness':
                              Label(self.frame, text='Default fitting smoothness', font=label_font),
@@ -253,6 +253,10 @@ class App:
         self.boolean_dictionary['is_amplification'].set(True)
         self.boolean_dictionary['is_misassignment'].set(True)
         self.boolean_dictionary['is_lowquality'].set(True)
+        self.boolean_dictionary['is_vary_detection_by_organ'].set(True)
+        self.boolean_dictionary['comorbidity_prison'].set(True)
+        self.boolean_dictionary['comorbidity_indigenous'].set(True)
+
         for numeric in uncertainty_numeric_list.keys():
             numeric_label = Label(self.frame, text=uncertainty_numeric_list[numeric][0], font=label_font)
             numeric_label.grid(row=uncertainty_row, column=4, sticky=SW)

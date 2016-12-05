@@ -172,9 +172,15 @@ class Inputs:
                              'posterior_width': None,
                              'width_multiplier': 2.}]
         self.potential_interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
-                                                'ipt_age0to5', 'ipt_age5to15', 'decentralisation', 'engage_lowquality']
+                                                'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
         if self.gui_inputs['n_strains'] > 1:
             self.potential_interventions_to_cost += ['shortcourse_mdr']
+        if self.gui_inputs['is_lowquality']:
+            self.potential_interventions_to_cost += ['engage_lowquality']
+        if self.gui_inputs['comorbidity_prison']:
+            self.potential_interventions_to_cost += ['xpertacf_prison']
+        if self.gui_inputs['comorbidity_indigenous']:
+            self.potential_interventions_to_cost += ['xpertacf_indigenous']
 
         self.interventions_to_cost = []
 

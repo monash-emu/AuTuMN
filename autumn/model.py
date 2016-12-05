@@ -124,7 +124,8 @@ class ConsolidatedModel(StratifiedModel):
         for timevariant in \
                 ['program_prop_novel_vaccination', 'transmission_modifier', 'program_prop_smearacf',
                  'program_prop_xpertacf', 'program_prop_decentralisation', 'program_prop_xpert',
-                 'program_prop_treatment_support', 'program_prop_community_ipt', 'program_prop_xpertacf_indigenous']:
+                 'program_prop_treatment_support', 'program_prop_community_ipt', 'program_prop_xpertacf_indigenous',
+                 'program_prop_xpertacf_prison', 'program_prop_xpertacf_indigenous']:
             if timevariant in self.scaleup_fns: self.optional_timevariants += [timevariant]
         if 'program_prop_shortcourse_mdr' in self.scaleup_fns and len(self.strains) > 1:
             self.optional_timevariants += ['program_prop_shortcourse_mdr']
@@ -835,21 +836,25 @@ class ConsolidatedModel(StratifiedModel):
                                    * (self.params['program_number_tests_per_tb_presentation'] + 1.)
 
         # ACF
-        if 'program_prop_smearacf' in self.optional_timevariants:
-            self.vars['popsize_smearacf'] = 0.
-            for compartment in self.compartments:
-                if 'active_' in compartment and '_smearpos' in compartment:
-                    self.vars['popsize_smearacf'] \
-                        += self.compartments[compartment] * self.params['program_nns_smearacf']
-        if 'program_prop_xpertacf' in self.optional_timevariants:
-            self.vars['popsize_xpertacf'] = 0.
-            for compartment in self.compartments:
-                if 'active_' in compartment and '_smearpos' in compartment:
-                    self.vars['popsize_xpertacf'] \
-                        += self.compartments[compartment] * self.params['program_nns_xpertacf_smearpos']
-                elif 'active_' in compartment and '_smearneg' in compartment:
-                    self.vars['popsize_xpertacf'] \
-                        += self.compartments[compartment] * self.params['program_nns_xpertacf_smearneg']
+        for comorbidity in [''] + self.comorbidities:
+            if 'program_prop_smearacf' + comorbidity in self.optional_timevariants:
+                self.vars['popsize_smearacf' + comorbidity] = 0.
+                for compartment in self.compartments:
+                    if 'active_' in compartment and '_smearpos' in compartment \
+                            and (comorbidity == '' or comorbidity in compartment):
+                        self.vars['popsize_smearacf' + comorbidity] \
+                            += self.compartments[compartment] * self.params['program_nns_smearacf']
+            if 'program_prop_xpertacf' + comorbidity in self.optional_timevariants:
+                self.vars['popsize_xpertacf' + comorbidity] = 0.
+                for compartment in self.compartments:
+                    if 'active_' in compartment and '_smearpos' in compartment \
+                            and (comorbidity == '' or comorbidity in compartment):
+                        self.vars['popsize_xpertacf' + comorbidity] \
+                            += self.compartments[compartment] * self.params['program_nns_xpertacf_smearpos']
+                    elif 'active_' in compartment and '_smearneg' in compartment \
+                            and (comorbidity == '' or comorbidity in compartment):
+                        self.vars['popsize_xpertacf' + comorbidity] \
+                            += self.compartments[compartment] * self.params['program_nns_xpertacf_smearneg']
 
         # Decentralisation and engage low quality sector
         all_actives_popsize = 0.

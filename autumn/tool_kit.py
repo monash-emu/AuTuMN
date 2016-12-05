@@ -209,6 +209,10 @@ def find_title_from_dictionary(name):
             'IPT in 5 to 15s coverage',
         'program_timeperiod':
             'programmatic time to treatment',
+        'program_prop_engage_lowquality':
+            'Engage low-quality sector',
+        'engage_lowquality':
+            'Engage low-quality sector',
         'epi_':
             'epidemiological',
         'epi_prop_smearneg':

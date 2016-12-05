@@ -851,12 +851,15 @@ class ConsolidatedModel(StratifiedModel):
                     self.vars['popsize_xpertacf'] \
                         += self.compartments[compartment] * self.params['program_nns_xpertacf_smearneg']
 
-        # Decentralisation
-        if 'program_prop_decentralisation' in self.optional_timevariants:
-            self.vars['popsize_decentralisation'] = 0.
-            for compartment in self.compartments:
-                if 'susceptible_' not in compartment and 'latent_' not in compartment:
-                    self.vars['popsize_decentralisation'] += self.compartments[compartment]
+        # Decentralisation and engage low quality sector
+        all_actives_popsize = 0.
+        for compartment in self.compartments:
+            if 'susceptible_' not in compartment and 'latent_' not in compartment:
+                all_actives_popsize += self.compartments[compartment]
+        all_actives_interventions = ['program_prop_decentralisation', 'engage_lowquality']
+        for intervention in all_actives_interventions:
+            if intervention in self.inputs.potential_interventions_to_cost:
+                self.vars['popsize_' + intervention] = all_actives_popsize
 
         # Shortcourse MDR-TB regimen
         if 'program_prop_shortcourse_mdr' in self.optional_timevariants:

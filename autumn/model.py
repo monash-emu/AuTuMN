@@ -124,9 +124,11 @@ class ConsolidatedModel(StratifiedModel):
         for timevariant in \
                 ['program_prop_novel_vaccination', 'transmission_modifier', 'program_prop_smearacf',
                  'program_prop_xpertacf', 'program_prop_decentralisation', 'program_prop_xpert',
-                 'program_prop_treatment_support', 'program_prop_community_ipt', 'program_prop_shortcourse_mdr',
-                 'program_prop_xpertacf_indigenous']:
+                 'program_prop_treatment_support', 'program_prop_community_ipt', 'program_prop_xpertacf_indigenous']:
             if timevariant in self.scaleup_fns: self.optional_timevariants += [timevariant]
+        if 'program_prop_shortcourse_mdr' in self.scaleup_fns and len(self.strains) > 1:
+            self.optional_timevariants += ['program_prop_shortcourse_mdr']
+
         for timevariant in self.scaleup_fns:
             if '_ipt_age' in timevariant:
                 self.optional_timevariants += ['agestratified_ipt']
@@ -172,7 +174,7 @@ class ConsolidatedModel(StratifiedModel):
             self.comorbidities_for_detection = self.comorbidities
 
         # Temporarily hard coded option for short course MDR-TB regimens to improve outcomes
-        self.shortcourse_improves_outcomes = True
+        self.shortcourse_improves_outcomes = False
 
         # Add time ticker
         self.next_time_point = copy.copy(self.start_time)
@@ -685,6 +687,8 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         prop_lowqual = self.get_constant_or_variable_param('program_prop_lowquality')
+        prop_lowqual *= (1. - self.vars['program_prop_engage_lowquality'])
+
         # Note that there is still a program_rate_detect var even if detection is varied by organ and/or comorbidity
         self.vars['program_rate_enterlowquality'] \
             = self.vars['program_rate_detect'] * prop_lowqual / (1. - prop_lowqual)
@@ -847,12 +851,15 @@ class ConsolidatedModel(StratifiedModel):
                     self.vars['popsize_xpertacf'] \
                         += self.compartments[compartment] * self.params['program_nns_xpertacf_smearneg']
 
-        # Decentralisation
-        if 'program_prop_decentralisation' in self.optional_timevariants:
-            self.vars['popsize_decentralisation'] = 0.
-            for compartment in self.compartments:
-                if 'susceptible_' not in compartment and 'latent_' not in compartment:
-                    self.vars['popsize_decentralisation'] += self.compartments[compartment]
+        # Decentralisation and engage low quality sector
+        all_actives_popsize = 0.
+        for compartment in self.compartments:
+            if 'susceptible_' not in compartment and 'latent_' not in compartment:
+                all_actives_popsize += self.compartments[compartment]
+        all_actives_interventions = ['program_prop_decentralisation', 'engage_lowquality']
+        for intervention in all_actives_interventions:
+            if intervention in self.inputs.potential_interventions_to_cost:
+                self.vars['popsize_' + intervention] = all_actives_popsize
 
         # Shortcourse MDR-TB regimen
         if 'program_prop_shortcourse_mdr' in self.optional_timevariants:

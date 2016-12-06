@@ -217,6 +217,10 @@ def find_title_from_dictionary(name):
             'Prison ACF',
         'program_prop_xpertacf_indigenous':
             'Indigenous ACF',
+        'program_prop_xpertacf_urbanpoor':
+            'Urban poor ACF',
+        'program_prop_xpertacf_ruralpoor':
+            'Rural poor ACF',
         'epi_':
             'epidemiological',
         'epi_prop_smearneg':

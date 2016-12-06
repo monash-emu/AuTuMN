@@ -54,6 +54,10 @@ def find_button_name_from_string(working_string):
                                   'HIV',
                               'comorbidity_prison':
                                   'Prison',
+                              'comorbidity_urbanpoor':
+                                  'Urban poor',
+                              'comorbidity_ruralpoor':
+                                  'Rural poor',
                               'comorbidity_indigenous':
                                   'Indigenous',
                               'is_lowquality':
@@ -123,7 +127,8 @@ class App:
                                'output_spreadsheets',
                                'output_documents', 'output_by_scenario', 'output_horizontally',
                                'output_age_calculations', 'comorbidity_diabetes', 'comorbidity_hiv',
-                               'comorbidity_prison', 'comorbidity_indigenous',
+                               'comorbidity_prison', 'comorbidity_indigenous', 'comorbidity_urbanpoor',
+                               'comorbidity_ruralpoor',
                                'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ']
         for i in range(1, 15):
             self.boolean_inputs += ['scenario_' + str(i)]
@@ -255,6 +260,8 @@ class App:
         self.boolean_dictionary['is_lowquality'].set(True)
         self.boolean_dictionary['is_vary_detection_by_organ'].set(True)
         self.boolean_dictionary['comorbidity_prison'].set(True)
+        # self.boolean_dictionary['comorbidity_urbanpoor'].set(True)
+        # self.boolean_dictionary['comorbidity_ruralpoor'].set(True)
         self.boolean_dictionary['comorbidity_indigenous'].set(True)
 
         for numeric in uncertainty_numeric_list.keys():

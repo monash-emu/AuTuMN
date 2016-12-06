@@ -181,6 +181,10 @@ class Inputs:
             self.potential_interventions_to_cost += ['xpertacf_prison']
         if self.gui_inputs['comorbidity_indigenous']:
             self.potential_interventions_to_cost += ['xpertacf_indigenous']
+        if self.gui_inputs['comorbidity_urbanpoor']:
+            self.potential_interventions_to_cost += ['xpertacf_urbanpoor']
+        if self.gui_inputs['comorbidity_ruralpoor']:
+            self.potential_interventions_to_cost += ['xpertacf_ruralpoor']
 
         self.interventions_to_cost = []
 

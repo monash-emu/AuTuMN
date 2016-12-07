@@ -1259,11 +1259,13 @@ class ConsolidatedModel(StratifiedModel):
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
                 for strain in self.strains:
-                    if 'agestratified_ipt' in self.optional_timevariants or 'ipt' in self.optional_timevariants:
+                    if 'agestratified_ipt' in self.optional_timevariants or 'ipt' in self.optional_timevariants \
+                            and 'dr' not in strain:
                         self.set_linked_transfer_rate_flow('latent_early' + strain + comorbidity + agegroup,
                                                            'susceptible_vac' + comorbidity + agegroup,
                                                            'ipt_effective_treatments' + agegroup)
-                    if 'program_prop_community_ipt' in self.optional_timevariants:
+                    if 'program_prop_community_ipt' in self.optional_timevariants \
+                            and 'dr' not in strain:
                         self.set_var_transfer_rate_flow('latent_early' + strain + comorbidity + agegroup,
                                                         'susceptible_vac' + comorbidity + agegroup,
                                                         'rate_community_ipt')

@@ -261,8 +261,8 @@ class App:
         self.boolean_dictionary['is_vary_detection_by_organ'].set(True)
         self.boolean_dictionary['comorbidity_prison'].set(True)
         # self.boolean_dictionary['comorbidity_urbanpoor'].set(True)
-        # self.boolean_dictionary['comorbidity_ruralpoor'].set(True)
-        self.boolean_dictionary['comorbidity_indigenous'].set(True)
+        self.boolean_dictionary['comorbidity_ruralpoor'].set(True)
+        # self.boolean_dictionary['comorbidity_indigenous'].set(True)
 
         for numeric in uncertainty_numeric_list.keys():
             numeric_label = Label(self.frame, text=uncertainty_numeric_list[numeric][0], font=label_font)

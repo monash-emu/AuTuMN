@@ -154,18 +154,21 @@ class ModelRunner:
 
         self.optimisation = False  # leave it True even if you want to load optimization results
         self.indicator_to_minimize = 'incidence'  # 'incidence' or 'mortality'
-        self.annual_envelope = [0.7e6, 1e6, 1.3e6, 1.6e6, 1.9e6] # funding scenarios to be run
+        self.annual_envelope = [10e6, 25e6, 50e6, 75e6, 100e6] # funding scenarios to be run
         self.save_opti = True
         self.load_opti = False  # optimization will not be run if loading is turned on
         self.total_funding = None  # Funding for entire period
+        self.f_tol = {'incidence': 0.5,
+                      'mortality': 0.05}  # stopping condition for optimisation algorithm: tolerance differs according to indicator
         self.year_end_opti = 2020.  # model is run until that date during optimisation
         self.acceptable_combinations = []  # list of intervention combinations that can be envisaged with available funding
         self.opti_results = {}  # store all the results that we need for optimisation
         self.optimised_combinations = []
         self.optimal_allocation = {}
-        self.interventions_considered_for_opti = ['treatment_support', 'decentralisation', 'xpertacf', \
-                                                  'ipt_age0to5', 'ipt_age5to15']
-        self.interventions_forced_for_opti = ['xpertacf', 'decentralisation', 'treatment_support']  # the ones we do want to appear in the optimal plan.
+        self.interventions_considered_for_opti = ['xpertacf_ruralpoor', \
+                                                  'xpertacf_prison', 'xpertacf', 'xpert', 'engage_lowquality']
+        self.interventions_forced_for_opti = ['xpertacf_ruralpoor', \
+                                                  'engage_lowquality']  # the ones we do want to appear in the optimal plan.
 
         self.acceptance_dict = {}
         self.rejection_dict = {}
@@ -1239,9 +1242,8 @@ class ModelRunner:
                                                 self.model_dict['manual_baseline'].interventions_to_cost[combi[i]]] / self.total_funding
                     bnds.append((minimal_allocation, 1.0))
                 # Ready to run optimisation
-                f_tol = {'incidence': 0.5, 'mortality': 0.05} # stopping condition: tolerance differs according to indicator
                 res = minimize(func, x_0, jac=None, bounds=bnds, constraints=cons, method='SLSQP',
-                               options={'disp': False, 'ftol': f_tol[self.indicator_to_minimize]})
+                               options={'disp': False, 'ftol': self.f_tol[self.indicator_to_minimize]})
                 dict_optimised_combi['distribution'] = res.x
                 dict_optimised_combi['objective'] = res.fun
 

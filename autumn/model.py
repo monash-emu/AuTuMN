@@ -178,6 +178,9 @@ class ConsolidatedModel(StratifiedModel):
         # Temporarily hard coded option for short course MDR-TB regimens to improve outcomes
         self.shortcourse_improves_outcomes = False
 
+        # Temporarily hard coded option to vary force of infection across risk groups
+        self.vary_force_infection_by_comorbidity = False
+
         # Add time ticker
         self.next_time_point = copy.copy(self.start_time)
 
@@ -383,55 +386,55 @@ class ConsolidatedModel(StratifiedModel):
         calculate the raw force of infection, then adjust for various levels of susceptibility.
         """
 
+        # Determine whether force of infection should vary across comorbidities
+        force_comorbidities = copy.copy(self.comorbidities)
+        if not self.vary_force_infection_by_comorbidity:
+            force_comorbidities = ['']
+
         for strain in self.strains:
+            for comorbidity in force_comorbidities:
 
-            # Initialise infectious population to zero
-            self.vars['infectious_population' + strain] = 0.
-            for organ in self.organ_status:
-                for label in self.labels:
+                # Initialise infectious population to zero
+                self.vars['infectious_population' + strain + comorbidity] = 0.
+                for organ in self.organ_status:
+                    for label in self.labels:
 
-                    # If model is organ-stratified, but we haven't yet reached the organ of interest
-                    if organ not in label and organ != '':
-                        continue
+                        # If model is organ-stratified, but we haven't yet reached the organ of interest
+                        if organ not in label and organ != '':
+                            continue
 
-                    # If model is strain-stratified, but we haven't yet reached the strain of interest
-                    if strain not in label and strain != '':
-                        continue
+                        # If model is strain-stratified, but we haven't yet reached the strain of interest
+                        if strain not in label and strain != '':
+                            continue
 
-                    # If the compartment is infectious
-                    if label_intersects_tags(label, self.infectious_tags):
+                        # If the compartment is infectious
+                        if label_intersects_tags(label, self.infectious_tags):
 
-                        # Allow modification for infectiousness by age
-                        for agegroup in self.agegroups:
-                            if agegroup in label:
+                            # Allow modification for infectiousness by age
+                            for agegroup in self.agegroups:
+                                if agegroup in label:
 
-                                # Add to the effective infectious population, adjusting for organ involvement and age
-                                self.vars['infectious_population' + strain] += \
-                                    self.params['tb_multiplier_force' + organ] \
-                                    * self.params['tb_multiplier_child_infectiousness' + agegroup] \
-                                    * self.compartments[label]
+                                    # Add to the effective infectious population, adjusting for organ involvement and age
+                                    self.vars['infectious_population' + strain + comorbidity] += \
+                                        self.params['tb_multiplier_force' + organ] \
+                                        * self.params['tb_multiplier_child_infectiousness' + agegroup] \
+                                        * self.compartments[label]
 
-            # Calculate force of infection unadjusted for immunity/susceptibility
-            self.vars['rate_force' + strain] = \
-                self.params['tb_n_contact'] * self.vars['infectious_population' + strain] / self.vars['population']
+                # Calculate force of infection unadjusted for immunity/susceptibility
+                self.vars['rate_force' + strain + comorbidity] = \
+                    self.params['tb_n_contact'] \
+                    * self.vars['infectious_population' + strain + comorbidity] \
+                    / self.vars['population']
 
-            # If any modifications to transmission parameter to be made over time
-            if 'transmission_modifier' in self.optional_timevariants:
-                self.vars['rate_force' + strain] *= self.vars['transmission_modifier']
+                # If any modifications to transmission parameter to be made over time
+                if 'transmission_modifier' in self.optional_timevariants:
+                    self.vars['rate_force' + strain + comorbidity] *= self.vars['transmission_modifier']
 
-            # Adjust for immunity in various groups
-            for force_type in ['_vac', '_latent', '_novelvac']:
-                self.vars['rate_force' + force_type + strain] \
-                    = self.params['tb_multiplier' + force_type + '_protection'] * self.vars['rate_force' + strain]
-
-            # Adjust at-risk group's force of infection as required
-            for force_type in ['', '_vac', '_latent', '_novelvac']:
-                for comorbidity in self.comorbidities:
+                # Adjust for immunity in various groups
+                for force_type in ['_vac', '_latent', '_novelvac']:
                     self.vars['rate_force' + force_type + strain + comorbidity] \
-                        = self.vars['rate_force' + force_type + strain]
-                    if 'comorb_multiplier_force_infection' + comorbidity in self.params:
-                        self.vars['rate_force' + force_type + strain + comorbidity] \
-                            *= self.params['comorb_multiplier_force_infection' + comorbidity]
+                        = self.params['tb_multiplier' + force_type + '_protection'] \
+                          * self.vars['rate_force' + strain + comorbidity]
 
     def calculate_progression_vars(self):
 
@@ -967,34 +970,38 @@ class ConsolidatedModel(StratifiedModel):
 
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
+
+                # Whether to vary force of infection across comorbidities
+                force_comorbidity = comorbidity
+                if not self.vary_force_infection_by_comorbidity:
+                    force_comorbidity = ''
+
                 for strain in self.strains:
 
-                    # Fully susceptible
+                    # Set infection rates according to susceptibility status
                     self.set_var_transfer_rate_flow(
                         'susceptible_fully' + comorbidity + agegroup,
                         'latent_early' + strain + comorbidity + agegroup,
-                        'rate_force' + strain + comorbidity)
-
-                    # Partially immune
+                        'rate_force' + strain + force_comorbidity)
                     self.set_var_transfer_rate_flow(
                         'susceptible_vac' + comorbidity + agegroup,
                         'latent_early' + strain + comorbidity + agegroup,
-                        'rate_force_vac' + strain + comorbidity)
+                        'rate_force_vac' + strain + force_comorbidity)
                     self.set_var_transfer_rate_flow(
                         'susceptible_treated' + comorbidity + agegroup,
                         'latent_early' + strain + comorbidity + agegroup,
-                        'rate_force_vac' + strain + comorbidity)
+                        'rate_force_vac' + strain + force_comorbidity)
                     self.set_var_transfer_rate_flow(
                         'latent_late' + strain + comorbidity + agegroup,
                         'latent_early' + strain + comorbidity + agegroup,
-                        'rate_force_latent' + strain + comorbidity)
+                        'rate_force_latent' + strain + force_comorbidity)
 
                     # Novel vaccination
                     if 'program_prop_novel_vaccination' in self.optional_timevariants:
                         self.set_var_transfer_rate_flow(
                             'susceptible_novelvac' + comorbidity + agegroup,
                             'latent_early' + strain + comorbidity + agegroup,
-                            'rate_force_novelvac' + strain + comorbidity)
+                            'rate_force_novelvac' + strain + force_comorbidity)
 
     def set_progression_flows(self):
 

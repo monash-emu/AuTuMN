@@ -171,8 +171,11 @@ class Inputs:
         self.outputs_unc = [{'key': 'incidence',
                              'posterior_width': None,
                              'width_multiplier': 2.}]
-        self.potential_interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
-                                                'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
+        #self.potential_interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
+        #                                        'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
+        self.potential_interventions_to_cost = ['vaccination','xpertacf_ruralpoor', \
+                                                  'xpertacf_prison', 'xpertacf', 'xpert', 'engage_lowquality']
+
         if self.gui_inputs['n_strains'] > 1:
             self.potential_interventions_to_cost += ['shortcourse_mdr']
         if self.gui_inputs['is_lowquality']:

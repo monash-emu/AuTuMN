@@ -812,7 +812,7 @@ class Project:
 
         self.load_opti_results()
         self.save_opti_results()
-        #self.write_opti_outputs_spreadsheet()
+        self.write_opti_outputs_spreadsheet()
 
         self.run_plotting()
 
@@ -1193,37 +1193,38 @@ class Project:
             document.save(path)
 
     def write_opti_outputs_spreadsheet(self):
-        # Make filename
-        path = os.path.join(self.opti_outputs_dir, 'opti_results.xlsx')
+        if self.model_runner.optimisation:
+            # Make filename
+            path = os.path.join(self.opti_outputs_dir, 'opti_results.xlsx')
 
-        # Get active sheet
-        wb = xl.Workbook()
-        sheet = wb.active
-        sheet.title = 'optimization'
+            # Get active sheet
+            wb = xl.Workbook()
+            sheet = wb.active
+            sheet.title = 'optimization'
 
-        # write row names
-        sheet.cell(row=1, column=1).value = 'envelope'
-        sheet.cell(row=2, column=1).value = 'incidence'
-        sheet.cell(row=3, column=1).value = 'mortality'
-        n_row = 3
-        row_index = {}
-        for intervention in self.model_runner.interventions_considered_for_opti:
-            n_row += 1
-            sheet.cell(row=n_row, column=1).value = intervention
-            row_index[intervention] = n_row
-        # populate cells with content
-        n_col = 1
-        for i, envelope in enumerate(self.model_runner.opti_results['annual_envelope']):
-            n_col += 1
-            sheet.cell(row=1, column=n_col).value = envelope
-            sheet.cell(row=2, column=n_col).value = self.model_runner.opti_results['incidence'][i]
-            sheet.cell(row=3, column=n_col).value = self.model_runner.opti_results['mortality'][i]
-            for intervention in self.model_runner.opti_results['best_allocation'][i].keys():
-                sheet.cell(row=row_index[intervention], column=n_col).value = \
-                    self.model_runner.opti_results['best_allocation'][i][intervention]
+            # write row names
+            sheet.cell(row=1, column=1).value = 'envelope'
+            sheet.cell(row=2, column=1).value = 'incidence'
+            sheet.cell(row=3, column=1).value = 'mortality'
+            n_row = 3
+            row_index = {}
+            for intervention in self.model_runner.interventions_considered_for_opti:
+                n_row += 1
+                sheet.cell(row=n_row, column=1).value = intervention
+                row_index[intervention] = n_row
+            # populate cells with content
+            n_col = 1
+            for i, envelope in enumerate(self.model_runner.opti_results['annual_envelope']):
+                n_col += 1
+                sheet.cell(row=1, column=n_col).value = envelope
+                sheet.cell(row=2, column=n_col).value = self.model_runner.opti_results['incidence'][i]
+                sheet.cell(row=3, column=n_col).value = self.model_runner.opti_results['mortality'][i]
+                for intervention in self.model_runner.opti_results['best_allocation'][i].keys():
+                    sheet.cell(row=row_index[intervention], column=n_col).value = \
+                        self.model_runner.opti_results['best_allocation'][i][intervention]
 
-        # Save workbook
-        wb.save(path)
+            # Save workbook
+            wb.save(path)
 
     def run_plotting(self):
 

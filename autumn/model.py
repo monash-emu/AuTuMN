@@ -179,7 +179,7 @@ class ConsolidatedModel(StratifiedModel):
         self.shortcourse_improves_outcomes = False
 
         # Temporarily hard coded option to vary force of infection across risk groups
-        self.vary_force_infection_by_comorbidity = True
+        self.vary_force_infection_by_comorbidity = False
 
         # Add time ticker
         self.next_time_point = copy.copy(self.start_time)
@@ -386,14 +386,15 @@ class ConsolidatedModel(StratifiedModel):
         calculate the raw force of infection, then adjust for various levels of susceptibility.
         """
 
-        # Determine whether force of infection should vary across comorbidities
-        force_comorbidities = copy.copy(self.comorbidities)
-        if not self.vary_force_infection_by_comorbidity:
-            force_comorbidities = ['']
+        mixing = {'_prison': {'_prison': .8, '_nocomorb': .2},
+                  '_nocomorb': {'_prison': .2, '_nocomorb': .8}}
 
         # First find the effective infectious population for each strain, adjusting for infectiousness of risk groups
         for strain in self.strains:
             self.vars['effective_infectious_population' + strain] = 0.
+
+            for comorbidity in self.comorbidities:
+                self.vars['effective_infectious_population' + strain + comorbidity] = 0.
 
             for label in self.labels:
                 if strain not in label and strain != '':
@@ -404,33 +405,36 @@ class ConsolidatedModel(StratifiedModel):
                     for agegroup in self.agegroups:
                         if agegroup not in label and agegroup != '':
                             continue
-                        for comorbidity in force_comorbidities:
-                            if comorbidity not in label and comorbidity != '':
-                                continue
-                            if not self.vary_force_infection_by_comorbidity \
-                                    or 'comorb_multiplier_force_infection' + comorbidity not in self.params:
-                                comorb_multiplier_force_infection = 1.
-                            else:
-                                comorb_multiplier_force_infection = self.params[
-                                    'comorb_multiplier_force_infection' + comorbidity]
 
-                            # If the compartment is infectious
+                        if not self.vary_force_infection_by_comorbidity:
+
                             if label_intersects_tags(label, self.infectious_tags):
-
-                                # Add to effective infectious population, adjusting for organ, age and comorbidity
                                 self.vars['effective_infectious_population' + strain] \
                                     += self.params['tb_multiplier_force' + organ] \
                                        * self.params['tb_multiplier_child_infectiousness' + agegroup] \
-                                       * self.compartments[label] \
-                                       * comorb_multiplier_force_infection
+                                       * self.compartments[label]
 
-            # Then calculate the force of infection from the previously calculated effective infectious population
-            for comorbidity in force_comorbidities:
+                        else:
+                            for comorbidity in self.comorbidities:
+                                if comorbidity not in label:
+                                    continue
+                                if label_intersects_tags(label, self.infectious_tags):
+                                    for source_comorbidity in self.comorbidities:
+                                        self.vars['effective_infectious_population' + strain + comorbidity] \
+                                            += self.params['tb_multiplier_force' + organ] \
+                                               * self.params['tb_multiplier_child_infectiousness' + agegroup] \
+                                               * self.compartments[label] \
+                                               * mixing[comorbidity][source_comorbidity]
 
-                # Calculate force of infection unadjusted for immunity/susceptibility
+            force_comorbidity = ['']
+            if self.vary_force_infection_by_comorbidity:
+                force_comorbidity = copy.copy(self.comorbidities)
+
+            # Calculate force of infection unadjusted for immunity/susceptibility
+            for comorbidity in force_comorbidity:
                 self.vars['rate_force' + strain + comorbidity] = \
                     self.params['tb_n_contact'] \
-                    * self.vars['effective_infectious_population' + strain] \
+                    * self.vars['effective_infectious_population' + strain + comorbidity] \
                     / self.vars['population']
 
                 # If any modifications to transmission parameter to be made over time
@@ -978,10 +982,9 @@ class ConsolidatedModel(StratifiedModel):
         for agegroup in self.agegroups:
             for comorbidity in self.comorbidities:
 
-                # Whether to vary force of infection across comorbidities
-                force_comorbidity = comorbidity
-                if not self.vary_force_infection_by_comorbidity:
-                    force_comorbidity = ''
+                force_comorbidity = ''
+                if self.vary_force_infection_by_comorbidity:
+                    force_comorbidity = comorbidity
 
                 for strain in self.strains:
 

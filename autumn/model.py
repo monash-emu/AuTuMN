@@ -179,7 +179,7 @@ class ConsolidatedModel(StratifiedModel):
         self.shortcourse_improves_outcomes = False
 
         # Temporarily hard coded option to vary force of infection across risk groups
-        self.vary_force_infection_by_comorbidity = False
+        self.vary_force_infection_by_comorbidity = True
         if self.vary_force_infection_by_comorbidity:
             self.mixing = {}
             self.create_mixing_matrix()

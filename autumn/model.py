@@ -174,13 +174,15 @@ class ConsolidatedModel(StratifiedModel):
         self.comorbidities_for_detection = ['']
         if self.vary_detection_by_comorbidity:
             self.comorbidities_for_detection = self.comorbidities
-            self.create_mixing_matrix()
 
         # Temporarily hard coded option for short course MDR-TB regimens to improve outcomes
         self.shortcourse_improves_outcomes = False
 
         # Temporarily hard coded option to vary force of infection across risk groups
-        self.vary_force_infection_by_comorbidity = False
+        self.vary_force_infection_by_comorbidity = True
+        if self.vary_force_infection_by_comorbidity:
+            self.mixing = {}
+            self.create_mixing_matrix()
 
         # Add time ticker
         self.next_time_point = copy.copy(self.start_time)
@@ -282,11 +284,6 @@ class ConsolidatedModel(StratifiedModel):
 
     def create_mixing_matrix(self):
 
-        self.mixing = {}
-        params = {'_nocomorb_mix_prison': .3,
-                  '_prison_mix_ruralpoor': .2,
-                  '_ruralpoor_mix_nocomorb': .4}
-
         # Initialise first tier of dictionaries fully so that parameters can be either way round
         for comorbidity in self.comorbidities:
             self.mixing[comorbidity] = {}
@@ -294,11 +291,11 @@ class ConsolidatedModel(StratifiedModel):
         # Populate symmetric matrices outside of diagonal
         for comorbidity in self.comorbidities:
             for other_comorbidity in self.comorbidities:
-                if comorbidity + '_mix' + other_comorbidity in params:
-                    self.mixing[comorbidity][other_comorbidity] = params[
-                        comorbidity + '_mix' + other_comorbidity]
-                    self.mixing[other_comorbidity][comorbidity] = params[
-                        comorbidity + '_mix' + other_comorbidity]
+                if 'prop' + comorbidity + '_mix' + other_comorbidity in self.params:
+                    self.mixing[comorbidity][other_comorbidity] \
+                        = self.params['prop' + comorbidity + '_mix' + other_comorbidity]
+                    self.mixing[other_comorbidity][comorbidity] \
+                        = self.params['prop' + comorbidity + '_mix' + other_comorbidity]
 
         # Populate diagonal
         for comorbidity in self.comorbidities:
@@ -442,6 +439,7 @@ class ConsolidatedModel(StratifiedModel):
                                     continue
                                 if label_intersects_tags(label, self.infectious_tags):
                                     for source_comorbidity in self.comorbidities:
+
                                         self.vars['effective_infectious_population' + strain + comorbidity] \
                                             += self.params['tb_multiplier_force' + organ] \
                                                * self.params['tb_multiplier_child_infectiousness' + agegroup] \

@@ -255,10 +255,10 @@ class App:
                                     'burn_in_runs': ['Number of burn-in runs', 0],
                                     'search_width': ['Relative search width', .08]}
         self.boolean_dictionary['adaptive_uncertainty'].set(True)
-        self.boolean_dictionary['is_amplification'].set(True)
-        self.boolean_dictionary['is_misassignment'].set(True)
-        self.boolean_dictionary['is_lowquality'].set(True)
-        self.boolean_dictionary['is_vary_detection_by_organ'].set(True)
+        # self.boolean_dictionary['is_amplification'].set(True)
+        # self.boolean_dictionary['is_misassignment'].set(True)
+        # self.boolean_dictionary['is_lowquality'].set(True)
+        # self.boolean_dictionary['is_vary_detection_by_organ'].set(True)
         self.boolean_dictionary['comorbidity_prison'].set(True)
         # self.boolean_dictionary['comorbidity_urbanpoor'].set(True)
         self.boolean_dictionary['comorbidity_ruralpoor'].set(True)

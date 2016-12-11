@@ -174,6 +174,7 @@ class ConsolidatedModel(StratifiedModel):
         self.comorbidities_for_detection = ['']
         if self.vary_detection_by_comorbidity:
             self.comorbidities_for_detection = self.comorbidities
+            self.create_mixing_matrix()
 
         # Temporarily hard coded option for short course MDR-TB regimens to improve outcomes
         self.shortcourse_improves_outcomes = False
@@ -279,6 +280,30 @@ class ConsolidatedModel(StratifiedModel):
                                                      * start_comorb_prop[comorbidity]
                                                      / len(self.organ_status) / len(self.agegroups))
 
+    def create_mixing_matrix(self):
+
+        self.mixing = {}
+        params = {'_nocomorb_mix_prison': .3,
+                  '_prison_mix_ruralpoor': .2,
+                  '_ruralpoor_mix_nocomorb': .4}
+
+        # Initialise first tier of dictionaries fully so that parameters can be either way round
+        for comorbidity in self.comorbidities:
+            self.mixing[comorbidity] = {}
+
+        # Populate symmetric matrices outside of diagonal
+        for comorbidity in self.comorbidities:
+            for other_comorbidity in self.comorbidities:
+                if comorbidity + '_mix' + other_comorbidity in params:
+                    self.mixing[comorbidity][other_comorbidity] = params[
+                        comorbidity + '_mix' + other_comorbidity]
+                    self.mixing[other_comorbidity][comorbidity] = params[
+                        comorbidity + '_mix' + other_comorbidity]
+
+        # Populate diagonal
+        for comorbidity in self.comorbidities:
+            self.mixing[comorbidity][comorbidity] = 1. - sum(self.mixing[comorbidity].values())
+
     #######################################################
     ### Single method to process uncertainty parameters ###
     #######################################################
@@ -378,30 +403,6 @@ class ConsolidatedModel(StratifiedModel):
                 self.vars['births_' + vac_status + comorbidity] \
                     = vac_props[vac_status] * self.vars['births_total'] * self.target_comorb_props[comorbidity][-1]
 
-    def create_mixing_matrix(self):
-
-        mixing = {}
-        params = {'_nocomorb_mix_prison': .3,
-                  '_prison_mix_ruralpoor': .2,
-                  '_ruralpoor_mix_nocomorb': .4}
-
-        # Initialise first tier of dictionaries fully so that parameters can be either way round
-        for comorbidity in self.comorbidities:
-            mixing[comorbidity] = {}
-
-        # Populate symmetric matrices outside of diagonal
-        for comorbidity in self.comorbidities:
-            for other_comorbidity in self.comorbidities:
-                if comorbidity + '_mix' + other_comorbidity in params:
-                    mixing[comorbidity][other_comorbidity] = params[comorbidity + '_mix' + other_comorbidity]
-                    mixing[other_comorbidity][comorbidity] = params[comorbidity + '_mix' + other_comorbidity]
-
-        # Populate diagonal
-        for comorbidity in self.comorbidities:
-            mixing[comorbidity][comorbidity] = 1. - sum(mixing[comorbidity].values())
-
-        return mixing
-
     def calculate_force_infection_vars(self):
 
         """
@@ -409,8 +410,6 @@ class ConsolidatedModel(StratifiedModel):
         First calculate the effective infectious population (incorporating infectiousness by organ involvement), then
         calculate the raw force of infection, then adjust for various levels of susceptibility.
         """
-
-        # mixing = self.create_mixing_matrix()
 
         # First find the effective infectious population for each strain, adjusting for infectiousness of risk groups
         for strain in self.strains:
@@ -447,7 +446,7 @@ class ConsolidatedModel(StratifiedModel):
                                             += self.params['tb_multiplier_force' + organ] \
                                                * self.params['tb_multiplier_child_infectiousness' + agegroup] \
                                                * self.compartments[label] \
-                                               * mixing[comorbidity][source_comorbidity]
+                                               * self.mixing[comorbidity][source_comorbidity]
 
             force_comorbidity = ['']
             if self.vary_force_infection_by_comorbidity:

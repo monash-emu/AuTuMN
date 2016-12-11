@@ -449,16 +449,16 @@ class ConsolidatedModel(StratifiedModel):
                             for comorbidity in self.comorbidities:
                                 if comorbidity not in label:
                                     continue
-
-                                # Adjustment for increased transmission in risk groups if needed
-                                comorb_multiplier_force_infection = 1.
-                                if 'comorb_multiplier_force_infection' + comorbidity in self.params:
-                                    comorb_multiplier_force_infection \
-                                        = self.params['comorb_multiplier_force_infection' + comorbidity]
-
-                                # Calculate effective infectious population for each risk group
                                 if label_intersects_tags(label, self.infectious_tags):
                                     for source_comorbidity in self.comorbidities:
+
+                                        # Adjustment for increased infectiousness of risk groups as required
+                                        comorb_multiplier_force_infection = 1.
+                                        if 'comorb_multiplier_force_infection' + source_comorbidity in self.params:
+                                            comorb_multiplier_force_infection \
+                                                = self.params['comorb_multiplier_force_infection' + source_comorbidity]
+
+                                        # Calculate effective infectious population for each risk group
                                         self.vars['effective_infectious_population' + strain + comorbidity] \
                                             += self.params['tb_multiplier_force' + organ] \
                                                * self.params['tb_multiplier_child_infectiousness' + agegroup] \

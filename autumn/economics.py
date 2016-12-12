@@ -28,6 +28,8 @@ def get_cost_from_coverage(coverage, c_inflection_cost, saturation, unit_cost, p
 
     if coverage == 0.:
         return 0.
+    elif coverage == saturation:
+        coverage = saturation - 1e-9
     # Here's the logistic curve function code
     a = saturation / (1. - 2. ** alpha)
     b = ((2. ** (alpha + 1.)) / (alpha * (saturation - a) * unit_cost * pop_size))

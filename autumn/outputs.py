@@ -2391,7 +2391,7 @@ class Project:
         ax.cla() # clear the gost pie chart
 
         ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], n_envelopes + 1)
-        ax.legend(patches, interventions_for_legend, loc='right')
+        ax.legend(patches, interventions_for_legend, loc='right', fontsize=2.0*font_size)
         ax.axis('off')
         fig.tight_layout() # reduces the margins to maximize the size of the pies
         fig.suptitle('Optimal allocation of resource')

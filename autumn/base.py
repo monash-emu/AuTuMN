@@ -52,6 +52,7 @@ class BaseModel:
         self.run_costing = True
         self.end_period_costing = 2035
         self.interventions_to_cost = []
+        self.interventions_considered_for_opti = []
         self.eco_drives_epi = False
         self.available_funding = {}
         self.annual_available_funding = {}
@@ -640,7 +641,7 @@ class BaseModel:
         integration.
         """
 
-        interventions = self.interventions_to_cost
+        interventions = self.interventions_considered_for_opti
         for int in interventions:
             if (int in ['ipt_age0to5', 'ipt_age5to15']) and (len(self.agegroups) < 2):
                 continue
@@ -836,7 +837,7 @@ class BaseModel:
 
         # Number of years to fund
         n_years = self.end_period_costing - self.inputs.model_constants['scenario_start_time']
-        for int in self.interventions_to_cost:
+        for int in self.interventions_considered_for_opti:
             self.annual_available_funding[int] = 0
             # If intervention hasn't started
             if self.intervention_startdates[int] is None:

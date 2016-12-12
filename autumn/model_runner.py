@@ -154,13 +154,13 @@ class ModelRunner:
 
         self.optimisation = False  # leave it True even if you want to load optimization results
         self.indicator_to_minimize = 'incidence'  # 'incidence' or 'mortality'
-        self.annual_envelope = [10e6, 25e6, 50e6, 75e6, 100e6] # funding scenarios to be run
+        self.annual_envelope = [25e6, 50e6, 75e6, 100e6, 200e6] # funding scenarios to be run
         self.save_opti = True
         self.load_opti = False  # optimization will not be run if loading is turned on
         self.total_funding = None  # Funding for entire period
         self.f_tol = {'incidence': 0.5,
                       'mortality': 0.05}  # stopping condition for optimisation algorithm: tolerance differs according to indicator
-        self.year_end_opti = 2020.  # model is run until that date during optimisation
+        self.year_end_opti = 2035.  # model is run until that date during optimisation
         self.acceptable_combinations = []  # list of intervention combinations that can be envisaged with available funding
         self.opti_results = {}  # store all the results that we need for optimisation
         self.optimised_combinations = []
@@ -1114,27 +1114,10 @@ class ModelRunner:
         """
         self.acceptable_combinations = []
 
-        # Determine list of interventions with and without startup costs
-        interventions_without_startup = []
-        interventions_with_startup = []
-
-        for i, intervention in enumerate(self.interventions_considered_for_opti):
-            start_cost = 0.
-            if self.model_dict['manual_baseline'].intervention_startdates[
-                intervention] is None:
-                start_cost = self.inputs.model_constants['econ_startupcost_' + intervention]
-            if start_cost == 0:
-                interventions_without_startup.append(intervention)
-            else:
-                interventions_with_startup.append(intervention)
-
-        # to be completed
-
         n_interventions = len(self.interventions_considered_for_opti)
         full_set = range(n_interventions)
         canditate_combinations = list(itertools.chain.from_iterable(itertools.combinations(full_set, n) \
                                                                     for n in range(n_interventions + 1)[1:]))
-
 
         for combi in canditate_combinations:
             total_start_cost = 0
@@ -1163,6 +1146,7 @@ class ModelRunner:
             self.model_dict['manual_baseline'].load_state(start_time_index)
 
         self.model_dict['optimisation'].eco_drives_epi = True
+        self.model_dict['optimisation'].interventions_considered_for_opti = self.interventions_considered_for_opti
 
         self.get_acceptable_combinations()
 
@@ -1204,12 +1188,12 @@ class ModelRunner:
                     predicted incidence for 2035
                 """
                 #initialise funding at 0 for each intervention
-                for intervention in self.model_dict['manual_baseline'].interventions_to_cost:
+                for intervention in self.interventions_considered_for_opti:
                     self.model_dict['optimisation'].available_funding[intervention] = 0.
 
                 # input values from x
                 for i in range(len(x)):
-                    intervention = self.model_dict['manual_baseline'].interventions_to_cost[combi[i]]
+                    intervention = self.interventions_considered_for_opti[combi[i]]
                     self.model_dict['optimisation'].available_funding[intervention] = x[i] * self.total_funding
                 self.model_dict['optimisation'].distribute_funding_across_years()
                 self.model_dict['optimisation'].integrate()

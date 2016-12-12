@@ -1263,9 +1263,10 @@ class ModelRunner:
         self.model_dict['optimisation'].loaded_compartments = \
             self.model_dict['manual_baseline'].load_state(start_time_index)
         self.model_dict['optimisation'].eco_drives_epi = True
+        self.model_dict['optimisation'].interventions_considered_for_opti = self.interventions_considered_for_opti
 
         # initialise funding at 0 for each intervention
-        for intervention in self.model_dict['manual_baseline'].interventions_to_cost:
+        for intervention in self.interventions_considered_for_opti:
             self.model_dict['optimisation'].available_funding[intervention] = 0.
 
         for intervention, prop in self.optimal_allocation.iteritems():

@@ -2364,6 +2364,7 @@ class Project:
         for i, funding in enumerate(self.model_runner.opti_results['annual_envelope']):
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i+1)
             temp_dict = self.model_runner.opti_results['best_allocation'][i]
+            temp_dict = {key: val for key, val in temp_dict.iteritems() if val > 0.0001}
             labels = temp_dict.keys()
             fracs = temp_dict.values()
             dynamic_colors = [color_dict[lab] for lab in labels]

@@ -430,7 +430,6 @@ class BaseModel:
         return derivative_fn
 
     def integrate(self):
-
         """
         Numerical integration. This version also includes storage of compartment / vars / flows solutions which was
         previously done in calculate_diagnostics.
@@ -474,6 +473,7 @@ class BaseModel:
         # For each time as stored in self.times, except the first one
         for i_time, next_time in enumerate(self.times[1:]):
             store_step = False  # Whether the calculated time is to be stored (i.e. appears in self.times)
+            cpt_reduce_step = 0  # counts the number of times that the time step needs to be reduced
             while store_step is False:
                 if not dt_is_ok:  # Previous proposed time step was too wide
                     adaptive_dt /= 2.
@@ -518,13 +518,18 @@ class BaseModel:
                 if (numpy.asarray(y_candidate) >= 0).all():  # Accept the new integration step temp_time
                     dt_is_ok = True
                     prev_time = temp_time
+                    cpt_reduce_step = 0
                     for i in range(n_compartment):
                         y[i] = y_candidate[i]
                     if is_temp_time_in_times:
                         store_step = True  # To end the while loop and update i_time
                 else:  # If integration failed at proposed step, reduce time step
                     dt_is_ok = False
-
+                    cpt_reduce_step += 1
+                    if cpt_reduce_step > 50:
+                        print "integration did not complete. The following compartments became negative:"
+                        print [self.labels[i] for i in range(len(y_candidate)) if y_candidate[i] < 0]
+                        break
             # For stored steps only, store compartment state, vars and intercompartmental flows
             for i, label in enumerate(self.labels):
                 self.compartment_soln[label][i_time + 1] = y[i]

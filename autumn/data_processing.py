@@ -183,31 +183,23 @@ class Inputs:
 
     def read_and_load_data(self):
 
-        # Keys of universally required sheets
-        self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
-        keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy', 'default_parameters', 'tb', 'notifications',
-                                  'outcomes', 'country_constants', 'default_constants', 'country_programs',
-                                  'default_programs']
-
-        # Add any optional sheets required for specific model being run
-        if 'comorbidity_diabetes' in self.gui_inputs:
-            keys_of_sheets_to_read += ['diabetes']
+        """
+        Master method of this object, calling all sub-methods to read and process data and define model structure.
+        """
 
         # Read all required data
+        keys_of_sheets_to_read = self.find_keys_of_sheets_to_read()
+        self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
         self.original_data = spreadsheet.read_input_data_xls(self.from_test, keys_of_sheets_to_read, self.country)
 
         # Process constant parameters
-        self.add_model_constant_defaults()
-        self.add_universal_parameters()
+        self.process_model_constants()
 
         # Process time-variant parameters
         self.process_time_variants()
 
         # Define model structure
-        self.define_age_structure()
-        self.define_comorbidity_structure()
-        self.define_strain_structure()
-        self.define_organ_structure()
+        self.define_model_structure()
 
         # Find the time non-infectious on treatment from the total time on treatment and the time infectious
         self.find_noninfectious_period()
@@ -246,6 +238,22 @@ class Inputs:
 
         # Perform checks
         self.checks()
+
+    def find_keys_of_sheets_to_read(self):
+
+        """
+        Find keys of spreadsheets to read.
+        """
+
+        keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy', 'default_parameters', 'tb', 'notifications',
+                                  'outcomes', 'country_constants', 'default_constants', 'country_programs',
+                                  'default_programs']
+
+        # Add any optional sheets required for specific model being run
+        if 'comorbidity_diabetes' in self.gui_inputs:
+            keys_of_sheets_to_read += ['diabetes']
+
+        return keys_of_sheets_to_read
 
     def process_time_variants(self):
 
@@ -340,6 +348,15 @@ class Inputs:
                     if year not in self.time_variants[program_var]:
                         self.time_variants[program_var][year] = \
                             self.original_data['default_programs'][program_var][year]
+
+    def process_model_constants(self):
+
+        """
+        Master method to call methods for processing constant model parameters.
+        """
+
+        self.add_model_constant_defaults()
+        self.add_universal_parameters()
 
     def add_model_constant_defaults(self,
                                     other_sheets_with_constants=('diabetes', 'country_constants', 'default_constants')):
@@ -621,6 +638,17 @@ class Inputs:
             self.model_constants[timeperiod] \
                 = self.model_constants[timeperiod + '_ds']
 
+    def define_model_structure(self):
+
+        """
+        Master method to define all aspects of model structure.
+        """
+
+        self.define_age_structure()
+        self.define_comorbidity_structure()
+        self.define_strain_structure()
+        self.define_organ_structure()
+
     def define_comorbidity_structure(self):
 
         """
@@ -727,7 +755,6 @@ class Inputs:
 
         """
         Code to adjust the progression rates to active disease for various comorbidities - so far diabetes and HIV.
-
         """
 
         # Initialise dictionary of additional adjusted parameters to avoid dictionary changing size during iterations
@@ -796,7 +823,6 @@ class Inputs:
         """
         Find early progression rates by age group and by comorbidity status - i.e. early progression to
         active TB and stabilisation into late latency.
-
         """
 
         for agegroup in self.agegroups:

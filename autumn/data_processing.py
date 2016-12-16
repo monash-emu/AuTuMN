@@ -183,26 +183,18 @@ class Inputs:
 
     def read_and_load_data(self):
 
-        # Default keys of sheets to read (ones that should always be read)
+        # Keys of universally required sheets
         self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
         keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy', 'default_parameters', 'tb', 'notifications',
                                   'outcomes', 'country_constants', 'default_constants', 'country_programs',
                                   'default_programs']
 
-        # Add the optional ones (this is intended to be the standard approach to reading additional
-        # data to the data object - currently not that useful as it only applies to diabetes)
+        # Add any optional sheets required for specific model being run
         if 'comorbidity_diabetes' in self.gui_inputs:
             keys_of_sheets_to_read += ['diabetes']
 
-        # Read all the original data required
-        self.original_data \
-            = spreadsheet.read_input_data_xls(self.from_test,
-                                              keys_of_sheets_to_read,
-                                              self.country)
-
-        ####################################
-        # Work through the data processing #
-        ####################################
+        # Read all required data
+        self.original_data = spreadsheet.read_input_data_xls(self.from_test, keys_of_sheets_to_read, self.country)
 
         # Process constant parameters
         self.add_model_constant_defaults()
@@ -211,55 +203,14 @@ class Inputs:
         # Process time-variant parameters
         self.process_time_variants()
 
-        # Describe and work out age stratification structure for model from the list of age breakpoints
-        self.agegroups, _ = tool_kit.get_agegroups_from_breakpoints(self.model_constants['age_breakpoints'])
-
-        # Find ageing rates and age-weighted parameters
-        if len(self.agegroups) > 1:
-            self.find_ageing_rates()
-            self.find_fixed_age_specific_parameters()
-            agegroups_to_print = ''
-            for a, agegroup in enumerate(self.model_constants['age_breakpoints']):
-                if a == len(self.model_constants['age_breakpoints']) - 1:
-                    agegroups_to_print += ' and ' + str(agegroup) + '.\n'
-                elif a == len(self.model_constants['age_breakpoints']) - 2:
-                    agegroups_to_print += str(agegroup)
-                else:
-                    agegroups_to_print += str(agegroup) + ', '
-            self.add_comment_to_gui_window('Age breakpoints are at: %s' % agegroups_to_print)
-        else:
-            self.add_comment_to_gui_window('Model is not stratified by age.\n')
-
-        # Add treatment time periods for single strain model, as only populated for DS-TB to now
-        if self.gui_inputs['n_strains'] == 0:
-            self.find_single_strain_timeperiods()
-
-        # Define the structuring of comorbidities for the model
+        # Define model structure
+        self.define_age_structure()
         self.define_comorbidity_structure()
-        if len(self.comorbidities) == 1:
-            self.add_comment_to_gui_window('Model does not incorporate any additional risk groups.\n')
-        elif len(self.comorbidities) == 2:
-            self.add_comment_to_gui_window('Model incorporates one additional risk group.\n')
-        elif len(self.comorbidities) > 2:
-            self.add_comment_to_gui_window('Model incorporates %s additional risk groups.\n'
-                                        % str(len(self.comorbidities) - 1))
-
-        # Code to ensure some starting proportion of births go to the comorbidity stratum if value not loaded earlier
-        for comorbidity in self.comorbidities:
-            if 'comorb_prop' + comorbidity not in self.model_constants:
-                self.model_constants['comorb_prop' + comorbidity] = 0.
-
-        # Define the strain structure for the model
         self.define_strain_structure()
-
-        # Define the organ status structure for the model
         self.define_organ_structure()
 
         # Find the time non-infectious on treatment from the total time on treatment and the time infectious
         self.find_noninfectious_period()
-
-        # List all the time variant parameters that are not relevant to this model structure
-        self.list_irrelevant_time_variants()
 
         # Find comorbidity-specific parameters
         if len(self.comorbidities) > 1:
@@ -268,21 +219,8 @@ class Inputs:
         # Calculate rates of progression to active disease or late latency
         self.find_progression_rates_from_params()
 
-        # Work through whether organ status should be time variant
-        self.find_organ_time_variation()
-
-        # Create a scale-up dictionary for resistance amplification if appropriate
-        if self.gui_inputs['n_strains'] > 1:
-            self.find_amplification_data()
-            self.add_comment_to_gui_window('Model simulating %d strains.\n' % self.gui_inputs['n_strains'])
-        else:
-            self.add_comment_to_gui_window('Model simulating single strain only.\n')
-
         # Derive some basic parameters for IPT
         self.find_ipt_params()
-
-        # Extract data from time variants dictionary and populate to dictionary with scenario keys
-        self.find_data_for_functions_or_params()
 
         # Find scale-up functions or constant parameters from
         self.find_functions_or_params()
@@ -299,7 +237,6 @@ class Inputs:
 
         # Add parameters for IPT, if and where not specified for the age range being implemented
         self.add_missing_economics_for_ipt()
-
         self.find_interventions_to_cost()
 
         # Specify the parameters to be used for uncertainty
@@ -687,7 +624,7 @@ class Inputs:
     def define_comorbidity_structure(self):
 
         """
-        Work out the comorbidity stratification
+        Work out the comorbidity stratification.
         """
 
         # Create list of comorbidity names
@@ -700,6 +637,36 @@ class Inputs:
         else:
             self.comorbidities += ['_nocomorb']
 
+        # Ensure some starting proportion of births go to the comorbidity stratum if value not loaded earlier
+        for comorbidity in self.comorbidities:
+            if 'comorb_prop' + comorbidity not in self.model_constants:
+                self.model_constants['comorb_prop' + comorbidity] = 0.
+
+    def define_age_structure(self):
+
+        """
+        Define the model's age structure based on the breakpoints provided in spreadsheets.
+        """
+
+        # Describe and work out age stratification structure for model from the list of age breakpoints
+        self.agegroups, _ = tool_kit.get_agegroups_from_breakpoints(self.model_constants['age_breakpoints'])
+
+        # Find ageing rates and age-weighted parameters
+        if len(self.agegroups) > 1:
+            self.find_ageing_rates()
+            self.find_fixed_age_specific_parameters()
+            agegroups_to_print = ''
+            for a, agegroup in enumerate(self.model_constants['age_breakpoints']):
+                if a == len(self.model_constants['age_breakpoints']) - 1:
+                    agegroups_to_print += ' and ' + str(agegroup) + '.\n'
+                elif a == len(self.model_constants['age_breakpoints']) - 2:
+                    agegroups_to_print += str(agegroup)
+                else:
+                    agegroups_to_print += str(agegroup) + ', '
+            self.add_comment_to_gui_window('Age breakpoints are at: %s' % agegroups_to_print)
+        else:
+            self.add_comment_to_gui_window('Model is not stratified by age.\n')
+
     def define_strain_structure(self):
 
         """
@@ -707,11 +674,19 @@ class Inputs:
         the integer value for the number of strains selected.
         """
 
+        # Add treatment time periods for single strain model, as only populated for DS-TB to now
+        if self.gui_inputs['n_strains'] == 0:
+            self.find_single_strain_timeperiods()
+
         # Need a list of an empty string to be iterable for methods iterating by strain
         if self.gui_inputs['n_strains'] == 0:
             self.strains = ['']
         else:
             self.strains = self.available_strains[:self.gui_inputs['n_strains']]
+
+        # Create a scale-up dictionary for resistance amplification if appropriate
+        if self.gui_inputs['n_strains'] > 1:
+            self.find_amplification_data()
 
     def define_organ_structure(self):
 
@@ -726,6 +701,9 @@ class Inputs:
             self.organ_status = ['']
         else:
             self.organ_status = self.available_organs[:self.gui_inputs['n_organs']]
+
+        # Work through whether organ status should be time variant
+        self.find_organ_time_variation()
 
     def find_noninfectious_period(self):
 
@@ -979,8 +957,10 @@ class Inputs:
         """
         Calculate the scale-up functions from the scale-up data attribute and populate to
         a dictionary with keys of the scenarios to be run.
-
         """
+
+        self.find_data_for_functions_or_params()
+        self.list_irrelevant_time_variants()
 
         # For each scenario to be run
         for scenario in self.gui_inputs['scenarios_to_run']:

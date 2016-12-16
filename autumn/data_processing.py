@@ -666,7 +666,8 @@ class Inputs:
             self.strains = ['']
         else:
             self.strains = self.available_strains[:self.gui_inputs['n_strains']]
-            self.find_amplification_data()
+            if self.gui_inputs['is_amplification']:
+                self.find_amplification_data()
             self.treatment_outcome_types = copy.copy(self.strains)
             if self.gui_inputs['is_misassignment']:
                 self.treatment_outcome_types += ['_inappropriate']
@@ -970,7 +971,8 @@ class Inputs:
                 for key in mort_conversion_dict:
                     self.data_to_fit[key] = self.original_data['tb'][mort_conversion_dict[key]]
             else:
-                print 'Warning: Calibrated output %s is not directly available from the data' % output['key']
+                self.add_comment_to_gui_window(
+                    'Warning: Calibrated output %s is not directly available from the data' % output['key'])
 
     ###########################
     ### Second tier methods ###
@@ -985,13 +987,12 @@ class Inputs:
         for agegroup in self.agegroups:
             age_limits, _ = tool_kit.interrogate_age_string(agegroup)
             if 'up' not in agegroup:
-                self.model_constants['ageing_rate' + agegroup] \
-                    = 1. / (age_limits[1] - age_limits[0])
+                self.model_constants['ageing_rate' + agegroup] = 1. / (age_limits[1] - age_limits[0])
 
     def find_fixed_age_specific_parameters(self):
 
         """
-        Find weighted age specific parameters using Romain's age weighting code (now in took_kit)
+        Find weighted age specific parameters using age weighting code from took_kit.
         """
 
         # Extract age breakpoints in appropriate form for module
@@ -999,19 +1000,16 @@ class Inputs:
         for i in self.model_constants['age_breakpoints']:
             model_breakpoints += [float(i)]
 
-        for param in ['early_progression_age', 'late_progression_age',
-                      'tb_multiplier_child_infectiousness_age']:
+        for param in ['early_progression_age', 'late_progression_age', 'tb_multiplier_child_infectiousness_age']:
+
             # Extract age-stratified parameters in the appropriate form
             prog_param_vals = {}
             prog_age_dict = {}
             for constant in self.model_constants:
                 if param in constant:
-                    prog_param_string, prog_stem = \
-                        tool_kit.find_string_from_starting_letters(constant, '_age')
-                    prog_age_dict[prog_param_string], _ = \
-                        tool_kit.interrogate_age_string(prog_param_string)
-                    prog_param_vals[prog_param_string] = \
-                        self.model_constants[constant]
+                    prog_param_string, prog_stem = tool_kit.find_string_from_starting_letters(constant, '_age')
+                    prog_age_dict[prog_param_string], _ = tool_kit.interrogate_age_string(prog_param_string)
+                    prog_param_vals[prog_param_string] = self.model_constants[constant]
 
             param_breakpoints = tool_kit.find_age_breakpoints_from_dicts(prog_age_dict)
 
@@ -1029,18 +1027,17 @@ class Inputs:
 
         """
         If the model isn't stratified by strain, use DS-TB time-periods for the single strain.
-        Note that the parameter for the time period infectious on treatment will only be defined
-        for DS-TB in this case and not for no strain name.
+        Note that the parameter for the time period infectious on treatment will only be defined for DS-TB in this case
+        and not for no strain name.
         """
 
         for timeperiod in ['tb_timeperiod_infect_ontreatment', 'tb_timeperiod_ontreatment']:
-            self.model_constants[timeperiod] \
-                = self.model_constants[timeperiod + '_ds']
+            self.model_constants[timeperiod] = self.model_constants[timeperiod + '_ds']
 
     def find_amplification_data(self):
 
         """
-        Add dictionary for the amplification proportion scale-up, where relevant.
+        Add dictionary for the amplification proportion scale-up.
         """
 
         self.time_variants['epi_prop_amplification'] \
@@ -1051,9 +1048,9 @@ class Inputs:
     def find_organ_time_variation(self):
 
         """
-        Work through whether variation in organ status with time should be implemented,
-        according to whether the model is stratified by organ and whether organ stratification is requested
-        through the smear-positive time-variant input.
+        Work through whether variation in organ status with time should be implemented, according to whether the model
+        is stratified by organ and whether organ stratification is requested through the smear-positive time-variant
+        input.
         """
 
         # If no organ stratification
@@ -1066,31 +1063,30 @@ class Inputs:
                                                 'model is not stratified by organ status. ' +
                                                 'Therefore, time variant smear-' + status +
                                                 ' status has been changed to off.\n')
-
                     self.time_variants['epi_prop_smear' + status]['time_variant'] = u'no'
         else:
 
             # Change to organ variation true if organ stratification and smear-positive variation requested
             if self.time_variants['epi_prop_smearpos']['time_variant'] == u'yes':
                 self.is_organvariation = True
+
                 # Warn if smear-negative variation not requested
                 if self.time_variants['epi_prop_smearneg']['time_variant'] == u'no':
                     self.add_comment_to_gui_window(
                                                 'Requested time variant smear-positive status, but ' +
                                                 'not time variant smear-negative status. ' +
                                                 'Therefore, changed to time variant smear-negative status.\n')
-
                     self.time_variants['epi_prop_smearneg']['time_variant'] = u'yes'
 
             # Leave organ variation as false if smear-positive variation not requested
             elif self.time_variants['epi_prop_smearpos']['time_variant'] == u'no':
+
                 # Warn if smear-negative variation requested
                 if self.time_variants['epi_prop_smearneg']['time_variant'] == u'yes':
                     self.add_comment_to_gui_window(
                                                 'Requested non-time variant smear-positive status, but ' +
                                                 'time variant smear-negative status. ' +
                                                 'Therefore, changed to non-time variant smear-negative status.\n')
-
                     self.time_variants['epi_prop_smearneg']['time_variant'] = u'no'
 
         # Set fixed parameters if no organ status variation
@@ -1105,20 +1101,17 @@ class Inputs:
     def find_data_for_functions_or_params(self):
 
         """
-        Method to load all the dictionaries to be used in generating scale-up functions to
-        a single attribute of the class instance (to avoid creating heaps of functions for
-        irrelevant programs)
+        Method to load all the dictionaries to be used in generating scale-up functions to a single attribute of the
+        class instance (to avoid creating heaps of functions for irrelevant programs).
 
-        Returns:
-            Creates self.scaleup_data, a dictionary of the relevant scale-up data for creating
-             scale-up functions in set_scaleup_functions within the model object. First tier
-             of keys is the scenario to be run, next is the time variant parameter to be calculated.
-
+        Creates: self.scaleup_data, a dictionary of the relevant scale-up data for creating scale-up functions in
+            set_scaleup_functions within the model object. First tier of keys is the scenario to be run, next is the
+            time variant parameter to be calculated.
         """
 
         for scenario in self.gui_inputs['scenarios_to_run']:
-
             self.scaleup_data[scenario] = {}
+
             # Find the programs that are relevant and load them to the scaleup_data attribute
             for time_variant in self.time_variants:
                 if time_variant not in self.irrelevant_time_variants:
@@ -1129,14 +1122,9 @@ class Inputs:
                                 self.time_variants[time_variant][i]
                         elif type(i) == str:
                             if 'scenario_' not in i:
-                                self.scaleup_data[scenario][str(time_variant)][i] \
-                                    = self.time_variants[time_variant][i]
-                        elif scenario is None or 'program_' not in time_variant:
-                            self.scaleup_data[scenario][str(time_variant)][i] \
-                                = self.time_variants[time_variant][i]
+                                self.scaleup_data[scenario][str(time_variant)][i] = self.time_variants[time_variant][i]
                         else:
-                            self.scaleup_data[scenario][str(time_variant)][i] \
-                                = self.time_variants[time_variant][i]
+                            self.scaleup_data[scenario][str(time_variant)][i] = self.time_variants[time_variant][i]
 
     def list_irrelevant_time_variants(self):
 
@@ -1168,12 +1156,14 @@ class Inputs:
 
     def add_comment_to_gui_window(self, comment, target='console'):
 
+        """
+        Output message to either JavaScript or Tkinter GUI.
+        """
+
         if self.js_gui:
             emit(target, {"message": comment})
             time.sleep(self.emit_delay)
-
             print "Emitting:", comment
-
         else:
             self.runtime_outputs.insert(END, comment + '\n')
             self.runtime_outputs.see(END)

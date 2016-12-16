@@ -204,36 +204,12 @@ class Inputs:
         # Work through the data processing #
         ####################################
 
-        # Find the proportion of new cases by organ status and start to populate the derived data dictionary
-        self.find_organ_proportions()
-
-        # Process the time-variant parameters
-        self.extract_freeze_times()
-        if 'country_programs' in self.original_data:
-            self.time_variants.update(self.original_data['country_programs'])
-        self.add_time_variant_defaults()
-        self.load_vacc_detect_time_variants()
-        self.convert_percentages_to_proportions()
-        self.find_ds_outcomes()
-        self.add_treatment_outcomes()
-        if self.gui_inputs['n_strains'] > 1:
-            self.duplicate_ds_outcomes_for_multistrain()
-        self.add_resistant_strain_outcomes()
-        self.add_demo_dictionaries_to_timevariants()
-        if self.time_variants['epi_prop_smearpos']['load_data'] == u'yes':
-            self.add_organ_status_to_timevariants()
-
-        # Process the constant parameters
+        # Process constant parameters
         self.add_model_constant_defaults()
-
-        # Populate freeze time dictionary with defaults where unavailable
-        self.complete_freeze_time_dictionary()
-
-        # Add zeroes, remove nans and remove load_data key from time variant dictionaries
-        self.tidy_time_variants()
-
-        # Add hard-coded parameters that are universal to all models that require them
         self.add_universal_parameters()
+
+        # Process time-variant parameters
+        self.process_time_variants()
 
         # Describe and work out age stratification structure for model from the list of age breakpoints
         self.agegroups, _ = tool_kit.get_agegroups_from_breakpoints(self.model_constants['age_breakpoints'])
@@ -333,6 +309,32 @@ class Inputs:
 
         # Perform checks
         self.checks()
+
+    def process_time_variants(self):
+
+        """
+        Master method to perform all processing tasks for time-variant parameters. Note that the order of call is
+        important and can lead to errors if changed.
+        """
+
+        # Run first to remove from time-variants before they are processed
+        self.extract_freeze_times()
+        self.find_organ_proportions()
+        if 'country_programs' in self.original_data:
+            self.time_variants.update(self.original_data['country_programs'])
+        self.add_time_variant_defaults()
+        self.load_vacc_detect_time_variants()
+        self.convert_percentages_to_proportions()
+        self.find_ds_outcomes()
+        self.add_treatment_outcomes()
+        if self.gui_inputs['n_strains'] > 1:
+            self.duplicate_ds_outcomes_for_multistrain()
+        self.add_resistant_strain_outcomes()
+        self.add_demo_dictionaries_to_timevariants()
+        if self.time_variants['epi_prop_smearpos']['load_data'] == u'yes':
+            self.add_organ_status_to_timevariants()
+        self.complete_freeze_time_dictionary()
+        self.tidy_time_variants()
 
     def extract_freeze_times(self):
 

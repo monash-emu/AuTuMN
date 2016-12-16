@@ -158,6 +158,7 @@ class Inputs:
         # For incidence for ex. Width of Normal posterior relative to CI width in data
         self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
         self.freeze_times = {}
+        self.treatment_outcome_types = []
 
         # Create a list of the interventions that could potentially be costed if they are requested
         self.potential_interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
@@ -583,8 +584,8 @@ class Inputs:
     def complete_freeze_time_dictionary(self):
 
         """
-        Ensure all scenarios have an entry in the self.freeze_times dictionary, if a time hadn't been
-        specified in self.extract_freeze_times above.
+        Ensure all scenarios have an entry in the self.freeze_times dictionary, if a time hadn't been specified in
+        self.extract_freeze_times above.
         """
 
         for scenario in self.gui_inputs['scenarios_to_run']:
@@ -593,30 +594,27 @@ class Inputs:
             if scenario is None:
                 self.freeze_times['baseline'] = self.model_constants['current_time']
 
-            # Scenarios with no time specified
+            # Scenarios with no freeze time specified
             elif 'scenario_' + str(scenario) not in self.freeze_times:
                 self.freeze_times['scenario_' + str(scenario)] = self.model_constants['current_time']
 
     def tidy_time_variants(self):
 
         """
-        Perform final rounds of tidying of time-variants
+        Perform final rounds of tidying of time-variants.
         """
 
         # Looping over each time variant
         for program in self.time_variants:
 
-            # Add zero at starting time for model run to all programs that are proportions
-            if 'program_prop' in program:
-                self.time_variants[program][int(self.model_constants['start_time'])] = 0.
+            # Add zero at starting time for model run to all program proportions
+            if 'program_prop' in program: self.time_variants[program][int(self.model_constants['start_time'])] = 0.
 
             # Remove the load_data keys, as they have been used and are now redundant
-            self.time_variants[program] \
-                = remove_specific_key(self.time_variants[program], 'load_data')
+            self.time_variants[program] = remove_specific_key(self.time_variants[program], 'load_data')
 
-            # Remove dictionary keys for which values are nan
-            self.time_variants[program] \
-                = remove_nans(self.time_variants[program])
+            # Remove keys for which values are nan
+            self.time_variants[program] = remove_nans(self.time_variants[program])
 
     def define_age_structure(self):
 
@@ -631,17 +629,6 @@ class Inputs:
         if len(self.agegroups) > 1:
             self.find_ageing_rates()
             self.find_fixed_age_specific_parameters()
-            agegroups_to_print = ''
-            for a, agegroup in enumerate(self.model_constants['age_breakpoints']):
-                if a == len(self.model_constants['age_breakpoints']) - 1:
-                    agegroups_to_print += ' and ' + str(agegroup) + '.\n'
-                elif a == len(self.model_constants['age_breakpoints']) - 2:
-                    agegroups_to_print += str(agegroup)
-                else:
-                    agegroups_to_print += str(agegroup) + ', '
-            self.add_comment_to_gui_window('Age breakpoints are at: %s' % agegroups_to_print)
-        else:
-            self.add_comment_to_gui_window('Model is not stratified by age.\n')
 
     def define_comorbidity_structure(self):
 
@@ -654,6 +641,8 @@ class Inputs:
         for time_variant in self.time_variants:
             if 'comorb_prop_' in time_variant and self.gui_inputs['comorbidity' + time_variant[11:]]:
                 self.comorbidities += [time_variant[11:]]
+
+        # Add the null group
         if len(self.comorbidities) == 0:
             self.comorbidities += ['']
         else:
@@ -667,23 +656,20 @@ class Inputs:
     def define_strain_structure(self):
 
         """
-        Finds the strains to be present in the model from a list of available strains and
-        the integer value for the number of strains selected.
+        Finds the strains to be present in the model from a list of available strains and the integer value for the
+        number of strains selected.
         """
-
-        # Add treatment time periods for single strain model, as only populated for DS-TB to now
-        if self.gui_inputs['n_strains'] == 0:
-            self.find_single_strain_timeperiods()
 
         # Need a list of an empty string to be iterable for methods iterating by strain
         if self.gui_inputs['n_strains'] == 0:
+            self.find_single_strain_timeperiods()
             self.strains = ['']
         else:
             self.strains = self.available_strains[:self.gui_inputs['n_strains']]
-
-        # Create a scale-up dictionary for resistance amplification if appropriate
-        if self.gui_inputs['n_strains'] > 1:
             self.find_amplification_data()
+            self.treatment_outcome_types = copy.copy(self.strains)
+            if self.gui_inputs['is_misassignment']:
+                self.treatment_outcome_types += ['_inappropriate']
 
     def define_organ_structure(self):
 
@@ -694,7 +680,6 @@ class Inputs:
         """
 
         if self.gui_inputs['n_organs'] == 0:
-            # Need a list of an empty string to be iterable for methods iterating by organ status
             self.organ_status = ['']
         else:
             self.organ_status = self.available_organs[:self.gui_inputs['n_organs']]
@@ -705,17 +690,10 @@ class Inputs:
     def find_noninfectious_period(self):
 
         """
-        Work out the periods of time spent non-infectious for each strain (plus inappropriate as required)
-        by very simple subtraction.
+        Work out the periods of time spent non-infectious for each strain (plus inappropriate if required).
         """
 
-        treatment_outcome_types = copy.copy(self.strains)
-        if self.gui_inputs['n_strains'] > 1 and self.gui_inputs['is_misassignment']:
-            treatment_outcome_types += ['_inappropriate']
-
-        for strain in treatment_outcome_types:
-
-            # Find the non-infectious periods
+        for strain in self.treatment_outcome_types:
             self.model_constants['tb_timeperiod_noninfect_ontreatment' + strain] \
                 = self.model_constants['tb_timeperiod_ontreatment' + strain] \
                   - self.model_constants['tb_timeperiod_infect_ontreatment' + strain]

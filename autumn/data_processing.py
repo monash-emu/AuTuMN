@@ -401,8 +401,8 @@ class Inputs:
     def find_organ_proportions(self):
 
         """
-        Calculates dictionaries with proportion of cases progressing to each organ status by year,
-        and adds these to the derived_data attribute of the object.
+        Calculates dictionaries with proportion of cases progressing to each organ status by year, and adds these to
+        the derived_data attribute of the object.
         """
 
         self.derived_data.update(calculate_proportion_dict(self.original_data['notifications'],
@@ -411,7 +411,7 @@ class Inputs:
     def add_time_variant_defaults(self):
 
         """
-        Populates time variant parameters with defaults if those values aren't found in the manually entered
+        Populates time-variant parameters with defaults if those values aren't found in the manually entered
         country-specific data.
         """
 
@@ -419,15 +419,14 @@ class Inputs:
 
             # If the key isn't in available for the country at all
             if program_var not in self.time_variants:
-                self.time_variants[program_var] = \
-                    self.original_data['default_programs'][program_var]
+                self.time_variants[program_var] = self.original_data['default_programs'][program_var]
 
             # Otherwise if it's there, populate for the missing years
             else:
                 for year in self.original_data['default_programs'][program_var]:
                     if year not in self.time_variants[program_var]:
-                        self.time_variants[program_var][year] = \
-                            self.original_data['default_programs'][program_var][year]
+                        self.time_variants[program_var][year] \
+                            = self.original_data['default_programs'][program_var][year]
 
     def load_vacc_detect_time_variants(self):
 
@@ -442,8 +441,7 @@ class Inputs:
 
                 # If not already loaded through the inputs spreadsheet
                 if year not in self.time_variants['program_perc_vaccination']:
-                    self.time_variants['program_perc_vaccination'][year] \
-                        = self.original_data['bcg'][year]
+                    self.time_variants['program_perc_vaccination'][year] = self.original_data['bcg'][year]
 
         # Case detection
         if self.time_variants['program_perc_detect']['load_data'] == u'yes':
@@ -451,8 +449,7 @@ class Inputs:
 
                 # If not already loaded through the inputs spreadsheet
                 if year not in self.time_variants['program_perc_detect']:
-                    self.time_variants['program_perc_detect'][year] \
-                        = self.original_data['tb']['c_cdr'][year]
+                    self.time_variants['program_perc_detect'][year] = self.original_data['tb']['c_cdr'][year]
 
     def convert_percentages_to_proportions(self):
 
@@ -468,7 +465,7 @@ class Inputs:
                 time_variants_converted_to_prop[time_variant.replace('perc_', 'prop_')] = {}
                 for i in self.time_variants[time_variant]:
 
-                    # If it's a year or scenario
+                    # If it's a year or scenario entry to the dictionary
                     if type(i) == int or 'scenario' in i:
                         time_variants_converted_to_prop[time_variant.replace('perc_', 'prop_')][i] \
                             = self.time_variants[time_variant][i] / 1e2
@@ -502,25 +499,20 @@ class Inputs:
 
         """
         Add treatment outcomes for DS-TB to the time variants attribute.
-        Use the same approach as above to adding if requested and if data not manually entered.
+        Use the same approach as above to adding if requested and data not manually entered.
         """
+
+        name_conversion_dict = {'_success': '_success', '_death': '_died'}
 
         # Iterate over success and death outcomes
         for outcome in ['_success', '_death']:
-
-            # Populate data
             if self.time_variants['program_prop_treatment' + outcome]['load_data'] == u'yes':
 
-                # Correct naming GTB report
-                if outcome == '_success':
-                    report_outcome = '_success'
-                elif outcome == '_death':
-                    report_outcome = '_died'
-
-                for year in self.derived_data['prop_new_sp' + report_outcome]:
+                # Populate data
+                for year in self.derived_data['prop_new_sp' + name_conversion_dict[outcome]]:
                     if year not in self.time_variants['program_prop_treatment' + outcome]:
                         self.time_variants['program_prop_treatment' + outcome][year] \
-                            = self.derived_data['prop_new_sp' + report_outcome][year]
+                            = self.derived_data['prop_new_sp' + name_conversion_dict[outcome]][year]
 
     def duplicate_ds_outcomes_for_multistrain(self):
 

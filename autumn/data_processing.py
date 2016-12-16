@@ -5,10 +5,47 @@ import numpy
 import tool_kit
 from curve import scale_up_function, freeze_curve
 from Tkinter import *
-
 import time
 import eventlet
 from flask_socketio import emit
+
+
+def find_common_elements(list_1, list_2):
+
+    """
+    Simple method to find the intersection of two lists
+
+    Args:
+        list_1 and list_2: The two lists
+    Returns:
+        intersection: The common elements of the two lists
+    """
+
+    intersection = []
+    for i in list_1:
+        if i in list_2:
+            intersection += [i]
+    return intersection
+
+
+def find_common_elements_multiple_lists(list_of_lists):
+
+    """
+    Simple method to find the common elements of any number of lists
+
+    Args:
+        list_of_lists: A list whose elements are all the lists we want to find the
+            intersection of.
+
+    Returns:
+        intersection: Common elements of all lists.
+    """
+
+    intersection = list_of_lists[0]
+    for i in range(1, len(list_of_lists)):
+        intersection = find_common_elements(intersection, list_of_lists[i])
+    return intersection
+
 
 def calculate_proportion_dict(data, indices, percent=False):
 
@@ -16,17 +53,16 @@ def calculate_proportion_dict(data, indices, percent=False):
     General method to calculate proportions from absolute values provided as dictionaries.
 
     Args:
-        data: Dicionary containing the absolute values.
+        data: Dictionary containing the absolute values.
         indices: The keys of data from which proportions are to be calculated (generally a list of strings).
         percent: Boolean describing whether the method should return the output as a percent or proportion.
-
     Returns:
         proportions: A dictionary of the resulting proportions.
     """
 
     # Calculate multiplier for percentages if requested, otherwise leave as one
     if percent:
-        multiplier = 1E2
+        multiplier = 1e2
     else:
         multiplier = 1.
 
@@ -58,72 +94,31 @@ def calculate_proportion_dict(data, indices, percent=False):
     return proportions
 
 
-def find_common_elements_multiple_lists(list_of_lists):
-
-    """
-    Simple method to find the common elements of any number of lists
-
-    Args:
-        list_of_lists: A list whose elements are all the lists we want to find the
-            intersection of.
-
-    Returns:
-        intersection: Common elements of all lists.
-    """
-
-    intersection = list_of_lists[0]
-    for i in range(1, len(list_of_lists)):
-        intersection = find_common_elements(intersection, list_of_lists[i])
-    return intersection
-
-
-def find_common_elements(list_1, list_2):
-
-    """
-    Simple method to find the intersection of two lists
-
-    Args:
-        list_1 and list_2: The two lists
-
-    Returns:
-        intersection: The common elements of the two lists
-    """
-
-    intersection = []
-    for i in list_1:
-        if i in list_2:
-            intersection += [i]
-    return intersection
-
-
 def remove_specific_key(dictionary, key):
 
     """
-    Remove a specific named key from a dictionary
+    Remove a specific named key from a dictionary.
 
     Args:
         dictionary: The dictionary to have a key removed
         key: The key to be removed
-
     Returns:
         dictionary: The dictionary with the key removed
     """
 
     if key in dictionary:
         del dictionary[key]
-
     return dictionary
 
 
 def remove_nans(dictionary):
 
     """
-    Takes a dictionary and removes all of the elements for which the value is nan
+    Takes a dictionary and removes all of the elements for which the value is nan.
 
     Args:
         dictionary: Should typically be the dictionary of programmatic values, usually
                     with time in years as the key.
-
     Returns:
         dictionary: The dictionary with the nans removed.
     """
@@ -134,7 +129,6 @@ def remove_nans(dictionary):
             nan_indices += [i]
     for i in nan_indices:
         del dictionary[i]
-
     return dictionary
 
 
@@ -150,14 +144,8 @@ class Inputs:
         self.derived_data = {}
         self.time_variants = {}
         self.model_constants = {}
-        self.available_strains = [
-            '_ds',
-            '_mdr',
-            '_xdr']
-        self.available_organs = [
-            '_smearpos',
-            '_smearneg',
-            '_extrapul']
+        self.available_strains = ['_ds', '_mdr', '_xdr']
+        self.available_organs = ['_smearpos', '_smearneg', '_extrapul']
         self.agegroups = None
         self.irrelevant_time_variants = []
         self.is_organvariation = False
@@ -168,14 +156,11 @@ class Inputs:
         self.mode = 'uncertainty'
         self.data_to_fit = {}
         # For incidence for ex. Width of Normal posterior relative to CI width in data
-        self.outputs_unc = [{'key': 'incidence',
-                             'posterior_width': None,
-                             'width_multiplier': 2.}]
-        self.potential_interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
-                                               'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
-        # self.potential_interventions_to_cost = ['vaccination','xpertacf_ruralpoor', \
-        #                                           'xpertacf_prison', 'xpertacf', 'xpert', 'engage_lowquality']
+        self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
 
+        # Create a list of the interventions that could potentially be costed if they are requested
+        self.potential_interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
+                                                'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
         if self.gui_inputs['n_strains'] > 1:
             self.potential_interventions_to_cost += ['shortcourse_mdr']
         if self.gui_inputs['is_lowquality']:
@@ -190,12 +175,9 @@ class Inputs:
             self.potential_interventions_to_cost += ['xpertacf_ruralpoor']
 
         self.interventions_to_cost = []
-
         self.emit_delay = 0.1
         self.plot_count = 0
-
         self.js_gui = js_gui
-
         if self.js_gui:
             eventlet.monkey_patch()
 

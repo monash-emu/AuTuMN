@@ -768,8 +768,8 @@ class Inputs:
     def find_progression_rates_from_params(self):
 
         """
-        Find early progression rates by age group and by comorbidity status - i.e. early progression to
-        active TB and stabilisation into late latency.
+        Find early progression rates by age group and by comorbidity status - i.e. early progression to active TB and
+        stabilisation into late latency.
         """
 
         for agegroup in self.agegroups:
@@ -792,8 +792,8 @@ class Inputs:
         who receive effective IPT per person assessed for LTBI.
         """
 
-        self.model_constants['ipt_eligible_per_treatment_start'] = (self.model_constants['demo_household_size'] - 1.) \
-                                                                   * self.model_constants['tb_prop_contacts_infected']
+        self.model_constants['ipt_eligible_per_treatment_start'] \
+            = (self.model_constants['demo_household_size'] - 1.) * self.model_constants['tb_prop_contacts_infected']
 
         for ipt_type in ['', 'novel_']:
             self.model_constants[ipt_type + 'ipt_effective_per_assessment'] \
@@ -803,23 +803,24 @@ class Inputs:
     def find_functions_or_params(self):
 
         """
-        Calculate the scale-up functions from the scale-up data attribute and populate to
-        a dictionary with keys of the scenarios to be run.
+        Calculate the scale-up functions from the scale-up data attribute and populate to a dictionary with keys of the
+        scenarios to be run.
+        Note that the 'demo_life_expectancy' parameter has to be given this name and base.py will then calculate
+        population death rates automatically.
         """
 
         self.find_data_for_functions_or_params()
         self.list_irrelevant_time_variants()
 
-        # For each scenario to be run
         for scenario in self.gui_inputs['scenarios_to_run']:
 
             # Dictionary of whether interventions are applied or not
             self.intervention_applied[scenario] = {}
 
-            # Need dictionary to track whether each parameter is time variant
+            # Whether each parameter is time variant
             whether_time_variant = {}
 
-            # Initialise the scaleup function dictionary
+            # Initialise the scale-up function dictionary
             self.scaleup_fns[scenario] = {}
 
             # Define scale-up functions from these datasets
@@ -875,7 +876,7 @@ class Inputs:
                 # If no is selected in the time variant column
                 elif whether_time_variant[param] == u'no':
 
-                    # Get rid of smoothness, which isn't relevant
+                    # Smoothness no longer relevant
                     if 'smoothness' in self.scaleup_data[scenario][param]:
                         del self.scaleup_data[scenario][param]['smoothness']
 
@@ -883,26 +884,20 @@ class Inputs:
                     self.model_constants[param] \
                         = self.scaleup_data[scenario][param][max(self.scaleup_data[scenario][param])]
 
-                    # Note that the 'demo_life_expectancy' parameter has to be given this name
-                    # and base.py will then calculate population death rates automatically.
-
     def find_constant_extrapulmonary_proportion(self):
 
         """
-        Calculate constant proportion progressing to extrapulmonary for models that are stratified by organ status,
-        but are not time-variant by organ status.
+        Calculate constant proportion progressing to extrapulmonary for models that are stratified but not time-variant
+        by organ status.
         """
 
         self.model_constants['epi_prop_extrapul'] \
-            = 1. \
-              - self.model_constants['epi_prop_smearpos'] \
-              - self.model_constants['epi_prop_smearneg']
+            = 1. - self.model_constants['epi_prop_smearpos'] - self.model_constants['epi_prop_smearneg']
 
     def set_fixed_infectious_proportion(self):
 
         """
-        Find a multiplier for the proportion of all cases infectious for
-        models unstructured by organ status.
+        Find a multiplier for the proportion of all cases infectious for models unstructured by organ status.
         """
 
         self.model_constants['tb_multiplier_force'] \
@@ -914,7 +909,6 @@ class Inputs:
         """
         To avoid errors because no economic values are available for age-stratified IPT, use the unstratified values
         for each age group for which no value is provided.
-
         """
 
         for agegroup in self.agegroups:
@@ -928,7 +922,6 @@ class Inputs:
                                                     '"' + param[1:] + '" parameter unavailable for ' +
                                                     str(int(limits[0])) + ' and up ' +
                                                     'age-group, so default value used.\n')
-
                     else:
                         self.add_comment_to_gui_window(
                                                     '"' + param[1:] + '" parameter unavailable for ' +
@@ -938,9 +931,8 @@ class Inputs:
     def find_uncertainty_distributions(self):
 
         """
-        Populate a dictionary of uncertainty parameters from the inputs dictionary in a format that matches
-        Romain's code for uncertainty.
-
+        Populate a dictionary of uncertainty parameters from the inputs dictionary in a format that matches code for
+        uncertainty.
         """
 
         for param in self.model_constants:
@@ -953,8 +945,7 @@ class Inputs:
     def get_data_to_fit(self):
 
         """
-        Extract the data to be used for model fitting. (Choices currently hard-coded above.)
-
+        Extract data for model fitting. Choices currently hard-coded above.
         """
 
         # Decide whether calibration or uncertainty analysis is being run
@@ -963,16 +954,21 @@ class Inputs:
         elif self.mode == 'uncertainty':
             var_to_iterate = self.outputs_unc
 
+        inc_conversion_dict = {'incidence': 'e_inc_100k',
+                               'incidence_low': 'e_inc_100k_lo',
+                               'incidence_high': 'e_inc_100k_hi'}
+        mort_conversion_dict = {'mortality': 'e_mort_exc_tbhiv_100k',
+                                'mortality_low': 'e_mort_exc_tbhiv_100k_lo',
+                                'mortality_high': 'e_mort_exc_tbhiv_100k_hi'}
+
         # Work through vars to be used and populate into the data fitting dictionary
         for output in var_to_iterate:
             if output['key'] == 'incidence':
-                self.data_to_fit['incidence'] = self.original_data['tb']['e_inc_100k']
-                self.data_to_fit['incidence_low'] = self.original_data['tb']['e_inc_100k_lo']
-                self.data_to_fit['incidence_high'] = self.original_data['tb']['e_inc_100k_hi']
+                for key in inc_conversion_dict:
+                    self.data_to_fit[key] = self.original_data['tb'][inc_conversion_dict[key]]
             elif output['key'] == 'mortality':
-                self.data_to_fit['mortality'] = self.original_data['tb']['e_mort_exc_tbhiv_100k']
-                self.data_to_fit['mortality_low'] = self.original_data['tb']['e_mort_exc_tbhiv_100k_lo']
-                self.data_to_fit['mortality_high'] = self.original_data['tb']['e_mort_exc_tbhiv_100k_hi']
+                for key in mort_conversion_dict:
+                    self.data_to_fit[key] = self.original_data['tb'][mort_conversion_dict[key]]
             else:
                 print 'Warning: Calibrated output %s is not directly available from the data' % output['key']
 

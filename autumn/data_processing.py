@@ -555,16 +555,15 @@ class Inputs:
 
         """
         Add epidemiological time variant parameters to time_variants.
-        Similarly to previous methods, only performed if requested
-        and only populated where absent (either entirely or for that year).
+        Similarly to previous methods, only performed if requested and only populated where absent
+        (either entirely or for that year).
         """
 
         for demo_parameter in ['life_expectancy', 'rate_birth']:
             if self.time_variants['demo_' + demo_parameter]['load_data'] == u'yes':
                 for year in self.original_data[demo_parameter]:
                     if year not in self.time_variants['demo_' + demo_parameter]:
-                        self.time_variants['demo_' + demo_parameter][year] \
-                            = self.original_data[demo_parameter][year]
+                        self.time_variants['demo_' + demo_parameter][year] = self.original_data[demo_parameter][year]
 
     def add_organ_status_to_timevariants(self):
 
@@ -572,20 +571,14 @@ class Inputs:
         Populate organ status dictionaries where requested and not already loaded.
         """
 
-        # Iterate over smear positive and negative status
+        name_conversion_dict = {'_smearpos': '_sp', '_smearneg': '_sn'}
         for outcome in ['_smearpos', '_smearneg']:
 
-            # Correct naming GTB report
-            if outcome == '_smearpos':
-                report_outcome = '_sp'
-            elif outcome == '_smearneg':
-                report_outcome = '_sn'
-
             # Populate data
-            for year in self.derived_data['prop_new' + report_outcome]:
+            for year in self.derived_data['prop_new' + name_conversion_dict[outcome]]:
                 if year not in self.time_variants['epi_prop' + outcome]:
                     self.time_variants['epi_prop' + outcome][year] \
-                        = self.derived_data['prop_new' + report_outcome][year]
+                        = self.derived_data['prop_new' + name_conversion_dict[outcome]][year]
 
     def complete_freeze_time_dictionary(self):
 

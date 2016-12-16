@@ -176,7 +176,7 @@ class App:
         for dropdown in running_dropdown_list:
             self.raw_outputs[dropdown] = StringVar()
         self.raw_outputs['country'].set('Philippines')
-        self.raw_outputs['integration_method'].set('Runge Kutta')
+        self.raw_outputs['integration_method'].set('Explicit')
         self.raw_outputs['fitting_method'].set('Method 5')
         self.drop_downs['country'] \
             = OptionMenu(self.frame, self.raw_outputs['country'],

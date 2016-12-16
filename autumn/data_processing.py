@@ -181,6 +181,10 @@ class Inputs:
         if self.js_gui:
             eventlet.monkey_patch()
 
+    ######################
+    ### Master methods ###
+    ######################
+
     def read_and_load_data(self):
 
         """
@@ -213,21 +217,14 @@ class Inputs:
         # Perform checks
         self.checks()
 
-    def find_keys_of_sheets_to_read(self):
+    def process_model_constants(self):
 
         """
-        Find keys of spreadsheets to read.
+        Master method to call methods for processing constant model parameters.
         """
 
-        keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy', 'default_parameters', 'tb', 'notifications',
-                                  'outcomes', 'country_constants', 'default_constants', 'country_programs',
-                                  'default_programs']
-
-        # Add any optional sheets required for specific model being run
-        if 'comorbidity_diabetes' in self.gui_inputs:
-            keys_of_sheets_to_read += ['diabetes']
-
-        return keys_of_sheets_to_read
+        self.add_model_constant_defaults()
+        self.add_universal_parameters()
 
     def process_time_variants(self):
 
@@ -255,6 +252,145 @@ class Inputs:
         self.complete_freeze_time_dictionary()
         self.tidy_time_variants()
 
+    def define_model_structure(self):
+
+        """
+        Master method to define all aspects of model structure.
+        """
+
+        self.define_age_structure()
+        self.define_comorbidity_structure()
+        self.define_strain_structure()
+        self.define_organ_structure()
+
+    def find_additional_parameters(self):
+
+        # Find the time non-infectious on treatment from the total time on treatment and the time infectious
+        self.find_noninfectious_period()
+
+        # Find comorbidity-specific parameters
+        if len(self.comorbidities) > 1:
+            self.find_comorb_progressions()
+
+        # Calculate rates of progression to active disease or late latency
+        self.find_progression_rates_from_params()
+
+        # Derive some basic parameters for IPT
+        self.find_ipt_params()
+
+        # Find scale-up functions or constant parameters from
+        self.find_functions_or_params()
+
+        # Find extrapulmonary proportion if model is stratified by organ type, but there is no time variant organ
+        # proportion. Note that this has to be done after find_functions_or_params or the constant parameter
+        # won't have been calculated yet.
+        if not self.is_organvariation and len(self.organ_status) > 2:
+            self.find_constant_extrapulmonary_proportion()
+
+        # Find the proportion of cases that are infectious for models that are unstratified by organ status
+        if len(self.organ_status) < 2:
+            self.set_fixed_infectious_proportion()
+
+        # Add parameters for IPT, if and where not specified for the age range being implemented
+        self.add_missing_economics_for_ipt()
+
+    def find_interventions_to_cost(self):
+
+        """
+        Work out which interventions should be costed, selecting from the ones that can be costed in
+        self.potential_interventions_to_cost.
+        """
+
+        for intervention in self.potential_interventions_to_cost:
+            if 'program_prop_' + intervention in self.time_variants and \
+                    ('_age' not in intervention or len(self.agegroups) > 1):
+                self.interventions_to_cost += [intervention]
+
+    def process_uncertainty_parameters(self):
+
+        # Specify the parameters to be used for uncertainty
+        if self.gui_inputs['output_uncertainty']:
+            self.find_uncertainty_distributions()
+            self.get_data_to_fit()
+
+    def checks(self):
+
+        """
+        Not much in here as yet. However, this function is intended to contain all the data consistency checks for
+        data entry.
+        """
+
+        # Check that the time to start economics analyses from is earlier than the end time of the model run
+        assert self.model_constants['econ_start_time'] \
+               <= self.model_constants['scenario_end_time'], \
+            'Period_end must be before the end of the model integration time'
+
+        # Check that all entered times occur after the model start time
+        for time in self.model_constants:
+            if time[-5:] == '_time' and '_step_time' not in time:
+                assert self.model_constants[time] >= self.model_constants['start_time'], \
+                    '% is before model start time' % self.model_constants[time]
+
+    ##########################
+    ### Processing methods ###
+    ##########################
+
+    def find_keys_of_sheets_to_read(self):
+
+        """
+        Find keys of spreadsheets to read.
+        """
+
+        keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy', 'default_parameters', 'tb', 'notifications',
+                                  'outcomes', 'country_constants', 'default_constants', 'country_programs',
+                                  'default_programs']
+
+        # Add any optional sheets required for specific model being run
+        if 'comorbidity_diabetes' in self.gui_inputs:
+            keys_of_sheets_to_read += ['diabetes']
+
+        return keys_of_sheets_to_read
+
+    def add_model_constant_defaults(self,
+                                    other_sheets_with_constants=('diabetes', 'country_constants', 'default_constants')):
+
+        """
+        Populate model_constants with data from control panel, country sheet or default sheet hierarhically
+        - such that the control panel is read in preference to the country data in preference to the default back-ups
+
+        Args:
+            other_sheets_with_constants: The sheets of original_data which contain model constants
+        """
+
+        # Populate from country_constants if available and default_constants if not
+        for other_sheet in other_sheets_with_constants:
+            if other_sheet in self.original_data:
+                for item in self.original_data[other_sheet]:
+
+                    # Only add the item if it hasn't been added yet
+                    if item not in self.model_constants:
+                        self.model_constants[item] = \
+                            self.original_data[other_sheet][item]
+
+    def add_universal_parameters(self):
+
+        """
+        Sets parameters that should never be changed in any situation,
+        i.e. "by definition" parameters (although note that the infectiousness
+        of the single infectious compartment for models unstratified by organ
+        status is now set in set_fixed_infectious_proportion, because it is
+        dependent upon loading some parameters in find_functions_or_params)
+        """
+
+        if self.gui_inputs['n_organs'] < 2:
+            # Proportion progressing to the only infectious compartment for models unstratified by organ status
+            self.model_constants['epi_prop'] = 1.
+        else:
+            self.model_constants['tb_multiplier_force_smearpos'] \
+                = 1.  # Infectiousness of smear-positive patients
+            self.model_constants['tb_multiplier_force_extrapul'] \
+                = 0.  # Infectiousness of extrapulmonary patients
+
     def extract_freeze_times(self):
 
         """
@@ -266,31 +402,6 @@ class Inputs:
             self.freeze_times = self.original_data['country_programs'].pop('freeze_times')
         else:
             self.freeze_times = {}
-
-    def load_vacc_detect_time_variants(self):
-
-        """
-        Adds vaccination and case detection time-variants to the manually entered data loaded from the spreadsheets.
-        Note that the manual inputs over-ride the loaded data if both are present.
-        """
-
-        # Vaccination
-        if self.time_variants['program_perc_vaccination']['load_data'] == u'yes':
-            for year in self.original_data['bcg']:
-
-                # If not already loaded through the inputs spreadsheet
-                if year not in self.time_variants['program_perc_vaccination']:
-                    self.time_variants['program_perc_vaccination'][year] \
-                        = self.original_data['bcg'][year]
-
-        # Case detection
-        if self.time_variants['program_perc_detect']['load_data'] == u'yes':
-            for year in self.original_data['tb']['c_cdr']:
-
-                # If not already loaded through the inputs spreadsheet
-                if year not in self.time_variants['program_perc_detect']:
-                    self.time_variants['program_perc_detect'][year] \
-                        = self.original_data['tb']['c_cdr'][year]
 
     def find_organ_proportions(self):
 
@@ -323,35 +434,30 @@ class Inputs:
                         self.time_variants[program_var][year] = \
                             self.original_data['default_programs'][program_var][year]
 
-    def process_model_constants(self):
+    def load_vacc_detect_time_variants(self):
 
         """
-        Master method to call methods for processing constant model parameters.
+        Adds vaccination and case detection time-variants to the manually entered data loaded from the spreadsheets.
+        Note that the manual inputs over-ride the loaded data if both are present.
         """
 
-        self.add_model_constant_defaults()
-        self.add_universal_parameters()
+        # Vaccination
+        if self.time_variants['program_perc_vaccination']['load_data'] == u'yes':
+            for year in self.original_data['bcg']:
 
-    def add_model_constant_defaults(self,
-                                    other_sheets_with_constants=('diabetes', 'country_constants', 'default_constants')):
+                # If not already loaded through the inputs spreadsheet
+                if year not in self.time_variants['program_perc_vaccination']:
+                    self.time_variants['program_perc_vaccination'][year] \
+                        = self.original_data['bcg'][year]
 
-        """
-        Populate model_constants with data from control panel, country sheet or default sheet hierarhically
-        - such that the control panel is read in preference to the country data in preference to the default back-ups
+        # Case detection
+        if self.time_variants['program_perc_detect']['load_data'] == u'yes':
+            for year in self.original_data['tb']['c_cdr']:
 
-        Args:
-            other_sheets_with_constants: The sheets of original_data which contain model constants
-        """
-
-        # Populate from country_constants if available and default_constants if not
-        for other_sheet in other_sheets_with_constants:
-            if other_sheet in self.original_data:
-                for item in self.original_data[other_sheet]:
-
-                    # Only add the item if it hasn't been added yet
-                    if item not in self.model_constants:
-                        self.model_constants[item] = \
-                            self.original_data[other_sheet][item]
+                # If not already loaded through the inputs spreadsheet
+                if year not in self.time_variants['program_perc_detect']:
+                    self.time_variants['program_perc_detect'][year] \
+                        = self.original_data['tb']['c_cdr'][year]
 
     def convert_percentages_to_proportions(self):
 
@@ -376,23 +482,6 @@ class Inputs:
                             = self.time_variants[time_variant][i]
 
         self.time_variants.update(time_variants_converted_to_prop)
-
-    def complete_freeze_time_dictionary(self):
-
-        """
-        Ensure all scenarios have an entry in the self.freeze_times dictionary, if a time hadn't been
-        specified in self.extract_freeze_times above.
-        """
-
-        for scenario in self.gui_inputs['scenarios_to_run']:
-
-            # Baseline
-            if scenario is None:
-                self.freeze_times['baseline'] = self.model_constants['current_time']
-
-            # Scenarios with no time specified
-            elif 'scenario_' + str(scenario) not in self.freeze_times:
-                self.freeze_times['scenario_' + str(scenario)] = self.model_constants['current_time']
 
     def find_ds_outcomes(self):
 
@@ -448,6 +537,33 @@ class Inputs:
             self.time_variants['program_prop_treatment' + outcome + '_ds'] \
                 = copy.copy(self.time_variants['program_prop_treatment' + outcome])
 
+    def add_resistant_strain_outcomes(self):
+
+        """
+        Finds treatment outcomes for the resistant strains (i.e. MDR and XDR-TB).
+        As for DS-TB, no need to find default proportion, as it is equal to one minus success minus death.
+        **** Inappropriate outcomes are currently set to those for XDR-TB - this is temporary ****
+        """
+
+        # Calculate proportions of each outcome for MDR and XDR-TB from GTB
+        for strain in ['mdr', 'xdr']:
+            self.derived_data.update(
+                calculate_proportion_dict(self.original_data['outcomes'],
+                                          [strain + '_succ', strain + '_fail', strain + '_died', strain + '_lost'],
+                                          percent=False))
+
+            # Populate MDR and XDR data from outcomes dictionary into time variants where requested and not entered
+            if self.time_variants['program_prop_treatment_success_' + strain]['load_data'] == u'yes':
+                for year in self.derived_data['prop_' + strain + '_succ']:
+                    if year not in self.time_variants['program_prop_treatment_success_' + strain]:
+                        self.time_variants['program_prop_treatment_success_' + strain][year] \
+                            = self.derived_data['prop_' + strain + '_succ'][year]
+
+        # Temporarily assign the same treatment outcomes to XDR-TB as for inappropriate
+        for outcome in ['_success', '_death']:
+            self.time_variants['program_prop_treatment' + outcome + '_inappropriate'] \
+                = copy.copy(self.time_variants['program_prop_treatment' + outcome + '_xdr'])
+
     def add_demo_dictionaries_to_timevariants(self):
 
         """
@@ -484,32 +600,22 @@ class Inputs:
                     self.time_variants['epi_prop' + outcome][year] \
                         = self.derived_data['prop_new' + report_outcome][year]
 
-    def add_resistant_strain_outcomes(self):
+    def complete_freeze_time_dictionary(self):
 
         """
-        Finds treatment outcomes for the resistant strains (i.e. MDR and XDR-TB).
-        As for DS-TB, no need to find default proportion, as it is equal to one minus success minus death.
-        **** Inappropriate outcomes are currently set to those for XDR-TB - this is temporary ****
+        Ensure all scenarios have an entry in the self.freeze_times dictionary, if a time hadn't been
+        specified in self.extract_freeze_times above.
         """
 
-        # Calculate proportions of each outcome for MDR and XDR-TB from GTB
-        for strain in ['mdr', 'xdr']:
-            self.derived_data.update(
-                calculate_proportion_dict(self.original_data['outcomes'],
-                                          [strain + '_succ', strain + '_fail', strain + '_died', strain + '_lost'],
-                                          percent=False))
+        for scenario in self.gui_inputs['scenarios_to_run']:
 
-            # Populate MDR and XDR data from outcomes dictionary into time variants where requested and not entered
-            if self.time_variants['program_prop_treatment_success_' + strain]['load_data'] == u'yes':
-                for year in self.derived_data['prop_' + strain + '_succ']:
-                    if year not in self.time_variants['program_prop_treatment_success_' + strain]:
-                        self.time_variants['program_prop_treatment_success_' + strain][year] \
-                            = self.derived_data['prop_' + strain + '_succ'][year]
+            # Baseline
+            if scenario is None:
+                self.freeze_times['baseline'] = self.model_constants['current_time']
 
-        # Temporarily assign the same treatment outcomes to XDR-TB as for inappropriate
-        for outcome in ['_success', '_death']:
-            self.time_variants['program_prop_treatment' + outcome + '_inappropriate'] \
-                = copy.copy(self.time_variants['program_prop_treatment' + outcome + '_xdr'])
+            # Scenarios with no time specified
+            elif 'scenario_' + str(scenario) not in self.freeze_times:
+                self.freeze_times['scenario_' + str(scenario)] = self.model_constants['current_time']
 
     def tidy_time_variants(self):
 
@@ -531,118 +637,6 @@ class Inputs:
             # Remove dictionary keys for which values are nan
             self.time_variants[program] \
                 = remove_nans(self.time_variants[program])
-
-    def add_universal_parameters(self):
-
-        """
-        Sets parameters that should never be changed in any situation,
-        i.e. "by definition" parameters (although note that the infectiousness
-        of the single infectious compartment for models unstratified by organ
-        status is now set in set_fixed_infectious_proportion, because it is
-        dependent upon loading some parameters in find_functions_or_params)
-        """
-
-        if self.gui_inputs['n_organs'] < 2:
-            # Proportion progressing to the only infectious compartment for models unstratified by organ status
-            self.model_constants['epi_prop'] = 1.
-        else:
-            self.model_constants['tb_multiplier_force_smearpos'] \
-                = 1.  # Infectiousness of smear-positive patients
-            self.model_constants['tb_multiplier_force_extrapul'] \
-                = 0.  # Infectiousness of extrapulmonary patients
-
-    def find_fixed_age_specific_parameters(self):
-
-        """
-        Find weighted age specific parameters using Romain's age weighting code (now in took_kit)
-        """
-
-        # Extract age breakpoints in appropriate form for module
-        model_breakpoints = []
-        for i in self.model_constants['age_breakpoints']:
-            model_breakpoints += [float(i)]
-
-        for param in ['early_progression_age', 'late_progression_age',
-                      'tb_multiplier_child_infectiousness_age']:
-            # Extract age-stratified parameters in the appropriate form
-            prog_param_vals = {}
-            prog_age_dict = {}
-            for constant in self.model_constants:
-                if param in constant:
-                    prog_param_string, prog_stem = \
-                        tool_kit.find_string_from_starting_letters(constant, '_age')
-                    prog_age_dict[prog_param_string], _ = \
-                        tool_kit.interrogate_age_string(prog_param_string)
-                    prog_param_vals[prog_param_string] = \
-                        self.model_constants[constant]
-
-            param_breakpoints = tool_kit.find_age_breakpoints_from_dicts(prog_age_dict)
-
-            # Find and set age-adjusted parameters
-            prog_age_adjusted_params = \
-                tool_kit.adapt_params_to_stratification(param_breakpoints,
-                                                        model_breakpoints,
-                                                        prog_param_vals,
-                                                        parameter_name=param,
-                                                        whether_to_plot=self.gui_inputs['output_age_calculations'])
-            for agegroup in self.agegroups:
-                self.model_constants[prog_stem + agegroup] = prog_age_adjusted_params[agegroup]
-
-    def find_ageing_rates(self):
-
-        """
-        Calculate ageing rates as the reciprocal of the width of the age bracket.
-        """
-
-        for agegroup in self.agegroups:
-            age_limits, _ = tool_kit.interrogate_age_string(agegroup)
-            if 'up' not in agegroup:
-                self.model_constants['ageing_rate' + agegroup] \
-                    = 1. / (age_limits[1] - age_limits[0])
-
-    def find_single_strain_timeperiods(self):
-
-        """
-        If the model isn't stratified by strain, use DS-TB time-periods for the single strain.
-        Note that the parameter for the time period infectious on treatment will only be defined
-        for DS-TB in this case and not for no strain name.
-        """
-
-        for timeperiod in ['tb_timeperiod_infect_ontreatment', 'tb_timeperiod_ontreatment']:
-            self.model_constants[timeperiod] \
-                = self.model_constants[timeperiod + '_ds']
-
-    def define_model_structure(self):
-
-        """
-        Master method to define all aspects of model structure.
-        """
-
-        self.define_age_structure()
-        self.define_comorbidity_structure()
-        self.define_strain_structure()
-        self.define_organ_structure()
-
-    def define_comorbidity_structure(self):
-
-        """
-        Work out the comorbidity stratification.
-        """
-
-        # Create list of comorbidity names
-        self.comorbidities = []
-        for time_variant in self.time_variants:
-            if 'comorb_prop_' in time_variant and self.gui_inputs['comorbidity' + time_variant[11:]]:
-                self.comorbidities += [time_variant[11:]]
-        if len(self.comorbidities) == 0:
-            self.comorbidities += ['']
-        else:
-            self.comorbidities += ['_nocomorb']
-
-        # Ensure some starting proportion of births go to the comorbidity stratum if value not loaded earlier
-        for comorbidity in self.comorbidities:
-            if 'comorb_prop' + comorbidity not in self.model_constants:
-                self.model_constants['comorb_prop' + comorbidity] = 0.
 
     def define_age_structure(self):
 
@@ -668,6 +662,27 @@ class Inputs:
             self.add_comment_to_gui_window('Age breakpoints are at: %s' % agegroups_to_print)
         else:
             self.add_comment_to_gui_window('Model is not stratified by age.\n')
+
+    def define_comorbidity_structure(self):
+
+        """
+        Work out the comorbidity stratification.
+        """
+
+        # Create list of comorbidity names
+        self.comorbidities = []
+        for time_variant in self.time_variants:
+            if 'comorb_prop_' in time_variant and self.gui_inputs['comorbidity' + time_variant[11:]]:
+                self.comorbidities += [time_variant[11:]]
+        if len(self.comorbidities) == 0:
+            self.comorbidities += ['']
+        else:
+            self.comorbidities += ['_nocomorb']
+
+        # Ensure some starting proportion of births go to the comorbidity stratum if value not loaded earlier
+        for comorbidity in self.comorbidities:
+            if 'comorb_prop' + comorbidity not in self.model_constants:
+                self.model_constants['comorb_prop' + comorbidity] = 0.
 
     def define_strain_structure(self):
 
@@ -812,71 +827,6 @@ class Inputs:
                     = (1. - self.model_constants['tb_prop_early_progression' + comorbidity + agegroup]) \
                       / self.model_constants['tb_timeperiod_early_latent']
 
-    def find_organ_time_variation(self):
-
-        """
-        Work through whether variation in organ status with time should be implemented,
-        according to whether the model is stratified by organ and whether organ stratification is requested
-        through the smear-positive time-variant input.
-        """
-
-        # If no organ stratification
-        if self.gui_inputs['n_organs'] < 2:
-            # Leave organ variation as false if no organ stratification and warn if variation requested
-            for status in ['pos', 'neg']:
-                if self.time_variants['epi_prop_smear' + status]['time_variant'] == u'yes':
-                    self.add_comment_to_gui_window(
-                                                'Time variant smear-' + status + ' proportion requested, but ' +
-                                                'model is not stratified by organ status. ' +
-                                                'Therefore, time variant smear-' + status +
-                                                ' status has been changed to off.\n')
-
-                    self.time_variants['epi_prop_smear' + status]['time_variant'] = u'no'
-        else:
-
-            # Change to organ variation true if organ stratification and smear-positive variation requested
-            if self.time_variants['epi_prop_smearpos']['time_variant'] == u'yes':
-                self.is_organvariation = True
-                # Warn if smear-negative variation not requested
-                if self.time_variants['epi_prop_smearneg']['time_variant'] == u'no':
-                    self.add_comment_to_gui_window(
-                                                'Requested time variant smear-positive status, but ' +
-                                                'not time variant smear-negative status. ' +
-                                                'Therefore, changed to time variant smear-negative status.\n')
-
-                    self.time_variants['epi_prop_smearneg']['time_variant'] = u'yes'
-
-            # Leave organ variation as false if smear-positive variation not requested
-            elif self.time_variants['epi_prop_smearpos']['time_variant'] == u'no':
-                # Warn if smear-negative variation requested
-                if self.time_variants['epi_prop_smearneg']['time_variant'] == u'yes':
-                    self.add_comment_to_gui_window(
-                                                'Requested non-time variant smear-positive status, but ' +
-                                                'time variant smear-negative status. ' +
-                                                'Therefore, changed to non-time variant smear-negative status.\n')
-
-                    self.time_variants['epi_prop_smearneg']['time_variant'] = u'no'
-
-        # Set fixed parameters if no organ status variation
-        if not self.is_organvariation:
-            for organ in self.organ_status:
-                for timing in ['_early', '_late']:
-                    for agegroup in self.agegroups:
-                        self.model_constants['tb_rate' + timing + '_progression' + organ + agegroup] \
-                            = self.model_constants['tb_rate' + timing + '_progression' + agegroup] \
-                              * self.model_constants['epi_prop' + organ]
-
-    def find_amplification_data(self):
-
-        """
-        Add dictionary for the amplification proportion scale-up, where relevant.
-        """
-
-        self.time_variants['epi_prop_amplification'] \
-            = {self.model_constants['start_mdr_introduce_time']: 0.,
-               self.model_constants['end_mdr_introduce_time']: self.model_constants['tb_prop_amplification'],
-               'time_variant': u'yes'}
-
     def find_ipt_params(self):
 
         """
@@ -891,66 +841,6 @@ class Inputs:
             self.model_constants[ipt_type + 'ipt_effective_per_assessment'] \
                 = self.model_constants['tb_prop_ltbi_test_sensitivity'] \
                   * self.model_constants['tb_prop_' + ipt_type + 'ipt_effectiveness']
-
-    def find_data_for_functions_or_params(self):
-
-        """
-        Method to load all the dictionaries to be used in generating scale-up functions to
-        a single attribute of the class instance (to avoid creating heaps of functions for
-        irrelevant programs)
-
-        Returns:
-            Creates self.scaleup_data, a dictionary of the relevant scale-up data for creating
-             scale-up functions in set_scaleup_functions within the model object. First tier
-             of keys is the scenario to be run, next is the time variant parameter to be calculated.
-
-        """
-
-        for scenario in self.gui_inputs['scenarios_to_run']:
-
-            self.scaleup_data[scenario] = {}
-            # Find the programs that are relevant and load them to the scaleup_data attribute
-            for time_variant in self.time_variants:
-                if time_variant not in self.irrelevant_time_variants:
-                    self.scaleup_data[scenario][str(time_variant)] = {}
-                    for i in self.time_variants[time_variant]:
-                        if i == 'scenario_' + str(scenario):
-                            self.scaleup_data[scenario][str(time_variant)]['scenario'] = \
-                                self.time_variants[time_variant][i]
-                        elif type(i) == str:
-                            if 'scenario_' not in i:
-                                self.scaleup_data[scenario][str(time_variant)][i] \
-                                    = self.time_variants[time_variant][i]
-                        elif scenario is None or 'program_' not in time_variant:
-                            self.scaleup_data[scenario][str(time_variant)][i] \
-                                = self.time_variants[time_variant][i]
-                        else:
-                            self.scaleup_data[scenario][str(time_variant)][i] \
-                                = self.time_variants[time_variant][i]
-
-    def list_irrelevant_time_variants(self):
-
-        """
-        List all the time-variant parameters that are not relevant to the current model structure.
-        """
-
-        for time_variant in self.time_variants:
-            if 'perc_' in time_variant:
-                self.irrelevant_time_variants += [time_variant]
-            for strain in self.available_strains:
-                if strain not in self.strains and strain in time_variant and '_dst' not in time_variant:
-                    self.irrelevant_time_variants += [time_variant]
-            if self.gui_inputs['n_strains'] < 2 and 'line_dst' in time_variant:
-                self.irrelevant_time_variants += [time_variant]
-            elif '_inappropriate' in time_variant \
-                    and (self.gui_inputs['n_strains'] < 2 or not self.gui_inputs['is_misassignment']):
-                self.irrelevant_time_variants += [time_variant]
-            elif self.gui_inputs['n_strains'] == 2 and 'secondline_dst' in time_variant:
-                self.irrelevant_time_variants += [time_variant]
-            elif self.gui_inputs['n_organs'] == 1 and 'smearneg' in time_variant:
-                self.irrelevant_time_variants += [time_variant]
-            if 'lowquality' in time_variant and not self.gui_inputs['is_lowquality']:
-                self.irrelevant_time_variants += [time_variant]
 
     def find_functions_or_params(self):
 
@@ -1128,73 +1018,199 @@ class Inputs:
             else:
                 print 'Warning: Calibrated output %s is not directly available from the data' % output['key']
 
-    def find_interventions_to_cost(self):
+    ###########################
+    ### Second tier methods ###
+    ###########################
+
+    def find_ageing_rates(self):
 
         """
-        Work out which interventions should be costed, selecting from the ones that can be costed in
-        self.potential_interventions_to_cost.
+        Calculate ageing rates as the reciprocal of the width of the age bracket.
         """
 
-        for intervention in self.potential_interventions_to_cost:
-            if 'program_prop_' + intervention in self.time_variants and \
-                    ('_age' not in intervention or len(self.agegroups) > 1):
-                self.interventions_to_cost += [intervention]
+        for agegroup in self.agegroups:
+            age_limits, _ = tool_kit.interrogate_age_string(agegroup)
+            if 'up' not in agegroup:
+                self.model_constants['ageing_rate' + agegroup] \
+                    = 1. / (age_limits[1] - age_limits[0])
 
-    def find_additional_parameters(self):
-
-        # Find the time non-infectious on treatment from the total time on treatment and the time infectious
-        self.find_noninfectious_period()
-
-        # Find comorbidity-specific parameters
-        if len(self.comorbidities) > 1:
-            self.find_comorb_progressions()
-
-        # Calculate rates of progression to active disease or late latency
-        self.find_progression_rates_from_params()
-
-        # Derive some basic parameters for IPT
-        self.find_ipt_params()
-
-        # Find scale-up functions or constant parameters from
-        self.find_functions_or_params()
-
-        # Find extrapulmonary proportion if model is stratified by organ type, but there is no time variant organ
-        # proportion. Note that this has to be done after find_functions_or_params or the constant parameter
-        # won't have been calculated yet.
-        if not self.is_organvariation and len(self.organ_status) > 2:
-            self.find_constant_extrapulmonary_proportion()
-
-        # Find the proportion of cases that are infectious for models that are unstratified by organ status
-        if len(self.organ_status) < 2:
-            self.set_fixed_infectious_proportion()
-
-        # Add parameters for IPT, if and where not specified for the age range being implemented
-        self.add_missing_economics_for_ipt()
-
-    def process_uncertainty_parameters(self):
-
-        # Specify the parameters to be used for uncertainty
-        if self.gui_inputs['output_uncertainty']:
-            self.find_uncertainty_distributions()
-            self.get_data_to_fit()
-
-    def checks(self):
+    def find_fixed_age_specific_parameters(self):
 
         """
-        Not much in here as yet. However, this function is intended to contain all the data consistency checks for
-        data entry.
+        Find weighted age specific parameters using Romain's age weighting code (now in took_kit)
         """
 
-        # Check that the time to start economics analyses from is earlier than the end time of the model run
-        assert self.model_constants['econ_start_time'] \
-               <= self.model_constants['scenario_end_time'], \
-            'Period_end must be before the end of the model integration time'
+        # Extract age breakpoints in appropriate form for module
+        model_breakpoints = []
+        for i in self.model_constants['age_breakpoints']:
+            model_breakpoints += [float(i)]
 
-        # Check that all entered times occur after the model start time
-        for time in self.model_constants:
-            if time[-5:] == '_time' and '_step_time' not in time:
-                assert self.model_constants[time] >= self.model_constants['start_time'], \
-                    '% is before model start time' % self.model_constants[time]
+        for param in ['early_progression_age', 'late_progression_age',
+                      'tb_multiplier_child_infectiousness_age']:
+            # Extract age-stratified parameters in the appropriate form
+            prog_param_vals = {}
+            prog_age_dict = {}
+            for constant in self.model_constants:
+                if param in constant:
+                    prog_param_string, prog_stem = \
+                        tool_kit.find_string_from_starting_letters(constant, '_age')
+                    prog_age_dict[prog_param_string], _ = \
+                        tool_kit.interrogate_age_string(prog_param_string)
+                    prog_param_vals[prog_param_string] = \
+                        self.model_constants[constant]
+
+            param_breakpoints = tool_kit.find_age_breakpoints_from_dicts(prog_age_dict)
+
+            # Find and set age-adjusted parameters
+            prog_age_adjusted_params = \
+                tool_kit.adapt_params_to_stratification(param_breakpoints,
+                                                        model_breakpoints,
+                                                        prog_param_vals,
+                                                        parameter_name=param,
+                                                        whether_to_plot=self.gui_inputs['output_age_calculations'])
+            for agegroup in self.agegroups:
+                self.model_constants[prog_stem + agegroup] = prog_age_adjusted_params[agegroup]
+
+    def find_single_strain_timeperiods(self):
+
+        """
+        If the model isn't stratified by strain, use DS-TB time-periods for the single strain.
+        Note that the parameter for the time period infectious on treatment will only be defined
+        for DS-TB in this case and not for no strain name.
+        """
+
+        for timeperiod in ['tb_timeperiod_infect_ontreatment', 'tb_timeperiod_ontreatment']:
+            self.model_constants[timeperiod] \
+                = self.model_constants[timeperiod + '_ds']
+
+    def find_amplification_data(self):
+
+        """
+        Add dictionary for the amplification proportion scale-up, where relevant.
+        """
+
+        self.time_variants['epi_prop_amplification'] \
+            = {self.model_constants['start_mdr_introduce_time']: 0.,
+               self.model_constants['end_mdr_introduce_time']: self.model_constants['tb_prop_amplification'],
+               'time_variant': u'yes'}
+
+    def find_organ_time_variation(self):
+
+        """
+        Work through whether variation in organ status with time should be implemented,
+        according to whether the model is stratified by organ and whether organ stratification is requested
+        through the smear-positive time-variant input.
+        """
+
+        # If no organ stratification
+        if self.gui_inputs['n_organs'] < 2:
+            # Leave organ variation as false if no organ stratification and warn if variation requested
+            for status in ['pos', 'neg']:
+                if self.time_variants['epi_prop_smear' + status]['time_variant'] == u'yes':
+                    self.add_comment_to_gui_window(
+                                                'Time variant smear-' + status + ' proportion requested, but ' +
+                                                'model is not stratified by organ status. ' +
+                                                'Therefore, time variant smear-' + status +
+                                                ' status has been changed to off.\n')
+
+                    self.time_variants['epi_prop_smear' + status]['time_variant'] = u'no'
+        else:
+
+            # Change to organ variation true if organ stratification and smear-positive variation requested
+            if self.time_variants['epi_prop_smearpos']['time_variant'] == u'yes':
+                self.is_organvariation = True
+                # Warn if smear-negative variation not requested
+                if self.time_variants['epi_prop_smearneg']['time_variant'] == u'no':
+                    self.add_comment_to_gui_window(
+                                                'Requested time variant smear-positive status, but ' +
+                                                'not time variant smear-negative status. ' +
+                                                'Therefore, changed to time variant smear-negative status.\n')
+
+                    self.time_variants['epi_prop_smearneg']['time_variant'] = u'yes'
+
+            # Leave organ variation as false if smear-positive variation not requested
+            elif self.time_variants['epi_prop_smearpos']['time_variant'] == u'no':
+                # Warn if smear-negative variation requested
+                if self.time_variants['epi_prop_smearneg']['time_variant'] == u'yes':
+                    self.add_comment_to_gui_window(
+                                                'Requested non-time variant smear-positive status, but ' +
+                                                'time variant smear-negative status. ' +
+                                                'Therefore, changed to non-time variant smear-negative status.\n')
+
+                    self.time_variants['epi_prop_smearneg']['time_variant'] = u'no'
+
+        # Set fixed parameters if no organ status variation
+        if not self.is_organvariation:
+            for organ in self.organ_status:
+                for timing in ['_early', '_late']:
+                    for agegroup in self.agegroups:
+                        self.model_constants['tb_rate' + timing + '_progression' + organ + agegroup] \
+                            = self.model_constants['tb_rate' + timing + '_progression' + agegroup] \
+                              * self.model_constants['epi_prop' + organ]
+
+    def find_data_for_functions_or_params(self):
+
+        """
+        Method to load all the dictionaries to be used in generating scale-up functions to
+        a single attribute of the class instance (to avoid creating heaps of functions for
+        irrelevant programs)
+
+        Returns:
+            Creates self.scaleup_data, a dictionary of the relevant scale-up data for creating
+             scale-up functions in set_scaleup_functions within the model object. First tier
+             of keys is the scenario to be run, next is the time variant parameter to be calculated.
+
+        """
+
+        for scenario in self.gui_inputs['scenarios_to_run']:
+
+            self.scaleup_data[scenario] = {}
+            # Find the programs that are relevant and load them to the scaleup_data attribute
+            for time_variant in self.time_variants:
+                if time_variant not in self.irrelevant_time_variants:
+                    self.scaleup_data[scenario][str(time_variant)] = {}
+                    for i in self.time_variants[time_variant]:
+                        if i == 'scenario_' + str(scenario):
+                            self.scaleup_data[scenario][str(time_variant)]['scenario'] = \
+                                self.time_variants[time_variant][i]
+                        elif type(i) == str:
+                            if 'scenario_' not in i:
+                                self.scaleup_data[scenario][str(time_variant)][i] \
+                                    = self.time_variants[time_variant][i]
+                        elif scenario is None or 'program_' not in time_variant:
+                            self.scaleup_data[scenario][str(time_variant)][i] \
+                                = self.time_variants[time_variant][i]
+                        else:
+                            self.scaleup_data[scenario][str(time_variant)][i] \
+                                = self.time_variants[time_variant][i]
+
+    def list_irrelevant_time_variants(self):
+
+        """
+        List all the time-variant parameters that are not relevant to the current model structure.
+        """
+
+        for time_variant in self.time_variants:
+            if 'perc_' in time_variant:
+                self.irrelevant_time_variants += [time_variant]
+            for strain in self.available_strains:
+                if strain not in self.strains and strain in time_variant and '_dst' not in time_variant:
+                    self.irrelevant_time_variants += [time_variant]
+            if self.gui_inputs['n_strains'] < 2 and 'line_dst' in time_variant:
+                self.irrelevant_time_variants += [time_variant]
+            elif '_inappropriate' in time_variant \
+                    and (self.gui_inputs['n_strains'] < 2 or not self.gui_inputs['is_misassignment']):
+                self.irrelevant_time_variants += [time_variant]
+            elif self.gui_inputs['n_strains'] == 2 and 'secondline_dst' in time_variant:
+                self.irrelevant_time_variants += [time_variant]
+            elif self.gui_inputs['n_organs'] == 1 and 'smearneg' in time_variant:
+                self.irrelevant_time_variants += [time_variant]
+            if 'lowquality' in time_variant and not self.gui_inputs['is_lowquality']:
+                self.irrelevant_time_variants += [time_variant]
+
+    ############################
+    ### Miscellaneous method ###
+    ############################
 
     def add_comment_to_gui_window(self, comment, target='console'):
 

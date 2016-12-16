@@ -185,10 +185,9 @@ class Inputs:
 
         # Default keys of sheets to read (ones that should always be read)
         self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
-        keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy',
-                                  'default_parameters', 'tb', 'notifications', 'outcomes',
-                                  'country_constants', 'default_constants',
-                                  'country_programs', 'default_programs']
+        keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy', 'default_parameters', 'tb', 'notifications',
+                                  'outcomes', 'country_constants', 'default_constants', 'country_programs',
+                                  'default_programs']
 
         # Add the optional ones (this is intended to be the standard approach to reading additional
         # data to the data object - currently not that useful as it only applies to diabetes)
@@ -208,45 +207,27 @@ class Inputs:
         # Find the proportion of new cases by organ status and start to populate the derived data dictionary
         self.find_organ_proportions()
 
-        # Extract freeze times for scenarios as a separate dictionary
+        # Process the time-variant parameters
         self.extract_freeze_times()
-
-        # Start to populate the time variants dictionary
         if 'country_programs' in self.original_data:
             self.time_variants.update(self.original_data['country_programs'])
-
-        # Populate time variant dictionary with defaults where not present in country-specific data
         self.add_time_variant_defaults()
-
-        # Add vaccination and case detection time variants to time variant dictionary
-        self.update_time_variants()
-
-        # Populate constant model values hierarchically
-        self.add_model_constant_defaults()
-
-        # Convert time variants loaded as percentages to proportions
+        self.load_vacc_detect_time_variants()
         self.convert_percentages_to_proportions()
-
-        # Populate freeze time dictionary with defaults where unavailable
-        self.complete_freeze_time_dictionary()
-
-        # Find outcomes for smear-positive DS-TB patients and populate to derived data dictionary
         self.find_ds_outcomes()
         self.add_treatment_outcomes()
-
-        # Add ds to the naming of the treatment outcomes for multistrain models
         if self.gui_inputs['n_strains'] > 1:
             self.duplicate_ds_outcomes_for_multistrain()
-
-        # Add time variant demographic dictionaries
+        self.add_resistant_strain_outcomes()
         self.add_demo_dictionaries_to_timevariants()
-
-        # Add time-variant organ status to time variant parameters
         if self.time_variants['epi_prop_smearpos']['load_data'] == u'yes':
             self.add_organ_status_to_timevariants()
 
-        # Add outcomes for resistant strains - currently using XDR-TB outcomes for inappropriate treatment
-        self.add_resistant_strain_outcomes()
+        # Process the constant parameters
+        self.add_model_constant_defaults()
+
+        # Populate freeze time dictionary with defaults where unavailable
+        self.complete_freeze_time_dictionary()
 
         # Add zeroes, remove nans and remove load_data key from time variant dictionaries
         self.tidy_time_variants()
@@ -365,17 +346,17 @@ class Inputs:
         else:
             self.freeze_times = {}
 
-    def update_time_variants(self):
+    def load_vacc_detect_time_variants(self):
 
         """
-        Adds vaccination and case detection time-variants to the manually entered data
-        loaded from the spreadsheets.
-        Note that the manual inputs always over-ride the loaded data if both are present.
+        Adds vaccination and case detection time-variants to the manually entered data loaded from the spreadsheets.
+        Note that the manual inputs over-ride the loaded data if both are present.
         """
 
         # Vaccination
         if self.time_variants['program_perc_vaccination']['load_data'] == u'yes':
             for year in self.original_data['bcg']:
+
                 # If not already loaded through the inputs spreadsheet
                 if year not in self.time_variants['program_perc_vaccination']:
                     self.time_variants['program_perc_vaccination'][year] \
@@ -384,6 +365,7 @@ class Inputs:
         # Case detection
         if self.time_variants['program_perc_detect']['load_data'] == u'yes':
             for year in self.original_data['tb']['c_cdr']:
+
                 # If not already loaded through the inputs spreadsheet
                 if year not in self.time_variants['program_perc_detect']:
                     self.time_variants['program_perc_detect'][year] \
@@ -394,7 +376,6 @@ class Inputs:
         """
         Calculates dictionaries with proportion of cases progressing to each organ status by year,
         and adds these to the derived_data attribute of the object.
-
         """
 
         self.derived_data.update(calculate_proportion_dict(self.original_data['notifications'],
@@ -403,9 +384,8 @@ class Inputs:
     def add_time_variant_defaults(self):
 
         """
-        Populates time variant parameters with defaults if those values aren't found
-        in the manually entered country-specific data.
-
+        Populates time variant parameters with defaults if those values aren't found in the manually entered
+        country-specific data.
         """
 
         for program_var in self.original_data['default_programs']:
@@ -423,13 +403,12 @@ class Inputs:
                             self.original_data['default_programs'][program_var][year]
 
     def add_model_constant_defaults(self,
-                                    other_sheets_with_constants=('diabetes',
-                                                                 'country_constants',
-                                                                 'default_constants')):
+                                    other_sheets_with_constants=('diabetes', 'country_constants', 'default_constants')):
 
         """
         Populate model_constants with data from control panel, country sheet or default sheet hierarhically
         - such that the control panel is read in preference to the country data in preference to the default back-ups
+
         Args:
             other_sheets_with_constants: The sheets of original_data which contain model constants
         """
@@ -448,7 +427,6 @@ class Inputs:
 
         """
         Converts time-variant dictionaries to proportions if they are loaded as percentages in their raw form.
-
         """
 
         time_variants_converted_to_prop = {}
@@ -458,6 +436,7 @@ class Inputs:
             if 'perc_' in time_variant:
                 time_variants_converted_to_prop[time_variant.replace('perc_', 'prop_')] = {}
                 for i in self.time_variants[time_variant]:
+
                     # If it's a year or scenario
                     if type(i) == int or 'scenario' in i:
                         time_variants_converted_to_prop[time_variant.replace('perc_', 'prop_')][i] \
@@ -488,24 +467,22 @@ class Inputs:
     def find_ds_outcomes(self):
 
         """
-        Calculates proportions of patients with each reported outcome for DS-TB,
-        then sums cure and completion to obtain treatment success proportion.
-        Note that the outcomes are reported differently for resistant strains, so code differs for them.
+        Calculates proportions of patients with each reported outcome for DS-TB, then sums cure and completion to obtain
+        treatment success proportion. Note that the outcomes are reported differently for resistant strains, so code
+        differs for them.
         """
 
         # Calculate each proportion
         self.derived_data.update(
-            calculate_proportion_dict(
-                self.original_data['outcomes'],
-                ['new_sp_cmplt', 'new_sp_cur', 'new_sp_def', 'new_sp_died', 'new_sp_fail'],
-                percent=False))
+            calculate_proportion_dict(self.original_data['outcomes'],
+                                      ['new_sp_cmplt', 'new_sp_cur', 'new_sp_def', 'new_sp_died', 'new_sp_fail'],
+                                      percent=False))
 
-        # Sum to get treatment success
+        # Sum cure and completion to get treatment success
         self.derived_data['prop_new_sp_success'] = {}
         for year in self.derived_data['prop_new_sp_cmplt']:
             self.derived_data['prop_new_sp_success'][year] \
-                = self.derived_data['prop_new_sp_cmplt'][year] \
-                  + self.derived_data['prop_new_sp_cur'][year]
+                = self.derived_data['prop_new_sp_cmplt'][year] + self.derived_data['prop_new_sp_cur'][year]
 
     def add_treatment_outcomes(self):
 

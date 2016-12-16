@@ -157,6 +157,7 @@ class Inputs:
         self.data_to_fit = {}
         # For incidence for ex. Width of Normal posterior relative to CI width in data
         self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
+        self.freeze_times = {}
 
         # Create a list of the interventions that could potentially be costed if they are requested
         self.potential_interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
@@ -223,7 +224,7 @@ class Inputs:
         Master method to call methods for processing constant model parameters.
         """
 
-        self.add_model_constant_defaults()
+        self.add_model_constant_defaults(['diabetes', 'country_constants', 'default_constants'])
         self.add_universal_parameters()
 
     def process_time_variants(self):
@@ -351,12 +352,11 @@ class Inputs:
 
         return keys_of_sheets_to_read
 
-    def add_model_constant_defaults(self,
-                                    other_sheets_with_constants=('diabetes', 'country_constants', 'default_constants')):
+    def add_model_constant_defaults(self, other_sheets_with_constants):
 
         """
-        Populate model_constants with data from control panel, country sheet or default sheet hierarhically
-        - such that the control panel is read in preference to the country data in preference to the default back-ups
+        Populate model_constants with data from control panel, country sheet or default sheet hierarchically
+        - such that the control panel is read in preference to the country data in preference to the default back-ups.
 
         Args:
             other_sheets_with_constants: The sheets of original_data which contain model constants
@@ -365,31 +365,28 @@ class Inputs:
         # Populate from country_constants if available and default_constants if not
         for other_sheet in other_sheets_with_constants:
             if other_sheet in self.original_data:
-                for item in self.original_data[other_sheet]:
 
-                    # Only add the item if it hasn't been added yet
+                # Only add the item if it hasn't been added yet
+                for item in self.original_data[other_sheet]:
                     if item not in self.model_constants:
-                        self.model_constants[item] = \
-                            self.original_data[other_sheet][item]
+                        self.model_constants[item] = self.original_data[other_sheet][item]
 
     def add_universal_parameters(self):
 
         """
-        Sets parameters that should never be changed in any situation,
-        i.e. "by definition" parameters (although note that the infectiousness
-        of the single infectious compartment for models unstratified by organ
-        status is now set in set_fixed_infectious_proportion, because it is
-        dependent upon loading some parameters in find_functions_or_params)
+        Sets parameters that should never be changed in any situation, i.e. "by definition" parameters (although note
+        that the infectiousness of the single infectious compartment for models unstratified by organ status is now set
+        in set_fixed_infectious_proportion, because it's dependent upon loading parameters in find_functions_or_params).
         """
 
+        # Proportion progressing to the only infectious compartment for models unstratified by organ status
         if self.gui_inputs['n_organs'] < 2:
-            # Proportion progressing to the only infectious compartment for models unstratified by organ status
             self.model_constants['epi_prop'] = 1.
+
+        # Infectiousness of smear-positive and extrapulmonary patients
         else:
-            self.model_constants['tb_multiplier_force_smearpos'] \
-                = 1.  # Infectiousness of smear-positive patients
-            self.model_constants['tb_multiplier_force_extrapul'] \
-                = 0.  # Infectiousness of extrapulmonary patients
+            self.model_constants['tb_multiplier_force_smearpos'] = 1.
+            self.model_constants['tb_multiplier_force_extrapul'] = 0.
 
     def extract_freeze_times(self):
 
@@ -399,9 +396,7 @@ class Inputs:
         """
 
         if 'country_programs' in self.original_data and 'freeze_times' in self.original_data['country_programs']:
-            self.freeze_times = self.original_data['country_programs'].pop('freeze_times')
-        else:
-            self.freeze_times = {}
+            self.freeze_times.update(self.original_data['country_programs'].pop('freeze_times'))
 
     def find_organ_proportions(self):
 

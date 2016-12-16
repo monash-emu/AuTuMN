@@ -201,40 +201,14 @@ class Inputs:
         # Define model structure
         self.define_model_structure()
 
-        # Find the time non-infectious on treatment from the total time on treatment and the time infectious
-        self.find_noninfectious_period()
+        # Find parameters that require processing
+        self.find_additional_parameters()
 
-        # Find comorbidity-specific parameters
-        if len(self.comorbidities) > 1:
-            self.find_comorb_progressions()
-
-        # Calculate rates of progression to active disease or late latency
-        self.find_progression_rates_from_params()
-
-        # Derive some basic parameters for IPT
-        self.find_ipt_params()
-
-        # Find scale-up functions or constant parameters from
-        self.find_functions_or_params()
-
-        # Find extrapulmonary proportion if model is stratified by organ type, but there is no time variant organ
-        # proportion. Note that this has to be done after find_functions_or_params or the constant parameter
-        # won't have been calculated yet.
-        if not self.is_organvariation and len(self.organ_status) > 2:
-            self.find_constant_extrapulmonary_proportion()
-
-        # Find the proportion of cases that are infectious for models that are unstratified by organ status
-        if len(self.organ_status) < 2:
-            self.set_fixed_infectious_proportion()
-
-        # Add parameters for IPT, if and where not specified for the age range being implemented
-        self.add_missing_economics_for_ipt()
+        # Find which interventions need to be costed
         self.find_interventions_to_cost()
 
-        # Specify the parameters to be used for uncertainty
-        if self.gui_inputs['output_uncertainty']:
-            self.find_uncertainty_distributions()
-            self.get_data_to_fit()
+        # Prepare for uncertainty analysis
+        self.process_uncertainty_parameters()
 
         # Perform checks
         self.checks()
@@ -1165,6 +1139,44 @@ class Inputs:
             if 'program_prop_' + intervention in self.time_variants and \
                     ('_age' not in intervention or len(self.agegroups) > 1):
                 self.interventions_to_cost += [intervention]
+
+    def find_additional_parameters(self):
+
+        # Find the time non-infectious on treatment from the total time on treatment and the time infectious
+        self.find_noninfectious_period()
+
+        # Find comorbidity-specific parameters
+        if len(self.comorbidities) > 1:
+            self.find_comorb_progressions()
+
+        # Calculate rates of progression to active disease or late latency
+        self.find_progression_rates_from_params()
+
+        # Derive some basic parameters for IPT
+        self.find_ipt_params()
+
+        # Find scale-up functions or constant parameters from
+        self.find_functions_or_params()
+
+        # Find extrapulmonary proportion if model is stratified by organ type, but there is no time variant organ
+        # proportion. Note that this has to be done after find_functions_or_params or the constant parameter
+        # won't have been calculated yet.
+        if not self.is_organvariation and len(self.organ_status) > 2:
+            self.find_constant_extrapulmonary_proportion()
+
+        # Find the proportion of cases that are infectious for models that are unstratified by organ status
+        if len(self.organ_status) < 2:
+            self.set_fixed_infectious_proportion()
+
+        # Add parameters for IPT, if and where not specified for the age range being implemented
+        self.add_missing_economics_for_ipt()
+
+    def process_uncertainty_parameters(self):
+
+        # Specify the parameters to be used for uncertainty
+        if self.gui_inputs['output_uncertainty']:
+            self.find_uncertainty_distributions()
+            self.get_data_to_fit()
 
     def checks(self):
 

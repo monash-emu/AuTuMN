@@ -167,13 +167,13 @@ class Inputs:
             self.potential_interventions_to_cost += ['shortcourse_mdr']
         if self.gui_inputs['is_lowquality']:
             self.potential_interventions_to_cost += ['engage_lowquality']
-        if self.gui_inputs['comorbidity_prison']:
+        if self.gui_inputs['riskgroup_prison']:
             self.potential_interventions_to_cost += ['xpertacf_prison']
-        if self.gui_inputs['comorbidity_indigenous']:
+        if self.gui_inputs['riskgroup_indigenous']:
             self.potential_interventions_to_cost += ['xpertacf_indigenous']
-        if self.gui_inputs['comorbidity_urbanpoor']:
+        if self.gui_inputs['riskgroup_urbanpoor']:
             self.potential_interventions_to_cost += ['xpertacf_urbanpoor']
-        if self.gui_inputs['comorbidity_ruralpoor']:
+        if self.gui_inputs['riskgroup_ruralpoor']:
             self.potential_interventions_to_cost += ['xpertacf_ruralpoor']
 
         self.interventions_to_cost = []
@@ -261,7 +261,7 @@ class Inputs:
         """
 
         self.define_age_structure()
-        self.define_comorbidity_structure()
+        self.define_riskgroup_structure()
         self.define_strain_structure()
         self.define_organ_structure()
 
@@ -270,9 +270,9 @@ class Inputs:
         # Find the time non-infectious on treatment from the total time on treatment and the time infectious
         self.find_noninfectious_period()
 
-        # Find comorbidity-specific parameters
-        if len(self.comorbidities) > 1:
-            self.find_comorb_progressions()
+        # Find risk group-specific parameters
+        if len(self.riskgroups) > 1:
+            self.find_riskgroup_progressions()
 
         # Calculate rates of progression to active disease or late latency
         self.find_progression_rates_from_params()
@@ -348,7 +348,7 @@ class Inputs:
                                   'default_programs']
 
         # Add any optional sheets required for specific model being run
-        if 'comorbidity_diabetes' in self.gui_inputs:
+        if 'riskgroup_diabetes' in self.gui_inputs:
             keys_of_sheets_to_read += ['diabetes']
 
         return keys_of_sheets_to_read
@@ -630,28 +630,28 @@ class Inputs:
             self.find_ageing_rates()
             self.find_fixed_age_specific_parameters()
 
-    def define_comorbidity_structure(self):
+    def define_riskgroup_structure(self):
 
         """
-        Work out the comorbidity stratification.
+        Work out the risk group stratification.
         """
 
-        # Create list of comorbidity names
-        self.comorbidities = []
+        # Create list of risk group names
+        self.riskgroups = []
         for time_variant in self.time_variants:
-            if 'comorb_prop_' in time_variant and self.gui_inputs['comorbidity' + time_variant[11:]]:
-                self.comorbidities += [time_variant[11:]]
+            if 'riskgroup_prop_' in time_variant and self.gui_inputs['riskgroup' + time_variant[14:]]:
+                self.riskgroups += [time_variant[14:]]
 
         # Add the null group
-        if len(self.comorbidities) == 0:
-            self.comorbidities += ['']
+        if len(self.riskgroups) == 0:
+            self.riskgroups += ['']
         else:
-            self.comorbidities += ['_nocomorb']
+            self.riskgroups += ['_norisk']
 
-        # Ensure some starting proportion of births go to the comorbidity stratum if value not loaded earlier
-        for comorbidity in self.comorbidities:
-            if 'comorb_prop' + comorbidity not in self.model_constants:
-                self.model_constants['comorb_prop' + comorbidity] = 0.
+        # Ensure some starting proportion of births go to the risk group stratum if value not loaded earlier
+        for riskgroup in self.riskgroups:
+            if 'riskgroup_prop' + riskgroup not in self.model_constants:
+                self.model_constants['riskgroup_prop' + riskgroup] = 0.
 
     def define_strain_structure(self):
 
@@ -699,15 +699,15 @@ class Inputs:
                 = self.model_constants['tb_timeperiod_ontreatment' + strain] \
                   - self.model_constants['tb_timeperiod_infect_ontreatment' + strain]
 
-    def find_comorb_progressions(self):
+    def find_riskgroup_progressions(self):
 
         """
-        Code to adjust the progression rates to active disease for various comorbidities - so far diabetes and HIV.
+        Code to adjust the progression rates to active disease for various risk groups - so far diabetes and HIV.
         """
 
         # Initialise dictionary of additional adjusted parameters to avoid dictionary changing size during iterations
-        comorb_adjusted_parameters = {}
-        for comorb in self.comorbidities:
+        risk_adjusted_parameters = {}
+        for riskgroup in self.riskgroups:
             for param in self.model_constants:
 
                 # Start from the assumption that parameter is not being adjusted
@@ -723,12 +723,12 @@ class Inputs:
 
                     # Diabetes progression rates only start from age groups with lower limit above the start age
                     # and apply to both early and late progression.
-                    if comorb == '_diabetes' and '_progression' in param \
-                            and age_limits[0] >= self.model_constants['comorb_startage' + comorb]:
+                    if riskgroup == '_diabetes' and '_progression' in param \
+                            and age_limits[0] >= self.model_constants['riskgroup_startage' + riskgroup]:
                         whether_to_adjust = True
 
                     # HIV applies to all age groups, but only late progression
-                    elif comorb == '_hiv' and '_late_progression' in param:
+                    elif riskgroup == '_hiv' and '_late_progression' in param:
                         whether_to_adjust = True
 
                     # Shouldn't apply this to the multiplier parameters or non-TB-specific parameters
@@ -737,53 +737,53 @@ class Inputs:
 
                     # Now adjust the age-stratified parameter values
                     if whether_to_adjust:
-                        comorb_adjusted_parameters[param_without_age + comorb + age_string] \
+                        risk_adjusted_parameters[param_without_age + riskgroup + age_string] \
                             = self.model_constants[param] \
-                              * self.model_constants['comorb_multiplier' + comorb + '_progression']
+                              * self.model_constants['riskgroup_multiplier' + riskgroup + '_progression']
                     elif '_progression' in param:
-                        comorb_adjusted_parameters[param_without_age + comorb + age_string] \
+                        risk_adjusted_parameters[param_without_age + riskgroup + age_string] \
                             = self.model_constants[param]
 
                 # Parameters not stratified by age
                 else:
 
                     # Explanation as above
-                    if comorb == '_diabetes' and '_progression' in param:
+                    if riskgroup == '_diabetes' and '_progression' in param:
                         whether_to_adjust = True
-                    elif comorb == '_hiv' and '_late_progression' in param:
+                    elif riskgroup == '_hiv' and '_late_progression' in param:
                         whether_to_adjust = True
                     if '_multiplier' in param or 'tb_' not in param:
                         whether_to_adjust = False
 
                     # Adjustment as above, except age string not included
                     if whether_to_adjust:
-                        comorb_adjusted_parameters[param + comorb] \
+                        risk_adjusted_parameters[param + riskgroup] \
                             = self.model_constants[param] \
-                              * self.model_constants['comorb_multiplier' + comorb + '_progression']
+                              * self.model_constants['riskgroup_multiplier' + riskgroup + '_progression']
                     elif '_progression' in param:
-                        comorb_adjusted_parameters[param + comorb] \
+                        risk_adjusted_parameters[param + riskgroup] \
                             = self.model_constants[param]
 
-        self.model_constants.update(comorb_adjusted_parameters)
+        self.model_constants.update(risk_adjusted_parameters)
 
     def find_progression_rates_from_params(self):
 
         """
-        Find early progression rates by age group and by comorbidity status - i.e. early progression to active TB and
+        Find early progression rates by age group and by risk group status - i.e. early progression to active TB and
         stabilisation into late latency.
         """
 
         for agegroup in self.agegroups:
-            for comorbidity in self.comorbidities:
+            for riskgroup in self.riskgroups:
 
                 # Early progression rate is early progression proportion divided by early time period
-                self.model_constants['tb_rate_early_progression' + comorbidity + agegroup] \
-                    = self.model_constants['tb_prop_early_progression' + comorbidity + agegroup] \
+                self.model_constants['tb_rate_early_progression' + riskgroup + agegroup] \
+                    = self.model_constants['tb_prop_early_progression' + riskgroup + agegroup] \
                       / self.model_constants['tb_timeperiod_early_latent']
 
                 # Stabilisation rate is one minus early progression proportion divided by early time period
-                self.model_constants['tb_rate_stabilise' + comorbidity + agegroup] \
-                    = (1. - self.model_constants['tb_prop_early_progression' + comorbidity + agegroup]) \
+                self.model_constants['tb_rate_stabilise' + riskgroup + agegroup] \
+                    = (1. - self.model_constants['tb_prop_early_progression' + riskgroup + agegroup]) \
                       / self.model_constants['tb_timeperiod_early_latent']
 
     def find_ipt_params(self):

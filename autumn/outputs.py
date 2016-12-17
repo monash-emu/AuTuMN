@@ -1274,21 +1274,21 @@ class Project:
 
         # Plot proportions of population
         if self.gui_inputs['output_age_fractions']:
-            self.plot_stratified_populations(age_or_comorbidity='age')
+            self.plot_stratified_populations(age_or_risk='age')
 
-        # Plot comorbidity proportions
-        if self.gui_inputs['output_comorbidity_fractions']:
-            self.plot_stratified_populations(age_or_comorbidity='comorbidity')
+        # Plot risk group proportions
+        if self.gui_inputs['output_riskgroup_fractions']:
+            self.plot_stratified_populations(age_or_risk='risk')
 
         # Make a flow-diagram
         if self.gui_inputs['output_flow_diagram']:
             png = os.path.join(self.out_dir_project, self.country + '_flow_diagram' + '.png')
             self.model_runner.model_dict['manual_baseline'].make_flow_diagram(png)
 
-        # Plot comorbidity proportions
-        if self.gui_inputs['output_plot_comorbidity_checks'] \
-                and len(self.model_runner.model_dict['manual_baseline'].comorbidities) > 1:
-            self.plot_comorb_checks()
+        # Plot risk group proportions
+        if self.gui_inputs['output_plot_riskgroup_checks'] \
+                and len(self.model_runner.model_dict['manual_baseline'].riskgroups) > 1:
+            self.plot_riskgroup_checks()
 
         # Save figure that is produced in the uncertainty running process
         if self.gui_inputs['output_param_plots']:
@@ -2044,7 +2044,7 @@ class Project:
         fig.suptitle(self.country + ' burden by age group', fontsize=self.suptitle_size)
         self.save_figure(fig, '_output_by_age')
 
-    def plot_stratified_populations(self, age_or_comorbidity='age'):
+    def plot_stratified_populations(self, age_or_risk='age'):
 
         """
         Function to plot population by age group both as raw numbers and as proportions,
@@ -2052,10 +2052,10 @@ class Project:
 
         """
 
-        if age_or_comorbidity == 'age':
+        if age_or_risk == 'age':
             stratification = self.model_runner.model_dict['manual_baseline'].agegroups
-        elif age_or_comorbidity == 'comorbidity':
-            stratification = self.model_runner.model_dict['manual_baseline'].comorbidities
+        elif age_or_risk == 'risk':
+            stratification = self.model_runner.model_dict['manual_baseline'].riskgroups
         else:
             stratification = None
 
@@ -2102,9 +2102,9 @@ class Project:
 
                     # Create proxy for legend
                     ax_upper.plot([], [], color=colours[i][1], linewidth=6)
-                    if age_or_comorbidity == 'age':
+                    if age_or_risk == 'age':
                         legd_text += [tool_kit.turn_strat_into_label(stratum)]
-                    elif age_or_comorbidity == 'comorbidity':
+                    elif age_or_risk == 'risk':
                         legd_text += [tool_kit.find_title_from_dictionary(stratum)]
 
                     # Cosmetic changes at the end
@@ -2142,9 +2142,9 @@ class Project:
                                       self.inputs.model_constants['plot_end_time'])
 
             # Finish up
-            fig.suptitle('Population by ' + tool_kit.find_title_from_dictionary(age_or_comorbidity),
+            fig.suptitle('Population by ' + tool_kit.find_title_from_dictionary(age_or_risk),
                          fontsize=self.suptitle_size)
-            self.save_figure(fig, '_comorbidity_proportions')
+            self.save_figure(fig, '_riskgroup_proportions')
 
     def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):
 
@@ -2224,10 +2224,10 @@ class Project:
         pyplot.savefig(os.path.join(self.out_dir_project, self.country + '_totalcost' + '.png'),
                        bbox_extra_artists=(lgd,), bbox_inches='tight')
 
-    def plot_comorb_checks(self):
+    def plot_riskgroup_checks(self):
 
         """
-        Plots actual comorbidity fractions against targets.
+        Plots actual risk group fractions against targets.
 
         """
 
@@ -2236,21 +2236,21 @@ class Project:
         ax = self.make_single_axis(fig)
 
         # Plotting
-        for comorb in self.model_runner.model_dict['manual_baseline'].comorbidities:
+        for riskgroup in self.model_runner.model_dict['manual_baseline'].riskgroups:
             ax.plot(self.model_runner.model_dict['manual_baseline'].times[2:],
-                    self.model_runner.model_dict['manual_baseline'].actual_comorb_props[comorb], 'g-')
+                    self.model_runner.model_dict['manual_baseline'].actual_riskgroup_props[riskgroup], 'g-')
             ax.plot(self.model_runner.model_dict['manual_baseline'].times[1:],
-                    self.model_runner.model_dict['manual_baseline'].target_comorb_props[comorb], 'k--')
+                    self.model_runner.model_dict['manual_baseline'].target_riskgroup_props[riskgroup], 'k--')
             ax.set_xlim([self.inputs.model_constants['recent_time'], self.inputs.model_constants['current_time']])
 
         # End bits
-        fig.suptitle('Population by comorbidity', fontsize=self.suptitle_size)
+        fig.suptitle('Population by risk group', fontsize=self.suptitle_size)
         ax.set_xlabel('Year', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         ax.set_ylabel('Proportion', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         for axis_to_change in [ax.xaxis, ax.yaxis]:
             for tick in axis_to_change.get_major_ticks():
                 tick.label.set_fontsize(get_nice_font_size([1, 1]))
-        self.save_figure(fig, '_comorb_checks')
+        self.save_figure(fig, '_riskgroup_checks')
 
     def plot_param_histograms(self):
 

@@ -28,7 +28,7 @@ def find_button_name_from_string(working_string):
                                   'Plot outcomes by age groups',
                               'output_age_fractions':
                                   'Plot proportions by age',
-                              'output_comorbidity_fractions':
+                              'output_riskgroup_fractions':
                                   'Plot proportions by risk group',
                               'output_flow_diagram':
                                   'Draw flow diagram',
@@ -38,8 +38,8 @@ def find_button_name_from_string(working_string):
                                   'Plot scale-up functions',
                               'output_plot_economics':
                                   'Plot economics graphs',
-                              'output_plot_comorbidity_checks':
-                                  'Plot comorbidity checks',
+                              'output_plot_riskgroup_checks':
+                                  'Plot risk group checks',
                               'output_age_calculations':
                                   'Plot age calculation weightings',
                               'output_param_plots':
@@ -48,17 +48,17 @@ def find_button_name_from_string(working_string):
                                   'Plot "popsizes" for cost-coverage curves',
                               'output_likelihood_plot':
                                   'Plot log likelihoods over runs',
-                              'comorbidity_diabetes':
+                              'riskgroup_diabetes':
                                   'Type II diabetes',
-                              'comorbidity_hiv':
+                              'riskgroup_hiv':
                                   'HIV',
-                              'comorbidity_prison':
+                              'riskgroup_prison':
                                   'Prison',
-                              'comorbidity_urbanpoor':
+                              'riskgroup_urbanpoor':
                                   'Urban poor',
-                              'comorbidity_ruralpoor':
+                              'riskgroup_ruralpoor':
                                   'Rural poor',
-                              'comorbidity_indigenous':
+                              'riskgroup_indigenous':
                                   'Indigenous',
                               'is_lowquality':
                                   'Low quality care',
@@ -119,16 +119,16 @@ class App:
 
         # Prepare Boolean data structures
         self.boolean_dictionary = {}
-        self.boolean_inputs = ['output_flow_diagram', 'output_compartment_populations', 'output_comorbidity_fractions',
+        self.boolean_inputs = ['output_flow_diagram', 'output_compartment_populations', 'output_riskgroup_fractions',
                                'output_age_fractions', 'output_by_age', 'output_fractions', 'output_scaleups',
-                               'output_gtb_plots', 'output_plot_economics', 'output_plot_comorbidity_checks',
+                               'output_gtb_plots', 'output_plot_economics', 'output_plot_riskgroup_checks',
                                'output_param_plots', 'output_popsize_plot', 'output_likelihood_plot',
                                'output_uncertainty', 'adaptive_uncertainty',
                                'output_spreadsheets',
                                'output_documents', 'output_by_scenario', 'output_horizontally',
-                               'output_age_calculations', 'comorbidity_diabetes', 'comorbidity_hiv',
-                               'comorbidity_prison', 'comorbidity_indigenous', 'comorbidity_urbanpoor',
-                               'comorbidity_ruralpoor',
+                               'output_age_calculations', 'riskgroup_diabetes', 'riskgroup_hiv',
+                               'riskgroup_prison', 'riskgroup_indigenous', 'riskgroup_urbanpoor',
+                               'riskgroup_ruralpoor',
                                'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ']
         for i in range(1, 15):
             self.boolean_inputs += ['scenario_' + str(i)]
@@ -146,7 +146,7 @@ class App:
         plot_row = 1
         option_row = 1
         uncertainty_row = 1
-        comorbidity_row = 1
+        riskgroup_row = 1
         elaboration_row = 1
         running_row = 2
         scenario_row = 1
@@ -161,9 +161,9 @@ class App:
             elif 'is_' in boolean:
                 self.boolean_toggles[boolean].grid(row=elaboration_row, column=2, sticky=W)
                 elaboration_row += 1
-            elif 'comorbidity_' in boolean or 'n_' in boolean:
-                self.boolean_toggles[boolean].grid(row=comorbidity_row, column=1, sticky=W)
-                comorbidity_row += 1
+            elif 'riskgroup_' in boolean or 'n_' in boolean:
+                self.boolean_toggles[boolean].grid(row=riskgroup_row, column=1, sticky=W)
+                riskgroup_row += 1
             elif 'scenario_' in boolean:
                 self.boolean_toggles[boolean].grid(row=scenario_row, column=3, sticky=W)
                 scenario_row += 1
@@ -209,8 +209,8 @@ class App:
         self.drop_downs['n_strains'] = OptionMenu(self.frame, self.raw_outputs['n_strains'],
                                                   'Single strain', 'DS / MDR', 'DS / MDR / XDR')
         for option in numerical_stratification_inputs:
-            self.drop_downs[option].grid(row=comorbidity_row, column=1, sticky=W)
-            comorbidity_row += 1
+            self.drop_downs[option].grid(row=riskgroup_row, column=1, sticky=W)
+            riskgroup_row += 1
 
         # Consistent width to drop-down menus
         for drop_down in self.drop_downs:
@@ -259,10 +259,10 @@ class App:
         self.boolean_dictionary['is_misassignment'].set(True)
         self.boolean_dictionary['is_lowquality'].set(True)
         self.boolean_dictionary['is_vary_detection_by_organ'].set(True)
-        self.boolean_dictionary['comorbidity_prison'].set(True)
-        # self.boolean_dictionary['comorbidity_urbanpoor'].set(True)
-        self.boolean_dictionary['comorbidity_ruralpoor'].set(True)
-        # self.boolean_dictionary['comorbidity_indigenous'].set(True)
+        self.boolean_dictionary['riskgroup_prison'].set(True)
+        # self.boolean_dictionary['riskgroup_urbanpoor'].set(True)
+        self.boolean_dictionary['riskgroup_ruralpoor'].set(True)
+        # self.boolean_dictionary['riskgroup_indigenous'].set(True)
 
         for numeric in uncertainty_numeric_list.keys():
             numeric_label = Label(self.frame, text=uncertainty_numeric_list[numeric][0], font=label_font)

@@ -104,7 +104,7 @@ class ConsolidatedModel(StratifiedModel):
 
         # Get organ stratification, strains and starting time from inputs objects
         self.inputs = inputs
-        for attribute in ['organ_status', 'strains', 'comorbidities', 'is_organvariation', 'agegroups']:
+        for attribute in ['organ_status', 'strains', 'riskgroups', 'is_organvariation', 'agegroups']:
             setattr(self, attribute, getattr(inputs, attribute))
         self.scaleup_fns = inputs.scaleup_fns[self.scenario]
         self.start_time = inputs.model_constants['start_time']
@@ -168,19 +168,19 @@ class ConsolidatedModel(StratifiedModel):
             self.organs_for_detection = self.organ_status
 
         # Boolean is automatically set according to whether any form of ACF is being implemented
-        self.vary_detection_by_comorbidity = False
+        self.vary_detection_by_riskgroup = False
         for timevariant in self.scaleup_fns:
-            if 'acf' in timevariant: self.vary_detection_by_comorbidity = True
-        self.comorbidities_for_detection = ['']
-        if self.vary_detection_by_comorbidity:
-            self.comorbidities_for_detection = self.comorbidities
+            if 'acf' in timevariant: self.vary_detection_by_riskgroup = True
+        self.riskgroups_for_detection = ['']
+        if self.vary_detection_by_riskgroup:
+            self.riskgroups_for_detection = self.riskgroups
 
         # Temporarily hard coded option for short course MDR-TB regimens to improve outcomes
         self.shortcourse_improves_outcomes = False
 
         # Temporarily hard coded option to vary force of infection across risk groups
-        self.vary_force_infection_by_comorbidity = True
-        if self.vary_force_infection_by_comorbidity:
+        self.vary_force_infection_by_riskgroup = True
+        if self.vary_force_infection_by_riskgroup:
             self.mixing = {}
             self.create_mixing_matrix()
 
@@ -215,45 +215,45 @@ class ConsolidatedModel(StratifiedModel):
 
         # Initialise to zero
         for agegroup in self.agegroups:
-            for comorbidity in self.comorbidities:
+            for riskgroup in self.riskgroups:
                 for compartment in self.compartment_types:
 
-                    # Replicate susceptible for age-groups and comorbidities
-                    if 'susceptible' in compartment: self.set_compartment(compartment + comorbidity + agegroup, 0.)
+                    # Replicate susceptible for age and risk groups
+                    if 'susceptible' in compartment: self.set_compartment(compartment + riskgroup + agegroup, 0.)
 
-                    # Replicate latent classes for age-groups, comorbidities and strains
+                    # Replicate latent classes for age-groups, risk groups and strains
                     elif 'latent' in compartment:
                         for strain in self.strains:
-                            self.set_compartment(compartment + strain + comorbidity + agegroup, 0.)
+                            self.set_compartment(compartment + strain + riskgroup + agegroup, 0.)
 
-                    # Replicate active classes for age-groups, comorbidities, strains and organs
+                    # Replicate active classes for age-groups, risk groups, strains and organs
                     elif 'active' in compartment or 'missed' in compartment or 'lowquality' in compartment:
                         for strain in self.strains:
                             for organ in self.organ_status:
-                                self.set_compartment(compartment + organ + strain + comorbidity + agegroup, 0.)
+                                self.set_compartment(compartment + organ + strain + riskgroup + agegroup, 0.)
 
-                    # Replicate treatment classes for age-groups, comorbidities, strains, organs and assigned strains
+                    # Replicate treatment classes for age-groups, risk groups, strains, organs and assigned strains
                     else:
                         for strain in self.strains:
                             for organ in self.organ_status:
                                 if self.is_misassignment:
                                     for assigned_strain in self.strains:
                                         self.set_compartment(compartment + organ + strain + '_as' + assigned_strain[1:]
-                                                             + comorbidity + agegroup,
+                                                             + riskgroup + agegroup,
                                                              0.)
                                 else:
-                                    self.set_compartment(compartment + organ + strain + comorbidity + agegroup, 0.)
+                                    self.set_compartment(compartment + organ + strain + riskgroup + agegroup, 0.)
 
         # Find starting proportions for risk groups
-        if len(self.comorbidities) == 1:
-            start_comorb_prop = {'': 1.}
+        if len(self.riskgroups) == 1:
+            start_risk_prop = {'': 1.}
         else:
-            start_comorb_prop = {'_nocomorb': 1.}
-            for comorbidity in self.comorbidities:
-                if comorbidity != '_nocomorb':
-                    start_comorb_prop[comorbidity] \
-                        = self.scaleup_fns['comorb_prop' + comorbidity](self.inputs.model_constants['start_time'])
-                    start_comorb_prop['_nocomorb'] -= start_comorb_prop[comorbidity]
+            start_risk_prop = {'_norisk': 1.}
+            for riskgroup in self.riskgroups:
+                if riskgroup != '_norisk':
+                    start_risk_prop[riskgroup] \
+                        = self.scaleup_fns['riskgroup_prop' + riskgroup](self.inputs.model_constants['start_time'])
+                    start_risk_prop['_norisk'] -= start_risk_prop[riskgroup]
 
         # Find starting strain for compartment initialisation
         if self.strains == ['']:
@@ -265,21 +265,21 @@ class ConsolidatedModel(StratifiedModel):
         for compartment in self.compartment_types:
             if compartment in self.initial_compartments:
                 for agegroup in self.agegroups:
-                    for comorbidity in self.comorbidities:
+                    for riskgroup in self.riskgroups:
                         if 'susceptible_fully' in compartment:
-                            self.set_compartment(compartment + comorbidity + agegroup,
-                                                 self.initial_compartments[compartment] * start_comorb_prop[comorbidity]
+                            self.set_compartment(compartment + riskgroup + agegroup,
+                                                 self.initial_compartments[compartment] * start_risk_prop[riskgroup]
                                                  / len(self.agegroups))
                         elif 'latent' in compartment:
-                            self.set_compartment(compartment + default_start_strain + comorbidity + agegroup,
-                                                 self.initial_compartments[compartment] * start_comorb_prop[comorbidity]
+                            self.set_compartment(compartment + default_start_strain + riskgroup + agegroup,
+                                                 self.initial_compartments[compartment] * start_risk_prop[riskgroup]
                                                  / len(self.agegroups))
                         else:
                             for organ in self.organ_status:
-                                self.set_compartment(compartment + organ + default_start_strain + comorbidity
+                                self.set_compartment(compartment + organ + default_start_strain + riskgroup
                                                      + agegroup,
                                                      self.initial_compartments[compartment]
-                                                     * start_comorb_prop[comorbidity]
+                                                     * start_risk_prop[riskgroup]
                                                      / len(self.organ_status) / len(self.agegroups))
 
     def create_mixing_matrix(self):
@@ -293,21 +293,21 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         # Initialise first tier of dictionaries fully so that parameters can be either way round
-        for comorbidity in self.comorbidities:
-            self.mixing[comorbidity] = {}
+        for riskgroup in self.riskgroups:
+            self.mixing[riskgroup] = {}
 
         # Populate symmetric matrices outside of diagonal
-        for comorbidity in self.comorbidities:
-            for other_comorbidity in self.comorbidities:
-                if 'prop' + comorbidity + '_mix' + other_comorbidity in self.params:
-                    self.mixing[comorbidity][other_comorbidity] \
-                        = self.params['prop' + comorbidity + '_mix' + other_comorbidity]
-                    self.mixing[other_comorbidity][comorbidity] \
-                        = self.params['prop' + comorbidity + '_mix' + other_comorbidity]
+        for riskgroup in self.riskgroups:
+            for other_riskgroup in self.riskgroups:
+                if 'prop' + riskgroup + '_mix' + other_riskgroup in self.params:
+                    self.mixing[riskgroup][other_riskgroup] \
+                        = self.params['prop' + riskgroup + '_mix' + other_riskgroup]
+                    self.mixing[other_riskgroup][riskgroup] \
+                        = self.params['prop' + riskgroup + '_mix' + other_riskgroup]
 
         # Populate diagonal
-        for comorbidity in self.comorbidities:
-            self.mixing[comorbidity][comorbidity] = 1. - sum(self.mixing[comorbidity].values())
+        for riskgroup in self.riskgroups:
+            self.mixing[riskgroup][riskgroup] = 1. - sum(self.mixing[riskgroup].values())
 
     #######################################################
     ### Single method to process uncertainty parameters ###
@@ -362,7 +362,7 @@ class ConsolidatedModel(StratifiedModel):
             if 'program_prop_xpert' in self.optional_timevariants:
                 self.adjust_smearneg_detection_for_xpert()
         self.calculate_detect_missed_vars()
-        if self.vary_detection_by_comorbidity:
+        if self.vary_detection_by_riskgroup:
             self.calculate_acf_rate()
             self.adjust_case_detection_for_acf()
         self.calculate_misassignment_detection_vars()
@@ -403,10 +403,10 @@ class ConsolidatedModel(StratifiedModel):
             vac_props['vac'] -= vac_props['novelvac']
 
         # Calculate birth rates
-        for comorbidity in self.comorbidities:
+        for riskgroup in self.riskgroups:
             for vac_status in vac_props:
-                self.vars['births_' + vac_status + comorbidity] \
-                    = vac_props[vac_status] * self.vars['births_total'] * self.target_comorb_props[comorbidity][-1]
+                self.vars['births_' + vac_status + riskgroup] \
+                    = vac_props[vac_status] * self.vars['births_total'] * self.target_risk_props[riskgroup][-1]
 
     def calculate_force_infection_vars(self):
 
@@ -420,9 +420,9 @@ class ConsolidatedModel(StratifiedModel):
         for strain in self.strains:
 
             # Initialise infectious population vars as needed
-            if self.vary_force_infection_by_comorbidity:
-                for comorbidity in self.comorbidities:
-                    self.vars['effective_infectious_population' + strain + comorbidity] = 0.
+            if self.vary_force_infection_by_riskgroup:
+                for riskgroup in self.riskgroups:
+                    self.vars['effective_infectious_population' + strain + riskgroup] = 0.
             else:
                 self.vars['effective_infectious_population' + strain] = 0.
 
@@ -438,7 +438,7 @@ class ConsolidatedModel(StratifiedModel):
                             continue
 
                         # Calculate effective infectious population without stratification for risk group
-                        if not self.vary_force_infection_by_comorbidity:
+                        if not self.vary_force_infection_by_riskgroup:
                             if label_intersects_tags(label, self.infectious_tags):
                                 self.vars['effective_infectious_population' + strain] \
                                     += self.params['tb_multiplier_force' + organ] \
@@ -446,47 +446,47 @@ class ConsolidatedModel(StratifiedModel):
                                        * self.compartments[label]
 
                         else:
-                            for comorbidity in self.comorbidities:
-                                if comorbidity not in label:
+                            for riskgroup in self.riskgroups:
+                                if riskgroup not in label:
                                     continue
                                 if label_intersects_tags(label, self.infectious_tags):
-                                    for source_comorbidity in self.comorbidities:
+                                    for source_riskgroup in self.riskgroups:
 
                                         # Adjustment for increased infectiousness of risk groups as required
-                                        comorb_multiplier_force_infection = 1.
-                                        if 'comorb_multiplier_force_infection' + source_comorbidity in self.params:
-                                            comorb_multiplier_force_infection \
-                                                = self.params['comorb_multiplier_force_infection' + source_comorbidity]
+                                        riskgroup_multiplier_force_infection = 1.
+                                        if 'risk_multiplier_force_infection' + source_riskgroup in self.params:
+                                            riskgroup_multiplier_force_infection \
+                                                = self.params['risk_multiplier_force_infection' + source_riskgroup]
 
                                         # Calculate effective infectious population for each risk group
-                                        self.vars['effective_infectious_population' + strain + comorbidity] \
+                                        self.vars['effective_infectious_population' + strain + riskgroup] \
                                             += self.params['tb_multiplier_force' + organ] \
                                                * self.params['tb_multiplier_child_infectiousness' + agegroup] \
                                                * self.compartments[label] \
-                                               * self.mixing[comorbidity][source_comorbidity] \
-                                               * comorb_multiplier_force_infection
+                                               * self.mixing[riskgroup][source_riskgroup] \
+                                               * riskgroup_multiplier_force_infection
 
-            # To loop over all comorbidities if needed, or otherwise to just run once
-            force_comorbidities = ['']
-            if self.vary_force_infection_by_comorbidity:
-                force_comorbidities = copy.copy(self.comorbidities)
+            # To loop over all risk groups if needed, or otherwise to just run once
+            force_riskgroups = ['']
+            if self.vary_force_infection_by_riskgroup:
+                force_riskgroups = copy.copy(self.riskgroups)
 
             # Calculate force of infection unadjusted for immunity/susceptibility
-            for comorbidity in force_comorbidities:
-                self.vars['rate_force' + strain + comorbidity] = \
+            for riskgroup in force_riskgroups:
+                self.vars['rate_force' + strain + riskgroup] = \
                     self.params['tb_n_contact'] \
-                    * self.vars['effective_infectious_population' + strain + comorbidity] \
+                    * self.vars['effective_infectious_population' + strain + riskgroup] \
                     / self.vars['population']
 
                 # If any modifications to transmission parameter to be made over time
                 if 'transmission_modifier' in self.optional_timevariants:
-                    self.vars['rate_force' + strain + comorbidity] *= self.vars['transmission_modifier']
+                    self.vars['rate_force' + strain + riskgroup] *= self.vars['transmission_modifier']
 
                 # Adjust for immunity in various groups
                 for force_type in ['_vac', '_latent', '_novelvac']:
-                    self.vars['rate_force' + force_type + strain + comorbidity] \
+                    self.vars['rate_force' + force_type + strain + riskgroup] \
                         = self.params['tb_multiplier' + force_type + '_protection'] \
-                          * self.vars['rate_force' + strain + comorbidity]
+                          * self.vars['rate_force' + strain + riskgroup]
 
     def calculate_progression_vars(self):
 
@@ -510,17 +510,17 @@ class ConsolidatedModel(StratifiedModel):
         # Determine variable progression rates
         for organ in self.organ_status:
             for agegroup in self.agegroups:
-                for comorbidity in self.comorbidities:
+                for riskgroup in self.riskgroups:
                     for timing in ['_early', '_late']:
-                        if comorbidity == '_diabetes':
-                            self.vars['tb_rate' + timing + '_progression' + organ + comorbidity + agegroup] \
+                        if riskgroup == '_diabetes':
+                            self.vars['tb_rate' + timing + '_progression' + organ + riskgroup + agegroup] \
                                 = self.vars['epi_prop' + organ] \
-                                  * self.params['tb_rate' + timing + '_progression' + '_nocomorb' + agegroup] \
-                                  * self.params['comorb_multiplier_diabetes_progression']
+                                  * self.params['tb_rate' + timing + '_progression' + '_norisk' + agegroup] \
+                                  * self.params['risk_multiplier_diabetes_progression']
                         else:
-                            self.vars['tb_rate' + timing + '_progression' + organ + comorbidity + agegroup] \
+                            self.vars['tb_rate' + timing + '_progression' + organ + riskgroup + agegroup] \
                                 = self.vars['epi_prop' + organ] \
-                                  * self.params['tb_rate' + timing + '_progression' + comorbidity + agegroup]
+                                  * self.params['tb_rate' + timing + '_progression' + riskgroup + agegroup]
 
     def adjust_case_detection_for_decentralisation(self):
 
@@ -584,16 +584,16 @@ class ConsolidatedModel(StratifiedModel):
         if self.vary_detection_by_organ:
             organs += ['']
         for organ in organs:
-            for comorbidity in [''] + self.comorbidities_for_detection:
+            for riskgroup in [''] + self.riskgroups_for_detection:
 
                 # Detected
-                self.vars['program_rate_detect' + organ + comorbidity] \
+                self.vars['program_rate_detect' + organ + riskgroup] \
                     = - self.vars['program_prop_detect' + organ] \
                       * (1. / self.params['tb_timeperiod_activeuntreated']
                          + 1. / self.vars['demo_life_expectancy']) \
                       / (self.vars['program_prop_detect' + organ] - 1.)
 
-            # Missed (no need to loop by comorbidity as ACF is the only difference here, which is applied next)
+            # Missed (no need to loop by risk group as ACF is the only difference here, which is applied next)
             self.vars['program_rate_missed' + organ] \
                 = self.vars['program_rate_detect' + organ] \
                   * (1. - self.vars['program_prop_algorithm_sensitivity' + organ]) \
@@ -611,31 +611,31 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         # Loop covers risk groups and community-wide ACF
-        for comorbidity in [''] + self.comorbidities:
-            if 'program_prop_smearacf' + comorbidity in self.optional_timevariants \
-                    or 'program_prop_xpertacf' + comorbidity in self.optional_timevariants:
+        for riskgroup in [''] + self.riskgroups:
+            if 'program_prop_smearacf' + riskgroup in self.optional_timevariants \
+                    or 'program_prop_xpertacf' + riskgroup in self.optional_timevariants:
 
                 # The following can't be written as self.organ_status, as it won't work for non-fully-stratified models
                 for organ in ['', '_smearpos', '_smearneg', '_extrapul']:
-                    self.vars['program_rate_acf' + organ + comorbidity] = 0.
+                    self.vars['program_rate_acf' + organ + riskgroup] = 0.
 
                 # Smear-based ACF rate
-                if 'program_prop_smearacf' + comorbidity in self.optional_timevariants:
-                    self.vars['program_rate_acf_smearpos' + comorbidity] \
-                        += self.vars['program_prop_smearacf' + comorbidity] \
+                if 'program_prop_smearacf' + riskgroup in self.optional_timevariants:
+                    self.vars['program_rate_acf_smearpos' + riskgroup] \
+                        += self.vars['program_prop_smearacf' + riskgroup] \
                            * self.params['program_prop_acf_detections_per_round'] \
                            / self.params['program_timeperiod_acf_rounds']
 
                 # Xpert-based ACF rate for smear-positives and smear-negatives
-                if 'program_prop_xpertacf' + comorbidity in self.optional_timevariants:
+                if 'program_prop_xpertacf' + riskgroup in self.optional_timevariants:
                     for organ in ['_smearpos', '_smearneg']:
-                        self.vars['program_rate_acf' + organ + comorbidity] \
-                            += self.vars['program_prop_xpertacf' + comorbidity] \
+                        self.vars['program_rate_acf' + organ + riskgroup] \
+                            += self.vars['program_prop_xpertacf' + riskgroup] \
                                * self.params['program_prop_acf_detections_per_round'] \
                                / self.params['program_timeperiod_acf_rounds']
 
                     # Adjust smear-negative detections for Xpert's sensitivity
-                    self.vars['program_rate_acf_smearneg' + comorbidity] \
+                    self.vars['program_rate_acf_smearneg' + riskgroup] \
                         *= self.params['tb_prop_xpert_smearneg_sensitivity']
 
     def adjust_case_detection_for_acf(self):
@@ -646,18 +646,18 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         for organ in self.organs_for_detection:
-            for comorbidity in self.comorbidities:
+            for riskgroup in self.riskgroups:
 
                 # ACF in risk groups
-                if 'program_prop_smearacf' + comorbidity in self.optional_timevariants \
-                        or 'program_prop_xpertacf' + comorbidity in self.optional_timevariants:
-                    self.vars['program_rate_detect' + organ + comorbidity] \
-                        += self.vars['program_rate_acf' + organ + comorbidity]
+                if 'program_prop_smearacf' + riskgroup in self.optional_timevariants \
+                        or 'program_prop_xpertacf' + riskgroup in self.optional_timevariants:
+                    self.vars['program_rate_detect' + organ + riskgroup] \
+                        += self.vars['program_rate_acf' + organ + riskgroup]
 
                 # ACF in the general community
                 if 'program_prop_smearacf' in self.optional_timevariants \
                         or 'program_prop_xpertacf' in self.optional_timevariants:
-                    self.vars['program_rate_detect' + organ + comorbidity] \
+                    self.vars['program_rate_detect' + organ + riskgroup] \
                         += self.vars['program_rate_acf' + organ]
 
     def calculate_misassignment_detection_vars(self):
@@ -669,7 +669,7 @@ class ConsolidatedModel(StratifiedModel):
 
         # With misassignment:
         for organ in self.organs_for_detection:
-            for comorbidity in self.comorbidities_for_detection:
+            for riskgroup in self.riskgroups_for_detection:
                 if self.is_misassignment:
 
                     prop_firstline = self.get_constant_or_variable_param('program_prop_firstline_dst')
@@ -679,32 +679,32 @@ class ConsolidatedModel(StratifiedModel):
                         prop_firstline += (1. - prop_firstline) * self.vars['program_prop_xpert']
 
                     # Determine rates of identification/misidentification as each strain
-                    self.vars['program_rate_detect' + organ + comorbidity + '_ds_asds'] \
-                        = self.vars['program_rate_detect' + organ + comorbidity]
-                    self.vars['program_rate_detect' + organ + comorbidity + '_ds_asmdr'] = 0.
-                    self.vars['program_rate_detect' + organ + comorbidity + '_mdr_asds'] \
-                        = (1. - prop_firstline) * self.vars['program_rate_detect' + organ + comorbidity]
-                    self.vars['program_rate_detect' + organ + comorbidity + '_mdr_asmdr'] \
-                        = prop_firstline * self.vars['program_rate_detect' + organ + comorbidity]
+                    self.vars['program_rate_detect' + organ + riskgroup + '_ds_asds'] \
+                        = self.vars['program_rate_detect' + organ + riskgroup]
+                    self.vars['program_rate_detect' + organ + riskgroup + '_ds_asmdr'] = 0.
+                    self.vars['program_rate_detect' + organ + riskgroup + '_mdr_asds'] \
+                        = (1. - prop_firstline) * self.vars['program_rate_detect' + organ + riskgroup]
+                    self.vars['program_rate_detect' + organ + riskgroup + '_mdr_asmdr'] \
+                        = prop_firstline * self.vars['program_rate_detect' + organ + riskgroup]
 
                     # If a third strain is present
                     if len(self.strains) > 2:
                         prop_secondline = self.get_constant_or_variable_param('program_prop_secondline_dst')
-                        self.vars['program_rate_detect' + organ + comorbidity + '_ds_asxdr'] = 0.
-                        self.vars['program_rate_detect' + organ + comorbidity + '_mdr_asxdr'] = 0.
-                        self.vars['program_rate_detect' + organ + comorbidity + '_xdr_asds'] \
-                            = (1. - prop_firstline) * self.vars['program_rate_detect' + organ + comorbidity]
-                        self.vars['program_rate_detect' + organ + comorbidity + '_xdr_asmdr'] \
+                        self.vars['program_rate_detect' + organ + riskgroup + '_ds_asxdr'] = 0.
+                        self.vars['program_rate_detect' + organ + riskgroup + '_mdr_asxdr'] = 0.
+                        self.vars['program_rate_detect' + organ + riskgroup + '_xdr_asds'] \
+                            = (1. - prop_firstline) * self.vars['program_rate_detect' + organ + riskgroup]
+                        self.vars['program_rate_detect' + organ + riskgroup + '_xdr_asmdr'] \
                             = prop_firstline \
-                              * (1. - prop_secondline) * self.vars['program_rate_detect' + organ + comorbidity]
-                        self.vars['program_rate_detect' + organ + comorbidity + '_xdr_asxdr'] \
-                            = prop_firstline * prop_secondline * self.vars['program_rate_detect' + organ + comorbidity]
+                              * (1. - prop_secondline) * self.vars['program_rate_detect' + organ + riskgroup]
+                        self.vars['program_rate_detect' + organ + riskgroup + '_xdr_asxdr'] \
+                            = prop_firstline * prop_secondline * self.vars['program_rate_detect' + organ + riskgroup]
 
                 # Without misassignment, everyone is correctly allocated
                 else:
                     for strain in self.strains:
-                        self.vars['program_rate_detect' + organ + comorbidity + strain + '_as' + strain[1:]] \
-                            = self.vars['program_rate_detect' + organ + comorbidity]
+                        self.vars['program_rate_detect' + organ + riskgroup + strain + '_as' + strain[1:]] \
+                            = self.vars['program_rate_detect' + organ + riskgroup]
 
     def calculate_await_treatment_var(self):
 
@@ -746,7 +746,7 @@ class ConsolidatedModel(StratifiedModel):
         prop_lowqual = self.get_constant_or_variable_param('program_prop_lowquality')
         prop_lowqual *= (1. - self.vars['program_prop_engage_lowquality'])
 
-        # Note that there is still a program_rate_detect var even if detection is varied by organ and/or comorbidity
+        # Note that there is still a program_rate_detect var even if detection is varied by organ and/or risk group
         self.vars['program_rate_enterlowquality'] \
             = self.vars['program_rate_detect'] * prop_lowqual / (1. - prop_lowqual)
 
@@ -855,7 +855,7 @@ class ConsolidatedModel(StratifiedModel):
         # IPT
         for agegroup in self.agegroups:
             self.vars['popsize_ipt' + agegroup] = 0.
-            for comorbidity in self.comorbidities:
+            for riskgroup in self.riskgroups:
                 for strain in self.strains:
                     for organ in self.organ_status:
                         if '_smearpos' in organ and 'dr' not in strain:
@@ -864,12 +864,12 @@ class ConsolidatedModel(StratifiedModel):
                                     self.vars['popsize_ipt' + agegroup] \
                                         += self.vars['program_rate_start_treatment' + organ] \
                                            * self.compartments['detect' + organ + strain + '_as' + assigned_strain[1:] \
-                                                               + comorbidity + agegroup] \
+                                                               + riskgroup + agegroup] \
                                            * self.inputs.model_constants['ipt_eligible_per_treatment_start']
                             else:
                                 self.vars['popsize_ipt' + agegroup] \
                                     += self.vars['program_rate_start_treatment' + organ] \
-                                       * self.compartments['detect' + organ + strain + comorbidity + agegroup] \
+                                       * self.compartments['detect' + organ + strain + riskgroup + agegroup] \
                                        * self.inputs.model_constants['ipt_eligible_per_treatment_start']
 
         # BCG (So simple that it's almost unnecessary, but needed for loops over program names)
@@ -879,7 +879,7 @@ class ConsolidatedModel(StratifiedModel):
         if 'program_prop_xpert' in self.optional_timevariants:
             self.vars['popsize_xpert'] = 0.
             for agegroup in self.agegroups:
-                for comorbidity in self.comorbidities:
+                for riskgroup in self.riskgroups:
                     for strain in self.strains:
                         for organ in self.organ_status:
                             if self.vary_detection_by_organ:
@@ -887,29 +887,29 @@ class ConsolidatedModel(StratifiedModel):
                             else:
                                 detection_organ = ''
                             self.vars['popsize_xpert'] \
-                                += self.vars['program_rate_detect' + detection_organ + comorbidity]\
-                                   * self.compartments['active' + organ + strain + comorbidity + agegroup] \
+                                += self.vars['program_rate_detect' + detection_organ + riskgroup]\
+                                   * self.compartments['active' + organ + strain + riskgroup + agegroup] \
                                    * (self.params['program_number_tests_per_tb_presentation'] + 1.)
 
         # ACF
-        for comorbidity in [''] + self.comorbidities:
-            if 'program_prop_smearacf' + comorbidity in self.optional_timevariants:
-                self.vars['popsize_smearacf' + comorbidity] = 0.
+        for riskgroup in [''] + self.riskgroups:
+            if 'program_prop_smearacf' + riskgroup in self.optional_timevariants:
+                self.vars['popsize_smearacf' + riskgroup] = 0.
                 for compartment in self.compartments:
                     if 'active_' in compartment and '_smearpos' in compartment \
-                            and (comorbidity == '' or comorbidity in compartment):
-                        self.vars['popsize_smearacf' + comorbidity] \
+                            and (riskgroup == '' or riskgroup in compartment):
+                        self.vars['popsize_smearacf' + riskgroup] \
                             += self.compartments[compartment] * self.params['program_nns_smearacf']
-            if 'program_prop_xpertacf' + comorbidity in self.optional_timevariants:
-                self.vars['popsize_xpertacf' + comorbidity] = 0.
+            if 'program_prop_xpertacf' + riskgroup in self.optional_timevariants:
+                self.vars['popsize_xpertacf' + riskgroup] = 0.
                 for compartment in self.compartments:
                     if 'active_' in compartment and '_smearpos' in compartment \
-                            and (comorbidity == '' or comorbidity in compartment):
-                        self.vars['popsize_xpertacf' + comorbidity] \
+                            and (riskgroup == '' or riskgroup in compartment):
+                        self.vars['popsize_xpertacf' + riskgroup] \
                             += self.compartments[compartment] * self.params['program_nns_xpertacf_smearpos']
                     elif 'active_' in compartment and '_smearneg' in compartment \
-                            and (comorbidity == '' or comorbidity in compartment):
-                        self.vars['popsize_xpertacf' + comorbidity] \
+                            and (riskgroup == '' or riskgroup in compartment):
+                        self.vars['popsize_xpertacf' + riskgroup] \
                             += self.compartments[compartment] * self.params['program_nns_xpertacf_smearneg']
 
         # Decentralisation and engage low quality sector
@@ -1005,14 +1005,14 @@ class ConsolidatedModel(StratifiedModel):
         Set birth (or recruitment) flows by vaccination status (including novel vaccination if implemented).
         """
 
-        for comorbidity in self.comorbidities:
+        for riskgroup in self.riskgroups:
             self.set_var_entry_rate_flow(
-                'susceptible_fully' + comorbidity + self.agegroups[0], 'births_unvac' + comorbidity)
+                'susceptible_fully' + riskgroup + self.agegroups[0], 'births_unvac' + riskgroup)
             self.set_var_entry_rate_flow(
-                'susceptible_vac' + comorbidity + self.agegroups[0], 'births_vac' + comorbidity)
+                'susceptible_vac' + riskgroup + self.agegroups[0], 'births_vac' + riskgroup)
             if 'program_prop_novel_vaccination' in self.optional_timevariants:
                 self.set_var_entry_rate_flow('susceptible_novelvac'
-                                             + comorbidity + self.agegroups[0], 'births_novelvac' + comorbidity)
+                                             + riskgroup + self.agegroups[0], 'births_novelvac' + riskgroup)
 
     def set_infection_flows(self):
 
@@ -1021,38 +1021,38 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         for agegroup in self.agegroups:
-            for comorbidity in self.comorbidities:
+            for riskgroup in self.riskgroups:
 
-                force_comorbidity = ''
-                if self.vary_force_infection_by_comorbidity:
-                    force_comorbidity = comorbidity
+                force_riskgroup = ''
+                if self.vary_force_infection_by_riskgroup:
+                    force_riskgroup = riskgroup
 
                 for strain in self.strains:
 
                     # Set infection rates according to susceptibility status
                     self.set_var_transfer_rate_flow(
-                        'susceptible_fully' + comorbidity + agegroup,
-                        'latent_early' + strain + comorbidity + agegroup,
-                        'rate_force' + strain + force_comorbidity)
+                        'susceptible_fully' + riskgroup + agegroup,
+                        'latent_early' + strain + riskgroup + agegroup,
+                        'rate_force' + strain + force_riskgroup)
                     self.set_var_transfer_rate_flow(
-                        'susceptible_vac' + comorbidity + agegroup,
-                        'latent_early' + strain + comorbidity + agegroup,
-                        'rate_force_vac' + strain + force_comorbidity)
+                        'susceptible_vac' + riskgroup + agegroup,
+                        'latent_early' + strain + riskgroup + agegroup,
+                        'rate_force_vac' + strain + force_riskgroup)
                     self.set_var_transfer_rate_flow(
-                        'susceptible_treated' + comorbidity + agegroup,
-                        'latent_early' + strain + comorbidity + agegroup,
-                        'rate_force_vac' + strain + force_comorbidity)
+                        'susceptible_treated' + riskgroup + agegroup,
+                        'latent_early' + strain + riskgroup + agegroup,
+                        'rate_force_vac' + strain + force_riskgroup)
                     self.set_var_transfer_rate_flow(
-                        'latent_late' + strain + comorbidity + agegroup,
-                        'latent_early' + strain + comorbidity + agegroup,
-                        'rate_force_latent' + strain + force_comorbidity)
+                        'latent_late' + strain + riskgroup + agegroup,
+                        'latent_early' + strain + riskgroup + agegroup,
+                        'rate_force_latent' + strain + force_riskgroup)
 
                     # Novel vaccination
                     if 'program_prop_novel_vaccination' in self.optional_timevariants:
                         self.set_var_transfer_rate_flow(
-                            'susceptible_novelvac' + comorbidity + agegroup,
-                            'latent_early' + strain + comorbidity + agegroup,
-                            'rate_force_novelvac' + strain + force_comorbidity)
+                            'susceptible_novelvac' + riskgroup + agegroup,
+                            'latent_early' + strain + riskgroup + agegroup,
+                            'rate_force_novelvac' + strain + force_riskgroup)
 
     def set_progression_flows(self):
 
@@ -1061,14 +1061,14 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         for agegroup in self.agegroups:
-            for comorbidity in self.comorbidities:
+            for riskgroup in self.riskgroups:
                 for strain in self.strains:
 
                         # Stabilisation
                         self.set_fixed_transfer_rate_flow(
-                            'latent_early' + strain + comorbidity + agegroup,
-                            'latent_late' + strain + comorbidity + agegroup,
-                            'tb_rate_stabilise' + comorbidity + agegroup)
+                            'latent_early' + strain + riskgroup + agegroup,
+                            'latent_late' + strain + riskgroup + agegroup,
+                            'tb_rate_stabilise' + riskgroup + agegroup)
 
                         for organ in self.organ_status:
 
@@ -1076,27 +1076,27 @@ class ConsolidatedModel(StratifiedModel):
                             # self.scaleup_fns, then epi_prop_smearneg should be too)
                             if self.is_organvariation:
                                 self.set_var_transfer_rate_flow(
-                                    'latent_early' + strain + comorbidity + agegroup,
-                                    'active' + organ + strain + comorbidity + agegroup,
-                                    'tb_rate_early_progression' + organ + comorbidity + agegroup)
+                                    'latent_early' + strain + riskgroup + agegroup,
+                                    'active' + organ + strain + riskgroup + agegroup,
+                                    'tb_rate_early_progression' + organ + riskgroup + agegroup)
                                 self.set_var_transfer_rate_flow(
-                                    'latent_late' + strain + comorbidity + agegroup,
-                                    'active' + organ + strain + comorbidity + agegroup,
-                                    'tb_rate_late_progression' + organ + comorbidity + agegroup)
+                                    'latent_late' + strain + riskgroup + agegroup,
+                                    'active' + organ + strain + riskgroup + agegroup,
+                                    'tb_rate_late_progression' + organ + riskgroup + agegroup)
 
                             # Otherwise, set fixed flows
                             else:
                                 # Early progression
                                 self.set_fixed_transfer_rate_flow(
-                                    'latent_early' + strain + comorbidity + agegroup,
-                                    'active' + organ + strain + comorbidity + agegroup,
-                                    'tb_rate_early_progression' + organ + comorbidity + agegroup)
+                                    'latent_early' + strain + riskgroup + agegroup,
+                                    'active' + organ + strain + riskgroup + agegroup,
+                                    'tb_rate_early_progression' + organ + riskgroup + agegroup)
 
                                 # Late progression
                                 self.set_fixed_transfer_rate_flow(
-                                    'latent_late' + strain + comorbidity + agegroup,
-                                    'active' + organ + strain + comorbidity + agegroup,
-                                    'tb_rate_late_progression' + organ + comorbidity + agegroup)
+                                    'latent_late' + strain + riskgroup + agegroup,
+                                    'active' + organ + strain + riskgroup + agegroup,
+                                    'tb_rate_late_progression' + organ + riskgroup + agegroup)
 
     def set_natural_history_flows(self):
 
@@ -1113,18 +1113,18 @@ class ConsolidatedModel(StratifiedModel):
 
         # Apply flows
         for agegroup in self.agegroups:
-            for comorbidity in self.comorbidities:
+            for riskgroup in self.riskgroups:
                 for strain in self.strains:
                     for organ in self.organ_status:
                         for compartment in active_compartments:
 
                             # Recovery
-                            self.set_fixed_transfer_rate_flow(compartment + organ + strain + comorbidity + agegroup,
-                                                              'latent_late' + strain + comorbidity + agegroup,
+                            self.set_fixed_transfer_rate_flow(compartment + organ + strain + riskgroup + agegroup,
+                                                              'latent_late' + strain + riskgroup + agegroup,
                                                               'tb_rate_recover' + organ)
 
                             # Death
-                            self.set_fixed_infection_death_rate_flow(compartment + organ + strain + comorbidity
+                            self.set_fixed_infection_death_rate_flow(compartment + organ + strain + riskgroup
                                                                      + agegroup,
                                                                      'tb_rate_death' + organ)
 
@@ -1132,11 +1132,11 @@ class ConsolidatedModel(StratifiedModel):
                         if self.is_misassignment:
                             for assigned_strain in self.strains:
                                 self.set_fixed_infection_death_rate_flow('detect' + organ + strain + '_as'
-                                                                         + assigned_strain[1:] + comorbidity + agegroup,
+                                                                         + assigned_strain[1:] + riskgroup + agegroup,
                                                                          'tb_rate_death' + organ)
                                 self.set_fixed_transfer_rate_flow('detect' + organ + strain + '_as'
-                                                                  + assigned_strain[1:] + comorbidity + agegroup,
-                                                                  'latent_late' + strain + comorbidity + agegroup,
+                                                                  + assigned_strain[1:] + riskgroup + agegroup,
+                                                                  'latent_late' + strain + riskgroup + agegroup,
                                                                   'tb_rate_recover' + organ)
 
     def set_fixed_programmatic_flows(self):
@@ -1147,21 +1147,21 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         for agegroup in self.agegroups:
-            for comorbidity in self.comorbidities:
+            for riskgroup in self.riskgroups:
                 for strain in self.strains:
                     for organ in self.organ_status:
 
                         # Re-start presenting after a missed diagnosis
                         self.set_fixed_transfer_rate_flow(
-                            'missed' + organ + strain + comorbidity + agegroup,
-                            'active' + organ + strain + comorbidity + agegroup,
+                            'missed' + organ + strain + riskgroup + agegroup,
+                            'active' + organ + strain + riskgroup + agegroup,
                             'program_rate_restart_presenting')
 
                         # Giving up on the hopeless low-quality health system
                         if self.is_lowquality:
                             self.set_fixed_transfer_rate_flow(
-                                'lowquality' + organ + strain + comorbidity + agegroup,
-                                'active' + organ + strain + comorbidity + agegroup,
+                                'lowquality' + organ + strain + riskgroup + agegroup,
+                                'active' + organ + strain + riskgroup + agegroup,
                                 'program_rate_leavelowquality')
 
     def set_detection_flows(self):
@@ -1172,7 +1172,7 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         for agegroup in self.agegroups:
-            for comorbidity in self.comorbidities_for_detection:
+            for riskgroup in self.riskgroups_for_detection:
                 for organ in self.organ_status:
                     organ_for_detection = organ
                     if not self.vary_detection_by_organ:
@@ -1187,17 +1187,17 @@ class ConsolidatedModel(StratifiedModel):
                                 # If the strain is equally or more resistant than its assignment
                                 if strain_number >= assigned_strain_number:
                                     self.set_var_transfer_rate_flow(
-                                        'active' + organ + strain + comorbidity + agegroup,
-                                        'detect' + organ + strain + as_assigned_strain + comorbidity + agegroup,
-                                        'program_rate_detect' + organ_for_detection + comorbidity
+                                        'active' + organ + strain + riskgroup + agegroup,
+                                        'detect' + organ + strain + as_assigned_strain + riskgroup + agegroup,
+                                        'program_rate_detect' + organ_for_detection + riskgroup
                                         + strain + as_assigned_strain)
 
                         # Without misassignment
                         else:
                             self.set_var_transfer_rate_flow(
-                                'active' + organ + strain + comorbidity + agegroup,
-                                'detect' + organ + strain + comorbidity + agegroup,
-                                'program_rate_detect' + organ_for_detection + comorbidity)
+                                'active' + organ + strain + riskgroup + agegroup,
+                                'detect' + organ + strain + riskgroup + agegroup,
+                                'program_rate_detect' + organ_for_detection + riskgroup)
 
     def set_variable_programmatic_flows(self):
 
@@ -1209,33 +1209,33 @@ class ConsolidatedModel(StratifiedModel):
 
         # Set rate of missed diagnoses and entry to low-quality health care
         for agegroup in self.agegroups:
-            for comorbidity in self.comorbidities:
+            for riskgroup in self.riskgroups:
                 for strain in self.strains:
                     for organ in self.organ_status:
                         detection_organ = ''
                         if self.vary_detection_by_organ: detection_organ = organ
-                        self.set_var_transfer_rate_flow('active' + organ + strain + comorbidity + agegroup,
-                                                        'missed' + organ + strain + comorbidity + agegroup,
+                        self.set_var_transfer_rate_flow('active' + organ + strain + riskgroup + agegroup,
+                                                        'missed' + organ + strain + riskgroup + agegroup,
                                                         'program_rate_missed' + detection_organ)
 
                         # Treatment commencement, with and without misassignment
                         if self.is_misassignment:
                             for assigned_strain in self.strains:
                                 self.set_var_transfer_rate_flow('detect' + organ + strain + '_as' + assigned_strain[1:]
-                                                                + comorbidity + agegroup,
+                                                                + riskgroup + agegroup,
                                                                 'treatment_infect' + organ + strain + '_as'
-                                                                + assigned_strain[1:] + comorbidity + agegroup,
+                                                                + assigned_strain[1:] + riskgroup + agegroup,
                                                                 'program_rate_start_treatment' + organ)
                         else:
-                            self.set_var_transfer_rate_flow('detect' + organ + strain + comorbidity + agegroup,
-                                                            'treatment_infect' + organ + strain + comorbidity
+                            self.set_var_transfer_rate_flow('detect' + organ + strain + riskgroup + agegroup,
+                                                            'treatment_infect' + organ + strain + riskgroup
                                                             + agegroup,
                                                             'program_rate_start_treatment' + organ)
 
                         # Enter the low quality health care system
                         if self.is_lowquality:
-                            self.set_var_transfer_rate_flow('active' + organ + strain + comorbidity + agegroup,
-                                                            'lowquality' + organ + strain + comorbidity + agegroup,
+                            self.set_var_transfer_rate_flow('active' + organ + strain + riskgroup + agegroup,
+                                                            'lowquality' + organ + strain + riskgroup + agegroup,
                                                             'program_rate_enterlowquality')
 
     def set_treatment_flows(self):
@@ -1246,7 +1246,7 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         for agegroup in self.agegroups:
-            for comorbidity in self.comorbidities:
+            for riskgroup in self.riskgroups:
                 for organ in self.organ_status:
                     for strain_number, strain in enumerate(self.strains):
 
@@ -1267,18 +1267,18 @@ class ConsolidatedModel(StratifiedModel):
 
                             # Success by treatment stage
                             self.set_var_transfer_rate_flow(
-                                'treatment_infect' + organ + strain + as_assigned_strain + comorbidity + agegroup,
-                                'treatment_noninfect' + organ + strain + as_assigned_strain + comorbidity + agegroup,
+                                'treatment_infect' + organ + strain + as_assigned_strain + riskgroup + agegroup,
+                                'treatment_noninfect' + organ + strain + as_assigned_strain + riskgroup + agegroup,
                                 'program_rate_success_infect' + strain_or_inappropriate)
                             self.set_var_transfer_rate_flow(
-                                'treatment_noninfect' + organ + strain + as_assigned_strain + comorbidity + agegroup,
-                                'susceptible_treated' + comorbidity + agegroup,
+                                'treatment_noninfect' + organ + strain + as_assigned_strain + riskgroup + agegroup,
+                                'susceptible_treated' + riskgroup + agegroup,
                                 'program_rate_success_noninfect' + strain_or_inappropriate)
 
                             # Death on treatment
                             for treatment_stage in self.treatment_stages:
                                 self.set_var_infection_death_rate_flow('treatment' +
-                                    treatment_stage + organ + strain + as_assigned_strain + comorbidity + agegroup,
+                                    treatment_stage + organ + strain + as_assigned_strain + riskgroup + agegroup,
                                     'program_rate_death' + treatment_stage + strain_or_inappropriate)
 
                             # Default
@@ -1288,8 +1288,8 @@ class ConsolidatedModel(StratifiedModel):
                                 if strain == self.strains[-1] or not self.is_amplification:
                                     self.set_var_transfer_rate_flow(
                                         'treatment' +
-                                        treatment_stage + organ + strain + as_assigned_strain + comorbidity + agegroup,
-                                        'active' + organ + strain + comorbidity + agegroup,
+                                        treatment_stage + organ + strain + as_assigned_strain + riskgroup + agegroup,
+                                        'active' + organ + strain + riskgroup + agegroup,
                                         'program_rate_default' + treatment_stage + strain_or_inappropriate)
 
                                 # Otherwise with amplification
@@ -1297,14 +1297,14 @@ class ConsolidatedModel(StratifiedModel):
                                     amplify_to_strain = self.strains[strain_number + 1]
                                     self.set_var_transfer_rate_flow(
                                         'treatment' +
-                                        treatment_stage + organ + strain + as_assigned_strain + comorbidity + agegroup,
-                                        'active' + organ + strain + comorbidity + agegroup,
+                                        treatment_stage + organ + strain + as_assigned_strain + riskgroup + agegroup,
+                                        'active' + organ + strain + riskgroup + agegroup,
                                         'program_rate_default' + treatment_stage + '_noamplify'
                                         + strain_or_inappropriate)
                                     self.set_var_transfer_rate_flow(
                                         'treatment' +
-                                        treatment_stage + organ + strain + as_assigned_strain + comorbidity + agegroup,
-                                        'active' + organ + amplify_to_strain + comorbidity + agegroup,
+                                        treatment_stage + organ + strain + as_assigned_strain + riskgroup + agegroup,
+                                        'active' + organ + amplify_to_strain + riskgroup + agegroup,
                                         'program_rate_default' + treatment_stage + '_amplify' + strain_or_inappropriate)
 
     def set_ipt_flows(self):
@@ -1315,19 +1315,19 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         for agegroup in self.agegroups:
-            for comorbidity in self.comorbidities:
+            for riskgroup in self.riskgroups:
                 for strain in self.strains:
                     if 'agestratified_ipt' in self.optional_timevariants or 'ipt' in self.optional_timevariants \
                             and 'dr' not in strain:
-                        self.set_linked_transfer_rate_flow('latent_early' + strain + comorbidity + agegroup,
-                                                           'susceptible_vac' + comorbidity + agegroup,
+                        self.set_linked_transfer_rate_flow('latent_early' + strain + riskgroup + agegroup,
+                                                           'susceptible_vac' + riskgroup + agegroup,
                                                            'ipt_effective_treatments' + agegroup)
                     if 'program_prop_community_ipt' in self.optional_timevariants \
                             and 'dr' not in strain:
-                        self.set_var_transfer_rate_flow('latent_early' + strain + comorbidity + agegroup,
-                                                        'susceptible_vac' + comorbidity + agegroup,
+                        self.set_var_transfer_rate_flow('latent_early' + strain + riskgroup + agegroup,
+                                                        'susceptible_vac' + riskgroup + agegroup,
                                                         'rate_community_ipt')
-                        self.set_var_transfer_rate_flow('latent_late' + strain + comorbidity + agegroup,
-                                                        'susceptible_vac' + comorbidity + agegroup,
+                        self.set_var_transfer_rate_flow('latent_late' + strain + riskgroup + agegroup,
+                                                        'susceptible_vac' + riskgroup + agegroup,
                                                         'rate_community_ipt')
 

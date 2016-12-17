@@ -539,7 +539,7 @@ class BaseModel:
             for i_label, label in enumerate(self.labels):
                 self.flow_array[i_time + 1, i_label] = self.flows[label]
 
-            # Adjustments for comorbidities
+            # Adjustments for risk groups
             y = self.make_adjustments_during_integration(y)
 
         # self.calculate_diagnostics()
@@ -558,8 +558,8 @@ class BaseModel:
     def make_adjustments_during_integration(self, y):
 
         """
-        Adjusts the proportions of the population in each comorbidity group according to the calculations
-        made in assess_comorbidity_props.
+        Adjusts the proportions of the population in each risk group according to the calculations
+        made in assess_riskgroup_props.
 
         Args:
             y: The original compartment vector y to be adjusted.
@@ -859,15 +859,15 @@ class StratifiedModel(BaseModel):
 
         BaseModel.__init__(self)
         self.agegroups = []
-        self.comorbidities = []
-        self.actual_comorb_props = {}
-        self.target_comorb_props = {}
+        self.riskgroups = []
+        self.actual_risk_props = {}
+        self.target_risk_props = {}
 
     def make_adjustments_during_integration(self, y):
 
         """
-        Adjusts the proportions of the population in each comorbidity group according to the calculations
-        made in assess_comorbidity_props above.
+        Adjusts the proportions of the population in each risk group according to the calculations
+        made in assess_risk_props above.
 
         Args:
             y: The original compartment vector y to be adjusted.
@@ -875,54 +875,54 @@ class StratifiedModel(BaseModel):
             The adjusted compartment vector (y).
         """
 
-        comorb_adjustment_factor = {}
+        risk_adjustment_factor = {}
 
-        # Find the target proportions for each comorbidity stratum
-        if len(self.comorbidities) > 1:
-            for comorbidity in self.comorbidities:
-                if comorbidity not in self.target_comorb_props:
-                    self.target_comorb_props[comorbidity] = []
-            self.target_comorb_props['_nocomorb'].append(1.)
-            for comorbidity in self.comorbidities:
-                if comorbidity != '_nocomorb':
-                    self.target_comorb_props[comorbidity].append(
-                        self.get_constant_or_variable_param('comorb_prop' + comorbidity))
-                    self.target_comorb_props['_nocomorb'][-1] \
-                        -= self.target_comorb_props[comorbidity][-1]
+        # Find the target proportions for each risk group stratum
+        if len(self.riskgroups) > 1:
+            for riskgroup in self.riskgroups:
+                if riskgroup not in self.target_risk_props:
+                    self.target_risk_props[riskgroup] = []
+            self.target_risk_props['_norisk'].append(1.)
+            for riskgroup in self.riskgroups:
+                if riskgroup != '_norisk':
+                    self.target_risk_props[riskgroup].append(
+                        self.get_constant_or_variable_param('riskgroup_prop' + riskgroup))
+                    self.target_risk_props['_norisk'][-1] \
+                        -= self.target_risk_props[riskgroup][-1]
 
             # If integration has started properly
             if self.compartments:
 
-                # Find the actual proportions in each comorbidity stratum
+                # Find the actual proportions in each risk group stratum
                 population = sum(self.compartments.values())
-                for comorbidity in self.comorbidities:
-                    if comorbidity not in self.actual_comorb_props:
-                        self.actual_comorb_props[comorbidity] = []
-                    self.actual_comorb_props[comorbidity].append(0.)
+                for riskgroup in self.riskgroups:
+                    if riskgroup not in self.actual_risk_props:
+                        self.actual_risk_props[riskgroup] = []
+                    self.actual_risk_props[riskgroup].append(0.)
                     for c in self.compartments:
-                        if comorbidity in c:
-                            self.actual_comorb_props[comorbidity][-1] += self.compartments[c] / population
+                        if riskgroup in c:
+                            self.actual_risk_props[riskgroup][-1] += self.compartments[c] / population
 
                 # Find the scaling factor for the risk group in question
-                for comorbidity in self.comorbidities:
-                    if self.actual_comorb_props[comorbidity][-1] > 0.:
-                        comorb_adjustment_factor[comorbidity] = self.target_comorb_props[comorbidity][-1] \
-                                                                     / self.actual_comorb_props[comorbidity][-1]
+                for riskgroup in self.riskgroups:
+                    if self.actual_risk_props[riskgroup][-1] > 0.:
+                        risk_adjustment_factor[riskgroup] = self.target_risk_props[riskgroup][-1] \
+                                                                     / self.actual_risk_props[riskgroup][-1]
                     else:
-                        comorb_adjustment_factor[comorbidity] = 1.
+                        risk_adjustment_factor[riskgroup] = 1.
         else:
 
             # Otherwise, it's just a list of ones
-            if '' not in self.target_comorb_props:
-                self.target_comorb_props[''] = []
-            self.target_comorb_props[''].append(1.)
+            if '' not in self.target_risk_props:
+                self.target_risk_props[''] = []
+            self.target_risk_props[''].append(1.)
 
-        if comorb_adjustment_factor != {}:
+        if risk_adjustment_factor != {}:
             compartments = self.convert_list_to_compartments(y)
             for c in compartments:
-                for comorbidity in self.comorbidities:
-                    if comorbidity in c:
-                        compartments[c] *= comorb_adjustment_factor[comorbidity]
+                for riskgroup in self.riskgroups:
+                    if riskgroup in c:
+                        compartments[c] *= risk_adjustment_factor[riskgroup]
             return self.convert_compartments_to_list(compartments)
         else:
             return y

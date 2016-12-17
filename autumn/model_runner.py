@@ -289,11 +289,11 @@ class ModelRunner:
                 = self.find_epi_outputs(scenario_name,
                                         outputs_to_analyse=self.epi_outputs_to_analyse,
                                         stratifications=[self.model_dict[scenario_name].agegroups,
-                                                         self.model_dict[scenario_name].comorbidities])
+                                                         self.model_dict[scenario_name].riskgroups])
             self.find_cost_outputs(scenario_name)
 
         self.find_population_fractions(stratifications=[self.model_dict['manual_baseline'].agegroups,
-                                                        self.model_dict['manual_baseline'].comorbidities])
+                                                        self.model_dict['manual_baseline'].riskgroups])
 
         # If you want some dictionaries based on the lists created above (may not be necessary)
         self.epi_outputs_dict.update(get_output_dicts_from_lists(models_to_analyse=self.model_dict,

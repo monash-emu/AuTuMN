@@ -142,19 +142,37 @@ def find_uncertainty_output_weights(list, method, relative_weights=[1., 2.]):
 
 
 class ModelRunner:
+
     def __init__(self, gui_inputs, runtime_outputs, figure_frame, js_gui=False):
+
+        """
+        Instantiation method for model runner - currently including many attributes that should be set externally, e.g.
+        in the GUI(s).
+
+        Args:
+            gui_inputs: Inputs from the off-line Tkinter GUI.
+            runtime_outputs: Off-line GUI window for commenting.
+            figure_frame: Uncertainty parameter plotting window of Tkinter GUI.
+            js_gui: JavaScript GUI inputs.
+        """
+
+        # Loading of inputs
         self.gui_inputs = gui_inputs
         self.runtime_outputs = runtime_outputs
         self.figure_frame = figure_frame
         self.inputs = data_processing.Inputs(gui_inputs, runtime_outputs, from_test=True, js_gui=js_gui)
         self.inputs.read_and_load_data()
+
+        # Preparing for basic runs
         self.model_dict = {}
-        self.is_last_run_success = False
         self.interventions_to_cost = self.inputs.interventions_to_cost
+
+        # Uncertainty-related attributes
+        self.is_last_run_success = False
         self.loglikelihoods = []
         self.outputs_unc = [{'key': 'incidence',
                              'posterior_width': None,
-                             'width_multiplier': 2.  # for incidence for ex. Width of Normal posterior relative to CI width in data
+                             'width_multiplier': 2.  # Width of normal posterior relative to range of parameter values allowed
                              }]
         self.all_parameters_tried = {}
         self.whether_accepted_list = []
@@ -162,27 +180,32 @@ class ModelRunner:
         self.rejected_indices = []
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
-
-        self.optimisation = False  # leave it True even if you want to load optimization results
-        self.indicator_to_minimize = 'incidence'  # 'incidence' or 'mortality'
-        self.annual_envelope = [25e6, 50e6, 75e6, 100e6, 200e6] # funding scenarios to be run
-        self.save_opti = True
-        self.load_opti = False  # optimization will not be run if loading is turned on
-        self.total_funding = None  # Funding for entire period
-        self.f_tol = {'incidence': 0.5,
-                      'mortality': 0.05}  # stopping condition for optimisation algorithm: tolerance differs according to indicator
-        self.year_end_opti = 2035.  # model is run until that date during optimisation
-        self.acceptable_combinations = []  # list of intervention combinations that can be envisaged with available funding
-        self.opti_results = {}  # store all the results that we need for optimisation
-        self.optimised_combinations = []
-        self.optimal_allocation = {}
-        self.interventions_considered_for_opti = ['xpertacf_ruralpoor', \
-                                                  'xpertacf_prison', 'xpertacf', 'xpert', 'engage_lowquality']
-        self.interventions_forced_for_opti = ['xpertacf_ruralpoor', \
-                                                  'engage_lowquality']  # the ones we do want to appear in the optimal plan.
-
         self.acceptance_dict = {}
         self.rejection_dict = {}
+        self.uncertainty_percentiles = {}
+        self.percentiles = [2.5, 50, 97.5]
+        self.accepted_no_burn_in_indices = []
+
+        # Optimisation attributes
+        self.optimisation = False  # Leave True even if loading optimisation results
+        self.indicator_to_minimise = 'incidence'  # Currently must be 'incidence' or 'mortality'
+        self.annual_envelope = [25e6, 50e6, 75e6, 100e6, 200e6]  # Size of funding envelope in scenarios to be run
+        self.save_opti = True
+        self.load_opti = False  # Optimisation will not be run if on
+        self.total_funding = None  # Funding for entire period
+        self.f_tol = {'incidence': 0.5,
+                      'mortality': 0.05}  # Stopping condition for optimisation algorithm (differs by indicator)
+        self.year_end_opti = 2035.  # Model is run until that date during optimisation
+        self.acceptable_combinations = []  # List of intervention combinations that can be considered with available funding
+        self.opti_results = {}  # Store all the results that we need for optimisation
+        self.optimised_combinations = []
+        self.optimal_allocation = {}
+        self.interventions_considered_for_opti \
+            = ['xpertacf_ruralpoor', 'xpertacf_prison', 'xpertacf', 'xpert', 'engage_lowquality']
+        self.interventions_forced_for_opti \
+            = ['xpertacf_ruralpoor', 'engage_lowquality']  # Interventions that must appear in optimal plan
+
+        # Output-related attributes
         self.epi_outputs_to_analyse = ['population', 'incidence', 'true_incidence', 'prevalence', 'true_prevalence',
                                        'mortality', 'true_mortality', 'notifications']
         self.epi_outputs = {}
@@ -197,32 +220,19 @@ class ModelRunner:
         self.cost_outputs_uncertainty_centiles = None
         self.additional_cost_types = ['inflated', 'discounted', 'discounted_inflated']
         self.cost_types = self.additional_cost_types + ['raw']
-        self.uncertainty_percentiles = {}
-        self.percentiles = [2.5, 50, 97.5]
-        self.accepted_no_burn_in_indices = []
-        self.attributes_to_save = ['epi_outputs',
-                                   'epi_outputs_dict',
-                                   'epi_outputs_integer_dict',
-                                   'epi_outputs_uncertainty',
-                                   'cost_outputs',
-                                   'cost_outputs_dict',
-                                   'cost_outputs_integer_dict',
-                                   'cost_outputs_uncertainty',
-                                   'accepted_indices',
-                                   'rejected_indices',
-                                   'all_parameters_tried',
-                                   'whether_accepted_list',
-                                   'acceptance_dict',
-                                   'accepted_no_burn_in_indices',
-                                   'rejection_dict',
-                                   'loglikelihoods']
 
+        # Saving-related
+        self.attributes_to_save = ['epi_outputs', 'epi_outputs_dict', 'epi_outputs_integer_dict',
+                                   'epi_outputs_uncertainty', 'cost_outputs', 'cost_outputs_dict',
+                                   'cost_outputs_integer_dict', 'cost_outputs_uncertainty', 'accepted_indices',
+                                   'rejected_indices', 'all_parameters_tried', 'whether_accepted_list',
+                                   'acceptance_dict', 'accepted_no_burn_in_indices', 'rejection_dict', 'loglikelihoods']
+
+        # GUI-related
         self.emit_delay = 0.1
         self.plot_count = 0
         self.js_gui = js_gui
-
-        if self.js_gui:
-            eventlet.monkey_patch()
+        if self.js_gui: eventlet.monkey_patch()
 
     ###############################################
     ### Master methods to run all other methods ###
@@ -234,10 +244,9 @@ class ModelRunner:
         Calls methods to run model with each of the three fundamental approaches.
         """
 
-        # Prepare directory for saving
+        # Prepare file for saving
         out_dir = 'saved_uncertainty_analyses'
-        if not os.path.isdir(out_dir):
-            os.makedirs(out_dir)
+        if not os.path.isdir(out_dir): os.makedirs(out_dir)
         storage_file_name = os.path.join(out_dir, 'store.pkl')
 
         # Load a saved simulation
@@ -247,8 +256,9 @@ class ModelRunner:
             self.add_comment_to_gui_window('Loading finished')
             for attribute in loaded_data:
                 setattr(self, attribute, loaded_data[attribute])
+
+        # Or run the models as requested
         else:
-            # Or run the models as requested
             self.run_manual_calibration()
             if self.gui_inputs['output_uncertainty']:
                 self.run_uncertainty()
@@ -322,7 +332,7 @@ class ModelRunner:
         """
         if self.optimisation and not self.load_opti:
             # initialize the optimization output container
-            self.opti_results['indicator_to_minimize'] = self.indicator_to_minimize
+            self.opti_results['indicator_to_minimize'] = self.indicator_to_minimise
             self.opti_results['annual_envelope'] = self.annual_envelope
             self.opti_results['best_allocation'] = []
             self.opti_results['incidence'] = []
@@ -1212,7 +1222,7 @@ class ModelRunner:
                     = self.find_epi_outputs('optimisation',
                                             outputs_to_analyse=['population', 'incidence', 'true_incidence',
                                                                 'mortality', 'true_mortality'])
-                return output_list[self.indicator_to_minimize][-1]
+                return output_list[self.indicator_to_minimise][-1]
 
             if len(combi) == 1: # the distribution result is obvious
                 dict_optimised_combi['distribution'] = [1.]
@@ -1238,7 +1248,7 @@ class ModelRunner:
                     bnds.append((minimal_allocation, 1.0))
                 # Ready to run optimisation
                 res = minimize(func, x_0, jac=None, bounds=bnds, constraints=cons, method='SLSQP',
-                               options={'disp': False, 'ftol': self.f_tol[self.indicator_to_minimize]})
+                               options={'disp': False, 'ftol': self.f_tol[self.indicator_to_minimise]})
                 dict_optimised_combi['distribution'] = res.x
                 dict_optimised_combi['objective'] = res.fun
 

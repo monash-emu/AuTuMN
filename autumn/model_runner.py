@@ -187,7 +187,7 @@ class ModelRunner:
         self.accepted_no_burn_in_indices = []
 
         # Optimisation attributes
-        self.optimisation = False  # Leave True even if loading optimisation results
+        self.optimisation = True  # Leave True even if loading optimisation results
         self.indicator_to_minimise = 'incidence'  # Currently must be 'incidence' or 'mortality'
         self.annual_envelope = [25e6, 50e6, 75e6, 100e6, 200e6]  # Size of funding envelope in scenarios to be run
         self.save_opti = True
@@ -257,11 +257,10 @@ class ModelRunner:
             for attribute in loaded_data:
                 setattr(self, attribute, loaded_data[attribute])
 
-        # Or run the models as requested
+        # Or run the manual scenarios as requested by user
         else:
             self.run_manual_calibration()
-            if self.gui_inputs['output_uncertainty']:
-                self.run_uncertainty()
+            if self.gui_inputs['output_uncertainty']: self.run_uncertainty()
 
         # Save uncertainty if requested
         if self.gui_inputs['pickle_uncertainty'] == 'Save':
@@ -276,11 +275,17 @@ class ModelRunner:
         self.cost_outputs_uncertainty_centiles = self.find_uncertainty_centiles(self.cost_outputs_uncertainty)
 
         # Master optimisation method
-        self.run_optimisation()
+        if self.optimisation and not self.load_opti:
+            self.run_optimisation()
 
+        # Notify user that model running has finished
         self.add_comment_to_gui_window('Finished')
 
     def run_manual_calibration(self):
+
+        """
+        Runs the scenarios a single time, starting from baseline with parameter values as specified in spreadsheets.
+        """
 
         for scenario in self.gui_inputs['scenarios_to_run']:
 
@@ -298,14 +303,12 @@ class ModelRunner:
                 self.model_dict[scenario_name].loaded_compartments = \
                     self.model_dict['manual_baseline'].load_state(scenario_start_time_index)
 
-            # Describe model
+            # Describe model and integrate
             self.add_comment_to_gui_window('Running ' + scenario_name[7:] + ' conditions for '
                                            + self.gui_inputs['country'] + ' using point estimates for parameters.')
-
-            # Integrate and add result to outputs object
             self.model_dict[scenario_name].integrate()
 
-            # Model interpretation code - should be flexible and is now used by uncertainty and optimisation
+            # Model interpretation for each scenario
             self.epi_outputs[scenario_name] \
                 = self.find_epi_outputs(scenario_name,
                                         outputs_to_analyse=self.epi_outputs_to_analyse,
@@ -313,6 +316,7 @@ class ModelRunner:
                                                          self.model_dict[scenario_name].riskgroups])
             self.find_cost_outputs(scenario_name)
 
+        # Model interpretation that applies to baseline run only
         self.find_population_fractions(stratifications=[self.model_dict['manual_baseline'].agegroups,
                                                         self.model_dict['manual_baseline'].riskgroups])
 
@@ -322,47 +326,9 @@ class ModelRunner:
         self.cost_outputs_dict.update(get_output_dicts_from_lists(models_to_analyse=self.model_dict,
                                                                   output_dict_of_lists=self.cost_outputs))
 
-        # If you want some integer-based dictionaries
+        # If integer-based dictionaries required
         self.epi_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.epi_outputs_dict))
         self.cost_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.cost_outputs_dict))
-
-    def run_optimisation(self):
-        """
-        Triggers optimization for the different levels of funding defined in self.annual_envelope
-        """
-        if self.optimisation and not self.load_opti:
-            # initialize the optimization output container
-            self.opti_results['indicator_to_minimize'] = self.indicator_to_minimise
-            self.opti_results['annual_envelope'] = self.annual_envelope
-            self.opti_results['best_allocation'] = []
-            self.opti_results['incidence'] = []
-            self.opti_results['mortality'] = []
-
-            for env in self.annual_envelope:
-                print "Start optimization for annual total envelope of:" + str(env)
-                self.total_funding = env * (2035 - self.inputs.model_constants['scenario_start_time'])  # Total funding for the entire period
-                self.execute_optimisation()
-                full_results = self.get_full_results_opti()
-                self.opti_results['best_allocation'].append(full_results['best_allocation'])
-                self.opti_results['incidence'].append(full_results['incidence'])
-                self.opti_results['mortality'].append(full_results['mortality'])
-
-    ##################################################
-    ### JavaScript GUI methods parallel to Tkinter ###
-    ##################################################
-
-    def plot_progressive_parameters_js(self):
-
-        accepted_params = [
-            list(p for p, a in zip(self.all_parameters_tried[param], self.whether_accepted_list) if a)[-1]
-            for p, param in enumerate(self.all_parameters_tried)]
-
-        names = [tool_kit.find_title_from_dictionary(param) for p, param in
-                 enumerate(self.all_parameters_tried)]
-
-        emit('uncertainty_graph', {"data": accepted_params, "names": names, "count": self.plot_count})
-
-        self.plot_count += 1
 
     ####################################
     ### Model interpretation methods ###
@@ -561,6 +527,7 @@ class ModelRunner:
                                 epi_outputs['incidence' + stratum] \
                                     = elementwise_list_addition(incidence_increment,
                                                                 epi_outputs['incidence' + stratum])
+
                         # Fixed flows
                         for from_label, to_label, rate in self.model_dict[scenario].fixed_transfer_rate_flows:
                             if 'latent' in from_label and 'active' in to_label and stratum in from_label:
@@ -594,13 +561,13 @@ class ModelRunner:
                                 # Reduce paediatric contribution
                                 if '_age' in from_label \
                                         and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
-                                    mortality_increment *= self.inputs.model_constants[
-                                        'program_prop_child_reporting']
+                                    mortality_increment *= self.inputs.model_constants['program_prop_child_reporting']
+
                                 # Reduce outside health system contribution
                                 epi_outputs['mortality' + stratum] \
                                     = elementwise_list_addition(mortality_increment
                                                                 * self.model_dict[scenario].params[
-                                                         'program_prop_death_reporting'],
+                                                                    'program_prop_death_reporting'],
                                                                 epi_outputs['mortality' + stratum])
                         for from_label, rate in self.model_dict[scenario].var_infection_death_rate_flows:
                             # Variable flows
@@ -620,7 +587,7 @@ class ModelRunner:
                                 epi_outputs['mortality' + stratum] \
                                     = elementwise_list_addition(mortality_increment
                                                                 * self.model_dict[scenario].params[
-                                                         'program_prop_death_reporting'],
+                                                                    'program_prop_death_reporting'],
                                                                 epi_outputs['mortality' + stratum])
 
                     # Prevalence
@@ -637,8 +604,7 @@ class ModelRunner:
                             if '_age' in label and tool_kit.is_upper_age_limit_at_or_below(label, 15.):
                                 prevalence_increment *= self.inputs.model_constants['program_prop_child_reporting']
                             epi_outputs['prevalence' + stratum] \
-                                = elementwise_list_addition(prevalence_increment,
-                                                            epi_outputs['prevalence' + stratum])
+                                = elementwise_list_addition(prevalence_increment, epi_outputs['prevalence' + stratum])
 
                     # Infections
                     if 'infections' in outputs_to_analyse:
@@ -651,8 +617,7 @@ class ModelRunner:
                                                                 epi_outputs['infections' + stratum])
                         # ARI
                         epi_outputs['annual_risk_infection' + stratum] \
-                            = [i / j * 1e2 for i, j in zip(epi_outputs['infections' + stratum],
-                                                           stratum_denominator)]
+                            = [i / j * 1e2 for i, j in zip(epi_outputs['infections' + stratum], stratum_denominator)]
 
         return epi_outputs
 
@@ -703,22 +668,33 @@ class ModelRunner:
 
         costs_all_programs = [0.] * len(self.cost_outputs[scenario_name]['raw_cost_' + self.interventions_to_cost[0]])
         for i in self.interventions_to_cost:
-            costs_all_programs = elementwise_list_addition(self.cost_outputs[scenario_name]['raw_cost_' + i], costs_all_programs)
+            costs_all_programs \
+                = elementwise_list_addition(self.cost_outputs[scenario_name]['raw_cost_' + i], costs_all_programs)
         return costs_all_programs
 
     def find_adjusted_costs(self, scenario_name):
+
+        """
+        Find costs adjusted for inflation and discounting.
+
+        Args:
+            scenario_name: Scenario being costed
+        """
 
         # Get some preliminary parameters
         year_current = self.inputs.model_constants['current_time']
         current_cpi = self.inputs.scaleup_fns[None]['econ_cpi'](year_current)
         discount_rate = self.inputs.model_constants['econ_discount_rate']
+
+        # Loop over interventions to be costed and cost types to calculate costs
         cost_outputs = {}
-        for cost_type in self.additional_cost_types:
-            for intervention in self.interventions_to_cost + ['all_programs']:
+        for intervention in self.interventions_to_cost + ['all_programs']:
+            for cost_type in self.additional_cost_types:
                 cost_outputs[cost_type + '_cost_' + intervention] = []
                 for t, time in enumerate(self.cost_outputs[scenario_name]['times']):
                     cost_outputs[cost_type + '_cost_' + intervention].append(
-                        autumn.economics.get_adjusted_cost(self.cost_outputs[scenario_name]['raw_cost_' + intervention][t],
+                        autumn.economics.get_adjusted_cost(self.cost_outputs[scenario_name]['raw_cost_'
+                                                                                            + intervention][t],
                                                            cost_type,
                                                            current_cpi,
                                                            self.inputs.scaleup_fns[None]['econ_cpi'](time),
@@ -732,19 +708,20 @@ class ModelRunner:
         """
         Find percentiles from uncertainty dictionaries.
 
-        Modifies:
+        Updates:
             self.percentiles: Adds all the required percentiles to this dictionary.
         """
 
-        # Loop through scenarios and outputs
-        uncertainty_percentiles = {}
+        uncertainty_centiles = {}
         self.accepted_no_burn_in_indices = [i for i in self.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
 
+        # Loop through scenarios and outputs
         for scenario in full_uncertainty_outputs:
-            uncertainty_percentiles[scenario] = {}
+            uncertainty_centiles[scenario] = {}
             for output in full_uncertainty_outputs[scenario]:
                 if output != 'times':
-                    # Dealing with the fact that we are currently saving all baseline runs but only accepted scenarios:
+
+                    # To deal with the fact that we are currently saving all baseline runs but only accepted scenarios:
                     if scenario == 'uncertainty_baseline':
                         matrix_to_analyse = full_uncertainty_outputs[scenario][output][
                                             self.accepted_no_burn_in_indices, :]
@@ -752,11 +729,11 @@ class ModelRunner:
                         matrix_to_analyse = full_uncertainty_outputs[scenario][output]
 
                     # Find the actual centiles
-                    uncertainty_percentiles[scenario][output] \
+                    uncertainty_centiles[scenario][output] \
                         = numpy.percentile(matrix_to_analyse, self.percentiles, axis=0)
 
         # Return result to make usable in other situations
-        return uncertainty_percentiles
+        return uncertainty_centiles
 
     ###########################
     ### Uncertainty methods ###
@@ -954,10 +931,8 @@ class ModelRunner:
                 parameter values).
         """
 
-        n_set = 0
         for key in param_dict:
             if key in self.model_dict[model_object].params:
-                n_set += 1
                 self.model_dict[model_object].set_parameter(key, param_dict[key])
             else:
                 raise ValueError("%s not in model_object params" % key)
@@ -965,22 +940,18 @@ class ModelRunner:
     def convert_param_list_to_dict(self, params):
 
         """
-        Extract parameters from list into dictionary that can be used for setting in the model
-        through the set_model_with_params method.
+        Extract parameters from list into dictionary that can be used for setting in the model through the
+        set_model_with_params method.
 
         Args:
             params: The parameter names for extraction.
-
         Returns:
             param_dict: The dictionary returned in appropriate format.
-
         """
 
         param_dict = {}
-
         for names, vals in zip(self.inputs.param_ranges_unc, params):
             param_dict[names['key']] = vals
-
         return param_dict
 
     def get_fitting_data(self):
@@ -1068,12 +1039,13 @@ class ModelRunner:
 
             # Whether the parameter value is within acceptable ranges
             if (param < bounds[0]) or (param > bounds[1]):
-                # print "Warning: parameter%d=%f is outside of the allowed bounds" % (p, param)
+                # print 'Warning: parameter%d=%f is outside of the allowed bounds' % (p, param)
                 self.is_last_run_success = False
                 return
 
         param_dict = self.convert_param_list_to_dict(params)
 
+        # Set parameters and run
         self.set_model_with_params(param_dict, model_object)
         self.is_last_run_success = True
         try:
@@ -1091,17 +1063,17 @@ class ModelRunner:
         Args:
             scenario_name: The scenario being run.
             epi_outputs_to_analyse: The epidemiological outputs of interest.
-
         Updates:
             self.epi_outputs_uncertainty
             self.cost_outputs_uncertainty
         """
 
+        # Get outputs
         self.epi_outputs[scenario_name] \
             = self.find_epi_outputs(scenario_name, outputs_to_analyse=self.epi_outputs_to_analyse)
         self.find_cost_outputs(scenario_name)
 
-        # Initialise dictionaries
+        # Initialise dictionaries if needed
         if scenario_name not in self.epi_outputs_uncertainty:
             self.epi_outputs_uncertainty[scenario_name] = {'times': self.epi_outputs[scenario_name]['times']}
             self.cost_outputs_uncertainty[scenario_name] = {'times': self.cost_outputs[scenario_name]['times']}
@@ -1126,6 +1098,29 @@ class ModelRunner:
     ### Optimisation methods ###
     ############################
 
+    def run_optimisation(self):
+
+        """
+        Triggers optimisation for the different levels of funding defined in self.annual_envelope
+        """
+
+        standard_optimisation_attributes = ['best_allocation', 'incidence', 'mortality']
+
+        # Initialise the optimisation output container
+        self.opti_results['indicator_to_minimise'] = self.indicator_to_minimise
+        self.opti_results['annual_envelope'] = self.annual_envelope
+        for attribute in standard_optimisation_attributes:
+            self.opti_results[attribute] = []
+
+        # Run optimisation for each envelope
+        for env in self.annual_envelope:
+            print "Start optimisation for annual total envelope of:" + str(env)
+            self.total_funding = env * (2035. - self.inputs.model_constants['scenario_start_time'])
+            self.execute_optimisation()
+            full_results = self.get_full_results_opti()
+            for attribute in standard_optimisation_attributes:
+                self.opti_results[attribute].append(full_results[attribute])
+
     def get_acceptable_combinations(self):
 
         """
@@ -1133,6 +1128,7 @@ class ModelRunner:
         ammount of funding
         populates the attribute 'acceptable_combinations' of model_runner.
         """
+
         self.acceptable_combinations = []
 
         n_interventions = len(self.interventions_considered_for_opti)
@@ -1379,5 +1375,17 @@ class ModelRunner:
         if not from_runner:
             return param_tracking_figure
 
+    def plot_progressive_parameters_js(self):
 
+        """
+        Method to shadow previous method in JavaScript GUI.
+        """
+
+        accepted_params = [
+            list(p for p, a in zip(self.all_parameters_tried[param], self.whether_accepted_list) if a)[-1]
+            for p, param in enumerate(self.all_parameters_tried)]
+        names = [tool_kit.find_title_from_dictionary(param) for p, param in
+                 enumerate(self.all_parameters_tried)]
+        emit('uncertainty_graph', {"data": accepted_params, "names": names, "count": self.plot_count})
+        self.plot_count += 1
 

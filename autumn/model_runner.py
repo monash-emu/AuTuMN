@@ -773,7 +773,6 @@ class ModelRunner:
         for param_dict in self.inputs.param_ranges_unc:
             self.all_parameters_tried[param_dict['key']] = []
         n_accepted = 0
-        i_candidates = 0
         run = 0
         prev_log_likelihood = -1e10
         params = []
@@ -797,7 +796,7 @@ class ModelRunner:
             # Update parameters
             new_params = []
             if self.gui_inputs['adaptive_uncertainty']:
-                if i_candidates == 0:
+                if run == 0:
                     new_params = []
                     for param_dict in self.inputs.param_ranges_unc:
                         new_params.append(param_candidates[param_dict['key']][run])
@@ -901,20 +900,15 @@ class ModelRunner:
                             self.run_with_params(new_params, model_object=scenario_name)
                             self.store_uncertainty(scenario_name, epi_outputs_to_analyse=self.epi_outputs_to_analyse)
 
-                i_candidates += 1
+                # Plot parameter progression and update run and candidate tracker
+                self.plot_progressive_parameters()
                 run += 1
-
-            if self.js_gui:
-                self.plot_progressive_parameters_js()
-            else:
-                self.plot_progressive_parameters(from_runner=True)
 
             # Generate more candidates if required
             if not self.gui_inputs['adaptive_uncertainty'] and run >= len(param_candidates.keys()):
                 param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
                 run = 0
-            self.add_comment_to_gui_window(str(n_accepted) + ' accepted / ' + str(i_candidates) +
-                                           ' candidates. Running time: '
+            self.add_comment_to_gui_window(str(n_accepted) + ' accepted / ' + str(run) + ' candidates. Running time: '
                                            + str(datetime.datetime.now() - start_timer_run))
 
     def set_model_with_params(self, param_dict, model_object='baseline'):
@@ -1310,7 +1304,18 @@ class ModelRunner:
             self.runtime_outputs.insert(END, comment + '\n')
             self.runtime_outputs.see(END)
 
-    def plot_progressive_parameters(self, from_runner=True, input_figure=None):
+    def plot_progressive_parameters(self):
+
+        """
+        Produce real-time parameter plot, according to which GUI is in use.
+        """
+
+        if self.js_gui:
+            self.plot_progressive_parameters_js()
+        else:
+            self.plot_progressive_parameters_tk(from_runner=True)
+
+    def plot_progressive_parameters_tk(self, from_runner=True, input_figure=None):
 
         # Initialise plotting
         if from_runner:

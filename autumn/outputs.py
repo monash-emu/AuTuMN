@@ -1293,8 +1293,8 @@ class Project:
         # Save figure that is produced in the uncertainty running process
         if self.gui_inputs['output_param_plots']:
             param_tracking_figure = self.set_and_update_figure()
-            param_tracking_figure = self.model_runner.plot_progressive_parameters(from_runner=False,
-                                                                                  input_figure=param_tracking_figure)
+            param_tracking_figure = self.model_runner.plot_progressive_parameters_tk(from_runner=False,
+                                                                                     input_figure=param_tracking_figure)
             self.save_figure(param_tracking_figure, '_param_tracking')
             self.plot_param_histograms()
 

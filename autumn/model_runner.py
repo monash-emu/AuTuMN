@@ -188,7 +188,7 @@ class ModelRunner:
         self.random_start = False  # Whether to start from a random point, as opposed to the manually calibrated value
 
         # Optimisation attributes
-        self.optimisation = False  # Leave True even if loading optimisation results
+        self.optimisation = True  # Leave True even if loading optimisation results
         self.indicator_to_minimise = 'incidence'  # Currently must be 'incidence' or 'mortality'
         self.annual_envelope = [25e6, 50e6, 75e6, 100e6, 200e6]  # Size of funding envelope in scenarios to be run
         self.save_opti = True
@@ -1084,21 +1084,21 @@ class ModelRunner:
     def run_optimisation(self):
 
         """
-        Triggers optimisation for the different levels of funding defined in self.annual_envelope
+        Master optimisation method for the different levels of funding defined in self.annual_envelope
         """
 
+        # Initialise the optimisation output data structures
         standard_optimisation_attributes = ['best_allocation', 'incidence', 'mortality']
-
-        # Initialise the optimisation output container
         self.opti_results['indicator_to_minimise'] = self.indicator_to_minimise
         self.opti_results['annual_envelope'] = self.annual_envelope
         for attribute in standard_optimisation_attributes:
             self.opti_results[attribute] = []
 
         # Run optimisation for each envelope
-        for env in self.annual_envelope:
-            print "Start optimisation for annual total envelope of:" + str(env)
-            self.total_funding = env * (2035. - self.inputs.model_constants['scenario_start_time'])
+        for envelope in self.annual_envelope:
+            self.add_comment_to_gui_window('Start optimisation for annual total envelope of: ' + str(envelope))
+            self.total_funding = envelope * (self.inputs.model_constants['scenario_end_time']
+                                             - self.inputs.model_constants['scenario_start_time'])
             self.execute_optimisation()
             full_results = self.get_full_results_opti()
             for attribute in standard_optimisation_attributes:
@@ -1107,43 +1107,49 @@ class ModelRunner:
     def get_acceptable_combinations(self):
 
         """
-        determines the acceptable combinations of interventions according to the related starting costs and given a total
-        ammount of funding
-        populates the attribute 'acceptable_combinations' of model_runner.
+        Determines the acceptable combinations of interventions according to the related starting costs and given a
+        total amount of funding populates the acceptable_combinations attribute of model_runner.
         """
 
         self.acceptable_combinations = []
-
         n_interventions = len(self.interventions_considered_for_opti)
-        full_set = range(n_interventions)
-        canditate_combinations = list(itertools.chain.from_iterable(itertools.combinations(full_set, n) \
-                                                                    for n in range(n_interventions + 1)[1:]))
+        candidate_combinations \
+            = list(itertools.chain.from_iterable(itertools.combinations(range(n_interventions), n)
+                                                 for n in range(n_interventions + 1)[1:]))
+        for candidate in candidate_combinations:
 
-        for combi in canditate_combinations:
-            total_start_cost = 0
-            for ind_intervention in combi:
-                # Start-up costs apply
-                if self.model_dict['manual_baseline'].intervention_startdates[self.interventions_considered_for_opti[ind_intervention]] is None:
-                    total_start_cost \
+            # Determine whether start-up costs apply
+            total_startup_costs = 0.
+            for intervention in candidate:
+                if self.model_dict['manual_baseline'].intervention_startdates[
+                    self.interventions_considered_for_opti[intervention]] is None:
+                    total_startup_costs \
                         += self.inputs.model_constants['econ_startupcost_' +
-                                                       self.interventions_considered_for_opti[ind_intervention]]
-            if total_start_cost <= self.total_funding:
-                self.acceptable_combinations.append(combi)
+                                                       self.interventions_considered_for_opti[intervention]]
+
+            # Add to list of feasible combinations if allowed
+            if total_startup_costs <= self.total_funding:
+                self.acceptable_combinations.append(candidate)
 
     def execute_optimisation(self):
+
         start_timer_opti = datetime.datetime.now()
         self.optimised_combinations = []
-        # Initialise a new model that will be run from 'recent_time' for optimisation
+
+        # Initialise a new model that will be run from recent_time
         inputs_opti = self.inputs
         inputs_opti.model_constants['scenario_end_time'] = self.year_end_opti
 
         self.model_dict['optimisation'] = model.ConsolidatedModel(None, inputs_opti, self.gui_inputs)
+
+
+
         start_time_index = \
             self.model_dict['manual_baseline'].find_time_index(self.inputs.model_constants['recent_time'])
-        self.model_dict['optimisation'].start_time = \
-            self.model_dict['manual_baseline'].times[start_time_index]
-        self.model_dict['optimisation'].loaded_compartments = \
-            self.model_dict['manual_baseline'].load_state(start_time_index)
+        self.model_dict['optimisation'].start_time = self.model_dict['manual_baseline'].times[start_time_index]
+        self.model_dict['optimisation'].loaded_compartments \
+            = self.model_dict['manual_baseline'].load_state(start_time_index)
+
 
         self.model_dict['optimisation'].eco_drives_epi = True
         self.model_dict['optimisation'].interventions_considered_for_opti = self.interventions_considered_for_opti

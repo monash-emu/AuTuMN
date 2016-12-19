@@ -294,14 +294,7 @@ class ModelRunner:
             self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
             # Sort out times for scenario runs
-            if scenario is not None:
-                scenario_start_time_index = \
-                    self.model_dict['manual_baseline'].find_time_index(self.inputs.model_constants['recent_time'])
-                start_time = self.model_dict['manual_baseline'].times[scenario_start_time_index]
-                self.model_dict[scenario_name].start_time = start_time
-                self.model_dict[scenario_name].next_time_point = start_time
-                self.model_dict[scenario_name].loaded_compartments = \
-                    self.model_dict['manual_baseline'].load_state(scenario_start_time_index)
+            self.run_scenarios('manual', scenario)
 
             # Describe model and integrate
             self.add_comment_to_gui_window('Running ' + scenario_name[7:] + ' conditions for '
@@ -329,6 +322,26 @@ class ModelRunner:
         # If integer-based dictionaries required
         self.epi_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.epi_outputs_dict))
         self.cost_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.cost_outputs_dict))
+
+    def run_scenarios(self, run_type, scenario):
+
+        """
+        Method to prepare a scenario for running - applied to both manual calibration and to uncertainty.
+
+        Args:
+            run_type: Whether manual or uncertainty being run
+            scenario: The scenario being run
+        """
+
+        if scenario is not None:
+            scenario_name = run_type + '_' + tool_kit.find_scenario_string_from_number(scenario)
+            scenario_start_time_index = \
+                self.model_dict[run_type + '_baseline'].find_time_index(self.inputs.model_constants['recent_time'])
+            start_time = self.model_dict[run_type + '_baseline'].times[scenario_start_time_index]
+            self.model_dict[scenario_name].start_time = start_time
+            self.model_dict[scenario_name].next_time_point = start_time
+            self.model_dict[scenario_name].loaded_compartments = \
+                self.model_dict[run_type + '_baseline'].load_state(scenario_start_time_index)
 
     ####################################
     ### Model interpretation methods ###
@@ -773,10 +786,8 @@ class ModelRunner:
         for param_dict in self.inputs.param_ranges_unc:
             self.all_parameters_tried[param_dict['key']] = []
         n_accepted = 0
-        run = 0
         prev_log_likelihood = -1e10
         params = []
-
         for param_dict in self.inputs.param_ranges_unc:
             self.acceptance_dict[param_dict['key']] = {}
             self.rejection_dict[param_dict['key']] = {}
@@ -788,6 +799,7 @@ class ModelRunner:
             self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
         # Until a sufficient number of parameters are accepted
+        run = 0
         while n_accepted < self.gui_inputs['uncertainty_runs']:
 
             # Set timer
@@ -813,7 +825,7 @@ class ModelRunner:
             # Now storing regardless of acceptance, provided run was completed successfully
             if self.is_last_run_success:
 
-                # Storage
+                # Get outputs for calibration and store results
                 self.store_uncertainty('uncertainty_baseline', epi_outputs_to_analyse=self.epi_outputs_to_analyse)
                 integer_dictionary \
                     = extract_integer_dicts(['uncertainty_baseline'],
@@ -829,15 +841,12 @@ class ModelRunner:
                     # Calculate the density of param_val
                     bound_low, bound_high = param_dict['bounds'][0], param_dict['bounds'][1]
 
-                    # Normalise value and find log of PDF from beta distribution
+                    # Normalise value and find log of PDF from appropriate distribution
                     if param_dict['distribution'] == 'beta':
                         prior_log_likelihood \
                             += beta.logpdf((param_val - bound_low) / (bound_high - bound_low), 2., 2.)
-
-                    # Find log of PDF from uniform distribution
                     elif param_dict['distribution'] == 'uniform':
-                        prior_log_likelihood \
-                            += numpy.log(1. / (bound_high - bound_low))
+                        prior_log_likelihood += numpy.log(1. / (bound_high - bound_low))
 
                 # Calculate posterior
                 posterior_log_likelihood = 0.
@@ -851,30 +860,20 @@ class ModelRunner:
                             mu, sd = working_output_dictionary[year][0], working_output_dictionary[year][1]
                             posterior_log_likelihood += norm.logpdf(model_result_for_output, mu, sd) * weights[y]
 
-                # Sum for overall likelihood of run
-                log_likelihood = prior_log_likelihood + posterior_log_likelihood
-
                 # Determine acceptance
-                if log_likelihood >= prev_log_likelihood:
-                    accepted = 1
-                else:
-                    accepted = numpy.random.binomial(n=1, p=numpy.exp(log_likelihood - prev_log_likelihood))
+                log_likelihood = prior_log_likelihood + posterior_log_likelihood
+                accepted = numpy.random.binomial(n=1, p=min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
 
-                # Possibly temporary code to explain what's happening with progression of the likelihood
+                # Explain progression of likelihood
                 self.add_comment_to_gui_window('Previous log likelihood:\n' + str(prev_log_likelihood)
                                                + '\nLog likelihood this run:\n' + str(log_likelihood)
                                                + '\nAcceptance probability:\n'
-                                               + str(numpy.exp(log_likelihood - prev_log_likelihood))
+                                               + str(min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
                                                + '\nWhether accepted:\n' + str(bool(accepted)) + '\n________________\n')
                 self.loglikelihoods.append(log_likelihood)
 
-                # Record some information for all runs
-                if not bool(accepted):
-                    self.whether_accepted_list.append(False)
-                    for p, param_dict in enumerate(self.inputs.param_ranges_unc):
-                        self.rejection_dict[param_dict['key']][n_accepted].append(new_params[p])
-                    self.rejected_indices += [run]
-                else:
+                # Record information for all runs
+                if bool(accepted):
                     self.whether_accepted_list.append(True)
                     self.accepted_indices += [run]
                     n_accepted += 1
@@ -886,30 +885,30 @@ class ModelRunner:
                     prev_log_likelihood = log_likelihood
                     params = new_params
 
-                    # Run scenarios other than baseline and store uncertainty - currently only if accepted
+                    # Run scenarios other than baseline and store uncertainty (only if accepted)
                     for scenario in self.gui_inputs['scenarios_to_run']:
-                        if scenario is not None:
-                            scenario_name = 'uncertainty_' + tool_kit.find_scenario_string_from_number(scenario)
-                            scenario_start_time_index = \
-                                self.model_dict['uncertainty_baseline'].find_time_index(
-                                    self.inputs.model_constants['recent_time'])
-                            self.model_dict[scenario_name].start_time = \
-                                self.model_dict['uncertainty_baseline'].times[scenario_start_time_index]
-                            self.model_dict[scenario_name].loaded_compartments = \
-                                self.model_dict['uncertainty_baseline'].load_state(scenario_start_time_index)
-                            self.run_with_params(new_params, model_object=scenario_name)
-                            self.store_uncertainty(scenario_name, epi_outputs_to_analyse=self.epi_outputs_to_analyse)
+                        self.run_scenarios('uncertainty', scenario)
+                        scenario_name = 'uncertainty_' + tool_kit.find_scenario_string_from_number(scenario)
+                        self.run_with_params(new_params, model_object=scenario_name)
+                        self.store_uncertainty(scenario_name, epi_outputs_to_analyse=self.epi_outputs_to_analyse)
 
-                # Plot parameter progression and update run and candidate tracker
+                else:
+                    self.whether_accepted_list.append(False)
+                    self.rejected_indices += [run]
+                    for p, param_dict in enumerate(self.inputs.param_ranges_unc):
+                        self.rejection_dict[param_dict['key']][n_accepted].append(new_params[p])
+
+                # Plot parameter progression and report on progress
                 self.plot_progressive_parameters()
+                self.add_comment_to_gui_window(str(n_accepted) + ' accepted / ' + str(run) +
+                                               ' candidates. Running time: '
+                                               + str(datetime.datetime.now() - start_timer_run))
                 run += 1
 
-            # Generate more candidates if required
+            # Generate more candidates if required -
             if not self.gui_inputs['adaptive_uncertainty'] and run >= len(param_candidates.keys()):
                 param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
                 run = 0
-            self.add_comment_to_gui_window(str(n_accepted) + ' accepted / ' + str(run) + ' candidates. Running time: '
-                                           + str(datetime.datetime.now() - start_timer_run))
 
     def set_model_with_params(self, param_dict, model_object='baseline'):
 

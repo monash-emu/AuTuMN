@@ -185,6 +185,7 @@ class ModelRunner:
         self.uncertainty_percentiles = {}
         self.percentiles = [2.5, 50, 97.5]
         self.accepted_no_burn_in_indices = []
+        self.random_start = False  # Whether to start from a random point, as opposed to the manually calibrated value
 
         # Optimisation attributes
         self.optimisation = False  # Leave True even if loading optimisation results
@@ -766,29 +767,26 @@ class ModelRunner:
         else:
             n_candidates = self.gui_inputs['uncertainty_runs'] * 10
 
-        # Define an initial set of parameter candidates only - comment out as required
+        # Decide whether to start analysis from a random point or the manual values of the parameters
+        if self.random_start:
+            param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
+        else:
+            param_candidates = {}
+            for param_dict in self.inputs.param_ranges_unc:
+                param_candidates[param_dict['key']] = [self.inputs.model_constants[param_dict['key']]]
 
-        # To start from a random point in the parameter range:
-        # param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
-
-        # To start from the manually calibrated values:
-        param_candidates = {}
-        for param_dict in self.inputs.param_ranges_unc:
-            param_candidates[param_dict['key']] = [self.inputs.model_constants[param_dict['key']]]
-
+        # Find weights for outputs that are being calibrated to
         normal_char = self.get_fitting_data()
         years_to_compare = range(1990, 2015)
         weights = find_uncertainty_output_weights(years_to_compare, 1, [1., 2.])
-        self.add_comment_to_gui_window('"Weights": ')
-        self.add_comment_to_gui_window(str(weights))
+        self.add_comment_to_gui_window('"Weights": \n' + str(weights))
 
         # Prepare for uncertainty loop
-        for param_dict in self.inputs.param_ranges_unc:
-            self.all_parameters_tried[param_dict['key']] = []
         n_accepted = 0
         prev_log_likelihood = -1e10
         params = []
         for param_dict in self.inputs.param_ranges_unc:
+            self.all_parameters_tried[param_dict['key']] = []
             self.acceptance_dict[param_dict['key']] = {}
             self.rejection_dict[param_dict['key']] = {}
             self.rejection_dict[param_dict['key']][n_accepted] = []
@@ -809,7 +807,6 @@ class ModelRunner:
             new_params = []
             if self.gui_inputs['adaptive_uncertainty']:
                 if run == 0:
-                    new_params = []
                     for param_dict in self.inputs.param_ranges_unc:
                         new_params.append(param_candidates[param_dict['key']][run])
                         params.append(param_candidates[param_dict['key']][run])

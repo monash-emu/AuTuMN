@@ -784,7 +784,6 @@ class ModelRunner:
         # Prepare for uncertainty loop
         n_accepted = 0
         prev_log_likelihood = -1e10
-        params = []
         for param in self.inputs.param_ranges_unc:
             self.all_parameters_tried[param['key']] = []
             self.acceptance_dict[param['key']] = {}
@@ -803,18 +802,16 @@ class ModelRunner:
             # Set timer
             start_timer_run = datetime.datetime.now()
 
-            # Update parameters
-            new_param_list = []
-            if self.gui_inputs['adaptive_uncertainty']:
-                if run == 0:
-                    for param in self.inputs.param_ranges_unc:
-                        new_param_list.append(param_candidates[param['key']][run])
-                        params.append(param_candidates[param['key']][run])
-                else:
-                    new_param_list = self.update_params(params)
-            else:
+            # If we are using existing parameters
+            if run == 0 or not self.gui_inputs['adaptive_uncertainty']:
+                new_param_list = []
                 for param in self.inputs.param_ranges_unc:
                     new_param_list.append(param_candidates[param['key']][run])
+                    params = new_param_list
+
+            # If we need to get a new parameter set from the old accepted set
+            else:
+                new_param_list = self.update_params(params)
 
             # Run baseline integration (includes parameter checking, parameter setting and recording success/failure)
             self.run_with_params(new_param_list, model_object='uncertainty_baseline')

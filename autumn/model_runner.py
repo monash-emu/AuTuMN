@@ -187,7 +187,7 @@ class ModelRunner:
         self.accepted_no_burn_in_indices = []
 
         # Optimisation attributes
-        self.optimisation = True  # Leave True even if loading optimisation results
+        self.optimisation = False  # Leave True even if loading optimisation results
         self.indicator_to_minimise = 'incidence'  # Currently must be 'incidence' or 'mortality'
         self.annual_envelope = [25e6, 50e6, 75e6, 100e6, 200e6]  # Size of funding envelope in scenarios to be run
         self.save_opti = True
@@ -766,8 +766,8 @@ class ModelRunner:
         normal_char = self.get_fitting_data()
         years_to_compare = range(1990, 2015)
         weights = find_uncertainty_output_weights(years_to_compare, 1, [1., 2.])
-        print('"weights"')
-        print(weights)
+        self.add_comment_to_gui_window('"Weights": ')
+        self.add_comment_to_gui_window(str(weights))
 
         # Prepare for uncertainty loop
         for param_dict in self.inputs.param_ranges_unc:
@@ -780,8 +780,6 @@ class ModelRunner:
 
         for param_dict in self.inputs.param_ranges_unc:
             self.acceptance_dict[param_dict['key']] = {}
-
-        for param_dict in self.inputs.param_ranges_unc:
             self.rejection_dict[param_dict['key']] = {}
             self.rejection_dict[param_dict['key']][n_accepted] = []
 
@@ -810,11 +808,10 @@ class ModelRunner:
                 for param_dict in self.inputs.param_ranges_unc:
                     new_params.append(param_candidates[param_dict['key']][run])
 
-            # Run the baseline integration
-            # (includes checking parameters, setting parameters and recording success/failure of run)
+            # Run baseline integration (includes parameter checking, parameter setting and recording success/failure)
             self.run_with_params(new_params, model_object='uncertainty_baseline')
 
-            # Now storing regardless of acceptance
+            # Now storing regardless of acceptance, provided run was completed successfully
             if self.is_last_run_success:
 
                 # Storage
@@ -836,8 +833,7 @@ class ModelRunner:
                     # Normalise value and find log of PDF from beta distribution
                     if param_dict['distribution'] == 'beta':
                         prior_log_likelihood \
-                            += beta.logpdf((param_val - bound_low) / (bound_high - bound_low),
-                                           2., 2.)
+                            += beta.logpdf((param_val - bound_low) / (bound_high - bound_low), 2., 2.)
 
                     # Find log of PDF from uniform distribution
                     elif param_dict['distribution'] == 'uniform':

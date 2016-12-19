@@ -1164,10 +1164,12 @@ class ModelRunner:
         for forced_intervention in self.interventions_forced_for_opti:
             self.acceptable_combinations = force_presence_intervention(forced_intervention)
 
-        print "Number of combinations to consider: " + str(len(self.acceptable_combinations))
+        self.add_comment_to_gui_window('Number of combinations to consider: ' + str(len(self.acceptable_combinations)))
 
-        for j, combi in enumerate(self.acceptable_combinations): # for each acceptable combination of interventions
-            # prepare storage
+        # For each acceptable combination of interventions
+        for j, combi in enumerate(self.acceptable_combinations):
+
+            # Prepare storage
             dict_optimised_combi = {'interventions': [], 'distribution': [], 'objective': None}
 
             for i in range(len(combi)):
@@ -1251,33 +1253,33 @@ class ModelRunner:
         print 'End optimisation after ' + str(datetime.datetime.now() - start_timer_opti)
 
     def get_full_results_opti(self):
+
         """
         We need to run the best allocation scenario until 2035 to obtain the final incidence and mortality
         """
+
+        # Prepare new model to run full scenario duration
         self.model_dict['optimisation'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
-        start_time_index = \
-            self.model_dict['manual_baseline'].find_time_index(self.inputs.model_constants['recent_time'])
-        self.model_dict['optimisation'].start_time = \
-            self.model_dict['manual_baseline'].times[start_time_index]
-        self.model_dict['optimisation'].loaded_compartments = \
-            self.model_dict['manual_baseline'].load_state(start_time_index)
+        self.prepare_new_model_from_baseline('manual', 'optimisation')
         self.model_dict['optimisation'].eco_drives_epi = True
         self.model_dict['optimisation'].interventions_considered_for_opti = self.interventions_considered_for_opti
 
-        # initialise funding at 0 for each intervention
+        # Initialise funding at 0 for each intervention
         for intervention in self.interventions_considered_for_opti:
             self.model_dict['optimisation'].available_funding[intervention] = 0.
 
+        # Distribute funding and integrate
         for intervention, prop in self.optimal_allocation.iteritems():
             self.model_dict['optimisation'].available_funding[intervention] = prop * self.total_funding
         self.model_dict['optimisation'].distribute_funding_across_years()
         self.model_dict['optimisation'].integrate()
 
+        # Find epi results
         output_list = self.find_epi_outputs('optimisation',
                                             outputs_to_analyse=['population', 'incidence', 'true_incidence',
                                                                 'mortality', 'true_mortality'])
         del self.model_dict['optimisation']
-        return {'best_allocation': self.optimal_allocation, 'incidence': output_list['incidence'][-1], \
+        return {'best_allocation': self.optimal_allocation, 'incidence': output_list['incidence'][-1],
                 'mortality': output_list['mortality'][-1]}
 
     ###########################

@@ -1133,6 +1133,23 @@ class ModelRunner:
             if total_startup_costs <= self.total_funding:
                 self.acceptable_combinations.append(candidate)
 
+        # Keeps only combinations including intervention
+        def force_presence_intervention(intervention):
+            if intervention in self.interventions_considered_for_opti:
+                ind_intervention = self.interventions_considered_for_opti.index(intervention)
+                updated_acceptable_combinations = []
+                for combination in self.acceptable_combinations:
+                    if ind_intervention in combination:
+                        updated_acceptable_combinations.append(combination)
+                return updated_acceptable_combinations
+            else:
+                return self.acceptable_combinations
+
+        for forced_intervention in self.interventions_forced_for_opti:
+            self.acceptable_combinations = force_presence_intervention(forced_intervention)
+
+        self.add_comment_to_gui_window('Number of combinations to consider: ' + str(len(self.acceptable_combinations)))
+
     def execute_optimisation(self):
 
         """
@@ -1151,26 +1168,6 @@ class ModelRunner:
 
         # Find the combinations of interventions to be optimised
         self.get_acceptable_combinations()
-
-        ### Move the following code to get_acceptable_combinations I think
-
-        def force_presence_intervention(intervention):
-
-            # Keeps only combinations including intervention
-            if intervention in self.interventions_considered_for_opti:
-                ind_intervention = self.interventions_considered_for_opti.index(intervention)
-                updated_acceptable_combinations = []
-                for combination in self.acceptable_combinations:
-                    if ind_intervention in combination:
-                        updated_acceptable_combinations.append(combination)
-                return updated_acceptable_combinations
-            else:
-                return self.acceptable_combinations
-
-        for forced_intervention in self.interventions_forced_for_opti:
-            self.acceptable_combinations = force_presence_intervention(forced_intervention)
-
-        self.add_comment_to_gui_window('Number of combinations to consider: ' + str(len(self.acceptable_combinations)))
 
         # For each acceptable combination of interventions
         for c, combination in enumerate(self.acceptable_combinations):

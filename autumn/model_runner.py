@@ -295,7 +295,9 @@ class ModelRunner:
             self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
             # Sort out times for scenario runs
-            self.run_scenarios('manual', scenario)
+            if scenario is not None:
+                scenario_name = 'manual_' + tool_kit.find_scenario_string_from_number(scenario)
+                self.prepare_new_model_from_baseline('manual', scenario_name)
 
             # Describe model and integrate
             self.add_comment_to_gui_window('Running ' + scenario_name[7:] + ' conditions for '
@@ -324,25 +326,23 @@ class ModelRunner:
         self.epi_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.epi_outputs_dict))
         self.cost_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.cost_outputs_dict))
 
-    def run_scenarios(self, run_type, scenario):
+    def prepare_new_model_from_baseline(self, run_type, scenario_name):
 
         """
-        Method to prepare a scenario for running - applied to both manual calibration and to uncertainty.
+        Method to set the start time of a model and load the compartment values from the baseline run.
 
         Args:
-            run_type: Whether manual or uncertainty being run
-            scenario: The scenario being run
+            run_type: The type of run for the model object to be set
+            scenario_name: Either the scenario name or optimisation if during optimisation run
         """
 
-        if scenario is not None:
-            scenario_name = run_type + '_' + tool_kit.find_scenario_string_from_number(scenario)
-            scenario_start_time_index = \
-                self.model_dict[run_type + '_baseline'].find_time_index(self.inputs.model_constants['recent_time'])
-            start_time = self.model_dict[run_type + '_baseline'].times[scenario_start_time_index]
-            self.model_dict[scenario_name].start_time = start_time
-            self.model_dict[scenario_name].next_time_point = start_time
-            self.model_dict[scenario_name].loaded_compartments = \
-                self.model_dict[run_type + '_baseline'].load_state(scenario_start_time_index)
+        scenario_start_time_index = \
+            self.model_dict[run_type + '_baseline'].find_time_index(self.inputs.model_constants['recent_time'])
+        start_time = self.model_dict[run_type + '_baseline'].times[scenario_start_time_index]
+        self.model_dict[scenario_name].start_time = start_time
+        self.model_dict[scenario_name].next_time_point = start_time
+        self.model_dict[scenario_name].loaded_compartments = \
+            self.model_dict[run_type + '_baseline'].load_state(scenario_start_time_index)
 
     ####################################
     ### Model interpretation methods ###
@@ -881,7 +881,9 @@ class ModelRunner:
 
                     # Run scenarios other than baseline and store uncertainty (only if accepted)
                     for scenario in self.gui_inputs['scenarios_to_run']:
-                        self.run_scenarios('uncertainty', scenario)
+                        if scenario is not None:
+                            scenario_name = 'uncertainty_' + tool_kit.find_scenario_string_from_number(scenario)
+                            self.prepare_new_model_from_baseline('uncertainty', scenario_name)
                         scenario_name = 'uncertainty_' + tool_kit.find_scenario_string_from_number(scenario)
                         self.run_with_params(new_param_list, model_object=scenario_name)
                         self.store_uncertainty(scenario_name, epi_outputs_to_analyse=self.epi_outputs_to_analyse)
@@ -1136,28 +1138,19 @@ class ModelRunner:
         start_timer_opti = datetime.datetime.now()
         self.optimised_combinations = []
 
-        # Initialise a new model that will be run from recent_time
-        inputs_opti = self.inputs
-        inputs_opti.model_constants['scenario_end_time'] = self.year_end_opti
-
-        self.model_dict['optimisation'] = model.ConsolidatedModel(None, inputs_opti, self.gui_inputs)
-
-
-
-        start_time_index = \
-            self.model_dict['manual_baseline'].find_time_index(self.inputs.model_constants['recent_time'])
-        self.model_dict['optimisation'].start_time = self.model_dict['manual_baseline'].times[start_time_index]
-        self.model_dict['optimisation'].loaded_compartments \
-            = self.model_dict['manual_baseline'].load_state(start_time_index)
-
-
+        # Initialise a new model that will be run from recent_time and set basic attributes for optimisation
+        self.model_dict['optimisation'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
+        self.prepare_new_model_from_baseline('manual', 'optimisation')
         self.model_dict['optimisation'].eco_drives_epi = True
+        self.model_dict['optimisation'].inputs.model_constants['scenario_end_time'] = self.year_end_opti
         self.model_dict['optimisation'].interventions_considered_for_opti = self.interventions_considered_for_opti
 
+        # Find the combinations of interventions to be optimised
         self.get_acceptable_combinations()
 
         def force_presence_intervention(intervention):
-            # keeps only combinations including intervention
+
+            # Keeps only combinations including intervention
             if intervention in self.interventions_considered_for_opti:
                 ind_intervention = self.interventions_considered_for_opti.index(intervention)
                 updated_acceptable_combinations = []

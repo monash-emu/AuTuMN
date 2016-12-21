@@ -6,7 +6,8 @@ This is a set of Python models that modularises the development of dynamic trans
 pluggable API to other system. Applied to tuberculosis.
 
 # TODO
-- code uncertainty for economics
-- get second strain incorporated properly (for Philippines application)
-
+- uncertainty for economics
+- programmatic uncertainty
+- automatic calibration
+- read 2016 GTB report
 

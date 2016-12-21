@@ -188,7 +188,7 @@ class ModelRunner:
         self.random_start = False  # Whether to start from a random point, as opposed to the manually calibrated value
 
         # Optimisation attributes
-        self.optimisation = False  # Leave True even if loading optimisation results
+        self.optimisation = True  # Leave True even if loading optimisation results
         self.indicator_to_minimise = 'incidence'  # Currently must be 'incidence' or 'mortality'
         self.annual_envelope = [25e6, 50e6, 75e6, 100e6, 200e6]  # Size of funding envelope in scenarios to be run
         self.save_opti = True
@@ -1141,9 +1141,11 @@ class ModelRunner:
                     combinations_missing_a_forced_intervention.append(combination)
 
         # Populate final list of acceptable combinations
+        acceptable_combinations = []
         for combination in fundable_combinations:
             if combination not in combinations_missing_a_forced_intervention:
-                self.acceptable_combinations.append(combination)
+                acceptable_combinations.append(combination)
+        self.acceptable_combinations = acceptable_combinations
 
         self.add_comment_to_gui_window('Number of combinations to consider: ' + str(len(self.acceptable_combinations)))
 

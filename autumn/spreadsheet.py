@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
-from xlrd import open_workbook  # For opening Excel workbooks
+from xlrd import open_workbook
 from numpy import nan
 import numpy
 import os
@@ -65,48 +65,53 @@ def parse_year_data(year_data, blank, endcolumn):
 class BcgCoverageSheetReader:
 
     """
-    Reader for the WHO/UNICEF BCG coverage data
-    Now only reads the rows relevant to the country in question to speed things up
-    Therefore, creates a single dictionary with years keys and coverage as a float
-    for BCG coverage over
+    Reader for the WHO/UNICEF BCG coverage data.
+    Creates a single dictionary with years keys and coverage as a float representing BCG coverage.
+    Comments to each method and attribute apply to the other sheet readers below as well.
     """
 
     def __init__(self, country_to_read):
+
+        self.country_to_read = country_to_read  # Country being read
         self.data = {}  # Empty dictionary to contain the data that is read
         self.tab_name = 'BCG'  # Tab of spreadsheet to be read
         self.key = 'bcg'  # String that defines the data type in this file
         self.filename = 'xls/who_unicef_bcg_coverage.xlsx'  # Filename
         self.start_row = 0  # First row to be read in
-        self.column_for_keys = 2  # Column that keys come from
-        self.horizontal = True  # Orientation of spreadsheet
-        self.country_to_read = country_to_read  # Country being read
         self.start_col = 4
+        self.column_for_keys = 2  # Column that keys come from
+        self.horizontal = True  # Spreadsheet orientation
         self.first_cell = 'Region'
 
     def parse_row(self, row):
 
+        # Parse first row
         if row[0] == self.first_cell:
             self.parlist = parse_year_data(row, '', len(row))
             for i in range(len(self.parlist)):
                 self.parlist[i] = str(self.parlist[i])
+
+        # Subsequent rows
         elif row[self.column_for_keys] == tool_kit.adjust_country_name(self.country_to_read):
             for i in range(self.start_col, len(row)):
                 if type(row[i]) == float:
-                    self.data[int(self.parlist[i])] = \
-                        row[i]
+                    self.data[int(self.parlist[i])] = row[i]
 
     def get_data(self):
+
+        # Simply return the data that has been collected
         return self.data
 
 
 class BirthRateReader:
 
     """
-    Reader for the WHO/UNICEF BCG coverage data
-    Same structure and approach as for BcgCoverageSheetReader above
+    Reader for the WHO/UNICEF BCG coverage data. Same structure and approach as for BcgCoverageSheetReader above.
     """
 
     def __init__(self, country_to_read):
+
+        self.country_to_read = country_to_read
         self.data = {}
         self.tab_name = 'Data'
         self.key = 'rate_birth'
@@ -115,27 +120,27 @@ class BirthRateReader:
         self.start_row = 0
         self.column_for_keys = 2
         self.horizontal = True
-        self.country_to_read = country_to_read
 
     def parse_row(self, row):
 
         if row[0] == 'Series Name':
             for i in range(len(row)):
-                self.parlist += \
-                    [row[i][:4]]
+                self.parlist += [row[i][:4]]
         elif row[self.column_for_keys] == self.country_to_read:
             for i in range(4, len(row)):
                 if type(row[i]) == float:
-                    self.data[int(self.parlist[i])] = \
-                        row[i]
+                    self.data[int(self.parlist[i])] = row[i]
 
     def get_data(self):
+
         return self.data
 
 
 class LifeExpectancyReader:
 
     def __init__(self, country_to_read):
+
+        self.country_to_read = country_to_read
         self.data = {}
         self.tab_name = 'Data'
         self.key = 'life_expectancy'
@@ -144,7 +149,6 @@ class LifeExpectancyReader:
         self.start_row = 3
         self.column_for_keys = 0
         self.horizontal = True
-        self.country_to_read = country_to_read
 
     def parse_row(self, row):
 
@@ -153,10 +157,10 @@ class LifeExpectancyReader:
         elif row[self.column_for_keys] == self.country_to_read:
             for i in range(4, len(row)):
                 if type(row[i]) == float:
-                    self.data[int(self.parlist[i])] = \
-                        row[i]
+                    self.data[int(self.parlist[i])] = row[i]
 
     def get_data(self):
+
         return self.data
 
 
@@ -172,6 +176,7 @@ class ControlPanelReader:
         self.data['start_compartments'] = {}
 
     def general_program_intialisations(self):
+
         self.data = {}
         self.parlist = []
         self.start_row = 1
@@ -200,9 +205,11 @@ class ControlPanelReader:
         elif 'time' in row[0] or 'smoothness' in row[0]:
             self.data[str(row[0])] = float(row[1])
 
+        # Fitting approach
         elif 'fitting' in row[0]:
             self.data[str(row[0])] = int(row[1])
 
+        # All instructions around outputs, plotting and spreadsheet/document writing
         elif 'output_' in row[0]:
             self.data[str(row[0])] = bool(row[1])
 
@@ -215,25 +222,22 @@ class ControlPanelReader:
             self.data[str(row[0])] = [None]
             if self.key == 'control_panel':
                 for i in range(1, len(row)):
-                    if not row[i] == '':
-                        self.data[str(row[0])] += [int(row[i])]
+                    if not row[i] == '': self.data[str(row[0])] += [int(row[i])]
 
         # Age breakpoints (arguably should just be an empty list always)
         elif row[0] == 'age_breakpoints':
             self.data[str(row[0])] = []
             for i in range(1, len(row)):
-                if not row[i] == '':
-                    self.data[str(row[0])] += [int(row[i])]
+                if not row[i] == '': self.data[str(row[0])] += [int(row[i])]
 
-        # Parameters
+        # Parameters values
         else:
             self.data[str(row[0])] = row[1]
 
         # Uncertainty parameters
         # Not sure why this if statement needs to be split exactly, but huge bugs seem to occur if it isn't
         if len(row) >= 4:
-            # If there is an entry in the second column and it is a constant parameter that could potentially
-            # be modified in uncertainty
+            # If an entry present in second column and it is a constant parameter that can be modified in uncertainty
             if row[2] != '' and ('tb_' in row[0] or 'program_' in row[0]):
                 uncertainty_dict = {'point': row[1],
                                     'lower': row[2],
@@ -255,9 +259,10 @@ class FixedParametersReader(ControlPanelReader):
         self.general_program_intialisations()
 
 
-class CountryParametersReader(FixedParametersReader):
+class CountryParametersReader(ControlPanelReader):
 
     def __init__(self, country_to_read):
+
         self.tab_name = 'constants'
         self.key = 'country_constants'
         self.filename = 'xls/data_' + country_to_read.lower() + '.xlsx'
@@ -267,11 +272,13 @@ class CountryParametersReader(FixedParametersReader):
 class DefaultProgramReader:
 
     def __init__(self):
+
         self.filename = 'xls/data_default.xlsx'
         self.key = 'default_programs'
         self.general_program_intialisations()
 
     def general_program_intialisations(self):
+
         self.data = {}
         self.tab_name = 'time_variants'
         self.start_row = 0
@@ -292,8 +299,7 @@ class DefaultProgramReader:
                     self.data[row[0]][int(self.parlist[i])] = \
                         row[i]
                 elif row[i] != '':
-                    self.data[str(row[0])][str(self.parlist[i])] = \
-                        row[i]
+                    self.data[str(row[0])][str(self.parlist[i])] = row[i]
 
     def get_data(self):
 
@@ -303,32 +309,17 @@ class DefaultProgramReader:
 class CountryProgramReader(DefaultProgramReader):
 
     def __init__(self, country_to_read):
+
         self.filename = 'xls/data_' + country_to_read.lower() + '.xlsx'
         self.country_to_read = country_to_read
         self.key = 'country_programs'
         self.general_program_intialisations()
 
 
-class DefaultEconomicsReader(DefaultProgramReader):
-
-    def __init__(self):
-        self.key = 'default_economics'
-        self.filename = 'xls/economics_default.xlsx'
-        self.general_program_intialisations()
-
-
-class CountryEconomicsReader(DefaultProgramReader):
-
-    def __init__(self, country_to_read):
-        self.key = 'country_economics'
-        self.filename = 'xls/economics_' + country_to_read.lower() + '.xlsx'
-        self.country_to_read = country_to_read
-        self.general_program_intialisations()
-
-
 class GlobalTbReportReader:
 
     def __init__(self, country_to_read):
+
         self.data = {}
         self.tab_name = 'TB_burden_countries_2016-04-19'
         self.key = 'tb'
@@ -340,7 +331,6 @@ class GlobalTbReportReader:
         self.indices = []
         self.country_to_read = country_to_read
 
-
     def parse_col(self, col):
 
         col = replace_specified_value(col, nan, '')
@@ -350,8 +340,7 @@ class GlobalTbReportReader:
 
             # Find the indices for the country in question
             for i in range(len(col)):
-                if col[i] == self.country_to_read:
-                    self.indices += [i]
+                if col[i] == self.country_to_read: self.indices += [i]
 
         elif 'iso' in col[0] or 'g_who' in col[0] or 'source' in col[0]:
             pass
@@ -369,12 +358,14 @@ class GlobalTbReportReader:
                     self.data[col[0]][year] = col[self.year_indices[year]]
 
     def get_data(self):
+
         return self.data
 
 
 class NotificationsReader(GlobalTbReportReader):
 
     def __init__(self, country_to_read):
+
         self.data = {}
         self.tab_name = 'TB_notifications_2016-04-20'
         self.key = 'notifications'
@@ -391,6 +382,7 @@ class NotificationsReader(GlobalTbReportReader):
 class TreatmentOutcomesReader(GlobalTbReportReader):
 
     def __init__(self, country_to_read):
+
         self.data = {}
         self.tab_name = 'TB_outcomes_2016-04-21'
         self.key = 'outcomes'
@@ -407,6 +399,7 @@ class TreatmentOutcomesReader(GlobalTbReportReader):
 class MdrReportReader:
 
     def __init__(self, country_to_read):
+
         self.data = {}
         self.tab_name = 'MDR-TB_burden_estimates_2016-04'
         self.key = 'mdr'
@@ -420,8 +413,7 @@ class MdrReportReader:
     def parse_row(self, row):
 
         # Create the list to turn in to dictionary keys later
-        if row[0] == 'country':
-            self.dictionary_keys += row
+        if row[0] == 'country': self.dictionary_keys += row
 
         # Populate when country to read is encountered
         elif row[0] == self.country_to_read:
@@ -429,12 +421,14 @@ class MdrReportReader:
                 self.data[self.dictionary_keys[i]] = row[i]
 
     def get_data(self):
+
         return self.data
 
 
 class LaboratoriesReader(GlobalTbReportReader):
 
     def __init__(self, country_to_read):
+
         self.data = {}
         self.tab_name = 'TB_laboratories_2016-04-21'
         self.key = 'laboratories'
@@ -450,6 +444,7 @@ class LaboratoriesReader(GlobalTbReportReader):
 class StrategyReader(MdrReportReader):
 
     def __init__(self, country_to_read):
+
         self.data = {}
         self.tab_name = 'TB_strategy_2016-04-21'
         self.key = 'strategy'
@@ -465,6 +460,7 @@ class StrategyReader(MdrReportReader):
 class DiabetesReportReader:
 
     def __init__(self, country_to_read):
+
         self.data = {}
         self.tab_name = 'DM estimates 2015'
         self.key = 'diabetes'
@@ -486,25 +482,25 @@ class DiabetesReportReader:
         elif row[0] == self.country_to_read:
             for i in range(len(self.dictionary_keys)):
                 if self.dictionary_keys[i][:28] == u'Diabetes national prevalence':
-                    self.data['comorb_prop_diabetes'] \
-                        = float(row[i][:row[i].find('\n')]) / 1E2
+                    self.data['comorb_prop_diabetes'] = float(row[i][:row[i].find('\n')]) / 1E2
 
     def get_data(self):
+
         return self.data
 
 
-###############################################################
-#  Master scripts
+######################
+### Master scripts ###
+######################
 
 
-def read_xls_with_sheet_readers(sheet_readers=[]):
+def read_xls_with_sheet_readers(sheet_readers):
 
     """
     Runs the individual readers to gather all the data from the sheets
 
     Args:
         sheet_readers: The sheet readers that were previously collated into a list
-
     Returns:
         All the data for reading as a single object
     """
@@ -542,8 +538,7 @@ def read_xls_with_sheet_readers(sheet_readers=[]):
 def read_input_data_xls(from_test, sheets_to_read, country=None):
 
     """
-    Compile sheet readers into a list according to which ones have
-    been selected.
+    Compile sheet readers into a list according to which ones have been selected.
     Note that most readers now take the country in question as an input,
     while only the fixed parameters sheet reader does not.
 
@@ -605,12 +600,8 @@ if __name__ == "__main__":
     country = read_input_data_xls(False, ['control_panel'])['control_panel']['country']
 
     original_data = read_input_data_xls(False,
-                                        ['bcg', 'rate_birth', 'life_expectancy', 'control_panel',
-                                         'default_constants',
-                                         'tb', 'notifications', 'outcomes',
-                                         'country_constants',
-                                         'default_economics',
-                                         'country_programs', 'default_programs',
-                                         'diabetes'],
+                                        ['bcg', 'rate_birth', 'life_expectancy', 'control_panel', 'default_constants',
+                                         'tb', 'notifications', 'outcomes', 'country_constants', 'country_programs',
+                                         'default_programs', 'diabetes'],
                                         country)
 

@@ -188,7 +188,7 @@ class ModelRunner:
         self.random_start = False  # Whether to start from a random point, as opposed to the manually calibrated value
 
         # Optimisation attributes
-        self.optimisation = True  # Leave True even if loading optimisation results
+        self.optimisation = False  # Leave True even if loading optimisation results
         self.indicator_to_minimise = 'incidence'  # Currently must be 'incidence' or 'mortality'
         self.annual_envelope = [25e6, 50e6, 75e6, 100e6, 200e6]  # Size of funding envelope in scenarios to be run
         self.save_opti = True
@@ -1113,40 +1113,37 @@ class ModelRunner:
         total amount of funding populates the acceptable_combinations attribute of model_runner.
         """
 
-        self.acceptable_combinations = []
-        n_interventions = len(self.interventions_considered_for_opti)
-        candidate_combinations \
-            = list(itertools.chain.from_iterable(itertools.combinations(range(n_interventions), n)
-                                                 for n in range(n_interventions + 1)[1:]))
-        for candidate in candidate_combinations:
+        # Find all possible combinations of the considered interventions
+        all_possible_combinations \
+            = list(itertools.chain.from_iterable(
+            itertools.combinations(range(len(self.interventions_considered_for_opti)), n) for n in
+            range(len(self.interventions_considered_for_opti) + 1)[1:]))
 
-            # Determine whether start-up costs apply
+        # Determine whether each combination is fund-able given start-up costs
+        fundable_combinations = []
+        for combination in all_possible_combinations:
             total_startup_costs = 0.
-            for intervention in candidate:
+            for intervention in combination:
                 if self.model_dict['manual_baseline'].intervention_startdates[
                     self.interventions_considered_for_opti[intervention]] is None:
                     total_startup_costs \
                         += self.inputs.model_constants['econ_startupcost_' +
                                                        self.interventions_considered_for_opti[intervention]]
-
-            # Add to list of feasible combinations if allowed
             if total_startup_costs <= self.total_funding:
-                self.acceptable_combinations.append(candidate)
+                fundable_combinations.append(combination)
 
-        # Keeps only combinations including intervention
-        def force_presence_intervention(intervention):
-            if intervention in self.interventions_considered_for_opti:
-                ind_intervention = self.interventions_considered_for_opti.index(intervention)
-                updated_acceptable_combinations = []
-                for combination in self.acceptable_combinations:
-                    if ind_intervention in combination:
-                        updated_acceptable_combinations.append(combination)
-                return updated_acceptable_combinations
-            else:
-                return self.acceptable_combinations
+        # Determine whether a forced intervention is missing from each fund-able intervention
+        combinations_missing_a_forced_intervention = []
+        for c, combination in enumerate(fundable_combinations):
+            for intervention in self.interventions_forced_for_opti:
+                if self.interventions_considered_for_opti.index(intervention) not in combination \
+                        and combination not in combinations_missing_a_forced_intervention:
+                    combinations_missing_a_forced_intervention.append(combination)
 
-        for forced_intervention in self.interventions_forced_for_opti:
-            self.acceptable_combinations = force_presence_intervention(forced_intervention)
+        # Populate final list of acceptable combinations
+        for combination in fundable_combinations:
+            if combination not in combinations_missing_a_forced_intervention:
+                self.acceptable_combinations.append(combination)
 
         self.add_comment_to_gui_window('Number of combinations to consider: ' + str(len(self.acceptable_combinations)))
 

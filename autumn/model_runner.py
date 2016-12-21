@@ -1101,7 +1101,7 @@ class ModelRunner:
             self.add_comment_to_gui_window('Start optimisation for annual total envelope of: ' + str(envelope))
             self.total_funding = envelope * (self.inputs.model_constants['scenario_end_time']
                                              - self.inputs.model_constants['scenario_start_time'])
-            self.execute_optimisation()
+            self.optimise_single_envelope()
             full_results = self.get_full_results_opti()
             for attribute in standard_optimisation_attributes:
                 self.opti_results[attribute].append(full_results[attribute])
@@ -1146,10 +1146,9 @@ class ModelRunner:
             if combination not in combinations_missing_a_forced_intervention:
                 acceptable_combinations.append(combination)
         self.acceptable_combinations = acceptable_combinations
-
         self.add_comment_to_gui_window('Number of combinations to consider: ' + str(len(self.acceptable_combinations)))
 
-    def execute_optimisation(self):
+    def optimise_single_envelope(self):
 
         """
         Method to fully run optimisation for a single funding envelope.
@@ -1192,7 +1191,7 @@ class ModelRunner:
                     predicted incidence for 2035
                 """
 
-                # Initialise funding at 0 for each intervention
+                # Initialise funding at zero for each intervention
                 for intervention in self.interventions_considered_for_opti:
                     self.model_dict['optimisation'].available_funding[intervention] = 0.
 
@@ -1222,9 +1221,9 @@ class ModelRunner:
                     starting_distribution.append(1. / len(combination))
 
                 # Equality constraint is that the sum of the proportions has to be equal to one
-                cons = [{'type': 'ineq',
-                         'fun': lambda x: 1. - sum(x),
-                         'jac': lambda x: -numpy.ones(len(x))}]
+                sum_to_one_constraint = [{'type': 'ineq',
+                                          'fun': lambda x: 1. - sum(x),
+                                          'jac': lambda x: -numpy.ones(len(x))}]
                 cost_bounds = []
                 for i in range(len(combination)):
                     minimal_allocation = 0.
@@ -1242,7 +1241,7 @@ class ModelRunner:
                 # Ready to run optimisation
                 optimisation_result \
                     = minimize(minimisation_function, starting_distribution, jac=None, bounds=cost_bounds,
-                               constraints=cons, method='SLSQP',
+                               constraints=sum_to_one_constraint, method='SLSQP',
                                options={'disp': False, 'ftol': self.f_tol[self.indicator_to_minimise]})
                 dict_optimised_combi['distribution'] = optimisation_result.x
                 dict_optimised_combi['objective'] = optimisation_result.fun
@@ -1279,7 +1278,7 @@ class ModelRunner:
         self.model_dict['optimisation'].eco_drives_epi = True
         self.model_dict['optimisation'].interventions_considered_for_opti = self.interventions_considered_for_opti
 
-        # Initialise funding at 0 for each intervention
+        # Initialise funding at zero for each intervention
         for intervention in self.interventions_considered_for_opti:
             self.model_dict['optimisation'].available_funding[intervention] = 0.
 

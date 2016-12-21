@@ -5,118 +5,62 @@ from xlrd import open_workbook  # For opening Excel workbooks
 from numpy import nan
 import numpy
 import os
-import datetime
-import copy
-import warnings
+import tool_kit
 
-
-spreadsheet_start_realtime = datetime.datetime.now()
-
-
-"""
-Import model inputs from Excel spreadsheet 
-"""
-
-###############################################################
-#  General functions for use by readers below
 
 def is_all_same_value(a_list, test_val):
 
+    """
+    Simple method to find whether all values in list are equal to a particular value.
+
+    Args:
+        a_list: The list being interrogated
+        test_val: The value to compare the elements of the list against
+    """
+
     for val in a_list:
-        if val != test_val:
-            return False
+        if val != test_val: return False
     return True
 
 
-def replace_blanks(a_list, new_val, blank):
+def replace_specified_value(a_list, new_val, old_value):
 
-    return [new_val if val == blank else val for val in a_list]
+    """
+    Replace all elements of a list that are a certain value with a new value specified in the inputs.
+
+    Args:
+         a_list: The list being modified
+         new_val: The value to insert into the list
+         old_value: The value of the list to be replaced
+    """
+
+    return [new_val if val == old_value else val for val in a_list]
 
 
-def parse_year_data(these_data, blank, endcolumn):
+def parse_year_data(year_data, blank, endcolumn):
 
-    these_data = replace_blanks(these_data, nan, blank)
-    assumption_val = these_data[-1]
-    year_vals = these_data[: endcolumn]
+    """
+    Code to parse rows of data that are years.
+
+    Args:
+        year_data: The row to parse
+        blank: A value for blanks to be ignored
+        endcolumn: Column to end at
+    """
+
+    year_data = replace_specified_value(year_data, nan, blank)
+    assumption_val = year_data[-1]
+    year_vals = year_data[:endcolumn]
     if is_all_same_value(year_vals, nan):
         return [assumption_val] 
     else:
-        # skip "OR" and assumption col
         return year_vals
 
 
-def adjust_country_name(country_name):
+#######################################
+###  Individual spreadsheet readers ###
+#######################################
 
-    adjusted_country_name = country_name
-    if country_name == 'Philippines':
-        adjusted_country_name = country_name + ' (the)'
-    return adjusted_country_name
-
-
-def calculate_proportion_list(data, indices, percent):
-
-    """
-    Calculate the proportions of patients within subgroups
-
-    Args:
-        data: The main data structure containing all the data for that country
-        indices: A list of the dictionary elements of data that are to be summed
-            and then the proportions calculated
-
-    Returns:
-        proportions: A dictionary containing the proportions by indices
-    """
-
-    multiplier = 1.
-    if percent:
-        multiplier = 100.
-
-    # Calculate totals for denominator
-    denominator = []
-    for j in range(len(indices)):
-        for i in range(len(data[indices[0]])):
-            # Start list from first index
-            if j == 0:
-                denominator += [data[indices[j]][i]]
-            # Add other indices
-            else:
-                denominator[i] += data[indices[j]][i]
-
-    # Calculate proportions
-    proportions = {}
-    for j in range(len(indices)):
-        proportions['prop_' + indices[j]] = []
-        for i in range(len(data[indices[0]])):
-
-            # Avoid division by zero errors and nans
-            if type(denominator[i]) == float and denominator[i] > 0.:
-                proportions['prop_' + indices[j]] \
-                    += [data[indices[j]][i]
-                        / denominator[i] * multiplier]
-            else:
-                proportions['prop_' + indices[j]] += [float('nan')]
-
-    return proportions
-
-
-def convert_dictionary_of_lists_to_dictionary_of_dictionaries(lists_to_process):
-
-    dict = {}
-    for list in lists_to_process:
-        # If it's actually numeric data and not just a column that's of not much use
-        # (not sure how to generalise this - clearly it should be generalised)
-        if 'source' not in list and 'year' not in list and 'iso' not in list and 'who' not in list:
-            dict[list] = {}
-            for i in range(len(lists_to_process['year'])):
-                dict[list][int(lists_to_process['year'][i])] = lists_to_process[list][i]
-            # Remove nans
-            dict[list] = remove_nans(dict[list])
-    return dict
-
-
-
-###############################################################
-#  Readers
 
 class BcgCoverageSheetReader:
 
@@ -145,7 +89,7 @@ class BcgCoverageSheetReader:
             self.parlist = parse_year_data(row, '', len(row))
             for i in range(len(self.parlist)):
                 self.parlist[i] = str(self.parlist[i])
-        elif row[self.column_for_keys] == adjust_country_name(self.country_to_read):
+        elif row[self.column_for_keys] == tool_kit.adjust_country_name(self.country_to_read):
             for i in range(self.start_col, len(row)):
                 if type(row[i]) == float:
                     self.data[int(self.parlist[i])] = \
@@ -399,7 +343,7 @@ class GlobalTbReportReader:
 
     def parse_col(self, col):
 
-        col = replace_blanks(col, nan, '')
+        col = replace_specified_value(col, nan, '')
 
         # If it's the country column (the first one)
         if col[0] == 'country':
@@ -669,6 +613,4 @@ if __name__ == "__main__":
                                          'country_programs', 'default_programs',
                                          'diabetes'],
                                         country)
-
-    print("Time elapsed in running script is " + str(datetime.datetime.now() - spreadsheet_start_realtime))
 

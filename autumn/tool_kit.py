@@ -90,6 +90,14 @@ def replace_underscore_with_space(original_string):
     return replaced_string
 
 
+def adjust_country_name(country_name):
+
+    adjusted_country_name = country_name
+    if country_name == 'Philippines':
+        adjusted_country_name = country_name + ' (the)'
+    return adjusted_country_name
+
+
 def introduce_model(models, model_name):
 
     if model_name == 'baseline':

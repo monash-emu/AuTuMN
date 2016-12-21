@@ -23,15 +23,13 @@ import copy
 def relax_y_axis(ax):
 
     """
-    Matplotlib's default values often place curves very close to the top
-    of axes and sometimes extend down to small fractions for plots that are
-    proportions. This over-rides some of these defaults, that I don't like.
+    Matplotlib's default values often place curves very close to the top of axes and sometimes extend down to small
+    fractions for plots that are proportions. This over-rides some of these defaults, that I don't like.
+
     Args:
         ax: Axis with default y-limits to be revised
-
     Returns:
         ylims: New y-lims that look better
-
     """
 
     ylims = list(ax.get_ylim())
@@ -47,15 +45,13 @@ def relax_y_axis(ax):
 def find_smallest_factors_of_integer(n):
 
     """
-    Quick method to iterate through integers to find the smallest whole number
-    fractions. Written only to be called by find_subplot_numbers.
+    Quick method to iterate through integers to find the smallest whole number fractions.
+    Written only to be called by find_subplot_numbers.
 
     Args:
         n: Integer to be factorised
-
     Returns:
         answer: The two smallest factors of the integer
-
     """
 
     answer = [1E3, 1E3]
@@ -68,15 +64,12 @@ def find_smallest_factors_of_integer(n):
 def humanise_y_ticks(ax):
 
     """
-    Coded by Bosco, does a few things, including rounding
-    axis values to thousands, millions or billions and abbreviating
-    these to single letters.
+    Coded by Bosco, does a few things, including rounding axis values to thousands, millions or billions and
+    abbreviating these to single letters.
 
     Args:
         ax: The adapted axis
-
     """
-
 
     vals = list(ax.get_yticks())
     max_val = max([abs(v) for v in vals])
@@ -100,12 +93,10 @@ def humanise_y_ticks(ax):
 def make_axes_with_room_for_legend():
 
     """
-    Create axes for a figure with a single plot with a reasonable
-    amount of space around.
+    Create axes for a figure with a single plot with a reasonable amount of space around.
 
     Returns:
         ax: The axes that can be plotted on
-
     """
 
     fig = pyplot.figure()
@@ -113,9 +104,7 @@ def make_axes_with_room_for_legend():
     return ax
 
 
-def set_axes_props(
-        ax, xlabel=None, ylabel=None, title=None, is_legend=True,
-        axis_labels=None, side='left'):
+def set_axes_props(ax, xlabel=None, ylabel=None, title=None, is_legend=True, axis_labels=None, side='left'):
 
     frame_colour = "grey"
 
@@ -174,6 +163,7 @@ def get_nice_font_size(subplot_grid):
 
     # Simple function to return a reasonable font size
     # as appropriate to the number of rows of subplots in the figure
+
     return 2. + 8. / subplot_grid[0]
 
 
@@ -186,7 +176,6 @@ def find_reasonable_year_ticks(start_time, end_time):
     Args:
         start_time: Plotting start time
         end_time: Plotting end time
-
     Returns:
         xticks: List of where the x ticks should go
     """
@@ -224,7 +213,6 @@ def find_standard_output_styles(labels, lightening_factor=1.):
         lightening_factor: Float between zero and one that specifies how much lighter to make
             the colours - with 0. being no additional lightening (black or dark green/red/blue)
             and 1. being completely lightened to reach white.
-
     Returns:
         colour: Colour for plotting
         indices: List of strings to be used to find the data in the data object
@@ -412,11 +400,11 @@ def make_plot_title(model, labels):
 def create_patch_from_dictionary(dict):
 
     """
-    Creates an array that can be used as a patch for plotting
+    Creates an array that can be used as a patch for plotting.
+
     Args:
         dict: Dictionary with keys 'lower_limit', 'upper_limit' and 'year'
             (at least, although 'point_estimate' will also usually be there)
-
     Returns:
         patch_array: The patch array for plotting
     """
@@ -521,12 +509,12 @@ def plot_comparative_age_parameters(data_strat_list,
 
 
 def find_subplot_numbers(n):
+
     """
     Method to find a good number of rows and columns for subplots of figure.
 
     Args:
         n: Total number of subplots.
-
     Returns:
         answer: List of two elements, being the rows and columns of the subplots.
 
@@ -544,9 +532,11 @@ def find_subplot_numbers(n):
     return answer
 
 def get_string_for_funding(funding):
+
     """
     Returns an easy to read string corresponding to a level of funding (ex 9,000,000 becomes $9M)
     """
+
     s = '$'
     if funding >= 1e9:
         letter = 'B'
@@ -564,13 +554,15 @@ def get_string_for_funding(funding):
     s += str(number) + letter
     return s
 
+
 class Project:
 
     def __init__(self, model_runner, gui_inputs):
 
         """
         Initialises an object of class Project, that will contain all the information (data + outputs) for writing a
-        report for a country
+        report for a country.
+
         Args:
             models: dictionary such as: models = {'baseline': model, 'scenario_1': model_1,  ...}
         """
@@ -631,8 +623,7 @@ class Project:
                                 int(self.inputs.model_constants['report_step_time']))
         years = []
         for y in integer_dict:
-            if y in requested_years:
-                years += [y]
+            if y in requested_years: years += [y]
         return years
 
     def find_var_index(self, var):
@@ -656,7 +647,6 @@ class Project:
         If called at the start of each plotting function, will create a figure that is numbered according to
         self.figure_number, which is then updated at each call. This stops figures plotting on the same axis
         and saves you having to worry about how many figures are being opened.
-
         """
 
         fig = pyplot.figure(self.figure_number)
@@ -666,12 +656,10 @@ class Project:
     def make_single_axis(self, fig):
 
         """
-        Create axes for a figure with a single plot with a reasonable
-        amount of space around.
+        Create axes for a figure with a single plot with a reasonable amount of space around.
 
         Returns:
             ax: The axes that can be plotted on
-
         """
 
         ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
@@ -680,12 +668,12 @@ class Project:
     def make_legend_to_single_axis(self, ax, scenario_handles, scenario_labels):
 
         """
-        Standardised format to legend at side of single axis plot
+        Standardised format to legend at side of single axis plot.
+
         Args:
             ax: The axis that needs a legend.
             scenario_handles: The elements for the legend.
             scenario_labels: List of strings to name the elements of the legend.
-
         """
 
         ax.legend(scenario_handles,
@@ -699,8 +687,7 @@ class Project:
     def make_default_line_styles(self, n, return_all=True):
 
         """
-        Produces a standard set of line styles that isn't adapted to
-        the data being plotted.
+        Produces a standard set of line styles that isn't adapted to the data being plotted.
 
         Args:
             n: The number of line-styles
@@ -709,7 +696,6 @@ class Project:
         Returns:
             line_styles: A list of standard line-styles, or if return_all is False,
                 then the single item (for methods that are iterating through plots.
-
         """
 
         # Iterate through a standard set of line styles
@@ -729,13 +715,12 @@ class Project:
         """
         Method to find how much the axis in question should be scaled down by for plotting numbers with high values
         (especially costs) and provide a string to amend the axis appropriately.
+
         Args:
             max_value: The highest value in the plot (or a group of plots)
-
         Returns:
             multiplier: The value to scale the axis by.
             multiplier_label: The text to add to the y-axis after scaling
-
         """
 
         if max_value < 1e3:
@@ -760,10 +745,10 @@ class Project:
 
         """
         Simple method to standardise names for output figure files.
+
         Args:
             last_part_of_name_for_figure: The part of the figure name that is variable and input from the
                 plotting method.
-
         """
 
         png = os.path.join(self.out_dir_project, self.country + last_part_of_name_for_figure + '.png')
@@ -772,7 +757,7 @@ class Project:
     def save_opti_figure(self, fig, last_part_of_name_for_figure):
 
         """
-        Same as previous method, when applied to optimisation outputs
+        Same as previous method, when applied to optimisation outputs.
         """
 
         png = os.path.join(self.opti_outputs_dir, self.country + last_part_of_name_for_figure + '.png')
@@ -787,7 +772,6 @@ class Project:
         """
         Method to work through all the fundamental output methods, which then call all the specific output
         methods for plotting and writing as required.
-
         """
 
         # Master methods for each type of outputs
@@ -813,9 +797,7 @@ class Project:
         self.load_opti_results()
         self.save_opti_results()
         self.write_opti_outputs_spreadsheet()
-
         self.run_plotting()
-
         self.open_output_directory()
 
     def write_xls_by_scenario(self):

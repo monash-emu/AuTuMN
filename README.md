@@ -14,4 +14,5 @@ pluggable API to other system. Applied to tuberculosis.
         - seems very strange, but needs to be sorted
     - treatment outcomes reader seems unchanged and bugs when updated
         - also strange because this is mutually inconsistent anyway
+    - (World Bank demographic data is current, as 2014 seems to be the last year with data available still)
 

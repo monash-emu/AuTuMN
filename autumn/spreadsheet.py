@@ -446,7 +446,7 @@ class StrategyReader(MdrReportReader):
     def __init__(self, country_to_read):
 
         self.data = {}
-        self.tab_name = 'TB_strategy_2016-04-21'
+        self.tab_name = 'TB_policies_services_2016-12-22'
         self.key = 'strategy'
         self.parlist = []
         self.filename = 'xls/strategy_data.xlsx'

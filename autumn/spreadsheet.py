@@ -401,7 +401,7 @@ class MdrReportReader:
     def __init__(self, country_to_read):
 
         self.data = {}
-        self.tab_name = 'MDR-TB_burden_estimates_2016-04'
+        self.tab_name = 'MDR_RR_TB_burden_estimates_2016'
         self.key = 'mdr'
         self.parlist = []
         self.filename = 'xls/mdr_data.xlsx'
@@ -593,15 +593,4 @@ def read_input_data_xls(from_test, sheets_to_read, country=None):
 
     return read_xls_with_sheet_readers(sheet_readers)
 
-
-if __name__ == "__main__":
-
-    # Find the country by just reading that sheet first
-    country = read_input_data_xls(False, ['control_panel'])['control_panel']['country']
-
-    original_data = read_input_data_xls(False,
-                                        ['bcg', 'rate_birth', 'life_expectancy', 'control_panel', 'default_constants',
-                                         'tb', 'notifications', 'outcomes', 'country_constants', 'country_programs',
-                                         'default_programs', 'diabetes'],
-                                        country)
 

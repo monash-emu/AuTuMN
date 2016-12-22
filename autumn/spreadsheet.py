@@ -81,7 +81,7 @@ class BcgCoverageSheetReader:
         self.start_col = 4
         self.column_for_keys = 2  # Column that keys come from
         self.horizontal = True  # Spreadsheet orientation
-        self.first_cell = 'Region'
+        self.first_cell = 'WHO_REGION'
 
     def parse_row(self, row):
 

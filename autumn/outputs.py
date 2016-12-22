@@ -589,6 +589,7 @@ class Project:
         self.program_colours = {}
         self.suptitle_size = 13
         self.classified_scaleups = {}
+        self.grid = True
 
         # Extract some characteristics from the models within model runner
         self.scenarios = self.gui_inputs['scenarios_to_run']
@@ -1437,6 +1438,9 @@ class Project:
             # Label the y axis with the smaller text size
             ax.set_ylabel(yaxis_label[o], fontsize=get_nice_font_size(subplot_grid))
 
+            ax.xaxis.grid(self.grid)
+            ax.yaxis.grid(self.grid)
+
         # Add main title and save
         fig.suptitle(tool_kit.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb' + end_filename)
@@ -1592,6 +1596,9 @@ class Project:
                               scenario_labels,
                               fontsize=get_nice_font_size(subplot_grid),
                               frameon=False)
+
+                ax.xaxis.grid(self.grid)
+                ax.yaxis.grid(self.grid)
 
             # Save
             self.save_figure(fig, '_' + classification + '_scale_ups')

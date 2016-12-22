@@ -430,7 +430,7 @@ class LaboratoriesReader(GlobalTbReportReader):
     def __init__(self, country_to_read):
 
         self.data = {}
-        self.tab_name = 'TB_laboratories_2016-04-21'
+        self.tab_name = 'TB_laboratories_2016-12-22'
         self.key = 'laboratories'
         self.parlist = []
         self.filename = 'xls/laboratories_data.xlsx'

@@ -367,7 +367,7 @@ class NotificationsReader(GlobalTbReportReader):
     def __init__(self, country_to_read):
 
         self.data = {}
-        self.tab_name = 'TB_notifications_2016-04-20'
+        self.tab_name = 'TB_notifications_2016-12-22'
         self.key = 'notifications'
         self.parlist = []
         self.filename = 'xls/notifications_data.xlsx'

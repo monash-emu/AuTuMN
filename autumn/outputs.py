@@ -581,7 +581,7 @@ class Project:
         self.program_colours = {}
         self.suptitle_size = 13
         self.classified_scaleups = {}
-        self.grid = True
+        self.grid = False
         self.plot_rejected_runs = False
 
         # Extract some characteristics from the models within model runner
@@ -1310,6 +1310,7 @@ class Project:
         # Loop through indicators
         for o, output in enumerate(outputs):
 
+            max_data = 0.
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
 
             # Plotting GTB data_________________________________________________________________________________________
@@ -1341,14 +1342,16 @@ class Project:
                 ax.plot(gtb_data['point_estimate'].keys(), gtb_data['point_estimate'].values(),
                         color=colour[o], linewidth=0.5, label=None)
 
+            max_data = max((max(gtb_data['point_estimate'].values()), max_data))
+
             # Plotting modelled data____________________________________________________________________________________
 
             # Plot without uncertainty
-            max_data = 0.
             if ci_plot is None:
 
                 end_filename = '_scenario'
-                max_data = max((max(self.model_runner.epi_outputs['manual_baseline'][output][start_time_index:]), 0.))
+                max_data = max((max(self.model_runner.epi_outputs['manual_baseline'][output][start_time_index:]),
+                                max_data))
 
                 # Reversing ensures black baseline plotted over top
                 for scenario in self.scenarios[::-1]:
@@ -1600,6 +1603,8 @@ class Project:
                               scenario_labels,
                               fontsize=get_nice_font_size(subplot_grid),
                               frameon=False)
+
+                ax.set_xticks(find_reasonable_year_ticks(start_time, end_time))
 
                 ax.xaxis.grid(self.grid)
                 ax.yaxis.grid(self.grid)
@@ -2325,9 +2330,11 @@ class Project:
         self.save_figure(fig, '_likelihoods')
 
     def plot_optimised_epi_outputs(self):
+
         """
-         plot incidence and mortality over funding. This corresponds to the outputs obtained under optimal allocation
+        Plot incidence and mortality over funding. This corresponds to the outputs obtained under optimal allocation
         """
+
         fig = self.set_and_update_figure()
         ax = self.make_single_axis(fig)
         ax2 = ax.twinx()

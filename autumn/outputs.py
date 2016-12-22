@@ -169,36 +169,27 @@ def get_nice_font_size(subplot_grid):
 
 def find_reasonable_year_ticks(start_time, end_time):
 
-    """
-    Simple method to find some reasonably spaced x-ticks and making sure there
-    aren't too many of them
-
-    Args:
-        start_time: Plotting start time
-        end_time: Plotting end time
-    Returns:
-        xticks: List of where the x ticks should go
-    """
-
-    # If the range is divisible by 15
-    if (start_time - end_time) % 15 == 0:
-        xticks_any_length = numpy.arange(start_time, end_time + 15, 15)
-    # Otherwise if it's divisible by 10
-    elif (start_time - end_time) % 10 == 0:
-        xticks_any_length = numpy.arange(start_time, end_time + 10, 10)
-    # Otherwise just give up on having ticks along axis
+    duration = end_time - start_time
+    if duration > 1e3:
+        spacing = 1e2
+    elif duration > 75.:
+        spacing = 25.
+    elif duration > 25.:
+        spacing = 10.
+    elif duration > 15.:
+        spacing = 5.
+    elif duration > 5.:
+        spacing = 2.
     else:
-        xticks_any_length = [start_time, end_time]
+        spacing = 1.
 
-    xticks = []
-    if len(xticks_any_length) > 10:
-        for i in range(len(xticks_any_length)):
-            if i % 2 == 0:
-                xticks += [xticks_any_length[i]]
-    else:
-        xticks = xticks_any_length
+    times = []
+    working_time = start_time
+    while working_time < end_time:
+        times.append(working_time)
+        working_time += spacing
 
-    return xticks
+    return times
 
 
 def find_standard_output_styles(labels, lightening_factor=1.):
@@ -531,6 +522,7 @@ def find_subplot_numbers(n):
 
     return answer
 
+
 def get_string_for_funding(funding):
 
     """
@@ -575,7 +567,7 @@ class Project:
         self.out_dir_project = os.path.join('projects', self.name)
         if not os.path.isdir(self.out_dir_project):
             os.makedirs(self.out_dir_project)
-        self.opti_outputs_dir = os.path.join(self.out_dir_project, 'optimization')
+        self.opti_outputs_dir = os.path.join(self.out_dir_project, 'optimisation')
         if not os.path.isdir(self.opti_outputs_dir):
             os.makedirs(self.opti_outputs_dir)
 
@@ -589,7 +581,8 @@ class Project:
         self.program_colours = {}
         self.suptitle_size = 13
         self.classified_scaleups = {}
-        self.grid = True
+        self.grid = False
+        self.plot_rejected_runs = True
 
         # Extract some characteristics from the models within model runner
         self.scenarios = self.gui_inputs['scenarios_to_run']
@@ -1183,7 +1176,7 @@ class Project:
             # Get active sheet
             wb = xl.Workbook()
             sheet = wb.active
-            sheet.title = 'optimization'
+            sheet.title = 'optimisation'
 
             # write row names
             sheet.cell(row=1, column=1).value = 'envelope'
@@ -1291,7 +1284,7 @@ class Project:
 
         # Optimisation plotting
         if self.model_runner.optimisation:
-            self.plot_optimized_epi_outputs()
+            self.plot_optimised_epi_outputs()
             self.plot_piecharts_opti()
 
     def plot_outputs_against_gtb(self, outputs, ci_plot=None):
@@ -1351,16 +1344,18 @@ class Project:
             # Plotting modelled data____________________________________________________________________________________
 
             # Plot without uncertainty
+            max_data = 0.
             if ci_plot is None:
 
                 end_filename = '_scenario'
-                max_data = max(self.model_runner.epi_outputs['manual_baseline'][output][start_time_index:])
+                max_data = max((max(self.model_runner.epi_outputs['manual_baseline'][output][start_time_index:]), 0.))
 
                 # Reversing ensures black baseline plotted over top
                 for scenario in self.scenarios[::-1]:
                     scenario_name = tool_kit.find_scenario_string_from_number(scenario)
                     data_to_plot = self.model_runner.epi_outputs['manual_' + scenario_name][output]
-                    max_data = max(self.model_runner.epi_outputs['manual_baseline'][output][start_time_index:])
+                    max_data = max((max(self.model_runner.epi_outputs['manual_baseline'][output][start_time_index:]),
+                                    max_data))
                     ax.plot(
                         self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
                         data_to_plot,
@@ -1402,27 +1397,33 @@ class Project:
                             linestyle='--',
                             linewidth=.5,
                             label=None)
+                    max_data \
+                        = max((max(self.model_runner.epi_outputs_uncertainty_centiles[
+                                       'uncertainty_' + scenario_name][output][
+                                   self.model_runner.percentiles.index(97.5), start_time_index:]), max_data))
             elif self.gui_inputs['output_uncertainty']:
                 end_filename = '_progress'
                 for run in range(len(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output])):
-                    if run not in self.model_runner.accepted_indices:
-                        # Switch over the commented code to show the rejected runs (in thin yellow lines at the back)
-                        pass
-                        # ax.plot(
-                        #     self.model_runner.epi_outputs_uncertainty['baseline']['times'],
-                        #     self.model_runner.epi_outputs_uncertainty['baseline'][output][run, :],
-                        #     linewidth=.2,
-                        #     color='y',
-                        #     label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space('baseline')))
-                    else:
+                    if run not in self.model_runner.accepted_indices and self.plot_rejected_runs:
                         ax.plot(
-                            self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['times'],
-                            self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output][run, :],
-                            linewidth=1.2,
-                            color=str(1.
-                                      - float(run)
-                                      / float(len(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output]))),
+                            self.model_runner.epi_outputs_uncertainty['baseline']['times'],
+                            self.model_runner.epi_outputs_uncertainty['baseline'][output][run, :],
+                            linewidth=.2,
+                            color='y',
                             label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space('baseline')))
+                    else:
+                        ax.plot(self.model_runner.epi_outputs_uncertainty[
+                                    'uncertainty_baseline']['times'][start_time_index:],
+                                self.model_runner.epi_outputs_uncertainty[
+                                    'uncertainty_baseline'][output][run, start_time_index:],
+                                linewidth=1.2,
+                                color=str(1. - float(run) / float(len(
+                                    self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output]))),
+                                label=tool_kit.capitalise_first_letter(
+                                    tool_kit.replace_underscore_with_space('baseline')))
+                        max_data = max(
+                            (max(self.model_runner.epi_outputs_uncertainty[
+                                     'uncertainty_baseline'][output][run, start_time_index:]), 0.))
 
             # Make cosmetic changes
             # if o == len(outputs) - 1 and ci_plot:
@@ -1433,11 +1434,14 @@ class Project:
             for axis_to_change in [ax.xaxis, ax.yaxis]:
                 for tick in axis_to_change.get_major_ticks():
                     tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+
             # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
             ax.set_title(title[o], fontsize=get_nice_font_size(subplot_grid) + 2.)
+
             # Label the y axis with the smaller text size
             ax.set_ylabel(yaxis_label[o], fontsize=get_nice_font_size(subplot_grid))
 
+            # Turn grid lines on/off
             ax.xaxis.grid(self.grid)
             ax.yaxis.grid(self.grid)
 
@@ -1525,7 +1529,6 @@ class Project:
 
         """
         Plot each scale-up function as a separate panel against the data it is fitted to.
-
         """
 
         # Different figure for each type of function
@@ -2320,7 +2323,7 @@ class Project:
         ax.set_ylabel('Likelihood', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         self.save_figure(fig, '_likelihoods')
 
-    def plot_optimized_epi_outputs(self):
+    def plot_optimised_epi_outputs(self):
         """
          plot incidence and mortality over funding. This corresponds to the outputs obtained under optimal allocation
         """
@@ -2336,7 +2339,7 @@ class Project:
         set_axes_props(ax2, 'Annual funding (US$)', 'TB mortality (/100,000/year)',
                        '', True, 'mortality', side='right')
         # need to add a legend !
-        self.save_opti_figure(fig, '_optimized_outputs')
+        self.save_opti_figure(fig, '_optimised_outputs')
 
     def plot_piecharts_opti(self):
         n_envelopes = len(self.model_runner.opti_results['annual_envelope'])
@@ -2391,7 +2394,7 @@ class Project:
         if self.model_runner.load_opti:
             storage_file_name = os.path.join(self.opti_outputs_dir, 'opti_outputs.pkl')
             self.model_runner.opti_results = tool_kit.pickle_load(storage_file_name)
-            print "optimization results loaded"
+            print "optimisation results loaded"
 
     def save_opti_results(self):
         if self.model_runner.save_opti and self.model_runner.optimisation: # save only if opti has been run and save ordered
@@ -2410,10 +2413,6 @@ class Project:
             os.system('start ' + ' ' + self.out_dir_project)
         elif 'Darwin' in operating_system:
             os.system('open ' + ' ' + self.out_dir_project)
-
-
-
-
 
 
 

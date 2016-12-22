@@ -1405,12 +1405,13 @@ class Project:
                 end_filename = '_progress'
                 for run in range(len(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output])):
                     if run not in self.model_runner.accepted_indices and self.plot_rejected_runs:
-                        ax.plot(
-                            self.model_runner.epi_outputs_uncertainty['baseline']['times'],
-                            self.model_runner.epi_outputs_uncertainty['baseline'][output][run, :],
-                            linewidth=.2,
-                            color='y',
-                            label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space('baseline')))
+                        ax.plot(self.model_runner.epi_outputs_uncertainty[
+                                    'uncertainty_baseline']['times'][start_time_index:],
+                                self.model_runner.epi_outputs_uncertainty[
+                                    'uncertainty_baseline'][output][run, start_time_index:],
+                                linewidth=.2,
+                                color='y',
+                                label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space('baseline')))
                     else:
                         ax.plot(self.model_runner.epi_outputs_uncertainty[
                                     'uncertainty_baseline']['times'][start_time_index:],

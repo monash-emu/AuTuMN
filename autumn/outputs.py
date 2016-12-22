@@ -581,8 +581,8 @@ class Project:
         self.program_colours = {}
         self.suptitle_size = 13
         self.classified_scaleups = {}
-        self.grid = False
-        self.plot_rejected_runs = True
+        self.grid = True
+        self.plot_rejected_runs = False
 
         # Extract some characteristics from the models within model runner
         self.scenarios = self.gui_inputs['scenarios_to_run']

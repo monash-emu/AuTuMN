@@ -9,5 +9,9 @@ pluggable API to other system. Applied to tuberculosis.
 - uncertainty for economics
 - programmatic uncertainty
 - automatic calibration
-- read 2016 GTB report
+- update last two sheet readers - all done except:
+    - latest GTB reader doesn't have prevalence data
+        - seems very strange, but needs to be sorted
+    - treatment outcomes reader seems unchanged and bugs when updated
+        - also strange because this is mutually inconsistent anyway
 

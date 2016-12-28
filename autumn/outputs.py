@@ -588,7 +588,7 @@ class Project:
         self.scenarios = self.gui_inputs['scenarios_to_run']
         self.scenario_names = self.gui_inputs['scenario_names_to_run']
         self.programs = self.inputs.interventions_to_cost
-        self.gtb_available_outputs = ['notifications', 'incidence', 'prevalence', 'mortality']
+        self.gtb_available_outputs = ['incidence', 'mortality', 'prevalence', 'notifications']
         self.level_conversion_dict = {'lower_limit': '_lo', 'upper_limit': '_hi', 'point_estimate': ''}
 
     #################################
@@ -1209,10 +1209,10 @@ class Project:
 
         # Plot main outputs
         if self.gui_inputs['output_gtb_plots']:
-            self.plot_outputs_against_gtb(['incidence', 'mortality', 'prevalence', 'notifications'], ci_plot=None)
+            self.plot_outputs_against_gtb(self.gtb_available_outputs, ci_plot=None)
             if self.gui_inputs['output_uncertainty']:
-                self.plot_outputs_against_gtb(['incidence', 'mortality', 'prevalence', 'notifications'], ci_plot=True)
-                self.plot_outputs_against_gtb(['incidence', 'mortality', 'prevalence', 'notifications'], ci_plot=False)
+                self.plot_outputs_against_gtb(self.gtb_available_outputs, ci_plot=True)
+                self.plot_outputs_against_gtb(self.gtb_available_outputs, ci_plot=False)
             if self.gui_inputs['n_strains'] > 1:
                 self.plot_resistant_strain_outputs(['incidence', 'mortality', 'prevalence', 'perc_incidence'])
 

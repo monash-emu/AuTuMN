@@ -7,7 +7,7 @@ import autumn.economics
 from autumn.spreadsheet import read_input_data_xls
 import numpy as np
 import openpyxl as xl
-import tool_kit
+import tool_kit as t_k
 from docx import Document
 from matplotlib import pyplot, patches, style
 import numpy
@@ -453,10 +453,10 @@ def plot_comparative_age_parameters(data_strat_list,
     # Get good tick labels from the stratum lists
     data_strat_labels = []
     for i in range(len(data_strat_list)):
-        data_strat_labels += [tool_kit.turn_strat_into_label(data_strat_list[i])]
+        data_strat_labels += [t_k.turn_strat_into_label(data_strat_list[i])]
     model_strat_labels = []
     for i in range(len(model_strat_list)):
-        model_strat_labels += [tool_kit.turn_strat_into_label(model_strat_list[i])]
+        model_strat_labels += [t_k.turn_strat_into_label(model_strat_list[i])]
 
     # Find a reasonable upper limit for the y-axis
     ymax = max(data_value_list + model_value_list) * 1.2
@@ -487,7 +487,7 @@ def plot_comparative_age_parameters(data_strat_list,
     ax.set_xlim(-1. + width, x_positions[-1] + 1)
 
     # Overall title
-    fig.suptitle(tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(parameter_name))
+    fig.suptitle(t_k.capitalise_and_remove_underscore(parameter_name)
                  + ' adjustment',
                  fontsize=15)
 
@@ -844,9 +844,7 @@ class Project:
                                 row = 1
                                 column = o + 2
                                 if horizontal: column, row = row, column
-                                sheet.cell(row=row, column=column).value = \
-                                    tool_kit.replace_underscore_with_space(
-                                        tool_kit.capitalise_first_letter(output))
+                                sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(output)
 
                                 # Write columns of data
                                 for y, year in enumerate(years):
@@ -867,9 +865,7 @@ class Project:
                                 row = 1
                                 column = o * 3 + 2
                                 if horizontal: column, row = row, column
-                                sheet.cell(row=row, column=column).value = \
-                                    tool_kit.replace_underscore_with_space(
-                                        tool_kit.capitalise_first_letter(output))
+                                sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(output)
                                 row = 1
                                 column = o * 3 + 3
                                 if horizontal: column, row = row, column
@@ -882,7 +878,7 @@ class Project:
                                 # Write the columns of data
                                 for y, year in enumerate(years):
                                     year_index \
-                                        = tool_kit.find_first_list_element_at_least_value(
+                                        = t_k.find_first_list_element_at_least_value(
                                         self.model_runner.epi_outputs['uncertainty_' + scenario]['times'], year)
                                     for ord, order in enumerate(order_to_write):
                                         row = y + 2
@@ -918,9 +914,7 @@ class Project:
                             row = 1
                             column = o + 2
                             if horizontal: column, row = row, column
-                            sheet.cell(row=row, column=column).value = \
-                                tool_kit.replace_underscore_with_space(
-                                    tool_kit.capitalise_first_letter(output))
+                            sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(output)
 
                             # Write the columns of data
                             for y, year in enumerate(years):
@@ -981,8 +975,7 @@ class Project:
                         column = s + 2
                         if horizontal: column, row = row, column
                         sheet.cell(row=row, column=column).value = \
-                            tool_kit.replace_underscore_with_space(
-                                tool_kit.capitalise_first_letter(scenario))
+                            t_k.capitalise_and_remove_underscore(scenario)
 
                         # Write columns of data
                         for y, year in enumerate(years):
@@ -1002,8 +995,7 @@ class Project:
                         column = s * 3 + 2
                         if horizontal: column, row = row, column
                         sheet.cell(row=row, column=column).value = \
-                            tool_kit.replace_underscore_with_space(
-                                tool_kit.capitalise_first_letter(scenario))
+                            t_k.capitalise_and_remove_underscore(scenario)
                         row = 1
                         column = s * 3 + 3
                         if horizontal: column, row = row, column
@@ -1016,7 +1008,7 @@ class Project:
                         # Write the columns of data
                         for y, year in enumerate(years):
                             year_index \
-                                = tool_kit.find_first_list_element_at_least_value(
+                                = t_k.find_first_list_element_at_least_value(
                                 self.model_runner.epi_outputs['uncertainty_' + scenario]['times'], year)
                             for o, order in enumerate(order_to_write):
                                 row = y + 2
@@ -1062,7 +1054,7 @@ class Project:
                     column = s + 2
                     if horizontal: column, row = row, column
                     sheet.cell(row=row, column=column).value \
-                        = tool_kit.replace_underscore_with_space(tool_kit.capitalise_first_letter(scenario))
+                        = t_k.capitalise_and_remove_underscore(scenario)
 
                     # Write the columns of data
                     for y, year in enumerate(years):
@@ -1102,12 +1094,11 @@ class Project:
                 # Write outputs across the top
                 row_cells = table.rows[0].cells
                 row_cells[0].text = 'Year'
-                row_cells[s + 1].text \
-                    = tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario))
+                row_cells[s + 1].text = t_k.capitalise_and_remove_underscore(scenario)
 
                 for y, year in enumerate(years):
                     year_index \
-                        = tool_kit.find_first_list_element_at_least_value(
+                        = t_k.find_first_list_element_at_least_value(
                         self.model_runner.epi_outputs['uncertainty_' + scenario]['times'], year)
                     row_cells = table.rows[y + 1].cells
                     row_cells[0].text = str(year)
@@ -1148,12 +1139,11 @@ class Project:
                 # Write outputs across the top
                 row_cells = table.rows[0].cells
                 row_cells[0].text = 'Year'
-                row_cells[o + 1].text \
-                    = tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(output))
+                row_cells[o + 1].text = t_k.capitalise_and_remove_underscore(output)
 
                 for y, year in enumerate(years):
                     year_index \
-                        = tool_kit.find_first_list_element_at_least_value(
+                        = t_k.find_first_list_element_at_least_value(
                         self.model_runner.epi_outputs['uncertainty_' + scenario]['times'], year)
 
                     row_cells = table.rows[y + 1].cells
@@ -1305,7 +1295,7 @@ class Project:
         # Standard preliminaries
         start_time = self.inputs.model_constants['plot_start_time']
         start_time_index \
-            = tool_kit.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
+            = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
                                                               start_time)
         colour, indices, yaxis_label, title, patch_colour = find_standard_output_styles(outputs, lightening_factor=0.3)
         subplot_grid = find_subplot_numbers(len(outputs))
@@ -1346,7 +1336,7 @@ class Project:
 
                 # Plot model estimates
                 for scenario in self.scenarios[::-1]:  # Reversing ensures black baseline plotted over top
-                    scenario_name = tool_kit.find_scenario_string_from_number(scenario)
+                    scenario_name = t_k.find_scenario_string_from_number(scenario)
                     data_to_plot = self.model_runner.epi_outputs['manual_' + scenario_name][output]
                     max_data = max((max(data_to_plot[start_time_index:]), max_data))
                     ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
@@ -1354,8 +1344,7 @@ class Project:
                             color=self.output_colours[scenario][1],
                             linestyle=self.output_colours[scenario][0],
                             linewidth=1.5,
-                            label
-                            =tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario_name)))
+                            label=t_k.capitalise_and_remove_underscore(scenario_name))
 
                 # Plot "true" model outputs
                 if output in ['incidence', 'mortality']:
@@ -1369,7 +1358,7 @@ class Project:
             # Plot with uncertainty confidence intervals
             elif ci_plot and self.gui_inputs['output_uncertainty']:
                 for scenario in self.scenarios[::-1]:
-                    scenario_name = tool_kit.find_scenario_string_from_number(scenario)
+                    scenario_name = t_k.find_scenario_string_from_number(scenario)
 
                     # Median
                     ax.plot(
@@ -1379,7 +1368,7 @@ class Project:
                         color=self.output_colours[scenario][1],
                         linestyle=self.output_colours[scenario][0],
                         linewidth=1.5,
-                        label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario_name)))
+                        label=t_k.capitalise_and_remove_underscore(scenario_name))
 
                     # Upper and lower confidence bounds
                     for centile in [2.5, 97.5]:
@@ -1407,8 +1396,7 @@ class Project:
                                     'uncertainty_baseline'][output][run, start_time_index:],
                                 linewidth=.2,
                                 color='y',
-                                label
-                                =tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space('baseline')))
+                                label=t_k.capitalise_and_remove_underscore('baseline'))
                     else:
                         ax.plot(self.model_runner.epi_outputs_uncertainty[
                                     'uncertainty_baseline']['times'][start_time_index:],
@@ -1417,8 +1405,7 @@ class Project:
                                 linewidth=1.2,
                                 color=str(1. - float(run) / float(len(
                                     self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output]))),
-                                label=tool_kit.capitalise_first_letter(
-                                    tool_kit.replace_underscore_with_space('baseline')))
+                                label=t_k.capitalise_and_remove_underscore('baseline'))
                         max_data = max(
                             (max(self.model_runner.epi_outputs_uncertainty[
                                      'uncertainty_baseline'][output][run, start_time_index:]), 0.))
@@ -1445,7 +1432,7 @@ class Project:
             ax.yaxis.grid(self.grid)
 
         # Add main title and save
-        fig.suptitle(tool_kit.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
+        fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb' + end_filename)
 
     def plot_resistant_strain_outputs(self, outputs):
@@ -1468,7 +1455,7 @@ class Project:
         for o, output in enumerate(outputs):
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
             for scenario in self.scenarios[::-1]:
-                scenario_name = tool_kit.find_scenario_string_from_number(scenario)
+                scenario_name = t_k.find_scenario_string_from_number(scenario)
                 ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
                         self.model_runner.epi_outputs['manual_' + scenario_name][output + '_mdr'],
                         color=self.output_colours[scenario][1],
@@ -1486,7 +1473,7 @@ class Project:
             ax.set_ylabel(yaxis_label[o], fontsize=get_nice_font_size(subplot_grid))
 
         # Finish off
-        fig.suptitle(tool_kit.capitalise_first_letter(self.country) + ' resistant strain outputs',
+        fig.suptitle(t_k.capitalise_first_letter(self.country) + ' resistant strain outputs',
                      fontsize=self.suptitle_size)
         self.save_figure(fig, '_resistant_strain')
 
@@ -1516,7 +1503,7 @@ class Project:
             start_time = self.inputs.model_constants['plot_start_time']
             end_time = self.inputs.model_constants['plot_end_time']
             for scenario in reversed(self.scenarios):
-                scenario_name = tool_kit.find_scenario_string_from_number(scenario)
+                scenario_name = t_k.find_scenario_string_from_number(scenario)
                 ax.plot(self.model_runner.model_dict['manual_' + scenario_name].times,
                         self.model_runner.model_dict['manual_' + scenario_name].get_var_soln(function),
                         color=self.output_colours[scenario][1])
@@ -1547,7 +1534,7 @@ class Project:
 
             # Main title for whole figure
             title = self.inputs.country + ' ' + \
-                    tool_kit.find_title_from_dictionary(classification) + ' parameter'
+                    t_k.find_title_from_dictionary(classification) + ' parameter'
             if len(functions) > 1:
                 title += 's'
             fig.suptitle(title, fontsize=self.suptitle_size)
@@ -1561,7 +1548,7 @@ class Project:
                 # Iterate through the scenarios
                 scenario_labels = []
                 for scenario in reversed(self.scenarios):
-                    scenario_name = tool_kit.find_scenario_string_from_number(scenario)
+                    scenario_name = t_k.find_scenario_string_from_number(scenario)
 
                     # Line plot of scaling parameter functions
                     ax.plot(x_vals,
@@ -1570,7 +1557,7 @@ class Project:
 
                     # Record the name of the scenario for the legend
                     scenario_labels \
-                        += [tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario_name))]
+                        += [t_k.capitalise_and_remove_underscore(scenario_name)]
 
                 # Plot the raw data from which the scale-up functions were produced
                 data_to_plot = {}
@@ -1586,7 +1573,7 @@ class Project:
                 for axis_to_change in [ax.xaxis, ax.yaxis]:
                     for tick in axis_to_change.get_major_ticks():
                         tick.label.set_fontsize(get_nice_font_size(subplot_grid))
-                title = tool_kit.find_title_from_dictionary(function)
+                title = t_k.find_title_from_dictionary(function)
                 ax.set_title(title, fontsize=get_nice_font_size(subplot_grid))
                 ylims = relax_y_axis(ax)
                 ax.set_ylim(bottom=ylims[0], top=ylims[1])
@@ -1635,11 +1622,11 @@ class Project:
                     map(self.inputs.scaleup_fns[None][function],
                         x_vals), line_styles[figure_number],
                     label=function)
-            scenario_labels += [tool_kit.find_title_from_dictionary(function)]
+            scenario_labels += [t_k.find_title_from_dictionary(function)]
 
         # Make title, legend, generally tidy up and save
-        title = tool_kit.capitalise_first_letter(self.country) + ' ' + \
-                tool_kit.find_title_from_dictionary('program_prop_') + \
+        title = t_k.capitalise_first_letter(self.country) + ' ' + \
+                t_k.find_title_from_dictionary('program_prop_') + \
                 ' parameters'
         set_axes_props(ax, 'Year', 'Parameter value',
                        title, True, functions)
@@ -1673,7 +1660,7 @@ class Project:
                               int(self.inputs.model_constants['cost_curve_step_time']))
 
                 for t, time in enumerate(times):
-                    time_index = tool_kit.find_first_list_element_at_least_value(
+                    time_index = t_k.find_first_list_element_at_least_value(
                         self.model_runner.model_dict['manual_' + scenario].times, time)
                     y_values = []
                     x_values = []
@@ -1715,7 +1702,7 @@ class Project:
                 if p == len(self.programs) - 1:
                     scenario_handles = ax.lines
                     self.make_legend_to_single_axis(ax, scenario_handles, scenario_labels)
-                ax.set_title(tool_kit.find_title_from_dictionary('program_prop_' + program),
+                ax.set_title(t_k.find_title_from_dictionary('program_prop_' + program),
                              fontsize=get_nice_font_size(subplot_grid)+2)
 
                 # X-axis label
@@ -1725,7 +1712,7 @@ class Project:
                         tick.label.set_fontsize(get_nice_font_size(subplot_grid))
 
             # Finish off with title and save file for scenario
-            fig.suptitle('Cost-coverage curves for ' + tool_kit.replace_underscore_with_space(scenario),
+            fig.suptitle('Cost-coverage curves for ' + t_k.replace_underscore_with_space(scenario),
                          fontsize=self.suptitle_size)
             self.save_figure(fig, '_' + scenario + '_cost_coverage')
 
@@ -1766,7 +1753,7 @@ class Project:
 
             # Find the index for the first time after the current time
             reference_time_index \
-                = tool_kit.find_first_list_element_above_value(self.model_runner.cost_outputs['manual_'
+                = t_k.find_first_list_element_above_value(self.model_runner.cost_outputs['manual_'
                                                                                               + scenario]['times'],
                                                                self.inputs.model_constants['reference_time'])
             for c, cost_type in enumerate(self.model_runner.cost_types):
@@ -1829,11 +1816,11 @@ class Project:
                                             linewidth=0.)
 
                     # Record label for legend
-                    program_labels += [tool_kit.find_title_from_dictionary(program)]
+                    program_labels += [t_k.find_title_from_dictionary(program)]
 
                 # Axis title and y-axis label
                 for ax in [ax_individual, ax_stacked, ax_relative]:
-                    ax.set_title(tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(cost_type)),
+                    ax.set_title(t_k.capitalise_and_remove_underscore(cost_type),
                                  fontsize=8)
                     ax.set_ylabel(multiplier_individual_label + ' $US',
                                   fontsize=get_nice_font_size(subplot_grid))
@@ -1857,13 +1844,13 @@ class Project:
                                 self.inputs.model_constants['plot_end_time'])
 
             # Finishing off with title and save
-            fig_individual.suptitle('Individual program costs for ' + tool_kit.find_title_from_dictionary(scenario),
+            fig_individual.suptitle('Individual program costs for ' + t_k.find_title_from_dictionary(scenario),
                                     fontsize=self.suptitle_size)
             self.save_figure(fig_individual, '_' + scenario + '_timecost_individual')
-            fig_stacked.suptitle('Stacked program costs for ' + tool_kit.find_title_from_dictionary(scenario),
+            fig_stacked.suptitle('Stacked program costs for ' + t_k.find_title_from_dictionary(scenario),
                                  fontsize=self.suptitle_size)
             self.save_figure(fig_stacked, '_' + scenario + '_timecost_stacked')
-            fig_relative.suptitle('Relative program costs for ' + tool_kit.find_title_from_dictionary(scenario),
+            fig_relative.suptitle('Relative program costs for ' + t_k.find_title_from_dictionary(scenario),
                                   fontsize=self.suptitle_size)
             self.save_figure(fig_relative, '_' + scenario + '_timecost_relative')
 
@@ -1932,8 +1919,7 @@ class Project:
         """
 
         # Get values to be plotted
-        subgroup_solns, subgroup_fractions \
-            = autumn.tool_kit.find_fractions(self.model_runner.model_dict['manual_baseline'])
+        subgroup_solns, subgroup_fractions = t_k.find_fractions(self.model_runner.model_dict['manual_baseline'])
         for i, category in enumerate(subgroup_fractions):
             values = subgroup_fractions[category]
 
@@ -1996,7 +1982,7 @@ class Project:
                 # Plot the modelled data
                 scenario_labels = []
                 for scenario in self.scenarios:
-                    scenario_name = tool_kit.find_scenario_string_from_number(scenario)
+                    scenario_name = t_k.find_scenario_string_from_number(scenario)
                     ax.plot(
                         self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
                         self.model_runner.epi_outputs['manual_' + scenario_name][output + agegroup],
@@ -2004,7 +1990,7 @@ class Project:
                         linestyle=self.output_colours[scenario][0],
                         linewidth=1.5)
                     scenario_labels \
-                        += [tool_kit.replace_underscore_with_space(tool_kit.capitalise_first_letter(scenario_name))]
+                        += [t_k.capitalise_and_remove_underscore(scenario_name)]
 
                 # Adjust size of labels of x-ticks
                 for axis_to_change in [ax.xaxis, ax.yaxis]:
@@ -2012,8 +1998,8 @@ class Project:
                         tick.label.set_fontsize(get_nice_font_size(subplot_grid))
 
                 # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
-                ax.set_title(tool_kit.capitalise_first_letter(output) + ', '
-                             + tool_kit.turn_strat_into_label(agegroup), fontsize=get_nice_font_size(subplot_grid))
+                ax.set_title(t_k.capitalise_first_letter(output) + ', '
+                             + t_k.turn_strat_into_label(agegroup), fontsize=get_nice_font_size(subplot_grid))
 
                 # Label the y axis with the smaller text size
                 if i == 0:
@@ -2065,7 +2051,7 @@ class Project:
             for i_time, plot_left_time in enumerate(['plot_start_time', 'early_time']):
 
                 # Find starting times
-                title_time_text = tool_kit.find_title_from_dictionary(plot_left_time)
+                title_time_text = t_k.find_title_from_dictionary(plot_left_time)
 
                 # Initialise some variables
                 times = self.model_runner.model_dict['manual_baseline'].times
@@ -2096,9 +2082,9 @@ class Project:
                     # Create proxy for legend
                     ax_upper.plot([], [], color=colours[i][1], linewidth=6)
                     if age_or_risk == 'age':
-                        legd_text += [tool_kit.turn_strat_into_label(stratum)]
+                        legd_text += [t_k.turn_strat_into_label(stratum)]
                     elif age_or_risk == 'risk':
-                        legd_text += [tool_kit.find_title_from_dictionary(stratum)]
+                        legd_text += [t_k.find_title_from_dictionary(stratum)]
 
                     # Cosmetic changes at the end
                     if i == len(stratification) - 1:
@@ -2135,7 +2121,7 @@ class Project:
                                       self.inputs.model_constants['plot_end_time'])
 
             # Finish up
-            fig.suptitle('Population by ' + tool_kit.find_title_from_dictionary(age_or_risk),
+            fig.suptitle('Population by ' + t_k.find_title_from_dictionary(age_or_risk),
                          fontsize=self.suptitle_size)
             self.save_figure(fig, '_riskgroup_proportions')
 
@@ -2267,7 +2253,7 @@ class Project:
 
             # Plot
             ax.hist(param_values)
-            ax.set_title(tool_kit.find_title_from_dictionary(param))
+            ax.set_title(t_k.find_title_from_dictionary(param))
         self.save_figure(fig, '_param_histogram')
 
     def plot_popsizes(self):
@@ -2284,7 +2270,7 @@ class Project:
             if 'popsize_' in var:
                 ax.plot(self.model_runner.model_dict['manual_baseline'].times,
                         self.model_runner.model_dict['manual_baseline'].get_var_soln(var))
-                scenario_labels += [tool_kit.find_title_from_dictionary(var[8:])]
+                scenario_labels += [t_k.find_title_from_dictionary(var[8:])]
         ax.set_xlim([self.inputs.model_constants['recent_time'],
                      self.inputs.model_constants['scenario_end_time']])
         fig.suptitle('Population sizes for cost-coverage curves under baseline scenario')
@@ -2394,15 +2380,17 @@ class Project:
         self.save_opti_figure(fig, '_optimal_allocation')
 
     def load_opti_results(self):
+
         if self.model_runner.load_opti:
             storage_file_name = os.path.join(self.opti_outputs_dir, 'opti_outputs.pkl')
-            self.model_runner.opti_results = tool_kit.pickle_load(storage_file_name)
+            self.model_runner.opti_results = t_k.pickle_load(storage_file_name)
             print "optimisation results loaded"
 
     def save_opti_results(self):
+
         if self.model_runner.save_opti and self.model_runner.optimisation: # save only if opti has been run and save ordered
             filename = os.path.join(self.opti_outputs_dir, 'opti_outputs.pkl')
-            tool_kit.pickle_save(self.model_runner.opti_results, filename)
+            t_k.pickle_save(self.model_runner.opti_results, filename)
 
     def open_output_directory(self):
 

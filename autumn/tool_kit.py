@@ -79,7 +79,6 @@ def replace_underscore_with_space(original_string):
 
     """
 
-
     replaced_string = ''
     for i in range(len(original_string)):
         if original_string[i] == '_':
@@ -88,6 +87,20 @@ def replace_underscore_with_space(original_string):
             replaced_string += original_string[i]
 
     return replaced_string
+
+
+def capitalise_and_remove_underscore(original_string):
+
+    """
+    Combine the two methods used to create titles.
+
+    Args:
+        original_string: String to be modified
+    Return:
+         revised string
+    """
+
+    return capitalise_first_letter(replace_underscore_with_space(original_string))
 
 
 def adjust_country_name(country_name):

@@ -589,6 +589,7 @@ class Project:
         self.scenario_names = self.gui_inputs['scenario_names_to_run']
         self.programs = self.inputs.interventions_to_cost
         self.gtb_available_outputs = ['notifications', 'incidence', 'prevalence', 'mortality']
+        self.level_conversion_dict = {'lower_limit': '_lo', 'upper_limit': '_hi', 'point_estimate': ''}
 
     #################################
     # General methods for use below #
@@ -1204,6 +1205,10 @@ class Project:
 
     def run_plotting(self):
 
+        """
+        Master plotting method to call all the methods that produce specific plots.
+        """
+
         # Find some general output colours
         output_colours = self.make_default_line_styles(5, True)
         for s, scenario in enumerate(self.scenarios):
@@ -1290,7 +1295,7 @@ class Project:
     def plot_outputs_against_gtb(self, outputs, ci_plot=None):
 
         """
-        Produces the plot for the main outputs, can handle multiple scenarios.
+        Produces the plot for the main outputs, loops over multiple scenarios.
 
         Args:
             outputs: A list of the outputs to be plotted.
@@ -1302,8 +1307,7 @@ class Project:
         start_time_index \
             = tool_kit.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
                                                               start_time)
-        colour, indices, yaxis_label, title, patch_colour = \
-            find_standard_output_styles(outputs, lightening_factor=0.3)
+        colour, indices, yaxis_label, title, patch_colour = find_standard_output_styles(outputs, lightening_factor=0.3)
         subplot_grid = find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
 
@@ -1320,22 +1324,11 @@ class Project:
             if output == 'notifications':
                 gtb_data['point_estimate'] = self.inputs.original_data['notifications']['c_newinc']
 
-            # Other indicators (incidence, prevalence, mortality)
+            # Extract the relevant data from the Global TB Report and use to plot a patch (for inc, prev and mortality)
             elif output in self.gtb_available_outputs:
-
-                # Extract the relevant data
-                for indicator in self.inputs.original_data['tb']:
-                    if indices[o] in indicator and '_lo' in indicator:
-                        gtb_data['lower_limit'] = self.inputs.original_data['tb'][indicator]
-                    elif indices[o] in indicator and '_hi' in indicator:
-                        gtb_data['upper_limit'] = self.inputs.original_data['tb'][indicator]
-                    elif indices[o] in indicator:
-                        gtb_data['point_estimate'] = self.inputs.original_data['tb'][indicator]
-
-                # Create and plot the patch array
-                patch_array = create_patch_from_dictionary(gtb_data)
-                patch = patches.Polygon(patch_array, color=patch_colour[o])
-                ax.add_patch(patch)
+                for level in self.level_conversion_dict:
+                    gtb_data[level] = self.inputs.original_data['tb'][indices[o] + self.level_conversion_dict[level]]
+                ax.add_patch(patches.Polygon(create_patch_from_dictionary(gtb_data), color=patch_colour[o]))
 
             # Plot point estimates
             if output in self.gtb_available_outputs:

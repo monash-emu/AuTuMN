@@ -1314,10 +1314,11 @@ class Project:
         # Loop through indicators
         for o, output in enumerate(outputs):
 
-            max_data = 0.
+            # Preliminaries
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
+            max_data = 0.
 
-            # Plotting GTB data_________________________________________________________________________________________
+            # Plotting GTB data in background___________________________________________________________________________
             gtb_data = {}
 
             # Notifications
@@ -1335,41 +1336,38 @@ class Project:
                 ax.plot(gtb_data['point_estimate'].keys(), gtb_data['point_estimate'].values(),
                         color=colour[o], linewidth=0.5, label=None)
 
+            # Update upper limit of data
             max_data = max((max(gtb_data['point_estimate'].values()), max_data))
 
             # Plotting modelled data____________________________________________________________________________________
 
-            # Plot without uncertainty
+            # Plot scenarios without uncertainty
             if ci_plot is None:
 
-                end_filename = '_scenario'
-                max_data = max((max(self.model_runner.epi_outputs['manual_baseline'][output][start_time_index:]),
-                                max_data))
-
-                # Reversing ensures black baseline plotted over top
-                for scenario in self.scenarios[::-1]:
+                # Plot model estimates
+                for scenario in self.scenarios[::-1]:  # Reversing ensures black baseline plotted over top
                     scenario_name = tool_kit.find_scenario_string_from_number(scenario)
                     data_to_plot = self.model_runner.epi_outputs['manual_' + scenario_name][output]
-                    max_data = max((max(self.model_runner.epi_outputs['manual_baseline'][output][start_time_index:]),
-                                    max_data))
-                    ax.plot(
-                        self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
-                        data_to_plot,
-                        color=self.output_colours[scenario][1],
-                        linestyle=self.output_colours[scenario][0],
-                        linewidth=1.5,
-                        label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario_name)))
+                    max_data = max((max(data_to_plot[start_time_index:]), max_data))
+                    ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
+                            data_to_plot,
+                            color=self.output_colours[scenario][1],
+                            linestyle=self.output_colours[scenario][0],
+                            linewidth=1.5,
+                            label
+                            =tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(scenario_name)))
+
+                # Plot "true" model outputs
                 if output in ['incidence', 'mortality']:
-                    ax.plot(
-                        self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
-                        self.model_runner.epi_outputs['manual_' + scenario_name]['true_' + output],
-                        color=self.output_colours[scenario][1],
-                        linestyle=':',
-                        linewidth=1)
+                    ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
+                            self.model_runner.epi_outputs['manual_' + scenario_name]['true_' + output],
+                            color=self.output_colours[scenario][1],
+                            linestyle=':',
+                            linewidth=1)
+                end_filename = '_scenario'
 
             # Plot with uncertainty confidence intervals
             elif ci_plot and self.gui_inputs['output_uncertainty']:
-                end_filename = '_ci'
                 for scenario in self.scenarios[::-1]:
                     scenario_name = tool_kit.find_scenario_string_from_number(scenario)
 
@@ -1397,8 +1395,10 @@ class Project:
                         = max((max(self.model_runner.epi_outputs_uncertainty_centiles[
                                        'uncertainty_' + scenario_name][output][
                                    self.model_runner.percentiles.index(97.5), start_time_index:]), max_data))
+                    end_filename = '_ci'
+
+            # Plot progressive model run outputs
             elif self.gui_inputs['output_uncertainty']:
-                end_filename = '_progress'
                 for run in range(len(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output])):
                     if run not in self.model_runner.accepted_indices and self.plot_rejected_runs:
                         ax.plot(self.model_runner.epi_outputs_uncertainty[
@@ -1407,7 +1407,8 @@ class Project:
                                     'uncertainty_baseline'][output][run, start_time_index:],
                                 linewidth=.2,
                                 color='y',
-                                label=tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space('baseline')))
+                                label
+                                =tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space('baseline')))
                     else:
                         ax.plot(self.model_runner.epi_outputs_uncertainty[
                                     'uncertainty_baseline']['times'][start_time_index:],
@@ -1421,6 +1422,7 @@ class Project:
                         max_data = max(
                             (max(self.model_runner.epi_outputs_uncertainty[
                                      'uncertainty_baseline'][output][run, start_time_index:]), 0.))
+                    end_filename = '_progress'
 
             # Make cosmetic changes
             # if o == len(outputs) - 1 and ci_plot:

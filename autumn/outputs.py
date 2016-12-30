@@ -1327,7 +1327,7 @@ class Project:
                         color=colour[o], linewidth=0.5, label=None)
 
             # Update upper limit of data
-            max_data = max((max(gtb_data['point_estimate'].values()), max_data))
+            max_data = max(max(gtb_data['point_estimate'].values()), max_data)
 
             # Plotting modelled data____________________________________________________________________________________
 
@@ -1338,7 +1338,11 @@ class Project:
                 for scenario in self.scenarios[::-1]:  # Reversing ensures black baseline plotted over top
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
                     data_to_plot = self.model_runner.epi_outputs['manual_' + scenario_name][output]
-                    max_data = max((max(data_to_plot[start_time_index:]), max_data))
+                    if scenario is None:
+                        max_data = max(max(data_to_plot[start_time_index:]), max_data)
+                    else:
+                        max_data = max(max(data_to_plot), max_data)
+
                     ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
                             data_to_plot,
                             color=self.output_colours[scenario][1],
@@ -1380,10 +1384,17 @@ class Project:
                             linestyle='--',
                             linewidth=.5,
                             label=None)
-                    max_data \
-                        = max((max(self.model_runner.epi_outputs_uncertainty_centiles[
-                                       'uncertainty_' + scenario_name][output][
-                                   self.model_runner.percentiles.index(97.5), start_time_index:]), max_data))
+
+                    if scenario:
+                        max_data \
+                            = max(max(self.model_runner.epi_outputs_uncertainty_centiles[
+                                           'uncertainty_' + scenario_name][output][
+                                       self.model_runner.percentiles.index(97.5), :]), max_data)
+                    else:
+                        max_data \
+                            = max(max(self.model_runner.epi_outputs_uncertainty_centiles[
+                                           'uncertainty_' + scenario_name][output][
+                                       self.model_runner.percentiles.index(97.5), start_time_index:]), max_data)
                     end_filename = '_ci'
 
             # Plot progressive model run outputs
@@ -1406,30 +1417,32 @@ class Project:
                                 color=str(1. - float(run) / float(len(
                                     self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output]))),
                                 label=t_k.capitalise_and_remove_underscore('baseline'))
-                        max_data = max(
-                            (max(self.model_runner.epi_outputs_uncertainty[
-                                     'uncertainty_baseline'][output][run, start_time_index:]), 0.))
+                        if scenario:
+                            max_data = max(
+                                max(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output][run, :]),
+                                max_data)
+                        else:
+                            max_data = max(
+                                max(self.model_runner.epi_outputs_uncertainty[
+                                         'uncertainty_baseline'][output][run, start_time_index:]), max_data)
                     end_filename = '_progress'
 
             # Make cosmetic changes
-            # if o == len(outputs) - 1 and ci_plot:
-            #     ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False)
+            if o == len(outputs) - 1:
+                ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False)
             ax.set_ylim((0., max_data * 1.2))
             ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
             ax.set_xticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))
             for axis_to_change in [ax.xaxis, ax.yaxis]:
                 for tick in axis_to_change.get_major_ticks():
                     tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+                    axis_to_change.grid(self.grid)
 
             # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
             ax.set_title(title[o], fontsize=get_nice_font_size(subplot_grid) + 2.)
 
             # Label the y axis with the smaller text size
             ax.set_ylabel(yaxis_label[o], fontsize=get_nice_font_size(subplot_grid))
-
-            # Turn grid lines on/off
-            ax.xaxis.grid(self.grid)
-            ax.yaxis.grid(self.grid)
 
         # Add main title and save
         fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)

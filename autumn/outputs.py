@@ -705,7 +705,7 @@ class Project:
         else:
             return line_styles[n - 1]
 
-    def tidy_axis(self, ax, subplot_grid, max_data=0., start_time=0., o=0, outputs=[]):
+    def tidy_axis(self, ax, subplot_grid, title=[], yaxis_label=[], max_data=0., start_time=0., o=0, outputs=[]):
 
         """
         Method to make cosmetic changes to a set of plot axes.
@@ -729,6 +729,12 @@ class Project:
                 axis_to_change.grid(self.grid)
         if max_data > 1.:
             ax.set_ylim((0., max_data * 1.2))
+
+        # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
+        ax.set_title(title[o], fontsize=get_nice_font_size(subplot_grid) + 2.)
+
+        # Label the y axis with the smaller text size
+        ax.set_ylabel(yaxis_label[o], fontsize=get_nice_font_size(subplot_grid))
 
     def scale_axes(self, max_value):
 
@@ -1451,13 +1457,8 @@ class Project:
 
                     end_filename = '_progress'
 
-            self.tidy_axis(ax, subplot_grid, max_data, start_time, o, outputs)
-
-            # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
-            ax.set_title(title[o], fontsize=get_nice_font_size(subplot_grid) + 2.)
-
-            # Label the y axis with the smaller text size
-            ax.set_ylabel(yaxis_label[o], fontsize=get_nice_font_size(subplot_grid))
+            self.tidy_axis(ax, subplot_grid, title=title, yaxis_label=yaxis_label, max_data=max_data,
+                           start_time=start_time, o=o, outputs=outputs)
 
         # Add main title and save
         fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
@@ -1488,9 +1489,8 @@ class Project:
                         self.model_runner.epi_outputs['manual_' + scenario_name][output + '_mdr'],
                         color=self.output_colours[scenario][1],
                         linestyle=self.output_colours[scenario][0])
-            ax.set_title(title[o], fontsize=get_nice_font_size(subplot_grid) + 2.)
-
-            self.tidy_axis(ax, subplot_grid, start_time=self.inputs.model_constants['start_mdr_introduce_time'],
+            self.tidy_axis(ax, subplot_grid, yaxis_label=yaxis_label, title=title,
+                           start_time=self.inputs.model_constants['start_mdr_introduce_time'],
                            max_data=0., o=o, outputs=outputs)
 
         # Finish off

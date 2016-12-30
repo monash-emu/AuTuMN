@@ -1489,16 +1489,9 @@ class Project:
                         color=self.output_colours[scenario][1],
                         linestyle=self.output_colours[scenario][0])
             ax.set_title(title[o], fontsize=get_nice_font_size(subplot_grid) + 2.)
-            ax.set_xticks(find_reasonable_year_ticks(self.inputs.model_constants['start_mdr_introduce_time'],
-                                                     self.inputs.model_constants['plot_end_time']))
 
-            # Tidy axis
-            for axis_to_change in [ax.xaxis, ax.yaxis]:
-                for tick in axis_to_change.get_major_ticks():
-                    tick.label.set_fontsize(get_nice_font_size(subplot_grid))
-            ax.set_xlim([self.inputs.model_constants['start_mdr_introduce_time'],
-                        self.inputs.model_constants['plot_end_time']])
-            ax.set_ylabel(yaxis_label[o], fontsize=get_nice_font_size(subplot_grid))
+            self.tidy_axis(ax, subplot_grid, start_time=self.inputs.model_constants['start_mdr_introduce_time'],
+                           max_data=0., o=o, outputs=outputs)
 
         # Finish off
         fig.suptitle(t_k.capitalise_first_letter(self.country) + ' resistant strain outputs',

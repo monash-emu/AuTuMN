@@ -592,7 +592,7 @@ class Project:
         self.level_conversion_dict = {'lower_limit': '_lo', 'upper_limit': '_hi', 'point_estimate': ''}
 
         # To have a look at some individual vars scaling over time
-        self.vars_to_view = ['demo_life_expectancy']
+        self.vars_to_view = []
 
     #################################
     # General methods for use below #
@@ -1252,7 +1252,8 @@ class Project:
 
         # Plot scale-up functions - currently only doing this for the baseline model run
         if self.gui_inputs['output_scaleups']:
-            self.var_viewer()
+            if self.vars_to_view:
+                self.var_viewer()
             self.classify_scaleups()
             self.plot_scaleup_fns_against_data()
             self.plot_programmatic_scaleups()

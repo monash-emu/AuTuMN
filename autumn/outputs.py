@@ -705,6 +705,31 @@ class Project:
         else:
             return line_styles[n - 1]
 
+    def tidy_axis(self, ax, subplot_grid, max_data=0., start_time=0., o=0, outputs=[]):
+
+        """
+        Method to make cosmetic changes to a set of plot axes.
+
+        Args:
+            ax: The axis to be modified
+            subplot_grid: List describing the size of the plot
+            max_data: Maximum value of the data of interest on the y-axis
+            start_time: Earliest time needing to be plotted
+            o: Integer for the output number if this method is called by the GTB plotting method
+            outputs: All the outputs to be plotted
+        """
+
+        if o == len(outputs) - 1:
+            ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False)
+        ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
+        ax.set_xticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))
+        for axis_to_change in [ax.xaxis, ax.yaxis]:
+            for tick in axis_to_change.get_major_ticks():
+                tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+                axis_to_change.grid(self.grid)
+        if max_data > 1.:
+            ax.set_ylim((0., max_data * 1.2))
+
     def scale_axes(self, max_value):
 
         """
@@ -1426,16 +1451,7 @@ class Project:
 
                     end_filename = '_progress'
 
-            # Make cosmetic changes
-            if o == len(outputs) - 1:
-                ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False)
-            ax.set_ylim((0., max_data * 1.2))
-            ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
-            ax.set_xticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))
-            for axis_to_change in [ax.xaxis, ax.yaxis]:
-                for tick in axis_to_change.get_major_ticks():
-                    tick.label.set_fontsize(get_nice_font_size(subplot_grid))
-                    axis_to_change.grid(self.grid)
+            self.tidy_axis(ax, subplot_grid, max_data, start_time, o, outputs)
 
             # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
             ax.set_title(title[o], fontsize=get_nice_font_size(subplot_grid) + 2.)

@@ -591,6 +591,9 @@ class Project:
         self.gtb_available_outputs = ['incidence', 'mortality', 'prevalence', 'notifications']
         self.level_conversion_dict = {'lower_limit': '_lo', 'upper_limit': '_hi', 'point_estimate': ''}
 
+        # If you want to have a look at some individual vars scaling over time
+        self.vars_to_view = ['demo_life_expectancy']
+
     #################################
     # General methods for use below #
     #################################
@@ -1249,7 +1252,7 @@ class Project:
 
         # Plot scale-up functions - currently only doing this for the baseline model run
         if self.gui_inputs['output_scaleups']:
-            # self.var_viewer()
+            self.var_viewer()
             self.classify_scaleups()
             self.plot_scaleup_fns_against_data()
             self.plot_programmatic_scaleups()
@@ -1501,8 +1504,7 @@ class Project:
     def classify_scaleups(self):
 
         """
-        Classifies the time variant parameters according to their type (e.g. programmatic, economic, demographic, etc.)
-
+        Classifies the time variant parameters according to their type (e.g. programmatic, economic, demographic, etc.).
         """
 
         for classification in self.classifications:
@@ -1511,14 +1513,14 @@ class Project:
                 if classification in fn:
                     self.classified_scaleups[classification] += [fn]
 
-    def var_viewer(self, functions=['']):
+    def var_viewer(self):
 
         """
         Function that is not currently called, but can be used to visualise a particular var or several vars, by adding
         them to the function input list.
         """
 
-        for function in functions:
+        for function in self.vars_to_view:
             fig = self.set_and_update_figure()
             ax = fig.add_subplot(1, 1, 1)
             start_time = self.inputs.model_constants['plot_start_time']

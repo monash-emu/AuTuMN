@@ -1338,10 +1338,11 @@ class Project:
                 for scenario in self.scenarios[::-1]:  # Reversing ensures black baseline plotted over top
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
                     data_to_plot = self.model_runner.epi_outputs['manual_' + scenario_name][output]
-                    if scenario is None:
-                        max_data = max(max(data_to_plot[start_time_index:]), max_data)
+                    if scenario:
+                        index = 0
                     else:
-                        max_data = max(max(data_to_plot), max_data)
+                        index = start_time_index
+                    max_data = max(max(data_to_plot[index:]), max_data)
 
                     ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
                             data_to_plot,
@@ -1386,15 +1387,13 @@ class Project:
                             label=None)
 
                     if scenario:
-                        max_data \
-                            = max(max(self.model_runner.epi_outputs_uncertainty_centiles[
-                                           'uncertainty_' + scenario_name][output][
-                                       self.model_runner.percentiles.index(97.5), :]), max_data)
+                        index = 0
                     else:
-                        max_data \
-                            = max(max(self.model_runner.epi_outputs_uncertainty_centiles[
-                                           'uncertainty_' + scenario_name][output][
-                                       self.model_runner.percentiles.index(97.5), start_time_index:]), max_data)
+                        index = start_time_index
+                    max_data \
+                        = max(max(self.model_runner.epi_outputs_uncertainty_centiles[
+                                       'uncertainty_' + scenario_name][output][
+                                   self.model_runner.percentiles.index(97.5), index:]), max_data)
                     end_filename = '_ci'
 
             # Plot progressive model run outputs
@@ -1418,13 +1417,13 @@ class Project:
                                     self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output]))),
                                 label=t_k.capitalise_and_remove_underscore('baseline'))
                         if scenario:
-                            max_data = max(
-                                max(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output][run, :]),
-                                max_data)
+                            index = 0
                         else:
-                            max_data = max(
-                                max(self.model_runner.epi_outputs_uncertainty[
-                                         'uncertainty_baseline'][output][run, start_time_index:]), max_data)
+                            index = start_time_index
+                        max_data \
+                            = max(max(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output][run,
+                                      index:]), max_data)
+
                     end_filename = '_progress'
 
             # Make cosmetic changes

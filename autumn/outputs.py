@@ -591,7 +591,7 @@ class Project:
         self.gtb_available_outputs = ['incidence', 'mortality', 'prevalence', 'notifications']
         self.level_conversion_dict = {'lower_limit': '_lo', 'upper_limit': '_hi', 'point_estimate': ''}
 
-        # If you want to have a look at some individual vars scaling over time
+        # To have a look at some individual vars scaling over time
         self.vars_to_view = ['demo_life_expectancy']
 
     #################################
@@ -734,10 +734,10 @@ class Project:
             ax.set_ylim((0., max_data * 1.2))
 
         # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
-        ax.set_title(title[o], fontsize=get_nice_font_size(subplot_grid) + 2.)
+        if title: ax.set_title(title[o], fontsize=get_nice_font_size(subplot_grid) + 2.)
 
         # Label the y axis with the smaller text size
-        ax.set_ylabel(yaxis_label[o], fontsize=get_nice_font_size(subplot_grid))
+        if yaxis_label: ax.set_ylabel(yaxis_label[o], fontsize=get_nice_font_size(subplot_grid))
 
     def scale_axes(self, max_value):
 
@@ -1516,22 +1516,20 @@ class Project:
     def var_viewer(self):
 
         """
-        Function that is not currently called, but can be used to visualise a particular var or several vars, by adding
-        them to the function input list.
+        Function that can be used to visualise a particular var or several vars, by adding them to the function input
+        list, which is now an attribute of this object (i.e. vars_to_view).
         """
 
         for function in self.vars_to_view:
             fig = self.set_and_update_figure()
             ax = fig.add_subplot(1, 1, 1)
-            start_time = self.inputs.model_constants['plot_start_time']
-            end_time = self.inputs.model_constants['plot_end_time']
             for scenario in reversed(self.scenarios):
                 scenario_name = t_k.find_scenario_string_from_number(scenario)
                 ax.plot(self.model_runner.model_dict['manual_' + scenario_name].times,
                         self.model_runner.model_dict['manual_' + scenario_name].get_var_soln(function),
                         color=self.output_colours[scenario][1])
-            ax.set_xlim([start_time, end_time])
-            fig.suptitle(function)
+            self.tidy_axis(ax, [1, 1], start_time=self.inputs.model_constants['plot_start_time'])
+            fig.suptitle(t_k.find_title_from_dictionary(function))
             self.save_figure(fig, '_var_' + function)
 
     def plot_scaleup_fns_against_data(self):

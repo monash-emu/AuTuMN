@@ -1253,7 +1253,7 @@ class Project:
         # Plot scale-up functions - currently only doing this for the baseline model run
         if self.gui_inputs['output_scaleups']:
             if self.vars_to_view:
-                self.var_viewer()
+                self.individual_var_viewer()
             self.classify_scaleups()
             self.plot_scaleup_fns_against_data()
             self.plot_programmatic_scaleups()
@@ -1514,7 +1514,7 @@ class Project:
                 if classification in fn:
                     self.classified_scaleups[classification] += [fn]
 
-    def var_viewer(self):
+    def individual_var_viewer(self):
 
         """
         Function that can be used to visualise a particular var or several vars, by adding them to the function input
@@ -1543,49 +1543,34 @@ class Project:
         for classification in self.classified_scaleups:
 
             # Find the list of the scale-up functions to work with and some x-values
-            functions = self.classified_scaleups[classification]
+            function_list = self.classified_scaleups[classification]
 
             # Standard prelims
-            subplot_grid = find_subplot_numbers(len(functions))
             fig = self.set_and_update_figure()
-
-            # Find some x-values
-            start_time = self.inputs.model_constants['plot_start_time']
-            end_time = self.inputs.model_constants['plot_end_time']
+            subplot_grid = find_subplot_numbers(len(function_list))
+            start_time, end_time \
+                = self.inputs.model_constants['plot_start_time'], self.inputs.model_constants['plot_end_time']
             x_vals = numpy.linspace(start_time, end_time, 1e3)
 
-            # Main title for whole figure
-            title = self.inputs.country + ' ' + \
-                    t_k.find_title_from_dictionary(classification) + ' parameter'
-            if len(functions) > 1:
-                title += 's'
-            fig.suptitle(title, fontsize=self.suptitle_size)
-
             # Iterate through functions
-            for f, function in enumerate(functions):
+            for f, function in enumerate(function_list):
 
-                # Initialise subplot area
+                # Initialise axis
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], f + 1)
 
                 # Iterate through the scenarios
                 scenario_labels = []
                 for scenario in reversed(self.scenarios):
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
+                    scenario_labels += [t_k.capitalise_and_remove_underscore(scenario_name)]
 
                     # Line plot of scaling parameter functions
                     ax.plot(x_vals,
                             map(self.model_runner.model_dict['manual_' + scenario_name].scaleup_fns[function], x_vals),
                             color=self.output_colours[scenario][1])
 
-                    # Record the name of the scenario for the legend
-                    scenario_labels \
-                        += [t_k.capitalise_and_remove_underscore(scenario_name)]
-
                 # Plot the raw data from which the scale-up functions were produced
-                data_to_plot = {}
-                for year in self.inputs.scaleup_data[None][function]:
-                    if year > start_time:
-                        data_to_plot[year] = self.inputs.scaleup_data[None][function][year]
+                data_to_plot = self.inputs.scaleup_data[None][function]
 
                 # Scatter plot data from which they are derived
                 ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
@@ -1602,18 +1587,23 @@ class Project:
 
                 # Add legend to last plot
                 scenario_handles = ax.lines
-                if f == len(functions) - 1:
+                if f == len(function_list) - 1:
                     ax.legend(scenario_handles,
                               scenario_labels,
                               fontsize=get_nice_font_size(subplot_grid),
                               frameon=False)
 
                 ax.set_xticks(find_reasonable_year_ticks(start_time, end_time))
-
                 ax.xaxis.grid(self.grid)
+                ax.set_xlim(left=start_time, right=end_time)
+
                 ax.yaxis.grid(self.grid)
 
             # Save
+            # Main title for whole figure
+            title = self.inputs.country + ' ' + t_k.find_title_from_dictionary(classification) + ' parameter'
+            if len(function_list) > 1: title += 's'
+            fig.suptitle(title, fontsize=self.suptitle_size)
             self.save_figure(fig, '_' + classification + '_scale_ups')
 
     def plot_programmatic_scaleups(self):

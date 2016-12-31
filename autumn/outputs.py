@@ -708,7 +708,7 @@ class Project:
         else:
             return line_styles[n - 1]
 
-    def tidy_axis(self, ax, subplot_grid, title=[], yaxis_label=[], max_data=0., start_time=0., o=0, outputs=[]):
+    def tidy_axis(self, ax, subplot_grid, title='', yaxis_label='', max_data=0., start_time=0., legend=False):
 
         """
         Method to make cosmetic changes to a set of plot axes.
@@ -718,13 +718,11 @@ class Project:
             subplot_grid: List describing the size of the plot
             max_data: Maximum value of the data of interest on the y-axis
             start_time: Earliest time needing to be plotted
-            o: Integer for the output number if this method is called by the GTB plotting method
             outputs: All the outputs to be plotted
         """
 
         # Add a legend if needed
-        if o == len(outputs) - 1:
-            ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False)
+        if legend: ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False)
 
         #
         ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
@@ -740,10 +738,10 @@ class Project:
         if max_data > 1.: ax.set_ylim((0., max_data * 1.2))
 
         # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
-        if title: ax.set_title(title[o], fontsize=get_nice_font_size(subplot_grid) + 2.)
+        if title: ax.set_title(title, fontsize=get_nice_font_size(subplot_grid) + 2.)
 
         # Label the y axis with the smaller text size
-        if yaxis_label: ax.set_ylabel(yaxis_label[o], fontsize=get_nice_font_size(subplot_grid))
+        if yaxis_label: ax.set_ylabel(yaxis_label, fontsize=get_nice_font_size(subplot_grid))
 
     def scale_axes(self, max_value):
 
@@ -1467,8 +1465,8 @@ class Project:
 
                     end_filename = '_progress'
 
-            self.tidy_axis(ax, subplot_grid, title=title, yaxis_label=yaxis_label, max_data=max_data,
-                           start_time=start_time, o=o, outputs=outputs)
+            self.tidy_axis(ax, subplot_grid, title=title[o], yaxis_label=yaxis_label[o], max_data=max_data,
+                           start_time=start_time)
 
         # Add main title and save
         fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
@@ -1499,9 +1497,8 @@ class Project:
                         self.model_runner.epi_outputs['manual_' + scenario_name][output + '_mdr'],
                         color=self.output_colours[scenario][1],
                         linestyle=self.output_colours[scenario][0])
-            self.tidy_axis(ax, subplot_grid, yaxis_label=yaxis_label, title=title,
-                           start_time=self.inputs.model_constants['start_mdr_introduce_time'],
-                           max_data=0., o=o, outputs=outputs)
+            self.tidy_axis(ax, subplot_grid, title=title[o], yaxis_label=yaxis_label[o],
+                           start_time=self.inputs.model_constants['start_mdr_introduce_time'], max_data=0.)
 
         # Finish off
         fig.suptitle(t_k.capitalise_first_letter(self.country) + ' resistant strain outputs',

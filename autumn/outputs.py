@@ -722,16 +722,22 @@ class Project:
             outputs: All the outputs to be plotted
         """
 
+        # Add a legend if needed
         if o == len(outputs) - 1:
             ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False)
+
+        #
         ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
+
+        # Sort out the x-axis ticks
         ax.set_xticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))
         for axis_to_change in [ax.xaxis, ax.yaxis]:
             for tick in axis_to_change.get_major_ticks():
                 tick.label.set_fontsize(get_nice_font_size(subplot_grid))
                 axis_to_change.grid(self.grid)
-        if max_data > 1.:
-            ax.set_ylim((0., max_data * 1.2))
+
+        # Set y-limit
+        if max_data > 1.: ax.set_ylim((0., max_data * 1.2))
 
         # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
         if title: ax.set_title(title[o], fontsize=get_nice_font_size(subplot_grid) + 2.)
@@ -1576,28 +1582,20 @@ class Project:
                 ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
 
                 # Adjust tick font size and add panel title
-                ax.set_xticks([start_time, end_time])
-                for axis_to_change in [ax.xaxis, ax.yaxis]:
-                    for tick in axis_to_change.get_major_ticks():
-                        tick.label.set_fontsize(get_nice_font_size(subplot_grid))
-                title = t_k.find_title_from_dictionary(function)
-                ax.set_title(title, fontsize=get_nice_font_size(subplot_grid))
-                ylims = relax_y_axis(ax)
-                ax.set_ylim(bottom=ylims[0], top=ylims[1])
+                self.tidy_axis(ax, subplot_grid, start_time=start_time)
+
+                # title = t_k.find_title_from_dictionary(function)
+                # ax.set_title(title, fontsize=get_nice_font_size(subplot_grid))
+                # ylims = relax_y_axis(ax)
+                # ax.set_ylim(bottom=ylims[0], top=ylims[1])
 
                 # Add legend to last plot
-                scenario_handles = ax.lines
-                if f == len(function_list) - 1:
-                    ax.legend(scenario_handles,
-                              scenario_labels,
-                              fontsize=get_nice_font_size(subplot_grid),
-                              frameon=False)
-
-                ax.set_xticks(find_reasonable_year_ticks(start_time, end_time))
-                ax.xaxis.grid(self.grid)
-                ax.set_xlim(left=start_time, right=end_time)
-
-                ax.yaxis.grid(self.grid)
+                # scenario_handles = ax.lines
+                # if f == len(function_list) - 1:
+                #     ax.legend(scenario_handles,
+                #               scenario_labels,
+                #               fontsize=get_nice_font_size(subplot_grid),
+                #               frameon=False)
 
             # Save
             # Main title for whole figure

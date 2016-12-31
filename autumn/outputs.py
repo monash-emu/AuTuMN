@@ -724,7 +724,7 @@ class Project:
         # Add a legend if needed
         if legend: ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False)
 
-        #
+        # Set x-limits
         ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
 
         # Sort out the x-axis ticks
@@ -1198,6 +1198,7 @@ class Project:
             document.save(path)
 
     def write_opti_outputs_spreadsheet(self):
+
         if self.model_runner.optimisation:
             # Make filename
             path = os.path.join(self.opti_outputs_dir, 'opti_results.xlsx')
@@ -1466,7 +1467,7 @@ class Project:
                     end_filename = '_progress'
 
             self.tidy_axis(ax, subplot_grid, title=title[o], yaxis_label=yaxis_label[o], max_data=max_data,
-                           start_time=start_time)
+                           start_time=start_time, legend=(o == len(outputs) - 1))
 
         # Add main title and save
         fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
@@ -1498,7 +1499,8 @@ class Project:
                         color=self.output_colours[scenario][1],
                         linestyle=self.output_colours[scenario][0])
             self.tidy_axis(ax, subplot_grid, title=title[o], yaxis_label=yaxis_label[o],
-                           start_time=self.inputs.model_constants['start_mdr_introduce_time'], max_data=0.)
+                           start_time=self.inputs.model_constants['start_mdr_introduce_time'], max_data=0.,
+                           legend=(o == len(outputs) - 1))
 
         # Finish off
         fig.suptitle(t_k.capitalise_first_letter(self.country) + ' resistant strain outputs',
@@ -1579,9 +1581,8 @@ class Project:
                 ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
 
                 # Adjust tick font size and add panel title
-                self.tidy_axis(ax, subplot_grid, start_time=start_time)
+                self.tidy_axis(ax, subplot_grid, start_time=start_time, title=t_k.find_title_from_dictionary(function))
 
-                # title = t_k.find_title_from_dictionary(function)
                 # ax.set_title(title, fontsize=get_nice_font_size(subplot_grid))
                 # ylims = relax_y_axis(ax)
                 # ax.set_ylim(bottom=ylims[0], top=ylims[1])

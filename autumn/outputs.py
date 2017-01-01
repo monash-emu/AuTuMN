@@ -1802,13 +1802,10 @@ class Project:
         """
         Plot population by the compartment to which they belong.
 
-        *** Needs a bit of work - compartment duplication by risk group not really working properly
-        (same compartment with different risk group should be added to that compartment), and classifying
-        multiple compartments into one more general compartment not running.
+        *** Doesn't work well for any but the simplest compartmental model structure - due to number of compartments ***
 
         Args:
-            strain_or_organ: Whether the plotting style should be done by strain or by organ.
-
+            strain_or_organ: Whether the plotting style should be done by strain or by organ
         """
 
         # Standard prelims
@@ -1819,34 +1816,24 @@ class Project:
         colours, patterns, compartment_full_names, markers \
             = make_related_line_styles(self.model_runner.model_dict['manual_baseline'].labels, strain_or_organ)
 
-        # Initialise empty list for legend
-        axis_labels = []
-
         # Plot total population
-        ax.plot(
-            self.model_runner.epi_outputs['manual_baseline']['times'],
-            self.model_runner.epi_outputs['manual_baseline']['population'],
-            'k',
-            label='total', linewidth=2)
-        axis_labels.append('Number of persons')
+        max_data \
+            = max(self.model_runner.epi_outputs['manual_baseline']['population'][self.model_runner.model_dict[
+            'manual_baseline'].find_time_index(self.inputs.model_constants['plot_start_time']):])
+        ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'],
+                self.model_runner.epi_outputs['manual_baseline']['population'], 'k', label='total', linewidth=2)
 
         # Plot sub-populations
         for plot_label in self.model_runner.model_dict['manual_baseline'].labels:
             ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'],
                     self.model_runner.model_dict['manual_baseline'].compartment_soln[plot_label],
-                    label=plot_label, linewidth=1,
-                    color=colours[plot_label],
-                    marker=markers[plot_label],
+                    label=plot_label, linewidth=1, color=colours[plot_label], marker=markers[plot_label],
                     linestyle=patterns[plot_label])
-            axis_labels.append(compartment_full_names[plot_label])
 
         # Finishing touches
-        ax.set_xlim(self.inputs.model_constants['plot_start_time'],
-                    self.inputs.model_constants['plot_end_time'])
-        title = make_plot_title('manual_baseline', self.model_runner.model_dict['manual_baseline'].labels)
-        set_axes_props(ax, 'Year', 'Persons', 'Population, ' + title, True, axis_labels)
-
-        # Saving
+        self.tidy_axis(ax, [1, 1], title='Compartmental population distribution (baseline scenario)',
+                       start_time=self.inputs.model_constants['plot_start_time'], single_axis_room_for_legend=True,
+                       max_data=max_data)
         self.save_figure(fig, '_population')
 
     def plot_fractions(self, strain_or_organ):

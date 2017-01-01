@@ -1811,29 +1811,31 @@ class Project:
         # Standard prelims
         fig = self.set_and_update_figure()
         ax = self.make_single_axis(fig)
-
-        # Get plotting styles
         colours, patterns, compartment_full_names, markers \
             = make_related_line_styles(self.model_runner.model_dict['manual_baseline'].labels, strain_or_organ)
+        start_time_index = self.model_runner.model_dict['manual_baseline'].find_time_index(self.inputs.model_constants[
+                                                                                  'plot_start_time'])
 
         # Plot total population
-        max_data \
-            = max(self.model_runner.epi_outputs['manual_baseline']['population'][self.model_runner.model_dict[
-            'manual_baseline'].find_time_index(self.inputs.model_constants['plot_start_time']):])
-        ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'],
-                self.model_runner.epi_outputs['manual_baseline']['population'], 'k', label='total', linewidth=2)
+        raw_data = self.model_runner.epi_outputs['manual_baseline']['population'][start_time_index:]
+        multiplier, multiplier_label = self.scale_axes(max(raw_data))
+        data = [d * multiplier for d in raw_data]
+        max_data = max(data)
+        ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'][start_time_index:], data,
+                'k', label='total', linewidth=2)
 
         # Plot sub-populations
         for plot_label in self.model_runner.model_dict['manual_baseline'].labels:
-            ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'],
-                    self.model_runner.model_dict['manual_baseline'].compartment_soln[plot_label],
-                    label=plot_label, linewidth=1, color=colours[plot_label], marker=markers[plot_label],
-                    linestyle=patterns[plot_label])
+            data = [d * multiplier for d in self.model_runner.model_dict['manual_baseline'].compartment_soln[
+                                                plot_label][start_time_index:]]
+            ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'][start_time_index:], data,
+                    label=t_k.find_title_from_dictionary(plot_label), linewidth=1, color=colours[plot_label],
+                    marker=markers[plot_label], linestyle=patterns[plot_label])
 
         # Finishing touches
         self.tidy_axis(ax, [1, 1], title='Compartmental population distribution (baseline scenario)',
                        start_time=self.inputs.model_constants['plot_start_time'], single_axis_room_for_legend=True,
-                       max_data=max_data)
+                       max_data=max_data, yaxis_label=multiplier_label + ' population')
         self.save_figure(fig, '_population')
 
     def plot_fractions(self, strain_or_organ):

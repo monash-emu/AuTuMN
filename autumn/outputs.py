@@ -727,8 +727,6 @@ class Project:
         # Set x-limits
         if xaxis_is_time:
             ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
-
-            # Sort out the x-axis ticks
             ax.set_xticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))
 
         for axis_to_change in [ax.xaxis, ax.yaxis]:
@@ -1704,11 +1702,12 @@ class Project:
             # Find the maximum of any type of cost across all of the programs
             max_cost, max_stacked_cost = 0., 0.
             for cost_type in self.model_runner.cost_types:
-                for program in self.programs:
-                    if max(self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_' + program]) \
+                for intervention in self.programs:
+                    if max(self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_' + intervention]) \
                             > max_cost:
                         max_cost \
-                            = max(self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_' + program])
+                            = max(self.model_runner.cost_outputs['manual_' + scenario][cost_type
+                                                                                       + '_cost_' + intervention])
                 if max(self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_all_programs']) \
                         > max_stacked_cost:
                     max_stacked_cost \
@@ -1720,93 +1719,72 @@ class Project:
 
             # Find the index for the first time after the current time
             reference_time_index \
-                = t_k.find_first_list_element_above_value(
-                self.model_runner.cost_outputs['manual_' + scenario]['times'],
-                self.inputs.model_constants['reference_time'])
+                = t_k.find_first_list_element_above_value(self.model_runner.cost_outputs['manual_' + scenario]['times'],
+                                                          self.inputs.model_constants['reference_time'])
 
             # Plot each type of cost to its own subplot and ensure same y-axis scale
+            ax_individual = fig_individual.add_subplot(subplot_grid[0], subplot_grid[1], 1)
+            ax_stacked = fig_stacked.add_subplot(subplot_grid[0], subplot_grid[1], 1)
+            ax_relative = fig_relative.add_subplot(subplot_grid[0], subplot_grid[1], 1)
+            ax_individual_first = copy.copy(ax_individual)
+            ax_stacked_first = copy.copy(ax_stacked)
+            ax_reference_first = copy.copy(ax_relative)
+
             for c, cost_type in enumerate(self.model_runner.cost_types):
-                if c == 0:
-                    ax_individual = fig_individual.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
-                    ax_stacked = fig_stacked.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
-                    ax_relative = fig_relative.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
-                    ax_individual_first = copy.copy(ax_individual)
-                    ax_stacked_first = copy.copy(ax_stacked)
-                    ax_reference_first = copy.copy(ax_relative)
-                else:
-                    ax_individual = fig_individual.add_subplot(subplot_grid[0], subplot_grid[1], c + 1,
-                                                               sharey=ax_individual_first)
-                    ax_stacked = fig_stacked.add_subplot(subplot_grid[0], subplot_grid[1], c + 1,
-                                                         sharey=ax_stacked_first)
-                    ax_relative = fig_relative.add_subplot(subplot_grid[0], subplot_grid[1], c + 1,
-                                                           sharey=ax_reference_first)
+                if c > 0:
+                    ax_individual \
+                        = fig_individual.add_subplot(subplot_grid[0], subplot_grid[1], c + 1,
+                                                     sharey=ax_individual_first)
+                    ax_stacked \
+                        = fig_stacked.add_subplot(subplot_grid[0], subplot_grid[1], c + 1, sharey=ax_stacked_first)
+                    ax_relative \
+                        = fig_relative.add_subplot(subplot_grid[0], subplot_grid[1], c + 1, sharey=ax_reference_first)
 
                 # Create empty list for legend
-                program_labels = []
                 cumulative_data = [0.] * len(self.model_runner.cost_outputs['manual_' + scenario]['times'])
 
-                for program in self.inputs.interventions_to_cost:
+                # Plot for each intervention
+                for intervention in self.inputs.interventions_to_cost:
 
                     # Record the previous data for plotting as an independent object for the lower edge of the fill
                     previous_data = copy.copy(cumulative_data)
 
                     # Calculate the cumulative sum for the upper edge of the fill
                     for i in range(len(self.model_runner.cost_outputs['manual_' + scenario]['times'])):
-                        cumulative_data[i] += self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_' + program][i]
+                        cumulative_data[i] \
+                            += self.model_runner.cost_outputs['manual_' + scenario][cost_type
+                                                                                    + '_cost_' + intervention][i]
 
-                    # Scale all the data
-                    data = self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_' + program]
-
+                    # Scale the cost data
+                    data = self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_' + intervention]
                     individual_data = [d * multiplier_individual for d in data]
                     cumulative_data_to_plot = [d * multiplier_stacked for d in cumulative_data]
                     previous_data_to_plot = [d * multiplier_stacked for d in previous_data]
-
                     reference_cost \
-                        = self.model_runner.cost_outputs['manual_'
-                                                         + scenario][cost_type
-                                                                     + '_cost_' + program][reference_time_index]
+                        = self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_'
+                                                                               + intervention][reference_time_index]
                     relative_data = [(d - reference_cost) * multiplier_individual for d in data]
 
                     # Plot lines
                     ax_individual.plot(self.model_runner.cost_outputs['manual_' + scenario]['times'],
-                                       individual_data,
-                                       color=self.program_colours[program][1])
+                                       individual_data, color=self.program_colours[intervention][1],
+                                       label=t_k.find_title_from_dictionary(intervention))
                     ax_relative.plot(self.model_runner.cost_outputs['manual_' + scenario]['times'],
-                                     relative_data,
-                                     color=self.program_colours[program][1])
+                                     relative_data, color=self.program_colours[intervention][1],
+                                     label=t_k.find_title_from_dictionary(intervention))
 
-                    # Plot stacked
+                    # Plot stacked areas
                     ax_stacked.fill_between(self.model_runner.model_dict['manual_' + scenario].cost_times,
-                                            previous_data_to_plot,
-                                            cumulative_data_to_plot,
-                                            color=self.program_colours[program][1],
-                                            linewidth=0.)
+                                            previous_data_to_plot, cumulative_data_to_plot,
+                                            color=self.program_colours[intervention][1],
+                                            linewidth=0., label=t_k.find_title_from_dictionary(intervention))
 
-                    # Record label for legend
-                    program_labels += [t_k.find_title_from_dictionary(program)]
-
-                # Axis title and y-axis label
+                # Final tidying
                 for ax in [ax_individual, ax_stacked, ax_relative]:
-                    ax.set_title(t_k.capitalise_and_remove_underscore(cost_type),
-                                 fontsize=8)
-                    ax.set_ylabel(multiplier_individual_label + ' $US',
-                                  fontsize=get_nice_font_size(subplot_grid))
-
-                    # Tidy ticks
-                    for tick in ax.xaxis.get_major_ticks():
-                        tick.label.set_fontsize(get_nice_font_size(subplot_grid))
-                    for tick in ax.yaxis.get_major_ticks():
-                        tick.label.set_fontsize(get_nice_font_size(subplot_grid))
-
-                    # Add the legend to last subplot panel
-                    if c == len(self.model_runner.cost_types) - 1:
-                        ax.legend(ax_individual.lines, program_labels, fontsize=get_nice_font_size(subplot_grid),
-                                  frameon=False)
-
-                # Set x-limits
-                for ax in [ax_individual, ax_stacked, ax_relative]:
-                    ax.set_xlim(self.inputs.model_constants['plot_economics_start_time'],
-                                self.inputs.model_constants['plot_end_time'])
+                    self.tidy_axis(ax, subplot_grid, title=t_k.capitalise_and_remove_underscore(cost_type),
+                                   start_time=self.inputs.model_constants['plot_economics_start_time'],
+                                   yaxis_label=multiplier_individual_label + ' $US',
+                                   legend=(c == len(self.model_runner.cost_types) - 1))
 
             # Finishing off with title and save
             fig_individual.suptitle('Individual program costs for ' + t_k.find_title_from_dictionary(scenario),

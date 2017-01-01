@@ -1702,15 +1702,13 @@ class Project:
             subplot_grid = find_subplot_numbers(len(self.model_runner.cost_types))
 
             # Find the maximum of any type of cost across all of the programs
-            max_cost = 0.
-            max_stacked_cost = 0.
-
-            for program in self.programs:
-                for cost_type in self.model_runner.cost_types:
-                    if max(self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_' + program]) > max_cost:
-                        max_cost = max(self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_' + program])
-
+            max_cost, max_stacked_cost = 0., 0.
             for cost_type in self.model_runner.cost_types:
+                for program in self.programs:
+                    if max(self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_' + program]) \
+                            > max_cost:
+                        max_cost \
+                            = max(self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_' + program])
                 if max(self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_all_programs']) \
                         > max_stacked_cost:
                     max_stacked_cost \
@@ -1722,12 +1720,12 @@ class Project:
 
             # Find the index for the first time after the current time
             reference_time_index \
-                = t_k.find_first_list_element_above_value(self.model_runner.cost_outputs['manual_'
-                                                                                              + scenario]['times'],
-                                                               self.inputs.model_constants['reference_time'])
-            for c, cost_type in enumerate(self.model_runner.cost_types):
+                = t_k.find_first_list_element_above_value(
+                self.model_runner.cost_outputs['manual_' + scenario]['times'],
+                self.inputs.model_constants['reference_time'])
 
-                # Plot each type of cost to its own subplot and ensure same y-axis scale
+            # Plot each type of cost to its own subplot and ensure same y-axis scale
+            for c, cost_type in enumerate(self.model_runner.cost_types):
                 if c == 0:
                     ax_individual = fig_individual.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
                     ax_stacked = fig_stacked.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
@@ -1802,9 +1800,7 @@ class Project:
 
                     # Add the legend to last subplot panel
                     if c == len(self.model_runner.cost_types) - 1:
-                        ax.legend(ax_individual.lines,
-                                  program_labels,
-                                  fontsize=get_nice_font_size(subplot_grid),
+                        ax.legend(ax_individual.lines, program_labels, fontsize=get_nice_font_size(subplot_grid),
                                   frameon=False)
 
                 # Set x-limits

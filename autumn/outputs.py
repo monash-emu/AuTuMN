@@ -708,7 +708,8 @@ class Project:
         else:
             return line_styles[n - 1]
 
-    def tidy_axis(self, ax, subplot_grid, title='', yaxis_label='', max_data=0., start_time=0., legend=False):
+    def tidy_axis(self, ax, subplot_grid, title='', yaxis_label='', max_data=0., start_time=0., legend=False,
+                  single_axis_room_for_legend=False):
 
         """
         Method to make cosmetic changes to a set of plot axes.
@@ -718,7 +719,6 @@ class Project:
             subplot_grid: List describing the size of the plot
             max_data: Maximum value of the data of interest on the y-axis
             start_time: Earliest time needing to be plotted
-            outputs: All the outputs to be plotted
         """
 
         # Add a legend if needed
@@ -742,6 +742,10 @@ class Project:
 
         # Label the y axis with the smaller text size
         if yaxis_label: ax.set_ylabel(yaxis_label, fontsize=get_nice_font_size(subplot_grid))
+
+        if single_axis_room_for_legend:
+            ax.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., frameon=False, prop={'size': 7})
+
 
     def scale_axes(self, max_value):
 
@@ -1592,43 +1596,28 @@ class Project:
     def plot_programmatic_scaleups(self):
 
         """
-        Plots only the programmatic time-variant functions on a single set of axes
-
+        Plots only the programmatic time-variant functions on a single set of axes.
         """
 
         # Functions to plot are those in the program_prop_ category of the classified scaleups
-        # (classify_scaleups must have been run)
         functions = self.classified_scaleups['program_prop_']
 
         # Standard prelims
         fig = self.set_and_update_figure()
         line_styles = self.make_default_line_styles(len(functions), True)
-
-        # Get some x values for plotting
-        x_vals = numpy.linspace(self.inputs.model_constants['plot_start_time'],
-                                self.inputs.model_constants['plot_end_time'],
-                                1e3)
+        start_time = self.inputs.model_constants['plot_start_time']
+        x_vals = numpy.linspace(start_time, self.inputs.model_constants['plot_end_time'], 1e3)
 
         # Plot functions for baseline model run only
-        scenario_labels = []
         ax = self.make_single_axis(fig)
         for figure_number, function in enumerate(functions):
-            ax.plot(x_vals,
-                    map(self.inputs.scaleup_fns[None][function],
-                        x_vals), line_styles[figure_number],
-                    label=function)
-            scenario_labels += [t_k.find_title_from_dictionary(function)]
+            ax.plot(x_vals, map(self.inputs.scaleup_fns[None][function], x_vals), line_styles[figure_number],
+                    label=t_k.find_title_from_dictionary(function))
 
-        # Make title, legend, generally tidy up and save
-        title = t_k.capitalise_first_letter(self.country) + ' ' + \
-                t_k.find_title_from_dictionary('program_prop_') + \
-                ' parameters'
-        set_axes_props(ax, 'Year', 'Parameter value',
-                       title, True, functions)
-        ylims = relax_y_axis(ax)
-        ax.set_ylim(bottom=ylims[0], top=ylims[1])
-        scenario_handles = ax.lines
-        self.make_legend_to_single_axis(ax, scenario_handles, scenario_labels)
+        # Finish off
+        self.tidy_axis(ax, [1, 1], title=t_k.capitalise_first_letter(self.country) + ' '
+                                         + t_k.find_title_from_dictionary('program_prop_') + ' parameters',
+                       start_time=start_time, single_axis_room_for_legend=True)
         self.save_figure(fig, '_programmatic_scale_ups')
 
     def plot_cost_coverage_curves(self):

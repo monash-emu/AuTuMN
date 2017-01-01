@@ -709,7 +709,7 @@ class Project:
             return line_styles[n - 1]
 
     def tidy_axis(self, ax, subplot_grid, title='', yaxis_label='', max_data=0., start_time=0., legend=False,
-                  single_axis_room_for_legend=False):
+                  single_axis_room_for_legend=False, xaxis_is_time=True, y_proportion=False, x_label=None):
 
         """
         Method to make cosmetic changes to a set of plot axes.
@@ -725,27 +725,33 @@ class Project:
         if legend: ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False)
 
         # Set x-limits
-        ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
+        if xaxis_is_time:
+            ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
 
-        # Sort out the x-axis ticks
-        ax.set_xticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))
+            # Sort out the x-axis ticks
+            ax.set_xticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))
+
         for axis_to_change in [ax.xaxis, ax.yaxis]:
             for tick in axis_to_change.get_major_ticks():
                 tick.label.set_fontsize(get_nice_font_size(subplot_grid))
                 axis_to_change.grid(self.grid)
 
         # Set y-limit
-        if max_data > 1.: ax.set_ylim((0., max_data * 1.2))
+        if y_proportion:
+            ax.set_ylim((0., 1.))
+        elif max_data > 1.:
+            ax.set_ylim((0., max_data * 1.2))
 
         # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
         if title: ax.set_title(title, fontsize=get_nice_font_size(subplot_grid) + 2.)
 
         # Label the y axis with the smaller text size
         if yaxis_label: ax.set_ylabel(yaxis_label, fontsize=get_nice_font_size(subplot_grid))
+        if x_label: ax.set_xlabel(x_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
 
+        # If the plot is a single axis with legend outside of axis box
         if single_axis_room_for_legend:
             ax.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., frameon=False, prop={'size': 7})
-
 
     def scale_axes(self, max_value):
 
@@ -1628,15 +1634,12 @@ class Project:
 
         # Plot figures by scenario
         for scenario in self.scenario_names:
-
             fig = self.set_and_update_figure()
 
             # Subplots by program
             subplot_grid = find_subplot_numbers(len(self.programs))
             for p, program in enumerate(self.programs):
-
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
-                scenario_labels = []
 
                 # Make times that each curve is produced for from control panel inputs
                 times = range(int(self.inputs.model_constants['cost_curve_start_time']),
@@ -1646,28 +1649,22 @@ class Project:
                 for t, time in enumerate(times):
                     time_index = t_k.find_first_list_element_at_least_value(
                         self.model_runner.model_dict['manual_' + scenario].times, time)
-                    y_values = []
-                    x_values = []
-                    for i in numpy.linspace(0, 1, 101):
 
-                        # Make cost coverage curve
-                        if i < self.inputs.model_constants['econ_saturation_' + program]:
-                            cost = economics.get_cost_from_coverage(i,
-                                                                    self.inputs.model_constants['econ_inflectioncost_'
-                                                                                                + program],
-                                                                    self.inputs.model_constants['econ_saturation_'
-                                                                                                + program],
-                                                                    self.inputs.model_constants['econ_unitcost_'
-                                                                                                + program],
-                                                                    self.model_runner.model_dict[
-                                                                        'manual_' + scenario].var_array[
-                                                                        time_index,
-                                                                        self.model_runner.model_dict[
-                                                                            'manual_'
-                                                                            + scenario].var_labels.index('popsize_'
-                                                                                                         + program)])
+                    # Make cost coverage curve
+                    x_values, y_values = [], []
+                    for coverage in numpy.linspace(0, 1, 101):
+                        if coverage < self.inputs.model_constants['econ_saturation_' + program]:
+                            cost \
+                                = economics.get_cost_from_coverage(coverage,
+                                self.inputs.model_constants['econ_inflectioncost_' + program],
+                                self.inputs.model_constants['econ_saturation_' + program],
+                                self.inputs.model_constants['econ_unitcost_' + program],
+                                self.model_runner.model_dict['manual_' + scenario].var_array[
+                                    time_index,
+                                    self.model_runner.model_dict[
+                                        'manual_' + scenario].var_labels.index('popsize_' + program)])
                             x_values += [cost]
-                            y_values += [i]
+                            y_values += [coverage]
 
                     # Find darkness
                     darkness = .9 - (float(t) / float(len(times))) * .9
@@ -1677,23 +1674,11 @@ class Project:
                     x_values_to_plot = [x * multiplier for x in x_values]
 
                     # Plot
-                    ax.plot(x_values_to_plot, y_values, color=(darkness, darkness, darkness))
+                    ax.plot(x_values_to_plot, y_values, color=(darkness, darkness, darkness), label=str(int(time)))
 
-                    # Find label for legend
-                    scenario_labels += [str(int(time))]
-
-                # Legend to last panel
-                if p == len(self.programs) - 1:
-                    scenario_handles = ax.lines
-                    self.make_legend_to_single_axis(ax, scenario_handles, scenario_labels)
-                ax.set_title(t_k.find_title_from_dictionary('program_prop_' + program),
-                             fontsize=get_nice_font_size(subplot_grid)+2)
-
-                # X-axis label
-                ax.set_xlabel(multiplier_label + ' $US', fontsize=get_nice_font_size(subplot_grid), labelpad=1)
-                for axis_to_change in [ax.xaxis, ax.yaxis]:
-                    for tick in axis_to_change.get_major_ticks():
-                        tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+                self.tidy_axis(ax, subplot_grid, title=t_k.find_title_from_dictionary('program_prop_' + program),
+                               max_data=1., legend=(p == len(self.programs) - 1), xaxis_is_time=False,
+                               y_proportion=True, x_label=multiplier_label + ' $US')
 
             # Finish off with title and save file for scenario
             fig.suptitle('Cost-coverage curves for ' + t_k.replace_underscore_with_space(scenario),

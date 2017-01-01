@@ -1564,15 +1564,14 @@ class Project:
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], f + 1)
 
                 # Iterate through the scenarios
-                scenario_labels = []
                 for scenario in reversed(self.scenarios):
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
-                    scenario_labels += [t_k.capitalise_and_remove_underscore(scenario_name)]
 
                     # Line plot of scaling parameter functions
                     ax.plot(x_vals,
                             map(self.model_runner.model_dict['manual_' + scenario_name].scaleup_fns[function], x_vals),
-                            color=self.output_colours[scenario][1])
+                            color=self.output_colours[scenario][1],
+                            label=t_k.capitalise_and_remove_underscore(scenario_name))
 
                 # Plot the raw data from which the scale-up functions were produced
                 data_to_plot = self.inputs.scaleup_data[None][function]
@@ -1581,22 +1580,10 @@ class Project:
                 ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
 
                 # Adjust tick font size and add panel title
-                self.tidy_axis(ax, subplot_grid, start_time=start_time, title=t_k.find_title_from_dictionary(function))
+                self.tidy_axis(ax, subplot_grid, start_time=start_time, title=t_k.find_title_from_dictionary(function),
+                               legend=(f == len(function_list) - 1))
 
-                # ax.set_title(title, fontsize=get_nice_font_size(subplot_grid))
-                # ylims = relax_y_axis(ax)
-                # ax.set_ylim(bottom=ylims[0], top=ylims[1])
-
-                # Add legend to last plot
-                # scenario_handles = ax.lines
-                # if f == len(function_list) - 1:
-                #     ax.legend(scenario_handles,
-                #               scenario_labels,
-                #               fontsize=get_nice_font_size(subplot_grid),
-                #               frameon=False)
-
-            # Save
-            # Main title for whole figure
+            # Finish off
             title = self.inputs.country + ' ' + t_k.find_title_from_dictionary(classification) + ' parameter'
             if len(function_list) > 1: title += 's'
             fig.suptitle(title, fontsize=self.suptitle_size)

@@ -20,28 +20,6 @@ import pandas
 import copy
 
 
-def relax_y_axis(ax):
-
-    """
-    Matplotlib's default values often place curves very close to the top of axes and sometimes extend down to small
-    fractions for plots that are proportions. This over-rides some of these defaults, that I don't like.
-
-    Args:
-        ax: Axis with default y-limits to be revised
-    Returns:
-        ylims: New y-lims that look better
-    """
-
-    ylims = list(ax.get_ylim())
-    if ylims[0] < ylims[1] * .75:
-        ylims[0] = 0.
-    else:
-        ylims[0] = ylims[0] * .6
-    ylims[1] = ylims[1] * 1.1
-
-    return ylims
-
-
 def find_smallest_factors_of_integer(n):
 
     """
@@ -424,30 +402,7 @@ def save_png(png):
         pylab.savefig(png, dpi=300)
 
 
-def plot_flows(model, labels, png=None):
-
-    colours, patterns, compartment_full_names\
-        = make_related_line_styles(labels)
-    ax = make_axes_with_room_for_legend()
-    axis_labels = []
-    for i_plot, plot_label in enumerate(labels):
-        ax.plot(
-            model.times,
-            model.get_flow_soln(plot_label) / 1E3,
-            label=plot_label, linewidth=1,
-            color=colours[plot_label],
-            linestyle=patterns[plot_label])
-        axis_labels.append(compartment_full_names[plot_label])
-    set_axes_props(ax, 'Year', 'Change per year, thousands',
-                   'Aggregate flows in/out of compartment',
-                   True, axis_labels)
-    save_png(png)
-
-
-def plot_comparative_age_parameters(data_strat_list,
-                                    data_value_list,
-                                    model_value_list,
-                                    model_strat_list,
+def plot_comparative_age_parameters(data_strat_list, data_value_list, model_value_list, model_strat_list,
                                     parameter_name):
 
     # Get good tick labels from the stratum lists
@@ -598,10 +553,7 @@ class Project:
     # General methods for use below #
     #################################
 
-    def find_years_to_write(self,
-                            scenario,
-                            output,
-                            epi=True):
+    def find_years_to_write(self, scenario, output, epi=True):
 
         """
         Find years that need to be written into a spreadsheet or document.
@@ -1930,30 +1882,32 @@ class Project:
         """
         Function to plot population by age group both as raw numbers and as proportions,
         both from the start of the model and using the input argument
-
         """
 
+        # Find stratification to work with
         if age_or_risk == 'age':
-            stratification = self.model_runner.model_dict['manual_baseline'].agegroups
+            stratification = self.inputs.agegroups
         elif age_or_risk == 'risk':
-            stratification = self.model_runner.model_dict['manual_baseline'].riskgroups
+            stratification = self.inputs.riskgroups
         else:
             stratification = None
 
+        # Warn if necessary
         if stratification is None:
             warnings.warn('Plotting by stratification requested, but type of stratification requested unknown')
         elif len(stratification) < 2:
             warnings.warn('No stratification to plot')
         else:
+
             # Standard prelims
             fig = self.set_and_update_figure()
             colours = self.make_default_line_styles(len(stratification), return_all=True)
 
-            # Loop over starting from the model start and the specified starting time
-            for i_time, plot_left_time in enumerate(['plot_start_time', 'early_time']):
+            # Run plotting from early in the model run and from the standard start time for plotting
+            for t, time in enumerate(['plot_start_time', 'early_time']):
 
                 # Find starting times
-                title_time_text = t_k.find_title_from_dictionary(plot_left_time)
+                title_time_text = t_k.find_title_from_dictionary(time)
 
                 # Initialise some variables
                 times = self.model_runner.model_dict['manual_baseline'].times
@@ -1963,7 +1917,7 @@ class Project:
                 upper_plot_margin_fraction = numpy.zeros(len(times))
                 legd_text = []
 
-                for i, stratum in enumerate(stratification):
+                for s, stratum in enumerate(stratification):
 
                     # Find numbers or fractions in that group
                     stratum_count = self.model_runner.epi_outputs['manual_baseline']['population' + stratum]
@@ -1974,57 +1928,36 @@ class Project:
                         upper_plot_margin_count[j] += stratum_count[j]
                         upper_plot_margin_fraction[j] += stratum_fraction[j]
 
-                    # Plot
-                    ax_upper = fig.add_subplot(2, 2, 1 + i_time)
-                    ax_upper.fill_between(times,
-                                          lower_plot_margin_count,
-                                          upper_plot_margin_count,
-                                          facecolors=colours[i][1])
-
                     # Create proxy for legend
-                    ax_upper.plot([], [], color=colours[i][1], linewidth=6)
                     if age_or_risk == 'age':
-                        legd_text += [t_k.turn_strat_into_label(stratum)]
+                        legd_text = t_k.turn_strat_into_label(stratum)
                     elif age_or_risk == 'risk':
-                        legd_text += [t_k.find_title_from_dictionary(stratum)]
+                        legd_text = t_k.find_title_from_dictionary(stratum)
 
-                    # Cosmetic changes at the end
-                    if i == len(stratification) - 1:
-                        ax_upper.set_title('Total numbers from ' + title_time_text, fontsize=8)
-                        if i_time == 1:
-                            ax_upper.legend(reversed(ax_upper.lines),
-                                            reversed(legd_text), loc=2, frameon=False, fontsize=8)
+                    # Plot total numbers
+                    ax_upper = fig.add_subplot(2, 2, 1 + t)
+                    ax_upper.fill_between(times, lower_plot_margin_count, upper_plot_margin_count,
+                                          facecolors=colours[s][1])
 
                     # Plot population proportions
-                    ax_lower = fig.add_subplot(2, 2, 3 + i_time)
+                    ax_lower = fig.add_subplot(2, 2, 3 + t)
                     ax_lower.fill_between(times, lower_plot_margin_fraction, upper_plot_margin_fraction,
-                                          facecolors=colours[i][1])
+                                          facecolors=colours[s][1], label=legd_text)
 
-                    # Cosmetic changes at the end
-                    if i == len(stratification) - 1:
-                        ax_lower.set_ylim((0., 1.))
-                        ax_lower.set_title('Proportion of population from ' + title_time_text, fontsize=8)
+                    # Tidy up plots
+                    self.tidy_axis(ax_upper, [2, 2], start_time=self.inputs.model_constants[time],
+                                   title='Total numbers from ' + title_time_text)
+                    self.tidy_axis(ax_lower, [2, 2], y_proportion=True,
+                                   start_time=self.inputs.model_constants[time],
+                                   title='Proportion of population from ' + title_time_text, legend=(t == 1))
 
                     # Add group values to the lower plot range for next iteration
                     for j in range(len(lower_plot_margin_count)):
                         lower_plot_margin_count[j] += stratum_count[j]
                         lower_plot_margin_fraction[j] += stratum_fraction[j]
 
-                    for axis_to_change in [ax_upper.xaxis, ax_upper.yaxis]:
-                        for tick in axis_to_change.get_major_ticks():
-                            tick.label.set_fontsize(get_nice_font_size([2]))
-                    for axis_to_change in [ax_lower.xaxis, ax_lower.yaxis]:
-                        for tick in axis_to_change.get_major_ticks():
-                            tick.label.set_fontsize(get_nice_font_size([2]))
-
-                    ax_upper.set_xlim(self.inputs.model_constants[plot_left_time],
-                                      self.inputs.model_constants['plot_end_time'])
-                    ax_lower.set_xlim(self.inputs.model_constants[plot_left_time],
-                                      self.inputs.model_constants['plot_end_time'])
-
             # Finish up
-            fig.suptitle('Population by ' + t_k.find_title_from_dictionary(age_or_risk),
-                         fontsize=self.suptitle_size)
+            fig.suptitle('Population by ' + t_k.find_title_from_dictionary(age_or_risk), fontsize=self.suptitle_size)
             self.save_figure(fig, '_riskgroup_proportions')
 
     def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):

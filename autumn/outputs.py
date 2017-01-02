@@ -1845,45 +1845,35 @@ class Project:
 
         *** Ideally shouldn't be running directly from the model objects as is currently happening.
 
+        *** Actually, this really isn't doing what it's supposed to at all - errors seem to be in the functions that are
+        called from the took kit. ***
+
         Args:
             strain_or_organ: Whether the plotting style should be done by strain or by organ.
-
         """
 
         # Get values to be plotted
-        subgroup_solns, subgroup_fractions = t_k.find_fractions(self.model_runner.model_dict['manual_baseline'])
-        for i, category in enumerate(subgroup_fractions):
+        _, subgroup_fractions = t_k.find_fractions(self.model_runner.model_dict['manual_baseline'])
+        for c, category in enumerate(subgroup_fractions):
             values = subgroup_fractions[category]
 
             # Standard prelims
             fig = self.set_and_update_figure()
             ax = self.make_single_axis(fig)
-
-            # Get plotting styles
             colours, patterns, compartment_full_names, markers \
                 = make_related_line_styles(values.keys(), strain_or_organ)
 
-            # Initialise empty list for legend
-            axis_labels = []
-
             # Plot population fractions
             for plot_label in values.keys():
-                ax.plot(
-                    self.model_runner.model_dict['manual_baseline'].times,
-                    values[plot_label],
-                    label=plot_label, linewidth=1,
-                    color=colours[plot_label],
-                    marker=markers[plot_label],
-                    linestyle=patterns[plot_label])
-                axis_labels.append(compartment_full_names[plot_label])
+                ax.plot(self.model_runner.model_dict['manual_baseline'].times, values[plot_label],
+                        label=t_k.find_title_from_dictionary(plot_label),
+                        linewidth=1, color=colours[plot_label], marker=markers[plot_label],
+                        linestyle=patterns[plot_label])
 
-            # Finishing touches
-            ax.set_xlim(self.inputs.model_constants['plot_start_time'],
-                        self.inputs.model_constants['plot_end_time'])
-            title = make_plot_title(self.model_runner.model_dict['manual_baseline'], values.keys())
-            set_axes_props(ax, 'Year', 'Proportion of population', 'Population, ' + title, True, axis_labels)
-
-            # Saving
+            # Finishing up
+            self.tidy_axis(ax, [1, 1], legend=True, single_axis_room_for_legend=True,
+                           start_time=self.inputs.model_constants['plot_start_time'],
+                           yaxis_label='Proportion')
             self.save_figure(fig, '_fraction')
 
     def plot_outputs_by_age(self):

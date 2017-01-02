@@ -477,21 +477,15 @@ def get_fraction_soln(numerator_labels, numerators, denominator):
         Fractions of the denominator in each numerator
     """
 
-    fraction = {}
-
     # Just to avoid warnings, replace any zeros in the denominators with small values
     # (numerators will still be zero, so all fractions should be zero)
     for i in range(len(denominator)):
         if denominator[i] == 0.:
             denominator[i] = 1E-3
 
+    fraction = {}
     for label in numerator_labels:
-        fraction[label] = [
-            v / t
-            for v, t
-            in zip(
-                numerators[label],
-                denominator)]
+        fraction[label] = [v / t for v, t in zip(numerators[label], denominator)]
     return fraction
 
 
@@ -583,18 +577,16 @@ def find_fractions(model):
         subgroup_solns[category], compartment_type_denominator \
             = sum_over_compartments(model, dictionary_of_classifications[category])
         subgroup_fractions[category] \
-            = get_fraction_soln(
-            dictionary_of_classifications[category],
-            subgroup_solns[category],
-            compartment_type_denominator)
+            = get_fraction_soln(dictionary_of_classifications[category],
+                                subgroup_solns[category],
+                                compartment_type_denominator)
         for strata in ['strain', 'organ']:
             subgroup_solns[category + strata], compartment_type_bystrain_denominator, compartment_types_bystrain \
                 = sum_over_compartments_bycategory(model, dictionary_of_classifications[category], strata)
             subgroup_fractions[category + strata] \
-                = get_fraction_soln(
-                compartment_types_bystrain,
-                subgroup_solns[category + strata],
-                compartment_type_bystrain_denominator)
+                = get_fraction_soln(compartment_types_bystrain,
+                                    subgroup_solns[category + strata],
+                                    compartment_type_bystrain_denominator)
 
     return subgroup_solns, subgroup_fractions
 

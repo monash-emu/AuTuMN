@@ -1879,70 +1879,50 @@ class Project:
     def plot_outputs_by_age(self):
 
         """
+        Plot basic epidemiological outputs by age group.
         """
 
+        # Prelims
         outputs_to_plot = ['incidence', 'mortality']
-
-        # Not sure whether we have to specify a figure number
         fig = self.set_and_update_figure()
         subplot_grid = [len(outputs_to_plot), len(self.inputs.agegroups)]
+        start_time_index \
+            = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
+                                                         self.inputs.model_constants['plot_start_time'])
 
+        # Loop over outputs and age groups
         for o, output in enumerate(outputs_to_plot):
 
             # Find the highest incidence value in the time period considered across all age groups
             ymax = 0.
             for agegroup in self.inputs.agegroups:
-                new_ymax = max(self.model_runner.epi_outputs['manual_baseline'][output + agegroup])
-                if new_ymax > ymax:
-                    ymax = new_ymax
+                ymax = max(max(self.model_runner.epi_outputs['manual_baseline'][output + agegroup][start_time_index:]),
+                           ymax)
 
-            for i, agegroup in enumerate(self.inputs.agegroups):
+            for a, agegroup in enumerate(self.inputs.agegroups):
 
-                # i+1 gives the column, o the row
-                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i+1 + o*len(self.inputs.agegroups))
+                # a + 1 gives the column, o the row
+                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], a + 1 + o * len(self.inputs.agegroups))
 
                 # Plot the modelled data
-                scenario_labels = []
                 for scenario in self.scenarios:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
-                    ax.plot(
-                        self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
-                        self.model_runner.epi_outputs['manual_' + scenario_name][output + agegroup],
-                        color=self.output_colours[scenario][1],
-                        linestyle=self.output_colours[scenario][0],
-                        linewidth=1.5)
-                    scenario_labels \
-                        += [t_k.capitalise_and_remove_underscore(scenario_name)]
+                    ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
+                            self.model_runner.epi_outputs['manual_' + scenario_name][output + agegroup],
+                            color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
+                            linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
 
-                # Adjust size of labels of x-ticks
-                for axis_to_change in [ax.xaxis, ax.yaxis]:
-                    for tick in axis_to_change.get_major_ticks():
-                        tick.label.set_fontsize(get_nice_font_size(subplot_grid))
-
-                # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
-                ax.set_title(t_k.capitalise_first_letter(output) + ', '
-                             + t_k.turn_strat_into_label(agegroup), fontsize=get_nice_font_size(subplot_grid))
-
-                # Label the y axis with the smaller text size
-                if i == 0:
-                    ax.set_ylabel('Per 100,000 per year', fontsize=get_nice_font_size(subplot_grid))
-
-                # Set upper y-limit to the maximum value for any age group during the period of interest
-                ax.set_ylim(bottom=0., top=ymax)
-
-                # Draw the legend
-                scenario_handles = ax.lines
-                ax.legend(scenario_handles,
-                          scenario_labels,
-                          fontsize=get_nice_font_size(subplot_grid) - 2.,
-                          frameon=False)
-
-                # Finishing touches
-                ax.set_xlim(self.inputs.model_constants['plot_start_time'],
-                            self.inputs.model_constants['plot_end_time'])
-
-        # Finish up
-        fig.suptitle(self.country + ' burden by age group', fontsize=self.suptitle_size)
+                # Finish off
+                if a == 0:
+                    ylabel = 'Per 100,000 per year'
+                else:
+                    ylabel=''
+                self.tidy_axis(ax, subplot_grid, start_time=self.inputs.model_constants['plot_start_time'],
+                               max_data=ymax, yaxis_label=ylabel,
+                               title=t_k.capitalise_first_letter(output) + ', ' + t_k.turn_strat_into_label(agegroup),
+                               legend=(output == len(outputs_to_plot) - 1 and a == len(self.inputs.agegroups) - 1))
+        fig.suptitle(t_k.capitalise_and_remove_underscore(self.country) + ' burden by age group',
+                     fontsize=self.suptitle_size)
         self.save_figure(fig, '_output_by_age')
 
     def plot_stratified_populations(self, age_or_risk='age'):

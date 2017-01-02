@@ -1915,7 +1915,6 @@ class Project:
                 upper_plot_margin_count = numpy.zeros(len(times))
                 lower_plot_margin_fraction = numpy.zeros(len(times))
                 upper_plot_margin_fraction = numpy.zeros(len(times))
-                legd_text = []
 
                 for s, stratum in enumerate(stratification):
 
@@ -1924,9 +1923,9 @@ class Project:
                     stratum_fraction = self.model_runner.epi_outputs['manual_baseline']['fraction' + stratum]
 
                     # Add group values to the upper plot range for area plot
-                    for j in range(len(upper_plot_margin_count)):
-                        upper_plot_margin_count[j] += stratum_count[j]
-                        upper_plot_margin_fraction[j] += stratum_fraction[j]
+                    for i in range(len(upper_plot_margin_count)):
+                        upper_plot_margin_count[i] += stratum_count[i]
+                        upper_plot_margin_fraction[i] += stratum_fraction[i]
 
                     # Create proxy for legend
                     if age_or_risk == 'age':
@@ -1952,9 +1951,9 @@ class Project:
                                    title='Proportion of population from ' + title_time_text, legend=(t == 1))
 
                     # Add group values to the lower plot range for next iteration
-                    for j in range(len(lower_plot_margin_count)):
-                        lower_plot_margin_count[j] += stratum_count[j]
-                        lower_plot_margin_fraction[j] += stratum_fraction[j]
+                    for i in range(len(lower_plot_margin_count)):
+                        lower_plot_margin_count[i] += stratum_count[i]
+                        lower_plot_margin_fraction[i] += stratum_fraction[i]
 
             # Finish up
             fig.suptitle('Population by ' + t_k.find_title_from_dictionary(age_or_risk), fontsize=self.suptitle_size)

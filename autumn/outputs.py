@@ -761,9 +761,9 @@ class Project:
         png = os.path.join(self.opti_outputs_dir, self.country + last_part_of_name_for_figure + '.png')
         fig.savefig(png, dpi=300)
 
-    #################################################
-    # Methods for outputting to Office applications #
-    #################################################
+    #####################################################
+    ### Methods for outputting to Office applications ###
+    #####################################################
 
     def master_outputs_runner(self):
 
@@ -1199,6 +1199,10 @@ class Project:
 
             # Save workbook
             wb.save(path)
+
+    ########################
+    ### Plotting methods ###
+    ########################
 
     def run_plotting(self):
 
@@ -2231,6 +2235,10 @@ class Project:
         fig.suptitle('Optimal allocation of resource')
         self.save_opti_figure(fig, '_optimal_allocation')
 
+    ############################
+    ### Miscellaneous method ###
+    ############################
+
     def open_output_directory(self):
 
         """
@@ -2242,7 +2250,5 @@ class Project:
             os.system('start ' + ' ' + self.out_dir_project)
         elif 'Darwin' in operating_system:
             os.system('open ' + ' ' + self.out_dir_project)
-
-
 
 

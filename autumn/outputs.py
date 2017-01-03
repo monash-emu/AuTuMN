@@ -2099,16 +2099,26 @@ class Project:
 
         fig = self.set_and_update_figure()
         ax = self.make_single_axis(fig)
-        scenario_labels = []
+        max_data = 0.
+        start_time_index \
+            = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
+                                                         self.inputs.model_constants['plot_start_time'])
+        for var in self.model_runner.model_dict['manual_baseline'].var_labels:
+            if 'popsize_' in var:
+                max_data \
+                    = max(max(self.model_runner.model_dict['manual_baseline'].get_var_soln(var)[start_time_index:]),
+                          max_data)
+
+        multiplier, multiplier_label = self.scale_axes(max_data)
         for var in self.model_runner.model_dict['manual_baseline'].var_labels:
             if 'popsize_' in var:
                 ax.plot(self.model_runner.model_dict['manual_baseline'].times,
-                        self.model_runner.model_dict['manual_baseline'].get_var_soln(var))
-                scenario_labels += [t_k.find_title_from_dictionary(var[8:])]
-        ax.set_xlim([self.inputs.model_constants['recent_time'],
-                     self.inputs.model_constants['scenario_end_time']])
+                        self.model_runner.model_dict['manual_baseline'].get_var_soln(var) * multiplier,
+                        label=t_k.find_title_from_dictionary(var[8:]))
+        self.tidy_axis(ax, [1, 1], single_axis_room_for_legend=True, max_data=max_data * multiplier,
+                       start_time=self.inputs.model_constants['plot_start_time'],
+                       yaxis_label=multiplier_label + ' persons')
         fig.suptitle('Population sizes for cost-coverage curves under baseline scenario')
-        self.make_legend_to_single_axis(ax, ax.lines, scenario_labels)
         self.save_figure(fig, '_popsizes')
 
     def plot_likelihoods(self):

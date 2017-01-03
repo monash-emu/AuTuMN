@@ -139,13 +139,24 @@ def set_axes_props(ax, xlabel=None, ylabel=None, title=None, is_legend=True, axi
 
 def get_nice_font_size(subplot_grid):
 
-    # Simple function to return a reasonable font size
-    # as appropriate to the number of rows of subplots in the figure
+    """
+    Simple function to return a reasonable font size as appropriate to the number of rows of subplots in the figure.
+    """
 
     return 2. + 8. / subplot_grid[0]
 
 
 def find_reasonable_year_ticks(start_time, end_time):
+
+    """
+    Function to find a reasonable spacing between years for x-ticks.
+
+    Args:
+        start_time: Float for left x-limit in years
+        end_time: Float for right x-limit in years
+    Returns:
+        times: The times for the x ticks
+    """
 
     duration = end_time - start_time
     if duration > 1e3:
@@ -231,6 +242,18 @@ def find_standard_output_styles(labels, lightening_factor=1.):
 
 def make_related_line_styles(labels, strain_or_organ):
 
+    """
+    Make line styles for compartments.
+    Args:
+        labels: List of compartment names
+        strain_or_organ: Whether to make patterns refer to strain or organ status
+    Returns:
+        colours: Colours for plotting
+        patterns: Line patterns for plotting
+        compartment_full_names: Full names of compartments
+        markers: Marker styles
+    """
+
     colours = {}
     patterns = {}
     compartment_full_names = {}
@@ -246,6 +269,14 @@ def make_related_line_styles(labels, strain_or_organ):
 
 
 def get_line_style(label, strain_or_organ):
+
+    """
+    Get some colours and patterns for lines for compartments - called by make_related_line_styles only.
+
+    Args:
+        label: Compartment name
+        strain_or_organ: Whether to change line pattern by strain or by organ
+    """
 
     # Unassigned groups remain black
     colour = (0, 0, 0)
@@ -319,6 +350,16 @@ def get_line_style(label, strain_or_organ):
 
 def get_line_pattern(label, strain_or_organ):
 
+    """
+    Get pattern for a compartment.
+
+    Args:
+        label: Compartment name
+        strain_or_organ: Whether to change pattern by strain or by organ
+    Returns:
+        pattern: Line pattern for plotting
+    """
+
     pattern = "-"  # Default solid line
     if strain_or_organ == "organ":
         if "smearneg" in label:
@@ -332,38 +373,6 @@ def get_line_pattern(label, strain_or_organ):
             pattern = '.'
 
     return pattern
-
-
-def make_plot_title(model, labels):
-
-    try:
-        if labels is model.labels:
-            title = "by each individual compartment"
-        elif labels is model.compartment_types \
-                or labels is model.compartment_types_bystrain:
-            title = "by types of compartments"
-        elif labels is model.broad_compartment_types_byorgan:
-            title = "by organ involvement"
-        elif labels is model.broad_compartment_types \
-                or labels is model.broad_compartment_types_bystrain:
-            title = "by broad types of compartments"
-        elif labels is model.groups["ever_infected"]:
-            title = "within ever infected compartments"
-        elif labels is model.groups["infected"]:
-            title = "within infected compartments"
-        elif labels is model.groups["active"]:
-            title = "within active disease compartments"
-        elif labels is model.groups["infectious"]:
-            title = "within infectious compartments"
-        elif labels is model.groups["identified"]:
-            title = "within identified compartments"
-        elif labels is model.groups["treatment"]:
-            title = "within treatment compartments"
-        else:
-            title = "not sure"
-        return title
-    except:
-        return ""
 
 
 def create_patch_from_dictionary(dict):
@@ -642,7 +651,6 @@ class Project:
         Args:
             n: The number of line-styles
             return_all: Whether to return all of the styles up to n or just the last one
-
         Returns:
             line_styles: A list of standard line-styles, or if return_all is False,
                 then the single item (for methods that are iterating through plots.
@@ -1160,6 +1168,7 @@ class Project:
     def write_opti_outputs_spreadsheet(self):
 
         if self.model_runner.optimisation:
+
             # Make filename
             path = os.path.join(self.opti_outputs_dir, 'opti_results.xlsx')
 
@@ -1168,7 +1177,7 @@ class Project:
             sheet = wb.active
             sheet.title = 'optimisation'
 
-            # write row names
+            # Write row names
             sheet.cell(row=1, column=1).value = 'envelope'
             sheet.cell(row=2, column=1).value = 'incidence'
             sheet.cell(row=3, column=1).value = 'mortality'
@@ -1178,16 +1187,17 @@ class Project:
                 n_row += 1
                 sheet.cell(row=n_row, column=1).value = intervention
                 row_index[intervention] = n_row
-            # populate cells with content
+
+            # Populate cells with content
             n_col = 1
-            for i, envelope in enumerate(self.model_runner.opti_results['annual_envelope']):
+            for env, envelope in enumerate(self.model_runner.opti_results['annual_envelope']):
                 n_col += 1
                 sheet.cell(row=1, column=n_col).value = envelope
-                sheet.cell(row=2, column=n_col).value = self.model_runner.opti_results['incidence'][i]
-                sheet.cell(row=3, column=n_col).value = self.model_runner.opti_results['mortality'][i]
-                for intervention in self.model_runner.opti_results['best_allocation'][i].keys():
+                sheet.cell(row=2, column=n_col).value = self.model_runner.opti_results['incidence'][env]
+                sheet.cell(row=3, column=n_col).value = self.model_runner.opti_results['mortality'][env]
+                for intervention in self.model_runner.opti_results['best_allocation'][env].keys():
                     sheet.cell(row=row_index[intervention], column=n_col).value = \
-                        self.model_runner.opti_results['best_allocation'][i][intervention]
+                        self.model_runner.opti_results['best_allocation'][env][intervention]
 
             # Save workbook
             wb.save(path)
@@ -2232,7 +2242,8 @@ class Project:
 
     def save_opti_results(self):
 
-        if self.model_runner.save_opti and self.model_runner.optimisation: # save only if opti has been run and save ordered
+        # Save only if optimisation has been run and save requested
+        if self.model_runner.save_opti and self.model_runner.optimisation:
             filename = os.path.join(self.opti_outputs_dir, 'opti_outputs.pkl')
             t_k.pickle_save(self.model_runner.opti_results, filename)
 

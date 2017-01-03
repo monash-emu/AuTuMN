@@ -188,9 +188,9 @@ class ModelRunner:
         self.random_start = False  # Whether to start from a random point, as opposed to the manually calibrated value
 
         # Optimisation attributes
-        self.optimisation = False  # Leave True even if loading optimisation results
+        self.optimisation = True  # Leave True even if loading optimisation results
         self.indicator_to_minimise = 'incidence'  # Currently must be 'incidence' or 'mortality'
-        self.annual_envelope = [25e6, 50e6, 75e6, 100e6, 200e6]  # Size of funding envelope in scenarios to be run
+        self.annual_envelope = [25e6]  # Size of funding envelope in scenarios to be run
         self.save_opti = True
         self.load_opti = False  # Optimisation will not be run if on
         self.total_funding = None  # Funding for entire period
@@ -278,6 +278,12 @@ class ModelRunner:
         # Master optimisation method
         if self.optimisation and not self.load_opti:
             self.run_optimisation()
+
+        # Prepare file for saving, save and load as requested
+        self.opti_outputs_dir = 'saved_optimisation_analyses'
+        if not os.path.isdir(out_dir): os.makedirs(out_dir)
+        self.load_opti_results()
+        self.save_opti_results()
 
         # Notify user that model running has finished
         self.add_comment_to_gui_window('Finished')
@@ -1295,6 +1301,29 @@ class ModelRunner:
         del self.model_dict['optimisation']
         return {'best_allocation': self.optimal_allocation, 'incidence': output_list['incidence'][-1],
                 'mortality': output_list['mortality'][-1]}
+
+    def load_opti_results(self):
+
+        """
+        Load optimisation results if attribute to self is True.
+        """
+
+        if self.load_opti:
+            storage_file_name = os.path.join(self.opti_outputs_dir, 'opti_outputs.pkl')
+            self.opti_results = tool_kit.pickle_load(storage_file_name)
+            self.add_comment_to_gui_window('Optimisation results loaded')
+
+    def save_opti_results(self):
+
+        """
+        Save optimisation results, which is expected to be the usual behaviour for the model runner.
+        """
+
+        # Save only if optimisation has been run and save requested
+        if self.save_opti and self.optimisation:
+            filename = os.path.join(self.opti_outputs_dir, 'opti_outputs.pkl')
+            tool_kit.pickle_save(self.opti_results, filename)
+            self.add_comment_to_gui_window('Optimisation results saved')
 
     ###########################
     ### GUI-related methods ###

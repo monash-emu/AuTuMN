@@ -531,9 +531,6 @@ class Project:
         self.out_dir_project = os.path.join('projects', self.name)
         if not os.path.isdir(self.out_dir_project):
             os.makedirs(self.out_dir_project)
-        self.opti_outputs_dir = os.path.join(self.out_dir_project, 'optimisation')
-        if not os.path.isdir(self.opti_outputs_dir):
-            os.makedirs(self.opti_outputs_dir)
 
         self.figure_number = 1
         self.classifications = ['demo_', 'econ_', 'epi_prop', 'epi_rr', 'program_prop_', 'program_timeperiod_',
@@ -775,8 +772,6 @@ class Project:
         methods for plotting and writing as required.
         """
 
-        # Master methods for each type of outputs
-
         # Write spreadsheets - with sheet for each scenario or each output
         if self.gui_inputs['output_spreadsheets']:
             if self.gui_inputs['output_by_scenario']:
@@ -795,10 +790,13 @@ class Project:
                 print('Writing output indicator documents')
                 self.write_docs_by_output()
 
-        self.load_opti_results()
-        self.save_opti_results()
+        # Write optimisation spreadsheets
         self.write_opti_outputs_spreadsheet()
+
+        # Master plotting method
         self.run_plotting()
+
+        # Open the directory to which everything has been written to save the user a click or two
         self.open_output_directory()
 
     def write_xls_by_scenario(self):
@@ -2232,20 +2230,6 @@ class Project:
         fig.tight_layout()  # reduces the margins to maximize the size of the pies
         fig.suptitle('Optimal allocation of resource')
         self.save_opti_figure(fig, '_optimal_allocation')
-
-    def load_opti_results(self):
-
-        if self.model_runner.load_opti:
-            storage_file_name = os.path.join(self.opti_outputs_dir, 'opti_outputs.pkl')
-            self.model_runner.opti_results = t_k.pickle_load(storage_file_name)
-            print "optimisation results loaded"
-
-    def save_opti_results(self):
-
-        # Save only if optimisation has been run and save requested
-        if self.model_runner.save_opti and self.model_runner.optimisation:
-            filename = os.path.join(self.opti_outputs_dir, 'opti_outputs.pkl')
-            t_k.pickle_save(self.model_runner.opti_results, filename)
 
     def open_output_directory(self):
 

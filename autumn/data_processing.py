@@ -183,6 +183,8 @@ class Inputs:
         if self.js_gui:
             eventlet.monkey_patch()
 
+        self.intervention_startdates = {}
+
     ######################
     ### Master methods ###
     ######################
@@ -215,6 +217,9 @@ class Inputs:
 
         # Prepare for uncertainty analysis
         self.process_uncertainty_parameters()
+
+        # Optimisation-related methods
+        self.find_intervention_startdates()
 
         # Perform checks
         self.checks()
@@ -973,6 +978,23 @@ class Inputs:
             else:
                 self.add_comment_to_gui_window(
                     'Warning: Calibrated output %s is not directly available from the data' % output['key'])
+
+    def find_intervention_startdates(self):
+
+        """
+        Find the dates when the different interventions start and populate self.intervention_startdates
+        """
+
+        for scenario in self.gui_inputs['scenarios_to_run']:
+            self.intervention_startdates[scenario] = {}
+            for intervention in self.interventions_to_cost:
+                self.intervention_startdates[scenario][intervention] = None
+                years_pos_coverage \
+                    = [key for (key, value) in
+                       self.scaleup_data[scenario]['program_prop_' + intervention].items()
+                       if value > 0.]  # Years from start
+                if len(years_pos_coverage) > 0:  # i.e. some coverage present from start
+                    self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
 
     ###########################
     ### Second tier methods ###

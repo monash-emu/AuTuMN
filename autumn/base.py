@@ -57,7 +57,6 @@ class BaseModel:
         self.available_funding = {}
         self.annual_available_funding = {}
         self.startups_apply = {}
-        self.intervention_startdates = {}
         self.graph = None
         self.loaded_compartments = None
         self.scenario = None
@@ -661,9 +660,9 @@ class BaseModel:
                     pop_size = 0
 
                 # Starting costs
-                # Is a programm starting right now? In that case, update intervention_startdates
-                if self.intervention_startdates[int] is None:  # Intervention hadn't started yet
-                    self.intervention_startdates[int] = self.time
+                # Is a program starting right now? In that case, update intervention_startdates
+                if self.inputs.intervention_startdates[self.scenario][int] is None:  # Intervention hadn't started yet
+                    self.inputs.intervention_startdates[self.scenario][int] = self.time
 
                 # Starting cost has already been taken into account in 'distribute_funding_across_years'
                 coverage = get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.)
@@ -818,21 +817,6 @@ class BaseModel:
                     and self.inputs.model_constants['econ_startupcost_' + program] > 0.:
                 self.startups_apply[program] = True
 
-    def find_intervention_startdates(self):
-
-        """
-        Find the dates when the different interventions start and populate self.intervention_startdates
-        """
-
-        scenario = self.scenario
-        for intervention in self.interventions_to_cost:
-            self.intervention_startdates[intervention] = None
-            years_pos_coverage \
-                = [key for (key, value) in self.inputs.scaleup_data[scenario]['program_prop_' + intervention].items()
-                   if value > 0.]  # Years from start
-            if len(years_pos_coverage) > 0:  # i.e. some coverage present from start
-                self.intervention_startdates[intervention] = min(years_pos_coverage)
-
     def distribute_funding_across_years(self):
 
         # Number of years to fund
@@ -840,12 +824,12 @@ class BaseModel:
         for int in self.interventions_considered_for_opti:
             self.annual_available_funding[int] = 0
             # If intervention hasn't started
-            if self.intervention_startdates[int] is None:
+            if self.inputs.intervention_startdates[self.scenario][int] is None:
                 if self.available_funding[int] < self.inputs.model_constants['econ_startupcost_' + int]:
                     # print 'available_funding insufficient to cover starting costs of ' + int
                     pass
                 else:
-                    self.intervention_startdates[int] = self.inputs.model_constants['scenario_start_time']
+                    self.inputs.intervention_startdates[self.scenario][int] = self.inputs.model_constants['scenario_start_time']
                     self.annual_available_funding[int] \
                         = (self.available_funding[int] - self.inputs.model_constants['econ_startupcost_' + int]) \
                           / n_years

@@ -1124,8 +1124,8 @@ class ModelRunner:
         for combination in all_possible_combinations:
             total_startup_costs = 0.
             for intervention in combination:
-                if self.model_dict['manual_baseline'].intervention_startdates[
-                    self.interventions_considered_for_opti[intervention]] is None:
+                if self.inputs.intervention_startdates[None][self.interventions_considered_for_opti[intervention]] \
+                        is None:
                     total_startup_costs \
                         += self.inputs.model_constants['econ_startupcost_' +
                                                        self.interventions_considered_for_opti[intervention]]
@@ -1229,7 +1229,7 @@ class ModelRunner:
                     minimal_allocation = 0.
 
                     # If start-up costs apply
-                    if self.model_dict['manual_baseline'].intervention_startdates[
+                    if self.inputs.intervention_startdates[None][
                         self.model_dict['manual_baseline'].interventions_to_cost[combination[i]]] is None:
                         minimal_allocation \
                             = self.model_dict['manual_baseline'].inputs.model_constants[

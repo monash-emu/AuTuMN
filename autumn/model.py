@@ -146,7 +146,6 @@ class ConsolidatedModel(StratifiedModel):
 
         # Intervention and economics-related initialisiations
         self.interventions_to_cost = inputs.interventions_to_cost
-        self.find_intervention_startdates()
         if self.eco_drives_epi: self.distribute_funding_across_years()
 
         # Work out what we're doing with organ status and variation of detection rates by organ status

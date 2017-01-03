@@ -1227,6 +1227,7 @@ class Project:
         if self.gui_inputs['output_plot_economics']:
             self.plot_cost_coverage_curves()
             self.plot_cost_over_time()
+            self.plot_intervention_costs_by_scenario(2015, 2030)
 
         # Plot compartment population sizes
         if self.gui_inputs['output_compartment_populations']:
@@ -1881,7 +1882,7 @@ class Project:
 
         """
         Function to plot population by age group both as raw numbers and as proportions,
-        both from the start of the model and using the input argument
+        both from the start of the model and using the input argument.
         """
 
         # Find stratification to work with
@@ -1902,6 +1903,10 @@ class Project:
             # Standard prelims
             fig = self.set_and_update_figure()
             colours = self.make_default_line_styles(len(stratification), return_all=True)
+
+            # Find multiplier for vertical axis scaling
+            multiplier, multiplier_label \
+                = self.scale_axes(max(self.model_runner.epi_outputs['manual_baseline']['population']))
 
             # Run plotting from early in the model run and from the standard start time for plotting
             for t, time in enumerate(['plot_start_time', 'early_time']):
@@ -1935,8 +1940,8 @@ class Project:
 
                     # Plot total numbers
                     ax_upper = fig.add_subplot(2, 2, 1 + t)
-                    ax_upper.fill_between(times, lower_plot_margin_count, upper_plot_margin_count,
-                                          facecolors=colours[s][1])
+                    ax_upper.fill_between(times, lower_plot_margin_count * multiplier,
+                                          upper_plot_margin_count * multiplier, facecolors=colours[s][1])
 
                     # Plot population proportions
                     ax_lower = fig.add_subplot(2, 2, 3 + t)
@@ -1944,8 +1949,12 @@ class Project:
                                           facecolors=colours[s][1], label=legd_text)
 
                     # Tidy up plots
+                    if t == 0:
+                        yaxis_label = multiplier_label + ' population'
+                    else:
+                        yaxis_label = ''
                     self.tidy_axis(ax_upper, [2, 2], start_time=self.inputs.model_constants[time],
-                                   title='Total numbers from ' + title_time_text)
+                                   title='Total numbers from ' + title_time_text, yaxis_label=yaxis_label)
                     self.tidy_axis(ax_lower, [2, 2], y_proportion=True,
                                    start_time=self.inputs.model_constants[time],
                                    title='Proportion of population from ' + title_time_text, legend=(t == 1))
@@ -1962,33 +1971,29 @@ class Project:
     def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):
 
         """
-
-        Eike, 02/09/16
-
         Function for plotting total cost of interventions under different scenarios over a given range of years.
+        Will throw error if defined year range is not present in economic model outputs.
 
         Args:
-            year_start: integer, start year of time frame over which to calculate total costs
-            year_end:   integer, end year of time frame over which to calculate total costs (included)
-            horizontal: boolean, plot stacked bar chart horizontally
-            plot_options: dictionary, options for generating plot
-
-        Will throw error if defined year range is not present in economic model outputs!
-
+            year_start: Integer, start year of time frame over which to calculate total costs
+            year_end: Integer, end year of time frame over which to calculate total costs (included)
+            horizontal: Boolean, plot stacked bar chart horizontally
+            plot_options: Dictionary, options for generating plot
         """
 
-        # set and check options / data ranges
-        intervention_names_dict = {"vaccination": "Vaccination", "xpert": "GeneXpert", "xpertacf": "GeneXpert ACF", "smearacf": "Smear ACF",
-                              "treatment_support": "Treatment Support", "ipt_age0to5": "IPT 0-5 y.o.", "ipt_age5to15": "IPT 5-15 y.o."}
+        # Set and check options / data ranges
+        intervention_names_dict \
+            = {'vaccination': 'Vaccination', 'xpert': 'GeneXpert', 'xpertacf': 'GeneXpert ACF', 'smearacf': 'Smear ACF',
+               'treatment_support': 'Treatment Support', 'ipt_age0to5': 'IPT 0-5 y.o.', 'ipt_age5to15': 'IPT 5-15 y.o.'}
 
         defaults = {
-            "interventions": self.inputs.interventions_to_cost,
-            "x_label_rotation": 45,
-            "y_label": "Total Cost ($)\n",
-            "legend_size": 10,
-            "legend_frame": False,
-            "plot_style": "ggplot",
-            "title": "Projected total costs {sy} - {ey}\n".format(sy=year_start, ey=year_end)
+            'interventions': self.inputs.interventions_to_cost,
+            'x_label_rotation': 45,
+            'y_label': 'Total Cost ($)\n',
+            'legend_size': 10,
+            'legend_frame': False,
+            'plot_style': 'ggplot',
+            'title': 'Projected total costs {sy} - {ey}\n'.format(sy=year_start, ey=year_end)
         }
 
         if plot_options is None:
@@ -2005,35 +2010,35 @@ class Project:
             else:
                 intervention_names.append(options['interventions'][i])
 
-        if options["plot_style"] is not None:
-            style.use(options["plot_style"])
+        if options['plot_style'] is not None: style.use(options['plot_style'])
 
         years = range(year_start, year_end + 1)
 
-        # make data frame (columns: interventions, rows: scenarios)
+        # Make data frame (columns: interventions, rows: scenarios)
         data_frame = pandas.DataFrame(index=self.scenarios, columns=intervention_names)
-
         for scenario in self.scenarios:
-            data_frame.loc[scenario] = [sum([self.model_runner.epi_outputs_integer_dict[scenario]["cost_" + intervention][year]
-                                             for year in years]) for intervention in options["interventions"]]
-
+            data_frame.loc[scenario] \
+                = [sum([self.model_runner.cost_outputs_integer_dict[
+                            'manual_' + t_k.find_scenario_string_from_number(scenario)][
+                            'discounted_inflated_cost_' + intervention][year] for year in years])
+                   for intervention in options['interventions']]
         data_frame.columns = intervention_names
 
-        # make and style plot
+        # Make and style plot
         if horizontal:
-            plot = data_frame.plot.barh(stacked=True, rot=options["x_label_rotation"], title=options["title"])
+            plot = data_frame.plot.barh(stacked=True, rot=options['x_label_rotation'], title=options['title'])
             plot.set_xlabel(options['y_label'])
         else:
-            plot = data_frame.plot.bar(stacked=True, rot=options["x_label_rotation"], title=options["title"])
-            plot.set_ylabel(options["y_label"])
+            plot = data_frame.plot.bar(stacked=True, rot=options['x_label_rotation'], title=options['title'])
+            plot.set_ylabel(options['y_label'])
 
         humanise_y_ticks(plot)
 
         handles, labels = plot.get_legend_handles_labels()
         lgd = plot.legend(handles, labels, bbox_to_anchor=(1, 0.5), loc='center left',
-                          fontsize=options["legend_size"], frameon=options["legend_frame"])
+                          fontsize=options['legend_size'], frameon=options['legend_frame'])
 
-        # save plot
+        # Save plot
         pyplot.savefig(os.path.join(self.out_dir_project, self.country + '_totalcost' + '.png'),
                        bbox_extra_artists=(lgd,), bbox_inches='tight')
 

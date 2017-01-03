@@ -2157,17 +2157,16 @@ class Project:
     def plot_optimised_epi_outputs(self):
 
         """
-        Plot incidence and mortality over funding. This corresponds to the outputs obtained under optimal allocation
+        Plot incidence and mortality over funding. This corresponds to the outputs obtained under optimal allocation.
         """
 
         fig = self.set_and_update_figure()
         ax = self.make_single_axis(fig)
         ax2 = ax.twinx()
-        ax.plot(self.model_runner.opti_results['annual_envelope'], self.model_runner.opti_results['incidence'], 'b^', \
+        ax.plot(self.model_runner.opti_results['annual_envelope'], self.model_runner.opti_results['incidence'], 'b^',
                 linewidth=2.0)
-        set_axes_props(ax, 'Annual funding (US$)', 'TB incidence (/100,000/year)',
-                       '', True, 'incidence')
-        ax2.plot(self.model_runner.opti_results['annual_envelope'], self.model_runner.opti_results['mortality'], 'r+', \
+        set_axes_props(ax, 'Annual funding (US$)', 'TB incidence (/100,000/year)', '', True, 'incidence')
+        ax2.plot(self.model_runner.opti_results['annual_envelope'], self.model_runner.opti_results['mortality'], 'r+',
                  linewidth=4.0)
         set_axes_props(ax2, 'Annual funding (US$)', 'TB mortality (/100,000/year)',
                        '', True, 'mortality', side='right')
@@ -2175,12 +2174,14 @@ class Project:
         self.save_opti_figure(fig, '_optimised_outputs')
 
     def plot_piecharts_opti(self):
+
         n_envelopes = len(self.model_runner.opti_results['annual_envelope'])
         subplot_grid = find_subplot_numbers(n_envelopes + 1)
         font_size = get_nice_font_size(subplot_grid)
 
         fig = self.set_and_update_figure()
-        colors = ['#000037', '#7398B5', '#D94700', '#DBE4E9', '#62000E', '#3D5F00', '#240445', 'black', 'red', 'yellow', 'blue']  # AuTuMN colors
+        colors = ['#000037', '#7398B5', '#D94700', '#DBE4E9', '#62000E', '#3D5F00', '#240445', 'black', 'red',
+                  'yellow', 'blue']  # AuTuMN colours
         color_dict = {}
         for i, intervention in enumerate(self.model_runner.interventions_considered_for_opti):
             color_dict[intervention] = colors[i]
@@ -2200,7 +2201,7 @@ class Project:
             ax.add_artist(circle)
             ax.text(0, 0, get_string_for_funding(funding), horizontalalignment='center', verticalalignment='center')
             if len(interventions_for_legend) == 0:
-                # the legend will contain interventions sorted by proportion of funding for the smallest funding
+                # The legend will contain interventions sorted by proportion of funding for the smallest funding
                 interventions_for_legend = sorted(temp_dict, key=temp_dict.get, reverse=True)
             else:
                 # we need to add interventions that were not selected for lower funding amounts
@@ -2208,19 +2209,18 @@ class Project:
                     if intervention not in interventions_for_legend:
                         interventions_for_legend.append(intervention)
 
-        # generate a gost pie chart that include all interventions to be able to build the full legend
+        # Generate a gost pie chart that include all interventions to be able to build the full legend
         ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], n_envelopes + 1)
         fracs = numpy.random.uniform(0, 1, size=len(interventions_for_legend))
         dynamic_colors = [color_dict[lab] for lab in interventions_for_legend]
         patches, texts = ax.pie(fracs, colors=dynamic_colors)
-        ax.cla() # clear the gost pie chart
+        ax.cla()  # Clear the gost pie chart
 
         ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], n_envelopes + 1)
         ax.legend(patches, interventions_for_legend, loc='right', fontsize=2.0*font_size)
         ax.axis('off')
-        fig.tight_layout() # reduces the margins to maximize the size of the pies
+        fig.tight_layout()  # reduces the margins to maximize the size of the pies
         fig.suptitle('Optimal allocation of resource')
-
         self.save_opti_figure(fig, '_optimal_allocation')
 
     def load_opti_results(self):
@@ -2239,8 +2239,7 @@ class Project:
     def open_output_directory(self):
 
         """
-        Opens the directory into which all the outputs have been placed
-
+        Opens the directory into which all the outputs have been placed.
         """
 
         operating_system = platform.system()

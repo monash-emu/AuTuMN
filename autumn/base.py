@@ -827,10 +827,10 @@ class BaseModel:
         scenario = self.scenario
         for intervention in self.interventions_to_cost:
             self.intervention_startdates[intervention] = None
-            param_key = 'program_prop_' + intervention
-            param_dict = self.inputs.scaleup_data[scenario][param_key]
-            years_pos_coverage = [key for (key, value) in param_dict.items() if value > 0.]  # Years from start
-            if len(years_pos_coverage) > 0:  # Some coverage present at baseline
+            years_pos_coverage \
+                = [key for (key, value) in self.inputs.scaleup_data[scenario]['program_prop_' + intervention].items()
+                   if value > 0.]  # Years from start
+            if len(years_pos_coverage) > 0:  # i.e. some coverage present from start
                 self.intervention_startdates[intervention] = min(years_pos_coverage)
 
     def distribute_funding_across_years(self):

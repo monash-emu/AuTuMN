@@ -2045,29 +2045,27 @@ class Project:
     def plot_riskgroup_checks(self):
 
         """
-        Plots actual risk group fractions against targets.
-
+        Plots actual risk group fractions against targets. Probably almost redundant, as this is a test of code, rather
+        than really giving and epidemiological information.
         """
 
-        # Initial bits
+        # Standard prelims
         fig = self.set_and_update_figure()
         ax = self.make_single_axis(fig)
 
         # Plotting
         for riskgroup in self.model_runner.model_dict['manual_baseline'].riskgroups:
-            ax.plot(self.model_runner.model_dict['manual_baseline'].times[2:],
-                    self.model_runner.model_dict['manual_baseline'].actual_riskgroup_props[riskgroup], 'g-')
             ax.plot(self.model_runner.model_dict['manual_baseline'].times[1:],
-                    self.model_runner.model_dict['manual_baseline'].target_riskgroup_props[riskgroup], 'k--')
-            ax.set_xlim([self.inputs.model_constants['recent_time'], self.inputs.model_constants['current_time']])
+                    self.model_runner.model_dict['manual_baseline'].actual_risk_props[riskgroup], 'g-',
+                    label='Actual ' + riskgroup)
+            ax.plot(self.model_runner.model_dict['manual_baseline'].times,
+                    self.model_runner.model_dict['manual_baseline'].target_risk_props[riskgroup], 'k--',
+                    label='Target ' + riskgroup)
 
         # End bits
+        self.tidy_axis(ax, [1, 1], yaxis_label='Proportion', start_time=self.inputs.model_constants['plot_start_time'],
+                       single_axis_room_for_legend=True)
         fig.suptitle('Population by risk group', fontsize=self.suptitle_size)
-        ax.set_xlabel('Year', fontsize=get_nice_font_size([1, 1]), labelpad=1)
-        ax.set_ylabel('Proportion', fontsize=get_nice_font_size([1, 1]), labelpad=1)
-        for axis_to_change in [ax.xaxis, ax.yaxis]:
-            for tick in axis_to_change.get_major_ticks():
-                tick.label.set_fontsize(get_nice_font_size([1, 1]))
         self.save_figure(fig, '_riskgroup_checks')
 
     def plot_param_histograms(self):

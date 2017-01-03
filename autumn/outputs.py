@@ -2072,7 +2072,6 @@ class Project:
 
         """
         Simple function to plot histograms of parameter values used in uncertainty analysis.
-
         """
 
         # Preliminaries
@@ -2081,12 +2080,11 @@ class Project:
 
         # Loop through parameters used in uncertainty
         for p, param in enumerate(self.model_runner.all_parameters_tried):
-            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p)
+            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
 
             # Restrict to those accepted and after burn-in complete
-            param_values = \
-                [self.model_runner.all_parameters_tried[param][i]
-                 for i in self.model_runner.accepted_no_burn_in_indices]
+            param_values = [self.model_runner.all_parameters_tried[param][i]
+                            for i in self.model_runner.accepted_no_burn_in_indices]
 
             # Plot
             ax.hist(param_values)
@@ -2097,7 +2095,6 @@ class Project:
 
         """
         Plot popsizes over recent time for each program in baseline scenario.
-
         """
 
         fig = self.set_and_update_figure()

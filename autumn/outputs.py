@@ -54,14 +54,14 @@ def humanise_y_ticks(ax):
     if max_val < 1e3:
         return
     if max_val >= 1e3 and max_val < 1e6:
-        labels = ["%.1fK" % (v/1e3) for v in vals]
+        labels = ['%.1fK' % (v/1e3) for v in vals]
     elif max_val >= 1e6 and max_val < 1e9:
-        labels = ["%.1fM" % (v/1e6) for v in vals]
+        labels = ['%.1fM' % (v/1e6) for v in vals]
     elif max_val >= 1e9:
-        labels = ["%.1fB" % (v/1e9) for v in vals]
+        labels = ['%.1fB' % (v/1e9) for v in vals]
     is_fraction = False
     for label in labels:
-        if label[-3:-1] != ".0":
+        if label[-3:-1] != '.0':
             is_fraction = True
     if not is_fraction:
         labels = [l[:-3] + l[-1] for l in labels]
@@ -553,7 +553,7 @@ class Project:
         self.level_conversion_dict = {'lower_limit': '_lo', 'upper_limit': '_hi', 'point_estimate': ''}
 
         # To have a look at some individual vars scaling over time
-        self.vars_to_view = []
+        self.vars_to_view = ['demo_life_expectancy']
 
     #################################
     # General methods for use below #
@@ -665,48 +665,84 @@ class Project:
         else:
             return line_styles[n - 1]
 
-    def tidy_axis(self, ax, subplot_grid, title='', yaxis_label='', max_data=0., start_time=0., legend=False,
-                  single_axis_room_for_legend=False, xaxis_is_time=True, y_proportion=False, x_label=None):
+    def tidy_axis(self, ax, subplot_grid, title='', start_time=0., legend=False, x_label=None, y_label='',
+                  x_axis_type='time', y_axis_type='scaled', x_sig_figs=0, y_sig_figs=0):
 
         """
         Method to make cosmetic changes to a set of plot axes.
-
-        Args:
-            ax: The axis to be modified
-            subplot_grid: List describing the size of the plot
-            max_data: Maximum value of the data of interest on the y-axis
-            start_time: Earliest time needing to be plotted
         """
-
-        # Add a legend if needed
-        if legend: ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False)
-
-        # Set x-limits
-        if xaxis_is_time:
-            ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
-            ax.set_xticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))
-
-        for axis_to_change in [ax.xaxis, ax.yaxis]:
-            for tick in axis_to_change.get_major_ticks():
-                tick.label.set_fontsize(get_nice_font_size(subplot_grid))
-                axis_to_change.grid(self.grid)
-
-        # Set y-limit
-        if y_proportion:
-            ax.set_ylim((0., 1.))
-        elif max_data > 1.:
-            ax.set_ylim((0., max_data * 1.2))
 
         # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
         if title: ax.set_title(title, fontsize=get_nice_font_size(subplot_grid) + 2.)
 
-        # Label the y axis with the smaller text size
-        if yaxis_label: ax.set_ylabel(yaxis_label, fontsize=get_nice_font_size(subplot_grid))
-        if x_label: ax.set_xlabel(x_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
-
-        # If the plot is a single axis with legend outside of axis box
-        if single_axis_room_for_legend:
+        # Add a legend if needed
+        if legend == 'for_single':
             ax.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., frameon=False, prop={'size': 7})
+        elif legend:
+            ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False)
+
+        # Sort x-axis
+        if x_axis_type == 'time':
+            ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
+            ax.set_xticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))
+        elif x_axis_type == 'scaled':
+            x_number_format = '%.' + str(x_sig_figs) + 'f'
+            vals = list(ax.get_xticks())
+            max_val = max([abs(v) for v in vals])
+            if max_val < 1e3:
+                labels = [x_number_format % v for v in vals]
+                axis_modifier = ''
+            elif max_val < 1e6:
+                labels = [x_number_format % (v/1e3) for v in vals]
+                axis_modifier = ' thousand'
+            elif max_val < 1e9:
+                labels = [x_number_format % (v/1e6) for v in vals]
+                axis_modifier = ' million'
+            else:
+                labels = [x_number_format % (v/1e9) for v in vals]
+                axis_modifier = ' billion'
+            ax.set_xticklabels(labels)
+            ax.set_xlabel(x_label + axis_modifier, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
+        elif x_axis_type == 'proportion':
+            ax.set_xlabel(x_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
+            ax.set_xlim((0., 1.))
+        else:
+            ax.set_xlabel(x_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
+
+        # Sort y-axis
+        vals = list(ax.get_yticks())
+        max_val = max([abs(v) for v in vals])
+        if y_axis_type == 'time':
+            ax.set_ylim((start_time, self.inputs.model_constants['plot_end_time']))
+            ax.set_yticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))
+        elif y_axis_type == 'scaled':
+            y_number_format = '%.' + str(y_sig_figs) + 'f'
+            if max_val < 1e3:
+                labels = [y_number_format % v for v in vals]
+                axis_modifier = ''
+            elif max_val < 1e6:
+                labels = [y_number_format % (v/1e3) for v in vals]
+                axis_modifier = 'Thousand '
+            elif max_val < 1e9:
+                labels = [y_number_format % (v/1e6) for v in vals]
+                axis_modifier = 'Million '
+            else:
+                labels = [y_number_format % (v/1e9) for v in vals]
+                axis_modifier = 'Billions '
+            ax.set_yticklabels(labels)
+            ax.set_ylabel(axis_modifier + y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
+        elif y_axis_type == 'proportion':
+            ax.set_ylim((0., 1.))
+            ax.set_ylabel(y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
+        else:
+            ax.set_ylim((0., max_val * 1.2))
+            ax.set_ylabel(y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
+
+        # Set size of font for x-ticks and add a grid if requested
+        for axis_to_change in [ax.xaxis, ax.yaxis]:
+            for tick in axis_to_change.get_major_ticks():
+                tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+                axis_to_change.grid(self.grid)
 
     def scale_axes(self, max_value):
 
@@ -1319,7 +1355,6 @@ class Project:
 
             # Preliminaries
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
-            max_data = 0.
 
             # Plotting GTB data in background___________________________________________________________________________
             gtb_data = {}
@@ -1339,9 +1374,6 @@ class Project:
                 ax.plot(gtb_data['point_estimate'].keys(), gtb_data['point_estimate'].values(),
                         color=colour[o], linewidth=0.5, label=None)
 
-            # Update upper limit of data
-            max_data = max(max(gtb_data['point_estimate'].values()), max_data)
-
             # Plotting modelled data____________________________________________________________________________________
 
             # Plot scenarios without uncertainty
@@ -1350,66 +1382,49 @@ class Project:
                 # Plot model estimates
                 for scenario in self.scenarios[::-1]:  # Reversing ensures black baseline plotted over top
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
-                    data_to_plot = self.model_runner.epi_outputs['manual_' + scenario_name][output]
                     if scenario:
                         index = 0
                     else:
                         index = start_time_index
-                    max_data = max(max(data_to_plot[index:]), max_data)
-
-                    ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
-                            data_to_plot,
-                            color=self.output_colours[scenario][1],
-                            linestyle=self.output_colours[scenario][0],
-                            linewidth=1.5,
-                            label=t_k.capitalise_and_remove_underscore(scenario_name))
+                    ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'][index:],
+                            self.model_runner.epi_outputs['manual_' + scenario_name][output][index:],
+                            color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
+                            linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
 
                 # Plot "true" model outputs
                 if output in ['incidence', 'mortality']:
-                    ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
-                            self.model_runner.epi_outputs['manual_' + scenario_name]['true_' + output],
-                            color=self.output_colours[scenario][1],
-                            linestyle=':',
-                            linewidth=1)
+                    ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'][index:],
+                            self.model_runner.epi_outputs['manual_' + scenario_name]['true_' + output][index:],
+                            color=self.output_colours[scenario][1], linestyle=':', linewidth=1)
                 end_filename = '_scenario'
 
             # Plot with uncertainty confidence intervals
             elif ci_plot and self.gui_inputs['output_uncertainty']:
                 for scenario in self.scenarios[::-1]:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
-
-                    # Median
-                    ax.plot(
-                        self.model_runner.epi_outputs_uncertainty['uncertainty_' + scenario_name]['times'],
-                        self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_' + scenario_name][output][
-                        self.model_runner.percentiles.index(50), :],
-                        color=self.output_colours[scenario][1],
-                        linestyle=self.output_colours[scenario][0],
-                        linewidth=1.5,
-                        label=t_k.capitalise_and_remove_underscore(scenario_name))
-
-                    # Upper and lower confidence bounds
-                    for centile in [2.5, 97.5]:
-                        ax.plot(
-                            self.model_runner.epi_outputs_uncertainty['uncertainty_' + scenario_name]['times'],
-                            self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_' + scenario_name][output][
-                            self.model_runner.percentiles.index(centile), :],
-                            color=self.output_colours[scenario][1],
-                            linestyle='--',
-                            linewidth=.5,
-                            label=None)
-
                     if scenario:
                         index = 0
                     else:
                         index = start_time_index
-                    max_data \
-                        = max(max(self.model_runner.epi_outputs_uncertainty_centiles[
-                                       'uncertainty_' + scenario_name][output][
-                                   self.model_runner.percentiles.index(97.5), index:]), max_data)
+
+                    # Median
+                    ax.plot(
+                        self.model_runner.epi_outputs_uncertainty['uncertainty_' + scenario_name]['times'][index:],
+                        self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_' + scenario_name][output][
+                        self.model_runner.percentiles.index(50), :][index:],
+                        color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
+                        linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
+
+                    # Upper and lower confidence bounds
+                    for centile in [2.5, 97.5]:
+                        ax.plot(
+                            self.model_runner.epi_outputs_uncertainty['uncertainty_' + scenario_name]['times'][index:],
+                            self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_' + scenario_name][output][
+                            self.model_runner.percentiles.index(centile), :][index:],
+                            color=self.output_colours[scenario][1], linestyle='--', linewidth=.5, label=None)
                     end_filename = '_ci'
 
-            # Plot progressive model run outputs
+            # Plot progressive model run outputs for baseline scenario
             elif self.gui_inputs['output_uncertainty']:
                 for run in range(len(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output])):
                     if run not in self.model_runner.accepted_indices and self.plot_rejected_runs:
@@ -1417,9 +1432,7 @@ class Project:
                                     'uncertainty_baseline']['times'][start_time_index:],
                                 self.model_runner.epi_outputs_uncertainty[
                                     'uncertainty_baseline'][output][run, start_time_index:],
-                                linewidth=.2,
-                                color='y',
-                                label=t_k.capitalise_and_remove_underscore('baseline'))
+                                linewidth=.2, color='y', label=t_k.capitalise_and_remove_underscore('baseline'))
                     else:
                         ax.plot(self.model_runner.epi_outputs_uncertainty[
                                     'uncertainty_baseline']['times'][start_time_index:],
@@ -1429,18 +1442,10 @@ class Project:
                                 color=str(1. - float(run) / float(len(
                                     self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output]))),
                                 label=t_k.capitalise_and_remove_underscore('baseline'))
-                        if scenario:
-                            index = 0
-                        else:
-                            index = start_time_index
-                        max_data \
-                            = max(max(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output][run,
-                                      index:]), max_data)
-
                     end_filename = '_progress'
 
-            self.tidy_axis(ax, subplot_grid, title=title[o], yaxis_label=yaxis_label[o], max_data=max_data,
-                           start_time=start_time, legend=(o == len(outputs) - 1))
+            self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time, legend=(o == len(outputs) - 1),
+                           y_axis_type='raw', y_label=yaxis_label[o])
 
         # Add main title and save
         fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
@@ -1469,10 +1474,9 @@ class Project:
                 scenario_name = t_k.find_scenario_string_from_number(scenario)
                 ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
                         self.model_runner.epi_outputs['manual_' + scenario_name][output + '_mdr'],
-                        color=self.output_colours[scenario][1],
-                        linestyle=self.output_colours[scenario][0])
-            self.tidy_axis(ax, subplot_grid, title=title[o], yaxis_label=yaxis_label[o],
-                           start_time=self.inputs.model_constants['start_mdr_introduce_time'], max_data=0.,
+                        color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0])
+            self.tidy_axis(ax, subplot_grid, title=title[o], y_label=yaxis_label[o],
+                           start_time=self.inputs.model_constants['start_mdr_introduce_time'],
                            legend=(o == len(outputs) - 1))
 
         # Finish off
@@ -1553,8 +1557,12 @@ class Project:
                 ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
 
                 # Adjust tick font size and add panel title
+                if 'prop_' in function:
+                    y_axis_type = 'proportion'
+                else:
+                    y_axis_type = 'raw'
                 self.tidy_axis(ax, subplot_grid, start_time=start_time, title=t_k.find_title_from_dictionary(function),
-                               legend=(f == len(function_list) - 1))
+                               legend=(f == len(function_list) - 1), y_axis_type=y_axis_type)
 
             # Finish off
             title = self.inputs.country + ' ' + t_k.find_title_from_dictionary(classification) + ' parameter'
@@ -1586,7 +1594,7 @@ class Project:
         # Finish off
         self.tidy_axis(ax, [1, 1], title=t_k.capitalise_first_letter(self.country) + ' '
                                          + t_k.find_title_from_dictionary('program_prop_') + ' parameters',
-                       start_time=start_time, single_axis_room_for_legend=True)
+                       start_time=start_time, legend='for_single', y_axis_type='proportion')
         self.save_figure(fig, '_programmatic_scale_ups')
 
     def plot_cost_coverage_curves(self):
@@ -1632,16 +1640,12 @@ class Project:
                     # Find darkness
                     darkness = .9 - (float(t) / float(len(times))) * .9
 
-                    # Scale data
-                    multiplier, multiplier_label = self.scale_axes(max(x_values))
-                    x_values_to_plot = [x * multiplier for x in x_values]
-
                     # Plot
-                    ax.plot(x_values_to_plot, y_values, color=(darkness, darkness, darkness), label=str(int(time)))
+                    ax.plot(x_values, y_values, color=(darkness, darkness, darkness), label=str(int(time)))
 
                 self.tidy_axis(ax, subplot_grid, title=t_k.find_title_from_dictionary('program_prop_' + program),
-                               max_data=1., legend=(p == len(self.programs) - 1), xaxis_is_time=False,
-                               y_proportion=True, x_label=multiplier_label + ' $US')
+                               x_axis_type='scaled', legend=(p == len(self.programs) - 1), y_axis_type='proportion',
+                               x_label='$US ')
 
             # Finish off with title and save file for scenario
             fig.suptitle('Cost-coverage curves for ' + t_k.replace_underscore_with_space(scenario),
@@ -1664,24 +1668,6 @@ class Project:
             fig_relative = self.set_and_update_figure()
             subplot_grid = find_subplot_numbers(len(self.model_runner.cost_types))
 
-            # Find the maximum of any type of cost across all of the programs
-            max_cost, max_stacked_cost = 0., 0.
-            for cost_type in self.model_runner.cost_types:
-                for intervention in self.programs:
-                    if max(self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_' + intervention]) \
-                            > max_cost:
-                        max_cost \
-                            = max(self.model_runner.cost_outputs['manual_' + scenario][cost_type
-                                                                                       + '_cost_' + intervention])
-                if max(self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_all_programs']) \
-                        > max_stacked_cost:
-                    max_stacked_cost \
-                        = max(self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_all_programs'])
-
-            # Scale vertical axis and amend axis label as appropriate
-            multiplier_individual, multiplier_individual_label = self.scale_axes(max_cost)
-            multiplier_stacked, multiplier_stacked_label = self.scale_axes(max_stacked_cost)
-
             # Find the index for the first time after the current time
             reference_time_index \
                 = t_k.find_first_list_element_above_value(self.model_runner.cost_outputs['manual_' + scenario]['times'],
@@ -1697,9 +1683,8 @@ class Project:
 
             for c, cost_type in enumerate(self.model_runner.cost_types):
                 if c > 0:
-                    ax_individual \
-                        = fig_individual.add_subplot(subplot_grid[0], subplot_grid[1], c + 1,
-                                                     sharey=ax_individual_first)
+                    ax_individual = fig_individual.add_subplot(subplot_grid[0], subplot_grid[1], c + 1,
+                                                               sharey=ax_individual_first)
                     ax_stacked \
                         = fig_stacked.add_subplot(subplot_grid[0], subplot_grid[1], c + 1, sharey=ax_stacked_first)
                     ax_relative \
@@ -1721,14 +1706,12 @@ class Project:
                                                                                     + '_cost_' + intervention][i]
 
                     # Scale the cost data
-                    data = self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_' + intervention]
-                    individual_data = [d * multiplier_individual for d in data]
-                    cumulative_data_to_plot = [d * multiplier_stacked for d in cumulative_data]
-                    previous_data_to_plot = [d * multiplier_stacked for d in previous_data]
+                    individual_data \
+                        = self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_' + intervention]
                     reference_cost \
                         = self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_'
                                                                                + intervention][reference_time_index]
-                    relative_data = [(d - reference_cost) * multiplier_individual for d in data]
+                    relative_data = [(d - reference_cost) for d in individual_data]
 
                     # Plot lines
                     ax_individual.plot(self.model_runner.cost_outputs['manual_' + scenario]['times'],
@@ -1740,7 +1723,7 @@ class Project:
 
                     # Plot stacked areas
                     ax_stacked.fill_between(self.model_runner.model_dict['manual_' + scenario].cost_times,
-                                            previous_data_to_plot, cumulative_data_to_plot,
+                                            previous_data, cumulative_data,
                                             color=self.program_colours[intervention][1],
                                             linewidth=0., label=t_k.find_title_from_dictionary(intervention))
 
@@ -1748,7 +1731,7 @@ class Project:
                 for ax in [ax_individual, ax_stacked, ax_relative]:
                     self.tidy_axis(ax, subplot_grid, title=t_k.capitalise_and_remove_underscore(cost_type),
                                    start_time=self.inputs.model_constants['plot_economics_start_time'],
-                                   yaxis_label=multiplier_individual_label + ' $US',
+                                   y_label=' $US', y_axis_type='scaled', y_sig_figs=1,
                                    legend=(c == len(self.model_runner.cost_types) - 1))
 
             # Finishing off with title and save
@@ -1782,25 +1765,21 @@ class Project:
                                                                                   'plot_start_time'])
 
         # Plot total population
-        raw_data = self.model_runner.epi_outputs['manual_baseline']['population'][start_time_index:]
-        multiplier, multiplier_label = self.scale_axes(max(raw_data))
-        data = [d * multiplier for d in raw_data]
-        max_data = max(data)
-        ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'][start_time_index:], data,
+        ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'][start_time_index:],
+                self.model_runner.epi_outputs['manual_baseline']['population'][start_time_index:],
                 'k', label='total', linewidth=2)
 
         # Plot sub-populations
         for plot_label in self.model_runner.model_dict['manual_baseline'].labels:
-            data = [d * multiplier for d in self.model_runner.model_dict['manual_baseline'].compartment_soln[
-                                                plot_label][start_time_index:]]
-            ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'][start_time_index:], data,
+            ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'][start_time_index:],
+                    self.model_runner.model_dict['manual_baseline'].compartment_soln[plot_label][start_time_index:],
                     label=t_k.find_title_from_dictionary(plot_label), linewidth=1, color=colours[plot_label],
                     marker=markers[plot_label], linestyle=patterns[plot_label])
 
         # Finishing touches
         self.tidy_axis(ax, [1, 1], title='Compartmental population distribution (baseline scenario)',
-                       start_time=self.inputs.model_constants['plot_start_time'], single_axis_room_for_legend=True,
-                       max_data=max_data, yaxis_label=multiplier_label + ' population')
+                       start_time=self.inputs.model_constants['plot_start_time'], legend='for_single',
+                       y_label='Population', y_axis_type='scaled')
         self.save_figure(fig, '_population')
 
     def plot_fractions(self, strain_or_organ):
@@ -1831,14 +1810,12 @@ class Project:
             # Plot population fractions
             for plot_label in values.keys():
                 ax.plot(self.model_runner.model_dict['manual_baseline'].times, values[plot_label],
-                        label=t_k.find_title_from_dictionary(plot_label),
-                        linewidth=1, color=colours[plot_label], marker=markers[plot_label],
-                        linestyle=patterns[plot_label])
+                        label=t_k.find_title_from_dictionary(plot_label), linewidth=1, color=colours[plot_label],
+                        marker=markers[plot_label], linestyle=patterns[plot_label])
 
             # Finishing up
-            self.tidy_axis(ax, [1, 1], legend=True, single_axis_room_for_legend=True,
-                           start_time=self.inputs.model_constants['plot_start_time'],
-                           yaxis_label='Proportion')
+            self.tidy_axis(ax, [1, 1], legend='for_single', start_time=self.inputs.model_constants['plot_start_time'],
+                           y_axis_type='proportion')
             self.save_figure(fig, '_fraction')
 
     def plot_outputs_by_age(self):
@@ -1857,13 +1834,6 @@ class Project:
 
         # Loop over outputs and age groups
         for o, output in enumerate(outputs_to_plot):
-
-            # Find the highest incidence value in the time period considered across all age groups
-            ymax = 0.
-            for agegroup in self.inputs.agegroups:
-                ymax = max(max(self.model_runner.epi_outputs['manual_baseline'][output + agegroup][start_time_index:]),
-                           ymax)
-
             for a, agegroup in enumerate(self.inputs.agegroups):
 
                 # a + 1 gives the column, o the row
@@ -1872,18 +1842,19 @@ class Project:
                 # Plot the modelled data
                 for scenario in self.scenarios:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
-                    ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
-                            self.model_runner.epi_outputs['manual_' + scenario_name][output + agegroup],
-                            color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
-                            linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
+                    ax.plot(
+                        self.model_runner.epi_outputs['manual_' + scenario_name]['times'][start_time_index:],
+                        self.model_runner.epi_outputs['manual_' + scenario_name][output + agegroup][start_time_index:],
+                        color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
+                        linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
 
                 # Finish off
                 if a == 0:
                     ylabel = 'Per 100,000 per year'
                 else:
-                    ylabel=''
+                    ylabel = ''
                 self.tidy_axis(ax, subplot_grid, start_time=self.inputs.model_constants['plot_start_time'],
-                               max_data=ymax, yaxis_label=ylabel,
+                               y_label=ylabel, y_axis_type='scaled',
                                title=t_k.capitalise_first_letter(output) + ', ' + t_k.turn_strat_into_label(agegroup),
                                legend=(output == len(outputs_to_plot) - 1 and a == len(self.inputs.agegroups) - 1))
         fig.suptitle(t_k.capitalise_and_remove_underscore(self.country) + ' burden by age group',
@@ -1896,6 +1867,13 @@ class Project:
         Function to plot population by age group both as raw numbers and as proportions,
         both from the start of the model and using the input argument.
         """
+
+        start_time_index \
+            = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
+                                                         self.inputs.model_constants['plot_start_time'])
+        early_time_index \
+            = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
+                                                         self.inputs.model_constants['early_time'])
 
         # Find stratification to work with
         if age_or_risk == 'age':
@@ -1916,10 +1894,6 @@ class Project:
             fig = self.set_and_update_figure()
             colours = self.make_default_line_styles(len(stratification), return_all=True)
 
-            # Find multiplier for vertical axis scaling
-            multiplier, multiplier_label \
-                = self.scale_axes(max(self.model_runner.epi_outputs['manual_baseline']['population']))
-
             # Run plotting from early in the model run and from the standard start time for plotting
             for t, time in enumerate(['plot_start_time', 'early_time']):
 
@@ -1936,8 +1910,10 @@ class Project:
                 for s, stratum in enumerate(stratification):
 
                     # Find numbers or fractions in that group
-                    stratum_count = self.model_runner.epi_outputs['manual_baseline']['population' + stratum]
-                    stratum_fraction = self.model_runner.epi_outputs['manual_baseline']['fraction' + stratum]
+                    stratum_count \
+                        = self.model_runner.epi_outputs['manual_baseline']['population' + stratum]
+                    stratum_fraction \
+                        = self.model_runner.epi_outputs['manual_baseline']['fraction' + stratum]
 
                     # Add group values to the upper plot range for area plot
                     for i in range(len(upper_plot_margin_count)):
@@ -1950,24 +1926,26 @@ class Project:
                     elif age_or_risk == 'risk':
                         legd_text = t_k.find_title_from_dictionary(stratum)
 
+                    if t == 0:
+                        time_index = start_time_index
+                    else:
+                        time_index = early_time_index
+
                     # Plot total numbers
                     ax_upper = fig.add_subplot(2, 2, 1 + t)
-                    ax_upper.fill_between(times, lower_plot_margin_count * multiplier,
-                                          upper_plot_margin_count * multiplier, facecolors=colours[s][1])
+                    ax_upper.fill_between(times[time_index:], lower_plot_margin_count[time_index:],
+                                          upper_plot_margin_count[time_index:], facecolors=colours[s][1])
 
                     # Plot population proportions
                     ax_lower = fig.add_subplot(2, 2, 3 + t)
-                    ax_lower.fill_between(times, lower_plot_margin_fraction, upper_plot_margin_fraction,
+                    ax_lower.fill_between(times[time_index:], lower_plot_margin_fraction[time_index:],
+                                          upper_plot_margin_fraction[time_index:],
                                           facecolors=colours[s][1], label=legd_text)
 
                     # Tidy up plots
-                    if t == 0:
-                        yaxis_label = multiplier_label + ' population'
-                    else:
-                        yaxis_label = ''
                     self.tidy_axis(ax_upper, [2, 2], start_time=self.inputs.model_constants[time],
-                                   title='Total numbers from ' + title_time_text, yaxis_label=yaxis_label)
-                    self.tidy_axis(ax_lower, [2, 2], y_proportion=True,
+                                   title='Total numbers from ' + title_time_text, y_label='population')
+                    self.tidy_axis(ax_lower, [2, 2], y_axis_type='proportion',
                                    start_time=self.inputs.model_constants[time],
                                    title='Proportion of population from ' + title_time_text, legend=(t == 1))
 
@@ -2109,27 +2087,23 @@ class Project:
         Plot popsizes over recent time for each program in baseline scenario.
         """
 
+        # Prelims
         fig = self.set_and_update_figure()
         ax = self.make_single_axis(fig)
-        max_data = 0.
         start_time_index \
             = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
                                                          self.inputs.model_constants['plot_start_time'])
-        for var in self.model_runner.model_dict['manual_baseline'].var_labels:
-            if 'popsize_' in var:
-                max_data \
-                    = max(max(self.model_runner.model_dict['manual_baseline'].get_var_soln(var)[start_time_index:]),
-                          max_data)
 
-        multiplier, multiplier_label = self.scale_axes(max_data)
+        # Plotting
         for var in self.model_runner.model_dict['manual_baseline'].var_labels:
             if 'popsize_' in var:
-                ax.plot(self.model_runner.model_dict['manual_baseline'].times,
-                        self.model_runner.model_dict['manual_baseline'].get_var_soln(var) * multiplier,
+                ax.plot(self.model_runner.model_dict['manual_baseline'].times[start_time_index:],
+                        self.model_runner.model_dict['manual_baseline'].get_var_soln(var)[start_time_index:],
                         label=t_k.find_title_from_dictionary(var[8:]))
-        self.tidy_axis(ax, [1, 1], single_axis_room_for_legend=True, max_data=max_data * multiplier,
-                       start_time=self.inputs.model_constants['plot_start_time'],
-                       yaxis_label=multiplier_label + ' persons')
+
+        # Finishing up
+        self.tidy_axis(ax, [1, 1], legend='for_single', start_time=self.inputs.model_constants['plot_start_time'],
+                       y_label=' persons', y_axis_type='scaled')
         fig.suptitle('Population sizes for cost-coverage curves under baseline scenario')
         self.save_figure(fig, '_popsizes')
 

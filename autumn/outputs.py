@@ -511,6 +511,25 @@ def get_string_for_funding(funding):
     return s
 
 
+def scale_axes(vals, max_val, y_sig_figs):
+
+    y_number_format = '%.' + str(y_sig_figs) + 'f'
+    if max_val < 1e3:
+        labels = [y_number_format % v for v in vals]
+        axis_modifier = ''
+    elif max_val < 1e6:
+        labels = [y_number_format % (v / 1e3) for v in vals]
+        axis_modifier = 'Thousand '
+    elif max_val < 1e9:
+        labels = [y_number_format % (v / 1e6) for v in vals]
+        axis_modifier = 'Million '
+    else:
+        labels = [y_number_format % (v / 1e9) for v in vals]
+        axis_modifier = 'Billions '
+
+    return labels, axis_modifier
+
+
 class Project:
 
     def __init__(self, model_runner, gui_inputs):
@@ -686,21 +705,9 @@ class Project:
             ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
             ax.set_xticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))
         elif x_axis_type == 'scaled':
-            x_number_format = '%.' + str(x_sig_figs) + 'f'
             vals = list(ax.get_xticks())
             max_val = max([abs(v) for v in vals])
-            if max_val < 1e3:
-                labels = [x_number_format % v for v in vals]
-                axis_modifier = ''
-            elif max_val < 1e6:
-                labels = [x_number_format % (v/1e3) for v in vals]
-                axis_modifier = ' thousand'
-            elif max_val < 1e9:
-                labels = [x_number_format % (v/1e6) for v in vals]
-                axis_modifier = ' million'
-            else:
-                labels = [x_number_format % (v/1e9) for v in vals]
-                axis_modifier = ' billion'
+            labels, axis_modifier = scale_axes(vals, max_val, x_sig_figs)
             ax.set_xticklabels(labels)
             ax.set_xlabel(x_label + axis_modifier, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
         elif x_axis_type == 'proportion':
@@ -716,19 +723,7 @@ class Project:
             ax.set_ylim((start_time, self.inputs.model_constants['plot_end_time']))
             ax.set_yticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))
         elif y_axis_type == 'scaled':
-            y_number_format = '%.' + str(y_sig_figs) + 'f'
-            if max_val < 1e3:
-                labels = [y_number_format % v for v in vals]
-                axis_modifier = ''
-            elif max_val < 1e6:
-                labels = [y_number_format % (v/1e3) for v in vals]
-                axis_modifier = 'Thousand '
-            elif max_val < 1e9:
-                labels = [y_number_format % (v/1e6) for v in vals]
-                axis_modifier = 'Million '
-            else:
-                labels = [y_number_format % (v/1e9) for v in vals]
-                axis_modifier = 'Billions '
+            labels, axis_modifier = scale_axes(vals, max_val, y_sig_figs)
             ax.set_yticklabels(labels)
             ax.set_ylabel(axis_modifier + y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
         elif y_axis_type == 'proportion':

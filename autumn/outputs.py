@@ -697,7 +697,7 @@ class Project:
         else:
             return line_styles[n - 1]
 
-    def tidy_axis(self, ax, subplot_grid, title='', start_time=0., legend=False, x_label=None, y_label='',
+    def tidy_axis(self, ax, subplot_grid, title='', start_time=0., legend=False, x_label='', y_label='',
                   x_axis_type='time', y_axis_type='scaled', x_sig_figs=0, y_sig_figs=0):
 
         """
@@ -802,7 +802,7 @@ class Project:
         Same as previous method, when applied to optimisation outputs.
         """
 
-        png = os.path.join(self.opti_outputs_dir, self.country + last_part_of_name_for_figure + '.png')
+        png = os.path.join(self.model_runner.opti_outputs_dir, self.country + last_part_of_name_for_figure + '.png')
         fig.savefig(png, dpi=300)
 
     #####################################################
@@ -1212,7 +1212,7 @@ class Project:
         if self.model_runner.optimisation:
 
             # Make filename
-            path = os.path.join(self.opti_outputs_dir, 'opti_results.xlsx')
+            path = os.path.join(self.model_runner.opti_outputs_dir, 'opti_results.xlsx')
 
             # Get active sheet
             wb = xl.Workbook()
@@ -2155,16 +2155,15 @@ class Project:
         """
 
         fig = self.set_and_update_figure()
-        ax = self.make_single_axis(fig)
-        ax2 = ax.twinx()
-        ax.plot(self.model_runner.opti_results['annual_envelope'], self.model_runner.opti_results['incidence'], 'b^',
-                linewidth=2.0)
-        set_axes_props(ax, 'Annual funding (US$)', 'TB incidence (/100,000/year)', '', True, 'incidence')
-        ax2.plot(self.model_runner.opti_results['annual_envelope'], self.model_runner.opti_results['mortality'], 'r+',
-                 linewidth=4.0)
-        set_axes_props(ax2, 'Annual funding (US$)', 'TB mortality (/100,000/year)',
-                       '', True, 'mortality', side='right')
-        # need to add a legend !
+        left_ax = self.make_single_axis(fig)
+        right_ax = left_ax.twinx()
+        plots = {'incidence': [left_ax, 'b^', 'TB incidence per 100,000 per year'],
+                'mortality': [right_ax, 'r+', 'TB mortality per 100,000 per year']}
+        for plot in plots:
+            plots[plot][0].plot(self.model_runner.opti_results['annual_envelope'],
+                                 self.model_runner.opti_results[plot], plots[plot][1], linewidth=2.0, label=plot)
+            self.tidy_axis(plots[plot][0], [1, 1], y_axis_type='raw', y_label=plots[plot][2], x_sig_figs=1,
+                           title='Annual funding (US$)', x_axis_type='scaled', x_label='$US ', legend='for_single')
         self.save_opti_figure(fig, '_optimised_outputs')
 
     def plot_piecharts_opti(self):

@@ -15,8 +15,4 @@ pluggable API to other system. Applied to tuberculosis.
     - treatment outcomes reader seems unchanged and bugs when updated
         - also strange because this is should be mutually inconsistent
     - (World Bank demographic data is current, as 2014 seems to be the last year with data available still)
-- check whether treatment outcomes can be derived from all patients, rather than from smear-positive
-    (and check whether this is currently happening)
-- tidy the tidy_axis method of outputs itself
-- run through formatting of curve.py to make it more James-like
 

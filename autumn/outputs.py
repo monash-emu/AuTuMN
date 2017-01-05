@@ -513,6 +513,19 @@ def get_string_for_funding(funding):
 
 def scale_axes(vals, max_val, y_sig_figs):
 
+    """
+    General function to scale a set of axes and produce text that can be added to the axis label. Written here as a
+    separate function from the tidy_axis method below because it can then be applied to both x- and y-axes.
+
+    Args:
+        vals: List of the current y-ticks
+        max_val: The maximum value of this list
+        y_sig_figs: The number of significant figures for the ticks
+    Returns:
+        labels: List of the modified tick labels
+        axis_modifier: The text to be added to the axis
+    """
+
     y_number_format = '%.' + str(y_sig_figs) + 'f'
     if max_val < 1e3:
         labels = [y_number_format % v for v in vals]

@@ -188,7 +188,7 @@ class ModelRunner:
         self.random_start = False  # Whether to start from a random point, as opposed to the manually calibrated value
 
         # Optimisation attributes
-        self.optimisation = True  # Leave True even if loading optimisation results
+        self.optimisation = False  # Leave True even if loading optimisation results
         self.indicator_to_minimise = 'incidence'  # Currently must be 'incidence' or 'mortality'
         self.annual_envelope = [25e6]  # Size of funding envelope in scenarios to be run
         self.save_opti = True

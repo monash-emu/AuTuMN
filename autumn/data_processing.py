@@ -176,6 +176,8 @@ class Inputs:
         if self.gui_inputs['riskgroup_ruralpoor']:
             self.potential_interventions_to_cost += ['xpertacf_ruralpoor']
 
+        self.include_relapse_in_ds_outcomes = True
+
         self.interventions_to_cost = []
         self.emit_delay = 0.1
         self.plot_count = 0
@@ -489,17 +491,39 @@ class Inputs:
         differs for them.
         """
 
-        # Calculate each proportion
-        self.derived_data.update(
-            calculate_proportion_dict(self.original_data['outcomes'],
-                                      ['new_sp_cmplt', 'new_sp_cur', 'new_sp_def', 'new_sp_died', 'new_sp_fail'],
-                                      percent=False))
+        # Adjusting the original data to add a success number for smear-positive, which shouldn't generally be done
+        self.original_data['outcomes']['new_sp_succ'] \
+            = tool_kit.increment_dictionary_with_dictionary(self.original_data['outcomes']['new_sp_cmplt'],
+                                                            self.original_data['outcomes']['new_sp_cur'])
 
-        # Sum cure and completion to get treatment success
-        self.derived_data['prop_new_sp_success'] = {}
-        for year in self.derived_data['prop_new_sp_cmplt']:
-            self.derived_data['prop_new_sp_success'][year] \
-                = self.derived_data['prop_new_sp_cmplt'][year] + self.derived_data['prop_new_sp_cur'][year]
+        # Similarly, move completion over to represent success for smear-negative, extrapulmonary and retreatment
+        for treatment_type in ['new_snep', 'ret']:
+            self.original_data['outcomes'][treatment_type + '_succ'] \
+                = self.original_data['outcomes'][treatment_type + '_cmplt']
+
+        # And (effectively) rename the outcomes for the years that are pooled
+        self.original_data['outcomes']['newrel_def'] = self.original_data['outcomes']['newrel_lost']
+
+        # Sum over smear-positive, smear-negative, extrapulmonary and (if required) retreatment
+        for outcome in ['succ', 'def', 'died', 'fail']:
+            self.derived_data[outcome] \
+                = tool_kit.increment_dictionary_with_dictionary(self.original_data['outcomes']['new_sp_' + outcome],
+                                                                self.original_data['outcomes']['new_snep_' + outcome])
+            if self.include_relapse_in_ds_outcomes:
+                self.derived_data[outcome] \
+                    = tool_kit.increment_dictionary_with_dictionary(self.derived_data[outcome],
+                                                                    self.original_data['outcomes']['ret_' + outcome])
+
+            # Update with newer pooled outcomes
+            self.derived_data[outcome].update(self.original_data['outcomes']['newrel_' + outcome])
+
+        # Calculate default rates from 'def' and 'fail' reported outcomes
+        self.derived_data['default'] \
+            = tool_kit.increment_dictionary_with_dictionary(self.derived_data['def'], self.derived_data['fail'])
+
+        # Calculate the proportions for use in creating the treatment scale-up functions
+        self.derived_data.update(calculate_proportion_dict(self.derived_data,
+                                                           ['succ', 'died', 'default'], percent=False))
 
     def add_treatment_outcomes(self):
 
@@ -508,17 +532,17 @@ class Inputs:
         Use the same approach as above to adding if requested and data not manually entered.
         """
 
-        name_conversion_dict = {'_success': '_success', '_death': '_died'}
+        name_conversion_dict = {'_success': 'succ', '_death': 'died'}
 
         # Iterate over success and death outcomes
         for outcome in ['_success', '_death']:
             if self.time_variants['program_prop_treatment' + outcome]['load_data'] == u'yes':
 
                 # Populate data
-                for year in self.derived_data['prop_new_sp' + name_conversion_dict[outcome]]:
+                for year in self.derived_data['prop_' + name_conversion_dict[outcome]]:
                     if year not in self.time_variants['program_prop_treatment' + outcome]:
                         self.time_variants['program_prop_treatment' + outcome][year] \
-                            = self.derived_data['prop_new_sp' + name_conversion_dict[outcome]][year]
+                            = self.derived_data['prop_' + name_conversion_dict[outcome]][year]
 
     def duplicate_ds_outcomes_for_multistrain(self):
 

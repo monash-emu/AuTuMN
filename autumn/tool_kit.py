@@ -13,6 +13,21 @@ Object-oriented structures are not intended to be kept here.
 """
 
 
+def increment_dictionary_with_dictionary(dict_a, dict_b):
+
+    """
+    Function to add the values from one dictionary to the values from the same keys in another.
+
+    Args:
+        dict_a: First dictionary to be added
+        dict_b: Second dictionary to be added
+    Return:
+        The combined dictionary
+    """
+
+    return dict(dict_a.items() + dict_b.items() + [(k, dict_a[k] + dict_b[k]) for k in set(dict_b) & set(dict_a)])
+
+
 def is_parameter_value_valid(parameter):
 
     """

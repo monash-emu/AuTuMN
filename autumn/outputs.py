@@ -752,37 +752,6 @@ class Project:
                 tick.label.set_fontsize(get_nice_font_size(subplot_grid))
                 axis_to_change.grid(self.grid)
 
-    def scale_axes(self, max_value):
-
-        """
-        Method to find how much the axis in question should be scaled down by for plotting numbers with high values
-        (especially costs) and provide a string to amend the axis appropriately.
-
-        Args:
-            max_value: The highest value in the plot (or a group of plots)
-        Returns:
-            multiplier: The value to scale the axis by.
-            multiplier_label: The text to add to the y-axis after scaling
-        """
-
-        if max_value < 1e3:
-            multiplier = 1.
-            multiplier_label = ''
-        elif max_value >= 1e3 and max_value < 1e6:
-            multiplier = 1e-3
-            multiplier_label = 'Thousand'
-        elif max_value >= 1e6 and max_value < 1e9:
-            multiplier = 1e-6
-            multiplier_label = 'Million'
-        elif max_value >= 1e9 and max_value < 1e12:
-            multiplier = 1e-9
-            multiplier_label = 'Billion'
-        elif max_value >= 1e12:
-            multiplier = 1e-12
-            multiplier_label = 'Trillion'
-
-        return multiplier, multiplier_label
-
     def save_figure(self, fig, last_part_of_name_for_figure):
 
         """

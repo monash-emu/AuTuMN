@@ -400,6 +400,10 @@ def find_age_limits_directly_from_string(param_or_compartment):
 
 def find_age_breakpoints_from_dicts(age_dict):
 
+    """
+    Convert a dictionary of age groups back into the list of breakpoints.
+    """
+
     breakpoints_with_repetition = []
     breakpoints = []
 
@@ -423,18 +427,18 @@ def find_age_breakpoints_from_dicts(age_dict):
 def estimate_prop_of_population_in_agegroup(age_limits, life_expectancy):
 
     """
-    Function to estimate the proportion of the population that should be in a specific age
-    group, assuming model equilibrium and absence of TB effects (which are false, of course).
+    Function to estimate the proportion of the population that should be in a specific age group, assuming model
+    equilibrium and absence of TB effects (which are false assumptions, of course).
+
     Args:
         age_limits: Two element string of the upper and lower limit of the age group.
         life_expectancy: Float specifying the life expectancy.
-
     Returns:
         estimated_prop_in_agegroup: Estimate of the proportion of the population in the age group.
     """
 
-    estimated_prop_in_agegroup = exp(-age_limits[0] * (1. / life_expectancy)) \
-                                 - exp(-age_limits[1] * (1. / life_expectancy))
+    estimated_prop_in_agegroup \
+        = exp(-age_limits[0] * (1. / life_expectancy)) - exp(-age_limits[1] * (1. / life_expectancy))
 
     return estimated_prop_in_agegroup
 
@@ -442,43 +446,37 @@ def estimate_prop_of_population_in_agegroup(age_limits, life_expectancy):
 def sum_over_compartments(model, compartment_types):
 
     """
-    General method to sum sets of compartments
+    General method to sum sets of compartments.
+
     Args:
         compartment_types: List of the compartments to be summed over
-
     Returns:
         summed_soln: Dictionary of lists for the sums of each compartment
         summed_denominator: List of the denominator values
     """
 
     summed_soln = {}
-    summed_denominator \
-        = [0] * len(random.sample(model.compartment_soln.items(), 1)[0][1])
+    summed_denominator = [0] * len(random.sample(model.compartment_soln.items(), 1)[0][1])
     for compartment_type in compartment_types:
-        summed_soln[compartment_type] \
-            = [0] * len(random.sample(model.compartment_soln.items(), 1)[0][1])
+        summed_soln[compartment_type] = [0] * len(random.sample(model.compartment_soln.items(), 1)[0][1])
         for label in model.labels:
             if compartment_type in label:
-                summed_soln[compartment_type] = [
-                    a + b
-                    for a, b
-                    in zip(
-                        summed_soln[compartment_type],
-                        model.compartment_soln[label])]
+                summed_soln[compartment_type] \
+                    = [a + b for a, b in zip(summed_soln[compartment_type], model.compartment_soln[label])]
                 summed_denominator += model.compartment_soln[label]
+
     return summed_soln, summed_denominator
 
 
 def get_fraction_soln(numerator_labels, numerators, denominator):
 
     """
-    General method for calculating the proportion of a subgroup of the population
-    in each compartment type
+    General method for calculating the proportion of a subgroup of the population in each compartment type.
+
     Args:
         numerator_labels: Labels of numerator compartments
         numerators: Lists of values of each numerator
         denominator: List of values for the denominator
-
     Returns:
         Fractions of the denominator in each numerator
     """
@@ -492,6 +490,7 @@ def get_fraction_soln(numerator_labels, numerators, denominator):
     fraction = {}
     for label in numerator_labels:
         fraction[label] = [v / t for v, t in zip(numerators[label], denominator)]
+
     return fraction
 
 
@@ -600,7 +599,7 @@ def find_fractions(model):
 def calculate_additional_diagnostics(model):
 
     """
-    Calculate fractions and populations within subgroups of the full population
+    Calculate fractions and populations within subgroups of the full population.
     """
 
     groups = {
@@ -629,20 +628,16 @@ def calculate_additional_diagnostics(model):
 def get_agegroups_from_breakpoints(breakpoints):
 
     """
-    This function consolidates get_strat_from_breakpoints from Romain's age_strat
-    module and define_age_structure from James' model.py method into one function
-    that can return either a dictionary or a list for the model stratification. (One
-    reason for using this approach rather than Romain's is that the lists need to be
-    ordered for model.py.)
+    This function consolidates get_strat_from_breakpoints from Romain's age_strat module and define_age_structure from
+    James' model.py method into one function that can return either a dictionary or a list for the model stratification.
+    (One reason for using this approach rather than Romain's is that the lists need to be ordered for model.py.)
 
     Args:
         breakpoints: The age group cut-offs.
-
     Returns:
         agegroups: List of the strings describing the age groups only.
         agegroups_dict: List with strings of agegroups as keys with values being
             lists of the lower and upper age cut-off for that age group.
-
     """
 
     # Initialise
@@ -681,6 +676,15 @@ def get_agegroups_from_breakpoints(breakpoints):
 
 def turn_strat_into_label(stratum):
 
+    """
+    Convert age stratification string into a string that describes it more clearly.
+
+    Args:
+        stratum: String used in the model
+    Returns:
+        label: String that can be used in plotting
+    """
+
     if 'up' in stratum:
         label = stratum[4: -2] + ' and up'
     elif 'to' in stratum:
@@ -694,12 +698,8 @@ def turn_strat_into_label(stratum):
     return label
 
 
-def adapt_params_to_stratification(data_breakpoints,
-                                   model_breakpoints,
-                                   data_param_vals,
-                                   assumed_max_params=100.,
-                                   parameter_name='',
-                                   whether_to_plot=False):
+def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_param_vals, assumed_max_params=100.,
+                                   parameter_name='', whether_to_plot=False):
 
     """
     Create a new set of parameters associated to the model stratification given parameter values that are known for
@@ -711,7 +711,6 @@ def adapt_params_to_stratification(data_breakpoints,
         data_param_vals: dictionary containing the parameter values associated with each category defined by data_breakpoints
                          format example: {'_age0to5': 0.0, '_age5to15': 0.5, '_age15up': 1.0}
         assumed_max_params: the assumed maximal value for the parameter (exemple, age: 100 yo).
-
     Returns:
         dictionary containing the parameter values associated with each category defined by model_breakpoints
     """
@@ -783,9 +782,15 @@ def report_age_specific_parameter_calculations(parameter_name, model_param_vals)
 def indices(a, func):
 
     """
-    Returns the indices of a which verify a condition defined by a lambda function
-        example: year = indices(self.model.times, lambda x: x >= 2003)[0]  returns the smallest index where x >=2003
+    Returns the indices of a which verify a condition defined by a lambda function.
 
+    Args:
+        a: The list to be interrogated
+        func: The function to be applied to the list
+    Returns:
+        List of the indices of the list that satisfy the function
+    Example:
+        year = indices(self.model.times, lambda x: x >= 2003)[0]  returns the smallest index where x >=2003
     """
 
     return [i for (i, val) in enumerate(a) if func(val)]
@@ -795,10 +800,10 @@ def find_first_list_element_above_value(list, value):
 
     """
     Simple method to return the index of the first element of a list that is greater than a specified value.
-    Args:
-        list: The list of floats.
-        value: The value that the element must be greater than.
 
+    Args:
+        list: List of floats
+        value: The value that the element must be greater than
     """
 
     index = next(x[0] for x in enumerate(list) if x[1] > value)
@@ -810,10 +815,10 @@ def find_first_list_element_at_least_value(list, value):
 
     """
     Simple method to return the index of the first element of a list that is greater than a specified value.
-    Args:
-        list: The list of floats.
-        value: The value that the element must be greater than.
 
+    Args:
+        list: The list of floats
+        value: The value that the element must be greater than
     """
 
     index = next(x[0] for x in enumerate(list) if x[1] >= value)
@@ -823,11 +828,26 @@ def find_first_list_element_at_least_value(list, value):
 
 def pickle_save(object, file):
 
+    """
+    Save an object in pickle format.
+
+    Args:
+        object: The object to be saved
+        file: The filename to save the data to
+    """
+
     with open(file, 'wb') as output:
         pickle.dump(object, output)
 
 
 def pickle_load(file):
+
+    """
+    Load an object previously saved in pickle format.
+
+    Args:
+        file: Filename storing the object to be loaded
+    """
 
     with open(file, 'rb') as input:
         loaded_object = pickle.load(input)
@@ -840,10 +860,9 @@ def prepare_denominator(list_to_prepare):
     Method to safely divide a list of numbers while ignoring zero denominators.
 
     Args:
-        list_to_prepare: The list to be used as a denominator.
-
+        list_to_prepare: The list to be used as a denominator
     Returns:
-        The list with zeros replaced with small numbers.
+        The list with zeros replaced with small numbers
     """
 
     return [list_to_prepare[i] if list_to_prepare[i] > 0. else 1e-10 for i in range(len(list_to_prepare))]
@@ -856,9 +875,8 @@ def is_upper_age_limit_at_or_below(compartment_string, age_value):
     determining whether an age-group is entirely paediatric.
 
     Args:
-        compartment_string: The compartment string to analyse.
-        age_value: The age to compare against.
-
+        compartment_string: The compartment string to analyse
+        age_value: The age to compare against
     Returns:
         Boolean for whether the upper limit of age-group is below age_value
     """

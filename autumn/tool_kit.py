@@ -24,6 +24,14 @@ def is_parameter_value_valid(parameter):
 
 def find_scenario_string_from_number(scenario):
 
+    """
+    Find a string to represent a scenario from it's number (or None in the case of baseline).
+
+    Args:
+        scenario: The scenario value or None for baseline
+        return: The string representing the scenario
+    """
+
     if scenario is None:
         scenario_name = 'baseline'
     else:
@@ -33,6 +41,15 @@ def find_scenario_string_from_number(scenario):
 
 
 def find_scenario_number_from_string(scenario):
+
+    """
+    Reverse of the above method. Not currently used, but likely to be needed.
+
+    Args:
+        scenario: Scenario string
+    Returns:
+        scenario_number: The scenario number or None for baseline
+    """
 
     if scenario == 'baseline':
         scenario_number = None
@@ -45,14 +62,12 @@ def find_scenario_number_from_string(scenario):
 def capitalise_first_letter(old_string):
 
     """
-    Really simple method to capitalise the first character of a string
+    Really simple method to capitalise the first character of a string.
 
     Args:
         old_string: The string to be capitalised
-
     Returns:
         new_string: The capitalised string
-
     """
 
     new_string = ''
@@ -68,15 +83,12 @@ def capitalise_first_letter(old_string):
 def replace_underscore_with_space(original_string):
 
     """
-    A quick, simple method to remove underscores and replace with
-    spaces for titles of plots.
+    Another really simple method to remove underscores and replace with spaces for titles of plots.
 
     Args:
         original_string: String with underscores
-
     Returns:
         replaced_string: String with underscores replaced
-
     """
 
     replaced_string = ''
@@ -92,12 +104,12 @@ def replace_underscore_with_space(original_string):
 def capitalise_and_remove_underscore(original_string):
 
     """
-    Combine the two methods used to create titles.
+    Combine the previous two methods used to create titles.
 
     Args:
         original_string: String to be modified
     Return:
-         revised string
+        revised string
     """
 
     return capitalise_first_letter(replace_underscore_with_space(original_string))
@@ -105,35 +117,20 @@ def capitalise_and_remove_underscore(original_string):
 
 def adjust_country_name(country_name):
 
+    """
+    Currently very simple method to convert one country's name into that used by the GTB Report. However, likely to
+    need to expand this as we work with more countries.
+
+    Args:
+        country_name: String for the original country name
+    Returns:
+        adjusted_country_name: Adjusted string
+    """
+
     adjusted_country_name = country_name
     if country_name == 'Philippines':
         adjusted_country_name = country_name + ' (the)'
     return adjusted_country_name
-
-
-def introduce_model(models, model_name):
-
-    if model_name == 'baseline':
-        print('Initialising model for ' + capitalise_first_letter(
-            models[model_name].gui_inputs['country']) + ' with key "' + model_name + '".')
-
-
-def describe_model(models, model_name):
-
-    if model_name == 'baseline':
-        model = models[model_name]
-
-        string_to_print = 'Model "' + model_name + '" has the following attributes:\n'
-        if model.gui_inputs['n_organs'] <= 1:
-            string_to_print += 'unstratified by organ involvement,\n'
-        else:
-            string_to_print += str(model.gui_inputs['n_organs']) + ' organ strata,\n'
-        if model.gui_inputs['n_strains'] <= 1:
-            string_to_print += 'single strain model.'
-        else:
-            string_to_print += str(model.gui_inputs['n_strains']) + ' circulating strains.'
-
-        print(string_to_print)
 
 
 def find_title_from_dictionary(name):
@@ -302,34 +299,32 @@ def find_title_from_dictionary(name):
         return name
 
 
-def get_truncated_lists_from_dict(dictionary, left_truncation_point):
-
-    modelled_time_values = dictionary.keys()
-    modelled_time_values.sort()
-    modelled_time = []
-    modelled_values = []
-    for j in modelled_time_values:
-        if j > left_truncation_point:
-            modelled_time += [j]
-            modelled_values += [dictionary[j]]
-
-    return modelled_time, modelled_values
-
-
 def find_string_from_starting_letters(string_to_analyse, string_start_to_find):
 
-    # Find the position of the age string
+    """
+    Possibly overly complicated function to find a string referring to an age group or population sub-group from
+    the entire string for the compartment.
+
+    Args:
+        string_to_analyse: The full string for the compartment
+        string_start_to_find: The beginning of the string of interest (e.g. 'age')
+    Returns:
+        result_string: The string of interest to be extracted
+        stem: The remaining start of the string to be analysed
+    """
+
+    # Find the position of the string
     string_position = string_to_analyse.find(string_start_to_find)
 
     # Find the position of all the underscores in the string
     underscores = [pos for pos, char in enumerate(string_to_analyse) if char == '_']
 
-    # Find the age underscore's position in the list of underscores
+    # Find the underscore at the start of the string of interest's position in the list of underscores
     for i, position in enumerate(underscores):
         if position == string_position:
             string_underscore_index = i
 
-    # If the age stratification is at the end of the string
+    # If the string of interest is at the end of the string
     if string_position == underscores[-1]:
         result_string = string_to_analyse[string_position:]
 
@@ -343,6 +338,16 @@ def find_string_from_starting_letters(string_to_analyse, string_start_to_find):
 
 
 def interrogate_age_string(age_string):
+
+    """
+    Take a string referring to an age group and find it's upper and lower limits.
+
+    Args:
+        age_string: The string to be analysed
+    Returns:
+        limits: List of the lower and upper limits
+        dict_limits: Dictionary of the lower and upper limits
+    """
 
     # Check the age string sta
     assert age_string[:4] == '_age', 'Age string does not begin with "_age".'
@@ -377,7 +382,8 @@ def interrogate_age_string(age_string):
 def find_age_limits_directly_from_string(param_or_compartment):
 
     """
-    Simple function to quickly grab the age limits from a stirng containing a standardised age string
+    Simple function to quickly grab the age limits from a string containing a standardised age string by combining the
+    two previous functions.
 
     Args:
         param_or_compartment: String for parameter or compartment that contains a standardised age string

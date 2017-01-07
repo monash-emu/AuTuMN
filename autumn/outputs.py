@@ -1263,11 +1263,9 @@ class Project:
             self.plot_fractions('strain')
 
         # Plot outputs by age group
-        if self.gui_inputs['output_by_age']:
-            if len(self.inputs.agegroups) > 1:
-                self.plot_outputs_by_age()
-            else:
-                warnings.warn('Requested outputs by age, but model is not age stratified.')
+        if self.gui_inputs['output_by_subgroups']:
+            self.plot_outputs_by_stratum()
+            self.plot_outputs_by_stratum(strata_string='riskgroups')
 
         # Plot proportions of population
         if self.gui_inputs['output_age_fractions']:
@@ -1795,48 +1793,56 @@ class Project:
                            y_axis_type='proportion')
             self.save_figure(fig, '_fraction')
 
-    def plot_outputs_by_age(self):
+    def plot_outputs_by_stratum(self, strata_string='agegroups', outputs_to_plot=('incidence', 'mortality')):
 
         """
-        Plot basic epidemiological outputs by age group.
+        Plot basic epidemiological outputs either by risk stratum or by age group.
         """
+
+        # Find strata to loop over
+        strata = getattr(self.inputs, strata_string)
+        if len(strata) == 0:
+            return
 
         # Prelims
-        outputs_to_plot = ['incidence', 'mortality']
         fig = self.set_and_update_figure()
-        subplot_grid = [len(outputs_to_plot), len(self.inputs.agegroups)]
+        subplot_grid = [len(outputs_to_plot), len(strata)]
         start_time_index \
             = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
                                                          self.inputs.model_constants['plot_start_time'])
 
-        # Loop over outputs and age groups
+        # Loop over outputs and strata
         for o, output in enumerate(outputs_to_plot):
-            for a, agegroup in enumerate(self.inputs.agegroups):
+            for s, stratum in enumerate(strata):
 
                 # a + 1 gives the column, o the row
-                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], a + 1 + o * len(self.inputs.agegroups))
+                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], s + 1 + o * len(strata))
 
                 # Plot the modelled data
                 for scenario in self.scenarios:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
                     ax.plot(
                         self.model_runner.epi_outputs['manual_' + scenario_name]['times'][start_time_index:],
-                        self.model_runner.epi_outputs['manual_' + scenario_name][output + agegroup][start_time_index:],
+                        self.model_runner.epi_outputs['manual_' + scenario_name][output + stratum][start_time_index:],
                         color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
                         linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
 
                 # Finish off
-                if a == 0:
+                if s == 0:
                     ylabel = 'Per 100,000 per year'
                 else:
                     ylabel = ''
+                if strata_string == 'agegroups':
+                    stratum_string = t_k.turn_strat_into_label(stratum)
+                else:
+                    stratum_string = t_k.find_title_from_dictionary(stratum)
                 self.tidy_axis(ax, subplot_grid, start_time=self.inputs.model_constants['plot_start_time'],
                                y_label=ylabel, y_axis_type='scaled',
-                               title=t_k.capitalise_first_letter(output) + ', ' + t_k.turn_strat_into_label(agegroup),
-                               legend=(output == len(outputs_to_plot) - 1 and a == len(self.inputs.agegroups) - 1))
-        fig.suptitle(t_k.capitalise_and_remove_underscore(self.country) + ' burden by age group',
+                               title=t_k.capitalise_first_letter(output) + ', ' + stratum_string,
+                               legend=(output == len(outputs_to_plot) - 1 and s == len(strata) - 1))
+        fig.suptitle(t_k.capitalise_and_remove_underscore(self.country) + ' burden by sub-group',
                      fontsize=self.suptitle_size)
-        self.save_figure(fig, '_output_by_age')
+        self.save_figure(fig, '_output_by_' + strata_string)
 
     def plot_stratified_populations(self, age_or_risk='age'):
 

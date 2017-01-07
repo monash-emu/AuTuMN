@@ -24,8 +24,8 @@ def find_button_name_from_string(working_string):
                                   'Plot outcomes',
                               'output_compartment_populations':
                                   'Plot compartment sizes',
-                              'output_by_age':
-                                  'Plot outcomes by age groups',
+                              'output_by_subgroups':
+                                  'Plot outcomes by sub-groups',
                               'output_age_fractions':
                                   'Plot proportions by age',
                               'output_riskgroup_fractions':
@@ -120,7 +120,7 @@ class App:
         # Prepare Boolean data structures
         self.boolean_dictionary = {}
         self.boolean_inputs = ['output_flow_diagram', 'output_compartment_populations', 'output_riskgroup_fractions',
-                               'output_age_fractions', 'output_by_age', 'output_fractions', 'output_scaleups',
+                               'output_age_fractions', 'output_by_subgroups', 'output_fractions', 'output_scaleups',
                                'output_gtb_plots', 'output_plot_economics', 'output_plot_riskgroup_checks',
                                'output_param_plots', 'output_popsize_plot', 'output_likelihood_plot',
                                'output_uncertainty', 'adaptive_uncertainty',

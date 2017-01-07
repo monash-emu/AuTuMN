@@ -79,7 +79,7 @@ class Autumn:
         self.plot_options = {
             'Outcomes': 'output_gtb_plots',
             'Compartment Sizes': 'output_compartment_populations',
-            'Outcomes by Age Group': 'output_by_age',
+            'Outcomes by Subgroups': 'output_by_subgroups',
             'Proportions by Age': 'output_age_fractions',
             'Proportions by Risk Group': 'output_comorbidity_fractions',
             'Flowdiagram': 'output_flow_diagram',

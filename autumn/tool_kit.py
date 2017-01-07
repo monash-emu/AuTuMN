@@ -303,7 +303,13 @@ def find_title_from_dictionary(name):
         'decentralisation':
             'Decentralisation',
         'ipt':
-            'IPT'
+            'IPT',
+        '_prison':
+            'prisoners',
+        '_ruralpoor':
+            'rural poor',
+        '_norisk':
+            'general population'
     }
 
     if name in dictionary_of_names:

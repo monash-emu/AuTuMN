@@ -730,6 +730,7 @@ class Project:
             ax.set_xlabel(x_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
 
         # Sort y-axis
+        ax.set_ylim(bottom=0.)
         vals = list(ax.get_yticks())
         max_val = max([abs(v) for v in vals])
         if y_axis_type == 'time':
@@ -740,10 +741,10 @@ class Project:
             ax.set_yticklabels(labels)
             ax.set_ylabel(axis_modifier + y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
         elif y_axis_type == 'proportion':
-            ax.set_ylim((0., 1.))
+            ax.set_ylim(top=1.)
             ax.set_ylabel(y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
         else:
-            ax.set_ylim((0., max_val * 1.2))
+            ax.set_ylim(top=max_val * 1.2)
             ax.set_ylabel(y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
 
         # Set size of font for x-ticks and add a grid if requested

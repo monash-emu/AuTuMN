@@ -750,7 +750,7 @@ class Project:
         for axis_to_change in [ax.xaxis, ax.yaxis]:
             for tick in axis_to_change.get_major_ticks():
                 tick.label.set_fontsize(get_nice_font_size(subplot_grid))
-                axis_to_change.grid(self.grid)
+            axis_to_change.grid(self.grid)
 
     def save_figure(self, fig, last_part_of_name_for_figure):
 

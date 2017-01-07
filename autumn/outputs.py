@@ -2080,7 +2080,7 @@ class Project:
     def plot_force_infection(self):
 
         """
-        View the force of infection vars, loosely derived from the more general var_viewer.
+        View the force of infection vars.
         """
 
         start_time_index \
@@ -2097,7 +2097,7 @@ class Project:
                 ax.plot(self.model_runner.model_dict['manual_baseline'].times[start_time_index:],
                         self.model_runner.model_dict['manual_baseline'].get_var_soln('rate_force' + strain + riskgroup)[
                         start_time_index:],
-                        label=t_k.find_title_from_dictionary(riskgroup))
+                        label=t_k.capitalise_first_letter(t_k.find_title_from_dictionary(riskgroup)))
 
             # Finish off
             self.tidy_axis(ax, [1, 1], start_time=self.inputs.model_constants['plot_start_time'],

@@ -496,7 +496,10 @@ class ConsolidatedModel(StratifiedModel):
                     self.vars['rate_force' + strain + riskgroup] *= self.vars['transmission_modifier']
 
                 # Adjust for immunity in various groups
-                for force_type in ['_vac', '_latent', '_novelvac']:
+                force_types = ['_vac', '_latent']
+                if 'program_prop_novel_vaccination' in self.optional_timevariants:
+                    force_types += ['_novelvac']
+                for force_type in force_types:
                     self.vars['rate_force' + force_type + strain + riskgroup] \
                         = self.params['tb_multiplier' + force_type + '_protection'] \
                           * self.vars['rate_force' + strain + riskgroup]

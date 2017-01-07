@@ -309,7 +309,11 @@ def find_title_from_dictionary(name):
         '_ruralpoor':
             'rural poor',
         '_norisk':
-            'general population'
+            'general population',
+        '_ds':
+            'DS-TB',
+        '_mdr':
+            'MDR-TB'
     }
 
     if name in dictionary_of_names:

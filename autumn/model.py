@@ -351,7 +351,7 @@ class ConsolidatedModel(StratifiedModel):
         self.ticker()
         # The parameter values are calculated from the costs, but only in the future
         if self.eco_drives_epi and self.time > self.inputs.model_constants['current_time']: self.update_vars_from_cost()
-        self.vars['population'] = sum(self.compartments.values())
+        self.calculate_populations()
         self.calculate_birth_rates_vars()
         self.calculate_force_infection_vars()
         if self.is_organvariation: self.calculate_progression_vars()
@@ -382,6 +382,18 @@ class ConsolidatedModel(StratifiedModel):
         if self.time > self.next_time_point:
             print(int(self.time))
             self.next_time_point += 10.
+
+    def calculate_populations(self):
+
+        """
+        Find the total absolute numbers of people in each population sub-group.
+        """
+
+        for riskgroup in self.riskgroups + ['']:
+            self.vars['population' + riskgroup] = 0.
+            for label in self.labels:
+                if riskgroup in label:
+                    self.vars['population' + riskgroup] += self.compartments[label]
 
     def calculate_birth_rates_vars(self):
 
@@ -477,7 +489,7 @@ class ConsolidatedModel(StratifiedModel):
                 self.vars['rate_force' + strain + riskgroup] = \
                     self.params['tb_n_contact'] \
                     * self.vars['effective_infectious_population' + strain + riskgroup] \
-                    / self.vars['population']
+                    / self.vars['population' + riskgroup]
 
                 # If any modifications to transmission parameter to be made over time
                 if 'transmission_modifier' in self.optional_timevariants:

@@ -464,9 +464,9 @@ class ConsolidatedModel(StratifiedModel):
                                     for source_riskgroup in self.riskgroups:
 
                                         # Adjustment for increased infectiousness of risk groups as required
-                                        if 'risk_multiplier_force_infection' + source_riskgroup in self.params:
+                                        if 'riskgroup_multiplier_force_infection' + source_riskgroup in self.params:
                                             riskgroup_multiplier_force_infection \
-                                                = self.params['risk_multiplier_force_infection' + source_riskgroup]
+                                                = self.params['riskgroup_multiplier_force_infection' + source_riskgroup]
                                         else:
                                             riskgroup_multiplier_force_infection = 1.
 

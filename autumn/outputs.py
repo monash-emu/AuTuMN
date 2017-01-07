@@ -1,6 +1,4 @@
 
-import glob
-import numpy as np
 import openpyxl as xl
 import tool_kit as t_k
 from docx import Document
@@ -522,18 +520,30 @@ def scale_axes(vals, max_val, y_sig_figs):
     """
 
     y_number_format = '%.' + str(y_sig_figs) + 'f'
-    if max_val < 4e3:
+    if max_val < 5e-9:
+        labels = [y_number_format % (v * 1e12) for v in vals]
+        axis_modifier = 'Trillionth '
+    elif max_val < 5e-6:
+        labels = [y_number_format % (v * 1e9) for v in vals]
+        axis_modifier = 'Billionth '
+    elif max_val < 5e-3:
+        labels = [y_number_format % (v * 1e6) for v in vals]
+        axis_modifier = 'Millionth '
+    elif max_val < 5:
+        labels = [y_number_format % (v * 1e3) for v in vals]
+        axis_modifier = 'Thousandth '
+    elif max_val < 5e3:
         labels = [y_number_format % v for v in vals]
         axis_modifier = ''
-    elif max_val < 4e6:
+    elif max_val < 5e6:
         labels = [y_number_format % (v / 1e3) for v in vals]
         axis_modifier = 'Thousand '
-    elif max_val < 4e9:
+    elif max_val < 5e9:
         labels = [y_number_format % (v / 1e6) for v in vals]
         axis_modifier = 'Million '
     else:
         labels = [y_number_format % (v / 1e9) for v in vals]
-        axis_modifier = 'Billions '
+        axis_modifier = 'Billion '
 
     return labels, axis_modifier
 
@@ -1243,6 +1253,9 @@ class Project:
             self.classify_scaleups()
             self.plot_scaleup_fns_against_data()
             self.plot_programmatic_scaleups()
+
+            # Not technically a scale-up function in the same sense, but put in here anyway
+            self.plot_force_infection()
 
         # Plot economic outputs
         if self.gui_inputs['output_plot_economics']:
@@ -2063,6 +2076,34 @@ class Project:
             ax.hist(param_values)
             ax.set_title(t_k.find_title_from_dictionary(param))
         self.save_figure(fig, '_param_histogram')
+
+    def plot_force_infection(self):
+
+        """
+        View the force of infection vars, loosely derived from the more general var_viewer.
+        """
+
+        start_time_index \
+            = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
+                                                         self.inputs.model_constants['plot_start_time'])
+
+        # Separate plot for each strain
+        for strain in self.model_runner.model_dict['manual_baseline'].strains:
+            fig = self.set_and_update_figure()
+            ax = fig.add_subplot(1, 1, 1)
+
+            # Loop over risk groups and plot line for each
+            for riskgroup in self.model_runner.model_dict['manual_baseline'].riskgroups:
+                ax.plot(self.model_runner.model_dict['manual_baseline'].times[start_time_index:],
+                        self.model_runner.model_dict['manual_baseline'].get_var_soln('rate_force' + strain + riskgroup)[
+                        start_time_index:],
+                        label=t_k.find_title_from_dictionary(riskgroup))
+
+            # Finish off
+            self.tidy_axis(ax, [1, 1], start_time=self.inputs.model_constants['plot_start_time'],
+                           y_axis_type='scaled', legend=True)
+            fig.suptitle('Force of infection, ' + t_k.find_title_from_dictionary(strain))
+            self.save_figure(fig, '_rate_force' + strain)
 
     def plot_popsizes(self):
 

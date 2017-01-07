@@ -448,14 +448,15 @@ class ConsolidatedModel(StratifiedModel):
                             for riskgroup in self.riskgroups:
                                 if riskgroup not in label:
                                     continue
-                                if label_intersects_tags(label, self.infectious_tags):
+                                elif label_intersects_tags(label, self.infectious_tags):
                                     for source_riskgroup in self.riskgroups:
 
                                         # Adjustment for increased infectiousness of risk groups as required
-                                        riskgroup_multiplier_force_infection = 1.
                                         if 'risk_multiplier_force_infection' + source_riskgroup in self.params:
                                             riskgroup_multiplier_force_infection \
                                                 = self.params['risk_multiplier_force_infection' + source_riskgroup]
+                                        else:
+                                            riskgroup_multiplier_force_infection = 1.
 
                                         # Calculate effective infectious population for each risk group
                                         self.vars['effective_infectious_population' + strain + riskgroup] \
@@ -466,9 +467,10 @@ class ConsolidatedModel(StratifiedModel):
                                                * riskgroup_multiplier_force_infection
 
             # To loop over all risk groups if needed, or otherwise to just run once
-            force_riskgroups = ['']
             if self.vary_force_infection_by_riskgroup:
                 force_riskgroups = copy.copy(self.riskgroups)
+            else:
+                force_riskgroups = ['']
 
             # Calculate force of infection unadjusted for immunity/susceptibility
             for riskgroup in force_riskgroups:

@@ -1815,11 +1815,15 @@ class Project:
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], s + 1 + o * len(strata))
 
                 # Plot the modelled data
-                for scenario in self.scenarios:
+                for scenario in self.scenarios[::-1]:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
+                    if scenario:
+                        index = 0
+                    else:
+                        index = start_time_index
                     ax.plot(
-                        self.model_runner.epi_outputs['manual_' + scenario_name]['times'][start_time_index:],
-                        self.model_runner.epi_outputs['manual_' + scenario_name][output + stratum][start_time_index:],
+                        self.model_runner.epi_outputs['manual_' + scenario_name]['times'][index:],
+                        self.model_runner.epi_outputs['manual_' + scenario_name][output + stratum][index:],
                         color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
                         linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
 

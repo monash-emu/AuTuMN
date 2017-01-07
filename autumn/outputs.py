@@ -1,10 +1,5 @@
 
-import os
 import glob
-import datetime
-import autumn.model
-import autumn.economics
-from autumn.spreadsheet import read_input_data_xls
 import numpy as np
 import openpyxl as xl
 import tool_kit as t_k
@@ -527,13 +522,13 @@ def scale_axes(vals, max_val, y_sig_figs):
     """
 
     y_number_format = '%.' + str(y_sig_figs) + 'f'
-    if max_val < 1e3:
+    if max_val < 4e3:
         labels = [y_number_format % v for v in vals]
         axis_modifier = ''
-    elif max_val < 1e6:
+    elif max_val < 4e6:
         labels = [y_number_format % (v / 1e3) for v in vals]
         axis_modifier = 'Thousand '
-    elif max_val < 1e9:
+    elif max_val < 4e9:
         labels = [y_number_format % (v / 1e6) for v in vals]
         axis_modifier = 'Million '
     else:

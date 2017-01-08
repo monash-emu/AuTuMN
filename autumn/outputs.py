@@ -2121,9 +2121,11 @@ class Project:
             for _riskgroup_ in self.model_runner.model_dict['manual_baseline'].riskgroups:
                 data += [self.model_runner.model_dict['manual_baseline'].mixing[riskgroup][_riskgroup_]]
             next_data = [i + j for i, j in zip(last_data, data)]
-            ax.bar(range(len(next_data)), data, width=.7, bottom=last_data, color=colours[r])
+            ax.bar(range(len(next_data)), data, width=.7, bottom=last_data, color=colours[r],
+                   label=t_k.capitalise_and_remove_underscore(t_k.find_title_from_dictionary(riskgroup)))
             last_data = next_data
             xlabels += [t_k.capitalise_first_letter(t_k.find_title_from_dictionary(riskgroup))]
+        ax.legend()
         ax.set_xticks(range(len(xlabels)))
         ax.set_xticklabels(xlabels)
         self.save_figure(fig, '_mixing')

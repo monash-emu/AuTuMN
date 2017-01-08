@@ -1257,6 +1257,8 @@ class Project:
             # Not technically a scale-up function in the same sense, but put in here anyway
             self.plot_force_infection()
 
+        self.plot_mixing_matrix()
+
         # Plot economic outputs
         if self.gui_inputs['output_plot_economics']:
             self.plot_cost_coverage_curves()
@@ -2108,12 +2110,13 @@ class Project:
     def plot_mixing_matrix(self):
 
         """
-        Method to visualise the mixing matrix with bar charts. Can't get the legend working or understand why.
+        Method to visualise the mixing matrix with bar charts.
         """
 
         fig = self.set_and_update_figure()
-        ax = fig.add_subplot(1, 1, 1)
-        colours = ['r', 'b', 'k', 'g']
+        ax = self.make_single_axis(fig)
+        output_colours = self.make_default_line_styles(5, True)
+        bar_width = .7
         xlabels = []
         last_data = list(numpy.zeros(len(self.model_runner.model_dict['manual_baseline'].riskgroups)))
         for r, riskgroup in enumerate(self.model_runner.model_dict['manual_baseline'].riskgroups):
@@ -2121,12 +2124,18 @@ class Project:
             for _riskgroup_ in self.model_runner.model_dict['manual_baseline'].riskgroups:
                 data += [self.model_runner.model_dict['manual_baseline'].mixing[riskgroup][_riskgroup_]]
             next_data = [i + j for i, j in zip(last_data, data)]
-            ax.bar(range(len(next_data)), data, width=.7, bottom=last_data, color=colours[r],
+            x_positions = numpy.linspace(.5, .5 + len(next_data) - 1., len(next_data))
+            ax.bar(x_positions, data,
+                   width=bar_width, bottom=last_data, color=output_colours[r][1],
                    label=t_k.capitalise_and_remove_underscore(t_k.find_title_from_dictionary(riskgroup)))
             last_data = next_data
             xlabels += [t_k.capitalise_first_letter(t_k.find_title_from_dictionary(riskgroup))]
-        ax.legend()
-        ax.set_xticks(range(len(xlabels)))
+        self.tidy_axis(ax, [1, 1],
+                       x_axis_type='raw', y_axis_type='proportion', legend='for_single', title='Mixing matrix')
+        ax.set_xlim(0.2, max(x_positions) + 1.)
+        x_label_positions = [x + bar_width / 2. for x in x_positions]
+        ax.set_xticks(x_label_positions)
+        ax.tick_params(length=0.)
         ax.set_xticklabels(xlabels)
         self.save_figure(fig, '_mixing')
 

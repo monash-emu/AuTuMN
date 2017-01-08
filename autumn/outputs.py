@@ -2021,7 +2021,7 @@ class Project:
         humanise_y_ticks(plot)
 
         handles, labels = plot.get_legend_handles_labels()
-        lgd = plot.legend(handles, labels, bbox_to_anchor=(1, 0.5), loc='center left',
+        lgd = plot.legend(handles, labels, bbox_to_anchor=(1., 0.5), loc='center left',
                           fontsize=options['legend_size'], frameon=options['legend_frame'])
 
         # Save plot
@@ -2104,6 +2104,29 @@ class Project:
                            y_axis_type='scaled', legend=True)
             fig.suptitle('Force of infection, ' + t_k.find_title_from_dictionary(strain))
             self.save_figure(fig, '_rate_force' + strain)
+
+    def plot_mixing_matrix(self):
+
+        """
+        Method to visualise the mixing matrix with bar charts. Can't get the legend working or understand why.
+        """
+
+        fig = self.set_and_update_figure()
+        ax = fig.add_subplot(1, 1, 1)
+        colours = ['r', 'b', 'k', 'g']
+        xlabels = []
+        last_data = list(numpy.zeros(len(self.model_runner.model_dict['manual_baseline'].riskgroups)))
+        for r, riskgroup in enumerate(self.model_runner.model_dict['manual_baseline'].riskgroups):
+            data = []
+            for _riskgroup_ in self.model_runner.model_dict['manual_baseline'].riskgroups:
+                data += [self.model_runner.model_dict['manual_baseline'].mixing[riskgroup][_riskgroup_]]
+            next_data = [i + j for i, j in zip(last_data, data)]
+            ax.bar(range(len(next_data)), data, width=.7, bottom=last_data, color=colours[r])
+            last_data = next_data
+            xlabels += [t_k.capitalise_first_letter(t_k.find_title_from_dictionary(riskgroup))]
+        ax.set_xticks(range(len(xlabels)))
+        ax.set_xticklabels(xlabels)
+        self.save_figure(fig, '_mixing')
 
     def plot_popsizes(self):
 

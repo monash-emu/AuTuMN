@@ -291,21 +291,11 @@ class ConsolidatedModel(StratifiedModel):
         defined in the inputs spreadsheet. ***
         """
 
-        # Initialise first tier of dictionaries fully so that parameters can be either way round
         for riskgroup in self.riskgroups:
             self.mixing[riskgroup] = {}
-
-        # Populate symmetric matrices outside of diagonal
-        for riskgroup in self.riskgroups:
             for other_riskgroup in self.riskgroups:
                 if 'prop' + riskgroup + '_mix' + other_riskgroup in self.params:
-                    self.mixing[riskgroup][other_riskgroup] \
-                        = self.params['prop' + riskgroup + '_mix' + other_riskgroup]
-                    self.mixing[other_riskgroup][riskgroup] \
-                        = self.params['prop' + riskgroup + '_mix' + other_riskgroup]
-
-        # Populate diagonal
-        for riskgroup in self.riskgroups:
+                    self.mixing[riskgroup][other_riskgroup] = self.params['prop' + riskgroup + '_mix' + other_riskgroup]
             self.mixing[riskgroup][riskgroup] = 1. - sum(self.mixing[riskgroup].values())
 
     #######################################################

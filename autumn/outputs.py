@@ -1333,6 +1333,7 @@ class Project:
             self.plot_popsizes()
 
         # self.plot_case_detection_rate()
+        self.plot_mixing_matrix()
 
         # Plot likelihood estimates
         if self.gui_inputs['output_likelihood_plot']:
@@ -1456,7 +1457,6 @@ class Project:
         # Add main title and save
         fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb' + end_filename)
-
 
     def plot_resistant_strain_outputs(self, outputs):
 
@@ -2123,21 +2123,21 @@ class Project:
         ax = self.make_single_axis(fig)
         output_colours = self.make_default_line_styles(5, True)
         bar_width = .7
-        xlabels = []
         last_data = list(numpy.zeros(len(self.model_runner.model_dict['manual_baseline'].riskgroups)))
-        for r, riskgroup in enumerate(self.model_runner.model_dict['manual_baseline'].riskgroups):
+        for r, to_riskgroup in enumerate(self.model_runner.model_dict['manual_baseline'].riskgroups):
             data = []
-            for _riskgroup_ in self.model_runner.model_dict['manual_baseline'].riskgroups:
-                data += [self.model_runner.model_dict['manual_baseline'].mixing[riskgroup][_riskgroup_]]
+            for from_riskgroup in self.model_runner.model_dict['manual_baseline'].riskgroups:
+                data += [self.model_runner.model_dict['manual_baseline'].mixing[from_riskgroup][to_riskgroup]]
             next_data = [i + j for i, j in zip(last_data, data)]
             x_positions = numpy.linspace(.5, .5 + len(next_data) - 1., len(next_data))
             ax.bar(x_positions, data,
                    width=bar_width, bottom=last_data, color=output_colours[r][1],
-                   label=t_k.capitalise_and_remove_underscore(t_k.find_title_from_dictionary(riskgroup)))
+                   label=t_k.capitalise_and_remove_underscore(t_k.find_title_from_dictionary(to_riskgroup)))
             last_data = next_data
-            xlabels += [t_k.capitalise_first_letter(t_k.find_title_from_dictionary(riskgroup))]
-        self.tidy_axis(ax, [1, 1],
-                       x_axis_type='raw', y_axis_type='proportion', legend='for_single', title='Mixing matrix')
+        xlabels = [t_k.capitalise_first_letter(t_k.find_title_from_dictionary(i))
+                   for i in self.model_runner.model_dict['manual_baseline'].riskgroups]
+        self.tidy_axis(ax, [1, 1], y_label='Proportion',
+                       x_axis_type='raw', y_axis_type='proportion', legend='for_single', title='Source of contacts')
         ax.set_xlim(0.2, max(x_positions) + 1.)
         x_label_positions = [x + bar_width / 2. for x in x_positions]
         ax.set_xticks(x_label_positions)

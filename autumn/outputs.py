@@ -1449,7 +1449,8 @@ class Project:
                                 label=t_k.capitalise_and_remove_underscore('baseline'))
                     end_filename = '_progress'
 
-            self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time, legend=(o == len(outputs) - 1),
+            self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
+                           legend=(o == len(outputs) - 1 and len(self.scenarios) > 1),
                            y_axis_type='raw', y_label=yaxis_label[o])
 
         # Add main title and save

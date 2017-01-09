@@ -408,13 +408,13 @@ class ModelRunner:
                                                  * rate / total_denominator * 1e5
                         epi_outputs['true_incidence' + strain] \
                             = elementwise_list_addition(incidence_increment,
-                                                        epi_outputs['incidence' + strain])
+                                                        epi_outputs['true_incidence' + strain])
                         # Reduce paedatric contribution
                         if '_age' in from_label and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
                             incidence_increment *= self.inputs.model_constants['program_prop_child_reporting']
                         epi_outputs['incidence' + strain] \
                             = elementwise_list_addition(incidence_increment,
-                                                        epi_outputs['true_incidence' + strain])
+                                                        epi_outputs['incidence' + strain])
             # Find percentage incidence by strain
             if len(self.model_dict[scenario].strains) > 1:
                 for strain in self.model_dict[scenario].strains:

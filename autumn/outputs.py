@@ -598,6 +598,8 @@ class Project:
             = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
                                                          self.inputs.model_constants['plot_start_time'])
 
+        self.plot_true_outcomes = False
+
     #################################
     # General methods for use below #
     #################################
@@ -1396,7 +1398,7 @@ class Project:
                             linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
 
                 # Plot "true" model outputs
-                if output in ['incidence', 'mortality']:
+                if output in ['incidence', 'mortality'] and self.plot_true_outcomes:
                     ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'][start_index:],
                             self.model_runner.epi_outputs['manual_' + scenario_name]['true_' + output][start_index:],
                             color=self.output_colours[scenario][1], linestyle=':', linewidth=1)
@@ -1453,6 +1455,7 @@ class Project:
         # Add main title and save
         fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb' + end_filename)
+
 
     def plot_resistant_strain_outputs(self, outputs):
 

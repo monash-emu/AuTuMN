@@ -34,10 +34,12 @@ def generate_candidates(n_candidates, param_ranges_unc):
 
         # Draw from distribution
         if param_dict['distribution'] == 'beta':
-            x = numpy.random.beta(2., 2., n_candidates)
-            x = bound_low + x * (bound_high - bound_low)
+            x = bound_low + numpy.random.beta(2., 2., n_candidates) * (bound_high - bound_low)
         elif param_dict['distribution'] == 'uniform':
             x = numpy.random.uniform(bound_low, bound_high, n_candidates)
+        else:
+            x = 0.5*(param_dict['bounds'][0] + param_dict['bounds'][1])
+            print "Unsupported statistical distribution specified to generate a candidate. Returned the midpoint of the range."
 
         # Return values
         param_candidates[param_dict['key']] = x

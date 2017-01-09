@@ -1419,15 +1419,15 @@ class Project:
                 for run in range(len(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output])):
                     if run not in self.model_runner.accepted_indices and self.plot_rejected_runs:
                         ax.plot(self.model_runner.epi_outputs_uncertainty[
-                                    'uncertainty_baseline']['times'][start_time_index:],
+                                    'uncertainty_baseline']['times'][self.start_time_index:],
                                 self.model_runner.epi_outputs_uncertainty[
-                                    'uncertainty_baseline'][output][run, start_time_index:],
+                                    'uncertainty_baseline'][output][run, self.start_time_index:],
                                 linewidth=.2, color='y', label=t_k.capitalise_and_remove_underscore('baseline'))
                     else:
                         ax.plot(self.model_runner.epi_outputs_uncertainty[
-                                    'uncertainty_baseline']['times'][start_time_index:],
+                                    'uncertainty_baseline']['times'][self.start_time_index:],
                                 self.model_runner.epi_outputs_uncertainty[
-                                    'uncertainty_baseline'][output][run, start_time_index:],
+                                    'uncertainty_baseline'][output][run, self.start_time_index:],
                                 linewidth=1.2,
                                 color=str(1. - float(run) / float(len(
                                     self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output]))),
@@ -1751,18 +1751,16 @@ class Project:
         ax = self.make_single_axis(fig)
         colours, patterns, compartment_full_names, markers \
             = make_related_line_styles(self.model_runner.model_dict['manual_baseline'].labels, strain_or_organ)
-        start_time_index = self.model_runner.model_dict['manual_baseline'].find_time_index(self.inputs.model_constants[
-                                                                                  'plot_start_time'])
 
         # Plot total population
-        ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'][start_time_index:],
-                self.model_runner.epi_outputs['manual_baseline']['population'][start_time_index:],
+        ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'][self.start_time_index:],
+                self.model_runner.epi_outputs['manual_baseline']['population'][self.start_time_index:],
                 'k', label='total', linewidth=2)
 
         # Plot sub-populations
         for plot_label in self.model_runner.model_dict['manual_baseline'].labels:
-            ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'][start_time_index:],
-                    self.model_runner.model_dict['manual_baseline'].compartment_soln[plot_label][start_time_index:],
+            ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'][self.start_time_index:],
+                    self.model_runner.model_dict['manual_baseline'].compartment_soln[plot_label][self.start_time_index:],
                     label=t_k.find_title_from_dictionary(plot_label), linewidth=1, color=colours[plot_label],
                     marker=markers[plot_label], linestyle=patterns[plot_label])
 
@@ -1822,9 +1820,6 @@ class Project:
         # Prelims
         fig = self.set_and_update_figure()
         subplot_grid = [len(outputs_to_plot), len(strata)]
-        start_time_index \
-            = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
-                                                         self.inputs.model_constants['plot_start_time'])
 
         # Loop over outputs and strata
         for o, output in enumerate(outputs_to_plot):
@@ -1839,7 +1834,7 @@ class Project:
                     if scenario:
                         index = 0
                     else:
-                        index = start_time_index
+                        index = self.start_time_index
                     ax.plot(
                         self.model_runner.epi_outputs['manual_' + scenario_name]['times'][index:],
                         self.model_runner.epi_outputs['manual_' + scenario_name][output + stratum][index:],
@@ -1870,9 +1865,6 @@ class Project:
         both from the start of the model and using the input argument.
         """
 
-        start_time_index \
-            = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
-                                                         self.inputs.model_constants['plot_start_time'])
         early_time_index \
             = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
                                                          self.inputs.model_constants['early_time'])
@@ -1929,7 +1921,7 @@ class Project:
                         legd_text = t_k.find_title_from_dictionary(stratum)
 
                     if t == 0:
-                        time_index = start_time_index
+                        time_index = self.start_time_index
                     else:
                         time_index = early_time_index
 
@@ -2089,10 +2081,6 @@ class Project:
         View the force of infection vars.
         """
 
-        start_time_index \
-            = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
-                                                         self.inputs.model_constants['plot_start_time'])
-
         # Separate plot for each strain
         for strain in self.model_runner.model_dict['manual_baseline'].strains:
             fig = self.set_and_update_figure()
@@ -2100,9 +2088,9 @@ class Project:
 
             # Loop over risk groups and plot line for each
             for riskgroup in self.model_runner.model_dict['manual_baseline'].riskgroups:
-                ax.plot(self.model_runner.model_dict['manual_baseline'].times[start_time_index:],
+                ax.plot(self.model_runner.model_dict['manual_baseline'].times[self.start_time_index:],
                         self.model_runner.model_dict['manual_baseline'].get_var_soln('rate_force' + strain + riskgroup)[
-                        start_time_index:],
+                        self.start_time_index:],
                         label=t_k.capitalise_first_letter(t_k.find_title_from_dictionary(riskgroup)))
 
             # Finish off
@@ -2152,15 +2140,12 @@ class Project:
         # Prelims
         fig = self.set_and_update_figure()
         ax = self.make_single_axis(fig)
-        start_time_index \
-            = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
-                                                         self.inputs.model_constants['plot_start_time'])
 
         # Plotting
         for var in self.model_runner.model_dict['manual_baseline'].var_labels:
             if 'popsize_' in var:
-                ax.plot(self.model_runner.model_dict['manual_baseline'].times[start_time_index:],
-                        self.model_runner.model_dict['manual_baseline'].get_var_soln(var)[start_time_index:],
+                ax.plot(self.model_runner.model_dict['manual_baseline'].times[self.start_time_index:],
+                        self.model_runner.model_dict['manual_baseline'].get_var_soln(var)[self.start_time_index:],
                         label=t_k.find_title_from_dictionary(var[8:]))
 
         # Finishing up

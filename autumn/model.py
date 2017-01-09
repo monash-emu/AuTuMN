@@ -291,12 +291,13 @@ class ConsolidatedModel(StratifiedModel):
         defined in the inputs spreadsheet. ***
         """
 
-        for riskgroup in self.riskgroups:
-            self.mixing[riskgroup] = {}
-            for other_riskgroup in self.riskgroups:
-                if 'prop' + riskgroup + '_mix' + other_riskgroup in self.params:
-                    self.mixing[riskgroup][other_riskgroup] = self.params['prop' + riskgroup + '_mix' + other_riskgroup]
-            self.mixing[riskgroup][riskgroup] = 1. - sum(self.mixing[riskgroup].values())
+        for from_riskgroup in self.riskgroups:
+            self.mixing[from_riskgroup] = {}
+            for to_riskgroup in self.riskgroups:
+                if 'prop' + from_riskgroup + '_mix' + to_riskgroup in self.params:
+                    self.mixing[from_riskgroup][to_riskgroup] \
+                        = self.params['prop' + from_riskgroup + '_mix' + to_riskgroup]
+            self.mixing[from_riskgroup][from_riskgroup] = 1. - sum(self.mixing[from_riskgroup].values())
 
     #######################################################
     ### Single method to process uncertainty parameters ###

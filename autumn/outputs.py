@@ -640,6 +640,23 @@ class Project:
 
         return self.model_runner.model_dict['manual_baseline'].var_labels.index(var)
 
+    def find_start_index(self, scenario=None):
+
+        """
+        Very simple, but commonly used bit of code to determine whether to start from the start of the epidemiological
+        outputs, or - if we're dealing with the baseline scenario - to start from the appropriate time index.
+
+        Args:
+            scenario: Scenario number (i.e. None for baseline or single integer for scenario)
+        Returns:
+            Index that can be used to find starting point in epidemiological output lists
+        """
+
+        if scenario:
+            return 0
+        else:
+            return self.start_time_index
+
     def set_and_update_figure(self):
 
         """
@@ -1323,23 +1340,6 @@ class Project:
         if self.model_runner.optimisation:
             self.plot_optimised_epi_outputs()
             self.plot_piecharts_opti()
-
-    def find_start_index(self, scenario=None):
-
-        """
-        Very simple, but commonly used bit of code to determine whether to start from the start of the epidemiological
-        outputs, or - if we're dealing with the baseline scenario - to start from the appropriate time index.
-
-        Args:
-            scenario: Scenario number (i.e. None for baseline or single integer for scenario)
-        Returns:
-            Index that can be used to find starting point in epidemiological output lists
-        """
-
-        if scenario:
-            return 0
-        else:
-            return self.start_time_index
 
     def plot_outputs_against_gtb(self, outputs, ci_plot=None):
 
@@ -2173,7 +2173,8 @@ class Project:
 
         riskgroup_styles = self.make_default_line_styles(5, True)
         fig = self.set_and_update_figure()
-        ax = self.make_single_axis(fig)
+        ax_left = fig.add_subplot(1, 2, 1)
+        ax_right = fig.add_subplot(1, 2, 2)
         separation = 0.
         separation_increment = .003
         for scenario in [None, 5, 6]:
@@ -2193,15 +2194,21 @@ class Project:
                         case_detection \
                             = model_runner.elementwise_list_addition(case_detection, case_detection_increment)
                     case_detection = [i + separation for i in case_detection]
-                    ax.plot(self.model_runner.model_dict[manual_scenario_name].times[start_index:],
-                            case_detection,
-                            label=t_k.capitalise_first_letter(t_k.find_title_from_dictionary(riskgroup)) + ', '
-                                  + t_k.replace_underscore_with_space(scenario_name),
-                            color=self.output_colours[scenario][1],
-                            linestyle=riskgroup_styles[r * 7][:-1])
+                    delay_to_presentation = [12. / i for i in case_detection]
+                    ax_left.plot(self.model_runner.model_dict[manual_scenario_name].times[start_index:],
+                                 case_detection,
+                                 color=self.output_colours[scenario][1], linestyle=riskgroup_styles[r * 7][:-1])
+                    ax_right.plot(self.model_runner.model_dict[manual_scenario_name].times[start_index:],
+                                  delay_to_presentation,
+                                  label=t_k.capitalise_first_letter(t_k.find_title_from_dictionary(riskgroup)) + ', '
+                                        + t_k.replace_underscore_with_space(scenario_name),
+                                  color=self.output_colours[scenario][1], linestyle=riskgroup_styles[r * 7][:-1])
                     separation += separation_increment
-        self.tidy_axis(ax, [1, 1], legend='for_single', start_time=self.inputs.model_constants['plot_start_time'],
-                       y_axis_type='raw', title='Case detection rates', y_label='Rate')
+            self.tidy_axis(ax_left, [1, 2], start_time=self.inputs.model_constants['plot_start_time'],
+                           y_axis_type='raw', title='Case detection rates', y_label='Presentation rate (per year)')
+            self.tidy_axis(ax_right, [1, 2], legend=True, start_time=self.inputs.model_constants['plot_start_time'],
+                           y_axis_type='raw', title='Delay to presentation', y_label='Months')
+            ax_right.legend(prop={'size': 8}, frameon=False)
         self.save_figure(fig, '_case_detection')
 
     def plot_likelihoods(self):

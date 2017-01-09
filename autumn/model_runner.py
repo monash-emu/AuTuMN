@@ -127,11 +127,9 @@ def find_uncertainty_output_weights(list, method, relative_weights=[1., 2.]):
     if method == 1:
         weights = []
         if len(list) == 1:
-            weights = [1.]
+            return [1.]
         else:
-            for y in range(len(list)):
-                weights.append(relative_weights[0]
-                               + (relative_weights[1] - relative_weights[0]) / float(len(list)-1) * y)
+            weights = numpy.linspace(relative_weights[0], relative_weights[1], num=len(list))
             return [i / sum(weights) for i in weights]
 
     # Equally distributed weights summing to one

@@ -593,6 +593,7 @@ class Project:
         # To have a look at some individual vars scaling over time
         self.vars_to_view = ['demo_life_expectancy']
 
+        # Comes up so often that we need to find this index, that best to do once in instantiation
         self.start_time_index \
             = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
                                                          self.inputs.model_constants['plot_start_time'])
@@ -1170,8 +1171,7 @@ class Project:
                 row_cells[o + 1].text = t_k.capitalise_and_remove_underscore(output)
 
                 for y, year in enumerate(years):
-                    year_index \
-                        = t_k.find_first_list_element_at_least_value(
+                    year_index = t_k.find_first_list_element_at_least_value(
                         self.model_runner.epi_outputs['uncertainty_' + scenario]['times'], year)
 
                     row_cells = table.rows[y + 1].cells
@@ -1268,7 +1268,7 @@ class Project:
         if self.gui_inputs['output_plot_economics']:
             self.plot_cost_coverage_curves()
             self.plot_cost_over_time()
-            self.plot_intervention_costs_by_scenario(2015, 2030)
+            # self.plot_intervention_costs_by_scenario(2015, 2030)
 
         # Plot compartment population sizes
         if self.gui_inputs['output_compartment_populations']:
@@ -1324,6 +1324,23 @@ class Project:
             self.plot_optimised_epi_outputs()
             self.plot_piecharts_opti()
 
+    def find_start_index(self, scenario=None):
+
+        """
+        Very simple, but commonly used bit of code to determine whether to start from the start of the epidemiological
+        outputs, or - if we're dealing with the baseline scenario - to start from the appropriate time index.
+
+        Args:
+            scenario: Scenario number (i.e. None for baseline or single integer for scenario)
+        Returns:
+            Index that can be used to find starting point in epidemiological output lists
+        """
+
+        if scenario:
+            return 0
+        else:
+            return self.start_time_index
+
     def plot_outputs_against_gtb(self, outputs, ci_plot=None):
 
         """
@@ -1372,19 +1389,16 @@ class Project:
                 # Plot model estimates
                 for scenario in self.scenarios[::-1]:  # Reversing ensures black baseline plotted over top
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
-                    if scenario:
-                        index = 0
-                    else:
-                        index = self.start_time_index
-                    ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'][index:],
-                            self.model_runner.epi_outputs['manual_' + scenario_name][output][index:],
+                    start_index = self.find_start_index(scenario)
+                    ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'][start_index:],
+                            self.model_runner.epi_outputs['manual_' + scenario_name][output][start_index:],
                             color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
                             linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
 
                 # Plot "true" model outputs
                 if output in ['incidence', 'mortality']:
-                    ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'][index:],
-                            self.model_runner.epi_outputs['manual_' + scenario_name]['true_' + output][index:],
+                    ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'][start_index:],
+                            self.model_runner.epi_outputs['manual_' + scenario_name]['true_' + output][start_index:],
                             color=self.output_colours[scenario][1], linestyle=':', linewidth=1)
                 end_filename = '_scenario'
 
@@ -1392,25 +1406,24 @@ class Project:
             elif ci_plot and self.gui_inputs['output_uncertainty']:
                 for scenario in self.scenarios[::-1]:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
-                    if scenario:
-                        index = 0
-                    else:
-                        index = self.start_time_index
+                    start_index = self.find_start_index(scenario)
 
                     # Median
                     ax.plot(
-                        self.model_runner.epi_outputs_uncertainty['uncertainty_' + scenario_name]['times'][index:],
-                        self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_' + scenario_name][output][
-                        self.model_runner.percentiles.index(50), :][index:],
+                        self.model_runner.epi_outputs_uncertainty['uncertainty_' + scenario_name][
+                            'times'][start_index:],
+                        self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_' + scenario_name][
+                            output][self.model_runner.percentiles.index(50), :][start_index:],
                         color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
                         linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
 
                     # Upper and lower confidence bounds
                     for centile in [2.5, 97.5]:
                         ax.plot(
-                            self.model_runner.epi_outputs_uncertainty['uncertainty_' + scenario_name]['times'][index:],
+                            self.model_runner.epi_outputs_uncertainty['uncertainty_' + scenario_name]['times'][
+                                start_index:],
                             self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_' + scenario_name][output][
-                            self.model_runner.percentiles.index(centile), :][index:],
+                            self.model_runner.percentiles.index(centile), :][start_index:],
                             color=self.output_colours[scenario][1], linestyle='--', linewidth=.5, label=None)
                     end_filename = '_ci'
 
@@ -1621,9 +1634,8 @@ class Project:
                                 self.inputs.model_constants['econ_saturation_' + program],
                                 self.inputs.model_constants['econ_unitcost_' + program],
                                 self.model_runner.model_dict['manual_' + scenario].var_array[
-                                    time_index,
-                                    self.model_runner.model_dict[
-                                        'manual_' + scenario].var_labels.index('popsize_' + program)])
+                                    time_index, self.model_runner.model_dict['manual_' + scenario].var_labels.index(
+                                        'popsize_' + program)])
                             x_values += [cost]
                             y_values += [coverage]
 
@@ -1760,7 +1772,8 @@ class Project:
         # Plot sub-populations
         for plot_label in self.model_runner.model_dict['manual_baseline'].labels:
             ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'][self.start_time_index:],
-                    self.model_runner.model_dict['manual_baseline'].compartment_soln[plot_label][self.start_time_index:],
+                    self.model_runner.model_dict['manual_baseline'].compartment_soln[plot_label][
+                        self.start_time_index:],
                     label=t_k.find_title_from_dictionary(plot_label), linewidth=1, color=colours[plot_label],
                     marker=markers[plot_label], linestyle=patterns[plot_label])
 
@@ -1831,13 +1844,10 @@ class Project:
                 # Plot the modelled data
                 for scenario in self.scenarios[::-1]:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
-                    if scenario:
-                        index = 0
-                    else:
-                        index = self.start_time_index
+                    start_index = self.find_start_index(scenario)
                     ax.plot(
-                        self.model_runner.epi_outputs['manual_' + scenario_name]['times'][index:],
-                        self.model_runner.epi_outputs['manual_' + scenario_name][output + stratum][index:],
+                        self.model_runner.epi_outputs['manual_' + scenario_name]['times'][start_index:],
+                        self.model_runner.epi_outputs['manual_' + scenario_name][output + stratum][start_index:],
                         color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
                         linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
 
@@ -2170,23 +2180,20 @@ class Project:
             scenario_name = t_k.find_scenario_string_from_number(scenario)
             manual_scenario_name = 'manual_' + scenario_name
             if scenario in self.scenarios:
-                if manual_scenario_name == 'manual_baseline':
-                    start_time_index = self.start_time_index
-                else:
-                    start_time_index = 0
+                start_index = self.find_start_index(scenario)
                 for r, riskgroup in enumerate(self.model_runner.model_dict[manual_scenario_name].riskgroups[::-1]):
                     case_detection = numpy.zeros(len(self.model_runner.model_dict[manual_scenario_name].times[
-                                                     start_time_index:]))
+                                                     start_index:]))
                     for organ in self.inputs.organ_status:
                         case_detection_increment \
                             = [i * j for i, j in zip(self.model_runner.model_dict[manual_scenario_name].get_var_soln(
-                                                         'program_rate_detect' + organ + riskgroup)[start_time_index:],
+                                                         'program_rate_detect' + organ + riskgroup)[start_index:],
                                                      self.model_runner.model_dict[manual_scenario_name].get_var_soln(
-                                                         'epi_prop' + organ)[start_time_index:])]
+                                                         'epi_prop' + organ)[start_index:])]
                         case_detection \
                             = model_runner.elementwise_list_addition(case_detection, case_detection_increment)
                     case_detection = [i + separation for i in case_detection]
-                    ax.plot(self.model_runner.model_dict[manual_scenario_name].times[start_time_index:],
+                    ax.plot(self.model_runner.model_dict[manual_scenario_name].times[start_index:],
                             case_detection,
                             label=t_k.capitalise_first_letter(t_k.find_title_from_dictionary(riskgroup)) + ', '
                                   + t_k.replace_underscore_with_space(scenario_name),

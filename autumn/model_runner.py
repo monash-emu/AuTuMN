@@ -605,8 +605,7 @@ class ModelRunner:
                                     mortality_increment *= self.inputs.model_constants[
                                         'program_prop_child_reporting']
                                 epi_outputs['mortality' + stratum] \
-                                    = elementwise_list_addition(mortality_increment
-                                                                * self.model_dict[scenario].params[
+                                    = elementwise_list_addition(mortality_increment * self.model_dict[scenario].params[
                                                                     'program_prop_death_reporting'],
                                                                 epi_outputs['mortality' + stratum])
 

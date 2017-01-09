@@ -11,6 +11,7 @@ import warnings
 import economics
 import pandas
 import copy
+import model_runner
 
 
 def find_smallest_factors_of_integer(n):
@@ -1257,7 +1258,7 @@ class Project:
             # Not technically a scale-up function in the same sense, but put in here anyway
             self.plot_force_infection()
 
-        self.plot_mixing_matrix()
+        # self.plot_mixing_matrix()
 
         # Plot economic outputs
         if self.gui_inputs['output_plot_economics']:
@@ -1307,6 +1308,8 @@ class Project:
         # Plot popsizes for checking cost-coverage curves
         if self.gui_inputs['output_popsize_plot']:
             self.plot_popsizes()
+
+        # self.plot_case_detection_rate()
 
         # Plot likelihood estimates
         if self.gui_inputs['output_likelihood_plot']:
@@ -2164,6 +2167,30 @@ class Project:
                        y_label=' persons', y_axis_type='scaled')
         fig.suptitle('Population sizes for cost-coverage curves under baseline scenario')
         self.save_figure(fig, '_popsizes')
+
+    def plot_case_detection_rate(self):
+
+        start_time_index \
+            = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
+                                                         self.inputs.model_constants['plot_start_time'])
+        fig = self.set_and_update_figure()
+        ax = self.make_single_axis(fig)
+        scenario = 'manual_scenario_6'
+        if scenario != 'manual_baseline':
+            start_time_index = 0
+        for riskgroup in self.model_runner.model_dict[scenario].riskgroups:
+            case_detection = numpy.zeros(len(self.model_runner.model_dict[scenario].times[start_time_index:]))
+            for organ in self.inputs.organ_status:
+                case_detection_increment = [i * j for i, j in zip(
+                    self.model_runner.model_dict[scenario].get_var_soln('program_rate_detect' + organ
+                                                                                 + riskgroup)[start_time_index:],
+                    self.model_runner.model_dict[scenario].get_var_soln('epi_prop' + organ)[start_time_index:])]
+                case_detection = model_runner.elementwise_list_addition(case_detection, case_detection_increment)
+            ax.plot(self.model_runner.model_dict[scenario].times[start_time_index:],
+                    case_detection, label=t_k.find_title_from_dictionary(riskgroup))
+        self.tidy_axis(ax, [1, 1], legend='for_single', start_time=self.inputs.model_constants['plot_start_time'],
+                       y_axis_type='proportion')
+        self.save_figure(fig, '_case_detection')
 
     def plot_likelihoods(self):
 

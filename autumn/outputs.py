@@ -1330,7 +1330,7 @@ class Project:
         if self.gui_inputs['output_popsize_plot']:
             self.plot_popsizes()
 
-        self.plot_case_detection_rate()
+        # self.plot_case_detection_rate()
 
         # Plot likelihood estimates
         if self.gui_inputs['output_likelihood_plot']:
@@ -2171,18 +2171,28 @@ class Project:
         ACF on improving detection rates relative to passive case finding alone.
         """
 
+        # Prelims
         riskgroup_styles = self.make_default_line_styles(5, True)
         fig = self.set_and_update_figure()
         ax_left = fig.add_subplot(1, 2, 1)
         ax_right = fig.add_subplot(1, 2, 2)
         separation = 0.
-        separation_increment = .003
-        for scenario in [None, 5, 6]:
+        separation_increment = .003  # Artificial shifting of lines away from each other
+
+        # Specif interventions of interest for this plotting function - needs to be changed for each country
+        interventions_affecting_case_detection = [None, 5, 6]
+
+        # Loop over scenarios
+        for scenario in interventions_affecting_case_detection:
             scenario_name = t_k.find_scenario_string_from_number(scenario)
             manual_scenario_name = 'manual_' + scenario_name
             if scenario in self.scenarios:
                 start_index = self.find_start_index(scenario)
+
+                # Repeat for each sub-group
                 for r, riskgroup in enumerate(self.model_runner.model_dict[manual_scenario_name].riskgroups[::-1]):
+
+                    # Find weighted case detection rate over organ statuses
                     case_detection = numpy.zeros(len(self.model_runner.model_dict[manual_scenario_name].times[
                                                      start_index:]))
                     for organ in self.inputs.organ_status:
@@ -2194,7 +2204,7 @@ class Project:
                         case_detection \
                             = model_runner.elementwise_list_addition(case_detection, case_detection_increment)
                     case_detection = [i + separation for i in case_detection]
-                    delay_to_presentation = [12. / i for i in case_detection]
+                    delay_to_presentation = [12. / i for i in case_detection]  # Convert rate to delay
                     ax_left.plot(self.model_runner.model_dict[manual_scenario_name].times[start_index:],
                                  case_detection,
                                  color=self.output_colours[scenario][1], linestyle=riskgroup_styles[r * 7][:-1])
@@ -2204,6 +2214,8 @@ class Project:
                                         + t_k.replace_underscore_with_space(scenario_name),
                                   color=self.output_colours[scenario][1], linestyle=riskgroup_styles[r * 7][:-1])
                     separation += separation_increment
+
+            # Finish off
             self.tidy_axis(ax_left, [1, 2], start_time=self.inputs.model_constants['plot_start_time'],
                            y_axis_type='raw', title='Case detection rates', y_label='Presentation rate (per year)')
             self.tidy_axis(ax_right, [1, 2], legend=True, start_time=self.inputs.model_constants['plot_start_time'],

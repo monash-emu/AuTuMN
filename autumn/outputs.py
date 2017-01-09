@@ -593,6 +593,10 @@ class Project:
         # To have a look at some individual vars scaling over time
         self.vars_to_view = ['demo_life_expectancy']
 
+        self.start_time_index \
+            = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
+                                                         self.inputs.model_constants['plot_start_time'])
+
     #################################
     # General methods for use below #
     #################################
@@ -1309,7 +1313,7 @@ class Project:
         if self.gui_inputs['output_popsize_plot']:
             self.plot_popsizes()
 
-        # self.plot_case_detection_rate()
+        self.plot_case_detection_rate()
 
         # Plot likelihood estimates
         if self.gui_inputs['output_likelihood_plot']:
@@ -1332,9 +1336,6 @@ class Project:
 
         # Standard preliminaries
         start_time = self.inputs.model_constants['plot_start_time']
-        start_time_index \
-            = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
-                                                              start_time)
         colour, indices, yaxis_label, title, patch_colour = find_standard_output_styles(outputs, lightening_factor=0.3)
         subplot_grid = find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
@@ -1374,7 +1375,7 @@ class Project:
                     if scenario:
                         index = 0
                     else:
-                        index = start_time_index
+                        index = self.start_time_index
                     ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'][index:],
                             self.model_runner.epi_outputs['manual_' + scenario_name][output][index:],
                             color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
@@ -1394,7 +1395,7 @@ class Project:
                     if scenario:
                         index = 0
                     else:
-                        index = start_time_index
+                        index = self.start_time_index
 
                     # Median
                     ax.plot(
@@ -2170,26 +2171,45 @@ class Project:
 
     def plot_case_detection_rate(self):
 
-        start_time_index \
-            = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
-                                                         self.inputs.model_constants['plot_start_time'])
+        """
+        Method to visualise case detection rates across scenarios and sub-groups, to better understand the impact of
+        ACF on improving detection rates relative to passive case finding alone.
+        """
+
+        riskgroup_styles = self.make_default_line_styles(5, True)
         fig = self.set_and_update_figure()
         ax = self.make_single_axis(fig)
-        scenario = 'manual_scenario_6'
-        if scenario != 'manual_baseline':
-            start_time_index = 0
-        for riskgroup in self.model_runner.model_dict[scenario].riskgroups:
-            case_detection = numpy.zeros(len(self.model_runner.model_dict[scenario].times[start_time_index:]))
-            for organ in self.inputs.organ_status:
-                case_detection_increment = [i * j for i, j in zip(
-                    self.model_runner.model_dict[scenario].get_var_soln('program_rate_detect' + organ
-                                                                                 + riskgroup)[start_time_index:],
-                    self.model_runner.model_dict[scenario].get_var_soln('epi_prop' + organ)[start_time_index:])]
-                case_detection = model_runner.elementwise_list_addition(case_detection, case_detection_increment)
-            ax.plot(self.model_runner.model_dict[scenario].times[start_time_index:],
-                    case_detection, label=t_k.find_title_from_dictionary(riskgroup))
+        separation = 0.
+        separation_increment = .003
+        for scenario in [None, 5, 6]:
+            scenario_name = t_k.find_scenario_string_from_number(scenario)
+            manual_scenario_name = 'manual_' + scenario_name
+            if scenario in self.scenarios:
+                if manual_scenario_name == 'manual_baseline':
+                    start_time_index = self.start_time_index
+                else:
+                    start_time_index = 0
+                for r, riskgroup in enumerate(self.model_runner.model_dict[manual_scenario_name].riskgroups[::-1]):
+                    case_detection = numpy.zeros(len(self.model_runner.model_dict[manual_scenario_name].times[
+                                                     start_time_index:]))
+                    for organ in self.inputs.organ_status:
+                        case_detection_increment \
+                            = [i * j for i, j in zip(self.model_runner.model_dict[manual_scenario_name].get_var_soln(
+                                                         'program_rate_detect' + organ + riskgroup)[start_time_index:],
+                                                     self.model_runner.model_dict[manual_scenario_name].get_var_soln(
+                                                         'epi_prop' + organ)[start_time_index:])]
+                        case_detection \
+                            = model_runner.elementwise_list_addition(case_detection, case_detection_increment)
+                    case_detection = [i + separation for i in case_detection]
+                    ax.plot(self.model_runner.model_dict[manual_scenario_name].times[start_time_index:],
+                            case_detection,
+                            label=t_k.capitalise_first_letter(t_k.find_title_from_dictionary(riskgroup)) + ', '
+                                  + t_k.replace_underscore_with_space(scenario_name),
+                            color=self.output_colours[scenario][1],
+                            linestyle=riskgroup_styles[r * 7][:-1])
+                    separation += separation_increment
         self.tidy_axis(ax, [1, 1], legend='for_single', start_time=self.inputs.model_constants['plot_start_time'],
-                       y_axis_type='proportion')
+                       y_axis_type='raw', title='Case detection rates', y_label='Rate')
         self.save_figure(fig, '_case_detection')
 
     def plot_likelihoods(self):

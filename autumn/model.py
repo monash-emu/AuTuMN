@@ -619,6 +619,15 @@ class ConsolidatedModel(StratifiedModel):
 
         # Loop covers risk groups and community-wide ACF
         for riskgroup in [''] + self.riskgroups:
+
+            # Decide whether to use the general detection proportion, or a risk-group specific one
+            if 'program_prop_acf_detections_per_round' + riskgroup in self.params:
+                program_prop_acf_detections_per_round \
+                    = self.params['program_prop_acf_detections_per_round' + riskgroup]
+            else:
+                program_prop_acf_detections_per_round = self.params['program_prop_acf_detections_per_round']
+
+            # Implement intervention
             if 'program_prop_smearacf' + riskgroup in self.optional_timevariants \
                     or 'program_prop_xpertacf' + riskgroup in self.optional_timevariants:
 
@@ -630,7 +639,7 @@ class ConsolidatedModel(StratifiedModel):
                 if 'program_prop_smearacf' + riskgroup in self.optional_timevariants:
                     self.vars['program_rate_acf_smearpos' + riskgroup] \
                         += self.vars['program_prop_smearacf' + riskgroup] \
-                           * self.params['program_prop_acf_detections_per_round'] \
+                           * program_prop_acf_detections_per_round \
                            / self.params['program_timeperiod_acf_rounds']
 
                 # Xpert-based ACF rate for smear-positives and smear-negatives
@@ -638,7 +647,7 @@ class ConsolidatedModel(StratifiedModel):
                     for organ in ['_smearpos', '_smearneg']:
                         self.vars['program_rate_acf' + organ + riskgroup] \
                             += self.vars['program_prop_xpertacf' + riskgroup] \
-                               * self.params['program_prop_acf_detections_per_round'] \
+                               * program_prop_acf_detections_per_round \
                                / self.params['program_timeperiod_acf_rounds']
 
                     # Adjust smear-negative detections for Xpert's sensitivity

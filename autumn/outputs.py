@@ -1300,7 +1300,7 @@ class Project:
         # Plot outputs by age group
         if self.gui_inputs['output_by_subgroups']:
             self.plot_outputs_by_stratum()
-            self.plot_outputs_by_stratum(strata_string='riskgroups')
+            self.plot_outputs_by_stratum(strata_string='riskgroups', outputs_to_plot=['incidence', 'prevalence'])
 
         # Plot proportions of population
         if self.gui_inputs['output_age_fractions']:

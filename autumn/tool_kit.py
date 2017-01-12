@@ -308,6 +308,8 @@ def find_title_from_dictionary(name):
             'prisoners',
         '_ruralpoor':
             'rural poor',
+        '_urbanpoor':
+            'urban poor',
         '_norisk':
             'general population',
         '_ds':

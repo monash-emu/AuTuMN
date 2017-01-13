@@ -701,7 +701,7 @@ class ModelRunner:
         """
 
         # Get some preliminary parameters
-        year_current = self.inputs.model_constants['current_time']
+        year_current = self.inputs.model_constants['recent_time']
         current_cpi = self.inputs.scaleup_fns[None]['econ_cpi'](year_current)
         discount_rate = self.inputs.model_constants['econ_discount_rate']
 

@@ -341,7 +341,7 @@ class ConsolidatedModel(StratifiedModel):
 
         self.ticker()
         # The parameter values are calculated from the costs, but only in the future
-        if self.eco_drives_epi and self.time > self.inputs.model_constants['current_time']: self.update_vars_from_cost()
+        if self.eco_drives_epi and self.time > self.inputs.model_constants['recent_time']: self.update_vars_from_cost()
         self.calculate_populations()
         self.calculate_birth_rates_vars()
         self.calculate_force_infection_vars()
@@ -536,6 +536,8 @@ class ConsolidatedModel(StratifiedModel):
         and the idealised estimated value.
         """
 
+        assert self.params['program_ideal_detection'] >= self.vars['program_prop_detect'], \
+            'program_prop_detect should not be greater than program_ideal_detection'
         self.vars['program_prop_detect'] \
             += self.vars['program_prop_decentralisation'] \
                * (self.params['program_ideal_detection'] - self.vars['program_prop_detect'])

@@ -621,11 +621,11 @@ class Inputs:
 
             # Baseline
             if scenario is None:
-                self.freeze_times['baseline'] = self.model_constants['current_time']
+                self.freeze_times['baseline'] = self.model_constants['recent_time']
 
             # Scenarios with no freeze time specified
             elif 'scenario_' + str(scenario) not in self.freeze_times:
-                self.freeze_times['scenario_' + str(scenario)] = self.model_constants['current_time']
+                self.freeze_times['scenario_' + str(scenario)] = self.model_constants['recent_time']
 
     def tidy_time_variants(self):
 
@@ -899,7 +899,7 @@ class Inputs:
 
                     if scenario is not None:
                         freeze_time = self.freeze_times['scenario_' + str(scenario)]
-                        if freeze_time < self.model_constants['current_time']:
+                        if freeze_time < self.model_constants['recent_time']:
                             self.scaleup_fns[scenario][param] = freeze_curve(self.scaleup_fns[scenario][param],
                                                                              freeze_time)
 

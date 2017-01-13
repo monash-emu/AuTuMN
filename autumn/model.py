@@ -600,11 +600,21 @@ class ConsolidatedModel(StratifiedModel):
                          + 1. / self.vars['demo_life_expectancy']) \
                       / (self.vars['program_prop_detect' + organ] - 1.)
 
-            # Missed (no need to loop by risk group as ACF is the only difference here, which is applied next)
+            # Missed (no need to loop by risk-group as ACF is the only difference here, which is applied next)
             self.vars['program_rate_missed' + organ] \
                 = self.vars['program_rate_detect' + organ] \
                   * (1. - self.vars['program_prop_algorithm_sensitivity' + organ]) \
                   / max(self.vars['program_prop_algorithm_sensitivity' + organ], 1e-6)
+
+            # Adjust for awareness raising
+            if 'program_prop_awareness_raising' in self.vars:
+                case_detection_ratio_with_awareness \
+                    = (self.params['program_ratio_case_detection_with_raised_awareness'] - 1.) \
+                      * self.vars['program_prop_awareness_raising'] \
+                      + 1.
+                self.vars['program_rate_missed' + organ] *= case_detection_ratio_with_awareness
+                for riskgroup in [''] + self.riskgroups_for_detection:
+                    self.vars['program_rate_detect' + organ + riskgroup] *= case_detection_ratio_with_awareness
 
     def calculate_acf_rate(self):
 

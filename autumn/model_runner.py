@@ -183,7 +183,7 @@ class ModelRunner:
         self.acceptance_dict = {}
         self.rejection_dict = {}
         self.uncertainty_percentiles = {}
-        self.percentiles = [2.5, 50, 97.5]
+        self.percentiles = [2.5, 50., 97.5]
         self.accepted_no_burn_in_indices = []
         self.random_start = False  # Whether to start from a random point, as opposed to the manually calibrated value
 

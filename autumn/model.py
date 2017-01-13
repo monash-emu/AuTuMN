@@ -536,6 +536,8 @@ class ConsolidatedModel(StratifiedModel):
         and the idealised estimated value.
         """
 
+        assert self.params['program_ideal_detection'] >= self.vars['program_prop_detect'], \
+            'program_prop_detect should not be greater than program_ideal_detection'
         self.vars['program_prop_detect'] \
             += self.vars['program_prop_decentralisation'] \
                * (self.params['program_ideal_detection'] - self.vars['program_prop_detect'])

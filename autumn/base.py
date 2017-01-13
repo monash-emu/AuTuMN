@@ -493,19 +493,19 @@ class BaseModel:
                 # Runge-Kutta 4 integration
                 elif self.integration_method == 'Runge Kutta':
                     y_k2 = y + 0.5 * adaptive_dt * k1
-                    if (y_k2 >= 0).all():
+                    if (y_k2 >= 0.).all():
                         k2 = numpy.asarray(derivative(y_k2, prev_time + 0.5 * adaptive_dt))
                     else:
                         dt_is_ok = False
                         continue
                     y_k3 = y + 0.5 * adaptive_dt * k2
-                    if (y_k3 >= 0).all():
+                    if (y_k3 >= 0.).all():
                         k3 = numpy.asarray(derivative(y_k3, prev_time + 0.5 * adaptive_dt))
                     else:
                         dt_is_ok = False
                         continue
                     y_k4 = y + adaptive_dt * k3
-                    if (y_k4 >= 0).all():
+                    if (y_k4 >= 0.).all():
                         k4 = numpy.asarray(derivative(y_k4, temp_time))
                     else:
                         dt_is_ok = False
@@ -515,7 +515,7 @@ class BaseModel:
                     for i in range(n_compartment):
                         y_candidate.append(y[i] + (adaptive_dt / 6.) * (k1[i] + 2. * k2[i] + 2. * k3[i] + k4[i]))
 
-                if (numpy.asarray(y_candidate) >= 0).all():  # Accept the new integration step temp_time
+                if (numpy.asarray(y_candidate) >= 0.).all():  # Accept the new integration step temp_time
                     dt_is_ok = True
                     prev_time = temp_time
                     cpt_reduce_step = 0
@@ -528,7 +528,7 @@ class BaseModel:
                     cpt_reduce_step += 1
                     if cpt_reduce_step > 50:
                         print "integration did not complete. The following compartments became negative:"
-                        print [self.labels[i] for i in range(len(y_candidate)) if y_candidate[i] < 0]
+                        print [self.labels[i] for i in range(len(y_candidate)) if y_candidate[i] < 0.]
                         break
             # For stored steps only, store compartment state, vars and intercompartmental flows
             for i, label in enumerate(self.labels):
@@ -647,8 +647,8 @@ class BaseModel:
 
             vars_key = 'program_prop_' + int
             cost = self.annual_available_funding[int]
-            if cost == 0:
-                coverage = 0
+            if cost == 0.:
+                coverage = 0.
             else:
                 unit_cost = self.inputs.model_constants['econ_unitcost_' + int]
                 c_inflection_cost = self.inputs.model_constants['econ_inflectioncost_' + int]
@@ -657,7 +657,7 @@ class BaseModel:
                 if popsize_key in self.vars.keys():
                     pop_size = self.vars[popsize_key]
                 else:
-                    pop_size = 0
+                    pop_size = 0.
 
                 # Starting costs
                 # Is a program starting right now? In that case, update intervention_startdates
@@ -764,7 +764,7 @@ class BaseModel:
                 return '%.1fM' % (f/1E6)
             if abs_f > 1E3:
                 return '%.1fK' % (f/1E3)
-            if abs_f > 100:
+            if abs_f > 100.:
                 return '%.0f' % f
             if abs_f > 0.5:
                 return '%.1f' % f
@@ -822,7 +822,7 @@ class BaseModel:
         # Number of years to fund
         n_years = self.end_period_costing - self.inputs.model_constants['scenario_start_time']
         for int in self.interventions_considered_for_opti:
-            self.annual_available_funding[int] = 0
+            self.annual_available_funding[int] = 0.
             # If intervention hasn't started
             if self.inputs.intervention_startdates[self.scenario][int] is None:
                 if self.available_funding[int] < self.inputs.model_constants['econ_startupcost_' + int]:

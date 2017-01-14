@@ -940,26 +940,23 @@ class ConsolidatedModel(StratifiedModel):
         #                 self.vars['popsize_xpertacf' + riskgroup] \
         #                     += self.compartments[compartment] * self.params['program_nns_xpertacf_smearneg']
 
-        # Alternative ACF
+        # Alternative ACF calculation
         for riskgroup in [''] + self.riskgroups:
-            if 'program_prop_smearacf' + riskgroup in self.optional_timevariants:
-                self.vars['popsize_smearacf' + riskgroup] = 0.
-                for compartment in self.compartments:
-                    if 'active_' in compartment and '_smearpos' in compartment \
-                            and (riskgroup == '' or riskgroup in compartment):
-                        self.vars['popsize_smearacf' + riskgroup] \
-                            += self.compartments[compartment] / self.params['program_timeperiod_acf_rounds']
-            if 'program_prop_xpertacf' + riskgroup in self.optional_timevariants:
-                self.vars['popsize_xpertacf' + riskgroup] = 0.
-                for compartment in self.compartments:
-                    if 'active_' in compartment and '_smearpos' in compartment \
-                            and (riskgroup == '' or riskgroup in compartment):
-                        self.vars['popsize_xpertacf' + riskgroup] \
-                            += self.compartments[compartment] / self.params['program_timeperiod_acf_rounds']
-                    elif 'active_' in compartment and '_smearneg' in compartment \
-                            and (riskgroup == '' or riskgroup in compartment):
-                        self.vars['popsize_xpertacf' + riskgroup] \
-                            += self.compartments[compartment] / self.params['program_timeperiod_acf_rounds']
+
+            # Allow proportion of persons actually receiving the screening to vary by risk-group, as per user inputs
+            if 'program_prop_population_screened' + riskgroup in self.params:
+                program_prop_population_screened = self.params['program_prop_population_screened' + riskgroup]
+            else:
+                program_prop_population_screened = self.params['program_prop_population_screened']
+            for acf_type in ['_smearacf', '_xpertacf']:
+                if 'program_prop' + acf_type + riskgroup in self.optional_timevariants:
+                    self.vars['popsize' + acf_type + riskgroup] = 0.
+                    for compartment in self.compartments:
+                        if riskgroup == '' or riskgroup in compartment:
+                            self.vars['popsize' + acf_type + riskgroup] \
+                                += self.compartments[compartment] \
+                                   / self.params['program_timeperiod_acf_rounds'] \
+                                   * program_prop_population_screened
 
         # Decentralisation and engage low-quality sector
         adjust_lowquality = True

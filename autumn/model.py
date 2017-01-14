@@ -920,6 +920,27 @@ class ConsolidatedModel(StratifiedModel):
                                    * (self.params['program_number_tests_per_tb_presentation'] + 1.)
 
         # ACF
+        # for riskgroup in [''] + self.riskgroups:
+        #     if 'program_prop_smearacf' + riskgroup in self.optional_timevariants:
+        #         self.vars['popsize_smearacf' + riskgroup] = 0.
+        #         for compartment in self.compartments:
+        #             if 'active_' in compartment and '_smearpos' in compartment \
+        #                     and (riskgroup == '' or riskgroup in compartment):
+        #                 self.vars['popsize_smearacf' + riskgroup] \
+        #                     += self.compartments[compartment] * self.params['program_nns_smearacf']
+        #     if 'program_prop_xpertacf' + riskgroup in self.optional_timevariants:
+        #         self.vars['popsize_xpertacf' + riskgroup] = 0.
+        #         for compartment in self.compartments:
+        #             if 'active_' in compartment and '_smearpos' in compartment \
+        #                     and (riskgroup == '' or riskgroup in compartment):
+        #                 self.vars['popsize_xpertacf' + riskgroup] \
+        #                     += self.compartments[compartment] * self.params['program_nns_xpertacf_smearpos']
+        #             elif 'active_' in compartment and '_smearneg' in compartment \
+        #                     and (riskgroup == '' or riskgroup in compartment):
+        #                 self.vars['popsize_xpertacf' + riskgroup] \
+        #                     += self.compartments[compartment] * self.params['program_nns_xpertacf_smearneg']
+
+        # Alternative ACF
         for riskgroup in [''] + self.riskgroups:
             if 'program_prop_smearacf' + riskgroup in self.optional_timevariants:
                 self.vars['popsize_smearacf' + riskgroup] = 0.
@@ -927,18 +948,18 @@ class ConsolidatedModel(StratifiedModel):
                     if 'active_' in compartment and '_smearpos' in compartment \
                             and (riskgroup == '' or riskgroup in compartment):
                         self.vars['popsize_smearacf' + riskgroup] \
-                            += self.compartments[compartment] * self.params['program_nns_smearacf']
+                            += self.compartments[compartment] / self.params['program_timeperiod_acf_rounds']
             if 'program_prop_xpertacf' + riskgroup in self.optional_timevariants:
                 self.vars['popsize_xpertacf' + riskgroup] = 0.
                 for compartment in self.compartments:
                     if 'active_' in compartment and '_smearpos' in compartment \
                             and (riskgroup == '' or riskgroup in compartment):
                         self.vars['popsize_xpertacf' + riskgroup] \
-                            += self.compartments[compartment] * self.params['program_nns_xpertacf_smearpos']
+                            += self.compartments[compartment] / self.params['program_timeperiod_acf_rounds']
                     elif 'active_' in compartment and '_smearneg' in compartment \
                             and (riskgroup == '' or riskgroup in compartment):
                         self.vars['popsize_xpertacf' + riskgroup] \
-                            += self.compartments[compartment] * self.params['program_nns_xpertacf_smearneg']
+                            += self.compartments[compartment] / self.params['program_timeperiod_acf_rounds']
 
         # Decentralisation and engage low-quality sector
         adjust_lowquality = True

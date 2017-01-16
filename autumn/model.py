@@ -126,7 +126,8 @@ class ConsolidatedModel(StratifiedModel):
                  'program_prop_xpertacf', 'program_prop_decentralisation', 'program_prop_xpert',
                  'program_prop_treatment_support', 'program_prop_community_ipt', 'program_prop_xpertacf_indigenous',
                  'program_prop_xpertacf_prison', 'program_prop_xpertacf_indigenous', 'program_prop_xpertacf_urbanpoor',
-                 'program_prop_xpertacf_ruralpoor']:
+                 'program_prop_xpertacf_ruralpoor', 'program_prop_cxrxpertacf_ruralpoor',
+                 'program_prop_cxrxpertacf_urbanpoor', 'program_prop_cxrxpertacf_prison']:
             if timevariant in self.scaleup_fns: self.optional_timevariants += [timevariant]
         if 'program_prop_shortcourse_mdr' in self.scaleup_fns and len(self.strains) > 1:
             self.optional_timevariants += ['program_prop_shortcourse_mdr']
@@ -651,20 +652,26 @@ class ConsolidatedModel(StratifiedModel):
                 if 'program_prop_smearacf' + riskgroup in self.optional_timevariants:
                     self.vars['program_rate_acf_smearpos' + riskgroup] \
                         += self.vars['program_prop_smearacf' + riskgroup] \
-                           * program_prop_acf_detections_per_round \
-                           / self.params['program_timeperiod_acf_rounds']
+                           * program_prop_acf_detections_per_round / self.params['program_timeperiod_acf_rounds']
 
                 # Xpert-based ACF rate for smear-positives and smear-negatives
-                if 'program_prop_xpertacf' + riskgroup in self.optional_timevariants:
-                    for organ in ['_smearpos', '_smearneg']:
-                        self.vars['program_rate_acf' + organ + riskgroup] \
-                            += self.vars['program_prop_xpertacf' + riskgroup] \
-                               * program_prop_acf_detections_per_round \
-                               / self.params['program_timeperiod_acf_rounds']
+                for acf_type in ['xpert', 'cxrxpert']:
+                    if acf_type == 'xpert':
+                        cxr_sensitivity = 1.
+                    else:
+                        cxr_sensitivity = self.params['tb_sensitivity_cxr']
+                    if 'program_prop_' + acf_type + 'acf' + riskgroup in self.optional_timevariants:
+                        for organ in ['_smearpos', '_smearneg']:
+                            self.vars['program_rate_acf' + organ + riskgroup] \
+                                += self.vars['program_prop_' + acf_type + 'acf' + riskgroup] \
+                                   * program_prop_acf_detections_per_round \
+                                   / self.params['program_timeperiod_acf_rounds'] \
+                                   * cxr_sensitivity
 
-                    # Adjust smear-negative detections for Xpert's sensitivity
-                    self.vars['program_rate_acf_smearneg' + riskgroup] \
-                        *= self.params['tb_prop_xpert_smearneg_sensitivity']
+                        # Adjust smear-negative detections for Xpert's sensitivity
+                        self.vars['program_rate_acf_smearneg' + riskgroup] \
+                            *= self.params['tb_prop_xpert_smearneg_sensitivity'] \
+                               * cxr_sensitivity
 
     def adjust_case_detection_for_acf(self):
 
@@ -919,7 +926,7 @@ class ConsolidatedModel(StratifiedModel):
                                    * self.compartments['active' + organ + strain + riskgroup + agegroup] \
                                    * (self.params['program_number_tests_per_tb_presentation'] + 1.)
 
-        # Alternative ACF calculation
+        # ACF
         for riskgroup in [''] + self.riskgroups:
 
             # Allow proportion of persons actually receiving the screening to vary by risk-group, as per user inputs

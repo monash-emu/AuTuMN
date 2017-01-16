@@ -124,14 +124,14 @@ class ConsolidatedModel(StratifiedModel):
         for timevariant in \
                 ['program_prop_novel_vaccination', 'transmission_modifier', 'program_prop_smearacf',
                  'program_prop_xpertacf', 'program_prop_decentralisation', 'program_prop_xpert',
-                 'program_prop_treatment_support', 'program_prop_community_ipt', 'program_prop_xpertacf_indigenous',
-                 'program_prop_xpertacf_prison', 'program_prop_xpertacf_indigenous', 'program_prop_xpertacf_urbanpoor',
-                 'program_prop_xpertacf_ruralpoor', 'program_prop_cxrxpertacf_ruralpoor',
-                 'program_prop_cxrxpertacf_urbanpoor', 'program_prop_cxrxpertacf_prison']:
+                 'program_prop_treatment_support', 'program_prop_community_ipt']:
             if timevariant in self.scaleup_fns: self.optional_timevariants += [timevariant]
+        for riskgroup in self.riskgroups:
+            for program in ['_xpertacf', '_cxrxpertacf']:
+                if 'program_prop' + program + riskgroup in self.scaleup_fns:
+                    self.optional_timevariants += ['program_prop' + program + riskgroup]
         if 'program_prop_shortcourse_mdr' in self.scaleup_fns and len(self.strains) > 1:
             self.optional_timevariants += ['program_prop_shortcourse_mdr']
-
         for timevariant in self.scaleup_fns:
             if '_ipt_age' in timevariant:
                 self.optional_timevariants += ['agestratified_ipt']

@@ -654,7 +654,7 @@ class ConsolidatedModel(StratifiedModel):
                         += self.vars['program_prop_smearacf' + riskgroup] \
                            * program_prop_acf_detections_per_round / self.params['program_timeperiod_acf_rounds']
 
-                # Xpert-based ACF rate for smear-positives and smear-negatives
+                # Xpert-based ACF rate for smear-positives and smear-negatives - with or without pre-screening with CXR
                 for acf_type in ['xpert', 'cxrxpert']:
                     if acf_type == 'xpert':
                         cxr_sensitivity = 1.

@@ -351,7 +351,6 @@ class BaseModel:
         for label in self.labels:
             val = self.compartments[label] / self.get_constant_or_variable_param('demo_life_expectancy')
             self.flows[label] -= val
-            self.vars['rate_death'] += val
 
         # Extra death flows
         self.vars['rate_infection_death'] = 0.

@@ -724,30 +724,36 @@ class BaseModel:
             state_compartments[label] = self.compartment_soln[label][i_time]
         return state_compartments
 
-    def calculate_outgoing_compartment_flows(self, compartment='active_'):
+    def calculate_outgoing_compartment_flows(self, from_compartment='active_', to_compartment=''):
 
         """
-        Method to sum the total flows emanating from a set of compartments containing a particular string, so that the
-        proportion of flows going in a particular direction can be determined.
+        Method to sum the total flows emanating from a set of compartments containing a particular string, restricting
+        to the flows entering a particular compartment of interest, if required.
+
+        Args:
+            from_compartment: The string of the compartment that the flows are coming out of
+            to_compartment: The string of the compartment of interest that flows should be going in to, if any
+                (otherwise '' for all flows)
         """
 
         outgoing_flows = {}
         for label in self.labels:
-            if compartment in label:
+            if from_compartment in label:
                 outgoing_flows[label] = 0.
                 for flow in self.fixed_transfer_rate_flows:
-                    if flow[0] == label:
+                    if flow[0] == label and to_compartment in flow[1]:
                         outgoing_flows[label] += flow[2]
                 for flow in self.var_transfer_rate_flows:
-                    if flow[0] == label:
+                    if flow[0] == label and to_compartment in flow[1]:
                         outgoing_flows[label] += self.vars[flow[2]]
                 for flow in self.fixed_infection_death_rate_flows:
-                    if flow[0] == label:
+                    if flow[0] == label and to_compartment == '':
                         outgoing_flows[label] += flow[1]
                 for flow in self.var_infection_death_rate_flows:
-                    if flow[0] == label:
+                    if flow[0] == label and to_compartment == '':
                         outgoing_flows[label] += self.vars[flow[1]]
-                outgoing_flows[label] += 1. / self.get_constant_or_variable_param('demo_life_expectancy')
+                if to_compartment == '':
+                    outgoing_flows[label] += 1. / self.get_constant_or_variable_param('demo_life_expectancy')
         return outgoing_flows
 
     ###############################

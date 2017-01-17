@@ -724,7 +724,7 @@ class BaseModel:
             state_compartments[label] = self.compartment_soln[label][i_time]
         return state_compartments
 
-    def calculate_outgoing_compartment_flows(self, from_compartment='active_', to_compartment=''):
+    def calculate_outgoing_compartment_flows(self, from_compartment, to_compartment=''):
 
         """
         Method to sum the total flows emanating from a set of compartments containing a particular string, restricting
@@ -734,6 +734,8 @@ class BaseModel:
             from_compartment: The string of the compartment that the flows are coming out of
             to_compartment: The string of the compartment of interest that flows should be going in to, if any
                 (otherwise '' for all flows)
+        Returns:
+            outgoing_flows: Dictionary of all the compartments of interest and the sum of their outgoing flows
         """
 
         outgoing_flows = {}
@@ -755,6 +757,31 @@ class BaseModel:
                 if to_compartment == '':
                     outgoing_flows[label] += 1. / self.get_constant_or_variable_param('demo_life_expectancy')
         return outgoing_flows
+
+    def calculate_outgoing_proportion(self, from_compartment, to_compartment=''):
+
+        """
+        Method that uses the previous method (calculate_outgoing_compartment_flows) to determine the proportion of all
+        flows coming out of a compartment that go a specific compartment.
+
+        Args:
+            from_compartment: Origin compartment
+            to_compartment: Destination compartment that you want to know the proportions for
+        Returns:
+            proportion_to_specific_compartment: Dictionary with keys of all the compartments containing the
+                from_compartment string and values float proportions of the amount of flows going in that direction.
+        """
+
+        outgoing_flows_all \
+            = self.calculate_outgoing_compartment_flows(from_compartment=from_compartment)
+        outgoing_flows_to_specific_compartment \
+            = self.calculate_outgoing_compartment_flows(from_compartment=from_compartment,
+                                                        to_compartment=to_compartment)
+        proportion_to_specific_compartment = {}
+        for compartment in outgoing_flows_all:
+            proportion_to_specific_compartment[compartment] \
+                = outgoing_flows_to_specific_compartment[compartment] / outgoing_flows_all[compartment]
+        return proportion_to_specific_compartment
 
     ###############################
     ### Flow diagram production ###

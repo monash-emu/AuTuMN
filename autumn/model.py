@@ -13,7 +13,6 @@ creating intercompartmental flows, costs, etc., while the latter sets down the a
 from scipy import exp, log
 from autumn.base import BaseModel, StratifiedModel
 import copy
-import warnings
 
 
 def label_intersects_tags(label, tags):
@@ -133,9 +132,9 @@ class ConsolidatedModel(StratifiedModel):
         if 'program_prop_shortcourse_mdr' in self.scaleup_fns and len(self.strains) > 1:
             self.optional_timevariants += ['program_prop_shortcourse_mdr']
         for timevariant in self.scaleup_fns:
-            if '_ipt_age' in timevariant:
+            if 'program_prop_ipt_age' in timevariant:
                 self.optional_timevariants += ['agestratified_ipt']
-            elif '_ipt' in timevariant and 'community_ipt' not in timevariant:
+            elif 'program_prop_ipt' in timevariant and 'community_ipt' not in timevariant:
                 self.optional_timevariants += ['ipt']
 
         # Define model compartmental structure (compartment initialisation is now in base.py)
@@ -345,9 +344,9 @@ class ConsolidatedModel(StratifiedModel):
         if self.eco_drives_epi and self.time > self.inputs.model_constants['recent_time']: self.update_vars_from_cost()
         self.calculate_populations()
         self.calculate_birth_rates_vars()
-        self.calculate_force_infection_vars()
         if self.is_organvariation: self.calculate_progression_vars()
-        if 'program_prop_decentralisation' in self.optional_timevariants: self.adjust_case_detection_for_decentralisation()
+        if 'program_prop_decentralisation' in self.optional_timevariants:
+            self.adjust_case_detection_for_decentralisation()
         if self.vary_detection_by_organ:
             self.calculate_case_detection_by_organ()
             if 'program_prop_xpert' in self.optional_timevariants:
@@ -362,8 +361,9 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_treatment_rates_vars()
         self.calculate_population_sizes()
         if 'agestratified_ipt' in self.optional_timevariants or 'ipt' in self.optional_timevariants:
-            self.calculate_ipt_rate()
-        if 'program_prop_community_ipt' in self.optional_timevariants: self.calculate_community_ipt_rate()
+            self.calculate_ipt_effect()
+        self.calculate_force_infection_vars()
+        # if 'program_prop_community_ipt' in self.optional_timevariants: self.calculate_community_ipt_rate()
 
     def ticker(self):
 
@@ -478,23 +478,29 @@ class ConsolidatedModel(StratifiedModel):
 
             # Calculate force of infection unadjusted for immunity/susceptibility
             for riskgroup in force_riskgroups:
-                self.vars['rate_force' + strain + riskgroup] = \
-                    self.params['tb_n_contact'] \
-                    * self.vars['effective_infectious_population' + strain + riskgroup] \
-                    / self.vars['population' + riskgroup]
+                for agegroup in self.agegroups:
+                    if 'proportion_infections_averted' + agegroup in self.vars: # *** something wrong
+                        ipt_infection_modifier = 1. - self.vars['proportion_infections_averted' + agegroup]
+                    else:
+                        ipt_infection_modifier = 1.
+                    self.vars['rate_force' + strain + riskgroup + agegroup] = \
+                        self.params['tb_n_contact'] \
+                        * self.vars['effective_infectious_population' + strain + riskgroup] \
+                        / self.vars['population' + riskgroup] \
+                        * ipt_infection_modifier
 
-                # If any modifications to transmission parameter to be made over time
-                if 'transmission_modifier' in self.optional_timevariants:
-                    self.vars['rate_force' + strain + riskgroup] *= self.vars['transmission_modifier']
+                    # If any modifications to transmission parameter to be made over time
+                    if 'transmission_modifier' in self.optional_timevariants:
+                        self.vars['rate_force' + strain + riskgroup + agegroup] *= self.vars['transmission_modifier']
 
-                # Adjust for immunity in various groups
-                force_types = ['_vac', '_latent']
-                if 'program_prop_novel_vaccination' in self.optional_timevariants:
-                    force_types += ['_novelvac']
-                for force_type in force_types:
-                    self.vars['rate_force' + force_type + strain + riskgroup] \
-                        = self.params['tb_multiplier' + force_type + '_protection'] \
-                          * self.vars['rate_force' + strain + riskgroup]
+                    # Adjust for immunity in various groups
+                    force_types = ['_vac', '_latent']
+                    if 'program_prop_novel_vaccination' in self.optional_timevariants:
+                        force_types += ['_novelvac']
+                    for force_type in force_types:
+                        self.vars['rate_force' + force_type + strain + riskgroup + agegroup] \
+                            = self.params['tb_multiplier' + force_type + '_protection'] \
+                              * self.vars['rate_force' + strain + riskgroup + agegroup]
 
     def calculate_progression_vars(self):
 
@@ -963,6 +969,26 @@ class ConsolidatedModel(StratifiedModel):
                 if 'treatment' in compartment and '_mdr' in compartment:
                     self.vars['popsize_shortcourse_mdr'] += self.compartments[compartment]
 
+    def calculate_ipt_effect(self):
+
+        """
+        Method to estimate the proportion of infections averted through the IPT program - as the proportion of all cases
+        detected by the high quality sector, multiplied by the proportion of infections in the household (giving the
+        proportion of all infections we can target), multiplied by the coverage of the program (in each age-group) and
+        the effectiveness of treatment.
+        """
+
+        for agegroup in self.agegroups:
+            self.vars['proportion_infections_averted' + agegroup] = 0.
+            if 'program_prop_ipt' + agegroup in self.vars:
+                self.vars['proportion_infections_averted' + agegroup] \
+                    = self.calculate_aggregate_outgoing_proportion('active', 'detect') \
+                      * self.params['tb_prop_infections_in_household'] \
+                      * self.vars['program_prop_ipt' + agegroup] \
+                      * self.params['tb_prop_ipt_effectiveness']
+            else:
+                self.vars['proportion_infections_averted' + agegroup] = 0.
+
     def calculate_ipt_rate(self):
 
         """
@@ -1030,8 +1056,8 @@ class ConsolidatedModel(StratifiedModel):
         self.set_variable_programmatic_flows()
         self.set_detection_flows()
         self.set_treatment_flows()
-        if 'agestratified_ipt' in self.optional_timevariants or 'ipt' in self.optional_timevariants:
-            self.set_ipt_flows()
+        # if 'agestratified_ipt' in self.optional_timevariants or 'ipt' in self.optional_timevariants:
+        #     self.set_ipt_flows()
 
     def set_birth_flows(self):
 
@@ -1067,26 +1093,26 @@ class ConsolidatedModel(StratifiedModel):
                     self.set_var_transfer_rate_flow(
                         'susceptible_fully' + riskgroup + agegroup,
                         'latent_early' + strain + riskgroup + agegroup,
-                        'rate_force' + strain + force_riskgroup)
+                        'rate_force' + strain + force_riskgroup + agegroup)
                     self.set_var_transfer_rate_flow(
                         'susceptible_vac' + riskgroup + agegroup,
                         'latent_early' + strain + riskgroup + agegroup,
-                        'rate_force_vac' + strain + force_riskgroup)
+                        'rate_force_vac' + strain + force_riskgroup + agegroup)
                     self.set_var_transfer_rate_flow(
                         'susceptible_treated' + riskgroup + agegroup,
                         'latent_early' + strain + riskgroup + agegroup,
-                        'rate_force_vac' + strain + force_riskgroup)
+                        'rate_force_vac' + strain + force_riskgroup + agegroup)
                     self.set_var_transfer_rate_flow(
                         'latent_late' + strain + riskgroup + agegroup,
                         'latent_early' + strain + riskgroup + agegroup,
-                        'rate_force_latent' + strain + force_riskgroup)
+                        'rate_force_latent' + strain + force_riskgroup + agegroup)
 
                     # Novel vaccination
                     if 'program_prop_novel_vaccination' in self.optional_timevariants:
                         self.set_var_transfer_rate_flow(
                             'susceptible_novelvac' + riskgroup + agegroup,
                             'latent_early' + strain + riskgroup + agegroup,
-                            'rate_force_novelvac' + strain + force_riskgroup)
+                            'rate_force_novelvac' + strain + force_riskgroup + agegroup)
 
     def set_progression_flows(self):
 

@@ -783,6 +783,28 @@ class BaseModel:
                 = outgoing_flows_to_specific_compartment[compartment] / outgoing_flows_all[compartment]
         return proportion_to_specific_compartment
 
+    def calculate_aggregate_outgoing_proportion(self, from_compartment, to_compartment):
+
+        numerator = 0.
+        denominator = 0.
+        for flow in self.fixed_transfer_rate_flows:
+            if from_compartment in flow[0]:
+                denominator += flow[2]
+                if to_compartment in flow[1]:
+                    numerator += flow[2]
+        for flow in self.var_transfer_rate_flows:
+            if from_compartment in flow[0]:
+                denominator += self.vars[flow[2]]
+                if to_compartment in flow[1]:
+                    numerator += self.vars[flow[2]]
+        for flow in self.fixed_infection_death_rate_flows:
+            if from_compartment in flow[0]:
+                denominator += flow[1]
+        for flow in self.var_infection_death_rate_flows:
+            if from_compartment in flow[0]:
+                denominator += self.vars[flow[1]]
+        return numerator / denominator
+
     ###############################
     ### Flow diagram production ###
     ###############################

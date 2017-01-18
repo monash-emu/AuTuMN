@@ -479,7 +479,7 @@ class ConsolidatedModel(StratifiedModel):
             # Calculate force of infection unadjusted for immunity/susceptibility
             for riskgroup in force_riskgroups:
                 for agegroup in self.agegroups:
-                    if 'proportion_infections_averted' + agegroup in self.vars: # *** something wrong
+                    if 'proportion_infections_averted' + agegroup in self.vars and 'dr' not in strain:
                         ipt_infection_modifier = 1. - self.vars['proportion_infections_averted' + agegroup]
                     else:
                         ipt_infection_modifier = 1.

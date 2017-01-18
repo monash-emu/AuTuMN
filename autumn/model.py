@@ -483,11 +483,11 @@ class ConsolidatedModel(StratifiedModel):
                         ipt_infection_modifier = 1. - self.vars['proportion_infections_averted' + agegroup]
                     else:
                         ipt_infection_modifier = 1.
-                    self.vars['rate_force' + strain + riskgroup + agegroup] = \
-                        self.params['tb_n_contact'] \
-                        * self.vars['effective_infectious_population' + strain + riskgroup] \
-                        / self.vars['population' + riskgroup] \
-                        * ipt_infection_modifier
+                    self.vars['rate_force' + strain + riskgroup + agegroup] \
+                        = self.params['tb_n_contact'] \
+                          * self.vars['effective_infectious_population' + strain + riskgroup] \
+                          / self.vars['population' + riskgroup] \
+                          * ipt_infection_modifier
 
                     # If any modifications to transmission parameter to be made over time
                     if 'transmission_modifier' in self.optional_timevariants:

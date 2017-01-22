@@ -519,7 +519,7 @@ def run_calibration(n_runs, calibrated_params, targeted_outputs, dt=None):
     autumn.outputs.plot_outputs_against_gtb(
         model_runner.model, ["incidence", "mortality", "prevalence", "notifications"],
         model_runner.inputs.model_constants['recent_time'],
-        'current_time',
+        'recent_time',
         base + '.png',
         model_runner.country,
         scenario=None,

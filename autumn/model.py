@@ -798,10 +798,7 @@ class ConsolidatedModel(StratifiedModel):
         and death.
         """
 
-        # Add inappropriate treatments to strains to create a list of all outcomes of interest
         treatments = copy.copy(self.strains)
-        if len(self.strains) > 1 and self.is_misassignment:
-            treatments += ['_inappropriate']
         for strain in treatments:
 
             # Find baseline treatment period for total duration and for period infectious
@@ -878,6 +875,55 @@ class ConsolidatedModel(StratifiedModel):
                     self.vars['program_rate_default' + treatment_stage + '_noamplify' + strain] \
                         = self.vars['program_rate_default' + treatment_stage + strain] \
                           * (1. - self.vars['epi_prop_amplification'])
+
+            # create new vars for misassigned individuals
+            if len(self.strains) > 1 and self.is_misassignment and strain != '_ds':
+                for treated_as in treatments:  # for each strain
+                    if treated_as != strain:  # misassigned strain has to be different from the actual strain
+                        if self.strains.index(treated_as) < self.strains.index(
+                                strain):  # if treated with weaker regimen
+                            props = {}
+                            for outcome in self.outcomes[1:]:
+                                treatment_type = strain + '_as' + treated_as[1:]
+                                if outcome == '_default':
+                                    self.params['program_prop_treatment' + outcome + treatment_type] = 1. - \
+                                        self.params['program_prop_treatment_success' + treatment_type] - \
+                                        self.params['program_prop_treatment_death' + treatment_type]
+                                props['_infect'], props['_noninfect'] \
+                                    = find_outcome_proportions_by_period(
+                                    self.params['program_prop_treatment' + outcome + treatment_type],
+                                    self.vars['tb_timeperiod_infect_ontreatment' + treated_as],
+                                    self.vars['tb_timeperiod_ontreatment' + treated_as])
+                                for treatment_stage in props:
+                                    self.vars[
+                                        'program_prop_treatment' + outcome + treatment_stage + treatment_type] = \
+                                    props[treatment_stage]
+
+                            for treatment_stage in self.treatment_stages:
+                                # Find the success proportions
+                                self.vars['program_prop_treatment_success' + treatment_stage + treatment_type] \
+                                    = 1. - self.vars[
+                                    'program_prop_treatment_default' + treatment_stage + treatment_type] \
+                                      - self.vars['program_prop_treatment_death' + treatment_stage + treatment_type]
+
+                                # Find the corresponding rates from the proportions
+                                for outcome in self.outcomes:
+                                    self.vars['program_rate' + outcome + treatment_stage + treatment_type] \
+                                        = 1. / self.vars[
+                                        'tb_timeperiod' + treatment_stage + '_ontreatment' + treated_as] \
+                                          * self.vars[
+                                              'program_prop_treatment' + outcome + treatment_stage + treatment_type]
+
+                                # Split default according to whether amplification occurs (if not the most resistant strain)
+                                if self.is_amplification:
+                                    self.vars[
+                                        'program_rate_default' + treatment_stage + '_amplify' + treatment_type] \
+                                        = self.vars['program_rate_default' + treatment_stage + treatment_type] \
+                                          * self.vars['epi_prop_amplification']
+                                    self.vars[
+                                        'program_rate_default' + treatment_stage + '_noamplify' + treatment_type] \
+                                        = self.vars['program_rate_default' + treatment_stage + treatment_type] \
+                                          * (1. - self.vars['epi_prop_amplification'])
 
     def calculate_population_sizes(self):
 
@@ -1323,7 +1369,7 @@ class ConsolidatedModel(StratifiedModel):
                                 # Which treatment parameters to use - for the strain or for inappropriate treatment
                                 strain_or_inappropriate = assigned_strain
                                 if strain_number > assigned_strain_number:
-                                    strain_or_inappropriate = '_inappropriate'
+                                    strain_or_inappropriate = strain + '_as' + assigned_strain[1:]
 
                             # Success by treatment stage
                             self.set_var_transfer_rate_flow(

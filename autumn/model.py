@@ -366,6 +366,7 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_force_infection_vars()
         self.calculate_population_sizes()
 
+
         # if 'program_prop_community_ipt' in self.optional_timevariants: self.calculate_community_ipt_rate()
 
     def ticker(self):
@@ -988,7 +989,7 @@ class ConsolidatedModel(StratifiedModel):
                 program_prop_population_screened = self.params['program_prop_population_screened' + riskgroup]
             else:
                 program_prop_population_screened = self.params['program_prop_population_screened']
-            for acf_type in ['_smearacf', '_xpertacf']:
+            for acf_type in ['_smearacf', '_xpertacf','_cxrxpertacf']:
                 if 'program_prop' + acf_type + riskgroup in self.optional_timevariants:
                     self.vars['popsize' + acf_type + riskgroup] = 0.
                     for compartment in self.compartments:

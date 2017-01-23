@@ -168,13 +168,13 @@ class Inputs:
         if self.gui_inputs['is_lowquality']:
             self.potential_interventions_to_cost += ['engage_lowquality']
         if self.gui_inputs['riskgroup_prison']:
-            self.potential_interventions_to_cost += ['xpertacf_prison']
+            self.potential_interventions_to_cost += ['xpertacf_prison', 'cxrxpertacf_prison']
         if self.gui_inputs['riskgroup_indigenous']:
             self.potential_interventions_to_cost += ['xpertacf_indigenous']
         if self.gui_inputs['riskgroup_urbanpoor']:
-            self.potential_interventions_to_cost += ['xpertacf_urbanpoor']
+            self.potential_interventions_to_cost += ['xpertacf_urbanpoor', 'cxrxpertacf_urbanpoor']
         if self.gui_inputs['riskgroup_ruralpoor']:
-            self.potential_interventions_to_cost += ['xpertacf_ruralpoor']
+            self.potential_interventions_to_cost += ['xpertacf_ruralpoor', 'cxrxpertacf_ruralpoor']
 
         self.include_relapse_in_ds_outcomes = True
 

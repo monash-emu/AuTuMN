@@ -359,10 +359,13 @@ class ConsolidatedModel(StratifiedModel):
         if self.is_lowquality: self.calculate_lowquality_detection_vars()
         self.calculate_await_treatment_var()
         self.calculate_treatment_rates_vars()
-        self.calculate_population_sizes()
+        self.calculate_prop_infections_reachable_with_ipt()
+       # self.calculate_population_sizes()
         if 'agestratified_ipt' in self.optional_timevariants or 'ipt' in self.optional_timevariants:
             self.calculate_ipt_effect()
         self.calculate_force_infection_vars()
+        self.calculate_population_sizes()
+
         # if 'program_prop_community_ipt' in self.optional_timevariants: self.calculate_community_ipt_rate()
 
     def ticker(self):
@@ -925,6 +928,16 @@ class ConsolidatedModel(StratifiedModel):
                                         = self.vars['program_rate_default' + treatment_stage + treatment_type] \
                                           * (1. - self.vars['epi_prop_amplification'])
 
+    def calculate_prop_infections_reachable_with_ipt(self):
+        """
+        Calculates the proportion of new infections that could potentially be targeted with IPT.
+        Obtained by multiplying the proportion of active cases that are detected with the proportion of infections
+        that occur within the household
+        """
+        self.vars['tb_prop_infections_reachable_with_ipt'] = \
+            self.calculate_aggregate_outgoing_proportion('active', 'detect') * \
+            self.params['tb_prop_infections_in_household']
+
     def calculate_population_sizes(self):
 
         """
@@ -939,25 +952,14 @@ class ConsolidatedModel(StratifiedModel):
                 if 'treatment_' in compartment:
                     self.vars['popsize_treatment_support'] += self.compartments[compartment]
 
-        # IPT
+        # IPT: popsize defined as the household contacts of active cases identified by the high-quality sector
         for agegroup in self.agegroups:
             self.vars['popsize_ipt' + agegroup] = 0.
-            for riskgroup in self.riskgroups:
-                for strain in self.strains:
-                    for organ in self.organ_status:
-                        if '_smearpos' in organ and 'dr' not in strain:
-                            if self.is_misassignment:
-                                for assigned_strain in self.strains:
-                                    self.vars['popsize_ipt' + agegroup] \
-                                        += self.vars['program_rate_start_treatment' + organ] \
-                                           * self.compartments['detect' + organ + strain + '_as' + assigned_strain[1:] \
-                                                               + riskgroup + agegroup] \
-                                           * self.inputs.model_constants['ipt_eligible_per_treatment_start']
-                            else:
-                                self.vars['popsize_ipt' + agegroup] \
-                                    += self.vars['program_rate_start_treatment' + organ] \
-                                       * self.compartments['detect' + organ + strain + riskgroup + agegroup] \
-                                       * self.inputs.model_constants['ipt_eligible_per_treatment_start']
+            for strain in self.strains:
+                for from_label, to_label, rate in self.var_transfer_rate_flows:
+                    if 'latent_early' in to_label and strain in to_label and agegroup in to_label:
+                        self.vars['popsize_ipt' + agegroup] += self.compartments[from_label] \
+                                              * self.vars[rate]
 
         # BCG (So simple that it's almost unnecessary, but needed for loops over program names)
         self.vars['popsize_vaccination'] = self.vars['births_total']
@@ -1028,8 +1030,7 @@ class ConsolidatedModel(StratifiedModel):
             self.vars['proportion_infections_averted' + agegroup] = 0.
             if 'program_prop_ipt' + agegroup in self.vars:
                 self.vars['proportion_infections_averted' + agegroup] \
-                    = self.calculate_aggregate_outgoing_proportion('active', 'detect') \
-                      * self.params['tb_prop_infections_in_household'] \
+                    = self.vars['tb_prop_infections_reachable_with_ipt'] \
                       * self.vars['program_prop_ipt' + agegroup] \
                       * self.params['tb_prop_ipt_effectiveness']
             else:

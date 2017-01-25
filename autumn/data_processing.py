@@ -168,13 +168,13 @@ class Inputs:
         if self.gui_inputs['is_lowquality']:
             self.potential_interventions_to_cost += ['engage_lowquality']
         if self.gui_inputs['riskgroup_prison']:
-            self.potential_interventions_to_cost += ['xpertacf_prison']
+            self.potential_interventions_to_cost += ['xpertacf_prison', 'cxrxpertacf_prison']
         if self.gui_inputs['riskgroup_indigenous']:
             self.potential_interventions_to_cost += ['xpertacf_indigenous']
         if self.gui_inputs['riskgroup_urbanpoor']:
-            self.potential_interventions_to_cost += ['xpertacf_urbanpoor']
+            self.potential_interventions_to_cost += ['xpertacf_urbanpoor', 'cxrxpertacf_urbanpoor']
         if self.gui_inputs['riskgroup_ruralpoor']:
-            self.potential_interventions_to_cost += ['xpertacf_ruralpoor']
+            self.potential_interventions_to_cost += ['xpertacf_ruralpoor', 'cxrxpertacf_ruralpoor']
 
         self.include_relapse_in_ds_outcomes = True
 
@@ -699,7 +699,12 @@ class Inputs:
                 self.find_amplification_data()
             self.treatment_outcome_types = copy.copy(self.strains)
             if self.gui_inputs['is_misassignment']:
-                self.treatment_outcome_types += ['_inappropriate']
+                for strain in self.strains[1:]:
+                    for treated_as in self.strains:  # for each strain
+                        if treated_as != strain:  # misassigned strain has to be different from the actual strain
+                            if self.strains.index(treated_as) < self.strains.index(
+                                    strain):  # if treated with weaker regimen
+                                self.treatment_outcome_types += [strain + '_as' + treated_as[1:]]
 
     def define_organ_structure(self):
 
@@ -723,7 +728,7 @@ class Inputs:
         Work out the periods of time spent non-infectious for each strain (plus inappropriate if required).
         """
 
-        for strain in self.treatment_outcome_types:
+        for strain in self.strains:
             self.model_constants['tb_timeperiod_noninfect_ontreatment' + strain] \
                 = self.model_constants['tb_timeperiod_ontreatment' + strain] \
                   - self.model_constants['tb_timeperiod_infect_ontreatment' + strain]

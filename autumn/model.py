@@ -892,15 +892,8 @@ class ConsolidatedModel(StratifiedModel):
                         if agegroup not in label and agegroup != '':
                             continue
 
-                        # Calculate effective infectious population without stratification for risk group
-                        if not self.vary_force_infection_by_riskgroup:
-                            if label_intersects_tags(label, self.infectious_tags):
-                                self.vars['effective_infectious_population' + strain] \
-                                    += self.params['tb_multiplier_force' + organ] \
-                                       * self.params['tb_multiplier_child_infectiousness' + agegroup] \
-                                       * self.compartments[label]
-
-                        else:
+                        # Calculate effective infectious population with stratification for risk-group
+                        if self.vary_force_infection_by_riskgroup:
                             for riskgroup in self.riskgroups:
                                 if riskgroup not in label:
                                     continue
@@ -921,6 +914,15 @@ class ConsolidatedModel(StratifiedModel):
                                                * self.compartments[label] \
                                                * self.mixing[riskgroup][source_riskgroup] \
                                                * riskgroup_multiplier_force_infection
+
+                        # Now without risk-group stratification
+                        else:
+                            if label_intersects_tags(label, self.infectious_tags):
+                                self.vars['effective_infectious_population' + strain] \
+                                    += self.params['tb_multiplier_force' + organ] \
+                                       * self.params['tb_multiplier_child_infectiousness' + agegroup] \
+                                       * self.compartments[label]
+
 
             # To loop over all risk groups if needed, or otherwise to just run once
             if self.vary_force_infection_by_riskgroup:

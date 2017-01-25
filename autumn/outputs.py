@@ -2100,10 +2100,13 @@ class Project:
             fig = self.set_and_update_figure()
             ax = fig.add_subplot(1, 1, 1)
 
-            # Loop over risk groups and plot line for each
+            # Loop over risk groups and plot line for each - now need to restrict to single age-group, as IPT modifies
+            # the force of infection for some age-groups.
             for riskgroup in self.model_runner.model_dict['manual_baseline'].riskgroups:
                 ax.plot(self.model_runner.model_dict['manual_baseline'].times[self.start_time_index:],
-                        self.model_runner.model_dict['manual_baseline'].get_var_soln('rate_force' + strain + riskgroup)[
+                        self.model_runner.model_dict['manual_baseline'].get_var_soln(
+                            'rate_force' + strain + riskgroup
+                            + self.model_runner.model_dict['manual_baseline'].agegroups[-1])[
                         self.start_time_index:],
                         label=t_k.capitalise_first_letter(t_k.find_title_from_dictionary(riskgroup)))
 

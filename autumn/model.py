@@ -923,7 +923,6 @@ class ConsolidatedModel(StratifiedModel):
                                        * self.params['tb_multiplier_child_infectiousness' + agegroup] \
                                        * self.compartments[label]
 
-
             # To loop over all risk groups if needed, or otherwise to just run once
             if self.vary_force_infection_by_riskgroup:
                 force_riskgroups = copy.copy(self.riskgroups)

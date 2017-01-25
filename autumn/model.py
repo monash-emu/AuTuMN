@@ -360,7 +360,6 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_await_treatment_var()
         self.calculate_treatment_rates_vars()
         self.calculate_prop_infections_reachable_with_ipt()
-       # self.calculate_population_sizes()
         if 'agestratified_ipt' in self.optional_timevariants or 'ipt' in self.optional_timevariants:
             self.calculate_ipt_effect()
         self.calculate_force_infection_vars()
@@ -411,97 +410,6 @@ class ConsolidatedModel(StratifiedModel):
             for vac_status in vac_props:
                 self.vars['births_' + vac_status + riskgroup] \
                     = vac_props[vac_status] * self.vars['births_total'] * self.target_risk_props[riskgroup][-1]
-
-    def calculate_force_infection_vars(self):
-
-        """
-        Calculate force of infection independently for each strain, incorporating partial immunity and infectiousness.
-        First calculate the effective infectious population (incorporating infectiousness by organ involvement), then
-        calculate the raw force of infection, then adjust for various levels of susceptibility.
-        """
-
-        # Find the effective infectious population for each strain
-        for strain in self.strains:
-
-            # Initialise infectious population vars as needed
-            if self.vary_force_infection_by_riskgroup:
-                for riskgroup in self.riskgroups:
-                    self.vars['effective_infectious_population' + strain + riskgroup] = 0.
-            else:
-                self.vars['effective_infectious_population' + strain] = 0.
-
-            # Loop through compartments, skipping on as soon as possible if not relevant
-            for label in self.labels:
-                if strain not in label and strain != '':
-                    continue
-                for organ in self.organ_status:
-                    if organ not in label and organ != '':
-                        continue
-                    for agegroup in self.agegroups:
-                        if agegroup not in label and agegroup != '':
-                            continue
-
-                        # Calculate effective infectious population without stratification for risk group
-                        if not self.vary_force_infection_by_riskgroup:
-                            if label_intersects_tags(label, self.infectious_tags):
-                                self.vars['effective_infectious_population' + strain] \
-                                    += self.params['tb_multiplier_force' + organ] \
-                                       * self.params['tb_multiplier_child_infectiousness' + agegroup] \
-                                       * self.compartments[label]
-
-                        else:
-                            for riskgroup in self.riskgroups:
-                                if riskgroup not in label:
-                                    continue
-                                elif label_intersects_tags(label, self.infectious_tags):
-                                    for source_riskgroup in self.riskgroups:
-
-                                        # Adjustment for increased infectiousness of risk groups as required
-                                        if 'riskgroup_multiplier_force_infection' + source_riskgroup in self.params:
-                                            riskgroup_multiplier_force_infection \
-                                                = self.params['riskgroup_multiplier_force_infection' + source_riskgroup]
-                                        else:
-                                            riskgroup_multiplier_force_infection = 1.
-
-                                        # Calculate effective infectious population for each risk group
-                                        self.vars['effective_infectious_population' + strain + riskgroup] \
-                                            += self.params['tb_multiplier_force' + organ] \
-                                               * self.params['tb_multiplier_child_infectiousness' + agegroup] \
-                                               * self.compartments[label] \
-                                               * self.mixing[riskgroup][source_riskgroup] \
-                                               * riskgroup_multiplier_force_infection
-
-            # To loop over all risk groups if needed, or otherwise to just run once
-            if self.vary_force_infection_by_riskgroup:
-                force_riskgroups = copy.copy(self.riskgroups)
-            else:
-                force_riskgroups = ['']
-
-            # Calculate force of infection unadjusted for immunity/susceptibility
-            for riskgroup in force_riskgroups:
-                for agegroup in self.agegroups:
-                    if 'proportion_infections_averted' + agegroup in self.vars and 'dr' not in strain:
-                        ipt_infection_modifier = 1. - self.vars['proportion_infections_averted' + agegroup]
-                    else:
-                        ipt_infection_modifier = 1.
-                    self.vars['rate_force' + strain + riskgroup + agegroup] \
-                        = self.params['tb_n_contact'] \
-                          * self.vars['effective_infectious_population' + strain + riskgroup] \
-                          / self.vars['population' + riskgroup] \
-                          * ipt_infection_modifier
-
-                    # If any modifications to transmission parameter to be made over time
-                    if 'transmission_modifier' in self.optional_timevariants:
-                        self.vars['rate_force' + strain + riskgroup + agegroup] *= self.vars['transmission_modifier']
-
-                    # Adjust for immunity in various groups
-                    force_types = ['_vac', '_latent']
-                    if 'program_prop_novel_vaccination' in self.optional_timevariants:
-                        force_types += ['_novelvac']
-                    for force_type in force_types:
-                        self.vars['rate_force' + force_type + strain + riskgroup + agegroup] \
-                            = self.params['tb_multiplier' + force_type + '_protection'] \
-                              * self.vars['rate_force' + strain + riskgroup + agegroup]
 
     def calculate_progression_vars(self):
 
@@ -748,6 +656,21 @@ class ConsolidatedModel(StratifiedModel):
                         self.vars['program_rate_detect' + organ + riskgroup + strain + '_as' + strain[1:]] \
                             = self.vars['program_rate_detect' + organ + riskgroup]
 
+    def calculate_lowquality_detection_vars(self):
+
+        """
+        Calculate rate of entry to low-quality care ffom the proportion of treatment administered in low-quality sector.
+        Note that this now means that the case detection proportion only applies to those with access to care, so
+        that proportion of all cases isn't actually detected.
+        """
+
+        prop_lowqual = self.get_constant_or_variable_param('program_prop_lowquality')
+        prop_lowqual *= (1. - self.vars['program_prop_engage_lowquality'])
+
+        # Note that there is still a program_rate_detect var even if detection is varied by organ and/or risk group
+        self.vars['program_rate_enterlowquality'] \
+            = self.vars['program_rate_detect'] * prop_lowqual / (1. - prop_lowqual)
+
     def calculate_await_treatment_var(self):
 
         """
@@ -776,21 +699,6 @@ class ConsolidatedModel(StratifiedModel):
                 else:
                     self.vars['program_rate_start_treatment' + organ] = \
                         1. / self.get_constant_or_variable_param('program_timeperiod_await_treatment' + organ)
-
-    def calculate_lowquality_detection_vars(self):
-
-        """
-        Calculate rate of entry to low-quality care ffom the proportion of treatment administered in low-quality sector.
-        Note that this now means that the case detection proportion only applies to those with access to care, so
-        that proportion of all cases isn't actually detected.
-        """
-
-        prop_lowqual = self.get_constant_or_variable_param('program_prop_lowquality')
-        prop_lowqual *= (1. - self.vars['program_prop_engage_lowquality'])
-
-        # Note that there is still a program_rate_detect var even if detection is varied by organ and/or risk group
-        self.vars['program_rate_enterlowquality'] \
-            = self.vars['program_rate_detect'] * prop_lowqual / (1. - prop_lowqual)
 
     def calculate_treatment_rates_vars(self):
 
@@ -936,6 +844,116 @@ class ConsolidatedModel(StratifiedModel):
             self.calculate_aggregate_outgoing_proportion('active', 'detect') * \
             self.params['tb_prop_infections_in_household']
 
+    def calculate_ipt_effect(self):
+
+        """
+        Method to estimate the proportion of infections averted through the IPT program - as the proportion of all cases
+        detected by the high quality sector, multiplied by the proportion of infections in the household (giving the
+        proportion of all infections we can target), multiplied by the coverage of the program (in each age-group) and
+        the effectiveness of treatment.
+        """
+
+        for agegroup in self.agegroups:
+            self.vars['prop_infections_averted_ipt' + agegroup] = 0.
+            if 'program_prop_ipt' + agegroup in self.vars:
+                self.vars['prop_infections_averted_ipt' + agegroup] \
+                    = self.vars['tb_prop_infections_reachable_with_ipt'] \
+                      * self.vars['program_prop_ipt' + agegroup] \
+                      * self.params['tb_prop_ipt_effectiveness']
+            else:
+                self.vars['prop_infections_averted_ipt' + agegroup] = 0.
+
+    def calculate_force_infection_vars(self):
+
+        """
+        Calculate force of infection independently for each strain, incorporating partial immunity and infectiousness.
+        First calculate the effective infectious population (incorporating infectiousness by organ involvement), then
+        calculate the raw force of infection, then adjust for various levels of susceptibility.
+        """
+
+        # Find the effective infectious population for each strain
+        for strain in self.strains:
+
+            # Initialise infectious population vars as needed
+            if self.vary_force_infection_by_riskgroup:
+                for riskgroup in self.riskgroups:
+                    self.vars['effective_infectious_population' + strain + riskgroup] = 0.
+            else:
+                self.vars['effective_infectious_population' + strain] = 0.
+
+            # Loop through compartments, skipping on as soon as possible if not relevant
+            for label in self.labels:
+                if strain not in label and strain != '':
+                    continue
+                for organ in self.organ_status:
+                    if organ not in label and organ != '':
+                        continue
+                    for agegroup in self.agegroups:
+                        if agegroup not in label and agegroup != '':
+                            continue
+
+                        # Calculate effective infectious population without stratification for risk group
+                        if not self.vary_force_infection_by_riskgroup:
+                            if label_intersects_tags(label, self.infectious_tags):
+                                self.vars['effective_infectious_population' + strain] \
+                                    += self.params['tb_multiplier_force' + organ] \
+                                       * self.params['tb_multiplier_child_infectiousness' + agegroup] \
+                                       * self.compartments[label]
+
+                        else:
+                            for riskgroup in self.riskgroups:
+                                if riskgroup not in label:
+                                    continue
+                                elif label_intersects_tags(label, self.infectious_tags):
+                                    for source_riskgroup in self.riskgroups:
+
+                                        # Adjustment for increased infectiousness of risk groups as required
+                                        if 'riskgroup_multiplier_force_infection' + source_riskgroup in self.params:
+                                            riskgroup_multiplier_force_infection \
+                                                = self.params['riskgroup_multiplier_force_infection' + source_riskgroup]
+                                        else:
+                                            riskgroup_multiplier_force_infection = 1.
+
+                                        # Calculate effective infectious population for each risk group
+                                        self.vars['effective_infectious_population' + strain + riskgroup] \
+                                            += self.params['tb_multiplier_force' + organ] \
+                                               * self.params['tb_multiplier_child_infectiousness' + agegroup] \
+                                               * self.compartments[label] \
+                                               * self.mixing[riskgroup][source_riskgroup] \
+                                               * riskgroup_multiplier_force_infection
+
+            # To loop over all risk groups if needed, or otherwise to just run once
+            if self.vary_force_infection_by_riskgroup:
+                force_riskgroups = copy.copy(self.riskgroups)
+            else:
+                force_riskgroups = ['']
+
+            # Calculate force of infection unadjusted for immunity/susceptibility
+            for riskgroup in force_riskgroups:
+                for agegroup in self.agegroups:
+                    if 'prop_infections_averted_ipt' + agegroup in self.vars and 'dr' not in strain:
+                        ipt_infection_modifier = 1. - self.vars['prop_infections_averted_ipt' + agegroup]
+                    else:
+                        ipt_infection_modifier = 1.
+                    self.vars['rate_force' + strain + riskgroup + agegroup] \
+                        = self.params['tb_n_contact'] \
+                          * self.vars['effective_infectious_population' + strain + riskgroup] \
+                          / self.vars['population' + riskgroup] \
+                          * ipt_infection_modifier
+
+                    # If any modifications to transmission parameter to be made over time
+                    if 'transmission_modifier' in self.optional_timevariants:
+                        self.vars['rate_force' + strain + riskgroup + agegroup] *= self.vars['transmission_modifier']
+
+                    # Adjust for immunity in various groups
+                    force_types = ['_vac', '_latent']
+                    if 'program_prop_novel_vaccination' in self.optional_timevariants:
+                        force_types += ['_novelvac']
+                    for force_type in force_types:
+                        self.vars['rate_force' + force_type + strain + riskgroup + agegroup] \
+                            = self.params['tb_multiplier' + force_type + '_protection'] \
+                              * self.vars['rate_force' + strain + riskgroup + agegroup]
+
     def calculate_population_sizes(self):
 
         """
@@ -1014,37 +1032,6 @@ class ConsolidatedModel(StratifiedModel):
             for compartment in self.compartments:
                 if 'treatment' in compartment and '_mdr' in compartment:
                     self.vars['popsize_shortcourse_mdr'] += self.compartments[compartment]
-
-    def calculate_ipt_effect(self):
-
-        """
-        Method to estimate the proportion of infections averted through the IPT program - as the proportion of all cases
-        detected by the high quality sector, multiplied by the proportion of infections in the household (giving the
-        proportion of all infections we can target), multiplied by the coverage of the program (in each age-group) and
-        the effectiveness of treatment.
-        """
-
-        for agegroup in self.agegroups:
-            self.vars['proportion_infections_averted' + agegroup] = 0.
-            if 'program_prop_ipt' + agegroup in self.vars:
-                self.vars['proportion_infections_averted' + agegroup] \
-                    = self.vars['tb_prop_infections_reachable_with_ipt'] \
-                      * self.vars['program_prop_ipt' + agegroup] \
-                      * self.params['tb_prop_ipt_effectiveness']
-            else:
-                self.vars['proportion_infections_averted' + agegroup] = 0.
-
-    def calculate_community_ipt_rate(self):
-
-        """
-        Implements the community IPT intervention, which is not limited to contacts of persons starting treatment for
-        active disease, but rather involves screening of an entire population.
-        """
-
-        self.vars['rate_community_ipt'] \
-            = self.vars['program_prop_community_ipt'] \
-              * self.inputs.model_constants['ipt_effective_per_assessment'] \
-              / self.inputs.model_constants['program_timeperiod_community_ipt_round']
 
     ################################################################
     ### Methods that calculate the flows of all the compartments ###

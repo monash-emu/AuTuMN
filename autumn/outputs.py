@@ -1281,7 +1281,9 @@ class Project:
             # Not technically a scale-up function in the same sense, but put in here anyway
             self.plot_force_infection()
 
-        # self.plot_mixing_matrix()
+        # Plot mixing matrix if relevant
+        if self.model_runner.model_dict['manual_baseline'].vary_force_infection_by_riskgroup:
+            self.plot_mixing_matrix()
 
         # Plot economic outputs
         if self.gui_inputs['output_plot_economics']:

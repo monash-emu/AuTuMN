@@ -24,7 +24,7 @@ def get_cost_from_coverage(coverage, c_inflection_cost, saturation, unit_cost, p
     # If unit cost or pop_size is null, return 0
     if pop_size * unit_cost == 0.:
         return 0.
-    assert 0. <= coverage < saturation, 'coverage must verify 0 <= coverage < saturation'
+    assert 0. <= coverage <= saturation, 'coverage must verify 0 <= coverage <= saturation'
 
     if coverage == 0.:
         return 0.

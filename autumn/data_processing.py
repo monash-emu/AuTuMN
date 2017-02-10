@@ -162,7 +162,7 @@ class Inputs:
 
         # Create a list of the interventions that could potentially be costed if they are requested
         self.potential_interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
-                                                'ipt_age0to5', 'ipt_age5to15', 'decentralisation']
+                                                'ipt_age0to5', 'ipt_age5to15', 'decentralisation', 'improve_dst']
         if self.gui_inputs['n_strains'] > 1:
             self.potential_interventions_to_cost += ['shortcourse_mdr']
         if self.gui_inputs['is_lowquality']:

@@ -624,9 +624,14 @@ class ConsolidatedModel(StratifiedModel):
 
                     prop_firstline = self.get_constant_or_variable_param('program_prop_firstline_dst')
 
+                    # Add effect of improve_dst program
+                    if 'program_prop_xpert' in self.optional_timevariants:
+                        prop_firstline += (1. - prop_firstline) * self.vars['program_prop_improve_dst']
+
                     # Add effect of Xpert on identification, assuming that independent distribution to conventional DST
                     if 'program_prop_xpert' in self.optional_timevariants:
                         prop_firstline += (1. - prop_firstline) * self.vars['program_prop_xpert']
+
 
                     # Determine rates of identification/misidentification as each strain
                     self.vars['program_rate_detect' + organ + riskgroup + '_ds_asds'] \
@@ -996,6 +1001,9 @@ class ConsolidatedModel(StratifiedModel):
                                 += self.vars['program_rate_detect' + detection_organ + riskgroup]\
                                    * self.compartments['active' + organ + strain + riskgroup + agegroup] \
                                    * (self.params['program_number_tests_per_tb_presentation'] + 1.)
+
+        # Improve_dst - The popsize is the same as for Xpert
+        self.vars['popsize_improve_dst'] = self.vars['popsize_xpert']
 
         # ACF
         for riskgroup in [''] + self.riskgroups:

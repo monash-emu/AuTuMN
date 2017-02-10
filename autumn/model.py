@@ -123,7 +123,8 @@ class ConsolidatedModel(StratifiedModel):
         for timevariant in \
                 ['program_prop_novel_vaccination', 'transmission_modifier', 'program_prop_smearacf',
                  'program_prop_xpertacf', 'program_prop_decentralisation', 'program_prop_xpert',
-                 'program_prop_treatment_support', 'program_prop_community_ipt']:
+                 'program_prop_treatment_support', 'program_prop_community_ipt', 'program_prop_food_voucher_ds',
+                 'program_prop_food_voucher_mdr','program_prop_improve_dst']:
             if timevariant in self.scaleup_fns: self.optional_timevariants += [timevariant]
         for riskgroup in self.riskgroups:
             for program in ['_xpertacf', '_cxrxpertacf']:
@@ -748,6 +749,17 @@ class ConsolidatedModel(StratifiedModel):
                        * self.params['program_prop_treatment_support_improvement'] \
                        * self.vars['program_prop_treatment_support']
 
+            # Add some extra treatment success if food vouchers are provided to treated cases
+            if 'program_prop_food_voucher' + strain in self.optional_timevariants:
+                self.vars['program_prop_treatment_success' + strain] \
+                    += (1. - self.vars['program_prop_treatment_success' + strain]) \
+                       * self.params['program_prop_food_voucher_improvement'] \
+                       * self.vars['program_prop_food_voucher' + strain]
+                self.vars['program_prop_treatment_death' + strain] \
+                    -= self.vars['program_prop_treatment_death' + strain] \
+                       * self.params['program_prop_food_voucher_improvement'] \
+                       * self.vars['program_prop_food_voucher' + strain]
+
             # Calculate the default proportion as the remainder from success and death
             self.vars['program_prop_treatment_default' + strain] \
                 = 1. - self.vars['program_prop_treatment_success' + strain] \
@@ -973,6 +985,14 @@ class ConsolidatedModel(StratifiedModel):
             for compartment in self.compartments:
                 if 'treatment_' in compartment:
                     self.vars['popsize_treatment_support'] += self.compartments[compartment]
+
+        # Food vouchers
+        for strain in self.strains:
+            if 'program_prop_food_voucher' + strain in self.optional_timevariants:
+                self.vars['popsize_food_voucher' + strain] = 0.
+                for compartment in self.compartments:
+                    if 'treatment_' in compartment and strain + '_' in compartment:
+                        self.vars['popsize_food_voucher' + strain] += self.compartments[compartment]
 
         # IPT: popsize defined as the household contacts of active cases identified by the high-quality sector
         for agegroup in self.agegroups:

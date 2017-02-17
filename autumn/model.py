@@ -440,7 +440,7 @@ class ConsolidatedModel(StratifiedModel):
                             self.vars['tb_rate' + timing + '_progression' + organ + riskgroup + agegroup] \
                                 = self.vars['epi_prop' + organ] \
                                   * self.params['tb_rate' + timing + '_progression' + '_norisk' + agegroup] \
-                                  * self.params['risk_multiplier_diabetes_progression']
+                                  * self.params['riskgroup_multiplier_diabetes_progression']
                         else:
                             self.vars['tb_rate' + timing + '_progression' + organ + riskgroup + agegroup] \
                                 = self.vars['epi_prop' + organ] \

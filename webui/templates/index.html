@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+    {% block title %}AuTuMN - version 1.0{% endblock %}
+    {% block content %}
+
+    <form action="/" method="POST">
+        {% include "model_running.html" %}
+        {% include "model_stratifications.html" %}
+        {% include "elaborations.html" %}
+        {% include "scenarios_to_run.html" %}
+        {% include "uncertainty.html" %}
+        {% include "plotting.html" %}
+        {% include "ms_office_outputs.html" %}
+    </form>
+
+{% endblock %}

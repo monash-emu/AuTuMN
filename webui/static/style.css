@@ -1,0 +1,20 @@
+* {
+    color: #383838;
+}
+
+html {
+    background-color: #f7f7f7;
+}
+
+textarea {
+    background-color: #fdfdfd;
+}
+
+div.group {
+    float: left;
+    margin: 10px;
+}
+
+div.field {
+    margin: 10px;
+}

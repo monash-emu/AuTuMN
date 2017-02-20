@@ -1,0 +1,27 @@
+<div id="uncertainty" class="group">
+    <h3>Uncertainty</h3>
+    <div class="field">
+        {{ form.output_uncertainty }}
+        {{ form.output_uncertainty.label }}
+    </div>
+    <div class="field">
+        {{ form.adaptive_uncertainty }}
+        {{ form.adaptive_uncertainty.label }}
+    </div>
+    <div class="field">
+        {{ form.uncertainty_runs.label }}
+        {{ form.uncertainty_runs(size=3) }}
+    </div>
+    <div class="field">
+        {{ form.burn_in_runs.label }}
+        {{ form.burn_in_runs(size=3) }}
+    </div>
+    <div class="field">
+        {{ form.search_width.label }}
+        {{ form.search_width(size=3) }}
+    </div>
+    <div class="field">
+        {{ form.pickle_uncertainty.label }}
+        {{ form.pickle_uncertainty }}
+    </div>
+</div>

@@ -626,7 +626,7 @@ class ConsolidatedModel(StratifiedModel):
                     prop_firstline = self.get_constant_or_variable_param('program_prop_firstline_dst')
 
                     # Add effect of improve_dst program
-                    if 'program_prop_xpert' in self.optional_timevariants:
+                    if 'program_prop_improve_dst' in self.optional_timevariants:
                         prop_firstline += (1. - prop_firstline) * self.vars['program_prop_improve_dst']
 
                     # Add effect of Xpert on identification, assuming that independent distribution to conventional DST

@@ -2,14 +2,20 @@
     {% block title %}AuTuMN - version 1.0{% endblock %}
     {% block content %}
 
-    <form action="/" method="POST">
-        {% include "model_running.html" %}
-        {% include "model_stratifications.html" %}
-        {% include "elaborations.html" %}
-        {% include "scenarios_to_run.html" %}
-        {% include "uncertainty.html" %}
-        {% include "plotting.html" %}
-        {% include "ms_office_outputs.html" %}
-    </form>
+    <div class="container menu">
+        <form action="/" method="POST">
+            {% include "model_running.html" %}
+            {% include "model_stratifications.html" %}
+            {% include "elaborations.html" %}
+            {% include "scenarios_to_run.html" %}
+            {% include "uncertainty.html" %}
+            {% include "plotting.html" %}
+            {% include "ms_office_outputs.html" %}
+        </form>
+    </div>
+    <div class="container output">
+        {% include "runtime_outputs_console.html" %}
+        {% include "tracking_parameters_over_model_runs.html" %}
+    </div>
 
 {% endblock %}

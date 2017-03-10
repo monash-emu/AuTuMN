@@ -178,6 +178,7 @@ class App:
         self.raw_outputs['country'].set('Philippines')
         self.raw_outputs['integration_method'].set('Explicit')
         self.raw_outputs['fitting_method'].set('Method 5')
+
         self.drop_downs['country'] \
             = OptionMenu(self.frame, self.raw_outputs['country'],
                          'Afghanistan', 'Albania', 'Angola', 'Argentina', 'Armenia', 'Australia', 'Austria',
@@ -262,6 +263,11 @@ class App:
         self.boolean_dictionary['riskgroup_prison'].set(True)
         self.boolean_dictionary['riskgroup_urbanpoor'].set(True)
         self.boolean_dictionary['riskgroup_ruralpoor'].set(True)
+        self.boolean_dictionary['output_gtb_plots'].set(True)
+
+        self.boolean_dictionary['riskgroup_diabetes'].set(True)
+        self.boolean_dictionary['riskgroup_hiv'].set(True)
+
         # self.boolean_dictionary['riskgroup_indigenous'].set(True)
 
         for numeric in uncertainty_numeric_list.keys():

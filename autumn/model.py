@@ -132,6 +132,10 @@ class ConsolidatedModel(StratifiedModel):
                     self.optional_timevariants += ['program_prop' + program + riskgroup]
         if 'program_prop_shortcourse_mdr' in self.scaleup_fns and len(self.strains) > 1:
             self.optional_timevariants += ['program_prop_shortcourse_mdr']
+
+        if 'program_prop_intensive_screening' in self.scaleup_fns:
+            self.optional_timevariants += ['program_prop_intensive_screening']
+
         for timevariant in self.scaleup_fns:
             if 'program_prop_ipt_age' in timevariant:
                 self.optional_timevariants += ['agestratified_ipt']
@@ -170,7 +174,8 @@ class ConsolidatedModel(StratifiedModel):
         # Boolean is automatically set according to whether any form of ACF is being implemented
         self.vary_detection_by_riskgroup = False
         for timevariant in self.scaleup_fns:
-            if 'acf' in timevariant: self.vary_detection_by_riskgroup = True
+            if 'acf' in timevariant or 'intensive_screening' in timevariant: self.vary_detection_by_riskgroup = True
+
         self.riskgroups_for_detection = ['']
         if self.vary_detection_by_riskgroup:
             self.riskgroups_for_detection = self.riskgroups
@@ -355,7 +360,9 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_detect_missed_vars()
         if self.vary_detection_by_riskgroup:
             self.calculate_acf_rate()
+            self.calculate_intensive_screening_rate()
             self.adjust_case_detection_for_acf()
+            self.adjust_case_detection_for_intensive_screening()
         self.calculate_misassignment_detection_vars()
         if self.is_lowquality: self.calculate_lowquality_detection_vars()
         self.calculate_await_treatment_var()
@@ -548,7 +555,6 @@ class ConsolidatedModel(StratifiedModel):
 
         # Loop covers risk groups and community-wide ACF
         for riskgroup in [''] + self.riskgroups:
-
             # Decide whether to use the general detection proportion, or a risk-group specific one
             if 'program_prop_acf_detections_per_round' + riskgroup in self.params:
                 program_prop_acf_detections_per_round \
@@ -589,6 +595,31 @@ class ConsolidatedModel(StratifiedModel):
                             *= self.params['tb_prop_xpert_smearneg_sensitivity'] \
                                * cxr_sensitivity
 
+    def calculate_intensive_screening_rate(self):
+        """
+            Calculates rates of intensive screening from the proportion of programmatic coverage.
+            Intensive screening detects smear-positive disease, and some
+            smear-negative disease (incorporating a multiplier for the sensitivity of Xpert for smear-negative disease).
+            Extrapulmonary disease can't be detected through intensive screening.
+        """
+
+        if 'program_prop_intensive_screening' in self.optional_timevariants:
+            screened_subgroups = ['_diabetes', '_hiv'] # may be incorporated into the GUI
+            # Loop covers risk groups
+            for riskgroup in screened_subgroups:
+                # The following can't be written as self.organ_status, as it won't work for non-fully-stratified models
+                for organ in ['', '_smearpos', '_smearneg', '_extrapul']:
+                    self.vars['program_rate_intensive_screening' + organ + riskgroup] = 0.
+
+                for organ in ['_smearpos', '_smearneg']:
+                    self.vars['program_rate_intensive_screening' + organ + riskgroup] \
+                        += self.vars['program_prop_intensive_screening'] * \
+                           self.params['program_prop_attending_clinics' + riskgroup]
+
+                # Adjust smear-negative detections for Xpert's sensitivity
+                self.vars['program_rate_intensive_screening_smearneg' + riskgroup] \
+                    *= self.params['tb_prop_xpert_smearneg_sensitivity']
+
     def adjust_case_detection_for_acf(self):
 
         """
@@ -610,6 +641,14 @@ class ConsolidatedModel(StratifiedModel):
                         or 'program_prop_xpertacf' in self.optional_timevariants:
                     self.vars['program_rate_detect' + organ + riskgroup] \
                         += self.vars['program_rate_acf' + organ]
+
+    def adjust_case_detection_for_intensive_screening(self):
+        if 'program_prop_intensive_screening' in self.optional_timevariants:
+            for organ in self.organs_for_detection:
+                screened_subgroups = ['_diabetes', '_hiv']  # may be incorporated into the GUI
+                for riskgroup in screened_subgroups:
+                    self.vars['program_rate_detect' + organ + riskgroup] \
+                        += self.vars['program_rate_intensive_screening' + organ + riskgroup]
 
     def calculate_misassignment_detection_vars(self):
 
@@ -1005,6 +1044,7 @@ class ConsolidatedModel(StratifiedModel):
 
         # BCG (So simple that it's almost unnecessary, but needed for loops over program names)
         self.vars['popsize_vaccination'] = self.vars['births_total']
+
 
         # Xpert - all presentations with active TB
         if 'program_prop_xpert' in self.optional_timevariants:

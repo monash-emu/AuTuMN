@@ -1083,6 +1083,20 @@ class ConsolidatedModel(StratifiedModel):
                                    / self.params['program_timeperiod_acf_rounds'] \
                                    * program_prop_population_screened
 
+        # intensive_screening
+        # popsize includes all active TB cases of targeted groups (HIV and diabetes) that attend specific clinics
+        if 'program_prop_intensive_screening' in self.optional_timevariants:
+            self.vars['popsize_intensive_screening'] = 0.
+            screened_subgroups = ['_diabetes', '_hiv']  # may be incorporated into the GUI
+            # Loop covers risk groups
+            for riskgroup in screened_subgroups:
+                for compartment in self.compartments:
+                    if riskgroup in compartment and 'active' in compartment:
+                        self.vars['popsize_intensive_screening'] \
+                            += self.compartments[compartment] \
+                               * self.params['program_prop_attending_clinics' + riskgroup]
+
+
         # Decentralisation and engage low-quality sector
         adjust_lowquality = True
         all_actives_popsize = 0.

@@ -190,7 +190,7 @@ class ModelRunner:
         # Optimisation attributes
         self.optimisation = False  # Leave True even if loading optimisation results
         self.indicator_to_minimise = 'incidence'  # Currently must be 'incidence' or 'mortality'
-        self.annual_envelope = [10e6]  # Size of funding envelope in scenarios to be run
+        self.annual_envelope = [112.5e6]  # Size of funding envelope in scenarios to be run
         self.save_opti = True
         self.load_opti = False  # Optimisation will not be run if on
         self.total_funding = None  # Funding for entire period
@@ -202,9 +202,9 @@ class ModelRunner:
         self.optimised_combinations = []
         self.optimal_allocation = {}
         self.interventions_considered_for_opti \
-            = ['engage_lowquality', 'xpert', 'cxrxpertacf_prison', 'cxrxpertacf_urbanpoor', 'cxrxpertacf_ruralpoor', 'ipt_age0to5']  # Interventions that must appear in optimal plan
+            = ['engage_lowquality', 'xpert', 'cxrxpertacf_prison', 'cxrxpertacf_urbanpoor', 'ipt_age0to5', 'intensive_screening']  # Interventions that must appear in optimal plan
         self.interventions_forced_for_opti \
-            = []
+            = ['engage_lowquality', 'ipt_age0to5', 'intensive_screening']
 
         # Output-related attributes
         self.epi_outputs_to_analyse = ['population', 'incidence', 'true_incidence', 'prevalence', 'true_prevalence',

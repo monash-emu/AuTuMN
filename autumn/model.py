@@ -136,6 +136,12 @@ class ConsolidatedModel(StratifiedModel):
         if 'program_prop_intensive_screening' in self.scaleup_fns:
             self.optional_timevariants += ['program_prop_intensive_screening']
 
+        if 'program_prop_ngo_activities' in self.scaleup_fns:
+            self.optional_timevariants += ['program_prop_ngo_activities']
+
+        if 'program_prop_opendoors_activities' in self.scaleup_fns:
+            self.optional_timevariants += ['program_prop_opendoors_activities']
+
         for timevariant in self.scaleup_fns:
             if 'program_prop_ipt_age' in timevariant:
                 self.optional_timevariants += ['agestratified_ipt']
@@ -351,6 +357,11 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_populations()
         self.calculate_birth_rates_vars()
         if self.is_organvariation: self.calculate_progression_vars()
+
+        if 'program_prop_opendoors_activities' in self.optional_timevariants or \
+                        'program_prop_ngo_activities' in self.optional_timevariants:
+            self.adjust_case_detection_and_ipt_for_ngo_and_opendoors()
+
         if 'program_prop_decentralisation' in self.optional_timevariants:
             self.adjust_case_detection_for_decentralisation()
         if self.vary_detection_by_organ:
@@ -498,6 +509,21 @@ class ConsolidatedModel(StratifiedModel):
                 += (self.vars['program_prop' + parameter + '_smearpos'] -
                     self.vars['program_prop' + parameter + '_smearneg']) \
                    * self.params['tb_prop_xpert_smearneg_sensitivity'] * self.vars['program_prop_xpert']
+
+    def adjust_case_detection_and_ipt_for_ngo_and_opendoors(self):
+        # if opendoors or ngo programs are stopped, case detection and IPT coverage are reduced
+        detection_reduction = 0.
+        ipt_coverage_reduction = 0.
+        for program in ['opendoors', 'ngo']:
+            if 'program_prop_' + program + '_activities' in self.optional_timevariants and \
+                    self.vars['program_prop_' + program + '_activities'] < 1:
+                detection_reduction += self.params['program_prop_detection_from_' + program]
+                ipt_coverage_reduction += self.params['program_prop_ipt_from_' + program]
+        self.vars['program_prop_detect'] *= (1. - detection_reduction)
+
+        for agegroup in self.agegroups:
+            if 'program_prop_ipt' + agegroup in self.vars:
+                self.vars['program_prop_ipt' + agegroup] *= (1. - ipt_coverage_reduction)
 
     def calculate_detect_missed_vars(self):
 

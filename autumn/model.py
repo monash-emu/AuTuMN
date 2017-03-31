@@ -166,7 +166,7 @@ class ConsolidatedModel(StratifiedModel):
         elif len(self.organ_status) == 1 and 'program_prop_xpert' in self.optional_timevariants:
             print('Effect of Xpert on smear-negative detection not simulated as model unstratified by organ status.')
 
-        self.detection_algorithm_ceiling = .85
+        self.detection_algorithm_ceiling = .95
         self.organs_for_detection = ['']
         if self.vary_detection_by_organ:
             self.organs_for_detection = self.organ_status

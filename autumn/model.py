@@ -185,6 +185,7 @@ class ConsolidatedModel(StratifiedModel):
         self.riskgroups_for_detection = ['']
         if self.vary_detection_by_riskgroup:
             self.riskgroups_for_detection = self.riskgroups
+        self.ngo_groups = ['_ruralpoor']  # list of riskgroups affected by ngo activities for detection
 
         # Temporarily hard coded option for short course MDR-TB regimens to improve outcomes
         self.shortcourse_improves_outcomes = False
@@ -360,7 +361,7 @@ class ConsolidatedModel(StratifiedModel):
 
         if 'program_prop_opendoors_activities' in self.optional_timevariants or \
                         'program_prop_ngo_activities' in self.optional_timevariants:
-            self.adjust_case_detection_and_ipt_for_ngo_and_opendoors()
+            self.adjust_case_detection_and_ipt_for_opendoors()
 
         if 'program_prop_decentralisation' in self.optional_timevariants:
             self.adjust_case_detection_for_decentralisation()
@@ -510,20 +511,17 @@ class ConsolidatedModel(StratifiedModel):
                     self.vars['program_prop' + parameter + '_smearneg']) \
                    * self.params['tb_prop_xpert_smearneg_sensitivity'] * self.vars['program_prop_xpert']
 
-    def adjust_case_detection_and_ipt_for_ngo_and_opendoors(self):
-        # if opendoors or ngo programs are stopped, case detection and IPT coverage are reduced
-        detection_reduction = 0.
-        ipt_coverage_reduction = 0.
-        for program in ['opendoors', 'ngo']:
-            if 'program_prop_' + program + '_activities' in self.optional_timevariants and \
-                    self.vars['program_prop_' + program + '_activities'] < 1:
-                detection_reduction += self.params['program_prop_detection_from_' + program]
-                ipt_coverage_reduction += self.params['program_prop_ipt_from_' + program]
-        self.vars['program_prop_detect'] *= (1. - detection_reduction)
+    def adjust_case_detection_and_ipt_for_opendoors(self):
+        # if opendoors programs are stopped, case detection and IPT coverage are reduced
+        # this applies to the whole population as opposed to NGOs activities that apply to specific risk groups
+        if 'program_prop_opendoors_activities' in self.optional_timevariants and \
+                self.vars['program_prop_opendoors_activities'] < 1.:
+            self.vars['program_prop_detect'] *= (1. - self.params['program_prop_detection_from_opendoors'])
 
-        for agegroup in self.agegroups:
-            if 'program_prop_ipt' + agegroup in self.vars:
-                self.vars['program_prop_ipt' + agegroup] *= (1. - ipt_coverage_reduction)
+            # adjust IPT coverage
+            for agegroup in self.agegroups:
+                if 'program_prop_ipt' + agegroup in self.vars:
+                    self.vars['program_prop_ipt' + agegroup] *= (1. - self.params['program_prop_ipt_from_opendoors'])
 
     def calculate_detect_missed_vars(self):
 
@@ -542,15 +540,23 @@ class ConsolidatedModel(StratifiedModel):
         organs = copy.copy(self.organs_for_detection)
         if self.vary_detection_by_organ:
             organs += ['']
+
         for organ in organs:
             for riskgroup in [''] + self.riskgroups_for_detection:
 
                 # Detected
                 self.vars['program_rate_detect' + organ + riskgroup] \
-                    = - self.vars['program_prop_detect' + organ] \
+                    = self.vars['program_prop_detect' + organ] \
                       * (1. / self.params['tb_timeperiod_activeuntreated']
                          + 1. / self.vars['demo_life_expectancy']) \
-                      / (self.vars['program_prop_detect' + organ] - 1.)
+                      / (1. - self.vars['program_prop_detect' + organ])
+
+                # Adjust detection rates for NGOs activities in specific risk groups
+                if 'program_prop_ngo_activities' in self.optional_timevariants and \
+                                self.vars['program_prop_ngo_activities'] < 1. and \
+                                riskgroup in self.ngo_groups:
+                    self.vars['program_rate_detect' + organ + riskgroup] \
+                        *= 1 - self.params['program_prop_detection_from_ngo']
 
             # Missed (no need to loop by risk-group as ACF is the only difference here, which is applied next)
             self.vars['program_rate_missed' + organ] \
@@ -1015,7 +1021,14 @@ class ConsolidatedModel(StratifiedModel):
             for riskgroup in force_riskgroups:
                 for agegroup in self.agegroups:
                     if 'prop_infections_averted_ipt' + agegroup in self.vars and 'dr' not in strain:
-                        ipt_infection_modifier = 1. - self.vars['prop_infections_averted_ipt' + agegroup]
+                        coverage_multiplier_ngo_stopped = 1.
+                        if 'program_prop_ngo_activities' in self.optional_timevariants and \
+                                        self.vars['program_prop_ngo_activities'] < 1. and \
+                                        riskgroup in self.ngo_groups:
+                            coverage_multiplier_ngo_stopped = (1. - self.params['program_prop_ipt_from_ngo'])
+                        ipt_infection_modifier = 1. - coverage_multiplier_ngo_stopped * \
+                                                      self.vars['prop_infections_averted_ipt' + agegroup]
+
                     else:
                         ipt_infection_modifier = 1.
                     self.vars['rate_force' + strain + riskgroup + agegroup] \

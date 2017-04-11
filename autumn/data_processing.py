@@ -855,72 +855,71 @@ class Inputs:
             # Dictionary of whether interventions are applied or not
             self.intervention_applied[scenario] = {}
 
-            # Whether each parameter is time variant
-            whether_time_variant = {}
-
             # Initialise the scale-up function dictionary
             self.scaleup_fns[scenario] = {}
 
             # Define scale-up functions from these datasets
             for param in self.scaleup_data[scenario]:
 
-                # Determine whether the parameter is time variant at the first scenario iteration,
-                # because otherwise the code will keep trying to pop off the time variant string
-                # from the same scaleup data dictionary.
-                if param not in whether_time_variant:
-                    whether_time_variant[param] = self.scaleup_data[scenario][param].pop('time_variant')
+                if 'perc_' not in param:
 
-                # If time variant
-                if whether_time_variant[param] == u'yes':
+                    # Determine whether the parameter is time variant at the first scenario iteration,
+                    # because otherwise the code will keep trying to pop off the time variant string
+                    # from the same scaleup data dictionary.
+                    whether_time_variant \
+                        = self.scaleup_data[scenario][param].pop('time_variant') == u'yes'
 
-                    # Extract and remove the smoothness parameter from the dictionary
-                    if 'smoothness' in self.scaleup_data[scenario][param]:
-                        smoothness = self.scaleup_data[scenario][param].pop('smoothness')
-                    else:
-                        smoothness = self.gui_inputs['default_smoothness']
+                    # If time variant
+                    if whether_time_variant:
 
-                    # If the parameter is being modified for the scenario being run
-                    self.intervention_applied[scenario][param] = False
-                    if 'scenario' in self.scaleup_data[scenario][param]:
-                        scenario_for_function = [self.model_constants['scenario_full_time'],
-                                    self.scaleup_data[scenario][param].pop('scenario')]
-                        self.intervention_applied[scenario][param] = True
-                    else:
-                        scenario_for_function = None
+                        # Extract and remove the smoothness parameter from the dictionary
+                        if 'smoothness' in self.scaleup_data[scenario][param]:
+                            smoothness = self.scaleup_data[scenario][param].pop('smoothness')
+                        else:
+                            smoothness = self.gui_inputs['default_smoothness']
 
-                    # Upper bound depends on whether the parameter is a proportion
-                    if 'prop' in param:
-                        upper_bound = 1.
-                    else:
-                        upper_bound = None
+                        # If the parameter is being modified for the scenario being run
+                        self.intervention_applied[scenario][param] = False
+                        if 'scenario' in self.scaleup_data[scenario][param]:
+                            scenario_for_function = [self.model_constants['scenario_full_time'],
+                                        self.scaleup_data[scenario][param].pop('scenario')]
+                            self.intervention_applied[scenario][param] = True
+                        else:
+                            scenario_for_function = None
 
-                    # Calculate the scaling function
-                    self.scaleup_fns[scenario][param] \
-                        = scale_up_function(self.scaleup_data[scenario][param].keys(),
-                                            self.scaleup_data[scenario][param].values(),
-                                            self.gui_inputs['fitting_method'],
-                                            smoothness,
-                                            bound_low=0.,
-                                            bound_up=upper_bound,
-                                            intervention_end=scenario_for_function,
-                                            intervention_start_date=self.model_constants['scenario_start_time'])
+                        # Upper bound depends on whether the parameter is a proportion
+                        if 'prop' in param:
+                            upper_bound = 1.
+                        else:
+                            upper_bound = None
 
-                    if scenario is not None:
-                        freeze_time = self.freeze_times['scenario_' + str(scenario)]
-                        if freeze_time < self.model_constants['recent_time']:
-                            self.scaleup_fns[scenario][param] = freeze_curve(self.scaleup_fns[scenario][param],
-                                                                             freeze_time)
+                        # Calculate the scaling function
+                        self.scaleup_fns[scenario][param] \
+                            = scale_up_function(self.scaleup_data[scenario][param].keys(),
+                                                self.scaleup_data[scenario][param].values(),
+                                                self.gui_inputs['fitting_method'],
+                                                smoothness,
+                                                bound_low=0.,
+                                                bound_up=upper_bound,
+                                                intervention_end=scenario_for_function,
+                                                intervention_start_date=self.model_constants['scenario_start_time'])
 
-                # If no is selected in the time variant column
-                elif whether_time_variant[param] == u'no':
+                        if scenario is not None:
+                            freeze_time = self.freeze_times['scenario_' + str(scenario)]
+                            if freeze_time < self.model_constants['recent_time']:
+                                self.scaleup_fns[scenario][param] = freeze_curve(self.scaleup_fns[scenario][param],
+                                                                                 freeze_time)
 
-                    # Smoothness no longer relevant
-                    if 'smoothness' in self.scaleup_data[scenario][param]:
-                        del self.scaleup_data[scenario][param]['smoothness']
+                    # If no is selected in the time variant column
+                    elif whether_time_variant:
 
-                    # Set as a constant parameter
-                    self.model_constants[param] \
-                        = self.scaleup_data[scenario][param][max(self.scaleup_data[scenario][param])]
+                        # Smoothness no longer relevant
+                        if 'smoothness' in self.scaleup_data[scenario][param]:
+                            del self.scaleup_data[scenario][param]['smoothness']
+
+                        # Set as a constant parameter
+                        self.model_constants[param] \
+                            = self.scaleup_data[scenario][param][max(self.scaleup_data[scenario][param])]
 
     def find_constant_extrapulmonary_proportion(self):
 

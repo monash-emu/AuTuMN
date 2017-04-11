@@ -865,8 +865,7 @@ class Inputs:
                     # Determine whether the parameter is time variant at the first scenario iteration,
                     # because otherwise the code will keep trying to pop off the time variant string
                     # from the same scaleup data dictionary.
-                    whether_time_variant \
-                        = self.scaleup_data[scenario][param].pop('time_variant') == u'yes'
+                    whether_time_variant = self.scaleup_data[scenario][param].pop('time_variant') == u'yes'
 
                     # If time variant
                     if whether_time_variant:
@@ -879,18 +878,15 @@ class Inputs:
 
                         # If the parameter is being modified for the scenario being run
                         self.intervention_applied[scenario][param] = False
+                        scenario_for_function = None
                         if 'scenario' in self.scaleup_data[scenario][param]:
                             scenario_for_function = [self.model_constants['scenario_full_time'],
                                         self.scaleup_data[scenario][param].pop('scenario')]
                             self.intervention_applied[scenario][param] = True
-                        else:
-                            scenario_for_function = None
 
                         # Upper bound depends on whether the parameter is a proportion
-                        if 'prop' in param:
-                            upper_bound = 1.
-                        else:
-                            upper_bound = None
+                        upper_bound = None
+                        if 'prop_' in param: upper_bound = 1.
 
                         # Calculate the scaling function
                         self.scaleup_fns[scenario][param] \

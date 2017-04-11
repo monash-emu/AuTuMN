@@ -168,7 +168,7 @@ def get_spare_fit(indice, x_peak, bound, side, f, cut_off_dict, bound_low, bound
 
 
 def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=None, auto_bound=1.3,
-                      intervention_end = None, intervention_start_date = None):
+                      intervention_end=None, intervention_start_date=None):
 
     """
     Given a set of points defined by x and y,

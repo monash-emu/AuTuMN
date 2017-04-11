@@ -106,6 +106,8 @@ class ConsolidatedModel(StratifiedModel):
         for attribute in ['organ_status', 'strains', 'riskgroups', 'is_organvariation', 'agegroups']:
             setattr(self, attribute, getattr(inputs, attribute))
         self.scaleup_fns = inputs.scaleup_fns[self.scenario]
+
+        # start_time can't be left as a model constant as it needs to be set for each scenario through the model runner
         self.start_time = inputs.model_constants['start_time']
 
         # Set model characteristics directly from GUI inputs
@@ -124,7 +126,7 @@ class ConsolidatedModel(StratifiedModel):
                 ['program_prop_novel_vaccination', 'transmission_modifier', 'program_prop_smearacf',
                  'program_prop_xpertacf', 'program_prop_decentralisation', 'program_prop_xpert',
                  'program_prop_treatment_support', 'program_prop_community_ipt', 'program_prop_food_voucher_ds',
-                 'program_prop_food_voucher_mdr','program_prop_improve_dst']:
+                 'program_prop_food_voucher_mdr', 'program_prop_improve_dst']:
             if timevariant in self.scaleup_fns: self.optional_timevariants += [timevariant]
         for riskgroup in self.riskgroups:
             for program in ['_xpertacf', '_cxrxpertacf']:

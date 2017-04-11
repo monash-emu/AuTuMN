@@ -854,9 +854,6 @@ class Inputs:
             # Dictionary of whether interventions are applied or not
             self.intervention_applied[scenario] = {}
 
-            # Whether each parameter is time variant
-            whether_time_variant = {}
-
             # Initialise the scale-up function dictionary
             self.scaleup_fns[scenario] = {}
 
@@ -866,11 +863,11 @@ class Inputs:
                 # Determine whether the parameter is time variant at the first scenario iteration,
                 # because otherwise the code will keep trying to pop off the time variant string
                 # from the same scaleup data dictionary.
-                if param not in whether_time_variant:
-                    whether_time_variant[param] = self.scaleup_data[scenario][param].pop('time_variant')
+                whether_time_variant \
+                    = self.scaleup_data[scenario][param].pop('time_variant') == u'yes'
 
                 # If time variant
-                if whether_time_variant[param] == u'yes':
+                if whether_time_variant:
 
                     # Extract and remove the smoothness parameter from the dictionary
                     if 'smoothness' in self.scaleup_data[scenario][param]:
@@ -911,7 +908,7 @@ class Inputs:
                                                                              freeze_time)
 
                 # If no is selected in the time variant column
-                elif whether_time_variant[param] == u'no':
+                elif whether_time_variant:
 
                     # Smoothness no longer relevant
                     if 'smoothness' in self.scaleup_data[scenario][param]:

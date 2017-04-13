@@ -455,6 +455,12 @@ class BaseModel:
 
         # Need to run derivative here to get the initial vars
         k1 = derivative(y, self.times[0])
+
+        # 'make_adjustments_during_integration' was already run but needed to be done again now that derivative
+        #  has been run. Indeed, derivate allows new vars to be created and these vars are used in
+        #  'make_adjustments_during_integration'
+        y = self.make_adjustments_during_integration(y)
+
         self.var_labels = self.vars.keys()
         self.var_array = numpy.zeros((n_time, len(self.var_labels)))
 
@@ -473,6 +479,7 @@ class BaseModel:
         for i_time, next_time in enumerate(self.times[1:]):
             store_step = False  # Whether the calculated time is to be stored (i.e. appears in self.times)
             cpt_reduce_step = 0  # counts the number of times that the time step needs to be reduced
+
             while store_step is False:
                 if not dt_is_ok:  # Previous proposed time step was too wide
                     adaptive_dt /= 2.
@@ -529,6 +536,10 @@ class BaseModel:
                         print "integration did not complete. The following compartments became negative:"
                         print [self.labels[i] for i in range(len(y_candidate)) if y_candidate[i] < 0.]
                         break
+
+            # Adjustments for risk groups
+            y = self.make_adjustments_during_integration(y)
+
             # For stored steps only, store compartment state, vars and intercompartmental flows
             for i, label in enumerate(self.labels):
                 self.compartment_soln[label][i_time + 1] = y[i]
@@ -536,9 +547,6 @@ class BaseModel:
                 self.var_array[i_time + 1, i_label] = self.vars[var_label]
             for i_label, label in enumerate(self.labels):
                 self.flow_array[i_time + 1, i_label] = self.flows[label]
-
-            # Adjustments for risk groups
-            y = self.make_adjustments_during_integration(y)
 
         # self.calculate_diagnostics()
         if self.run_costing:

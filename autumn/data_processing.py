@@ -848,9 +848,8 @@ class Inputs:
         """
 
         self.list_irrelevant_time_variants()
+        self.find_relevant_programs()
         self.find_data_for_functions_or_params()
-
-        print(self.irrelevant_time_variants)
 
         for scenario in self.gui_inputs['scenarios_to_run']:
 
@@ -1198,6 +1197,20 @@ class Inputs:
                 self.irrelevant_time_variants += [time_variant]
             if 'lowquality' in time_variant and not self.gui_inputs['is_lowquality']:
                 self.irrelevant_time_variants += [time_variant]
+
+    def find_relevant_programs(self):
+
+        self.relevant_programs = {}
+        for scenario in self.gui_inputs['scenarios_to_run']:
+            self.relevant_programs[scenario] = []
+            for time_variant in self.time_variants:
+                for key in self.time_variants[time_variant]:
+                    if time_variant not in self.irrelevant_time_variants and 'program_' in time_variant \
+                            and time_variant not in self.relevant_programs[scenario]:
+                        if type(key) == int and self.time_variants[time_variant][key] > 0.:
+                            self.relevant_programs[scenario] += [time_variant]
+                        if type(key) == str and key == tool_kit.find_scenario_string_from_number(scenario):
+                            self.relevant_programs[scenario] += [time_variant]
 
     ############################
     ### Miscellaneous method ###

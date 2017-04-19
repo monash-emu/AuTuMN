@@ -291,6 +291,13 @@ class Inputs:
         # Derive some basic parameters for IPT
         self.find_ipt_params()
 
+        # Work out which programs are relevant
+        self.list_irrelevant_time_variants()
+        self.find_relevant_programs()
+
+        # Extract data into structures for creating time-variant parameters or constant ones
+        self.find_data_for_functions_or_params()
+
         # Find scale-up functions or constant parameters from
         self.find_functions_or_params()
 
@@ -847,10 +854,6 @@ class Inputs:
         Note that the 'demo_life_expectancy' parameter has to be given this name and base.py will then calculate
         population death rates automatically.
         """
-
-        self.list_irrelevant_time_variants()
-        self.find_relevant_programs()
-        self.find_data_for_functions_or_params()
 
         for scenario in self.gui_inputs['scenarios_to_run']:
 

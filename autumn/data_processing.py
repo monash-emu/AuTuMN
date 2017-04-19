@@ -1201,6 +1201,9 @@ class Inputs:
                 self.irrelevant_time_variants += [time_variant]
             if 'lowquality' in time_variant and not self.gui_inputs['is_lowquality']:
                 self.irrelevant_time_variants += [time_variant]
+            if 'program_prop_shortcourse_mdr' in time_variant and self.gui_inputs['n_strains'] < 2:
+                self.irrelevant_time_variants += [time_variant]
+                print('program_prop_shortcourse_mdr requested, but not implemented during to insufficient strains')
 
     def find_relevant_programs(self):
 

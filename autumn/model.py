@@ -98,16 +98,17 @@ class ConsolidatedModel(StratifiedModel):
         BaseModel.__init__(self)
         StratifiedModel.__init__(self)
 
-        # Fundamental attributes of and inputs to model
-        self.scenario = scenario
-
-        # Get organ stratification, strains and starting time from inputs objects
+        # Model attributes to be set directly to attributes of the inputs object
         self.inputs = inputs
         for attribute in ['organ_status', 'strains', 'riskgroups', 'is_organvariation', 'agegroups']:
             setattr(self, attribute, getattr(inputs, attribute))
-        self.scaleup_fns = inputs.scaleup_fns[self.scenario]
 
-        # start_time can't be left as a model constant as it needs to be set for each scenario through the model runner
+        # Model characteristics to set to just the relevant scenario key from an inputs dictionary
+        self.scenario = scenario
+        for attribute in ['relevant_programs', 'scaleup_fns']:
+            setattr(self, attribute, getattr(inputs, attribute)[scenario])
+
+        # Start_time can't be left as a model constant as it needs to be set for each scenario through the model runner
         self.start_time = inputs.model_constants['start_time']
 
         # Set model characteristics directly from GUI inputs
@@ -171,7 +172,7 @@ class ConsolidatedModel(StratifiedModel):
         if self.vary_detection_by_organ:
             self.organs_for_detection = self.organ_status
 
-        # Boolean is automatically set according to whether any form of ACF is being implemented
+        # Boolean automatically set according to whether any form of ACF or intensive screening is being implemented
         self.vary_detection_by_riskgroup = False
         for timevariant in self.scaleup_fns:
             if 'acf' in timevariant or 'intensive_screening' in timevariant: self.vary_detection_by_riskgroup = True
@@ -179,18 +180,19 @@ class ConsolidatedModel(StratifiedModel):
         self.riskgroups_for_detection = ['']
         if self.vary_detection_by_riskgroup:
             self.riskgroups_for_detection = self.riskgroups
-        self.ngo_groups = ['_ruralpoor']  # list of riskgroups affected by ngo activities for detection
 
-        # Temporarily hard coded option for short course MDR-TB regimens to improve outcomes
+        self.ngo_groups = ['_ruralpoor']  # list of risk groups affected by ngo activities for detection
+
+        # Whether short-course MDR-TB regimen improves outcomes
         self.shortcourse_improves_outcomes = False
 
-        # Temporarily hard coded option to vary force of infection across risk groups
-        self.vary_force_infection_by_riskgroup = True
+        # Mixing matrix
+        self.vary_force_infection_by_riskgroup = True  # whether to incorporate heterogeneous mixing by risk group
         if self.vary_force_infection_by_riskgroup:
             self.mixing = {}
             self.create_mixing_matrix()
 
-        # Add time ticker
+        # Create time ticker
         self.next_time_point = copy.copy(self.start_time)
 
     def define_model_structure(self):

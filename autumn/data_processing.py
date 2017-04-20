@@ -159,7 +159,7 @@ class Inputs:
         self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
         self.freeze_times = {}
         self.treatment_outcome_types = []
-        self.relevant_programs = {}
+        self.relevant_interventions = {}
 
         # Create a list of the interventions that could potentially be costed if they are requested
         self.potential_interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
@@ -1211,19 +1211,19 @@ class Inputs:
         Code to create lists of the programmatic interventions that are relevant to a particular scenario being run.
 
         Creates:
-            self.relevant_programs: A dict with keys scenarios and values lists of programs relevant to that scenario
+            self.relevant_interventions: A dict with keys scenarios and values lists of programs relevant to that scenario
         """
 
         for scenario in self.gui_inputs['scenarios_to_run']:
-            self.relevant_programs[scenario] = []
+            self.relevant_interventions[scenario] = []
             for time_variant in self.time_variants:
                 for key in self.time_variants[time_variant]:
                     if time_variant not in self.irrelevant_time_variants and 'program_' in time_variant \
-                            and time_variant not in self.relevant_programs[scenario]:
+                            and time_variant not in self.relevant_interventions[scenario]:
                         if type(key) == int and self.time_variants[time_variant][key] > 0.:
-                            self.relevant_programs[scenario] += [time_variant]
+                            self.relevant_interventions[scenario] += [time_variant]
                         elif type(key) == str and key == tool_kit.find_scenario_string_from_number(scenario):
-                            self.relevant_programs[scenario] += [time_variant]
+                            self.relevant_interventions[scenario] += [time_variant]
 
     ############################
     ### Miscellaneous method ###

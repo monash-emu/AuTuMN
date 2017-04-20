@@ -145,9 +145,6 @@ class ConsolidatedModel(StratifiedModel):
             elif 'program_prop_ipt' in timevariant and 'community_ipt' not in timevariant:
                 self.optional_timevariants += ['ipt']
 
-        print(self.optional_timevariants)
-        print(self.relevant_interventions)
-
         # Define model compartmental structure (note that compartment initialisation is in base.py)
         self.define_model_structure()
 

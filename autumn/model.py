@@ -107,7 +107,7 @@ class ConsolidatedModel(StratifiedModel):
         # Model attributes to set to just the relevant scenario key from an inputs dictionary
         self.scenario = scenario
         for attribute in \
-                ['relevant_programs', 'scaleup_fns']:
+                ['relevant_interventions', 'scaleup_fns']:
             setattr(self, attribute, getattr(inputs, attribute)[scenario])
 
         # start_time can't be left as a model constant as it needs to be set for each scenario through the model runner
@@ -145,6 +145,9 @@ class ConsolidatedModel(StratifiedModel):
             elif 'program_prop_ipt' in timevariant and 'community_ipt' not in timevariant:
                 self.optional_timevariants += ['ipt']
 
+        print(self.optional_timevariants)
+        print(self.relevant_interventions)
+
         # Define model compartmental structure (note that compartment initialisation is in base.py)
         self.define_model_structure()
 
@@ -161,11 +164,11 @@ class ConsolidatedModel(StratifiedModel):
         if len(self.organ_status) == 1 and self.vary_detection_by_organ:
             self.vary_detection_by_organ = False
             print('Requested variation by organ status turned off, as model is unstratified by organ status.')
-        if len(self.organ_status) > 1 and 'program_prop_xpert' in self.optional_timevariants \
+        if len(self.organ_status) > 1 and 'program_prop_xpert' in self.relevant_interventions \
                 and not self.vary_detection_by_organ:
             self.vary_detection_by_organ = True
             print('Variation in detection by organ status added although not requested, for Xpert implementation.')
-        elif len(self.organ_status) == 1 and 'program_prop_xpert' in self.optional_timevariants:
+        elif len(self.organ_status) == 1 and 'program_prop_xpert' in self.relevant_interventions:
             print('Effect of Xpert on smear-negative detection not simulated as model unstratified by organ status.')
 
         self.detection_algorithm_ceiling = .95
@@ -203,7 +206,7 @@ class ConsolidatedModel(StratifiedModel):
                                   'latent_late', 'active', 'detect', 'missed', 'treatment_infect',
                                   'treatment_noninfect']
         if self.is_lowquality: self.compartment_types += ['lowquality']
-        if 'program_prop_novel_vaccination' in self.optional_timevariants:
+        if 'program_prop_novel_vaccination' in self.relevant_interventions:
             self.compartment_types += ['susceptible_novelvac']
 
         # Compartments that contribute to force of infection calculations

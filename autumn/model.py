@@ -139,11 +139,14 @@ class ConsolidatedModel(StratifiedModel):
         if 'program_prop_shortcourse_mdr' in self.scaleup_fns and len(self.strains) > 1:
             self.optional_timevariants += ['program_prop_shortcourse_mdr']
 
-        for timevariant in self.scaleup_fns:
+        for timevariant in self.relevant_interventions:
             if 'program_prop_ipt_age' in timevariant:
-                self.optional_timevariants += ['agestratified_ipt']
+                self.relevant_interventions += ['agestratified_ipt']
             elif 'program_prop_ipt' in timevariant and 'community_ipt' not in timevariant:
-                self.optional_timevariants += ['ipt']
+                self.relevant_interventions += ['ipt']
+
+        print(self.optional_timevariants)
+        print(self.relevant_interventions)
 
         # Define model compartmental structure (note that compartment initialisation is in base.py)
         self.define_model_structure()
@@ -355,12 +358,10 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_populations()
         self.calculate_birth_rates_vars()
         if self.is_organvariation: self.calculate_progression_vars()
-
-        if 'program_prop_opendoors_activities' in self.optional_timevariants or \
-                        'program_prop_ngo_activities' in self.optional_timevariants:
+        if 'program_prop_opendoors_activities' in self.relevant_interventions \
+                or 'program_prop_ngo_activities' in self.relevant_interventions:
             self.adjust_case_detection_and_ipt_for_opendoors()
-
-        if 'program_prop_decentralisation' in self.optional_timevariants:
+        if 'program_prop_decentralisation' in self.relevant_interventions:
             self.adjust_case_detection_for_decentralisation()
         if self.vary_detection_by_organ:
             self.calculate_case_detection_by_organ()
@@ -377,7 +378,7 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_await_treatment_var()
         self.calculate_treatment_rates_vars()
         self.calculate_prop_infections_reachable_with_ipt()
-        if 'agestratified_ipt' in self.optional_timevariants or 'ipt' in self.optional_timevariants:
+        if 'agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions:
             self.calculate_ipt_effect()
         self.calculate_force_infection_vars()
         self.calculate_population_sizes()
@@ -672,6 +673,7 @@ class ConsolidatedModel(StratifiedModel):
                         += self.vars['program_rate_acf' + organ]
 
     def adjust_case_detection_for_intensive_screening(self):
+
         if 'program_prop_intensive_screening' in self.optional_timevariants:
             for organ in self.organs_for_detection:
                 screened_subgroups = ['_diabetes', '_hiv']  # may be incorporated into the GUI

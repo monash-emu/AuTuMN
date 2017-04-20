@@ -100,24 +100,26 @@ class ConsolidatedModel(StratifiedModel):
 
         # Model attributes to be set directly to attributes of the inputs object
         self.inputs = inputs
-        for attribute in ['organ_status', 'strains', 'riskgroups', 'is_organvariation', 'agegroups']:
+        for attribute in \
+                ['organ_status', 'strains', 'riskgroups', 'is_organvariation', 'agegroups', 'interventions_to_cost']:
             setattr(self, attribute, getattr(inputs, attribute))
 
-        # Model characteristics to set to just the relevant scenario key from an inputs dictionary
+        # Model attributes to set to just the relevant scenario key from an inputs dictionary
         self.scenario = scenario
-        for attribute in ['relevant_programs', 'scaleup_fns']:
+        for attribute in \
+                ['relevant_programs', 'scaleup_fns']:
             setattr(self, attribute, getattr(inputs, attribute)[scenario])
 
-        # Start_time can't be left as a model constant as it needs to be set for each scenario through the model runner
+        # start_time can't be left as a model constant as it needs to be set for each scenario through the model runner
         self.start_time = inputs.model_constants['start_time']
 
-        # Set model characteristics directly from GUI inputs
+        # Model attributes to be set directly to attributes from the GUI object
         for attribute in \
                 ['is_lowquality', 'is_amplification', 'is_misassignment', 'country', 'time_step', 'integration_method']:
             setattr(self, attribute, gui_inputs[attribute])
         if self.is_misassignment: assert self.is_amplification, 'Misassignment requested without amplification'
 
-        # Set fixed parameters
+        # Set fixed parameters from inputs object
         for key, value in inputs.model_constants.items():
             if type(value) == float: self.set_parameter(key, value)
 
@@ -143,7 +145,7 @@ class ConsolidatedModel(StratifiedModel):
             elif 'program_prop_ipt' in timevariant and 'community_ipt' not in timevariant:
                 self.optional_timevariants += ['ipt']
 
-        # Define model compartmental structure (compartment initialisation is now in base.py)
+        # Define model compartmental structure (note that compartment initialisation is in base.py)
         self.define_model_structure()
 
         # Treatment outcomes
@@ -151,7 +153,6 @@ class ConsolidatedModel(StratifiedModel):
         self.treatment_stages = ['_infect', '_noninfect']
 
         # Intervention and economics-related initialisiations
-        self.interventions_to_cost = inputs.interventions_to_cost
         if self.eco_drives_epi: self.distribute_funding_across_years()
 
         # Work out what we're doing with organ status and variation of detection rates by organ status

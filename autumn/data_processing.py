@@ -314,8 +314,7 @@ class Inputs:
         self.potential_interventions_to_cost.
         """
 
-        self.find_potential_interventions_to_cost()
-
+        self.find_potential_interventions_to_cost()  # find interventions that can potentially be costed
         for intervention in self.potential_interventions_to_cost:
             if 'program_prop_' + intervention in self.relevant_interventions and \
                     ('_age' not in intervention or len(self.agegroups) > 1):
@@ -866,59 +865,42 @@ class Inputs:
             # Define scale-up functions from these datasets
             for param in self.scaleup_data[scenario]:
 
-                # Determine whether the parameter is time variant at the first scenario iteration,
-                # because otherwise the code will keep trying to pop off the time variant string
-                # from the same scaleup data dictionary.
-                whether_time_variant = self.scaleup_data[scenario][param].pop('time_variant') == u'yes'
+                print(param)
 
-                # If time variant
-                if whether_time_variant:
+                # Extract and remove the smoothness parameter from the dictionary
+                if 'smoothness' in self.scaleup_data[scenario][param]:
+                    smoothness = self.scaleup_data[scenario][param].pop('smoothness')
+                else:
+                    smoothness = self.gui_inputs['default_smoothness']
 
-                    # Extract and remove the smoothness parameter from the dictionary
-                    if 'smoothness' in self.scaleup_data[scenario][param]:
-                        smoothness = self.scaleup_data[scenario][param].pop('smoothness')
-                    else:
-                        smoothness = self.gui_inputs['default_smoothness']
+                # If the parameter is being modified for the scenario being run
+                self.intervention_applied[scenario][param] = False
+                scenario_for_function = None
+                if 'scenario' in self.scaleup_data[scenario][param]:
+                    scenario_for_function = [self.model_constants['scenario_full_time'],
+                                self.scaleup_data[scenario][param].pop('scenario')]
+                    self.intervention_applied[scenario][param] = True
 
-                    # If the parameter is being modified for the scenario being run
-                    self.intervention_applied[scenario][param] = False
-                    scenario_for_function = None
-                    if 'scenario' in self.scaleup_data[scenario][param]:
-                        scenario_for_function = [self.model_constants['scenario_full_time'],
-                                    self.scaleup_data[scenario][param].pop('scenario')]
-                        self.intervention_applied[scenario][param] = True
+                # Upper bound depends on whether the parameter is a proportion
+                upper_bound = None
+                if 'prop_' in param: upper_bound = 1.
 
-                    # Upper bound depends on whether the parameter is a proportion
-                    upper_bound = None
-                    if 'prop_' in param: upper_bound = 1.
+                # Calculate the scaling function
+                self.scaleup_fns[scenario][param] \
+                    = scale_up_function(self.scaleup_data[scenario][param].keys(),
+                                        self.scaleup_data[scenario][param].values(),
+                                        self.gui_inputs['fitting_method'],
+                                        smoothness,
+                                        bound_low=0.,
+                                        bound_up=upper_bound,
+                                        intervention_end=scenario_for_function,
+                                        intervention_start_date=self.model_constants['scenario_start_time'])
 
-                    # Calculate the scaling function
-                    self.scaleup_fns[scenario][param] \
-                        = scale_up_function(self.scaleup_data[scenario][param].keys(),
-                                            self.scaleup_data[scenario][param].values(),
-                                            self.gui_inputs['fitting_method'],
-                                            smoothness,
-                                            bound_low=0.,
-                                            bound_up=upper_bound,
-                                            intervention_end=scenario_for_function,
-                                            intervention_start_date=self.model_constants['scenario_start_time'])
-
-                    if scenario is not None:
-                        freeze_time = self.freeze_times['scenario_' + str(scenario)]
-                        if freeze_time < self.model_constants['recent_time']:
-                            self.scaleup_fns[scenario][param] = freeze_curve(self.scaleup_fns[scenario][param],
-                                                                             freeze_time)
-
-                # If no is selected in the time variant column
-                elif whether_time_variant:
-
-                    # Smoothness no longer relevant
-                    if 'smoothness' in self.scaleup_data[scenario][param]:
-                        del self.scaleup_data[scenario][param]['smoothness']
-
-                    # Set as a constant parameter
-                    self.model_constants[param] \
-                        = self.scaleup_data[scenario][param][max(self.scaleup_data[scenario][param])]
+                if scenario is not None:
+                    freeze_time = self.freeze_times['scenario_' + str(scenario)]
+                    if freeze_time < self.model_constants['recent_time']:
+                        self.scaleup_fns[scenario][param] = freeze_curve(self.scaleup_fns[scenario][param],
+                                                                         freeze_time)
 
     def find_constant_extrapulmonary_proportion(self):
 
@@ -1094,8 +1076,7 @@ class Inputs:
 
         self.time_variants['epi_prop_amplification'] \
             = {self.model_constants['start_mdr_introduce_time']: 0.,
-               self.model_constants['end_mdr_introduce_time']: self.model_constants['tb_prop_amplification'],
-               'time_variant': u'yes'}
+               self.model_constants['end_mdr_introduce_time']: self.model_constants['tb_prop_amplification']}
 
     def find_organ_time_variation(self):
 
@@ -1119,27 +1100,7 @@ class Inputs:
         else:
 
             # Change to organ variation true if organ stratification and smear-positive variation requested
-            if self.time_variants['epi_prop_smearpos']['time_variant'] == u'yes':
-                self.is_organvariation = True
-
-                # Warn if smear-negative variation not requested
-                if self.time_variants['epi_prop_smearneg']['time_variant'] == u'no':
-                    self.add_comment_to_gui_window(
-                                                'Requested time variant smear-positive status, but ' +
-                                                'not time variant smear-negative status. ' +
-                                                'Therefore, changed to time variant smear-negative status.\n')
-                    self.time_variants['epi_prop_smearneg']['time_variant'] = u'yes'
-
-            # Leave organ variation as false if smear-positive variation not requested
-            elif self.time_variants['epi_prop_smearpos']['time_variant'] == u'no':
-
-                # Warn if smear-negative variation requested
-                if self.time_variants['epi_prop_smearneg']['time_variant'] == u'yes':
-                    self.add_comment_to_gui_window(
-                                                'Requested non-time variant smear-positive status, but ' +
-                                                'time variant smear-negative status. ' +
-                                                'Therefore, changed to non-time variant smear-negative status.\n')
-                    self.time_variants['epi_prop_smearneg']['time_variant'] = u'no'
+            self.is_organvariation = True
 
         # Set fixed parameters if no organ status variation
         if not self.is_organvariation:

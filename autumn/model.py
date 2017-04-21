@@ -123,30 +123,16 @@ class ConsolidatedModel(StratifiedModel):
         for key, value in inputs.model_constants.items():
             if type(value) == float: self.set_parameter(key, value)
 
-        # Track list of included optional parameters (mostly interventions)
-        self.optional_timevariants = []
-        for timevariant in \
-                ['program_prop_novel_vaccination', 'transmission_modifier', 'program_prop_smearacf',
-                 'program_prop_xpertacf', 'program_prop_decentralisation', 'program_prop_xpert',
-                 'program_prop_treatment_support', 'program_prop_community_ipt', 'program_prop_food_voucher_ds',
-                 'program_prop_food_voucher_mdr', 'program_prop_improve_dst', 'program_prop_intensive_screening',
-                 'program_prop_ngo_activities', 'program_prop_opendoors_activities']:
-            if timevariant in self.scaleup_fns: self.optional_timevariants += [timevariant]
-        for riskgroup in self.riskgroups:
-            for program in ['_xpertacf', '_cxrxpertacf']:
-                if 'program_prop' + program + riskgroup in self.scaleup_fns:
-                    self.optional_timevariants += ['program_prop' + program + riskgroup]
-        if 'program_prop_shortcourse_mdr' in self.scaleup_fns and len(self.strains) > 1:
-            self.optional_timevariants += ['program_prop_shortcourse_mdr']
 
         for timevariant in self.relevant_interventions:
             if 'program_prop_ipt_age' in timevariant:
                 self.relevant_interventions += ['agestratified_ipt']
             elif 'program_prop_ipt' in timevariant and 'community_ipt' not in timevariant:
                 self.relevant_interventions += ['ipt']
-
-        print(self.optional_timevariants)
-        print(self.relevant_interventions)
+        for riskgroup in self.riskgroups:
+            for program in ['_xpertacf', '_cxrxpertacf']:
+                if 'program_prop' + program + riskgroup in self.scaleup_fns:
+                    self.relevant_interventions += ['program_prop' + program + riskgroup]
 
         # Define model compartmental structure (note that compartment initialisation is in base.py)
         self.define_model_structure()
@@ -614,7 +600,7 @@ class ConsolidatedModel(StratifiedModel):
                         cxr_sensitivity = 1.
                     else:
                         cxr_sensitivity = self.params['tb_sensitivity_cxr']
-                    if 'program_prop_' + acf_type + 'acf' + riskgroup in self.optional_timevariants:
+                    if 'program_prop_' + acf_type + 'acf' + riskgroup in self.relevant_interventions:
                         for organ in ['_smearpos', '_smearneg']:
                             self.vars['program_rate_acf' + organ + riskgroup] \
                                 += self.vars['program_prop_' + acf_type + 'acf' + riskgroup] \
@@ -1039,7 +1025,7 @@ class ConsolidatedModel(StratifiedModel):
                           * ipt_infection_modifier
 
                     # If any modifications to transmission parameter to be made over time
-                    if 'transmission_modifier' in self.optional_timevariants:
+                    if 'transmission_modifier' in self.vars:
                         self.vars['rate_force' + strain + riskgroup + agegroup] *= self.vars['transmission_modifier']
 
                     # Adjust for immunity in various groups

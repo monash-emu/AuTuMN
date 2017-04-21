@@ -196,6 +196,9 @@ class Inputs:
         # Find parameters that require processing
         self.find_additional_parameters()
 
+        # Calculate time-variant functions
+        self.find_scaleup_functions()
+
         # Find which interventions need to be costed
         self.find_interventions_to_cost()
 
@@ -225,8 +228,7 @@ class Inputs:
         Note that the order of call is important and can lead to errors if changed.
         """
 
-        # Run first to remove from time-variants before they are processed
-        self.extract_freeze_times()
+        self.extract_freeze_times()  # run first to remove from time-variants before they are processed
         self.find_organ_proportions()
         if 'country_programs' in self.original_data:  # start with country programs
             self.time_variants.update(self.original_data['country_programs'])
@@ -257,6 +259,12 @@ class Inputs:
 
     def find_additional_parameters(self):
 
+        """
+        Find additional parameters.
+        Includes methods that require the model structure to be defined,
+        so that this can't be run with process_model_constants.
+        """
+
         # Find the time non-infectious on treatment from the total time on treatment and the time infectious
         self.find_noninfectious_period()
 
@@ -270,6 +278,12 @@ class Inputs:
         # Derive some basic parameters for IPT
         self.find_ipt_params()
 
+    def find_scaleup_functions(self):
+
+        """
+        Master method for calculation of time-variant parameters/scale-up functions.
+        """
+
         # Work out which programs are relevant
         self.list_irrelevant_time_variants()
         self.find_relevant_programs()
@@ -281,8 +295,8 @@ class Inputs:
         self.find_functions_or_params()
 
         # Find extrapulmonary proportion if model is stratified by organ type, but there is no time variant organ
-        # proportion. Note that this has to be done after find_functions_or_params or the constant parameter
-        # won't have been calculated yet.
+        # proportion. Note that this has to be done after find_functions_or_params or the constant parameter won't have
+        # been calculated yet.
         if not self.is_organvariation and len(self.organ_status) > 2:
             self.find_constant_extrapulmonary_proportion()
 
@@ -1171,25 +1185,23 @@ class Inputs:
         """
 
         for time_variant in self.time_variants:
-            if 'perc_' in time_variant:
-                self.irrelevant_time_variants += [time_variant]
             for strain in self.available_strains:
-                if strain not in self.strains and strain in time_variant and '_dst' not in time_variant:
+
+                # Exclude programs relevant to strains that aren't included in the model
+                if strain not in self.strains and strain in time_variant:
                     self.irrelevant_time_variants += [time_variant]
-            if self.gui_inputs['n_strains'] < 2 and 'line_dst' in time_variant:
+
+            # Exclude time-variants that are percentages, irrelevant drug-susceptibility testing programs, inappropriate
+            # treatment time-variants for single strain models, smear-negative parameters for unstratified models,
+            # low-quality care sector interventions for models not including this.
+            if ('perc_' in time_variant) \
+                    or (self.gui_inputs['n_strains'] < 2 and 'line_dst' in time_variant) \
+                    or (self.gui_inputs['n_strains'] < 3 and 'second_line_dst' in time_variant) \
+                    or ('_inappropriate' in time_variant
+                                and (self.gui_inputs['n_strains'] < 2 or not self.gui_inputs['is_misassignment'])) \
+                    or (self.gui_inputs['n_organs'] == 1 and 'smearneg' in time_variant) \
+                    or ('lowquality' in time_variant and not self.gui_inputs['is_lowquality']):
                 self.irrelevant_time_variants += [time_variant]
-            elif '_inappropriate' in time_variant \
-                    and (self.gui_inputs['n_strains'] < 2 or not self.gui_inputs['is_misassignment']):
-                self.irrelevant_time_variants += [time_variant]
-            elif self.gui_inputs['n_strains'] == 2 and 'secondline_dst' in time_variant:
-                self.irrelevant_time_variants += [time_variant]
-            elif self.gui_inputs['n_organs'] == 1 and 'smearneg' in time_variant:
-                self.irrelevant_time_variants += [time_variant]
-            if 'lowquality' in time_variant and not self.gui_inputs['is_lowquality']:
-                self.irrelevant_time_variants += [time_variant]
-            if 'program_prop_shortcourse_mdr' in time_variant and self.gui_inputs['n_strains'] < 2:
-                self.irrelevant_time_variants += [time_variant]
-                print('program_prop_shortcourse_mdr requested, but not implemented during to insufficient strains')
 
     def find_relevant_programs(self):
 
@@ -1197,7 +1209,7 @@ class Inputs:
         Code to create lists of the programmatic interventions that are relevant to a particular scenario being run.
 
         Creates:
-            self.relevant_interventions: A dict with keys scenarios and values lists of programs relevant to that scenario
+            self.relevant_interventions: A dict with keys scenarios and values lists of scenario-relevant programs
         """
 
         for scenario in self.gui_inputs['scenarios_to_run']:

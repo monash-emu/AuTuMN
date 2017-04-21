@@ -284,7 +284,7 @@ class Inputs:
         Master method for calculation of time-variant parameters/scale-up functions.
         """
 
-        # Work out which programs are relevant
+        # Work out which programs are relevant/irrelevant
         self.list_irrelevant_time_variants()
         self.find_relevant_programs()
 
@@ -1194,12 +1194,12 @@ class Inputs:
             # Exclude time-variants that are percentages, irrelevant drug-susceptibility testing programs, inappropriate
             # treatment time-variants for single strain models, smear-negative parameters for unstratified models,
             # low-quality care sector interventions for models not including this.
-            if ('perc_' in time_variant) \
-                    or (self.gui_inputs['n_strains'] < 2 and 'line_dst' in time_variant) \
-                    or (self.gui_inputs['n_strains'] < 3 and 'second_line_dst' in time_variant) \
+            if 'perc_' in time_variant \
+                    or (len(self.strains) < 2 and 'line_dst' in time_variant) \
+                    or (len(self.strains) < 3 and 'second_line_dst' in time_variant) \
                     or ('_inappropriate' in time_variant
-                                and (self.gui_inputs['n_strains'] < 2 or not self.gui_inputs['is_misassignment'])) \
-                    or (self.gui_inputs['n_organs'] == 1 and 'smearneg' in time_variant) \
+                                and (len(self.strains) < 2 or not self.gui_inputs['is_misassignment'])) \
+                    or (len(self.organ_status) == 1 and 'smearneg' in time_variant) \
                     or ('lowquality' in time_variant and not self.gui_inputs['is_lowquality']):
                 self.irrelevant_time_variants += [time_variant]
 

@@ -220,8 +220,9 @@ class Inputs:
     def process_time_variants(self):
 
         """
-        Master method to perform all processing tasks for time-variant parameters. Note that the order of call is
-        important and can lead to errors if changed.
+        Master method to perform all preparation and processing tasks for time-variant parameters.
+        Does not actually fit functions, which is done later.
+        Note that the order of call is important and can lead to errors if changed.
         """
 
         # Run first to remove from time-variants before they are processed
@@ -481,15 +482,15 @@ class Inputs:
 
         for time_variant in self.time_variants.keys():
             if 'perc_' in time_variant:  # if a percentage
-                perc_name = time_variant.replace('perc_', 'prop_')
+                perc_name = time_variant.replace('perc', 'prop')
                 self.time_variants[perc_name] = {}
-                for i in self.time_variants[time_variant]:
-                    if type(i) == int or 'scenario' in i:  # to exclude load_data, smoothness, etc.
-                        self.time_variants[perc_name][i] \
-                            = self.time_variants[time_variant][i] / 1e2
+                for year in self.time_variants[time_variant]:
+                    if type(year) == int or 'scenario' in year:  # to exclude load_data, smoothness, etc.
+                        self.time_variants[perc_name][year] \
+                            = self.time_variants[time_variant][year] / 1e2
                     else:
-                        self.time_variants[perc_name][i] \
-                            = self.time_variants[time_variant][i]
+                        self.time_variants[perc_name][year] \
+                            = self.time_variants[time_variant][year]
 
     def find_ds_outcomes(self):
 
@@ -499,7 +500,7 @@ class Inputs:
         differs for them.
         """
 
-        # Adjusting the original data to add a success number for smear-positive, which shouldn't generally be done
+        # Adjusting the original data to add a success number for smear-positive (so technically not still "original")
         self.original_data['outcomes']['new_sp_succ'] \
             = tool_kit.increment_dictionary_with_dictionary(self.original_data['outcomes']['new_sp_cmplt'],
                                                             self.original_data['outcomes']['new_sp_cur'])
@@ -541,12 +542,8 @@ class Inputs:
         """
 
         name_conversion_dict = {'_success': 'succ', '_death': 'died'}
-
-        # Iterate over success and death outcomes
-        for outcome in ['_success', '_death']:
+        for outcome in ['_success', '_death']:  # only for success and death because default is derived from these
             if self.time_variants['program_prop_treatment' + outcome]['load_data'] == u'yes':
-
-                # Populate data
                 for year in self.derived_data['prop_' + name_conversion_dict[outcome]]:
                     if year not in self.time_variants['program_prop_treatment' + outcome]:
                         self.time_variants['program_prop_treatment' + outcome][year] \
@@ -567,7 +564,7 @@ class Inputs:
         """
         Finds treatment outcomes for the resistant strains (i.e. MDR and XDR-TB).
         As for DS-TB, no need to find default proportion, as it is equal to one minus success minus death.
-        **** Inappropriate outcomes are currently set to those for XDR-TB - this is temporary ****
+        Inappropriate outcomes are currently set to those for XDR-TB - intended to be temporary.
         """
 
         # Calculate proportions of each outcome for MDR and XDR-TB from GTB
@@ -593,8 +590,7 @@ class Inputs:
 
         """
         Add epidemiological time variant parameters to time_variants.
-        Similarly to previous methods, only performed if requested and only populated where absent
-        (either entirely or for that year).
+        Similarly to previous methods, only performed if requested and only populated where absent.
         """
 
         for demo_parameter in ['life_expectancy', 'rate_birth']:
@@ -611,8 +607,6 @@ class Inputs:
 
         name_conversion_dict = {'_smearpos': '_sp', '_smearneg': '_sn'}
         for outcome in ['_smearpos', '_smearneg']:
-
-            # Populate data
             for year in self.derived_data['prop_new' + name_conversion_dict[outcome]]:
                 if year not in self.time_variants['epi_prop' + outcome]:
                     self.time_variants['epi_prop' + outcome][year] \
@@ -626,22 +620,17 @@ class Inputs:
         """
 
         for scenario in self.gui_inputs['scenarios_to_run']:
-
-            # Baseline
-            if scenario is None:
+            if scenario is None:  # baseline
                 self.freeze_times['baseline'] = self.model_constants['recent_time']
-
-            # Scenarios with no freeze time specified
-            elif 'scenario_' + str(scenario) not in self.freeze_times:
+            elif 'scenario_' + str(scenario) not in self.freeze_times:  # scenarios with no freeze time specified
                 self.freeze_times['scenario_' + str(scenario)] = self.model_constants['recent_time']
 
     def tidy_time_variants(self):
 
         """
-        Perform final rounds of tidying of time-variants.
+        Final tidying of time-variants.
         """
 
-        # Looping over each time variant
         for program in self.time_variants:
 
             # Add zero at starting time for model run to all program proportions

@@ -185,7 +185,7 @@ class ModelRunner:
         self.uncertainty_percentiles = {}
         self.percentiles = [2.5, 50., 97.5]
         self.accepted_no_burn_in_indices = []
-        self.random_start = False  # Whether to start from a random point, as opposed to the manually calibrated value
+        self.random_start = False  # whether to start from a random point, as opposed to the manually calibrated value
 
         # Optimisation attributes
         self.optimisation = False  # Leave True even if loading optimisation results
@@ -316,7 +316,8 @@ class ModelRunner:
                                         outputs_to_analyse=self.epi_outputs_to_analyse,
                                         stratifications=[self.model_dict[scenario_name].agegroups,
                                                          self.model_dict[scenario_name].riskgroups])
-            self.find_cost_outputs(scenario_name)
+            if len(self.model_dict[scenario_name].interventions_to_cost) > 0:
+                self.find_cost_outputs(scenario_name)
 
         # Model interpretation that applies to baseline run only
         self.find_population_fractions(stratifications=[self.model_dict['manual_baseline'].agegroups,
@@ -325,12 +326,15 @@ class ModelRunner:
         # If you want some dictionaries based on the lists created above (may not be necessary)
         self.epi_outputs_dict.update(get_output_dicts_from_lists(models_to_analyse=self.model_dict,
                                                                  output_dict_of_lists=self.epi_outputs))
-        self.cost_outputs_dict.update(get_output_dicts_from_lists(models_to_analyse=self.model_dict,
-                                                                  output_dict_of_lists=self.cost_outputs))
 
         # If integer-based dictionaries required
         self.epi_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.epi_outputs_dict))
-        self.cost_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.cost_outputs_dict))
+
+        # Same for costs
+        if len(self.model_dict[scenario_name].interventions_to_cost) > 0:
+            self.cost_outputs_dict.update(get_output_dicts_from_lists(models_to_analyse=self.model_dict,
+                                                                      output_dict_of_lists=self.cost_outputs))
+            self.cost_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.cost_outputs_dict))
 
     def prepare_new_model_from_baseline(self, run_type, scenario_name):
 
@@ -1061,7 +1065,8 @@ class ModelRunner:
         # Get outputs
         self.epi_outputs[scenario_name] \
             = self.find_epi_outputs(scenario_name, outputs_to_analyse=self.epi_outputs_to_analyse)
-        self.find_cost_outputs(scenario_name)
+        if len(self.model_dict[scenario_name].interventions_to_cost) > 0:
+            self.find_cost_outputs(scenario_name)
 
         # Initialise dictionaries if needed
         if scenario_name not in self.epi_outputs_uncertainty:

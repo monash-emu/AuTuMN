@@ -164,7 +164,7 @@ class Inputs:
         # Create a list of the interventions that could potentially be costed if they are requested
         self.potential_interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
                                                 'ipt_age0to5', 'ipt_age5to15', 'decentralisation', 'improve_dst',
-                                                'intensive_screening', "ipt_age15up"]
+                                                'intensive_screening', 'ipt_age15up']
         if self.gui_inputs['n_strains'] > 1:
             self.potential_interventions_to_cost += ['shortcourse_mdr']
             self.potential_interventions_to_cost += ['food_voucher_ds']
@@ -322,7 +322,7 @@ class Inputs:
         """
 
         for intervention in self.potential_interventions_to_cost:
-            if 'program_prop_' + intervention in self.time_variants and \
+            if 'program_prop_' + intervention in self.relevant_interventions and \
                     ('_age' not in intervention or len(self.agegroups) > 1):
                 self.interventions_to_cost += [intervention]
 

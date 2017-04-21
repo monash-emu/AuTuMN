@@ -160,35 +160,13 @@ class Inputs:
         self.freeze_times = {}
         self.treatment_outcome_types = []
         self.relevant_interventions = {}
-
-        # Create a list of the interventions that could potentially be costed if they are requested
-        self.potential_interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
-                                                'ipt_age0to5', 'ipt_age5to15', 'decentralisation', 'improve_dst',
-                                                'intensive_screening', 'ipt_age15up']
-        if self.gui_inputs['n_strains'] > 1:
-            self.potential_interventions_to_cost += ['shortcourse_mdr']
-            self.potential_interventions_to_cost += ['food_voucher_ds']
-            self.potential_interventions_to_cost += ['food_voucher_mdr']
-        if self.gui_inputs['is_lowquality']:
-            self.potential_interventions_to_cost += ['engage_lowquality']
-        if self.gui_inputs['riskgroup_prison']:
-            self.potential_interventions_to_cost += ['xpertacf_prison', 'cxrxpertacf_prison']
-        if self.gui_inputs['riskgroup_indigenous']:
-            self.potential_interventions_to_cost += ['xpertacf_indigenous']
-        if self.gui_inputs['riskgroup_urbanpoor']:
-            self.potential_interventions_to_cost += ['xpertacf_urbanpoor', 'cxrxpertacf_urbanpoor']
-        if self.gui_inputs['riskgroup_ruralpoor']:
-            self.potential_interventions_to_cost += ['xpertacf_ruralpoor', 'cxrxpertacf_ruralpoor']
-
         self.include_relapse_in_ds_outcomes = True
-
         self.interventions_to_cost = []
         self.emit_delay = 0.1
         self.plot_count = 0
         self.js_gui = js_gui
         if self.js_gui:
             eventlet.monkey_patch()
-
         self.intervention_startdates = {}
 
     ######################
@@ -249,9 +227,9 @@ class Inputs:
         # Run first to remove from time-variants before they are processed
         self.extract_freeze_times()
         self.find_organ_proportions()
-        if 'country_programs' in self.original_data:
+        if 'country_programs' in self.original_data:  # start with country programs
             self.time_variants.update(self.original_data['country_programs'])
-        self.add_time_variant_defaults()
+        self.add_time_variant_defaults()  # add any necessary time-variants from defaults if not in country programs
         self.load_vacc_detect_time_variants()
         self.convert_percentages_to_proportions()
         self.find_ds_outcomes()
@@ -321,10 +299,37 @@ class Inputs:
         self.potential_interventions_to_cost.
         """
 
+        self.find_potential_interventions_to_cost()
+
         for intervention in self.potential_interventions_to_cost:
             if 'program_prop_' + intervention in self.relevant_interventions and \
                     ('_age' not in intervention or len(self.agegroups) > 1):
                 self.interventions_to_cost += [intervention]
+
+    def find_potential_interventions_to_cost(self):
+
+        """
+        Creates a list of the interventions that could potentially be costed if they are requested - that is, the ones
+        for which model.py has popsize calculations coded.
+        """
+
+        self.potential_interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
+                                                'ipt_age0to5', 'ipt_age5to15', 'decentralisation', 'improve_dst',
+                                                'intensive_screening', 'ipt_age15up']
+        if self.gui_inputs['n_strains'] > 1:
+            self.potential_interventions_to_cost += ['shortcourse_mdr']
+            self.potential_interventions_to_cost += ['food_voucher_ds']
+            self.potential_interventions_to_cost += ['food_voucher_mdr']
+        if self.gui_inputs['is_lowquality']:
+            self.potential_interventions_to_cost += ['engage_lowquality']
+        if self.gui_inputs['riskgroup_prison']:
+            self.potential_interventions_to_cost += ['xpertacf_prison', 'cxrxpertacf_prison']
+        if self.gui_inputs['riskgroup_indigenous']:
+            self.potential_interventions_to_cost += ['xpertacf_indigenous']
+        if self.gui_inputs['riskgroup_urbanpoor']:
+            self.potential_interventions_to_cost += ['xpertacf_urbanpoor', 'cxrxpertacf_urbanpoor']
+        if self.gui_inputs['riskgroup_ruralpoor']:
+            self.potential_interventions_to_cost += ['xpertacf_ruralpoor', 'cxrxpertacf_ruralpoor']
 
     def process_uncertainty_parameters(self):
 
@@ -440,10 +445,12 @@ class Inputs:
             if program_var not in self.time_variants:
                 self.time_variants[program_var] = self.original_data['default_programs'][program_var]
 
-            # Otherwise if it's there, populate for the missing years
+            # Otherwise if it's there and load_data is requested in the country sheet, populate for the missing years
             else:
                 for year in self.original_data['default_programs'][program_var]:
-                    if year not in self.time_variants[program_var]:
+                    if year not in self.time_variants[program_var] \
+                            and 'load_data' in self.original_data['country_programs'][program_var] \
+                            and self.original_data['country_programs'][program_var]['load_data'] == u'yes':
                         self.time_variants[program_var][year] \
                             = self.original_data['default_programs'][program_var][year]
 
@@ -457,16 +464,12 @@ class Inputs:
         # Vaccination
         if self.time_variants['program_perc_vaccination']['load_data'] == u'yes':
             for year in self.original_data['bcg']:
-
-                # If not already loaded through the inputs spreadsheet
                 if year not in self.time_variants['program_perc_vaccination']:
                     self.time_variants['program_perc_vaccination'][year] = self.original_data['bcg'][year]
 
         # Case detection
         if self.time_variants['program_perc_detect']['load_data'] == u'yes':
             for year in self.original_data['tb']['c_cdr']:
-
-                # If not already loaded through the inputs spreadsheet
                 if year not in self.time_variants['program_perc_detect']:
                     self.time_variants['program_perc_detect'][year] = self.original_data['tb']['c_cdr'][year]
 
@@ -476,23 +479,17 @@ class Inputs:
         Converts time-variant dictionaries to proportions if they are loaded as percentages in their raw form.
         """
 
-        time_variants_converted_to_prop = {}
-        for time_variant in self.time_variants:
-
-            # If the entered data is a percentage
-            if 'perc_' in time_variant:
-                time_variants_converted_to_prop[time_variant.replace('perc_', 'prop_')] = {}
+        for time_variant in self.time_variants.keys():
+            if 'perc_' in time_variant:  # if a percentage
+                perc_name = time_variant.replace('perc_', 'prop_')
+                self.time_variants[perc_name] = {}
                 for i in self.time_variants[time_variant]:
-
-                    # If it's a year or scenario entry to the dictionary
-                    if type(i) == int or 'scenario' in i:
-                        time_variants_converted_to_prop[time_variant.replace('perc_', 'prop_')][i] \
+                    if type(i) == int or 'scenario' in i:  # to exclude load_data, smoothness, etc.
+                        self.time_variants[perc_name][i] \
                             = self.time_variants[time_variant][i] / 1e2
                     else:
-                        time_variants_converted_to_prop[time_variant.replace('perc_', 'prop_')][i] \
+                        self.time_variants[perc_name][i] \
                             = self.time_variants[time_variant][i]
-
-        self.time_variants.update(time_variants_converted_to_prop)
 
     def find_ds_outcomes(self):
 

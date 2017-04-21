@@ -243,7 +243,7 @@ class Inputs:
         self.add_demo_dictionaries_to_timevariants()
         if self.time_variants['epi_prop_smearpos']['load_data'] == u'yes':
             self.add_organ_status_to_timevariants()
-        self.complete_freeze_time_dictionary()
+        # self.complete_freeze_time_dictionary()
         self.tidy_time_variants()
 
     def define_model_structure(self):
@@ -429,8 +429,7 @@ class Inputs:
     def extract_freeze_times(self):
 
         """
-        Extract the freeze_times for each scenario, if specified. If not specified, will be populated in
-        self.complete_freeze_time_dictionary below.
+        Extract the freeze_times for each scenario, if specified.
         """
 
         if 'country_programs' in self.original_data and 'freeze_times' in self.original_data['country_programs']:
@@ -624,19 +623,6 @@ class Inputs:
                 if year not in self.time_variants['epi_prop' + outcome]:
                     self.time_variants['epi_prop' + outcome][year] \
                         = self.derived_data['prop_new' + name_conversion_dict[outcome]][year]
-
-    def complete_freeze_time_dictionary(self):
-
-        """
-        Ensure all scenarios have an entry in the self.freeze_times dictionary, if a time hadn't been specified in
-        self.extract_freeze_times above.
-        """
-
-        for scenario in self.gui_inputs['scenarios_to_run']:
-            if scenario is None:  # baseline
-                self.freeze_times['baseline'] = self.model_constants['recent_time']
-            elif 'scenario_' + str(scenario) not in self.freeze_times:  # scenarios with no freeze time specified
-                self.freeze_times['scenario_' + str(scenario)] = self.model_constants['recent_time']
 
     def tidy_time_variants(self):
 
@@ -855,17 +841,13 @@ class Inputs:
         """
 
         for scenario in self.gui_inputs['scenarios_to_run']:
-
-            # Dictionary of whether interventions are applied or not
-            self.intervention_applied[scenario] = {}
+            scenario_name = tool_kit.find_scenario_string_from_number(scenario)
 
             # Initialise the scale-up function dictionary
             self.scaleup_fns[scenario] = {}
 
             # Define scale-up functions from these datasets
             for param in self.scaleup_data[scenario]:
-
-                print(param)
 
                 # Extract and remove the smoothness parameter from the dictionary
                 if 'smoothness' in self.scaleup_data[scenario][param]:
@@ -874,12 +856,10 @@ class Inputs:
                     smoothness = self.gui_inputs['default_smoothness']
 
                 # If the parameter is being modified for the scenario being run
-                self.intervention_applied[scenario][param] = False
                 scenario_for_function = None
                 if 'scenario' in self.scaleup_data[scenario][param]:
                     scenario_for_function = [self.model_constants['scenario_full_time'],
-                                self.scaleup_data[scenario][param].pop('scenario')]
-                    self.intervention_applied[scenario][param] = True
+                                             self.scaleup_data[scenario][param].pop('scenario')]
 
                 # Upper bound depends on whether the parameter is a proportion
                 upper_bound = None
@@ -896,11 +876,11 @@ class Inputs:
                                         intervention_end=scenario_for_function,
                                         intervention_start_date=self.model_constants['scenario_start_time'])
 
-                if scenario is not None:
-                    freeze_time = self.freeze_times['scenario_' + str(scenario)]
-                    if freeze_time < self.model_constants['recent_time']:
-                        self.scaleup_fns[scenario][param] = freeze_curve(self.scaleup_fns[scenario][param],
-                                                                         freeze_time)
+                # Freeze at point in time if necessary
+                if scenario_name in self.freeze_times \
+                        and self.freeze_times[scenario_name] < self.model_constants['recent_time']:
+                    self.scaleup_fns[scenario][param] = freeze_curve(self.scaleup_fns[scenario][param],
+                                                                     self.freeze_times[scenario_name])
 
     def find_constant_extrapulmonary_proportion(self):
 

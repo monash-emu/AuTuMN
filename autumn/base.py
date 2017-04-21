@@ -901,7 +901,7 @@ class BaseModel:
             self.startups_apply[program] = False
 
             # If the program reaches values greater than zero and start-up costs are greater than zero, change to True
-            if self.inputs.intervention_applied[self.scenario]['program_prop_' + program] \
+            if program in self.relevant_interventions \
                     and self.inputs.model_constants['econ_startupcost_' + program] > 0.:
                 self.startups_apply[program] = True
 

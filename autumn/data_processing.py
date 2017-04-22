@@ -359,11 +359,6 @@ class Inputs:
         data entry.
         """
 
-        # Check that the time to start economics analyses from is earlier than the end time of the model run
-        assert self.model_constants['econ_start_time'] \
-               <= self.model_constants['scenario_end_time'], \
-            'Period_end must be before the end of the model integration time'
-
         # Check that all entered times occur after the model start time
         for time in self.model_constants:
             if time[-5:] == '_time' and '_step_time' not in time:

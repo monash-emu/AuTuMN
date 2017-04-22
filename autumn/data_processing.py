@@ -167,7 +167,7 @@ class Inputs:
         self.treatment_outcome_types = []
         self.relevant_interventions = {}
         self.include_relapse_in_ds_outcomes = True
-        self.interventions_to_cost = []
+        self.interventions_to_cost = {}
         self.emit_delay = 0.1
         self.plot_count = 0
         self.js_gui = js_gui
@@ -316,9 +316,11 @@ class Inputs:
 
         self.find_potential_interventions_to_cost()  # find interventions that can potentially be costed
         for intervention in self.potential_interventions_to_cost:
-            if 'program_prop_' + intervention in self.relevant_interventions and \
-                    ('_age' not in intervention or len(self.agegroups) > 1):
-                self.interventions_to_cost += [intervention]
+            for scenario in self.gui_inputs['scenarios_to_run']:
+                self.interventions_to_cost[scenario] = []
+                if 'program_prop_' + intervention in self.relevant_interventions[scenario] and \
+                        ('_age' not in intervention or len(self.agegroups) > 1):
+                    self.interventions_to_cost[scenario] += [intervention]
 
     def find_potential_interventions_to_cost(self):
 
@@ -986,7 +988,7 @@ class Inputs:
 
         for scenario in self.gui_inputs['scenarios_to_run']:
             self.intervention_startdates[scenario] = {}
-            for intervention in self.interventions_to_cost:
+            for intervention in self.interventions_to_cost[scenario]:
                 self.intervention_startdates[scenario][intervention] = None
                 years_pos_coverage \
                     = [key for (key, value) in

@@ -298,7 +298,7 @@ class Inputs:
         # Extract data into structures for creating time-variant parameters or constant ones
         self.find_data_for_functions_or_params()
 
-        # Find scale-up functions or constant parameters from
+        # Find scale-up functions or constant parameters
         self.find_constant_functions()
         self.find_scaleups()
 

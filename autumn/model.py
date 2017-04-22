@@ -1238,31 +1238,15 @@ class ConsolidatedModel(StratifiedModel):
 
                         for organ in self.organ_status:
 
-                            # If organ scale-ups available, set flows as variable (if epi_prop_smearpos is in
-                            # self.scaleup_fns, then epi_prop_smearneg should be too)
-                            if self.is_organvariation:
-                                self.set_var_transfer_rate_flow(
-                                    'latent_early' + strain + riskgroup + agegroup,
-                                    'active' + organ + strain + riskgroup + agegroup,
-                                    'tb_rate_early_progression' + organ + riskgroup + agegroup)
-                                self.set_var_transfer_rate_flow(
-                                    'latent_late' + strain + riskgroup + agegroup,
-                                    'active' + organ + strain + riskgroup + agegroup,
-                                    'tb_rate_late_progression' + organ + riskgroup + agegroup)
-
-                            # Otherwise, set fixed flows
-                            else:
-                                # Early progression
-                                self.set_fixed_transfer_rate_flow(
-                                    'latent_early' + strain + riskgroup + agegroup,
-                                    'active' + organ + strain + riskgroup + agegroup,
-                                    'tb_rate_early_progression' + organ + riskgroup + agegroup)
-
-                                # Late progression
-                                self.set_fixed_transfer_rate_flow(
-                                    'latent_late' + strain + riskgroup + agegroup,
-                                    'active' + organ + strain + riskgroup + agegroup,
-                                    'tb_rate_late_progression' + organ + riskgroup + agegroup)
+                            # Now smear-pos/smear-neg is always a var, even when it's constant
+                            self.set_var_transfer_rate_flow(
+                                'latent_early' + strain + riskgroup + agegroup,
+                                'active' + organ + strain + riskgroup + agegroup,
+                                'tb_rate_early_progression' + organ + riskgroup + agegroup)
+                            self.set_var_transfer_rate_flow(
+                                'latent_late' + strain + riskgroup + agegroup,
+                                'active' + organ + strain + riskgroup + agegroup,
+                                'tb_rate_late_progression' + organ + riskgroup + agegroup)
 
     def set_natural_history_flows(self):
 

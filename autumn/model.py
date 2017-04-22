@@ -101,7 +101,7 @@ class ConsolidatedModel(StratifiedModel):
         # Model attributes to be set directly to attributes of the inputs object
         self.inputs = inputs
         for attribute in \
-                ['organ_status', 'strains', 'riskgroups', 'is_organvariation', 'agegroups', 'interventions_to_cost']:
+                ['organ_status', 'strains', 'riskgroups', 'agegroups', 'interventions_to_cost']:
             setattr(self, attribute, getattr(inputs, attribute))
 
         # Model attributes to set to just the relevant scenario key from an inputs dictionary
@@ -343,7 +343,7 @@ class ConsolidatedModel(StratifiedModel):
         if self.eco_drives_epi and self.time > self.inputs.model_constants['recent_time']: self.update_vars_from_cost()
         self.calculate_populations()
         self.calculate_birth_rates_vars()
-        if self.is_organvariation: self.calculate_progression_vars()
+        self.calculate_progression_vars()
         if 'program_prop_opendoors_activities' in self.relevant_interventions \
                 or 'program_prop_ngo_activities' in self.relevant_interventions:
             self.adjust_case_detection_and_ipt_for_opendoors()

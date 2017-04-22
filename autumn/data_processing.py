@@ -155,7 +155,6 @@ class Inputs:
         self.available_organs = ['_smearpos', '_smearneg', '_extrapul']
         self.agegroups = None
         self.irrelevant_time_variants = []
-        self.is_organvariation = False
         self.scaleup_data = {}
         self.scaleup_fns = {}
         self.intervention_applied = {}
@@ -250,7 +249,6 @@ class Inputs:
         self.add_demo_dictionaries_to_timevariants()
         if self.time_variants['epi_prop_smearpos']['load_data'] == u'yes':
             self.add_organ_status_to_timevariants()
-        # self.complete_freeze_time_dictionary()
         self.tidy_time_variants()
 
     def define_model_structure(self):
@@ -301,12 +299,6 @@ class Inputs:
         # Find scale-up functions or constant parameters
         self.find_constant_functions()
         self.find_scaleups()
-
-        # Find extrapulmonary proportion if model is stratified by organ type, but there is no time variant organ
-        # proportion. Note that this has to be done after find_functions_or_params or the constant parameter won't have
-        # been calculated yet.
-        if not self.is_organvariation and len(self.organ_status) > 2:
-            self.find_constant_extrapulmonary_proportion()
 
         # Find the proportion of cases that are infectious for models that are unstratified by organ status
         if len(self.organ_status) < 2:
@@ -723,9 +715,6 @@ class Inputs:
         else:
             self.organ_status = self.available_organs[:self.gui_inputs['n_organs']]
 
-        # Work through whether organ status should be time variant
-        self.find_organ_time_variation()
-
     def find_noninfectious_period(self):
 
         """
@@ -1080,39 +1069,6 @@ class Inputs:
         self.time_variants['epi_prop_amplification'] \
             = {self.model_constants['start_mdr_introduce_time']: 0.,
                self.model_constants['end_mdr_introduce_time']: self.model_constants['tb_prop_amplification']}
-
-    def find_organ_time_variation(self):
-
-        """
-        Work through whether variation in organ status with time should be implemented, according to whether the model
-        is stratified by organ and whether organ stratification is requested through the smear-positive time-variant
-        input.
-        """
-
-        # If no organ stratification
-        if self.gui_inputs['n_organs'] < 2:
-            # Leave organ variation as false if no organ stratification and warn if variation requested
-            for status in ['pos', 'neg']:
-                if self.time_variants['epi_prop_smear' + status]['time_variant'] == u'yes':
-                    self.add_comment_to_gui_window(
-                                                'Time variant smear-' + status + ' proportion requested, but ' +
-                                                'model is not stratified by organ status. ' +
-                                                'Therefore, time variant smear-' + status +
-                                                ' status has been changed to off.\n')
-                    self.time_variants['epi_prop_smear' + status]['time_variant'] = u'no'
-        else:
-
-            # Change to organ variation true if organ stratification and smear-positive variation requested
-            self.is_organvariation = True
-
-        # Set fixed parameters if no organ status variation
-        if not self.is_organvariation:
-            for organ in self.organ_status:
-                for timing in ['_early', '_late']:
-                    for agegroup in self.agegroups:
-                        self.model_constants['tb_rate' + timing + '_progression' + organ + agegroup] \
-                            = self.model_constants['tb_rate' + timing + '_progression' + agegroup] \
-                              * self.model_constants['epi_prop' + organ]
 
     def find_data_for_functions_or_params(self):
 

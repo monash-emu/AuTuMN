@@ -132,6 +132,13 @@ def remove_nans(dictionary):
     return dictionary
 
 
+def make_constant_function(value):
+
+    def constant(time):
+        return value
+    return constant
+
+
 class Inputs:
 
     def __init__(self, gui_inputs, runtime_outputs, from_test=False, js_gui=False):
@@ -292,7 +299,8 @@ class Inputs:
         self.find_data_for_functions_or_params()
 
         # Find scale-up functions or constant parameters from
-        self.find_functions_or_params()
+        self.find_constant_functions()
+        self.find_scaleups()
 
         # Find extrapulmonary proportion if model is stratified by organ type, but there is no time variant organ
         # proportion. Note that this has to be done after find_functions_or_params or the constant parameter won't have
@@ -831,7 +839,26 @@ class Inputs:
                 = self.model_constants['tb_prop_ltbi_test_sensitivity'] \
                   * self.model_constants['tb_prop_' + ipt_type + 'ipt_effectiveness']
 
-    def find_functions_or_params(self):
+    def find_constant_functions(self):
+
+        """
+        Method that can be used to set some variables that might usually be time-variant to be constant instead,
+        by creating a function that is just a single constant value (through the static make_constant_function method
+        above).
+        """
+
+        for scenario in self.gui_inputs['scenarios_to_run']:
+
+            # Initialise the scale-up function dictionary for the scenario
+            self.scaleup_fns[scenario] = {}
+
+            # Set constant functions for proportion smear-positive and negative
+            if not self.gui_inputs['is_timevariant_organs']:
+                for organ in ['pos', 'neg']:
+                    self.scaleup_fns[scenario]['epi_prop_smear' + organ] \
+                        = make_constant_function(self.model_constants['epi_prop_smear' + organ])
+
+    def find_scaleups(self):
 
         """
         Calculate the scale-up functions from the scale-up data attribute and populate to a dictionary with keys of the
@@ -843,44 +870,40 @@ class Inputs:
         for scenario in self.gui_inputs['scenarios_to_run']:
             scenario_name = tool_kit.find_scenario_string_from_number(scenario)
 
-            # Initialise the scale-up function dictionary
-            self.scaleup_fns[scenario] = {}
-
             # Define scale-up functions from these datasets
             for param in self.scaleup_data[scenario]:
+                if param not in self.scaleup_fns[scenario]:  # if not already set as constant previously
 
-                # Extract and remove the smoothness parameter from the dictionary
-                if 'smoothness' in self.scaleup_data[scenario][param]:
-                    smoothness = self.scaleup_data[scenario][param].pop('smoothness')
-                else:
-                    smoothness = self.gui_inputs['default_smoothness']
+                    # Extract and remove the smoothness parameter from the dictionary
+                    if 'smoothness' in self.scaleup_data[scenario][param]:
+                        smoothness = self.scaleup_data[scenario][param].pop('smoothness')
+                    else:
+                        smoothness = self.gui_inputs['default_smoothness']
 
-                # If the parameter is being modified for the scenario being run
-                scenario_for_function = None
-                if 'scenario' in self.scaleup_data[scenario][param]:
-                    scenario_for_function = [self.model_constants['scenario_full_time'],
-                                             self.scaleup_data[scenario][param].pop('scenario')]
+                    # If the parameter is being modified for the scenario being run
+                    scenario_for_function = None
+                    if 'scenario' in self.scaleup_data[scenario][param]:
+                        scenario_for_function = [self.model_constants['scenario_full_time'],
+                                                 self.scaleup_data[scenario][param].pop('scenario')]
 
-                # Upper bound depends on whether the parameter is a proportion
-                upper_bound = None
-                if 'prop_' in param: upper_bound = 1.
+                    # Upper bound depends on whether the parameter is a proportion
+                    upper_bound = None
+                    if 'prop_' in param: upper_bound = 1.
 
-                # Calculate the scaling function
-                self.scaleup_fns[scenario][param] \
-                    = scale_up_function(self.scaleup_data[scenario][param].keys(),
-                                        self.scaleup_data[scenario][param].values(),
-                                        self.gui_inputs['fitting_method'],
-                                        smoothness,
-                                        bound_low=0.,
-                                        bound_up=upper_bound,
-                                        intervention_end=scenario_for_function,
-                                        intervention_start_date=self.model_constants['scenario_start_time'])
+                    # Calculate the scaling function
+                    self.scaleup_fns[scenario][param] \
+                        = scale_up_function(self.scaleup_data[scenario][param].keys(),
+                                            self.scaleup_data[scenario][param].values(),
+                                            self.gui_inputs['fitting_method'], smoothness,
+                                            bound_low=0., bound_up=upper_bound,
+                                            intervention_end=scenario_for_function,
+                                            intervention_start_date=self.model_constants['scenario_start_time'])
 
-                # Freeze at point in time if necessary
-                if scenario_name in self.freeze_times \
-                        and self.freeze_times[scenario_name] < self.model_constants['recent_time']:
-                    self.scaleup_fns[scenario][param] = freeze_curve(self.scaleup_fns[scenario][param],
-                                                                     self.freeze_times[scenario_name])
+                    # Freeze at point in time if necessary
+                    if scenario_name in self.freeze_times \
+                            and self.freeze_times[scenario_name] < self.model_constants['recent_time']:
+                        self.scaleup_fns[scenario][param] = freeze_curve(self.scaleup_fns[scenario][param],
+                                                                         self.freeze_times[scenario_name])
 
     def find_constant_extrapulmonary_proportion(self):
 

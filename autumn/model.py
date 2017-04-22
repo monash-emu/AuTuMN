@@ -115,14 +115,14 @@ class ConsolidatedModel(StratifiedModel):
 
         # Model attributes to be set directly to attributes from the GUI object
         for attribute in \
-                ['is_lowquality', 'is_amplification', 'is_misassignment', 'country', 'time_step', 'integration_method']:
+                ['is_lowquality', 'is_amplification', 'is_misassignment', 'is_timevariant_organs',
+                 'country', 'time_step', 'integration_method']:
             setattr(self, attribute, gui_inputs[attribute])
         if self.is_misassignment: assert self.is_amplification, 'Misassignment requested without amplification'
 
         # Set fixed parameters from inputs object
         for key, value in inputs.model_constants.items():
             if type(value) == float: self.set_parameter(key, value)
-
 
         for timevariant in self.relevant_interventions:
             if 'program_prop_ipt_age' in timevariant:

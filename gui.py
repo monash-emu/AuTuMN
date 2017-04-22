@@ -64,6 +64,8 @@ def find_button_name_from_string(working_string):
                                   'Low quality care',
                               'is_amplification':
                                   'Resistance amplification',
+                              'is_timevariant_organs':
+                                  'Time-variant organ status',
                               'is_misassignment':
                                   'Strain mis-assignment',
                               'is_vary_detection_by_organ':
@@ -129,7 +131,8 @@ class App:
                                'output_age_calculations', 'riskgroup_diabetes', 'riskgroup_hiv',
                                'riskgroup_prison', 'riskgroup_indigenous', 'riskgroup_urbanpoor',
                                'riskgroup_ruralpoor',
-                               'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ']
+                               'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ',
+                               'is_timevariant_organs']
         for i in range(1, 15):
             self.boolean_inputs += ['scenario_' + str(i)]
 

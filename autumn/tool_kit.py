@@ -66,11 +66,17 @@ def find_scenario_number_from_string(scenario):
         scenario_number: The scenario number or None for baseline
     """
 
-    if scenario == 'baseline':
+    # Strip of the manual if being used in model_runner
+    if 'manual_' in scenario:
+        scenario_string = scenario.replace('manual_', '')
+    else:
+        scenario_string = scenario
+
+    # Find number or None for baseline scenario
+    if scenario_string == 'baseline':
         scenario_number = None
     else:
-        scenario_number = int(scenario[9:])
-
+        scenario_number = int(scenario_string[9:])
     return scenario_number
 
 

@@ -1257,9 +1257,10 @@ class Project:
         output_colours = self.make_default_line_styles(5, True)
         for s, scenario in enumerate(self.scenarios):
             self.output_colours[scenario] = output_colours[s]
-        for p, program in enumerate(self.programs):
-            # +1 is to avoid starting from black, which doesn't look as nice for programs as for baseline scenario
-            self.program_colours[program] = output_colours[p + 1]
+            self.program_colours[scenario] = {}
+            for p, program in enumerate(self.programs[scenario]):
+                # +1 is to avoid starting from black, which doesn't look as nice for programs as for baseline scenario
+                self.program_colours[scenario][program] = output_colours[p + 1]
 
         # Plot main outputs
         if self.gui_inputs['output_gtb_plots']:
@@ -1667,6 +1668,8 @@ class Project:
         Panels of figures are the different sorts of costs (i.e. whether discounting and inflation have been applied).
         """
 
+        print(self.program_colours)
+
         # Separate figures for each scenario
         for scenario in self.scenario_names:
 
@@ -1702,7 +1705,7 @@ class Project:
                 cumulative_data = [0.] * len(self.model_runner.cost_outputs['manual_' + scenario]['times'])
 
                 # Plot for each intervention
-                for intervention in self.inputs.interventions_to_cost[scenario]:
+                for intervention in self.inputs.interventions_to_cost[t_k.find_scenario_number_from_string(scenario)]:
 
                     # Record the previous data for plotting as an independent object for the lower edge of the fill
                     previous_data = copy.copy(cumulative_data)
@@ -1723,10 +1726,14 @@ class Project:
 
                     # Plot lines
                     ax_individual.plot(self.model_runner.cost_outputs['manual_' + scenario]['times'],
-                                       individual_data, color=self.program_colours[intervention][1],
+                                       individual_data,
+                                       color=self.program_colours[
+                                           t_k.find_scenario_number_from_string(scenario)][intervention][1],
                                        label=t_k.find_title_from_dictionary(intervention))
                     ax_relative.plot(self.model_runner.cost_outputs['manual_' + scenario]['times'],
-                                     relative_data, color=self.program_colours[intervention][1],
+                                     relative_data,
+                                     color=self.program_colours[
+                                         t_k.find_scenario_number_from_string(scenario)][intervention][1],
                                      label=t_k.find_title_from_dictionary(intervention))
 
                     # Plot stacked areas

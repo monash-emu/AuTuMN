@@ -306,7 +306,7 @@ class ModelRunner:
                 self.prepare_new_model_from_baseline('manual', scenario_name)
 
             # Describe model and integrate
-            self.add_comment_to_gui_window('Running ' + scenario_name[7:] + ' conditions for '
+            self.add_comment_to_gui_window('Running ' + scenario_name + ' conditions for '
                                            + self.gui_inputs['country'] + ' using point estimates for parameters.')
             self.model_dict[scenario_name].integrate()
 
@@ -680,7 +680,7 @@ class ModelRunner:
 
         cost_outputs = {'times': self.model_dict[scenario_name].cost_times}
         for i, intervention \
-                in enumerate(self.interventions_to_cost[tool_kit.find_scenario_number_from_string(scenario_name[7:])]):
+                in enumerate(self.interventions_to_cost[tool_kit.find_scenario_number_from_string(scenario_name)]):
             cost_outputs['raw_cost_' + intervention] = self.model_dict[scenario_name].costs[:, i]
         return cost_outputs
 
@@ -691,11 +691,9 @@ class ModelRunner:
         """
 
         costs_all_programs \
-            = [0.] * len(self.cost_outputs[scenario_name]['raw_cost_'
-                                                          + self.interventions_to_cost[
-                                                              tool_kit.find_scenario_number_from_string(
-                                                                  scenario_name[7:])][0]])
-        for i in self.interventions_to_cost[tool_kit.find_scenario_number_from_string(scenario_name[7:])]:
+            = [0.] * len(self.cost_outputs[scenario_name]['raw_cost_' + self.interventions_to_cost[
+            tool_kit.find_scenario_number_from_string(scenario_name)][0]])
+        for i in self.interventions_to_cost[tool_kit.find_scenario_number_from_string(scenario_name)]:
             costs_all_programs \
                 = elementwise_list_addition(self.cost_outputs[scenario_name]['raw_cost_' + i], costs_all_programs)
         return costs_all_programs
@@ -716,7 +714,7 @@ class ModelRunner:
 
         # Loop over interventions to be costed and cost types to calculate costs
         cost_outputs = {}
-        for intervention in self.interventions_to_cost[tool_kit.find_scenario_number_from_string(scenario_name[7:])] \
+        for intervention in self.interventions_to_cost[tool_kit.find_scenario_number_from_string(scenario_name)] \
                 + ['all_programs']:
             for cost_type in self.additional_cost_types:
                 cost_outputs[cost_type + '_cost_' + intervention] = []

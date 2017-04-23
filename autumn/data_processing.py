@@ -318,8 +318,7 @@ class Inputs:
         for scenario in self.gui_inputs['scenarios_to_run']:
             self.interventions_to_cost[scenario] = []
             for intervention in self.potential_interventions_to_cost:
-                if 'program_prop_' + intervention in self.relevant_interventions[scenario] or \
-                        ('_age' in intervention and len(self.agegroups) > 1):
+                if 'program_prop_' + intervention in self.relevant_interventions[scenario]:
                     self.interventions_to_cost[scenario] += [intervention]
 
     def find_potential_interventions_to_cost(self):
@@ -991,9 +990,8 @@ class Inputs:
             for intervention in self.interventions_to_cost[scenario]:
                 self.intervention_startdates[scenario][intervention] = None
                 years_pos_coverage \
-                    = [key for (key, value) in
-                       self.scaleup_data[scenario]['program_prop_' + intervention].items()
-                       if value > 0.]  # Years from start
+                    = [key for (key, value) in self.scaleup_data[scenario]['program_prop_' + intervention].items()
+                       if value > 0.]
                 if len(years_pos_coverage) > 0:  # i.e. some coverage present from start
                     self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
 

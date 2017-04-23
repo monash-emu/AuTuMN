@@ -910,11 +910,13 @@ class ConsolidatedModel(StratifiedModel):
                                           * (1. - self.vars['epi_prop_amplification'])
 
     def calculate_prop_infections_reachable_with_ipt(self):
+
         """
         Calculates the proportion of new infections that could potentially be targeted with IPT.
         Obtained by multiplying the proportion of active cases that are detected with the proportion of infections
         that occur within the household
         """
+
         self.vars['tb_prop_infections_reachable_with_ipt'] = \
             self.calculate_aggregate_outgoing_proportion('active', 'detect') * \
             self.params['tb_prop_infections_in_household']

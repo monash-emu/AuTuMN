@@ -679,7 +679,8 @@ class ModelRunner:
         """
 
         cost_outputs = {'times': self.model_dict[scenario_name].cost_times}
-        for i, intervention in enumerate(self.interventions_to_cost):
+        for i, intervention \
+                in enumerate(self.interventions_to_cost[tool_kit.find_scenario_number_from_string(scenario_name[7:])]):
             cost_outputs['raw_cost_' + intervention] = self.model_dict[scenario_name].costs[:, i]
         return cost_outputs
 
@@ -689,8 +690,12 @@ class ModelRunner:
         Sum costs across all programs and populate to cost_outputs dictionary for each scenario.
         """
 
-        costs_all_programs = [0.] * len(self.cost_outputs[scenario_name]['raw_cost_' + self.interventions_to_cost[0]])
-        for i in self.interventions_to_cost:
+        costs_all_programs \
+            = [0.] * len(self.cost_outputs[scenario_name]['raw_cost_'
+                                                          + self.interventions_to_cost[
+                                                              tool_kit.find_scenario_number_from_string(
+                                                                  scenario_name[7:])][0]])
+        for i in self.interventions_to_cost[tool_kit.find_scenario_number_from_string(scenario_name[7:])]:
             costs_all_programs \
                 = elementwise_list_addition(self.cost_outputs[scenario_name]['raw_cost_' + i], costs_all_programs)
         return costs_all_programs
@@ -711,7 +716,8 @@ class ModelRunner:
 
         # Loop over interventions to be costed and cost types to calculate costs
         cost_outputs = {}
-        for intervention in self.interventions_to_cost + ['all_programs']:
+        for intervention in self.interventions_to_cost[tool_kit.find_scenario_number_from_string(scenario_name[7:])] \
+                + ['all_programs']:
             for cost_type in self.additional_cost_types:
                 cost_outputs[cost_type + '_cost_' + intervention] = []
                 for t, time in enumerate(self.cost_outputs[scenario_name]['times']):

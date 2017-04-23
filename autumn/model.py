@@ -1123,16 +1123,15 @@ class ConsolidatedModel(StratifiedModel):
                             += self.compartments[compartment] \
                                * self.params['program_prop_attending_clinics' + riskgroup]
 
-
         # Decentralisation and engage low-quality sector
         adjust_lowquality = True
         all_actives_popsize = 0.
         for compartment in self.compartments:
             if 'susceptible_' not in compartment and 'latent_' not in compartment:
                 all_actives_popsize += self.compartments[compartment]
-        if 'decentralisation' in self.inputs.potential_interventions_to_cost:
+        if 'decentralisation' in self.inputs.interventions_to_cost:
             self.vars['popsize_decentralisation'] = all_actives_popsize
-        if 'engage_lowquality' in self.inputs.potential_interventions_to_cost:
+        if 'engage_lowquality' in self.inputs.interventions_to_cost:
             self.vars['popsize_engage_lowquality'] = all_actives_popsize
             if adjust_lowquality: self.vars['popsize_engage_lowquality'] *= self.vars['program_prop_lowquality']
 

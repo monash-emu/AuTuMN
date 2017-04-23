@@ -315,11 +315,11 @@ class Inputs:
         """
 
         self.find_potential_interventions_to_cost()  # find interventions that can potentially be costed
-        for intervention in self.potential_interventions_to_cost:
-            for scenario in self.gui_inputs['scenarios_to_run']:
-                self.interventions_to_cost[scenario] = []
-                if 'program_prop_' + intervention in self.relevant_interventions[scenario] and \
-                        ('_age' not in intervention or len(self.agegroups) > 1):
+        for scenario in self.gui_inputs['scenarios_to_run']:
+            self.interventions_to_cost[scenario] = []
+            for intervention in self.potential_interventions_to_cost:
+                if 'program_prop_' + intervention in self.relevant_interventions[scenario] or \
+                        ('_age' in intervention and len(self.agegroups) > 1):
                     self.interventions_to_cost[scenario] += [intervention]
 
     def find_potential_interventions_to_cost(self):

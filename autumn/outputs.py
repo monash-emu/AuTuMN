@@ -1617,8 +1617,8 @@ class Project:
             fig = self.set_and_update_figure()
 
             # Subplots by program
-            subplot_grid = find_subplot_numbers(len(self.programs))
-            for p, program in enumerate(self.programs):
+            subplot_grid = find_subplot_numbers(len(self.programs[t_k.find_scenario_number_from_string(scenario)]))
+            for p, program in enumerate(self.programs[t_k.find_scenario_number_from_string(scenario)]):
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
 
                 # Make times that each curve is produced for from control panel inputs
@@ -1702,7 +1702,7 @@ class Project:
                 cumulative_data = [0.] * len(self.model_runner.cost_outputs['manual_' + scenario]['times'])
 
                 # Plot for each intervention
-                for intervention in self.inputs.interventions_to_cost:
+                for intervention in self.inputs.interventions_to_cost[scenario]:
 
                     # Record the previous data for plotting as an independent object for the lower edge of the fill
                     previous_data = copy.copy(cumulative_data)

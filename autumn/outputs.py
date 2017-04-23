@@ -1668,8 +1668,6 @@ class Project:
         Panels of figures are the different sorts of costs (i.e. whether discounting and inflation have been applied).
         """
 
-        print(self.program_colours)
-
         # Separate figures for each scenario
         for scenario in self.scenario_names:
 
@@ -1739,7 +1737,8 @@ class Project:
                     # Plot stacked areas
                     ax_stacked.fill_between(self.model_runner.model_dict['manual_' + scenario].cost_times,
                                             previous_data, cumulative_data,
-                                            color=self.program_colours[intervention][1],
+                                            color=self.program_colours[
+                                                t_k.find_scenario_number_from_string(scenario)][intervention][1],
                                             linewidth=0., label=t_k.find_title_from_dictionary(intervention))
 
                 # Final tidying

@@ -115,6 +115,9 @@ class BaseModel:
     def get_constant_or_variable_param(self, param):
 
         """
+        Now obselete with new approach to determining whether parameters are constant or time variant in the data
+        processing module.
+
         Simple function to look first in vars then params for a parameter value and
         raise an error if the parameter is not found.
 

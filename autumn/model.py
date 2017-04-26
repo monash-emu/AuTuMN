@@ -398,14 +398,14 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         # Calculate total births (also for tracking for for interventions)
-        self.vars['births_total'] = self.get_constant_or_variable_param('demo_rate_birth') / 1e3 \
+        self.vars['births_total'] = self.vars['demo_rate_birth'] / 1e3 \
                                     * self.vars['population']
 
         # Determine vaccinated and unvaccinated proportions
-        vac_props = {'vac': self.get_constant_or_variable_param('int_prop_vaccination')}
+        vac_props = {'vac': self.vars['int_prop_vaccination']}
         vac_props['unvac'] = 1. - vac_props['vac']
         if 'int_prop_novel_vaccination' in self.relevant_interventions:
-            vac_props['novelvac'] = self.get_constant_or_variable_param('int_prop_vaccination') \
+            vac_props['novelvac'] = self.vars['int_prop_vaccination'] \
                                     * self.vars['int_prop_novel_vaccination']
             vac_props['vac'] -= vac_props['novelvac']
 
@@ -681,7 +681,7 @@ class ConsolidatedModel(StratifiedModel):
             for riskgroup in self.riskgroups_for_detection:
                 if self.is_misassignment:
 
-                    prop_firstline = self.get_constant_or_variable_param('program_prop_firstline_dst')
+                    prop_firstline = self.vars['program_prop_firstline_dst']
 
                     # Add effect of improve_dst program
                     if 'int_prop_improve_dst' in self.relevant_interventions:
@@ -703,7 +703,7 @@ class ConsolidatedModel(StratifiedModel):
 
                     # If a third strain is present
                     if len(self.strains) > 2:
-                        prop_secondline = self.get_constant_or_variable_param('program_prop_secondline_dst')
+                        prop_secondline = self.vars['program_prop_secondline_dst']
                         self.vars['program_rate_detect' + organ + riskgroup + '_ds_asxdr'] = 0.
                         self.vars['program_rate_detect' + organ + riskgroup + '_mdr_asxdr'] = 0.
                         self.vars['program_rate_detect' + organ + riskgroup + '_xdr_asds'] \
@@ -728,7 +728,7 @@ class ConsolidatedModel(StratifiedModel):
         that proportion of all cases isn't actually detected.
         """
 
-        prop_lowqual = self.get_constant_or_variable_param('program_prop_lowquality')
+        prop_lowqual = self.vars['program_prop_lowquality']
         if 'int_prop_engage_lowquality' in self.relevant_interventions:
             prop_lowqual *= (1. - self.vars['int_prop_engage_lowquality'])
 
@@ -747,7 +747,7 @@ class ConsolidatedModel(StratifiedModel):
         # If only one organ stratum
         if len(self.organ_status) == 1:
             self.vars['program_rate_start_treatment'] \
-                = 1. / self.get_constant_or_variable_param('program_timeperiod_await_treatment_smearpos')
+                = 1. / self.vars['program_timeperiod_await_treatment_smearpos']
 
         # Organ stratification
         else:
@@ -755,7 +755,7 @@ class ConsolidatedModel(StratifiedModel):
 
                 # Adjust smear-negative for Xpert coverage
                 if organ == '_smearneg' and 'int_prop_xpert' in self.relevant_interventions:
-                    prop_xpert = self.get_constant_or_variable_param('int_prop_xpert')
+                    prop_xpert = self.vars['int_prop_xpert']
                     self.vars['program_rate_start_treatment_smearneg'] = \
                         1. / (self.vars['program_timeperiod_await_treatment_smearneg'] * (1. - prop_xpert)
                               + self.params['int_timeperiod_await_treatment_smearneg_xpert'] * prop_xpert)

@@ -318,7 +318,7 @@ class Inputs:
         for scenario in self.gui_inputs['scenarios_to_run']:
             self.interventions_to_cost[scenario] = []
             for intervention in self.potential_interventions_to_cost:
-                if 'program_prop_' + intervention in self.relevant_interventions[scenario]:
+                if 'int_prop_' + intervention in self.relevant_interventions[scenario]:
                     self.interventions_to_cost[scenario] += [intervention]
 
     def find_potential_interventions_to_cost(self):
@@ -331,7 +331,7 @@ class Inputs:
         self.potential_interventions_to_cost = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf',
                                                 'ipt_age0to5', 'ipt_age5to15', 'decentralisation', 'improve_dst',
                                                 'intensive_screening', 'ipt_age15up']
-        if self.gui_inputs['n_strains'] > 1:
+        if self.strains > 1:
             self.potential_interventions_to_cost += ['shortcourse_mdr']
             self.potential_interventions_to_cost += ['food_voucher_ds']
             self.potential_interventions_to_cost += ['food_voucher_mdr']
@@ -471,10 +471,10 @@ class Inputs:
         """
 
         # Vaccination
-        if self.time_variants['program_perc_vaccination']['load_data'] == u'yes':
+        if self.time_variants['int_perc_vaccination']['load_data'] == u'yes':
             for year in self.original_data['bcg']:
-                if year not in self.time_variants['program_perc_vaccination']:
-                    self.time_variants['program_perc_vaccination'][year] = self.original_data['bcg'][year]
+                if year not in self.time_variants['int_perc_vaccination']:
+                    self.time_variants['int_perc_vaccination'][year] = self.original_data['bcg'][year]
 
         # Case detection
         if self.time_variants['program_perc_detect']['load_data'] == u'yes':
@@ -629,7 +629,8 @@ class Inputs:
         for program in self.time_variants:
 
             # Add zero at starting time for model run to all program proportions
-            if 'program_prop' in program: self.time_variants[program][int(self.model_constants['start_time'])] = 0.
+            if 'program_prop' in program or 'int_prop' in program:
+                self.time_variants[program][int(self.model_constants['start_time'])] = 0.
 
             # Remove the load_data keys, as they have been used and are now redundant
             self.time_variants[program] = remove_specific_key(self.time_variants[program], 'load_data')
@@ -990,7 +991,7 @@ class Inputs:
             for intervention in self.interventions_to_cost[scenario]:
                 self.intervention_startdates[scenario][intervention] = None
                 years_pos_coverage \
-                    = [key for (key, value) in self.scaleup_data[scenario]['program_prop_' + intervention].items()
+                    = [key for (key, value) in self.scaleup_data[scenario]['int_prop_' + intervention].items()
                        if value > 0.]
                 if len(years_pos_coverage) > 0:  # i.e. some coverage present from start
                     self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
@@ -1096,7 +1097,8 @@ class Inputs:
     def list_irrelevant_time_variants(self):
 
         """
-        List all the time-variant parameters that are not relevant to the current model structure.
+        List all the time-variant parameters that are not relevant to the current model structure (unstratified by
+        the scenario being run).
         """
 
         for time_variant in self.time_variants:
@@ -1111,11 +1113,13 @@ class Inputs:
             # low-quality care sector interventions for models not including this.
             if 'perc_' in time_variant \
                     or (len(self.strains) < 2 and 'line_dst' in time_variant) \
-                    or (len(self.strains) < 3 and 'second_line_dst' in time_variant) \
+                    or (len(self.strains) < 3 and 'secondline_dst' in time_variant) \
                     or ('_inappropriate' in time_variant
                                 and (len(self.strains) < 2 or not self.gui_inputs['is_misassignment'])) \
                     or (len(self.organ_status) == 1 and 'smearneg' in time_variant) \
-                    or ('lowquality' in time_variant and not self.gui_inputs['is_lowquality']):
+                    or ('lowquality' in time_variant and not self.gui_inputs['is_lowquality']) \
+                    or (len(self.strains) > 1 and 'treatment_' in time_variant and 'timeperiod_' not in time_variant
+                        and ('_ds' not in time_variant and 'dr' not in time_variant)):
                 self.irrelevant_time_variants += [time_variant]
 
     def find_relevant_programs(self):
@@ -1131,7 +1135,8 @@ class Inputs:
             self.relevant_interventions[scenario] = []
             for time_variant in self.time_variants:
                 for key in self.time_variants[time_variant]:
-                    if time_variant not in self.irrelevant_time_variants and 'program_' in time_variant \
+                    if time_variant not in self.irrelevant_time_variants \
+                            and ('program_' in time_variant or 'int_' in time_variant) \
                             and time_variant not in self.relevant_interventions[scenario]:
                         if type(key) == int and self.time_variants[time_variant][key] > 0.:
                             self.relevant_interventions[scenario] += [time_variant]

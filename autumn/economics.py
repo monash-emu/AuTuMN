@@ -100,7 +100,7 @@ def discount_cost(cost_uninflated, discount_rate, t_into_future):
     return cost_uninflated / ((1 + discount_rate) ** t_into_future)
 
 
-def get_adjusted_cost(raw_cost, type, current_cpi=None, cpi_time_variant=None,discount_rate=None, t_into_future=None):
+def get_adjusted_cost(raw_cost, type, current_cpi=None, cpi_time_variant=None, discount_rate=None, t_into_future=None):
 
     """
     calculate the adjusted cost corresponding to a given type

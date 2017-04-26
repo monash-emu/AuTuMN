@@ -618,7 +618,7 @@ class BaseModel:
 
             # Loop over times to be costed
             for i, t in enumerate(self.cost_times):
-                cost = get_cost_from_coverage(self.scaleup_fns['program_prop_' + intervention](t),
+                cost = get_cost_from_coverage(self.scaleup_fns['int_prop_' + intervention](t),
                                               self.inputs.model_constants['econ_inflectioncost_' + intervention],
                                               self.inputs.model_constants['econ_saturation_' + intervention],
                                               self.inputs.model_constants['econ_unitcost_' + intervention],

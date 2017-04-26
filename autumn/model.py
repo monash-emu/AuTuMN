@@ -125,14 +125,14 @@ class ConsolidatedModel(StratifiedModel):
             if type(value) == float: self.set_parameter(key, value)
 
         for timevariant in self.relevant_interventions:
-            if 'program_prop_ipt_age' in timevariant:
+            if 'int_prop_ipt_age' in timevariant:
                 self.relevant_interventions += ['agestratified_ipt']
-            elif 'program_prop_ipt' in timevariant and 'community_ipt' not in timevariant:
+            elif 'int_prop_ipt' in timevariant and 'community_ipt' not in timevariant:
                 self.relevant_interventions += ['ipt']
         for riskgroup in self.riskgroups:
             for program in ['_xpertacf', '_cxrxpertacf']:
-                if 'program_prop' + program + riskgroup in self.scaleup_fns:
-                    self.relevant_interventions += ['program_prop' + program + riskgroup]
+                if 'int_prop' + program + riskgroup in self.scaleup_fns:
+                    self.relevant_interventions += ['int_prop' + program + riskgroup]
 
         # Define model compartmental structure (note that compartment initialisation is in base.py)
         self.define_model_structure()
@@ -150,11 +150,11 @@ class ConsolidatedModel(StratifiedModel):
         if len(self.organ_status) == 1 and self.vary_detection_by_organ:
             self.vary_detection_by_organ = False
             print('Requested variation by organ status turned off, as model is unstratified by organ status.')
-        if len(self.organ_status) > 1 and 'program_prop_xpert' in self.relevant_interventions \
+        if len(self.organ_status) > 1 and 'int_prop_xpert' in self.relevant_interventions \
                 and not self.vary_detection_by_organ:
             self.vary_detection_by_organ = True
             print('Variation in detection by organ status added although not requested, for Xpert implementation.')
-        elif len(self.organ_status) == 1 and 'program_prop_xpert' in self.relevant_interventions:
+        elif len(self.organ_status) == 1 and 'int_prop_xpert' in self.relevant_interventions:
             print('Effect of Xpert on smear-negative detection not simulated as model unstratified by organ status.')
 
         self.detection_algorithm_ceiling = .95
@@ -192,7 +192,7 @@ class ConsolidatedModel(StratifiedModel):
                                   'latent_late', 'active', 'detect', 'missed', 'treatment_infect',
                                   'treatment_noninfect']
         if self.is_lowquality: self.compartment_types += ['lowquality']
-        if 'program_prop_novel_vaccination' in self.relevant_interventions:
+        if 'int_prop_novel_vaccination' in self.relevant_interventions:
             self.compartment_types += ['susceptible_novelvac']
 
         # Compartments that contribute to force of infection calculations
@@ -344,14 +344,14 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_populations()
         self.calculate_birth_rates_vars()
         self.calculate_progression_vars()
-        if 'program_prop_opendoors_activities' in self.relevant_interventions \
-                or 'program_prop_ngo_activities' in self.relevant_interventions:
+        if 'int_prop_opendoors_activities' in self.relevant_interventions \
+                or 'int_prop_ngo_activities' in self.relevant_interventions:
             self.adjust_case_detection_and_ipt_for_opendoors()
-        if 'program_prop_decentralisation' in self.relevant_interventions:
+        if 'int_prop_decentralisation' in self.relevant_interventions:
             self.adjust_case_detection_for_decentralisation()
         if self.vary_detection_by_organ:
             self.calculate_case_detection_by_organ()
-            if 'program_prop_xpert' in self.relevant_interventions:
+            if 'int_prop_xpert' in self.relevant_interventions:
                 self.adjust_smearneg_detection_for_xpert()
         self.calculate_detect_missed_vars()
         if self.vary_detection_by_riskgroup:
@@ -402,11 +402,11 @@ class ConsolidatedModel(StratifiedModel):
                                     * self.vars['population']
 
         # Determine vaccinated and unvaccinated proportions
-        vac_props = {'vac': self.get_constant_or_variable_param('program_prop_vaccination')}
+        vac_props = {'vac': self.get_constant_or_variable_param('int_prop_vaccination')}
         vac_props['unvac'] = 1. - vac_props['vac']
-        if 'program_prop_novel_vaccination' in self.relevant_interventions:
-            vac_props['novelvac'] = self.get_constant_or_variable_param('program_prop_vaccination') \
-                                    * self.vars['program_prop_novel_vaccination']
+        if 'int_prop_novel_vaccination' in self.relevant_interventions:
+            vac_props['novelvac'] = self.get_constant_or_variable_param('int_prop_vaccination') \
+                                    * self.vars['int_prop_novel_vaccination']
             vac_props['vac'] -= vac_props['novelvac']
 
         # Calculate birth rates
@@ -459,7 +459,7 @@ class ConsolidatedModel(StratifiedModel):
         assert self.params['program_ideal_detection'] >= self.vars['program_prop_detect'], \
             'program_prop_detect should not be greater than program_ideal_detection'
         self.vars['program_prop_detect'] \
-            += self.vars['program_prop_decentralisation'] \
+            += self.vars['int_prop_decentralisation'] \
                * (self.params['program_ideal_detection'] - self.vars['program_prop_detect'])
 
     def calculate_case_detection_by_organ(self):
@@ -493,21 +493,21 @@ class ConsolidatedModel(StratifiedModel):
             self.vars['program_prop' + parameter + '_smearneg'] \
                 += (self.vars['program_prop' + parameter + '_smearpos'] -
                     self.vars['program_prop' + parameter + '_smearneg']) \
-                   * self.params['tb_prop_xpert_smearneg_sensitivity'] * self.vars['program_prop_xpert']
+                   * self.params['tb_prop_xpert_smearneg_sensitivity'] * self.vars['int_prop_xpert']
 
     def adjust_case_detection_and_ipt_for_opendoors(self):
 
         # if opendoors programs are stopped, case detection and IPT coverage are reduced
         # this applies to the whole population as opposed to NGOs activities that apply to specific risk groups
 
-        if 'program_prop_opendoors_activities' in self.relevant_interventions and \
-                self.vars['program_prop_opendoors_activities'] < 1.:
+        if 'int_prop_opendoors_activities' in self.relevant_interventions and \
+                self.vars['int_prop_opendoors_activities'] < 1.:
             self.vars['program_prop_detect'] *= (1. - self.params['program_prop_detection_from_opendoors'])
 
             # adjust IPT coverage
             for agegroup in self.agegroups:
-                if 'program_prop_ipt' + agegroup in self.vars:
-                    self.vars['program_prop_ipt' + agegroup] *= (1. - self.params['program_prop_ipt_from_opendoors'])
+                if 'int_prop_ipt' + agegroup in self.vars:
+                    self.vars['int_prop_ipt' + agegroup] *= (1. - self.params['program_prop_ipt_from_opendoors'])
 
     def calculate_detect_missed_vars(self):
 
@@ -538,8 +538,8 @@ class ConsolidatedModel(StratifiedModel):
                       / (1. - self.vars['program_prop_detect' + organ])
 
                 # Adjust detection rates for NGOs activities in specific risk groups
-                if 'program_prop_ngo_activities' in self.relevant_interventions and \
-                                self.vars['program_prop_ngo_activities'] < 1. and \
+                if 'int_prop_ngo_activities' in self.relevant_interventions and \
+                                self.vars['int_prop_ngo_activities'] < 1. and \
                                 riskgroup in self.ngo_groups:
                     self.vars['program_rate_detect' + organ + riskgroup] \
                         *= 1 - self.params['program_prop_detection_from_ngo']
@@ -551,11 +551,10 @@ class ConsolidatedModel(StratifiedModel):
                   / max(self.vars['program_prop_algorithm_sensitivity' + organ], 1e-6)
 
             # Adjust for awareness raising
-            if 'program_prop_awareness_raising' in self.vars:
+            if 'int_prop_awareness_raising' in self.vars:
                 case_detection_ratio_with_awareness \
-                    = (self.params['program_ratio_case_detection_with_raised_awareness'] - 1.) \
-                      * self.vars['program_prop_awareness_raising'] \
-                      + 1.
+                    = (self.params['int_ratio_case_detection_with_raised_awareness'] - 1.) \
+                      * self.vars['int_prop_awareness_raising'] + 1.
                 self.vars['program_rate_missed' + organ] *= case_detection_ratio_with_awareness
                 for riskgroup in [''] + self.riskgroups_for_detection:
                     self.vars['program_rate_detect' + organ + riskgroup] *= case_detection_ratio_with_awareness
@@ -573,26 +572,27 @@ class ConsolidatedModel(StratifiedModel):
 
         # Loop covers risk groups and community-wide ACF
         for riskgroup in [''] + self.riskgroups:
+
             # Decide whether to use the general detection proportion, or a risk-group specific one
-            if 'program_prop_acf_detections_per_round' + riskgroup in self.params:
-                program_prop_acf_detections_per_round \
-                    = self.params['program_prop_acf_detections_per_round' + riskgroup]
+            if 'int_prop_acf_detections_per_round' + riskgroup in self.params:
+                int_prop_acf_detections_per_round \
+                    = self.params['int_prop_acf_detections_per_round' + riskgroup]
             else:
-                program_prop_acf_detections_per_round = self.params['program_prop_acf_detections_per_round']
+                int_prop_acf_detections_per_round = self.params['int_prop_acf_detections_per_round']
 
             # Implement intervention
-            if 'program_prop_smearacf' + riskgroup in self.relevant_interventions \
-                    or 'program_prop_xpertacf' + riskgroup in self.relevant_interventions:
+            if 'int_prop_smearacf' + riskgroup in self.relevant_interventions \
+                    or 'int_prop_xpertacf' + riskgroup in self.relevant_interventions:
 
                 # The following can't be written as self.organ_status, as it won't work for non-fully-stratified models
                 for organ in ['', '_smearpos', '_smearneg', '_extrapul']:
-                    self.vars['program_rate_acf' + organ + riskgroup] = 0.
+                    self.vars['int_rate_acf' + organ + riskgroup] = 0.
 
                 # Smear-based ACF rate
-                if 'program_prop_smearacf' + riskgroup in self.relevant_interventions:
-                    self.vars['program_rate_acf_smearpos' + riskgroup] \
-                        += self.vars['program_prop_smearacf' + riskgroup] \
-                           * program_prop_acf_detections_per_round / self.params['program_timeperiod_acf_rounds']
+                if 'int_prop_smearacf' + riskgroup in self.relevant_interventions:
+                    self.vars['int_rate_acf_smearpos' + riskgroup] \
+                        += self.vars['int_prop_smearacf' + riskgroup] \
+                           * int_prop_acf_detections_per_round / self.params['int_timeperiod_acf_rounds']
 
                 # Xpert-based ACF rate for smear-positives and smear-negatives - with or without pre-screening with CXR
                 for acf_type in ['xpert', 'cxrxpert']:
@@ -600,16 +600,16 @@ class ConsolidatedModel(StratifiedModel):
                         cxr_sensitivity = 1.
                     else:
                         cxr_sensitivity = self.params['tb_sensitivity_cxr']
-                    if 'program_prop_' + acf_type + 'acf' + riskgroup in self.relevant_interventions:
+                    if 'int_prop_' + acf_type + 'acf' + riskgroup in self.relevant_interventions:
                         for organ in ['_smearpos', '_smearneg']:
-                            self.vars['program_rate_acf' + organ + riskgroup] \
-                                += self.vars['program_prop_' + acf_type + 'acf' + riskgroup] \
-                                   * program_prop_acf_detections_per_round \
-                                   / self.params['program_timeperiod_acf_rounds'] \
+                            self.vars['int_rate_acf' + organ + riskgroup] \
+                                += self.vars['int_prop_' + acf_type + 'acf' + riskgroup] \
+                                   * int_prop_acf_detections_per_round \
+                                   / self.params['int_timeperiod_acf_rounds'] \
                                    * cxr_sensitivity
 
                         # Adjust smear-negative detections for Xpert's sensitivity
-                        self.vars['program_rate_acf_smearneg' + riskgroup] \
+                        self.vars['int_rate_acf_smearneg' + riskgroup] \
                             *= self.params['tb_prop_xpert_smearneg_sensitivity'] \
                                * cxr_sensitivity
 
@@ -621,21 +621,21 @@ class ConsolidatedModel(StratifiedModel):
             Extrapulmonary disease can't be detected through intensive screening.
         """
 
-        if 'program_prop_intensive_screening' in self.relevant_interventions:
+        if 'int_prop_intensive_screening' in self.relevant_interventions:
             screened_subgroups = ['_diabetes', '_hiv'] # may be incorporated into the GUI
             # Loop covers risk groups
             for riskgroup in screened_subgroups:
                 # The following can't be written as self.organ_status, as it won't work for non-fully-stratified models
                 for organ in ['', '_smearpos', '_smearneg', '_extrapul']:
-                    self.vars['program_rate_intensive_screening' + organ + riskgroup] = 0.
+                    self.vars['int_rate_intensive_screening' + organ + riskgroup] = 0.
 
                 for organ in ['_smearpos', '_smearneg']:
-                    self.vars['program_rate_intensive_screening' + organ + riskgroup] \
-                        += self.vars['program_prop_intensive_screening'] * \
-                           self.params['program_prop_attending_clinics' + riskgroup]
+                    self.vars['int_rate_intensive_screening' + organ + riskgroup] \
+                        += self.vars['int_prop_intensive_screening'] * \
+                           self.params['int_prop_attending_clinics' + riskgroup]
 
                 # Adjust smear-negative detections for Xpert's sensitivity
-                self.vars['program_rate_intensive_screening_smearneg' + riskgroup] \
+                self.vars['int_rate_intensive_screening_smearneg' + riskgroup] \
                     *= self.params['tb_prop_xpert_smearneg_sensitivity']
 
     def adjust_case_detection_for_acf(self):
@@ -649,25 +649,25 @@ class ConsolidatedModel(StratifiedModel):
             for riskgroup in self.riskgroups:
 
                 # ACF in risk groups
-                if 'program_prop_smearacf' + riskgroup in self.relevant_interventions \
-                        or 'program_prop_xpertacf' + riskgroup in self.relevant_interventions:
+                if 'int_prop_smearacf' + riskgroup in self.relevant_interventions \
+                        or 'int_prop_xpertacf' + riskgroup in self.relevant_interventions:
                     self.vars['program_rate_detect' + organ + riskgroup] \
-                        += self.vars['program_rate_acf' + organ + riskgroup]
+                        += self.vars['int_rate_acf' + organ + riskgroup]
 
                 # ACF in the general community
-                if 'program_prop_smearacf' in self.relevant_interventions \
-                        or 'program_prop_xpertacf' in self.relevant_interventions:
+                if 'int_prop_smearacf' in self.relevant_interventions \
+                        or 'int_prop_xpertacf' in self.relevant_interventions:
                     self.vars['program_rate_detect' + organ + riskgroup] \
-                        += self.vars['program_rate_acf' + organ]
+                        += self.vars['int_rate_acf' + organ]
 
     def adjust_case_detection_for_intensive_screening(self):
 
-        if 'program_prop_intensive_screening' in self.relevant_interventions:
+        if 'int_prop_intensive_screening' in self.relevant_interventions:
             for organ in self.organs_for_detection:
                 screened_subgroups = ['_diabetes', '_hiv']  # may be incorporated into the GUI
                 for riskgroup in screened_subgroups:
                     self.vars['program_rate_detect' + organ + riskgroup] \
-                        += self.vars['program_rate_intensive_screening' + organ + riskgroup]
+                        += self.vars['int_rate_intensive_screening' + organ + riskgroup]
 
     def calculate_misassignment_detection_vars(self):
 
@@ -684,12 +684,12 @@ class ConsolidatedModel(StratifiedModel):
                     prop_firstline = self.get_constant_or_variable_param('program_prop_firstline_dst')
 
                     # Add effect of improve_dst program
-                    if 'program_prop_improve_dst' in self.relevant_interventions:
-                        prop_firstline += (1. - prop_firstline) * self.vars['program_prop_improve_dst']
+                    if 'int_prop_improve_dst' in self.relevant_interventions:
+                        prop_firstline += (1. - prop_firstline) * self.vars['int_prop_improve_dst']
 
                     # Add effect of Xpert on identification, assuming that independent distribution to conventional DST
-                    if 'program_prop_xpert' in self.relevant_interventions:
-                        prop_firstline += (1. - prop_firstline) * self.vars['program_prop_xpert']
+                    if 'int_prop_xpert' in self.relevant_interventions:
+                        prop_firstline += (1. - prop_firstline) * self.vars['int_prop_xpert']
 
 
                     # Determine rates of identification/misidentification as each strain
@@ -729,7 +729,8 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         prop_lowqual = self.get_constant_or_variable_param('program_prop_lowquality')
-        prop_lowqual *= (1. - self.vars['program_prop_engage_lowquality'])
+        if 'int_prop_engage_lowquality' in self.relevant_interventions:
+            prop_lowqual *= (1. - self.vars['int_prop_engage_lowquality'])
 
         # Note that there is still a program_rate_detect var even if detection is varied by organ and/or risk group
         self.vars['program_rate_enterlowquality'] \
@@ -753,16 +754,16 @@ class ConsolidatedModel(StratifiedModel):
             for organ in self.organ_status:
 
                 # Adjust smear-negative for Xpert coverage
-                if organ == '_smearneg' and 'program_prop_xpert' in self.relevant_interventions:
-                    prop_xpert = self.get_constant_or_variable_param('program_prop_xpert')
+                if organ == '_smearneg' and 'int_prop_xpert' in self.relevant_interventions:
+                    prop_xpert = self.get_constant_or_variable_param('int_prop_xpert')
                     self.vars['program_rate_start_treatment_smearneg'] = \
                         1. / (self.vars['program_timeperiod_await_treatment_smearneg'] * (1. - prop_xpert)
-                              + self.params['program_timeperiod_await_treatment_smearneg_xpert'] * prop_xpert)
+                              + self.params['int_timeperiod_await_treatment_smearneg_xpert'] * prop_xpert)
 
                 # Do other organ stratifications (including smear-negative if Xpert not an intervention)
                 else:
                     self.vars['program_rate_start_treatment' + organ] = \
-                        1. / self.get_constant_or_variable_param('program_timeperiod_await_treatment' + organ)
+                        1. / self.vars['program_timeperiod_await_treatment' + organ]
 
     def calculate_treatment_rates_vars(self):
 
@@ -780,10 +781,10 @@ class ConsolidatedModel(StratifiedModel):
                     = self.params['tb_timeperiod' + treatment_stage + '_ontreatment' + strain]
 
             # Adapt treatment periods for short course regimen
-            if strain == '_mdr' and 'program_prop_shortcourse_mdr' in self.relevant_interventions:
+            if strain == '_mdr' and 'int_prop_shortcourse_mdr' in self.relevant_interventions:
                 relative_treatment_duration_mdr \
-                    = 1. - self.vars['program_prop_shortcourse_mdr'] \
-                           * (1. - self.params['program_prop_shortcourse_mdr_relativeduration'])
+                    = 1. - self.vars['int_prop_shortcourse_mdr'] \
+                           * (1. - self.params['int_prop_shortcourse_mdr_relativeduration'])
                 for treatment_stage in ['', '_infect']:
                     self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
                         *= relative_treatment_duration_mdr
@@ -794,29 +795,29 @@ class ConsolidatedModel(StratifiedModel):
                         self.vars['program_prop_treatment' + outcome + '_mdr'] \
                             += (self.params['program_prop_treatment' + outcome + '_shortcoursemdr']
                                 - self.vars['program_prop_treatment' + outcome + '_mdr']) \
-                               * self.vars['program_prop_shortcourse_mdr']
+                               * self.vars['int_prop_shortcourse_mdr']
 
-            # Add some extra treatment success if the treatment support program is active
-            if 'program_prop_treatment_support' in self.relevant_interventions:
+            # Add some extra treatment success if the treatment support int is active
+            if 'int_prop_treatment_support' in self.relevant_interventions:
                 self.vars['program_prop_treatment_success' + strain] \
                     += (1. - self.vars['program_prop_treatment_success' + strain]) \
-                       * self.params['program_prop_treatment_support_improvement'] \
-                       * self.vars['program_prop_treatment_support']
+                       * self.params['int_prop_treatment_support_improvement'] \
+                       * self.vars['int_prop_treatment_support']
                 self.vars['program_prop_treatment_death' + strain] \
                     -= self.vars['program_prop_treatment_death' + strain] \
-                       * self.params['program_prop_treatment_support_improvement'] \
-                       * self.vars['program_prop_treatment_support']
+                       * self.params['int_prop_treatment_support_improvement'] \
+                       * self.vars['int_prop_treatment_support']
 
             # Add some extra treatment success if food vouchers are provided to treated cases
-            if 'program_prop_food_voucher' + strain in self.relevant_interventions:
+            if 'int_prop_food_voucher' + strain in self.relevant_interventions:
                 self.vars['program_prop_treatment_success' + strain] \
                     += (1. - self.vars['program_prop_treatment_success' + strain]) \
-                       * self.params['program_prop_food_voucher_improvement'] \
-                       * self.vars['program_prop_food_voucher' + strain]
+                       * self.params['int_prop_food_voucher_improvement'] \
+                       * self.vars['int_prop_food_voucher' + strain]
                 self.vars['program_prop_treatment_death' + strain] \
                     -= self.vars['program_prop_treatment_death' + strain] \
-                       * self.params['program_prop_food_voucher_improvement'] \
-                       * self.vars['program_prop_food_voucher' + strain]
+                       * self.params['int_prop_food_voucher_improvement'] \
+                       * self.vars['int_prop_food_voucher' + strain]
 
             # Calculate the default proportion as the remainder from success and death
             self.vars['program_prop_treatment_default' + strain] \
@@ -932,10 +933,10 @@ class ConsolidatedModel(StratifiedModel):
 
         for agegroup in self.agegroups:
             self.vars['prop_infections_averted_ipt' + agegroup] = 0.
-            if 'program_prop_ipt' + agegroup in self.vars:
+            if 'int_prop_ipt' + agegroup in self.vars:
                 self.vars['prop_infections_averted_ipt' + agegroup] \
                     = self.vars['tb_prop_infections_reachable_with_ipt'] \
-                      * self.vars['program_prop_ipt' + agegroup] \
+                      * self.vars['int_prop_ipt' + agegroup] \
                       * self.params['tb_prop_ipt_effectiveness']
             else:
                 self.vars['prop_infections_averted_ipt' + agegroup] = 0.
@@ -1011,10 +1012,10 @@ class ConsolidatedModel(StratifiedModel):
                 for agegroup in self.agegroups:
                     if 'prop_infections_averted_ipt' + agegroup in self.vars and 'dr' not in strain:
                         coverage_multiplier_ngo_stopped = 1.
-                        if 'program_prop_ngo_activities' in self.relevant_interventions and \
-                                        self.vars['program_prop_ngo_activities'] < 1. and \
+                        if 'int_prop_ngo_activities' in self.relevant_interventions and \
+                                        self.vars['int_prop_ngo_activities'] < 1. and \
                                         riskgroup in self.ngo_groups:
-                            coverage_multiplier_ngo_stopped = (1. - self.params['program_prop_ipt_from_ngo'])
+                            coverage_multiplier_ngo_stopped = (1. - self.params['int_prop_ipt_from_ngo'])
                         ipt_infection_modifier = 1. - coverage_multiplier_ngo_stopped * \
                                                       self.vars['prop_infections_averted_ipt' + agegroup]
 
@@ -1032,7 +1033,7 @@ class ConsolidatedModel(StratifiedModel):
 
                     # Adjust for immunity in various groups
                     force_types = ['_vac', '_latent']
-                    if 'program_prop_novel_vaccination' in self.relevant_interventions:
+                    if 'int_prop_novel_vaccination' in self.relevant_interventions:
                         force_types += ['_novelvac']
                     for force_type in force_types:
                         self.vars['rate_force' + force_type + strain + riskgroup + agegroup] \
@@ -1047,7 +1048,7 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         # Treatment support
-        if 'program_prop_treatment_support' in self.relevant_interventions:
+        if 'int_prop_treatment_support' in self.relevant_interventions:
             self.vars['popsize_treatment_support'] = 0.
             for compartment in self.compartments:
                 if 'treatment_' in compartment:
@@ -1055,7 +1056,7 @@ class ConsolidatedModel(StratifiedModel):
 
         # Food vouchers
         for strain in self.strains:
-            if 'program_prop_food_voucher' + strain in self.relevant_interventions:
+            if 'int_prop_food_voucher' + strain in self.relevant_interventions:
                 self.vars['popsize_food_voucher' + strain] = 0.
                 for compartment in self.compartments:
                     if 'treatment_' in compartment and strain + '_' in compartment:
@@ -1070,51 +1071,47 @@ class ConsolidatedModel(StratifiedModel):
                         self.vars['popsize_ipt' + agegroup] += self.compartments[from_label] \
                                               * self.vars[rate]
 
-        # BCG (So simple that it's almost unnecessary, but needed for loops over program names)
+        # BCG (So simple that it's almost unnecessary, but needed for loops over int names)
         self.vars['popsize_vaccination'] = self.vars['births_total']
 
-
-        # Xpert - all presentations with active TB
-        if 'program_prop_xpert' in self.relevant_interventions:
-            self.vars['popsize_xpert'] = 0.
-            for agegroup in self.agegroups:
-                for riskgroup in self.riskgroups:
-                    for strain in self.strains:
-                        for organ in self.organ_status:
-                            if self.vary_detection_by_organ:
-                                detection_organ = organ
-                            else:
-                                detection_organ = ''
-                            self.vars['popsize_xpert'] \
-                                += self.vars['program_rate_detect' + detection_organ + riskgroup]\
-                                   * self.compartments['active' + organ + strain + riskgroup + agegroup] \
-                                   * (self.params['program_number_tests_per_tb_presentation'] + 1.)
-
-        # improve_dst - popsize the same as for Xpert
-        if 'improve_dst' in self.relevant_interventions and 'xpert' in self.relevant_interventions:
-            self.vars['popsize_improve_dst'] = self.vars['popsize_xpert']
+        # Xpert and improve DST - all presentations with active TB
+        for active_tb_presentations_intervention in ['xpert', 'improve_dst']:
+            if 'int_prop_' + active_tb_presentations_intervention in self.relevant_interventions:
+                self.vars['popsize_' + active_tb_presentations_intervention] = 0.
+                for agegroup in self.agegroups:
+                    for riskgroup in self.riskgroups:
+                        for strain in self.strains:
+                            for organ in self.organ_status:
+                                if self.vary_detection_by_organ:
+                                    detection_organ = organ
+                                else:
+                                    detection_organ = ''
+                                self.vars['popsize_' + active_tb_presentations_intervention] \
+                                    += self.vars['program_rate_detect' + detection_organ + riskgroup]\
+                                       * self.compartments['active' + organ + strain + riskgroup + agegroup] \
+                                       * (self.params['int_number_tests_per_tb_presentation'] + 1.)
 
         # ACF
         for riskgroup in [''] + self.riskgroups:
 
             # Allow proportion of persons actually receiving the screening to vary by risk-group, as per user inputs
-            if 'program_prop_population_screened' + riskgroup in self.params:
-                program_prop_population_screened = self.params['program_prop_population_screened' + riskgroup]
+            if 'int_prop_population_screened' + riskgroup in self.params:
+                int_prop_population_screened = self.params['int_prop_population_screened' + riskgroup]
             else:
-                program_prop_population_screened = self.params['program_prop_population_screened']
+                int_prop_population_screened = self.params['int_prop_population_screened']
             for acf_type in ['_smearacf', '_xpertacf','_cxrxpertacf']:
-                if 'program_prop' + acf_type + riskgroup in self.relevant_interventions:
+                if 'int_prop' + acf_type + riskgroup in self.relevant_interventions:
                     self.vars['popsize' + acf_type + riskgroup] = 0.
                     for compartment in self.compartments:
                         if riskgroup == '' or riskgroup in compartment:
                             self.vars['popsize' + acf_type + riskgroup] \
                                 += self.compartments[compartment] \
-                                   / self.params['program_timeperiod_acf_rounds'] \
-                                   * program_prop_population_screened
+                                   / self.params['int_timeperiod_acf_rounds'] \
+                                   * int_prop_population_screened
 
         # intensive_screening
         # popsize includes all active TB cases of targeted groups (HIV and diabetes) that attend specific clinics
-        if 'program_prop_intensive_screening' in self.relevant_interventions:
+        if 'int_prop_intensive_screening' in self.relevant_interventions:
             self.vars['popsize_intensive_screening'] = 0.
             screened_subgroups = ['_diabetes', '_hiv']  # may be incorporated into the GUI
             # Loop covers risk groups
@@ -1123,7 +1120,7 @@ class ConsolidatedModel(StratifiedModel):
                     if riskgroup in compartment and 'active' in compartment:
                         self.vars['popsize_intensive_screening'] \
                             += self.compartments[compartment] \
-                               * self.params['program_prop_attending_clinics' + riskgroup]
+                               * self.params['int_prop_attending_clinics' + riskgroup]
 
         # Decentralisation and engage low-quality sector
         adjust_lowquality = True
@@ -1131,14 +1128,14 @@ class ConsolidatedModel(StratifiedModel):
         for compartment in self.compartments:
             if 'susceptible_' not in compartment and 'latent_' not in compartment:
                 all_actives_popsize += self.compartments[compartment]
-        if 'decentralisation' in self.inputs.interventions_to_cost:
+        if 'decentralisation' in self.interventions_to_cost:
             self.vars['popsize_decentralisation'] = all_actives_popsize
-        if 'engage_lowquality' in self.inputs.interventions_to_cost:
+        if 'engage_lowquality' in self.interventions_to_cost:
             self.vars['popsize_engage_lowquality'] = all_actives_popsize
             if adjust_lowquality: self.vars['popsize_engage_lowquality'] *= self.vars['program_prop_lowquality']
 
         # Shortcourse MDR-TB regimen
-        if 'program_prop_shortcourse_mdr' in self.relevant_interventions:
+        if 'int_prop_shortcourse_mdr' in self.relevant_interventions:
             self.vars['popsize_shortcourse_mdr'] = 0.
             for compartment in self.compartments:
                 if 'treatment' in compartment and '_mdr' in compartment:
@@ -1177,7 +1174,7 @@ class ConsolidatedModel(StratifiedModel):
                 'susceptible_fully' + riskgroup + self.agegroups[0], 'births_unvac' + riskgroup)
             self.set_var_entry_rate_flow(
                 'susceptible_vac' + riskgroup + self.agegroups[0], 'births_vac' + riskgroup)
-            if 'program_prop_novel_vaccination' in self.relevant_interventions:
+            if 'int_prop_novel_vaccination' in self.relevant_interventions:
                 self.set_var_entry_rate_flow('susceptible_novelvac'
                                              + riskgroup + self.agegroups[0], 'births_novelvac' + riskgroup)
 
@@ -1215,7 +1212,7 @@ class ConsolidatedModel(StratifiedModel):
                         'rate_force_latent' + strain + force_riskgroup + agegroup)
 
                     # Novel vaccination
-                    if 'program_prop_novel_vaccination' in self.relevant_interventions:
+                    if 'int_prop_novel_vaccination' in self.relevant_interventions:
                         self.set_var_transfer_rate_flow(
                             'susceptible_novelvac' + riskgroup + agegroup,
                             'latent_early' + strain + riskgroup + agegroup,
@@ -1473,7 +1470,7 @@ class ConsolidatedModel(StratifiedModel):
                         self.set_linked_transfer_rate_flow('latent_early' + strain + riskgroup + agegroup,
                                                            'susceptible_vac' + riskgroup + agegroup,
                                                            'ipt_effective_treatments' + agegroup)
-                    if 'program_prop_community_ipt' in self.relevant_interventions \
+                    if 'int_prop_community_ipt' in self.relevant_interventions \
                             and 'dr' not in strain:
                         self.set_var_transfer_rate_flow('latent_early' + strain + riskgroup + agegroup,
                                                         'susceptible_vac' + riskgroup + agegroup,

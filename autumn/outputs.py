@@ -605,7 +605,6 @@ class Project:
     #################################
 
     def find_years_to_write(self, scenario, output, epi=True):
-
         """
         Find years that need to be written into a spreadsheet or document.
 
@@ -1069,7 +1068,7 @@ class Project:
             # Save workbook
             wb.save(path)
 
-        for output in self.inputs.interventions_to_cost:
+        for output in self.inputs.interventions_to_cost[None]:
 
             years = self.find_years_to_write('manual_baseline', output, epi=False)
 

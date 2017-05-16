@@ -218,15 +218,16 @@ class Inputs:
         self.checks()
 
     def process_model_constants(self):
-
         """
         Master method to call methods for processing constant model parameters.
         """
 
         # note ordering to list of sheets to be worked through is important for hierarchical loading of constants
-        self.add_model_constant_defaults(['diabetes', 'country_constants', 'default_constants'])
+        sheets_with_constants = ['country_constants', 'default_constants']
+        if self.gui_inputs['riskgroup_diabetes']: sheets_with_constants += ['diabetes']
+        self.add_model_constant_defaults(sheets_with_constants)
 
-        # add "by definition" parameters
+        # add "by definition" hard-coded parameters
         self.add_universal_parameters()
 
     def process_time_variants(self):
@@ -253,6 +254,23 @@ class Inputs:
         if self.time_variants['epi_prop_smearpos']['load_data'] == u'yes':
             self.add_organ_status_to_timevariants()
         self.tidy_time_variants()
+        self.adjust_param_for_reporting('program_prop_detect', 'Bulgaria', .9)  # Bulgaria thought over-estimated CDR
+
+    def adjust_param_for_reporting(self, param, country, adjustment_factor):
+        """
+        Adjust a parameter that is thought to be mis-reported by the country by a constant factor across the estimates
+        for all years.
+
+        Args:
+            param: The string for the parameter to be adjusted
+            country: The country to which this applies
+            adjustment_factor: A float to multiply the reported values by to get the adjusted values
+        """
+
+        if self.country == country:
+            for year in self.time_variants[param]:
+                if type(year) == int:
+                    self.time_variants[param][year] *= adjustment_factor
 
     def define_model_structure(self):
 
@@ -396,17 +414,13 @@ class Inputs:
             other_sheets_with_constants: The sheets of original_data which contain model constants
         """
 
-        # populate from country_constants if available and default_constants if not
+        # populate hierarchically from the earliest sheet in the list as available
         for other_sheet in other_sheets_with_constants:
-            if other_sheet in self.original_data:
-
-                # only add the item if it hasn't been added yet
-                for item in self.original_data[other_sheet]:
-                    if item not in self.model_constants:
-                        self.model_constants[item] = self.original_data[other_sheet][item]
+            for item in self.original_data[other_sheet]:
+                if item not in self.model_constants:
+                    self.model_constants[item] = self.original_data[other_sheet][item]
 
     def add_universal_parameters(self):
-
         """
         Sets parameters that should never be changed in any situation, i.e. "by definition" parameters (although note
         that the infectiousness of the single infectious compartment for models unstratified by organ status is now set
@@ -432,7 +446,6 @@ class Inputs:
             self.freeze_times.update(self.original_data['country_programs'].pop('freeze_times'))
 
     def find_organ_proportions(self):
-
         """
         Calculates dictionaries with proportion of cases progressing to each organ status by year, and adds these to
         the derived_data attribute of the object.

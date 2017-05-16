@@ -84,7 +84,6 @@ class ConsolidatedModel(StratifiedModel):
     """
 
     def __init__(self, scenario=None, inputs=None, gui_inputs=None):
-
         """
         Instantiation, partly inherited from the lower level model objects through nested inheritance.
 

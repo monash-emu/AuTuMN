@@ -193,11 +193,11 @@ class Inputs:
         # process constant parameters
         self.process_model_constants()
 
-        # define model structure
-        self.define_model_structure()
-
         # process time-variant parameters
         self.process_time_variants()
+
+        # define model structure
+        self.define_model_structure()
 
         # find parameters that require processing
         self.find_additional_parameters()
@@ -231,10 +231,9 @@ class Inputs:
         self.add_universal_parameters()
 
     def process_time_variants(self):
-
         """
         Master method to perform all preparation and processing tasks for time-variant parameters.
-        Does not actually fit functions, which is done later.
+        Does not perform the fitting of functions to the data, which is done later in find_scaleup_functions.
         Note that the order of call is important and can lead to errors if changed.
         """
 
@@ -284,7 +283,6 @@ class Inputs:
         self.define_organ_structure()
 
     def find_additional_parameters(self):
-
         """
         Find additional parameters.
         Includes methods that require the model structure to be defined,

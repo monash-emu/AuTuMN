@@ -193,11 +193,11 @@ class Inputs:
         # Process constant parameters
         self.process_model_constants()
 
-        # Process time-variant parameters
-        self.process_time_variants()
-
         # Define model structure
         self.define_model_structure()
+
+        # Process time-variant parameters
+        self.process_time_variants()
 
         # Find parameters that require processing
         self.find_additional_parameters()
@@ -374,7 +374,6 @@ class Inputs:
     ##########################
 
     def find_keys_of_sheets_to_read(self):
-
         """
         Find keys of spreadsheets to read.
         """
@@ -383,7 +382,7 @@ class Inputs:
                                   'outcomes', 'country_constants', 'default_constants', 'country_programs',
                                   'default_programs']
 
-        # Add any optional sheets required for specific model being run
+        # add any optional sheets required for specific model being run
         if 'riskgroup_diabetes' in self.gui_inputs:
             keys_of_sheets_to_read += ['diabetes']
 

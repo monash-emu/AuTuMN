@@ -457,6 +457,63 @@ class Inputs:
             for agegroup in self.agegroups:
                 self.model_constants[prog_stem + agegroup] = prog_age_adjusted_params[agegroup]
 
+    def define_riskgroup_structure(self):
+        """
+        Work out the risk group stratification.
+        """
+
+        # create list of risk group names
+        self.riskgroups = []
+        for time_variant in self.time_variants:
+            if 'riskgroup_prop_' in time_variant and self.gui_inputs['riskgroup' + time_variant[14:]]:
+                self.riskgroups += [time_variant[14:]]
+
+        # add the null group
+        if len(self.riskgroups) == 0:
+            self.riskgroups += ['']
+        else:
+            self.riskgroups += ['_norisk']
+
+        # ensure some starting proportion of births go to the risk group stratum if value not loaded earlier
+        for riskgroup in self.riskgroups:
+            if 'riskgroup_prop' + riskgroup not in self.model_constants:
+                self.model_constants['riskgroup_prop' + riskgroup] = 0.
+
+    def define_strain_structure(self):
+        """
+        Finds the strains to be present in the model from a list of available strains and the integer value for the
+        number of strains selected.
+        """
+
+        # need a list of an empty string to be iterable for methods iterating by strain
+        if self.gui_inputs['n_strains'] == 0:
+            self.find_single_strain_timeperiods()
+            self.strains = ['']
+        else:
+            self.strains = self.available_strains[:self.gui_inputs['n_strains']]
+            if self.gui_inputs['is_amplification']:
+                self.find_amplification_data()
+            self.treatment_outcome_types = copy.copy(self.strains)
+            if self.gui_inputs['is_misassignment']:
+                for strain in self.strains[1:]:
+                    for treated_as in self.strains:  # for each strain
+                        if treated_as != strain:  # misassigned strain has to be different from the actual strain
+                            if self.strains.index(treated_as) < self.strains.index(
+                                    strain):  # if treated with weaker regimen
+                                self.treatment_outcome_types += [strain + '_as' + treated_as[1:]]
+
+    def define_organ_structure(self):
+        """
+        Defines the organ status stratification from the number of statuses selected.
+        Note that "organ" is the simplest single-word term that I can currently think of to describe whether patients
+        have smear-positive, smear-negative or extrapulmonary disease.
+        """
+
+        if self.gui_inputs['n_organs'] == 0:
+            self.organ_status = ['']
+        else:
+            self.organ_status = self.available_organs[:self.gui_inputs['n_organs']]
+
     #################################################
     ### Time variant parameter processing methods ###
     #################################################
@@ -468,24 +525,137 @@ class Inputs:
         Note that the order of call is important and can lead to errors if changed.
         """
 
-        self.extract_freeze_times()  # run first to remove from time-variants before they are processed
+        self.extract_freeze_times()  # goes first to remove from time-variants before they are processed
         self.find_organ_proportions()
-        if 'country_programs' in self.original_data:  # start with country programs
-            self.time_variants.update(self.original_data['country_programs'])
+        if 'country_programs' in self.original_data: self.time_variants.update(self.original_data['country_programs'])
         self.add_time_variant_defaults()  # add any necessary time-variants from defaults if not in country programs
         self.load_vacc_detect_time_variants()
         self.convert_percentages_to_proportions()
         self.find_ds_outcomes()
         self.add_treatment_outcomes()
-        if self.gui_inputs['n_strains'] > 1:
-            self.duplicate_ds_outcomes_for_multistrain()
+        if self.gui_inputs['n_strains'] > 1: self.duplicate_ds_outcomes_for_multistrain()
         self.add_resistant_strain_outcomes()
         self.add_demo_dictionaries_to_timevariants()
-        if self.time_variants['epi_prop_smearpos']['load_data'] == u'yes':
-            self.add_organ_status_to_timevariants()
+        if self.time_variants['epi_prop_smearpos']['load_data'] == u'yes': self.add_organ_status_to_timevariants()
         self.tidy_time_variants()
         self.adjust_param_for_reporting('program_prop_detect', 'Bulgaria', 0.95)  # Bulgaria thought over-estimated CDR
 
+    def extract_freeze_times(self):
+        """
+        Extract the freeze_times for each scenario, if specified.
+        """
+
+        if 'country_programs' in self.original_data and 'freeze_times' in self.original_data['country_programs']:
+            self.freeze_times.update(self.original_data['country_programs'].pop('freeze_times'))
+
+    def find_organ_proportions(self):
+        """
+        Calculates dictionaries with proportion of cases progressing to each organ status by year, and adds these to
+        the derived_data attribute of the object.
+        """
+
+        self.derived_data.update(calculate_proportion_dict(self.original_data['notifications'],
+                                                           ['new_sp', 'new_sn', 'new_ep']))
+
+    def add_time_variant_defaults(self):
+        """
+        Populates time-variant parameters with defaults if those values aren't found in the manually entered
+        country-specific data.
+        """
+
+        for program_var in self.original_data['default_programs']:
+
+            # if the key isn't in available for the country
+            if program_var not in self.time_variants:
+                self.time_variants[program_var] = self.original_data['default_programs'][program_var]
+
+            # otherwise if it's there and load_data is requested in the country sheet, populate for the missing years
+            else:
+                for year in self.original_data['default_programs'][program_var]:
+                    if year not in self.time_variants[program_var] \
+                            and 'load_data' in self.original_data['country_programs'][program_var] \
+                            and self.original_data['country_programs'][program_var]['load_data'] == u'yes':
+                        self.time_variants[program_var][year] \
+                            = self.original_data['default_programs'][program_var][year]
+
+    def load_vacc_detect_time_variants(self):
+        """
+        Adds vaccination and case detection time-variants to the manually entered data loaded from the spreadsheets.
+        Note that the manual inputs over-ride the loaded data if both are present.
+        """
+
+        # vaccination
+        if self.time_variants['int_perc_vaccination']['load_data'] == u'yes':
+            for year in self.original_data['bcg']:
+                if year not in self.time_variants['int_perc_vaccination']:
+                    self.time_variants['int_perc_vaccination'][year] = self.original_data['bcg'][year]
+
+        # case detection
+        if self.time_variants['program_perc_detect']['load_data'] == u'yes':
+            for year in self.original_data['tb']['c_cdr']:
+                if year not in self.time_variants['program_perc_detect']:
+                    self.time_variants['program_perc_detect'][year] = self.original_data['tb']['c_cdr'][year]
+
+    def convert_percentages_to_proportions(self):
+        """
+        Converts time-variant dictionaries to proportions if they are loaded as percentages in their raw form.
+        """
+
+        for time_variant in self.time_variants.keys():
+            if 'perc_' in time_variant:  # if a percentage
+                perc_name = time_variant.replace('perc', 'prop')
+                self.time_variants[perc_name] = {}
+                for year in self.time_variants[time_variant]:
+                    if type(year) == int or 'scenario' in year:  # to exclude load_data, smoothness, etc.
+                        self.time_variants[perc_name][year] = self.time_variants[time_variant][year] / 1e2
+                    else:
+                        self.time_variants[perc_name][year] = self.time_variants[time_variant][year]
+
+    def find_ds_outcomes(self):
+        """
+        Calculates proportions of patients with each reported outcome for DS-TB, then sums cure and completion to obtain
+        treatment success proportion. Note that the outcomes are reported differently for resistant strains, so code
+        differs for them.
+        """
+
+        # adjusting the original data to add a success number for smear-positive (so technically not still "original")
+        self.original_data['outcomes']['new_sp_succ'] \
+            = tool_kit.increment_dictionary_with_dictionary(
+            self.original_data['outcomes']['new_sp_cmplt'],
+            self.original_data['outcomes']['new_sp_cur'])
+
+        # similarly, move completion over to represent success for smear-negative, extrapulmonary and retreatment
+        for treatment_type in ['new_snep', 'ret']:
+            self.original_data['outcomes'][treatment_type + '_succ'] \
+                = self.original_data['outcomes'][treatment_type + '_cmplt']
+
+        # and (effectively) rename the outcomes for the years that are pooled
+        self.original_data['outcomes']['newrel_def'] = self.original_data['outcomes']['newrel_lost']
+
+        # sum over smear-positive, smear-negative, extrapulmonary and (if required) retreatment
+        for outcome in ['succ', 'def', 'died', 'fail']:
+            self.derived_data[outcome] \
+                = tool_kit.increment_dictionary_with_dictionary(self.original_data['outcomes']['new_sp_' + outcome],
+                                                                self.original_data['outcomes']['new_snep_' + outcome])
+            if self.include_relapse_in_ds_outcomes:
+                self.derived_data[outcome] \
+                    = tool_kit.increment_dictionary_with_dictionary(self.derived_data[outcome],
+                                                                    self.original_data['outcomes']['ret_' + outcome])
+
+            # update with newer pooled outcomes
+            self.derived_data[outcome].update(self.original_data['outcomes']['newrel_' + outcome])
+
+        # calculate default rates from 'def' and 'fail' reported outcomes
+        self.derived_data['default'] \
+            = tool_kit.increment_dictionary_with_dictionary(self.derived_data['def'], self.derived_data['fail'])
+
+        # calculate the proportions for use in creating the treatment scale-up functions
+        self.derived_data.update(calculate_proportion_dict(self.derived_data,
+                                                           ['succ', 'died', 'default'], percent=False))
+
+    ##############################
+    ### Classify interventions ###
+    ##############################
 
     def classify_interventions(self):
         """
@@ -496,6 +666,68 @@ class Inputs:
         self.list_irrelevant_time_variants()
         self.find_relevant_interventions()
         self.find_interventions_to_cost()
+
+    def list_irrelevant_time_variants(self):
+        """
+        List all the time-variant parameters that are not relevant to the current model structure (unstratified by
+        the scenario being run).
+        """
+
+        for time_variant in self.time_variants:
+            for strain in self.available_strains:
+
+                # exclude programs relevant to strains that aren't included in the model
+                if strain not in self.strains and strain in time_variant:
+                    self.irrelevant_time_variants += [time_variant]
+
+            # Exclude time-variants that are percentages, irrelevant drug-susceptibility testing programs, inappropriate
+            # treatment time-variants for single strain models, smear-negative parameters for unstratified models,
+            # low-quality care sector interventions for models not including this.
+            if 'perc_' in time_variant \
+                    or (len(self.strains) < 2 and 'line_dst' in time_variant) \
+                    or (len(self.strains) < 3 and 'secondline_dst' in time_variant) \
+                    or ('_inappropriate' in time_variant
+                                and (len(self.strains) < 2 or not self.gui_inputs['is_misassignment'])) \
+                    or (len(self.organ_status) == 1 and 'smearneg' in time_variant) \
+                    or ('lowquality' in time_variant and not self.gui_inputs['is_lowquality']) \
+                    or (len(self.strains) > 1 and 'treatment_' in time_variant and 'timeperiod_' not in time_variant
+                        and ('_ds' not in time_variant and 'dr' not in time_variant)):
+                self.irrelevant_time_variants += [time_variant]
+
+    def find_relevant_interventions(self):
+        """
+        Code to create lists of the programmatic interventions that are relevant to a particular scenario being run.
+
+        Creates:
+            self.relevant_interventions: A dict with keys scenarios and values lists of scenario-relevant programs
+        """
+
+        for scenario in self.gui_inputs['scenarios_to_run']:
+            self.relevant_interventions[scenario] = []
+            for time_variant in self.time_variants:
+                for key in self.time_variants[time_variant]:
+                    if time_variant not in self.irrelevant_time_variants \
+                            and ('program_' in time_variant or 'int_' in time_variant) \
+                            and time_variant not in self.relevant_interventions[scenario]:
+                        if (type(key) == int and self.time_variants[time_variant][key] > 0.)\
+                                or (type(key) == str and key == tool_kit.find_scenario_string_from_number(scenario)):
+                            self.relevant_interventions[scenario] += [time_variant]
+
+    def find_interventions_to_cost(self):
+
+        """
+        Work out which interventions should be costed, selecting from the ones that can be costed in
+        self.potential_interventions_to_cost.
+        """
+
+        self.find_potential_interventions_to_cost()  # find interventions that can potentially be costed
+        for scenario in self.gui_inputs['scenarios_to_run']:
+            self.interventions_to_cost[scenario] = []
+            for intervention in self.potential_interventions_to_cost:
+                if 'int_prop_' + intervention in self.relevant_interventions[scenario]:
+                    self.interventions_to_cost[scenario] += [intervention]
+
+    #####
 
     def find_scaleup_functions(self):
         """
@@ -539,34 +771,6 @@ class Inputs:
                 if len(years_pos_coverage) > 0:  # i.e. some coverage present from start
                     self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
 
-    def checks(self):
-        """
-        Not much in here as yet. However, this function is intended to contain all the data consistency checks for
-        data entry.
-        """
-
-        # Check that all entered times occur after the model start time
-        for time in self.model_constants:
-            if time[-5:] == '_time' and '_step_time' not in time:
-                assert self.model_constants[time] >= self.model_constants['start_time'], \
-                    '% is before model start time' % self.model_constants[time]
-
-    ##########################
-
-    def find_interventions_to_cost(self):
-
-        """
-        Work out which interventions should be costed, selecting from the ones that can be costed in
-        self.potential_interventions_to_cost.
-        """
-
-        self.find_potential_interventions_to_cost()  # find interventions that can potentially be costed
-        for scenario in self.gui_inputs['scenarios_to_run']:
-            self.interventions_to_cost[scenario] = []
-            for intervention in self.potential_interventions_to_cost:
-                if 'int_prop_' + intervention in self.relevant_interventions[scenario]:
-                    self.interventions_to_cost[scenario] += [intervention]
-
     def find_potential_interventions_to_cost(self):
 
         """
@@ -607,125 +811,6 @@ class Inputs:
             for year in self.time_variants[param]:
                 if type(year) == int:
                     self.time_variants[param][year] *= adjustment_factor
-
-    def extract_freeze_times(self):
-
-        """
-        Extract the freeze_times for each scenario, if specified.
-        """
-
-        if 'country_programs' in self.original_data and 'freeze_times' in self.original_data['country_programs']:
-            self.freeze_times.update(self.original_data['country_programs'].pop('freeze_times'))
-
-    def find_organ_proportions(self):
-        """
-        Calculates dictionaries with proportion of cases progressing to each organ status by year, and adds these to
-        the derived_data attribute of the object.
-        """
-
-        self.derived_data.update(calculate_proportion_dict(self.original_data['notifications'],
-                                                           ['new_sp', 'new_sn', 'new_ep']))
-
-    def add_time_variant_defaults(self):
-
-        """
-        Populates time-variant parameters with defaults if those values aren't found in the manually entered
-        country-specific data.
-        """
-
-        for program_var in self.original_data['default_programs']:
-
-            # If the key isn't in available for the country at all
-            if program_var not in self.time_variants:
-                self.time_variants[program_var] = self.original_data['default_programs'][program_var]
-
-            # Otherwise if it's there and load_data is requested in the country sheet, populate for the missing years
-            else:
-                for year in self.original_data['default_programs'][program_var]:
-                    if year not in self.time_variants[program_var] \
-                            and 'load_data' in self.original_data['country_programs'][program_var] \
-                            and self.original_data['country_programs'][program_var]['load_data'] == u'yes':
-                        self.time_variants[program_var][year] \
-                            = self.original_data['default_programs'][program_var][year]
-
-    def load_vacc_detect_time_variants(self):
-
-        """
-        Adds vaccination and case detection time-variants to the manually entered data loaded from the spreadsheets.
-        Note that the manual inputs over-ride the loaded data if both are present.
-        """
-
-        # Vaccination
-        if self.time_variants['int_perc_vaccination']['load_data'] == u'yes':
-            for year in self.original_data['bcg']:
-                if year not in self.time_variants['int_perc_vaccination']:
-                    self.time_variants['int_perc_vaccination'][year] = self.original_data['bcg'][year]
-
-        # Case detection
-        if self.time_variants['program_perc_detect']['load_data'] == u'yes':
-            for year in self.original_data['tb']['c_cdr']:
-                if year not in self.time_variants['program_perc_detect']:
-                    self.time_variants['program_perc_detect'][year] = self.original_data['tb']['c_cdr'][year]
-
-    def convert_percentages_to_proportions(self):
-
-        """
-        Converts time-variant dictionaries to proportions if they are loaded as percentages in their raw form.
-        """
-
-        for time_variant in self.time_variants.keys():
-            if 'perc_' in time_variant:  # if a percentage
-                perc_name = time_variant.replace('perc', 'prop')
-                self.time_variants[perc_name] = {}
-                for year in self.time_variants[time_variant]:
-                    if type(year) == int or 'scenario' in year:  # to exclude load_data, smoothness, etc.
-                        self.time_variants[perc_name][year] \
-                            = self.time_variants[time_variant][year] / 1e2
-                    else:
-                        self.time_variants[perc_name][year] \
-                            = self.time_variants[time_variant][year]
-
-    def find_ds_outcomes(self):
-
-        """
-        Calculates proportions of patients with each reported outcome for DS-TB, then sums cure and completion to obtain
-        treatment success proportion. Note that the outcomes are reported differently for resistant strains, so code
-        differs for them.
-        """
-
-        # Adjusting the original data to add a success number for smear-positive (so technically not still "original")
-        self.original_data['outcomes']['new_sp_succ'] \
-            = tool_kit.increment_dictionary_with_dictionary(self.original_data['outcomes']['new_sp_cmplt'],
-                                                            self.original_data['outcomes']['new_sp_cur'])
-
-        # Similarly, move completion over to represent success for smear-negative, extrapulmonary and retreatment
-        for treatment_type in ['new_snep', 'ret']:
-            self.original_data['outcomes'][treatment_type + '_succ'] \
-                = self.original_data['outcomes'][treatment_type + '_cmplt']
-
-        # And (effectively) rename the outcomes for the years that are pooled
-        self.original_data['outcomes']['newrel_def'] = self.original_data['outcomes']['newrel_lost']
-
-        # Sum over smear-positive, smear-negative, extrapulmonary and (if required) retreatment
-        for outcome in ['succ', 'def', 'died', 'fail']:
-            self.derived_data[outcome] \
-                = tool_kit.increment_dictionary_with_dictionary(self.original_data['outcomes']['new_sp_' + outcome],
-                                                                self.original_data['outcomes']['new_snep_' + outcome])
-            if self.include_relapse_in_ds_outcomes:
-                self.derived_data[outcome] \
-                    = tool_kit.increment_dictionary_with_dictionary(self.derived_data[outcome],
-                                                                    self.original_data['outcomes']['ret_' + outcome])
-
-            # Update with newer pooled outcomes
-            self.derived_data[outcome].update(self.original_data['outcomes']['newrel_' + outcome])
-
-        # Calculate default rates from 'def' and 'fail' reported outcomes
-        self.derived_data['default'] \
-            = tool_kit.increment_dictionary_with_dictionary(self.derived_data['def'], self.derived_data['fail'])
-
-        # Calculate the proportions for use in creating the treatment scale-up functions
-        self.derived_data.update(calculate_proportion_dict(self.derived_data,
-                                                           ['succ', 'died', 'default'], percent=False))
 
     def add_treatment_outcomes(self):
 
@@ -822,66 +907,6 @@ class Inputs:
 
             # Remove keys for which values are nan
             self.time_variants[program] = remove_nans(self.time_variants[program])
-
-    def define_riskgroup_structure(self):
-
-        """
-        Work out the risk group stratification.
-        """
-
-        # Create list of risk group names
-        self.riskgroups = []
-        for time_variant in self.time_variants:
-            if 'riskgroup_prop_' in time_variant and self.gui_inputs['riskgroup' + time_variant[14:]]:
-                self.riskgroups += [time_variant[14:]]
-
-        # Add the null group
-        if len(self.riskgroups) == 0:
-            self.riskgroups += ['']
-        else:
-            self.riskgroups += ['_norisk']
-
-        # Ensure some starting proportion of births go to the risk group stratum if value not loaded earlier
-        for riskgroup in self.riskgroups:
-            if 'riskgroup_prop' + riskgroup not in self.model_constants:
-                self.model_constants['riskgroup_prop' + riskgroup] = 0.
-
-    def define_strain_structure(self):
-
-        """
-        Finds the strains to be present in the model from a list of available strains and the integer value for the
-        number of strains selected.
-        """
-
-        # Need a list of an empty string to be iterable for methods iterating by strain
-        if self.gui_inputs['n_strains'] == 0:
-            self.find_single_strain_timeperiods()
-            self.strains = ['']
-        else:
-            self.strains = self.available_strains[:self.gui_inputs['n_strains']]
-            if self.gui_inputs['is_amplification']:
-                self.find_amplification_data()
-            self.treatment_outcome_types = copy.copy(self.strains)
-            if self.gui_inputs['is_misassignment']:
-                for strain in self.strains[1:]:
-                    for treated_as in self.strains:  # for each strain
-                        if treated_as != strain:  # misassigned strain has to be different from the actual strain
-                            if self.strains.index(treated_as) < self.strains.index(
-                                    strain):  # if treated with weaker regimen
-                                self.treatment_outcome_types += [strain + '_as' + treated_as[1:]]
-
-    def define_organ_structure(self):
-
-        """
-        Defines the organ status stratification from the number of statuses selected
-        Note that "organ" is the simplest single-word term that I can currently think of to
-        describe whether patients have smear-positive, smear-negative or extrapulmonary disease.
-        """
-
-        if self.gui_inputs['n_organs'] == 0:
-            self.organ_status = ['']
-        else:
-            self.organ_status = self.available_organs[:self.gui_inputs['n_organs']]
 
     def find_constant_functions(self):
 
@@ -1087,55 +1112,6 @@ class Inputs:
                         else:
                             self.scaleup_data[scenario][str(time_variant)][i] = self.time_variants[time_variant][i]
 
-    def list_irrelevant_time_variants(self):
-
-        """
-        List all the time-variant parameters that are not relevant to the current model structure (unstratified by
-        the scenario being run).
-        """
-
-        for time_variant in self.time_variants:
-            for strain in self.available_strains:
-
-                # Exclude programs relevant to strains that aren't included in the model
-                if strain not in self.strains and strain in time_variant:
-                    self.irrelevant_time_variants += [time_variant]
-
-            # Exclude time-variants that are percentages, irrelevant drug-susceptibility testing programs, inappropriate
-            # treatment time-variants for single strain models, smear-negative parameters for unstratified models,
-            # low-quality care sector interventions for models not including this.
-            if 'perc_' in time_variant \
-                    or (len(self.strains) < 2 and 'line_dst' in time_variant) \
-                    or (len(self.strains) < 3 and 'secondline_dst' in time_variant) \
-                    or ('_inappropriate' in time_variant
-                                and (len(self.strains) < 2 or not self.gui_inputs['is_misassignment'])) \
-                    or (len(self.organ_status) == 1 and 'smearneg' in time_variant) \
-                    or ('lowquality' in time_variant and not self.gui_inputs['is_lowquality']) \
-                    or (len(self.strains) > 1 and 'treatment_' in time_variant and 'timeperiod_' not in time_variant
-                        and ('_ds' not in time_variant and 'dr' not in time_variant)):
-                self.irrelevant_time_variants += [time_variant]
-
-    def find_relevant_interventions(self):
-
-        """
-        Code to create lists of the programmatic interventions that are relevant to a particular scenario being run.
-
-        Creates:
-            self.relevant_interventions: A dict with keys scenarios and values lists of scenario-relevant programs
-        """
-
-        for scenario in self.gui_inputs['scenarios_to_run']:
-            self.relevant_interventions[scenario] = []
-            for time_variant in self.time_variants:
-                for key in self.time_variants[time_variant]:
-                    if time_variant not in self.irrelevant_time_variants \
-                            and ('program_' in time_variant or 'int_' in time_variant) \
-                            and time_variant not in self.relevant_interventions[scenario]:
-                        if type(key) == int and self.time_variants[time_variant][key] > 0.:
-                            self.relevant_interventions[scenario] += [time_variant]
-                        elif type(key) == str and key == tool_kit.find_scenario_string_from_number(scenario):
-                            self.relevant_interventions[scenario] += [time_variant]
-
     #############################
     ### Miscellaneous methods ###
     #############################
@@ -1169,3 +1145,14 @@ class Inputs:
             self.runtime_outputs.insert(END, comment + '\n')
             self.runtime_outputs.see(END)
 
+    def checks(self):
+        """
+        Not much in here as yet. However, this function is intended to contain all the data consistency checks for
+        data entry.
+        """
+
+        # Check that all entered times occur after the model start time
+        for time in self.model_constants:
+            if time[-5:] == '_time' and '_step_time' not in time:
+                assert self.model_constants[time] >= self.model_constants['start_time'], \
+                    '% is before model start time' % self.model_constants[time]

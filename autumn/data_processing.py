@@ -215,10 +215,11 @@ class Inputs:
         # perform checks (undeveloped still)
         self.checks()
 
-    ###########################
-    ### Second tier methods ###
-    ###########################
+    #############################################
+    ### Constant parameter processing methods ###
+    #############################################
 
+    # populate with first round of unprocessed parameters
     def process_model_constants(self):
         """
         Master method to call methods for processing constant model parameters.
@@ -231,6 +232,168 @@ class Inputs:
 
         # add "by definition" hard-coded parameters
         self.add_universal_parameters()
+
+    def add_model_constant_defaults(self, other_sheets_with_constants):
+        """
+        Populate model_constants with data from control panel, country sheet or default sheet hierarchically
+        - such that the control panel is read in preference to the country data in preference to the default back-ups.
+
+        Args:
+            other_sheets_with_constants: The sheets of original_data which contain model constants
+        """
+
+        # populate hierarchically from the earliest sheet in the list as available
+        for other_sheet in other_sheets_with_constants:
+            for item in self.original_data[other_sheet]:
+                if item not in self.model_constants:
+                    self.model_constants[item] = self.original_data[other_sheet][item]
+
+    def add_universal_parameters(self):
+        """
+        Sets parameters that should never be changed in any situation, i.e. "by definition" parameters (although note
+        that the infectiousness of the single infectious compartment for models unstratified by organ status is now set
+        in set_fixed_infectious_proportion, because it's dependent upon loading parameters in find_functions_or_params).
+        """
+
+        # proportion progressing to the only infectious compartment for models unstratified by organ status
+        if self.gui_inputs['n_organs'] < 2:
+            self.model_constants['epi_prop'] = 1.
+
+        # infectiousness of smear-positive and extrapulmonary patients
+        else:
+            self.model_constants['tb_multiplier_force_smearpos'] = 1.
+            self.model_constants['tb_multiplier_force_extrapul'] = 0.
+
+    # derive further parameters
+    def find_additional_parameters(self):
+        """
+        Find additional parameters.
+        Includes methods that require the model structure to be defined,
+        so that this can't be run with process_model_constants.
+        """
+
+        # find risk group-specific parameters
+        if len(self.riskgroups) > 1: self.find_riskgroup_progressions()
+
+        # calculate rates of progression to active disease or late latency
+        self.find_latency_progression_rates()
+
+        # find the time non-infectious on treatment from the total time on treatment and the time infectious
+        self.find_noninfectious_period()
+
+        # derive some basic parameters for IPT
+        self.find_ipt_params()
+
+    def find_latency_progression_rates(self):
+        """
+        Find early progression rates by age group and by risk group status - i.e. early progression to active TB and
+        stabilisation into late latency.
+        """
+
+        for agegroup in self.agegroups:
+            for riskgroup in self.riskgroups:
+
+                prop_early = self.model_constants['tb_prop_early_progression' + riskgroup + agegroup]
+                time_early = self.model_constants['tb_timeperiod_early_latent']
+
+                # early progression rate is early progression proportion divided by early time period
+                self.model_constants['tb_rate_early_progression' + riskgroup + agegroup] = prop_early / time_early
+
+                # stabilisation rate is one minus early progression proportion divided by early time period
+                self.model_constants['tb_rate_stabilise' + riskgroup + agegroup] = (1. - prop_early) / time_early
+
+    def find_riskgroup_progressions(self):
+        """
+        Code to adjust the progression rates to active disease for various risk groups - so far diabetes and HIV.
+        """
+
+        # initialise dictionary of additional adjusted parameters to avoid dictionary changing size during iterations
+        risk_adjusted_parameters = {}
+        for riskgroup in self.riskgroups:
+            for param in self.model_constants:
+
+                # start from the assumption that parameter is not being adjusted
+                whether_to_adjust = False
+
+                # for age-stratified parameters
+                if '_age' in param:
+
+                    # find the age string, the lower and upper age limits and the parameter name without the age string
+                    age_string, _ = tool_kit.find_string_from_starting_letters(param, '_age')
+                    age_limits, _ = tool_kit.interrogate_age_string(age_string)
+                    param_without_age = param[:-len(age_string)]
+
+                    # diabetes progression rates only start from age groups with lower limit above the start age
+                    # and apply to both early and late progression.
+                    if riskgroup == '_diabetes' and '_progression' in param \
+                            and age_limits[0] >= self.model_constants['riskgroup_startage' + riskgroup]:
+                        whether_to_adjust = True
+
+                    # HIV applies to all age groups, but only late progression
+                    elif riskgroup == '_hiv' and '_late_progression' in param:
+                        whether_to_adjust = True
+
+                    # shouldn't apply this to the multiplier parameters or non-TB-specific parameters
+                    if '_multiplier' in param or 'tb_' not in param:
+                        whether_to_adjust = False
+
+                    # now adjust the age-stratified parameter values
+                    if whether_to_adjust:
+                        risk_adjusted_parameters[param_without_age + riskgroup + age_string] \
+                            = self.model_constants[param] \
+                              * self.model_constants['riskgroup_multiplier' + riskgroup + '_progression']
+                    elif '_progression' in param:
+                        risk_adjusted_parameters[param_without_age + riskgroup + age_string] \
+                            = self.model_constants[param]
+
+                # parameters not stratified by age
+                else:
+
+                    # explanation as above
+                    if riskgroup == '_diabetes' and '_progression' in param:
+                        whether_to_adjust = True
+                    elif riskgroup == '_hiv' and '_late_progression' in param:
+                        whether_to_adjust = True
+                    if '_multiplier' in param or 'tb_' not in param:
+                        whether_to_adjust = False
+
+                    # adjustment as above, except age string not included
+                    if whether_to_adjust:
+                        risk_adjusted_parameters[param + riskgroup] \
+                            = self.model_constants[param] \
+                              * self.model_constants['riskgroup_multiplier' + riskgroup + '_progression']
+                    elif '_progression' in param:
+                        risk_adjusted_parameters[param + riskgroup] \
+                            = self.model_constants[param]
+
+        self.model_constants.update(risk_adjusted_parameters)
+
+    def find_noninfectious_period(self):
+        """
+        Work out the periods of time spent non-infectious for each strain (plus inappropriate if required).
+        """
+
+        for strain in self.strains:
+            self.model_constants['tb_timeperiod_noninfect_ontreatment' + strain] \
+                = self.model_constants['tb_timeperiod_ontreatment' + strain] \
+                  - self.model_constants['tb_timeperiod_infect_ontreatment' + strain]
+
+    def find_ipt_params(self):
+        """
+        Calculate number of persons eligible for IPT per person commencing treatment and then the number of persons
+        who receive effective IPT per person assessed for LTBI.
+        """
+
+        self.model_constants['ipt_eligible_per_treatment_start'] \
+            = (self.model_constants['demo_household_size'] - 1.) * self.model_constants['tb_prop_contacts_infected']
+        for ipt_type in ['', 'novel_']:
+            self.model_constants[ipt_type + 'ipt_effective_per_assessment'] \
+                = self.model_constants['tb_prop_ltbi_test_sensitivity'] \
+                  * self.model_constants['tb_prop_' + ipt_type + 'ipt_effectiveness']
+
+    #################################################
+    ### Time variant parameter processing methods ###
+    #################################################
 
     def process_time_variants(self):
         """
@@ -267,26 +430,6 @@ class Inputs:
         self.define_riskgroup_structure()
         self.define_strain_structure()
         self.define_organ_structure()
-
-    def find_additional_parameters(self):
-        """
-        Find additional parameters.
-        Includes methods that require the model structure to be defined,
-        so that this can't be run with process_model_constants.
-        """
-
-        # Find the time non-infectious on treatment from the total time on treatment and the time infectious
-        self.find_noninfectious_period()
-
-        # Find risk group-specific parameters
-        if len(self.riskgroups) > 1:
-            self.find_riskgroup_progressions()
-
-        # Calculate rates of progression to active disease or late latency
-        self.find_progression_rates_from_params()
-
-        # Derive some basic parameters for IPT
-        self.find_ipt_params()
 
     def classify_interventions(self):
         """
@@ -352,8 +495,6 @@ class Inputs:
                 assert self.model_constants[time] >= self.model_constants['start_time'], \
                     '% is before model start time' % self.model_constants[time]
 
-    ##########################
-    ### Third tier methods ###
     ##########################
 
     def find_interventions_to_cost(self):
@@ -424,37 +565,6 @@ class Inputs:
         if 'riskgroup_diabetes' in self.gui_inputs: keys_of_sheets_to_read += ['diabetes']
 
         return keys_of_sheets_to_read
-
-    def add_model_constant_defaults(self, other_sheets_with_constants):
-        """
-        Populate model_constants with data from control panel, country sheet or default sheet hierarchically
-        - such that the control panel is read in preference to the country data in preference to the default back-ups.
-
-        Args:
-            other_sheets_with_constants: The sheets of original_data which contain model constants
-        """
-
-        # populate hierarchically from the earliest sheet in the list as available
-        for other_sheet in other_sheets_with_constants:
-            for item in self.original_data[other_sheet]:
-                if item not in self.model_constants:
-                    self.model_constants[item] = self.original_data[other_sheet][item]
-
-    def add_universal_parameters(self):
-        """
-        Sets parameters that should never be changed in any situation, i.e. "by definition" parameters (although note
-        that the infectiousness of the single infectious compartment for models unstratified by organ status is now set
-        in set_fixed_infectious_proportion, because it's dependent upon loading parameters in find_functions_or_params).
-        """
-
-        # proportion progressing to the only infectious compartment for models unstratified by organ status
-        if self.gui_inputs['n_organs'] < 2:
-            self.model_constants['epi_prop'] = 1.
-
-        # infectiousness of smear-positive and extrapulmonary patients
-        else:
-            self.model_constants['tb_multiplier_force_smearpos'] = 1.
-            self.model_constants['tb_multiplier_force_extrapul'] = 0.
 
     def extract_freeze_times(self):
 
@@ -743,116 +853,6 @@ class Inputs:
             self.organ_status = ['']
         else:
             self.organ_status = self.available_organs[:self.gui_inputs['n_organs']]
-
-    def find_noninfectious_period(self):
-
-        """
-        Work out the periods of time spent non-infectious for each strain (plus inappropriate if required).
-        """
-
-        for strain in self.strains:
-            self.model_constants['tb_timeperiod_noninfect_ontreatment' + strain] \
-                = self.model_constants['tb_timeperiod_ontreatment' + strain] \
-                  - self.model_constants['tb_timeperiod_infect_ontreatment' + strain]
-
-    def find_riskgroup_progressions(self):
-
-        """
-        Code to adjust the progression rates to active disease for various risk groups - so far diabetes and HIV.
-        """
-
-        # Initialise dictionary of additional adjusted parameters to avoid dictionary changing size during iterations
-        risk_adjusted_parameters = {}
-        for riskgroup in self.riskgroups:
-            for param in self.model_constants:
-
-                # Start from the assumption that parameter is not being adjusted
-                whether_to_adjust = False
-
-                # For age-stratified parameters
-                if '_age' in param:
-
-                    # Find the age string, the lower and upper age limits and the parameter name without the age string
-                    age_string, _ = tool_kit.find_string_from_starting_letters(param, '_age')
-                    age_limits, _ = tool_kit.interrogate_age_string(age_string)
-                    param_without_age = param[:-len(age_string)]
-
-                    # Diabetes progression rates only start from age groups with lower limit above the start age
-                    # and apply to both early and late progression.
-                    if riskgroup == '_diabetes' and '_progression' in param \
-                            and age_limits[0] >= self.model_constants['riskgroup_startage' + riskgroup]:
-                        whether_to_adjust = True
-
-                    # HIV applies to all age groups, but only late progression
-                    elif riskgroup == '_hiv' and '_late_progression' in param:
-                        whether_to_adjust = True
-
-                    # Shouldn't apply this to the multiplier parameters or non-TB-specific parameters
-                    if '_multiplier' in param or 'tb_' not in param:
-                        whether_to_adjust = False
-
-                    # Now adjust the age-stratified parameter values
-                    if whether_to_adjust:
-                        risk_adjusted_parameters[param_without_age + riskgroup + age_string] \
-                            = self.model_constants[param] \
-                              * self.model_constants['riskgroup_multiplier' + riskgroup + '_progression']
-                    elif '_progression' in param:
-                        risk_adjusted_parameters[param_without_age + riskgroup + age_string] \
-                            = self.model_constants[param]
-
-                # Parameters not stratified by age
-                else:
-
-                    # Explanation as above
-                    if riskgroup == '_diabetes' and '_progression' in param:
-                        whether_to_adjust = True
-                    elif riskgroup == '_hiv' and '_late_progression' in param:
-                        whether_to_adjust = True
-                    if '_multiplier' in param or 'tb_' not in param:
-                        whether_to_adjust = False
-
-                    # Adjustment as above, except age string not included
-                    if whether_to_adjust:
-                        risk_adjusted_parameters[param + riskgroup] \
-                            = self.model_constants[param] \
-                              * self.model_constants['riskgroup_multiplier' + riskgroup + '_progression']
-                    elif '_progression' in param:
-                        risk_adjusted_parameters[param + riskgroup] \
-                            = self.model_constants[param]
-
-        self.model_constants.update(risk_adjusted_parameters)
-
-    def find_progression_rates_from_params(self):
-        """
-        Find early progression rates by age group and by risk group status - i.e. early progression to active TB and
-        stabilisation into late latency.
-        """
-
-        for agegroup in self.agegroups:
-            for riskgroup in self.riskgroups:
-
-                prop_early = self.model_constants['tb_prop_early_progression' + riskgroup + agegroup]
-                time_early = self.model_constants['tb_timeperiod_early_latent']
-
-                # early progression rate is early progression proportion divided by early time period
-                self.model_constants['tb_rate_early_progression' + riskgroup + agegroup] = prop_early / time_early
-
-                # stabilisation rate is one minus early progression proportion divided by early time period
-                self.model_constants['tb_rate_stabilise' + riskgroup + agegroup] = (1. - prop_early) / time_early
-
-    def find_ipt_params(self):
-        """
-        Calculate number of persons eligible for IPT per person commencing treatment and then the number of persons
-        who receive effective IPT per person assessed for LTBI.
-        """
-
-        self.model_constants['ipt_eligible_per_treatment_start'] \
-            = (self.model_constants['demo_household_size'] - 1.) * self.model_constants['tb_prop_contacts_infected']
-
-        for ipt_type in ['', 'novel_']:
-            self.model_constants[ipt_type + 'ipt_effective_per_assessment'] \
-                = self.model_constants['tb_prop_ltbi_test_sensitivity'] \
-                  * self.model_constants['tb_prop_' + ipt_type + 'ipt_effectiveness']
 
     def find_constant_functions(self):
 

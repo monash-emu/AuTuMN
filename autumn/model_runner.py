@@ -160,7 +160,7 @@ class ModelRunner:
         self.gui_inputs = gui_inputs
         self.runtime_outputs = runtime_outputs
         self.figure_frame = figure_frame
-        self.inputs = data_processing.Inputs(gui_inputs, runtime_outputs, from_test=True, js_gui=js_gui)
+        self.inputs = data_processing.Inputs(gui_inputs, runtime_outputs, js_gui=js_gui)
         self.inputs.read_and_load_data()
 
         # Preparing for basic runs

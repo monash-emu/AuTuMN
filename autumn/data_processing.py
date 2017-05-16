@@ -141,13 +141,12 @@ def make_constant_function(value):
 
 class Inputs:
 
-    def __init__(self, gui_inputs, runtime_outputs, from_test=False, js_gui=False):
+    def __init__(self, gui_inputs, runtime_outputs, js_gui=False):
 
         self.gui_inputs = gui_inputs
         self.country = gui_inputs['country']
         self.runtime_outputs = runtime_outputs
         self.original_data = None
-        self.from_test = from_test
         self.derived_data = {}
         self.time_variants = {}
         self.model_constants = {}
@@ -188,7 +187,7 @@ class Inputs:
         # read all required data
         self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
         self.original_data \
-            = spreadsheet.read_input_data_xls(self.from_test, self.find_keys_of_sheets_to_read(), self.country)
+            = spreadsheet.read_input_data_xls(True, self.find_keys_of_sheets_to_read(), self.country)
 
         # process constant parameters
         self.process_model_constants()

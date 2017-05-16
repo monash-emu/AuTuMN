@@ -185,36 +185,36 @@ class Inputs:
         Master method of this object, calling all sub-methods to read and process data and define model structure.
         """
 
-        # Read all required data
-        keys_of_sheets_to_read = self.find_keys_of_sheets_to_read()
+        # read all required data
         self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
-        self.original_data = spreadsheet.read_input_data_xls(self.from_test, keys_of_sheets_to_read, self.country)
+        self.original_data \
+            = spreadsheet.read_input_data_xls(self.from_test, self.find_keys_of_sheets_to_read(), self.country)
 
-        # Process constant parameters
+        # process constant parameters
         self.process_model_constants()
 
-        # Define model structure
+        # define model structure
         self.define_model_structure()
 
-        # Process time-variant parameters
+        # process time-variant parameters
         self.process_time_variants()
 
-        # Find parameters that require processing
+        # find parameters that require processing
         self.find_additional_parameters()
 
-        # Calculate time-variant functions
+        # calculate time-variant functions
         self.find_scaleup_functions()
 
-        # Find which interventions need to be costed
+        # find which interventions need to be costed
         self.find_interventions_to_cost()
 
-        # Prepare for uncertainty analysis
+        # prepare for uncertainty analysis
         self.process_uncertainty_parameters()
 
-        # Optimisation-related methods
+        # optimisation-related methods
         self.find_intervention_startdates()
 
-        # Perform checks
+        # perform checks
         self.checks()
 
     def process_model_constants(self):
@@ -382,9 +382,8 @@ class Inputs:
                                   'outcomes', 'country_constants', 'default_constants', 'country_programs',
                                   'default_programs']
 
-        # add any optional sheets required for specific model being run
-        if 'riskgroup_diabetes' in self.gui_inputs:
-            keys_of_sheets_to_read += ['diabetes']
+        # add any optional sheets required for specific model being run (currently just diabetes)
+        if 'riskgroup_diabetes' in self.gui_inputs: keys_of_sheets_to_read += ['diabetes']
 
         return keys_of_sheets_to_read
 
@@ -640,7 +639,6 @@ class Inputs:
             self.time_variants[program] = remove_nans(self.time_variants[program])
 
     def define_age_structure(self):
-
         """
         Define the model's age structure based on the breakpoints provided in spreadsheets.
         """

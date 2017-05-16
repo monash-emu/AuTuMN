@@ -253,7 +253,7 @@ class Inputs:
         if self.time_variants['epi_prop_smearpos']['load_data'] == u'yes':
             self.add_organ_status_to_timevariants()
         self.tidy_time_variants()
-        self.adjust_param_for_reporting('program_prop_detect', 'Bulgaria', .9)  # Bulgaria thought over-estimated CDR
+        self.adjust_param_for_reporting('program_prop_detect', 'Bulgaria', 0.95)  # Bulgaria thought over-estimated CDR
 
     def adjust_param_for_reporting(self, param, country, adjustment_factor):
         """

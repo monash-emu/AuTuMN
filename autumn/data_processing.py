@@ -391,6 +391,72 @@ class Inputs:
                 = self.model_constants['tb_prop_ltbi_test_sensitivity'] \
                   * self.model_constants['tb_prop_' + ipt_type + 'ipt_effectiveness']
 
+    #########################################
+    ### Methods to define model structure ###
+    #########################################
+
+    def define_model_structure(self):
+        """
+        Master method to define all aspects of model structure.
+        """
+
+        self.define_age_structure()
+        self.define_riskgroup_structure()
+        self.define_strain_structure()
+        self.define_organ_structure()
+
+    def define_age_structure(self):
+        """
+        Define the model's age structure based on the breakpoints provided in spreadsheets.
+        """
+
+        # describe and work out age stratification structure for model from the list of age breakpoints
+        self.agegroups, _ = tool_kit.get_agegroups_from_breakpoints(self.model_constants['age_breakpoints'])
+
+        # find ageing rates and age-weighted parameters
+        if len(self.agegroups) > 1:
+            self.find_ageing_rates()
+            self.find_fixed_age_specific_parameters()
+
+    def find_ageing_rates(self):
+        """
+        Calculate ageing rates as the reciprocal of the width of the age bracket.
+        """
+
+        for agegroup in self.agegroups:
+            age_limits, _ = tool_kit.interrogate_age_string(agegroup)
+            if 'up' not in agegroup:
+                self.model_constants['ageing_rate' + agegroup] = 1. / (age_limits[1] - age_limits[0])
+
+    def find_fixed_age_specific_parameters(self):
+        """
+        Find weighted age specific parameters using age weighting code from tool_kit.
+        """
+
+        model_breakpoints = [float(i) for i in self.model_constants['age_breakpoints']]  # convert list of ints to float
+        for param in ['early_progression_age', 'late_progression_age', 'tb_multiplier_child_infectiousness_age']:
+
+            # extract age-stratified parameters in the appropriate form
+            prog_param_vals = {}
+            prog_age_dict = {}
+            for constant in self.model_constants:
+                if param in constant:
+                    prog_param_string, prog_stem = tool_kit.find_string_from_starting_letters(constant, '_age')
+                    prog_age_dict[prog_param_string], _ = tool_kit.interrogate_age_string(prog_param_string)
+                    prog_param_vals[prog_param_string] = self.model_constants[constant]
+
+            param_breakpoints = tool_kit.find_age_breakpoints_from_dicts(prog_age_dict)
+
+            # find and set age-adjusted parameters
+            prog_age_adjusted_params = \
+                tool_kit.adapt_params_to_stratification(param_breakpoints,
+                                                        model_breakpoints,
+                                                        prog_param_vals,
+                                                        parameter_name=param,
+                                                        whether_to_plot=self.gui_inputs['output_age_calculations'])
+            for agegroup in self.agegroups:
+                self.model_constants[prog_stem + agegroup] = prog_age_adjusted_params[agegroup]
+
     #################################################
     ### Time variant parameter processing methods ###
     #################################################
@@ -420,16 +486,6 @@ class Inputs:
         self.tidy_time_variants()
         self.adjust_param_for_reporting('program_prop_detect', 'Bulgaria', 0.95)  # Bulgaria thought over-estimated CDR
 
-    def define_model_structure(self):
-
-        """
-        Master method to define all aspects of model structure.
-        """
-
-        self.define_age_structure()
-        self.define_riskgroup_structure()
-        self.define_strain_structure()
-        self.define_organ_structure()
 
     def classify_interventions(self):
         """
@@ -551,20 +607,6 @@ class Inputs:
             for year in self.time_variants[param]:
                 if type(year) == int:
                     self.time_variants[param][year] *= adjustment_factor
-
-    def find_keys_of_sheets_to_read(self):
-        """
-        Find keys of spreadsheets to read.
-        """
-
-        keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy', 'default_parameters', 'tb', 'notifications',
-                                  'outcomes', 'country_constants', 'default_constants', 'country_programs',
-                                  'default_programs']
-
-        # add any optional sheets required for specific model being run (currently just diabetes)
-        if 'riskgroup_diabetes' in self.gui_inputs: keys_of_sheets_to_read += ['diabetes']
-
-        return keys_of_sheets_to_read
 
     def extract_freeze_times(self):
 
@@ -781,19 +823,6 @@ class Inputs:
             # Remove keys for which values are nan
             self.time_variants[program] = remove_nans(self.time_variants[program])
 
-    def define_age_structure(self):
-        """
-        Define the model's age structure based on the breakpoints provided in spreadsheets.
-        """
-
-        # Describe and work out age stratification structure for model from the list of age breakpoints
-        self.agegroups, _ = tool_kit.get_agegroups_from_breakpoints(self.model_constants['age_breakpoints'])
-
-        # Find ageing rates and age-weighted parameters
-        if len(self.agegroups) > 1:
-            self.find_ageing_rates()
-            self.find_fixed_age_specific_parameters()
-
     def define_riskgroup_structure(self):
 
         """
@@ -1009,51 +1038,6 @@ class Inputs:
                 self.add_comment_to_gui_window(
                     'Warning: Calibrated output %s is not directly available from the data' % output['key'])
 
-    def find_ageing_rates(self):
-
-        """
-        Calculate ageing rates as the reciprocal of the width of the age bracket.
-        """
-
-        for agegroup in self.agegroups:
-            age_limits, _ = tool_kit.interrogate_age_string(agegroup)
-            if 'up' not in agegroup:
-                self.model_constants['ageing_rate' + agegroup] = 1. / (age_limits[1] - age_limits[0])
-
-    def find_fixed_age_specific_parameters(self):
-
-        """
-        Find weighted age specific parameters using age weighting code from took_kit.
-        """
-
-        # Extract age breakpoints in appropriate form for module
-        model_breakpoints = []
-        for i in self.model_constants['age_breakpoints']:
-            model_breakpoints += [float(i)]
-
-        for param in ['early_progression_age', 'late_progression_age', 'tb_multiplier_child_infectiousness_age']:
-
-            # Extract age-stratified parameters in the appropriate form
-            prog_param_vals = {}
-            prog_age_dict = {}
-            for constant in self.model_constants:
-                if param in constant:
-                    prog_param_string, prog_stem = tool_kit.find_string_from_starting_letters(constant, '_age')
-                    prog_age_dict[prog_param_string], _ = tool_kit.interrogate_age_string(prog_param_string)
-                    prog_param_vals[prog_param_string] = self.model_constants[constant]
-
-            param_breakpoints = tool_kit.find_age_breakpoints_from_dicts(prog_age_dict)
-
-            # Find and set age-adjusted parameters
-            prog_age_adjusted_params = \
-                tool_kit.adapt_params_to_stratification(param_breakpoints,
-                                                        model_breakpoints,
-                                                        prog_param_vals,
-                                                        parameter_name=param,
-                                                        whether_to_plot=self.gui_inputs['output_age_calculations'])
-            for agegroup in self.agegroups:
-                self.model_constants[prog_stem + agegroup] = prog_age_adjusted_params[agegroup]
-
     def find_single_strain_timeperiods(self):
 
         """
@@ -1152,6 +1136,25 @@ class Inputs:
                         elif type(key) == str and key == tool_kit.find_scenario_string_from_number(scenario):
                             self.relevant_interventions[scenario] += [time_variant]
 
+    #############################
+    ### Miscellaneous methods ###
+    #############################
+
+    def find_keys_of_sheets_to_read(self):
+        """
+        Find keys of spreadsheets to read. Pretty simplistic at this stage, but expected to get more complicated as
+        other sheets (like diabetes) are added as optional.
+        """
+
+        keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy', 'default_parameters', 'tb', 'notifications',
+                                  'outcomes', 'country_constants', 'default_constants', 'country_programs',
+                                  'default_programs']
+
+        # add any optional sheets required for specific model being run (currently just diabetes)
+        if 'riskgroup_diabetes' in self.gui_inputs: keys_of_sheets_to_read += ['diabetes']
+
+        return keys_of_sheets_to_read
+
     def add_comment_to_gui_window(self, comment, target='console'):
 
         """
@@ -1165,3 +1168,4 @@ class Inputs:
         else:
             self.runtime_outputs.insert(END, comment + '\n')
             self.runtime_outputs.see(END)
+

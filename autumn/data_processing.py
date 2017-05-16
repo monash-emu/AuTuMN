@@ -223,7 +223,10 @@ class Inputs:
         Master method to call methods for processing constant model parameters.
         """
 
+        # note ordering to list of sheets to be worked through is important for hierarchical loading of constants
         self.add_model_constant_defaults(['diabetes', 'country_constants', 'default_constants'])
+
+        # add "by definition" parameters
         self.add_universal_parameters()
 
     def process_time_variants(self):
@@ -387,7 +390,6 @@ class Inputs:
         return keys_of_sheets_to_read
 
     def add_model_constant_defaults(self, other_sheets_with_constants):
-
         """
         Populate model_constants with data from control panel, country sheet or default sheet hierarchically
         - such that the control panel is read in preference to the country data in preference to the default back-ups.
@@ -396,11 +398,11 @@ class Inputs:
             other_sheets_with_constants: The sheets of original_data which contain model constants
         """
 
-        # Populate from country_constants if available and default_constants if not
+        # populate from country_constants if available and default_constants if not
         for other_sheet in other_sheets_with_constants:
             if other_sheet in self.original_data:
 
-                # Only add the item if it hasn't been added yet
+                # only add the item if it hasn't been added yet
                 for item in self.original_data[other_sheet]:
                     if item not in self.model_constants:
                         self.model_constants[item] = self.original_data[other_sheet][item]
@@ -413,11 +415,11 @@ class Inputs:
         in set_fixed_infectious_proportion, because it's dependent upon loading parameters in find_functions_or_params).
         """
 
-        # Proportion progressing to the only infectious compartment for models unstratified by organ status
+        # proportion progressing to the only infectious compartment for models unstratified by organ status
         if self.gui_inputs['n_organs'] < 2:
             self.model_constants['epi_prop'] = 1.
 
-        # Infectiousness of smear-positive and extrapulmonary patients
+        # infectiousness of smear-positive and extrapulmonary patients
         else:
             self.model_constants['tb_multiplier_force_smearpos'] = 1.
             self.model_constants['tb_multiplier_force_extrapul'] = 0.
@@ -791,7 +793,6 @@ class Inputs:
         self.model_constants.update(risk_adjusted_parameters)
 
     def find_progression_rates_from_params(self):
-
         """
         Find early progression rates by age group and by risk group status - i.e. early progression to active TB and
         stabilisation into late latency.
@@ -800,18 +801,16 @@ class Inputs:
         for agegroup in self.agegroups:
             for riskgroup in self.riskgroups:
 
-                # Early progression rate is early progression proportion divided by early time period
-                self.model_constants['tb_rate_early_progression' + riskgroup + agegroup] \
-                    = self.model_constants['tb_prop_early_progression' + riskgroup + agegroup] \
-                      / self.model_constants['tb_timeperiod_early_latent']
+                prop_early = self.model_constants['tb_prop_early_progression' + riskgroup + agegroup]
+                time_early = self.model_constants['tb_timeperiod_early_latent']
 
-                # Stabilisation rate is one minus early progression proportion divided by early time period
-                self.model_constants['tb_rate_stabilise' + riskgroup + agegroup] \
-                    = (1. - self.model_constants['tb_prop_early_progression' + riskgroup + agegroup]) \
-                      / self.model_constants['tb_timeperiod_early_latent']
+                # early progression rate is early progression proportion divided by early time period
+                self.model_constants['tb_rate_early_progression' + riskgroup + agegroup] = prop_early / time_early
+
+                # stabilisation rate is one minus early progression proportion divided by early time period
+                self.model_constants['tb_rate_stabilise' + riskgroup + agegroup] = (1. - prop_early) / time_early
 
     def find_ipt_params(self):
-
         """
         Calculate number of persons eligible for IPT per person commencing treatment and then the number of persons
         who receive effective IPT per person assessed for LTBI.

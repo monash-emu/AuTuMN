@@ -303,22 +303,21 @@ class ConsolidatedModel(StratifiedModel):
     #######################################################
 
     def process_uncertainty_params(self):
-
         """
         Perform some simple parameter processing - just for those that are used as uncertainty parameters and so can't
         be processed in the data_processing module.
         """
 
-        # Find the case fatality of smear-negative TB using the relative case fatality
+        # find the case fatality of smear-negative TB using the relative case fatality
         self.params['tb_prop_casefatality_untreated_smearneg'] = \
             self.params['tb_prop_casefatality_untreated_smearpos'] \
             * self.params['tb_relative_casefatality_untreated_smearneg']
 
-        # Add the extrapulmonary case fatality (currently not entered from the spreadsheets)
+        # add the extrapulmonary case fatality (currently not entered from the spreadsheets)
         self.params['tb_prop_casefatality_untreated_extrapul'] \
             = self.params['tb_prop_casefatality_untreated_smearneg']
 
-        # Calculate the rates of death and recovery from the above parameters
+        # calculate the rates of death and recovery from the above parameters
         for organ in self.organ_status:
             self.params['tb_rate_death' + organ] \
                 = self.params['tb_prop_casefatality_untreated' + organ] \
@@ -483,7 +482,6 @@ class ConsolidatedModel(StratifiedModel):
                           * self.params['program_prop_snep_relative_algorithm']
 
     def adjust_smearneg_detection_for_xpert(self):
-
         """
         Adjust case case detection and algorithm sensitivity for Xpert (will only work with weighting and so is grouped
         with the previous method in calculate_vars).
@@ -923,7 +921,6 @@ class ConsolidatedModel(StratifiedModel):
             self.params['tb_prop_infections_in_household']
 
     def calculate_ipt_effect(self):
-
         """
         Method to estimate the proportion of infections averted through the IPT program - as the proportion of all cases
         detected by the high quality sector, multiplied by the proportion of infections in the household (giving the
@@ -942,24 +939,23 @@ class ConsolidatedModel(StratifiedModel):
                 self.vars['prop_infections_averted_ipt' + agegroup] = 0.
 
     def calculate_force_infection_vars(self):
-
         """
         Calculate force of infection independently for each strain, incorporating partial immunity and infectiousness.
         First calculate the effective infectious population (incorporating infectiousness by organ involvement), then
         calculate the raw force of infection, then adjust for various levels of susceptibility.
         """
 
-        # Find the effective infectious population for each strain
+        # find the effective infectious population for each strain
         for strain in self.strains:
 
-            # Initialise infectious population vars as needed
+            # initialise infectious population vars as needed
             if self.vary_force_infection_by_riskgroup:
                 for riskgroup in self.riskgroups:
                     self.vars['effective_infectious_population' + strain + riskgroup] = 0.
             else:
                 self.vars['effective_infectious_population' + strain] = 0.
 
-            # Loop through compartments, skipping on as soon as possible if not relevant
+            # loop through compartments, skipping on as soon as possible if not relevant
             for label in self.labels:
                 if strain not in label and strain != '':
                     continue
@@ -970,7 +966,7 @@ class ConsolidatedModel(StratifiedModel):
                         if agegroup not in label and agegroup != '':
                             continue
 
-                        # Calculate effective infectious population with stratification for risk-group
+                        # calculate effective infectious population with stratification for risk-group
                         if self.vary_force_infection_by_riskgroup:
                             for riskgroup in self.riskgroups:
                                 if riskgroup not in label:
@@ -978,14 +974,14 @@ class ConsolidatedModel(StratifiedModel):
                                 elif label_intersects_tags(label, self.infectious_tags):
                                     for source_riskgroup in self.riskgroups:
 
-                                        # Adjustment for increased infectiousness of risk groups as required
+                                        # adjustment for increased infectiousness of risk groups as required
                                         if 'riskgroup_multiplier_force_infection' + source_riskgroup in self.params:
                                             riskgroup_multiplier_force_infection \
                                                 = self.params['riskgroup_multiplier_force_infection' + source_riskgroup]
                                         else:
                                             riskgroup_multiplier_force_infection = 1.
 
-                                        # Calculate effective infectious population for each risk group
+                                        # calculate effective infectious population for each risk group
                                         self.vars['effective_infectious_population' + strain + riskgroup] \
                                             += self.params['tb_multiplier_force' + organ] \
                                                * self.params['tb_multiplier_child_infectiousness' + agegroup] \
@@ -993,7 +989,7 @@ class ConsolidatedModel(StratifiedModel):
                                                * self.mixing[riskgroup][source_riskgroup] \
                                                * riskgroup_multiplier_force_infection
 
-                        # Now without risk-group stratification
+                        # now without risk-group stratification
                         else:
                             if label_intersects_tags(label, self.infectious_tags):
                                 self.vars['effective_infectious_population' + strain] \
@@ -1001,13 +997,13 @@ class ConsolidatedModel(StratifiedModel):
                                        * self.params['tb_multiplier_child_infectiousness' + agegroup] \
                                        * self.compartments[label]
 
-            # To loop over all risk groups if needed, or otherwise to just run once
+            # to loop over all risk groups if needed, or otherwise to just run once
             if self.vary_force_infection_by_riskgroup:
                 force_riskgroups = copy.copy(self.riskgroups)
             else:
                 force_riskgroups = ['']
 
-            # Calculate force of infection unadjusted for immunity/susceptibility
+            # calculate force of infection unadjusted for immunity/susceptibility
             for riskgroup in force_riskgroups:
                 for agegroup in self.agegroups:
                     if 'prop_infections_averted_ipt' + agegroup in self.vars and 'dr' not in strain:
@@ -1027,11 +1023,11 @@ class ConsolidatedModel(StratifiedModel):
                           / self.vars['population' + riskgroup] \
                           * ipt_infection_modifier
 
-                    # If any modifications to transmission parameter to be made over time
+                    # if any modifications to transmission parameter to be made over time
                     if 'transmission_modifier' in self.vars:
                         self.vars['rate_force' + strain + riskgroup + agegroup] *= self.vars['transmission_modifier']
 
-                    # Adjust for immunity in various groups
+                    # adjust for immunity in various groups
                     force_types = ['_vac', '_latent']
                     if 'int_prop_novel_vaccination' in self.relevant_interventions:
                         force_types += ['_novelvac']

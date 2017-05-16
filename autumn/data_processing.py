@@ -160,26 +160,25 @@ class Inputs:
         self.param_ranges_unc = []
         self.mode = 'uncertainty'
         self.data_to_fit = {}
-        # For incidence for ex. Width of Normal posterior relative to CI width in data
+        # for incidence for ex., width of Normal posterior relative to CI width in data
         self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
         self.freeze_times = {}
         self.treatment_outcome_types = []
         self.relevant_interventions = {}
         self.include_relapse_in_ds_outcomes = True
         self.interventions_to_cost = {}
-        self.emit_delay = 0.1
+        self.emit_delay = .1
         self.plot_count = 0
         self.js_gui = js_gui
         if self.js_gui:
             eventlet.monkey_patch()
         self.intervention_startdates = {}
 
-    ######################
-    ### Master methods ###
-    ######################
+    #####################
+    ### Master method ###
+    #####################
 
     def read_and_load_data(self):
-
         """
         Master method of this object, calling all sub-methods to read and process data and define model structure.
         """
@@ -201,20 +200,24 @@ class Inputs:
         # find parameters that require processing
         self.find_additional_parameters()
 
+        # classify interventions as to whether they apply and are to be costed
+        self.classify_interventions()
+
         # calculate time-variant functions
         self.find_scaleup_functions()
 
-        # find which interventions need to be costed
-        self.find_interventions_to_cost()
-
-        # prepare for uncertainty analysis
+        # uncertainty-related analysis
         self.process_uncertainty_parameters()
 
         # optimisation-related methods
         self.find_intervention_startdates()
 
-        # perform checks
+        # perform checks (undeveloped still)
         self.checks()
+
+    ###########################
+    ### Second tier methods ###
+    ###########################
 
     def process_model_constants(self):
         """
@@ -254,22 +257,6 @@ class Inputs:
         self.tidy_time_variants()
         self.adjust_param_for_reporting('program_prop_detect', 'Bulgaria', 0.95)  # Bulgaria thought over-estimated CDR
 
-    def adjust_param_for_reporting(self, param, country, adjustment_factor):
-        """
-        Adjust a parameter that is thought to be mis-reported by the country by a constant factor across the estimates
-        for all years.
-
-        Args:
-            param: The string for the parameter to be adjusted
-            country: The country to which this applies
-            adjustment_factor: A float to multiply the reported values by to get the adjusted values
-        """
-
-        if self.country == country:
-            for year in self.time_variants[param]:
-                if type(year) == int:
-                    self.time_variants[param][year] *= adjustment_factor
-
     def define_model_structure(self):
 
         """
@@ -301,29 +288,73 @@ class Inputs:
         # Derive some basic parameters for IPT
         self.find_ipt_params()
 
-    def find_scaleup_functions(self):
+    def classify_interventions(self):
+        """
+        Classify the interventions as to whether they are generally relevant, whether they apply to specific scenarios
+        being run and whether they are to be costed.
+        """
 
+        self.list_irrelevant_time_variants()
+        self.find_relevant_interventions()
+        self.find_interventions_to_cost()
+
+    def find_scaleup_functions(self):
         """
         Master method for calculation of time-variant parameters/scale-up functions.
         """
 
-        # Work out which programs are relevant/irrelevant
-        self.list_irrelevant_time_variants()
-        self.find_relevant_programs()
-
-        # Extract data into structures for creating time-variant parameters or constant ones
+        # extract data into structures for creating time-variant parameters or constant ones
         self.find_data_for_functions_or_params()
 
-        # Find scale-up functions or constant parameters
+        # find scale-up functions or constant parameters
         self.find_constant_functions()
         self.find_scaleups()
 
-        # Find the proportion of cases that are infectious for models that are unstratified by organ status
+        # find the proportion of cases that are infectious for models that are unstratified by organ status
         if len(self.organ_status) < 2:
             self.set_fixed_infectious_proportion()
 
-        # Add parameters for IPT, if and where not specified for the age range being implemented
+        # add parameters for IPT, if and where not specified for the age range being implemented
         self.add_missing_economics_for_ipt()
+
+    def process_uncertainty_parameters(self):
+
+        # Specify the parameters to be used for uncertainty
+        if self.gui_inputs['output_uncertainty']:
+            self.find_uncertainty_distributions()
+            self.get_data_to_fit()
+
+    def find_intervention_startdates(self):
+
+        """
+        Find the dates when the different interventions start and populate self.intervention_startdates
+        """
+
+        for scenario in self.gui_inputs['scenarios_to_run']:
+            self.intervention_startdates[scenario] = {}
+            for intervention in self.interventions_to_cost[scenario]:
+                self.intervention_startdates[scenario][intervention] = None
+                years_pos_coverage \
+                    = [key for (key, value) in self.scaleup_data[scenario]['int_prop_' + intervention].items()
+                       if value > 0.]
+                if len(years_pos_coverage) > 0:  # i.e. some coverage present from start
+                    self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
+
+    def checks(self):
+        """
+        Not much in here as yet. However, this function is intended to contain all the data consistency checks for
+        data entry.
+        """
+
+        # Check that all entered times occur after the model start time
+        for time in self.model_constants:
+            if time[-5:] == '_time' and '_step_time' not in time:
+                assert self.model_constants[time] >= self.model_constants['start_time'], \
+                    '% is before model start time' % self.model_constants[time]
+
+    ##########################
+    ### Third tier methods ###
+    ##########################
 
     def find_interventions_to_cost(self):
 
@@ -364,29 +395,21 @@ class Inputs:
         if self.gui_inputs['riskgroup_ruralpoor']:
             self.potential_interventions_to_cost += ['xpertacf_ruralpoor', 'cxrxpertacf_ruralpoor']
 
-    def process_uncertainty_parameters(self):
-
-        # Specify the parameters to be used for uncertainty
-        if self.gui_inputs['output_uncertainty']:
-            self.find_uncertainty_distributions()
-            self.get_data_to_fit()
-
-    def checks(self):
-
+    def adjust_param_for_reporting(self, param, country, adjustment_factor):
         """
-        Not much in here as yet. However, this function is intended to contain all the data consistency checks for
-        data entry.
+        Adjust a parameter that is thought to be mis-reported by the country by a constant factor across the estimates
+        for all years.
+
+        Args:
+            param: The string for the parameter to be adjusted
+            country: The country to which this applies
+            adjustment_factor: A float to multiply the reported values by to get the adjusted values
         """
 
-        # Check that all entered times occur after the model start time
-        for time in self.model_constants:
-            if time[-5:] == '_time' and '_step_time' not in time:
-                assert self.model_constants[time] >= self.model_constants['start_time'], \
-                    '% is before model start time' % self.model_constants[time]
-
-    ##########################
-    ### Processing methods ###
-    ##########################
+        if self.country == country:
+            for year in self.time_variants[param]:
+                if type(year) == int:
+                    self.time_variants[param][year] *= adjustment_factor
 
     def find_keys_of_sheets_to_read(self):
         """
@@ -986,26 +1009,6 @@ class Inputs:
                 self.add_comment_to_gui_window(
                     'Warning: Calibrated output %s is not directly available from the data' % output['key'])
 
-    def find_intervention_startdates(self):
-
-        """
-        Find the dates when the different interventions start and populate self.intervention_startdates
-        """
-
-        for scenario in self.gui_inputs['scenarios_to_run']:
-            self.intervention_startdates[scenario] = {}
-            for intervention in self.interventions_to_cost[scenario]:
-                self.intervention_startdates[scenario][intervention] = None
-                years_pos_coverage \
-                    = [key for (key, value) in self.scaleup_data[scenario]['int_prop_' + intervention].items()
-                       if value > 0.]
-                if len(years_pos_coverage) > 0:  # i.e. some coverage present from start
-                    self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
-
-    ###########################
-    ### Second tier methods ###
-    ###########################
-
     def find_ageing_rates(self):
 
         """
@@ -1128,7 +1131,7 @@ class Inputs:
                         and ('_ds' not in time_variant and 'dr' not in time_variant)):
                 self.irrelevant_time_variants += [time_variant]
 
-    def find_relevant_programs(self):
+    def find_relevant_interventions(self):
 
         """
         Code to create lists of the programmatic interventions that are relevant to a particular scenario being run.
@@ -1148,10 +1151,6 @@ class Inputs:
                             self.relevant_interventions[scenario] += [time_variant]
                         elif type(key) == str and key == tool_kit.find_scenario_string_from_number(scenario):
                             self.relevant_interventions[scenario] += [time_variant]
-
-    ############################
-    ### Miscellaneous method ###
-    ############################
 
     def add_comment_to_gui_window(self, comment, target='console'):
 

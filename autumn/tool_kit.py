@@ -89,7 +89,6 @@ def capitalise_first_letter(old_string):
 
 
 def replace_underscore_with_space(original_string):
-
     """
     Another really simple method to remove underscores and replace with spaces for titles of plots.
 
@@ -99,18 +98,10 @@ def replace_underscore_with_space(original_string):
         replaced_string: String with underscores replaced
     """
 
-    replaced_string = ''
-    for i in range(len(original_string)):
-        if original_string[i] == '_':
-            replaced_string += ' '
-        else:
-            replaced_string += original_string[i]
-
-    return replaced_string
+    return original_string.replace('_', ' ')
 
 
 def capitalise_and_remove_underscore(original_string):
-
     """
     Combine the previous two methods used to create titles.
 
@@ -124,7 +115,6 @@ def capitalise_and_remove_underscore(original_string):
 
 
 def adjust_country_name(country_name):
-
     """
     Currently very simple method to convert one country's name into that used by the GTB Report. However, likely to
     need to expand this as we work with more countries.

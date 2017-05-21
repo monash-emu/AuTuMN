@@ -143,40 +143,48 @@ class Inputs:
 
     def __init__(self, gui_inputs, runtime_outputs, js_gui=False):
 
+        # GUI inputs
         self.gui_inputs = gui_inputs
         self.country = gui_inputs['country']
-        self.runtime_outputs = runtime_outputs
+        self.scenarios = self.gui_inputs['scenarios_to_run']
+
+        # parameter structures
         self.original_data = None
         self.derived_data = {}
         self.time_variants = {}
         self.model_constants = {}
-        self.available_strains = ['_ds', '_mdr', '_xdr']
-        self.available_organs = ['_smearpos', '_smearneg', '_extrapul']
-        self.agegroups = None
-        self.irrelevant_time_variants = []
         self.scaleup_data = {}
         self.scaleup_fns = {}
-        self.intervention_applied = {}
         self.param_ranges_unc = []
-        self.mode = 'uncertainty'
         self.data_to_fit = {}
         # for incidence for ex., width of Normal posterior relative to CI width in data
         self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
-        self.freeze_times = {}
-        self.treatment_outcome_types = []
+
+        # model structure
+        self.available_strains = ['_ds', '_mdr', '_xdr']
+        self.available_organs = ['_smearpos', '_smearneg', '_extrapul']
+        self.agegroups = None
+
+        # interventions
+        self.irrelevant_time_variants = []
         self.relevant_interventions = {}
-        self.include_relapse_in_ds_outcomes = True
         self.interventions_to_cost = {}
-        self.emit_delay = .1
-        self.plot_count = 0
-        self.js_gui = js_gui
-        if self.js_gui:
-            eventlet.monkey_patch()
         self.intervention_startdates = {}
         self.potential_interventions_to_cost \
             = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf', 'ipt_age0to5', 'ipt_age5to15',
                'decentralisation', 'improve_dst', 'intensive_screening', 'ipt_age15up']
-        self.scenarios = self.gui_inputs['scenarios_to_run']
+        self.freeze_times = {}
+
+        # miscellaneous
+        self.runtime_outputs = runtime_outputs
+        self.mode = 'uncertainty'
+        self.js_gui = js_gui
+        if self.js_gui:
+            eventlet.monkey_patch()
+        self.plot_count = 0
+        self.emit_delay = .1
+        self.treatment_outcome_types = []
+        self.include_relapse_in_ds_outcomes = True
 
     #####################
     ### Master method ###

@@ -468,7 +468,6 @@ def sum_over_compartments(model, compartment_types):
 
 
 def get_fraction_soln(numerator_labels, numerators, denominator):
-
     """
     General method for calculating the proportion of a subgroup of the population in each compartment type.
 
@@ -480,34 +479,24 @@ def get_fraction_soln(numerator_labels, numerators, denominator):
         Fractions of the denominator in each numerator
     """
 
-    # Just to avoid warnings, replace any zeros in the denominators with small values
+    # just to avoid warnings, replace any zeros in the denominators with small values
     # (numerators will still be zero, so all fractions should be zero)
     for i in range(len(denominator)):
         if denominator[i] == 0.:
-            denominator[i] = 1E-3
+            denominator[i] = 1e-3
 
     fraction = {}
     for label in numerator_labels:
         fraction[label] = [v / t for v, t in zip(numerators[label], denominator)]
-
     return fraction
 
 
 def sum_over_compartments_bycategory(model, compartment_types, categories):
 
-    # Waiting for Bosco's input, so won't fully comment yet
     summed_soln = {}
-    # HELP BOSCO
-    # The following line of code works, but I'm sure this isn't the best approach:
     summed_denominator \
         = [0] * len(random.sample(model.compartment_soln.items(), 1)[0][1])
     compartment_types_bycategory = []
-    # HELP BOSCO
-    # I think there is probably a more elegant way to do the following, but perhaps not.
-    # Also, it could possibly be better generalised. That is, rather than insisting that
-    # strain applies to all compartments except for the susceptible, it might be possible
-    # to say that strain applies to all compartments except for those that have any
-    # strain in their label.
     if categories == 'strain':
         working_categories = model.strains
     elif categories == 'organ':
@@ -520,12 +509,8 @@ def sum_over_compartments_bycategory(model, compartment_types, categories):
                 = [0] * len(random.sample(model.compartment_soln.items(), 1)[0][1])
             for label in model.labels:
                 if compartment_type in label:
-                    summed_soln[compartment_type] = [
-                        a + b
-                        for a, b
-                        in zip(
-                            summed_soln[compartment_type],
-                            model.compartment_soln[label])]
+                    summed_soln[compartment_type] \
+                        = [i + j for i, j in zip(summed_soln[compartment_type], model.compartment_soln[label])]
                     summed_denominator += model.compartment_soln[label]
                 if compartment_type in label \
                         and compartment_type not in compartment_types_bycategory:
@@ -537,14 +522,10 @@ def sum_over_compartments_bycategory(model, compartment_types, categories):
                     = [0] * len(random.sample(model.compartment_soln.items(), 1)[0][1])
                 for label in model.labels:
                     if compartment_type in label and working_category in label:
-                        summed_soln[compartment_type + working_category] = [
-                            a + b
-                            for a, b
-                            in zip(
-                                summed_soln[compartment_type + working_category],
-                                model.compartment_soln[label])]
+                        summed_soln[compartment_type + working_category] \
+                            = [i + j for i, j in zip(summed_soln[compartment_type + working_category],
+                                                     model.compartment_soln[label])]
                         summed_denominator += model.compartment_soln[label]
-
     return summed_soln, summed_denominator, compartment_types_bycategory
 
 
@@ -595,37 +576,7 @@ def find_fractions(model):
     return subgroup_solns, subgroup_fractions
 
 
-def calculate_additional_diagnostics(model):
-
-    """
-    Calculate fractions and populations within subgroups of the full population.
-    """
-
-    groups = {
-        'ever_infected': ['susceptible_treated', 'latent', 'active', 'missed', 'lowquality', 'detect', 'treatment'],
-        'infected': ['latent', 'active', 'missed', 'lowquality', 'detect', 'treatment'],
-        'active': ['active', 'missed', 'detect', 'lowquality', 'treatment'],
-        'infectious': ['active', 'missed', 'lowquality', 'detect', 'treatment_infect'],
-        'identified': ['detect', 'treatment'],
-        'treatment': ['treatment_infect', 'treatment_noninfect']}
-
-    subgroup_solns = {}
-    subgroup_fractions = {}
-
-    for key in groups:
-        subgroup_solns[key], compartment_denominator \
-            = sum_over_compartments(model, groups[key])
-        subgroup_fractions[key] \
-            = get_fraction_soln(
-            groups[key],
-            subgroup_solns[key],
-            compartment_denominator)
-
-    return subgroup_solns, subgroup_fractions
-
-
 def get_agegroups_from_breakpoints(breakpoints):
-
     """
     This function consolidates get_strat_from_breakpoints from Romain's age_strat module and define_age_structure from
     James' model.py method into one function that can return either a dictionary or a list for the model stratification.
@@ -639,7 +590,7 @@ def get_agegroups_from_breakpoints(breakpoints):
             lists of the lower and upper age cut-off for that age group.
     """
 
-    # Initialise
+    # initialise
     agegroups = []
     agegroups_dict = {}
 
@@ -659,22 +610,21 @@ def get_agegroups_from_breakpoints(breakpoints):
                                                    float(breakpoints[i])]
             agegroups += [agegroup_string]
 
-        # Last age-group
+        # last age-group
         agegroup_string = '_age' + str(int(breakpoints[-1])) + 'up'
         agegroups_dict[agegroup_string] = [float(breakpoints[-1]),
                                            float('inf')]
         agegroups += [agegroup_string]
 
-    # If no age groups
+    # if no age groups
     else:
-        # List consisting of one empty string required for methods that iterate over strains
+        # list consisting of one empty string required for methods that iterate over strains
         agegroups += ['']
 
     return agegroups, agegroups_dict
 
 
 def turn_strat_into_label(stratum):
-
     """
     Convert age stratification string into a string that describes it more clearly.
 
@@ -685,33 +635,30 @@ def turn_strat_into_label(stratum):
     """
 
     if 'up' in stratum:
-        label = stratum[4: -2] + ' and up'
+        return stratum[4: -2] + ' and up'
     elif 'to' in stratum:
         to_index = stratum.find('to')
-        label = stratum[4: to_index] + ' to ' + stratum[to_index+2:]
+        return stratum[4: to_index] + ' to ' + stratum[to_index+2:]
     elif stratum == '':
-        label = 'All ages'
+        return 'All ages'
     else:
-        label = ''
-
-    return label
+        return ''
 
 
 def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_param_vals, assumed_max_params=100.,
                                    parameter_name='', whether_to_plot=False):
-
     """
     Create a new set of parameters associated to the model stratification given parameter values that are known for
     another stratification.
 
     Args:
-        data_breakpoints: tuple defining the breakpoints used in data.
-        model_breakpoints: tuple defining the breakpoints used in the model.
-        data_param_vals: dictionary containing the parameter values associated with each category defined by data_breakpoints
+        data_breakpoints: Tuple defining the breakpoints used in data.
+        model_breakpoints: Tuple defining the breakpoints used in the model.
+        data_param_vals: Dictionary containing the parameter values associated with each category defined by data_breakpoints
                          format example: {'_age0to5': 0.0, '_age5to15': 0.5, '_age15up': 1.0}
-        assumed_max_params: the assumed maximal value for the parameter (exemple, age: 100 yo).
+        assumed_max_params: The assumed maximal value for the parameter (example, age: 100 yo).
     Returns:
-        dictionary containing the parameter values associated with each category defined by model_breakpoints
+        Dictionary containing the parameter values associated with each category defined by model_breakpoints
     """
 
     data_strat_list, data_strat = get_agegroups_from_breakpoints(data_breakpoints)
@@ -736,14 +683,13 @@ def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_par
                 new_up = assumed_max_params
             else:
                 w_right = min(new_up, data_strat[old_name][1])
-
             beta += alpha * (w_right - w_left)
         beta = beta / (new_up - new_low)
         model_param_vals[new_name] = beta
 
     report_age_specific_parameter_calculations(parameter_name, model_param_vals)
 
-    # Convert data into list with same order as the ordered strat_lists
+    # convert data into list with same order as the ordered strat_lists
     data_value_list = []
     for i in data_strat_list:
         data_value_list += [data_param_vals[i]]
@@ -752,18 +698,15 @@ def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_par
         model_value_list += [model_param_vals[i]]
 
     if whether_to_plot:
-        outputs.plot_comparative_age_parameters(data_strat_list,
-                                                data_value_list,
-                                                model_value_list,
-                                                model_strat_list,
-                                                parameter_name)
-
+        outputs.plot_comparative_age_parameters(
+            data_strat_list, data_value_list, model_value_list, model_strat_list, parameter_name)
     return(model_param_vals)
 
 
 def report_age_specific_parameter_calculations(parameter_name, model_param_vals):
-
-    # Function to report the age-specific parameter calculations
+    """
+    Function to report the age-specific parameter calculations.
+    """
 
     print('For parameter "' + replace_underscore_with_space(parameter_name[:-4]) + '":')
     for age_param in model_param_vals:
@@ -779,7 +722,6 @@ def report_age_specific_parameter_calculations(parameter_name, model_param_vals)
 
 
 def indices(a, func):
-
     """
     Returns the indices of a which verify a condition defined by a lambda function.
 
@@ -796,7 +738,6 @@ def indices(a, func):
 
 
 def find_first_list_element_above_value(list, value):
-
     """
     Simple method to return the index of the first element of a list that is greater than a specified value.
 
@@ -805,13 +746,10 @@ def find_first_list_element_above_value(list, value):
         value: The value that the element must be greater than
     """
 
-    index = next(x[0] for x in enumerate(list) if x[1] > value)
-
-    return index
+    return next(x[0] for x in enumerate(list) if x[1] > value)
 
 
 def find_first_list_element_at_least_value(list, value):
-
     """
     Simple method to return the index of the first element of a list that is greater than a specified value.
 
@@ -820,13 +758,10 @@ def find_first_list_element_at_least_value(list, value):
         value: The value that the element must be greater than
     """
 
-    index = next(x[0] for x in enumerate(list) if x[1] >= value)
-
-    return index
+    return next(x[0] for x in enumerate(list) if x[1] >= value)
 
 
 def pickle_save(object, file):
-
     """
     Save an object in pickle format.
 
@@ -840,7 +775,6 @@ def pickle_save(object, file):
 
 
 def pickle_load(file):
-
     """
     Load an object previously saved in pickle format.
 
@@ -854,7 +788,6 @@ def pickle_load(file):
 
 
 def prepare_denominator(list_to_prepare):
-
     """
     Method to safely divide a list of numbers while ignoring zero denominators.
 
@@ -868,7 +801,6 @@ def prepare_denominator(list_to_prepare):
 
 
 def is_upper_age_limit_at_or_below(compartment_string, age_value):
-
     """
     Return boolean for whether the upper limit of the age string is below a certain value. Expected to be used for
     determining whether an age-group is entirely paediatric.
@@ -994,7 +926,6 @@ def remove_nans(dictionary):
     for i in nan_indices:
         del dictionary[i]
     return dictionary
-
 
 
 # * * * * * * * * * * * * * * * * * * * * * *

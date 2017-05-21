@@ -132,7 +132,6 @@ def adjust_country_name(country_name):
 
 
 def find_title_from_dictionary(name):
-
     """
     Function to store nicer strings for plot titles in a dictionary and extract
     for scale-up functions (initially, although could be used more widely).
@@ -200,7 +199,7 @@ def find_title_from_dictionary(name):
         'start_time':
             ' from start of model run',
         'early_time':
-            ' from start of model run',  # This is a bit of a fib
+            ' from start of model run',  # this is a bit of a fib
         'recent_time':
             ' over recent years',
         '_diabetes':
@@ -310,7 +309,6 @@ def find_title_from_dictionary(name):
 
 
 def find_string_from_starting_letters(string_to_analyse, string_start_to_find):
-
     """
     Possibly overly complicated function to find a string referring to an age group or population sub-group from
     the entire string for the compartment.
@@ -323,22 +321,22 @@ def find_string_from_starting_letters(string_to_analyse, string_start_to_find):
         stem: The remaining start of the string to be analysed
     """
 
-    # Find the position of the string
+    # find the position of the string
     string_position = string_to_analyse.find(string_start_to_find)
 
-    # Find the position of all the underscores in the string
+    # find the position of all the underscores in the string
     underscores = [pos for pos, char in enumerate(string_to_analyse) if char == '_']
 
-    # Find the underscore at the start of the string of interest's position in the list of underscores
+    # find the underscore at the start of the string of interest's position in the list of underscores
     for i, position in enumerate(underscores):
         if position == string_position:
             string_underscore_index = i
 
-    # If the string of interest is at the end of the string
+    # if the string of interest is at the end of the string
     if string_position == underscores[-1]:
         result_string = string_to_analyse[string_position:]
 
-    # Otherwise if more string follows the age string
+    # otherwise if more string follows the age string
     else:
         result_string = string_to_analyse[string_position: underscores[string_underscore_index + 1]]
 
@@ -389,7 +387,6 @@ def interrogate_age_string(age_string):
 
 
 def find_age_limits_directly_from_string(param_or_compartment):
-
     """
     Simple function to quickly grab the age limits from a string containing a standardised age string by combining the
     two previous functions.
@@ -408,7 +405,6 @@ def find_age_limits_directly_from_string(param_or_compartment):
 
 
 def find_age_breakpoints_from_dicts(age_dict):
-
     """
     Convert a dictionary of age groups back into the list of breakpoints.
     """
@@ -416,25 +412,24 @@ def find_age_breakpoints_from_dicts(age_dict):
     breakpoints_with_repetition = []
     breakpoints = []
 
-    # Add all age breakpoints to a temporary list that allows repetition
+    # add all age breakpoints to a temporary list that allows repetition
     for key in age_dict:
         for i in age_dict[key]:
             breakpoints_with_repetition += [i]
 
-    # Check there is a lowest and highest age group
+    # check there is a lowest and highest age group
     assert 0. in breakpoints_with_repetition, 'No age group goes to zero'
     assert float('inf') in breakpoints_with_repetition, 'No age group goes to infinity'
 
-    # Add the actual breakpoints once each
+    # add the actual breakpoints once each
     for breakpoint in breakpoints_with_repetition:
-        if breakpoint != 0. and breakpoint < 1E10 and breakpoint not in breakpoints:
+        if breakpoint != 0. and breakpoint < 1e10 and breakpoint not in breakpoints:
             breakpoints += [breakpoint]
 
     return breakpoints
 
 
 def estimate_prop_of_population_in_agegroup(age_limits, life_expectancy):
-
     """
     Function to estimate the proportion of the population that should be in a specific age group, assuming model
     equilibrium and absence of TB effects (which are false assumptions, of course).
@@ -443,17 +438,13 @@ def estimate_prop_of_population_in_agegroup(age_limits, life_expectancy):
         age_limits: Two element string of the upper and lower limit of the age group.
         life_expectancy: Float specifying the life expectancy.
     Returns:
-        estimated_prop_in_agegroup: Estimate of the proportion of the population in the age group.
+        Estimate of the proportion of the population in the age group.
     """
 
-    estimated_prop_in_agegroup \
-        = exp(-age_limits[0] * (1. / life_expectancy)) - exp(-age_limits[1] * (1. / life_expectancy))
-
-    return estimated_prop_in_agegroup
+    return exp(-age_limits[0] * (1. / life_expectancy)) - exp(-age_limits[1] * (1. / life_expectancy))
 
 
 def sum_over_compartments(model, compartment_types):
-
     """
     General method to sum sets of compartments.
 
@@ -471,9 +462,8 @@ def sum_over_compartments(model, compartment_types):
         for label in model.labels:
             if compartment_type in label:
                 summed_soln[compartment_type] \
-                    = [a + b for a, b in zip(summed_soln[compartment_type], model.compartment_soln[label])]
+                    = [i + j for i, j in zip(summed_soln[compartment_type], model.compartment_soln[label])]
                 summed_denominator += model.compartment_soln[label]
-
     return summed_soln, summed_denominator
 
 

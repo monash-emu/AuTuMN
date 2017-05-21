@@ -125,10 +125,10 @@ def adjust_country_name(country_name):
         adjusted_country_name: Adjusted string
     """
 
-    adjusted_country_name = country_name
     if country_name == 'Philippines':
-        adjusted_country_name = country_name + ' (the)'
-    return adjusted_country_name
+        return country_name + ' (the)'
+    else:
+        return country_name
 
 
 def find_title_from_dictionary(name):

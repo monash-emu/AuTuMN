@@ -371,7 +371,6 @@ def find_string_from_starting_letters(string_to_analyse, string_start_to_find):
 
 
 def interrogate_age_string(age_string):
-
     """
     Take a string referring to an age group and find it's upper and lower limits.
 
@@ -382,13 +381,13 @@ def interrogate_age_string(age_string):
         dict_limits: Dictionary of the lower and upper limits
     """
 
-    # Check the age string sta
+    # check the age string starts with the string to indicate age
     assert age_string[:4] == '_age', 'Age string does not begin with "_age".'
 
-    # Extract the part of the string that actually refers to the ages
+    # extract the part of the string that actually refers to the ages
     ages = age_string[4:]
 
-    # Find the lower age limit
+    # find the lower age limit
     lower_age_limit = ''
     for i, letter in enumerate(ages):
         if letter.isdigit():
@@ -398,7 +397,7 @@ def interrogate_age_string(age_string):
     remaining_string = ages[len(lower_age_limit):]
     lower_age_limit = float(lower_age_limit)
 
-    # Find the upper age limit
+    # find the upper age limit
     if remaining_string == 'up':
         upper_age_limit = float('inf')
     elif remaining_string[:2] == 'to':

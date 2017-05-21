@@ -11,9 +11,8 @@ from flask_socketio import emit
 
 
 def find_common_elements(list_1, list_2):
-
     """
-    Simple method to find the intersection of two lists
+    Simple method to find the intersection of two lists.
 
     Args:
         list_1 and list_2: The two lists
@@ -21,15 +20,10 @@ def find_common_elements(list_1, list_2):
         intersection: The common elements of the two lists
     """
 
-    intersection = []
-    for i in list_1:
-        if i in list_2:
-            intersection += [i]
-    return intersection
+    return [i for i in list_1 if i in list_2]
 
 
 def find_common_elements_multiple_lists(list_of_lists):
-
     """
     Simple method to find the common elements of any number of lists
 

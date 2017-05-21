@@ -1,10 +1,10 @@
 
 import random
-from matplotlib import pyplot, patches
 from scipy import exp
 import outputs
 import cPickle as pickle
 from numpy import isfinite
+import numpy
 
 
 """
@@ -914,6 +914,120 @@ def is_upper_age_limit_at_or_below(compartment_string, age_value):
     """
 
     return interrogate_age_string(find_string_from_starting_letters(compartment_string, '_age')[0])[0][1] <= age_value
+
+
+def find_common_elements(list_1, list_2):
+    """
+    Simple method to find the intersection of two lists.
+
+    Args:
+        list_1 and list_2: The two lists
+    Returns:
+        intersection: The common elements of the two lists
+    """
+
+    return [i for i in list_1 if i in list_2]
+
+
+def find_common_elements_multiple_lists(list_of_lists):
+    """
+    Simple method to find the common elements of any number of lists
+
+    Args:
+        list_of_lists: A list whose elements are all the lists we want to find the
+            intersection of.
+
+    Returns:
+        intersection: Common elements of all lists.
+    """
+
+    intersection = list_of_lists[0]
+    for i in range(1, len(list_of_lists)):
+        intersection = find_common_elements(intersection, list_of_lists[i])
+    return intersection
+
+
+def calculate_proportion_dict(data, indices, percent=False):
+    """
+    General method to calculate proportions from absolute values provided as dictionaries.
+
+    Args:
+        data: Dictionary containing the absolute values.
+        indices: The keys of data from which proportions are to be calculated (generally a list of strings).
+        percent: Boolean describing whether the method should return the output as a percent or proportion.
+    Returns:
+        proportions: A dictionary of the resulting proportions.
+    """
+
+    # calculate multiplier for percentages if requested, otherwise leave as one
+    if percent:
+        multiplier = 1e2
+    else:
+        multiplier = 1.
+
+    # create a list of the years that are common to all indices within data
+    lists_of_years = []
+    for i in range(len(indices)):
+        lists_of_years += [data[indices[i]].keys()]
+    common_years = find_common_elements_multiple_lists(lists_of_years)
+
+    # calculate the denominator by summing the values for which proportions have been requested
+    denominator = {}
+    for i in common_years:
+        for j in indices:
+            if j == indices[0]:
+                denominator[i] = data[j][i]
+            else:
+                denominator[i] += data[j][i]
+
+    # calculate the proportions
+    proportions = {}
+    for j in indices:
+        proportions['prop_' + j] = {}
+        for i in common_years:
+            if denominator[i] > 0.:
+                proportions['prop_' + j][i] = \
+                    data[j][i] / denominator[i] \
+                    * multiplier
+
+    return proportions
+
+
+def remove_specific_key(dictionary, key):
+    """
+    Remove a specific named key from a dictionary.
+
+    Args:
+        dictionary: The dictionary to have a key removed
+        key: The key to be removed
+    Returns:
+        dictionary: The dictionary with the key removed
+    """
+
+    if key in dictionary:
+        del dictionary[key]
+    return dictionary
+
+
+def remove_nans(dictionary):
+    """
+    Takes a dictionary and removes all of the elements for which the value is nan.
+
+    Args:
+        dictionary: Should typically be the dictionary of programmatic values, usually
+                    with time in years as the key.
+    Returns:
+        dictionary: The dictionary with the nans removed.
+    """
+
+    nan_indices = []
+    for i in dictionary:
+        if type(dictionary[i]) == float and numpy.isnan(dictionary[i]):
+            nan_indices += [i]
+    for i in nan_indices:
+        del dictionary[i]
+    return dictionary
+
 
 
 # * * * * * * * * * * * * * * * * * * * * * *

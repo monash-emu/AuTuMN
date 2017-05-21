@@ -502,7 +502,9 @@ class Inputs:
         else:
             self.strains = self.available_strains[:self.gui_inputs['n_strains']]
             if self.gui_inputs['is_amplification']:
-                self.find_amplification_data()
+                self.time_variants['epi_prop_amplification'] \
+                    = {self.model_constants['start_mdr_introduce_time']: 0.,
+                       self.model_constants['end_mdr_introduce_time']: self.model_constants['tb_prop_amplification']}
             self.treatment_outcome_types = copy.copy(self.strains)
             if self.gui_inputs['is_misassignment']:
                 for strain in self.strains[1:]:
@@ -1073,18 +1075,6 @@ class Inputs:
             else:
                 self.add_comment_to_gui_window(
                     'Warning: Calibrated output %s is not directly available from the data' % output['key'])
-
-    ##### Unsorted methods from here through to miscellaneous
-
-    def find_amplification_data(self):
-        """
-        Add dictionary for the amplification proportion scale-up.
-        """
-
-        self.time_variants['epi_prop_amplification'] \
-            = {self.model_constants['start_mdr_introduce_time']: 0.,
-               self.model_constants['end_mdr_introduce_time']: self.model_constants['tb_prop_amplification']}
-
 
     #############################
     ### Miscellaneous methods ###

@@ -42,7 +42,6 @@ def find_common_elements_multiple_lists(list_of_lists):
 
 
 def calculate_proportion_dict(data, indices, percent=False):
-
     """
     General method to calculate proportions from absolute values provided as dictionaries.
 
@@ -54,19 +53,19 @@ def calculate_proportion_dict(data, indices, percent=False):
         proportions: A dictionary of the resulting proportions.
     """
 
-    # Calculate multiplier for percentages if requested, otherwise leave as one
+    # calculate multiplier for percentages if requested, otherwise leave as one
     if percent:
         multiplier = 1e2
     else:
         multiplier = 1.
 
-    # Create a list of the years that are common to all indices within data
+    # create a list of the years that are common to all indices within data
     lists_of_years = []
     for i in range(len(indices)):
         lists_of_years += [data[indices[i]].keys()]
     common_years = find_common_elements_multiple_lists(lists_of_years)
 
-    # Calculate the denominator by summing the values for which proportions have been requested
+    # calculate the denominator by summing the values for which proportions have been requested
     denominator = {}
     for i in common_years:
         for j in indices:
@@ -75,7 +74,7 @@ def calculate_proportion_dict(data, indices, percent=False):
             else:
                 denominator[i] += data[j][i]
 
-    # Calculate the proportions
+    # calculate the proportions
     proportions = {}
     for j in indices:
         proportions['prop_' + j] = {}
@@ -89,7 +88,6 @@ def calculate_proportion_dict(data, indices, percent=False):
 
 
 def remove_specific_key(dictionary, key):
-
     """
     Remove a specific named key from a dictionary.
 
@@ -106,7 +104,6 @@ def remove_specific_key(dictionary, key):
 
 
 def remove_nans(dictionary):
-
     """
     Takes a dictionary and removes all of the elements for which the value is nan.
 
@@ -127,6 +124,16 @@ def remove_nans(dictionary):
 
 
 def make_constant_function(value):
+    """
+    Function that returns a function of constant returned value with a deliberately irrelevant argument,
+    to maintain consistency with the number of arguments to other functions that take time as an argument.
+
+    Args:
+        value: The value for the created function to return
+        time: Irrelevant but necessary argument to the returned function
+    Returns:
+        constant: The constant function
+    """
 
     def constant(time):
         return value

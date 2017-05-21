@@ -14,7 +14,6 @@ Object-oriented structures are not intended to be kept here.
 
 
 def increment_dictionary_with_dictionary(dict_a, dict_b):
-
     """
     Function to add the values from one dictionary to the values from the same keys in another.
 
@@ -29,7 +28,6 @@ def increment_dictionary_with_dictionary(dict_a, dict_b):
 
 
 def is_parameter_value_valid(parameter):
-
     """
     Determine whether a number (typically a parameter value) is finite and positive.
     """
@@ -38,7 +36,6 @@ def is_parameter_value_valid(parameter):
 
 
 def find_scenario_string_from_number(scenario):
-
     """
     Find a string to represent a scenario from it's number (or None in the case of baseline).
 
@@ -51,12 +48,10 @@ def find_scenario_string_from_number(scenario):
         scenario_name = 'baseline'
     else:
         scenario_name = 'scenario_' + str(scenario)
-
     return scenario_name
 
 
 def find_scenario_number_from_string(scenario):
-
     """
     Reverse of the above method. Not currently used, but likely to be needed.
 
@@ -66,13 +61,13 @@ def find_scenario_number_from_string(scenario):
         scenario_number: The scenario number or None for baseline
     """
 
-    # Strip of the manual if being used in model_runner
+    # strip of the manual if being used in model_runner
     if 'manual_' in scenario:
         scenario_string = scenario.replace('manual_', '')
     else:
         scenario_string = scenario
 
-    # Find number or None for baseline scenario
+    # find number or None for baseline scenario
     if scenario_string == 'baseline':
         scenario_number = None
     else:
@@ -81,7 +76,6 @@ def find_scenario_number_from_string(scenario):
 
 
 def capitalise_first_letter(old_string):
-
     """
     Really simple method to capitalise the first character of a string.
 
@@ -91,14 +85,7 @@ def capitalise_first_letter(old_string):
         new_string: The capitalised string
     """
 
-    new_string = ''
-    for i in range(len(old_string)):
-        if i == 0:
-            new_string += old_string[i].upper()
-        else:
-            new_string += old_string[i]
-
-    return new_string
+    return old_string[0].upper() + old_string[1:]
 
 
 def replace_underscore_with_space(original_string):

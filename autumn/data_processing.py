@@ -210,7 +210,7 @@ class Inputs:
         self.process_uncertainty_parameters()
 
         # optimisation-related methods
-        self.find_intervention_startdates()
+        self.find_intervention_startdates()  # currently sitting with intervention classification methods, though(
 
         # perform checks (undeveloped still)
         self.checks()
@@ -855,6 +855,22 @@ class Inputs:
                 if 'int_prop_' + intervention in self.relevant_interventions[scenario]:
                     self.interventions_to_cost[scenario] += [intervention]
 
+    def find_intervention_startdates(self):
+        """
+        Find the dates when the different interventions start and populate self.intervention_startdates
+        """
+
+        for scenario in self.gui_inputs['scenarios_to_run']:
+            self.intervention_startdates[scenario] = {}
+            for intervention in self.interventions_to_cost[scenario]:
+                self.intervention_startdates[scenario][intervention] = None
+                years_pos_coverage \
+                    = [key for (key, value) in
+                       self.scaleup_data[scenario]['int_prop_' + intervention].items()
+                       if value > 0.]
+                if len(years_pos_coverage) > 0:  # i.e. some coverage present from start
+                    self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
+
     ###################################
     ### Uncertainty-related methods ###
     ###################################
@@ -913,21 +929,6 @@ class Inputs:
                     'Warning: Calibrated output %s is not directly available from the data' % output['key'])
 
     ##### Unsorted methods from here through to miscellaneous
-
-    def find_intervention_startdates(self):
-        """
-        Find the dates when the different interventions start and populate self.intervention_startdates
-        """
-
-        for scenario in self.gui_inputs['scenarios_to_run']:
-            self.intervention_startdates[scenario] = {}
-            for intervention in self.interventions_to_cost[scenario]:
-                self.intervention_startdates[scenario][intervention] = None
-                years_pos_coverage \
-                    = [key for (key, value) in self.scaleup_data[scenario]['int_prop_' + intervention].items()
-                       if value > 0.]
-                if len(years_pos_coverage) > 0:  # i.e. some coverage present from start
-                    self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
 
     def find_potential_interventions_to_cost(self):
 

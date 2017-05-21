@@ -653,6 +653,134 @@ class Inputs:
         self.derived_data.update(calculate_proportion_dict(self.derived_data,
                                                            ['succ', 'died', 'default'], percent=False))
 
+    def add_treatment_outcomes(self):
+        """
+        Add treatment outcomes for DS-TB to the time variants attribute.
+        Use the same approach as above to adding if requested and data not manually entered.
+        """
+
+        name_conversion_dict = {'_success': 'succ', '_death': 'died'}
+        for outcome in ['_success', '_death']:  # only for success and death because default is derived from these
+            if self.time_variants['program_prop_treatment' + outcome]['load_data'] == u'yes':
+                for year in self.derived_data['prop_' + name_conversion_dict[outcome]]:
+                    if year not in self.time_variants['program_prop_treatment' + outcome]:
+                        self.time_variants['program_prop_treatment' + outcome][year] \
+                            = self.derived_data['prop_' + name_conversion_dict[outcome]][year]
+
+    def duplicate_ds_outcomes_for_multistrain(self):
+        """
+        Duplicates the treatment outcomes with DS-TB key if it is a multi-strain model.
+        """
+
+        for outcome in ['_success', '_death']:
+            self.time_variants['program_prop_treatment' + outcome + '_ds'] \
+                = copy.copy(self.time_variants['program_prop_treatment' + outcome])
+
+    def add_resistant_strain_outcomes(self):
+        """
+        Finds treatment outcomes for the resistant strains (i.e. MDR and XDR-TB).
+        As for DS-TB, no need to find default proportion, as it is equal to one minus success minus death.
+        Inappropriate outcomes are currently set to those for XDR-TB - intended to be temporary.
+        """
+
+        # calculate proportions of each outcome for MDR and XDR-TB from GTB
+        for strain in ['mdr', 'xdr']:
+            self.derived_data.update(
+                calculate_proportion_dict(self.original_data['outcomes'],
+                                          [strain + '_succ', strain + '_fail', strain + '_died', strain + '_lost'],
+                                          percent=False))
+
+            # populate MDR and XDR data from outcomes dictionary into time variants where requested and not entered
+            if self.time_variants['program_prop_treatment_success_' + strain]['load_data'] == u'yes':
+                for year in self.derived_data['prop_' + strain + '_succ']:
+                    if year not in self.time_variants['program_prop_treatment_success_' + strain]:
+                        self.time_variants['program_prop_treatment_success_' + strain][year] \
+                            = self.derived_data['prop_' + strain + '_succ'][year]
+
+        # temporarily assign the same treatment outcomes to XDR-TB as for inappropriate
+        for outcome in ['_success', '_death']:
+            self.time_variants['program_prop_treatment' + outcome + '_inappropriate'] \
+                = copy.copy(self.time_variants['program_prop_treatment' + outcome + '_xdr'])
+
+    def add_demo_dictionaries_to_timevariants(self):
+        """
+        Add epidemiological time variant parameters to time_variants.
+        Similarly to previous methods, only performed if requested and only populated where absent.
+        """
+
+        for demo_parameter in ['life_expectancy', 'rate_birth']:
+            if self.time_variants['demo_' + demo_parameter]['load_data'] == u'yes':
+                for year in self.original_data[demo_parameter]:
+                    if year not in self.time_variants['demo_' + demo_parameter]:
+                        self.time_variants['demo_' + demo_parameter][year] = self.original_data[demo_parameter][
+                            year]
+
+    def add_organ_status_to_timevariants(self):
+        """
+        Populate organ status dictionaries where requested and not already loaded.
+        """
+
+        name_conversion_dict = {'_smearpos': '_sp', '_smearneg': '_sn'}
+        for outcome in ['_smearpos', '_smearneg']:
+            for year in self.derived_data['prop_new' + name_conversion_dict[outcome]]:
+                if year not in self.time_variants['epi_prop' + outcome]:
+                    self.time_variants['epi_prop' + outcome][year] \
+                        = self.derived_data['prop_new' + name_conversion_dict[outcome]][year]
+
+    def tidy_time_variants(self):
+        """
+        Final tidying of time-variants, as described in comments to each line of code below.
+        """
+
+        for time_variant in self.time_variants:
+
+            # add zero at starting time for model run to all program proportions
+            if 'program_prop' in time_variant or 'int_prop' in time_variant:
+                self.time_variants[time_variant][int(self.model_constants['start_time'])] = 0.
+
+            # remove the load_data keys, as they have been used and are now redundant
+            self.time_variants[time_variant] = remove_specific_key(self.time_variants[time_variant],
+                                                                   'load_data')
+
+            # remove keys for which values are nan
+            self.time_variants[time_variant] = remove_nans(self.time_variants[time_variant])
+
+    def adjust_param_for_reporting(self, param, country, adjustment_factor):
+        """
+        Adjust a parameter that is thought to be mis-reported by the country by a constant factor across the estimates
+        for all years.
+
+        Args:
+            param: The string for the parameter to be adjusted
+            country: The country to which this applies
+            adjustment_factor: A float to multiply the reported values by to get the adjusted values
+        """
+
+        if self.country == country:
+            for year in self.time_variants[param]:
+                if type(year) == int:
+                    self.time_variants[param][year] *= adjustment_factor
+
+    # called later than the methods above - after interventions have been classified
+    def find_scaleup_functions(self):
+        """
+        Master method for calculation of time-variant parameters/scale-up functions.
+        """
+
+        # extract data into structures for creating time-variant parameters or constant ones
+        self.find_data_for_functions_or_params()
+
+        # find scale-up functions or constant parameters
+        self.find_constant_functions()
+        self.find_scaleups()
+
+        # find the proportion of cases that are infectious for models that are unstratified by organ status
+        if len(self.organ_status) < 2:
+            self.set_fixed_infectious_proportion()
+
+        # add parameters for IPT, if and where not specified for the age range being implemented
+        self.add_missing_economics_for_ipt()
+
     ##############################
     ### Classify interventions ###
     ##############################
@@ -727,36 +855,66 @@ class Inputs:
                 if 'int_prop_' + intervention in self.relevant_interventions[scenario]:
                     self.interventions_to_cost[scenario] += [intervention]
 
-    #####
-
-    def find_scaleup_functions(self):
-        """
-        Master method for calculation of time-variant parameters/scale-up functions.
-        """
-
-        # extract data into structures for creating time-variant parameters or constant ones
-        self.find_data_for_functions_or_params()
-
-        # find scale-up functions or constant parameters
-        self.find_constant_functions()
-        self.find_scaleups()
-
-        # find the proportion of cases that are infectious for models that are unstratified by organ status
-        if len(self.organ_status) < 2:
-            self.set_fixed_infectious_proportion()
-
-        # add parameters for IPT, if and where not specified for the age range being implemented
-        self.add_missing_economics_for_ipt()
+    ###################################
+    ### Uncertainty-related methods ###
+    ###################################
 
     def process_uncertainty_parameters(self):
+        """
+        Master method to uncertainty processing, calling other relevant methods.
+        """
 
-        # Specify the parameters to be used for uncertainty
+        # specify the parameters to be used for uncertainty
         if self.gui_inputs['output_uncertainty']:
             self.find_uncertainty_distributions()
             self.get_data_to_fit()
 
-    def find_intervention_startdates(self):
+    def find_uncertainty_distributions(self):
+        """
+        Populate a dictionary of uncertainty parameters from the inputs dictionary in a format that matches code for
+        uncertainty.
+        """
 
+        for param in self.model_constants:
+            if '_uncertainty' in param and type(self.model_constants[param]) == dict:
+                self.param_ranges_unc += [{'key': param[:-12],
+                                           'bounds': [self.model_constants[param]['lower'],
+                                                      self.model_constants[param]['upper']],
+                                           'distribution': 'uniform'}]
+
+    def get_data_to_fit(self):
+        """
+        Extract data for model fitting. Choices currently hard-coded above.
+        """
+
+        # decide whether calibration or uncertainty analysis is being run
+        if self.mode == 'calibration':
+            var_to_iterate = self.calib_outputs
+        elif self.mode == 'uncertainty':
+            var_to_iterate = self.outputs_unc
+
+        inc_conversion_dict = {'incidence': 'e_inc_100k',
+                               'incidence_low': 'e_inc_100k_lo',
+                               'incidence_high': 'e_inc_100k_hi'}
+        mort_conversion_dict = {'mortality': 'e_mort_exc_tbhiv_100k',
+                                'mortality_low': 'e_mort_exc_tbhiv_100k_lo',
+                                'mortality_high': 'e_mort_exc_tbhiv_100k_hi'}
+
+        # work through vars to be used and populate into the data fitting dictionary
+        for output in var_to_iterate:
+            if output['key'] == 'incidence':
+                for key in inc_conversion_dict:
+                    self.data_to_fit[key] = self.original_data['tb'][inc_conversion_dict[key]]
+            elif output['key'] == 'mortality':
+                for key in mort_conversion_dict:
+                    self.data_to_fit[key] = self.original_data['tb'][mort_conversion_dict[key]]
+            else:
+                self.add_comment_to_gui_window(
+                    'Warning: Calibrated output %s is not directly available from the data' % output['key'])
+
+    ##### Unsorted methods from here through to miscellaneous
+
+    def find_intervention_startdates(self):
         """
         Find the dates when the different interventions start and populate self.intervention_startdates
         """
@@ -795,118 +953,6 @@ class Inputs:
             self.potential_interventions_to_cost += ['xpertacf_urbanpoor', 'cxrxpertacf_urbanpoor']
         if self.gui_inputs['riskgroup_ruralpoor']:
             self.potential_interventions_to_cost += ['xpertacf_ruralpoor', 'cxrxpertacf_ruralpoor']
-
-    def adjust_param_for_reporting(self, param, country, adjustment_factor):
-        """
-        Adjust a parameter that is thought to be mis-reported by the country by a constant factor across the estimates
-        for all years.
-
-        Args:
-            param: The string for the parameter to be adjusted
-            country: The country to which this applies
-            adjustment_factor: A float to multiply the reported values by to get the adjusted values
-        """
-
-        if self.country == country:
-            for year in self.time_variants[param]:
-                if type(year) == int:
-                    self.time_variants[param][year] *= adjustment_factor
-
-    def add_treatment_outcomes(self):
-
-        """
-        Add treatment outcomes for DS-TB to the time variants attribute.
-        Use the same approach as above to adding if requested and data not manually entered.
-        """
-
-        name_conversion_dict = {'_success': 'succ', '_death': 'died'}
-        for outcome in ['_success', '_death']:  # only for success and death because default is derived from these
-            if self.time_variants['program_prop_treatment' + outcome]['load_data'] == u'yes':
-                for year in self.derived_data['prop_' + name_conversion_dict[outcome]]:
-                    if year not in self.time_variants['program_prop_treatment' + outcome]:
-                        self.time_variants['program_prop_treatment' + outcome][year] \
-                            = self.derived_data['prop_' + name_conversion_dict[outcome]][year]
-
-    def duplicate_ds_outcomes_for_multistrain(self):
-
-        """
-        Duplicates the treatment outcomes with DS-TB key if it is a multi-strain model.
-        """
-
-        for outcome in ['_success', '_death']:
-            self.time_variants['program_prop_treatment' + outcome + '_ds'] \
-                = copy.copy(self.time_variants['program_prop_treatment' + outcome])
-
-    def add_resistant_strain_outcomes(self):
-
-        """
-        Finds treatment outcomes for the resistant strains (i.e. MDR and XDR-TB).
-        As for DS-TB, no need to find default proportion, as it is equal to one minus success minus death.
-        Inappropriate outcomes are currently set to those for XDR-TB - intended to be temporary.
-        """
-
-        # Calculate proportions of each outcome for MDR and XDR-TB from GTB
-        for strain in ['mdr', 'xdr']:
-            self.derived_data.update(
-                calculate_proportion_dict(self.original_data['outcomes'],
-                                          [strain + '_succ', strain + '_fail', strain + '_died', strain + '_lost'],
-                                          percent=False))
-
-            # Populate MDR and XDR data from outcomes dictionary into time variants where requested and not entered
-            if self.time_variants['program_prop_treatment_success_' + strain]['load_data'] == u'yes':
-                for year in self.derived_data['prop_' + strain + '_succ']:
-                    if year not in self.time_variants['program_prop_treatment_success_' + strain]:
-                        self.time_variants['program_prop_treatment_success_' + strain][year] \
-                            = self.derived_data['prop_' + strain + '_succ'][year]
-
-        # Temporarily assign the same treatment outcomes to XDR-TB as for inappropriate
-        for outcome in ['_success', '_death']:
-            self.time_variants['program_prop_treatment' + outcome + '_inappropriate'] \
-                = copy.copy(self.time_variants['program_prop_treatment' + outcome + '_xdr'])
-
-    def add_demo_dictionaries_to_timevariants(self):
-
-        """
-        Add epidemiological time variant parameters to time_variants.
-        Similarly to previous methods, only performed if requested and only populated where absent.
-        """
-
-        for demo_parameter in ['life_expectancy', 'rate_birth']:
-            if self.time_variants['demo_' + demo_parameter]['load_data'] == u'yes':
-                for year in self.original_data[demo_parameter]:
-                    if year not in self.time_variants['demo_' + demo_parameter]:
-                        self.time_variants['demo_' + demo_parameter][year] = self.original_data[demo_parameter][year]
-
-    def add_organ_status_to_timevariants(self):
-
-        """
-        Populate organ status dictionaries where requested and not already loaded.
-        """
-
-        name_conversion_dict = {'_smearpos': '_sp', '_smearneg': '_sn'}
-        for outcome in ['_smearpos', '_smearneg']:
-            for year in self.derived_data['prop_new' + name_conversion_dict[outcome]]:
-                if year not in self.time_variants['epi_prop' + outcome]:
-                    self.time_variants['epi_prop' + outcome][year] \
-                        = self.derived_data['prop_new' + name_conversion_dict[outcome]][year]
-
-    def tidy_time_variants(self):
-
-        """
-        Final tidying of time-variants.
-        """
-
-        for program in self.time_variants:
-
-            # Add zero at starting time for model run to all program proportions
-            if 'program_prop' in program or 'int_prop' in program:
-                self.time_variants[program][int(self.model_constants['start_time'])] = 0.
-
-            # Remove the load_data keys, as they have been used and are now redundant
-            self.time_variants[program] = remove_specific_key(self.time_variants[program], 'load_data')
-
-            # Remove keys for which values are nan
-            self.time_variants[program] = remove_nans(self.time_variants[program])
 
     def find_constant_functions(self):
 
@@ -1017,51 +1063,6 @@ class Inputs:
                                                     '"' + param[1:] + '" parameter unavailable for ' +
                                                     str(int(limits[0])) + ' to ' + str(int(limits[1])) +
                                                     ' age-group, so default value used.\n')
-
-    def find_uncertainty_distributions(self):
-
-        """
-        Populate a dictionary of uncertainty parameters from the inputs dictionary in a format that matches code for
-        uncertainty.
-        """
-
-        for param in self.model_constants:
-            if '_uncertainty' in param and type(self.model_constants[param]) == dict:
-                self.param_ranges_unc += [{'key': param[:-12],
-                                           'bounds': [self.model_constants[param]['lower'],
-                                                      self.model_constants[param]['upper']],
-                                           'distribution': 'uniform'}]
-
-    def get_data_to_fit(self):
-
-        """
-        Extract data for model fitting. Choices currently hard-coded above.
-        """
-
-        # Decide whether calibration or uncertainty analysis is being run
-        if self.mode == 'calibration':
-            var_to_iterate = self.calib_outputs
-        elif self.mode == 'uncertainty':
-            var_to_iterate = self.outputs_unc
-
-        inc_conversion_dict = {'incidence': 'e_inc_100k',
-                               'incidence_low': 'e_inc_100k_lo',
-                               'incidence_high': 'e_inc_100k_hi'}
-        mort_conversion_dict = {'mortality': 'e_mort_exc_tbhiv_100k',
-                                'mortality_low': 'e_mort_exc_tbhiv_100k_lo',
-                                'mortality_high': 'e_mort_exc_tbhiv_100k_hi'}
-
-        # Work through vars to be used and populate into the data fitting dictionary
-        for output in var_to_iterate:
-            if output['key'] == 'incidence':
-                for key in inc_conversion_dict:
-                    self.data_to_fit[key] = self.original_data['tb'][inc_conversion_dict[key]]
-            elif output['key'] == 'mortality':
-                for key in mort_conversion_dict:
-                    self.data_to_fit[key] = self.original_data['tb'][mort_conversion_dict[key]]
-            else:
-                self.add_comment_to_gui_window(
-                    'Warning: Calibrated output %s is not directly available from the data' % output['key'])
 
     def find_single_strain_timeperiods(self):
 

@@ -1069,7 +1069,7 @@ class ConsolidatedModel(StratifiedModel):
         # BCG (So simple that it's almost unnecessary, but needed for loops over int names)
         self.vars['popsize_vaccination'] = self.vars['births_total']
 
-        # Xpert and improve DST - all presentations with active TB
+        # Xpert and improve DST - all presentations for assessment for active TB
         for active_tb_presentations_intervention in ['xpert', 'improve_dst']:
             if 'int_prop_' + active_tb_presentations_intervention in self.relevant_interventions:
                 self.vars['popsize_' + active_tb_presentations_intervention] = 0.
@@ -1117,7 +1117,7 @@ class ConsolidatedModel(StratifiedModel):
                             += self.compartments[compartment] \
                                * self.params['int_prop_attending_clinics' + riskgroup]
 
-        # Decentralisation and engage low-quality sector
+        # decentralisation and engage low-quality sector
         adjust_lowquality = True
         all_actives_popsize = 0.
         for compartment in self.compartments:
@@ -1129,12 +1129,16 @@ class ConsolidatedModel(StratifiedModel):
             self.vars['popsize_engage_lowquality'] = all_actives_popsize
             if adjust_lowquality: self.vars['popsize_engage_lowquality'] *= self.vars['program_prop_lowquality']
 
-        # Shortcourse MDR-TB regimen
+        # shortcourse MDR-TB regimen
         if 'int_prop_shortcourse_mdr' in self.relevant_interventions:
             self.vars['popsize_shortcourse_mdr'] = 0.
             for compartment in self.compartments:
                 if 'treatment' in compartment and '_mdr' in compartment:
                     self.vars['popsize_shortcourse_mdr'] += self.compartments[compartment]
+
+        if self.scenario == 3:
+            print(self.vars['popsize_shortcourse_mdr'])
+
 
     ################################################################
     ### Methods that calculate the flows of all the compartments ###

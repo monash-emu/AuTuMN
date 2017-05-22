@@ -15,7 +15,6 @@ import model_runner
 
 
 def find_smallest_factors_of_integer(n):
-
     """
     Quick method to iterate through integers to find the smallest whole number fractions.
     Written only to be called by find_subplot_numbers.
@@ -26,7 +25,7 @@ def find_smallest_factors_of_integer(n):
         answer: The two smallest factors of the integer
     """
 
-    answer = [1E3, 1E3]
+    answer = [1e3, 1e3]
     for i in range(1, n + 1):
         if n % i == 0 and i+(n/i) < sum(answer):
             answer = [i, n/i]
@@ -34,7 +33,6 @@ def find_smallest_factors_of_integer(n):
 
 
 def humanise_y_ticks(ax):
-
     """
     Coded by Bosco, does a few things, including rounding axis values to thousands, millions or billions and
     abbreviating these to single letters.
@@ -63,17 +61,15 @@ def humanise_y_ticks(ax):
 
 
 def make_axes_with_room_for_legend():
-
     """
     Create axes for a figure with a single plot with a reasonable amount of space around.
 
     Returns:
-        ax: The axes that can be plotted on
+        The axes that can be plotted on
     """
 
     fig = pyplot.figure()
-    ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
-    return ax
+    return fig.add_axes([0.1, 0.1, 0.6, 0.75])
 
 
 def set_axes_props(ax, xlabel=None, ylabel=None, title=None, is_legend=True, axis_labels=None, side='left'):
@@ -132,7 +128,6 @@ def set_axes_props(ax, xlabel=None, ylabel=None, title=None, is_legend=True, axi
 
 
 def get_nice_font_size(subplot_grid):
-
     """
     Simple function to return a reasonable font size as appropriate to the number of rows of subplots in the figure.
     """
@@ -141,7 +136,6 @@ def get_nice_font_size(subplot_grid):
 
 
 def find_reasonable_year_ticks(start_time, end_time):
-
     """
     Function to find a reasonable spacing between years for x-ticks.
 
@@ -171,12 +165,10 @@ def find_reasonable_year_ticks(start_time, end_time):
     while working_time < end_time:
         times.append(working_time)
         working_time += spacing
-
     return times
 
 
 def find_standard_output_styles(labels, lightening_factor=1.):
-
     """
     Function to find some standardised colours for the outputs we'll typically
     be reporting on - i.e. incidence, prevalence, mortality and notifications.
@@ -225,7 +217,7 @@ def find_standard_output_styles(labels, lightening_factor=1.):
         yaxis_label += ['Percentage']
         title += ['Proportion of incidence']
 
-    # Create a colour half-way between the line colour and white for patches
+    # create a colour half-way between the line colour and white for patches
     for i in range(len(colour)):
         patch_colour += [[]]
         for j in range(len(colour[i])):
@@ -235,7 +227,6 @@ def find_standard_output_styles(labels, lightening_factor=1.):
 
 
 def make_related_line_styles(labels, strain_or_organ):
-
     """
     Make line styles for compartments.
     Args:
@@ -1252,7 +1243,7 @@ class Project:
         Master plotting method to call all the methods that produce specific plots.
         """
 
-        # Find some general output colours
+        # find some general output colours
         output_colours = self.make_default_line_styles(5, True)
         for s, scenario in enumerate(self.scenarios):
             self.output_colours[scenario] = output_colours[s]
@@ -1261,7 +1252,7 @@ class Project:
                 # +1 is to avoid starting from black, which doesn't look as nice for programs as for baseline scenario
                 self.program_colours[scenario][program] = output_colours[p + 1]
 
-        # Plot main outputs
+        # plot main outputs
         if self.gui_inputs['output_gtb_plots']:
             self.plot_outputs_against_gtb(self.gtb_available_outputs, ci_plot=None)
             if self.gui_inputs['output_uncertainty']:
@@ -1270,7 +1261,7 @@ class Project:
             if self.gui_inputs['n_strains'] > 1:
                 self.plot_resistant_strain_outputs(['incidence', 'mortality', 'prevalence', 'perc_incidence'])
 
-        # Plot scale-up functions - currently only doing this for the baseline model run
+        # plot scale-up functions - currently only doing this for the baseline model run
         if self.gui_inputs['output_scaleups']:
             if self.vars_to_view:
                 self.individual_var_viewer()
@@ -1281,48 +1272,48 @@ class Project:
             # Not technically a scale-up function in the same sense, but put in here anyway
             self.plot_force_infection()
 
-        # Plot mixing matrix if relevant
+        # plot mixing matrix if relevant
         if self.model_runner.model_dict['manual_baseline'].vary_force_infection_by_riskgroup:
             self.plot_mixing_matrix()
 
-        # Plot economic outputs
+        # plot economic outputs
         if self.gui_inputs['output_plot_economics']:
             self.plot_cost_coverage_curves()
             self.plot_cost_over_time()
             # self.plot_intervention_costs_by_scenario(2015, 2030)
 
-        # Plot compartment population sizes
+        # plot compartment population sizes
         if self.gui_inputs['output_compartment_populations']:
             self.plot_populations()
 
-        # Plot fractions
+        # plot fractions
         if self.gui_inputs['output_fractions']:
             self.plot_fractions('strain')
 
-        # Plot outputs by age group
+        # plot outputs by age group
         if self.gui_inputs['output_by_subgroups']:
             self.plot_outputs_by_stratum()
             self.plot_outputs_by_stratum(strata_string='riskgroups', outputs_to_plot=['incidence', 'prevalence'])
 
-        # Plot proportions of population
+        # plot proportions of population
         if self.gui_inputs['output_age_fractions']:
             self.plot_stratified_populations(age_or_risk='age')
 
-        # Plot risk group proportions
+        # plot risk group proportions
         if self.gui_inputs['output_riskgroup_fractions']:
             self.plot_stratified_populations(age_or_risk='risk')
 
-        # Make a flow-diagram
+        # make a flow-diagram
         if self.gui_inputs['output_flow_diagram']:
             png = os.path.join(self.out_dir_project, self.country + '_flow_diagram' + '.png')
             self.model_runner.model_dict['manual_baseline'].make_flow_diagram(png)
 
-        # Plot risk group proportions
+        # plot risk group proportions
         if self.gui_inputs['output_plot_riskgroup_checks'] \
                 and len(self.model_runner.model_dict['manual_baseline'].riskgroups) > 1:
             self.plot_riskgroup_checks()
 
-        # Save figure that is produced in the uncertainty running process
+        # save figure that is produced in the uncertainty running process
         if self.gui_inputs['output_param_plots']:
             param_tracking_figure = self.set_and_update_figure()
             param_tracking_figure = self.model_runner.plot_progressive_parameters_tk(from_runner=False,
@@ -1330,18 +1321,18 @@ class Project:
             self.save_figure(param_tracking_figure, '_param_tracking')
             self.plot_param_histograms()
 
-        # Plot popsizes for checking cost-coverage curves
+        # plot popsizes for checking cost-coverage curves
         if self.gui_inputs['output_popsize_plot']:
             self.plot_popsizes()
 
         # self.plot_case_detection_rate()
         self.plot_mixing_matrix()
 
-        # Plot likelihood estimates
+        # plot likelihood estimates
         if self.gui_inputs['output_likelihood_plot']:
             self.plot_likelihoods()
 
-        # Optimisation plotting
+        # optimisation plotting
         if self.model_runner.optimisation:
             self.plot_optimised_epi_outputs()
             self.plot_piecharts_opti()
@@ -1356,13 +1347,13 @@ class Project:
             ci_plot: Whether to plot uncertainty intervals around the estimates generated from uncertainty runs.
         """
 
-        # Standard preliminaries
+        # standard preliminaries
         start_time = self.inputs.model_constants['plot_start_time']
         colour, indices, yaxis_label, title, patch_colour = find_standard_output_styles(outputs, lightening_factor=0.3)
         subplot_grid = find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
 
-        # Loop through indicators
+        # loop through indicators
         for o, output in enumerate(outputs):
 
             # Preliminaries
@@ -1456,7 +1447,7 @@ class Project:
                            legend=(o == len(outputs) - 1 and len(self.scenarios) > 1),
                            y_axis_type='raw', y_label=yaxis_label[o])
 
-        # Add main title and save
+        # add main title and save
         fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb' + end_filename)
 
@@ -1471,12 +1462,12 @@ class Project:
             outputs: The outputs to be plotted (after adding the strain name to the end).
         """
 
-        # Prelims
+        # prelims
         subplot_grid = find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
         colour, indices, yaxis_label, title, _ = find_standard_output_styles(outputs)
 
-        # Cycle over each output and plot
+        # cycle over each output and plot
         for o, output in enumerate(outputs):
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
             for scenario in self.scenarios[::-1]:
@@ -1488,7 +1479,7 @@ class Project:
                            start_time=self.inputs.model_constants['start_mdr_introduce_time'],
                            legend=(o == len(outputs) - 1))
 
-        # Finish off
+        # finish off
         fig.suptitle(t_k.capitalise_first_letter(self.country) + ' resistant strain outputs',
                      fontsize=self.suptitle_size)
         self.save_figure(fig, '_resistant_strain')
@@ -1530,20 +1521,20 @@ class Project:
         Plot each scale-up function as a separate panel against the data it is fitted to.
         """
 
-        # Different figure for each type of function
+        # different figure for each type of function
         for classification in self.classified_scaleups:
 
-            # Find the list of the scale-up functions to work with and some x-values
+            # find the list of the scale-up functions to work with and some x-values
             function_list = self.classified_scaleups[classification]
 
-            # Standard prelims
+            # standard prelims
             fig = self.set_and_update_figure()
             subplot_grid = find_subplot_numbers(len(function_list))
             start_time, end_time \
                 = self.inputs.model_constants['plot_start_time'], self.inputs.model_constants['plot_end_time']
             x_vals = numpy.linspace(start_time, end_time, 1e3)
 
-            # Iterate through functions
+            # iterate through functions
             for f, function in enumerate(function_list):
 
                 # Initialise axis
@@ -1573,7 +1564,7 @@ class Project:
                 self.tidy_axis(ax, subplot_grid, start_time=start_time, title=t_k.find_title_from_dictionary(function),
                                legend=(f == len(function_list) - 1), y_axis_type=y_axis_type)
 
-            # Finish off
+            # finish off
             title = self.inputs.country + ' ' + t_k.find_title_from_dictionary(classification) + ' parameter'
             if len(function_list) > 1: title += 's'
             fig.suptitle(title, fontsize=self.suptitle_size)
@@ -2048,27 +2039,26 @@ class Project:
                        bbox_extra_artists=(lgd,), bbox_inches='tight')
 
     def plot_riskgroup_checks(self):
-
         """
         Plots actual risk group fractions against targets. Probably almost redundant, as this is a test of code, rather
         than really giving and epidemiological information.
         """
 
-        # Standard prelims
+        # standard prelims
         fig = self.set_and_update_figure()
         ax = self.make_single_axis(fig)
 
-        # Plotting
+        # plotting
         for riskgroup in self.model_runner.model_dict['manual_baseline'].riskgroups:
-            ax.plot(self.model_runner.model_dict['manual_baseline'].times[1:],
+            ax.plot(self.model_runner.model_dict['manual_baseline'].times,
                     self.model_runner.model_dict['manual_baseline'].actual_risk_props[riskgroup], 'g-',
                     label='Actual ' + riskgroup)
             ax.plot(self.model_runner.model_dict['manual_baseline'].times,
-                    self.model_runner.model_dict['manual_baseline'].target_risk_props[riskgroup], 'k--',
+                    self.model_runner.model_dict['manual_baseline'].target_risk_props[riskgroup][1:], 'k--',
                     label='Target ' + riskgroup)
 
-        # End bits
-        self.tidy_axis(ax, [1, 1], yaxis_label='Proportion', start_time=self.inputs.model_constants['plot_start_time'],
+        # end bits
+        self.tidy_axis(ax, [1, 1], y_axis_type='proportion', start_time=self.inputs.model_constants['plot_start_time'],
                        single_axis_room_for_legend=True)
         fig.suptitle('Population by risk group', fontsize=self.suptitle_size)
         self.save_figure(fig, '_riskgroup_checks')

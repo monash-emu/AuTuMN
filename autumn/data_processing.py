@@ -873,6 +873,8 @@ class Inputs:
             self.potential_interventions_to_cost += ['shortcourse_mdr']
             self.potential_interventions_to_cost += ['food_voucher_ds']
             self.potential_interventions_to_cost += ['food_voucher_mdr']
+        for organ in self.organ_status:
+            self.potential_interventions_to_cost += ['ambulatorycare' + organ]
         if self.gui_inputs['is_lowquality']:
             self.potential_interventions_to_cost += ['engage_lowquality']
         if self.gui_inputs['riskgroup_prison']:

@@ -762,7 +762,6 @@ class ConsolidatedModel(StratifiedModel):
                         1. / self.vars['program_timeperiod_await_treatment' + organ]
 
     def calculate_treatment_rates_vars(self):
-
         """
         Work out rates of progression through treatment by stage of treatment from the proportions provided for success
         and death.
@@ -1047,6 +1046,16 @@ class ConsolidatedModel(StratifiedModel):
                 if 'treatment_' in compartment:
                     self.vars['popsize_treatment_support'] += self.compartments[compartment]
 
+        # ambulatory care
+        for organ in self.organ_status:
+            if 'int_prop_ambulatorycare' + organ in self.relevant_interventions:
+                self.vars['popsize_ambulatorycare' + organ] = 0.
+                for compartment in self.compartments:
+                    if 'treatment_' in compartment and organ in compartment:
+                        self.vars['popsize_ambulatorycare' + organ] += self.compartments[compartment]
+
+        print(self.vars['int_prop_ambulatorycare_smearneg'])
+
         # food vouchers
         for strain in self.strains:
             if 'int_prop_food_voucher' + strain in self.relevant_interventions:
@@ -1152,6 +1161,7 @@ class ConsolidatedModel(StratifiedModel):
             for compartment in self.compartments:
                 if 'treatment' in compartment and '_mdr' in compartment:
                     self.vars['popsize_shortcourse_mdr'] += self.compartments[compartment]
+
 
     ################################################################
     ### Methods that calculate the flows of all the compartments ###

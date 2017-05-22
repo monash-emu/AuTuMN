@@ -869,7 +869,7 @@ class Inputs:
         for which model.py has popsize calculations coded.
         """
 
-        if self.strains > 1:
+        if len(self.strains) > 1:
             self.potential_interventions_to_cost += ['shortcourse_mdr']
             self.potential_interventions_to_cost += ['food_voucher_ds']
             self.potential_interventions_to_cost += ['food_voucher_mdr']

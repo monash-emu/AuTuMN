@@ -557,7 +557,6 @@ class ConsolidatedModel(StratifiedModel):
                     self.vars['program_rate_detect' + organ + riskgroup] *= case_detection_ratio_with_awareness
 
     def calculate_acf_rate(self):
-
         """
         Calculates rates of ACF from the proportion of programmatic coverage of both smear-based and Xpert-based ACF
         (both presuming symptom-based screening before this, as in the studies on which this is based).
@@ -567,25 +566,25 @@ class ConsolidatedModel(StratifiedModel):
         Creates vars for both ACF in specific risk groups and for ACF in the general community (which uses '').
         """
 
-        # Loop covers risk groups and community-wide ACF
+        # loop covers risk groups and community-wide ACF
         for riskgroup in [''] + self.riskgroups:
 
-            # Decide whether to use the general detection proportion, or a risk-group specific one
+            # decide whether to use the general detection proportion, or a risk-group specific one
             if 'int_prop_acf_detections_per_round' + riskgroup in self.params:
                 int_prop_acf_detections_per_round \
                     = self.params['int_prop_acf_detections_per_round' + riskgroup]
             else:
                 int_prop_acf_detections_per_round = self.params['int_prop_acf_detections_per_round']
 
-            # Implement intervention
+            # implement intervention
             if 'int_prop_smearacf' + riskgroup in self.relevant_interventions \
                     or 'int_prop_xpertacf' + riskgroup in self.relevant_interventions:
 
-                # The following can't be written as self.organ_status, as it won't work for non-fully-stratified models
+                # the following can't be written as self.organ_status, as it won't work for non-fully-stratified models
                 for organ in ['', '_smearpos', '_smearneg', '_extrapul']:
                     self.vars['int_rate_acf' + organ + riskgroup] = 0.
 
-                # Smear-based ACF rate
+                # smear-based ACF rate
                 if 'int_prop_smearacf' + riskgroup in self.relevant_interventions:
                     self.vars['int_rate_acf_smearpos' + riskgroup] \
                         += self.vars['int_prop_smearacf' + riskgroup] \
@@ -605,7 +604,7 @@ class ConsolidatedModel(StratifiedModel):
                                    / self.params['int_timeperiod_acf_rounds'] \
                                    * cxr_sensitivity
 
-                        # Adjust smear-negative detections for Xpert's sensitivity
+                        # adjust smear-negative detections for Xpert's sensitivity
                         self.vars['int_rate_acf_smearneg' + riskgroup] \
                             *= self.params['tb_prop_xpert_smearneg_sensitivity'] \
                                * cxr_sensitivity
@@ -772,12 +771,12 @@ class ConsolidatedModel(StratifiedModel):
         treatments = copy.copy(self.strains)
         for strain in treatments:
 
-            # Find baseline treatment period for total duration and for period infectious
+            # find baseline treatment period for total duration and for period infectious
             for treatment_stage in ['', '_infect']:
                 self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
                     = self.params['tb_timeperiod' + treatment_stage + '_ontreatment' + strain]
 
-            # Adapt treatment periods for short course regimen
+            # adapt treatment periods for short course regimen
             if strain == '_mdr' and 'int_prop_shortcourse_mdr' in self.relevant_interventions:
                 relative_treatment_duration_mdr \
                     = 1. - self.vars['int_prop_shortcourse_mdr'] \
@@ -794,7 +793,7 @@ class ConsolidatedModel(StratifiedModel):
                                 - self.vars['program_prop_treatment' + outcome + '_mdr']) \
                                * self.vars['int_prop_shortcourse_mdr']
 
-            # Add some extra treatment success if the treatment support int is active
+            # add some extra treatment success if the treatment support int is active
             if 'int_prop_treatment_support' in self.relevant_interventions:
                 self.vars['program_prop_treatment_success' + strain] \
                     += (1. - self.vars['program_prop_treatment_success' + strain]) \
@@ -805,7 +804,7 @@ class ConsolidatedModel(StratifiedModel):
                        * self.params['int_prop_treatment_support_improvement'] \
                        * self.vars['int_prop_treatment_support']
 
-            # Add some extra treatment success if food vouchers are provided to treated cases
+            # add some extra treatment success if food vouchers are provided to treated cases
             if 'int_prop_food_voucher' + strain in self.relevant_interventions:
                 self.vars['program_prop_treatment_success' + strain] \
                     += (1. - self.vars['program_prop_treatment_success' + strain]) \
@@ -816,17 +815,17 @@ class ConsolidatedModel(StratifiedModel):
                        * self.params['int_prop_food_voucher_improvement'] \
                        * self.vars['int_prop_food_voucher' + strain]
 
-            # Calculate the default proportion as the remainder from success and death
+            # calculate the default proportion as the remainder from success and death
             self.vars['program_prop_treatment_default' + strain] \
                 = 1. - self.vars['program_prop_treatment_success' + strain] \
                   - self.vars['program_prop_treatment_death' + strain]
 
-            # Find non-infectious period from infectious and total
+            # find non-infectious period from infectious and total
             self.vars['tb_timeperiod_noninfect_ontreatment' + strain] \
                 = self.vars['tb_timeperiod_ontreatment' + strain] \
                   - self.vars['tb_timeperiod_infect_ontreatment' + strain]
 
-            # Find the proportion of deaths/defaults during the infectious and non-infectious stages
+            # find the proportion of deaths/defaults during the infectious and non-infectious stages
             props = {}
             for outcome in self.outcomes[1:]:
                 props['_infect'], props['_noninfect'] \
@@ -838,18 +837,18 @@ class ConsolidatedModel(StratifiedModel):
 
             for treatment_stage in self.treatment_stages:
 
-                # Find the success proportions
+                # find the success proportions
                 self.vars['program_prop_treatment_success' + treatment_stage + strain] \
                     = 1. - self.vars['program_prop_treatment_default' + treatment_stage + strain] \
                       - self.vars['program_prop_treatment_death' + treatment_stage + strain]
 
-                # Find the corresponding rates from the proportions
+                # find the corresponding rates from the proportions
                 for outcome in self.outcomes:
                     self.vars['program_rate' + outcome + treatment_stage + strain] \
                         = 1. / self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
                           * self.vars['program_prop_treatment' + outcome + treatment_stage + strain]
 
-                # Split default according to whether amplification occurs (if not the most resistant strain)
+                # split default according to whether amplification occurs (if not the most resistant strain)
                 if self.is_amplification:
                     self.vars['program_rate_default' + treatment_stage + '_amplify' + strain] \
                         = self.vars['program_rate_default' + treatment_stage + strain] \
@@ -1232,7 +1231,6 @@ class ConsolidatedModel(StratifiedModel):
                             'rate_force_novelvac' + strain + force_riskgroup + agegroup)
 
     def set_progression_flows(self):
-
         """
         Set rates of progression from latency to active disease, with rates differing by organ status.
         """

@@ -1154,9 +1154,6 @@ class ConsolidatedModel(StratifiedModel):
                 if 'treatment' in compartment and '_mdr' in compartment:
                     self.vars['popsize_shortcourse_mdr'] += self.compartments[compartment]
 
-
-
-
     ################################################################
     ### Methods that calculate the flows of all the compartments ###
     ################################################################

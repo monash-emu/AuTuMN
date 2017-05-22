@@ -59,7 +59,7 @@ class Inputs:
         self.intervention_startdates = {}
         self.potential_interventions_to_cost \
             = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf', 'ipt_age0to5', 'ipt_age5to15',
-               'decentralisation', 'improve_dst', 'intensive_screening', 'ipt_age15up']
+               'decentralisation', 'improve_dst', 'bulgaria_improve_dst', 'intensive_screening', 'ipt_age15up']
         self.freeze_times = {}
 
         # miscellaneous
@@ -830,7 +830,7 @@ class Inputs:
                 if strain not in self.strains and strain in time_variant:
                     self.irrelevant_time_variants += [time_variant]
 
-            # Exclude time-variants that are percentages, irrelevant drug-susceptibility testing programs, inappropriate
+            # exclude time-variants that are percentages, irrelevant drug-susceptibility testing programs, inappropriate
             # treatment time-variants for single strain models, smear-negative parameters for unstratified models,
             # low-quality care sector interventions for models not including this.
             if 'perc_' in time_variant \

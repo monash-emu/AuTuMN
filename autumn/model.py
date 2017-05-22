@@ -1036,20 +1036,19 @@ class ConsolidatedModel(StratifiedModel):
                               * self.vars['rate_force' + strain + riskgroup + agegroup]
 
     def calculate_population_sizes(self):
-
         """
         Calculate the size of the populations to which each intervention is applicable, for use in generating
         cost-coverage curves.
         """
 
-        # Treatment support
+        # treatment support
         if 'int_prop_treatment_support' in self.relevant_interventions:
             self.vars['popsize_treatment_support'] = 0.
             for compartment in self.compartments:
                 if 'treatment_' in compartment:
                     self.vars['popsize_treatment_support'] += self.compartments[compartment]
 
-        # Food vouchers
+        # food vouchers
         for strain in self.strains:
             if 'int_prop_food_voucher' + strain in self.relevant_interventions:
                 self.vars['popsize_food_voucher' + strain] = 0.
@@ -1085,6 +1084,25 @@ class ConsolidatedModel(StratifiedModel):
                                     += self.vars['program_rate_detect' + detection_organ + riskgroup]\
                                        * self.compartments['active' + organ + strain + riskgroup + agegroup] \
                                        * (self.params['int_number_tests_per_tb_presentation'] + 1.)
+
+        # improve DST in Bulgaria - the number of culture-positive cases
+        if 'int_prop_bulgaria_improve_dst' in self.relevant_interventions:
+            self.vars['popsize_bulgaria_improve_dst'] = 0.
+            for agegroup in self.agegroups:
+                for riskgroup in self.riskgroups:
+                    for strain in self.strains:
+                        detection_organ = ''
+                        if self.vary_detection_by_organ:
+                            detection_organ = '_smearpos'
+                        self.vars['popsize_bulgaria_improve_dst'] \
+                            += self.vars['program_rate_detect' + detection_organ + riskgroup] \
+                               * self.compartments['active_smearpos' + strain + riskgroup + agegroup]
+                        if self.vary_detection_by_organ:
+                            detection_organ = '_smearneg'
+                        self.vars['popsize_bulgaria_improve_dst'] \
+                            += self.vars['program_rate_detect' + detection_organ + riskgroup] \
+                               * self.compartments['active_smearneg' + strain + riskgroup + agegroup] \
+                               * self.params['tb_prop_smearneg_culturepos']
 
         # ACF
         for riskgroup in [''] + self.riskgroups:

@@ -3,7 +3,6 @@ import random
 from scipy import exp
 import outputs
 import cPickle as pickle
-from numpy import isfinite
 import numpy
 
 
@@ -12,6 +11,10 @@ Note that this module is intended only to contain stand-alone functions for use 
 Object-oriented structures are not intended to be kept here.
 """
 
+
+###########################################
+### General data manipulation functions ###
+###########################################
 
 def increment_dictionary_with_dictionary(dict_a, dict_b):
     """
@@ -27,13 +30,175 @@ def increment_dictionary_with_dictionary(dict_a, dict_b):
     return dict(dict_a.items() + dict_b.items() + [(k, dict_a[k] + dict_b[k]) for k in set(dict_b) & set(dict_a)])
 
 
-def is_parameter_value_valid(parameter):
+def indices(a, func):
     """
-    Determine whether a number (typically a parameter value) is finite and positive.
+    Returns the indices of a which verify a condition defined by a lambda function.
+
+    Args:
+        a: The list to be interrogated
+        func: The function to be applied to the list
+    Returns:
+        List of the indices of the list that satisfy the function
+    Example:
+        year = indices(self.model.times, lambda x: x >= 2003)[0]  returns the smallest index where x >=2003
     """
 
-    return isfinite(parameter) and parameter > 0.
+    return [i for (i, val) in enumerate(a) if func(val)]
 
+
+def find_first_list_element_above_value(list, value):
+    """
+    Simple method to return the index of the first element of a list that is greater than a specified value.
+
+    Args:
+        list: List of floats
+        value: The value that the element must be greater than
+    """
+
+    return next(x[0] for x in enumerate(list) if x[1] > value)
+
+
+def find_first_list_element_at_least_value(list, value):
+    """
+    Simple method to return the index of the first element of a list that is greater than a specified value.
+
+    Args:
+        list: The list of floats
+        value: The value that the element must be greater than
+    """
+
+    return next(x[0] for x in enumerate(list) if x[1] >= value)
+
+
+def prepare_denominator(list_to_prepare):
+    """
+    Method to safely divide a list of numbers while ignoring zero denominators.
+
+    Args:
+        list_to_prepare: The list to be used as a denominator
+    Returns:
+        The list with zeros replaced with small numbers
+    """
+
+    return [list_to_prepare[i] if list_to_prepare[i] > 0. else 1e-10 for i in range(len(list_to_prepare))]
+
+
+def find_common_elements(list_1, list_2):
+    """
+    Simple method to find the intersection of two lists.
+
+    Args:
+        list_1 and list_2: The two lists
+    Returns:
+        intersection: The common elements of the two lists
+    """
+
+    return [i for i in list_1 if i in list_2]
+
+
+def find_common_elements_multiple_lists(list_of_lists):
+    """
+    Simple method to find the common elements of any number of lists
+
+    Args:
+        list_of_lists: A list whose elements are all the lists we want to find the
+            intersection of.
+
+    Returns:
+        intersection: Common elements of all lists.
+    """
+
+    intersection = list_of_lists[0]
+    for i in range(1, len(list_of_lists)):
+        intersection = find_common_elements(intersection, list_of_lists[i])
+    return intersection
+
+
+def calculate_proportion_dict(data, indices, percent=False):
+    """
+    General method to calculate proportions from absolute values provided as dictionaries.
+
+    Args:
+        data: Dictionary containing the absolute values.
+        indices: The keys of data from which proportions are to be calculated (generally a list of strings).
+        percent: Boolean describing whether the method should return the output as a percent or proportion.
+    Returns:
+        proportions: A dictionary of the resulting proportions.
+    """
+
+    # calculate multiplier for percentages if requested, otherwise leave as one
+    if percent:
+        multiplier = 1e2
+    else:
+        multiplier = 1.
+
+    # create a list of the years that are common to all indices within data
+    lists_of_years = []
+    for i in range(len(indices)):
+        lists_of_years += [data[indices[i]].keys()]
+    common_years = find_common_elements_multiple_lists(lists_of_years)
+
+    # calculate the denominator by summing the values for which proportions have been requested
+    denominator = {}
+    for i in common_years:
+        for j in indices:
+            if j == indices[0]:
+                denominator[i] = data[j][i]
+            else:
+                denominator[i] += data[j][i]
+
+    # calculate the proportions
+    proportions = {}
+    for j in indices:
+        proportions['prop_' + j] = {}
+        for i in common_years:
+            if denominator[i] > 0.:
+                proportions['prop_' + j][i] = \
+                    data[j][i] / denominator[i] \
+                    * multiplier
+
+    return proportions
+
+
+def remove_specific_key(dictionary, key):
+    """
+    Remove a specific named key from a dictionary.
+
+    Args:
+        dictionary: The dictionary to have a key removed
+        key: The key to be removed
+    Returns:
+        dictionary: The dictionary with the key removed
+    """
+
+    if key in dictionary:
+        del dictionary[key]
+    return dictionary
+
+
+def remove_nans(dictionary):
+    """
+    Takes a dictionary and removes all of the elements for which the value is nan.
+
+    Args:
+        dictionary: Should typically be the dictionary of programmatic values, usually
+                    with time in years as the key.
+    Returns:
+        dictionary: The dictionary with the nans removed.
+    """
+
+    nan_indices = []
+    for i in dictionary:
+        if type(dictionary[i]) == float and numpy.isnan(dictionary[i]):
+            nan_indices += [i]
+    for i in nan_indices:
+        del dictionary[i]
+    return dictionary
+
+
+##################################
+### Scenario name manipulation ###
+##################################
 
 def find_scenario_string_from_number(scenario):
     """
@@ -74,6 +239,10 @@ def find_scenario_number_from_string(scenario):
         scenario_number = int(scenario_string[9:])
     return scenario_number
 
+
+###########################
+### String manipulation ###
+###########################
 
 def capitalise_first_letter(old_string):
     """
@@ -345,6 +514,10 @@ def find_string_from_starting_letters(string_to_analyse, string_start_to_find):
     return result_string, stem
 
 
+###############################
+### Age string manipulation ###
+###############################
+
 def interrogate_age_string(age_string):
     """
     Take a string referring to an age group and find it's upper and lower limits.
@@ -443,6 +616,171 @@ def estimate_prop_of_population_in_agegroup(age_limits, life_expectancy):
 
     return exp(-age_limits[0] * (1. / life_expectancy)) - exp(-age_limits[1] * (1. / life_expectancy))
 
+
+def get_agegroups_from_breakpoints(breakpoints):
+    """
+    This function consolidates get_strat_from_breakpoints from Romain's age_strat module and define_age_structure from
+    James' model.py method into one function that can return either a dictionary or a list for the model stratification.
+    (One reason for using this approach rather than Romain's is that the lists need to be ordered for model.py.)
+
+    Args:
+        breakpoints: The age group cut-offs.
+    Returns:
+        agegroups: List of the strings describing the age groups only.
+        agegroups_dict: List with strings of agegroups as keys with values being
+            lists of the lower and upper age cut-off for that age group.
+    """
+
+    # initialise
+    agegroups = []
+    agegroups_dict = {}
+
+    if len(breakpoints) > 0:
+        for i in range(len(breakpoints)):
+
+            # The first age-group
+            if i == 0:
+                agegroup_string = '_age0to' + str(int(breakpoints[i]))
+                agegroups_dict[agegroup_string] = [0.,
+                                                   float(breakpoints[i])]
+
+            # Middle age-groups
+            else:
+                agegroup_string = '_age' + str(int(breakpoints[i - 1])) + 'to' + str(int(breakpoints[i]))
+                agegroups_dict[agegroup_string] = [float(breakpoints[i - 1]),
+                                                   float(breakpoints[i])]
+            agegroups += [agegroup_string]
+
+        # last age-group
+        agegroup_string = '_age' + str(int(breakpoints[-1])) + 'up'
+        agegroups_dict[agegroup_string] = [float(breakpoints[-1]),
+                                           float('inf')]
+        agegroups += [agegroup_string]
+
+    # if no age groups
+    else:
+        # list consisting of one empty string required for methods that iterate over strains
+        agegroups += ['']
+
+    return agegroups, agegroups_dict
+
+
+def turn_strat_into_label(stratum):
+    """
+    Convert age stratification string into a string that describes it more clearly.
+
+    Args:
+        stratum: String used in the model
+    Returns:
+        label: String that can be used in plotting
+    """
+
+    if 'up' in stratum:
+        return stratum[4: -2] + ' and up'
+    elif 'to' in stratum:
+        to_index = stratum.find('to')
+        return stratum[4: to_index] + ' to ' + stratum[to_index+2:]
+    elif stratum == '':
+        return 'All ages'
+    else:
+        return ''
+
+
+def report_age_specific_parameter_calculations(parameter_name, model_param_vals):
+    """
+    Function to report the age-specific parameter calculations.
+    """
+
+    print('For parameter "' + replace_underscore_with_space(parameter_name[:-4]) + '":')
+    for age_param in model_param_vals:
+        limits, _ = interrogate_age_string(age_param)
+        if limits[1] != float('inf'):
+            lower_limit = ' from ' + str(int(limits[0]))
+            upper_limit = ' to ' + str(int(limits[1]))
+        else:
+            lower_limit = ' aged ' + str(int(limits[0]))
+            upper_limit = ' and up'
+        print('\tthe parameter value for the age group' + lower_limit + upper_limit
+              + ' has been estimated as ' + str(model_param_vals[age_param]))
+
+
+def is_upper_age_limit_at_or_below(compartment_string, age_value):
+    """
+    Return boolean for whether the upper limit of the age string is below a certain value. Expected to be used for
+    determining whether an age-group is entirely paediatric.
+
+    Args:
+        compartment_string: The compartment string to analyse
+        age_value: The age to compare against
+    Returns:
+        Boolean for whether the upper limit of age-group is below age_value
+    """
+
+    return interrogate_age_string(find_string_from_starting_letters(compartment_string, '_age')[0])[0][
+               1] <= age_value
+
+
+def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_param_vals, assumed_max_params=100.,
+                                   parameter_name='', whether_to_plot=False):
+    """
+    Create a new set of parameters associated to the model stratification given parameter values that are known for
+    another stratification.
+
+    Args:
+        data_breakpoints: Tuple defining the breakpoints used in data.
+        model_breakpoints: Tuple defining the breakpoints used in the model.
+        data_param_vals: Dictionary containing the parameter values associated with each category defined by data_breakpoints
+                         format example: {'_age0to5': 0.0, '_age5to15': 0.5, '_age15up': 1.0}
+        assumed_max_params: The assumed maximal value for the parameter (example, age: 100 yo).
+    Returns:
+        Dictionary containing the parameter values associated with each category defined by model_breakpoints
+    """
+
+    data_strat_list, data_strat = get_agegroups_from_breakpoints(data_breakpoints)
+    model_strat_list, model_strat = get_agegroups_from_breakpoints(model_breakpoints)
+
+    assert data_param_vals.viewkeys() == data_strat.viewkeys()
+
+    model_param_vals = {}
+    for new_name, new_range in model_strat.iteritems():
+        new_low, new_up = new_range[0], new_range[1]
+        considered_old_cats = []
+        for old_name, old_range in data_strat.iteritems():
+            if (old_range[0] <= new_low <= old_range[1]) or (old_range[0] <= new_up <= old_range[1]):
+                considered_old_cats.append(old_name)
+        beta = 0.  # store the new value for the parameter
+        for old_name in considered_old_cats:
+            alpha = data_param_vals[old_name]
+            # calculate the weight to be affected to alpha (w = w_right - w_left)
+            w_left = max(new_low, data_strat[old_name][0])
+            if (data_strat[old_name][1] == float('inf')) and (new_up == float('inf')):
+                w_right = assumed_max_params
+                new_up = assumed_max_params
+            else:
+                w_right = min(new_up, data_strat[old_name][1])
+            beta += alpha * (w_right - w_left)
+        beta = beta / (new_up - new_low)
+        model_param_vals[new_name] = beta
+
+    report_age_specific_parameter_calculations(parameter_name, model_param_vals)
+
+    # convert data into list with same order as the ordered strat_lists
+    data_value_list = []
+    for i in data_strat_list:
+        data_value_list += [data_param_vals[i]]
+    model_value_list = []
+    for i in model_strat_list:
+        model_value_list += [model_param_vals[i]]
+
+    if whether_to_plot:
+        outputs.plot_comparative_age_parameters(
+            data_strat_list, data_value_list, model_value_list, model_strat_list, parameter_name)
+    return(model_param_vals)
+
+
+######################################
+### Output interrogation functions ###
+######################################
 
 def sum_over_compartments(model, compartment_types):
     """
@@ -576,190 +914,9 @@ def find_fractions(model):
     return subgroup_solns, subgroup_fractions
 
 
-def get_agegroups_from_breakpoints(breakpoints):
-    """
-    This function consolidates get_strat_from_breakpoints from Romain's age_strat module and define_age_structure from
-    James' model.py method into one function that can return either a dictionary or a list for the model stratification.
-    (One reason for using this approach rather than Romain's is that the lists need to be ordered for model.py.)
-
-    Args:
-        breakpoints: The age group cut-offs.
-    Returns:
-        agegroups: List of the strings describing the age groups only.
-        agegroups_dict: List with strings of agegroups as keys with values being
-            lists of the lower and upper age cut-off for that age group.
-    """
-
-    # initialise
-    agegroups = []
-    agegroups_dict = {}
-
-    if len(breakpoints) > 0:
-        for i in range(len(breakpoints)):
-
-            # The first age-group
-            if i == 0:
-                agegroup_string = '_age0to' + str(int(breakpoints[i]))
-                agegroups_dict[agegroup_string] = [0.,
-                                                   float(breakpoints[i])]
-
-            # Middle age-groups
-            else:
-                agegroup_string = '_age' + str(int(breakpoints[i - 1])) + 'to' + str(int(breakpoints[i]))
-                agegroups_dict[agegroup_string] = [float(breakpoints[i - 1]),
-                                                   float(breakpoints[i])]
-            agegroups += [agegroup_string]
-
-        # last age-group
-        agegroup_string = '_age' + str(int(breakpoints[-1])) + 'up'
-        agegroups_dict[agegroup_string] = [float(breakpoints[-1]),
-                                           float('inf')]
-        agegroups += [agegroup_string]
-
-    # if no age groups
-    else:
-        # list consisting of one empty string required for methods that iterate over strains
-        agegroups += ['']
-
-    return agegroups, agegroups_dict
-
-
-def turn_strat_into_label(stratum):
-    """
-    Convert age stratification string into a string that describes it more clearly.
-
-    Args:
-        stratum: String used in the model
-    Returns:
-        label: String that can be used in plotting
-    """
-
-    if 'up' in stratum:
-        return stratum[4: -2] + ' and up'
-    elif 'to' in stratum:
-        to_index = stratum.find('to')
-        return stratum[4: to_index] + ' to ' + stratum[to_index+2:]
-    elif stratum == '':
-        return 'All ages'
-    else:
-        return ''
-
-
-def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_param_vals, assumed_max_params=100.,
-                                   parameter_name='', whether_to_plot=False):
-    """
-    Create a new set of parameters associated to the model stratification given parameter values that are known for
-    another stratification.
-
-    Args:
-        data_breakpoints: Tuple defining the breakpoints used in data.
-        model_breakpoints: Tuple defining the breakpoints used in the model.
-        data_param_vals: Dictionary containing the parameter values associated with each category defined by data_breakpoints
-                         format example: {'_age0to5': 0.0, '_age5to15': 0.5, '_age15up': 1.0}
-        assumed_max_params: The assumed maximal value for the parameter (example, age: 100 yo).
-    Returns:
-        Dictionary containing the parameter values associated with each category defined by model_breakpoints
-    """
-
-    data_strat_list, data_strat = get_agegroups_from_breakpoints(data_breakpoints)
-    model_strat_list, model_strat = get_agegroups_from_breakpoints(model_breakpoints)
-
-    assert data_param_vals.viewkeys() == data_strat.viewkeys()
-
-    model_param_vals = {}
-    for new_name, new_range in model_strat.iteritems():
-        new_low, new_up = new_range[0], new_range[1]
-        considered_old_cats = []
-        for old_name, old_range in data_strat.iteritems():
-            if (old_range[0] <= new_low <= old_range[1]) or (old_range[0] <= new_up <= old_range[1]):
-                considered_old_cats.append(old_name)
-        beta = 0.  # store the new value for the parameter
-        for old_name in considered_old_cats:
-            alpha = data_param_vals[old_name]
-            # calculate the weight to be affected to alpha (w = w_right - w_left)
-            w_left = max(new_low, data_strat[old_name][0])
-            if (data_strat[old_name][1] == float('inf')) and (new_up == float('inf')):
-                w_right = assumed_max_params
-                new_up = assumed_max_params
-            else:
-                w_right = min(new_up, data_strat[old_name][1])
-            beta += alpha * (w_right - w_left)
-        beta = beta / (new_up - new_low)
-        model_param_vals[new_name] = beta
-
-    report_age_specific_parameter_calculations(parameter_name, model_param_vals)
-
-    # convert data into list with same order as the ordered strat_lists
-    data_value_list = []
-    for i in data_strat_list:
-        data_value_list += [data_param_vals[i]]
-    model_value_list = []
-    for i in model_strat_list:
-        model_value_list += [model_param_vals[i]]
-
-    if whether_to_plot:
-        outputs.plot_comparative_age_parameters(
-            data_strat_list, data_value_list, model_value_list, model_strat_list, parameter_name)
-    return(model_param_vals)
-
-
-def report_age_specific_parameter_calculations(parameter_name, model_param_vals):
-    """
-    Function to report the age-specific parameter calculations.
-    """
-
-    print('For parameter "' + replace_underscore_with_space(parameter_name[:-4]) + '":')
-    for age_param in model_param_vals:
-        limits, _ = interrogate_age_string(age_param)
-        if limits[1] != float('inf'):
-            lower_limit = ' from ' + str(int(limits[0]))
-            upper_limit = ' to ' + str(int(limits[1]))
-        else:
-            lower_limit = ' aged ' + str(int(limits[0]))
-            upper_limit = ' and up'
-        print('\tthe parameter value for the age group' + lower_limit + upper_limit
-              + ' has been estimated as ' + str(model_param_vals[age_param]))
-
-
-def indices(a, func):
-    """
-    Returns the indices of a which verify a condition defined by a lambda function.
-
-    Args:
-        a: The list to be interrogated
-        func: The function to be applied to the list
-    Returns:
-        List of the indices of the list that satisfy the function
-    Example:
-        year = indices(self.model.times, lambda x: x >= 2003)[0]  returns the smallest index where x >=2003
-    """
-
-    return [i for (i, val) in enumerate(a) if func(val)]
-
-
-def find_first_list_element_above_value(list, value):
-    """
-    Simple method to return the index of the first element of a list that is greater than a specified value.
-
-    Args:
-        list: List of floats
-        value: The value that the element must be greater than
-    """
-
-    return next(x[0] for x in enumerate(list) if x[1] > value)
-
-
-def find_first_list_element_at_least_value(list, value):
-    """
-    Simple method to return the index of the first element of a list that is greater than a specified value.
-
-    Args:
-        list: The list of floats
-        value: The value that the element must be greater than
-    """
-
-    return next(x[0] for x in enumerate(list) if x[1] >= value)
-
+##########################
+### Pickling functions ###
+##########################
 
 def pickle_save(object, file):
     """
@@ -785,167 +942,4 @@ def pickle_load(file):
     with open(file, 'rb') as input:
         loaded_object = pickle.load(input)
     return loaded_object
-
-
-def prepare_denominator(list_to_prepare):
-    """
-    Method to safely divide a list of numbers while ignoring zero denominators.
-
-    Args:
-        list_to_prepare: The list to be used as a denominator
-    Returns:
-        The list with zeros replaced with small numbers
-    """
-
-    return [list_to_prepare[i] if list_to_prepare[i] > 0. else 1e-10 for i in range(len(list_to_prepare))]
-
-
-def is_upper_age_limit_at_or_below(compartment_string, age_value):
-    """
-    Return boolean for whether the upper limit of the age string is below a certain value. Expected to be used for
-    determining whether an age-group is entirely paediatric.
-
-    Args:
-        compartment_string: The compartment string to analyse
-        age_value: The age to compare against
-    Returns:
-        Boolean for whether the upper limit of age-group is below age_value
-    """
-
-    return interrogate_age_string(find_string_from_starting_letters(compartment_string, '_age')[0])[0][1] <= age_value
-
-
-def find_common_elements(list_1, list_2):
-    """
-    Simple method to find the intersection of two lists.
-
-    Args:
-        list_1 and list_2: The two lists
-    Returns:
-        intersection: The common elements of the two lists
-    """
-
-    return [i for i in list_1 if i in list_2]
-
-
-def find_common_elements_multiple_lists(list_of_lists):
-    """
-    Simple method to find the common elements of any number of lists
-
-    Args:
-        list_of_lists: A list whose elements are all the lists we want to find the
-            intersection of.
-
-    Returns:
-        intersection: Common elements of all lists.
-    """
-
-    intersection = list_of_lists[0]
-    for i in range(1, len(list_of_lists)):
-        intersection = find_common_elements(intersection, list_of_lists[i])
-    return intersection
-
-
-def calculate_proportion_dict(data, indices, percent=False):
-    """
-    General method to calculate proportions from absolute values provided as dictionaries.
-
-    Args:
-        data: Dictionary containing the absolute values.
-        indices: The keys of data from which proportions are to be calculated (generally a list of strings).
-        percent: Boolean describing whether the method should return the output as a percent or proportion.
-    Returns:
-        proportions: A dictionary of the resulting proportions.
-    """
-
-    # calculate multiplier for percentages if requested, otherwise leave as one
-    if percent:
-        multiplier = 1e2
-    else:
-        multiplier = 1.
-
-    # create a list of the years that are common to all indices within data
-    lists_of_years = []
-    for i in range(len(indices)):
-        lists_of_years += [data[indices[i]].keys()]
-    common_years = find_common_elements_multiple_lists(lists_of_years)
-
-    # calculate the denominator by summing the values for which proportions have been requested
-    denominator = {}
-    for i in common_years:
-        for j in indices:
-            if j == indices[0]:
-                denominator[i] = data[j][i]
-            else:
-                denominator[i] += data[j][i]
-
-    # calculate the proportions
-    proportions = {}
-    for j in indices:
-        proportions['prop_' + j] = {}
-        for i in common_years:
-            if denominator[i] > 0.:
-                proportions['prop_' + j][i] = \
-                    data[j][i] / denominator[i] \
-                    * multiplier
-
-    return proportions
-
-
-def remove_specific_key(dictionary, key):
-    """
-    Remove a specific named key from a dictionary.
-
-    Args:
-        dictionary: The dictionary to have a key removed
-        key: The key to be removed
-    Returns:
-        dictionary: The dictionary with the key removed
-    """
-
-    if key in dictionary:
-        del dictionary[key]
-    return dictionary
-
-
-def remove_nans(dictionary):
-    """
-    Takes a dictionary and removes all of the elements for which the value is nan.
-
-    Args:
-        dictionary: Should typically be the dictionary of programmatic values, usually
-                    with time in years as the key.
-    Returns:
-        dictionary: The dictionary with the nans removed.
-    """
-
-    nan_indices = []
-    for i in dictionary:
-        if type(dictionary[i]) == float and numpy.isnan(dictionary[i]):
-            nan_indices += [i]
-    for i in nan_indices:
-        del dictionary[i]
-    return dictionary
-
-
-# * * * * * * * * * * * * * * * * * * * * * *
-#                   Test age-stratification
-
-if __name__ == "__main__":
-
-    data_breaks = [5., 15.]
-    model_breaks = [2., 7., 20.]
-
-    data_param_vals = {'_age0to5': 0.5,
-                       '_age5to15': 0.1,
-                       '_age15up': 1.0}
-
-    model_param = adapt_params_to_stratification(data_breaks,
-                                                 model_breaks,
-                                                 data_param_vals,
-                                                 parameter_name='test parameter')
-    print(model_param)
-
-
-
 

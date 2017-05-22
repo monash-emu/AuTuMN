@@ -1054,8 +1054,6 @@ class ConsolidatedModel(StratifiedModel):
                     if 'treatment_' in compartment and organ in compartment:
                         self.vars['popsize_ambulatorycare' + organ] += self.compartments[compartment]
 
-        print(self.vars['int_prop_ambulatorycare_smearneg'])
-
         # food vouchers
         for strain in self.strains:
             if 'int_prop_food_voucher' + strain in self.relevant_interventions:
@@ -1161,7 +1159,6 @@ class ConsolidatedModel(StratifiedModel):
             for compartment in self.compartments:
                 if 'treatment' in compartment and '_mdr' in compartment:
                     self.vars['popsize_shortcourse_mdr'] += self.compartments[compartment]
-
 
     ################################################################
     ### Methods that calculate the flows of all the compartments ###

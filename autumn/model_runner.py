@@ -17,6 +17,7 @@ import itertools
 import time
 import eventlet
 from flask_socketio import emit
+from numpy import isfinite
 
 
 def generate_candidates(n_candidates, param_ranges_unc):
@@ -139,6 +140,14 @@ def find_uncertainty_output_weights(list, method, relative_weights=[1., 2.]):
     # All weights equal to one
     elif method == 3:
         return [1.] * len(list)
+
+
+def is_parameter_value_valid(parameter):
+    """
+    Determine whether a number (typically a parameter value) is finite and positive.
+    """
+
+    return isfinite(parameter) and parameter > 0.
 
 
 class ModelRunner:
@@ -1029,7 +1038,7 @@ class ModelRunner:
         for p, param in enumerate(params):
 
             # Whether the parameter value is valid
-            if not tool_kit.is_parameter_value_valid(param):
+            if not is_parameter_value_valid(param):
                 print 'Warning: parameter%d=%f is invalid for model' % (p, param)
                 self.is_last_run_success = False
                 return

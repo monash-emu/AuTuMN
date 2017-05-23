@@ -873,6 +873,12 @@ class Inputs:
                 elif 'int_prop_ipt' in timevariant and 'community_ipt' not in timevariant:
                     self.relevant_interventions[scenario] += ['ipt']
 
+            # similarly, add universal terms for ACF interventions, regardless of the risk-group applied to
+            for riskgroup in self.riskgroups:
+                for intervention in ['_xpertacf', '_cxrxpertacf']:
+                    if 'int_prop' + intervention + riskgroup in self.relevant_interventions[scenario]:
+                        self.relevant_interventions[scenario] += ['int_prop' + intervention + riskgroup]
+
     def find_potential_interventions_to_cost(self):
         """
         Creates a list of the interventions that could potentially be costed if they are requested - that is, the ones

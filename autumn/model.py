@@ -104,11 +104,6 @@ class ConsolidatedModel(StratifiedModel):
         for key, value in inputs.model_constants.items():
             if type(value) == float: self.set_parameter(key, value)
 
-        for riskgroup in self.riskgroups:
-            for intervention in ['_xpertacf', '_cxrxpertacf']:
-                if 'int_prop' + intervention + riskgroup in self.scaleup_fns:
-                    self.relevant_interventions += ['int_prop' + intervention + riskgroup]
-
         # define model compartmental structure (note that compartment initialisation is in base.py)
         self.define_model_structure()
 

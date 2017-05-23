@@ -196,6 +196,22 @@ def remove_nans(dictionary):
     return dictionary
 
 
+def label_intersects_tags(label, tags):
+    """
+    Primarily for use in force of infection calculation to determine whether a compartment is infectious.
+
+    Args:
+        label: Generally a compartment label.
+        tags: Tag for whether label is to be counted.
+    Returns:
+        Boolean for whether any of the tags are in the label.
+    """
+
+    for tag in tags:
+        if tag in label: return True
+    return False
+
+
 ##################################
 ### Scenario name manipulation ###
 ##################################

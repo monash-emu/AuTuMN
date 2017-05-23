@@ -368,7 +368,6 @@ class ModelRunner:
     ####################################
 
     def find_epi_outputs(self, scenario, outputs_to_analyse, stratifications=[]):
-
         """
         Method to extract all requested epidemiological outputs from the models. Intended ultimately to be flexible\
         enough for use for analysis of scenarios, uncertainty and optimisation.

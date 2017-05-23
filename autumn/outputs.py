@@ -1338,7 +1338,6 @@ class Project:
             self.plot_piecharts_opti()
 
     def plot_outputs_against_gtb(self, outputs, ci_plot=None):
-
         """
         Produces the plot for the main outputs, loops over multiple scenarios.
 

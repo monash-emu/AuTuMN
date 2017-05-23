@@ -1,6 +1,6 @@
 
 """
-All TB-specific model (or models) should be coded in this file, including the interventions applied to them.
+All TB-specific models should be coded in this file, including the interventions applied to them.
 
 Time unit throughout: years
 Compartment unit throughout: patients
@@ -13,27 +13,10 @@ creating intercompartmental flows, costs, etc., while the latter sets down the a
 from scipy import exp, log
 from autumn.base import BaseModel, StratifiedModel
 import copy
-
-
-def label_intersects_tags(label, tags):
-
-    """
-    Primarily for use in force of infection calculation to determine whether a compartment is infectious.
-
-    Args:
-        label: Generally a compartment label.
-        tags: Tag for whether label is to be counted.
-    Returns:
-        Boolean for whether any of the tags are in the label.
-    """
-
-    for tag in tags:
-        if tag in label: return True
-    return False
+import tool_kit as t_k
 
 
 def find_outcome_proportions_by_period(proportion, early_period, total_period):
-
     """
     Split one treatment outcome proportion (e.g. default, death) over multiple time periods.
 
@@ -48,7 +31,7 @@ def find_outcome_proportions_by_period(proportion, early_period, total_period):
 
     if proportion > 1. or proportion < 0.:
         raise Exception('Proportion parameter not between zero and one.')
-    # To avoid errors where the proportion is exactly one (although the function isn't really intended for this):
+    # to avoid errors where the proportion is exactly one (although the function isn't really intended for this):
     elif proportion > .99:
         early_proportion = 0.99
     else:
@@ -58,7 +41,6 @@ def find_outcome_proportions_by_period(proportion, early_period, total_period):
 
 
 class ConsolidatedModel(StratifiedModel):
-
     """
     The transmission dynamic model to underpin all AuTuMN analyses.
     Inherits from BaseModel and then StratifiedModel, which is intended to be general to any infectious disease.
@@ -968,7 +950,7 @@ class ConsolidatedModel(StratifiedModel):
                             for riskgroup in self.riskgroups:
                                 if riskgroup not in label:
                                     continue
-                                elif label_intersects_tags(label, self.infectious_tags):
+                                elif t_k.label_intersects_tags(label, self.infectious_tags):
                                     for source_riskgroup in self.riskgroups:
 
                                         # adjustment for increased infectiousness of risk groups as required
@@ -988,7 +970,7 @@ class ConsolidatedModel(StratifiedModel):
 
                         # now without risk-group stratification
                         else:
-                            if label_intersects_tags(label, self.infectious_tags):
+                            if t_k.label_intersects_tags(label, self.infectious_tags):
                                 self.vars['effective_infectious_population' + strain] \
                                     += self.params['tb_multiplier_force' + organ] \
                                        * self.params['tb_multiplier_child_infectiousness' + agegroup] \

@@ -815,6 +815,7 @@ class Inputs:
         self.find_irrelevant_time_variants()
         self.find_relevant_interventions()
         self.determine_organ_detection_variation()
+        self.determine_riskgroup_detection_variation()
         self.find_potential_interventions_to_cost()
         self.find_interventions_to_cost()
 
@@ -858,7 +859,7 @@ class Inputs:
             for time_variant in self.time_variants:
                 for key in self.time_variants[time_variant]:
                     # if 1) not irrelevant to structure, 2) it is a programmatic time variant,
-                    # 3) it hasn't been added yet, 4) it has a non-zero entry for a year or scenario value
+                    # 3) it hasn't been added yet, 4) it has a non-zero entry for any year or scenario value
                     if time_variant not in self.irrelevant_time_variants \
                             and ('program_' in time_variant or 'int_' in time_variant) \
                             and time_variant not in self.relevant_interventions[scenario] \
@@ -868,21 +869,21 @@ class Inputs:
 
         # add terms for the IPT interventions to the list that refer to its general type without the specific age string
         for scenario in self.scenarios:
-            for timevariant in self.relevant_interventions[scenario]:
-                if 'int_prop_ipt_age' in timevariant:
+            for intervention in self.relevant_interventions[scenario]:
+                if 'int_prop_ipt_age' in intervention:
                     self.relevant_interventions[scenario] += ['agestratified_ipt']
-                elif 'int_prop_ipt' in timevariant and 'community_ipt' not in timevariant:
+                elif 'int_prop_ipt' in intervention and 'community_ipt' not in intervention:
                     self.relevant_interventions[scenario] += ['ipt']
 
             # similarly, add universal terms for ACF interventions, regardless of the risk-group applied to
             for riskgroup in self.riskgroups:
                 for intervention in ['_xpertacf', '_cxrxpertacf']:
                     if 'int_prop' + intervention + riskgroup in self.relevant_interventions[scenario]:
-                        self.relevant_interventions[scenario] += ['int_prop' + intervention + riskgroup]
+                        self.relevant_interventions[scenario] += ['acf']
 
     def determine_organ_detection_variation(self):
         """
-        Work out what we're doing with variation of detection rates by organ status
+        Work out what we're doing with variation of detection rates by organ status (consistently for all scenarios).
         """
 
         # start with request
@@ -905,6 +906,20 @@ class Inputs:
         # set relevant attributes
         self.organs_for_detection = ['']
         if self.vary_detection_by_organ: self.organs_for_detection = self.organ_status
+
+    def determine_riskgroup_detection_variation(self):
+        """
+        Set variation in detection by risk-group according to whether ACF or intensive screening implemented (in any of
+        the scenarios).
+        """
+
+        self.vary_detection_by_riskgroup = False
+        for scenario in self.scenarios:
+            for intervention in self.relevant_interventions[scenario]:
+                if 'acf' in intervention or 'intensive_screening' in intervention:
+                    self.vary_detection_by_riskgroup = True
+        self.riskgroups_for_detection = ['']
+        if self.vary_detection_by_riskgroup: self.riskgroups_for_detection = self.riskgroups
 
     def find_potential_interventions_to_cost(self):
         """

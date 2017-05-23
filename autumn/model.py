@@ -85,7 +85,7 @@ class ConsolidatedModel(StratifiedModel):
 
         # model attributes to be set directly to attributes of the inputs object
         for attribute in ['organ_status', 'strains', 'riskgroups', 'agegroups', 'vary_detection_by_organ',
-                          'organs_for_detection']:
+                          'organs_for_detection', 'riskgroups_for_detection', 'vary_detection_by_riskgroup']:
             setattr(self, attribute, getattr(inputs, attribute))
 
         # model attributes to set to just the relevant scenario key from an inputs dictionary
@@ -117,13 +117,6 @@ class ConsolidatedModel(StratifiedModel):
 
         # case detection rate ceiling
         self.detection_algorithm_ceiling = .95
-
-        # set variation in detection by risk group according to whether ACF or intensive screening implemented
-        self.vary_detection_by_riskgroup = False
-        for timevariant in self.scaleup_fns:
-            if 'acf' in timevariant or 'intensive_screening' in timevariant: self.vary_detection_by_riskgroup = True
-        self.riskgroups_for_detection = ['']
-        if self.vary_detection_by_riskgroup: self.riskgroups_for_detection = self.riskgroups
 
         # list of risk groups affected by ngo activities for detection
         self.ngo_groups = ['_ruralpoor']
@@ -1052,17 +1045,19 @@ class ConsolidatedModel(StratifiedModel):
             self.vars['popsize_bulgaria_improve_dst'] = 0.
             for agegroup in self.agegroups:
                 for riskgroup in self.riskgroups:
+                    detection_riskgroup = ''
+                    if self.vary_detection_by_riskgroup: detection_riskgroup = riskgroup
                     for strain in self.strains:
                         detection_organ = ''
                         if self.vary_detection_by_organ:
                             detection_organ = '_smearpos'
                         self.vars['popsize_bulgaria_improve_dst'] \
-                            += self.vars['program_rate_detect' + detection_organ + riskgroup] \
+                            += self.vars['program_rate_detect' + detection_organ + detection_riskgroup] \
                                * self.compartments['active_smearpos' + strain + riskgroup + agegroup]
                         if self.vary_detection_by_organ:
                             detection_organ = '_smearneg'
                         self.vars['popsize_bulgaria_improve_dst'] \
-                            += self.vars['program_rate_detect' + detection_organ + riskgroup] \
+                            += self.vars['program_rate_detect' + detection_organ + detection_riskgroup] \
                                * self.compartments['active_smearneg' + strain + riskgroup + agegroup] \
                                * self.params['tb_prop_smearneg_culturepos']
 
@@ -1287,14 +1282,15 @@ class ConsolidatedModel(StratifiedModel):
                                 'program_rate_leavelowquality')
 
     def set_detection_flows(self):
-
         """
         Set previously calculated detection rates (either assuming everyone is correctly identified if misassignment
         not permitted or with proportional misassignment).
         """
 
         for agegroup in self.agegroups:
-            for riskgroup in self.riskgroups_for_detection:
+            for riskgroup in self.riskgroups:
+                riskgroup_for_detection = ''
+                if self.vary_detection_by_riskgroup: riskgroup_for_detection = riskgroup
                 for organ in self.organ_status:
                     organ_for_detection = organ
                     if not self.vary_detection_by_organ:
@@ -1302,19 +1298,20 @@ class ConsolidatedModel(StratifiedModel):
 
                     for strain_number, strain in enumerate(self.strains):
 
-                        # With misassignment
+                        # with misassignment
                         if self.is_misassignment:
                             for assigned_strain_number in range(len(self.strains)):
                                 as_assigned_strain = '_as' + self.strains[assigned_strain_number][1:]
-                                # If the strain is equally or more resistant than its assignment
+
+                                # if the strain is equally or more resistant than its assignment
                                 if strain_number >= assigned_strain_number:
                                     self.set_var_transfer_rate_flow(
                                         'active' + organ + strain + riskgroup + agegroup,
                                         'detect' + organ + strain + as_assigned_strain + riskgroup + agegroup,
-                                        'program_rate_detect' + organ_for_detection + riskgroup
+                                        'program_rate_detect' + organ_for_detection + riskgroup_for_detection
                                         + strain + as_assigned_strain)
 
-                        # Without misassignment
+                        # without misassignment
                         else:
                             self.set_var_transfer_rate_flow(
                                 'active' + organ + strain + riskgroup + agegroup,

@@ -114,6 +114,9 @@ class ConsolidatedModel(StratifiedModel):
         # intervention and economics-related initialisiations
         if self.eco_drives_epi: self.distribute_funding_across_years()
 
+        # case detection rate ceiling
+        self.detection_algorithm_ceiling = .95
+
         # work out what we're doing with organ status and variation of detection rates by organ status
         # ** This should probably be moved to the data processing module
         self.vary_detection_by_organ = gui_inputs['is_vary_detection_by_organ']
@@ -126,22 +129,18 @@ class ConsolidatedModel(StratifiedModel):
             print('Variation in detection by organ status added although not requested, for Xpert implementation.')
         elif len(self.organ_status) == 1 and 'int_prop_xpert' in self.relevant_interventions:
             print('Effect of Xpert on smear-negative detection not simulated as model unstratified by organ status.')
-
-        self.detection_algorithm_ceiling = .95
         self.organs_for_detection = ['']
-        if self.vary_detection_by_organ:
-            self.organs_for_detection = self.organ_status
+        if self.vary_detection_by_organ: self.organs_for_detection = self.organ_status
 
-        # Boolean automatically set according to whether any form of ACF or intensive screening is being implemented
+        # set variation in detection by risk group according to whether ACF or intensive screening implemented
         self.vary_detection_by_riskgroup = False
         for timevariant in self.scaleup_fns:
             if 'acf' in timevariant or 'intensive_screening' in timevariant: self.vary_detection_by_riskgroup = True
-
         self.riskgroups_for_detection = ['']
-        if self.vary_detection_by_riskgroup:
-            self.riskgroups_for_detection = self.riskgroups
+        if self.vary_detection_by_riskgroup: self.riskgroups_for_detection = self.riskgroups
 
-        self.ngo_groups = ['_ruralpoor']  # list of risk groups affected by ngo activities for detection
+        # list of risk groups affected by ngo activities for detection
+        self.ngo_groups = ['_ruralpoor']
 
         # whether short-course MDR-TB regimen improves outcomes
         self.shortcourse_improves_outcomes = False

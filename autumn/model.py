@@ -84,7 +84,8 @@ class ConsolidatedModel(StratifiedModel):
         self.scenario = scenario
 
         # model attributes to be set directly to attributes of the inputs object
-        for attribute in ['organ_status', 'strains', 'riskgroups', 'agegroups']:
+        for attribute in ['organ_status', 'strains', 'riskgroups', 'agegroups', 'vary_detection_by_organ',
+                          'organs_for_detection']:
             setattr(self, attribute, getattr(inputs, attribute))
 
         # model attributes to set to just the relevant scenario key from an inputs dictionary
@@ -116,21 +117,6 @@ class ConsolidatedModel(StratifiedModel):
 
         # case detection rate ceiling
         self.detection_algorithm_ceiling = .95
-
-        # work out what we're doing with organ status and variation of detection rates by organ status
-        # ** This should probably be moved to the data processing module
-        self.vary_detection_by_organ = gui_inputs['is_vary_detection_by_organ']
-        if len(self.organ_status) == 1 and self.vary_detection_by_organ:
-            self.vary_detection_by_organ = False
-            print('Requested variation by organ status turned off, as model is unstratified by organ status.')
-        if len(self.organ_status) > 1 and 'int_prop_xpert' in self.relevant_interventions \
-                and not self.vary_detection_by_organ:
-            self.vary_detection_by_organ = True
-            print('Variation in detection by organ status added although not requested, for Xpert implementation.')
-        elif len(self.organ_status) == 1 and 'int_prop_xpert' in self.relevant_interventions:
-            print('Effect of Xpert on smear-negative detection not simulated as model unstratified by organ status.')
-        self.organs_for_detection = ['']
-        if self.vary_detection_by_organ: self.organs_for_detection = self.organ_status
 
         # set variation in detection by risk group according to whether ACF or intensive screening implemented
         self.vary_detection_by_riskgroup = False

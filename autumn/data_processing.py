@@ -812,12 +812,13 @@ class Inputs:
         being run and whether they are to be costed.
         """
 
-        self.list_irrelevant_time_variants()
+        self.find_irrelevant_time_variants()
         self.find_relevant_interventions()
+        self.determine_organ_detection_variation()
         self.find_potential_interventions_to_cost()
         self.find_interventions_to_cost()
 
-    def list_irrelevant_time_variants(self):
+    def find_irrelevant_time_variants(self):
         """
         List all the time-variant parameters that are not relevant to the current model structure (unstratified by
         the scenario being run).
@@ -878,6 +879,32 @@ class Inputs:
                 for intervention in ['_xpertacf', '_cxrxpertacf']:
                     if 'int_prop' + intervention + riskgroup in self.relevant_interventions[scenario]:
                         self.relevant_interventions[scenario] += ['int_prop' + intervention + riskgroup]
+
+    def determine_organ_detection_variation(self):
+        """
+        Work out what we're doing with variation of detection rates by organ status
+        """
+
+        # start with request
+        self.vary_detection_by_organ = self.gui_inputs['is_vary_detection_by_organ']
+
+        # turn off and warn if model unstratified by organ status
+        if len(self.organ_status) == 1 and self.vary_detection_by_organ:
+            self.vary_detection_by_organ = False
+            print('Requested variation by organ status turned off, as model is unstratified by organ status.')
+
+        # turn on and warn if Xpert requested but variation not requested
+        for scenario in self.scenarios:
+            if len(self.organ_status) > 1 and 'int_prop_xpert' in self.relevant_interventions[scenario] \
+                    and not self.vary_detection_by_organ:
+                self.vary_detection_by_organ = True
+                print('Variation in detection by organ status added for Xpert implementation, although not requested.')
+            elif len(self.organ_status) == 1 and 'int_prop_xpert' in self.relevant_interventions[scenario]:
+                print('Effect of Xpert on smear-negative detection not simulated as model unstratified by organ status.')
+
+        # set relevant attributes
+        self.organs_for_detection = ['']
+        if self.vary_detection_by_organ: self.organs_for_detection = self.organ_status
 
     def find_potential_interventions_to_cost(self):
         """

@@ -856,12 +856,22 @@ class Inputs:
             self.relevant_interventions[scenario] = []
             for time_variant in self.time_variants:
                 for key in self.time_variants[time_variant]:
+                    # if 1) not irrelevant to structure, 2) it is a programmatic time variant,
+                    # 3) it hasn't been added yet, 4) it has a non-zero entry for a year or scenario value
                     if time_variant not in self.irrelevant_time_variants \
                             and ('program_' in time_variant or 'int_' in time_variant) \
-                            and time_variant not in self.relevant_interventions[scenario]:
-                        if (type(key) == int and self.time_variants[time_variant][key] > 0.)\
-                                or (type(key) == str and key == tool_kit.find_scenario_string_from_number(scenario)):
-                            self.relevant_interventions[scenario] += [time_variant]
+                            and time_variant not in self.relevant_interventions[scenario] \
+                            and ((type(key) == int and self.time_variants[time_variant][key] > 0.)
+                                 or (type(key) == str and key == tool_kit.find_scenario_string_from_number(scenario))):
+                        self.relevant_interventions[scenario] += [time_variant]
+
+        # add terms for the IPT interventions to the list that refer to its general type without the specific age string
+        for scenario in self.scenarios:
+            for timevariant in self.relevant_interventions[scenario]:
+                if 'int_prop_ipt_age' in timevariant:
+                    self.relevant_interventions[scenario] += ['agestratified_ipt']
+                elif 'int_prop_ipt' in timevariant and 'community_ipt' not in timevariant:
+                    self.relevant_interventions[scenario] += ['ipt']
 
     def find_potential_interventions_to_cost(self):
         """

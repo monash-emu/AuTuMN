@@ -104,11 +104,6 @@ class ConsolidatedModel(StratifiedModel):
         for key, value in inputs.model_constants.items():
             if type(value) == float: self.set_parameter(key, value)
 
-        for timevariant in self.relevant_interventions:
-            if 'int_prop_ipt_age' in timevariant:
-                self.relevant_interventions += ['agestratified_ipt']
-            elif 'int_prop_ipt' in timevariant and 'community_ipt' not in timevariant:
-                self.relevant_interventions += ['ipt']
         for riskgroup in self.riskgroups:
             for intervention in ['_xpertacf', '_cxrxpertacf']:
                 if 'int_prop' + intervention + riskgroup in self.scaleup_fns:

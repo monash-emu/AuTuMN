@@ -75,33 +75,32 @@ class ConsolidatedModel(StratifiedModel):
             gui_inputs: GUI inputs from Tkinter or JS GUI
         """
 
-        # Inherited initialisations
+        # inherited initialisations
         BaseModel.__init__(self)
         StratifiedModel.__init__(self)
 
-        # Model attributes to be set directly to attributes of the inputs object
+        # model attributes set from inputs
         self.inputs = inputs
-        for attribute in \
-                ['organ_status', 'strains', 'riskgroups', 'agegroups']:
+        self.scenario = scenario
+
+        # model attributes to be set directly to attributes of the inputs object
+        for attribute in ['organ_status', 'strains', 'riskgroups', 'agegroups']:
             setattr(self, attribute, getattr(inputs, attribute))
 
-        # Model attributes to set to just the relevant scenario key from an inputs dictionary
-        self.scenario = scenario
-        for attribute in \
-                ['relevant_interventions', 'scaleup_fns', 'interventions_to_cost']:
+        # model attributes to set to just the relevant scenario key from an inputs dictionary
+        for attribute in ['relevant_interventions', 'scaleup_fns', 'interventions_to_cost']:
             setattr(self, attribute, getattr(inputs, attribute)[scenario])
 
         # start_time can't be left as a model constant as it needs to be set for each scenario through the model runner
         self.start_time = inputs.model_constants['start_time']
 
-        # Model attributes to be set directly to attributes from the GUI object
-        for attribute in \
-                ['is_lowquality', 'is_amplification', 'is_misassignment', 'is_timevariant_organs',
-                 'country', 'time_step', 'integration_method']:
+        # model attributes to be set directly to attributes from the GUI object
+        for attribute in ['is_lowquality', 'is_amplification', 'is_misassignment', 'is_timevariant_organs', 'country',
+                          'time_step', 'integration_method']:
             setattr(self, attribute, gui_inputs[attribute])
         if self.is_misassignment: assert self.is_amplification, 'Misassignment requested without amplification'
 
-        # Set fixed parameters from inputs object
+        # set fixed parameters from inputs object
         for key, value in inputs.model_constants.items():
             if type(value) == float: self.set_parameter(key, value)
 
@@ -111,21 +110,21 @@ class ConsolidatedModel(StratifiedModel):
             elif 'int_prop_ipt' in timevariant and 'community_ipt' not in timevariant:
                 self.relevant_interventions += ['ipt']
         for riskgroup in self.riskgroups:
-            for program in ['_xpertacf', '_cxrxpertacf']:
-                if 'int_prop' + program + riskgroup in self.scaleup_fns:
-                    self.relevant_interventions += ['int_prop' + program + riskgroup]
+            for intervention in ['_xpertacf', '_cxrxpertacf']:
+                if 'int_prop' + intervention + riskgroup in self.scaleup_fns:
+                    self.relevant_interventions += ['int_prop' + intervention + riskgroup]
 
-        # Define model compartmental structure (note that compartment initialisation is in base.py)
+        # define model compartmental structure (note that compartment initialisation is in base.py)
         self.define_model_structure()
 
-        # Treatment outcomes
+        # treatment outcomes
         self.outcomes = ['_success', '_death', '_default']
         self.treatment_stages = ['_infect', '_noninfect']
 
-        # Intervention and economics-related initialisiations
+        # intervention and economics-related initialisiations
         if self.eco_drives_epi: self.distribute_funding_across_years()
 
-        # Work out what we're doing with organ status and variation of detection rates by organ status
+        # work out what we're doing with organ status and variation of detection rates by organ status
         # ** This should probably be moved to the data processing module
         self.vary_detection_by_organ = gui_inputs['is_vary_detection_by_organ']
         if len(self.organ_status) == 1 and self.vary_detection_by_organ:
@@ -154,16 +153,16 @@ class ConsolidatedModel(StratifiedModel):
 
         self.ngo_groups = ['_ruralpoor']  # list of risk groups affected by ngo activities for detection
 
-        # Whether short-course MDR-TB regimen improves outcomes
+        # whether short-course MDR-TB regimen improves outcomes
         self.shortcourse_improves_outcomes = False
 
-        # Mixing matrix
-        self.vary_force_infection_by_riskgroup = True  # whether to incorporate heterogeneous mixing by risk group
+        # mixing matrix if heterogeneous mixing by risk group being implemented
+        self.vary_force_infection_by_riskgroup = True  # waiting to go to GUI
         if self.vary_force_infection_by_riskgroup:
             self.mixing = {}
             self.create_mixing_matrix()
 
-        # Create time ticker
+        # create time ticker
         self.next_time_point = copy.copy(self.start_time)
 
     def define_model_structure(self):

@@ -456,7 +456,6 @@ class ConsolidatedModel(StratifiedModel):
                     self.vars['int_prop_ipt' + agegroup] *= (1. - self.params['program_prop_ipt_from_opendoors'])
 
     def calculate_detect_missed_vars(self):
-
         """"
         Calculate rates of detection and failure of detection from the programmatic report of the case detection "rate"
         (which is actually a proportion and referred to as program_prop_detect here).
@@ -733,7 +732,7 @@ class ConsolidatedModel(StratifiedModel):
                     self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
                         *= relative_treatment_duration_mdr
 
-                # Adapt treatment outcomes for short course regimen
+                # adapt treatment outcomes for short course regimen
                 if self.shortcourse_improves_outcomes:
                     for outcome in ['_success', '_death']:
                         self.vars['program_prop_treatment' + outcome + '_mdr'] \
@@ -741,7 +740,7 @@ class ConsolidatedModel(StratifiedModel):
                                 - self.vars['program_prop_treatment' + outcome + '_mdr']) \
                                * self.vars['int_prop_shortcourse_mdr']
 
-            # add some extra treatment success if the treatment support int is active
+            # add some extra treatment success if the treatment support intervention is active
             if 'int_prop_treatment_support' in self.relevant_interventions:
                 self.vars['program_prop_treatment_success' + strain] \
                     += (1. - self.vars['program_prop_treatment_success' + strain]) \
@@ -751,6 +750,13 @@ class ConsolidatedModel(StratifiedModel):
                     -= self.vars['program_prop_treatment_death' + strain] \
                        * self.params['int_prop_treatment_support_improvement'] \
                        * self.vars['int_prop_treatment_support']
+
+            # subtract some treatment success if ngo activities program has discontinued
+            if 'int_prop_ngo_activities' in self.relevant_interventions:
+                self.vars['program_prop_treatment_success' + strain] \
+                    -= self.vars['program_prop_treatment_success' + strain] \
+                       * self.params['int_prop_treatment_support_improvement'] \
+                       * (1. - self.vars['int_prop_ngo_activities'])
 
             # add some extra treatment success if food vouchers are provided to treated cases
             if 'int_prop_food_voucher' + strain in self.relevant_interventions:
@@ -829,13 +835,13 @@ class ConsolidatedModel(StratifiedModel):
                                     props[treatment_stage]
 
                             for treatment_stage in self.treatment_stages:
-                                # Find the success proportions
+                                # find the success proportions
                                 self.vars['program_prop_treatment_success' + treatment_stage + treatment_type] \
                                     = 1. - self.vars[
                                     'program_prop_treatment_default' + treatment_stage + treatment_type] \
                                       - self.vars['program_prop_treatment_death' + treatment_stage + treatment_type]
 
-                                # Find the corresponding rates from the proportions
+                                # find the corresponding rates from the proportions
                                 for outcome in self.outcomes:
                                     self.vars['program_rate' + outcome + treatment_stage + treatment_type] \
                                         = 1. / self.vars[
@@ -843,7 +849,7 @@ class ConsolidatedModel(StratifiedModel):
                                           * self.vars[
                                               'program_prop_treatment' + outcome + treatment_stage + treatment_type]
 
-                                # Split default according to whether amplification occurs (if not the most resistant strain)
+                                # split default according to whether amplification occurs (if not the most resistant strain)
                                 if self.is_amplification:
                                     self.vars[
                                         'program_rate_default' + treatment_stage + '_amplify' + treatment_type] \
@@ -954,9 +960,8 @@ class ConsolidatedModel(StratifiedModel):
                 for agegroup in self.agegroups:
                     if 'prop_infections_averted_ipt' + agegroup in self.vars and 'dr' not in strain:
                         coverage_multiplier_ngo_stopped = 1.
-                        if 'int_prop_ngo_activities' in self.relevant_interventions and \
-                                        self.vars['int_prop_ngo_activities'] < 1. and \
-                                        riskgroup in self.ngo_groups:
+                        if 'int_prop_ngo_activities' in self.relevant_interventions \
+                                and self.vars['int_prop_ngo_activities'] < 1. and riskgroup in self.ngo_groups:
                             coverage_multiplier_ngo_stopped = (1. - self.params['int_prop_ipt_from_ngo'])
                         ipt_infection_modifier = 1. - coverage_multiplier_ngo_stopped * \
                                                       self.vars['prop_infections_averted_ipt' + agegroup]

@@ -73,7 +73,9 @@ def find_button_name_from_string(working_string):
                               'n_organs':
                                   'Number of organ strata',
                               'n_strains':
-                                  'Number of strains'}
+                                  'Number of strains',
+                              'is_timevariant_contactrate':
+                                  'Time-variant contact rate'}
 
     if working_string in button_name_dictionary:
         return button_name_dictionary[working_string]
@@ -132,7 +134,7 @@ class App:
                                'riskgroup_prison', 'riskgroup_indigenous', 'riskgroup_urbanpoor',
                                'riskgroup_ruralpoor',
                                'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ',
-                               'is_timevariant_organs']
+                               'is_timevariant_organs', 'is_timevariant_contactrate']
         for i in range(1, 15):
             self.boolean_inputs += ['scenario_' + str(i)]
 
@@ -178,7 +180,7 @@ class App:
         running_dropdown_list = ['country', 'integration_method', 'fitting_method']
         for dropdown in running_dropdown_list:
             self.raw_outputs[dropdown] = StringVar()
-        self.raw_outputs['country'].set('Philippines')
+        self.raw_outputs['country'].set('Bulgaria')
         self.raw_outputs['integration_method'].set('Explicit')
         self.raw_outputs['fitting_method'].set('Method 5')
 
@@ -261,14 +263,14 @@ class App:
         self.boolean_dictionary['adaptive_uncertainty'].set(True)
         self.boolean_dictionary['is_amplification'].set(True)
         self.boolean_dictionary['is_misassignment'].set(True)
-        self.boolean_dictionary['is_lowquality'].set(True)
+        # self.boolean_dictionary['is_lowquality'].set(True)
         self.boolean_dictionary['is_vary_detection_by_organ'].set(True)
         self.boolean_dictionary['riskgroup_prison'].set(True)
-        self.boolean_dictionary['riskgroup_urbanpoor'].set(True)
+        # self.boolean_dictionary['riskgroup_urbanpoor'].set(True)
         self.boolean_dictionary['riskgroup_ruralpoor'].set(True)
         self.boolean_dictionary['output_gtb_plots'].set(True)
 
-        self.boolean_dictionary['riskgroup_diabetes'].set(True)
+        # self.boolean_dictionary['riskgroup_diabetes'].set(True)
         self.boolean_dictionary['riskgroup_hiv'].set(True)
 
         # self.boolean_dictionary['riskgroup_indigenous'].set(True)

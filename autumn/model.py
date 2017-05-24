@@ -969,7 +969,7 @@ class ConsolidatedModel(StratifiedModel):
                     else:
                         ipt_infection_modifier = 1.
                     self.vars['rate_force' + strain + riskgroup + agegroup] \
-                        = self.params['tb_n_contact'] \
+                        = self.vars['tb_n_contact'] \
                           * self.vars['effective_infectious_population' + strain + riskgroup] \
                           / self.vars['population' + riskgroup] \
                           * ipt_infection_modifier

@@ -6,6 +6,7 @@ This is a set of Python models that modularises the development of dynamic trans
 pluggable API to other system. Applied to tuberculosis.
 
 # TODO
+- add markers to GTB graphs to indicate target values
 - uncertainty for economics
 - intervention uncertainty
 - automatic calibration

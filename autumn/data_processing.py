@@ -143,9 +143,10 @@ class Inputs:
 
         # populate hierarchically from the earliest sheet in the list as available
         for other_sheet in other_sheets_with_constants:
-            for item in self.original_data[other_sheet]:
-                if item not in self.model_constants:
-                    self.model_constants[item] = self.original_data[other_sheet][item]
+            if other_sheet in self.original_data:
+                for item in self.original_data[other_sheet]:
+                    if item not in self.model_constants:
+                        self.model_constants[item] = self.original_data[other_sheet][item]
 
     def add_universal_parameters(self):
         """

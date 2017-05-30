@@ -1273,7 +1273,8 @@ class Project:
             self.plot_force_infection()
 
         # plot mixing matrix if relevant
-        if self.model_runner.model_dict['manual_baseline'].vary_force_infection_by_riskgroup:
+        if self.model_runner.model_dict['manual_baseline'].vary_force_infection_by_riskgroup \
+                and len(self.inputs.riskgroups) > 1:
             self.plot_mixing_matrix()
 
         # plot economic outputs
@@ -1324,9 +1325,6 @@ class Project:
         # plot popsizes for checking cost-coverage curves
         if self.gui_inputs['output_popsize_plot']:
             self.plot_popsizes()
-
-        # self.plot_case_detection_rate()
-        self.plot_mixing_matrix()
 
         # plot likelihood estimates
         if self.gui_inputs['output_likelihood_plot']:
@@ -2113,7 +2111,6 @@ class Project:
             self.save_figure(fig, '_rate_force' + strain)
 
     def plot_mixing_matrix(self):
-
         """
         Method to visualise the mixing matrix with bar charts.
         """

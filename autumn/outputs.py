@@ -1764,7 +1764,7 @@ class Project:
             # each scenario being implemented
             for int, intervention in enumerate(self.inputs.interventions_to_cost[scenario]):
 
-                # find the data
+                # find the data to plot for the current intervention
                 data = self.model_runner.cost_outputs_integer_dict[
                     'manual_' + t_k.find_scenario_string_from_number(scenario)][cost_type + '_cost_' + intervention]
 
@@ -1778,7 +1778,8 @@ class Project:
 
                 # plot
                 ax = self.make_single_axis(fig)
-                ax.bar(upper.keys(), upper.values(), .4, bottom=base.values())
+                ax.bar(upper.keys(), upper.values(), .4, bottom=base.values(),
+                       color=self.program_colours[scenario][intervention][1])
 
                 # increment the lower values before looping again
                 base = {i: base[i] + data[i] for i in data}

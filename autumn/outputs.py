@@ -1282,6 +1282,7 @@ class Project:
             self.plot_cost_coverage_curves()
             self.plot_cost_over_time()
             # self.plot_intervention_costs_by_scenario(2015, 2030)
+            self.plot_cost_over_time_stacked_bars()
 
         # plot compartment population sizes
         if self.gui_inputs['output_compartment_populations']:
@@ -1649,27 +1650,26 @@ class Project:
             self.save_figure(fig, '_' + scenario + '_cost_coverage')
 
     def plot_cost_over_time(self):
-
         """
         Method that produces plots for individual and cumulative program costs for each scenario as separate figures.
         Panels of figures are the different sorts of costs (i.e. whether discounting and inflation have been applied).
         """
 
-        # Separate figures for each scenario
+        # separate figures for each scenario
         for scenario in self.scenario_names:
 
-            # Standard prelims, but separate for each type of plot - individual and stacked
+            # standard prelims, but separate for each type of plot - individual and stacked
             fig_individual = self.set_and_update_figure()
             fig_stacked = self.set_and_update_figure()
             fig_relative = self.set_and_update_figure()
             subplot_grid = find_subplot_numbers(len(self.model_runner.cost_types))
 
-            # Find the index for the first time after the current time
+            # find the index for the first time after the current time
             reference_time_index \
                 = t_k.find_first_list_element_above_value(self.model_runner.cost_outputs['manual_' + scenario]['times'],
                                                           self.inputs.model_constants['reference_time'])
 
-            # Plot each type of cost to its own subplot and ensure same y-axis scale
+            # plot each type of cost to its own subplot and ensure same y-axis scale
             ax_individual = fig_individual.add_subplot(subplot_grid[0], subplot_grid[1], 1)
             ax_stacked = fig_stacked.add_subplot(subplot_grid[0], subplot_grid[1], 1)
             ax_relative = fig_relative.add_subplot(subplot_grid[0], subplot_grid[1], 1)
@@ -1686,10 +1686,10 @@ class Project:
                     ax_relative \
                         = fig_relative.add_subplot(subplot_grid[0], subplot_grid[1], c + 1, sharey=ax_reference_first)
 
-                # Create empty list for legend
+                # create empty list for legend
                 cumulative_data = [0.] * len(self.model_runner.cost_outputs['manual_' + scenario]['times'])
 
-                # Plot for each intervention
+                # plot for each intervention
                 for intervention in self.inputs.interventions_to_cost[t_k.find_scenario_number_from_string(scenario)]:
 
                     # Record the previous data for plotting as an independent object for the lower edge of the fill
@@ -1728,14 +1728,14 @@ class Project:
                                                 t_k.find_scenario_number_from_string(scenario)][intervention][1],
                                             linewidth=0., label=t_k.find_title_from_dictionary(intervention))
 
-                # Final tidying
+                # final tidying
                 for ax in [ax_individual, ax_stacked, ax_relative]:
                     self.tidy_axis(ax, subplot_grid, title=t_k.capitalise_and_remove_underscore(cost_type),
                                    start_time=self.inputs.model_constants['plot_economics_start_time'],
                                    y_label=' $US', y_axis_type='scaled', y_sig_figs=1,
                                    legend=(c == len(self.model_runner.cost_types) - 1))
 
-            # Finishing off with title and save
+            # finishing off with title and save
             fig_individual.suptitle('Individual program costs for ' + t_k.find_title_from_dictionary(scenario),
                                     fontsize=self.suptitle_size)
             self.save_figure(fig_individual, '_' + scenario + '_timecost_individual')
@@ -1746,8 +1746,46 @@ class Project:
                                   fontsize=self.suptitle_size)
             self.save_figure(fig_relative, '_' + scenario + '_timecost_relative')
 
-    def plot_populations(self, strain_or_organ='organ'):
+    def plot_cost_over_time_stacked_bars(self, cost_type='raw'):
+        """
+        Plotting method to plot bar graphs of spending by programs to look the way Tan gets them to look with Excel.
+        That is, separated bars with costs by years.
 
+        Args:
+            cost_type: Type of cost to be plotted, i.e. whether raw, inflated, discounted or inflated-and-discounted
+        """
+
+        # separate figures for each scenario
+        for scenario in self.scenarios:
+
+            # standard prelims
+            fig = self.set_and_update_figure()
+
+            # each scenario being implemented
+            for int, intervention in enumerate(self.inputs.interventions_to_cost[scenario]):
+
+                # find the data
+                data = self.model_runner.cost_outputs_integer_dict[
+                    'manual_' + t_k.find_scenario_string_from_number(scenario)][cost_type + '_cost_' + intervention]
+
+                # initialise the dictionaries at the first iteration
+                if int == 0:
+                    base = {i: 0. for i in data}
+                    upper = {i: 0. for i in data}
+
+                # increment the upper values
+                upper = {i: upper[i] + data[i] for i in data}
+
+                # plot
+                ax = self.make_single_axis(fig)
+                ax.bar(upper.keys(), upper.values(), .4, bottom=base.values())
+
+                # increment the lower values before looping again
+                base = {i: base[i] + data[i] for i in data}
+
+            self.save_figure(fig, '_' + t_k.find_scenario_string_from_number(scenario) + '_stacked_bars')
+
+    def plot_populations(self, strain_or_organ='organ'):
         """
         Plot population by the compartment to which they belong.
 
@@ -1757,18 +1795,18 @@ class Project:
             strain_or_organ: Whether the plotting style should be done by strain or by organ
         """
 
-        # Standard prelims
+        # standard prelims
         fig = self.set_and_update_figure()
         ax = self.make_single_axis(fig)
         colours, patterns, compartment_full_names, markers \
             = make_related_line_styles(self.model_runner.model_dict['manual_baseline'].labels, strain_or_organ)
 
-        # Plot total population
+        # plot total population
         ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'][self.start_time_index:],
                 self.model_runner.epi_outputs['manual_baseline']['population'][self.start_time_index:],
                 'k', label='total', linewidth=2)
 
-        # Plot sub-populations
+        # plot sub-populations
         for plot_label in self.model_runner.model_dict['manual_baseline'].labels:
             ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'][self.start_time_index:],
                     self.model_runner.model_dict['manual_baseline'].compartment_soln[plot_label][
@@ -1776,7 +1814,7 @@ class Project:
                     label=t_k.find_title_from_dictionary(plot_label), linewidth=1, color=colours[plot_label],
                     marker=markers[plot_label], linestyle=patterns[plot_label])
 
-        # Finishing touches
+        # finishing touches
         self.tidy_axis(ax, [1, 1], title='Compartmental population distribution (baseline scenario)',
                        start_time=self.inputs.model_constants['plot_start_time'], legend='for_single',
                        y_label='Population', y_axis_type='scaled')
@@ -1962,7 +2000,6 @@ class Project:
             self.save_figure(fig, '_riskgroup_proportions')
 
     def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):
-
         """
         Function for plotting total cost of interventions under different scenarios over a given range of years.
         Will throw error if defined year range is not present in economic model outputs.
@@ -1974,7 +2011,7 @@ class Project:
             plot_options: Dictionary, options for generating plot
         """
 
-        # Set and check options / data ranges
+        # set and check options / data ranges
         intervention_names_dict \
             = {'vaccination': 'Vaccination', 'xpert': 'GeneXpert', 'xpertacf': 'GeneXpert ACF', 'smearacf': 'Smear ACF',
                'treatment_support': 'Treatment Support', 'ipt_age0to5': 'IPT 0-5 y.o.', 'ipt_age5to15': 'IPT 5-15 y.o.'}

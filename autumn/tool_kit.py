@@ -482,7 +482,13 @@ def find_title_from_dictionary(name):
         '_ds':
             'DS-TB',
         '_mdr':
-            'MDR-TB'
+            'MDR-TB',
+        'bulgaria_improve_dst':
+            'Improve DST (Bulgaria implementation)',
+        'food_voucher_ds':
+            'Food vouchers, DS-TB',
+        'food_voucher_mdr':
+            'Food vouchers, MDR-TB'
     }
 
     if name in dictionary_of_names:

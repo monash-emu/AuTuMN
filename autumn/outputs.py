@@ -1783,20 +1783,19 @@ class Project:
                 # plot
                 ax = self.make_single_axis(fig)
                 ax.bar(upper.keys(), upper.values(), .6, bottom=base.values(),
-                       color=self.program_colours[scenario][intervention][1])
+                       color=self.program_colours[scenario][intervention][1],
+                       label=t_k.find_title_from_dictionary(intervention))
 
                 # increment the lower values before looping again
                 base = {i: base[i] + data[i] for i in data}
 
             # finishing up
-            self.tidy_axis(ax, [1, 1],
-                           title=t_k.capitalise_and_remove_underscore(cost_type)
-                                 + ' costs by intervention for scenario '
-                                 + t_k.find_scenario_string_from_number(scenario),
-                           start_time=self.inputs.model_constants['plot_economics_start_time'],
-                           x_axis_type='individual_years',
-                           y_label=' $US', y_axis_type='scaled', y_sig_figs=1,
-                           legend=True)
+            self.tidy_axis(
+                ax, [1, 1],
+                title=t_k.capitalise_and_remove_underscore(cost_type) + ' costs by intervention for '
+                      + t_k.replace_underscore_with_space(t_k.find_scenario_string_from_number(scenario)),
+                start_time=self.inputs.model_constants['plot_economics_start_time'], x_axis_type='individual_years',
+                y_label=' $US', y_axis_type='scaled', y_sig_figs=1, legend='for_single')
             self.save_figure(fig, '_' + t_k.find_scenario_string_from_number(scenario) + '_timecost_stackedbars')
 
     def plot_populations(self, strain_or_organ='organ'):

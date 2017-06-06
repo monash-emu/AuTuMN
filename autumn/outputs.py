@@ -719,21 +719,20 @@ class Project:
 
     def tidy_axis(self, ax, subplot_grid, title='', start_time=0., legend=False, x_label='', y_label='',
                   x_axis_type='time', y_axis_type='scaled', x_sig_figs=0, y_sig_figs=0):
-
         """
         Method to make cosmetic changes to a set of plot axes.
         """
 
-        # Add the sub-plot title with slightly larger titles than the rest of the text on the panel
+        # add the sub-plot title with slightly larger titles than the rest of the text on the panel
         if title: ax.set_title(title, fontsize=get_nice_font_size(subplot_grid) + 2.)
 
-        # Add a legend if needed
+        # add a legend if needed
         if legend == 'for_single':
             ax.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., frameon=False, prop={'size': 7})
         elif legend:
             ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False)
 
-        # Sort x-axis
+        # sort x-axis
         if x_axis_type == 'time':
             ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
             ax.set_xticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))
@@ -746,10 +745,15 @@ class Project:
         elif x_axis_type == 'proportion':
             ax.set_xlabel(x_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
             ax.set_xlim((0., 1.))
+        elif x_axis_type == 'individual_years':
+            ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
+            ax.set_xticks(range(int(start_time), int(self.inputs.model_constants['plot_end_time']), 1))
+            for tick in ax.xaxis.get_major_ticks():
+                tick.label.set_rotation(45)
         else:
             ax.set_xlabel(x_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
 
-        # Sort y-axis
+        # sort y-axis
         ax.set_ylim(bottom=0.)
         vals = list(ax.get_yticks())
         max_val = max([abs(v) for v in vals])
@@ -767,7 +771,7 @@ class Project:
             ax.set_ylim(top=max_val * 1.2)
             ax.set_ylabel(y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
 
-        # Set size of font for x-ticks and add a grid if requested
+        # set size of font for x-ticks and add a grid if requested
         for axis_to_change in [ax.xaxis, ax.yaxis]:
             for tick in axis_to_change.get_major_ticks():
                 tick.label.set_fontsize(get_nice_font_size(subplot_grid))
@@ -1778,13 +1782,22 @@ class Project:
 
                 # plot
                 ax = self.make_single_axis(fig)
-                ax.bar(upper.keys(), upper.values(), .4, bottom=base.values(),
+                ax.bar(upper.keys(), upper.values(), .6, bottom=base.values(),
                        color=self.program_colours[scenario][intervention][1])
 
                 # increment the lower values before looping again
                 base = {i: base[i] + data[i] for i in data}
 
-            self.save_figure(fig, '_' + t_k.find_scenario_string_from_number(scenario) + '_stacked_bars')
+            # finishing up
+            self.tidy_axis(ax, [1, 1],
+                           title=t_k.capitalise_and_remove_underscore(cost_type)
+                                 + ' costs by intervention for scenario '
+                                 + t_k.find_scenario_string_from_number(scenario),
+                           start_time=self.inputs.model_constants['plot_economics_start_time'],
+                           x_axis_type='individual_years',
+                           y_label=' $US', y_axis_type='scaled', y_sig_figs=1,
+                           legend=True)
+            self.save_figure(fig, '_' + t_k.find_scenario_string_from_number(scenario) + '_timecost_stackedbars')
 
     def plot_populations(self, strain_or_organ='organ'):
         """

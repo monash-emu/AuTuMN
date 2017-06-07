@@ -1058,12 +1058,12 @@ class ConsolidatedModel(StratifiedModel):
                             detection_organ = '_smearpos'
                         self.vars['popsize_bulgaria_improve_dst'] \
                             += self.vars['program_rate_detect' + detection_organ + detection_riskgroup] \
-                               * self.compartments['active_smearpos' + strain + riskgroup + agegroup]
+                               * self.compartments['active' + detection_organ + strain + riskgroup + agegroup]
                         if self.vary_detection_by_organ:
                             detection_organ = '_smearneg'
                         self.vars['popsize_bulgaria_improve_dst'] \
                             += self.vars['program_rate_detect' + detection_organ + detection_riskgroup] \
-                               * self.compartments['active_smearneg' + strain + riskgroup + agegroup] \
+                               * self.compartments['active' + detection_organ + strain + riskgroup + agegroup] \
                                * self.params['tb_prop_smearneg_culturepos']
 
         # ACF

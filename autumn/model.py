@@ -6,7 +6,7 @@ Time unit throughout: years
 Compartment unit throughout: patients
 
 Nested inheritance from BaseModel and StratifiedModel in base.py - the former sets some fundamental methods for
-creating intercompartmental flows, costs, etc., while the latter sets down the approach to population stratification.
+creating intercompartmental flows, costs, etc., while the latter sets out the approach to population stratification.
 """
 
 
@@ -134,8 +134,11 @@ class ConsolidatedModel(StratifiedModel):
         self.next_time_point = copy.copy(self.start_time)
 
     def define_model_structure(self):
+        """
+        Determines the compartments required for model run, including stratifications by age and risk groups, etc.
+        """
 
-        # All compartmental disease stages
+        # all compartmental disease stages
         self.compartment_types = ['susceptible_fully', 'susceptible_vac', 'susceptible_treated', 'latent_early',
                                   'latent_late', 'active', 'detect', 'missed', 'treatment_infect',
                                   'treatment_noninfect']
@@ -143,10 +146,10 @@ class ConsolidatedModel(StratifiedModel):
         if 'int_prop_novel_vaccination' in self.relevant_interventions:
             self.compartment_types += ['susceptible_novelvac']
 
-        # Compartments that contribute to force of infection calculations
+        # compartments that contribute to force of infection calculations
         self.infectious_tags = ['active', 'missed', 'detect', 'treatment_infect', 'lowquality']
 
-        # Initialise compartments
+        # initialise compartments
         self.initial_compartments = {}
         for compartment in self.compartment_types:
             if compartment in self.inputs.model_constants:
@@ -280,7 +283,6 @@ class ConsolidatedModel(StratifiedModel):
     ########################################################################
 
     def calculate_vars(self):
-
         """
         The master method that calls all the other methods for the calculations of variable rates
         """

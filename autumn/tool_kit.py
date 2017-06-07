@@ -245,6 +245,8 @@ def find_scenario_number_from_string(scenario):
     # strip of the manual if being used in model_runner
     if 'manual_' in scenario:
         scenario_string = scenario.replace('manual_', '')
+    elif 'uncertainty_' in scenario:
+        scenario_string = scenario.replace('uncertainty_', '')
     else:
         scenario_string = scenario
 

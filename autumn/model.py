@@ -157,31 +157,30 @@ class ConsolidatedModel(StratifiedModel):
                 self.initial_compartments[compartment] = self.inputs.model_constants[compartment]
 
     def initialise_compartments(self):
-
         """
         Initialise all compartments to zero and then populate with the requested values.
         """
 
-        # Initialise to zero
+        # initialise to zero
         for agegroup in self.agegroups:
             for riskgroup in self.riskgroups:
                 for compartment in self.compartment_types:
 
-                    # Replicate susceptible for age and risk groups
+                    # replicate susceptible for age and risk groups
                     if 'susceptible' in compartment: self.set_compartment(compartment + riskgroup + agegroup, 0.)
 
-                    # Replicate latent classes for age-groups, risk groups and strains
+                    # replicate latent classes for age groups, risk groups and strains
                     elif 'latent' in compartment:
                         for strain in self.strains:
                             self.set_compartment(compartment + strain + riskgroup + agegroup, 0.)
 
-                    # Replicate active classes for age-groups, risk groups, strains and organs
+                    # replicate active classes for age groups, risk groups, strains and organs
                     elif 'active' in compartment or 'missed' in compartment or 'lowquality' in compartment:
                         for strain in self.strains:
                             for organ in self.organ_status:
                                 self.set_compartment(compartment + organ + strain + riskgroup + agegroup, 0.)
 
-                    # Replicate treatment classes for age-groups, risk groups, strains, organs and assigned strains
+                    # replicate treatment classes for age groups, risk groups, strains, organs and assigned strains
                     else:
                         for strain in self.strains:
                             for organ in self.organ_status:
@@ -193,7 +192,7 @@ class ConsolidatedModel(StratifiedModel):
                                 else:
                                     self.set_compartment(compartment + organ + strain + riskgroup + agegroup, 0.)
 
-        # Find starting proportions for risk groups
+        # find starting proportions for risk groups
         if len(self.riskgroups) == 1:
             start_risk_prop = {'': 1.}
         else:
@@ -204,18 +203,21 @@ class ConsolidatedModel(StratifiedModel):
                         = self.scaleup_fns['riskgroup_prop' + riskgroup](self.inputs.model_constants['start_time'])
                     start_risk_prop['_norisk'] -= start_risk_prop[riskgroup]
 
-        # Find starting strain for compartment initialisation
+        # find starting strain for compartment initialisation
         if self.strains == ['']:
             default_start_strain = ''
         else:
             default_start_strain = '_ds'
 
-        # Arbitrarily split equally by age-groups and organ status, but avoid starting with any resistant strains
+        # arbitrarily split equally by age-groups and organ status, but avoid starting with any resistant strains
+        print(self.initial_compartments)
+
         for compartment in self.compartment_types:
             if compartment in self.initial_compartments:
+                print(compartment)
                 for agegroup in self.agegroups:
                     for riskgroup in self.riskgroups:
-                        if 'susceptible_fully' in compartment:
+                        if 'susceptible' in compartment:
                             self.set_compartment(compartment + riskgroup + agegroup,
                                                  self.initial_compartments[compartment] * start_risk_prop[riskgroup]
                                                  / len(self.agegroups))

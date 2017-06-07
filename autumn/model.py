@@ -135,7 +135,8 @@ class ConsolidatedModel(StratifiedModel):
 
     def define_model_structure(self):
         """
-        Determines the compartments required for model run, including stratifications by age and risk groups, etc.
+        Determines the compartment types required for model run,
+        not including stratifications by age and risk groups, etc.
         """
 
         # all compartmental disease stages
@@ -153,8 +154,7 @@ class ConsolidatedModel(StratifiedModel):
         self.initial_compartments = {}
         for compartment in self.compartment_types:
             if compartment in self.inputs.model_constants:
-                self.initial_compartments[compartment] \
-                    = self.inputs.model_constants[compartment]
+                self.initial_compartments[compartment] = self.inputs.model_constants[compartment]
 
     def initialise_compartments(self):
 

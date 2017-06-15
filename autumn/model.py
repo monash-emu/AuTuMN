@@ -85,7 +85,8 @@ class ConsolidatedModel(StratifiedModel):
 
         # model attributes to be set directly to attributes of the inputs object
         for attribute in ['organ_status', 'strains', 'riskgroups', 'agegroups', 'vary_detection_by_organ',
-                          'organs_for_detection', 'riskgroups_for_detection', 'vary_detection_by_riskgroup']:
+                          'organs_for_detection', 'riskgroups_for_detection', 'vary_detection_by_riskgroup',
+                          'mixing', 'vary_force_infection_by_riskgroup']:
             setattr(self, attribute, getattr(inputs, attribute))
 
         # model attributes to set to just the relevant scenario key from an inputs dictionary
@@ -123,12 +124,6 @@ class ConsolidatedModel(StratifiedModel):
 
         # whether short-course MDR-TB regimen improves outcomes
         self.shortcourse_improves_outcomes = False
-
-        # mixing matrix if heterogeneous mixing by risk group being implemented
-        self.vary_force_infection_by_riskgroup = True  # waiting to go to GUI
-        if self.vary_force_infection_by_riskgroup:
-            self.mixing = {}
-            self.create_mixing_matrix()
 
         # create time ticker
         self.next_time_point = copy.copy(self.start_time)
@@ -228,23 +223,6 @@ class ConsolidatedModel(StratifiedModel):
                                                      self.initial_compartments[compartment]
                                                      * start_risk_prop[riskgroup]
                                                      / len(self.organ_status) / len(self.agegroups))
-
-    def create_mixing_matrix(self):
-        """
-        Creates model attribute for mixing between population risk groups, for use in calculate_force_infection_vars
-        method below only.
-
-        *** Would be nice to make this more general - currently dependent on all inter-group mixing proportions being
-        defined in the inputs spreadsheet. ***
-        """
-
-        for from_riskgroup in self.riskgroups:
-            self.mixing[from_riskgroup] = {}
-            for to_riskgroup in self.riskgroups:
-                if 'prop' + from_riskgroup + '_mix' + to_riskgroup in self.params:
-                    self.mixing[from_riskgroup][to_riskgroup] \
-                        = self.params['prop' + from_riskgroup + '_mix' + to_riskgroup]
-            self.mixing[from_riskgroup][from_riskgroup] = 1. - sum(self.mixing[from_riskgroup].values())
 
     #######################################################
     ### Single method to process uncertainty parameters ###

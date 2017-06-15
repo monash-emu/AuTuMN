@@ -51,6 +51,8 @@ class Inputs:
         self.available_strains = ['_ds', '_mdr', '_xdr']
         self.available_organs = ['_smearpos', '_smearneg', '_extrapul']
         self.agegroups = None
+        self.vary_force_infection_by_riskgroup = True  # waiting to go to GUI
+        self.mixing = {}
 
         # interventions
         self.irrelevant_time_variants = []
@@ -104,6 +106,9 @@ class Inputs:
 
         # calculate time-variant functions
         self.find_scaleup_functions()
+
+        # create mixing matrix (has to be run after scale-up functions, so can't go in model structure method)
+        if self.vary_force_infection_by_riskgroup: self.create_mixing_matrix()
 
         # uncertainty-related analysis
         self.process_uncertainty_parameters()
@@ -378,6 +383,20 @@ class Inputs:
         for riskgroup in self.riskgroups:
             if 'riskgroup_prop' + riskgroup not in self.model_constants:
                 self.model_constants['riskgroup_prop' + riskgroup] = 0.
+
+    def create_mixing_matrix(self):
+        """
+        Creates model attribute for mixing between population risk groups, for use in calculate_force_infection_vars
+        method below only.
+        """
+
+        for from_riskgroup in self.riskgroups:
+            self.mixing[from_riskgroup] = {}
+            for to_riskgroup in self.riskgroups:
+                if 'prop' + from_riskgroup + '_mix' + to_riskgroup in self.model_constants:
+                    self.mixing[from_riskgroup][to_riskgroup] \
+                        = self.model_constants['prop' + from_riskgroup + '_mix' + to_riskgroup]
+            self.mixing[from_riskgroup][from_riskgroup] = 1. - sum(self.mixing[from_riskgroup].values())
 
     def define_strain_structure(self):
         """

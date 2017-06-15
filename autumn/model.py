@@ -187,8 +187,7 @@ class ConsolidatedModel(StratifiedModel):
                                 if self.is_misassignment:
                                     for assigned_strain in self.strains:
                                         self.set_compartment(compartment + organ + strain + '_as' + assigned_strain[1:]
-                                                             + riskgroup + agegroup,
-                                                             0.)
+                                                             + riskgroup + agegroup, 0.)
                                 else:
                                     self.set_compartment(compartment + organ + strain + riskgroup + agegroup, 0.)
 
@@ -210,11 +209,8 @@ class ConsolidatedModel(StratifiedModel):
             default_start_strain = '_ds'
 
         # arbitrarily split equally by age-groups and organ status, but avoid starting with any resistant strains
-        print(self.initial_compartments)
-
         for compartment in self.compartment_types:
             if compartment in self.initial_compartments:
-                print(compartment)
                 for agegroup in self.agegroups:
                     for riskgroup in self.riskgroups:
                         if 'susceptible' in compartment:
@@ -234,7 +230,6 @@ class ConsolidatedModel(StratifiedModel):
                                                      / len(self.organ_status) / len(self.agegroups))
 
     def create_mixing_matrix(self):
-
         """
         Creates model attribute for mixing between population risk groups, for use in calculate_force_infection_vars
         method below only.

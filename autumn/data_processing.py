@@ -26,6 +26,20 @@ def make_constant_function(value):
     return constant
 
 
+def find_latest_value_from_year_dict(dictionary, ceiling):
+    """
+    Finds the value corresponding to the latest key that is not into the future.
+
+    Args:
+        dictionary: The dictionary to be interrogated
+        ceiling: Upper limit of time to prevent entries into the future being included
+    Returns:
+        The value corresponding to the key found through this process
+    """
+
+    return dictionary[max([i for i in dictionary if i <= int(ceiling)])]
+
+
 class Inputs:
 
     def __init__(self, gui_inputs, runtime_outputs, js_gui=False):
@@ -390,13 +404,33 @@ class Inputs:
         method below only.
         """
 
-        for from_riskgroup in self.riskgroups:
-            self.mixing[from_riskgroup] = {}
+        # create mixing matrix separately for each scenario, just in case risk groups being managed differently
+        for scenario in self.scenarios:
+            self.mixing[scenario] = {}
+
+            # next tier of dictionary is the "to" risk group that is being infected
             for to_riskgroup in self.riskgroups:
-                if 'prop' + from_riskgroup + '_mix' + to_riskgroup in self.model_constants:
-                    self.mixing[from_riskgroup][to_riskgroup] \
-                        = self.model_constants['prop' + from_riskgroup + '_mix' + to_riskgroup]
-            self.mixing[from_riskgroup][from_riskgroup] = 1. - sum(self.mixing[from_riskgroup].values())
+                self.mixing[scenario][to_riskgroup] = {}
+
+                # last tier of dictionary is the "from" risk group describing the make up of contacts
+                for from_riskgroup in self.riskgroups:
+                    if from_riskgroup != '_norisk':
+
+                        # use parameters for risk groups other than "_norisk" if available
+                        if 'prop_mix' + to_riskgroup + '_from' + from_riskgroup in self.model_constants:
+                            self.mixing[scenario][to_riskgroup][from_riskgroup] \
+                                = self.model_constants['prop_mix' + to_riskgroup + '_from' + from_riskgroup]
+
+                        # otherwise use the latest value for the proportion of the population with that risk factor
+                        else:
+                            self.mixing[scenario][to_riskgroup][from_riskgroup] \
+                                = find_latest_value_from_year_dict(
+                                self.scaleup_data[scenario]['riskgroup_prop' + from_riskgroup],
+                                self.model_constants['current_time'])
+
+                # give the remainder to the "_norisk" group without any risk factors
+                self.mixing[scenario][to_riskgroup][from_riskgroup] \
+                    = 1. - sum(self.mixing[scenario][to_riskgroup].values())
 
     def define_strain_structure(self):
         """

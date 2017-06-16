@@ -86,11 +86,11 @@ class ConsolidatedModel(StratifiedModel):
         # model attributes to be set directly to attributes of the inputs object
         for attribute in ['organ_status', 'strains', 'riskgroups', 'agegroups', 'vary_detection_by_organ',
                           'organs_for_detection', 'riskgroups_for_detection', 'vary_detection_by_riskgroup',
-                          'mixing', 'vary_force_infection_by_riskgroup']:
+                          'vary_force_infection_by_riskgroup']:
             setattr(self, attribute, getattr(inputs, attribute))
 
         # model attributes to set to just the relevant scenario key from an inputs dictionary
-        for attribute in ['relevant_interventions', 'scaleup_fns', 'interventions_to_cost']:
+        for attribute in ['relevant_interventions', 'scaleup_fns', 'interventions_to_cost', 'mixing']:
             setattr(self, attribute, getattr(inputs, attribute)[scenario])
 
         # start_time can't be left as a model constant as it needs to be set for each scenario through the model runner

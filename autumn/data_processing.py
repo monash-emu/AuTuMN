@@ -65,7 +65,7 @@ class Inputs:
         self.available_strains = ['_ds', '_mdr', '_xdr']
         self.available_organs = ['_smearpos', '_smearneg', '_extrapul']
         self.agegroups = None
-        self.vary_force_infection_by_riskgroup = True  # waiting to go to GUI
+        self.vary_force_infection_by_riskgroup = self.gui_inputs['is_vary_force_infection_by_riskgroup']
         self.mixing = {}
 
         # interventions

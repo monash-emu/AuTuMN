@@ -75,7 +75,9 @@ def find_button_name_from_string(working_string):
                               'n_strains':
                                   'Number of strains',
                               'is_timevariant_contactrate':
-                                  'Time-variant contact rate'}
+                                  'Time-variant contact rate',
+                              'is_vary_force_infection_by_riskgroup':
+                                  'Heterogeneous mixing'}
 
     if working_string in button_name_dictionary:
         return button_name_dictionary[working_string]
@@ -134,7 +136,8 @@ class App:
                                'riskgroup_prison', 'riskgroup_indigenous', 'riskgroup_urbanpoor',
                                'riskgroup_ruralpoor',
                                'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ',
-                               'is_timevariant_organs', 'is_timevariant_contactrate']
+                               'is_timevariant_organs', 'is_timevariant_contactrate',
+                               'is_vary_force_infection_by_riskgroup']
         for i in range(1, 15):
             self.boolean_inputs += ['scenario_' + str(i)]
 
@@ -269,6 +272,7 @@ class App:
         # self.boolean_dictionary['riskgroup_urbanpoor'].set(True)
         self.boolean_dictionary['riskgroup_ruralpoor'].set(True)
         self.boolean_dictionary['output_gtb_plots'].set(True)
+        self.boolean_dictionary['is_vary_force_infection_by_riskgroup'].set(True)
 
         # self.boolean_dictionary['riskgroup_diabetes'].set(True)
         self.boolean_dictionary['riskgroup_hiv'].set(True)

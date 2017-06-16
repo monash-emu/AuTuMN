@@ -655,7 +655,7 @@ class BaseModel:
             if (int in ['ipt_age0to5', 'ipt_age5to15']) and (len(self.agegroups) < 2):
                 continue
 
-            vars_key = 'program_prop_' + int
+            vars_key = 'int_prop_' + int
             cost = self.annual_available_funding[int]
             if cost == 0.:
                 coverage = 0.

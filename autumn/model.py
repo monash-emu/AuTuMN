@@ -214,13 +214,13 @@ class ConsolidatedModel(StratifiedModel):
     def process_uncertainty_params(self):
         """
         Perform some simple parameter processing - just for those that are used as uncertainty parameters and so can't
-        be processed in the data_processing module.
+        be processed in the data processing module.
         """
 
         # find the case fatality of smear-negative TB using the relative case fatality
-        self.params['tb_prop_casefatality_untreated_smearneg'] = \
-            self.params['tb_prop_casefatality_untreated_smearpos'] \
-            * self.params['tb_relative_casefatality_untreated_smearneg']
+        self.params['tb_prop_casefatality_untreated_smearneg'] \
+            = self.params['tb_prop_casefatality_untreated_smearpos'] \
+              * self.params['tb_relative_casefatality_untreated_smearneg']
 
         # add the extrapulmonary case fatality (currently not entered from the spreadsheets)
         self.params['tb_prop_casefatality_untreated_extrapul'] \
@@ -242,11 +242,11 @@ class ConsolidatedModel(StratifiedModel):
 
     def calculate_vars(self):
         """
-        The master method that calls all the other methods for the calculations of variable rates
+        The master method that calls all the other methods for the calculations of variable rates.
         """
 
         self.ticker()
-        # The parameter values are calculated from the costs, but only in the future
+        # parameter values are calculated from the costs, but only in the future
         if self.eco_drives_epi and self.time > self.inputs.model_constants['recent_time']: self.update_vars_from_cost()
         self.calculate_populations()
         self.calculate_birth_rates_vars()
@@ -277,9 +277,8 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_population_sizes()
 
     def ticker(self):
-
         """
-        Prints time every ten years to give a sense of progress through integration.
+        Prints time every ten years to indicate progress through integration.
         """
 
         if self.time > self.next_time_point:
@@ -287,9 +286,8 @@ class ConsolidatedModel(StratifiedModel):
             self.next_time_point += 10.
 
     def calculate_populations(self):
-
         """
-        Find the total absolute numbers of people in each population sub-group.
+        Find the total absolute numbers of people in the population by each risk group and overall.
         """
 
         for riskgroup in self.riskgroups + ['']:
@@ -299,16 +297,14 @@ class ConsolidatedModel(StratifiedModel):
                     self.vars['population' + riskgroup] += self.compartments[label]
 
     def calculate_birth_rates_vars(self):
-
         """
         Calculate birth rates into vaccinated and unvaccinated compartments.
         """
 
-        # Calculate total births (also for tracking for for interventions)
-        self.vars['births_total'] = self.vars['demo_rate_birth'] / 1e3 \
-                                    * self.vars['population']
+        # calculate total births (also for tracking for for interventions)
+        self.vars['births_total'] = self.vars['demo_rate_birth'] / 1e3 * self.vars['population']
 
-        # Determine vaccinated and unvaccinated proportions
+        # determine vaccinated and unvaccinated proportions
         vac_props = {'vac': self.vars['int_prop_vaccination']}
         vac_props['unvac'] = 1. - vac_props['vac']
         if 'int_prop_novel_vaccination' in self.relevant_interventions:
@@ -316,7 +312,7 @@ class ConsolidatedModel(StratifiedModel):
                                     * self.vars['int_prop_novel_vaccination']
             vac_props['vac'] -= vac_props['novelvac']
 
-        # Calculate birth rates
+        # calculate birth rates
         for riskgroup in self.riskgroups:
             for vac_status in vac_props:
                 self.vars['births_' + vac_status + riskgroup] \

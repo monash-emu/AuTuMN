@@ -84,9 +84,9 @@ class ConsolidatedModel(StratifiedModel):
         self.scenario = scenario
 
         # model attributes to be set directly to attributes of the inputs object
-        for attribute in ['organ_status', 'strains', 'riskgroups', 'agegroups', 'vary_detection_by_organ',
-                          'organs_for_detection', 'riskgroups_for_detection', 'vary_detection_by_riskgroup',
-                          'vary_force_infection_by_riskgroup']:
+        for attribute in ['compartment_types', 'organ_status', 'strains', 'riskgroups', 'agegroups',
+                          'vary_detection_by_organ', 'organs_for_detection', 'riskgroups_for_detection',
+                          'vary_detection_by_riskgroup', 'vary_force_infection_by_riskgroup']:
             setattr(self, attribute, getattr(inputs, attribute))
 
         # model attributes to set to just the relevant scenario key from an inputs dictionary
@@ -106,8 +106,9 @@ class ConsolidatedModel(StratifiedModel):
         for key, value in inputs.model_constants.items():
             if type(value) == float: self.set_parameter(key, value)
 
-        # define model compartmental structure (note that compartment initialisation is in base.py)
-        self.define_model_structure()
+        # list of infectious compartments
+        self.infectious_tags = ['active', 'missed', 'detect', 'treatment_infect', 'lowquality']
+        self.initial_compartments = {}
 
         # treatment outcomes
         self.outcomes = ['_success', '_death', '_default']
@@ -128,33 +129,15 @@ class ConsolidatedModel(StratifiedModel):
         # create time ticker
         self.next_time_point = copy.copy(self.start_time)
 
-    def define_model_structure(self):
-        """
-        Determines the compartment types required for model run,
-        not including stratifications by age and risk groups, etc.
-        """
-
-        # all compartmental disease stages
-        self.compartment_types = ['susceptible_fully', 'susceptible_vac', 'susceptible_treated', 'latent_early',
-                                  'latent_late', 'active', 'detect', 'missed', 'treatment_infect',
-                                  'treatment_noninfect']
-        if self.is_lowquality: self.compartment_types += ['lowquality']
-        if 'int_prop_novel_vaccination' in self.relevant_interventions:
-            self.compartment_types += ['susceptible_novelvac']
-
-        # compartments that contribute to force of infection calculations
-        self.infectious_tags = ['active', 'missed', 'detect', 'treatment_infect', 'lowquality']
-
-        # initialise compartments
-        self.initial_compartments = {}
-        for compartment in self.compartment_types:
-            if compartment in self.inputs.model_constants:
-                self.initial_compartments[compartment] = self.inputs.model_constants[compartment]
-
     def initialise_compartments(self):
         """
         Initialise all compartments to zero and then populate with the requested values.
         """
+
+        # extract values for compartment initialisation by compartment type
+        for compartment in self.compartment_types:
+            if compartment in self.inputs.model_constants:
+                self.initial_compartments[compartment] = self.inputs.model_constants[compartment]
 
         # initialise to zero
         for agegroup in self.agegroups:
@@ -1131,7 +1114,6 @@ class ConsolidatedModel(StratifiedModel):
                                              + riskgroup + self.agegroups[0], 'births_novelvac' + riskgroup)
 
     def set_infection_flows(self):
-
         """
         Set force of infection flows that were estimated by strain in calculate_force_infection_vars above.
         """

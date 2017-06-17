@@ -67,6 +67,9 @@ class Inputs:
         self.agegroups = None
         self.vary_force_infection_by_riskgroup = self.gui_inputs['is_vary_force_infection_by_riskgroup']
         self.mixing = {}
+        self.compartment_types \
+            = ['susceptible_fully', 'susceptible_vac', 'susceptible_treated', 'latent_early', 'latent_late', 'active',
+               'detect', 'missed', 'treatment_infect', 'treatment_noninfect']
 
         # interventions
         self.irrelevant_time_variants = []
@@ -123,6 +126,9 @@ class Inputs:
 
         # create mixing matrix (has to be run after scale-up functions, so can't go in model structure method)
         if self.vary_force_infection_by_riskgroup: self.create_mixing_matrix()
+
+        # define compartmental structure
+        self.define_compartment_structure()
 
         # uncertainty-related analysis
         self.process_uncertainty_parameters()
@@ -398,40 +404,6 @@ class Inputs:
             if 'riskgroup_prop' + riskgroup not in self.model_constants:
                 self.model_constants['riskgroup_prop' + riskgroup] = 0.
 
-    def create_mixing_matrix(self):
-        """
-        Creates model attribute for mixing between population risk groups, for use in calculate_force_infection_vars
-        method below only.
-        """
-
-        # create mixing matrix separately for each scenario, just in case risk groups being managed differently
-        for scenario in self.scenarios:
-            self.mixing[scenario] = {}
-
-            # next tier of dictionary is the "to" risk group that is being infected
-            for to_riskgroup in self.riskgroups:
-                self.mixing[scenario][to_riskgroup] = {}
-
-                # last tier of dictionary is the "from" risk group describing the make up of contacts
-                for from_riskgroup in self.riskgroups:
-                    if from_riskgroup != '_norisk':
-
-                        # use parameters for risk groups other than "_norisk" if available
-                        if 'prop_mix' + to_riskgroup + '_from' + from_riskgroup in self.model_constants:
-                            self.mixing[scenario][to_riskgroup][from_riskgroup] \
-                                = self.model_constants['prop_mix' + to_riskgroup + '_from' + from_riskgroup]
-
-                        # otherwise use the latest value for the proportion of the population with that risk factor
-                        else:
-                            self.mixing[scenario][to_riskgroup][from_riskgroup] \
-                                = find_latest_value_from_year_dict(
-                                self.scaleup_data[scenario]['riskgroup_prop' + from_riskgroup],
-                                self.model_constants['current_time'])
-
-                # give the remainder to the "_norisk" group without any risk factors
-                self.mixing[scenario][to_riskgroup][from_riskgroup] \
-                    = 1. - sum(self.mixing[scenario][to_riskgroup].values())
-
     def define_strain_structure(self):
         """
         Finds the strains to be present in the model from a list of available strains and the integer value for the
@@ -474,6 +446,51 @@ class Inputs:
             self.organ_status = ['']
         else:
             self.organ_status = self.available_organs[:self.gui_inputs['n_organs']]
+
+    def create_mixing_matrix(self):
+        """
+        Creates model attribute for mixing between population risk groups, for use in calculate_force_infection_vars
+        method below only.
+        """
+
+        # create mixing matrix separately for each scenario, just in case risk groups being managed differently
+        for scenario in self.scenarios:
+            self.mixing[scenario] = {}
+
+            # next tier of dictionary is the "to" risk group that is being infected
+            for to_riskgroup in self.riskgroups:
+                self.mixing[scenario][to_riskgroup] = {}
+
+                # last tier of dictionary is the "from" risk group describing the make up of contacts
+                for from_riskgroup in self.riskgroups:
+                    if from_riskgroup != '_norisk':
+
+                        # use parameters for risk groups other than "_norisk" if available
+                        if 'prop_mix' + to_riskgroup + '_from' + from_riskgroup in self.model_constants:
+                            self.mixing[scenario][to_riskgroup][from_riskgroup] \
+                                = self.model_constants['prop_mix' + to_riskgroup + '_from' + from_riskgroup]
+
+                        # otherwise use the latest value for the proportion of the population with that risk factor
+                        else:
+                            self.mixing[scenario][to_riskgroup][from_riskgroup] \
+                                = find_latest_value_from_year_dict(
+                                self.scaleup_data[scenario]['riskgroup_prop' + from_riskgroup],
+                                self.model_constants['current_time'])
+
+                # give the remainder to the "_norisk" group without any risk factors
+                self.mixing[scenario][to_riskgroup][from_riskgroup] \
+                    = 1. - sum(self.mixing[scenario][to_riskgroup].values())
+
+    def define_compartment_structure(self):
+        """
+        Determines the compartment types required for model run,
+        not including stratifications by age and risk groups, etc.
+        """
+
+        # add elaboration compartments to default list of mandatory compartments
+        if self.gui_inputs['is_lowquality']: self.compartment_types += ['lowquality']
+        if 'int_prop_novel_vaccination' in self.relevant_interventions:
+            self.compartment_types += ['susceptible_novelvac']
 
     #################################################
     ### Time variant parameter processing methods ###

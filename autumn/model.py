@@ -1071,6 +1071,16 @@ class ConsolidatedModel(StratifiedModel):
                 if 'treatment' in compartment and '_mdr' in compartment:
                     self.vars['popsize_shortcourse_mdr'] += self.compartments[compartment]
 
+        # OpenDoors activities
+        if 'int_prop_opendoors_activities' in self.relevant_interventions:
+            self.vars['popsize_opendoors_activities'] = 598*2.  # fictional nb of diagnosed cases (LTBI + TB) if coverage was 100%
+
+        # NGO activities
+        if 'int_prop_ngo_activities' in self.relevant_interventions:
+            self.vars['popsize_ngo_activities'] = 456*2 # fictional nb of diagnosed cases (LTBI + TB) if coverage was 100%
+
+
+
     ################################################################
     ### Methods that calculate the flows of all the compartments ###
     ################################################################

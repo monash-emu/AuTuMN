@@ -78,7 +78,8 @@ class Inputs:
         self.intervention_startdates = {}
         self.potential_interventions_to_cost \
             = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf', 'ipt_age0to5', 'ipt_age5to15',
-               'decentralisation', 'improve_dst', 'bulgaria_improve_dst', 'intensive_screening', 'ipt_age15up']
+               'decentralisation', 'improve_dst', 'bulgaria_improve_dst', 'intensive_screening', 'ipt_age15up',
+               'ngo_activities', 'opendoors_activities']
         self.freeze_times = {}
 
         # miscellaneous

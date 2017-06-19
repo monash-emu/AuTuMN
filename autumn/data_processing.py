@@ -125,7 +125,11 @@ class Inputs:
         self.find_scaleup_functions()
 
         # create mixing matrix (has to be run after scale-up functions, so can't go in model structure method)
-        if self.vary_force_infection_by_riskgroup: self.create_mixing_matrix()
+        if self.vary_force_infection_by_riskgroup:
+            self.create_mixing_matrix()
+        else:
+            for scenario in self.scenarios:
+                self.mixing[scenario] = {}
 
         # define compartmental structure
         self.define_compartment_structure()

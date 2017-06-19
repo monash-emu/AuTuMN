@@ -437,7 +437,7 @@ class ConsolidatedModel(StratifiedModel):
                                 self.vars['int_prop_ngo_activities'] < 1. and \
                                 riskgroup in self.ngo_groups:
                     self.vars['program_rate_detect' + organ + riskgroup] \
-                        *= 1 - self.params['program_prop_detection_from_ngo']
+                        *= 1 - self.params['int_prop_detection_ngo']
 
             # missed (no need to loop by risk-group as ACF is the only difference here, which is applied next)
             self.vars['program_rate_missed' + organ] \
@@ -912,7 +912,7 @@ class ConsolidatedModel(StratifiedModel):
                         coverage_multiplier_ngo_stopped = 1.
                         if 'int_prop_ngo_activities' in self.relevant_interventions \
                                 and self.vars['int_prop_ngo_activities'] < 1. and riskgroup in self.ngo_groups:
-                            coverage_multiplier_ngo_stopped = (1. - self.params['int_prop_ipt_from_ngo'])
+                            coverage_multiplier_ngo_stopped = (1. - self.params['int_prop_ipt_ngo'])
                         ipt_infection_modifier = 1. - coverage_multiplier_ngo_stopped * \
                                                       self.vars['prop_infections_averted_ipt' + agegroup]
 

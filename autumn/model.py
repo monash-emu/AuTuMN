@@ -368,12 +368,12 @@ class ConsolidatedModel(StratifiedModel):
 
         if 'int_prop_opendoors_activities' in self.relevant_interventions \
                 and self.vars['int_prop_opendoors_activities'] < 1.:
-            self.vars['program_prop_detect'] *= (1. - self.params['program_prop_detection_from_opendoors'])
+            self.vars['program_prop_detect'] *= (1. - self.params['int_prop_detection_opendoors'])
 
             # adjust IPT coverage
             for agegroup in self.agegroups:
                 if 'int_prop_ipt' + agegroup in self.vars:
-                    self.vars['int_prop_ipt' + agegroup] *= (1. - self.params['program_prop_ipt_from_opendoors'])
+                    self.vars['int_prop_ipt' + agegroup] *= (1. - self.params['int_prop_ipt_opendoors'])
 
     def calculate_case_detection_by_organ(self):
         """

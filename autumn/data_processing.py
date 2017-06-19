@@ -984,7 +984,8 @@ class Inputs:
         # turn off and warn if model unstratified by organ status
         if len(self.organ_status) == 1 and self.vary_detection_by_organ:
             self.vary_detection_by_organ = False
-            print('Requested variation by organ status turned off, as model is unstratified by organ status.')
+            self.add_comment_to_gui_window(
+                'Requested variation by organ status turned off, as model is unstratified by organ status.')
 
         # turn on and warn if Xpert requested but variation not requested
         for scenario in self.scenarios:
@@ -993,7 +994,8 @@ class Inputs:
                 self.vary_detection_by_organ = True
                 print('Variation in detection by organ status added for Xpert implementation, although not requested.')
             elif len(self.organ_status) == 1 and 'int_prop_xpert' in self.relevant_interventions[scenario]:
-                print('Effect of Xpert on smear-negative detection not simulated as model unstratified by organ status.')
+                self.add_comment_to_gui_window(
+                    'Effect of Xpert on smear-negative detection not simulated as model unstratified by organ status.')
 
         # set relevant attributes
         self.organs_for_detection = ['']

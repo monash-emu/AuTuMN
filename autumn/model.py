@@ -248,11 +248,11 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_populations()
         self.calculate_birth_rates_vars()
         self.calculate_progression_vars()
+        if 'int_prop_decentralisation' in self.relevant_interventions:
+            self.adjust_case_detection_for_decentralisation()
         if 'int_prop_opendoors_activities' in self.relevant_interventions \
                 or 'int_prop_ngo_activities' in self.relevant_interventions:
             self.adjust_case_detection_and_ipt_for_opendoors()
-        if 'int_prop_decentralisation' in self.relevant_interventions:
-            self.adjust_case_detection_for_decentralisation()
         if self.vary_detection_by_organ:
             self.calculate_case_detection_by_organ()
             if 'int_prop_xpert' in self.relevant_interventions:
@@ -360,6 +360,21 @@ class ConsolidatedModel(StratifiedModel):
             += self.vars['int_prop_decentralisation'] \
                * (self.params['program_ideal_detection'] - self.vars['program_prop_detect'])
 
+    def adjust_case_detection_and_ipt_for_opendoors(self):
+        """
+        If opendoors programs are stopped, case detection and IPT coverage are reduced.
+        This applies to the whole population, as opposed to NGOs activities that apply to specific risk groups.
+        """
+
+        if 'int_prop_opendoors_activities' in self.relevant_interventions \
+                and self.vars['int_prop_opendoors_activities'] < 1.:
+            self.vars['program_prop_detect'] *= (1. - self.params['program_prop_detection_from_opendoors'])
+
+            # adjust IPT coverage
+            for agegroup in self.agegroups:
+                if 'int_prop_ipt' + agegroup in self.vars:
+                    self.vars['int_prop_ipt' + agegroup] *= (1. - self.params['program_prop_ipt_from_opendoors'])
+
     def calculate_case_detection_by_organ(self):
         """
         Method to perform simple weighting on the assumption that the smear-negative and extra-pulmonary rates are less
@@ -390,20 +405,6 @@ class ConsolidatedModel(StratifiedModel):
                 += (self.vars['program_prop' + parameter + '_smearpos'] -
                     self.vars['program_prop' + parameter + '_smearneg']) \
                    * self.params['tb_prop_xpert_smearneg_sensitivity'] * self.vars['int_prop_xpert']
-
-    def adjust_case_detection_and_ipt_for_opendoors(self):
-
-        # if opendoors programs are stopped, case detection and IPT coverage are reduced
-        # this applies to the whole population as opposed to NGOs activities that apply to specific risk groups
-
-        if 'int_prop_opendoors_activities' in self.relevant_interventions and \
-                self.vars['int_prop_opendoors_activities'] < 1.:
-            self.vars['program_prop_detect'] *= (1. - self.params['program_prop_detection_from_opendoors'])
-
-            # adjust IPT coverage
-            for agegroup in self.agegroups:
-                if 'int_prop_ipt' + agegroup in self.vars:
-                    self.vars['int_prop_ipt' + agegroup] *= (1. - self.params['program_prop_ipt_from_opendoors'])
 
     def calculate_detect_missed_vars(self):
         """"

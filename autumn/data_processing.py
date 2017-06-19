@@ -58,7 +58,7 @@ class Inputs:
         self.scaleup_fns = {}
         self.param_ranges_unc = []
         self.data_to_fit = {}
-        # for incidence for ex., width of Normal posterior relative to CI width in data
+        # for incidence for ex, width of normal posterior relative to CI width in data
         self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
 
         # model structure
@@ -703,12 +703,22 @@ class Inputs:
         Populate organ status dictionaries where requested and not already loaded.
         """
 
+        # conversion from GTB code to AuTuMN code
         name_conversion_dict = {'_smearpos': '_sp', '_smearneg': '_sn'}
+
+        # for the time variant progression parameters that are used (extrapulmonary just calculated as a complement)
         for organ in ['_smearpos', '_smearneg']:
-            for year in self.derived_data['prop_new' + name_conversion_dict[organ]]:
-                if year not in self.time_variants['epi_prop' + organ]:
-                    self.time_variants['epi_prop' + organ][year] \
-                        = self.derived_data['prop_new' + name_conversion_dict[organ]][year]
+
+            # populate absent values from derived data if input data available
+            if 'epi_prop' + organ in self.time_variants:
+                for year in self.derived_data['prop_new' + name_conversion_dict[organ]]:
+                    if year not in self.time_variants['epi_prop' + organ]:
+                        self.time_variants['epi_prop' + organ][year] \
+                            = self.derived_data['prop_new' + name_conversion_dict[organ]][year]
+
+            # otherwise if no input data available, just take the derived data straight from the loaded sheets
+            else:
+                self.time_variants['epi_prop' + organ] = self.derived_data['prop_new' + name_conversion_dict[organ]]
 
     def tidy_time_variants(self):
         """

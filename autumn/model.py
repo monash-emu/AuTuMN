@@ -252,7 +252,7 @@ class ConsolidatedModel(StratifiedModel):
             self.adjust_case_detection_for_decentralisation()
         if 'int_prop_opendoors_activities' in self.relevant_interventions \
                 or 'int_prop_ngo_activities' in self.relevant_interventions:
-            self.adjust_case_detection_and_ipt_for_opendoors()
+            self.adjust_ipt_for_opendoors()
         if self.vary_detection_by_organ:
             self.calculate_case_detection_by_organ()
             if 'int_prop_xpert' in self.relevant_interventions:
@@ -360,7 +360,7 @@ class ConsolidatedModel(StratifiedModel):
             += self.vars['int_prop_decentralisation'] \
                * (self.params['program_ideal_detection'] - self.vars['program_prop_detect'])
 
-    def adjust_case_detection_and_ipt_for_opendoors(self):
+    def adjust_ipt_for_opendoors(self):
         """
         If opendoors programs are stopped, case detection and IPT coverage are reduced.
         This applies to the whole population, as opposed to NGOs activities that apply to specific risk groups.
@@ -368,9 +368,6 @@ class ConsolidatedModel(StratifiedModel):
 
         if 'int_prop_opendoors_activities' in self.relevant_interventions \
                 and self.vars['int_prop_opendoors_activities'] < 1.:
-            self.vars['program_prop_detect'] *= (1. - self.params['int_prop_detection_opendoors'])
-
-            # adjust IPT coverage
             for agegroup in self.agegroups:
                 if 'int_prop_ipt' + agegroup in self.vars:
                     self.vars['int_prop_ipt' + agegroup] *= (1. - self.params['int_prop_ipt_opendoors'])
@@ -431,6 +428,12 @@ class ConsolidatedModel(StratifiedModel):
                       * (1. / self.params['tb_timeperiod_activeuntreated']
                          + 1. / self.vars['demo_life_expectancy']) \
                       / (1. - self.vars['program_prop_detect' + organ])
+
+                # adjust detection rates for opendoors activities in all groups
+                if 'int_prop_opendoors_activities' in self.relevant_interventions and \
+                                self.vars['int_prop_opendoors_activities'] < 1.:
+                    self.vars['program_rate_detect' + organ + riskgroup] \
+                        *= 1 - self.params['int_prop_detection_opendoors']
 
                 # adjust detection rates for NGOs activities in specific risk groups
                 if 'int_prop_ngo_activities' in self.relevant_interventions and \

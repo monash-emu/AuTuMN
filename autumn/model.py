@@ -370,7 +370,8 @@ class ConsolidatedModel(StratifiedModel):
                 and self.vars['int_prop_opendoors_activities'] < 1.:
             for agegroup in self.agegroups:
                 if 'int_prop_ipt' + agegroup in self.vars:
-                    self.vars['int_prop_ipt' + agegroup] *= (1. - self.params['int_prop_ipt_opendoors'])
+                    self.vars['int_prop_ipt' + agegroup] \
+                        *= 1. - self.params['int_prop_ipt_opendoors']*(1-self.vars['int_prop_opendoors_activities'])
 
     def calculate_case_detection_by_organ(self):
         """
@@ -433,14 +434,14 @@ class ConsolidatedModel(StratifiedModel):
                 if 'int_prop_opendoors_activities' in self.relevant_interventions and \
                                 self.vars['int_prop_opendoors_activities'] < 1.:
                     self.vars['program_rate_detect' + organ + riskgroup] \
-                        *= 1 - self.params['int_prop_detection_opendoors']
+                        *= 1 - self.params['int_prop_detection_opendoors']*(1-self.vars['int_prop_opendoors_activities'])
 
                 # adjust detection rates for NGOs activities in specific risk groups
                 if 'int_prop_ngo_activities' in self.relevant_interventions and \
                                 self.vars['int_prop_ngo_activities'] < 1. and \
                                 riskgroup in self.ngo_groups:
                     self.vars['program_rate_detect' + organ + riskgroup] \
-                        *= 1 - self.params['int_prop_detection_ngo']
+                        *= 1 - self.params['int_prop_detection_ngo']*(1-self.vars['int_prop_ngo_activities'])
 
             # missed (no need to loop by risk-group as ACF is the only difference here, which is applied next)
             self.vars['program_rate_missed' + organ] \
@@ -915,7 +916,8 @@ class ConsolidatedModel(StratifiedModel):
                         coverage_multiplier_ngo_stopped = 1.
                         if 'int_prop_ngo_activities' in self.relevant_interventions \
                                 and self.vars['int_prop_ngo_activities'] < 1. and riskgroup in self.ngo_groups:
-                            coverage_multiplier_ngo_stopped = (1. - self.params['int_prop_ipt_ngo'])
+                            coverage_multiplier_ngo_stopped = (1. - self.params['int_prop_ipt_ngo'])\
+                                                              * (1 - self.vars['int_prop_ngo_activities'])
                         ipt_infection_modifier = 1. - coverage_multiplier_ngo_stopped * \
                                                       self.vars['prop_infections_averted_ipt' + agegroup]
 

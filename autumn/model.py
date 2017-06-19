@@ -117,9 +117,6 @@ class ConsolidatedModel(StratifiedModel):
         # intervention and economics-related initialisiations
         if self.eco_drives_epi: self.distribute_funding_across_years()
 
-        # case detection rate ceiling
-        self.detection_algorithm_ceiling = .95
-
         # list of risk groups affected by ngo activities for detection
         self.ngo_groups = ['_ruralpoor']
 
@@ -352,7 +349,6 @@ class ConsolidatedModel(StratifiedModel):
                                   * self.params['tb_rate' + timing + '_progression' + riskgroup + agegroup]
 
     def adjust_case_detection_for_decentralisation(self):
-
         """
         Implement the decentralisation intervention, which narrows the case detection gap between the current values
         and the idealised estimated value.
@@ -365,7 +361,6 @@ class ConsolidatedModel(StratifiedModel):
                * (self.params['program_ideal_detection'] - self.vars['program_prop_detect'])
 
     def calculate_case_detection_by_organ(self):
-
         """
         Method to perform simple weighting on the assumption that the smear-negative and extra-pulmonary rates are less
         than the smear-positive rate by a proportion specified in program_prop_snep_relative_algorithm.
@@ -377,7 +372,7 @@ class ConsolidatedModel(StratifiedModel):
                 = min(self.vars['program_prop' + parameter + '']
                       / (self.vars['epi_prop_smearpos']
                          + self.params['program_prop_snep_relative_algorithm']
-                         * (1. - self.vars['epi_prop_smearpos'])), self.detection_algorithm_ceiling)
+                         * (1. - self.vars['epi_prop_smearpos'])), self.params['tb_prop_detection_algorithm_ceiling'])
             for organ in ['_smearneg', '_extrapul']:
                 if organ in self.organ_status:
                     self.vars['program_prop' + parameter + organ] \

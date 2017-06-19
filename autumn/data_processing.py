@@ -5,8 +5,8 @@ import tool_kit
 from curve import scale_up_function, freeze_curve
 from Tkinter import *
 import time
-#import eventlet
-#from flask_socketio import emit
+import eventlet
+from flask_socketio import emit
 
 
 def make_constant_function(value):

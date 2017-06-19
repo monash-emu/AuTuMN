@@ -422,31 +422,30 @@ class ConsolidatedModel(StratifiedModel):
         organs = copy.copy(self.organs_for_detection)
         if self.vary_detection_by_organ:
             organs += ['']
-
         for organ in organs:
             for riskgroup in [''] + self.riskgroups_for_detection:
 
-                # Detected
+                # detected
                 self.vars['program_rate_detect' + organ + riskgroup] \
                     = self.vars['program_prop_detect' + organ] \
                       * (1. / self.params['tb_timeperiod_activeuntreated']
                          + 1. / self.vars['demo_life_expectancy']) \
                       / (1. - self.vars['program_prop_detect' + organ])
 
-                # Adjust detection rates for NGOs activities in specific risk groups
+                # adjust detection rates for NGOs activities in specific risk groups
                 if 'int_prop_ngo_activities' in self.relevant_interventions and \
                                 self.vars['int_prop_ngo_activities'] < 1. and \
                                 riskgroup in self.ngo_groups:
                     self.vars['program_rate_detect' + organ + riskgroup] \
                         *= 1 - self.params['program_prop_detection_from_ngo']
 
-            # Missed (no need to loop by risk-group as ACF is the only difference here, which is applied next)
+            # missed (no need to loop by risk-group as ACF is the only difference here, which is applied next)
             self.vars['program_rate_missed' + organ] \
                 = self.vars['program_rate_detect' + organ] \
                   * (1. - self.vars['program_prop_algorithm_sensitivity' + organ]) \
                   / max(self.vars['program_prop_algorithm_sensitivity' + organ], 1e-6)
 
-            # Adjust for awareness raising
+            # adjust for awareness raising
             if 'int_prop_awareness_raising' in self.vars:
                 case_detection_ratio_with_awareness \
                     = (self.params['int_ratio_case_detection_with_raised_awareness'] - 1.) \

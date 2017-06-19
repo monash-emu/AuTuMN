@@ -441,7 +441,7 @@ class Inputs:
         have smear-positive, smear-negative or extrapulmonary disease.
         """
 
-        if self.gui_inputs['n_organs'] == 0:
+        if self.gui_inputs['n_organs'] < 2:
             self.organ_status = ['']
         else:
             self.organ_status = self.available_organs[:self.gui_inputs['n_organs']]

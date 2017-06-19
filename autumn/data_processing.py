@@ -103,8 +103,7 @@ class Inputs:
 
         # read all required data
         self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
-        self.original_data \
-            = spreadsheet.read_input_data_xls(True, self.find_keys_of_sheets_to_read(), self.country)
+        self.original_data = spreadsheet.read_input_data_xls(True, self.find_keys_of_sheets_to_read(), self.country)
 
         # process constant parameters
         self.process_model_constants()
@@ -514,7 +513,7 @@ class Inputs:
         if self.gui_inputs['n_strains'] > 1: self.duplicate_ds_outcomes_for_multistrain()
         self.add_resistant_strain_outcomes()
         self.add_demo_dictionaries_to_timevariants()
-        if self.time_variants['epi_prop_smearpos']['load_data'] == u'yes': self.add_organ_status_to_timevariants()
+        if self.gui_inputs['is_timevariant_organs']: self.add_organ_status_to_timevariants()
         self.tidy_time_variants()
         self.adjust_param_for_reporting('program_prop_detect', 'Bulgaria', 0.95)  # Bulgaria thought over-estimated CDR
 
@@ -705,11 +704,11 @@ class Inputs:
         """
 
         name_conversion_dict = {'_smearpos': '_sp', '_smearneg': '_sn'}
-        for outcome in ['_smearpos', '_smearneg']:
-            for year in self.derived_data['prop_new' + name_conversion_dict[outcome]]:
-                if year not in self.time_variants['epi_prop' + outcome]:
-                    self.time_variants['epi_prop' + outcome][year] \
-                        = self.derived_data['prop_new' + name_conversion_dict[outcome]][year]
+        for organ in ['_smearpos', '_smearneg']:
+            for year in self.derived_data['prop_new' + name_conversion_dict[organ]]:
+                if year not in self.time_variants['epi_prop' + organ]:
+                    self.time_variants['epi_prop' + organ][year] \
+                        = self.derived_data['prop_new' + name_conversion_dict[organ]][year]
 
     def tidy_time_variants(self):
         """

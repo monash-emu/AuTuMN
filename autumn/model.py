@@ -319,25 +319,24 @@ class ConsolidatedModel(StratifiedModel):
                     = vac_props[vac_status] * self.vars['births_total'] * self.target_risk_props[riskgroup][-1]
 
     def calculate_progression_vars(self):
-
         """
         Calculate vars for the remainder of progressions. The vars for the smear-positive and smear-negative proportions
         have already been calculated, but as all progressions have to go somewhere, we need to calculate the remainder.
         """
 
-        # Unstratified (self.organ_status should really have length 0, but length 1 OK)
+        # unstratified (self.organ_status should really have length 0, but length 1 also acceptable)
         if len(self.organ_status) < 2:
             self.vars['epi_prop'] = 1.
 
-        # Stratified into smear-positive and smear-negative
+        # stratified into two tiers only (i.e. smear-positive and smear-negative)
         elif len(self.organ_status) == 2:
             self.vars['epi_prop_smearneg'] = 1. - self.vars['epi_prop_smearpos']
 
-        # Fully stratified into smear-positive, smear-negative and extra-pulmonary
+        # fully stratified into smear-positive, smear-negative and extrapulmonary
         else:
             self.vars['epi_prop_extrapul'] = 1. - self.vars['epi_prop_smearpos'] - self.vars['epi_prop_smearneg']
 
-        # Determine variable progression rates
+        # determine variable progression rates
         for organ in self.organ_status:
             for agegroup in self.agegroups:
                 for riskgroup in self.riskgroups:

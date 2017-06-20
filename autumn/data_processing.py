@@ -78,7 +78,8 @@ class Inputs:
         self.intervention_startdates = {}
         self.potential_interventions_to_cost \
             = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf', 'ipt_age0to5', 'ipt_age5to15',
-               'decentralisation', 'improve_dst', 'bulgaria_improve_dst', 'intensive_screening', 'ipt_age15up']
+               'decentralisation', 'improve_dst', 'bulgaria_improve_dst', 'intensive_screening', 'ipt_age15up',
+               'ngo_activities', 'opendoors_activities']
         self.freeze_times = {}
 
         # miscellaneous
@@ -124,7 +125,11 @@ class Inputs:
         self.find_scaleup_functions()
 
         # create mixing matrix (has to be run after scale-up functions, so can't go in model structure method)
-        if self.vary_force_infection_by_riskgroup: self.create_mixing_matrix()
+        if self.vary_force_infection_by_riskgroup:
+            self.create_mixing_matrix()
+        else:
+            for scenario in self.scenarios:
+                self.mixing[scenario] = {}
 
         # define compartmental structure
         self.define_compartment_structure()
@@ -1010,7 +1015,7 @@ class Inputs:
         self.vary_detection_by_riskgroup = False
         for scenario in self.scenarios:
             for intervention in self.relevant_interventions[scenario]:
-                if 'acf' in intervention or 'intensive_screening' in intervention:
+                if 'acf' in intervention or 'intensive_screening' in intervention or 'ngo' in intervention:
                     self.vary_detection_by_riskgroup = True
         self.riskgroups_for_detection = ['']
         if self.vary_detection_by_riskgroup: self.riskgroups_for_detection = self.riskgroups

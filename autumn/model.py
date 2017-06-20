@@ -1079,8 +1079,6 @@ class ConsolidatedModel(StratifiedModel):
         if 'int_prop_ngo_activities' in self.relevant_interventions:
             self.vars['popsize_ngo_activities'] = 456*2 # fictional nb of diagnosed cases (LTBI + TB) if coverage was 100%
 
-
-
     ################################################################
     ### Methods that calculate the flows of all the compartments ###
     ################################################################

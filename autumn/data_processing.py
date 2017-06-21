@@ -65,6 +65,7 @@ class Inputs:
         self.available_strains = ['_ds', '_mdr', '_xdr']
         self.available_organs = ['_smearpos', '_smearneg', '_extrapul']
         self.agegroups = None
+        self.riskgroups = []
         self.vary_force_infection_by_riskgroup = self.gui_inputs['is_vary_force_infection_by_riskgroup']
         self.mixing = {}
         self.compartment_types \
@@ -392,7 +393,6 @@ class Inputs:
         """
 
         # create list of risk group names
-        self.riskgroups = []
         for time_variant in self.time_variants:
             if 'riskgroup_prop_' in time_variant and self.gui_inputs['riskgroup' + time_variant[14:]]:
                 self.riskgroups += [time_variant[14:]]

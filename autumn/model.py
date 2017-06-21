@@ -352,13 +352,13 @@ class ConsolidatedModel(StratifiedModel):
         """
         Implement the decentralisation intervention, which narrows the case detection gap between the current values
         and the idealised estimated value.
+        Only do so if the current case detection ratio is lower than the idealised detection ratio.
         """
 
-        assert self.params['program_ideal_detection'] >= self.vars['program_prop_detect'], \
-            'program_prop_detect should not be greater than program_ideal_detection'
-        self.vars['program_prop_detect'] \
-            += self.vars['int_prop_decentralisation'] \
-               * (self.params['program_ideal_detection'] - self.vars['program_prop_detect'])
+        if self.vars['program_prop_detect'] < self.vars['program_ideal_detection']:
+            self.vars['program_prop_detect'] \
+                += (self.params['program_ideal_detection'] - self.vars['program_prop_detect']) \
+                   * self.vars['int_prop_decentralisation']
 
     def adjust_ipt_for_opendoors(self):
         """

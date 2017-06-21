@@ -183,7 +183,7 @@ class App:
         running_dropdown_list = ['country', 'integration_method', 'fitting_method']
         for dropdown in running_dropdown_list:
             self.raw_outputs[dropdown] = StringVar()
-        self.raw_outputs['country'].set('Bulgaria')
+        self.raw_outputs['country'].set('Armenia')
         self.raw_outputs['integration_method'].set('Explicit')
         self.raw_outputs['fitting_method'].set('Method 5')
 
@@ -259,7 +259,7 @@ class App:
         console_label = Label(self.frame, text='Runtime outputs console', font=label_font)
         console_label.grid(row=running_row, column=0, sticky=SW)
 
-        # Numeric entry box
+        # numeric entry box
         uncertainty_numeric_list = {'uncertainty_runs': ['Number of uncertainty runs', 10],
                                     'burn_in_runs': ['Number of burn-in runs', 0],
                                     'search_width': ['Relative search width', .08]}
@@ -268,14 +268,14 @@ class App:
         self.boolean_dictionary['is_misassignment'].set(True)
         # self.boolean_dictionary['is_lowquality'].set(True)
         self.boolean_dictionary['is_vary_detection_by_organ'].set(True)
-        self.boolean_dictionary['riskgroup_prison'].set(True)
+        # self.boolean_dictionary['riskgroup_prison'].set(True)
         # self.boolean_dictionary['riskgroup_urbanpoor'].set(True)
-        self.boolean_dictionary['riskgroup_ruralpoor'].set(True)
+        # self.boolean_dictionary['riskgroup_ruralpoor'].set(True)
         self.boolean_dictionary['output_gtb_plots'].set(True)
-        self.boolean_dictionary['is_vary_force_infection_by_riskgroup'].set(True)
+        # self.boolean_dictionary['is_vary_force_infection_by_riskgroup'].set(True)
 
         # self.boolean_dictionary['riskgroup_diabetes'].set(True)
-        self.boolean_dictionary['riskgroup_hiv'].set(True)
+        # self.boolean_dictionary['riskgroup_hiv'].set(True)
 
         # self.boolean_dictionary['riskgroup_indigenous'].set(True)
 

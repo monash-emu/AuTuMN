@@ -14,6 +14,7 @@ from scipy import exp, log
 from autumn.base import BaseModel, StratifiedModel
 import copy
 import tool_kit as t_k
+import warnings
 
 
 def find_outcome_proportions_by_period(proportion, early_period, total_period):
@@ -30,10 +31,12 @@ def find_outcome_proportions_by_period(proportion, early_period, total_period):
     """
 
     if proportion > 1. or proportion < 0.:
-        raise Exception('Proportion parameter not between zero and one.')
+        warnings.warn('Proportion parameter not between zero and one.')
     # to avoid errors where the proportion is exactly one (although the function isn't really intended for this):
-    elif proportion > .99:
+    if proportion > .99:
         early_proportion = 0.99
+    elif proportion < 0.:
+        return 0., 0.
     else:
         early_proportion = 1. - exp(log(1. - proportion) * early_period / total_period)
     late_proportion = proportion - early_proportion

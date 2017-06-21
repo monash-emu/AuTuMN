@@ -355,9 +355,9 @@ class ConsolidatedModel(StratifiedModel):
         Only do so if the current case detection ratio is lower than the idealised detection ratio.
         """
 
-        if self.vars['program_prop_detect'] < self.vars['program_ideal_detection']:
+        if self.vars['program_prop_detect'] < self.vars['int_ideal_detection']:
             self.vars['program_prop_detect'] \
-                += (self.params['program_ideal_detection'] - self.vars['program_prop_detect']) \
+                += (self.params['int_ideal_detection'] - self.vars['program_prop_detect']) \
                    * self.vars['int_prop_decentralisation']
 
     def adjust_ipt_for_opendoors(self):

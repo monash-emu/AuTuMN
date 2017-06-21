@@ -400,6 +400,7 @@ class Inputs:
         # add the null group
         if len(self.riskgroups) == 0:
             self.riskgroups += ['']
+            self.vary_force_infection_by_riskgroup = False
         else:
             self.riskgroups += ['_norisk']
 

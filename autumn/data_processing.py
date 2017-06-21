@@ -393,14 +393,21 @@ class Inputs:
         """
 
         # create list of risk group names
-        for time_variant in self.time_variants:
-            if 'riskgroup_prop_' in time_variant and self.gui_inputs['riskgroup' + time_variant[14:]]:
-                self.riskgroups += [time_variant[14:]]
+        for item in self.gui_inputs:
+            if item[:10] == 'riskgroup_':
+                if self.gui_inputs[item] and 'riskgroup_prop' + item[9:] in self.time_variants:
+                    self.riskgroups += [item[9:]]
+                elif self.gui_inputs[item]:
+                    self.add_comment_to_gui_window(
+                        'Stratification requested for %s risk group, but proportions not specified'
+                        % tool_kit.find_title_from_dictionary(item[9:]))
 
         # add the null group
         if len(self.riskgroups) == 0:
             self.riskgroups += ['']
             self.vary_force_infection_by_riskgroup = False
+            self.add_comment_to_gui_window(
+                'Heterogeneous mixing requested, but not implemented as no risk groups are present')
         else:
             self.riskgroups += ['_norisk']
 

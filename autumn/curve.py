@@ -232,6 +232,7 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
         curve_intervention = scale_up_function(x=[t_intervention_start, intervention_end[0]],
                                                y=[y[-1], intervention_end[1]], method=4)
 
+    print y
     if (len(x) == 1) or (max(y)-min(y) == 0):
         def curve(t):
             if intervention_end is not None:

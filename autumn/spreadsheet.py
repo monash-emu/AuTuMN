@@ -550,9 +550,15 @@ def read_input_data_xls(from_test, sheets_to_read, country=None):
     if 'bcg' in sheets_to_read:
         sheet_readers.append(BcgCoverageSheetReader(country))
     if 'rate_birth' in sheets_to_read:
-        sheet_readers.append(BirthRateReader(country))
+        if country == 'Kyrgyzstan':
+             sheet_readers.append(BirthRateReader('Kyrgyz Republic'))
+        else:
+            sheet_readers.append(BirthRateReader(country))
     if 'life_expectancy' in sheets_to_read:
-        sheet_readers.append(LifeExpectancyReader(country))
+        if country == 'Kyrgyzstan':
+            sheet_readers.append(LifeExpectancyReader('Kyrgyz Republic'))
+        else:
+            sheet_readers.append(LifeExpectancyReader(country))
     if 'control_panel' in sheets_to_read:
         sheet_readers.append(ControlPanelReader())
     if 'default_constants' in sheets_to_read:

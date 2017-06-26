@@ -569,7 +569,10 @@ def read_input_data_xls(from_test, sheets_to_read, country=None):
         else:
             sheet_readers.append(GlobalTbReportReader(country))
     if 'notifications' in sheets_to_read:
-        sheet_readers.append(NotificationsReader(country))
+        if country == 'Moldova':
+            sheet_readers.append(NotificationsReader('Republic of Moldova'))
+        else:
+            sheet_readers.append(NotificationsReader(country))
     if 'outcomes' in sheets_to_read:
         sheet_readers.append(TreatmentOutcomesReader(country))
     if 'mdr' in sheets_to_read:

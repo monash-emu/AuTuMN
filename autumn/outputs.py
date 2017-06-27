@@ -2142,20 +2142,21 @@ class Project:
             fig = self.set_and_update_figure()
             ax = fig.add_subplot(1, 1, 1)
 
-            # Loop over risk groups and plot line for each - now need to restrict to single age-group, as IPT modifies
+            # loop over risk groups and plot line for each - now need to restrict to single age-group, as IPT modifies
             # the force of infection for some age-groups.
             for riskgroup in self.model_runner.model_dict['manual_baseline'].riskgroups:
-                ax.plot(self.model_runner.model_dict['manual_baseline'].times[self.start_time_index:],
-                        self.model_runner.model_dict['manual_baseline'].get_var_soln(
+                data_to_plot = self.model_runner.model_dict['manual_baseline'].get_var_soln(
                             'rate_force' + strain + riskgroup
                             + self.model_runner.model_dict['manual_baseline'].agegroups[-1])[
-                        self.start_time_index:],
+                        self.start_time_index:]
+                ax.plot(self.model_runner.model_dict['manual_baseline'].times[self.start_time_index:],
+                        data_to_plot * 1e2,
                         label=t_k.capitalise_first_letter(t_k.find_title_from_dictionary(riskgroup)))
 
-            # Finish off
+            # finish off
             self.tidy_axis(ax, [1, 1], start_time=self.inputs.model_constants['plot_start_time'],
                            y_axis_type='scaled', legend=True)
-            fig.suptitle('Annual risk of infection, ' + t_k.find_title_from_dictionary(strain))
+            fig.suptitle('Percentage annual risk of infection, ' + t_k.find_title_from_dictionary(strain))
             self.save_figure(fig, '_rate_force' + strain)
 
     def plot_mixing_matrix(self):

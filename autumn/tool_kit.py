@@ -317,6 +317,8 @@ def adjust_country_name(country_name):
 
     if country_name == 'Philippines':
         return country_name + ' (the)'
+    elif country_name == 'Moldova':
+        return 'Republic of ' + country_name
     else:
         return country_name
 

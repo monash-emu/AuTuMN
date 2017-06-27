@@ -305,7 +305,7 @@ class CountryProgramReader(DefaultProgramReader):
     def __init__(self, country_to_read):
 
         self.filename = 'xls/data_' + country_to_read.lower() + '.xlsx'
-        self.country_to_read = country_to_read
+        self.country_to_read = tool_kit.adjust_country_name(country_to_read)
         self.key = 'country_programs'
         self.general_program_intialisations()
 
@@ -323,7 +323,7 @@ class GlobalTbReportReader:
         self.horizontal = False
         self.start_column = 0
         self.indices = []
-        self.country_to_read = country_to_read
+        self.country_to_read = tool_kit.adjust_country_name(country_to_read)
 
     def parse_col(self, col):
 
@@ -370,7 +370,7 @@ class NotificationsReader(GlobalTbReportReader):
         self.start_column = 0
         self.start_row = 1
         self.indices = []
-        self.country_to_read = country_to_read
+        self.country_to_read = tool_kit.adjust_country_name(country_to_read)
 
 
 class TreatmentOutcomesReader(GlobalTbReportReader):
@@ -387,7 +387,7 @@ class TreatmentOutcomesReader(GlobalTbReportReader):
         self.start_column = 0
         self.start_row = 1
         self.indices = []
-        self.country_to_read = country_to_read
+        self.country_to_read = tool_kit.adjust_country_name(country_to_read)
 
 
 class MdrReportReader:
@@ -402,7 +402,7 @@ class MdrReportReader:
         self.start_row = 0
         self.horizontal = True
         self.dictionary_keys = []
-        self.country_to_read = country_to_read
+        self.country_to_read = tool_kit.adjust_country_name(country_to_read)
 
     def parse_row(self, row):
 
@@ -432,7 +432,7 @@ class LaboratoriesReader(GlobalTbReportReader):
         self.horizontal = False
         self.start_column = 0
         self.indices = []
-        self.country_to_read = country_to_read
+        self.country_to_read = tool_kit.adjust_country_name(country_to_read)
 
 
 class StrategyReader(MdrReportReader):
@@ -448,7 +448,7 @@ class StrategyReader(MdrReportReader):
         self.column_for_keys = 0
         self.horizontal = True
         self.dictionary_keys = []
-        self.country_to_read = country_to_read
+        self.country_to_read = tool_kit.adjust_country_name(country_to_read)
 
 
 class DiabetesReportReader:
@@ -464,7 +464,7 @@ class DiabetesReportReader:
         self.column_for_keys = 0
         self.horizontal = True
         self.dictionary_keys = []
-        self.country_to_read = country_to_read
+        self.country_to_read = tool_kit.adjust_country_name(country_to_read)
 
     def parse_row(self, row):
 

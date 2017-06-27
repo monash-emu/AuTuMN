@@ -1518,7 +1518,6 @@ class Project:
             self.save_figure(fig, '_var_' + function)
 
     def plot_scaleup_fns_against_data(self):
-
         """
         Plot each scale-up function as a separate panel against the data it is fitted to.
         """
@@ -1539,26 +1538,25 @@ class Project:
             # iterate through functions
             for f, function in enumerate(function_list):
 
-                # Initialise axis
+                # initialise axis
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], f + 1)
 
-                # Iterate through the scenarios
+                # iterate through the scenarios
                 for scenario in reversed(self.scenarios):
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
 
-                    # Line plot of scaling parameter functions
+                    # line plot of scaling parameter functions
                     ax.plot(x_vals,
                             map(self.model_runner.model_dict['manual_' + scenario_name].scaleup_fns[function], x_vals),
                             color=self.output_colours[scenario][1],
                             label=t_k.capitalise_and_remove_underscore(scenario_name))
 
-                # Plot the raw data from which the scale-up functions were produced
-                data_to_plot = self.inputs.scaleup_data[None][function]
+                # plot the raw data from which the scale-up functions were produced
+                if function in self.inputs.scaleup_data[None]:
+                    data_to_plot = self.inputs.scaleup_data[None][function]
+                    ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
 
-                # Scatter plot data from which they are derived
-                ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
-
-                # Adjust tick font size and add panel title
+                # adjust tick font size and add panel title
                 if 'prop_' in function:
                     y_axis_type = 'proportion'
                 else:

@@ -272,7 +272,10 @@ def capitalise_first_letter(old_string):
         new_string: The capitalised string
     """
 
-    return old_string[0].upper() + old_string[1:]
+    if len(old_string) > 0:
+        return old_string[0].upper() + old_string[1:]
+    else:
+        return old_string
 
 
 def replace_underscore_with_space(original_string):

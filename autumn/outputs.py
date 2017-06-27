@@ -1557,7 +1557,9 @@ class Project:
                         ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
 
                     # adjust tick font size and add panel title
-                    if 'prop_' in function:
+                    if 'prop_treatment_death' in function:
+                        y_axis_type = 'raw'
+                    elif 'prop_' in function:
                         y_axis_type = 'proportion'
                     else:
                         y_axis_type = 'raw'

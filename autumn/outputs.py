@@ -562,9 +562,9 @@ class Project:
             os.makedirs(self.out_dir_project)
 
         self.figure_number = 1
-        self.classifications = ['demo_', 'econ_', 'epi_prop', 'epi_rr', 'program_prop_', 'program_timeperiod_',
+        self.classifications = ['demo_', 'econ_', 'epi_prop_smear', 'epi_rr', 'program_prop_', 'program_timeperiod_',
                                 'program_prop_novel', 'program_prop_treatment', 'program_prop_detect',
-                                'program_prop_vaccination', 'program_prop_treatment_success',
+                                'int_prop_vaccination', 'program_prop_treatment_success',
                                 'program_prop_treatment_death', 'transmission_modifier']
         self.output_colours = {}
         self.uncertainty_output_colours = {}
@@ -1486,7 +1486,6 @@ class Project:
         self.save_figure(fig, '_resistant_strain')
 
     def classify_scaleups(self):
-
         """
         Classifies the time variant parameters according to their type (e.g. programmatic, economic, demographic, etc.).
         """
@@ -1561,7 +1560,8 @@ class Project:
                         y_axis_type = 'proportion'
                     else:
                         y_axis_type = 'raw'
-                    self.tidy_axis(ax, subplot_grid, start_time=start_time, title=t_k.find_title_from_dictionary(function),
+                    self.tidy_axis(ax, subplot_grid, start_time=start_time,
+                                   title=t_k.capitalise_first_letter(t_k.find_title_from_dictionary(function)),
                                    legend=(f == len(function_list) - 1), y_axis_type=y_axis_type)
 
                 # finish off
@@ -2132,12 +2132,11 @@ class Project:
         self.save_figure(fig, '_param_histogram')
 
     def plot_force_infection(self):
-
         """
         View the force of infection vars.
         """
 
-        # Separate plot for each strain
+        # separate plot for each strain
         for strain in self.model_runner.model_dict['manual_baseline'].strains:
             fig = self.set_and_update_figure()
             ax = fig.add_subplot(1, 1, 1)
@@ -2155,7 +2154,7 @@ class Project:
             # Finish off
             self.tidy_axis(ax, [1, 1], start_time=self.inputs.model_constants['plot_start_time'],
                            y_axis_type='scaled', legend=True)
-            fig.suptitle('Force of infection, ' + t_k.find_title_from_dictionary(strain))
+            fig.suptitle('Annual risk of infection, ' + t_k.find_title_from_dictionary(strain))
             self.save_figure(fig, '_rate_force' + strain)
 
     def plot_mixing_matrix(self):

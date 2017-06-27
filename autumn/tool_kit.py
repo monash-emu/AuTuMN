@@ -336,16 +336,16 @@ def find_title_from_dictionary(name):
     """
 
     dictionary_of_names = {
-        'program_prop_vaccination':
-            'Vaccination coverage',
+        'int_prop_vaccination':
+            'vaccination coverage',
         'program_prop_treatment_success':
-            'Treatment success rate',
+            'treatment success rate',
         'program_prop_xpert':
             'GeneXpert coverage',
         'program_prop_detect':
-            'Case detection rate',
+            'case detection rate',
         'program_prop_treatment_death':
-            'Death rate on treatment',
+            'death rate on treatment',
         'program_prop_algorithm_sensitivity':
             'Diagnostic algorithm sensitivity',
         'program_prop_ipt':
@@ -430,6 +430,8 @@ def find_title_from_dictionary(name):
             'Rural poor ACF',
         'epi_':
             'epidemiological',
+        'epi_prop_smear':
+            'organ status',
         'epi_prop_smearneg':
             'Proportion smear-negative',
         'epi_prop_smearpos':
@@ -495,7 +497,21 @@ def find_title_from_dictionary(name):
         'food_voucher_ds':
             'Food vouchers, DS-TB',
         'food_voucher_mdr':
-            'Food vouchers, MDR-TB'
+            'Food vouchers, MDR-TB',
+        'program_prop_firstline_dst':
+            'DST availability',
+        'program_prop_treatment_success_mdr':
+            'Treatment success MDR-TB',
+        'program_prop_treatment_success_ds':
+            'Treatment success DS-TB',
+        'program_prop_treatment_death_mdr':
+            'Death on treatment MDR-TB',
+        'program_prop_treatment_death_ds':
+            'Death on treatment DS-TB',
+        'program_prop_treatment':
+            'treatment outcome',
+        'program_timeperiod_':
+            'waiting period'
     }
 
     if name in dictionary_of_names:

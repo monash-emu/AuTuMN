@@ -523,7 +523,7 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         if 'int_prop_intensive_screening' in self.relevant_interventions:
-            screened_subgroups = ['_diabetes', '_hiv'] # may be incorporated into the GUI
+            screened_subgroups = ['_diabetes', '_hiv']  # may be incorporated into the GUI
             # Loop covers risk groups
             for riskgroup in screened_subgroups:
                 # The following can't be written as self.organ_status, as it won't work for non-fully-stratified models

@@ -581,8 +581,8 @@ class Project:
         self.gtb_available_outputs = ['incidence', 'mortality', 'prevalence', 'notifications']
         self.level_conversion_dict = {'lower_limit': '_lo', 'upper_limit': '_hi', 'point_estimate': ''}
 
-        # To have a look at some individual vars scaling over time
-        self.vars_to_view = ['demo_life_expectancy']
+        # to have a look at some individual vars scaling over time
+        self.vars_to_view = []
 
         # Comes up so often that we need to find this index, that best to do once in instantiation
         self.start_time_index \
@@ -1273,7 +1273,7 @@ class Project:
             self.plot_scaleup_fns_against_data()
             self.plot_programmatic_scaleups()
 
-            # Not technically a scale-up function in the same sense, but put in here anyway
+            # not technically a scale-up function in the same sense, but put in here anyway
             self.plot_force_infection()
 
         # plot mixing matrix if relevant

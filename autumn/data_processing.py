@@ -675,9 +675,10 @@ class Inputs:
 
         # calculate proportions of each outcome for MDR and XDR-TB from GTB
         for strain in ['mdr', 'xdr']:
-            self.derived_data.update(tool_kit.calculate_proportion_dict(self.original_data['outcomes'],
-                                                                        [strain + '_succ', strain + '_fail', strain
-                                                                         + '_died', strain + '_lost'], percent=False))
+            self.derived_data.update(
+                tool_kit.calculate_proportion_dict(
+                    self.original_data['outcomes'],
+                    [strain + '_succ', strain + '_fail', strain + '_died', strain + '_lost'], percent=False))
 
             # populate MDR and XDR data from outcomes dictionary into time variants where requested and not entered
             if self.time_variants['program_prop_treatment_success_' + strain]['load_data'] == u'yes':

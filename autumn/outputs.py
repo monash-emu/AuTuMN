@@ -1454,7 +1454,6 @@ class Project:
         self.save_figure(fig, '_gtb' + end_filename)
 
     def plot_resistant_strain_outputs(self, outputs):
-
         """
         Plot outputs for MDR-TB. Will extend to all resistant strains as needed, which should be pretty easy.
         Sparsely commented because largely shadows plot_outputs_against_gtb (without plotting the patch for the GTB
@@ -1478,7 +1477,7 @@ class Project:
                         self.model_runner.epi_outputs['manual_' + scenario_name][output + '_mdr'],
                         color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0])
             self.tidy_axis(ax, subplot_grid, title=title[o], y_label=yaxis_label[o],
-                           start_time=self.inputs.model_constants['start_mdr_introduce_time'],
+                           start_time=self.inputs.model_constants['recent_time'],
                            legend=(o == len(outputs) - 1))
 
         # finish off

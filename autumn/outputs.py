@@ -1523,51 +1523,52 @@ class Project:
 
         # different figure for each type of function
         for classification in self.classified_scaleups:
+            if len(self.classified_scaleups[classification]) > 0:
 
-            # find the list of the scale-up functions to work with and some x-values
-            function_list = self.classified_scaleups[classification]
+                # find the list of the scale-up functions to work with and some x-values
+                function_list = self.classified_scaleups[classification]
 
-            # standard prelims
-            fig = self.set_and_update_figure()
-            subplot_grid = find_subplot_numbers(len(function_list))
-            start_time, end_time \
-                = self.inputs.model_constants['plot_start_time'], self.inputs.model_constants['plot_end_time']
-            x_vals = numpy.linspace(start_time, end_time, 1e3)
+                # standard prelims
+                fig = self.set_and_update_figure()
+                subplot_grid = find_subplot_numbers(len(function_list))
+                start_time, end_time \
+                    = self.inputs.model_constants['plot_start_time'], self.inputs.model_constants['plot_end_time']
+                x_vals = numpy.linspace(start_time, end_time, 1e3)
 
-            # iterate through functions
-            for f, function in enumerate(function_list):
+                # iterate through functions
+                for f, function in enumerate(function_list):
 
-                # initialise axis
-                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], f + 1)
+                    # initialise axis
+                    ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], f + 1)
 
-                # iterate through the scenarios
-                for scenario in reversed(self.scenarios):
-                    scenario_name = t_k.find_scenario_string_from_number(scenario)
+                    # iterate through the scenarios
+                    for scenario in reversed(self.scenarios):
+                        scenario_name = t_k.find_scenario_string_from_number(scenario)
 
-                    # line plot of scaling parameter functions
-                    ax.plot(x_vals,
-                            map(self.model_runner.model_dict['manual_' + scenario_name].scaleup_fns[function], x_vals),
-                            color=self.output_colours[scenario][1],
-                            label=t_k.capitalise_and_remove_underscore(scenario_name))
+                        # line plot of scaling parameter functions
+                        ax.plot(x_vals,
+                                map(self.model_runner.model_dict['manual_' + scenario_name].scaleup_fns[function], x_vals),
+                                color=self.output_colours[scenario][1],
+                                label=t_k.capitalise_and_remove_underscore(scenario_name))
 
-                # plot the raw data from which the scale-up functions were produced
-                if function in self.inputs.scaleup_data[None]:
-                    data_to_plot = self.inputs.scaleup_data[None][function]
-                    ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
+                    # plot the raw data from which the scale-up functions were produced
+                    if function in self.inputs.scaleup_data[None]:
+                        data_to_plot = self.inputs.scaleup_data[None][function]
+                        ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
 
-                # adjust tick font size and add panel title
-                if 'prop_' in function:
-                    y_axis_type = 'proportion'
-                else:
-                    y_axis_type = 'raw'
-                self.tidy_axis(ax, subplot_grid, start_time=start_time, title=t_k.find_title_from_dictionary(function),
-                               legend=(f == len(function_list) - 1), y_axis_type=y_axis_type)
+                    # adjust tick font size and add panel title
+                    if 'prop_' in function:
+                        y_axis_type = 'proportion'
+                    else:
+                        y_axis_type = 'raw'
+                    self.tidy_axis(ax, subplot_grid, start_time=start_time, title=t_k.find_title_from_dictionary(function),
+                                   legend=(f == len(function_list) - 1), y_axis_type=y_axis_type)
 
-            # finish off
-            title = self.inputs.country + ' ' + t_k.find_title_from_dictionary(classification) + ' parameter'
-            if len(function_list) > 1: title += 's'
-            fig.suptitle(title, fontsize=self.suptitle_size)
-            self.save_figure(fig, '_' + classification + '_scale_ups')
+                # finish off
+                title = self.inputs.country + ' ' + t_k.find_title_from_dictionary(classification) + ' parameter'
+                if len(function_list) > 1: title += 's'
+                fig.suptitle(title, fontsize=self.suptitle_size)
+                self.save_figure(fig, '_' + classification + '_scale_ups')
 
     def plot_programmatic_scaleups(self):
 

@@ -681,11 +681,13 @@ class Inputs:
                     [strain + '_succ', strain + '_fail', strain + '_died', strain + '_lost'], percent=False))
 
             # populate MDR and XDR data from outcomes dictionary into time variants where requested and not entered
-            if self.time_variants['program_prop_treatment_success_' + strain]['load_data'] == u'yes':
-                for year in self.derived_data['prop_' + strain + '_succ']:
-                    if year not in self.time_variants['program_prop_treatment_success_' + strain]:
-                        self.time_variants['program_prop_treatment_success_' + strain][year] \
-                            = self.derived_data['prop_' + strain + '_succ'][year]
+            outcome_dict = {'_success': '_succ', '_death': '_died'}
+            for outcome in outcome_dict:
+                if self.time_variants['program_prop_treatment' + outcome + '_' + strain]['load_data'] == u'yes':
+                    for year in self.derived_data['prop_' + strain + outcome_dict[outcome]]:
+                        if year not in self.time_variants['program_prop_treatment' + outcome + '_' + strain]:
+                            self.time_variants['program_prop_treatment' + outcome + '_' + strain][year] \
+                                = self.derived_data['prop_' + strain + outcome_dict[outcome]][year]
 
         # temporarily assign the same treatment outcomes to XDR-TB as for inappropriate
         for outcome in ['_success', '_death']:

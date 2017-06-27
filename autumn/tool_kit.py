@@ -511,7 +511,9 @@ def find_title_from_dictionary(name):
         'program_prop_treatment':
             'treatment outcome',
         'program_timeperiod_':
-            'waiting period'
+            'waiting period',
+        'misc':
+            'miscellaneous'
     }
 
     if name in dictionary_of_names:

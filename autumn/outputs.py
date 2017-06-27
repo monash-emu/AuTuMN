@@ -1495,6 +1495,7 @@ class Project:
             for fn in self.model_runner.model_dict['manual_baseline'].scaleup_fns:
                 if classification in fn:
                     self.classified_scaleups[classification] += [fn]
+        self.classified_scaleups['misc'] = ['program_prop_firstline_dst', 'program_prop_algorithm_sensitivity']
 
     def individual_var_viewer(self):
 

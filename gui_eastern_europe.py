@@ -272,6 +272,7 @@ class App:
 
         self.boolean_dictionary['riskgroup_diabetes'].set(False)
         self.boolean_dictionary['riskgroup_hiv'].set(False)
+        self.boolean_dictionary['output_scaleups'].set(True)
 
         # self.boolean_dictionary['riskgroup_indigenous'].set(True)
 

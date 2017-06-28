@@ -311,6 +311,7 @@ def adjust_country_name(country_name, adjustment='default'):
 
     Args:
         country_name: String for the original country name
+        adjustment: In case multiple adjustments could be required, allow for alternative sets of name adjustments
     Returns:
         adjusted_country_name: Adjusted string
     """

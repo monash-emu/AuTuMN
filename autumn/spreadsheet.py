@@ -87,7 +87,8 @@ class BcgCoverageSheetReader:
                 self.parlist[i] = str(self.parlist[i])
 
         # subsequent rows
-        elif row[self.column_for_keys] == tool_kit.adjust_country_name(self.country_to_read):
+        elif row[self.column_for_keys] \
+                == tool_kit.adjust_country_name(self.country_to_read, adjustment='for_vaccination'):
             for i in range(self.start_col, len(row)):
                 if type(row[i]) == float:
                     self.data[int(self.parlist[i])] = row[i]

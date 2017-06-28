@@ -304,7 +304,7 @@ def capitalise_and_remove_underscore(original_string):
     return capitalise_first_letter(replace_underscore_with_space(original_string))
 
 
-def adjust_country_name(country_name):
+def adjust_country_name(country_name, adjustment='default'):
     """
     Currently very simple method to convert one country's name into that used by the GTB Report. However, likely to
     need to expand this as we work with more countries.
@@ -315,12 +315,16 @@ def adjust_country_name(country_name):
         adjusted_country_name: Adjusted string
     """
 
-    if country_name == 'Philippines':
-        return country_name + ' (the)'
-    elif country_name == 'Moldova':
-        return 'Republic of ' + country_name
+    if adjustment == 'for_vaccination':
+        if country_name == 'Moldova':
+            return 'Republic of ' + country_name + ' (the)'
     else:
-        return country_name
+        if country_name == 'Philippines':
+            return country_name + ' (the)'
+        elif country_name == 'Moldova':
+            return 'Republic of ' + country_name
+        else:
+            return country_name
 
 
 def find_title_from_dictionary(name):

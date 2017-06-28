@@ -189,8 +189,8 @@ class App:
 
         self.drop_downs['country'] \
             = OptionMenu(self.frame, self.raw_outputs['country'],
-                         'Armenia', 'Azerbaijan', 'Belarus', 'Bulgaria', 'Georgia', 'Moldova', 'Uzbekistan', 'Romania', 'Kazakhstan',
-                         'Tajikistan','Kyrgyzstan','Ukraine','Turkmenistan')
+                         'Armenia', 'Azerbaijan', 'Belarus', 'Bulgaria', 'Georgia', 'Moldova', 'Uzbekistan', 'Romania',
+                         'Kazakhstan', 'Tajikistan', 'Kyrgyzstan', 'Ukraine', 'Turkmenistan')
         self.drop_downs['integration_method'] \
             = OptionMenu(self.frame, self.raw_outputs['integration_method'],
                          'Runge Kutta', 'Explicit')

@@ -153,7 +153,6 @@ def is_parameter_value_valid(parameter):
 class ModelRunner:
 
     def __init__(self, gui_inputs, runtime_outputs, figure_frame, js_gui=False):
-
         """
         Instantiation method for model runner - currently including many attributes that should be set externally, e.g.
         in the GUI(s).
@@ -165,7 +164,7 @@ class ModelRunner:
             js_gui: JavaScript GUI inputs.
         """
 
-        # Loading of inputs
+        # loading of inputs
         self.gui_inputs = gui_inputs
         self.runtime_outputs = runtime_outputs
         self.figure_frame = figure_frame
@@ -215,7 +214,7 @@ class ModelRunner:
         self.interventions_forced_for_opti \
             = ['engage_lowquality', 'ipt_age0to5', 'intensive_screening']
 
-        # Output-related attributes
+        # output-related attributes
         self.epi_outputs_to_analyse = ['population', 'incidence', 'true_incidence', 'prevalence', 'true_prevalence',
                                        'mortality', 'true_mortality', 'notifications']
         self.epi_outputs = {}

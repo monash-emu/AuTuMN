@@ -16,7 +16,7 @@ def make_constant_function(value):
 
     Args:
         value: The value for the created function to return
-        time: Irrelevant but necessary argument to the returned function
+        time: Irrelevant argument to the returned function, but necessary for consistency with other functions
     Returns:
         constant: The constant function
     """

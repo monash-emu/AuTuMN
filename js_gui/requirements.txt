@@ -1,0 +1,4 @@
+eventlet==0.21.0
+Flask==0.10.1
+Flask_SocketIO==2.8.6
+autumn==0.5.1

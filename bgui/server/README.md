@@ -1,9 +1,8 @@
-# Introduction to the Optima webserver
+# Introduction to the BASE webserver
 
 - the main webserver is `api.py`, a `python` application, written in the `flask` framework.
  `api.py` defines the way URL requests are converted into HTTP responses to the
-  webclient, you can see a list of available API calls at <http://sandbox.optimamodel.com/api/spec.html#!/spec>,
-  or locally, once the webserver is running <http://localhost:8080/api/spec.html>
+  webclient
 - `flask` is a micro-framework to provide libraries to build `api.py`
 - `api.py` stores projects in a `postgres` database, a robust high-performant database. 
   It uses the `sqlalchemy` python library to interface with the database, 
@@ -77,24 +76,15 @@ __!__ Note: whenever you make a change that could affect a celery task, you need
 ## Files
 
 - `api.py` - the webserver
-- `export.py` - command-line to extract saved projects from the postgres database
-- `import.py` - command-line to push projects into the database
 - `config.py` - the configuration of the postgres/redis databases and ports for the webserver
-- `localrequirements.txt` - python modules to be installed
-- `venvrequirements.txt` - another version of `localrequirements.txt` but for use with virtualenv
+- `requirements.txt` - python modules to be installed
 
 In `server/webapp`:
 
 - `handlers.py` - the URL handlers are defined here. The handlers only deal with JSON-data structures,
   UIDs, and upload/download files
-- `parse.py` - routines defined here parse all the PyOptima objects into JSON-data structures. This is
-   to separate the parsing from storing/running PyOptima objects
-- `dataio.py` - the routines defined here, take JSON-data structures and pass them to the database, and
-  run the simulations. PyOptima objects are converted with calls to `parse.py`
 - `dbconn.py` - this is a central place to store references to the postgres and redis database
 - `dbmodel.py` - the adaptor to the Postgres database with objects that map onto the database tables
-- `exceptions.py` - common exceptions stored here
-- `plot.py` - some specialist graph-mangling routines to work with the mpld3 library that generates graphs
 - `tasks.py` - this is a conceptually difficult file - it defines both the daemons
    and the tasks run by the daemon. This file is called by `api.py` as entry point to talk to `celery`,
    and is run separately as the `celery` task-manager daemon.

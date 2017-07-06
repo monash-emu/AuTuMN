@@ -30,6 +30,8 @@ from werkzeug.utils import secure_filename
 from validate_email import validate_email
 
 from server import dbmodel, tasks
+
+sys.path.insert(0, os.path.abspath("../.."))
 import autumn.model_runner
 import autumn.outputs
 
@@ -178,6 +180,9 @@ def public_run_autumn(gui_outputs):
     Run the model
     """
     print(">> handler.run_autumn\n", pprint.pformat(gui_outputs, indent=2))
+    autumn_dir = os.path.join(os.path.dirname(autumn.__file__), os.pardir)
+    print(">> handler.run_autumn goto dir:", autumn_dir)
+    os.chdir(autumn_dir)
     model_runner = autumn.model_runner.ModelRunner(gui_outputs, None, None, True)
     model_runner.master_runner()
     project = autumn.outputs.Project(model_runner, gui_outputs)

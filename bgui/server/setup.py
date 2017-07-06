@@ -29,14 +29,13 @@ CLASSIFIERS = [
 ]
 
 setup(
-    name='BaseOptima',
+    name='Base GUI',
     version=version,
     author='Bosco Ho',
-    author_email='info@optimamodel.com',
+    author_email='apposite@gmail.com',
     description='Webserver for python simulations"',
     long_description=convert('README.md', 'md'),
-    url='http://github.com/optimamodel/BaseOptima',
-    keywords=['optima'],
+    url='http://github.com/boscoh/basegui',
     platforms=['OS Independent'],
     classifiers=CLASSIFIERS,
     packages=find_packages(),

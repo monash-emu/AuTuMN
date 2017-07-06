@@ -241,7 +241,9 @@ class ModelRunner:
         self.emit_delay = 0.1
         self.plot_count = 0
         self.js_gui = js_gui
-        if self.js_gui: eventlet.monkey_patch()
+        if self.js_gui:
+            pass
+            # eventlet.monkey_patch()
 
     ###############################################
     ### Master methods to run all other methods ###
@@ -1347,8 +1349,8 @@ class ModelRunner:
     def add_comment_to_gui_window(self, comment, target='console'):
 
         if self.js_gui:
-            emit(target, {"message": comment})
-            time.sleep(self.emit_delay)
+            # emit(target, {"message": comment})
+            # time.sleep(self.emit_delay)
 
             print "Emitting:", comment
 
@@ -1439,6 +1441,6 @@ class ModelRunner:
             for p, param in enumerate(self.all_parameters_tried)]
         names = [tool_kit.find_title_from_dictionary(param) for p, param in
                  enumerate(self.all_parameters_tried)]
-        emit('uncertainty_graph', {"data": accepted_params, "names": names, "count": self.plot_count})
+        # emit('uncertainty_graph', {"data": accepted_params, "names": names, "count": self.plot_count})
         self.plot_count += 1
 

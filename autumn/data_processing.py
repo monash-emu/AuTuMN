@@ -1166,8 +1166,8 @@ class Inputs:
         """
 
         if self.js_gui:
-            emit(target, {"message": comment})
-            time.sleep(self.emit_delay)
+            # emit(target, {"message": comment})
+            # time.sleep(self.emit_delay)
             print "Emitting:", comment
         else:
             self.runtime_outputs.insert(END, comment + '\n')

@@ -10,8 +10,6 @@ import redis
 from flask.ext.login import LoginManager, current_user
 from werkzeug.utils import secure_filename
 
-from flask_cors import CORS, cross_origin
-
 # Create flask app
 
 app = Flask(__name__)

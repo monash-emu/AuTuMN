@@ -505,6 +505,7 @@ def read_xls_with_sheet_readers(sheet_readers):
         try:
 
             # check that the spreadsheet to be read exists
+            print( "Reading file", os.getcwd(), reader.filename)
             workbook = open_workbook(reader.filename)
 
         except:

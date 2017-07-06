@@ -40,7 +40,7 @@ def run():
             return r
 
 
-    base_resource = File('client/source/')
+    base_resource = File('client/')
     base_resource.putChild('build', File('client/build/'))
     base_resource.putChild('vue', File('client/vue/'))
     base_resource.putChild('api', OptimaResource(wsgi_app))

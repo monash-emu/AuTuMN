@@ -1,4 +1,3 @@
-# This is a module-wide location to store the connection to the database
-# that is initialized in api.py
+# This is a module-wide location to connect to the database initialized by api.py
 db = None
 redis = None

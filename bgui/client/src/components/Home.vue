@@ -2,10 +2,10 @@
     <div class="container">
         <div class="row">
 
-            <nav 
+            <nav
                 style="margin-top: 1em"
                 class="drawer col-md-4 col-lg-2">
-                <a  href="#" 
+                <a  href="#"
                     v-for="group in groups"
                     @click="selectGroup(group)">
                     <span v-if="group == selectedGroup">
@@ -21,19 +21,19 @@
 
             <div class="col-sm-9 col-md-9 col-lg-9">
                 <h2>{{selectedGroup}}</h2>
-                <table 
-                    v-for="(inputSet, i) in inputSets" 
+                <table
+                    v-for="(inputSet, i) in inputSets"
                     v-if="groups[i] == selectedGroup"
                     class="left-margin">
                     <tr v-for="key in inputSet">
 
                         <td v-if="key in booleans">
                             <div class="input-group">
-                                <input 
-                                    type="checkbox" 
-                                    tabindex="0" 
-                                    v-bind:id="key" 
-                                    v-bind:value="getName(key)" 
+                                <input
+                                    type="checkbox"
+                                    tabindex="0"
+                                    v-bind:id="key"
+                                    v-bind:value="getName(key)"
                                     v-model="booleans[key]">
                                 <label v-bind:for="key">
                                     {{ getName(key) }}
@@ -43,8 +43,8 @@
 
                         <td v-else-if="key in drop_downs">
                             <select v-model="raw_outputs[key]">
-                                <option 
-                                    v-for="option in drop_downs[key]" 
+                                <option
+                                    v-for="option in drop_downs[key]"
                                     v-bind:value="option">
                                     {{option}}
                                 </option>
@@ -52,7 +52,7 @@
                         </td>
 
                         <td v-else>
-                            <input 
+                            <input
                                 type="number"
                                 step="any"
                                 v-model="raw_outputs[key]">
@@ -84,37 +84,37 @@ import rpc from '../modules/rpc'
 import _ from 'lodash'
 
 const keys = [
-    'output_flow_diagram', 
-    'output_compartment_populations', 
+    'output_flow_diagram',
+    'output_compartment_populations',
     'output_riskgroup_fractions',
-    'output_age_fractions', 
-    'output_by_subgroups', 
-    'output_fractions', 
+    'output_age_fractions',
+    'output_by_subgroups',
+    'output_fractions',
     'output_scaleups',
-    'output_gtb_plots', 
-    'output_plot_economics', 
+    'output_gtb_plots',
+    'output_plot_economics',
     'output_plot_riskgroup_checks',
-    'output_param_plots', 
-    'output_popsize_plot', 
+    'output_param_plots',
+    'output_popsize_plot',
     'output_likelihood_plot',
-    'output_uncertainty', 
+    'output_uncertainty',
     'adaptive_uncertainty',
     'output_spreadsheets',
-    'output_documents', 
-    'output_by_scenario', 
+    'output_documents',
+    'output_by_scenario',
     'output_horizontally',
-    'output_age_calculations', 
-    'riskgroup_diabetes', 
+    'output_age_calculations',
+    'riskgroup_diabetes',
     'riskgroup_hiv',
-    'riskgroup_prison', 
-    'riskgroup_indigenous', 
+    'riskgroup_prison',
+    'riskgroup_indigenous',
     'riskgroup_urbanpoor',
     'riskgroup_ruralpoor',
-    'is_lowquality', 
-    'is_amplification', 
-    'is_misassignment', 
+    'is_lowquality',
+    'is_amplification',
+    'is_misassignment',
     'is_vary_detection_by_organ',
-    'is_timevariant_organs', 
+    'is_timevariant_organs',
     'is_timevariant_contactrate',
     'is_vary_force_infection_by_riskgroup'
 ]
@@ -158,17 +158,17 @@ const booleanName = {
 }
 
 let groups = [
-    'Model running', 
-    'Model Stratifications', 
-    'Elaborations', 
-    'Scenarios to run', 
-    'Uncertainty', 
+    'Model running',
+    'Model Stratifications',
+    'Elaborations',
+    'Scenarios to run',
+    'Uncertainty',
     'Plotting',
     'MS Office outputs',
 ]
 
-_.each(_.range(1, 16), i => { 
-    keys.push(`scenario_${i}`) 
+_.each(_.range(1, 16), i => {
+    keys.push(`scenario_${i}`)
 })
 
 let inputSets = _.map(_.range(7), i => [])
@@ -204,9 +204,9 @@ let drop_downs = {}
 drop_downs.country = [
     'Afghanistan', 'Albania', 'Angola', 'Argentina', 'Armenia',
     'Australia', 'Austria', 'Azerbaijan', 'Bahrain', 'Bangladesh',
-    'Belarus', 'Belgium', 'Benin', 'Bhutan', 'Botswana', 'Brazil', 
+    'Belarus', 'Belgium', 'Benin', 'Bhutan', 'Botswana', 'Brazil',
     'Bulgaria', 'Burundi', 'Cameroon', 'Chad', 'Chile', 'Croatia',
-    'Djibouti', 'Ecuador', 'Estonia', 'Ethiopia', 'Fiji', 'Gabon', 
+    'Djibouti', 'Ecuador', 'Estonia', 'Ethiopia', 'Fiji', 'Gabon',
     'Georgia', 'Ghana', 'Guatemala', 'Guinea', 'Philippines', 'Romania']
 raw_outputs.country = drop_downs.country[4]
 drop_downs.integration_method = ['Runge Kutta', 'Explicit']
@@ -282,7 +282,7 @@ export default {
             for (let key of keys) {
                 if (_.includes(key, 'scenario_')) {
                     if (booleans[key]) {
-                        let i = parseInt(key.sukeystr(9, 2))
+                        let i = parseInt(key.substr(9, 2))
                         guiOutputs.scenarios_to_run.push(i)
                         guiOutputs.scenario_names_to_run.push(find_scenario_string_from_number(i))
                     }
@@ -297,7 +297,7 @@ export default {
                 'Unstratified': 0
             }
             let strain_stratification_keys = {
-                'Single strain': 0,
+                'Single strain': 0.286,
                 'DS / MDR': 2,
                 'DS / MDR / XDR': 3
             }

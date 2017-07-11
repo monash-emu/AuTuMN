@@ -1286,7 +1286,7 @@ class ConsolidatedModel(StratifiedModel):
                             self.set_var_transfer_rate_flow(
                                 'active' + organ + strain + riskgroup + agegroup,
                                 'detect' + organ + strain + riskgroup + agegroup,
-                                'program_rate_detect' + organ_for_detection + riskgroup)
+                                'program_rate_detect' + organ_for_detection + riskgroup_for_detection)
 
     def set_variable_programmatic_flows(self):
 

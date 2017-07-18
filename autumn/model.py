@@ -144,8 +144,8 @@ class ConsolidatedModel(StratifiedModel):
 
         # initialise to zero
         for agegroup in self.agegroups:
-            for history in self.histories:
-                for riskgroup in self.riskgroups:
+            for riskgroup in self.riskgroups:
+                for history in self.histories:
                     for compartment in self.compartment_types:
 
                         # replicate susceptible for age and risk groups
@@ -176,6 +176,9 @@ class ConsolidatedModel(StratifiedModel):
                                     else:
                                         self.set_compartment(
                                             compartment + organ + strain + riskgroup + history + agegroup, 0.)
+
+                # remove the unnecessary fully susceptible treated compartments
+                self.remove_compartment('susceptible_fully' + riskgroup + self.histories[-1] + agegroup)
 
         # find starting proportions for risk groups
         start_risk_prop = {self.riskgroups[0]: 1.}
@@ -570,7 +573,7 @@ class ConsolidatedModel(StratifiedModel):
         the proportion of those with first-line DST who also have second-line DST available.)
         """
 
-        # with misassignment:
+        # with misassignment
         for organ in self.organs_for_detection:
             for riskgroup in self.riskgroups_for_detection:
                 if self.is_misassignment:
@@ -1118,22 +1121,24 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         for agegroup in self.agegroups:
-            for history in self.histories:
 
-                # vary force of infection by risk-group if heterogeneous mixing is incorporated
-                for riskgroup in self.riskgroups:
-                    force_riskgroup = ''
-                    if self.vary_force_infection_by_riskgroup:
-                        force_riskgroup = riskgroup
+            # vary force of infection by risk-group if heterogeneous mixing is incorporated
+            for riskgroup in self.riskgroups:
+                force_riskgroup = ''
+                if self.vary_force_infection_by_riskgroup:
+                    force_riskgroup = riskgroup
 
-                    for strain in self.strains:
+                for strain in self.strains:
 
-                        # set infection rates according to susceptibility status
-                        # age adjustment for infections averted through IPT
-                        self.set_var_transfer_rate_flow(
-                            'susceptible_fully' + riskgroup + history + agegroup,
-                            'latent_early' + strain + riskgroup + history + agegroup,
-                            'rate_force' + strain + force_riskgroup + agegroup)
+                    # new patients can only be fully susceptible
+                    self.set_var_transfer_rate_flow(
+                        'susceptible_fully' + riskgroup + self.histories[0] + agegroup,
+                        'latent_early' + strain + riskgroup + self.histories[0] + agegroup,
+                        'rate_force' + strain + force_riskgroup + agegroup)
+
+                    # set infection rates according to susceptibility status
+                    # age adjustment for infections averted through IPT
+                    for history in self.histories:
                         self.set_var_transfer_rate_flow(
                             'susceptible_immune' + riskgroup + history + agegroup,
                             'latent_early' + strain + riskgroup + history + agegroup,

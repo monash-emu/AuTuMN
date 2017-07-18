@@ -136,18 +136,30 @@ class BaseModel:
         return param_value
 
     def set_compartment(self, label, init_val=0.):
-
         """
         Assign an initial value to a compartment.
 
         Args:
-            label: The name of the compartment.
-            init_val: The starting size of this compartment.
+            label: The name of the compartment
+            init_val: The starting size of this compartment
         """
 
         assert init_val >= 0., 'Start with negative compartment not permitted'
         if label not in self.labels: self.labels.append(label)
         self.init_compartments[label] = init_val
+
+    def remove_compartment(self, label):
+        """
+        Remove a compartment from the model. Generally intended to be used in cases where the loops make it easier to
+        create compartments and then remove them again.
+
+        Args:
+            label: Name fo the compartment to be removed
+        """
+
+        assert label in self.init_compartments, 'Tried to remove non-existent compartment'
+        self.labels.remove(label)
+        del self.init_compartments[label]
 
     def initialise_compartments(self):
 

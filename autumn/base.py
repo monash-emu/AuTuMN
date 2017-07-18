@@ -309,7 +309,6 @@ class BaseModel:
         for label, fn in self.scaleup_fns.iteritems(): self.vars[label] = fn(self.time)
 
     def calculate_vars(self):
-
         """
         Calculate the self.vars that depend on current model conditions (compartment sizes) rather than scale-up
         functions. (Model-specific, so currently just "pass".)
@@ -318,7 +317,6 @@ class BaseModel:
         pass
 
     def calculate_flows(self):
-
         """
         Calculate flows, which should only depend on compartment values and self.vars calculated in
         calculate_variable_rates.
@@ -391,7 +389,6 @@ class BaseModel:
         self.calculate_flows()
 
     def set_flows(self):
-
         """
         Main method to work through setting all intercompartmental flows.
         """
@@ -1003,7 +1000,6 @@ class StratifiedModel(BaseModel):
             return y
 
     def set_ageing_flows(self):
-
         """
         Set ageing flows for any number of age stratifications.
         """
@@ -1012,7 +1008,8 @@ class StratifiedModel(BaseModel):
             for n_agegroup, agegroup in enumerate(self.agegroups):
                 if agegroup in label and n_agegroup < len(self.agegroups) - 1:
                     self.set_fixed_transfer_rate_flow(
-                        label, label[0: label.find('_age')] + self.agegroups[n_agegroup + 1],
+                        label,
+                        label[0: label.find('_age')] + self.agegroups[n_agegroup + 1],
                         'ageing_rate' + self.agegroups[n_agegroup])
 
 

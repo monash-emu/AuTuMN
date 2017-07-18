@@ -71,6 +71,7 @@ class Inputs:
         self.compartment_types \
             = ['susceptible_fully', 'susceptible_immune', 'latent_early', 'latent_late', 'active',
                'detect', 'missed', 'treatment_infect', 'treatment_noninfect']
+        self.histories = ['']
 
         # interventions
         self.irrelevant_time_variants = []
@@ -334,6 +335,7 @@ class Inputs:
         self.define_riskgroup_structure()
         self.define_strain_structure()
         self.define_organ_structure()
+        self.define_treatment_history_structure()
 
     def define_age_structure(self):
         """
@@ -458,6 +460,15 @@ class Inputs:
             self.organ_status = ['']
         else:
             self.organ_status = self.available_organs[:self.gui_inputs['n_organs']]
+
+    def define_treatment_history_structure(self):
+        """
+        Define the structure for tracking patients' treatment histories (i.e. whether they are treatment naive "_new"
+        patients, or whether they are previously treated "_treated" patients.
+        """
+
+        if self.gui_inputs['is_treatment_history']:
+            self.histories = ['_new', '_treated']
 
     def create_mixing_matrix(self):
         """

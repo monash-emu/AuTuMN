@@ -77,7 +77,9 @@ def find_button_name_from_string(working_string):
                               'is_timevariant_contactrate':
                                   'Time-variant contact rate',
                               'is_vary_force_infection_by_riskgroup':
-                                  'Heterogeneous mixing'}
+                                  'Heterogeneous mixing',
+                              'is_treatment_history':
+                                  'Treatment history'}
 
     if working_string in button_name_dictionary:
         return button_name_dictionary[working_string]
@@ -136,7 +138,7 @@ class App:
                                'riskgroup_prison', 'riskgroup_indigenous', 'riskgroup_urbanpoor',
                                'riskgroup_ruralpoor',
                                'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ',
-                               'is_timevariant_organs', 'is_timevariant_contactrate',
+                               'is_timevariant_organs', 'is_timevariant_contactrate', 'is_treatment_history',
                                'is_vary_force_infection_by_riskgroup']
         for i in range(1, 15):
             self.boolean_inputs += ['scenario_' + str(i)]

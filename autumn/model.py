@@ -89,7 +89,7 @@ class ConsolidatedModel(StratifiedModel):
         # model attributes to be set directly to attributes of the inputs object
         for attribute in ['compartment_types', 'organ_status', 'strains', 'riskgroups', 'agegroups',
                           'vary_detection_by_organ', 'organs_for_detection', 'riskgroups_for_detection',
-                          'vary_detection_by_riskgroup', 'vary_force_infection_by_riskgroup']:
+                          'vary_detection_by_riskgroup', 'vary_force_infection_by_riskgroup', 'histories']:
             setattr(self, attribute, getattr(inputs, attribute))
 
         # model attributes to set to just the relevant scenario key from an inputs dictionary
@@ -128,9 +128,6 @@ class ConsolidatedModel(StratifiedModel):
 
         # create time ticker
         self.next_time_point = copy.copy(self.start_time)
-
-        self.histories = ['']
-        # self.histories = ['_new', '_treated']
 
     def initialise_compartments(self):
         """

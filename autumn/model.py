@@ -130,7 +130,7 @@ class ConsolidatedModel(StratifiedModel):
         self.next_time_point = copy.copy(self.start_time)
 
         self.histories = ['']
-        # self.histories = ['_new', '_retreat']
+        # self.histories = ['_new', '_treated']
 
     def initialise_compartments(self):
         """
@@ -1365,7 +1365,7 @@ class ConsolidatedModel(StratifiedModel):
                                 self.set_var_transfer_rate_flow(
                                     'treatment_noninfect' + organ + strain + as_assigned_strain + riskgroup
                                     + history + agegroup,
-                                    'susceptible_treated' + riskgroup + history + agegroup,
+                                    'susceptible_treated' + riskgroup + self.histories[-1] + agegroup,
                                     'program_rate_success_noninfect' + strain_or_inappropriate)
 
                                 # death on treatment

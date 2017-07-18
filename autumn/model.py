@@ -586,7 +586,7 @@ class ConsolidatedModel(StratifiedModel):
                         prop_firstline += (1. - prop_firstline) * self.vars['int_prop_xpert']
 
 
-                    # Determine rates of identification/misidentification as each strain
+                    # determine rates of identification/misidentification as each strain
                     self.vars['program_rate_detect' + organ + riskgroup + '_ds_asds'] \
                         = self.vars['program_rate_detect' + organ + riskgroup]
                     self.vars['program_rate_detect' + organ + riskgroup + '_ds_asmdr'] = 0.
@@ -595,7 +595,7 @@ class ConsolidatedModel(StratifiedModel):
                     self.vars['program_rate_detect' + organ + riskgroup + '_mdr_asmdr'] \
                         = prop_firstline * self.vars['program_rate_detect' + organ + riskgroup]
 
-                    # If a third strain is present
+                    # if a third strain is present
                     if len(self.strains) > 2:
                         prop_secondline = self.vars['program_prop_secondline_dst']
                         self.vars['program_rate_detect' + organ + riskgroup + '_ds_asxdr'] = 0.
@@ -608,7 +608,7 @@ class ConsolidatedModel(StratifiedModel):
                         self.vars['program_rate_detect' + organ + riskgroup + '_xdr_asxdr'] \
                             = prop_firstline * prop_secondline * self.vars['program_rate_detect' + organ + riskgroup]
 
-                # Without misassignment, everyone is correctly allocated
+                # without misassignment, everyone is correctly allocated
                 else:
                     for strain in self.strains:
                         self.vars['program_rate_detect' + organ + riskgroup + strain + '_as' + strain[1:]] \
@@ -1105,7 +1105,7 @@ class ConsolidatedModel(StratifiedModel):
                 'susceptible_fully' + riskgroup + self.histories[0] + self.agegroups[0],
                 'births_unvac' + riskgroup)
             self.set_var_entry_rate_flow(
-                'susceptible_vac' + riskgroup + self.histories[0] + self.agegroups[0],
+                'susceptible_immune' + riskgroup + self.histories[0] + self.agegroups[0],
                 'births_vac' + riskgroup)
             if 'int_prop_novel_vaccination' in self.relevant_interventions:
                 self.set_var_entry_rate_flow(
@@ -1135,11 +1135,7 @@ class ConsolidatedModel(StratifiedModel):
                             'latent_early' + strain + riskgroup + history + agegroup,
                             'rate_force' + strain + force_riskgroup + agegroup)
                         self.set_var_transfer_rate_flow(
-                            'susceptible_vac' + riskgroup + history + agegroup,
-                            'latent_early' + strain + riskgroup + history + agegroup,
-                            'rate_force_vac' + strain + force_riskgroup + agegroup)
-                        self.set_var_transfer_rate_flow(
-                            'susceptible_treated' + riskgroup + history + agegroup,
+                            'susceptible_immune' + riskgroup + history + agegroup,
                             'latent_early' + strain + riskgroup + history + agegroup,
                             'rate_force_vac' + strain + force_riskgroup + agegroup)
                         self.set_var_transfer_rate_flow(
@@ -1365,7 +1361,7 @@ class ConsolidatedModel(StratifiedModel):
                                 self.set_var_transfer_rate_flow(
                                     'treatment_noninfect' + organ + strain + as_assigned_strain + riskgroup
                                     + history + agegroup,
-                                    'susceptible_treated' + riskgroup + self.histories[-1] + agegroup,
+                                    'susceptible_immune' + riskgroup + self.histories[-1] + agegroup,
                                     'program_rate_success_noninfect' + strain_or_inappropriate)
 
                                 # death on treatment
@@ -1417,15 +1413,15 @@ class ConsolidatedModel(StratifiedModel):
                                 and 'dr' not in strain:
                             self.set_linked_transfer_rate_flow(
                                 'latent_early' + strain + riskgroup + history + agegroup,
-                                'susceptible_vac' + riskgroup + history + agegroup,
+                                'susceptible_immune' + riskgroup + history + agegroup,
                                 'ipt_effective_treatments' + agegroup)
                         if 'int_prop_community_ipt' in self.relevant_interventions and 'dr' not in strain:
                             self.set_var_transfer_rate_flow(
                                 'latent_early' + strain + riskgroup + history + agegroup,
-                                'susceptible_vac' + riskgroup + history + agegroup,
+                                'susceptible_immune' + riskgroup + history + agegroup,
                                 'rate_community_ipt')
                             self.set_var_transfer_rate_flow(
                                 'latent_late' + strain + riskgroup + history + agegroup,
-                                'susceptible_vac' + riskgroup + history + agegroup,
+                                'susceptible_immune' + riskgroup + history + agegroup,
                                 'rate_community_ipt')
 

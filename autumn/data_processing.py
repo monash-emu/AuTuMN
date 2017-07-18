@@ -69,7 +69,7 @@ class Inputs:
         self.vary_force_infection_by_riskgroup = self.gui_inputs['is_vary_force_infection_by_riskgroup']
         self.mixing = {}
         self.compartment_types \
-            = ['susceptible_fully', 'susceptible_vac', 'susceptible_treated', 'latent_early', 'latent_late', 'active',
+            = ['susceptible_fully', 'susceptible_immune', 'latent_early', 'latent_late', 'active',
                'detect', 'missed', 'treatment_infect', 'treatment_noninfect']
 
         # interventions

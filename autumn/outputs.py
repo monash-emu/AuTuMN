@@ -265,10 +265,8 @@ def get_line_style(label, strain_or_organ):
 
     # Unassigned groups remain black
     colour = (0, 0, 0)
-    if 'susceptible_vac' in label:  # susceptible_unvac remains black
+    if 'susceptible_immune' in label:  # susceptible_unvac remains black
         colour = (0.3, 0.3, 0.3)
-    elif 'susceptible_treated' in label:
-        colour = (0.6, 0.6, 0.6)
     if 'latent' in label:  # latent_early remains as for latent
         colour = (0, 0.4, 0.8)
     if 'latent_late' in label:
@@ -291,10 +289,8 @@ def get_line_style(label, strain_or_organ):
         category_full_name = 'Susceptible'
     if 'susceptible_fully' in label:
         category_full_name = 'Fully susceptible'
-    elif 'susceptible_vac' in label:
+    elif 'susceptible_immune' in label:
         category_full_name = 'BCG vaccinated, susceptible'
-    elif 'susceptible_treated' in label:
-        category_full_name = 'Previously treated, susceptible'
     if 'latent' in label:
         category_full_name = 'Latent'
     if 'latent_early' in label:

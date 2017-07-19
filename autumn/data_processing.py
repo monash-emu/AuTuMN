@@ -464,11 +464,11 @@ class Inputs:
     def define_treatment_history_structure(self):
         """
         Define the structure for tracking patients' treatment histories (i.e. whether they are treatment naive "_new"
-        patients, or whether they are previously treated "_treated" patients.
+        patients, or whether they are previously treated "_treated" patients. Note that the list was set to an empty
+        string (for no stratification) in initialisation of this object.
         """
 
-        if self.gui_inputs['is_treatment_history']:
-            self.histories = ['_new', '_treated']
+        if self.gui_inputs['is_treatment_history']: self.histories = ['_new', '_treated']
 
     def create_mixing_matrix(self):
         """
@@ -621,9 +621,8 @@ class Inputs:
 
         # adjusting the original data to add a success number for smear-positive (so technically not still "original")
         self.original_data['outcomes']['new_sp_succ'] \
-            = tool_kit.increment_dictionary_with_dictionary(
-            self.original_data['outcomes']['new_sp_cmplt'],
-            self.original_data['outcomes']['new_sp_cur'])
+            = tool_kit.increment_dictionary_with_dictionary(self.original_data['outcomes']['new_sp_cmplt'],
+                                                            self.original_data['outcomes']['new_sp_cur'])
 
         # similarly, move completion over to represent success for smear-negative, extrapulmonary and retreatment
         for treatment_type in ['new_snep', 'ret']:

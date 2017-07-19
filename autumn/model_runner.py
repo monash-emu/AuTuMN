@@ -97,7 +97,6 @@ def extract_integer_dicts(models_to_analyse={}, dict_to_extract_from={}):
 
 
 def get_output_dicts_from_lists(models_to_analyse={}, output_dict_of_lists={}):
-
     """
     Convert output lists to dictionaries. Also may ultimately be unnecessary.
     """
@@ -716,20 +715,19 @@ class ModelRunner:
     ###########################
 
     def run_uncertainty(self):
-
         """
         Main method to run all the uncertainty processes.
         """
 
         self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
-        # If not doing an adaptive search, only need to start with a single parameter set
+        # if not doing an adaptive search, only need to start with a single parameter set
         if self.gui_inputs['adaptive_uncertainty']:
             n_candidates = 1
         else:
             n_candidates = self.gui_inputs['uncertainty_runs'] * 10
 
-        # Decide whether to start analysis from a random point or the manual values of the parameters
+        # decide whether to start analysis from a random point or the manual values of the parameters
         if not self.gui_inputs['adaptive_uncertainty'] or self.random_start:
             param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
         else:
@@ -737,13 +735,13 @@ class ModelRunner:
             for param in self.inputs.param_ranges_unc:
                 param_candidates[param['key']] = [self.inputs.model_constants[param['key']]]
 
-        # Find weights for outputs that are being calibrated to
-        normal_char = self.get_fitting_data()
+        # find weights for outputs that are being calibrated to
+        fitting_data = self.get_fitting_data()
         years_to_compare = range(1990, 2015)
         weights = find_uncertainty_output_weights(years_to_compare, 1, [1., 2.])
         self.add_comment_to_gui_window('"Weights": \n' + str(weights))
 
-        # Prepare for uncertainty loop
+        # prepare for uncertainty loop
         n_accepted = 0
         prev_log_likelihood = -1e10
         for param in self.inputs.param_ranges_unc:
@@ -752,96 +750,88 @@ class ModelRunner:
             self.rejection_dict[param['key']] = {}
             self.rejection_dict[param['key']][n_accepted] = []
 
-        # Instantiate uncertainty model objects
+        # instantiate uncertainty model objects
         for scenario in self.gui_inputs['scenarios_to_run']:
             scenario_name = 'uncertainty_' + tool_kit.find_scenario_string_from_number(scenario)
             self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
-        # Until a sufficient number of parameters are accepted
+        new_param_list = []
+        for param in self.inputs.param_ranges_unc:
+            new_param_list.append(param_candidates[param['key']][0])
+            params = new_param_list
+
+        # until a sufficient number of parameters are accepted
         run = 0
         while n_accepted < self.gui_inputs['uncertainty_runs']:
 
-            # Set timer
+            # set timer
             start_timer_run = datetime.datetime.now()
 
-            # If we are using existing parameters
-            if run == 0 or not self.gui_inputs['adaptive_uncertainty']:
-                new_param_list = []
-                for param in self.inputs.param_ranges_unc:
-                    new_param_list.append(param_candidates[param['key']][run])
-                    params = new_param_list
-
-            # If we need to get a new parameter set from the old accepted set
-            else:
-                new_param_list = self.update_params(params)
-
-            # Run baseline integration (includes parameter checking, parameter setting and recording success/failure)
+            # run baseline scenario (includes parameter checking, parameter setting and recording success/failure)
             self.run_with_params(new_param_list, model_object='uncertainty_baseline')
 
-            # Now storing regardless of acceptance, provided run was completed successfully
+            # store outputs regardless of acceptance, provided run was completed successfully
             if self.is_last_run_success:
 
-                # Get outputs for calibration and store results
+                # get outputs for calibration and store results
                 self.store_uncertainty('uncertainty_baseline', epi_outputs_to_analyse=self.epi_outputs_to_analyse)
                 integer_dictionary \
                     = extract_integer_dicts(['uncertainty_baseline'],
                                             get_output_dicts_from_lists(models_to_analyse=['uncertainty_baseline'],
                                                                         output_dict_of_lists=self.epi_outputs))
 
-                # Calculate prior
+                # calculate prior
                 prior_log_likelihood = 0.
                 for p, param in enumerate(self.inputs.param_ranges_unc):
                     param_val = new_param_list[p]
                     self.all_parameters_tried[param['key']].append(new_param_list[p])
 
-                    # Calculate the density of param_val
+                    # calculate the density of param_val
                     bound_low, bound_high = param['bounds'][0], param['bounds'][1]
 
-                    # Normalise value and find log of PDF from appropriate distribution
+                    # normalise value and find log of PDF from appropriate distribution
                     if param['distribution'] == 'beta':
-                        prior_log_likelihood \
-                            += beta.logpdf((param_val - bound_low) / (bound_high - bound_low), 2., 2.)
+                        prior_log_likelihood += beta.logpdf((param_val - bound_low) / (bound_high - bound_low), 2., 2.)
                     elif param['distribution'] == 'uniform':
                         prior_log_likelihood += numpy.log(1. / (bound_high - bound_low))
 
-                # Calculate posterior
+                # calculate posterior
                 posterior_log_likelihood = 0.
                 for output_dict in self.outputs_unc:
 
-                    # The GTB values for the output of interest
-                    working_output_dictionary = normal_char[output_dict['key']]
+                    # the GTB values for the output of interest
+                    working_output_dictionary = fitting_data[output_dict['key']]
                     for y, year in enumerate(years_to_compare):
                         if year in working_output_dictionary.keys():
                             model_result_for_output = integer_dictionary['uncertainty_baseline']['incidence'][year]
                             mu, sd = working_output_dictionary[year][0], working_output_dictionary[year][1]
                             posterior_log_likelihood += norm.logpdf(model_result_for_output, mu, sd) * weights[y]
 
-                # Determine acceptance
+                # determine acceptance
                 log_likelihood = prior_log_likelihood + posterior_log_likelihood
                 accepted = numpy.random.binomial(n=1, p=min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
 
-                # Explain progression of likelihood
-                self.add_comment_to_gui_window('Previous log likelihood:\n' + str(prev_log_likelihood)
-                                               + '\nLog likelihood this run:\n' + str(log_likelihood)
-                                               + '\nAcceptance probability:\n'
-                                               + str(min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
-                                               + '\nWhether accepted:\n' + str(bool(accepted)) + '\n________________\n')
+                # describe progression of likelihood analysis
+                self.add_comment_to_gui_window(
+                    'Previous log likelihood:\n%4.3f\nLog likelihood this run:\n%4.3f\nAcceptance probability:\n%4.3f'
+                    % (log_likelihood, prev_log_likelihood, min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
+                    + '\nWhether accepted:\n%s\n________________\n' % str(bool(accepted)))
                 self.loglikelihoods.append(log_likelihood)
 
-                # Record information for all runs
+                # record information for all runs
                 if bool(accepted):
                     self.whether_accepted_list.append(True)
-                    self.accepted_indices += [run]
+                    self.accepted_indices.append(run)
                     n_accepted += 1
                     for p, param in enumerate(self.inputs.param_ranges_unc):
                         self.acceptance_dict[param['key']][n_accepted] = new_param_list[p]
                         self.rejection_dict[param['key']][n_accepted] = []
 
-                    # Update likelihood and parameter set for next run
+                    # update likelihood and parameter set for next run
                     prev_log_likelihood = log_likelihood
                     params = new_param_list
 
-                    # Run scenarios other than baseline and store uncertainty (only if accepted)
+                    # run scenarios other than baseline and store uncertainty (only if accepted)
                     for scenario in self.gui_inputs['scenarios_to_run']:
                         if scenario is not None:
                             scenario_name = 'uncertainty_' + tool_kit.find_scenario_string_from_number(scenario)
@@ -852,21 +842,23 @@ class ModelRunner:
 
                 else:
                     self.whether_accepted_list.append(False)
-                    self.rejected_indices += [run]
+                    self.rejected_indices.append(run)
                     for p, param in enumerate(self.inputs.param_ranges_unc):
                         self.rejection_dict[param['key']][n_accepted].append(new_param_list[p])
 
-                # Plot parameter progression and report on progress
+                # plot parameter progression and report on progress
                 self.plot_progressive_parameters()
                 self.add_comment_to_gui_window(str(n_accepted) + ' accepted / ' + str(run) +
                                                ' candidates. Running time: '
                                                + str(datetime.datetime.now() - start_timer_run))
                 run += 1
 
-            # Generate more candidates if required -
+            # generate more candidates if required
             if not self.gui_inputs['adaptive_uncertainty'] and run >= len(param_candidates.keys()):
                 param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
                 run = 0
+
+            new_param_list = self.update_params(params)
 
     def set_model_with_params(self, param_dict, model_object='baseline'):
 

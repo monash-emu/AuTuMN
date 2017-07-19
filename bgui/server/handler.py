@@ -209,12 +209,16 @@ def public_run_autumn(gui_outputs):
     autumn_dir = os.path.join(os.path.dirname(autumn.__file__), os.pardir)
     print(">> handler.public_run_autumn goto dir:", autumn_dir)
     os.chdir(autumn_dir)
-    model_runner = autumn.model_runner.ModelRunner(
-        gui_outputs, None, None, bgui_model_output)
-    model_runner.master_runner()
-    project = autumn.outputs.Project(model_runner, gui_outputs)
-    project.master_outputs_runner()
+    try:
+        model_runner = autumn.model_runner.ModelRunner(
+            gui_outputs, None, None, bgui_model_output)
+        model_runner.master_runner()
+        project = autumn.outputs.Project(model_runner, gui_outputs)
+        project.master_outputs_runner()
+        result = { 'success': True }
+    except:
+        result = { 'success': False }
     is_bgui_running = False
-    return { 'success': True }
+    return result
 
 

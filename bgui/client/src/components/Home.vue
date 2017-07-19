@@ -148,10 +148,6 @@
     'is_treatment_history'
   ]
 
-  _.each(_.range(1, 16), i => {
-    booleanKeys.push(`scenario_${i}`)
-  })
-
   const booleanName = {
     'output_uncertainty': 'Run uncertainty',
     'adaptive_uncertainty': 'Adaptive search',
@@ -201,6 +197,10 @@
     { keys: [], name: 'Plotting' },
     { keys: [], name: 'MS Office outputs' }
   ]
+
+  for (let i of _.range(1, 16)) {
+    booleanKeys.push(`scenario_${i}`)
+  }
 
   for (let key of booleanKeys) {
     params[key] = {
@@ -407,6 +407,9 @@
             'public_run_autumn', guiOutputs)
           .then((res) => {
             console.log('>> Home.run res', res)
+            if (!res.data.success) {
+              this.$data.consoleLines.push('Error: model crashed')
+            }
           })
           .catch((res) => {
             this.$data.isRunning = false

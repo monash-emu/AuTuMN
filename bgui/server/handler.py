@@ -175,16 +175,50 @@ def login_check_task(task_id):
 # - login_* requires login frist
 # - admin_* requires admin login
 
+bgui_output_lines = []
+is_bgui_running = False
+
+def public_check_autumn_run():
+    print(">> handler.public_check_autumn_run")
+    global bgui_output_lines
+    global is_bgui_running
+    result = {
+        "console": bgui_output_lines,
+        "is_running": is_bgui_running
+    }
+    return result
+
+def bgui_model_output(output_type, data={}):
+    if output_type == "init":
+        pass
+    elif output_type == "console":
+        global bgui_output_lines
+        bgui_output_lines.append(data["message"])
+        print(">> handler.bgui_model_output console:", data["message"])
+    elif output_type == "uncertainty_graph":
+        print(">> handler.bgui_model_output uncertainty_graph:", data)
+
 def public_run_autumn(gui_outputs):
     """
     Run the model
     """
-    print(">> handler.run_autumn\n", pprint.pformat(gui_outputs, indent=2))
+    global is_bgui_running
+    global bgui_output_lines
+    is_bgui_running = True
+    bgui_output_lines = []
     autumn_dir = os.path.join(os.path.dirname(autumn.__file__), os.pardir)
-    print(">> handler.run_autumn goto dir:", autumn_dir)
+    print(">> handler.public_run_autumn goto dir:", autumn_dir)
     os.chdir(autumn_dir)
-    model_runner = autumn.model_runner.ModelRunner(gui_outputs, None, None, True)
-    model_runner.master_runner()
-    project = autumn.outputs.Project(model_runner, gui_outputs)
-    project.master_outputs_runner()
-    return { 'success': True }
+    try:
+        model_runner = autumn.model_runner.ModelRunner(
+            gui_outputs, None, None, bgui_model_output)
+        model_runner.master_runner()
+        project = autumn.outputs.Project(model_runner, gui_outputs)
+        project.master_outputs_runner()
+        result = { 'success': True }
+    except:
+        result = { 'success': False }
+    is_bgui_running = False
+    return result
+
+

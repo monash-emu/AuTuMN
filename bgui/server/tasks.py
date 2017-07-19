@@ -15,7 +15,6 @@ from .api import app
 # WARNING: import only after app is defined
 from . import dbmodel
 
-
 # Concept: task_id: farms out async jobs
 # generalize to obj_id irrespective of object type?
 

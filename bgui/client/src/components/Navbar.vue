@@ -1,34 +1,34 @@
 <template>
-  <header class="sticky">
+  <md-toolbar class="md-dense">
 
-    <router-link to="/" class="logo">
-      AuTuMN
-    </router-link>
+    <h2 class="md-title" style="padding-left: 1em; flex: 1" >AuTuMN</h2>
 
     <span v-if="user.authenticated">
 
-      <router-link to='/experiments' class='button'>
+      <router-link to='/experiments' class="md-button">
         Experiments
       </router-link>
 
-      <span class="user">
-        {{user.email}}
-      </span>
+      <md-menu >
 
-      <router-link to='/edit-user' class='button'>
-        Edit
-      </router-link>
-      <button @click="logout">Logout</button>
+        <md-button md-menu-trigger>
+            {{user.name}}
+        </md-button>
+
+        <md-menu-content>
+          <md-menu-item @click="editUser">Edit User
+          </md-menu-item>
+          <md-menu-item @click="logout">Logout</md-menu-item>
+        </md-menu-content>
+      </md-menu>
 
     </span>
 
-    <span v-else>
-      <router-link to='/login' class='button'>
-        Login
-      </router-link>
-    </span>
+    <router-link v-else to='/login' tag='md-button'>
+      Login
+    </router-link>
 
-  </header>
+  </md-toolbar>
 </template>
 
 <style scoped>
@@ -36,26 +36,30 @@
 
 <script>
 
-import auth from '../modules/auth'
-import axios from 'axios'
-import config from '../config'
+  import axios from 'axios'
+  import config from '../config'
+  import auth from '../modules/auth'
+  import router from '../router'
 
-export default {
-  name: 'navbar',
-  data() {
-    return {
-      user: auth.user
-    }
-  },
-  methods: {
-    logout () {
-      auth
-        .logout()
-        .then(() => {
-          this.$router.push('/login')
-        })
+  export default {
+    name: 'navbar',
+    data () {
+      return {
+        user: auth.user
+      }
+    },
+    methods: {
+      editUser () {
+        router.push('/edit-user')
+      },
+      logout () {
+        auth
+          .logout()
+          .then(() => {
+            this.$router.push('/login')
+          })
+      }
     }
   }
-}
 </script>
 

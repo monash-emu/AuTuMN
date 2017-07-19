@@ -206,6 +206,7 @@ def receive_uploaded_file():
     else:
         return jsonify(result)
 
+# http://reputablejournal.com/adventures-with-flask-cors.html#.WW6-INOGMm8
 # Allow Cross-Origin-Resource-Sharing, mainly for working with hot reloading webclient
 @app.after_request
 def after_request(response):

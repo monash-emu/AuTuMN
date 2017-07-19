@@ -1,89 +1,117 @@
 <template>
-    <div class="container">
-        <div class="row">
+  <div style=" padding: 1em">
+    <md-layout md-column>
 
-            <nav
-                style="margin-top: 1em"
-                class="drawer col-md-4 col-lg-2">
-                <a  href="#"
-                    v-for="group in groups"
-                    @click="selectGroup(group)">
-                    <span v-if="group == selectedGroup">
-                        =&gt;{{group}}
-                    </span>
-                    <span v-else>{{group}}</span>
-                </a>
-                <button @click="run()">
-                    Run
-                </button>
-            </nav>
-
-
-            <div class="col-sm-9 col-md-9 col-lg-9">
-                <h2>{{selectedGroup}}</h2>
-                <table
-                    v-for="(inputSet, i) in inputSets"
-                    v-if="groups[i] == selectedGroup"
-                    class="left-margin">
-                    <tr v-for="key in inputSet">
-
-                        <td v-if="key in booleans">
-                            <div class="input-group">
-                                <input
-                                    type="checkbox"
-                                    tabindex="0"
-                                    v-bind:id="key"
-                                    v-bind:value="getName(key)"
-                                    v-model="booleans[key]">
-                                <label v-bind:for="key">
-                                    {{ getName(key) }}
-                                </label>
-                            </div>
-                        </td>
-
-                        <td v-else-if="key in drop_downs">
-                            <select v-model="raw_outputs[key]">
-                                <option
-                                    v-for="option in drop_downs[key]"
-                                    v-bind:value="option">
-                                    {{option}}
-                                </option>
-                            </select>
-                        </td>
-
-                        <td v-else>
-                            <input
-                                type="number"
-                                step="any"
-                                v-model="raw_outputs[key]">
-                        </td>
-
-                    </tr>
-                </table>
-            </div>
+      <div style="text-align: center;">
+        <br>
+        <div class="md-display-2">
+          Model Parameters
         </div>
-    </div>
+        <br>
+        <br>
+      </div>
+
+      <md-layout md-row>
+
+        <md-whiteframe style="width: 50%; height: calc(100vh - 230px); overflow: auto">
+          <md-tabs>
+            <md-tab
+                v-for="(paramGroup, i) in paramGroups"
+                :key="i"
+                :id="paramGroup.name"
+                :md-label="paramGroup.name">
+              <div>
+                <div style="width: 18em;">
+                  <md-layout
+                      md-column
+                      v-for="(key, i) in paramGroups[i].keys"
+                      :key="i">
+
+                    <div v-if="params[key].type == 'boolean'">
+                      <md-checkbox
+                          type="checkbox"
+                          tabindex="0"
+                          :id="key"
+                          v-model="params[key].value">
+                        {{ params[key].label }}
+                      </md-checkbox>
+                    </div>
+
+                    <div v-else-if="params[key].type == 'drop_down'">
+                      <md-input-container>
+                        <label>{{ params[key].label }}</label>
+                        <md-select
+                            v-model="params[key].value">
+                          <md-option
+                              v-for="(option, i) in params[key].options"
+                              v-bind:value="option"
+                              :key="i">
+                            {{option}}
+                          </md-option>
+                        </md-select>
+                      </md-input-container>
+                    </div>
+
+                    <div v-else-if="params[key].type == 'number'">
+                      <md-input-container>
+                        <label>{{ params[key].label }}</label>
+                        <md-input
+                            type="number"
+                            step="any"
+                            v-model="params[key].value">
+                        </md-input>
+
+                      </md-input-container>
+                    </div>
+
+                  </md-layout>
+                </div>
+              </div>
+            </md-tab>
+          </md-tabs>
+        </md-whiteframe>
+
+        <md-whiteframe style="padding: 1em; width: 50%; height: calc(100vh - 230px); overflow: auto">
+          <md-layout
+              md-row
+              md-align="center"
+              md-vertical-align="center">
+            <md-button
+                class="md-raised"
+                :disabled="isRunning"
+                @click="run()">
+              Run simulation
+            </md-button>
+          </md-layout>
+          <md-layout>
+            <ul>
+              <li v-for="line in consoleLines">
+                {{ line }}
+              </li>
+            </ul>
+          </md-layout>
+          <md-layout style="padding-left: 2em;">
+            <md-spinner
+                :md-size="30"
+                md-indeterminate
+                v-if="isRunning">
+            </md-spinner>
+          </md-layout>
+        </md-whiteframe>
+      </md-layout>
+    </md-layout>
+  </div>
 </template>
 
 <!-- Add 'scoped' attribute to limit CSS to this component only -->
 <style scoped>
-.left-margin {
-    margin-left: 10px
-}
-.selected-group {
-    background-color: lightblue;
-}
 </style>
 
 <script>
-import axios from 'axios'
-import auth from '../modules/auth'
-import config from '../config'
-import util from '../modules/util'
-import rpc from '../modules/rpc'
-import _ from 'lodash'
+  import rpc from '../modules/rpc'
+  import _ from 'lodash'
 
-const keys = [
+  const booleanKeys = [
     'output_flow_diagram',
     'output_compartment_populations',
     'output_riskgroup_fractions',
@@ -116,10 +144,11 @@ const keys = [
     'is_vary_detection_by_organ',
     'is_timevariant_organs',
     'is_timevariant_contactrate',
-    'is_vary_force_infection_by_riskgroup'
-]
+    'is_vary_force_infection_by_riskgroup',
+    'is_treatment_history'
+  ]
 
-const booleanName = {
+  const booleanName = {
     'output_uncertainty': 'Run uncertainty',
     'adaptive_uncertainty': 'Adaptive search',
     'output_spreadsheets': 'Write to spreadsheets',
@@ -155,175 +184,242 @@ const booleanName = {
     'n_strains': 'Number of strains',
     'is_timevariant_contactrate': 'Time-variant contact rate',
     'is_vary_force_infection_by_riskgroup': 'Heterogeneous mixing'
-}
+  }
 
-let groups = [
-    'Model running',
-    'Model Stratifications',
-    'Elaborations',
-    'Scenarios to run',
-    'Uncertainty',
-    'Plotting',
-    'MS Office outputs',
-]
+  let params = {}
 
-_.each(_.range(1, 16), i => {
-    keys.push(`scenario_${i}`)
-})
+  let paramGroups = [
+    { keys: [], name: 'Model running' },
+    { keys: [], name: 'Model Stratifications' },
+    { keys: [], name: 'Elaborations' },
+    { keys: [], name: 'Scenarios to run' },
+    { keys: [], name: 'Uncertainty' },
+    { keys: [], name: 'Plotting' },
+    { keys: [], name: 'MS Office outputs' }
+  ]
 
-let inputSets = _.map(_.range(7), i => [])
-_.each(keys, key => {
+  for (let i of _.range(1, 16)) {
+    booleanKeys.push(`scenario_${i}`)
+  }
+
+  for (let key of booleanKeys) {
+    params[key] = {
+      value: false,
+      type: "boolean",
+      label: key in booleanName ? booleanName[key] : ''
+    }
+  }
+  const defaultBooleanKeys = ['adaptive_uncertainty', 'is_amplification',
+    'is_misassignment', 'is_vary_detection_by_organ', 'output_gtb_plots']
+  for (let k of defaultBooleanKeys) {
+    params[k].value = true
+  }
+
+  for (let key of booleanKeys) {
     const name = booleanName[key]
     if (_.includes(name, 'Plot') || _.includes(name, 'Draw')) {
-        inputSets[5].push(key)
+      paramGroups[5].keys.push(key)
     } else if (_.includes(name, 'uncertainty') || _.includes(key, 'uncertainty')) {
-        inputSets[4].push(key)
+      paramGroups[4].keys.push(key)
     } else if (_.includes(key, 'is_')) {
-        inputSets[2].push(key)
+      paramGroups[2].keys.push(key)
     } else if (_.includes(key, 'riskgroup_') || _.includes(key, 'n_')) {
-        inputSets[1].push(key)
+      paramGroups[1].keys.push(key)
     } else if (_.includes(key, 'scenario_')) {
-        inputSets[3].push(key)
+      paramGroups[3].keys.push(key)
     } else {
-        inputSets[6].push(key)
+      paramGroups[6].keys.push(key)
     }
-})
+  }
 
-let booleans = {}
-_.each(keys, key => { booleans[key] = false })
-booleans.adaptive_uncertainty = true
-booleans.is_amplification = true
-booleans.is_misassignment = true
-booleans.is_vary_detection_by_organ = true
-booleans.output_gtb_plots = true
+  // Model running options
+  params.country = {
+    type: 'drop_down',
+    options: [
+      'Afghanistan', 'Albania', 'Angola', 'Argentina', 'Armenia',
+      'Australia', 'Austria', 'Azerbaijan', 'Bahrain', 'Bangladesh',
+      'Belarus', 'Belgium', 'Benin', 'Bhutan', 'Botswana', 'Brazil',
+      'Bulgaria', 'Burundi', 'Cameroon', 'Chad', 'Chile', 'Croatia',
+      'Djibouti', 'Ecuador', 'Estonia', 'Ethiopia', 'Fiji', 'Gabon',
+      'Georgia', 'Ghana', 'Guatemala', 'Guinea', 'Philippines', 'Romania']
+  }
+  params.country.value = params.country.options[4]
 
-let raw_outputs = {}
-let drop_downs = {}
+  params.integration_method = {
+    type: 'drop_down',
+    options: ['Runge Kutta', 'Explicit']
+  }
+  params.integration_method.value = params.integration_method.options[1]
 
-// Model running options
-drop_downs.country = [
-    'Afghanistan', 'Albania', 'Angola', 'Argentina', 'Armenia',
-    'Australia', 'Austria', 'Azerbaijan', 'Bahrain', 'Bangladesh',
-    'Belarus', 'Belgium', 'Benin', 'Bhutan', 'Botswana', 'Brazil',
-    'Bulgaria', 'Burundi', 'Cameroon', 'Chad', 'Chile', 'Croatia',
-    'Djibouti', 'Ecuador', 'Estonia', 'Ethiopia', 'Fiji', 'Gabon',
-    'Georgia', 'Ghana', 'Guatemala', 'Guinea', 'Philippines', 'Romania']
-raw_outputs.country = drop_downs.country[4]
-drop_downs.integration_method = ['Runge Kutta', 'Explicit']
-raw_outputs.integration_method = drop_downs.integration_method[1]
-drop_downs.fitting_method = ['Method 1', 'Method 2', 'Method 3', 'Method 4', 'Method 5']
-raw_outputs.fitting_method = drop_downs.fitting_method[4]
-raw_outputs.default_smoothness = 1.
-raw_outputs.time_step = 5.
-const runningKeys = ['country', 'integration_method', 'fitting_method',
-'default_smoothness', 'time_step']
-_.each(runningKeys, k => inputSets[0].push(k))
+  params.fitting_method = {
+    type: 'drop_down',
+    options: ['Method 1', 'Method 2', 'Method 3', 'Method 4', 'Method 5']
+  }
+  params.fitting_method.value = params.fitting_method.options[4]
 
-// Model stratifications options
-drop_downs.n_organs = ['Pos / Neg / Extra', 'Pos / Neg', 'Unstratified']
-raw_outputs.n_organs = drop_downs.n_organs[0]
-drop_downs.n_strains = ['Single strain', 'DS / MDR', 'DS / MDR / XDR']
-raw_outputs.n_strains = drop_downs.n_strains[1]
-_.each(['n_organs', 'n_strains'], k => inputSets[1].push(k))
+  params.default_smoothness = {
+    type: 'number',
+    value: 1.0
+  }
+  params.time_step = {
+    type: 'number',
+    value: 5.
+  }
 
-// Uncertainty options
-const uncertainty_numeric_list = {
-    uncertainty_runs: ['Number of uncertainty runs', 10],
-    burn_in_runs: ['Number of burn-in runs', 0],
-    search_width: ['Relative search width', .08]
-}
-drop_downs.pickle_uncertainty = ['No saving or loading', 'Load', 'Save']
-raw_outputs.pickle_uncertainty = 'No saving or loading'
-_.each(uncertainty_numeric_list, (v, k) => {
-    raw_outputs[k] = v[1]
-    inputSets[4].push(k)
-})
-inputSets[4].push('pickle_uncertainty')
+  const runningKeys = ['country', 'integration_method', 'fitting_method',
+    'default_smoothness', 'time_step']
+  for (let k of runningKeys) {
+    paramGroups[0].keys.push(k)
+  }
 
-function find_scenario_string_from_number(scenario) {
+  // Model stratifications options
+  params.n_organs = {
+    type: 'drop_down',
+    options: ['Pos / Neg / Extra', 'Pos / Neg', 'Unstratified']
+  }
+  params.n_organs.value = params.n_organs.options[0]
+  params.n_strains = {
+    type: 'drop_down',
+    options: ['Single strain', 'DS / MDR', 'DS / MDR / XDR']
+  }
+  params.n_strains.value = params.n_strains.options[1]
+
+  for (let k of ['n_organs', 'n_strains']) {
+    paramGroups[1].keys.push(k)
+  }
+
+  // Uncertainty options
+  params.uncertainty_runs = {
+    type: 'number',
+    value: 10.,
+    label: 'Number of uncertainty runs'
+  }
+  params.burn_in_runs = {
+    type: 'number',
+    value: 0,
+    label: 'Number of burn-in runs'
+  }
+  params.search_width = {
+    type: 'number',
+    value: .08,
+    label: 'Relative search width'
+  }
+  params.pickle_uncertainty = {
+    type: 'drop_down',
+    options: ['No saving or loading', 'Load', 'Save'],
+  }
+  params.pickle_uncertainty.value = params.pickle_uncertainty.options[0]
+
+  const uncertaintyKeys = ['uncertainty_runs', 'burn_in_runs',
+    'search_width', 'pickle_uncertainty']
+  for (let k of uncertaintyKeys) {
+    paramGroups[4].keys.push(k)
+  }
+
+  for (let [key, value] of _.entries(params)) {
+    if (!value.label) {
+      value.label = key
+    }
+  }
+  console.log('params', params)
+
+  function find_scenario_string_from_number (scenario) {
     if (scenario === null) {
-        return 'baseline'
+      return 'baseline'
     } else {
-        return `scenario_${scenario}`
+      return `scenario_${scenario}`
     }
-}
+  }
 
-export default {
+  export default {
     name: 'experiments',
     data() {
-        return {
-            inputSets,
-            booleans,
-            groups,
-            drop_downs,
-            raw_outputs,
-            selectedGroup: groups[0]
-        }
+      return {
+        paramGroups,
+        params,
+        isRunning: false,
+        consoleLines: []
+      }
+    },
+    created () {
+      this.checkRun()
     },
     methods: {
-        getName(key) {
-            if (key in booleanName) {
-                return booleanName[key]
+      checkRun () {
+        rpc
+          .rpcRun(
+            'public_check_autumn_run')
+          .then((res) => {
+            console.log('>> Home.checkRun', res.data.is_running, res.data.console)
+            if (res.data.console) {
+              this.$data.consoleLines = res.data.console
+            }
+            if (res.data.is_running) {
+              this.$data.isRunning = true
+              setTimeout(() => { this.checkRun() }, 2000)
             } else {
-                return key
+              this.$data.isRunning = false
             }
-        },
-        selectGroup (group) {
-            this.$data.selectedGroup = group
-        },
-        run() {
-            let booleans = this.$data.booleans
-            let raw_outputs = this.$data.raw_outputs
-
-            let guiOutputs = {
-                scenarios_to_run: [null],
-                scenario_names_to_run: ['baseline']
-            }
-            for (let key of keys) {
-                if (_.includes(key, 'scenario_')) {
-                    if (booleans[key]) {
-                        let i = parseInt(key.substr(9, 2))
-                        guiOutputs.scenarios_to_run.push(i)
-                        guiOutputs.scenario_names_to_run.push(find_scenario_string_from_number(i))
-                    }
-                } else {
-                    guiOutputs[key] = booleans[key]
-                }
-            }
-
-            let organ_stratification_keys = {
-                'Pos / Neg / Extra': 3,
-                'Pos / Neg': 2,
-                'Unstratified': 0
-            }
-            let strain_stratification_keys = {
-                'Single strain': 0.286,
-                'DS / MDR': 2,
-                'DS / MDR / XDR': 3
-            }
-
-            _.each(raw_outputs, (value, option) => {
-                if (option == 'fitting_method') {
-                    guiOutputs[option] = parseInt(_.last(value))
-                } else if (option == 'n_organs') {
-                    guiOutputs[option] = organ_stratification_keys[value]
-                } else if (option == 'n_strains') {
-                    guiOutputs[option] = strain_stratification_keys[value]
-                } else {
-                    guiOutputs[option] = value
-                }
-            })
-
-            console.log('>> Home.run', guiOutputs)
-            rpc
-                .rpcRun(
-                    'public_run_autumn', guiOutputs)
-                .then((res) => {
-                    console.log('>> Home.run res', res)
-                })
+          })
+      },
+      run() {
+        let organ_stratification_keys = {
+          'Pos / Neg / Extra': 3,
+          'Pos / Neg': 2,
+          'Unstratified': 0
         }
+        let strain_stratification_keys = {
+          'Single strain': 0.286,
+          'DS / MDR': 2,
+          'DS / MDR / XDR': 3
+        }
+
+        let params = this.$data.params
+        let guiOutputs = {
+          scenarios_to_run: [null],
+          scenario_names_to_run: ['baseline']
+        }
+        for (let [key, value] of _.entries(params)) {
+          if (_.includes(key, 'scenario_')) {
+            if (value.type == 'boolean') {
+              if (value.value) {
+                console.log('scenario')
+                let i = parseInt(key.substr(9, 2))
+                guiOutputs.scenarios_to_run.push(i)
+                guiOutputs.scenario_names_to_run.push(find_scenario_string_from_number(i))
+              }
+            }
+          } else if (key == 'fitting_method') {
+            guiOutputs[key] = parseInt(_.last(value.value))
+          } else if (key == 'n_organs') {
+            guiOutputs[key] = organ_stratification_keys[value.value]
+          } else if (key == 'n_strains') {
+            guiOutputs[key] = strain_stratification_keys[value.value]
+          } else {
+            guiOutputs[key] = value.value
+          }
+        }
+
+        console.log('>> Home.run', guiOutputs)
+        this.$data.isRunning = true
+        rpc
+          .rpcRun(
+            'public_run_autumn', guiOutputs)
+          .then((res) => {
+            console.log('>> Home.run res', res)
+            if (!res.data.success) {
+              this.$data.consoleLines.push('Error: model crashed')
+            }
+          })
+          .catch((res) => {
+            this.$data.isRunning = false
+          })
+
+        this.$data.consoleLines = []
+        this.checkRun()
+      }
     }
-}
+  }
 
 </script>
 

@@ -1,32 +1,33 @@
 import axios from 'axios'
 import _ from 'lodash'
 import config from '../config'
+import auth from '../modules/auth'
+/**
+ * rpc module provides a clean rpc interface for JSON-based
+ * api with the server
+ */
 
-// really important for using with passport.js 
+// really important for using with passport.js
 // https://stackoverflow.com/questions/40941118/axios-wont-send-cookie-ajax-xhrfields-does-just-fine
+
 axios.defaults.withCredentials = true
 
 export default {
-  rpcRun (...args) {
-    const n = args.length
-    const payload = {
-      name: args[0],
-      args: _.takeRight(args, n - 1)
-    }
-    console.log('>> rpc.rpcRun', args)
-    return axios.post(`${config.api}/rpc-run`, payload)
+
+  rpcRun (name, ...args) {
+    console.log('>> rpc.rpcRun', name, args)
+    return axios.post(`${config.apiUrl}/api/rpc-run`, {name, args})
   },
 
-  rpcUpload (name, inputEventTarget, ...args) {
-    let files = inputEventTarget.files
+  rpcUpload (name, files, ...args) {
     let formData = new FormData()
     formData.append('name', name)
     formData.append('args', JSON.stringify(args))
-    _.each(files, file => {
-      formData.append('uploadFiles', file, file.name)
+    _.each(files, f => {
+      formData.append('uploadFiles', f, f.name)
     })
-    console.log('>> rpcUpoad ', name, args, _.map(files, 'name'))
-    return axios.post(`${config.api}/rpc-upload`, formData)
+    console.log('>> rpc.rpcUpoad', name, args, _.map(files, 'name'))
+    return axios.post(`${config.apiUrl}/api/rpc-upload`, formData)
   }
 
 }

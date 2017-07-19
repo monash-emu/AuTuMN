@@ -607,10 +607,9 @@ class ModelRunner:
         return epi_outputs
 
     def find_population_fractions(self, stratifications=[]):
-
         """
-        Find the proportion of the population in various stratifications.
-        The stratifications must apply to the entire population, so not to be used for strains, etc.
+        Find the proportion of the population in various strata. The stratifications must apply to the entire
+        population, so this method should not be used for strains, health systems, etc.
         """
 
         for scenario in self.model_dict:
@@ -622,7 +621,6 @@ class ModelRunner:
                                                         self.epi_outputs[scenario]['population'])
 
     def find_cost_outputs(self, scenario_name):
-
         """
         Master method to call methods to find and update costs below.
 
@@ -635,9 +633,8 @@ class ModelRunner:
         self.cost_outputs[scenario_name].update(self.find_adjusted_costs(scenario_name))
 
     def find_raw_cost_outputs(self, scenario_name):
-
         """
-        Add cost dictionaries to cost_outputs attribute.
+        Find cost dictionaries to add to cost_outputs attribute.
         """
 
         cost_outputs = {'times': self.model_dict[scenario_name].cost_times}
@@ -647,7 +644,6 @@ class ModelRunner:
         return cost_outputs
 
     def find_costs_all_programs(self, scenario_name):
-
         """
         Sum costs across all programs and populate to cost_outputs dictionary for each scenario.
         """
@@ -655,26 +651,26 @@ class ModelRunner:
         costs_all_programs \
             = [0.] * len(self.cost_outputs[scenario_name]['raw_cost_' + self.interventions_to_cost[
             tool_kit.find_scenario_number_from_string(scenario_name)][0]])
-        for i in self.interventions_to_cost[tool_kit.find_scenario_number_from_string(scenario_name)]:
+        for intervention in self.interventions_to_cost[tool_kit.find_scenario_number_from_string(scenario_name)]:
             costs_all_programs \
-                = elementwise_list_addition(self.cost_outputs[scenario_name]['raw_cost_' + i], costs_all_programs)
+                = elementwise_list_addition(self.cost_outputs[scenario_name]['raw_cost_' + intervention],
+                                            costs_all_programs)
         return costs_all_programs
 
     def find_adjusted_costs(self, scenario_name):
-
         """
-        Find costs adjusted for inflation and discounting.
+        Find costs adjusted for inflation, discounting and both.
 
         Args:
             scenario_name: Scenario being costed
         """
 
-        # Get some preliminary parameters
+        # get some preliminary parameters
         year_current = self.inputs.model_constants['recent_time']
         current_cpi = self.inputs.scaleup_fns[None]['econ_cpi'](year_current)
         discount_rate = self.inputs.model_constants['econ_discount_rate']
 
-        # Loop over interventions to be costed and cost types to calculate costs
+        # loop over interventions to be costed and cost types
         cost_outputs = {}
         for intervention in self.interventions_to_cost[tool_kit.find_scenario_number_from_string(scenario_name)] \
                 + ['all_programs']:
@@ -682,18 +678,13 @@ class ModelRunner:
                 cost_outputs[cost_type + '_cost_' + intervention] = []
                 for t, time in enumerate(self.cost_outputs[scenario_name]['times']):
                     cost_outputs[cost_type + '_cost_' + intervention].append(
-                        autumn.economics.get_adjusted_cost(self.cost_outputs[scenario_name]['raw_cost_'
-                                                                                            + intervention][t],
-                                                           cost_type,
-                                                           current_cpi,
-                                                           self.inputs.scaleup_fns[None]['econ_cpi'](time),
-                                                           discount_rate,
-                                                           max(0., (time - year_current))))
-
+                        autumn.economics.get_adjusted_cost(
+                            self.cost_outputs[scenario_name]['raw_cost_' + intervention][t], cost_type, current_cpi,
+                            self.inputs.scaleup_fns[None]['econ_cpi'](time), discount_rate,
+                            max(0., (time - year_current))))
         return cost_outputs
 
     def find_uncertainty_centiles(self, full_uncertainty_outputs):
-
         """
         Find percentiles from uncertainty dictionaries.
 
@@ -703,25 +694,17 @@ class ModelRunner:
 
         uncertainty_centiles = {}
         self.accepted_no_burn_in_indices = [i for i in self.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
-
-        # Loop through scenarios and outputs
         for scenario in full_uncertainty_outputs:
             uncertainty_centiles[scenario] = {}
             for output in full_uncertainty_outputs[scenario]:
                 if output != 'times':
-
-                    # To deal with the fact that we are currently saving all baseline runs but only accepted scenarios:
-                    if scenario == 'uncertainty_baseline':
-                        matrix_to_analyse = full_uncertainty_outputs[scenario][output][
-                                            self.accepted_no_burn_in_indices, :]
-                    else:
+                    if scenario == 'uncertainty_baseline':  # select the baseline runs for analysis
+                        matrix_to_analyse \
+                            = full_uncertainty_outputs[scenario][output][self.accepted_no_burn_in_indices, :]
+                    else:  # use all runs for scenarios (as we only save those that were accepted)
                         matrix_to_analyse = full_uncertainty_outputs[scenario][output]
-
-                    # Find the actual centiles
                     uncertainty_centiles[scenario][output] \
                         = numpy.percentile(matrix_to_analyse, self.percentiles, axis=0)
-
-        # Return result to make usable in other situations
         return uncertainty_centiles
 
     ###########################

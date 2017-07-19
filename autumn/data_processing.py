@@ -4,9 +4,6 @@ import copy
 import tool_kit
 from curve import scale_up_function, freeze_curve
 from Tkinter import *
-import time
-import eventlet
-from flask_socketio import emit
 
 
 def make_constant_function(value):
@@ -42,7 +39,7 @@ def find_latest_value_from_year_dict(dictionary, ceiling):
 
 class Inputs:
 
-    def __init__(self, gui_inputs, runtime_outputs, js_gui=False):
+    def __init__(self, gui_inputs, runtime_outputs, js_gui=None):
 
         # GUI inputs
         self.gui_inputs = gui_inputs
@@ -89,7 +86,7 @@ class Inputs:
         self.mode = 'uncertainty'
         self.js_gui = js_gui
         if self.js_gui:
-            eventlet.monkey_patch()
+            self.js_gui('init')
         self.plot_count = 0
         self.emit_delay = .1
         self.treatment_outcome_types = []
@@ -1170,16 +1167,14 @@ class Inputs:
 
         return keys_of_sheets_to_read
 
-    def add_comment_to_gui_window(self, comment, target='console'):
+    def add_comment_to_gui_window(self, comment):
 
         """
         Output message to either JavaScript or Tkinter GUI.
         """
 
         if self.js_gui:
-            # emit(target, {"message": comment})
-            # time.sleep(self.emit_delay)
-            print "Emitting:", comment
+            self.js_gui('console', {"message":comment})
         else:
             self.runtime_outputs.insert(END, comment + '\n')
             self.runtime_outputs.see(END)

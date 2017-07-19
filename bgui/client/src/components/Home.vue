@@ -1,89 +1,122 @@
 <template>
-    <div class="container">
-        <div class="row">
+  <div style=" padding: 1em">
+    <md-layout md-column>
 
-            <nav
-                style="margin-top: 1em"
-                class="drawer col-md-4 col-lg-2">
-                <a  href="#"
-                    v-for="group in groups"
-                    @click="selectGroup(group)">
-                    <span v-if="group == selectedGroup">
-                        =&gt;{{group}}
-                    </span>
-                    <span v-else>{{group}}</span>
-                </a>
-                <button @click="run()">
-                    Run
-                </button>
-            </nav>
-
-
-            <div class="col-sm-9 col-md-9 col-lg-9">
-                <h2>{{selectedGroup}}</h2>
-                <table
-                    v-for="(inputSet, i) in inputSets"
-                    v-if="groups[i] == selectedGroup"
-                    class="left-margin">
-                    <tr v-for="key in inputSet">
-
-                        <td v-if="key in booleans">
-                            <div class="input-group">
-                                <input
-                                    type="checkbox"
-                                    tabindex="0"
-                                    v-bind:id="key"
-                                    v-bind:value="getName(key)"
-                                    v-model="booleans[key]">
-                                <label v-bind:for="key">
-                                    {{ getName(key) }}
-                                </label>
-                            </div>
-                        </td>
-
-                        <td v-else-if="key in drop_downs">
-                            <select v-model="raw_outputs[key]">
-                                <option
-                                    v-for="option in drop_downs[key]"
-                                    v-bind:value="option">
-                                    {{option}}
-                                </option>
-                            </select>
-                        </td>
-
-                        <td v-else>
-                            <input
-                                type="number"
-                                step="any"
-                                v-model="raw_outputs[key]">
-                        </td>
-
-                    </tr>
-                </table>
-            </div>
+      <div style="text-align: center;">
+        <br>
+        <div class="md-display-2">
+          Model Parameters
         </div>
-    </div>
+        <br>
+        <br>
+      </div>
+
+      <md-layout md-row>
+
+        <md-whiteframe style="width: 50%; height: calc(100vh - 230px); overflow: auto">
+          <md-tabs>
+            <md-tab
+                v-for="(group, i) in groups"
+                :key="i"
+                :id="group"
+                :md-label="group">
+              <div>
+                <div style="width: 18em;">
+                  <md-layout
+                      md-column
+                      v-for="(key, i) in inputSets[i]"
+                      :key="i">
+
+                    <div v-if="key in booleans">
+                      <md-checkbox
+                          type="checkbox"
+                          tabindex="0"
+                          v-bind:id="key"
+                          v-bind:value="getName(key)"
+                          v-model="booleans[key]">
+                        {{ getName(key) }}
+                      </md-checkbox>
+                    </div>
+
+                    <div v-else-if="key in drop_downs">
+                      <md-input-container>
+                        <label>{{ getName(key) }}</label>
+                        <md-select
+                            v-model="raw_outputs[key]">
+                          <md-option
+                              v-for="(option, i) in drop_downs[key]"
+                              v-bind:value="option"
+                              :key="i">
+                            {{option}}
+                          </md-option>
+                        </md-select>
+                      </md-input-container>
+                    </div>
+
+                    <div v-else>
+                      <md-input-container>
+                        <label>{{ getName(key) }}</label>
+                        <md-input
+                            type="number"
+                            step="any"
+                            v-model="raw_outputs[key]">
+                        </md-input>
+
+                      </md-input-container>
+                    </div>
+
+                  </md-layout>
+                </div>
+              </div>
+            </md-tab>
+          </md-tabs>
+        </md-whiteframe>
+
+        <md-whiteframe style="padding: 1em; width: 50%; height: calc(100vh - 230px); overflow: auto">
+          <md-layout
+              md-row
+              md-align="center"
+              md-vertical-align="center">
+            <md-button
+                class="md-raised"
+                :disabled="isRunning"
+                @click="run()">
+              Run simulation
+            </md-button>
+          </md-layout>
+          <md-layout>
+            <ul>
+              <li v-for="line in consoleLines">
+                {{ line }}
+              </li>
+            </ul>
+          </md-layout>
+          <md-layout style="padding-left: 2em;">
+            <md-spinner
+                :md-size="30"
+                md-indeterminate
+                v-if="isRunning">
+            </md-spinner>
+          </md-layout>
+        </md-whiteframe>
+      </md-layout>
+    </md-layout>
+  </div>
 </template>
 
 <!-- Add 'scoped' attribute to limit CSS to this component only -->
 <style scoped>
-.left-margin {
-    margin-left: 10px
-}
-.selected-group {
-    background-color: lightblue;
-}
 </style>
 
 <script>
-import axios from 'axios'
-import auth from '../modules/auth'
-import config from '../config'
-import util from '../modules/util'
-import rpc from '../modules/rpc'
-import _ from 'lodash'
+  import axios from 'axios'
+  import auth from '../modules/auth'
+  import config from '../config'
+  import util from '../modules/util'
+  import rpc from '../modules/rpc'
+  import _ from 'lodash'
 
-const keys = [
+  const keys = [
     'output_flow_diagram',
     'output_compartment_populations',
     'output_riskgroup_fractions',
@@ -116,10 +149,11 @@ const keys = [
     'is_vary_detection_by_organ',
     'is_timevariant_organs',
     'is_timevariant_contactrate',
-    'is_vary_force_infection_by_riskgroup'
-]
+    'is_vary_force_infection_by_riskgroup',
+    'is_treatment_history'
+  ]
 
-const booleanName = {
+  const booleanName = {
     'output_uncertainty': 'Run uncertainty',
     'adaptive_uncertainty': 'Adaptive search',
     'output_spreadsheets': 'Write to spreadsheets',
@@ -155,9 +189,9 @@ const booleanName = {
     'n_strains': 'Number of strains',
     'is_timevariant_contactrate': 'Time-variant contact rate',
     'is_vary_force_infection_by_riskgroup': 'Heterogeneous mixing'
-}
+  }
 
-let groups = [
+  let groups = [
     'Model running',
     'Model Stratifications',
     'Elaborations',
@@ -165,165 +199,194 @@ let groups = [
     'Uncertainty',
     'Plotting',
     'MS Office outputs',
-]
+  ]
 
-_.each(_.range(1, 16), i => {
+  _.each(_.range(1, 16), i => {
     keys.push(`scenario_${i}`)
-})
+  })
 
-let inputSets = _.map(_.range(7), i => [])
-_.each(keys, key => {
+  let inputSets = _.map(_.range(7), i => [])
+  _.each(keys, key => {
     const name = booleanName[key]
     if (_.includes(name, 'Plot') || _.includes(name, 'Draw')) {
-        inputSets[5].push(key)
+      inputSets[5].push(key)
     } else if (_.includes(name, 'uncertainty') || _.includes(key, 'uncertainty')) {
-        inputSets[4].push(key)
+      inputSets[4].push(key)
     } else if (_.includes(key, 'is_')) {
-        inputSets[2].push(key)
+      inputSets[2].push(key)
     } else if (_.includes(key, 'riskgroup_') || _.includes(key, 'n_')) {
-        inputSets[1].push(key)
+      inputSets[1].push(key)
     } else if (_.includes(key, 'scenario_')) {
-        inputSets[3].push(key)
+      inputSets[3].push(key)
     } else {
-        inputSets[6].push(key)
+      inputSets[6].push(key)
     }
-})
+  })
 
-let booleans = {}
-_.each(keys, key => { booleans[key] = false })
-booleans.adaptive_uncertainty = true
-booleans.is_amplification = true
-booleans.is_misassignment = true
-booleans.is_vary_detection_by_organ = true
-booleans.output_gtb_plots = true
+  let booleans = {}
+  _.each(keys, key => {
+    booleans[key] = false
+  })
+  booleans.adaptive_uncertainty = true
+  booleans.is_amplification = true
+  booleans.is_misassignment = true
+  booleans.is_vary_detection_by_organ = true
+  booleans.output_gtb_plots = true
 
-let raw_outputs = {}
-let drop_downs = {}
+  let raw_outputs = {}
+  let drop_downs = {}
 
-// Model running options
-drop_downs.country = [
+  // Model running options
+  drop_downs.country = [
     'Afghanistan', 'Albania', 'Angola', 'Argentina', 'Armenia',
     'Australia', 'Austria', 'Azerbaijan', 'Bahrain', 'Bangladesh',
     'Belarus', 'Belgium', 'Benin', 'Bhutan', 'Botswana', 'Brazil',
     'Bulgaria', 'Burundi', 'Cameroon', 'Chad', 'Chile', 'Croatia',
     'Djibouti', 'Ecuador', 'Estonia', 'Ethiopia', 'Fiji', 'Gabon',
     'Georgia', 'Ghana', 'Guatemala', 'Guinea', 'Philippines', 'Romania']
-raw_outputs.country = drop_downs.country[4]
-drop_downs.integration_method = ['Runge Kutta', 'Explicit']
-raw_outputs.integration_method = drop_downs.integration_method[1]
-drop_downs.fitting_method = ['Method 1', 'Method 2', 'Method 3', 'Method 4', 'Method 5']
-raw_outputs.fitting_method = drop_downs.fitting_method[4]
-raw_outputs.default_smoothness = 1.
-raw_outputs.time_step = 5.
-const runningKeys = ['country', 'integration_method', 'fitting_method',
-'default_smoothness', 'time_step']
-_.each(runningKeys, k => inputSets[0].push(k))
+  raw_outputs.country = drop_downs.country[4]
+  drop_downs.integration_method = ['Runge Kutta', 'Explicit']
+  raw_outputs.integration_method = drop_downs.integration_method[1]
+  drop_downs.fitting_method = ['Method 1', 'Method 2', 'Method 3', 'Method 4', 'Method 5']
+  raw_outputs.fitting_method = drop_downs.fitting_method[4]
+  raw_outputs.default_smoothness = 1.
+  raw_outputs.time_step = 5.
+  const runningKeys = ['country', 'integration_method', 'fitting_method',
+    'default_smoothness', 'time_step']
+  _.each(runningKeys, k => inputSets[0].push(k))
 
-// Model stratifications options
-drop_downs.n_organs = ['Pos / Neg / Extra', 'Pos / Neg', 'Unstratified']
-raw_outputs.n_organs = drop_downs.n_organs[0]
-drop_downs.n_strains = ['Single strain', 'DS / MDR', 'DS / MDR / XDR']
-raw_outputs.n_strains = drop_downs.n_strains[1]
-_.each(['n_organs', 'n_strains'], k => inputSets[1].push(k))
+  // Model stratifications options
+  drop_downs.n_organs = ['Pos / Neg / Extra', 'Pos / Neg', 'Unstratified']
+  raw_outputs.n_organs = drop_downs.n_organs[0]
+  drop_downs.n_strains = ['Single strain', 'DS / MDR', 'DS / MDR / XDR']
+  raw_outputs.n_strains = drop_downs.n_strains[1]
+  _.each(['n_organs', 'n_strains'], k => inputSets[1].push(k))
 
-// Uncertainty options
-const uncertainty_numeric_list = {
+  // Uncertainty options
+  const uncertainty_numeric_list = {
     uncertainty_runs: ['Number of uncertainty runs', 10],
     burn_in_runs: ['Number of burn-in runs', 0],
     search_width: ['Relative search width', .08]
-}
-drop_downs.pickle_uncertainty = ['No saving or loading', 'Load', 'Save']
-raw_outputs.pickle_uncertainty = 'No saving or loading'
-_.each(uncertainty_numeric_list, (v, k) => {
+  }
+  drop_downs.pickle_uncertainty = ['No saving or loading', 'Load', 'Save']
+  raw_outputs.pickle_uncertainty = 'No saving or loading'
+  _.each(uncertainty_numeric_list, (v, k) => {
     raw_outputs[k] = v[1]
     inputSets[4].push(k)
-})
-inputSets[4].push('pickle_uncertainty')
+  })
+  inputSets[4].push('pickle_uncertainty')
 
-function find_scenario_string_from_number(scenario) {
+  function find_scenario_string_from_number (scenario) {
     if (scenario === null) {
-        return 'baseline'
+      return 'baseline'
     } else {
-        return `scenario_${scenario}`
+      return `scenario_${scenario}`
     }
-}
+  }
 
-export default {
+  export default {
     name: 'experiments',
     data() {
-        return {
-            inputSets,
-            booleans,
-            groups,
-            drop_downs,
-            raw_outputs,
-            selectedGroup: groups[0]
-        }
+      return {
+        inputSets,
+        booleans,
+        groups,
+        drop_downs,
+        raw_outputs,
+        selectedGroup: groups[0],
+        isRunning: false,
+        consoleLines: []
+      }
+    },
+    created () {
+      this.checkRun()
     },
     methods: {
-        getName(key) {
-            if (key in booleanName) {
-                return booleanName[key]
-            } else {
-                return key
-            }
-        },
-        selectGroup (group) {
-            this.$data.selectedGroup = group
-        },
-        run() {
-            let booleans = this.$data.booleans
-            let raw_outputs = this.$data.raw_outputs
-
-            let guiOutputs = {
-                scenarios_to_run: [null],
-                scenario_names_to_run: ['baseline']
-            }
-            for (let key of keys) {
-                if (_.includes(key, 'scenario_')) {
-                    if (booleans[key]) {
-                        let i = parseInt(key.substr(9, 2))
-                        guiOutputs.scenarios_to_run.push(i)
-                        guiOutputs.scenario_names_to_run.push(find_scenario_string_from_number(i))
-                    }
-                } else {
-                    guiOutputs[key] = booleans[key]
-                }
-            }
-
-            let organ_stratification_keys = {
-                'Pos / Neg / Extra': 3,
-                'Pos / Neg': 2,
-                'Unstratified': 0
-            }
-            let strain_stratification_keys = {
-                'Single strain': 0.286,
-                'DS / MDR': 2,
-                'DS / MDR / XDR': 3
-            }
-
-            _.each(raw_outputs, (value, option) => {
-                if (option == 'fitting_method') {
-                    guiOutputs[option] = parseInt(_.last(value))
-                } else if (option == 'n_organs') {
-                    guiOutputs[option] = organ_stratification_keys[value]
-                } else if (option == 'n_strains') {
-                    guiOutputs[option] = strain_stratification_keys[value]
-                } else {
-                    guiOutputs[option] = value
-                }
-            })
-
-            console.log('>> Home.run', guiOutputs)
-            rpc
-                .rpcRun(
-                    'public_run_autumn', guiOutputs)
-                .then((res) => {
-                    console.log('>> Home.run res', res)
-                })
+      getName(key) {
+        if (key in booleanName) {
+          return booleanName[key]
+        } else {
+          return key
         }
+      },
+      selectGroup (group) {
+        this.$data.selectedGroup = group
+      },
+      checkRun () {
+        rpc
+          .rpcRun(
+            'public_check_autumn_run')
+          .then((res) => {
+            console.log('>> Home.checkRun', res.data.is_running, res.data.console)
+            if (res.data.console) {
+              this.$data.consoleLines = res.data.console
+            }
+            if (res.data.is_running) {
+              this.$data.isRunning = true
+              setTimeout(() => { this.checkRun() }, 2000)
+            } else {
+              this.$data.isRunning = false
+            }
+          })
+      },
+      run() {
+        console.log('> Home.run start')
+        let booleans = this.$data.booleans
+        let raw_outputs = this.$data.raw_outputs
+
+        let guiOutputs = {
+          scenarios_to_run: [null],
+          scenario_names_to_run: ['baseline']
+        }
+        for (let key of keys) {
+          if (_.includes(key, 'scenario_')) {
+            if (booleans[key]) {
+              let i = parseInt(key.substr(9, 2))
+              guiOutputs.scenarios_to_run.push(i)
+              guiOutputs.scenario_names_to_run.push(find_scenario_string_from_number(i))
+            }
+          } else {
+            guiOutputs[key] = booleans[key]
+          }
+        }
+
+        let organ_stratification_keys = {
+          'Pos / Neg / Extra': 3,
+          'Pos / Neg': 2,
+          'Unstratified': 0
+        }
+        let strain_stratification_keys = {
+          'Single strain': 0.286,
+          'DS / MDR': 2,
+          'DS / MDR / XDR': 3
+        }
+
+        _.each(raw_outputs, (value, option) => {
+          if (option == 'fitting_method') {
+            guiOutputs[option] = parseInt(_.last(value))
+          } else if (option == 'n_organs') {
+            guiOutputs[option] = organ_stratification_keys[value]
+          } else if (option == 'n_strains') {
+            guiOutputs[option] = strain_stratification_keys[value]
+          } else {
+            guiOutputs[option] = value
+          }
+        })
+
+        console.log('>> Home.run', guiOutputs)
+
+        rpc
+          .rpcRun(
+            'public_run_autumn', guiOutputs)
+          .then((res) => {
+            console.log('>> Home.run res', res)
+          })
+
+        this.$data.consoleLines = []
+        this.checkRun()
+      }
     }
-}
+  }
 
 </script>
 

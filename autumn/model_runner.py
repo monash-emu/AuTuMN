@@ -14,9 +14,6 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import outputs
 import autumn.economics
 import itertools
-import time
-import eventlet
-from flask_socketio import emit
 from numpy import isfinite
 
 
@@ -152,7 +149,7 @@ def is_parameter_value_valid(parameter):
 
 class ModelRunner:
 
-    def __init__(self, gui_inputs, runtime_outputs, figure_frame, js_gui=False):
+    def __init__(self, gui_inputs, runtime_outputs, figure_frame, js_gui=None):
         """
         Instantiation method for model runner - currently including many attributes that should be set externally, e.g.
         in the GUI(s).
@@ -242,8 +239,7 @@ class ModelRunner:
         self.plot_count = 0
         self.js_gui = js_gui
         if self.js_gui:
-            pass
-            # eventlet.monkey_patch()
+            self.js_gui('init')
 
     ###############################################
     ### Master methods to run all other methods ###
@@ -1346,13 +1342,10 @@ class ModelRunner:
     ### GUI-related methods ###
     ###########################
 
-    def add_comment_to_gui_window(self, comment, target='console'):
+    def add_comment_to_gui_window(self, comment):
 
         if self.js_gui:
-            # emit(target, {"message": comment})
-            # time.sleep(self.emit_delay)
-
-            print "Emitting:", comment
+            self.js_gui('console', {"message": comment})
 
         else:
             self.runtime_outputs.insert(END, comment + '\n')
@@ -1441,6 +1434,22 @@ class ModelRunner:
             for p, param in enumerate(self.all_parameters_tried)]
         names = [tool_kit.find_title_from_dictionary(param) for p, param in
                  enumerate(self.all_parameters_tried)]
-        # emit('uncertainty_graph', {"data": accepted_params, "names": names, "count": self.plot_count})
+        self.js_gui('uncertainty_graph', {"data": accepted_params, "names": names, "count": self.plot_count})
         self.plot_count += 1
+
+
+# # moved js_gui stuff here
+# import time
+# from flask_socketio import emit
+# import eventlet
+#
+# def js_gui_model_output(output_type, data):
+#     if output_type == "init":
+#         eventlet.monkey_patch()
+#     elif output_type == "console":
+#         emit('console', data)
+#         time.sleep(self.emit_delay)
+#         print(">> js_gui websocket emitting:", data["message"])
+#     elif output_type == "uncertainty_graph":
+#         print(">> js_gui websocket uncertainty graph:", data)
 

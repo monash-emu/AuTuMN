@@ -1,59 +1,52 @@
 <template>
-  <div class="container">
-    <div class="row">
-      <div 
-          class="
-            col-sm-6 col-sm-offset-3 
-            col-md-6 col-md-3-offset 
-            col-lg-4 col-lg-offset-4"
-          style="
-            padding-top: 4em">
-        <form class="login-screen"
-              v-on:submit.prevent="submit">
-          <h2>{{ title }}</h2>
-          <input 
-              type='text'
-              v-model='firstName'
-              placeholder='First name'>
-          </input>
-          <br>
-          <input 
-              type='text'
-              v-model='lastName'
-              placeholder='Last name'>
-          </input>
-          <br>
-          <input 
-              type='text'
-              v-model='email'
-              placeholder='E-mail address'>
-          </input>
-          <br>
-          <input 
-              type='password'
-              v-model='password'
-              placeholder='New Password'>
-          </input>
-          <br>
-          <input 
-              type='password'
-              v-model='passwordv'
-              placeholder='New Password Confirm'>
-          </input>
-          <br>
-          <button>
-            Update
-          </button>
-          <div v-if="errors.length" class="card error">
-            <ul>
-              <li v-for="err in errors">
-                {{ err }}
-              </li>
-            </ul>
-          </div>
-        </form>
+  <div style="padding: 1em">
+    <h2 class="md-display-2">
+      {{ title }}
+    </h2>
+    <form v-on:submit.prevent="submit">
+      <md-input-container>
+        <label>User name</label>
+        <md-input
+            type='text'
+            v-model='name'
+            placeholder='User name'>
+        </md-input>
+      </md-input-container>
+      <md-input-container>
+        <label>E-mail address</label>
+        <md-input
+            type='text'
+            v-model='email'
+            placeholder='E-mail address'>
+        </md-input>
+      </md-input-container>
+      <md-input-container>
+        <label>New Password</label>
+        <md-input
+            type='password'
+            v-model='password'
+            placeholder='New Password'>
+        </md-input>
+      </md-input-container>
+      <md-input-container>
+        <label>New Password</label>
+        <md-input
+            type='password'
+            v-model='passwordv'
+            placeholder='Confirm Password'>
+        </md-input>
+      </md-input-container>
+      <md-button type="submit" class="md-raised md-primary">
+        Update
+      </md-button>
+      <div v-if="errors.length" class="card error">
+        <ul>
+          <li v-for="err in errors">
+            {{ err }}
+          </li>
+        </ul>
       </div>
-    </div>
+    </form>
   </div>
 </template>
 
@@ -62,37 +55,39 @@ import axios from 'axios'
 import Router from 'vue-router'
 import auth from '../modules/auth'
 import _ from 'lodash'
+import util from '../modules/util'
 
 export default {
   name: 'EditUser',
   data() {
     let payload = _.assign({}, auth.user)
     _.assign(payload, {
-      title: 'Edit User Details',
+      title: 'Edit Your Details',
       password: '',
       passwordv: '',
       errors: []
     })
+    console.log('>> EditUser.data', payload)
     return payload
   },
   methods: {
     submit(e) {
-      let credentials = {}
-      let keys = ['id', 'firstName', 'lastName', 'email', 'password', 'passwordv']
-      _.each(keys, key => {
+      let payload = {}
+      const keys = ['name', 'email', 'password', 'passwordv']
+      for (let key of keys) {
         if (this.$data[key]) {
-          credentials[key] = this.$data[key]
+          payload[key] = this.$data[key]
         }
-      })
-      console.log('>> EditUser.submit', credentials)
+      }
+      console.log('>> EditUser.submit', util.jstr(payload))
       auth
-        .update(credentials)
+        .update(payload)
         .then((res) => {
           if (res.data.success) {
             console.log('>> Register.submit success: login')
             return auth.login({
-              username: credentials.email,
-              password: credentials.password
+              email: payload.email,
+              password: payload.password
             })
           } else {
             console.log('>> Register.submit fail', res.data)

@@ -158,10 +158,10 @@ class ModelRunner:
         in the GUI(s).
 
         Args:
-            gui_inputs: Inputs from the off-line Tkinter GUI.
-            runtime_outputs: Off-line GUI window for commenting.
-            figure_frame: Uncertainty parameter plotting window of Tkinter GUI.
-            js_gui: JavaScript GUI inputs.
+            gui_inputs: Inputs from the off-line Tkinter GUI
+            runtime_outputs: Off-line GUI window for commenting
+            figure_frame: Uncertainty parameter plotting window of Tkinter GUI
+            js_gui: JavaScript GUI inputs
         """
 
         # loading of inputs
@@ -196,21 +196,22 @@ class ModelRunner:
         self.random_start = False  # whether to start from a random point, as opposed to the manually calibrated value
 
         # Optimisation attributes
-        self.optimisation = False  # Leave True even if loading optimisation results
-        self.indicator_to_minimise = 'incidence'  # Currently must be 'incidence' or 'mortality'
-        self.annual_envelope = [112.5e6]  # Size of funding envelope in scenarios to be run
+        self.optimisation = False  # leave True even if loading optimisation results
+        self.indicator_to_minimise = 'incidence'  # currently must be 'incidence' or 'mortality'
+        self.annual_envelope = [112.5e6]  # size of funding envelope in scenarios to be run
         self.save_opti = True
-        self.load_opti = False  # Optimisation will not be run if on
-        self.total_funding = None  # Funding for entire period
+        self.load_optimisation = False  # optimisation will not be run if true
+        self.total_funding = None  # funding for entire period
         self.f_tol = {'incidence': 0.5,
-                      'mortality': 0.05}  # Stopping condition for optimisation algorithm (differs by indicator)
-        self.year_end_opti = 2035.  # Model is run until that date during optimisation
-        self.acceptable_combinations = []  # List of intervention combinations that can be considered with funding
-        self.opti_results = {}  # Store all the results that we need for optimisation
+                      'mortality': 0.05}  # stopping condition for optimisation algorithm (differs by indicator)
+        self.year_end_opti = 2035.  # model is run until that date during optimisation
+        self.acceptable_combinations = []  # list of intervention combinations that can be considered with funding
+        self.opti_results = {}  # store all the results that we need for optimisation
         self.optimised_combinations = []
         self.optimal_allocation = {}
         self.interventions_considered_for_opti \
-            = ['engage_lowquality', 'xpert', 'cxrxpertacf_prison', 'cxrxpertacf_urbanpoor', 'ipt_age0to5', 'intensive_screening']  # Interventions that must appear in optimal plan
+            = ['engage_lowquality', 'xpert', 'cxrxpertacf_prison', 'cxrxpertacf_urbanpoor', 'ipt_age0to5',
+               'intensive_screening']  # interventions that must appear in optimal plan
         self.interventions_forced_for_opti \
             = ['engage_lowquality', 'ipt_age0to5', 'intensive_screening']
 
@@ -230,12 +231,12 @@ class ModelRunner:
         self.additional_cost_types = ['inflated', 'discounted', 'discounted_inflated']
         self.cost_types = self.additional_cost_types + ['raw']
 
-        # Saving-related
-        self.attributes_to_save = ['epi_outputs', 'epi_outputs_dict', 'epi_outputs_integer_dict',
-                                   'epi_outputs_uncertainty', 'cost_outputs', 'cost_outputs_dict',
-                                   'cost_outputs_integer_dict', 'cost_outputs_uncertainty', 'accepted_indices',
-                                   'rejected_indices', 'all_parameters_tried', 'whether_accepted_list',
-                                   'acceptance_dict', 'accepted_no_burn_in_indices', 'rejection_dict', 'loglikelihoods']
+        # saving-related
+        self.attributes_to_save \
+            = ['epi_outputs', 'epi_outputs_dict', 'epi_outputs_integer_dict', 'epi_outputs_uncertainty', 'cost_outputs',
+               'cost_outputs_dict', 'cost_outputs_integer_dict', 'cost_outputs_uncertainty', 'accepted_indices',
+               'rejected_indices', 'all_parameters_tried', 'whether_accepted_list', 'acceptance_dict',
+               'accepted_no_burn_in_indices', 'rejection_dict', 'loglikelihoods']
 
         # GUI-related
         self.emit_delay = 0.1
@@ -250,84 +251,75 @@ class ModelRunner:
     ###############################################
 
     def master_runner(self):
-
         """
         Calls methods to run model with each of the three fundamental approaches.
         """
 
-        # Prepare file for saving
+        # prepare file for saving
         out_dir = 'saved_uncertainty_analyses'
         if not os.path.isdir(out_dir): os.makedirs(out_dir)
         storage_file_name = os.path.join(out_dir, 'store.pkl')
 
-        # Load a saved simulation
+        # load a saved simulation
         if self.gui_inputs['pickle_uncertainty'] == 'Load':
-            self.add_comment_to_gui_window('Results loading from previous simulation')
+            self.add_comment_to_gui_window('Loading results from previous simulation')
             loaded_data = tool_kit.pickle_load(storage_file_name)
             self.add_comment_to_gui_window('Loading finished')
-            for attribute in loaded_data:
-                setattr(self, attribute, loaded_data[attribute])
+            for attribute in loaded_data: setattr(self, attribute, loaded_data[attribute])
 
-        # Or run the manual scenarios as requested by user
+        # or run the manual scenarios as requested by user
         else:
             self.run_manual_calibration()
             if self.gui_inputs['output_uncertainty']: self.run_uncertainty()
 
-        # Save uncertainty if requested
+        # save uncertainty if requested
         if self.gui_inputs['pickle_uncertainty'] == 'Save':
             data_to_save = {}
-            for attribute in self.attributes_to_save:
-                data_to_save[attribute] = getattr(self, attribute)
+            for attribute in self.attributes_to_save: data_to_save[attribute] = getattr(self, attribute)
             tool_kit.pickle_save(data_to_save, storage_file_name)
             self.add_comment_to_gui_window('Uncertainty results saved to disc')
 
-        # Processing methods that are only required for outputs
+        # processing methods that are only required for outputs
         self.epi_outputs_uncertainty_centiles = self.find_uncertainty_centiles(self.epi_outputs_uncertainty)
         self.cost_outputs_uncertainty_centiles = self.find_uncertainty_centiles(self.cost_outputs_uncertainty)
 
-        # Master optimisation method
-        if self.optimisation and not self.load_opti:
-            self.run_optimisation()
+        # master optimisation method
+        if self.optimisation and not self.load_optimisation: self.run_optimisation()
 
-        # Prepare file for saving, save and load as requested
+        # prepare file for saving, save and load as requested
         self.opti_outputs_dir = 'saved_optimisation_analyses'
         if not os.path.isdir(self.opti_outputs_dir): os.makedirs(self.opti_outputs_dir)
         self.load_opti_results()
         self.save_opti_results()
 
-        # Notify user that model running has finished
-        self.add_comment_to_gui_window('Finished')
+        # notify user that model running has finished
+        self.add_comment_to_gui_window('Model running complete')
 
     def run_manual_calibration(self):
-
         """
         Runs the scenarios a single time, starting from baseline with parameter values as specified in spreadsheets.
         """
 
         for scenario in self.gui_inputs['scenarios_to_run']:
 
-            # Name and initialise model
+            # name and initialise model
             scenario_name = 'manual_' + tool_kit.find_scenario_string_from_number(scenario)
             self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
-            # Sort out times for scenario runs
-            if scenario is not None:
-                scenario_name = 'manual_' + tool_kit.find_scenario_string_from_number(scenario)
-                self.prepare_new_model_from_baseline('manual', scenario_name)
+            # sort out times for scenario runs
+            if scenario is not None: self.prepare_new_model_from_baseline('manual', scenario_name)
 
-            # Describe model and integrate
-            self.add_comment_to_gui_window('Running ' + scenario_name + ' conditions for '
-                                           + self.gui_inputs['country'] + ' using point estimates for parameters.')
+            # describe model and integrate
+            self.add_comment_to_gui_window('Running %s conditions for %s using point estimates for parameters.'
+                                           % (scenario_name, self.gui_inputs['country']))
             self.model_dict[scenario_name].integrate()
 
-            # Model interpretation for each scenario
+            # model interpretation for each scenario
             self.epi_outputs[scenario_name] \
-                = self.find_epi_outputs(scenario_name,
-                                        outputs_to_analyse=self.epi_outputs_to_analyse,
+                = self.find_epi_outputs(scenario_name, outputs_to_analyse=self.epi_outputs_to_analyse,
                                         stratifications=[self.model_dict[scenario_name].agegroups,
                                                          self.model_dict[scenario_name].riskgroups])
-            if len(self.model_dict[scenario_name].interventions_to_cost) > 0:
-                self.find_cost_outputs(scenario_name)
+            if len(self.model_dict[scenario_name].interventions_to_cost) > 0: self.find_cost_outputs(scenario_name)
 
         # Model interpretation that applies to baseline run only
         self.find_population_fractions(stratifications=[self.model_dict['manual_baseline'].agegroups,
@@ -1325,7 +1317,7 @@ class ModelRunner:
         Load optimisation results if attribute to self is True.
         """
 
-        if self.load_opti:
+        if self.load_optimisation:
             storage_file_name = os.path.join(self.opti_outputs_dir, 'opti_outputs.pkl')
             self.opti_results = tool_kit.pickle_load(storage_file_name)
             self.add_comment_to_gui_window('Optimisation results loaded')

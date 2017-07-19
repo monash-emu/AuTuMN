@@ -155,10 +155,10 @@ class ModelRunner:
         in the GUI(s).
 
         Args:
-            gui_inputs: Inputs from the off-line Tkinter GUI.
-            runtime_outputs: Off-line GUI window for commenting.
-            figure_frame: Uncertainty parameter plotting window of Tkinter GUI.
-            js_gui: JavaScript GUI inputs.
+            gui_inputs: Inputs from the off-line Tkinter GUI
+            runtime_outputs: Off-line GUI window for commenting
+            figure_frame: Uncertainty parameter plotting window of Tkinter GUI
+            js_gui: JavaScript GUI inputs
         """
 
         # loading of inputs
@@ -193,21 +193,22 @@ class ModelRunner:
         self.random_start = False  # whether to start from a random point, as opposed to the manually calibrated value
 
         # Optimisation attributes
-        self.optimisation = False  # Leave True even if loading optimisation results
-        self.indicator_to_minimise = 'incidence'  # Currently must be 'incidence' or 'mortality'
-        self.annual_envelope = [112.5e6]  # Size of funding envelope in scenarios to be run
+        self.optimisation = False  # leave True even if loading optimisation results
+        self.indicator_to_minimise = 'incidence'  # currently must be 'incidence' or 'mortality'
+        self.annual_envelope = [112.5e6]  # size of funding envelope in scenarios to be run
         self.save_opti = True
-        self.load_opti = False  # Optimisation will not be run if on
-        self.total_funding = None  # Funding for entire period
+        self.load_optimisation = False  # optimisation will not be run if true
+        self.total_funding = None  # funding for entire period
         self.f_tol = {'incidence': 0.5,
-                      'mortality': 0.05}  # Stopping condition for optimisation algorithm (differs by indicator)
-        self.year_end_opti = 2035.  # Model is run until that date during optimisation
-        self.acceptable_combinations = []  # List of intervention combinations that can be considered with funding
-        self.opti_results = {}  # Store all the results that we need for optimisation
+                      'mortality': 0.05}  # stopping condition for optimisation algorithm (differs by indicator)
+        self.year_end_opti = 2035.  # model is run until that date during optimisation
+        self.acceptable_combinations = []  # list of intervention combinations that can be considered with funding
+        self.opti_results = {}  # store all the results that we need for optimisation
         self.optimised_combinations = []
         self.optimal_allocation = {}
         self.interventions_considered_for_opti \
-            = ['engage_lowquality', 'xpert', 'cxrxpertacf_prison', 'cxrxpertacf_urbanpoor', 'ipt_age0to5', 'intensive_screening']  # Interventions that must appear in optimal plan
+            = ['engage_lowquality', 'xpert', 'cxrxpertacf_prison', 'cxrxpertacf_urbanpoor', 'ipt_age0to5',
+               'intensive_screening']  # interventions that must appear in optimal plan
         self.interventions_forced_for_opti \
             = ['engage_lowquality', 'ipt_age0to5', 'intensive_screening']
 
@@ -227,12 +228,12 @@ class ModelRunner:
         self.additional_cost_types = ['inflated', 'discounted', 'discounted_inflated']
         self.cost_types = self.additional_cost_types + ['raw']
 
-        # Saving-related
-        self.attributes_to_save = ['epi_outputs', 'epi_outputs_dict', 'epi_outputs_integer_dict',
-                                   'epi_outputs_uncertainty', 'cost_outputs', 'cost_outputs_dict',
-                                   'cost_outputs_integer_dict', 'cost_outputs_uncertainty', 'accepted_indices',
-                                   'rejected_indices', 'all_parameters_tried', 'whether_accepted_list',
-                                   'acceptance_dict', 'accepted_no_burn_in_indices', 'rejection_dict', 'loglikelihoods']
+        # saving-related
+        self.attributes_to_save \
+            = ['epi_outputs', 'epi_outputs_dict', 'epi_outputs_integer_dict', 'epi_outputs_uncertainty', 'cost_outputs',
+               'cost_outputs_dict', 'cost_outputs_integer_dict', 'cost_outputs_uncertainty', 'accepted_indices',
+               'rejected_indices', 'all_parameters_tried', 'whether_accepted_list', 'acceptance_dict',
+               'accepted_no_burn_in_indices', 'rejection_dict', 'loglikelihoods']
 
         # GUI-related
         self.emit_delay = 0.1
@@ -246,104 +247,94 @@ class ModelRunner:
     ###############################################
 
     def master_runner(self):
-
         """
         Calls methods to run model with each of the three fundamental approaches.
         """
 
-        # Prepare file for saving
+        # prepare file for saving
         out_dir = 'saved_uncertainty_analyses'
         if not os.path.isdir(out_dir): os.makedirs(out_dir)
         storage_file_name = os.path.join(out_dir, 'store.pkl')
 
-        # Load a saved simulation
+        # load a saved simulation
         if self.gui_inputs['pickle_uncertainty'] == 'Load':
-            self.add_comment_to_gui_window('Results loading from previous simulation')
+            self.add_comment_to_gui_window('Loading results from previous simulation')
             loaded_data = tool_kit.pickle_load(storage_file_name)
             self.add_comment_to_gui_window('Loading finished')
-            for attribute in loaded_data:
-                setattr(self, attribute, loaded_data[attribute])
+            for attribute in loaded_data: setattr(self, attribute, loaded_data[attribute])
 
-        # Or run the manual scenarios as requested by user
+        # or run the manual scenarios as requested by user
         else:
             self.run_manual_calibration()
             if self.gui_inputs['output_uncertainty']: self.run_uncertainty()
 
-        # Save uncertainty if requested
+        # save uncertainty if requested
         if self.gui_inputs['pickle_uncertainty'] == 'Save':
             data_to_save = {}
-            for attribute in self.attributes_to_save:
-                data_to_save[attribute] = getattr(self, attribute)
+            for attribute in self.attributes_to_save: data_to_save[attribute] = getattr(self, attribute)
             tool_kit.pickle_save(data_to_save, storage_file_name)
             self.add_comment_to_gui_window('Uncertainty results saved to disc')
 
-        # Processing methods that are only required for outputs
+        # processing methods that are only required for outputs
         self.epi_outputs_uncertainty_centiles = self.find_uncertainty_centiles(self.epi_outputs_uncertainty)
         self.cost_outputs_uncertainty_centiles = self.find_uncertainty_centiles(self.cost_outputs_uncertainty)
 
-        # Master optimisation method
-        if self.optimisation and not self.load_opti:
-            self.run_optimisation()
+        # master optimisation method
+        if self.optimisation and not self.load_optimisation: self.run_optimisation()
 
-        # Prepare file for saving, save and load as requested
+        # prepare file for saving, save and load as requested
         self.opti_outputs_dir = 'saved_optimisation_analyses'
         if not os.path.isdir(self.opti_outputs_dir): os.makedirs(self.opti_outputs_dir)
         self.load_opti_results()
         self.save_opti_results()
 
-        # Notify user that model running has finished
-        self.add_comment_to_gui_window('Finished')
+        # notify user that model running has finished
+        self.add_comment_to_gui_window('Model running complete')
 
     def run_manual_calibration(self):
-
         """
         Runs the scenarios a single time, starting from baseline with parameter values as specified in spreadsheets.
         """
 
         for scenario in self.gui_inputs['scenarios_to_run']:
 
-            # Name and initialise model
+            # name and initialise model
             scenario_name = 'manual_' + tool_kit.find_scenario_string_from_number(scenario)
             self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
-            # Sort out times for scenario runs
-            if scenario is not None:
-                scenario_name = 'manual_' + tool_kit.find_scenario_string_from_number(scenario)
-                self.prepare_new_model_from_baseline('manual', scenario_name)
+            # sort out times for scenario runs
+            if scenario is not None: self.prepare_new_model_from_baseline('manual', scenario_name)
 
-            # Describe model and integrate
-            self.add_comment_to_gui_window('Running ' + scenario_name + ' conditions for '
-                                           + self.gui_inputs['country'] + ' using point estimates for parameters.')
+            # describe model and integrate
+            self.add_comment_to_gui_window('Running %s conditions for %s using point estimates for parameters.'
+                                           % (scenario_name, self.gui_inputs['country']))
             self.model_dict[scenario_name].integrate()
 
-            # Model interpretation for each scenario
+            # model interpretation for each scenario
             self.epi_outputs[scenario_name] \
-                = self.find_epi_outputs(scenario_name,
-                                        outputs_to_analyse=self.epi_outputs_to_analyse,
+                = self.find_epi_outputs(scenario_name, outputs_to_analyse=self.epi_outputs_to_analyse,
                                         stratifications=[self.model_dict[scenario_name].agegroups,
                                                          self.model_dict[scenario_name].riskgroups])
-            if len(self.model_dict[scenario_name].interventions_to_cost) > 0:
-                self.find_cost_outputs(scenario_name)
+            if len(self.model_dict[scenario_name].interventions_to_cost) > 0: self.find_cost_outputs(scenario_name)
 
-        # Model interpretation that applies to baseline run only
+        # model interpretation that applies to baseline run only
         self.find_population_fractions(stratifications=[self.model_dict['manual_baseline'].agegroups,
                                                         self.model_dict['manual_baseline'].riskgroups])
 
-        # If you want some dictionaries based on the lists created above (may not be necessary)
+        # if you want some dictionaries based on the lists created above (may not be necessary)
         self.epi_outputs_dict.update(get_output_dicts_from_lists(models_to_analyse=self.model_dict,
                                                                  output_dict_of_lists=self.epi_outputs))
 
-        # If integer-based dictionaries required
+        # if integer-based dictionaries required
         self.epi_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.epi_outputs_dict))
 
-        # Same for costs
+        # same for costs
         if len(self.model_dict[scenario_name].interventions_to_cost) > 0:
-            self.cost_outputs_dict.update(get_output_dicts_from_lists(models_to_analyse=self.model_dict,
-                                                                      output_dict_of_lists=self.cost_outputs))
+            self.cost_outputs_dict.update(
+                get_output_dicts_from_lists(models_to_analyse=self.model_dict, output_dict_of_lists=self.cost_outputs))
             self.cost_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.cost_outputs_dict))
 
     def prepare_new_model_from_baseline(self, run_type, scenario_name):
-
         """
         Method to set the start time of a model and load the compartment values from the baseline run.
 
@@ -372,66 +363,61 @@ class ModelRunner:
 
         epi_outputs = {'times': self.model_dict[scenario].times}
 
-        # Unstratified outputs______________________________________________________________________________________
-        # Initialise lists
+        # unstratified outputs______________________________________________________________________________________
+        # initialise lists
         for output in outputs_to_analyse:
             epi_outputs[output] = [0.] * len(epi_outputs['times'])
             for strain in self.model_dict[scenario].strains:
                 epi_outputs[output + strain] = [0.] * len(epi_outputs['times'])
 
-        # Population
+        # population
         if 'population' in outputs_to_analyse:
             for compartment in self.model_dict[scenario].compartments:
                 epi_outputs['population'] \
                     = elementwise_list_addition(self.model_dict[scenario].get_compartment_soln(compartment),
                                                 epi_outputs['population'])
-        # Replace zeroes with small numbers for division
+
+        # replace zeroes with small numbers for division
         total_denominator = tool_kit.prepare_denominator(epi_outputs['population'])
 
-        # To allow calculation by strain and the total output
+        # to allow calculation by strain and the total output
         strains = self.model_dict[scenario].strains + ['']
 
-        # Incidence
+        # incidence
         if 'incidence' in outputs_to_analyse:
             for strain in strains:
-                # Variable flows
-                for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
+                for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:  # variable flows
                     if 'latent' in from_label and 'active' in to_label and strain in to_label:
-                        incidence_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
-                                                 * self.model_dict[scenario].get_var_soln(rate) \
-                                                 / total_denominator \
-                                                 * 1e5
+                        incidence_increment \
+                            = self.model_dict[scenario].get_compartment_soln(from_label) \
+                              * self.model_dict[scenario].get_var_soln(rate) / total_denominator * 1e5
                         epi_outputs['true_incidence' + strain] \
-                            = elementwise_list_addition(incidence_increment,
-                                                        epi_outputs['true_incidence' + strain])
-                        # Reduce paediatric contribution
+                            = elementwise_list_addition(incidence_increment, epi_outputs['true_incidence' + strain])
+                        # reduce paediatric contribution
                         if '_age' in from_label and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
                             incidence_increment *= self.inputs.model_constants['program_prop_child_reporting']
                         epi_outputs['incidence' + strain] \
-                            = elementwise_list_addition(incidence_increment,
-                                                        epi_outputs['incidence' + strain])
-                # Fixed flows
-                for from_label, to_label, rate in self.model_dict[scenario].fixed_transfer_rate_flows:
+                            = elementwise_list_addition(incidence_increment, epi_outputs['incidence' + strain])
+                for from_label, to_label, rate in self.model_dict[scenario].fixed_transfer_rate_flows:  # fixed flows
                     if 'latent' in from_label and 'active' in to_label and strain in to_label:
                         incidence_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
                                                  * rate / total_denominator * 1e5
                         epi_outputs['true_incidence' + strain] \
-                            = elementwise_list_addition(incidence_increment,
-                                                        epi_outputs['true_incidence' + strain])
-                        # Reduce paedatric contribution
+                            = elementwise_list_addition(incidence_increment, epi_outputs['true_incidence' + strain])
+                        # reduce paedatric contribution
                         if '_age' in from_label and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
                             incidence_increment *= self.inputs.model_constants['program_prop_child_reporting']
                         epi_outputs['incidence' + strain] \
-                            = elementwise_list_addition(incidence_increment,
-                                                        epi_outputs['incidence' + strain])
-            # Find percentage incidence by strain
+                            = elementwise_list_addition(incidence_increment, epi_outputs['incidence' + strain])
+
+            # find percentage incidence by strain
             if len(self.model_dict[scenario].strains) > 1:
                 for strain in self.model_dict[scenario].strains:
                     epi_outputs['perc_incidence' + strain] \
                         = [i / j * 1e2 for i, j in zip(epi_outputs['incidence' + strain],
                                                        tool_kit.prepare_denominator(epi_outputs['incidence']))]
 
-        # Notifications
+        # notifications
         if 'notifications' in outputs_to_analyse:
             for strain in strains:
                 for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
@@ -444,206 +430,177 @@ class ModelRunner:
                         epi_outputs['notifications' + strain] \
                             = elementwise_list_addition(notifications_increment, epi_outputs['notifications' + strain])
 
-        # Mortality
+        # mortality
         if 'mortality' in outputs_to_analyse:
             for strain in strains:
-                # Fixed flows
-                for from_label, rate in self.model_dict[scenario].fixed_infection_death_rate_flows:
+                for from_label, rate in self.model_dict[scenario].fixed_infection_death_rate_flows:  # fixed flows
                     if strain in from_label:
                         mortality_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
-                                              * rate \
-                                              / total_denominator \
-                                              * 1e5
+                                              * rate / total_denominator * 1e5
                         epi_outputs['true_mortality' + strain] \
-                            = elementwise_list_addition(mortality_increment,
-                                                        epi_outputs['true_mortality' + strain])
-                        # Reduce paediatric contribution
+                            = elementwise_list_addition(mortality_increment, epi_outputs['true_mortality' + strain])
+                        # reduce paediatric contribution
                         if '_age' in from_label and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
                             mortality_increment *= self.inputs.model_constants['program_prop_child_reporting']
-                        # Reduce outside health system contribution
+                        # reduce outside health system contribution
                         epi_outputs['mortality' + strain] \
-                            = elementwise_list_addition(mortality_increment
-                                                        * self.model_dict[scenario].params['program_prop_death_reporting'],
-                                                        epi_outputs['mortality' + strain])
-                # Variable flows
-                for from_label, rate in self.model_dict[scenario].var_infection_death_rate_flows:
+                            = elementwise_list_addition(
+                            mortality_increment * self.model_dict[scenario].params['program_prop_death_reporting'],
+                            epi_outputs['mortality' + strain])
+                for from_label, rate in self.model_dict[scenario].var_infection_death_rate_flows:  # variable flows
                     if strain in from_label:
                         mortality_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
-                                              * self.model_dict[scenario].get_var_soln(rate) \
-                                              / total_denominator \
-                                              * 1e5
+                                              * self.model_dict[scenario].get_var_soln(rate) / total_denominator * 1e5
                         epi_outputs['true_mortality' + strain] \
-                            = elementwise_list_addition(mortality_increment,
-                                                        epi_outputs['true_mortality' + strain])
-                        # Reduce paediatric contribution
+                            = elementwise_list_addition(mortality_increment, epi_outputs['true_mortality' + strain])
+                        # reduce paediatric contribution
                         if '_age' in from_label and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
                             mortality_increment *= self.inputs.model_constants['program_prop_child_reporting']
                         epi_outputs['mortality' + strain] \
-                            = elementwise_list_addition(mortality_increment,
-                                                        epi_outputs['mortality' + strain])
+                            = elementwise_list_addition(mortality_increment, epi_outputs['mortality' + strain])
 
-        # Prevalence
+        # prevalence
         if 'prevalence' in outputs_to_analyse:
             for strain in strains:
                 for label in self.model_dict[scenario].labels:
                     if 'susceptible' not in label and 'latent' not in label and strain in label:
                         prevalence_increment = self.model_dict[scenario].get_compartment_soln(label) \
-                                               / total_denominator \
-                                               * 1e5
+                                               / total_denominator * 1e5
                         epi_outputs['true_prevalence' + strain] \
-                            = elementwise_list_addition(prevalence_increment,
-                                                        epi_outputs['true_prevalence' + strain])
-                        # Reduce paediatric contribution
+                            = elementwise_list_addition(prevalence_increment, epi_outputs['true_prevalence' + strain])
+                        # reduce paediatric contribution
                         if '_age' in label and tool_kit.is_upper_age_limit_at_or_below(label, 15.):
                             prevalence_increment *= self.inputs.model_constants['program_prop_child_reporting']
                         epi_outputs['prevalence' + strain] \
-                            = elementwise_list_addition(prevalence_increment,
-                                                        epi_outputs['prevalence' + strain])
+                            = elementwise_list_addition(prevalence_increment, epi_outputs['prevalence' + strain])
 
-        # Infections
+        # infections
         if 'infections' in outputs_to_analyse:
             for strain in strains:
                 for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
                     if 'latent_early' in to_label and strain in to_label:
-                        # Absolute number of infections
+                        # absolute number of infections
                         epi_outputs['infections' + strain] \
                             = elementwise_list_addition(self.model_dict[scenario].get_compartment_soln(from_label)
                                                         * self.model_dict[scenario].get_var_soln(rate),
                                                         epi_outputs['infections' + strain])
-                # ARI
+                # annual risk of infection (as a percentage)
                 epi_outputs['annual_risk_infection' + strain] \
                     = [i / j * 1e2 for i, j in zip(epi_outputs['infections' + strain], total_denominator)]
 
-        # Stratified outputs________________________________________________________________________________________
-        # Currently not bothering to do this for each strain
+        # stratified outputs________________________________________________________________________________________
+        # currently not repeating this for each strain
         for stratification in stratifications:
             if len(stratification) > 1:
                 for stratum in stratification:
 
-                    # Initialise lists
+                    # initialise lists
                     for output in outputs_to_analyse:
                         epi_outputs[output + stratum] = [0.] * len(epi_outputs['times'])
 
-                    # Population
+                    # population
                     if 'population' in outputs_to_analyse:
                         for compartment in self.model_dict[scenario].compartments:
                             if stratum in compartment:
                                 epi_outputs['population' + stratum] \
-                                    = elementwise_list_addition(self.model_dict[scenario].get_compartment_soln(compartment),
-                                                                epi_outputs['population' + stratum])
+                                    = elementwise_list_addition(
+                                    self.model_dict[scenario].get_compartment_soln(compartment),
+                                    epi_outputs['population' + stratum])
 
-                    # The population denominator to be used with zeros replaced with small numbers
+                    # the population denominator to be used with zeros replaced with small numbers
                     stratum_denominator \
                         = tool_kit.prepare_denominator(epi_outputs['population' + stratum])
 
-                    # Incidence
+                    # incidence
                     if 'incidence' in outputs_to_analyse:
-                        # Variable flows
+                        # variable flows
                         for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
                             if 'latent' in from_label and 'active' in to_label and stratum in from_label:
                                 incidence_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
                                                       * self.model_dict[scenario].get_var_soln(rate) \
-                                                      / stratum_denominator \
-                                                      * 1e5
+                                                      / stratum_denominator * 1e5
                                 epi_outputs['true_incidence' + stratum] \
                                     = elementwise_list_addition(incidence_increment,
                                                                 epi_outputs['true_incidence' + stratum])
-                                # Reduce paediatric contribution
-                                if '_age' in from_label \
-                                        and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
-                                    incidence_increment *= self.inputs.model_constants[
-                                        'program_prop_child_reporting']
+                                # reduce paediatric contribution
+                                if '_age' in from_label and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
+                                    incidence_increment *= self.inputs.model_constants['program_prop_child_reporting']
                                 epi_outputs['incidence' + stratum] \
-                                    = elementwise_list_addition(incidence_increment,
-                                                                epi_outputs['incidence' + stratum])
+                                    = elementwise_list_addition(incidence_increment, epi_outputs['incidence' + stratum])
 
-                        # Fixed flows
+                        # fixed flows
                         for from_label, to_label, rate in self.model_dict[scenario].fixed_transfer_rate_flows:
                             if 'latent' in from_label and 'active' in to_label and stratum in from_label:
                                 incidence_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
-                                                      * rate \
-                                                      / stratum_denominator \
-                                                      * 1e5
+                                                      * rate / stratum_denominator * 1e5
                                 epi_outputs['true_incidence' + stratum] \
                                     = elementwise_list_addition(incidence_increment,
                                                                 epi_outputs['true_incidence' + stratum])
-                                # Reduce paediatric contribution
-                                if '_age' in from_label \
-                                        and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
-                                    incidence_increment \
-                                        *= self.inputs.model_constants['program_prop_child_reporting']
+                                # reduce paediatric contribution
+                                if '_age' in from_label and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
+                                    incidence_increment *= self.inputs.model_constants['program_prop_child_reporting']
                                 epi_outputs['incidence' + stratum] \
-                                    = elementwise_list_addition(incidence_increment,
-                                                                epi_outputs['incidence' + stratum])
+                                    = elementwise_list_addition(incidence_increment, epi_outputs['incidence' + stratum])
 
-                    # Mortality
+                    # mortality
                     if 'mortality' in outputs_to_analyse:
                         for from_label, rate in self.model_dict[scenario].fixed_infection_death_rate_flows:
                             if stratum in from_label:
                                 mortality_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
-                                                      * rate \
-                                                      / stratum_denominator \
-                                                      * 1e5
+                                                      * rate / stratum_denominator * 1e5
                                 epi_outputs['true_mortality' + stratum] \
                                     = elementwise_list_addition(mortality_increment,
                                                                 epi_outputs['true_mortality' + stratum])
-                                # Reduce paediatric contribution
-                                if '_age' in from_label \
-                                        and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
+                                # reduce paediatric contribution
+                                if '_age' in from_label and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
                                     mortality_increment *= self.inputs.model_constants['program_prop_child_reporting']
-
-                                # Reduce outside health system contribution
+                                # reduce outside health system contribution
                                 epi_outputs['mortality' + stratum] \
-                                    = elementwise_list_addition(mortality_increment
-                                                                * self.model_dict[scenario].params[
-                                                                    'program_prop_death_reporting'],
-                                                                epi_outputs['mortality' + stratum])
+                                    = elementwise_list_addition(
+                                    mortality_increment
+                                    * self.model_dict[scenario].params['program_prop_death_reporting'],
+                                    epi_outputs['mortality' + stratum])
                         for from_label, rate in self.model_dict[scenario].var_infection_death_rate_flows:
-                            # Variable flows
-                            if stratum in from_label:
+                            if stratum in from_label:  # variable flows
                                 mortality_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
                                                       * self.model_dict[scenario].get_var_soln(rate) \
-                                                      / stratum_denominator \
-                                                      * 1e5
+                                                      / stratum_denominator * 1e5
                                 epi_outputs['true_mortality' + stratum] \
                                     = elementwise_list_addition(mortality_increment,
                                                                 epi_outputs['true_mortality' + stratum])
-                                # Reduce paediatric contribution
-                                if '_age' in from_label \
-                                        and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
-                                    mortality_increment *= self.inputs.model_constants[
-                                        'program_prop_child_reporting']
+                                # reduce paediatric contribution
+                                if '_age' in from_label and tool_kit.is_upper_age_limit_at_or_below(from_label, 15.):
+                                    mortality_increment *= self.inputs.model_constants['program_prop_child_reporting']
                                 epi_outputs['mortality' + stratum] \
                                     = elementwise_list_addition(mortality_increment * self.model_dict[scenario].params[
                                                                     'program_prop_death_reporting'],
                                                                 epi_outputs['mortality' + stratum])
 
-                    # Prevalence
+                    # prevalence
                     if 'prevalence' in outputs_to_analyse:
                         for label in self.model_dict[scenario].labels:
                             if 'susceptible' not in label and 'latent' not in label and stratum in label:
                                 prevalence_increment = self.model_dict[scenario].get_compartment_soln(label) \
-                                                       / stratum_denominator \
-                                                       * 1e5
+                                                       / stratum_denominator * 1e5
                                 epi_outputs['true_prevalence' + stratum] \
                                     = elementwise_list_addition(prevalence_increment,
                                                                 epi_outputs['true_prevalence' + stratum])
-                            # Reduce paediatric contribution
+                            # reduce paediatric contribution
                             if '_age' in label and tool_kit.is_upper_age_limit_at_or_below(label, 15.):
                                 prevalence_increment *= self.inputs.model_constants['program_prop_child_reporting']
                             epi_outputs['prevalence' + stratum] \
                                 = elementwise_list_addition(prevalence_increment, epi_outputs['prevalence' + stratum])
 
-                    # Infections
+                    # infections
                     if 'infections' in outputs_to_analyse:
                         for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
                             if 'latent_early' in to_label and stratum in from_label:
-                                # Absolute number of infections
+                                # absolute number of infections
                                 epi_outputs['infections' + stratum] \
                                     = elementwise_list_addition(self.model_dict[scenario].get_compartment_soln(from_label)
                                                                 * self.model_dict[scenario].get_var_soln(rate),
                                                                 epi_outputs['infections' + stratum])
-                        # ARI
+                        # annual risk of infection (as a percentage)
                         epi_outputs['annual_risk_infection' + stratum] \
                             = [i / j * 1e2 for i, j in zip(epi_outputs['infections' + stratum], stratum_denominator)]
 
@@ -1321,7 +1278,7 @@ class ModelRunner:
         Load optimisation results if attribute to self is True.
         """
 
-        if self.load_opti:
+        if self.load_optimisation:
             storage_file_name = os.path.join(self.opti_outputs_dir, 'opti_outputs.pkl')
             self.opti_results = tool_kit.pickle_load(storage_file_name)
             self.add_comment_to_gui_window('Optimisation results loaded')

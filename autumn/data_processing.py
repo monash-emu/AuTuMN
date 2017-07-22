@@ -611,6 +611,14 @@ class Inputs:
                         self.time_variants[perc_name][year] = self.time_variants[time_variant][year]
 
     def find_treatment_outcomes(self, include_hiv=True):
+        """
+        Does all data processing from the point of the loaded treatment outcomes spreadsheet from the GTB Report through
+        to finding the proportions for each outcome for later conversion to data for time-variant parameter calculation.
+
+        Args:
+            include_hiv: Whether to include the HIV patients in calculations
+                (because may not be needed for models with explicit HIV strata)
+        """
 
         # up to 2011 fields for DS-TB
 

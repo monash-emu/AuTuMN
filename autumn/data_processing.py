@@ -633,7 +633,7 @@ class Inputs:
         # by each outcome, find total number of patients achieving that outcome
         for outcome in pre2011_map_gtb_to_autumn:
             self.derived_data['new' + pre2011_map_gtb_to_autumn[outcome]] = {}
-            self.derived_data['ret' + pre2011_map_gtb_to_autumn[outcome]] = {}
+            self.derived_data['treated' + pre2011_map_gtb_to_autumn[outcome]] = {}
             for hiv_status in hiv_statuses_to_include:
 
                 # new outcomes are disaggregated by organ involvement and hiv status pre-2011
@@ -646,9 +646,9 @@ class Inputs:
                             self.original_data['outcomes'][hiv_status + 'new_' + organ + outcome])
 
                 # retreatment outcomes are only disaggregated by hiv status pre-2011
-                self.derived_data['ret' + pre2011_map_gtb_to_autumn[outcome]] \
+                self.derived_data['treated' + pre2011_map_gtb_to_autumn[outcome]] \
                     = tool_kit.increment_dictionary_with_dictionary(
-                    self.derived_data['ret' + pre2011_map_gtb_to_autumn[outcome]],
+                    self.derived_data['treated' + pre2011_map_gtb_to_autumn[outcome]],
                     self.original_data['outcomes'][hiv_status + 'ret' + outcome])
 
         # post-2011 fields for DS-TB
@@ -672,9 +672,9 @@ class Inputs:
                     self.original_data['outcomes'][hiv_status + outcome])
 
             # previously treated outcomes (now excluding relapse) are not disaggregated post-2011
-            self.derived_data['ret' + post2011_map_gtb_to_autumn[outcome]] \
+            self.derived_data['treated' + post2011_map_gtb_to_autumn[outcome]] \
                 = tool_kit.increment_dictionary_with_dictionary(
-                self.derived_data['ret' + post2011_map_gtb_to_autumn[outcome]],
+                self.derived_data['treated' + post2011_map_gtb_to_autumn[outcome]],
                 self.original_data['outcomes']['ret_nrel' + outcome])
 
         # add retreatment rates on to new if the model is not stratified by treatment history
@@ -683,7 +683,7 @@ class Inputs:
                 self.derived_data['new' + outcome] \
                     = tool_kit.increment_dictionary_with_dictionary(
                     self.derived_data['new' + outcome],
-                    self.derived_data['ret' + outcome])
+                    self.derived_data['treated' + outcome])
 
         # MDR and XDR-TB (simpler because unaffected by 2011 changes)
         for strain in ['mdr', 'xdr']:
@@ -696,7 +696,7 @@ class Inputs:
 
         # calculate the proportions for use in creating the treatment scale-up functions
         treatment_types = ['new']
-        if self.gui_inputs['is_treatment_history']: treatment_types.append('ret')
+        if self.gui_inputs['is_treatment_history']: treatment_types.append('treated')
         if self.gui_inputs['n_strains'] > 1: treatment_types.append('mdr')
         if self.gui_inputs['n_strains'] > 2: treatment_types.append('xdr')
         for treatment in treatment_types:
@@ -718,6 +718,11 @@ class Inputs:
                     if year not in self.time_variants['program_prop_treatment' + outcome]:
                         self.time_variants['program_prop_treatment' + outcome][year] \
                             = self.derived_data['prop_new' + outcome][year]
+            for history in ['_new', '_treated']:
+                for year in self.derived_data['prop' + history + outcome]:
+                    if year not in self.time_variants['program_prop_treatment' + outcome]:
+                        self.time_variants['program_prop_treatment' + outcome + history][year] \
+                            = self.derived_data['prop' + history + outcome][year]
 
     def duplicate_ds_outcomes_for_multistrain(self):
         """

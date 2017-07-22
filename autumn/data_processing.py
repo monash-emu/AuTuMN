@@ -529,7 +529,7 @@ class Inputs:
         self.add_time_variant_defaults()  # add any necessary time-variants from defaults if not in country programs
         self.load_vacc_detect_time_variants()
         self.convert_percentages_to_proportions()
-        self.find_ds_outcomes_by_history()
+        # self.find_treatment_outcomes_by_history()
         self.find_ds_outcomes()
         self.add_treatment_outcomes()
         if self.gui_inputs['n_strains'] > 1: self.duplicate_ds_outcomes_for_multistrain()
@@ -610,9 +610,9 @@ class Inputs:
                     else:
                         self.time_variants[perc_name][year] = self.time_variants[time_variant][year]
 
-    def find_ds_outcomes_by_history(self, include_hiv=True):
+    def find_treatment_outcomes_by_history(self, include_hiv=True):
 
-        # up to 2011 fields
+        # up to 2011 fields for DS-TB
 
         # string conversion structures
         hiv_statuses_to_include = ['']
@@ -641,7 +641,7 @@ class Inputs:
                     self.derived_data['ret' + pre2011_map_gtb_to_autumn[outcome]],
                     self.original_data['outcomes'][hiv_status + 'ret' + outcome])
 
-        # post-2011 fields
+        # post-2011 fields for DS-TB
 
         # string conversion structures
         hiv_statuses_to_include = ['newrel']
@@ -666,6 +666,15 @@ class Inputs:
                 = tool_kit.increment_dictionary_with_dictionary(
                 self.derived_data['ret' + post2011_map_gtb_to_autumn[outcome]],
                 self.original_data['outcomes']['ret_nrel' + outcome])
+
+        # MDR and XDR-TB (unaffected by 2011 changes)
+        for strain in ['mdr', 'xdr']:
+            for outcome in post2011_map_gtb_to_autumn:
+                self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]] = {}
+                self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]] \
+                    = tool_kit.increment_dictionary_with_dictionary(
+                    self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]],
+                    self.original_data['outcomes'][strain + outcome])
 
     def find_ds_outcomes(self):
         """

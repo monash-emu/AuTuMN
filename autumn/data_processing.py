@@ -529,7 +529,7 @@ class Inputs:
         self.add_time_variant_defaults()  # add any necessary time-variants from defaults if not in country programs
         self.load_vacc_detect_time_variants()
         self.convert_percentages_to_proportions()
-        # self.find_ds_outcomes_by_history()
+        self.find_ds_outcomes_by_history()
         self.find_ds_outcomes()
         self.add_treatment_outcomes()
         if self.gui_inputs['n_strains'] > 1: self.duplicate_ds_outcomes_for_multistrain()
@@ -612,44 +612,59 @@ class Inputs:
 
     def find_ds_outcomes_by_history(self, include_hiv=True):
 
+        # up to 2011 fields
+
+        # string conversion structures
         hiv_statuses_to_include = ['']
         if include_hiv: hiv_statuses_to_include.append('hiv_')
+        pre2011_map_gtb_to_autumn = {'_cmplt': '_success',
+                                     '_def': '_default',
+                                     '_fail': '_default',
+                                     '_died': '_death'}
 
-        # up to 2011 fields
-        pre2011_outcome_conversion_dict = {'_cmplt': '_success',
-                                           '_def': '_default',
-                                           '_fail': '_default',
-                                           '_died': '_death'}
-        for outcome in pre2011_outcome_conversion_dict:
-            self.derived_data['new' + pre2011_outcome_conversion_dict[outcome]] = {}
-            self.derived_data['ret' + pre2011_outcome_conversion_dict[outcome]] = {}
+        # by each outcome, find total number of patients achieving that outcome
+        for outcome in pre2011_map_gtb_to_autumn:
+            self.derived_data['new' + pre2011_map_gtb_to_autumn[outcome]] = {}
+            self.derived_data['ret' + pre2011_map_gtb_to_autumn[outcome]] = {}
             for hiv_status in hiv_statuses_to_include:
+
+                # new outcomes are disaggregated by organ involvement and hiv status pre-2011
                 for organ in ['sp', 'snep']:
-                    self.derived_data['new' + pre2011_outcome_conversion_dict[outcome]] \
+                    self.derived_data['new' + pre2011_map_gtb_to_autumn[outcome]] \
                         = tool_kit.increment_dictionary_with_dictionary(
-                        self.derived_data['new' + pre2011_outcome_conversion_dict[outcome]],
+                        self.derived_data['new' + pre2011_map_gtb_to_autumn[outcome]],
                         self.original_data['outcomes'][hiv_status + 'new_' + organ + outcome])
-                self.derived_data['ret' + pre2011_outcome_conversion_dict[outcome]] \
+
+                # retreatment outcomes are only disaggregated by hiv status pre-2011
+                self.derived_data['ret' + pre2011_map_gtb_to_autumn[outcome]] \
                     = tool_kit.increment_dictionary_with_dictionary(
-                    self.derived_data['ret' + pre2011_outcome_conversion_dict[outcome]],
+                    self.derived_data['ret' + pre2011_map_gtb_to_autumn[outcome]],
                     self.original_data['outcomes'][hiv_status + 'ret' + outcome])
 
         # post-2011 fields
+
+        # string conversion structures
         hiv_statuses_to_include = ['newrel']
         if include_hiv: hiv_statuses_to_include.append('tbhiv')
-        post2011_outcome_conversion_dict = {'_succ': '_success',
-                                            '_fail': '_default',
-                                            '_lost': '_default',
-                                            '_died': '_death'}
-        for outcome in post2011_outcome_conversion_dict:
+        post2011_map_gtb_to_autumn = {'_succ': '_success',
+                                      '_fail': '_default',
+                                      '_lost': '_default',
+                                      '_died': '_death'}
+
+        # by each outcome, find total number of patients achieving that outcome
+        for outcome in post2011_map_gtb_to_autumn:
+
+            # new outcomes are disaggregated by hiv status post-2011
             for hiv_status in hiv_statuses_to_include:
-                self.derived_data['new' + post2011_outcome_conversion_dict[outcome]] \
+                self.derived_data['new' + post2011_map_gtb_to_autumn[outcome]] \
                     = tool_kit.increment_dictionary_with_dictionary(
-                    self.derived_data['new' + post2011_outcome_conversion_dict[outcome]],
+                    self.derived_data['new' + post2011_map_gtb_to_autumn[outcome]],
                     self.original_data['outcomes'][hiv_status + outcome])
-            self.derived_data['ret' + post2011_outcome_conversion_dict[outcome]] \
+
+            # previously treated outcomes (now excluding relapse) are not disaggregated post-2011
+            self.derived_data['ret' + post2011_map_gtb_to_autumn[outcome]] \
                 = tool_kit.increment_dictionary_with_dictionary(
-                self.derived_data['ret' + post2011_outcome_conversion_dict[outcome]],
+                self.derived_data['ret' + post2011_map_gtb_to_autumn[outcome]],
                 self.original_data['outcomes']['ret_nrel' + outcome])
 
     def find_ds_outcomes(self):

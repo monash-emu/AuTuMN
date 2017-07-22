@@ -698,21 +698,6 @@ class Inputs:
                 [treatment + '_success', treatment + '_death', treatment + '_default'],
                 percent=False))
 
-    def find_ds_outcomes(self):
-        """
-        Calculates proportions of patients with each reported outcome for DS-TB, then sums cure and completion to obtain
-        treatment success proportion. Note that the outcomes are reported differently for resistant strains, so code
-        differs for them.
-        """
-
-        # calculate default rates from 'def' and 'fail' reported outcomes
-        self.derived_data['default'] \
-            = tool_kit.increment_dictionary_with_dictionary(self.derived_data['def'], self.derived_data['fail'])
-
-        # calculate the proportions for use in creating the treatment scale-up functions
-        self.derived_data.update(tool_kit.calculate_proportion_dict(self.derived_data,
-                                                                    ['succ', 'died', 'default'], percent=False))
-
     def add_treatment_outcomes(self):
         """
         Add treatment outcomes for DS-TB to the time variants attribute. Use the same approach as above to adding if

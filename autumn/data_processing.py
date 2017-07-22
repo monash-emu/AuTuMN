@@ -530,7 +530,6 @@ class Inputs:
         self.load_vacc_detect_time_variants()
         self.convert_percentages_to_proportions()
         self.find_treatment_outcomes()
-        # self.find_ds_outcomes()
         self.add_treatment_outcomes()
         if self.gui_inputs['n_strains'] > 1: self.duplicate_ds_outcomes_for_multistrain()
         self.add_resistant_strain_outcomes()
@@ -736,21 +735,16 @@ class Inputs:
         Inappropriate outcomes are currently set to those for XDR-TB - intended to be temporary.
         """
 
-        # calculate proportions of each outcome for MDR and XDR-TB from GTB
-        for strain in ['mdr', 'xdr']:
-            self.derived_data.update(
-                tool_kit.calculate_proportion_dict(
-                    self.original_data['outcomes'],
-                    [strain + '_succ', strain + '_fail', strain + '_died', strain + '_lost'], percent=False))
-
-            # populate MDR and XDR data from outcomes dictionary into time variants where requested and not entered
-            outcome_dict = {'_success': '_succ', '_death': '_died'}
-            for outcome in outcome_dict:
+        strains = []
+        if self.gui_inputs['n_strains'] > 1: strains.append('mdr')
+        if self.gui_inputs['n_strains'] > 2: strains.append('xdr')
+        for strain in strains:
+            for outcome in ['_success', '_death']:
                 if self.time_variants['program_prop_treatment' + outcome + '_' + strain]['load_data'] == u'yes':
-                    for year in self.derived_data['prop_' + strain + outcome_dict[outcome]]:
+                    for year in self.derived_data['prop_' + strain + outcome]:
                         if year not in self.time_variants['program_prop_treatment' + outcome + '_' + strain]:
                             self.time_variants['program_prop_treatment' + outcome + '_' + strain][year] \
-                                = self.derived_data['prop_' + strain + outcome_dict[outcome]][year]
+                                = self.derived_data['prop_' + strain + outcome][year]
 
         # temporarily assign the same treatment outcomes to XDR-TB as for inappropriate
         for outcome in ['_success', '_death']:

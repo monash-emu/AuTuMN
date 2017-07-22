@@ -678,7 +678,7 @@ class Inputs:
                 self.derived_data['ret' + post2011_map_gtb_to_autumn[outcome]],
                 self.original_data['outcomes']['ret_nrel' + outcome])
 
-        # add retreatment rates on to new if the model is not going to be stratified by treatment history
+        # add retreatment rates on to new if the model is not stratified by treatment history
         if self.gui_inputs['is_treatment_history']:
             for outcome in ['_success', '_default', '_death']:
                 self.derived_data['new' + outcome] \
@@ -686,7 +686,7 @@ class Inputs:
                     self.derived_data['new' + outcome],
                     self.derived_data['ret' + outcome])
 
-        # MDR and XDR-TB (unaffected by 2011 changes)
+        # MDR and XDR-TB (simpler because unaffected by 2011 changes)
         for strain in ['mdr', 'xdr']:
             for outcome in post2011_map_gtb_to_autumn:
                 self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]] = {}
@@ -704,7 +704,8 @@ class Inputs:
             self.derived_data.update(tool_kit.calculate_proportion_dict(
                 self.derived_data,
                 [treatment + '_success', treatment + '_death', treatment + '_default'],
-                percent=False))
+                percent=False,
+                floor=10.))  # disregard any years with fewer than ten patients for whom data are reported
 
     def add_treatment_outcomes(self):
         """

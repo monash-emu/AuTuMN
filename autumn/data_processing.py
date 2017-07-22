@@ -676,6 +676,17 @@ class Inputs:
                     self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]],
                     self.original_data['outcomes'][strain + outcome])
 
+        # calculate the proportions for use in creating the treatment scale-up functions
+        treatment_types = ['new']
+        if self.gui_inputs['is_treatment_history']: treatment_types.append('ret')
+        if self.gui_inputs['n_strains'] > 1: treatment_types.append('mdr')
+        if self.gui_inputs['n_strains'] > 2: treatment_types.append('xdr')
+        for treatment in treatment_types:
+            self.derived_data.update(tool_kit.calculate_proportion_dict(
+                self.derived_data,
+                [treatment + '_success', treatment + '_death', treatment + '_default'],
+                percent=False))
+
     def find_ds_outcomes(self):
         """
         Calculates proportions of patients with each reported outcome for DS-TB, then sums cure and completion to obtain
@@ -724,7 +735,7 @@ class Inputs:
         """
 
         name_conversion_dict = {'_success': 'succ', '_death': 'died'}
-        for outcome in ['_success', '_death']:  # only for success and death because default is derived from these
+        for outcome in name_conversion_dict:  # only for success and death because default is derived from these
             if self.time_variants['program_prop_treatment' + outcome]['load_data'] == u'yes':
                 for year in self.derived_data['prop_' + name_conversion_dict[outcome]]:
                     if year not in self.time_variants['program_prop_treatment' + outcome]:

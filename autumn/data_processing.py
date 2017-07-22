@@ -632,7 +632,7 @@ class Inputs:
                 # new outcomes are disaggregated by organ involvement and hiv status pre-2011
                 for organ in ['sp', 'snep']:
                     # for smear-negative/extrapulmonary where cure isn't an outcome
-                    if organ != 'snep' and outcome != '_cur':
+                    if organ != 'snep' or outcome != '_cur':
                         self.derived_data['new' + pre2011_map_gtb_to_autumn[outcome]] \
                             = tool_kit.increment_dictionary_with_dictionary(
                             self.derived_data['new' + pre2011_map_gtb_to_autumn[outcome]],
@@ -670,6 +670,14 @@ class Inputs:
                 self.derived_data['ret' + post2011_map_gtb_to_autumn[outcome]],
                 self.original_data['outcomes']['ret_nrel' + outcome])
 
+        # add retreatment rates on to new if the model is not going to be stratified by treatment history
+        if self.gui_inputs['is_treatment_history']:
+            for outcome in ['_success', '_default', '_death']:
+                self.derived_data['new' + outcome] \
+                    = tool_kit.increment_dictionary_with_dictionary(
+                    self.derived_data['new' + outcome],
+                    self.derived_data['ret' + outcome])
+
         # MDR and XDR-TB (unaffected by 2011 changes)
         for strain in ['mdr', 'xdr']:
             for outcome in post2011_map_gtb_to_autumn:
@@ -696,32 +704,6 @@ class Inputs:
         treatment success proportion. Note that the outcomes are reported differently for resistant strains, so code
         differs for them.
         """
-
-        # adjusting the original data to add a success number for smear-positive (so technically not still "original")
-        self.original_data['outcomes']['new_sp_succ'] \
-            = tool_kit.increment_dictionary_with_dictionary(self.original_data['outcomes']['new_sp_cmplt'],
-                                                            self.original_data['outcomes']['new_sp_cur'])
-
-        # similarly, move completion over to represent success for smear-negative, extrapulmonary and retreatment
-        for treatment_type in ['new_snep', 'ret']:
-            self.original_data['outcomes'][treatment_type + '_succ'] \
-                = self.original_data['outcomes'][treatment_type + '_cmplt']
-
-        # and (effectively) rename the outcomes for the years that are pooled
-        self.original_data['outcomes']['newrel_def'] = self.original_data['outcomes']['newrel_lost']
-
-        # sum over smear-positive, smear-negative, extrapulmonary and (if required) retreatment
-        for outcome in ['succ', 'def', 'died', 'fail']:
-            self.derived_data[outcome] \
-                = tool_kit.increment_dictionary_with_dictionary(self.original_data['outcomes']['new_sp_' + outcome],
-                                                                self.original_data['outcomes']['new_snep_' + outcome])
-            if self.include_relapse_in_ds_outcomes:
-                self.derived_data[outcome] \
-                    = tool_kit.increment_dictionary_with_dictionary(self.derived_data[outcome],
-                                                                    self.original_data['outcomes']['ret_' + outcome])
-
-            # update with newer pooled outcomes
-            self.derived_data[outcome].update(self.original_data['outcomes']['newrel_' + outcome])
 
         # calculate default rates from 'def' and 'fail' reported outcomes
         self.derived_data['default'] \

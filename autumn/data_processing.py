@@ -618,6 +618,7 @@ class Inputs:
         hiv_statuses_to_include = ['']
         if include_hiv: hiv_statuses_to_include.append('hiv_')
         pre2011_map_gtb_to_autumn = {'_cmplt': '_success',
+                                     '_cur': '_success',
                                      '_def': '_default',
                                      '_fail': '_default',
                                      '_died': '_death'}
@@ -630,10 +631,12 @@ class Inputs:
 
                 # new outcomes are disaggregated by organ involvement and hiv status pre-2011
                 for organ in ['sp', 'snep']:
-                    self.derived_data['new' + pre2011_map_gtb_to_autumn[outcome]] \
-                        = tool_kit.increment_dictionary_with_dictionary(
-                        self.derived_data['new' + pre2011_map_gtb_to_autumn[outcome]],
-                        self.original_data['outcomes'][hiv_status + 'new_' + organ + outcome])
+                    # for smear-negative/extrapulmonary where cure isn't an outcome
+                    if organ != 'snep' and outcome != '_cur':
+                        self.derived_data['new' + pre2011_map_gtb_to_autumn[outcome]] \
+                            = tool_kit.increment_dictionary_with_dictionary(
+                            self.derived_data['new' + pre2011_map_gtb_to_autumn[outcome]],
+                            self.original_data['outcomes'][hiv_status + 'new_' + organ + outcome])
 
                 # retreatment outcomes are only disaggregated by hiv status pre-2011
                 self.derived_data['ret' + pre2011_map_gtb_to_autumn[outcome]] \

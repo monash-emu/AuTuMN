@@ -529,8 +529,8 @@ class Inputs:
         self.add_time_variant_defaults()  # add any necessary time-variants from defaults if not in country programs
         self.load_vacc_detect_time_variants()
         self.convert_percentages_to_proportions()
-        # self.find_treatment_outcomes_by_history()
-        self.find_ds_outcomes()
+        self.find_treatment_outcomes()
+        # self.find_ds_outcomes()
         self.add_treatment_outcomes()
         if self.gui_inputs['n_strains'] > 1: self.duplicate_ds_outcomes_for_multistrain()
         self.add_resistant_strain_outcomes()
@@ -610,7 +610,7 @@ class Inputs:
                     else:
                         self.time_variants[perc_name][year] = self.time_variants[time_variant][year]
 
-    def find_treatment_outcomes_by_history(self, include_hiv=True):
+    def find_treatment_outcomes(self, include_hiv=True):
 
         # up to 2011 fields for DS-TB
 
@@ -730,17 +730,16 @@ class Inputs:
 
     def add_treatment_outcomes(self):
         """
-        Add treatment outcomes for DS-TB to the time variants attribute.
-        Use the same approach as above to adding if requested and data not manually entered.
+        Add treatment outcomes for DS-TB to the time variants attribute. Use the same approach as above to adding if
+        requested and data not manually entered. Only done for success and death because default is derived from these.
         """
 
-        name_conversion_dict = {'_success': 'succ', '_death': 'died'}
-        for outcome in name_conversion_dict:  # only for success and death because default is derived from these
+        for outcome in ['_success', '_death']:
             if self.time_variants['program_prop_treatment' + outcome]['load_data'] == u'yes':
-                for year in self.derived_data['prop_' + name_conversion_dict[outcome]]:
+                for year in self.derived_data['prop_new' + outcome]:
                     if year not in self.time_variants['program_prop_treatment' + outcome]:
                         self.time_variants['program_prop_treatment' + outcome][year] \
-                            = self.derived_data['prop_' + name_conversion_dict[outcome]][year]
+                            = self.derived_data['prop_new' + outcome][year]
 
     def duplicate_ds_outcomes_for_multistrain(self):
         """

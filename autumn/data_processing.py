@@ -110,17 +110,17 @@ class Inputs:
         self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
         self.original_data = spreadsheet.read_input_data_xls(True, self.find_keys_of_sheets_to_read(), self.country)
 
-        # process constant parameters
+        # process constant parameters (age breakpoints come from sheets still, so has to come before defining structure)
         self.process_model_constants()
 
         # define model structure
         self.define_model_structure()
 
+        # find parameters that require processing (including processes that require model structure to be defined)
+        self.find_additional_parameters()
+
         # process time-variant parameters
         self.process_time_variants()
-
-        # find parameters that require processing
-        self.find_additional_parameters()
 
         # classify interventions as to whether they apply and are to be costed
         self.classify_interventions()

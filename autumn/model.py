@@ -753,13 +753,13 @@ class ConsolidatedModel(StratifiedModel):
                     # find the corresponding rates from the proportions
                     for outcome in self.outcomes:
                         end = strain + history + outcome + treatment_stage
-                        self.vars['program_rate' + end] \
+                        self.vars['program_rate_treatment' + end] \
                             = self.vars['program_prop_treatment' + end]\
                               / self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain]
 
                     # split default according to whether amplification occurs (if not the most resistant strain)
                     if self.is_amplification:
-                        start = 'program_rate' + strain + history + '_default' + treatment_stage
+                        start = 'program_rate_treatment' + strain + history + '_default' + treatment_stage
                         self.vars[start + '_amplify'] \
                             = self.vars[start] * self.vars['epi_prop_amplification']
                         self.vars[start + '_noamplify'] \
@@ -800,14 +800,15 @@ class ConsolidatedModel(StratifiedModel):
                                     # find the corresponding rates from the proportions
                                     for outcome in self.outcomes:
                                         end = treatment_type + history + outcome + treatment_stage
-                                        self.vars['program_rate' + end] \
+                                        self.vars['program_rate_treatment' + end] \
                                             = self.vars['program_prop_treatment' + end] \
                                               / self.vars['tb_timeperiod' + treatment_stage + '_ontreatment'
                                                           + treated_as]
 
                                     # split default according to whether amplification occurs
                                     if self.is_amplification:
-                                        start = 'program_rate' + treatment_type + history + '_default' + treatment_stage
+                                        start = 'program_rate_treatment' + treatment_type + history + '_default'\
+                                                + treatment_stage
                                         self.vars[start + '_amplify'] \
                                             = self.vars[start] * self.vars['epi_prop_amplification']
                                         self.vars[start + '_noamplify'] \
@@ -1361,19 +1362,20 @@ class ConsolidatedModel(StratifiedModel):
                                     + history + agegroup,
                                     'treatment_noninfect' + organ + strain + as_assigned_strain + riskgroup
                                     + history + agegroup,
-                                    'program_rate' + strain_or_inappropriate + history + '_success_infect')
+                                    'program_rate_treatment' + strain_or_inappropriate + history + '_success_infect')
                                 self.set_var_transfer_rate_flow(
                                     'treatment_noninfect' + organ + strain + as_assigned_strain + riskgroup
                                     + history + agegroup,
                                     'susceptible_immune' + riskgroup + self.histories[-1] + agegroup,
-                                    'program_rate' + strain_or_inappropriate + history + '_success_noninfect')
+                                    'program_rate_treatment' + strain_or_inappropriate + history + '_success_noninfect')
 
                                 # death on treatment
                                 for treatment_stage in self.treatment_stages:
                                     self.set_var_infection_death_rate_flow(
                                         'treatment' + treatment_stage + organ + strain + as_assigned_strain
                                         + riskgroup + history + agegroup,
-                                        'program_rate' + strain_or_inappropriate + history + '_death' + treatment_stage)
+                                        'program_rate_treatment' + strain_or_inappropriate + history + '_death'
+                                        + treatment_stage)
 
                                 # default
                                 for treatment_stage in self.treatment_stages:
@@ -1384,7 +1386,7 @@ class ConsolidatedModel(StratifiedModel):
                                             'treatment' + treatment_stage + organ + strain + as_assigned_strain
                                             + riskgroup + history + agegroup,
                                             'active' + organ + strain + riskgroup + history + agegroup,
-                                            'program_rate' + strain_or_inappropriate + history + '_default'
+                                            'program_rate_treatment' + strain_or_inappropriate + history + '_default'
                                             + treatment_stage)
 
                                     # otherwise with amplification
@@ -1394,14 +1396,14 @@ class ConsolidatedModel(StratifiedModel):
                                             'treatment' + treatment_stage + organ + strain + as_assigned_strain
                                             + riskgroup + history + agegroup,
                                             'active' + organ + strain + riskgroup + history + agegroup,
-                                            'program_rate' + strain_or_inappropriate + history + '_default'
+                                            'program_rate_treatment' + strain_or_inappropriate + history + '_default'
                                             + treatment_stage + '_noamplify')
                                         self.set_var_transfer_rate_flow(
                                             'treatment' +
                                             treatment_stage + organ + strain + as_assigned_strain
                                             + riskgroup + history + agegroup,
                                             'active' + organ + amplify_to_strain + riskgroup + history + agegroup,
-                                            'program_rate'+ strain_or_inappropriate + history + '_default'
+                                            'program_rate_treatment' + strain_or_inappropriate + history + '_default'
                                             + treatment_stage + '_amplify')
 
     def set_ipt_flows(self):

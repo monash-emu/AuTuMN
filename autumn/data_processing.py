@@ -92,6 +92,11 @@ class Inputs:
         self.treatment_outcome_types = []
         self.include_relapse_in_ds_outcomes = True
 
+        self.define_treatment_history_structure()
+        self.strains = ['']
+        if self.gui_inputs['n_strains'] > 1: self.strains = ['_mdr']
+        if self.gui_inputs['n_strains'] > 2: self.strains.append('_xdr')
+
     #####################
     ### Master method ###
     #####################
@@ -108,11 +113,11 @@ class Inputs:
         # process constant parameters
         self.process_model_constants()
 
-        # process time-variant parameters
-        self.process_time_variants()
-
         # define model structure
         self.define_model_structure()
+
+        # process time-variant parameters
+        self.process_time_variants()
 
         # find parameters that require processing
         self.find_additional_parameters()
@@ -332,7 +337,6 @@ class Inputs:
         self.define_riskgroup_structure()
         self.define_strain_structure()
         self.define_organ_structure()
-        self.define_treatment_history_structure()
 
     def define_age_structure(self):
         """
@@ -531,8 +535,7 @@ class Inputs:
         self.convert_percentages_to_proportions()
         self.find_treatment_outcomes()
         self.add_treatment_outcomes()
-        if self.gui_inputs['n_strains'] > 1: self.duplicate_ds_outcomes_for_multistrain()
-        self.add_resistant_strain_outcomes()
+        self.remove_unnecessary_treatment_timevariants()
         self.add_demo_dictionaries_to_timevariants()
         if self.gui_inputs['is_timevariant_organs']: self.add_organ_status_to_timevariants()
         self.tidy_time_variants()
@@ -632,23 +635,23 @@ class Inputs:
 
         # by each outcome, find total number of patients achieving that outcome
         for outcome in pre2011_map_gtb_to_autumn:
-            self.derived_data['new' + pre2011_map_gtb_to_autumn[outcome]] = {}
-            self.derived_data['treated' + pre2011_map_gtb_to_autumn[outcome]] = {}
+            self.derived_data[self.strains[0] + '_new' + pre2011_map_gtb_to_autumn[outcome]] = {}
+            self.derived_data[self.strains[0] + '_treated' + pre2011_map_gtb_to_autumn[outcome]] = {}
             for hiv_status in hiv_statuses_to_include:
 
                 # new outcomes are disaggregated by organ involvement and hiv status pre-2011
                 for organ in ['sp', 'snep']:
                     # for smear-negative/extrapulmonary where cure isn't an outcome
                     if organ != 'snep' or outcome != '_cur':
-                        self.derived_data['new' + pre2011_map_gtb_to_autumn[outcome]] \
+                        self.derived_data[self.strains[0] + '_new' + pre2011_map_gtb_to_autumn[outcome]] \
                             = tool_kit.increment_dictionary_with_dictionary(
-                            self.derived_data['new' + pre2011_map_gtb_to_autumn[outcome]],
+                            self.derived_data[self.strains[0] + '_new' + pre2011_map_gtb_to_autumn[outcome]],
                             self.original_data['outcomes'][hiv_status + 'new_' + organ + outcome])
 
                 # retreatment outcomes are only disaggregated by hiv status pre-2011
-                self.derived_data['treated' + pre2011_map_gtb_to_autumn[outcome]] \
+                self.derived_data[self.strains[0] + '_treated' + pre2011_map_gtb_to_autumn[outcome]] \
                     = tool_kit.increment_dictionary_with_dictionary(
-                    self.derived_data['treated' + pre2011_map_gtb_to_autumn[outcome]],
+                    self.derived_data[self.strains[0] + '_treated' + pre2011_map_gtb_to_autumn[outcome]],
                     self.original_data['outcomes'][hiv_status + 'ret' + outcome])
 
         # post-2011 fields for DS-TB
@@ -666,45 +669,50 @@ class Inputs:
 
             # new outcomes are disaggregated by hiv status post-2011
             for hiv_status in hiv_statuses_to_include:
-                self.derived_data['new' + post2011_map_gtb_to_autumn[outcome]] \
+                self.derived_data[self.strains[0] + '_new' + post2011_map_gtb_to_autumn[outcome]] \
                     = tool_kit.increment_dictionary_with_dictionary(
-                    self.derived_data['new' + post2011_map_gtb_to_autumn[outcome]],
+                    self.derived_data[self.strains[0] + '_new' + post2011_map_gtb_to_autumn[outcome]],
                     self.original_data['outcomes'][hiv_status + outcome])
 
             # previously treated outcomes (now excluding relapse) are not disaggregated post-2011
-            self.derived_data['treated' + post2011_map_gtb_to_autumn[outcome]] \
+            self.derived_data[self.strains[0] + '_treated' + post2011_map_gtb_to_autumn[outcome]] \
                 = tool_kit.increment_dictionary_with_dictionary(
-                self.derived_data['treated' + post2011_map_gtb_to_autumn[outcome]],
+                self.derived_data[self.strains[0] + '_treated' + post2011_map_gtb_to_autumn[outcome]],
                 self.original_data['outcomes']['ret_nrel' + outcome])
 
         # add retreatment rates on to new if the model is not stratified by treatment history
-        if self.gui_inputs['is_treatment_history']:
+        if not self.gui_inputs['is_treatment_history']:
             for outcome in ['_success', '_default', '_death']:
-                self.derived_data['new' + outcome] \
-                    = tool_kit.increment_dictionary_with_dictionary(
-                    self.derived_data['new' + outcome],
-                    self.derived_data['treated' + outcome])
+                self.derived_data[self.strains[0] + outcome] = {}
+                for history in ['_new', '_treated']:
+                    self.derived_data[self.strains[0] + outcome] \
+                        = tool_kit.increment_dictionary_with_dictionary(
+                        self.derived_data[self.strains[0] + outcome],
+                        self.derived_data[self.strains[0] + history + outcome])
 
         # MDR and XDR-TB (simpler because unaffected by 2011 changes)
-        for strain in ['mdr', 'xdr']:
+        for strain in self.strains[1:]:
             for outcome in post2011_map_gtb_to_autumn:
                 self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]] = {}
                 self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]] \
                     = tool_kit.increment_dictionary_with_dictionary(
                     self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]],
-                    self.original_data['outcomes'][strain + outcome])
+                    self.original_data['outcomes'][strain[1:] + outcome])
+
+        # duplicate outcomes by treatment history for resistant strains
+        for history in self.histories:
+            for outcome in ['_success', '_default', '_death']:
+                for strain in self.strains[1:]:
+                    self.derived_data[strain + history + outcome] \
+                        = self.derived_data[strain + outcome]
 
         # calculate the proportions for use in creating the treatment scale-up functions
-        treatment_types = ['new']
-        if self.gui_inputs['is_treatment_history']: treatment_types.append('treated')
-        if self.gui_inputs['n_strains'] > 1: treatment_types.append('mdr')
-        if self.gui_inputs['n_strains'] > 2: treatment_types.append('xdr')
-        for treatment in treatment_types:
-            self.derived_data.update(tool_kit.calculate_proportion_dict(
+        for history in self.histories:
+            for strain in self.strains:
+                self.derived_data.update(tool_kit.calculate_proportion_dict(
                 self.derived_data,
-                [treatment + '_success', treatment + '_death', treatment + '_default'],
-                percent=False,
-                floor=10.))  # disregard any years with fewer than ten patients for whom data are reported
+                [strain + history + '_success', strain + history + '_death', strain + history + '_default'],
+                percent=False, floor=10., underscore=False))
 
     def add_treatment_outcomes(self):
         """
@@ -712,49 +720,36 @@ class Inputs:
         requested and data not manually entered. Only done for success and death because default is derived from these.
         """
 
-        for outcome in ['_success', '_death']:
-            if self.time_variants['program_prop_treatment' + outcome]['load_data'] == u'yes':
-                for year in self.derived_data['prop_new' + outcome]:
-                    if year not in self.time_variants['program_prop_treatment' + outcome]:
-                        self.time_variants['program_prop_treatment' + outcome][year] \
-                            = self.derived_data['prop_new' + outcome][year]
-            for history in ['_new', '_treated']:
-                for year in self.derived_data['prop' + history + outcome]:
-                    if year not in self.time_variants['program_prop_treatment' + outcome]:
-                        self.time_variants['program_prop_treatment' + outcome + history][year] \
-                            = self.derived_data['prop' + history + outcome][year]
-
-    def duplicate_ds_outcomes_for_multistrain(self):
-        """
-        Duplicates the treatment outcomes with DS-TB key if it is a multi-strain model.
-        """
-
-        for outcome in ['_success', '_death']:
-            self.time_variants['program_prop_treatment' + outcome + '_ds'] \
-                = copy.copy(self.time_variants['program_prop_treatment' + outcome])
-
-    def add_resistant_strain_outcomes(self):
-        """
-        Finds treatment outcomes for the resistant strains (i.e. MDR and XDR-TB).
-        As for DS-TB, no need to find default proportion, as it is equal to one minus success minus death.
-        Inappropriate outcomes are currently set to those for XDR-TB - intended to be temporary.
-        """
-
-        strains = []
-        if self.gui_inputs['n_strains'] > 1: strains.append('mdr')
-        if self.gui_inputs['n_strains'] > 2: strains.append('xdr')
-        for strain in strains:
+        for strain in self.strains:
             for outcome in ['_success', '_death']:
-                if self.time_variants['program_prop_treatment' + outcome + '_' + strain]['load_data'] == u'yes':
-                    for year in self.derived_data['prop_' + strain + outcome]:
-                        if year not in self.time_variants['program_prop_treatment' + outcome + '_' + strain]:
-                            self.time_variants['program_prop_treatment' + outcome + '_' + strain][year] \
-                                = self.derived_data['prop_' + strain + outcome][year]
+                for history in self.histories:
+                    if self.time_variants['program_prop_treatment' + strain + history + outcome]['load_data'] == u'yes':
+                        for year in self.derived_data['prop' + strain + history + outcome]:
+                            if year not in self.time_variants['program_prop_treatment' + strain + history + outcome]:
+                                self.time_variants['program_prop_treatment' + strain + history + outcome][year] \
+                                    = self.derived_data['prop' + strain + history + outcome][year]
 
-        # temporarily assign the same treatment outcomes to XDR-TB as for inappropriate
-        for outcome in ['_success', '_death']:
-            self.time_variants['program_prop_treatment' + outcome + '_inappropriate'] \
-                = copy.copy(self.time_variants['program_prop_treatment' + outcome + '_xdr'])
+    def remove_unnecessary_treatment_timevariants(self):
+
+        # cull some unnecessary treatment time-variant dictionary items
+        keep = {}
+        for time_variant in self.time_variants:
+            keep[time_variant] = True
+            remove_on_strain = True
+            strains = copy.copy(self.strains)
+            if self.gui_inputs['is_misassignment']: strains.append('_inappropriate')
+            for strain in strains:
+                if strain in time_variant: remove_on_strain = False
+            remove_on_history = True
+            for history in self.histories:
+                if history in time_variant: remove_on_history = False
+            if len(self.histories) == 1:
+                if '_new' in time_variant or '_treated' in time_variant: remove_on_history = True
+            if 'program_prop_treatment' in time_variant and (remove_on_strain or remove_on_history):
+                keep[time_variant] = False
+            if 'program_perc_treatment' in time_variant: keep[time_variant] = False
+        for time_variant in self.time_variants.keys():
+            if not keep[time_variant]: del(self.time_variants[time_variant])
 
     def add_demo_dictionaries_to_timevariants(self):
         """
@@ -846,14 +841,12 @@ class Inputs:
         self.find_scaleups()
 
         # find the proportion of cases that are infectious for models that are unstratified by organ status
-        if len(self.organ_status) < 2:
-            self.set_fixed_infectious_proportion()
+        if len(self.organ_status) < 2: self.set_fixed_infectious_proportion()
 
         # add parameters for IPT, if and where not specified for the age range being implemented
         self.add_missing_economics_for_ipt()
 
     def find_data_for_functions_or_params(self):
-
         """
         Method to load all the dictionaries to be used in generating scale-up functions to a single attribute of the
         class instance (to avoid creating heaps of functions for irrelevant programs).
@@ -866,7 +859,7 @@ class Inputs:
         for scenario in self.scenarios:
             self.scaleup_data[scenario] = {}
 
-            # Find the programs that are relevant and load them to the scaleup_data attribute
+            # find the programs that are relevant and load them to the scaleup_data attribute
             for time_variant in self.time_variants:
                 if time_variant not in self.irrelevant_time_variants:
                     self.scaleup_data[scenario][str(time_variant)] = {}
@@ -1013,7 +1006,8 @@ class Inputs:
                     or (len(self.organ_status) == 1 and 'smearneg' in time_variant) \
                     or ('lowquality' in time_variant and not self.gui_inputs['is_lowquality']) \
                     or (len(self.strains) > 1 and 'treatment_' in time_variant and 'timeperiod_' not in time_variant
-                        and ('_ds' not in time_variant and 'dr' not in time_variant)):
+                        and ('_ds' not in time_variant and 'dr' not in time_variant
+                             and '_inappropriate' not in time_variant)):
                 self.irrelevant_time_variants += [time_variant]
 
     def find_relevant_interventions(self):

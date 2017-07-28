@@ -1357,23 +1357,20 @@ class ConsolidatedModel(StratifiedModel):
                                         strain_or_inappropriate = strain + '_as' + assigned_strain[1:]
 
                                 # success by treatment stage
+                                end = organ + strain + as_assigned_strain + riskgroup + history + agegroup
                                 self.set_var_transfer_rate_flow(
-                                    'treatment_infect' + organ + strain + as_assigned_strain + riskgroup
-                                    + history + agegroup,
-                                    'treatment_noninfect' + organ + strain + as_assigned_strain + riskgroup
-                                    + history + agegroup,
+                                    'treatment_infect' + end,
+                                    'treatment_noninfect' + end,
                                     'program_rate_treatment' + strain_or_inappropriate + history + '_success_infect')
                                 self.set_var_transfer_rate_flow(
-                                    'treatment_noninfect' + organ + strain + as_assigned_strain + riskgroup
-                                    + history + agegroup,
+                                    'treatment_noninfect' + end,
                                     'susceptible_immune' + riskgroup + self.histories[-1] + agegroup,
                                     'program_rate_treatment' + strain_or_inappropriate + history + '_success_noninfect')
 
                                 # death on treatment
                                 for treatment_stage in self.treatment_stages:
                                     self.set_var_infection_death_rate_flow(
-                                        'treatment' + treatment_stage + organ + strain + as_assigned_strain
-                                        + riskgroup + history + agegroup,
+                                        'treatment' + treatment_stage + end,
                                         'program_rate_treatment' + strain_or_inappropriate + history + '_death'
                                         + treatment_stage)
 
@@ -1383,8 +1380,7 @@ class ConsolidatedModel(StratifiedModel):
                                     # if it's either the most resistant strain available or amplification is not active:
                                     if strain == self.strains[-1] or not self.is_amplification:
                                         self.set_var_transfer_rate_flow(
-                                            'treatment' + treatment_stage + organ + strain + as_assigned_strain
-                                            + riskgroup + history + agegroup,
+                                            'treatment' + treatment_stage + end,
                                             'active' + organ + strain + riskgroup + history + agegroup,
                                             'program_rate_treatment' + strain_or_inappropriate + history + '_default'
                                             + treatment_stage)
@@ -1393,15 +1389,12 @@ class ConsolidatedModel(StratifiedModel):
                                     else:
                                         amplify_to_strain = self.strains[strain_number + 1]
                                         self.set_var_transfer_rate_flow(
-                                            'treatment' + treatment_stage + organ + strain + as_assigned_strain
-                                            + riskgroup + history + agegroup,
+                                            'treatment' + treatment_stage + end,
                                             'active' + organ + strain + riskgroup + history + agegroup,
                                             'program_rate_treatment' + strain_or_inappropriate + history + '_default'
                                             + treatment_stage + '_noamplify')
                                         self.set_var_transfer_rate_flow(
-                                            'treatment' +
-                                            treatment_stage + organ + strain + as_assigned_strain
-                                            + riskgroup + history + agegroup,
+                                            'treatment' + treatment_stage + end,
                                             'active' + organ + amplify_to_strain + riskgroup + history + agegroup,
                                             'program_rate_treatment' + strain_or_inappropriate + history + '_default'
                                             + treatment_stage + '_amplify')

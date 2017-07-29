@@ -151,7 +151,7 @@ class Inputs:
     ### Constant parameter processing methods ###
     #############################################
 
-    # populate with first round of unprocessed parameters
+    # populate with first round of unprocessed parameters (called before model structure defined)
     def process_model_constants(self):
         """
         Master method to call methods for processing constant model parameters.
@@ -197,7 +197,7 @@ class Inputs:
             self.model_constants['tb_multiplier_force_smearpos'] = 1.
             self.model_constants['tb_multiplier_force_extrapul'] = 0.
 
-    # derive further parameters
+    # derive further parameters (called after model structure defined)
     def find_additional_parameters(self):
         """
         Find additional parameters.
@@ -614,8 +614,9 @@ class Inputs:
 
     def find_treatment_outcomes(self, include_hiv=True):
         """
-        Does all data processing from the point of the loaded treatment outcomes spreadsheet from the GTB Report through
-        to finding the proportions for each outcome for later conversion to data for time-variant parameter calculation.
+        Does all treatment outcome processing from the point of the loaded treatment outcomes spreadsheet from the GTB
+        Report through to finding the proportions for each outcome for later conversion to data for time-variant
+        parameter calculation.
 
         Args:
             include_hiv: Whether to include the HIV patients in calculations
@@ -624,7 +625,7 @@ class Inputs:
 
         # up to 2011 fields for DS-TB
 
-        # string conversion structures
+        # string conversion structures for communcation between GTB report and AuTuMN
         hiv_statuses_to_include = ['']
         if include_hiv: hiv_statuses_to_include.append('hiv_')
         pre2011_map_gtb_to_autumn = {'_cmplt': '_success',
@@ -633,13 +634,13 @@ class Inputs:
                                      '_fail': '_default',
                                      '_died': '_death'}
 
-        # by each outcome, find total number of patients achieving that outcome
+        # by each outcome, find total number of patients achieving that outcome (up to 2011, with or without HIV)
         for outcome in pre2011_map_gtb_to_autumn:
             self.derived_data[self.strains[0] + '_new' + pre2011_map_gtb_to_autumn[outcome]] = {}
             self.derived_data[self.strains[0] + '_treated' + pre2011_map_gtb_to_autumn[outcome]] = {}
             for hiv_status in hiv_statuses_to_include:
 
-                # new outcomes are disaggregated by organ involvement and hiv status pre-2011
+                # new outcomes are disaggregated by organ involvement and hiv status up to 2011
                 for organ in ['sp', 'snep']:
                     # for smear-negative/extrapulmonary where cure isn't an outcome
                     if organ != 'snep' or outcome != '_cur':
@@ -680,7 +681,7 @@ class Inputs:
                 self.derived_data[self.strains[0] + '_treated' + post2011_map_gtb_to_autumn[outcome]],
                 self.original_data['outcomes']['ret_nrel' + outcome])
 
-        # add retreatment rates on to new if the model is not stratified by treatment history
+        # add re-treatment rates on to new if the model is not stratified by treatment history
         if not self.gui_inputs['is_treatment_history']:
             for outcome in ['_success', '_default', '_death']:
                 self.derived_data[self.strains[0] + outcome] = {}
@@ -712,7 +713,7 @@ class Inputs:
                 self.derived_data.update(tool_kit.calculate_proportion_dict(
                 self.derived_data,
                 [strain + history + '_success', strain + history + '_death', strain + history + '_default'],
-                percent=False, floor=10., underscore=False))
+                percent=False, floor=self.model_constants['tb_n_outcome_minimum'], underscore=False))
 
     def add_treatment_outcomes(self):
         """

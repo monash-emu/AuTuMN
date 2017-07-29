@@ -534,7 +534,6 @@ class Inputs:
         self.load_vacc_detect_time_variants()
         self.convert_percentages_to_proportions()
         self.find_treatment_outcomes()
-        self.add_treatment_outcomes()
         self.remove_unnecessary_treatment_timevariants()
         self.add_demo_dictionaries_to_timevariants()
         if self.gui_inputs['is_timevariant_organs']: self.add_organ_status_to_timevariants()
@@ -612,7 +611,13 @@ class Inputs:
                     else:
                         self.time_variants[perc_name][year] = self.time_variants[time_variant][year]
 
-    def find_treatment_outcomes(self, include_hiv=True):
+    def find_treatment_outcomes(self):
+
+        self.aggregate_treatment_outcomes()
+        self.calculate_treatment_outcome_proportions()
+        self.add_treatment_outcomes_to_timevariants()
+
+    def aggregate_treatment_outcomes(self, include_hiv=True):
         """
         Does all treatment outcome processing from the point of the loaded treatment outcomes spreadsheet from the GTB
         Report through to finding the proportions for each outcome for later conversion to data for time-variant
@@ -623,9 +628,9 @@ class Inputs:
                 (because may not be needed for models with explicit HIV strata)
         """
 
-        # up to 2011 fields for DS-TB
+        ''' up to 2011 fields for DS-TB '''
 
-        # string conversion structures for communcation between GTB report and AuTuMN
+        # create string conversion structures for communcation between GTB report and AuTuMN
         hiv_statuses_to_include = ['']
         if include_hiv: hiv_statuses_to_include.append('hiv_')
         pre2011_map_gtb_to_autumn = {'_cmplt': '_success',
@@ -655,9 +660,9 @@ class Inputs:
                     self.derived_data[self.strains[0] + '_treated' + pre2011_map_gtb_to_autumn[outcome]],
                     self.original_data['outcomes'][hiv_status + 'ret' + outcome])
 
-        # post-2011 fields for DS-TB
+        ''' post-2011 fields for DS-TB '''
 
-        # string conversion structures
+        # create string conversion structures
         hiv_statuses_to_include = ['newrel']
         if include_hiv: hiv_statuses_to_include.append('tbhiv')
         post2011_map_gtb_to_autumn = {'_succ': '_success',
@@ -691,7 +696,9 @@ class Inputs:
                         self.derived_data[self.strains[0] + outcome],
                         self.derived_data[self.strains[0] + history + outcome])
 
-        # MDR and XDR-TB (simpler because unaffected by 2011 changes)
+        ''' MDR and XDR-TB '''
+
+        # simpler because unaffected by 2011 changes
         for strain in self.strains[1:]:
             for outcome in post2011_map_gtb_to_autumn:
                 self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]] = {}
@@ -700,14 +707,18 @@ class Inputs:
                     self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]],
                     self.original_data['outcomes'][strain[1:] + outcome])
 
-        # duplicate outcomes by treatment history for resistant strains
+        # duplicate outcomes by treatment history because not provided as disaggregated for resistant strains
         for history in self.histories:
             for outcome in ['_success', '_default', '_death']:
                 for strain in self.strains[1:]:
                     self.derived_data[strain + history + outcome] \
                         = self.derived_data[strain + outcome]
 
-        # calculate the proportions for use in creating the treatment scale-up functions
+    def calculate_treatment_outcome_proportions(self):
+        """
+        Find proportions by each outcome for later use in creating the treatment scale-up functions.
+        """
+
         for history in self.histories:
             for strain in self.strains:
                 self.derived_data.update(tool_kit.calculate_proportion_dict(
@@ -715,10 +726,11 @@ class Inputs:
                 [strain + history + '_success', strain + history + '_death', strain + history + '_default'],
                 percent=False, floor=self.model_constants['tb_n_outcome_minimum'], underscore=False))
 
-    def add_treatment_outcomes(self):
+    def add_treatment_outcomes_to_timevariants(self):
         """
-        Add treatment outcomes for DS-TB to the time variants attribute. Use the same approach as above to adding if
-        requested and data not manually entered. Only done for success and death because default is derived from these.
+        Add treatment outcomes for all strains and treatment histories to the time variants attribute. Use the same
+        approach as elsewhere to adding if requested and data not manually entered. Only done for success and death
+        because default is derived from these.
         """
 
         for strain in self.strains:

@@ -534,7 +534,7 @@ class Inputs:
         self.load_vacc_detect_time_variants()
         self.convert_percentages_to_proportions()
         self.find_treatment_outcomes()
-        self.remove_unnecessary_treatment_timevariants()
+        self.find_irrelevant_treatment_timevariants()
         self.add_demo_dictionaries_to_timevariants()
         if self.gui_inputs['is_timevariant_organs']: self.add_organ_status_to_timevariants()
         self.tidy_time_variants()
@@ -742,9 +742,13 @@ class Inputs:
                                 self.time_variants['program_prop_treatment' + strain + history + outcome][year] \
                                     = self.derived_data['prop' + strain + history + outcome][year]
 
-    def remove_unnecessary_treatment_timevariants(self):
+    def find_irrelevant_treatment_timevariants(self):
+        """
+        Find treatment time-variant functions that are irrelevant to requested model structure (such as those specific
+        to treatment history in models that are unstratified by treatment history, percentages and outcomes for strains
+        not implemented in the current version of the model).
+        """
 
-        # cull some unnecessary treatment time-variant dictionary items
         keep = {}
         for time_variant in self.time_variants:
             keep[time_variant] = True
@@ -761,8 +765,7 @@ class Inputs:
             if 'program_prop_treatment' in time_variant and (remove_on_strain or remove_on_history):
                 keep[time_variant] = False
             if 'program_perc_treatment' in time_variant: keep[time_variant] = False
-        for time_variant in self.time_variants.keys():
-            if not keep[time_variant]: del(self.time_variants[time_variant])
+            if not keep[time_variant]: self.irrelevant_time_variants += [time_variant]
 
     def add_demo_dictionaries_to_timevariants(self):
         """

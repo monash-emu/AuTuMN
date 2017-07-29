@@ -672,7 +672,7 @@ class ConsolidatedModel(StratifiedModel):
                 self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
                     = self.params['tb_timeperiod' + treatment_stage + '_ontreatment' + strain]
 
-            # adapt treatment periods for short course regimen
+            # adapt treatment periods for short-course regimen
             if strain == '_mdr' and 'int_prop_shortcourse_mdr' in self.relevant_interventions:
                 relative_treatment_duration_mdr \
                     = 1. - self.vars['int_prop_shortcourse_mdr'] \
@@ -681,7 +681,7 @@ class ConsolidatedModel(StratifiedModel):
                     self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
                         *= relative_treatment_duration_mdr
 
-                # adapt treatment outcomes for short course regimen
+                # adapt treatment outcomes for short-course regimen
                 if self.shortcourse_improves_outcomes:
                     for outcome in ['_success', '_death']:
                         self.vars['program_prop_treatment' + outcome + '_mdr'] \

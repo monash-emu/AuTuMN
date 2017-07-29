@@ -624,9 +624,9 @@ class Inputs:
 
     def aggregate_treatment_outcomes(self, include_hiv=True):
         """
-        Does all treatment outcome processing from the point of the loaded treatment outcomes spreadsheet from the GTB
-        Report through to finding the proportions for each outcome for later conversion to data for time-variant
-        parameter calculation.
+        Sums the treatment outcome numbers from the Global TB Report to get aggregate values for the number of patients
+        achieving 1) success, 2) death on treatment, 3) unfavourable outcomes other than death on treatment (termed
+        default here.
 
         Args:
             include_hiv: Whether to include the HIV patients in calculations
@@ -652,6 +652,7 @@ class Inputs:
 
                 # new outcomes are disaggregated by organ involvement and hiv status up to 2011
                 for organ in ['sp', 'snep']:
+
                     # for smear-negative/extrapulmonary where cure isn't an outcome
                     if organ != 'snep' or outcome != '_cur':
                         self.derived_data[self.strains[0] + '_new' + pre2011_map_gtb_to_autumn[outcome]] \
@@ -659,7 +660,7 @@ class Inputs:
                             self.derived_data[self.strains[0] + '_new' + pre2011_map_gtb_to_autumn[outcome]],
                             self.original_data['outcomes'][hiv_status + 'new_' + organ + outcome])
 
-                # retreatment outcomes are only disaggregated by hiv status pre-2011
+                # re-treatment outcomes are only disaggregated by hiv status pre-2011
                 self.derived_data[self.strains[0] + '_treated' + pre2011_map_gtb_to_autumn[outcome]] \
                     = tool_kit.increment_dictionary_with_dictionary(
                     self.derived_data[self.strains[0] + '_treated' + pre2011_map_gtb_to_autumn[outcome]],
@@ -727,9 +728,9 @@ class Inputs:
         for history in self.histories:
             for strain in self.strains:
                 self.derived_data.update(tool_kit.calculate_proportion_dict(
-                self.derived_data,
-                [strain + history + '_success', strain + history + '_death', strain + history + '_default'],
-                percent=False, floor=self.model_constants['tb_n_outcome_minimum'], underscore=False))
+                    self.derived_data,
+                    [strain + history + '_success', strain + history + '_death', strain + history + '_default'],
+                    percent=False, floor=self.model_constants['tb_n_outcome_minimum'], underscore=False))
 
     def add_treatment_outcomes_to_timevariants(self):
         """

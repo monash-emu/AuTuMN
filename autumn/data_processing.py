@@ -540,6 +540,7 @@ class Inputs:
         self.tidy_time_variants()
         self.adjust_param_for_reporting('program_prop_detect', 'Bulgaria', 0.95)  # Bulgaria thought over-estimated CDR
 
+    # general and demographic methods
     def extract_freeze_times(self):
         """
         Extract the freeze_times for each scenario, if specified.
@@ -611,7 +612,11 @@ class Inputs:
                     else:
                         self.time_variants[perc_name][year] = self.time_variants[time_variant][year]
 
+    # treatment outcome methods
     def find_treatment_outcomes(self):
+        """
+        Master method for working through all the processes for finding treatment outcome functions.
+        """
 
         self.aggregate_treatment_outcomes()
         self.calculate_treatment_outcome_proportions()
@@ -742,6 +747,7 @@ class Inputs:
                                 self.time_variants['program_prop_treatment' + strain + history + outcome][year] \
                                     = self.derived_data['prop' + strain + history + outcome][year]
 
+    # miscellaneous methods
     def find_irrelevant_treatment_timevariants(self):
         """
         Find treatment time-variant functions that are irrelevant to requested model structure (such as those specific
@@ -842,144 +848,6 @@ class Inputs:
             for year in self.time_variants[param]:
                 if type(year) == int:
                     self.time_variants[param][year] *= adjustment_factor
-
-    # called later than the methods above - after interventions have been classified
-    def find_scaleup_functions(self):
-        """
-        Master method for calculation of time-variant parameters/scale-up functions.
-        """
-
-        # extract data into structures for creating time-variant parameters or constant ones
-        self.find_data_for_functions_or_params()
-
-        # find scale-up functions or constant parameters
-        self.find_constant_functions()
-        self.find_scaleups()
-
-        # find the proportion of cases that are infectious for models that are unstratified by organ status
-        if len(self.organ_status) < 2: self.set_fixed_infectious_proportion()
-
-        # add parameters for IPT, if and where not specified for the age range being implemented
-        self.add_missing_economics_for_ipt()
-
-    def find_data_for_functions_or_params(self):
-        """
-        Method to load all the dictionaries to be used in generating scale-up functions to a single attribute of the
-        class instance (to avoid creating heaps of functions for irrelevant programs).
-
-        Creates: self.scaleup_data, a dictionary of the relevant scale-up data for creating scale-up functions in
-            set_scaleup_functions within the model object. First tier of keys is the scenario to be run, next is the
-            time variant parameter to be calculated.
-        """
-
-        for scenario in self.scenarios:
-            self.scaleup_data[scenario] = {}
-
-            # find the programs that are relevant and load them to the scaleup_data attribute
-            for time_variant in self.time_variants:
-                if time_variant not in self.irrelevant_time_variants:
-                    self.scaleup_data[scenario][str(time_variant)] = {}
-                    for i in self.time_variants[time_variant]:
-                        if i == 'scenario_' + str(scenario):
-                            self.scaleup_data[scenario][str(time_variant)]['scenario'] = \
-                                self.time_variants[time_variant][i]
-                        elif type(i) == str:
-                            if 'scenario_' not in i:
-                                self.scaleup_data[scenario][str(time_variant)][i] = self.time_variants[time_variant][i]
-                        else:
-                            self.scaleup_data[scenario][str(time_variant)][i] = self.time_variants[time_variant][i]
-
-    def find_constant_functions(self):
-        """
-        Method that can be used to set some variables that might usually be time-variant to be constant instead,
-        by creating a function that is just a single constant value (through the static make_constant_function method
-        above).
-        """
-
-        for scenario in self.scenarios:
-
-            # initialise the scale-up function dictionary for the scenario
-            self.scaleup_fns[scenario] = {}
-
-            # set constant functions for proportion smear-positive and negative
-            if not self.gui_inputs['is_timevariant_organs']:
-                for organ in ['pos', 'neg']:
-                    self.scaleup_fns[scenario]['epi_prop_smear' + organ] \
-                        = make_constant_function(self.model_constants['epi_prop_smear' + organ])
-
-            # set constant function for effective contact rate
-            if not self.gui_inputs['is_timevariant_contactrate']:
-                self.scaleup_fns[scenario]['tb_n_contact'] \
-                    = make_constant_function(self.model_constants['tb_n_contact'])
-
-    def find_scaleups(self):
-        """
-        Calculate the scale-up functions from the scale-up data attribute and populate to a dictionary with keys of the
-        scenarios to be run.
-        Note that the 'demo_life_expectancy' parameter has to be given this name and base.py will then calculate
-        population death rates automatically.
-        """
-
-        for scenario in self.scenarios:
-            scenario_name = tool_kit.find_scenario_string_from_number(scenario)
-
-            # define scale-up functions from these datasets
-            for param in self.scaleup_data[scenario]:
-                if param not in self.scaleup_fns[scenario]:  # if not already set as constant previously
-
-                    # extract and remove the smoothness parameter from the dictionary
-                    smoothness = self.gui_inputs['default_smoothness']
-                    if 'smoothness' in self.scaleup_data[scenario][param]:
-                        smoothness = self.scaleup_data[scenario][param].pop('smoothness')
-
-                    # if the parameter is being modified for the scenario being run
-                    scenario_for_function = None
-                    if 'scenario' in self.scaleup_data[scenario][param]:
-                        scenario_for_function = [self.model_constants['scenario_full_time'],
-                                                 self.scaleup_data[scenario][param].pop('scenario')]
-
-                    # upper bound depends on whether the parameter is a proportion
-                    upper_bound = None
-                    if 'prop_' in param: upper_bound = 1.
-
-                    # calculate the scaling function
-                    self.scaleup_fns[scenario][param] \
-                        = scale_up_function(self.scaleup_data[scenario][param].keys(),
-                                            self.scaleup_data[scenario][param].values(),
-                                            self.gui_inputs['fitting_method'], smoothness,
-                                            bound_low=0., bound_up=upper_bound,
-                                            intervention_end=scenario_for_function,
-                                            intervention_start_date=self.model_constants[
-                                                'scenario_start_time'])
-
-                    # freeze at point in time if necessary
-                    if scenario_name in self.freeze_times \
-                            and self.freeze_times[scenario_name] < self.model_constants['recent_time']:
-                        self.scaleup_fns[scenario][param] \
-                            = freeze_curve(self.scaleup_fns[scenario][param], self.freeze_times[scenario_name])
-
-    def set_fixed_infectious_proportion(self):
-        """
-        Find a multiplier for the proportion of all cases infectious for models unstructured by organ status.
-        """
-
-        self.model_constants['tb_multiplier_force'] \
-            = self.model_constants['epi_prop_smearpos'] \
-              + self.model_constants['epi_prop_smearneg'] * self.model_constants['tb_multiplier_force_smearneg']
-
-    def add_missing_economics_for_ipt(self):
-        """
-        To avoid errors because no economic values are available for age-stratified IPT, use the unstratified values
-        for each age group for which no value is provided.
-        """
-
-        for agegroup in self.agegroups:
-            for param in ['_saturation', '_inflectioncost', '_unitcost', '_startupduration', '_startupcost']:
-                if 'econ' + param + '_ipt' + agegroup not in self.model_constants:
-                    self.model_constants['econ' + param + '_ipt' + agegroup] \
-                        = self.model_constants['econ' + param + '_ipt']
-                    self.add_comment_to_gui_window('"' + param[1:] + '" parameter unavailable for "' + agegroup +
-                                                   '" age-group, so default value used.\n')
 
     ##############################
     ### Classify interventions ###
@@ -1154,6 +1022,153 @@ class Inputs:
                        if value > 0.]
                 if len(years_pos_coverage) > 0:  # i.e. some coverage present from start
                     self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
+
+    ######################################################
+    ### Finding scale-up functions and related methods ###
+    ######################################################
+
+    def find_scaleup_functions(self):
+        """
+        Master method for calculation of time-variant parameters/scale-up functions.
+        """
+
+        # extract data into structures for creating time-variant parameters or constant ones
+        self.find_data_for_functions_or_params()
+
+        # find scale-up functions or constant parameters
+        self.find_constant_functions()
+        self.find_scaleups()
+
+        # find the proportion of cases that are infectious for models that are unstratified by organ status
+        if len(self.organ_status) < 2: self.set_fixed_infectious_proportion()
+
+        # add parameters for IPT, if and where not specified for the age range being implemented
+        self.add_missing_economics_for_ipt()
+
+    def find_data_for_functions_or_params(self):
+        """
+        Method to load all the dictionaries to be used in generating scale-up functions to a single attribute of the
+        class instance (to avoid creating heaps of functions for irrelevant programs).
+
+        Creates: self.scaleup_data, a dictionary of the relevant scale-up data for creating scale-up functions in
+            set_scaleup_functions within the model object. First tier of keys is the scenario to be run, next is the
+            time variant parameter to be calculated.
+        """
+
+        for scenario in self.scenarios:
+            self.scaleup_data[scenario] = {}
+
+            # find the programs that are relevant and load them to the scaleup_data attribute
+            for time_variant in self.time_variants:
+                if time_variant not in self.irrelevant_time_variants:
+                    self.scaleup_data[scenario][str(time_variant)] = {}
+                    for i in self.time_variants[time_variant]:
+                        if i == 'scenario_' + str(scenario):
+                            self.scaleup_data[scenario][str(time_variant)]['scenario'] = \
+                                self.time_variants[time_variant][i]
+                        elif type(i) == str:
+                            if 'scenario_' not in i:
+                                self.scaleup_data[scenario][str(time_variant)][i] = \
+                                self.time_variants[time_variant][i]
+                        else:
+                            self.scaleup_data[scenario][str(time_variant)][i] = \
+                            self.time_variants[time_variant][i]
+
+    def find_constant_functions(self):
+        """
+        Method that can be used to set some variables that might usually be time-variant to be constant instead,
+        by creating a function that is just a single constant value (through the static make_constant_function method
+        above).
+        """
+
+        for scenario in self.scenarios:
+
+            # initialise the scale-up function dictionary for the scenario
+            self.scaleup_fns[scenario] = {}
+
+            # set constant functions for proportion smear-positive and negative
+            if not self.gui_inputs['is_timevariant_organs']:
+                for organ in ['pos', 'neg']:
+                    self.scaleup_fns[scenario]['epi_prop_smear' + organ] \
+                        = make_constant_function(self.model_constants['epi_prop_smear' + organ])
+
+            # set constant function for effective contact rate
+            if not self.gui_inputs['is_timevariant_contactrate']:
+                self.scaleup_fns[scenario]['tb_n_contact'] \
+                    = make_constant_function(self.model_constants['tb_n_contact'])
+
+    def find_scaleups(self):
+        """
+        Calculate the scale-up functions from the scale-up data attribute and populate to a dictionary with keys of the
+        scenarios to be run.
+        Note that the 'demo_life_expectancy' parameter has to be given this name and base.py will then calculate
+        population death rates automatically.
+        """
+
+        for scenario in self.scenarios:
+            scenario_name = tool_kit.find_scenario_string_from_number(scenario)
+
+            # define scale-up functions from these datasets
+            for param in self.scaleup_data[scenario]:
+                if param not in self.scaleup_fns[scenario]:  # if not already set as constant previously
+
+                    # extract and remove the smoothness parameter from the dictionary
+                    smoothness = self.gui_inputs['default_smoothness']
+                    if 'smoothness' in self.scaleup_data[scenario][param]:
+                        smoothness = self.scaleup_data[scenario][param].pop('smoothness')
+
+                    # if the parameter is being modified for the scenario being run
+                    scenario_for_function = None
+                    if 'scenario' in self.scaleup_data[scenario][param]:
+                        scenario_for_function = [self.model_constants['scenario_full_time'],
+                                                 self.scaleup_data[scenario][param].pop('scenario')]
+
+                    # upper bound depends on whether the parameter is a proportion
+                    upper_bound = None
+                    if 'prop_' in param: upper_bound = 1.
+
+                    # calculate the scaling function
+                    self.scaleup_fns[scenario][param] \
+                        = scale_up_function(self.scaleup_data[scenario][param].keys(),
+                                            self.scaleup_data[scenario][param].values(),
+                                            self.gui_inputs['fitting_method'], smoothness,
+                                            bound_low=0., bound_up=upper_bound,
+                                            intervention_end=scenario_for_function,
+                                            intervention_start_date=self.model_constants[
+                                                'scenario_start_time'])
+
+                    # freeze at point in time if necessary
+                    if scenario_name in self.freeze_times \
+                            and self.freeze_times[scenario_name] < self.model_constants['recent_time']:
+                        self.scaleup_fns[scenario][param] \
+                            = freeze_curve(self.scaleup_fns[scenario][param],
+                                           self.freeze_times[scenario_name])
+
+    def set_fixed_infectious_proportion(self):
+        """
+        Find a multiplier for the proportion of all cases infectious for models unstructured by organ status.
+        """
+
+        self.model_constants['tb_multiplier_force'] \
+            = self.model_constants['epi_prop_smearpos'] \
+              + self.model_constants['epi_prop_smearneg'] * self.model_constants[
+            'tb_multiplier_force_smearneg']
+
+    def add_missing_economics_for_ipt(self):
+        """
+        To avoid errors because no economic values are available for age-stratified IPT, use the unstratified values
+        for each age group for which no value is provided.
+        """
+
+        for agegroup in self.agegroups:
+            for param in ['_saturation', '_inflectioncost', '_unitcost', '_startupduration',
+                          '_startupcost']:
+                if 'econ' + param + '_ipt' + agegroup not in self.model_constants:
+                    self.model_constants['econ' + param + '_ipt' + agegroup] \
+                        = self.model_constants['econ' + param + '_ipt']
+                    self.add_comment_to_gui_window(
+                        '"' + param[1:] + '" parameter unavailable for "' + agegroup +
+                        '" age-group, so default value used.\n')
 
     ###################################
     ### Uncertainty-related methods ###

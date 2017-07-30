@@ -937,9 +937,11 @@ class ConsolidatedModel(StratifiedModel):
                     force_types = ['_immune', '_latent']
                     if 'int_prop_novel_vaccination' in self.relevant_interventions: force_types.append('_novelvac')
                     for force_type in force_types:
-                        self.vars['rate_force' + force_type + strain + riskgroup + agegroup] \
-                            = self.params['tb_multiplier' + force_type + '_protection'] \
-                              * self.vars['rate_force' + strain + riskgroup + agegroup]
+                        for history in self.histories:
+                            self.vars['rate_force' + force_type + strain + history + riskgroup + agegroup] \
+                                = self.vars['rate_force' + strain + riskgroup + agegroup] \
+                                  * self.params['tb_multiplier' + force_type + '_protection'] \
+                                  * self.params['tb_multiplier' + history + '_protection']
 
     def calculate_population_sizes(self):
         """
@@ -1142,18 +1144,18 @@ class ConsolidatedModel(StratifiedModel):
                         self.set_var_transfer_rate_flow(
                             'susceptible_immune' + riskgroup + history + agegroup,
                             'latent_early' + strain + riskgroup + history + agegroup,
-                            'rate_force_immune' + strain + force_riskgroup + agegroup)
+                            'rate_force_immune' + strain + history + force_riskgroup + agegroup)
                         self.set_var_transfer_rate_flow(
                             'latent_late' + strain + riskgroup + history + agegroup,
                             'latent_early' + strain + riskgroup + history + agegroup,
-                            'rate_force_latent' + strain + force_riskgroup + agegroup)
+                            'rate_force_latent' + strain + history + force_riskgroup + agegroup)
 
                         # novel vaccination
                         if 'int_prop_novel_vaccination' in self.relevant_interventions:
                             self.set_var_transfer_rate_flow(
                                 'susceptible_novelvac' + riskgroup + history + agegroup,
                                 'latent_early' + strain + riskgroup + history + agegroup,
-                                'rate_force_novelvac' + strain + force_riskgroup + agegroup)
+                                'rate_force_novelvac' + strain + history + force_riskgroup + agegroup)
 
     def set_progression_flows(self):
         """

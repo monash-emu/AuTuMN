@@ -110,6 +110,9 @@ class Inputs:
         self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
         self.original_data = spreadsheet.read_input_data_xls(True, self.find_keys_of_sheets_to_read(), self.country)
 
+        # make sure user inputs make sense
+        self.reconcile_user_inputs()
+
         # process constant parameters (age breakpoints come from sheets still, so has to come before defining structure)
         self.process_model_constants()
 
@@ -242,6 +245,9 @@ class Inputs:
                 self.model_constants['tb_rate_stabilise' + riskgroup + agegroup] = (1. - prop_early) / time_early
 
     def find_additional_immunity_params(self):
+        """
+        Find immunity parameters, including those that are the product of multiple other parameters.
+        """
 
         force_types = ['_immune', '_latent']
         # if 'int_prop_novel_vaccination' in self.relevant_interventions: force_types.append('_novelvac')
@@ -423,9 +429,6 @@ class Inputs:
         # add the null group
         if len(self.riskgroups) == 0:
             self.riskgroups += ['']
-            self.vary_force_infection_by_riskgroup = False
-            self.add_comment_to_gui_window(
-                'Heterogeneous mixing requested, but not implemented as no risk groups are present')
         else:
             self.riskgroups += ['_norisk']
 
@@ -1246,6 +1249,29 @@ class Inputs:
     #############################
     ### Miscellaneous methods ###
     #############################
+
+    def reconcile_user_inputs(self):
+        """
+        Method to ensure that user inputs make sense within the model, including that elaborations that are specific to
+        particular ways of structuring the model are turned off with a warning if the model doesn't have the structure
+        to allow for those elaborations.
+        """
+
+        if self.gui_inputs['is_misassignment'] and self.gui_inputs['n_strains'] <= 1:
+            self.add_comment_to_gui_window('Misassignment requested, but not implemented as single strain model only')
+            self.gui_inputs['is_misassignment'] = False
+        if self.gui_inputs['is_amplification'] and self.gui_inputs['n_strains'] <= 1:
+            self.add_comment_to_gui_window(
+                'Resistance amplification requested, but not implemented as single strain model only')
+            self.gui_inputs['is_amplification'] = False
+        if len(self.riskgroups) == 0 and self.vary_force_infection_by_riskgroup:
+            self.add_comment_to_gui_window(
+                'Heterogeneous mixing requested, but not implemented as no risk groups are present')
+            self.vary_force_infection_by_riskgroup = False
+        if self.gui_inputs['n_organs'] <= 1 and self.gui_inputs['is_timevariant_organs']:
+            self.add_comment_to_gui_window(
+                'Time-variant organ status requested, but not implemented as no stratification by organ status')
+            self.gui_inputs['is_timevariant_organs'] = False
 
     def find_keys_of_sheets_to_read(self):
         """

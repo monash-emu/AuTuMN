@@ -82,7 +82,7 @@ class ConsolidatedModel(StratifiedModel):
         BaseModel.__init__(self)
         StratifiedModel.__init__(self)
 
-        # model attributes set from inputs
+        # model attributes set from model runner object
         self.inputs = inputs
         self.scenario = scenario
 
@@ -96,14 +96,13 @@ class ConsolidatedModel(StratifiedModel):
         for attribute in ['relevant_interventions', 'scaleup_fns', 'interventions_to_cost', 'mixing']:
             setattr(self, attribute, getattr(inputs, attribute)[scenario])
 
-        # start_time can't be left as a model constant as it needs to be set for each scenario through the model runner
+        # start_time can't be given as a model constant, as it must be set for each scenario individually
         self.start_time = inputs.model_constants['start_time']
 
         # model attributes to be set directly to attributes from the GUI object
         for attribute in ['is_lowquality', 'is_amplification', 'is_misassignment', 'is_timevariant_organs', 'country',
                           'time_step', 'integration_method']:
             setattr(self, attribute, gui_inputs[attribute])
-        if self.is_misassignment: assert self.is_amplification, 'Misassignment requested without amplification'
 
         # set fixed parameters from inputs object
         for key, value in inputs.model_constants.items():

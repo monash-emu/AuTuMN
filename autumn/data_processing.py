@@ -91,15 +91,9 @@ class Inputs:
         self.emit_delay = .1
         self.treatment_outcome_types = []
         self.include_relapse_in_ds_outcomes = True
-
         self.define_treatment_history_structure()
-        self.strains = ['']
-        if self.gui_inputs['n_strains'] > 1: self.strains = ['_mdr']
-        if self.gui_inputs['n_strains'] > 2: self.strains.append('_xdr')
 
-    #####################
-    ### Master method ###
-    #####################
+    ''' Master method '''
 
     def read_and_load_data(self):
         """
@@ -150,9 +144,7 @@ class Inputs:
         # perform checks (undeveloped still)
         self.checks()
 
-    #############################################
-    ### Constant parameter processing methods ###
-    #############################################
+    ''' Constant parameter processing methods '''
 
     # populate with first round of unprocessed parameters (called before model structure defined)
     def process_model_constants(self):
@@ -345,9 +337,7 @@ class Inputs:
                 = self.model_constants['tb_prop_ltbi_test_sensitivity'] \
                   * self.model_constants['tb_prop_' + ipt_type + 'ipt_effectiveness']
 
-    #########################################
-    ### Methods to define model structure ###
-    #########################################
+    ''' Methods to define model structure '''
 
     def define_model_structure(self):
         """
@@ -534,9 +524,7 @@ class Inputs:
         if 'int_prop_novel_vaccination' in self.relevant_interventions:
             self.compartment_types += ['susceptible_novelvac']
 
-    #################################################
-    ### Time variant parameter processing methods ###
-    #################################################
+    ''' Time variant parameter processing methods '''
 
     def process_time_variants(self):
         """
@@ -868,9 +856,7 @@ class Inputs:
                 if type(year) == int:
                     self.time_variants[param][year] *= adjustment_factor
 
-    ##############################
-    ### Classify interventions ###
-    ##############################
+    ''' Classify interventions '''
 
     def classify_interventions(self):
         """
@@ -1042,9 +1028,7 @@ class Inputs:
                 if len(years_pos_coverage) > 0:  # i.e. some coverage present from start
                     self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
 
-    ######################################################
-    ### Finding scale-up functions and related methods ###
-    ######################################################
+    ''' Finding scale-up functions and related methods '''
 
     def find_scaleup_functions(self):
         """
@@ -1189,9 +1173,7 @@ class Inputs:
                         '"' + param[1:] + '" parameter unavailable for "' + agegroup +
                         '" age-group, so default value used.\n')
 
-    ###################################
-    ### Uncertainty-related methods ###
-    ###################################
+    ''' Uncertainty-related methods '''
 
     def process_uncertainty_parameters(self):
         """
@@ -1246,9 +1228,7 @@ class Inputs:
                 self.add_comment_to_gui_window(
                     'Warning: Calibrated output %s is not directly available from the data' % output['key'])
 
-    #############################
-    ### Miscellaneous methods ###
-    #############################
+    ''' Miscellaneous methods '''
 
     def reconcile_user_inputs(self):
         """

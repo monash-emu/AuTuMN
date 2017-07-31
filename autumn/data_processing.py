@@ -85,13 +85,12 @@ class Inputs:
         self.runtime_outputs = runtime_outputs
         self.mode = 'uncertainty'
         self.js_gui = js_gui
-        if self.js_gui:
-            self.js_gui('init')
+        if self.js_gui: self.js_gui('init')
         self.plot_count = 0
         self.emit_delay = .1
         self.treatment_outcome_types = []
         self.include_relapse_in_ds_outcomes = True
-        self.define_treatment_history_structure()
+        # self.define_treatment_history_structure()
 
     ''' Master method '''
 
@@ -106,6 +105,9 @@ class Inputs:
 
         # make sure user inputs make sense
         self.reconcile_user_inputs()
+
+        # define treatment history structure (should ideally go in define_model_structure, but can't)
+        self.define_treatment_history_structure()
 
         # process constant parameters (age breakpoints come from sheets still, so has to come before defining structure)
         self.process_model_constants()
@@ -207,7 +209,7 @@ class Inputs:
         if len(self.riskgroups) > 1: self.find_riskgroup_progressions()
 
         # duplicate immunity parameters for models stratified by treatment history
-        # self.find_additional_immunity_params()
+        self.find_additional_immunity_params()
 
         # calculate rates of progression to active disease or late latency
         self.find_latency_progression_rates()
@@ -339,6 +341,15 @@ class Inputs:
 
     ''' Methods to define model structure '''
 
+    def define_treatment_history_structure(self):
+        """
+        Define the structure for tracking patients' treatment histories (i.e. whether they are treatment naive "_new"
+        patients, or whether they are previously treated "_treated" patients. Note that the list was set to an empty
+        string (for no stratification) in initialisation of this object.
+        """
+
+        if self.gui_inputs['is_treatment_history']: self.histories = ['_new', '_treated']
+
     def define_model_structure(self):
         """
         Master method to define all aspects of model structure.
@@ -469,15 +480,6 @@ class Inputs:
             self.organ_status = ['']
         else:
             self.organ_status = self.available_organs[:self.gui_inputs['n_organs']]
-
-    def define_treatment_history_structure(self):
-        """
-        Define the structure for tracking patients' treatment histories (i.e. whether they are treatment naive "_new"
-        patients, or whether they are previously treated "_treated" patients. Note that the list was set to an empty
-        string (for no stratification) in initialisation of this object.
-        """
-
-        if self.gui_inputs['is_treatment_history']: self.histories = ['_new', '_treated']
 
     def create_mixing_matrix(self):
         """

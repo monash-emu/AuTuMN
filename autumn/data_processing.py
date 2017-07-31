@@ -90,7 +90,6 @@ class Inputs:
         self.emit_delay = .1
         self.treatment_outcome_types = []
         self.include_relapse_in_ds_outcomes = True
-        # self.define_treatment_history_structure()
 
     ''' Master method '''
 
@@ -244,7 +243,7 @@ class Inputs:
         """
 
         force_types = ['_immune', '_latent']
-        # if 'int_prop_novel_vaccination' in self.relevant_interventions: force_types.append('_novelvac')
+        if 'int_prop_novel_vaccination' in self.relevant_interventions: force_types.append('_novelvac')
         for force_type in force_types:
             for history in self.histories:
                 self.model_constants['tb_multiplier' + force_type + history + '_protection'] \
@@ -271,8 +270,8 @@ class Inputs:
                     age_limits, _ = tool_kit.interrogate_age_string(age_string)
                     param_without_age = param[:-len(age_string)]
 
-                    # diabetes progression rates only start from age groups with lower limit above the start age
-                    # and apply to both early and late progression.
+                    # diabetes progression rates only start from age-groups with lower limit above the start age
+                    # and apply to both early and late progression
                     if riskgroup == '_diabetes' and '_progression' in param \
                             and age_limits[0] >= self.model_constants['riskgroup_startage' + riskgroup]:
                         whether_to_adjust = True
@@ -311,14 +310,14 @@ class Inputs:
                             = self.model_constants[param] \
                               * self.model_constants['riskgroup_multiplier' + riskgroup + '_progression']
                     elif '_progression' in param:
-                        risk_adjusted_parameters[param + riskgroup] \
-                            = self.model_constants[param]
+                        risk_adjusted_parameters[param + riskgroup] = self.model_constants[param]
 
         self.model_constants.update(risk_adjusted_parameters)
 
     def find_noninfectious_period(self):
         """
-        Work out the periods of time spent non-infectious for each strain (plus inappropriate if required).
+        Very simple calculation to work out the periods of time spent non-infectious for each strain (plus inappropriate
+        if required).
         """
 
         for strain in self.strains:
@@ -385,7 +384,7 @@ class Inputs:
 
     def find_fixed_age_specific_parameters(self):
         """
-        Find weighted age specific parameters using age weighting code from tool_kit.
+        Find weighted age-specific parameters using age weighting code from tool_kit.
         """
 
         model_breakpoints = [float(i) for i in self.model_constants['age_breakpoints']]  # convert list of ints to float
@@ -404,9 +403,7 @@ class Inputs:
 
             # find and set age-adjusted parameters
             prog_age_adjusted_params = \
-                tool_kit.adapt_params_to_stratification(param_breakpoints,
-                                                        model_breakpoints,
-                                                        prog_param_vals,
+                tool_kit.adapt_params_to_stratification(param_breakpoints, model_breakpoints, prog_param_vals,
                                                         parameter_name=param,
                                                         whether_to_plot=self.gui_inputs['output_age_calculations'])
             for agegroup in self.agegroups:

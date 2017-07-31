@@ -416,19 +416,20 @@ class Inputs:
 
         # create list of risk group names
         for item in self.gui_inputs:
-            if item[:10] == 'riskgroup_':
-                if self.gui_inputs[item] and 'riskgroup_prop' + item[9:] in self.time_variants:
-                    self.riskgroups += [item[9:]]
+            if item.startswith('riskgroup_'):
+                riskgroup = item.replace('riskgroup_', '')
+                if self.gui_inputs[item] and 'riskgroup_prop' + riskgroup in self.time_variants:
+                    self.riskgroups.append(riskgroup)
                 elif self.gui_inputs[item]:
                     self.add_comment_to_gui_window(
                         'Stratification requested for %s risk group, but proportions not specified'
-                        % tool_kit.find_title_from_dictionary(item[9:]))
+                        % tool_kit.find_title_from_dictionary(riskgroup))
 
         # add the null group
         if len(self.riskgroups) == 0:
-            self.riskgroups += ['']
+            self.riskgroups.append('')
         else:
-            self.riskgroups += ['_norisk']
+            self.riskgroups.append('_norisk')
 
         # ensure some starting proportion of births go to the risk group stratum if value not loaded earlier
         for riskgroup in self.riskgroups:

@@ -62,6 +62,8 @@ class Inputs:
         self.available_strains = ['_ds', '_mdr', '_xdr']
         self.available_organs = ['_smearpos', '_smearneg', '_extrapul']
         self.agegroups = None
+        self.strains = ['']
+        self.organ_status = ['']
         self.riskgroups = []
         self.vary_force_infection_by_riskgroup = self.gui_inputs['is_vary_force_infection_by_riskgroup']
         self.mixing = {}
@@ -417,7 +419,7 @@ class Inputs:
         # create list of risk group names
         for item in self.gui_inputs:
             if item.startswith('riskgroup_'):
-                riskgroup = item.replace('riskgroup_', '')
+                riskgroup = item.replace('riskgroup', '')
                 if self.gui_inputs[item] and 'riskgroup_prop' + riskgroup in self.time_variants:
                     self.riskgroups.append(riskgroup)
                 elif self.gui_inputs[item]:
@@ -448,8 +450,6 @@ class Inputs:
             # if the model isn't stratified by strain, use DS-TB time-periods for the single strain
             for timeperiod in ['tb_timeperiod_infect_ontreatment', 'tb_timeperiod_ontreatment']:
                 self.model_constants[timeperiod] = self.model_constants[timeperiod + '_ds']
-            # need a list of an empty string to be iterable for methods iterating by strain
-            self.strains = ['']
 
         # stratified
         else:
@@ -458,14 +458,14 @@ class Inputs:
                 self.time_variants['epi_prop_amplification'] \
                     = {self.model_constants['start_mdr_introduce_time']: 0.,
                        self.model_constants['end_mdr_introduce_time']: self.model_constants['tb_prop_amplification']}
-            self.treatment_outcome_types = copy.copy(self.strains)
             if self.gui_inputs['is_misassignment']:
+                self.treatment_outcome_types = copy.copy(self.strains)
+
+                # if misassigned strain treated with weaker regimen
                 for strain in self.strains[1:]:
-                    for treated_as in self.strains:  # for each strain
-                        if treated_as != strain:  # misassigned strain has to be different from the actual strain
-                            if self.strains.index(treated_as) < self.strains.index(
-                                    strain):  # if treated with weaker regimen
-                                self.treatment_outcome_types += [strain + '_as' + treated_as[1:]]
+                    for treated_as in self.strains:
+                        if self.strains.index(treated_as) < self.strains.index(strain):
+                            self.treatment_outcome_types.append(strain + '_as' + treated_as[1:])
 
     def define_organ_structure(self):
         """
@@ -474,10 +474,7 @@ class Inputs:
         have smear-positive, smear-negative or extrapulmonary disease.
         """
 
-        if self.gui_inputs['n_organs'] < 2:
-            self.organ_status = ['']
-        else:
-            self.organ_status = self.available_organs[:self.gui_inputs['n_organs']]
+        if self.gui_inputs['n_organs'] > 1: self.organ_status = self.available_organs[:self.gui_inputs['n_organs']]
 
     def create_mixing_matrix(self):
         """
@@ -509,9 +506,14 @@ class Inputs:
                                 self.scaleup_data[scenario]['riskgroup_prop' + from_riskgroup],
                                 self.model_constants['current_time'])
 
-                # give the remainder to the "_norisk" group without any risk factors
-                self.mixing[scenario][to_riskgroup][from_riskgroup] \
-                    = 1. - sum(self.mixing[scenario][to_riskgroup].values())
+                    # give the remainder to the "_norisk" group without any risk factors
+                    else:
+                        if sum(self.mixing[scenario][to_riskgroup].values) >= 1.:
+                            self.add_comment_to_gui_window(
+                                'Total of proportions of contacts for risk group %s greater than one. Model invalid.'
+                                % to_riskgroup)
+                        self.mixing[scenario][to_riskgroup]['_norisk'] \
+                            = 1. - sum(self.mixing[scenario][to_riskgroup].values())
 
     def define_compartment_structure(self):
         """

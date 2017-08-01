@@ -988,15 +988,17 @@ class ConsolidatedModel(StratifiedModel):
                 for agegroup in self.agegroups:
                     for riskgroup in self.riskgroups:
                         for strain in self.strains:
-                            for organ in self.organ_status:
-                                if self.vary_detection_by_organ:
-                                    detection_organ = organ
-                                else:
-                                    detection_organ = ''
-                                self.vars['popsize_' + active_tb_presentations_intervention] \
-                                    += self.vars['program_rate_detect' + detection_organ + riskgroup]\
-                                       * self.compartments['active' + organ + strain + riskgroup + agegroup] \
-                                       * (self.params['int_number_tests_per_tb_presentation'] + 1.)
+                            for history in self.histories:
+                                for organ in self.organ_status:
+                                    if self.vary_detection_by_organ:
+                                        detection_organ = organ
+                                    else:
+                                        detection_organ = ''
+                                    self.vars['popsize_' + active_tb_presentations_intervention] \
+                                        += self.vars['program_rate_detect' + detection_organ + riskgroup]\
+                                           * self.compartments['active' + organ + strain + history + riskgroup
+                                                               + agegroup] \
+                                           * (self.params['int_number_tests_per_tb_presentation'] + 1.)
 
         # improve DST in Bulgaria - the number of culture-positive cases
         if 'int_prop_bulgaria_improve_dst' in self.relevant_interventions:

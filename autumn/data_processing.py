@@ -116,11 +116,14 @@ class Inputs:
         # define model structure
         self.define_model_structure()
 
-        # find parameters that require processing (including processes that require model structure to be defined)
-        self.find_additional_parameters()
-
         # process time-variant parameters
         self.process_time_variants()
+
+        # has to go after time variants so that the proportion in each risk-group has been specified
+        self.define_riskgroup_structure()
+
+        # find parameters that require processing (including processes that require model structure to be defined)
+        self.find_additional_parameters()
 
         # classify interventions as to whether they apply and are to be costed
         self.classify_interventions()
@@ -357,7 +360,6 @@ class Inputs:
         """
 
         self.define_age_structure()
-        self.define_riskgroup_structure()
         self.define_strain_structure()
         self.define_organ_structure()
 
@@ -481,6 +483,8 @@ class Inputs:
         Creates model attribute for mixing between population risk groups, for use in calculate_force_infection_vars
         method below only.
         """
+
+        ### up to hear in run-through
 
         # create mixing matrix separately for each scenario, just in case risk groups being managed differently
         for scenario in self.scenarios:

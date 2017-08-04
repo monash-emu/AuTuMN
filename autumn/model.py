@@ -177,8 +177,8 @@ class ConsolidatedModel(StratifiedModel):
                 self.remove_compartment('susceptible_fully' + riskgroup + self.histories[-1] + agegroup)
 
         # find starting proportions for risk groups
-        start_risk_prop = {self.riskgroups[0]: 1.}
         if len(self.riskgroups) > 1:
+            start_risk_prop = {'_norisk': 1.}
             for riskgroup in self.riskgroups:
                 if riskgroup != '_norisk':
                     start_risk_prop[riskgroup] \

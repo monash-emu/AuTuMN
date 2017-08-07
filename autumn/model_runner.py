@@ -94,7 +94,6 @@ def extract_integer_dicts(models_to_analyse={}, dict_to_extract_from={}):
 
 
 def get_output_dicts_from_lists(models_to_analyse={}, output_dict_of_lists={}):
-
     """
     Convert output lists to dictionaries. Also may ultimately be unnecessary.
     """
@@ -712,20 +711,19 @@ class ModelRunner:
     ###########################
 
     def run_uncertainty(self):
-
         """
         Main method to run all the uncertainty processes.
         """
 
         self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
-        # If not doing an adaptive search, only need to start with a single parameter set
+        # if not doing an adaptive search, only need to start with a single parameter set
         if self.gui_inputs['adaptive_uncertainty']:
             n_candidates = 1
         else:
             n_candidates = self.gui_inputs['uncertainty_runs'] * 10
 
-        # Decide whether to start analysis from a random point or the manual values of the parameters
+        # decide whether to start analysis from a random point or the manual values of the parameters
         if not self.gui_inputs['adaptive_uncertainty'] or self.random_start:
             param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
         else:
@@ -733,13 +731,13 @@ class ModelRunner:
             for param in self.inputs.param_ranges_unc:
                 param_candidates[param['key']] = [self.inputs.model_constants[param['key']]]
 
-        # Find weights for outputs that are being calibrated to
-        normal_char = self.get_fitting_data()
+        # find weights for outputs that are being calibrated to
+        fitting_data = self.get_fitting_data()
         years_to_compare = range(1990, 2015)
         weights = find_uncertainty_output_weights(years_to_compare, 1, [1., 2.])
         self.add_comment_to_gui_window('"Weights": \n' + str(weights))
 
-        # Prepare for uncertainty loop
+        # prepare for uncertainty loop
         n_accepted = 0
         prev_log_likelihood = -1e10
         for param in self.inputs.param_ranges_unc:
@@ -748,96 +746,88 @@ class ModelRunner:
             self.rejection_dict[param['key']] = {}
             self.rejection_dict[param['key']][n_accepted] = []
 
-        # Instantiate uncertainty model objects
+        # instantiate uncertainty model objects
         for scenario in self.gui_inputs['scenarios_to_run']:
             scenario_name = 'uncertainty_' + tool_kit.find_scenario_string_from_number(scenario)
             self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
-        # Until a sufficient number of parameters are accepted
+        new_param_list = []
+        for param in self.inputs.param_ranges_unc:
+            new_param_list.append(param_candidates[param['key']][0])
+            params = new_param_list
+
+        # until a sufficient number of parameters are accepted
         run = 0
         while n_accepted < self.gui_inputs['uncertainty_runs']:
 
-            # Set timer
+            # set timer
             start_timer_run = datetime.datetime.now()
 
-            # If we are using existing parameters
-            if run == 0 or not self.gui_inputs['adaptive_uncertainty']:
-                new_param_list = []
-                for param in self.inputs.param_ranges_unc:
-                    new_param_list.append(param_candidates[param['key']][run])
-                    params = new_param_list
-
-            # If we need to get a new parameter set from the old accepted set
-            else:
-                new_param_list = self.update_params(params)
-
-            # Run baseline integration (includes parameter checking, parameter setting and recording success/failure)
+            # run baseline scenario (includes parameter checking, parameter setting and recording success/failure)
             self.run_with_params(new_param_list, model_object='uncertainty_baseline')
 
-            # Now storing regardless of acceptance, provided run was completed successfully
+            # store outputs regardless of acceptance, provided run was completed successfully
             if self.is_last_run_success:
 
-                # Get outputs for calibration and store results
+                # get outputs for calibration and store results
                 self.store_uncertainty('uncertainty_baseline', epi_outputs_to_analyse=self.epi_outputs_to_analyse)
                 integer_dictionary \
                     = extract_integer_dicts(['uncertainty_baseline'],
                                             get_output_dicts_from_lists(models_to_analyse=['uncertainty_baseline'],
                                                                         output_dict_of_lists=self.epi_outputs))
 
-                # Calculate prior
+                # calculate prior
                 prior_log_likelihood = 0.
                 for p, param in enumerate(self.inputs.param_ranges_unc):
                     param_val = new_param_list[p]
                     self.all_parameters_tried[param['key']].append(new_param_list[p])
 
-                    # Calculate the density of param_val
+                    # calculate the density of param_val
                     bound_low, bound_high = param['bounds'][0], param['bounds'][1]
 
-                    # Normalise value and find log of PDF from appropriate distribution
+                    # normalise value and find log of PDF from appropriate distribution
                     if param['distribution'] == 'beta':
-                        prior_log_likelihood \
-                            += beta.logpdf((param_val - bound_low) / (bound_high - bound_low), 2., 2.)
+                        prior_log_likelihood += beta.logpdf((param_val - bound_low) / (bound_high - bound_low), 2., 2.)
                     elif param['distribution'] == 'uniform':
                         prior_log_likelihood += numpy.log(1. / (bound_high - bound_low))
 
-                # Calculate posterior
+                # calculate posterior
                 posterior_log_likelihood = 0.
                 for output_dict in self.outputs_unc:
 
-                    # The GTB values for the output of interest
-                    working_output_dictionary = normal_char[output_dict['key']]
+                    # the GTB values for the output of interest
+                    working_output_dictionary = fitting_data[output_dict['key']]
                     for y, year in enumerate(years_to_compare):
                         if year in working_output_dictionary.keys():
                             model_result_for_output = integer_dictionary['uncertainty_baseline']['incidence'][year]
                             mu, sd = working_output_dictionary[year][0], working_output_dictionary[year][1]
                             posterior_log_likelihood += norm.logpdf(model_result_for_output, mu, sd) * weights[y]
 
-                # Determine acceptance
+                # determine acceptance
                 log_likelihood = prior_log_likelihood + posterior_log_likelihood
                 accepted = numpy.random.binomial(n=1, p=min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
 
-                # Explain progression of likelihood
-                self.add_comment_to_gui_window('Previous log likelihood:\n' + str(prev_log_likelihood)
-                                               + '\nLog likelihood this run:\n' + str(log_likelihood)
-                                               + '\nAcceptance probability:\n'
-                                               + str(min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
-                                               + '\nWhether accepted:\n' + str(bool(accepted)) + '\n________________\n')
+                # describe progression of likelihood analysis
+                self.add_comment_to_gui_window(
+                    'Previous log likelihood:\n%4.3f\nLog likelihood this run:\n%4.3f\nAcceptance probability:\n%4.3f'
+                    % (log_likelihood, prev_log_likelihood, min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
+                    + '\nWhether accepted:\n%s\n________________\n' % str(bool(accepted)))
                 self.loglikelihoods.append(log_likelihood)
 
-                # Record information for all runs
+                # record information for all runs
                 if bool(accepted):
                     self.whether_accepted_list.append(True)
-                    self.accepted_indices += [run]
+                    self.accepted_indices.append(run)
                     n_accepted += 1
                     for p, param in enumerate(self.inputs.param_ranges_unc):
                         self.acceptance_dict[param['key']][n_accepted] = new_param_list[p]
                         self.rejection_dict[param['key']][n_accepted] = []
 
-                    # Update likelihood and parameter set for next run
+                    # update likelihood and parameter set for next run
                     prev_log_likelihood = log_likelihood
                     params = new_param_list
 
-                    # Run scenarios other than baseline and store uncertainty (only if accepted)
+                    # run scenarios other than baseline and store uncertainty (only if accepted)
                     for scenario in self.gui_inputs['scenarios_to_run']:
                         if scenario is not None:
                             scenario_name = 'uncertainty_' + tool_kit.find_scenario_string_from_number(scenario)
@@ -848,24 +838,108 @@ class ModelRunner:
 
                 else:
                     self.whether_accepted_list.append(False)
-                    self.rejected_indices += [run]
+                    self.rejected_indices.append(run)
                     for p, param in enumerate(self.inputs.param_ranges_unc):
                         self.rejection_dict[param['key']][n_accepted].append(new_param_list[p])
 
-                # Plot parameter progression and report on progress
+                # plot parameter progression and report on progress
                 self.plot_progressive_parameters()
                 self.add_comment_to_gui_window(str(n_accepted) + ' accepted / ' + str(run) +
                                                ' candidates. Running time: '
                                                + str(datetime.datetime.now() - start_timer_run))
                 run += 1
 
-            # Generate more candidates if required -
+            # generate more candidates if required
             if not self.gui_inputs['adaptive_uncertainty'] and run >= len(param_candidates.keys()):
                 param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
                 run = 0
 
-    def set_model_with_params(self, param_dict, model_object='baseline'):
+            new_param_list = self.update_params(params)
 
+    def get_fitting_data(self):
+        """
+        Define the characteristics (mean and standard deviation) of the normal distribution for model outputs
+        (incidence, mortality).
+
+        Returns:
+            normal_char: Dictionary with keys outputs and values dictionaries. Sub-dictionaries have keys years
+                and values lists, with first element of list means and second standard deviations.
+        """
+
+        # dictionary storing the characteristics of the normal distributions
+        normal_char = {}
+        for output_dict in self.inputs.outputs_unc:
+            normal_char[output_dict['key']] = {}
+
+            # incidence
+            if output_dict['key'] == 'incidence':
+                for year in self.inputs.data_to_fit[output_dict['key']].keys():
+                    low = self.inputs.data_to_fit['incidence_low'][year]
+                    high = self.inputs.data_to_fit['incidence_high'][year]
+                    sd = output_dict['width_multiplier'] * (high - low) / (2. * 1.96)
+                    mu = (high + low) / 2.
+                    normal_char[output_dict['key']][year] = [mu, sd]
+
+            # mortality
+            elif output_dict['key'] == 'mortality':
+                sd = output_dict['posterior_width'] / (2. * 1.96)
+                for year in self.inputs.data_to_fit[output_dict['key']].keys():
+                    mu = self.inputs.data_to_fit[output_dict['key']][year]
+                    normal_char[output_dict['key']][year] = [mu, sd]
+
+        return normal_char
+
+    def run_with_params(self, params, model_object='uncertainty_baseline'):
+        """
+        Integrate the model with the proposed parameter set.
+
+        Args:
+            params: The parameters to be set in the model.
+        """
+
+        # check whether parameter values are acceptable
+        for p, param in enumerate(params):
+
+            # whether the parameter value is valid
+            if not is_parameter_value_valid(param):
+                print 'Warning: parameter%d=%f is invalid for model' % (p, param)
+                self.is_last_run_success = False
+                return
+            bounds = self.inputs.param_ranges_unc[p]['bounds']
+
+            # whether the parameter value is within acceptable ranges
+            if (param < bounds[0]) or (param > bounds[1]):
+                # print 'Warning: parameter%d=%f is outside of the allowed bounds' % (p, param)
+                self.is_last_run_success = False
+                return
+
+        param_dict = self.convert_param_list_to_dict(params)
+
+        # set parameters and run
+        self.set_model_with_params(param_dict, model_object)
+        self.is_last_run_success = True
+        try:
+            self.model_dict[model_object].integrate()
+        except:
+            print "Warning: parameters=%s failed with model" % params
+            self.is_last_run_success = False
+
+    def convert_param_list_to_dict(self, params):
+        """
+        Extract parameters from list into dictionary that can be used for setting in the model through the
+        set_model_with_params method.
+
+        Args:
+            params: The parameter names for extraction.
+        Returns:
+            param_dict: The dictionary returned in appropriate format.
+        """
+
+        param_dict = {}
+        for names, vals in zip(self.inputs.param_ranges_unc, params): param_dict[names['key']] = vals
+        return param_dict
+
+    def set_model_with_params(self, param_dict, model_object='baseline'):
         """
         Populates baseline model with params from uncertainty calculations.
 
@@ -878,127 +952,9 @@ class ModelRunner:
             if key in self.model_dict[model_object].params:
                 self.model_dict[model_object].set_parameter(key, param_dict[key])
             else:
-                raise ValueError("%s not in model_object params" % key)
-
-    def convert_param_list_to_dict(self, params):
-
-        """
-        Extract parameters from list into dictionary that can be used for setting in the model through the
-        set_model_with_params method.
-
-        Args:
-            params: The parameter names for extraction.
-        Returns:
-            param_dict: The dictionary returned in appropriate format.
-        """
-
-        param_dict = {}
-        for names, vals in zip(self.inputs.param_ranges_unc, params):
-            param_dict[names['key']] = vals
-        return param_dict
-
-    def get_fitting_data(self):
-
-        """
-        Define the characteristics (mean and standard deviation) of the normal distribution for model outputs
-        (incidence, mortality).
-
-        Returns:
-            normal_char: Dictionary with keys outputs and values dictionaries. Sub-dictionaries have keys years
-                and values lists, with first element of list means and second standard deviations.
-        """
-
-        # Dictionary storing the characteristics of the normal distributions
-        normal_char = {}
-        for output_dict in self.inputs.outputs_unc:
-            normal_char[output_dict['key']] = {}
-
-            # Mortality
-            if output_dict['key'] == 'mortality':
-                sd = output_dict['posterior_width'] / (2. * 1.96)
-                for year in self.inputs.data_to_fit[output_dict['key']].keys():
-                    mu = self.inputs.data_to_fit[output_dict['key']][year]
-                    normal_char[output_dict['key']][year] = [mu, sd]
-
-            # Incidence
-            elif output_dict['key'] == 'incidence':
-                for year in self.inputs.data_to_fit[output_dict['key']].keys():
-                    low = self.inputs.data_to_fit['incidence_low'][year]
-                    high = self.inputs.data_to_fit['incidence_high'][year]
-                    sd = output_dict['width_multiplier'] * (high - low) / (2. * 1.96)
-                    mu = (high + low) / 2.
-                    normal_char[output_dict['key']][year] = [mu, sd]
-
-        return normal_char
-
-    def update_params(self, old_params):
-
-        """
-        Update all the parameter values being used in the uncertainty analysis.
-
-        Args:
-            old_params:
-
-        Returns:
-            new_params: The new parameters to be used in the next model run.
-
-        """
-
-        new_params = []
-
-        # Iterate through the parameters being used
-        for p, param_dict in enumerate(self.inputs.param_ranges_unc):
-            bounds = param_dict['bounds']
-            sd = self.gui_inputs['search_width'] * (bounds[1] - bounds[0]) / (2.0 * 1.96)
-            random = -100.
-
-            # Search for new parameters
-            while random < bounds[0] or random > bounds[1]:
-                random = norm.rvs(loc=old_params[p], scale=sd, size=1)
-
-            # Add them to the dictionary
-            new_params.append(random[0])
-
-        return new_params
-
-    def run_with_params(self, params, model_object='uncertainty_baseline'):
-
-        """
-        Integrate the model with the proposed parameter set.
-
-        Args:
-            params: The parameters to be set in the model.
-        """
-
-        # Check whether parameter values are acceptable
-        for p, param in enumerate(params):
-
-            # Whether the parameter value is valid
-            if not is_parameter_value_valid(param):
-                print 'Warning: parameter%d=%f is invalid for model' % (p, param)
-                self.is_last_run_success = False
-                return
-            bounds = self.inputs.param_ranges_unc[p]['bounds']
-
-            # Whether the parameter value is within acceptable ranges
-            if (param < bounds[0]) or (param > bounds[1]):
-                # print 'Warning: parameter%d=%f is outside of the allowed bounds' % (p, param)
-                self.is_last_run_success = False
-                return
-
-        param_dict = self.convert_param_list_to_dict(params)
-
-        # Set parameters and run
-        self.set_model_with_params(param_dict, model_object)
-        self.is_last_run_success = True
-        try:
-            self.model_dict[model_object].integrate()
-        except:
-            print "Warning: parameters=%s failed with model" % params
-            self.is_last_run_success = False
+                raise ValueError('%s not in model_object params' % key)
 
     def store_uncertainty(self, scenario_name, epi_outputs_to_analyse):
-
         """
         Add model results from one uncertainty run to the appropriate outputs dictionary, vertically stacking
         results on to the previous matrix.
@@ -1011,13 +967,12 @@ class ModelRunner:
             self.cost_outputs_uncertainty
         """
 
-        # Get outputs
+        # get outputs
         self.epi_outputs[scenario_name] \
             = self.find_epi_outputs(scenario_name, outputs_to_analyse=self.epi_outputs_to_analyse)
-        if len(self.model_dict[scenario_name].interventions_to_cost) > 0:
-            self.find_cost_outputs(scenario_name)
+        if len(self.model_dict[scenario_name].interventions_to_cost) > 0: self.find_cost_outputs(scenario_name)
 
-        # Initialise dictionaries if needed
+        # initialise dictionaries if needed
         if scenario_name not in self.epi_outputs_uncertainty:
             self.epi_outputs_uncertainty[scenario_name] = {'times': self.epi_outputs[scenario_name]['times']}
             self.cost_outputs_uncertainty[scenario_name] = {'times': self.cost_outputs[scenario_name]['times']}
@@ -1028,7 +983,7 @@ class ModelRunner:
                 self.cost_outputs_uncertainty[scenario_name][output] \
                     = numpy.empty(shape=[0, len(self.cost_outputs[scenario_name]['times'])])
 
-        # Add uncertainty data to dictionaries
+        # add uncertainty data to dictionaries
         for output in epi_outputs_to_analyse:
             self.epi_outputs_uncertainty[scenario_name][output] \
                 = numpy.vstack([self.epi_outputs_uncertainty[scenario_name][output],
@@ -1038,24 +993,50 @@ class ModelRunner:
                 = numpy.vstack([self.cost_outputs_uncertainty[scenario_name][output],
                                 self.cost_outputs[scenario_name][output]])
 
+    def update_params(self, old_params):
+        """
+        Update all the parameter values being used in the uncertainty analysis.
+
+        Args:
+            old_params:
+        Returns:
+            new_params: The new parameters to be used in the next model run.
+        """
+
+        new_params = []
+
+        # iterate through the parameters being used
+        for p, param_dict in enumerate(self.inputs.param_ranges_unc):
+            bounds = param_dict['bounds']
+            sd = self.gui_inputs['search_width'] * (bounds[1] - bounds[0]) / (2.0 * 1.96)
+            random = -100.
+
+            # search for new parameters
+            while random < bounds[0] or random > bounds[1]:
+                random = norm.rvs(loc=old_params[p], scale=sd, size=1)
+
+            # add them to the dictionary
+            new_params.append(random[0])
+
+        return new_params
+
     ############################
     ### Optimisation methods ###
     ############################
 
     def run_optimisation(self):
-
         """
         Master optimisation method for the different levels of funding defined in self.annual_envelope
         """
 
-        # Initialise the optimisation output data structures
+        # initialise the optimisation output data structures
         standard_optimisation_attributes = ['best_allocation', 'incidence', 'mortality']
         self.opti_results['indicator_to_minimise'] = self.indicator_to_minimise
         self.opti_results['annual_envelope'] = self.annual_envelope
         for attribute in standard_optimisation_attributes:
             self.opti_results[attribute] = []
 
-        # Run optimisation for each envelope
+        # run optimisation for each envelope
         for envelope in self.annual_envelope:
             self.add_comment_to_gui_window('Start optimisation for annual total envelope of: ' + str(envelope))
             self.total_funding = envelope * (self.inputs.model_constants['scenario_end_time']
@@ -1066,19 +1047,18 @@ class ModelRunner:
                 self.opti_results[attribute].append(full_results[attribute])
 
     def get_acceptable_combinations(self):
-
         """
         Determines the acceptable combinations of interventions according to the related starting costs and given a
         total amount of funding populates the acceptable_combinations attribute of model_runner.
         """
 
-        # Find all possible combinations of the considered interventions
+        # find all possible combinations of the considered interventions
         all_possible_combinations \
             = list(itertools.chain.from_iterable(
             itertools.combinations(range(len(self.interventions_considered_for_opti)), n) for n in
             range(len(self.interventions_considered_for_opti) + 1)[1:]))
 
-        # Determine whether each combination is fund-able given start-up costs
+        # determine whether each combination is fund-able given start-up costs
         fundable_combinations = []
         for combination in all_possible_combinations:
             total_startup_costs = 0.
@@ -1091,7 +1071,7 @@ class ModelRunner:
             if total_startup_costs <= self.total_funding:
                 fundable_combinations.append(combination)
 
-        # Determine whether a forced intervention is missing from each fund-able intervention
+        # determine whether a forced intervention is missing from each fund-able intervention
         combinations_missing_a_forced_intervention = []
         for c, combination in enumerate(fundable_combinations):
             for intervention in self.interventions_forced_for_opti:
@@ -1099,7 +1079,7 @@ class ModelRunner:
                         and combination not in combinations_missing_a_forced_intervention:
                     combinations_missing_a_forced_intervention.append(combination)
 
-        # Populate final list of acceptable combinations
+        # populate final list of acceptable combinations
         acceptable_combinations = []
         for combination in fundable_combinations:
             if combination not in combinations_missing_a_forced_intervention:
@@ -1108,7 +1088,6 @@ class ModelRunner:
         self.add_comment_to_gui_window('Number of combinations to consider: ' + str(len(self.acceptable_combinations)))
 
     def optimise_single_envelope(self):
-
         """
         Method to fully run optimisation for a single funding envelope.
         """
@@ -1116,20 +1095,20 @@ class ModelRunner:
         start_timer_opti = datetime.datetime.now()
         self.optimised_combinations = []
 
-        # Initialise a new model that will be run from recent_time and set basic attributes for optimisation
+        # initialise a new model that will be run from recent_time and set basic attributes for optimisation
         self.model_dict['optimisation'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
         self.prepare_new_model_from_baseline('manual', 'optimisation')
         self.model_dict['optimisation'].eco_drives_epi = True
         self.model_dict['optimisation'].inputs.model_constants['scenario_end_time'] = self.year_end_opti
         self.model_dict['optimisation'].interventions_considered_for_opti = self.interventions_considered_for_opti
 
-        # Find the combinations of interventions to be optimised
+        # find the combinations of interventions to be optimised
         self.get_acceptable_combinations()
 
-        # For each acceptable combination of interventions
+        # for each acceptable combination of interventions
         for c, combination in enumerate(self.acceptable_combinations):
 
-            # Prepare storage
+            # prepare storage
             dict_optimised_combi = {'interventions': [], 'distribution': [], 'objective': None}
 
             for i in range(len(combination)):
@@ -1139,7 +1118,7 @@ class ModelRunner:
             print('Optimisation of the distribution across: ')
             print(dict_optimised_combi['interventions'])
 
-            # Function to minimise: incidence in 2035
+            # function to minimise: incidence in 2035
             def minimisation_function(x):
 
                 """
@@ -1150,11 +1129,11 @@ class ModelRunner:
                     predicted incidence for 2035
                 """
 
-                # Initialise funding at zero for each intervention
+                # initialise funding at zero for each intervention
                 for intervention in self.interventions_considered_for_opti:
                     self.model_dict['optimisation'].available_funding[intervention] = 0.
 
-                # Input values from x
+                # input values from x
                 for i in range(len(x)):
                     intervention = self.interventions_considered_for_opti[combination[i]]
                     self.model_dict['optimisation'].available_funding[intervention] = x[i] * self.total_funding
@@ -1166,20 +1145,20 @@ class ModelRunner:
                                                                 'mortality', 'true_mortality'])
                 return output_list[self.indicator_to_minimise][-1]
 
-            # If only one intervention, the distribution is obvious
+            # if only one intervention, the distribution is obvious
             if len(combination) == 1:
                 dict_optimised_combi['distribution'] = [1.]
                 dict_optimised_combi['objective'] = minimisation_function([1.])
 
-            # Otherwise
+            # otherwise
             else:
 
-                # Initial guess
+                # initial guess
                 starting_distribution = []
                 for i in range(len(combination)):
                     starting_distribution.append(1. / len(combination))
 
-                # Equality constraint is that the sum of the proportions has to be equal to one
+                # equality constraint is that the sum of the proportions has to be equal to one
                 sum_to_one_constraint = [{'type': 'ineq',
                                           'fun': lambda x: 1. - sum(x),
                                           'jac': lambda x: -numpy.ones(len(x))}]
@@ -1187,7 +1166,7 @@ class ModelRunner:
                 for i in range(len(combination)):
                     minimal_allocation = 0.
 
-                    # If start-up costs apply
+                    # if start-up costs apply
                     if self.inputs.intervention_startdates[None][
                         self.model_dict['manual_baseline'].interventions_to_cost[combination[i]]] is None:
                         minimal_allocation \
@@ -1197,7 +1176,7 @@ class ModelRunner:
                               / self.total_funding
                     cost_bounds.append((minimal_allocation, 1.))
 
-                # Ready to run optimisation
+                # ready to run optimisation
                 optimisation_result \
                     = minimize(minimisation_function, starting_distribution, jac=None, bounds=cost_bounds,
                                constraints=sum_to_one_constraint, method='SLSQP',
@@ -1209,7 +1188,7 @@ class ModelRunner:
             self.add_comment_to_gui_window('Combination ' + str(c + 1) + '/' + str(len(self.acceptable_combinations))
                                            + ' completed.')
 
-        # Update self.optimal_allocation
+        # update optimal allocation
         self.optimal_allocation = {}
         best_dict = {}
         best_obj = 1e10
@@ -1226,28 +1205,27 @@ class ModelRunner:
         self.add_comment_to_gui_window('End optimisation after ' + str(datetime.datetime.now() - start_timer_opti))
 
     def get_full_results_opti(self):
-
         """
         We need to run the best allocation scenario until 2035 to obtain the final incidence and mortality.
         """
 
-        # Prepare new model to run full scenario duration
+        # prepare new model to run full scenario duration
         self.model_dict['optimisation'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
         self.prepare_new_model_from_baseline('manual', 'optimisation')
         self.model_dict['optimisation'].eco_drives_epi = True
         self.model_dict['optimisation'].interventions_considered_for_opti = self.interventions_considered_for_opti
 
-        # Initialise funding at zero for each intervention
+        # initialise funding at zero for each intervention
         for intervention in self.interventions_considered_for_opti:
             self.model_dict['optimisation'].available_funding[intervention] = 0.
 
-        # Distribute funding and integrate
+        # distribute funding and integrate
         for intervention, prop in self.optimal_allocation.iteritems():
             self.model_dict['optimisation'].available_funding[intervention] = prop * self.total_funding
         self.model_dict['optimisation'].distribute_funding_across_years()
         self.model_dict['optimisation'].integrate()
 
-        # Find epi results
+        # find epi results
         output_list = self.find_epi_outputs('optimisation',
                                             outputs_to_analyse=['population', 'incidence', 'true_incidence',
                                                                 'mortality', 'true_mortality'])
@@ -1256,7 +1234,6 @@ class ModelRunner:
                 'mortality': output_list['mortality'][-1]}
 
     def load_opti_results(self):
-
         """
         Load optimisation results if attribute to self is True.
         """
@@ -1267,12 +1244,11 @@ class ModelRunner:
             self.add_comment_to_gui_window('Optimisation results loaded')
 
     def save_opti_results(self):
-
         """
         Save optimisation results, which is expected to be the usual behaviour for the model runner.
         """
 
-        # Save only if optimisation has been run and save requested
+        # save only if optimisation has been run and save requested
         if self.save_opti and self.optimisation:
             filename = os.path.join(self.opti_outputs_dir, 'opti_outputs.pkl')
             tool_kit.pickle_save(self.opti_results, filename)
@@ -1292,7 +1268,6 @@ class ModelRunner:
             self.runtime_outputs.see(END)
 
     def plot_progressive_parameters(self):
-
         """
         Produce real-time parameter plot, according to which GUI is in use.
         """
@@ -1304,7 +1279,7 @@ class ModelRunner:
 
     def plot_progressive_parameters_tk(self, from_runner=True, input_figure=None):
 
-        # Initialise plotting
+        # initialise plotting
         if from_runner:
             param_tracking_figure = plt.Figure()
             parameter_plots = FigureCanvasTkAgg(param_tracking_figure, master=self.figure_frame)
@@ -1314,19 +1289,19 @@ class ModelRunner:
 
         subplot_grid = outputs.find_subplot_numbers(len(self.all_parameters_tried))
 
-        # Cycle through parameters with one subplot for each parameter
+        # cycle through parameters with one subplot for each parameter
         for p, param in enumerate(self.all_parameters_tried):
 
-            # Extract accepted params from all tried params
+            # extract accepted params from all tried params
             accepted_params = list(p for p, a in zip(self.all_parameters_tried[param], self.whether_accepted_list) if a)
 
-            # Plot
+            # plot
             ax = param_tracking_figure.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
             ax.plot(range(1, len(accepted_params) + 1), accepted_params, linewidth=2, marker='o', markersize=4,
                     mec='b', mfc='b')
             ax.set_xlim((1., len(self.accepted_indices) + 1))
 
-            # Find the y-limits from the parameter bounds and the parameter values tried
+            # find the y-limits from the parameter bounds and the parameter values tried
             for param_number in range(len(self.inputs.param_ranges_unc)):
                 if self.inputs.param_ranges_unc[param_number]['key'] == param:
                     bounds = self.inputs.param_ranges_unc[param_number]['bounds']
@@ -1335,11 +1310,11 @@ class ModelRunner:
             max_ylimit = max(accepted_params + [bounds[1]])
             ax.set_ylim((min_ylimit * (1 - ylim_margins), max_ylimit * (1 + ylim_margins)))
 
-            # Indicate the prior bounds
+            # indicate the prior bounds
             ax.plot([1, len(self.accepted_indices) + 1], [min_ylimit, min_ylimit], color='0.8')
             ax.plot([1, len(self.accepted_indices) + 1], [max_ylimit, max_ylimit], color='0.8')
 
-            # Plot rejected parameters
+            # plot rejected parameters
             for run, rejected_params in self.rejection_dict[param].items():
                 if self.rejection_dict[param][run]:
                     ax.plot([run + 1] * len(rejected_params), rejected_params, marker='o', linestyle='None',
@@ -1348,14 +1323,14 @@ class ModelRunner:
                         ax.plot([run, run + 1], [self.acceptance_dict[param][run], rejected_params[r]], color='0.5',
                                 linestyle='--')
 
-            # Label
+            # label
             ax.set_title(tool_kit.find_title_from_dictionary(param))
             if p > len(self.all_parameters_tried) - subplot_grid[1] - 1:
                 ax.set_xlabel('Accepted runs')
 
             if from_runner:
 
-                # Output to GUI window
+                # output to GUI window
                 parameter_plots.show()
                 parameter_plots.draw()
                 parameter_plots.get_tk_widget().grid(row=1, column=1)
@@ -1364,7 +1339,6 @@ class ModelRunner:
             return param_tracking_figure
 
     def plot_progressive_parameters_js(self):
-
         """
         Method to shadow previous method in JavaScript GUI.
         """

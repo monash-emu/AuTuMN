@@ -114,49 +114,45 @@ def find_common_elements_multiple_lists(list_of_lists):
     return intersection
 
 
-def calculate_proportion_dict(data, indices, percent=False):
+def calculate_proportion_dict(data, relevant_keys, percent=False, floor=0., underscore=True):
     """
     General method to calculate proportions from absolute values provided as dictionaries.
 
     Args:
         data: Dictionary containing the absolute values.
-        indices: The keys of data from which proportions are to be calculated (generally a list of strings).
+        relevant_keys: The keys of data from which proportions are to be calculated (generally a list of strings).
         percent: Boolean describing whether the method should return the output as a percent or proportion.
     Returns:
         proportions: A dictionary of the resulting proportions.
     """
 
+    if underscore:
+        string_stem = 'prop_'
+    else:
+        string_stem = 'prop'
+
     # calculate multiplier for percentages if requested, otherwise leave as one
+    multiplier = 1.
     if percent:
         multiplier = 1e2
-    else:
-        multiplier = 1.
 
-    # create a list of the years that are common to all indices within data
+    # create a list of the years that are common to all keys within data
     lists_of_years = []
-    for i in range(len(indices)):
-        lists_of_years += [data[indices[i]].keys()]
+    for i in range(len(relevant_keys)): lists_of_years += [data[relevant_keys[i]].keys()]
     common_years = find_common_elements_multiple_lists(lists_of_years)
 
     # calculate the denominator by summing the values for which proportions have been requested
     denominator = {}
     for i in common_years:
-        for j in indices:
-            if j == indices[0]:
-                denominator[i] = data[j][i]
-            else:
-                denominator[i] += data[j][i]
+        denominator[i] = 0.
+        for j in relevant_keys: denominator[i] += data[j][i]
 
     # calculate the proportions
     proportions = {}
-    for j in indices:
-        proportions['prop_' + j] = {}
+    for j in relevant_keys:
+        proportions[string_stem + j] = {}
         for i in common_years:
-            if denominator[i] > 0.:
-                proportions['prop_' + j][i] = \
-                    data[j][i] / denominator[i] \
-                    * multiplier
-
+            if denominator[i] > floor: proportions[string_stem + j][i] = data[j][i] / denominator[i] * multiplier
     return proportions
 
 

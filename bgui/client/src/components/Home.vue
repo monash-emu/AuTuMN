@@ -13,7 +13,11 @@
 
       <md-layout md-row>
 
-        <md-whiteframe style="width: 50%; height: calc(100vh - 230px); overflow: auto">
+        <md-whiteframe
+            style="
+            width: 50%;
+            height: calc(100vh - 230px);
+            overflow: auto">
           <md-tabs>
             <md-tab
                 v-for="(paramGroup, i) in paramGroups"
@@ -64,6 +68,16 @@
                       </md-input-container>
                     </div>
 
+                    <div v-else-if="params[key].type == 'slider'">
+                        <label>{{ params[key].label }}</label>
+                        <div style="height: 2.5em"></div>
+                        <vue-slider
+                            :max="params[key].max"
+                            :interval="params[key].interval"
+                            v-model="params[key].value">
+                        </vue-slider>
+                    </div>
+
                   </md-layout>
                 </div>
               </div>
@@ -71,7 +85,12 @@
           </md-tabs>
         </md-whiteframe>
 
-        <md-whiteframe style="padding: 1em; width: 50%; height: calc(100vh - 230px); overflow: auto">
+        <md-whiteframe
+            style="
+            padding: 1em;
+            width: 50%;
+            height: calc(100vh - 230px);
+            overflow: auto">
           <md-layout
               md-row
               md-align="center"
@@ -110,6 +129,7 @@
 <script>
   import rpc from '../modules/rpc'
   import _ from 'lodash'
+  import vueSlider from 'vue-slider-component'
 
   const booleanKeys = [
     'output_flow_diagram',
@@ -189,13 +209,13 @@
   let params = {}
 
   let paramGroups = [
-    { keys: [], name: 'Model running' },
-    { keys: [], name: 'Model Stratifications' },
-    { keys: [], name: 'Elaborations' },
-    { keys: [], name: 'Scenarios to run' },
-    { keys: [], name: 'Uncertainty' },
-    { keys: [], name: 'Plotting' },
-    { keys: [], name: 'MS Office outputs' }
+    {keys: [], name: 'Model running'},
+    {keys: [], name: 'Model Stratifications'},
+    {keys: [], name: 'Elaborations'},
+    {keys: [], name: 'Scenarios to run'},
+    {keys: [], name: 'Uncertainty'},
+    {keys: [], name: 'Plotting'},
+    {keys: [], name: 'MS Office outputs'}
   ]
 
   for (let i of _.range(1, 16)) {
@@ -258,12 +278,16 @@
   params.fitting_method.value = params.fitting_method.options[4]
 
   params.default_smoothness = {
-    type: 'number',
-    value: 1.0
+    type: 'slider',
+    value: 1.0,
+    interval: 0.1,
+    max: 5.0,
   }
   params.time_step = {
-    type: 'number',
-    value: 5.
+    type: 'slider',
+    value: 0.005,
+    max: 0.50,
+    interval: 0.05
   }
 
   const runningKeys = ['country', 'integration_method', 'fitting_method',
@@ -291,7 +315,7 @@
   // Uncertainty options
   params.uncertainty_runs = {
     type: 'number',
-    value: 10.,
+    value: 10.0,
     label: 'Number of uncertainty runs'
   }
   params.burn_in_runs = {
@@ -301,7 +325,7 @@
   }
   params.search_width = {
     type: 'number',
-    value: .08,
+    value: 0.08,
     label: 'Relative search width'
   }
   params.pickle_uncertainty = {
@@ -333,6 +357,7 @@
 
   export default {
     name: 'experiments',
+    components: {vueSlider},
     data() {
       return {
         paramGroups,
@@ -356,7 +381,9 @@
             }
             if (res.data.is_running) {
               this.$data.isRunning = true
-              setTimeout(() => { this.checkRun() }, 2000)
+              setTimeout(() => {
+                this.checkRun()
+              }, 2000)
             } else {
               this.$data.isRunning = false
             }
@@ -381,7 +408,7 @@
         }
         for (let [key, value] of _.entries(params)) {
           if (_.includes(key, 'scenario_')) {
-            if (value.type == 'boolean') {
+            if (value.type === 'boolean') {
               if (value.value) {
                 console.log('scenario')
                 let i = parseInt(key.substr(9, 2))
@@ -389,11 +416,11 @@
                 guiOutputs.scenario_names_to_run.push(find_scenario_string_from_number(i))
               }
             }
-          } else if (key == 'fitting_method') {
+          } else if (key === 'fitting_method') {
             guiOutputs[key] = parseInt(_.last(value.value))
-          } else if (key == 'n_organs') {
+          } else if (key === 'n_organs') {
             guiOutputs[key] = organ_stratification_keys[value.value]
-          } else if (key == 'n_strains') {
+          } else if (key === 'n_strains') {
             guiOutputs[key] = strain_stratification_keys[value.value]
           } else {
             guiOutputs[key] = value.value

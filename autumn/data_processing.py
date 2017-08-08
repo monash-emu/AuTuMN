@@ -256,68 +256,32 @@ class Inputs:
 
     def find_riskgroup_progressions(self):
         """
-        Code to adjust the progression rates to active disease for various risk groups - so far diabetes and HIV.
+        Code to adjust the progression rates to active disease for various risk groups - so fa.
         """
 
-        # initialise dictionary of additional adjusted parameters to avoid dictionary changing size during iterations
-        risk_adjusted_parameters = {}
         for riskgroup in self.riskgroups:
-            for param in self.model_constants:
 
-                # start from the assumption that parameter is not being adjusted
-                whether_to_adjust = False
+            # find age above which adjustments should be made, with default assumption of applying to all age-groups
+            start_age = -1.
+            if 'riskgroup_startage' + riskgroup in self.model_constants:
+                start_age = self.model_constants['riskgroup_startage' + riskgroup]
 
-                # for age-stratified parameters
-                if '_age' in param:
-
-                    # find the age string, the lower and upper age limits and the parameter name without the age string
-                    age_string, _ = tool_kit.find_string_from_starting_letters(param, '_age')
-                    age_limits, _ = tool_kit.interrogate_age_string(age_string)
-                    param_without_age = param[:-len(age_string)]
-
-                    # diabetes progression rates only start from age-groups with lower limit above the start age
-                    # and apply to both early and late progression
-                    if riskgroup == '_diabetes' and '_progression' in param \
-                            and age_limits[0] >= self.model_constants['riskgroup_startage' + riskgroup]:
-                        whether_to_adjust = True
-
-                    # HIV applies to all age groups, but only late progression
-                    elif riskgroup == '_hiv' and '_late_progression' in param:
-                        whether_to_adjust = True
-
-                    # shouldn't apply this to the multiplier parameters or non-TB-specific parameters
-                    if '_multiplier' in param or 'tb_' not in param:
-                        whether_to_adjust = False
-
-                    # now adjust the age-stratified parameter values
-                    if whether_to_adjust:
-                        risk_adjusted_parameters[param_without_age + riskgroup + age_string] \
-                            = self.model_constants[param] \
-                              * self.model_constants['riskgroup_multiplier' + riskgroup + '_progression']
-                    elif '_progression' in param:
-                        risk_adjusted_parameters[param_without_age + riskgroup + age_string] \
-                            = self.model_constants[param]
-
-                # parameters not stratified by age
+            # make adjustments for each age group if required
+            for agegroup in self.agegroups:
+                if 'riskgroup_multiplier' + riskgroup + '_progression' in self.model_constants\
+                        and tool_kit.interrogate_age_string(agegroup)[0][0] >= start_age:
+                    self.model_constants['tb_prop_early_progression' + riskgroup + agegroup] \
+                        = tool_kit.apply_odds_ratio_to_proportion(
+                        self.model_constants['tb_prop_early_progression' + agegroup],
+                        self.model_constants['riskgroup_multiplier' + riskgroup + '_progression'])
+                    self.model_constants['tb_rate_late_progression' + riskgroup + agegroup] \
+                        = self.model_constants['tb_rate_late_progression' + agegroup] \
+                          * self.model_constants['riskgroup_multiplier' + riskgroup + '_progression']
                 else:
-
-                    # explanation as above
-                    if riskgroup == '_diabetes' and '_progression' in param:
-                        whether_to_adjust = True
-                    elif riskgroup == '_hiv' and '_late_progression' in param:
-                        whether_to_adjust = True
-                    if '_multiplier' in param or 'tb_' not in param:
-                        whether_to_adjust = False
-
-                    # adjustment as above, except age string not included
-                    if whether_to_adjust:
-                        risk_adjusted_parameters[param + riskgroup] \
-                            = self.model_constants[param] \
-                              * self.model_constants['riskgroup_multiplier' + riskgroup + '_progression']
-                    elif '_progression' in param:
-                        risk_adjusted_parameters[param + riskgroup] = self.model_constants[param]
-
-        self.model_constants.update(risk_adjusted_parameters)
+                    self.model_constants['tb_prop_early_progression' + riskgroup + agegroup] \
+                        = self.model_constants['tb_prop_early_progression' + agegroup]
+                    self.model_constants['tb_rate_late_progression' + riskgroup + agegroup] \
+                        = self.model_constants['tb_rate_late_progression' + agegroup]
 
     def find_noninfectious_period(self):
         """

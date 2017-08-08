@@ -1,8 +1,14 @@
 import axios from 'axios'
 import _ from 'lodash'
 import config from '../config'
+import rpc from '../modules/rpc'
+import SHA224 from '../modules/sha224/sha224'
 
 axios.defaults.withCredentials = true
+
+function hashPassword (password) {
+  return SHA224(password).toString()
+}
 
 let user = {
   authenticated: false
@@ -34,7 +40,10 @@ export default {
   },
 
   register (newUser) {
-    return axios.post(config.api + '/register', newUser)
+    newUser.password = hashPassword(newUser.password)
+    newUser.username = newUser.name
+    delete newUser.passwordv
+    return rpc.rpcRun('public_create_user', newUser)
   },
 
   update (user) {

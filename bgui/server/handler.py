@@ -20,20 +20,13 @@ All parameters and return types are either id's, json-summaries, or mpld3 graphs
 
 from __future__ import print_function
 import os
-import json
-import pprint
 import sys
 
 from flask import current_app, session, abort
 from flask.ext.login import current_user, login_user, logout_user
-from werkzeug.utils import secure_filename
 from validate_email import validate_email
 
-from server import dbmodel, tasks
-
-sys.path.insert(0, os.path.abspath("../.."))
-import autumn.model_runner
-import autumn.outputs
+import dbmodel
 
 
 # User handlers
@@ -63,7 +56,7 @@ def check_user_attr(user_attr):
 
 def is_anonymous():
     try:
-        userisanonymous = current_user.is_anonymous()  # CK: WARNING, SUPER HACKY way of dealing with different Flask versions
+        userisanonymous = current_user.is_anonymous()
     except:
         userisanonymous = current_user.is_anonymous
     return userisanonymous
@@ -150,24 +143,6 @@ def get_server_filename(filename):
     return filename
 
 
-#
-# Task handlers
-#
-# The task_id embeds the task function in the form
-# fnName:arg0:arg1:arg2... it is not encouraged to pack JSON
-# objects into the arguments of the task functions
-
-def login_launch_task(task_id):
-    status = tasks.setup_task(task_id)
-    if status['status'] != "blocked":
-        tasks.run_task.delay(task_id)
-    return status
-
-
-def login_check_task(task_id):
-    return tasks.check_task(task_id)
-
-
 # RPC-JSON API Web-handlers
 #
 # To use define functions with name
@@ -178,8 +153,11 @@ def login_check_task(task_id):
 bgui_output_lines = []
 is_bgui_running = False
 
+sys.path.insert(0, os.path.abspath("../.."))
+import autumn.model_runner
+import autumn.outputs
+
 def public_check_autumn_run():
-    print(">> handler.public_check_autumn_run")
     global bgui_output_lines
     global is_bgui_running
     result = {
@@ -207,7 +185,6 @@ def public_run_autumn(gui_outputs):
     is_bgui_running = True
     bgui_output_lines = []
     autumn_dir = os.path.join(os.path.dirname(autumn.__file__), os.pardir)
-    print(">> handler.public_run_autumn goto dir:", autumn_dir)
     os.chdir(autumn_dir)
     try:
         model_runner = autumn.model_runner.ModelRunner(

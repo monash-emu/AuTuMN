@@ -2,16 +2,15 @@ from __future__ import print_function
 
 import copy
 
-import datetime
 from datetime import datetime
-import dateutil
 import dateutil.tz
 
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import UUID, JSON
 from sqlalchemy.orm import deferred
+import sqlalchemy.types as types
 
-from .dbconn import db, redis
+from dbconn import db
 
 
 class UserDb(db.Model):
@@ -52,43 +51,15 @@ class ObjectDb(db.Model):
 
     def load_obj_from_redis(self):
         print(">> ObjectDb.load_obj_from_redis " + self.id.hex)
-        return redis.get(self.id.hex)
+        return self.blob
 
     def save_obj_to_redis(self, obj):
         print(">> ObjectDb.save_obj_to_redis " + self.id.hex)
-        redis.set(self.id.hex, obj)
+        self.blob = obj
 
     def cleanup(self):
         print(">> ObjectDb.cleanup " + self.id.hex)
-        redis.delete(self.id.hex)
-
-
-
-class TaskLogDb(db.Model):  # pylint: disable=R0903
-
-    __tablename__ = "tasklogs"
-
-    id = db.Column(UUID(True), server_default=text("uuid_generate_v1mc()"), primary_key=True)
-    work_type = db.Column(db.String(128), default=None)
-    task_id = db.Column(db.String(128), default=None)
-    obj_id = db.Column(UUID(True))
-    start_time = db.Column(db.DateTime(timezone=True), server_default=text('now()'))
-    stop_time = db.Column(db.DateTime(timezone=True), default=None)
-    work_status = db.Enum('started', 'completed', 'cancelled', 'error', 'blocked', name='work_status')
-    status = db.Column(work_status, default='started')
-    error = db.Column(db.Text, default=None)
-
-    def load_obj_from_redis(self):
-        print(">> TaskLogDb.load_obj_from_redis task-" + self.id.hex)
-        return redis.get("task-" + self.id.hex)
-
-    def save_obj_to_redis(self, obj):
-        print(">> TaskLogDb.save_obj_to_redis task-" + self.id.hex)
-        redis.set("task-" + self.id.hex, obj)
-
-    def cleanup(self):
-        print(">> TaskLogDb.cleanup task-" + self.id.hex)
-        redis.delete("task-" + self.id.hex)
+        self.blob = b''
 
 
 def filter_dict_for_none(d):
@@ -227,22 +198,4 @@ def delete_user(user_id, db_session=None):
     db_session.delete(user)
     db_session.commit()
     return user_attr
-
-
-# tasklog functions
-
-def cleanup_tasklogs(db_session):
-    tasklogs = db_session.query(TaskLogDb)
-    n = tasklogs.count()
-    if n:
-        print("> dbmodel.init clear {} worklogs".format(n))
-        for work_log in tasklogs:
-            work_log.cleanup()
-        tasklogs.delete()
-        db_session.commit()
-
-
-
-
-
 

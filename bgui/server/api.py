@@ -5,21 +5,16 @@ from functools import wraps
 import traceback
 
 from flask import Flask, abort, jsonify, current_app, request, helpers, json, make_response
-from flask.ext.sqlalchemy import SQLAlchemy
-import redis
 from flask.ext.login import LoginManager, current_user
 from werkzeug.utils import secure_filename
 
 # Create flask app
-
 app = Flask(__name__)
 
 # Load configuration
-
 app.config.from_pyfile('config.py')
 
 # Setup logger
-
 stream_handler = logging.StreamHandler(sys.stdout)
 stream_handler.setLevel(logging.DEBUG)
 stream_handler.setFormatter(logging.Formatter(
@@ -29,24 +24,13 @@ stream_handler.setFormatter(logging.Formatter(
 app.logger.addHandler(stream_handler)
 app.logger.setLevel(logging.DEBUG)
 
-# Setup databases and save in module for access
-
-import server.dbconn
-server.dbconn.redis = redis.StrictRedis.from_url(app.config["REDIS_URL"])
-server.dbconn.db = SQLAlchemy(app)
-
-# Initialize postgres database
-
-server.dbconn.db.engine.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')
-server.dbconn.db.create_all()
-
-# Cleanup dangling worklogs for parallel processing
-
-from server import dbmodel
-dbmodel.cleanup_tasklogs(server.dbconn.db.session)
+# import dbmodel after dbconn.db is connected
+import dbconn
+dbconn.connect_to_app(app)
+import dbmodel
+dbconn.db.create_all()
 
 # Setup login manager
-
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -60,9 +44,11 @@ def load_user(user_id):
         user = None
     return user
 
+
 @login_manager.unauthorized_handler
 def unauthorized_handler():
     abort(401)
+
 
 # Setup RPC handlers
 
@@ -85,8 +71,10 @@ def report_exception_decorator(api_call):
 
     return _report_exception
 
+
 def get_post_data_json():
     return json.loads(request.data)
+
 
 def run_fn(fn_name, args, kwargs):
     if fn_name.startswith("admin_"):
@@ -219,4 +207,4 @@ def after_request(response):
 # Main loop
 
 if __name__ == '__main__':
-    app.run(threaded=True, debug=True, use_debugger=False)
+    app.run(threaded=True, debug=True, use_debugger=False, port=3000)

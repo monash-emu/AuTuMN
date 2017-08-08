@@ -8,10 +8,3 @@ else
     echo "Start postgres"
     lunchy start postgres
 fi
-
-if [[ $(lunchy status redis | grep redis) ]]; then
-    echo "Redis already running..."
-else
-    echo "Start redis"
-    lunchy start redis
-fi

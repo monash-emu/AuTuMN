@@ -44,7 +44,6 @@ try:
 except ImportError:
     pass
 
-
 RUN_RELOADER = True
 
 _mtimes = {}
@@ -128,7 +127,6 @@ def jython_reloader(main_func, args, kwargs):
         if code_changed():
             raise SystemRestart
         time.sleep(1)
-
 
 def main(main_func, args=None, kwargs=None, **more_options):
     if args is None:

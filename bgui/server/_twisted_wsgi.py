@@ -11,39 +11,34 @@ from twisted.python.threadpool import ThreadPool
 
 from . import api
 
-
 def run():
-    """
-    Run the server.
-    """
     globalLogBeginner.beginLoggingTo([
         FileLogObserver(sys.stdout, lambda _: formatEvent(_) + "\n")])
 
     threadpool = ThreadPool(maxthreads=30)
     wsgi_app = WSGIResource(reactor, threadpool, api.app)
 
-    class OptimaResource(Resource):
+    class ServerResource(Resource):
         isLeaf = True
 
         def __init__(self, wsgi):
             self._wsgi = wsgi
 
         def render(self, request):
+            """
+            Adds headers to disable caching of api calls
+            """
             request.prepath = []
             request.postpath = ['api'] + request.postpath[:]
-
             r = self._wsgi.render(request)
-
             request.responseHeaders.setRawHeaders(
-                b'Cache-Control', [b'no-cache', b'no-store', b'must-revalidate'])
+                b'Cache-Control',
+                [b'no-cache', b'no-store', b'must-revalidate'])
             request.responseHeaders.setRawHeaders(b'expires', [b'0'])
             return r
 
-
-    base_resource = File('client/')
-    base_resource.putChild('build', File('client/build/'))
-    base_resource.putChild('vue', File('client/vue/'))
-    base_resource.putChild('api', OptimaResource(wsgi_app))
+    base_resource = File('../client/dist')
+    base_resource.putChild('api', ServerResource(wsgi_app))
 
     site = Site(base_resource)
 

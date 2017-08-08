@@ -184,6 +184,8 @@ class ConsolidatedModel(StratifiedModel):
                     start_risk_prop[riskgroup] \
                         = self.scaleup_fns['riskgroup_prop' + riskgroup](self.inputs.model_constants['start_time'])
                     start_risk_prop['_norisk'] -= start_risk_prop[riskgroup]
+        else:
+            start_risk_prop = {'': 1.}
 
         # arbitrarily split equally by age-groups and organ status
         # start with everyone having least resistant strain (first in list) and having no treatment history

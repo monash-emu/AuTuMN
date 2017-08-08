@@ -185,7 +185,7 @@ class App:
         running_dropdown_list = ['country', 'integration_method', 'fitting_method']
         for dropdown in running_dropdown_list:
             self.raw_outputs[dropdown] = StringVar()
-        self.raw_outputs['country'].set('Armenia')
+        self.raw_outputs['country'].set('Fiji')
         self.raw_outputs['integration_method'].set('Explicit')
         self.raw_outputs['fitting_method'].set('Method 5')
 

@@ -5,6 +5,7 @@ from functools import wraps
 import traceback
 
 from flask import Flask, abort, jsonify, current_app, request, helpers, json, make_response
+from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import LoginManager, current_user
 from werkzeug.utils import secure_filename
 
@@ -25,11 +26,9 @@ app.logger.addHandler(stream_handler)
 app.logger.setLevel(logging.DEBUG)
 
 import dbconn
-dbconn.connect_to_app(app)
-
+dbconn.db = SQLAlchemy(app)
 # import dbmodel after dbconn.db is connected
 import dbmodel
-
 # only needs to be done once but here just in case
 dbconn.db.create_all()
 

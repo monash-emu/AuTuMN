@@ -199,7 +199,10 @@ class Inputs:
             self.model_constants['tb_multiplier_force_extrapul'] = 0.
 
         # no additional protection for new patients (tb_multiplier_treated_protection is used for additional immunity)
-        if len(self.histories) > 1: self.model_constants['tb_multiplier_new_protection'] = 1.
+        if len(self.histories) > 1:
+            self.model_constants['tb_multiplier_new_protection'] = 1.
+        else:
+            self.model_constants['tb_multiplier_protection'] = 1.
 
     # derive further parameters (called after model structure defined)
     def find_additional_parameters(self):

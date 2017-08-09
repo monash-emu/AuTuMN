@@ -1,5 +1,11 @@
-import sys
+"""
+Runs a twisted server to
+1. serve static files from ../client/dist
+2. handle the JSON-api at /api
+3. from the same port: 3000
+"""
 
+import sys
 from twisted.internet import reactor
 from twisted.internet.endpoints import serverFromString
 from twisted.logger import globalLogBeginner, FileLogObserver, formatEvent
@@ -8,8 +14,8 @@ from twisted.web.server import Site
 from twisted.web.static import File
 from twisted.web.wsgi import WSGIResource
 from twisted.python.threadpool import ThreadPool
-
 from . import api
+
 
 def run():
     globalLogBeginner.beginLoggingTo([
@@ -55,6 +61,7 @@ def run():
     endpoint.listen(site)
 
     reactor.run()
+
 
 if __name__ == "__main__":
     run()

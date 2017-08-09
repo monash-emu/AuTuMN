@@ -24,15 +24,19 @@ stream_handler.setFormatter(logging.Formatter(
 app.logger.addHandler(stream_handler)
 app.logger.setLevel(logging.DEBUG)
 
-# import dbmodel after dbconn.db is connected
 import dbconn
 dbconn.connect_to_app(app)
+
+# import dbmodel after dbconn.db is connected
 import dbmodel
+
+# only needs to be done once but here just in case
 dbconn.db.create_all()
 
 # Setup login manager
 login_manager = LoginManager()
 login_manager.init_app(app)
+
 
 # Define the user model used by flask_login
 
@@ -86,7 +90,7 @@ def run_fn(fn_name, args, kwargs):
         if not current_user.is_authenticated():
             return app.login_manager.unauthorized()
     elif not fn_name.startswith("public_"):
-      raise ValueError('Function "%s" not valid' % (fn_name))
+        raise ValueError('Function "%s" not valid' % (fn_name))
 
     # deferred importing to avoid circular imports when
     # tasks tries to import app from api.py
@@ -102,6 +106,7 @@ def run_fn(fn_name, args, kwargs):
         raise ValueError('Function "%s" does not exist' % (fn_name))
 
     return fn(*args, **kwargs)
+
 
 # NOTE: the twisted wgsi server is set up to
 # only allows url's with /api/* to be served
@@ -132,6 +137,7 @@ def run_remote_procedure():
         return ''
     else:
         return jsonify(result)
+
 
 @app.route('/api/rpc-download', methods=['POST'])
 @report_exception_decorator
@@ -164,6 +170,7 @@ def send_downloadable_file():
 
     return response
 
+
 @app.route('/api/rpc-upload', methods=['POST'])
 @report_exception_decorator
 def receive_uploaded_file():
@@ -194,6 +201,7 @@ def receive_uploaded_file():
     else:
         return jsonify(result)
 
+
 # http://reputablejournal.com/adventures-with-flask-cors.html#.WW6-INOGMm8
 # Allow Cross-Origin-Resource-Sharing, mainly for working with hot reloading webclient
 @app.after_request
@@ -203,6 +211,7 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     response.headers.add('Access-Control-Allow-Credentials', 'true')
     return response
+
 
 # Main loop
 

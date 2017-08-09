@@ -21,29 +21,31 @@ export default {
 
   // Send a request to the login URL and save the returned JWT
   login (newUser) {
-    return new Promise((resolve, reject) => {
-      axios
-        .post(config.api + '/login', newUser)
-        .then(
-          (res) => {
-            if (res.data.success) {
-              localStorage.setItem('user', JSON.stringify(newUser))
-              let returnUser = res.data.user
-              user.authenticated = true
-              _.assign(user, returnUser)
-              console.log('>> auth.login user', user)
-            }
-            resolve(res)
-          },
-          reject)
-    })
+    let payload = _.cloneDeep(newUser)
+    payload.password = hashPassword(payload.password)
+    payload.username = payload.name
+    delete payload.passwordv
+    return rpc
+      .rpcRun('public_login_user', payload)
+      .then(res => {
+        console.log('>> auth.login res', res)
+        if (res.data.success) {
+          localStorage.setItem('user', JSON.stringify(payload))
+          let returnUser = res.data.user
+          user.authenticated = true
+          _.assign(user, returnUser)
+          console.log('>> auth.login user', user)
+        }
+        return res
+      })
   },
 
   register (newUser) {
-    newUser.password = hashPassword(newUser.password)
-    newUser.username = newUser.name
-    delete newUser.passwordv
-    return rpc.rpcRun('public_create_user', newUser)
+    let payload = _.cloneDeep(newUser)
+    payload.password = hashPassword(payload.password)
+    payload.username = payload.name
+    delete payload.passwordv
+    return rpc.rpcRun('public_create_user', payload)
   },
 
   update (user) {
@@ -65,7 +67,7 @@ export default {
   logout () {
     localStorage.removeItem('user')
     user.authenticated = false
-    return axios.post(`${config.api}/logout`)
+    return rpc.rpcRun('public_logout_user')
   }
 
   // // if using JWT

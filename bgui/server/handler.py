@@ -26,10 +26,10 @@ from flask import current_app, session, abort
 from flask.ext.login import current_user, login_user, logout_user
 from validate_email import validate_email
 
+# User handlers
+
 import dbmodel
 
-
-# User handlers
 
 def check_valid_email(email):
     if not email:
@@ -71,7 +71,12 @@ def public_create_user(user_attr):
     try:
         dbmodel.load_user(username=username)
     except:
-        return dbmodel.create_user(user_attr)
+        print(">> public_create_user user_attr", user_attr)
+        created_user_attr = dbmodel.create_user(user_attr)
+        return {
+            'success': True,
+            'user': created_user_attr
+        }
     else:
         abort(409)
 
@@ -86,19 +91,33 @@ def login_update_user(user_attr):
 
 def public_login_user(user_attr):
     if not is_anonymous():
-        return dbmodel.parse_user(current_user)
+        print(">> public_login_user already logged-in")
+        return {
+            'success': True,
+            'user': dbmodel.parse_user(current_user)
+        }
 
     user_attr = check_user_attr(user_attr)
+    print(">> public_login_user user_attr", user_attr)
 
     try:
-        user = dbmodel.load_user(username=user_attr['username'])
+        kwargs = {}
+        if user_attr['username']:
+            kwargs['username'] = user_attr['username']
+        elif user_attr['email']:
+            kwargs['email'] = user_attr['email']
+        user = dbmodel.load_user(**kwargs)
+        print(">> public_login_user user", user)
     except:
         pass
     else:
         if user.password == user_attr['password']:
-            print(">> public_login_user logged-in", user_attr['username'])
+            print(">> public_login_user new login")
             login_user(user)
-            return dbmodel.parse_user(user)
+            return {
+                'success': True,
+                'user': dbmodel.parse_user(user)
+            }
 
     abort(401)
 
@@ -157,6 +176,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 import autumn.model_runner
 import autumn.outputs
 
+
 def public_check_autumn_run():
     global bgui_output_lines
     global is_bgui_running
@@ -165,6 +185,7 @@ def public_check_autumn_run():
         "is_running": is_bgui_running
     }
     return result
+
 
 def bgui_model_output(output_type, data={}):
     if output_type == "init":
@@ -175,6 +196,7 @@ def bgui_model_output(output_type, data={}):
         print(">> handler.bgui_model_output console:", data["message"])
     elif output_type == "uncertainty_graph":
         print(">> handler.bgui_model_output uncertainty_graph:", data)
+
 
 def public_run_autumn(gui_outputs):
     """
@@ -192,10 +214,8 @@ def public_run_autumn(gui_outputs):
         model_runner.master_runner()
         project = autumn.outputs.Project(model_runner, gui_outputs)
         project.master_outputs_runner()
-        result = { 'success': True }
+        result = {'success': True}
     except:
-        result = { 'success': False }
+        result = {'success': False}
     is_bgui_running = False
     return result
-
-

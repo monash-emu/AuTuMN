@@ -230,7 +230,8 @@
     }
   }
   const defaultBooleanKeys = ['adaptive_uncertainty', 'is_amplification',
-    'is_misassignment', 'is_vary_detection_by_organ', 'output_gtb_plots']
+    'is_misassignment', 'is_vary_detection_by_organ', 'output_gtb_plots',
+    'is_treatment_history']
   for (let k of defaultBooleanKeys) {
     params[k].value = true
   }
@@ -263,7 +264,7 @@
       'Djibouti', 'Ecuador', 'Estonia', 'Ethiopia', 'Fiji', 'Gabon',
       'Georgia', 'Ghana', 'Guatemala', 'Guinea', 'Philippines', 'Romania']
   }
-  params.country.value = params.country.options[4]
+  params.country.value = 'Fiji'
 
   params.integration_method = {
     type: 'drop_down',
@@ -285,9 +286,9 @@
   }
   params.time_step = {
     type: 'slider',
-    value: 0.005,
-    max: 0.50,
-    interval: 0.05
+    value: 0.5,
+    max: 0.5,
+    interval: 0.005
   }
 
   const runningKeys = ['country', 'integration_method', 'fitting_method',

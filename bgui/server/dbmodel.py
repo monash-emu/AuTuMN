@@ -1,23 +1,85 @@
 from __future__ import print_function
 
 import copy
-
 from datetime import datetime
 import dateutil.tz
+import uuid
+import json
 
 from sqlalchemy import text
+from sqlalchemy.types import TypeDecorator, CHAR, VARCHAR
 from sqlalchemy.dialects.postgresql import UUID, JSON
 from sqlalchemy.orm import deferred
-import sqlalchemy.types as types
 
+# NOTE: dbconn must have been initialized
 from dbconn import db
+
+
+class GUID(TypeDecorator):
+    """Platform-independent GUID type.
+
+    Uses PostgreSQL's UUID type, otherwise uses
+    CHAR(32), storing as stringified hex values.
+
+    http://docs.sqlalchemy.org/en/latest/core/custom_types.html
+    """
+    impl = CHAR
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == 'postgresql':
+            return dialect.type_descriptor(UUID())
+        else:
+            return dialect.type_descriptor(CHAR(32))
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+        elif dialect.name == 'postgresql':
+            return str(value)
+        else:
+            if not isinstance(value, uuid.UUID):
+                return "%.32x" % uuid.UUID(value).int
+            else:
+                # hexstring
+                return "%.32x" % value.int
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+        else:
+            return uuid.UUID(value)
+
+
+class JSONEncodedDict(TypeDecorator):
+    """Represents an immutable structure as a json-encoded string.
+
+    Usage::
+
+        JSONEncodedDict(255)
+
+    """
+
+    impl = VARCHAR
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            value = json.dumps(value)
+
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            value = json.loads(value)
+        return value
+
+
 
 
 class UserDb(db.Model):
 
     __tablename__ = 'users'
 
-    id = db.Column(UUID(True), server_default=text("uuid_generate_v1mc()"), primary_key=True)
+    id = db.Column(GUID(), default=uuid.uuid4, nullable=False, unique=True, primary_key=True)
     username = db.Column(db.String(255))
     name = db.Column(db.String(60))
     email = db.Column(db.String(200))
@@ -42,11 +104,10 @@ class ObjectDb(db.Model):
 
     __tablename__ = 'objects'
 
-    id = db.Column(UUID(True), server_default=text("uuid_generate_v1mc()"), primary_key=True)
-    user_id = db.Column(UUID(True), db.ForeignKey('users.id'))
+    id = db.Column(GUID(), default=uuid.uuid4, nullable=False, unique=True, primary_key=True)
+    user_id = db.Column(GUID(True), db.ForeignKey('users.id'))
     obj_type = db.Column(db.Text, default=None)
-    owner_id = db.Column(UUID(True), db.ForeignKey('objects.id'), default=None) # rename to master_obj_id
-    attr = db.Column(JSON)
+    attr = db.Column(JSONEncodedDict)
     blob = deferred(db.Column(db.LargeBinary))
 
     def load_obj_from_redis(self):
@@ -155,7 +216,7 @@ def parse_user(user):
 
 def create_user(user_attr, db_session=None):
     db_session = verify_db_session(db_session)
-    print(">> create_user", user_attr)
+    print(">> dbmodel.create_user", user_attr)
     user = UserDb(**user_attr)
     db_session.add(user)
     db_session.commit()

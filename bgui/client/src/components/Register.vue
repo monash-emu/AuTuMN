@@ -80,7 +80,7 @@ export default {
         .register(payload)
         .then((res) => {
           if (res.data.success) {
-            console.log('>> Register.submit success: login')
+            console.log('>> Register.submit success', res.data)
             return auth.login({
               email: payload.email,
               password: payload.password

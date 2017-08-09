@@ -6,5 +6,4 @@ db = None
 def connect_to_app(app):
     global db
     db = SQLAlchemy(app)
-    db.engine.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')
 

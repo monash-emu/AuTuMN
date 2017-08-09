@@ -40,6 +40,7 @@ class GUID(TypeDecorator):
             if not isinstance(value, uuid.UUID):
                 return "%.32x" % uuid.UUID(value).int
             else:
+                print("> GUID.process_bind_param", value, type(value))
                 # hexstring
                 return "%.32x" % value.int
 
@@ -73,18 +74,16 @@ class JSONEncodedDict(TypeDecorator):
         return value
 
 
-
-
 class UserDb(db.Model):
 
     __tablename__ = 'users'
 
-    id = db.Column(GUID(), default=uuid.uuid4, nullable=False, unique=True, primary_key=True)
+    id = db.Column(GUID(), default=uuid.uuid4, primary_key=True)
     username = db.Column(db.String(255))
     name = db.Column(db.String(60))
     email = db.Column(db.String(200))
-    password = db.Column(db.String(200))
-    is_admin = db.Column(db.Boolean, server_default=text('FALSE'))
+    password = db.Column(db.String(255))
+    is_admin = db.Column(db.Boolean, default=False)
     objects = db.relationship('ObjectDb', backref='user', lazy='dynamic')
 
     def get_id(self):
@@ -216,9 +215,11 @@ def parse_user(user):
 
 def create_user(user_attr, db_session=None):
     db_session = verify_db_session(db_session)
-    print(">> dbmodel.create_user", user_attr)
+    for key in user_attr:
+        user_attr[key] = str(user_attr[key])
     user = UserDb(**user_attr)
     db_session.add(user)
+    print(">> dbmodel.create_user", user_attr)
     db_session.commit()
     return parse_user(user)
 

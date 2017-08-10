@@ -63,6 +63,7 @@ export default {
         this
           .login(lastUser)
           .then(resolve)
+          .catch(resolve)
       } else {
         resolve()
       }

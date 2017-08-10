@@ -13,7 +13,8 @@ Vue.config.productionTip = false
 Vue.use(VueMaterial)
 
 auth.restoreLastUser()
-  .then(() => {
+  .then(res => {
+    console.log('> Got here')
     new Vue({
       el: '#app',
       router,

@@ -101,21 +101,20 @@ def public_login_user(user_attr):
         }
 
     user_attr = check_user_attr(user_attr)
-    print(">> public_login_user user_attr", user_attr)
+    kwargs = {}
+    if user_attr['username']:
+        kwargs['username'] = user_attr['username']
+    if user_attr['email']:
+        kwargs['email'] = user_attr['email']
+    print(">> public_login_user loading", kwargs)
 
     try:
-        kwargs = {}
-        if user_attr['username']:
-            kwargs['username'] = user_attr['username']
-        elif user_attr['email']:
-            kwargs['email'] = user_attr['email']
         user = dbmodel.load_user(**kwargs)
-        print(">> public_login_user user", user)
     except:
         pass
     else:
+        print(">> public_login_user compare", user.password, user_attr['password'])
         if user.password == user_attr['password']:
-            print(">> public_login_user new login")
             login_user(user)
             return {
                 'success': True,

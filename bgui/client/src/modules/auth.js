@@ -28,13 +28,13 @@ export default {
     return rpc
       .rpcRun('public_login_user', payload)
       .then(res => {
-        console.log('>> auth.login res', res)
         if (res.data.success) {
-          localStorage.setItem('user', JSON.stringify(payload))
           let returnUser = res.data.user
           user.authenticated = true
           _.assign(user, returnUser)
-          console.log('>> auth.login user', user)
+          user.password = payload.password
+          console.log('>> auth.login success user', JSON.stringify(user))
+          localStorage.setItem('user', JSON.stringify(user))
         }
         return res
       })
@@ -48,18 +48,24 @@ export default {
     return rpc.rpcRun('public_create_user', payload)
   },
 
-  update (user) {
-    console.log('>> auth.update', user)
-    return axios.post(config.api + '/update', user)
+  update (updateUser) {
+    console.log('>> auth.update', updateUser)
+    updateUser.id = user.id
+    // return axios.post(config.api + '/update', user)
+    return rpc.rpcRun('login_update_user', updateUser)
   },
 
   restoreLastUser () {
     return new Promise((resolve, reject) => {
       let lastUser = JSON.parse(localStorage.getItem('user'))
       console.log('>> auth.restoreLastUser', lastUser)
-      this
-        .login(lastUser)
-        .then(resolve)
+      if (lastUser) {
+        this
+          .login(lastUser)
+          .then(resolve)
+      } else {
+        resolve()
+      }
     })
   },
 

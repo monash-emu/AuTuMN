@@ -83,7 +83,7 @@ In `server/webapp`:
 
 - `handlers.py` - the URL handlers are defined here. The handlers only deal with JSON-data structures,
   UIDs, and upload/download files
-- `dbconn.py` - this is a central place to store references to the postgres and redis database
+- `conn.py` - this is a central place to store references to the postgres and redis database
 - `dbmodel.py` - the adaptor to the Postgres database with objects that map onto the database tables
 - `tasks.py` - this is a conceptually difficult file - it defines both the daemons
    and the tasks run by the daemon. This file is called by `api.py` as entry point to talk to `celery`,

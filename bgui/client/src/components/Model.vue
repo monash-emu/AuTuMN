@@ -4,8 +4,8 @@
 
       <div style="text-align: center;">
         <br>
-        <div class="md-display-2">
-          Model Parameters
+        <div class="md-display-1">
+          TB Epidemiological Model
         </div>
         <br>
         <br>

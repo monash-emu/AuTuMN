@@ -93,7 +93,7 @@ export default {
         })
         .then((res) => {
           if (res.data.success) {
-            this.$router.push('/experiments')
+            this.$router.push('/')
           }
         })
     }

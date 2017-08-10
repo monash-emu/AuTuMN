@@ -72,7 +72,7 @@
           .login(payload)
           .then((res) => {
             if (res.data.success) {
-              this.$router.push('/experiments')
+              this.$router.push('/')
             } else {
               this.$data.msg = res.data.msg
             }

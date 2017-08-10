@@ -86,7 +86,10 @@ def public_retrieve_current_user():
 
 
 def login_update_user(user_attr):
-    return dbmodel.update_user_from_attr(user_attr)
+    return {
+        'success': True,
+        'user': dbmodel.update_user_from_attr(user_attr)
+    }
 
 
 def public_login_user(user_attr):

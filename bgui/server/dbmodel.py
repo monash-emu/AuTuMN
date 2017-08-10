@@ -6,13 +6,11 @@ import dateutil.tz
 import uuid
 import json
 
-from sqlalchemy import text
 from sqlalchemy.types import TypeDecorator, CHAR, VARCHAR
-from sqlalchemy.dialects.postgresql import UUID, JSON
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import deferred
 
-# NOTE: dbconn must have been initialized
-from dbconn import db
+from conn import db
 
 
 class GUID(TypeDecorator):
@@ -122,6 +120,10 @@ class ObjectDb(db.Model):
         self.blob = b''
 
 
+# only needs to be done once but here just in case
+db.create_all()
+
+
 def filter_dict_for_none(d):
     new_d = {}
     for key, value in d.items():
@@ -209,7 +211,7 @@ def parse_user(user):
         'name': user.name,
         'username': user.username,
         'email': user.email,
-        'is_admin': user.is_admin,
+        'isAdmin': user.is_admin,
     }
 
 
@@ -260,4 +262,5 @@ def delete_user(user_id, db_session=None):
     db_session.delete(user)
     db_session.commit()
     return user_attr
+
 

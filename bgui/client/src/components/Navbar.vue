@@ -3,11 +3,11 @@
 
     <h2 class="md-title" style="padding-left: 1em; flex: 1" >AuTuMN</h2>
 
-    <span v-if="user.authenticated">
+    <router-link to='/' class="md-button">
+      Model
+    </router-link>
 
-      <router-link to='/experiments' class="md-button">
-        Experiments
-      </router-link>
+    <span v-if="user.authenticated">
 
       <md-menu >
 

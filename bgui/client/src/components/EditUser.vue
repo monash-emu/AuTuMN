@@ -51,56 +51,51 @@
 </template>
 
 <script>
-import axios from 'axios'
-import Router from 'vue-router'
-import auth from '../modules/auth'
-import _ from 'lodash'
-import util from '../modules/util'
+  import axios from 'axios'
+  import Router from 'vue-router'
+  import auth from '../modules/auth'
+  import _ from 'lodash'
+  import util from '../modules/util'
 
-export default {
-  name: 'EditUser',
-  data() {
-    let payload = _.assign({}, auth.user)
-    _.assign(payload, {
-      title: 'Edit Your Details',
-      password: '',
-      passwordv: '',
-      errors: []
-    })
-    console.log('>> EditUser.data', payload)
-    return payload
-  },
-  methods: {
-    submit(e) {
-      let payload = {}
-      const keys = ['name', 'email', 'password', 'passwordv']
-      for (let key of keys) {
-        if (this.$data[key]) {
-          payload[key] = this.$data[key]
+  export default {
+    name: 'EditUser',
+    data () {
+      let payload = _.assign({}, auth.user)
+      _.assign(payload, {
+        title: 'Edit Your Details',
+        password: '',
+        passwordv: '',
+        errors: []
+      })
+      console.log('>> EditUser.data', payload)
+      return payload
+    },
+    methods: {
+      submit (e) {
+        let payload = {}
+        const keys = ['name', 'email', 'password', 'passwordv']
+        for (let key of keys) {
+          if (this.$data[key]) {
+            payload[key] = this.$data[key]
+          }
         }
+        console.log('>> EditUser.submit', util.jstr(payload))
+        auth
+          .update(payload)
+          .then((res) => {
+            if (res.data.success) {
+              console.log('>> Register.submit success: login')
+              return auth
+                .login({
+                  email: payload.email,
+                  password: payload.password
+                })
+            } else {
+              console.log('>> Register.submit fail', res.data)
+              this.$data.errors = res.data.errors
+            }
+          })
       }
-      console.log('>> EditUser.submit', util.jstr(payload))
-      auth
-        .update(payload)
-        .then((res) => {
-          if (res.data.success) {
-            console.log('>> Register.submit success: login')
-            return auth.login({
-              email: payload.email,
-              password: payload.password
-            })
-          } else {
-            console.log('>> Register.submit fail', res.data)
-            this.$data.errors = res.data.errors
-            return { data: { success: false } }
-          }
-        })
-        .then((res) => {
-          if (res.data.success) {
-            this.$router.push('/experiments')
-          }
-        })
     }
   }
-}
 </script>

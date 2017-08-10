@@ -4,10 +4,11 @@ from __future__ import unicode_literals
 
 from setuptools import setup, find_packages
 
-with open("./_version.py", "r") as f:
-    version_file = {}
-    exec(f.read(), version_file)
-    version = version_file["__version__"]
+import re
+regex = r"^__version__ = ['\"]([^'\"]*)['\"]"
+mo = re.search(regex, open("_version.py").read(), re.M)
+if mo:
+    version = mo.group(1)
 
 CLASSIFIERS = [
     'Environment :: Console',

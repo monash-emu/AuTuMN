@@ -84,6 +84,8 @@ class UserDb(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     objects = db.relationship('ObjectDb', backref='user', lazy='dynamic')
 
+    # following methods are required by flask-login
+
     def get_id(self):
         return self.id
 

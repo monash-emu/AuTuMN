@@ -435,29 +435,29 @@ class ConsolidatedModel(StratifiedModel):
                 if 'int_prop_opendoors_activities' in self.relevant_interventions and \
                                 self.vars['int_prop_opendoors_activities'] < 1.:
                     self.vars['program_rate_detect' + organ + riskgroup] \
-                        *= 1 - self.params['int_prop_detection_opendoors']*(1-self.vars['int_prop_opendoors_activities'])
+                        *= 1. - self.params['int_prop_detection_opendoors'] \
+                                * (1. - self.vars['int_prop_opendoors_activities'])
 
                 # adjust detection rates for NGOs activities in specific risk groups
                 if 'int_prop_ngo_activities' in self.relevant_interventions and \
                                 self.vars['int_prop_ngo_activities'] < 1. and \
                                 riskgroup in self.ngo_groups:
                     self.vars['program_rate_detect' + organ + riskgroup] \
-                        *= 1 - self.params['int_prop_detection_ngo']*(1-self.vars['int_prop_ngo_activities'])
-
-            # missed (no need to loop by risk-group as ACF is the only difference here, which is applied next)
-            self.vars['program_rate_missed' + organ] \
-                = self.vars['program_rate_detect' + organ] \
-                  * (1. - self.vars['program_prop_algorithm_sensitivity' + organ]) \
-                  / max(self.vars['program_prop_algorithm_sensitivity' + organ], 1e-6)
+                        *= 1 - self.params['int_prop_detection_ngo'] * (1-self.vars['int_prop_ngo_activities'])
 
             # adjust for awareness raising
             if 'int_prop_awareness_raising' in self.vars:
                 case_detection_ratio_with_awareness \
                     = (self.params['int_ratio_case_detection_with_raised_awareness'] - 1.) \
                       * self.vars['int_prop_awareness_raising'] + 1.
-                self.vars['program_rate_missed' + organ] *= case_detection_ratio_with_awareness
                 for riskgroup in [''] + self.riskgroups_for_detection:
                     self.vars['program_rate_detect' + organ + riskgroup] *= case_detection_ratio_with_awareness
+
+            # missed (no need to loop by risk-group as ACF is the only difference here, which is applied next)
+            self.vars['program_rate_missed' + organ] \
+                = self.vars['program_rate_detect' + organ] \
+                  * (1. - self.vars['program_prop_algorithm_sensitivity' + organ]) \
+                  / max(self.vars['program_prop_algorithm_sensitivity' + organ], 1e-6)
 
     def calculate_acf_rate(self):
         """

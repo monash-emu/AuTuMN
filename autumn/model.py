@@ -691,15 +691,28 @@ class ConsolidatedModel(StratifiedModel):
                                * self.vars['int_prop_shortcourse_mdr']
 
             # add some extra treatment success if the treatment support intervention is active
-            if 'int_prop_treatment_support' in self.relevant_interventions:
-                self.vars['program_prop_treatment_success' + strain] \
-                    += (1. - self.vars['program_prop_treatment_success' + strain]) \
-                       * self.params['int_prop_treatment_support_improvement'] \
-                       * self.vars['int_prop_treatment_support']
-                self.vars['program_prop_treatment_death' + strain] \
-                    -= self.vars['program_prop_treatment_death' + strain] \
-                       * self.params['int_prop_treatment_support_improvement'] \
-                       * self.vars['int_prop_treatment_support']
+            if 'int_prop_treatment_support_relative' in self.relevant_interventions:
+                for history in self.histories:
+                    self.vars['program_prop_treatment' + history + '_success' + strain] \
+                        += (1. - self.vars['program_prop_treatment' + history + '_success' + strain]) \
+                           * self.params['int_prop_treatment_support_improvement'] \
+                           * self.vars['int_prop_treatment_support_relative']
+                    self.vars['program_prop_treatment' + history + '_death' + strain] \
+                        -= self.vars['program_prop_treatment' + history + '_death' + strain] \
+                           * self.params['int_prop_treatment_support_improvement'] \
+                           * self.vars['int_prop_treatment_support_relative']
+            elif 'int_prop_treatment_support_absolute' in self.relevant_interventions and strain == self.strains[0]:
+                for history in self.histories:
+                    if self.params['int_prop_treatment_success_ideal'] \
+                            > self.vars['program_prop_treatment' + history + '_success' + strain]:
+                        self.vars['program_prop_treatment' + history + '_success' + strain] \
+                            += (self.params['int_prop_treatment_success_ideal']
+                               - self.vars['program_prop_treatment' + history + '_success' + strain]) \
+                               * self.vars['int_prop_treatment_support_absolute']
+                        self.vars['program_prop_treatment' + history + '_death' + strain] \
+                            -= (self.vars['program_prop_treatment' + history + '_death' + strain]
+                                - self.params['int_prop_treatment_death_ideal']) \
+                               * self.vars['int_prop_treatment_support_absolute']
 
             # subtract some treatment success if ngo activities program has discontinued
             if 'int_prop_ngo_activities' in self.relevant_interventions:
@@ -951,10 +964,12 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         # treatment support
-        if 'int_prop_treatment_support' in self.relevant_interventions:
-            self.vars['popsize_treatment_support'] = 0.
-            for compartment in self.compartments:
-                if 'treatment_' in compartment: self.vars['popsize_treatment_support'] += self.compartments[compartment]
+        for intervention in ['treatment_support_relative', 'treatment_support_absolute']:
+            if 'int_prop_' + intervention in self.relevant_interventions:
+                self.vars['popsize_' + intervention] = 0.
+                for compartment in self.compartments:
+                    if 'treatment_' in compartment:
+                        self.vars['popsize_' + intervention] += self.compartments[compartment]
 
         # ambulatory care
         for organ in self.organ_status:

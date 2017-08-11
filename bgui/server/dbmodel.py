@@ -1,14 +1,22 @@
 from __future__ import print_function
 
 import copy
+import os
 from datetime import datetime
 import dateutil.tz
 import uuid
 import json
 
+from flask import current_app
+from flask_login import current_user
 from sqlalchemy.types import TypeDecorator, CHAR, VARCHAR
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import deferred
+
+from validate_email import validate_email
+
+from werkzeug.security import generate_password_hash, \
+     check_password_hash
 
 from conn import db
 
@@ -83,6 +91,17 @@ class UserDb(db.Model):
     password = db.Column(db.String(255))
     is_admin = db.Column(db.Boolean, default=False)
     objects = db.relationship('ObjectDb', backref='user', lazy='dynamic')
+
+    def __init__(self, **kwargs):
+        db.Model.__init__(self, **kwargs)
+        self.set_password(kwargs['password'])
+
+    def set_password(self, password):
+        self.password = generate_password_hash(password)
+        print('> dbmodel.Userdb.__init__ ', self.password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password, password)
 
     # following methods are required by flask-login
 
@@ -207,6 +226,14 @@ def delete_obj(obj_id, db_session=None):
 
 # USER functions
 
+def is_anonymous():
+    try:
+        userisanonymous = current_user.is_anonymous()
+    except:
+        userisanonymous = current_user.is_anonymous
+    return userisanonymous
+
+
 def parse_user(user):
     return {
         'id': user.id,
@@ -214,6 +241,29 @@ def parse_user(user):
         'username': user.username,
         'email': user.email,
         'isAdmin': user.is_admin,
+    }
+
+
+def check_valid_email(email):
+    if not email:
+        return email
+    if validate_email(email):
+        return email
+    raise ValueError('{} is not a valid email'.format(email))
+
+
+def check_sha224_hash(password):
+    if isinstance(password, basestring) and len(password) == 56:
+        return password
+    raise ValueError('Invalid password - expecting SHA224')
+
+
+def check_user_attr(user_attr):
+    return {
+        'email': check_valid_email(user_attr.get('email', None)),
+        'name': user_attr.get('name', ''),
+        'username': user_attr.get('username', ''),
+        'password': check_sha224_hash(user_attr.get('password')),
     }
 
 
@@ -264,5 +314,33 @@ def delete_user(user_id, db_session=None):
     db_session.delete(user)
     db_session.commit()
     return user_attr
+
+
+def get_user_server_dir(dirpath, user_id=None):
+    """
+    Returns a user directory if user_id is defined
+    """
+    try:
+        if not is_anonymous():
+            current_user_id = user_id if user_id else current_user.id
+            user_path = os.path.join(dirpath, str(current_user_id))
+            if not (os.path.exists(user_path)):
+                os.makedirs(user_path)
+            return user_path
+    except:
+        return dirpath
+    return dirpath
+
+
+def get_server_filename(filename):
+    """
+    Returns the path to save a file on the server
+    """
+    dirname = get_user_server_dir(current_app.config['SAVE_FOLDER'])
+    if not (os.path.exists(dirname)):
+        os.makedirs(dirname)
+    if os.path.dirname(filename) == '' and not os.path.exists(filename):
+        filename = os.path.join(dirname, filename)
+    return filename
 
 

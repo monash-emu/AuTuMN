@@ -1,6 +1,6 @@
 """
 Major global app variables defined here so that
-other modules can easily access it
+other modules can easily access them
 """
 
 from flask import Flask

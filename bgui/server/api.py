@@ -99,12 +99,11 @@ def run_fn(fn_name, args, kwargs):
     return fn(*args, **kwargs)
 
 
-# NOTE: the twisted wgsi server is set up to
-# only allows url's with /api/* to be served
+# NOTE: twisted wgsi only serves url's with /api/*
 
 @app.route('/api', methods=['GET'])
 def root():
-    return json.dumps({"rpc-json": _version.__version__})
+    return json.dumps({"rpcJsonVersion": _version.__version__})
 
 
 @app.route('/api/rpc-run', methods=['POST'])

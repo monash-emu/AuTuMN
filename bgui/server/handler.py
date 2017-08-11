@@ -19,55 +19,24 @@ All parameters and return types are either id's, json-summaries, or mpld3 graphs
 """
 
 from __future__ import print_function
+
 import os
 import sys
 
-from flask import current_app, session, abort
+from flask import session, abort
 from flask.ext.login import current_user, login_user, logout_user
-from validate_email import validate_email
 
 import dbmodel
 
 
-# User handlers
-
-def check_valid_email(email):
-    if not email:
-        return email
-    if validate_email(email):
-        return email
-    raise ValueError('{} is not a valid email'.format(email))
-
-
-def check_sha224_hash(password):
-    if isinstance(password, basestring) and len(password) == 56:
-        return password
-    raise ValueError('Invalid password - expecting SHA224')
-
-
-def check_user_attr(user_attr):
-    return {
-        'email': check_valid_email(user_attr.get('email', None)),
-        'name': user_attr.get('name', ''),
-        'username': user_attr.get('username', ''),
-        'password': check_sha224_hash(user_attr.get('password')),
-    }
-
-
-def is_anonymous():
-    try:
-        userisanonymous = current_user.is_anonymous()
-    except:
-        userisanonymous = current_user.is_anonymous
-    return userisanonymous
-
+# USER handlers
 
 def admin_retrieve_users():
     return {'users': map(dbmodel.parse_user, dbmodel.load_users())}
 
 
 def public_create_user(user_attr):
-    username = check_user_attr(user_attr)['username']
+    username = dbmodel.check_user_attr(user_attr)['username']
     try:
         dbmodel.load_user(username=username)
     except:
@@ -93,14 +62,14 @@ def login_update_user(user_attr):
 
 
 def public_login_user(user_attr):
-    if not is_anonymous():
+    if not dbmodel.is_anonymous():
         print(">> public_login_user already logged-in")
         return {
             'success': True,
             'user': dbmodel.parse_user(current_user)
         }
 
-    user_attr = check_user_attr(user_attr)
+    user_attr = dbmodel.check_user_attr(user_attr)
     kwargs = {}
     if user_attr['username']:
         kwargs['username'] = user_attr['username']
@@ -113,8 +82,7 @@ def public_login_user(user_attr):
     except:
         pass
     else:
-        print(">> public_login_user compare", user.password, user_attr['password'])
-        if user.password == user_attr['password']:
+        if user.check_password(user_attr['password']):
             login_user(user)
             return {
                 'success': True,
@@ -132,36 +100,6 @@ def admin_delete_user(user_id):
 def public_logout_user():
     logout_user()
     session.clear()
-
-
-## DIRECTORIES
-
-def get_user_server_dir(dirpath, user_id=None):
-    """
-    Returns a user directory if user_id is defined
-    """
-    try:
-        if not is_anonymous():
-            current_user_id = user_id if user_id else current_user.id
-            user_path = os.path.join(dirpath, str(current_user_id))
-            if not (os.path.exists(user_path)):
-                os.makedirs(user_path)
-            return user_path
-    except:
-        return dirpath
-    return dirpath
-
-
-def get_server_filename(filename):
-    """
-    Returns the path to save a file on the server
-    """
-    dirname = get_user_server_dir(current_app.config['SAVE_FOLDER'])
-    if not (os.path.exists(dirname)):
-        os.makedirs(dirname)
-    if os.path.dirname(filename) == '' and not os.path.exists(filename):
-        filename = os.path.join(dirname, filename)
-    return filename
 
 
 # RPC-JSON API Web-handlers

@@ -51,7 +51,7 @@ def run():
     try:
         port = str(sys.argv[1])
     except IndexError:
-        port = "8080"
+        port = "3000"
 
     # Start the threadpool now, shut it down when we're closing
     threadpool.start()

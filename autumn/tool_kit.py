@@ -230,6 +230,16 @@ def apply_odds_ratio_to_proportion(proportion, odds_ratio):
     return proportion * odds_ratio / (proportion * (odds_ratio - 1.) + 1.)
 
 
+def increase_parameter_closer_to_value(old_value, target_value, coverage):
+
+    if old_value < target_value: return old_value + (target_value - old_value) * coverage
+
+
+def decrease_parameter_closer_to_value(old_value, target_value, coverage):
+
+    if old_value > target_value: return old_value - (old_value - target_value) * coverage
+
+
 ##################################
 ### Scenario name manipulation ###
 ##################################

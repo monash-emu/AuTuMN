@@ -356,10 +356,10 @@ class ConsolidatedModel(StratifiedModel):
         Only do so if the current case detection ratio is lower than the idealised detection ratio.
         """
 
-        if self.vars['program_prop_detect'] < self.params['int_ideal_detection']:
-            self.vars['program_prop_detect'] \
-                += (self.params['int_ideal_detection'] - self.vars['program_prop_detect']) \
-                   * self.vars['int_prop_decentralisation']
+        self.vars['program_prop_detect'] \
+            = t_k.increase_parameter_closer_to_value(self.vars['program_prop_detect'],
+                                                     self.params['int_ideal_detection'],
+                                                     self.vars['int_prop_decentralisation'])
 
     def adjust_ipt_for_opendoors(self):
         """
@@ -703,16 +703,16 @@ class ConsolidatedModel(StratifiedModel):
                            * self.vars['int_prop_treatment_support_relative']
             elif 'int_prop_treatment_support_absolute' in self.relevant_interventions and strain == self.strains[0]:
                 for history in self.histories:
-                    if self.params['int_prop_treatment_success_ideal'] \
-                            > self.vars['program_prop_treatment' + history + '_success' + strain]:
-                        self.vars['program_prop_treatment' + history + '_success' + strain] \
-                            += (self.params['int_prop_treatment_success_ideal']
-                               - self.vars['program_prop_treatment' + history + '_success' + strain]) \
-                               * self.vars['int_prop_treatment_support_absolute']
-                        self.vars['program_prop_treatment' + history + '_death' + strain] \
-                            -= (self.vars['program_prop_treatment' + history + '_death' + strain]
-                                - self.params['int_prop_treatment_death_ideal']) \
-                               * self.vars['int_prop_treatment_support_absolute']
+                    self.vars['program_prop_treatment' + history + '_success' + strain] \
+                        = t_k.increase_parameter_closer_to_value(
+                        self.vars['program_prop_treatment' + history + '_success' + strain],
+                        self.vars['program_prop_treatment' + history + '_success' + strain],
+                        self.vars['int_prop_treatment_support_absolute'])
+                    self.vars['program_prop_treatment' + history + '_death' + strain] \
+                        = t_k.decrease_parameter_closer_to_value(
+                        self.vars['program_prop_treatment' + history + '_death' + strain],
+                        self.params['int_prop_treatment_death_ideal'],
+                        self.vars['int_prop_treatment_support_absolute'])
 
             # subtract some treatment success if ngo activities program has discontinued
             if 'int_prop_ngo_activities' in self.relevant_interventions:

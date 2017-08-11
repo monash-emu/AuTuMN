@@ -419,12 +419,15 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         organs = copy.copy(self.organs_for_detection)
-        if self.vary_detection_by_organ:
-            organs.append('')
+        if self.vary_detection_by_organ: organs.append('')
         for organ in organs:
-            for riskgroup in [''] + self.riskgroups_for_detection:
 
-                # detected
+            # add empty string for use in following calculation of number of missed patients
+            riskgroups_to_loop = copy.copy(self.riskgroups_for_detection)
+            if '' not in riskgroups_to_loop: riskgroups_to_loop.append('')
+            for riskgroup in riskgroups_to_loop:
+
+                # calculate detection rate from cdr proportion
                 self.vars['program_rate_detect' + organ + riskgroup] \
                     = self.vars['program_prop_detect' + organ]\
                       * (1. / self.params['tb_timeperiod_activeuntreated'] + 1. / self.vars['demo_life_expectancy']) \
@@ -439,21 +442,19 @@ class ConsolidatedModel(StratifiedModel):
 
                 # adjust detection rates for ngo activities in specific risk-groups
                 if 'int_prop_ngo_activities' in self.relevant_interventions and \
-                                self.vars['int_prop_ngo_activities'] < 1. and \
-                                riskgroup in self.ngo_groups:
+                                self.vars['int_prop_ngo_activities'] < 1. and riskgroup in self.ngo_groups:
                     self.vars['program_rate_detect' + organ + riskgroup] \
-                        *= 1 - self.params['int_prop_detection_ngo'] * (1-self.vars['int_prop_ngo_activities'])
+                        *= 1. - self.params['int_prop_detection_ngo'] * (1. - self.vars['int_prop_ngo_activities'])
 
-            # adjust for awareness raising
-            if 'int_prop_awareness_raising' in self.vars:
-                for riskgroup in [''] + self.riskgroups_for_detection:
+                # adjust for awareness raising
+                if 'int_prop_awareness_raising' in self.vars:
                     self.vars['program_rate_detect' + organ + riskgroup] \
-                        *= (self.params['int_ratio_case_detection_with_raised_awareness'] - 1.) \
+                        *= (self.params['int_multiplier_detection_with_raised_awareness'] - 1.) \
                            * self.vars['int_prop_awareness_raising'] + 1.
 
-            # missed (use arbitrary risk-group from end of last loop, as changes to cdr by risk-group not applied yet)
+            # missed
             self.vars['program_rate_missed' + organ] \
-                = self.vars['program_rate_detect' + organ + riskgroup] \
+                = self.vars['program_rate_detect' + organ] \
                   * (1. - self.vars['program_prop_algorithm_sensitivity' + organ]) \
                   / max(self.vars['program_prop_algorithm_sensitivity' + organ], 1e-6)
 

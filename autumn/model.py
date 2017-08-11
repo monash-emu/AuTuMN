@@ -410,7 +410,7 @@ class ConsolidatedModel(StratifiedModel):
         Calculate rates of detection and failure of detection from the programmatic report of the case detection "rate"
         (which is actually a proportion and referred to as program_prop_detect here).
 
-        Derived by solving the following simultaneous equations:
+        Derived by solving the simultaneous equations:
 
           algorithm sensitivity = detection rate / (detection rate + missed rate)
               - and -
@@ -426,9 +426,8 @@ class ConsolidatedModel(StratifiedModel):
 
                 # detected
                 self.vars['program_rate_detect' + organ + riskgroup] \
-                    = self.vars['program_prop_detect' + organ] \
-                      * (1. / self.params['tb_timeperiod_activeuntreated']
-                         + 1. / self.vars['demo_life_expectancy']) \
+                    = self.vars['program_prop_detect' + organ]\
+                      * (1. / self.params['tb_timeperiod_activeuntreated'] + 1. / self.vars['demo_life_expectancy']) \
                       / (1. - self.vars['program_prop_detect' + organ])
 
                 # adjust detection rates for opendoors activities in all groups
@@ -438,7 +437,7 @@ class ConsolidatedModel(StratifiedModel):
                         *= 1. - self.params['int_prop_detection_opendoors'] \
                                 * (1. - self.vars['int_prop_opendoors_activities'])
 
-                # adjust detection rates for NGOs activities in specific risk groups
+                # adjust detection rates for ngo activities in specific risk-groups
                 if 'int_prop_ngo_activities' in self.relevant_interventions and \
                                 self.vars['int_prop_ngo_activities'] < 1. and \
                                 riskgroup in self.ngo_groups:
@@ -447,15 +446,14 @@ class ConsolidatedModel(StratifiedModel):
 
             # adjust for awareness raising
             if 'int_prop_awareness_raising' in self.vars:
-                case_detection_ratio_with_awareness \
-                    = (self.params['int_ratio_case_detection_with_raised_awareness'] - 1.) \
-                      * self.vars['int_prop_awareness_raising'] + 1.
                 for riskgroup in [''] + self.riskgroups_for_detection:
-                    self.vars['program_rate_detect' + organ + riskgroup] *= case_detection_ratio_with_awareness
+                    self.vars['program_rate_detect' + organ + riskgroup] \
+                        *= (self.params['int_ratio_case_detection_with_raised_awareness'] - 1.) \
+                           * self.vars['int_prop_awareness_raising'] + 1.
 
-            # missed (no need to loop by risk-group as ACF is the only difference here, which is applied next)
+            # missed (use arbitrary risk-group from end of last loop, as changes to cdr by risk-group not applied yet)
             self.vars['program_rate_missed' + organ] \
-                = self.vars['program_rate_detect' + organ] \
+                = self.vars['program_rate_detect' + organ + riskgroup] \
                   * (1. - self.vars['program_prop_algorithm_sensitivity' + organ]) \
                   / max(self.vars['program_prop_algorithm_sensitivity' + organ], 1e-6)
 

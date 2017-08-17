@@ -78,9 +78,9 @@ class Inputs:
         self.interventions_to_cost = {}
         self.intervention_startdates = {}
         self.potential_interventions_to_cost \
-            = ['vaccination', 'xpert', 'treatment_support', 'smearacf', 'xpertacf', 'ipt_age0to5', 'ipt_age5to15',
-               'decentralisation', 'improve_dst', 'bulgaria_improve_dst', 'intensive_screening', 'ipt_age15up',
-               'ngo_activities', 'opendoors_activities']
+            = ['vaccination', 'xpert', 'treatment_support_relative', 'treatment_support_absolute', 'smearacf',
+               'xpertacf', 'ipt_age0to5', 'ipt_age5to15', 'decentralisation', 'improve_dst', 'bulgaria_improve_dst',
+               'intensive_screening', 'ipt_age15up', 'ngo_activities', 'opendoors_activities']
         self.freeze_times = {}
 
         # miscellaneous
@@ -1018,8 +1018,8 @@ class Inputs:
         # find the proportion of cases that are infectious for models that are unstratified by organ status
         if len(self.organ_status) < 2: self.set_fixed_infectious_proportion()
 
-        # add parameters for IPT, if and where not specified for the age range being implemented
-        self.add_missing_economics_for_ipt()
+        # add parameters for IPT and treatment support
+        self.add_missing_economics()
 
     def find_data_for_functions_or_params(self):
         """
@@ -1130,21 +1130,29 @@ class Inputs:
               + self.model_constants['epi_prop_smearneg'] * self.model_constants[
             'tb_multiplier_force_smearneg']
 
-    def add_missing_economics_for_ipt(self):
+    def add_missing_economics(self):
         """
         To avoid errors because no economic values are available for age-stratified IPT, use the unstratified values
         for each age group for which no value is provided.
+        Also need to reproduce economics parameters for relative and absolute treatment support, so that only single set
+        of parameters need to be entered.
         """
 
-        for agegroup in self.agegroups:
-            for param in ['_saturation', '_inflectioncost', '_unitcost', '_startupduration',
-                          '_startupcost']:
+        for param in ['_saturation', '_inflectioncost', '_unitcost', '_startupduration',
+                      '_startupcost']:
+
+            # ipt
+            for agegroup in self.agegroups:
                 if 'econ' + param + '_ipt' + agegroup not in self.model_constants:
                     self.model_constants['econ' + param + '_ipt' + agegroup] \
                         = self.model_constants['econ' + param + '_ipt']
-                    self.add_comment_to_gui_window(
-                        '"' + param[1:] + '" parameter unavailable for "' + agegroup +
-                        '" age-group, so default value used.\n')
+                    self.add_comment_to_gui_window('"' + param[1:] + '" parameter unavailable for "' + agegroup +
+                                                   '" age-group, so default value used.\n')
+
+            # treatment support
+            for treatment_support_type in ['_relative', '_absolute']:
+                self.model_constants['econ' + param + '_treatment_support' + treatment_support_type] \
+                    = self.model_constants['econ' + param + '_treatment_support']
 
     ''' Uncertainty-related methods '''
 

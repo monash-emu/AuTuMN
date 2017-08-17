@@ -356,10 +356,10 @@ class ConsolidatedModel(StratifiedModel):
         Only do so if the current case detection ratio is lower than the idealised detection ratio.
         """
 
-        if self.vars['program_prop_detect'] < self.params['int_ideal_detection']:
-            self.vars['program_prop_detect'] \
-                += (self.params['int_ideal_detection'] - self.vars['program_prop_detect']) \
-                   * self.vars['int_prop_decentralisation']
+        self.vars['program_prop_detect'] \
+            = t_k.increase_parameter_closer_to_value(self.vars['program_prop_detect'],
+                                                     self.params['int_ideal_detection'],
+                                                     self.vars['int_prop_decentralisation'])
 
     def adjust_ipt_for_opendoors(self):
         """
@@ -410,7 +410,7 @@ class ConsolidatedModel(StratifiedModel):
         Calculate rates of detection and failure of detection from the programmatic report of the case detection "rate"
         (which is actually a proportion and referred to as program_prop_detect here).
 
-        Derived by solving the following simultaneous equations:
+        Derived by solving the simultaneous equations:
 
           algorithm sensitivity = detection rate / (detection rate + missed rate)
               - and -
@@ -419,45 +419,44 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         organs = copy.copy(self.organs_for_detection)
-        if self.vary_detection_by_organ:
-            organs.append('')
+        if self.vary_detection_by_organ: organs.append('')
         for organ in organs:
-            for riskgroup in [''] + self.riskgroups_for_detection:
 
-                # detected
+            # add empty string for use in following calculation of number of missed patients
+            riskgroups_to_loop = copy.copy(self.riskgroups_for_detection)
+            if '' not in riskgroups_to_loop: riskgroups_to_loop.append('')
+            for riskgroup in riskgroups_to_loop:
+
+                # calculate detection rate from cdr proportion
                 self.vars['program_rate_detect' + organ + riskgroup] \
-                    = self.vars['program_prop_detect' + organ] \
-                      * (1. / self.params['tb_timeperiod_activeuntreated']
-                         + 1. / self.vars['demo_life_expectancy']) \
+                    = self.vars['program_prop_detect' + organ]\
+                      * (1. / self.params['tb_timeperiod_activeuntreated'] + 1. / self.vars['demo_life_expectancy']) \
                       / (1. - self.vars['program_prop_detect' + organ])
 
                 # adjust detection rates for opendoors activities in all groups
                 if 'int_prop_opendoors_activities' in self.relevant_interventions and \
                                 self.vars['int_prop_opendoors_activities'] < 1.:
                     self.vars['program_rate_detect' + organ + riskgroup] \
-                        *= 1 - self.params['int_prop_detection_opendoors']*(1-self.vars['int_prop_opendoors_activities'])
+                        *= 1. - self.params['int_prop_detection_opendoors'] \
+                                * (1. - self.vars['int_prop_opendoors_activities'])
 
-                # adjust detection rates for NGOs activities in specific risk groups
+                # adjust detection rates for ngo activities in specific risk-groups
                 if 'int_prop_ngo_activities' in self.relevant_interventions and \
-                                self.vars['int_prop_ngo_activities'] < 1. and \
-                                riskgroup in self.ngo_groups:
+                                self.vars['int_prop_ngo_activities'] < 1. and riskgroup in self.ngo_groups:
                     self.vars['program_rate_detect' + organ + riskgroup] \
-                        *= 1 - self.params['int_prop_detection_ngo']*(1-self.vars['int_prop_ngo_activities'])
+                        *= 1. - self.params['int_prop_detection_ngo'] * (1. - self.vars['int_prop_ngo_activities'])
 
-            # missed (no need to loop by risk-group as ACF is the only difference here, which is applied next)
+                # adjust for awareness raising
+                if 'int_prop_awareness_raising' in self.vars:
+                    self.vars['program_rate_detect' + organ + riskgroup] \
+                        *= (self.params['int_multiplier_detection_with_raised_awareness'] - 1.) \
+                           * self.vars['int_prop_awareness_raising'] + 1.
+
+            # missed
             self.vars['program_rate_missed' + organ] \
                 = self.vars['program_rate_detect' + organ] \
                   * (1. - self.vars['program_prop_algorithm_sensitivity' + organ]) \
                   / max(self.vars['program_prop_algorithm_sensitivity' + organ], 1e-6)
-
-            # adjust for awareness raising
-            if 'int_prop_awareness_raising' in self.vars:
-                case_detection_ratio_with_awareness \
-                    = (self.params['int_ratio_case_detection_with_raised_awareness'] - 1.) \
-                      * self.vars['int_prop_awareness_raising'] + 1.
-                self.vars['program_rate_missed' + organ] *= case_detection_ratio_with_awareness
-                for riskgroup in [''] + self.riskgroups_for_detection:
-                    self.vars['program_rate_detect' + organ + riskgroup] *= case_detection_ratio_with_awareness
 
     def calculate_acf_rate(self):
         """
@@ -691,15 +690,28 @@ class ConsolidatedModel(StratifiedModel):
                                * self.vars['int_prop_shortcourse_mdr']
 
             # add some extra treatment success if the treatment support intervention is active
-            if 'int_prop_treatment_support' in self.relevant_interventions:
-                self.vars['program_prop_treatment_success' + strain] \
-                    += (1. - self.vars['program_prop_treatment_success' + strain]) \
-                       * self.params['int_prop_treatment_support_improvement'] \
-                       * self.vars['int_prop_treatment_support']
-                self.vars['program_prop_treatment_death' + strain] \
-                    -= self.vars['program_prop_treatment_death' + strain] \
-                       * self.params['int_prop_treatment_support_improvement'] \
-                       * self.vars['int_prop_treatment_support']
+            if 'int_prop_treatment_support_relative' in self.relevant_interventions:
+                for history in self.histories:
+                    self.vars['program_prop_treatment' + history + '_success' + strain] \
+                        += (1. - self.vars['program_prop_treatment' + history + '_success' + strain]) \
+                           * self.params['int_prop_treatment_support_improvement'] \
+                           * self.vars['int_prop_treatment_support_relative']
+                    self.vars['program_prop_treatment' + history + '_death' + strain] \
+                        -= self.vars['program_prop_treatment' + history + '_death' + strain] \
+                           * self.params['int_prop_treatment_support_improvement'] \
+                           * self.vars['int_prop_treatment_support_relative']
+            elif 'int_prop_treatment_support_absolute' in self.relevant_interventions and strain == self.strains[0]:
+                for history in self.histories:
+                    self.vars['program_prop_treatment' + history + '_success' + strain] \
+                        = t_k.increase_parameter_closer_to_value(
+                        self.vars['program_prop_treatment' + history + '_success' + strain],
+                        self.vars['program_prop_treatment' + history + '_success' + strain],
+                        self.vars['int_prop_treatment_support_absolute'])
+                    self.vars['program_prop_treatment' + history + '_death' + strain] \
+                        = t_k.decrease_parameter_closer_to_value(
+                        self.vars['program_prop_treatment' + history + '_death' + strain],
+                        self.params['int_prop_treatment_death_ideal'],
+                        self.vars['int_prop_treatment_support_absolute'])
 
             # subtract some treatment success if ngo activities program has discontinued
             if 'int_prop_ngo_activities' in self.relevant_interventions:
@@ -951,10 +963,12 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         # treatment support
-        if 'int_prop_treatment_support' in self.relevant_interventions:
-            self.vars['popsize_treatment_support'] = 0.
-            for compartment in self.compartments:
-                if 'treatment_' in compartment: self.vars['popsize_treatment_support'] += self.compartments[compartment]
+        for intervention in ['treatment_support_relative', 'treatment_support_absolute']:
+            if 'int_prop_' + intervention in self.relevant_interventions:
+                self.vars['popsize_' + intervention] = 0.
+                for compartment in self.compartments:
+                    if 'treatment_' in compartment:
+                        self.vars['popsize_' + intervention] += self.compartments[compartment]
 
         # ambulatory care
         for organ in self.organ_status:

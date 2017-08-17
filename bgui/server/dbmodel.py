@@ -96,25 +96,24 @@ class UserDb(db.Model):
         db.Model.__init__(self, **kwargs)
         self.set_password(kwargs['password'])
 
+    # passwords are salted using werkzeug.security
     def set_password(self, password):
         self.password = generate_password_hash(password)
-        print('> dbmodel.Userdb.__init__ ', self.password)
 
     def check_password(self, password):
         return check_password_hash(self.password, password)
 
     # following methods are required by flask-login
-
     def get_id(self):
         return self.id
 
-    def is_active(self):  # pylint: disable=R0201
+    def is_active(self):
         return True
 
-    def is_anonymous(self):  # pylint: disable=R0201
+    def is_anonymous(self):
         return False
 
-    def is_authenticated(self):  # pylint: disable=R0201
+    def is_authenticated(self):
         return True
 
 
@@ -127,18 +126,6 @@ class ObjectDb(db.Model):
     obj_type = db.Column(db.Text, default=None)
     attr = db.Column(JSONEncodedDict)
     blob = deferred(db.Column(db.LargeBinary))
-
-    def load_obj_from_redis(self):
-        print(">> ObjectDb.load_obj_from_redis " + self.id.hex)
-        return self.blob
-
-    def save_obj_to_redis(self, obj):
-        print(">> ObjectDb.save_obj_to_redis " + self.id.hex)
-        self.blob = obj
-
-    def cleanup(self):
-        print(">> ObjectDb.cleanup " + self.id.hex)
-        self.blob = b''
 
 
 # only needs to be done once but here just in case
@@ -198,7 +185,7 @@ def create_obj_id(db_session=None, **kwargs):
 def save_object(id, obj_type, obj_str, obj_attr, db_session=None):
     db_session = verify_db_session(db_session)
     record = make_obj_query(id=id, obj_type=obj_type, db_session=db_session).one()
-    record.save_obj_to_redis(obj_str)
+    record.blob = obj_str
     obj_attr = copy.deepcopy(obj_attr)
     obj_attr['userId'] = str(record.user_id)
     obj_attr['modifiedTime'] = repr(datetime.now(dateutil.tz.tzutc()))
@@ -214,7 +201,7 @@ def get_user_id(obj_id, db_session=None):
 
 def load_obj_str(obj_id, obj_type, db_session=None):
     record = make_obj_query(id=obj_id, obj_type=obj_type, db_session=db_session).one()
-    return record.load_obj_from_redis()
+    return record.blob
 
 
 def delete_obj(obj_id, db_session=None):
@@ -226,12 +213,12 @@ def delete_obj(obj_id, db_session=None):
 
 # USER functions
 
-def is_anonymous():
+def is_current_user_anonymous():
     try:
-        userisanonymous = current_user.is_anonymous()
+        result = current_user.is_anonymous()
     except:
-        userisanonymous = current_user.is_anonymous
-    return userisanonymous
+        result = current_user.is_anonymous
+    return result
 
 
 def parse_user(user):
@@ -321,7 +308,7 @@ def get_user_server_dir(dirpath, user_id=None):
     Returns a user directory if user_id is defined
     """
     try:
-        if not is_anonymous():
+        if not is_current_user_anonymous():
             current_user_id = user_id if user_id else current_user.id
             user_path = os.path.join(dirpath, str(current_user_id))
             if not (os.path.exists(user_path)):

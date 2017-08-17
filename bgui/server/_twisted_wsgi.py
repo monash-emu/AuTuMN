@@ -3,6 +3,9 @@ Runs a twisted server to
 1. serve static files from ../client/dist
 2. handle the JSON-api at /api
 3. from the same port: 3000
+
+It pipes a synchronous flask server through the asynchronous
+twisted server.
 """
 
 import sys
@@ -28,6 +31,7 @@ def run():
         isLeaf = True
 
         def __init__(self, wsgi):
+            Resource.__init__(self)
             self._wsgi = wsgi
 
         def render(self, request):
@@ -43,7 +47,10 @@ def run():
             request.responseHeaders.setRawHeaders(b'expires', [b'0'])
             return r
 
+    # static files served from here
     base_resource = File('../client/dist')
+
+    # api requests must go through /api
     base_resource.putChild('api', ServerResource(wsgi_app))
 
     site = Site(base_resource)

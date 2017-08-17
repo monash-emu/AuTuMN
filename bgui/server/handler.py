@@ -1,21 +1,17 @@
 """
-
 handler.py
 =========
 
-Contains all the functions that fetches and saves optima objects to/from database
-and the file system. These functions abstracts out the data i/o for the web-server
-api calls.
+RPC-JSON API Web-handlers
 
-Function call pairs are load_*/save_* and refers to saving to database.
-(create, update, load, delete)
+To use define functions with name
+- public_* public handlers
+- login_* requires login first
+- admin_* requires admin login
 
-Database record variables should have suffix _record
-
-Parsed data structures should have suffix _summary
-
-All parameters and return types are either id's, json-summaries, or mpld3 graphs
-
+All handlers must return a JSON dictionary, except for downloadable functions
+Handlers can take parameters, which are expected to be only JSON-compatible
+Python data structures.
 """
 
 from __future__ import print_function
@@ -29,7 +25,7 @@ from flask.ext.login import current_user, login_user, logout_user
 import dbmodel
 
 
-# USER handlers
+# User handlers
 
 def admin_retrieve_users():
     return {'users': map(dbmodel.parse_user, dbmodel.load_users())}
@@ -62,7 +58,7 @@ def login_update_user(user_attr):
 
 
 def public_login_user(user_attr):
-    if not dbmodel.is_anonymous():
+    if not dbmodel.is_current_user_anonymous():
         print(">> public_login_user already logged-in")
         return {
             'success': True,
@@ -102,12 +98,7 @@ def public_logout_user():
     session.clear()
 
 
-# RPC-JSON API Web-handlers
-#
-# To use define functions with name
-# - public_* public handlers
-# - login_* requires login first
-# - admin_* requires admin login
+# model handlers
 
 bgui_output_lines = []
 is_bgui_running = False
@@ -125,7 +116,6 @@ def find_scenario_string_from_number(scenario):
 
 
 def convert_params_to_model_inputs(params):
-
     organ_stratification_keys = {
         'Pos / Neg / Extra': 3,
         'Pos / Neg': 2,
@@ -181,6 +171,8 @@ def bgui_model_output(output_type, data={}):
         bgui_output_lines.append(data["message"])
         print(">> handler.bgui_model_output console:", data["message"])
     elif output_type == "uncertainty_graph":
+        with open('graph.json', 'wt') as f:
+            f.write(json.dumps(data, indent=2))
         print(">> handler.bgui_model_output uncertainty_graph:", data)
 
 
@@ -242,47 +234,83 @@ def public_get_autumn_params():
         'is_vary_detection_by_organ',
         'is_timevariant_organs',
         'is_timevariant_contactrate',
+        'is_treatment_history',
         'is_vary_force_infection_by_riskgroup',
-        'is_treatment_history'
     ]
 
     bool_names = {
-        'output_uncertainty': 'Run uncertainty',
-        'adaptive_uncertainty': 'Adaptive search',
-        'output_spreadsheets': 'Write to spreadsheets',
-        'output_documents': 'Write to documents',
-        'output_by_scenario': 'Output by scenario',
-        'output_horizontally': 'Write horizontally',
-        'output_gtb_plots': 'Plot outcomes',
-        'output_compartment_populations': 'Plot compartment sizes',
-        'output_by_subgroups': 'Plot outcomes by sub-groups',
-        'output_age_fractions': 'Plot proportions by age',
-        'output_riskgroup_fractions': 'Plot proportions by risk group',
-        'output_flow_diagram': 'Draw flow diagram',
-        'output_fractions': 'Plot compartment fractions',
-        'output_scaleups': 'Plot scale-up functions',
-        'output_plot_economics': 'Plot economics graphs',
-        'output_plot_riskgroup_checks': 'Plot risk group checks',
-        'output_age_calculations': 'Plot age calculation weightings',
-        'output_param_plots': 'Plot parameter progression',
-        'output_popsize_plot': 'Plot "popsizes" for cost-coverage curves',
-        'output_likelihood_plot': 'Plot log likelihoods over runs',
-        'riskgroup_diabetes': 'Type II diabetes',
-        'riskgroup_hiv': 'HIV',
-        'riskgroup_prison': 'Prison',
-        'riskgroup_urbanpoor': 'Urban poor',
-        'riskgroup_ruralpoor': 'Rural poor',
-        'riskgroup_indigenous': 'Indigenous',
-        'is_lowquality': 'Low quality care',
-        'is_amplification': 'Resistance amplification',
-        'is_timevariant_organs': 'Time-variant organ status',
-        'is_misassignment': 'Strain mis-assignment',
-        'is_vary_detection_by_organ': 'Vary case detection by organ status',
-        'n_organs': 'Number of organ strata',
-        'n_strains': 'Number of strains',
-        'is_timevariant_contactrate': 'Time-variant contact rate',
-        'is_vary_force_infection_by_riskgroup': 'Heterogeneous mixing'
-    }
+        'output_uncertainty':
+            'Run uncertainty',
+        'adaptive_uncertainty':
+            'Adaptive search',
+        'output_spreadsheets':
+            'Write to spreadsheets',
+        'output_documents':
+            'Write to documents',
+        'output_by_scenario':
+            'Output by scenario',
+        'output_horizontally':
+            'Write horizontally',
+        'output_gtb_plots':
+            'Plot outcomes',
+        'output_compartment_populations':
+            'Plot compartment sizes',
+        'output_by_subgroups':
+            'Plot outcomes by sub-groups',
+        'output_age_fractions':
+            'Plot proportions by age',
+        'output_riskgroup_fractions':
+            'Plot proportions by risk group',
+        'output_flow_diagram':
+            'Draw flow diagram',
+        'output_fractions':
+            'Plot compartment fractions',
+        'output_scaleups':
+            'Plot scale-up functions',
+        'output_plot_economics':
+            'Plot economics graphs',
+        'output_plot_riskgroup_checks':
+            'Plot risk group checks',
+        'output_age_calculations':
+            'Plot age calculation weightings',
+        'output_param_plots':
+            'Plot parameter progression',
+        'output_popsize_plot':
+            'Plot "popsizes" for cost-coverage curves',
+        'output_likelihood_plot':
+            'Plot log likelihoods over runs',
+        'riskgroup_diabetes':
+            'Type II diabetes',
+        'riskgroup_hiv':
+            'HIV',
+        'riskgroup_prison':
+            'Prison',
+        'riskgroup_urbanpoor':
+            'Urban poor',
+        'riskgroup_ruralpoor':
+            'Rural poor',
+        'riskgroup_indigenous':
+            'Indigenous',
+        'is_lowquality':
+            'Low quality care',
+        'is_amplification':
+            'Resistance amplification',
+        'is_timevariant_organs':
+            'Time-variant organ status',
+        'is_misassignment':
+            'Strain mis-assignment',
+        'is_vary_detection_by_organ':
+            'Vary case detection by organ status',
+        'n_organs':
+            'Number of organ strata',
+        'n_strains':
+            'Number of strains',
+        'is_timevariant_contactrate':
+            'Time-variant contact rate',
+        'is_vary_force_infection_by_riskgroup':
+            'Heterogeneous mixing',
+        'is_treatment_history':
+            'Treatment history'}
 
     for i in range(1, 16):
         bool_keys.append('scenario_' + str(i))
@@ -297,8 +325,12 @@ def public_get_autumn_params():
         }
 
     defaultBooleanKeys = [
-        'adaptive_uncertainty', 'is_amplification', 'is_misassignment',
-        'is_vary_detection_by_organ', 'output_gtb_plots', 'is_treatment_history']
+        'riskgroup_diabetes',
+        'is_vary_detection_by_organ',
+        'is_timevariant_organs',
+        'is_treatment_history',
+        'adaptive_uncertainty',
+        'output_gtb_plots', ]
 
     for k in defaultBooleanKeys:
         params[k]['value'] = True

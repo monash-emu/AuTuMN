@@ -1,10 +1,7 @@
-import axios from 'axios'
 import _ from 'lodash'
-import config from '../config'
 import rpc from '../modules/rpc'
 import SHA224 from '../modules/sha224/sha224'
-
-axios.defaults.withCredentials = true
+import util from '../modules/util'
 
 function hashPassword (password) {
   return SHA224(password).toString()
@@ -16,10 +13,8 @@ let user = {
 
 export default {
 
-  // User object will let us check authentication status
   user: user,
 
-  // Send a request to the login URL and save the returned JWT
   login (newUser) {
     let payload = _.cloneDeep(newUser)
     payload.password = hashPassword(payload.password)
@@ -33,8 +28,8 @@ export default {
           user.authenticated = true
           _.assign(user, returnUser)
           user.password = payload.password
-          console.log('>> auth.login success user', JSON.stringify(user))
-          localStorage.setItem('user', JSON.stringify(user))
+          console.log('>> auth.login success user', util.jstr(user))
+          localStorage.setItem('user', util.jstr(user))
         }
         return res
       })
@@ -51,7 +46,6 @@ export default {
   update (updateUser) {
     console.log('>> auth.update', updateUser)
     updateUser.id = user.id
-    // return axios.post(config.api + '/update', user)
     return rpc.rpcRun('login_update_user', updateUser)
   },
 
@@ -70,17 +64,10 @@ export default {
     })
   },
 
-  // To log out, we just need to remove the token
   logout () {
     localStorage.removeItem('user')
     user.authenticated = false
     return rpc.rpcRun('public_logout_user')
   }
 
-  // // if using JWT
-  // getAuthHeader () {
-  //   return {
-  //     'Authorization': 'Bearer ' + localStorage.getItem('access_token')
-  //   }
-  // }
 }

@@ -1,4 +1,3 @@
-
 import tool_kit
 import model
 import os
@@ -18,7 +17,6 @@ from numpy import isfinite
 
 
 def generate_candidates(n_candidates, param_ranges_unc):
-
     """
     Function for generating candidate parameters.
     """
@@ -36,7 +34,7 @@ def generate_candidates(n_candidates, param_ranges_unc):
         elif param_dict['distribution'] == 'uniform':
             x = numpy.random.uniform(bound_low, bound_high, n_candidates)
         else:
-            x = 0.5*(param_dict['bounds'][0] + param_dict['bounds'][1])
+            x = 0.5 * (param_dict['bounds'][0] + param_dict['bounds'][1])
             print "Unsupported statistical distribution specified to generate a candidate. Returned the midpoint of the range."
 
         # Return values
@@ -45,7 +43,6 @@ def generate_candidates(n_candidates, param_ranges_unc):
 
 
 def elementwise_list_addition(increment, list_to_increment):
-
     """
     Simple method to element-wise increment a list by the values in another list of the same length.
     """
@@ -55,7 +52,6 @@ def elementwise_list_addition(increment, list_to_increment):
 
 
 def elementwise_list_division(numerator, denominator):
-
     """
     Simple method to element-wise increment a list by the values in another list of the same length.
     """
@@ -65,7 +61,6 @@ def elementwise_list_division(numerator, denominator):
 
 
 def find_integer_dict_from_float_dict(float_dict):
-
     # Method may be redundant with optimal code
 
     integer_dict = {}
@@ -81,7 +76,6 @@ def find_integer_dict_from_float_dict(float_dict):
 
 
 def extract_integer_dicts(models_to_analyse={}, dict_to_extract_from={}):
-
     # Method may be redundant with optimal code
 
     integer_dict = {}
@@ -109,7 +103,6 @@ def get_output_dicts_from_lists(models_to_analyse={}, output_dict_of_lists={}):
 
 
 def find_uncertainty_output_weights(list, method, relative_weights=[1., 2.]):
-
     """
     Creates a set of "weights" to determine the proportion of the log-likelihood to be contributed by the years
     considered in the calibration.
@@ -147,7 +140,6 @@ def is_parameter_value_valid(parameter):
 
 
 class ModelRunner:
-
     def __init__(self, gui_inputs, runtime_outputs, figure_frame, js_gui=None):
         """
         Instantiation method for model runner - currently including many attributes that should be set externally, e.g.
@@ -176,7 +168,8 @@ class ModelRunner:
         self.loglikelihoods = []
         self.outputs_unc = [{'key': 'incidence',
                              'posterior_width': None,
-                             'width_multiplier': 2.  # Width of normal posterior relative to range of parameter values allowed
+                             'width_multiplier': 2.
+                             # Width of normal posterior relative to range of parameter values allowed
                              }]
         self.all_parameters_tried = {}
         self.whether_accepted_list = []
@@ -400,7 +393,7 @@ class ModelRunner:
                 for from_label, to_label, rate in self.model_dict[scenario].fixed_transfer_rate_flows:  # fixed flows
                     if 'latent' in from_label and 'active' in to_label and strain in to_label:
                         incidence_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
-                                                 * rate / total_denominator * 1e5
+                                              * rate / total_denominator * 1e5
                         epi_outputs['true_incidence' + strain] \
                             = elementwise_list_addition(incidence_increment, epi_outputs['true_incidence' + strain])
                         # reduce paedatric contribution
@@ -572,7 +565,7 @@ class ModelRunner:
                                     mortality_increment *= self.inputs.model_constants['program_prop_child_reporting']
                                 epi_outputs['mortality' + stratum] \
                                     = elementwise_list_addition(mortality_increment * self.model_dict[scenario].params[
-                                                                    'program_prop_death_reporting'],
+                                    'program_prop_death_reporting'],
                                                                 epi_outputs['mortality' + stratum])
 
                     # prevalence
@@ -596,9 +589,10 @@ class ModelRunner:
                             if 'latent_early' in to_label and stratum in from_label:
                                 # absolute number of infections
                                 epi_outputs['infections' + stratum] \
-                                    = elementwise_list_addition(self.model_dict[scenario].get_compartment_soln(from_label)
-                                                                * self.model_dict[scenario].get_var_soln(rate),
-                                                                epi_outputs['infections' + stratum])
+                                    = elementwise_list_addition(
+                                    self.model_dict[scenario].get_compartment_soln(from_label)
+                                    * self.model_dict[scenario].get_var_soln(rate),
+                                    epi_outputs['infections' + stratum])
                         # annual risk of infection (as a percentage)
                         epi_outputs['annual_risk_infection' + stratum] \
                             = [i / j * 1e2 for i, j in zip(epi_outputs['infections' + stratum], stratum_denominator)]
@@ -1329,7 +1323,6 @@ class ModelRunner:
                 ax.set_xlabel('Accepted runs')
 
             if from_runner:
-
                 # output to GUI window
                 parameter_plots.show()
                 parameter_plots.draw()
@@ -1338,19 +1331,38 @@ class ModelRunner:
         if not from_runner:
             return param_tracking_figure
 
-    def plot_progressive_parameters_js(self):
-        """
-        Method to shadow previous method in JavaScript GUI.
-        """
-
         accepted_params = [
             list(p for p, a in zip(self.all_parameters_tried[param], self.whether_accepted_list) if a)[-1]
             for p, param in enumerate(self.all_parameters_tried)]
         names = [tool_kit.find_title_from_dictionary(param) for p, param in
                  enumerate(self.all_parameters_tried)]
-        self.js_gui('uncertainty_graph', {"data": accepted_params, "names": names, "count": self.plot_count})
-        self.plot_count += 1
+        import json
+        import os.path
+        with open('graph.json', 'wt') as f:
+            f.write(json.dumps({
+                "all_parameters_tried": self.all_parameters_tried,
+                "whether_accepted": self.whether_accepted_list,
+                "rejected_dict": self.rejection_dict,
+                "names": names,
+                "count": self.plot_count
+            }, indent=2))
+        print('> writing', os.path.abspath('graph.json'))
 
+    def plot_progressive_parameters_js(self):
+        """
+        Method to shadow previous method in JavaScript GUI.
+        """
+
+        names = [tool_kit.find_title_from_dictionary(param) for p, param in
+                 enumerate(self.all_parameters_tried)]
+        self.js_gui('uncertainty_graph', {
+            "all_parameters_tried": self.all_parameters_tried,
+            "whether_accepted": self.whether_accepted_list,
+            "rejected_dict": self.rejection_dict,
+            "names": names,
+            "count": self.plot_count
+        })
+        self.plot_count += 1
 
 # # moved js_gui stuff here
 # import time
@@ -1366,4 +1378,3 @@ class ModelRunner:
 #         print(">> js_gui websocket emitting:", data["message"])
 #     elif output_type == "uncertainty_graph":
 #         print(">> js_gui websocket uncertainty graph:", data)
-

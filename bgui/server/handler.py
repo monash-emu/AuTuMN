@@ -18,6 +18,7 @@ from __future__ import print_function
 
 import os
 import sys
+import json
 
 from flask import session, abort
 from flask.ext.login import current_user, login_user, logout_user
@@ -123,7 +124,7 @@ def convert_params_to_model_inputs(params):
     }
 
     strain_stratification_keys = {
-        'Single strain': 0.286,
+        'Single strain': 0,
         'DS / MDR': 2,
         'DS / MDR / XDR': 3
     }
@@ -184,6 +185,7 @@ def public_run_autumn(params):
     global bgui_output_lines
     is_bgui_running = True
     model_inputs = convert_params_to_model_inputs(params)
+    print(">> handler.public_run_autumn", json.dumps(model_inputs, indent=2))
     bgui_output_lines = []
     autumn_dir = os.path.join(os.path.dirname(autumn.__file__), os.pardir)
     os.chdir(autumn_dir)
@@ -202,41 +204,19 @@ def public_run_autumn(params):
 
 def public_get_autumn_params():
     bool_keys = [
-        'output_flow_diagram',
-        'output_compartment_populations',
-        'output_riskgroup_fractions',
-        'output_age_fractions',
-        'output_by_subgroups',
-        'output_fractions',
-        'output_scaleups',
-        'output_gtb_plots',
-        'output_plot_economics',
-        'output_plot_riskgroup_checks',
-        'output_param_plots',
-        'output_popsize_plot',
-        'output_likelihood_plot',
-        'output_uncertainty',
-        'adaptive_uncertainty',
+        'output_flow_diagram', 'output_compartment_populations', 'output_riskgroup_fractions',
+        'output_age_fractions', 'output_by_subgroups', 'output_fractions', 'output_scaleups',
+        'output_gtb_plots', 'output_plot_economics', 'output_plot_riskgroup_checks',
+        'output_param_plots', 'output_popsize_plot', 'output_likelihood_plot',
+        'output_uncertainty', 'adaptive_uncertainty',
         'output_spreadsheets',
-        'output_documents',
-        'output_by_scenario',
-        'output_horizontally',
-        'output_age_calculations',
-        'riskgroup_diabetes',
-        'riskgroup_hiv',
-        'riskgroup_prison',
-        'riskgroup_indigenous',
-        'riskgroup_urbanpoor',
+        'output_documents', 'output_by_scenario', 'output_horizontally',
+        'output_age_calculations', 'riskgroup_diabetes', 'riskgroup_hiv',
+        'riskgroup_prison', 'riskgroup_indigenous', 'riskgroup_urbanpoor',
         'riskgroup_ruralpoor',
-        'is_lowquality',
-        'is_amplification',
-        'is_misassignment',
-        'is_vary_detection_by_organ',
-        'is_timevariant_organs',
-        'is_timevariant_contactrate',
-        'is_treatment_history',
-        'is_vary_force_infection_by_riskgroup',
-    ]
+        'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ',
+        'is_timevariant_organs', 'is_timevariant_contactrate', 'is_treatment_history',
+        'is_vary_force_infection_by_riskgroup']
 
     bool_names = {
         'output_uncertainty':
@@ -384,7 +364,7 @@ def public_get_autumn_params():
         'type': 'drop_down',
         'options': ['Single strain', 'DS / MDR', 'DS / MDR / XDR']
     }
-    params['n_strains']['value'] = params['n_strains']['options'][1]
+    params['n_strains']['value'] = params['n_strains']['options'][0]
 
     # Uncertainty options
     params['uncertainty_runs'] = {

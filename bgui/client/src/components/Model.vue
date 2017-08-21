@@ -88,33 +88,41 @@
         <md-whiteframe
             style="
             padding: 1em;
-            width: 50%;
             height: calc(100vh - 230px);
-            overflow: auto">
+            width: 50%;">
           <md-layout
-              md-row
-              md-align="center"
-              md-vertical-align="center">
-            <md-button
-                class="md-raised"
-                :disabled="isRunning"
-                @click="run()">
-              Run simulation
-            </md-button>
-          </md-layout>
-          <md-layout>
-            <ul>
-              <li v-for="line in consoleLines">
-                {{ line }}
-              </li>
-            </ul>
-          </md-layout>
-          <md-layout style="padding-left: 2em;">
-            <md-spinner
-                :md-size="30"
-                md-indeterminate
-                v-if="isRunning">
-            </md-spinner>
+              md-column
+              md-align="start"
+              md-vertical-align="start">
+            <md-layout
+                md-row
+                md-vertical-align="center">
+              <md-button
+                  md-flex=true
+                  class="md-raised"
+                  :disabled="isRunning"
+                  @click="run()">
+                Run simulation
+              </md-button>
+              <md-spinner
+                  :md-size="30"
+                  md-indeterminate
+                  v-if="isRunning">
+              </md-spinner>
+            </md-layout>
+            <md-layout
+              id="console-output"
+              style="
+                width: 100%;
+                height: calc(100vh - 310px);
+                border: 1px solid #DDDDDD;
+                overflow: auto">
+              <ul style="width: 100%;">
+                <li v-for="line in consoleLines">
+                  {{ line }}
+                </li>
+              </ul>
+            </md-layout>
           </md-layout>
         </md-whiteframe>
       </md-layout>
@@ -130,6 +138,10 @@
   import rpc from '../modules/rpc'
   import _ from 'lodash'
   import vueSlider from 'vue-slider-component'
+  import Vue from 'vue'
+  import VueScrollTo from 'vue-scrollto'
+
+  Vue.use(VueScrollTo)
 
   export default {
     name: 'experiments',
@@ -160,6 +172,8 @@
             console.log('>> Home.checkRun', res.data.is_running, res.data.console)
             if (res.data.console) {
               this.$data.consoleLines = res.data.console
+              let container = this.$el.querySelector('#console-output')
+              container.scrollTop = container.scrollHeight
             }
             if (res.data.is_running) {
               this.$data.isRunning = true
@@ -172,6 +186,7 @@
       run () {
         let params = this.$data.params
         this.$data.isRunning = true
+        this.$data.consoleLines = []
         rpc
           .rpcRun(
             'public_run_autumn', params)
@@ -179,14 +194,14 @@
             console.log('>> Home.run res', res)
             if (!res.data.success) {
               this.$data.consoleLines.push('Error: model crashed')
+            } else {
+              this.checkRun()
             }
           })
           .catch((res) => {
             this.$data.isRunning = false
           })
-
-        this.$data.consoleLines = []
-        this.checkRun()
+        setTimeout(() => this.checkRun(), 1000)
       }
     }
   }

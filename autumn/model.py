@@ -429,7 +429,7 @@ class ConsolidatedModel(StratifiedModel):
 
                 # calculate detection rate from cdr proportion
                 self.vars['program_rate_detect' + organ + riskgroup] \
-                    = self.vars['program_prop_detect' + organ]\
+                    = self.vars['program_prop_detect' + organ] \
                       * (1. / self.params['tb_timeperiod_activeuntreated'] + 1. / self.vars['demo_life_expectancy']) \
                       / (1. - self.vars['program_prop_detect' + organ])
 
@@ -534,7 +534,6 @@ class ConsolidatedModel(StratifiedModel):
                     *= self.params['tb_prop_xpert_smearneg_sensitivity']
 
     def adjust_case_detection_for_acf(self):
-
         """
         Add ACF detection rates to previously calculated passive case detection rates, creating vars for case detection
         that are specific for organs.
@@ -573,7 +572,7 @@ class ConsolidatedModel(StratifiedModel):
         # with misassignment
         for organ in self.organs_for_detection:
             for riskgroup in self.riskgroups_for_detection:
-                if self.is_misassignment:
+                if len(self.strains) > 1 and self.is_misassignment:
 
                     prop_firstline = self.vars['program_prop_firstline_dst']
 
@@ -609,7 +608,7 @@ class ConsolidatedModel(StratifiedModel):
                             = prop_firstline * prop_secondline * self.vars['program_rate_detect' + organ + riskgroup]
 
                 # without misassignment, everyone is correctly allocated
-                else:
+                elif len(self.strains) > 1:
                     for strain in self.strains:
                         self.vars['program_rate_detect' + organ + riskgroup + strain + '_as' + strain[1:]] \
                             = self.vars['program_rate_detect' + organ + riskgroup]
@@ -1010,10 +1009,14 @@ class ConsolidatedModel(StratifiedModel):
                                         detection_organ = organ
                                     else:
                                         detection_organ = ''
+                                    if self.vary_detection_by_riskgroup:
+                                        detection_riskgroup = riskgroup
+                                    else:
+                                        detection_riskgroup = ''
                                     self.vars['popsize_' + active_tb_presentations_intervention] \
-                                        += self.vars['program_rate_detect' + detection_organ + riskgroup]\
-                                           * self.compartments['active' + organ + strain + history + riskgroup
-                                                               + agegroup] \
+                                        += self.vars['program_rate_detect' + detection_organ + detection_riskgroup] \
+                                           * self.compartments[
+                                               'active' + organ + strain + riskgroup + history + agegroup] \
                                            * (self.params['int_number_tests_per_tb_presentation'] + 1.)
 
         # improve DST in Bulgaria - the number of culture-positive cases

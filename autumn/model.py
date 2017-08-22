@@ -438,15 +438,15 @@ class ConsolidatedModel(StratifiedModel):
                       / (1. - self.vars['program_prop_detect' + organ])
 
                 # adjust detection rates for opendoors activities in all groups
-                if 'int_prop_opendoors_activities' in self.relevant_interventions and \
-                                self.vars['int_prop_opendoors_activities'] < 1.:
+                if 'int_prop_opendoors_activities' in self.relevant_interventions \
+                        and self.vars['int_prop_opendoors_activities'] < 1.:
                     self.vars['program_rate_detect' + organ + riskgroup] \
                         *= 1. - self.params['int_prop_detection_opendoors'] \
                                 * (1. - self.vars['int_prop_opendoors_activities'])
 
                 # adjust detection rates for ngo activities in specific risk-groups
-                if 'int_prop_ngo_activities' in self.relevant_interventions and \
-                                self.vars['int_prop_ngo_activities'] < 1. and riskgroup in self.ngo_groups:
+                if 'int_prop_ngo_activities' in self.relevant_interventions \
+                        and self.vars['int_prop_ngo_activities'] < 1. and riskgroup in self.ngo_groups:
                     self.vars['program_rate_detect' + organ + riskgroup] \
                         *= 1. - self.params['int_prop_detection_ngo'] * (1. - self.vars['int_prop_ngo_activities'])
 
@@ -472,8 +472,10 @@ class ConsolidatedModel(StratifiedModel):
         Creates vars for both ACF in specific risk groups and for ACF in the general community (which uses '').
         """
 
-        # loop covers risk groups and community-wide ACF
-        for riskgroup in [''] + self.riskgroups:
+        # loop to cover risk groups and community-wide ACF (an empty string)
+        riskgroups_to_loop = copy.copy(self.riskgroups)
+        if '' not in riskgroups_to_loop: riskgroups_to_loop.append('')
+        for riskgroup in riskgroups_to_loop:
 
             # decide whether to use the general detection proportion, or a risk-group specific one
             if 'int_prop_acf_detections_per_round' + riskgroup in self.params:
@@ -481,36 +483,33 @@ class ConsolidatedModel(StratifiedModel):
             else:
                 int_prop_acf_detections_per_round = self.params['int_prop_acf_detections_per_round']
 
-            # implement intervention
+            # smear-based ACF implementation
             if 'int_prop_smearacf' + riskgroup in self.relevant_interventions \
-                    or 'int_prop_xpertacf' + riskgroup in self.relevant_interventions:
+                    and '_smearpos' in self.organ_status:
+                self.vars['int_rate_acf_smearpos' + riskgroup] \
+                    = self.vars['int_prop_smearacf' + riskgroup] \
+                      * int_prop_acf_detections_per_round / self.params['int_timeperiod_acf_rounds']
 
-                # the following can't be written as self.organ_status, as it won't work for non-fully-stratified models
-                for organ in ['', '_smearpos', '_smearneg', '_extrapul']:
-                    self.vars['int_rate_acf' + organ + riskgroup] = 0.
+            # Xpert-based ACF implementation
+            if ('int_prop_xpertacf' + riskgroup in self.relevant_interventions \
+                    or 'int_prop_cxrxpertacf' + riskgroup in self.relevant_interventions) \
+                and '_smearpos' in self.organ_status:
 
-                # smear-based ACF rate
-                if 'int_prop_smearacf' + riskgroup in self.relevant_interventions:
-                    self.vars['int_rate_acf_smearpos' + riskgroup] \
-                        += self.vars['int_prop_smearacf' + riskgroup] \
-                           * int_prop_acf_detections_per_round / self.params['int_timeperiod_acf_rounds']
+                # find coverage and proportion detected with screening test, depending on intervention implemented
+                if 'int_prop_xpertacf' + riskgroup in self.relevant_interventions:
+                    coverage = self.vars['int_prop_xpertacf' + riskgroup]
+                elif 'int_prop_cxrxpertacf' + riskgroup in self.relevant_interventions:
+                    coverage = self.vars['int_prop_cxrxpertacf' + riskgroup] * self.params['tb_sensitivity_cxr']
 
-                # Xpert-based ACF rate for smear-positives and smear-negatives - with or without pre-screening with CXR
-                for acf_type in ['xpert', 'cxrxpert']:
-                    if acf_type == 'xpert':
-                        cxr_sensitivity = 1.
-                    else:
-                        cxr_sensitivity = self.params['tb_sensitivity_cxr']
-                    if 'int_prop_' + acf_type + 'acf' + riskgroup in self.relevant_interventions:
-                        for organ in ['_smearpos', '_smearneg']:
-                            self.vars['int_rate_acf' + organ + riskgroup] \
-                                += self.vars['int_prop_' + acf_type + 'acf' + riskgroup] \
-                                   * int_prop_acf_detections_per_round / self.params['int_timeperiod_acf_rounds'] \
-                                   * cxr_sensitivity
+                # find rate of case finding with ACF for smear-positive cases
+                self.vars['int_rate_acf_smearpos' + riskgroup] \
+                    = coverage * int_prop_acf_detections_per_round / self.params['int_timeperiod_acf_rounds']
 
-                        # adjust smear-negative detections for Xpert's sensitivity
-                        self.vars['int_rate_acf_smearneg' + riskgroup] \
-                            *= self.params['tb_prop_xpert_smearneg_sensitivity'] * cxr_sensitivity
+                # find rate for smear-negatives, adjusted for Xpert's sensitivity (if smear-negatives are in model)
+                if '_smearneg' in self.organ_status:
+                    self.vars['int_rate_acf_smearneg' + riskgroup] \
+                        = self.vars['int_rate_acf_smearpos' + riskgroup] \
+                          * self.params['tb_prop_xpert_smearneg_sensitivity']
 
     def calculate_intensive_screening_rate(self):
         """
@@ -548,14 +547,12 @@ class ConsolidatedModel(StratifiedModel):
             for riskgroup in self.riskgroups:
 
                 # ACF in risk groups
-                if 'int_prop_smearacf' + riskgroup in self.relevant_interventions \
-                        or 'int_prop_xpertacf' + riskgroup in self.relevant_interventions:
+                if 'int_rate_acf' + organ + riskgroup in self.vars:
                     self.vars['program_rate_detect' + organ + riskgroup] \
                         += self.vars['int_rate_acf' + organ + riskgroup]
 
                 # ACF in the general community
-                if 'int_prop_smearacf' in self.relevant_interventions \
-                        or 'int_prop_xpertacf' in self.relevant_interventions:
+                if 'int_rate_acf' + organ in self.vars:
                     self.vars['program_rate_detect' + organ + riskgroup] \
                         += self.vars['int_rate_acf' + organ]
 

@@ -971,14 +971,9 @@ class Inputs:
             self.potential_interventions_to_cost += ['ambulatorycare' + organ]
         if self.gui_inputs['is_lowquality']:
             self.potential_interventions_to_cost += ['engage_lowquality']
-        if self.gui_inputs['riskgroup_prison']:
-            self.potential_interventions_to_cost += ['xpertacf_prison', 'cxrxpertacf_prison']
-        if self.gui_inputs['riskgroup_indigenous']:
-            self.potential_interventions_to_cost += ['xpertacf_indigenous']
-        if self.gui_inputs['riskgroup_urbanpoor']:
-            self.potential_interventions_to_cost += ['xpertacf_urbanpoor', 'cxrxpertacf_urbanpoor']
-        if self.gui_inputs['riskgroup_ruralpoor']:
-            self.potential_interventions_to_cost += ['xpertacf_ruralpoor', 'cxrxpertacf_ruralpoor']
+        for riskgroup in ['_prison', '_indigenous', '_urbanpoor', '_ruralpoor']:
+            if self.gui_inputs['riskgroup' + riskgroup]:
+                self.potential_interventions_to_cost += ['xpertacf' + riskgroup, 'cxrxpertacf' + riskgroup]
 
     def find_interventions_to_cost(self):
         """

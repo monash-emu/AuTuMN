@@ -204,6 +204,11 @@ class Inputs:
         else:
             self.model_constants['tb_multiplier_protection'] = 1.
 
+        # add a time period to treatment for models unstratified by organ status
+        if len(self.organ_status) == 1:
+            self.model_constants['program_timeperiod_await_treatment'] \
+                = self.model_constants['program_timeperiod_await_treatment_smearpos']
+
     # derive further parameters (called after model structure defined)
     def find_additional_parameters(self):
         """

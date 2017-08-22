@@ -632,33 +632,27 @@ class ConsolidatedModel(StratifiedModel):
             = self.vars['program_rate_detect'] * prop_lowqual / (1. - prop_lowqual)
 
     def calculate_await_treatment_var(self):
-
         """
         Take the reciprocal of the waiting times to calculate the flow rate to start treatment after detection.
         Note that the default behaviour for a single strain model is to use the waiting time for smear-positives.
         Also weight the time period
         """
 
-        # If only one organ stratum
-        if len(self.organ_status) == 1:
-            self.vars['program_rate_start_treatment'] \
-                = 1. / self.vars['program_timeperiod_await_treatment_smearpos']
+        for organ in self.organ_status:
 
-        # Organ stratification
-        else:
-            for organ in self.organ_status:
+            # adjust smear-negative for Xpert coverage
+            if organ == '_smearneg' and 'int_prop_xpert' in self.relevant_interventions:
+                time_to_treatment \
+                    = self.params['program_timeperiod_await_treatment_smearneg'] \
+                      * (1. - self.vars['int_prop_xpert']) \
+                      + self.params['int_timeperiod_await_treatment_smearneg_xpert'] * self.vars['int_prop_xpert']
 
-                # Adjust smear-negative for Xpert coverage
-                if organ == '_smearneg' and 'int_prop_xpert' in self.relevant_interventions:
-                    prop_xpert = self.vars['int_prop_xpert']
-                    self.vars['program_rate_start_treatment_smearneg'] = \
-                        1. / (self.vars['program_timeperiod_await_treatment_smearneg'] * (1. - prop_xpert)
-                              + self.params['int_timeperiod_await_treatment_smearneg_xpert'] * prop_xpert)
+            # do other organ stratifications (including smear-negative if Xpert not an intervention)
+            else:
+                time_to_treatment = self.params['program_timeperiod_await_treatment' + organ]
 
-                # Do other organ stratifications (including smear-negative if Xpert not an intervention)
-                else:
-                    self.vars['program_rate_start_treatment' + organ] = \
-                        1. / self.vars['program_timeperiod_await_treatment' + organ]
+            # find the rate as the reciprocal of the time to treatment
+            self.vars['program_rate_start_treatment' + organ] = 1. / time_to_treatment
 
     def calculate_treatment_rates_vars(self):
         """

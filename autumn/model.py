@@ -510,17 +510,18 @@ class ConsolidatedModel(StratifiedModel):
 
     def calculate_intensive_screening_rate(self):
         """
-            Calculates rates of intensive screening from the proportion of programmatic coverage.
-            Intensive screening detects smear-positive disease, and some
-            smear-negative disease (incorporating a multiplier for the sensitivity of Xpert for smear-negative disease).
-            Extrapulmonary disease can't be detected through intensive screening.
+        Calculates rates of intensive screening from the proportion of programmatic coverage.
+        Intensive screening detects smear-positive disease, and some smear-negative disease
+        (incorporating a multiplier for the sensitivity of Xpert for smear-negative disease).
+        Extrapulmonary disease can't be detected through intensive screening.
         """
 
         if 'int_prop_intensive_screening' in self.relevant_interventions:
             screened_subgroups = ['_diabetes', '_hiv']  # may be incorporated into the GUI
-            # Loop covers risk groups
+
+            # loop covers risk groups
             for riskgroup in screened_subgroups:
-                # The following can't be written as self.organ_status, as it won't work for non-fully-stratified models
+                # the following can't be written as self.organ_status, as it won't work for non-fully-stratified models
                 for organ in ['', '_smearpos', '_smearneg', '_extrapul']:
                     self.vars['int_rate_intensive_screening' + organ + riskgroup] = 0.
 
@@ -529,7 +530,7 @@ class ConsolidatedModel(StratifiedModel):
                         += self.vars['int_prop_intensive_screening'] * \
                            self.params['int_prop_attending_clinics' + riskgroup]
 
-                # Adjust smear-negative detections for Xpert's sensitivity
+                # adjust smear-negative detections for Xpert's sensitivity
                 self.vars['int_rate_intensive_screening_smearneg' + riskgroup] \
                     *= self.params['tb_prop_xpert_smearneg_sensitivity']
 
@@ -582,8 +583,9 @@ class ConsolidatedModel(StratifiedModel):
 
                     # add effect of Xpert on identification, assuming that independent distribution to conventional DST
                     if 'int_prop_xpert' in self.relevant_interventions:
-                        prop_firstline += (1. - prop_firstline) * self.vars['int_prop_xpert']
-
+                        prop_firstline \
+                            += (1. - prop_firstline) \
+                               * self.vars['int_prop_xpert'] * self.params['int_prop_xpert_sensitivity_mdr']
 
                     # determine rates of identification/misidentification as each strain
                     self.vars['program_rate_detect' + organ + riskgroup + '_ds_asds'] \

@@ -324,7 +324,7 @@ class GlobalTbReportReader:
         self.horizontal = False
         self.start_column = 0
         self.indices = []
-        self.country_to_read = tool_kit.adjust_country_name(country_to_read)
+        self.country_to_read = country_to_read
 
     def parse_col(self, col):
 
@@ -371,7 +371,7 @@ class NotificationsReader(GlobalTbReportReader):
         self.start_column = 0
         self.start_row = 1
         self.indices = []
-        self.country_to_read = tool_kit.adjust_country_name(country_to_read)
+        self.country_to_read = country_to_read
 
 
 class TreatmentOutcomesReader(GlobalTbReportReader):
@@ -388,7 +388,7 @@ class TreatmentOutcomesReader(GlobalTbReportReader):
         self.start_column = 0
         self.start_row = 1
         self.indices = []
-        self.country_to_read = tool_kit.adjust_country_name(country_to_read)
+        self.country_to_read = country_to_read
 
 
 class MdrReportReader:
@@ -505,7 +505,7 @@ def read_xls_with_sheet_readers(sheet_readers):
         try:
 
             # check that the spreadsheet to be read exists
-            print( "Reading file", os.getcwd(), reader.filename)
+            print('Reading file', os.getcwd(), reader.filename)
             workbook = open_workbook(reader.filename)
 
         except:
@@ -552,6 +552,7 @@ def read_input_data_xls(from_test, sheets_to_read, country=None):
     if 'bcg' in sheets_to_read:
         sheet_readers.append(BcgCoverageSheetReader(country))
     if 'rate_birth' in sheets_to_read:
+        # don't like this code - should be dealt with through dictionaries in tool-kit, will re-code at some stage
         if country == 'Kyrgyzstan':
              sheet_readers.append(BirthRateReader('Kyrgyz Republic'))
         else:

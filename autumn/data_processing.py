@@ -1113,8 +1113,7 @@ class Inputs:
                                             self.gui_inputs['fitting_method'], smoothness,
                                             bound_low=0., bound_up=upper_bound,
                                             intervention_end=scenario_for_function,
-                                            intervention_start_date=self.model_constants[
-                                                'scenario_start_time'])
+                                            intervention_start_date=self.model_constants['scenario_start_time'])
 
                     # freeze at point in time if necessary
                     if scenario_name in self.freeze_times \

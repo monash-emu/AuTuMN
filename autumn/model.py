@@ -260,8 +260,7 @@ class ConsolidatedModel(StratifiedModel):
             self.adjust_ipt_for_opendoors()
         if self.vary_detection_by_organ:
             self.calculate_case_detection_by_organ()
-            if 'int_prop_xpert' in self.relevant_interventions:
-                self.adjust_smearneg_detection_for_xpert()
+            self.adjust_smearneg_detection_for_xpert()
         self.calculate_detect_missed_vars()
         if self.vary_detection_by_riskgroup:
             self.calculate_acf_rate()
@@ -382,11 +381,15 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         for parameter in ['_detect', '_algorithm_sensitivity']:
+
+            # weighted increase in smear-positive detection proportion
             self.vars['program_prop' + parameter + '_smearpos'] \
-                = min(self.vars['program_prop' + parameter + '']
+                = min(self.vars['program_prop' + parameter]
                       / (self.vars['epi_prop_smearpos']
-                         + self.params['program_prop_snep_relative_algorithm']
-                         * (1. - self.vars['epi_prop_smearpos'])), self.params['tb_prop_detection_algorithm_ceiling'])
+                         + self.params['program_prop_snep_relative_algorithm'] * (1. - self.vars['epi_prop_smearpos'])),
+                      self.params['tb_prop_detection_algorithm_ceiling'])
+
+            # then set smear-negative and extrapulmonary rates as proportionately lower
             for organ in ['_smearneg', '_extrapul']:
                 if organ in self.organ_status:
                     self.vars['program_prop' + parameter + organ] \
@@ -399,11 +402,12 @@ class ConsolidatedModel(StratifiedModel):
         with the previous method in calculate_vars).
         """
 
-        for parameter in ['_detect', '_algorithm_sensitivity']:
-            self.vars['program_prop' + parameter + '_smearneg'] \
-                += (self.vars['program_prop' + parameter + '_smearpos'] -
-                    self.vars['program_prop' + parameter + '_smearneg']) \
-                   * self.params['tb_prop_xpert_smearneg_sensitivity'] * self.vars['int_prop_xpert']
+        if 'int_prop_xpert' in self.relevant_interventions:
+            for parameter in ['_detect', '_algorithm_sensitivity']:
+                self.vars['program_prop' + parameter + '_smearneg'] \
+                    += (self.vars['program_prop' + parameter + '_smearpos'] -
+                        self.vars['program_prop' + parameter + '_smearneg']) \
+                       * self.params['tb_prop_xpert_smearneg_sensitivity'] * self.vars['int_prop_xpert']
 
     def calculate_detect_missed_vars(self):
         """"

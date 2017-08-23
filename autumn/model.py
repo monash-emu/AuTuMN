@@ -494,14 +494,18 @@ class ConsolidatedModel(StratifiedModel):
                         # adjust effective coverage for screening test, if being used
                         if whether_cxr_screen == 'cxr': coverage *= self.params['tb_sensitivity_cxr']
 
-                        # find rate of case finding with ACF for smear-positive cases
+                        # find the additional rate of case finding with ACF for smear-positive cases
+                        if 'int_rate_acf_smearpos' + riskgroup not in self.vars:
+                            self.vars['int_rate_acf_smearpos' + riskgroup] = 0.
                         self.vars['int_rate_acf_smearpos' + riskgroup] \
-                            = coverage * int_prop_acf_detections_per_round / self.params['int_timeperiod_acf_rounds']
+                            += coverage * int_prop_acf_detections_per_round / self.params['int_timeperiod_acf_rounds']
 
                         # find rate for smear-negatives, adjusted for Xpert sensitivity (if smear-negatives in model)
                         if acf_type == 'xpert' and '_smearneg' in self.organ_status:
+                            if 'int_rate_acf_smearneg' + riskgroup not in self.vars:
+                                self.vars['int_rate_acf_smearneg' + riskgroup] = 0.
                             self.vars['int_rate_acf_smearneg' + riskgroup] \
-                                = self.vars['int_rate_acf_smearpos' + riskgroup] \
+                                += self.vars['int_rate_acf_smearpos' + riskgroup] \
                                   * self.params['tb_prop_xpert_smearneg_sensitivity']
 
     def calculate_intensive_screening_rate(self):

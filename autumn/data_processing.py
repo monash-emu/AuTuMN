@@ -906,14 +906,22 @@ class Inputs:
                     self.relevant_interventions[scenario] += ['ipt']
 
             # similarly, add universal terms for ACF interventions, regardless of the risk-group applied to
-            for riskgroup in self.riskgroups:
-                for intervention in ['_xpertacf', '_cxrxpertacf']:
-                    if 'int_prop' + intervention + riskgroup in self.relevant_interventions[scenario]:
-                        if '_smearpos' in self.organ_status:
-                            self.relevant_interventions[scenario] += ['acf']
-                        else:
-                            self.add_comment_to_gui_window(
-                                'ACF requested, but not implemented because no organ stratification')
+            riskgroups_to_loop = copy.copy(self.riskgroups)
+            if '' not in riskgroups_to_loop: riskgroups_to_loop.append('')
+            for riskgroup in riskgroups_to_loop:
+                for acf_type in ['smear', 'xpert']:
+                    for whether_cxr_screen in ['', 'cxr']:
+                        intervention = 'int_prop_' + whether_cxr_screen + acf_type + 'acf' + riskgroup
+                        if intervention in self.relevant_interventions[scenario]:
+                            if '_smearpos' in self.organ_status:
+                                self.relevant_interventions[scenario] += ['acf']
+                            else:
+                                self.add_comment_to_gui_window(
+                                    intervention + ' not implemented as insufficient organ stratification structure')
+                            if '_smearneg' not in self.organ_status and acf_type == 'xpert':
+                                self.add_comment_to_gui_window(
+                                    'Effect of ' + intervention
+                                    + ' on smear-negatives not incorporated, as absent from model')
 
     def determine_organ_detection_variation(self):
         """

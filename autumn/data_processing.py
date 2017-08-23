@@ -135,8 +135,7 @@ class Inputs:
         if self.vary_force_infection_by_riskgroup:
             self.create_mixing_matrix()
         else:
-            for scenario in self.scenarios:
-                self.mixing[scenario] = {}
+            for scenario in self.scenarios: self.mixing[scenario] = {}
 
         # define compartmental structure
         self.define_compartment_structure()
@@ -910,7 +909,11 @@ class Inputs:
             for riskgroup in self.riskgroups:
                 for intervention in ['_xpertacf', '_cxrxpertacf']:
                     if 'int_prop' + intervention + riskgroup in self.relevant_interventions[scenario]:
-                        self.relevant_interventions[scenario] += ['acf']
+                        if '_smearpos' in self.organ_status:
+                            self.relevant_interventions[scenario] += ['acf']
+                        else:
+                            self.add_comment_to_gui_window(
+                                'ACF requested, but not implemented because no organ stratification')
 
     def determine_organ_detection_variation(self):
         """

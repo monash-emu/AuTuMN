@@ -477,39 +477,32 @@ class ConsolidatedModel(StratifiedModel):
         if '' not in riskgroups_to_loop: riskgroups_to_loop.append('')
         for riskgroup in riskgroups_to_loop:
 
-            # decide whether to use the general detection proportion, or a risk-group specific one
+            # decide whether to use the general detection proportion (as default), otherwise a risk-group-specific one
+            int_prop_acf_detections_per_round = self.params['int_prop_acf_detections_per_round']
             if 'int_prop_acf_detections_per_round' + riskgroup in self.params:
                 int_prop_acf_detections_per_round = self.params['int_prop_acf_detections_per_round' + riskgroup]
-            else:
-                int_prop_acf_detections_per_round = self.params['int_prop_acf_detections_per_round']
 
-            # smear-based ACF implementation
-            if 'int_prop_smearacf' + riskgroup in self.relevant_interventions \
-                    and '_smearpos' in self.organ_status:
-                self.vars['int_rate_acf_smearpos' + riskgroup] \
-                    = self.vars['int_prop_smearacf' + riskgroup] \
-                      * int_prop_acf_detections_per_round / self.params['int_timeperiod_acf_rounds']
+            # implement ACF by approach and whether CXR first as screening tool
+            for acf_type in ['smear', 'xpert']:
+                for whether_cxr_screen in ['', 'cxr']:
+                    intervention = 'int_prop_' + whether_cxr_screen + acf_type + 'acf' + riskgroup
+                    if intervention in self.relevant_interventions and '_smearpos' in self.organ_status:
 
-            # Xpert-based ACF implementation
-            if ('int_prop_xpertacf' + riskgroup in self.relevant_interventions \
-                    or 'int_prop_cxrxpertacf' + riskgroup in self.relevant_interventions) \
-                and '_smearpos' in self.organ_status:
+                        # find unadjusted coverage
+                        coverage = self.vars[intervention]
 
-                # find coverage and proportion detected with screening test, depending on intervention implemented
-                if 'int_prop_xpertacf' + riskgroup in self.relevant_interventions:
-                    coverage = self.vars['int_prop_xpertacf' + riskgroup]
-                elif 'int_prop_cxrxpertacf' + riskgroup in self.relevant_interventions:
-                    coverage = self.vars['int_prop_cxrxpertacf' + riskgroup] * self.params['tb_sensitivity_cxr']
+                        # adjust effective coverage for screening test, if being used
+                        if whether_cxr_screen == 'cxr': coverage *= self.params['tb_sensitivity_cxr']
 
-                # find rate of case finding with ACF for smear-positive cases
-                self.vars['int_rate_acf_smearpos' + riskgroup] \
-                    = coverage * int_prop_acf_detections_per_round / self.params['int_timeperiod_acf_rounds']
+                        # find rate of case finding with ACF for smear-positive cases
+                        self.vars['int_rate_acf_smearpos' + riskgroup] \
+                            = coverage * int_prop_acf_detections_per_round / self.params['int_timeperiod_acf_rounds']
 
-                # find rate for smear-negatives, adjusted for Xpert's sensitivity (if smear-negatives are in model)
-                if '_smearneg' in self.organ_status:
-                    self.vars['int_rate_acf_smearneg' + riskgroup] \
-                        = self.vars['int_rate_acf_smearpos' + riskgroup] \
-                          * self.params['tb_prop_xpert_smearneg_sensitivity']
+                        # find rate for smear-negatives, adjusted for Xpert sensitivity (if smear-negatives in model)
+                        if acf_type == 'xpert' and '_smearneg' in self.organ_status:
+                            self.vars['int_rate_acf_smearneg' + riskgroup] \
+                                = self.vars['int_rate_acf_smearpos' + riskgroup] \
+                                  * self.params['tb_prop_xpert_smearneg_sensitivity']
 
     def calculate_intensive_screening_rate(self):
         """

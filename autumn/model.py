@@ -539,15 +539,14 @@ class ConsolidatedModel(StratifiedModel):
         for organ in self.organs_for_detection:
             for riskgroup in self.riskgroups:
 
-                # ACF in risk groups
+                # risk groups
                 if 'int_rate_acf' + organ + riskgroup in self.vars:
                     self.vars['program_rate_detect' + organ + riskgroup] \
                         += self.vars['int_rate_acf' + organ + riskgroup]
 
-                # ACF in the general community
+                # general community
                 if 'int_rate_acf' + organ in self.vars:
-                    self.vars['program_rate_detect' + organ + riskgroup] \
-                        += self.vars['int_rate_acf' + organ]
+                    self.vars['program_rate_detect' + organ + riskgroup] += self.vars['int_rate_acf' + organ]
 
     def adjust_case_detection_for_intensive_screening(self):
 
@@ -1033,7 +1032,7 @@ class ConsolidatedModel(StratifiedModel):
         # ACF
         for riskgroup in [''] + self.riskgroups:
 
-            # Allow proportion of persons actually receiving the screening to vary by risk-group, as per user inputs
+            # allow proportion of persons actually receiving the screening to vary by risk-group, as per user inputs
             if 'int_prop_population_screened' + riskgroup in self.params:
                 int_prop_population_screened = self.params['int_prop_population_screened' + riskgroup]
             else:

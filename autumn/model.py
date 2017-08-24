@@ -271,7 +271,6 @@ class ConsolidatedModel(StratifiedModel):
         if self.is_lowquality: self.calculate_lowquality_detection_vars()
         self.calculate_await_treatment_var()
         self.calculate_treatment_rates_vars()
-        self.calculate_prop_infections_reachable_with_ipt()
         if 'agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions:
             self.calculate_ipt_effect()
         self.calculate_force_infection_vars()
@@ -819,35 +818,32 @@ class ConsolidatedModel(StratifiedModel):
                                         self.vars[start + '_noamplify'] \
                                             = self.vars[start] * (1. - self.vars['epi_prop_amplification'])
 
-    def calculate_prop_infections_reachable_with_ipt(self):
-
-        """
-        Calculates the proportion of new infections that could potentially be targeted with IPT.
-        Obtained by multiplying the proportion of active cases that are detected with the proportion of infections
-        that occur within the household
-        """
-
-        self.vars['tb_prop_infections_reachable_with_ipt'] = \
-            self.calculate_aggregate_outgoing_proportion('active', 'detect') * \
-            self.params['tb_prop_infections_in_household']
-
     def calculate_ipt_effect(self):
         """
         Method to estimate the proportion of infections averted through the IPT program - as the proportion of all cases
-        detected by the high quality sector, multiplied by the proportion of infections in the household (giving the
-        proportion of all infections we can target), multiplied by the coverage of the program (in each age-group) and
+        detected (by the high quality sector) multiplied by the proportion of infections in the household (giving the
+        proportion of all infections we can target) multiplied by the coverage of the program (in each age-group) and
         the effectiveness of treatment.
         """
 
+        # first calculate the proportion of new infections that are detected and so potentially targeted with IPT
+        self.vars['tb_prop_infections_reachable_ipt'] \
+            = self.calculate_aggregate_outgoing_proportion('active', 'detect') \
+              * self.params['tb_prop_infections_in_household']
+
+        # for each age group, calculate proportion of infections averted by IPT program
         for agegroup in self.agegroups:
-            self.vars['prop_infections_averted_ipt' + agegroup] = 0.
-            if 'int_prop_ipt' + agegroup in self.vars:
-                self.vars['prop_infections_averted_ipt' + agegroup] \
-                    = self.vars['tb_prop_infections_reachable_with_ipt'] \
-                      * self.vars['int_prop_ipt' + agegroup] \
-                      * self.params['tb_prop_ipt_effectiveness']
-            else:
-                self.vars['prop_infections_averted_ipt' + agegroup] = 0.
+
+            # calculate coverage as sum of coverage in age group and overall for entire population, with ceiling of one
+            coverage = 0.
+            for agegroup_or_entire_population in [agegroup, '']:
+                if 'int_prop_ipt' + agegroup_or_entire_population in self.vars:
+                    coverage += self.vars['int_prop_ipt' + agegroup_or_entire_population]
+            coverage = min(coverage, 1.)
+
+            # calculate infections averted as product of infections of identified cases, coverage and effectiveness
+            self.vars['prop_infections_averted_ipt' + agegroup] \
+                = self.vars['tb_prop_infections_reachable_ipt'] * coverage * self.params['tb_prop_ipt_effectiveness']
 
     def calculate_force_infection_vars(self):
         """

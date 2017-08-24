@@ -910,25 +910,23 @@ class ConsolidatedModel(StratifiedModel):
             else:
                 force_riskgroups = ['']
 
-            # calculate force of infection unadjusted for immunity/susceptibility
+            # first calculate force of infection unadjusted for immunity and IPT
             for riskgroup in force_riskgroups:
                 for agegroup in self.agegroups:
-
                     self.vars['rate_force' + strain + riskgroup + agegroup] \
                         = self.vars['tb_n_contact'] \
                           * self.vars['effective_infectious_population' + strain + riskgroup] \
                           / self.vars['population' + riskgroup]
+                    self.vars['rate_ipt_commencement' + agegroup] = 0.
 
                     # separate infections out into those treated and those not treated for DS-TB
                     if ('agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions) \
-                            and 'dr' not in strain:
-                        if 'rate_ipt_commencement' + agegroup not in self.vars:
-                            self.vars['rate_ipt_commencement' + agegroup] = 0.
+                            and strain == self.strains[0]:
                         self.vars['rate_ipt_commencement' + agegroup] \
                             += self.vars['rate_force' + strain + riskgroup + agegroup] \
                                * self.vars['prop_infections_averted_ipt' + agegroup]
                         self.vars['rate_force' + strain + riskgroup + agegroup] \
-                            *= 1. - self.vars['prop_infections_averted_ipt' + agegroup]
+                            -= self.vars['rate_ipt_commencement' + agegroup]
 
                     # if any modifications to transmission parameter to be made over time
                     if 'transmission_modifier' in self.vars:

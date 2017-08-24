@@ -337,35 +337,35 @@ class BaseModel:
         for label in self.labels:
             self.flows[label] = 0.
 
-        # Birth flows
+        # birth flows
         for label, vars_label in self.var_entry_rate_flows:
             self.flows[label] += self.vars[vars_label]
 
-        # Dynamic transmission flows
+        # dynamic transmission flows
         for from_label, to_label, vars_label in self.var_transfer_rate_flows:
             val = self.compartments[from_label] * self.vars[vars_label]
             self.flows[from_label] -= val
             self.flows[to_label] += val
 
-        # Fixed-rate flows
+        # fixed-rate flows
         for from_label, to_label, rate in self.fixed_transfer_rate_flows:
             val = self.compartments[from_label] * rate
             self.flows[from_label] -= val
             self.flows[to_label] += val
 
-        # Linked flows
+        # linked flows
         for from_label, to_label, vars_label in self.linked_transfer_rate_flows:
             val = self.vars[vars_label]
             self.flows[from_label] -= val
             self.flows[to_label] += val
 
-        # Normal death flows - note that there has to be a param or a var with the label 'demo_life_expectancy'
+        # normal death flows - note that there has to be a param or a var with the label 'demo_life_expectancy'
         self.vars['rate_death'] = 0.
         for label in self.labels:
             val = self.compartments[label] / self.get_constant_or_variable_param('demo_life_expectancy')
             self.flows[label] -= val
 
-        # Extra death flows
+        # extra death flows
         self.vars['rate_infection_death'] = 0.
         for label, rate in self.fixed_infection_death_rate_flows:
             val = self.compartments[label] * rate

@@ -913,22 +913,22 @@ class ConsolidatedModel(StratifiedModel):
             # calculate force of infection unadjusted for immunity/susceptibility
             for riskgroup in force_riskgroups:
                 for agegroup in self.agegroups:
-                    if 'prop_infections_averted_ipt' + agegroup in self.vars and 'dr' not in strain:
-                        coverage_multiplier_ngo_stopped = 1.
-                        if 'int_prop_ngo_activities' in self.relevant_interventions \
-                                and self.vars['int_prop_ngo_activities'] < 1. and riskgroup in self.ngo_groups:
-                            coverage_multiplier_ngo_stopped = (1. - self.params['int_prop_ipt_ngo'])\
-                                                              * (1 - self.vars['int_prop_ngo_activities'])
-                        ipt_infection_modifier = 1. - coverage_multiplier_ngo_stopped * \
-                                                      self.vars['prop_infections_averted_ipt' + agegroup]
 
-                    else:
-                        ipt_infection_modifier = 1.
                     self.vars['rate_force' + strain + riskgroup + agegroup] \
                         = self.vars['tb_n_contact'] \
                           * self.vars['effective_infectious_population' + strain + riskgroup] \
-                          / self.vars['population' + riskgroup] \
-                          * ipt_infection_modifier
+                          / self.vars['population' + riskgroup]
+
+                    # separate infections out into those treated and those not treated for DS-TB
+                    if ('agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions) \
+                            and 'dr' not in strain:
+                        if 'rate_ipt_commencement' + agegroup not in self.vars:
+                            self.vars['rate_ipt_commencement' + agegroup] = 0.
+                        self.vars['rate_ipt_commencement' + agegroup] \
+                            += self.vars['rate_force' + strain + riskgroup + agegroup] \
+                               * self.vars['prop_infections_averted_ipt' + agegroup]
+                        self.vars['rate_force' + strain + riskgroup + agegroup] \
+                            *= 1. - self.vars['prop_infections_averted_ipt' + agegroup]
 
                     # if any modifications to transmission parameter to be made over time
                     if 'transmission_modifier' in self.vars:

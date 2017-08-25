@@ -128,6 +128,9 @@ class Inputs:
         # classify interventions as to whether they apply and are to be costed
         self.classify_interventions()
 
+        # add compartment for IPT if implemented
+        self.define_ipt_structure()
+
         # calculate time-variant functions
         self.find_scaleup_functions()
 
@@ -313,6 +316,7 @@ class Inputs:
             self.model_constants[ipt_type + 'ipt_effective_per_assessment'] \
                 = self.model_constants['tb_prop_ltbi_test_sensitivity'] \
                   * self.model_constants['tb_prop_' + ipt_type + 'ipt_effectiveness']
+        self.model_constants['rate_ipt_completion'] = 1. / self.model_constants['tb_timeperiod_onipt']
 
     ''' Methods to define model structure '''
 
@@ -448,6 +452,13 @@ class Inputs:
         """
 
         if self.gui_inputs['n_organs'] > 1: self.organ_status = self.available_organs[:self.gui_inputs['n_organs']]
+
+    def define_ipt_structure(self):
+
+        for scenario in self.scenarios:
+            if 'agestratified_ipt' in self.relevant_interventions[scenario] \
+                    or 'ipt' in self.relevant_interventions[scenario]:
+                self.compartment_types.append('onipt')
 
     def create_mixing_matrix(self):
         """

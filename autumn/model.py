@@ -145,7 +145,7 @@ class ConsolidatedModel(StratifiedModel):
                     for compartment in self.compartment_types:
 
                         # replicate susceptible for age and risk groups
-                        if 'susceptible' in compartment:
+                        if 'susceptible' in compartment or 'onipt' in compartment:
                             self.set_compartment(compartment + riskgroup + history + agegroup, 0.)
 
                         # replicate latent classes for age groups, risk groups and strains
@@ -1117,8 +1117,7 @@ class ConsolidatedModel(StratifiedModel):
         self.set_variable_programmatic_flows()
         self.set_detection_flows()
         self.set_treatment_flows()
-        # if 'agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions:
-        #     self.set_ipt_flows()
+        self.set_ipt_flows()
 
     def set_birth_flows(self):
         """
@@ -1420,4 +1419,14 @@ class ConsolidatedModel(StratifiedModel):
                                             'active' + organ + amplify_to_strain + riskgroup + history + agegroup,
                                             'program_rate_treatment' + strain_or_inappropriate + history + '_default'
                                             + treatment_stage + '_amplify')
+
+    def set_ipt_flows(self):
+
+        # treatment completion flows
+        for agegroup in self.agegroups:
+            for history in self.histories:
+                for riskgroup in self.riskgroups:
+                    self.set_fixed_transfer_rate_flow('onipt' + riskgroup + history + agegroup,
+                                                      'susceptible_immune' + riskgroup + history + agegroup,
+                                                      'rate_ipt_completion')
 

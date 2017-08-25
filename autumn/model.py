@@ -911,22 +911,22 @@ class ConsolidatedModel(StratifiedModel):
                 force_riskgroups = ['']
 
             # first calculate force of infection unadjusted for immunity and IPT
-            for riskgroup in force_riskgroups:
-                for agegroup in self.agegroups:
+            for agegroup in self.agegroups:
+                for riskgroup in force_riskgroups:
                     self.vars['rate_force' + strain + riskgroup + agegroup] \
                         = self.vars['tb_n_contact'] \
                           * self.vars['effective_infectious_population' + strain + riskgroup] \
                           / self.vars['population' + riskgroup]
-                    self.vars['rate_ipt_commencement' + agegroup] = 0.
+                    self.vars['rate_ipt_commencement' + riskgroup + agegroup] = 0.
 
                     # separate infections out into those treated and those not treated for DS-TB
                     if ('agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions) \
                             and strain == self.strains[0]:
-                        self.vars['rate_ipt_commencement' + agegroup] \
+                        self.vars['rate_ipt_commencement' + riskgroup + agegroup] \
                             += self.vars['rate_force' + strain + riskgroup + agegroup] \
                                * self.vars['prop_infections_averted_ipt' + agegroup]
                         self.vars['rate_force' + strain + riskgroup + agegroup] \
-                            -= self.vars['rate_ipt_commencement' + agegroup]
+                            -= self.vars['rate_ipt_commencement' + riskgroup + agegroup]
 
                     # if any modifications to transmission parameter to be made over time
                     if 'transmission_modifier' in self.vars:
@@ -941,6 +941,19 @@ class ConsolidatedModel(StratifiedModel):
                                 = self.vars['rate_force' + strain + riskgroup + agegroup] \
                                   * self.params['tb_multiplier' + force_type + '_protection'] \
                                   * self.params['tb_multiplier' + history + '_protection']
+
+                # distribute IPT treatments across risk groups if homogeneous mixing
+                if ('agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions) \
+                        and strain == self.strains[0] \
+                        and len(self.riskgroups) > 1 and not self.vary_force_infection_by_riskgroup:
+                    self.vars['rate_ipt_commencement_norisk' + agegroup] = self.vars['rate_ipt_commencement' + agegroup]
+                    for riskgroup in self.riskgroups:
+                        if riskgroup != '_norisk':
+                            self.vars['rate_ipt_commencement' + riskgroup + agegroup] \
+                                = self.vars['rate_ipt_commencement' + agegroup] \
+                                  * self.vars['riskgroup_prop' + riskgroup]
+                            self.vars['rate_ipt_commencement_norisk' + agegroup] \
+                                -= self.vars['rate_ipt_commencement' + riskgroup + agegroup]
 
     def calculate_population_sizes(self):
         """
@@ -1407,30 +1420,4 @@ class ConsolidatedModel(StratifiedModel):
                                             'active' + organ + amplify_to_strain + riskgroup + history + agegroup,
                                             'program_rate_treatment' + strain_or_inappropriate + history + '_default'
                                             + treatment_stage + '_amplify')
-
-    def set_ipt_flows(self):
-        """
-        Sets a flow from the early latent compartment to the partially immune susceptible compartment that is determined
-        by report_numbers_starting_treatment above and is not linked to the 'from_label' compartment.
-        """
-
-        for history in self.histories:
-            for agegroup in self.agegroups:
-                for riskgroup in self.riskgroups:
-                    for strain in self.strains:
-                        if 'agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions \
-                                and 'dr' not in strain:
-                            self.set_linked_transfer_rate_flow(
-                                'latent_early' + strain + riskgroup + history + agegroup,
-                                'susceptible_immune' + riskgroup + history + agegroup,
-                                'ipt_effective_treatments' + agegroup)
-                        if 'int_prop_community_ipt' in self.relevant_interventions and 'dr' not in strain:
-                            self.set_var_transfer_rate_flow(
-                                'latent_early' + strain + riskgroup + history + agegroup,
-                                'susceptible_immune' + riskgroup + history + agegroup,
-                                'rate_community_ipt')
-                            self.set_var_transfer_rate_flow(
-                                'latent_late' + strain + riskgroup + history + agegroup,
-                                'susceptible_immune' + riskgroup + history + agegroup,
-                                'rate_community_ipt')
 

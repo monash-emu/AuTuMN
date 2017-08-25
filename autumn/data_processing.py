@@ -310,13 +310,12 @@ class Inputs:
         who receive effective IPT per person assessed for LTBI.
         """
 
-        self.model_constants['ipt_eligible_per_treatment_start'] \
-            = (self.model_constants['demo_household_size'] - 1.) * self.model_constants['tb_prop_contacts_infected']
-        for ipt_type in ['', 'novel_']:
-            self.model_constants[ipt_type + 'ipt_effective_per_assessment'] \
-                = self.model_constants['tb_prop_ltbi_test_sensitivity'] \
-                  * self.model_constants['tb_prop_' + ipt_type + 'ipt_effectiveness']
-        self.model_constants['rate_ipt_completion'] = 1. / self.model_constants['tb_timeperiod_onipt']
+        # completion
+        self.model_constants['rate_ipt_completion'] \
+            = 1. / self.model_constants['tb_timeperiod_onipt'] * self.model_constants['tb_prop_ipt_effectiveness']
+        self.model_constants['rate_ipt_noncompletion'] \
+            = 1. / self.model_constants['tb_timeperiod_onipt'] \
+              * (1. - self.model_constants['tb_prop_ipt_effectiveness'])
 
     ''' Methods to define model structure '''
 

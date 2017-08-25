@@ -836,7 +836,7 @@ class ConsolidatedModel(StratifiedModel):
         # first calculate the proportion of new infections that are detected and so potentially targeted with IPT
         self.vars['tb_prop_infections_reachable_ipt'] \
             = self.calculate_aggregate_outgoing_proportion('active', 'detect') \
-              * self.params['tb_prop_infections_in_household']
+              * self.params['tb_prop_infections_in_household'] * self.params['tb_prop_ltbi_test_sensitivity']
 
         # for each age group, calculate proportion of infections averted by IPT program
         for agegroup in self.agegroups:
@@ -850,7 +850,7 @@ class ConsolidatedModel(StratifiedModel):
 
             # calculate infections averted as product of infections of identified cases, coverage and effectiveness
             self.vars['prop_infections_averted_ipt' + agegroup] \
-                = self.vars['tb_prop_infections_reachable_ipt'] * coverage * self.params['tb_prop_ipt_effectiveness']
+                = self.vars['tb_prop_infections_reachable_ipt'] * coverage
 
     def calculate_force_infection_vars(self):
         """
@@ -1433,6 +1433,10 @@ class ConsolidatedModel(StratifiedModel):
                                             + treatment_stage + '_amplify')
 
     def set_ipt_flows(self):
+        """
+        Implement IPT-related transitions: treatment commencement (linked to force of infection), completion of
+        treatment and failure to complete treatment.
+        """
 
         for agegroup in self.agegroups:
             for history in self.histories:
@@ -1445,7 +1449,14 @@ class ConsolidatedModel(StratifiedModel):
                         'rate_ipt_commencement' + riskgroup + history + agegroup)
 
                     # treatment completion flows
-                    self.set_fixed_transfer_rate_flow('onipt' + riskgroup + history + agegroup,
-                                                      'susceptible_immune' + riskgroup + history + agegroup,
-                                                      'rate_ipt_completion')
+                    self.set_fixed_transfer_rate_flow(
+                        'onipt' + riskgroup + history + agegroup,
+                        'susceptible_immune' + riskgroup + history + agegroup,
+                        'rate_ipt_completion')
+
+                    # treatment non-completion flows
+                    self.set_fixed_transfer_rate_flow(
+                        'onipt' + riskgroup + history + agegroup,
+                        'latent_early' + self.strains[0] + riskgroup + history + agegroup,
+                        'rate_ipt_noncompletion')
 

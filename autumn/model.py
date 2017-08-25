@@ -295,6 +295,13 @@ class ConsolidatedModel(StratifiedModel):
             for label in self.labels:
                 if riskgroup in label: self.vars['population' + riskgroup] += self.compartments[label]
 
+        for history in self.histories:
+            self.vars['population' + history] = 0.
+            for label in self.labels:
+                if history in label: self.vars['population' + history] += self.compartments[label]
+        for history in self.histories:
+            self.vars['prop_population' + history] = self.vars['population' + history] / self.vars['population']
+
     def calculate_birth_rates_vars(self):
         """
         Calculate birth rates into vaccinated and unvaccinated compartments.
@@ -954,6 +961,10 @@ class ConsolidatedModel(StratifiedModel):
                                   * self.vars['riskgroup_prop' + riskgroup]
                             self.vars['rate_ipt_commencement_norisk' + agegroup] \
                                 -= self.vars['rate_ipt_commencement' + riskgroup + agegroup]
+                        for history in self.histories:
+                            self.vars['rate_ipt_commencement' + riskgroup + history + agegroup] \
+                                = self.vars['rate_ipt_commencement' + riskgroup + agegroup] \
+                                  * self.vars['prop_population' + history]
 
     def calculate_population_sizes(self):
         """
@@ -1431,7 +1442,7 @@ class ConsolidatedModel(StratifiedModel):
                     self.set_linked_transfer_rate_flow(
                         'latent_early' + self.strains[0] + riskgroup + history + agegroup,
                         'onipt' + riskgroup + history + agegroup,
-                        'rate_ipt_commencement' + riskgroup + agegroup)
+                        'rate_ipt_commencement' + riskgroup + history + agegroup)
 
                     # treatment completion flows
                     self.set_fixed_transfer_rate_flow('onipt' + riskgroup + history + agegroup,

@@ -1117,7 +1117,8 @@ class ConsolidatedModel(StratifiedModel):
         self.set_variable_programmatic_flows()
         self.set_detection_flows()
         self.set_treatment_flows()
-        self.set_ipt_flows()
+        if 'agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions:
+            self.set_ipt_flows()
 
     def set_birth_flows(self):
         """
@@ -1422,10 +1423,17 @@ class ConsolidatedModel(StratifiedModel):
 
     def set_ipt_flows(self):
 
-        # treatment completion flows
         for agegroup in self.agegroups:
             for history in self.histories:
                 for riskgroup in self.riskgroups:
+
+                    # treatment commencement
+                    self.set_linked_transfer_rate_flow(
+                        'latent_early' + self.strains[0] + riskgroup + history + agegroup,
+                        'onipt' + riskgroup + history + agegroup,
+                        'rate_ipt_commencement' + riskgroup + agegroup)
+
+                    # treatment completion flows
                     self.set_fixed_transfer_rate_flow('onipt' + riskgroup + history + agegroup,
                                                       'susceptible_immune' + riskgroup + history + agegroup,
                                                       'rate_ipt_completion')

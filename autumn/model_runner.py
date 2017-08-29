@@ -21,7 +21,7 @@ def generate_candidates(n_candidates, param_ranges_unc):
     Function for generating candidate parameters.
     """
 
-    # Dictionary for storing candidates
+    # dictionary for storing candidates
     param_candidates = {}
     for param_dict in param_ranges_unc:
 
@@ -234,9 +234,7 @@ class ModelRunner:
         if self.js_gui:
             self.js_gui('init')
 
-    ###############################################
-    ### Master methods to run all other methods ###
-    ###############################################
+    ''' Master methods to run other methods '''
 
     def master_runner(self):
         """
@@ -750,6 +748,8 @@ class ModelRunner:
             new_param_list.append(param_candidates[param['key']][0])
             params = new_param_list
 
+        print(params)
+
         # until a sufficient number of parameters are accepted
         run = 0
         while n_accepted < self.gui_inputs['uncertainty_runs']:
@@ -943,7 +943,13 @@ class ModelRunner:
         """
 
         for key in param_dict:
-            if key in self.model_dict[model_object].params:
+
+            # start time usually set in instantiation, which has already been done here, so needs to be set separately
+            if key == 'start_time':
+                self.model_dict[model_object].start_time = param_dict[key]
+
+            # set parameters
+            elif key in self.model_dict[model_object].params:
                 self.model_dict[model_object].set_parameter(key, param_dict[key])
             else:
                 raise ValueError('%s not in model_object params' % key)
@@ -979,9 +985,10 @@ class ModelRunner:
 
         # add uncertainty data to dictionaries
         for output in epi_outputs_to_analyse:
+            new_output = tool_kit.force_list_to_length(self.epi_outputs[scenario_name][output],
+                                                       len(self.epi_outputs['manual_baseline'][output]))
             self.epi_outputs_uncertainty[scenario_name][output] \
-                = numpy.vstack([self.epi_outputs_uncertainty[scenario_name][output],
-                                self.epi_outputs[scenario_name][output]])
+                = numpy.vstack([self.epi_outputs_uncertainty[scenario_name][output], new_output])
         for output in self.cost_outputs[scenario_name]:
             self.cost_outputs_uncertainty[scenario_name][output] \
                 = numpy.vstack([self.cost_outputs_uncertainty[scenario_name][output],
@@ -1002,7 +1009,7 @@ class ModelRunner:
         # iterate through the parameters being used
         for p, param_dict in enumerate(self.inputs.param_ranges_unc):
             bounds = param_dict['bounds']
-            sd = self.gui_inputs['search_width'] * (bounds[1] - bounds[0]) / (2.0 * 1.96)
+            sd = self.gui_inputs['search_width'] * (bounds[1] - bounds[0]) / (2. * 1.96)
             random = -100.
 
             # search for new parameters

@@ -1196,7 +1196,8 @@ class Inputs:
         """
 
         for param in self.model_constants:
-            if '_uncertainty' in param and type(self.model_constants[param]) == dict:
+            if ('tb_' in param or '_time' in param) \
+                    and '_uncertainty' in param and type(self.model_constants[param]) == dict:
                 self.param_ranges_unc += [{'key': param[:-12],
                                            'bounds': [self.model_constants[param]['lower'],
                                                       self.model_constants[param]['upper']],

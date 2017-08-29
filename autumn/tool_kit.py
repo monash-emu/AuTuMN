@@ -1,7 +1,7 @@
 
 import random
 from scipy import exp
-import outputs
+# import outputs
 import cPickle as pickle
 import numpy
 
@@ -238,6 +238,26 @@ def increase_parameter_closer_to_value(old_value, target_value, coverage):
 def decrease_parameter_closer_to_value(old_value, target_value, coverage):
 
     if old_value > target_value: return old_value - (old_value - target_value) * coverage
+
+
+def force_list_to_length(list, length):
+    """
+    Force a list to be a certain list in order that it can be stacked with other lists to make an array when working out
+    epidemiological outputs.
+
+    Args:
+        list: The list that needs its length adapted
+        length: The desired length as an integer
+    Returns:
+        The list in its adapted form, either unchanged, truncated to desired length or with zeroes added to the start
+    """
+
+    if len(list) == length:
+        return list
+    elif len(list) > length:
+        return list[-length:]
+    elif len(list) < length:
+        return [0.] * (length - len(list)) + list
 
 
 ##################################
@@ -1023,3 +1043,9 @@ def pickle_load(file):
         loaded_object = pickle.load(input)
     return loaded_object
 
+
+
+if __name__ == '__main__':
+
+    print(force_list_to_length([1, 2, 3], 10))
+    print(len(force_list_to_length([1, 2, 3], 10)))

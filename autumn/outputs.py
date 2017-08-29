@@ -1543,7 +1543,8 @@ class Project:
 
                         # line plot of scaling parameter functions
                         ax.plot(x_vals,
-                                map(self.model_runner.model_dict['manual_' + scenario_name].scaleup_fns[function], x_vals),
+                                map(self.model_runner.model_dict['manual_' + scenario_name].scaleup_fns[function],
+                                    x_vals),
                                 color=self.output_colours[scenario][1],
                                 label=t_k.capitalise_and_remove_underscore(scenario_name))
 

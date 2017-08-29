@@ -233,7 +233,7 @@ class ControlPanelReader:
         # not sure why this if statement needs to be split exactly, but huge bugs seem to occur if it isn't
         if len(row) >= 4:
             # if an entry present in second column and it is a constant parameter that can be modified in uncertainty
-            if row[2] != '' and ('tb_' in row[0] or 'program_' in row[0]):
+            if row[2] != '':
                 uncertainty_dict = {'point': row[1],
                                     'lower': row[2],
                                     'upper': row[3]}

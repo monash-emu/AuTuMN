@@ -748,8 +748,6 @@ class ModelRunner:
             new_param_list.append(param_candidates[param['key']][0])
             params = new_param_list
 
-        print(params)
-
         # until a sufficient number of parameters are accepted
         run = 0
         while n_accepted < self.gui_inputs['uncertainty_runs']:
@@ -1013,8 +1011,7 @@ class ModelRunner:
             random = -100.
 
             # search for new parameters
-            while random < bounds[0] or random > bounds[1]:
-                random = norm.rvs(loc=old_params[p], scale=sd, size=1)
+            while random < bounds[0] or random > bounds[1]: random = norm.rvs(loc=old_params[p], scale=sd, size=1)
 
             # add them to the dictionary
             new_params.append(random[0])

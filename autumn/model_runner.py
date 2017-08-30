@@ -731,7 +731,7 @@ class ModelRunner:
 
         # prepare for uncertainty loop
         n_accepted = 0
-        prev_log_likelihood = -1e10
+        prev_log_likelihood = -100
         for param in self.inputs.param_ranges_unc:
             self.all_parameters_tried[param['key']] = []
             self.acceptance_dict[param['key']] = {}
@@ -751,7 +751,7 @@ class ModelRunner:
         # until a sufficient number of parameters are accepted
         run = 0
         population_adjustment = 1.
-        accepted = False
+        accepted = 0
 
         while n_accepted < self.gui_inputs['uncertainty_runs']:
 
@@ -845,6 +845,7 @@ class ModelRunner:
                                                + str(datetime.datetime.now() - start_timer_run))
                 run += 1
 
+                # find value to adjust starting population by, if a target population specified
                 if 'target_population' in self.inputs.model_constants:
                     population_adjustment \
                         = self.inputs.model_constants['target_population'] \
@@ -852,6 +853,17 @@ class ModelRunner:
                               tool_kit.find_first_list_element_above_value(
                                   self.epi_outputs['uncertainty_baseline']['times'],
                                   self.inputs.model_constants['current_time'])]
+
+                # iteratively adjusting proportion of mortality reported
+                last_year_of_data = 2014.
+                ratio = self.epi_outputs['uncertainty_baseline'][
+                            'mortality'][tool_kit.find_first_list_element_above_value(
+                    self.epi_outputs['uncertainty_baseline']['times'], last_year_of_data)] \
+                        / self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k'][int(last_year_of_data)]
+                if ratio < 0.9 and accepted == 1:
+                    self.inputs.model_constants['program_prop_child_reporting'] += .02
+                elif ratio > 1.1 and accepted == 1:
+                    self.inputs.model_constants['program_prop_child_reporting'] -= .02
 
             # generate more candidates if required
             if not self.gui_inputs['adaptive_uncertainty'] and run >= len(param_candidates.keys()):
@@ -893,7 +905,7 @@ class ModelRunner:
 
         return normal_char
 
-    def run_with_params(self, params, model_object='uncertainty_baseline', population_adjustment=1., accepted=False):
+    def run_with_params(self, params, model_object='uncertainty_baseline', population_adjustment=1., accepted=0):
         """
         Integrate the model with the proposed parameter set.
 
@@ -944,7 +956,7 @@ class ModelRunner:
         for names, vals in zip(self.inputs.param_ranges_unc, params): param_dict[names['key']] = vals
         return param_dict
 
-    def set_model_with_params(self, param_dict, model_object='baseline', population_adjustment=1., accepted=False):
+    def set_model_with_params(self, param_dict, model_object='baseline', population_adjustment=1., accepted=0):
         """
         Populates baseline model with params from uncertainty calculations, including adjusting starting time.
         Also adjusts starting population to better match target population at current time using target_population input
@@ -956,7 +968,7 @@ class ModelRunner:
         """
 
         # adjust starting populations if target_population in sheets (i.e. country sheet, because not in defaults)
-        if population_adjustment != 1. and accepted:
+        if population_adjustment != 1. and accepted==1:
             for compartment_type in self.inputs.compartment_types:
                 if compartment_type in self.inputs.model_constants:
                     self.inputs.model_constants[compartment_type] *= population_adjustment

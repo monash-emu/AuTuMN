@@ -641,6 +641,9 @@ class Inputs:
         for outcome in pre2011_map_gtb_to_autumn:
             self.derived_data[self.strains[0] + '_new' + pre2011_map_gtb_to_autumn[outcome]] = {}
             self.derived_data[self.strains[0] + '_treated' + pre2011_map_gtb_to_autumn[outcome]] = {}
+
+        # needs another loop to prevent the default dictionaries being blanked after working out default
+        for outcome in pre2011_map_gtb_to_autumn:
             for hiv_status in hiv_statuses_to_include:
 
                 # new outcomes are disaggregated by organ involvement and hiv status up to 2011

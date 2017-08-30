@@ -31,7 +31,7 @@ def find_outcome_proportions_by_period(proportion, early_period, total_period):
     """
 
     if proportion > 1. or proportion < 0.:
-        warnings.warn('Proportion parameter not between zero and one.')
+        warnings.warn('Proportion parameter not between zero and one, value is %s' %proportion)
     # to avoid errors where the proportion is exactly one (although the function isn't really intended for this):
     if proportion > .99:
         early_proportion = 0.99
@@ -733,7 +733,11 @@ class ConsolidatedModel(StratifiedModel):
             for history in self.histories:
                 start = 'program_prop_treatment' + strain + history
                 self.vars[start + '_default'] \
-                    = 1. - self.vars[start + '_success'] - self.vars[start + '_death']
+                    = max([1. - self.vars[start + '_success'] - self.vars[start + '_death'], 0.])
+                sum_of_success_and_death = self.vars[start + '_success'] + self.vars[start + '_death']
+                if sum_of_success_and_death > 1.:
+                    print('Success and death sum to %s for %s outcome at %s time'
+                          %(sum_of_success_and_death, start, self.time))
 
             # find non-infectious period from infectious and total
             self.vars['tb_timeperiod_noninfect_ontreatment' + strain] \

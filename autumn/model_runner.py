@@ -750,13 +750,17 @@ class ModelRunner:
 
         # until a sufficient number of parameters are accepted
         run = 0
+        population_adjustment = 1.
+        accepted = False
+
         while n_accepted < self.gui_inputs['uncertainty_runs']:
 
             # set timer
             start_timer_run = datetime.datetime.now()
 
             # run baseline scenario (includes parameter checking, parameter setting and recording success/failure)
-            self.run_with_params(new_param_list, model_object='uncertainty_baseline')
+            self.run_with_params(new_param_list, model_object='uncertainty_baseline',
+                                 population_adjustment=population_adjustment, accepted=accepted)
 
             # store outputs regardless of acceptance, provided run was completed successfully
             if self.is_last_run_success:
@@ -841,6 +845,14 @@ class ModelRunner:
                                                + str(datetime.datetime.now() - start_timer_run))
                 run += 1
 
+                if 'target_population' in self.inputs.model_constants:
+                    population_adjustment \
+                        = self.inputs.model_constants['target_population'] \
+                          / self.epi_outputs['uncertainty_baseline']['population'][
+                              tool_kit.find_first_list_element_above_value(
+                                  self.epi_outputs['uncertainty_baseline']['times'],
+                                  self.inputs.model_constants['current_time'])]
+
             # generate more candidates if required
             if not self.gui_inputs['adaptive_uncertainty'] and run >= len(param_candidates.keys()):
                 param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
@@ -881,7 +893,7 @@ class ModelRunner:
 
         return normal_char
 
-    def run_with_params(self, params, model_object='uncertainty_baseline'):
+    def run_with_params(self, params, model_object='uncertainty_baseline', population_adjustment=1., accepted=False):
         """
         Integrate the model with the proposed parameter set.
 
@@ -908,7 +920,8 @@ class ModelRunner:
         param_dict = self.convert_param_list_to_dict(params)
 
         # set parameters and run
-        self.set_model_with_params(param_dict, model_object)
+        self.set_model_with_params(param_dict, model_object,
+                                   population_adjustment=population_adjustment, accepted=accepted)
         self.is_last_run_success = True
         try:
             self.model_dict[model_object].integrate()
@@ -931,14 +944,22 @@ class ModelRunner:
         for names, vals in zip(self.inputs.param_ranges_unc, params): param_dict[names['key']] = vals
         return param_dict
 
-    def set_model_with_params(self, param_dict, model_object='baseline'):
+    def set_model_with_params(self, param_dict, model_object='baseline', population_adjustment=1., accepted=False):
         """
-        Populates baseline model with params from uncertainty calculations.
+        Populates baseline model with params from uncertainty calculations, including adjusting starting time.
+        Also adjusts starting population to better match target population at current time using target_population input
+        from country sheet. (Not currently in default sheet.)
 
         Args:
             param_dict: Dictionary of the parameters to be set within the model (keys parameter name strings and values
                 parameter values).
         """
+
+        # adjust starting populations if target_population in sheets (i.e. country sheet, because not in defaults)
+        if population_adjustment != 1. and accepted:
+            for compartment_type in self.inputs.compartment_types:
+                if compartment_type in self.inputs.model_constants:
+                    self.inputs.model_constants[compartment_type] *= population_adjustment
 
         for key in param_dict:
 

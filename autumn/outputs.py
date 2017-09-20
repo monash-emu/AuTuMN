@@ -1519,8 +1519,7 @@ class Project:
 
         # different figure for each type of function
         for classification in self.classified_scaleups:
-            if len(self.classified_scaleups[classification]) > 0 \
-                    and classification in self.model_runner.model_dict['manual_baseline'].scaleup_fns[function]:
+            if len(self.classified_scaleups[classification]) > 0:
 
                 # find the list of the scale-up functions to work with and some x-values
                 function_list = self.classified_scaleups[classification]

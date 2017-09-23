@@ -813,10 +813,17 @@ class Project:
                 print('Writing calibration parameters back to input spreadsheet')
                 country_input_book = xl.load_workbook(path)
                 country_sheet = country_input_book['constants']
-                for row in country_sheet.rows:
-                    for param in self.model_runner.all_parameters_tried:
+                for param in self.model_runner.all_parameters_tried:
+                    param_found = False
+                    median = numpy.percentile(self.model_runner.all_parameters_tried[param], 50, axis=0)
+                    for row in country_sheet.rows:
                         if row[0].value == param:
-                            row[1].value = numpy.percentile(self.model_runner.all_parameters_tried[param], 50., axis=0)
+                            row[1].value = median
+                            param_found = True
+                    if not param_found:
+                        max_row = country_sheet.max_row
+                        country_sheet.cell(row=max_row+1, column=1).value = param
+                        country_sheet.cell(row=max_row+1, column=2).value = median
                 country_input_book.save(path)
 
         # write spreadsheets - with sheet for each scenario or each output

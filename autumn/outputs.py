@@ -646,7 +646,6 @@ class Project:
             return self.start_time_index
 
     def set_and_update_figure(self):
-
         """
         If called at the start of each plotting function, will create a figure that is numbered according to
         self.figure_number, which is then updated at each call. This stops figures plotting on the same axis
@@ -800,13 +799,27 @@ class Project:
     #####################################################
 
     def master_outputs_runner(self):
-
         """
         Method to work through all the fundamental output methods, which then call all the specific output
         methods for plotting and writing as required.
         """
 
-        # Write spreadsheets - with sheet for each scenario or each output
+        if self.gui_inputs['output_uncertainty'] and self.gui_inputs['write_uncertainty_outcome_params']:
+            try:
+                path = os.path.join('autumn/xls/data_' + self.country + '.xlsx')
+            except:
+                print('No country input spreadsheet for requested uncertainty parameter writing')
+            else:
+                print('Writing calibration parameters back to input spreadsheet')
+                country_input_book = xl.load_workbook(path)
+                country_sheet = country_input_book['constants']
+                for row in country_sheet.rows:
+                    for param in self.model_runner.all_parameters_tried:
+                        if row[0].value == param:
+                            row[1].value = numpy.percentile(self.model_runner.all_parameters_tried[param], 50., axis=0)
+                country_input_book.save(path)
+
+        # write spreadsheets - with sheet for each scenario or each output
         if self.gui_inputs['output_spreadsheets']:
             if self.gui_inputs['output_by_scenario']:
                 print('Writing scenario spreadsheets')
@@ -815,7 +828,7 @@ class Project:
                 print('Writing output indicator spreadsheets')
                 self.write_xls_by_output()
 
-        # Write documents - with document for each scenario or each output
+        # write documents - with document for each scenario or each output
         if self.gui_inputs['output_documents']:
             if self.gui_inputs['output_by_scenario']:
                 print('Writing scenario documents')
@@ -824,41 +837,40 @@ class Project:
                 print('Writing output indicator documents')
                 self.write_docs_by_output()
 
-        # Write optimisation spreadsheets
+        # write optimisation spreadsheets
         self.write_opti_outputs_spreadsheet()
 
-        # Master plotting method
+        # master plotting method
         self.run_plotting()
 
-        # Open the directory to which everything has been written to save the user a click or two
+        # open the directory to which everything has been written to save the user a click or two
         self.open_output_directory()
 
     def write_xls_by_scenario(self):
-
         """
         Write a spreadsheet with the sheet referring to one scenario.
         """
 
-        # Whether to write horizontally
+        # whether to write horizontally
         horizontal = self.gui_inputs['output_horizontally']
 
-        # Write a new file for each scenario and for each general type of output
+        # write a new file for each scenario and for each general type of output
         for result_type in ['epi_', 'raw_cost_', 'inflated_cost_', 'discounted_cost_', 'discounted_inflated_cost_']:
             for scenario in self.scenario_names:
 
-                # Make filename
+                # make filename
                 path = os.path.join(self.out_dir_project, result_type + scenario)
                 path += '.xlsx'
 
-                # Get active sheet
+                # get active sheet
                 wb = xl.Workbook()
                 sheet = wb.active
                 sheet.title = scenario
 
-                # Write the year text cell
+                # write the year text cell
                 sheet.cell(row=1, column=1).value = 'Year'
 
-                # For epidemiological outputs (for which uncertainty is fully finished)
+                # for epidemiological outputs (for which uncertainty is fully finished)
                 if result_type == 'epi_':
                     for output in self.model_runner.epi_outputs_to_analyse:
 
@@ -928,14 +940,14 @@ class Project:
                                             output][order,
                                                     year_index]
 
-                # For economic outputs (uncertainty not yet fully finished)
+                # for economic outputs (uncertainty not yet fully finished)
                 elif 'cost_' in result_type:
                     for output in self.inputs.interventions_to_cost:
 
-                        # Find years to write
+                        # find years to write
                         years = self.find_years_to_write('manual_' + scenario, output, epi=False)
 
-                        # Write the year cell
+                        # write the year cell
                         sheet.cell(row=1, column=1).value = 'Year'
 
                         # Write the year text column
@@ -962,7 +974,7 @@ class Project:
                                 sheet.cell(row=row, column=column).value \
                                     = self.model_runner.cost_outputs_integer_dict['manual_' + scenario][result_type + output][year]
 
-                # Save workbook
+                # save workbook
                 wb.save(path)
 
     def write_xls_by_output(self):
@@ -1354,33 +1366,33 @@ class Project:
         # loop through indicators
         for o, output in enumerate(outputs):
 
-            # Preliminaries
+            # preliminaries
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
 
-            # Plotting GTB data in background___________________________________________________________________________
+            # plotting GTB data in background___________________________________________________________________________
             gtb_data = {}
 
-            # Notifications
+            # notifications
             if output == 'notifications':
                 gtb_data['point_estimate'] = self.inputs.original_data['notifications']['c_newinc']
 
-            # Extract the relevant data from the Global TB Report and use to plot a patch (for inc, prev and mortality)
+            # extract the relevant data from the Global TB Report and use to plot a patch (for inc, prev and mortality)
             elif output in self.gtb_available_outputs:
                 for level in self.level_conversion_dict:
                     gtb_data[level] = self.inputs.original_data['tb'][indices[o] + self.level_conversion_dict[level]]
                 ax.add_patch(patches.Polygon(create_patch_from_dictionary(gtb_data), color=patch_colour[o]))
 
-            # Plot point estimates
+            # plot point estimates
             if output in self.gtb_available_outputs:
                 ax.plot(gtb_data['point_estimate'].keys(), gtb_data['point_estimate'].values(),
                         color=colour[o], linewidth=0.5, label=None)
 
-            # Plotting modelled data____________________________________________________________________________________
+            # plotting modelled data____________________________________________________________________________________
 
-            # Plot scenarios without uncertainty
+            # plot scenarios without uncertainty
             if ci_plot is None:
 
-                # Plot model estimates
+                # plot model estimates
                 for scenario in self.scenarios[::-1]:  # Reversing ensures black baseline plotted over top
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
                     start_index = self.find_start_index(scenario)
@@ -1389,20 +1401,20 @@ class Project:
                             color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
                             linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
 
-                # Plot "true" model outputs
+                # plot "true" model outputs
                 if output in ['incidence', 'mortality'] and self.plot_true_outcomes:
                     ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'][start_index:],
                             self.model_runner.epi_outputs['manual_' + scenario_name]['true_' + output][start_index:],
                             color=self.output_colours[scenario][1], linestyle=':', linewidth=1)
                 end_filename = '_scenario'
 
-            # Plot with uncertainty confidence intervals
+            # plot with uncertainty confidence intervals
             elif ci_plot and self.gui_inputs['output_uncertainty']:
                 for scenario in self.scenarios[::-1]:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
                     start_index = self.find_start_index(scenario)
 
-                    # Median
+                    # median
                     ax.plot(
                         self.model_runner.epi_outputs_uncertainty['uncertainty_' + scenario_name][
                             'times'][start_index:],
@@ -2109,24 +2121,23 @@ class Project:
         self.save_figure(fig, '_riskgroup_checks')
 
     def plot_param_histograms(self):
-
         """
         Simple function to plot histograms of parameter values used in uncertainty analysis.
         """
 
-        # Preliminaries
+        # preliminaries
         fig = self.set_and_update_figure()
         subplot_grid = find_subplot_numbers(len(self.model_runner.all_parameters_tried))
 
-        # Loop through parameters used in uncertainty
+        # loop through parameters used in uncertainty
         for p, param in enumerate(self.model_runner.all_parameters_tried):
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
 
-            # Restrict to those accepted and after burn-in complete
+            # restrict to those accepted and after burn-in complete
             param_values = [self.model_runner.all_parameters_tried[param][i]
                             for i in self.model_runner.accepted_no_burn_in_indices]
 
-            # Plot
+            # plot
             ax.hist(param_values)
             ax.set_title(t_k.find_title_from_dictionary(param))
         self.save_figure(fig, '_param_histogram')
@@ -2387,5 +2398,21 @@ class Project:
             os.system('start ' + ' ' + self.out_dir_project)
         elif 'Darwin' in operating_system:
             os.system('open ' + ' ' + self.out_dir_project)
+
+
+if __name__ == '__main__':
+    try:
+        path = os.path.join('xls/data_fiji.xlsx')
+    except:
+        print('No country input spreadsheet for requested uncertainty parameter writing')
+    else:
+        country_input_book = xl.load_workbook(path)
+        country_sheet = country_input_book['constants']
+        for i in country_sheet.rows:
+            if i[0].value == u'age_breakpoints':
+                for j in range(len(i)):
+                    print(i[j].value)
+                i[5].value = u'something'
+        country_input_book.save(path)
 
 

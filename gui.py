@@ -12,6 +12,8 @@ def find_button_name_from_string(working_string):
                                   'Run uncertainty',
                               'adaptive_uncertainty':
                                   'Adaptive search',
+                              'write_uncertainty_outcome_params':
+                                  'Record parameters',
                               'output_spreadsheets':
                                   'Write to spreadsheets',
                               'output_documents':
@@ -131,7 +133,7 @@ class App:
                                'output_age_fractions', 'output_by_subgroups', 'output_fractions', 'output_scaleups',
                                'output_gtb_plots', 'output_plot_economics', 'output_plot_riskgroup_checks',
                                'output_param_plots', 'output_popsize_plot', 'output_likelihood_plot',
-                               'output_uncertainty', 'adaptive_uncertainty',
+                               'output_uncertainty', 'adaptive_uncertainty', 'write_uncertainty_outcome_params',
                                'output_spreadsheets',
                                'output_documents', 'output_by_scenario', 'output_horizontally',
                                'output_age_calculations', 'riskgroup_diabetes', 'riskgroup_hiv',
@@ -265,7 +267,9 @@ class App:
         uncertainty_numeric_list = {'uncertainty_runs': ['Number of uncertainty runs', 10],
                                     'burn_in_runs': ['Number of burn-in runs', 0],
                                     'search_width': ['Relative search width', .08]}
+        # self.boolean_dictionary['output_uncertainty'].set(True)
         self.boolean_dictionary['adaptive_uncertainty'].set(True)
+        # self.boolean_dictionary['write_uncertainty_outcome_params'].set(True)
         # self.boolean_dictionary['is_amplification'].set(True)
         # self.boolean_dictionary['is_misassignment'].set(True)
         # self.boolean_dictionary['is_lowquality'].set(True)

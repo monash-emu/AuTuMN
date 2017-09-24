@@ -76,8 +76,6 @@ def find_button_name_from_string(working_string):
                                   'Number of organ strata',
                               'n_strains':
                                   'Number of strains',
-                              'is_timevariant_contactrate':
-                                  'Time-variant contact rate',
                               'is_vary_force_infection_by_riskgroup':
                                   'Heterogeneous mixing',
                               'is_treatment_history':
@@ -102,13 +100,13 @@ class App:
             master: The GUI
         """
 
-        # Prepare data structures
+        # prepare data structures
         self.gui_outputs = {}
         self.raw_outputs = {}
         self.drop_downs = {}
         self.thread_number = 0
 
-        # Set up first frame
+        # set up first frame
         self.master = master
         self.frame = Frame(master)
         self.frame.pack()
@@ -117,30 +115,29 @@ class App:
         self.master.minsize(1500, 500)
         self.master.title('AuTuMN - version 1.0')
 
-        # Model running button
+        # model running button
         self.run = Button(self.frame, text='Run', command=self.execute, width=10)
         self.run.grid(row=1, column=0, sticky=W, padx=2)
         self.run.config(font='Helvetica 10 bold italic', fg='darkgreen', bg='grey')
 
-        # Creating main output window
+        # creating main output window
         self.runtime_outputs = Text(self.frame)
         self.runtime_outputs.grid(row=10, column=0, rowspan=5, columnspan=3)
         self.runtime_outputs.config(height=9)
 
-        # Prepare Boolean data structures
+        # prepare Boolean data structures
         self.boolean_dictionary = {}
         self.boolean_inputs = ['output_flow_diagram', 'output_compartment_populations', 'output_riskgroup_fractions',
                                'output_age_fractions', 'output_by_subgroups', 'output_fractions', 'output_scaleups',
                                'output_gtb_plots', 'output_plot_economics', 'output_plot_riskgroup_checks',
                                'output_param_plots', 'output_popsize_plot', 'output_likelihood_plot',
                                'output_uncertainty', 'adaptive_uncertainty', 'write_uncertainty_outcome_params',
-                               'output_spreadsheets',
-                               'output_documents', 'output_by_scenario', 'output_horizontally',
+                               'output_spreadsheets', 'output_documents', 'output_by_scenario', 'output_horizontally',
                                'output_age_calculations', 'riskgroup_diabetes', 'riskgroup_hiv',
                                'riskgroup_prison', 'riskgroup_indigenous', 'riskgroup_urbanpoor',
                                'riskgroup_ruralpoor',
                                'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ',
-                               'is_timevariant_organs', 'is_timevariant_contactrate', 'is_treatment_history',
+                               'is_timevariant_organs', 'is_treatment_history',
                                'is_vary_force_infection_by_riskgroup']
         for i in range(1, 15):
             self.boolean_inputs += ['scenario_' + str(i)]
@@ -264,7 +261,7 @@ class App:
         console_label.grid(row=running_row, column=0, sticky=SW)
 
         # numeric entry box
-        uncertainty_numeric_list = {'uncertainty_runs': ['Number of uncertainty runs', 10],
+        uncertainty_numeric_list = {'uncertainty_runs': ['Number of uncertainty runs', 2],
                                     'burn_in_runs': ['Number of burn-in runs', 0],
                                     'search_width': ['Relative search width', .08]}
         # self.boolean_dictionary['output_uncertainty'].set(True)
@@ -273,14 +270,14 @@ class App:
         # self.boolean_dictionary['is_amplification'].set(True)
         # self.boolean_dictionary['is_misassignment'].set(True)
         # self.boolean_dictionary['is_lowquality'].set(True)
-        self.boolean_dictionary['is_vary_detection_by_organ'].set(True)
-        self.boolean_dictionary['is_treatment_history'].set(True)
+        # self.boolean_dictionary['is_vary_detection_by_organ'].set(True)
+        # self.boolean_dictionary['is_treatment_history'].set(True)
         # self.boolean_dictionary['riskgroup_prison'].set(True)
         # self.boolean_dictionary['riskgroup_urbanpoor'].set(True)
         # self.boolean_dictionary['riskgroup_ruralpoor'].set(True)
         self.boolean_dictionary['output_gtb_plots'].set(True)
         # self.boolean_dictionary['is_vary_force_infection_by_riskgroup'].set(True)
-        self.boolean_dictionary['riskgroup_diabetes'].set(True)
+        # self.boolean_dictionary['riskgroup_diabetes'].set(True)
         # self.boolean_dictionary['riskgroup_hiv'].set(True)
         # self.boolean_dictionary['riskgroup_indigenous'].set(True)
         self.boolean_dictionary['is_timevariant_organs'].set(True)
@@ -298,7 +295,7 @@ class App:
             runs.grid(row=uncertainty_row, column=4, sticky=NW)
             uncertainty_row += 1
 
-        # Pickling options
+        # pickling options
         uncertainty_dropdown_list = ['pickle_uncertainty']
         for dropdown in uncertainty_dropdown_list:
             self.raw_outputs[dropdown] = StringVar()
@@ -311,7 +308,6 @@ class App:
             uncertainty_row += 1
 
     def execute(self):
-
         """
         This is the main method to run the model. It replaces test_full_models.py
         """
@@ -329,7 +325,7 @@ class App:
             else:
                 self.gui_outputs[boolean] = bool(self.boolean_dictionary[boolean].get())
 
-        # Collate drop-down box options
+        # collate drop-down box options
         organ_stratification_keys = {'Pos / Neg / Extra': 3,
                                      'Pos / Neg': 2,
                                      'Unstratified': 0}
@@ -347,18 +343,18 @@ class App:
             else:
                 self.gui_outputs[option] = self.raw_outputs[option].get()
 
-        # Start timer
+        # start timer
         start_realtime = datetime.datetime.now()
 
-        # Record thread number
+        # record thread number
         self.thread_number += 1
 
-        # Indicate processing has started
+        # indicate processing has started
         self.runtime_outputs.insert(END, '_____________________________________________\n' +
                                     'Model run commenced using thread #%d.\n' % self.thread_number)
         self.runtime_outputs.see(END)
 
-        # Use multiple threads to deal with multiple user calls to run the model through the run button
+        # use multiple threads to deal with multiple user calls to run the model through the run button
         is_romain = False  # Set True for Romain. Leave it False
         if is_romain:
             self.run_model()

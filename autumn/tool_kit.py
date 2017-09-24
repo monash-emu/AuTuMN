@@ -58,6 +58,18 @@ def find_first_list_element_above_value(list, value):
     return next(x[0] for x in enumerate(list) if x[1] > value)
 
 
+def find_list_element_equal_to(list, value):
+    """
+    Find the list element exactly equal to a specific value.
+
+    Args:
+        list: The list to search through
+        value: Value being searched for
+    """
+
+    return next(x[0] for x in enumerate(list) if x[1] == value)
+
+
 def find_first_list_element_at_least_value(list, value):
     """
     Simple method to return the index of the first element of a list that is greater than a specified value.
@@ -1049,3 +1061,4 @@ if __name__ == '__main__':
 
     print(force_list_to_length([1, 2, 3], 10))
     print(len(force_list_to_length([1, 2, 3], 10)))
+    find_list_element_equal_to([1, 2, 3], 4)

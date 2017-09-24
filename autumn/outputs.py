@@ -536,6 +536,32 @@ def scale_axes(vals, max_val, y_sig_figs):
     return labels, axis_modifier
 
 
+def write_param_to_sheet(country_sheet, param, value):
+    """
+    Function to write a single parameter value into a cell of the input spreadsheets - to be used as part of
+    automatic calibration.
+
+    Args:
+        country_sheet: Spreadsheet object
+        param: Parameter name (to be written into first column)
+        value: Value of parameter (to be written into second column)
+    """
+
+    param_found = False
+
+    # over-write existing parameter value if present
+    for row in country_sheet.rows:
+        if row[0].value == param:
+            row[1].value = value
+            param_found = True
+
+    # if parameter not found in existing spreadsheet, write into new row at the bottom
+    if not param_found:
+        max_row = country_sheet.max_row
+        country_sheet.cell(row=max_row + 1, column=1).value = param
+        country_sheet.cell(row=max_row + 1, column=2).value = value
+
+
 class Project:
 
     def __init__(self, model_runner, gui_inputs):
@@ -811,19 +837,28 @@ class Project:
                 print('No country input spreadsheet for requested uncertainty parameter writing')
             else:
                 print('Writing calibration parameters back to input spreadsheet')
+
+                # open workbook and sheet
                 country_input_book = xl.load_workbook(path)
                 country_sheet = country_input_book['constants']
-                for param in self.model_runner.all_parameters_tried:
-                    param_found = False
-                    median = numpy.percentile(self.model_runner.all_parameters_tried[param], 50, axis=0)
-                    for row in country_sheet.rows:
-                        if row[0].value == param:
-                            row[1].value = median
-                            param_found = True
-                    if not param_found:
-                        max_row = country_sheet.max_row
-                        country_sheet.cell(row=max_row+1, column=1).value = param
-                        country_sheet.cell(row=max_row+1, column=2).value = median
+
+                # find the position of the median value by incidence
+                array_to_find_median \
+                    = list(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['incidence'][:,
+                           t_k.find_first_list_element_at_least_value(
+                               self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['times'],
+                               self.inputs.model_constants['current_time'])])
+                median_run_index \
+                    = t_k.find_list_element_equal_to(
+                    array_to_find_median, numpy.percentile(array_to_find_median, 50, interpolation='nearest'))
+
+                # write the parameters and starting compartment sizes back in to input sheets
+                for param in self.model_runner.acceptance_dict:
+                    write_param_to_sheet(country_sheet, param,
+                                         self.model_runner.acceptance_dict[param][median_run_index])
+                for compartment in self.model_runner.accepted_compartment_values:
+                    write_param_to_sheet(country_sheet, compartment,
+                                         self.model_runner.accepted_compartment_values[compartment][median_run_index])
                 country_input_book.save(path)
 
         # write spreadsheets - with sheet for each scenario or each output
@@ -2405,21 +2440,5 @@ class Project:
             os.system('start ' + ' ' + self.out_dir_project)
         elif 'Darwin' in operating_system:
             os.system('open ' + ' ' + self.out_dir_project)
-
-
-if __name__ == '__main__':
-    try:
-        path = os.path.join('xls/data_fiji.xlsx')
-    except:
-        print('No country input spreadsheet for requested uncertainty parameter writing')
-    else:
-        country_input_book = xl.load_workbook(path)
-        country_sheet = country_input_book['constants']
-        for i in country_sheet.rows:
-            if i[0].value == u'age_breakpoints':
-                for j in range(len(i)):
-                    print(i[j].value)
-                i[5].value = u'something'
-        country_input_book.save(path)
 
 

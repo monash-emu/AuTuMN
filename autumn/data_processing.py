@@ -1095,11 +1095,6 @@ class Inputs:
                     self.scaleup_fns[scenario]['epi_prop_smear' + organ] \
                         = make_constant_function(self.model_constants['epi_prop_smear' + organ])
 
-            # set constant function for effective contact rate
-            if not self.gui_inputs['is_timevariant_contactrate']:
-                self.scaleup_fns[scenario]['tb_n_contact'] \
-                    = make_constant_function(self.model_constants['tb_n_contact'])
-
     def find_scaleups(self):
         """
         Calculate the scale-up functions from the scale-up data attribute and populate to a dictionary with keys of the

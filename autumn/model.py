@@ -925,7 +925,7 @@ class ConsolidatedModel(StratifiedModel):
             for agegroup in self.agegroups:
                 for riskgroup in force_riskgroups:
                     self.vars['rate_force' + strain + riskgroup + agegroup] \
-                        = self.vars['tb_n_contact'] \
+                        = self.params['tb_n_contact'] \
                           * self.vars['effective_infectious_population' + strain + riskgroup] \
                           / self.vars['population' + riskgroup]
                     self.vars['rate_ipt_commencement' + riskgroup + agegroup] = 0.

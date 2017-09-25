@@ -536,30 +536,33 @@ def scale_axes(vals, max_val, y_sig_figs):
     return labels, axis_modifier
 
 
-def write_param_to_sheet(country_sheet, param, value):
+def write_param_to_sheet(country_sheet, working_list, median_run_index):
     """
     Function to write a single parameter value into a cell of the input spreadsheets - to be used as part of
     automatic calibration.
 
     Args:
         country_sheet: Spreadsheet object
-        param: Parameter name (to be written into first column)
-        value: Value of parameter (to be written into second column)
+        working_list: List to take value from
+        median_run_index: Integer index of the median
     """
 
-    param_found = False
+    for param in working_list:
+        value = working_list[param][median_run_index]
 
-    # over-write existing parameter value if present
-    for row in country_sheet.rows:
-        if row[0].value == param:
-            row[1].value = value
-            param_found = True
+        param_found = False
 
-    # if parameter not found in existing spreadsheet, write into new row at the bottom
-    if not param_found:
-        max_row = country_sheet.max_row
-        country_sheet.cell(row=max_row + 1, column=1).value = param
-        country_sheet.cell(row=max_row + 1, column=2).value = value
+        # over-write existing parameter value if present
+        for row in country_sheet.rows:
+            if row[0].value == param:
+                row[1].value = value
+                param_found = True
+
+        # if parameter not found in existing spreadsheet, write into new row at the bottom
+        if not param_found:
+            max_row = country_sheet.max_row
+            country_sheet.cell(row=max_row + 1, column=1).value = param
+            country_sheet.cell(row=max_row + 1, column=2).value = value
 
 
 class Project:
@@ -850,21 +853,17 @@ class Project:
                                self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['times'],
                                self.inputs.model_constants['current_time'])])
 
-                # find index of the median value - not very happ with this code yet
+                # find index of the median value - not very happy with this code yet
                 median_run_index \
                     = t_k.find_list_element_equal_to(
                     list_to_find_median, numpy.percentile(list_to_find_median, 50, interpolation='nearest'))
 
                 # write the parameters and starting compartment sizes back in to input sheets
-                for param in self.model_runner.all_parameters_tried:
-                    write_param_to_sheet(country_sheet, param,
-                                         self.model_runner.all_parameters_tried[param][median_run_index])
-                for compartment in self.model_runner.all_compartment_values_tried:
-                    write_param_to_sheet(country_sheet, compartment,
-                                         self.model_runner.all_compartment_values_tried[compartment][median_run_index])
-                for param in self.model_runner.all_other_adjustments_made:
-                    write_param_to_sheet(country_sheet, param,
-                                         self.model_runner.all_other_adjustments_made[param][median_run_index])
+                write_param_to_sheet(country_sheet, self.model_runner.all_parameters_tried, median_run_index)
+                write_param_to_sheet(country_sheet, self.model_runner.all_compartment_values_tried, median_run_index)
+                write_param_to_sheet(country_sheet, self.model_runner.all_other_adjustments_made, median_run_index)
+
+                # save
                 country_input_book.save(path)
 
         # write spreadsheets - with sheet for each scenario or each output

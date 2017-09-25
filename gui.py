@@ -90,9 +90,7 @@ def find_button_name_from_string(working_string):
 
 
 class App:
-
     def __init__(self, master):
-
         """
         All processes involved in setting up the first basic GUI frame are collated here.
 
@@ -145,7 +143,7 @@ class App:
         for boolean in self.boolean_inputs:
             self.boolean_dictionary[boolean] = IntVar()
 
-        # Set and collate checkboxes
+        # set and collate checkboxes
         self.boolean_toggles = {}
         for boolean in self.boolean_inputs:
             self.boolean_toggles[boolean] = Checkbutton(self.frame,
@@ -180,7 +178,7 @@ class App:
                 self.boolean_toggles[boolean].grid(row=option_row, column=6, sticky=W)
                 option_row += 1
 
-        # Drop down menus for multiple options
+        # drop down menus for multiple options
         running_dropdown_list = ['country', 'integration_method', 'fitting_method']
         for dropdown in running_dropdown_list:
             self.raw_outputs[dropdown] = StringVar()
@@ -206,7 +204,7 @@ class App:
             self.drop_downs[drop_down].grid(row=running_row, column=0, sticky=W)
             running_row += 1
 
-        # Model stratifications options
+        # model stratifications options
         numerical_stratification_inputs = ['n_organs', 'n_strains']
         for option in numerical_stratification_inputs:
             self.raw_outputs[option] = StringVar()
@@ -222,11 +220,11 @@ class App:
             self.drop_downs[option].grid(row=riskgroup_row, column=1, sticky=W)
             riskgroup_row += 1
 
-        # Consistent width to drop-down menus
+        # consistent width to drop-down menus
         for drop_down in self.drop_downs:
             self.drop_downs[drop_down].config(width=15)
 
-        # Column titles (order important)
+        # column titles (order important)
         column_titles = ['Model running', 'Model stratifications', 'Elaborations', 'Scenarios to run', 'Uncertainty',
                          'Plotting', 'MS Office outputs']
         for i in range(len(column_titles)):
@@ -235,7 +233,7 @@ class App:
             title.config(font='Helvetica 10 bold italic')
             self.frame.grid_columnconfigure(i, minsize=200)
 
-        # Sliders
+        # sliders
         slider_list = ['default_smoothness', 'time_step']
         sliders = {}
         for slide in slider_list:
@@ -312,7 +310,7 @@ class App:
         This is the main method to run the model. It replaces test_full_models.py
         """
 
-        # Collate check-box boolean options
+        # collate check-box boolean options
         self.gui_outputs['scenarios_to_run'] = [None]
         self.gui_outputs['scenario_names_to_run'] = ['baseline']
         for boolean in self.boolean_inputs:
@@ -343,9 +341,6 @@ class App:
             else:
                 self.gui_outputs[option] = self.raw_outputs[option].get()
 
-        # start timer
-        start_realtime = datetime.datetime.now()
-
         # record thread number
         self.thread_number += 1
 
@@ -355,7 +350,7 @@ class App:
         self.runtime_outputs.see(END)
 
         # use multiple threads to deal with multiple user calls to run the model through the run button
-        is_romain = False  # Set True for Romain. Leave it False
+        is_romain = False  # set True for Romain's computer, otherwise leave False
         if is_romain:
             self.run_model()
         else:
@@ -365,14 +360,13 @@ class App:
             execution_thread.start()
 
     def run_model(self):
-
         """
         Here the the objects to actually perform the model run are called after the thread has been initialised in the
         execute method above.
 
         """
 
-        # For some unknown reason, this code has started bugging - commented out
+        # for some unknown reason, this code has started bugging - commented out
         # if not self.gui_outputs['output_uncertainty']:
         #     self.figure_frame.withdraw()
 

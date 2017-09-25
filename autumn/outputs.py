@@ -853,12 +853,15 @@ class Project:
                     array_to_find_median, numpy.percentile(array_to_find_median, 50, interpolation='nearest'))
 
                 # write the parameters and starting compartment sizes back in to input sheets
-                for param in self.model_runner.acceptance_dict:
+                for param in self.model_runner.all_parameters_tried:
                     write_param_to_sheet(country_sheet, param,
-                                         self.model_runner.acceptance_dict[param][median_run_index])
-                for compartment in self.model_runner.accepted_compartment_values:
+                                         self.model_runner.all_parameters_tried[param][median_run_index])
+                for compartment in self.model_runner.all_compartment_values_tried:
                     write_param_to_sheet(country_sheet, compartment,
-                                         self.model_runner.accepted_compartment_values[compartment][median_run_index])
+                                         self.model_runner.all_compartment_values_tried[compartment][median_run_index])
+                for param in self.model_runner.all_other_adjustments_made:
+                    write_param_to_sheet(country_sheet, param,
+                                         self.model_runner.all_other_adjustments_made[param][median_run_index])
                 country_input_book.save(path)
 
         # write spreadsheets - with sheet for each scenario or each output

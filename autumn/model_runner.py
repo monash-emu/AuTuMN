@@ -168,11 +168,11 @@ class ModelRunner:
         self.loglikelihoods = []
         self.outputs_unc = [{'key': 'incidence',
                              'posterior_width': None,
-                             'width_multiplier': 2.
-                             # Width of normal posterior relative to range of parameter values allowed
+                             'width_multiplier': 2.  # width of normal posterior relative to range of allowed values
                              }]
-        self.all_parameters_tried = {}
-        self.accepted_compartment_values = {}
+        self.all_parameters_tried = {}  # all refers to applying to all runs of model (rather than accepted only)
+        self.all_compartment_values_tried = {}
+        self.all_other_adjustments_made = {}
         self.whether_accepted_list = []
         self.accepted_indices = []
         self.rejected_indices = []
@@ -185,7 +185,7 @@ class ModelRunner:
         self.accepted_no_burn_in_indices = []
         self.random_start = False  # whether to start from a random point, as opposed to the manually calibrated value
 
-        # Optimisation attributes
+        # optimisation attributes
         self.optimisation = False  # leave True even if loading optimisation results
         self.indicator_to_minimise = 'incidence'  # currently must be 'incidence' or 'mortality'
         self.annual_envelope = [112.5e6]  # size of funding envelope in scenarios to be run
@@ -732,7 +732,7 @@ class ModelRunner:
 
         # prepare for uncertainty loop
         n_accepted = 0
-        prev_log_likelihood = -1e3
+        prev_log_likelihood = -5e2
         for param in self.inputs.param_ranges_unc:
             self.all_parameters_tried[param['key']] = []
             self.acceptance_dict[param['key']] = {}
@@ -741,7 +741,8 @@ class ModelRunner:
         if self.gui_inputs['write_uncertainty_outcome_params']:
             for compartment_type in self.inputs.compartment_types:
                 if compartment_type in self.inputs.model_constants:
-                    self.accepted_compartment_values[compartment_type] = []
+                    self.all_compartment_values_tried[compartment_type] = []
+            self.all_other_adjustments_made['program_prop_death_reporting'] = []
 
         # instantiate uncertainty model objects
         for scenario in self.gui_inputs['scenarios_to_run']:
@@ -815,6 +816,25 @@ class ModelRunner:
                     + '\nWhether accepted:\n%s\n________________\n' % str(bool(accepted)))
                 self.loglikelihoods.append(log_likelihood)
 
+                # record starting population
+                if self.gui_inputs['write_uncertainty_outcome_params']:
+                    for compartment_type in self.all_compartment_values_tried:
+                        self.all_compartment_values_tried[compartment_type].append(
+                            self.inputs.model_constants[compartment_type])
+
+                # iteratively adjusting proportion of mortality reported
+                last_year_of_data = 2014.
+                ratio = self.epi_outputs['uncertainty_baseline'][
+                            'mortality'][tool_kit.find_first_list_element_above_value(
+                    self.epi_outputs['uncertainty_baseline']['times'], last_year_of_data)] \
+                        / self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k'][int(last_year_of_data)]
+                if ratio < 0.9 and accepted == 1:
+                    self.inputs.model_constants['program_prop_death_reporting'] += .02
+                elif ratio > 1.1 and accepted == 1:
+                    self.inputs.model_constants['program_prop_death_reporting'] -= .02
+                self.all_other_adjustments_made['program_prop_death_reporting'].append(
+                    self.inputs.model_constants['program_prop_death_reporting'])
+
                 # record uncertainty calculations for all runs
                 if bool(accepted):
                     self.whether_accepted_list.append(True)
@@ -827,12 +847,6 @@ class ModelRunner:
                     # update likelihood and parameter set for next run
                     prev_log_likelihood = log_likelihood
                     params = new_param_list
-
-                    # record starting population
-                    if self.gui_inputs['write_uncertainty_outcome_params']:
-                        for compartment_type in self.accepted_compartment_values:
-                            self.accepted_compartment_values[compartment_type].append(
-                                self.inputs.model_constants[compartment_type])
 
                     # run scenarios other than baseline and store uncertainty (only if accepted)
                     for scenario in self.gui_inputs['scenarios_to_run']:
@@ -865,29 +879,12 @@ class ModelRunner:
                                   self.epi_outputs['uncertainty_baseline']['times'],
                                   self.inputs.model_constants['current_time'])]
 
-                # iteratively adjusting proportion of mortality reported
-                last_year_of_data = 2014.
-                ratio = self.epi_outputs['uncertainty_baseline'][
-                            'mortality'][tool_kit.find_first_list_element_above_value(
-                    self.epi_outputs['uncertainty_baseline']['times'], last_year_of_data)] \
-                        / self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k'][int(last_year_of_data)]
-                if ratio < 0.9 and accepted == 1:
-                    self.inputs.model_constants['program_prop_child_reporting'] += .02
-                elif ratio > 1.1 and accepted == 1:
-                    self.inputs.model_constants['program_prop_child_reporting'] -= .02
-
             # generate more candidates if required
             if not self.gui_inputs['adaptive_uncertainty'] and run >= len(param_candidates.keys()):
                 param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
                 run = 0
 
             new_param_list = self.update_params(params)
-            print('\nParams')
-            print(params)
-            print('\nPopulation adjustment')
-            print(population_adjustment)
-            print('\nStart time')
-            print(self.model_dict['uncertainty_baseline'].start_time)
 
     def get_fitting_data(self):
         """

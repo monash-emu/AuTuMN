@@ -843,14 +843,17 @@ class Project:
                 country_sheet = country_input_book['constants']
 
                 # find the position of the median value by incidence
-                array_to_find_median \
-                    = list(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['incidence'][:,
+                list_to_find_median \
+                    = list(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['incidence'][
+                           self.model_runner.accepted_indices,
                            t_k.find_first_list_element_at_least_value(
                                self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['times'],
                                self.inputs.model_constants['current_time'])])
+
+                # find index of the median value - not very happ with this code yet
                 median_run_index \
                     = t_k.find_list_element_equal_to(
-                    array_to_find_median, numpy.percentile(array_to_find_median, 50, interpolation='nearest'))
+                    list_to_find_median, numpy.percentile(list_to_find_median, 50, interpolation='nearest'))
 
                 # write the parameters and starting compartment sizes back in to input sheets
                 for param in self.model_runner.all_parameters_tried:

@@ -1,7 +1,7 @@
+
 from Tkinter import *
 import autumn.model_runner
 import autumn.outputs
-import datetime
 import autumn.tool_kit
 import threading
 

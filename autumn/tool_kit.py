@@ -1056,9 +1056,3 @@ def pickle_load(file):
     return loaded_object
 
 
-
-if __name__ == '__main__':
-
-    print(force_list_to_length([1, 2, 3], 10))
-    print(len(force_list_to_length([1, 2, 3], 10)))
-    find_list_element_equal_to([1, 2, 3], 4)

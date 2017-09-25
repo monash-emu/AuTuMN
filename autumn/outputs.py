@@ -548,11 +548,12 @@ def write_param_to_sheet(country_sheet, working_list, median_run_index):
     """
 
     for param in working_list:
+
+        # find value to write from list and index
         value = working_list[param][median_run_index]
 
-        param_found = False
-
         # over-write existing parameter value if present
+        param_found = False
         for row in country_sheet.rows:
             if row[0].value == param:
                 row[1].value = value

@@ -834,38 +834,9 @@ class Project:
         methods for plotting and writing as required.
         """
 
+        # write automatic calibration values back to sheets
         if self.gui_inputs['output_uncertainty'] and self.gui_inputs['write_uncertainty_outcome_params']:
-            try:
-                path = os.path.join('autumn/xls/data_' + self.country + '.xlsx')
-            except:
-                print('No country input spreadsheet for requested uncertainty parameter writing')
-            else:
-                print('Writing calibration parameters back to input spreadsheet')
-
-                # open workbook and sheet
-                country_input_book = xl.load_workbook(path)
-                country_sheet = country_input_book['constants']
-
-                # find the position of the median value by incidence
-                list_to_find_median \
-                    = list(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['incidence'][
-                           self.model_runner.accepted_indices,
-                           t_k.find_first_list_element_at_least_value(
-                               self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['times'],
-                               self.inputs.model_constants['current_time'])])
-
-                # find index of the median value - not very happy with this code yet
-                median_run_index \
-                    = t_k.find_list_element_equal_to(
-                    list_to_find_median, numpy.percentile(list_to_find_median, 50, interpolation='nearest'))
-
-                # write the parameters and starting compartment sizes back in to input sheets
-                write_param_to_sheet(country_sheet, self.model_runner.all_parameters_tried, median_run_index)
-                write_param_to_sheet(country_sheet, self.model_runner.all_compartment_values_tried, median_run_index)
-                write_param_to_sheet(country_sheet, self.model_runner.all_other_adjustments_made, median_run_index)
-
-                # save
-                country_input_book.save(path)
+            self.write_automatic_calibration_outputs()
 
         # write spreadsheets - with sheet for each scenario or each output
         if self.gui_inputs['output_spreadsheets']:
@@ -893,6 +864,44 @@ class Project:
 
         # open the directory to which everything has been written to save the user a click or two
         self.open_output_directory()
+
+    def write_automatic_calibration_outputs(self):
+        """
+        Write median values from automatic calbiration process back to input spreadsheets, using the parameter values
+        that were associated with the median model output value.
+        """
+
+        try:
+            path = os.path.join('autumn/xls/data_' + self.country + '.xlsx')
+        except:
+            print('No country input spreadsheet for requested uncertainty parameter writing')
+        else:
+            print('Writing calibration parameters back to input spreadsheet')
+
+            # open workbook and sheet
+            country_input_book = xl.load_workbook(path)
+            country_sheet = country_input_book['constants']
+
+            # find the position of the median value by incidence
+            list_to_find_median \
+                = list(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['incidence'][
+                           self.model_runner.accepted_indices,
+                           t_k.find_first_list_element_at_least_value(
+                               self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['times'],
+                               self.inputs.model_constants['current_time'])])
+
+            # find index of the median value - not very happy with this code yet
+            median_run_index \
+                = t_k.find_list_element_equal_to(
+                list_to_find_median, numpy.percentile(list_to_find_median, 50, interpolation='nearest'))
+
+            # write the parameters and starting compartment sizes back in to input sheets
+            write_param_to_sheet(country_sheet, self.model_runner.all_parameters_tried, median_run_index)
+            write_param_to_sheet(country_sheet, self.model_runner.all_compartment_values_tried, median_run_index)
+            write_param_to_sheet(country_sheet, self.model_runner.all_other_adjustments_made, median_run_index)
+
+            # save
+            country_input_book.save(path)
 
     def write_xls_by_scenario(self):
         """

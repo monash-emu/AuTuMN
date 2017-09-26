@@ -738,11 +738,10 @@ class ModelRunner:
             self.acceptance_dict[param['key']] = {}
             self.rejection_dict[param['key']] = {}
             self.rejection_dict[param['key']][n_accepted] = []
-        if self.gui_inputs['write_uncertainty_outcome_params']:
-            for compartment_type in self.inputs.compartment_types:
-                if compartment_type in self.inputs.model_constants:
-                    self.all_compartment_values_tried[compartment_type] = []
-            self.all_other_adjustments_made['program_prop_death_reporting'] = []
+        for compartment_type in self.inputs.compartment_types:
+            if compartment_type in self.inputs.model_constants:
+                self.all_compartment_values_tried[compartment_type] = []
+        self.all_other_adjustments_made['program_prop_death_reporting'] = []
 
         # instantiate uncertainty model objects
         for scenario in self.gui_inputs['scenarios_to_run']:

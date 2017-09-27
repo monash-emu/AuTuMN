@@ -892,7 +892,7 @@ class ConsolidatedModel(StratifiedModel):
                                 elif t_k.label_intersects_tags(label, self.infectious_tags):
                                     for source_riskgroup in self.riskgroups:
 
-                                        # adjustment for increased infectiousness of risk groups as required
+                                        # adjustment for increased infectiousness of risk-groups as required
                                         if 'riskgroup_multiplier_force_infection' + source_riskgroup in self.params:
                                             riskgroup_multiplier_force_infection \
                                                 = self.params['riskgroup_multiplier_force_infection' + source_riskgroup]
@@ -1114,9 +1114,7 @@ class ConsolidatedModel(StratifiedModel):
             # number of diagnosed cases (LTBI + TB) if coverage was 100%
             self.vars['popsize_ngo_activities'] = 456*2
 
-    ################################################################
-    ### Methods that calculate the flows of all the compartments ###
-    ################################################################
+    ''' Methods that calculate the flows of all the compartments '''
 
     def set_flows(self):
         """
@@ -1180,10 +1178,11 @@ class ConsolidatedModel(StratifiedModel):
                             'susceptible_immune' + riskgroup + history + agegroup,
                             'latent_early' + strain + riskgroup + history + agegroup,
                             'rate_force_immune' + strain + history + force_riskgroup + agegroup)
-                        self.set_var_transfer_rate_flow(
-                            'latent_late' + strain + riskgroup + history + agegroup,
-                            'latent_early' + strain + riskgroup + history + agegroup,
-                            'rate_force_latent' + strain + history + force_riskgroup + agegroup)
+                        for from_strain in self.strains:
+                            self.set_var_transfer_rate_flow(
+                                'latent_late' + from_strain + riskgroup + history + agegroup,
+                                'latent_early' + strain + riskgroup + history + agegroup,
+                                'rate_force_latent' + strain + history + force_riskgroup + agegroup)
 
                         # novel vaccination
                         if 'int_prop_novel_vaccination' in self.relevant_interventions:

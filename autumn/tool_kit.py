@@ -168,6 +168,19 @@ def calculate_proportion_dict(data, relevant_keys, percent=False, floor=0., unde
     return proportions
 
 
+def calculate_proportion_list(numerator, denominator):
+    """
+    Simple method to return each list element from numerator divided by each list element from denominator.
+
+    Args:
+        numerator: List of numerator values
+        denominator: List of denominator values
+    """
+
+    assert len(numerator) == len(denominator), 'Attempted to divide list elements from lists of differing lengths'
+    return [i / j for i, j in zip(numerator, prepare_denominator(denominator))]
+
+
 def remove_specific_key(dictionary, key):
     """
     Remove a specific named key from a dictionary.

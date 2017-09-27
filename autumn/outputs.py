@@ -1307,7 +1307,6 @@ class Project:
     ########################
 
     def run_plotting(self):
-
         """
         Master plotting method to call all the methods that produce specific plots.
         """
@@ -1365,6 +1364,7 @@ class Project:
         if self.gui_inputs['output_by_subgroups']:
             self.plot_outputs_by_stratum()
             self.plot_outputs_by_stratum(strata_string='riskgroups', outputs_to_plot=['incidence', 'prevalence'])
+            self.plot_proportion_cases_by_stratum()
 
         # plot proportions of population
         if self.gui_inputs['output_age_fractions']:
@@ -1937,28 +1937,27 @@ class Project:
             self.save_figure(fig, '_fraction')
 
     def plot_outputs_by_stratum(self, strata_string='agegroups', outputs_to_plot=('incidence', 'mortality')):
-
         """
         Plot basic epidemiological outputs either by risk stratum or by age group.
         """
 
-        # Find strata to loop over
+        # find strata to loop over
         strata = getattr(self.inputs, strata_string)
         if len(strata) == 0:
             return
 
-        # Prelims
+        # prelims
         fig = self.set_and_update_figure()
         subplot_grid = [len(outputs_to_plot), len(strata)]
 
-        # Loop over outputs and strata
+        # loop over outputs and strata
         for o, output in enumerate(outputs_to_plot):
             for s, stratum in enumerate(strata):
 
                 # a + 1 gives the column, o the row
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], s + 1 + o * len(strata))
 
-                # Plot the modelled data
+                # plot the modelled data
                 for scenario in self.scenarios[::-1]:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
                     start_index = self.find_start_index(scenario)
@@ -1968,7 +1967,7 @@ class Project:
                         color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
                         linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
 
-                # Finish off
+                # finish off
                 if s == 0:
                     ylabel = 'Per 100,000 per year'
                 else:
@@ -1985,8 +1984,58 @@ class Project:
                      fontsize=self.suptitle_size)
         self.save_figure(fig, '_output_by_' + strata_string)
 
-    def plot_stratified_populations(self, age_or_risk='age'):
+    def plot_proportion_cases_by_stratum(self, strata_string='agegroups'):
+        """
+        Method to plot the proportion of notifications that come from various groups of the model. Particularly intended
+        to keep an eye on the proportion of notifications occurring in the paediatric population (which WHO sometimes
+        say should be around 15% in well-functioning TB programs).
 
+        Args:
+            strata_string: String of the model attribute of interest - can set to 'riskgroups'
+        """
+
+        # find strata to loop over
+        strata = getattr(self.inputs, strata_string)
+        if len(strata) == 0: return
+
+        colours = self.make_default_line_styles(len(strata), return_all=True)
+
+        # prelims
+        fig = self.set_and_update_figure()
+        ax = fig.add_subplot(1, 1, 1)
+        times = self.model_runner.model_dict['manual_baseline'].times
+        lower_plot_margin = numpy.zeros(len(times))
+        upper_plot_margin = numpy.zeros(len(times))
+
+        for s, stratum in enumerate(strata):
+
+            # find numbers or fractions in that group
+            stratum_count = t_k.calculate_proportion_list(
+                self.model_runner.epi_outputs['manual_baseline']['notifications' + stratum],
+                self.model_runner.epi_outputs['manual_baseline']['notifications'])
+
+            for i in range(len(upper_plot_margin)): upper_plot_margin[i] += stratum_count[i]
+
+            # create proxy for legend
+            if strata_string == 'agegroups':
+                legd_text = t_k.turn_strat_into_label(stratum)
+            elif strata_string == 'riskgroups':
+                legd_text = t_k.find_title_from_dictionary(stratum)
+
+            ax.fill_between(times, lower_plot_margin, upper_plot_margin, facecolors=colours[s][1],
+                            label=legd_text)
+
+            # add group values to the lower plot range for next iteration
+            for i in range(len(lower_plot_margin)): lower_plot_margin[i] += stratum_count[i]
+
+        # tidy up plots
+        self.tidy_axis(ax, [1, 1], start_time=self.inputs.model_constants['recent_time'],
+                       y_axis_type='proportion', y_label='Proportion', legend=True)
+
+        fig.suptitle('Proportion of notifications by age', fontsize=self.suptitle_size)
+        self.save_figure(fig, '_proportion_notifications_by_age')
+
+    def plot_stratified_populations(self, age_or_risk='age'):
         """
         Function to plot population by age group both as raw numbers and as proportions,
         both from the start of the model and using the input argument.
@@ -1996,7 +2045,7 @@ class Project:
             = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
                                                          self.inputs.model_constants['early_time'])
 
-        # Find stratification to work with
+        # find stratification to work with
         if age_or_risk == 'age':
             stratification = self.inputs.agegroups
         elif age_or_risk == 'risk':
@@ -2004,24 +2053,24 @@ class Project:
         else:
             stratification = None
 
-        # Warn if necessary
+        # warn if necessary
         if stratification is None:
             warnings.warn('Plotting by stratification requested, but type of stratification requested unknown')
         elif len(stratification) < 2:
             warnings.warn('No stratification to plot')
         else:
 
-            # Standard prelims
+            # standard prelims
             fig = self.set_and_update_figure()
             colours = self.make_default_line_styles(len(stratification), return_all=True)
 
-            # Run plotting from early in the model run and from the standard start time for plotting
+            # run plotting from early in the model run and from the standard start time for plotting
             for t, time in enumerate(['plot_start_time', 'early_time']):
 
-                # Find starting times
+                # find starting times
                 title_time_text = t_k.find_title_from_dictionary(time)
 
-                # Initialise some variables
+                # initialise some variables
                 times = self.model_runner.model_dict['manual_baseline'].times
                 lower_plot_margin_count = numpy.zeros(len(times))
                 upper_plot_margin_count = numpy.zeros(len(times))
@@ -2030,18 +2079,16 @@ class Project:
 
                 for s, stratum in enumerate(stratification):
 
-                    # Find numbers or fractions in that group
-                    stratum_count \
-                        = self.model_runner.epi_outputs['manual_baseline']['population' + stratum]
-                    stratum_fraction \
-                        = self.model_runner.epi_outputs['manual_baseline']['fraction' + stratum]
+                    # find numbers or fractions in that group
+                    stratum_count = self.model_runner.epi_outputs['manual_baseline']['population' + stratum]
+                    stratum_fraction = self.model_runner.epi_outputs['manual_baseline']['fraction' + stratum]
 
-                    # Add group values to the upper plot range for area plot
+                    # add group values to the upper plot range for area plot
                     for i in range(len(upper_plot_margin_count)):
                         upper_plot_margin_count[i] += stratum_count[i]
                         upper_plot_margin_fraction[i] += stratum_fraction[i]
 
-                    # Create proxy for legend
+                    # create proxy for legend
                     if age_or_risk == 'age':
                         legd_text = t_k.turn_strat_into_label(stratum)
                     elif age_or_risk == 'risk':
@@ -2052,30 +2099,30 @@ class Project:
                     else:
                         time_index = early_time_index
 
-                    # Plot total numbers
+                    # plot total numbers
                     ax_upper = fig.add_subplot(2, 2, 1 + t)
                     ax_upper.fill_between(times[time_index:], lower_plot_margin_count[time_index:],
                                           upper_plot_margin_count[time_index:], facecolors=colours[s][1])
 
-                    # Plot population proportions
+                    # plot population proportions
                     ax_lower = fig.add_subplot(2, 2, 3 + t)
                     ax_lower.fill_between(times[time_index:], lower_plot_margin_fraction[time_index:],
                                           upper_plot_margin_fraction[time_index:],
                                           facecolors=colours[s][1], label=legd_text)
 
-                    # Tidy up plots
+                    # tidy up plots
                     self.tidy_axis(ax_upper, [2, 2], start_time=self.inputs.model_constants[time],
                                    title='Total numbers from ' + title_time_text, y_label='population')
                     self.tidy_axis(ax_lower, [2, 2], y_axis_type='proportion',
                                    start_time=self.inputs.model_constants[time],
                                    title='Proportion of population from ' + title_time_text, legend=(t == 1))
 
-                    # Add group values to the lower plot range for next iteration
+                    # add group values to the lower plot range for next iteration
                     for i in range(len(lower_plot_margin_count)):
                         lower_plot_margin_count[i] += stratum_count[i]
                         lower_plot_margin_fraction[i] += stratum_fraction[i]
 
-            # Finish up
+            # finish up
             fig.suptitle('Population by ' + t_k.find_title_from_dictionary(age_or_risk), fontsize=self.suptitle_size)
             self.save_figure(fig, '_riskgroup_proportions')
 

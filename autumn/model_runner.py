@@ -533,6 +533,23 @@ class ModelRunner:
                                 epi_outputs['incidence' + stratum] \
                                     = elementwise_list_addition(incidence_increment, epi_outputs['incidence' + stratum])
 
+                    # notifications
+                    if 'notifications' in outputs_to_analyse:
+                        for strain in strains:
+                            for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
+                                if 'active' in from_label and 'detect' in to_label and strain in to_label \
+                                        and stratum in from_label:
+                                    notifications_increment \
+                                        = self.model_dict[scenario].get_compartment_soln(from_label) \
+                                          * self.model_dict[scenario].get_var_soln(rate)
+                                    if '_age' in from_label and tool_kit.is_upper_age_limit_at_or_below(
+                                            from_label, 15.):
+                                        notifications_increment *= self.inputs.model_constants[
+                                            'program_prop_child_reporting']
+                                    epi_outputs['notifications' + strain + stratum] \
+                                        = elementwise_list_addition(
+                                        notifications_increment, epi_outputs['notifications' + strain + stratum])
+
                     # mortality
                     if 'mortality' in outputs_to_analyse:
                         for from_label, rate in self.model_dict[scenario].fixed_infection_death_rate_flows:

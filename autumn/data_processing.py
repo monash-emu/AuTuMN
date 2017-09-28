@@ -211,6 +211,9 @@ class Inputs:
             self.model_constants['program_timeperiod_await_treatment'] \
                 = self.model_constants['program_timeperiod_await_treatment_smearpos']
 
+        # reference group for susceptibility
+        self.model_constants['tb_multiplier_fully_protection'] = 1.
+
     # derive further parameters (called after model structure defined)
     def find_additional_parameters(self):
         """
@@ -221,9 +224,6 @@ class Inputs:
 
         # find risk group-specific parameters
         if len(self.riskgroups) > 1: self.find_riskgroup_progressions()
-
-        # duplicate immunity parameters for models stratified by treatment history
-        self.find_additional_immunity_params()
 
         # calculate rates of progression to active disease or late latency
         self.find_latency_progression_rates()
@@ -251,18 +251,6 @@ class Inputs:
 
                 # stabilisation rate is one minus early progression proportion divided by early time period
                 self.model_constants['tb_rate_stabilise' + riskgroup + agegroup] = (1. - prop_early) / time_early
-
-    def find_additional_immunity_params(self):
-        """
-        Find immunity parameters, including those that are the product of multiple other parameters.
-        """
-
-        force_types = ['_immune', '_latent']
-        if 'int_prop_novel_vaccination' in self.relevant_interventions: force_types.append('_novelvac')
-        for force_type in force_types:
-            for history in self.histories:
-                self.model_constants['tb_multiplier' + force_type + history + '_protection'] \
-                    = self.model_constants['tb_multiplier' + force_type + '_protection']
 
     def find_riskgroup_progressions(self):
         """

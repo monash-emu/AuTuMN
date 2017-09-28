@@ -209,9 +209,7 @@ class ConsolidatedModel(StratifiedModel):
                                     self.initial_compartments[compartment] * start_risk_prop[riskgroup]
                                     / len(self.organ_status) / len(self.agegroups))
 
-    #######################################################
-    ### Single method to process uncertainty parameters ###
-    #######################################################
+    ''' Single method to process uncertainty parameters '''
 
     def process_uncertainty_params(self):
         """
@@ -237,10 +235,8 @@ class ConsolidatedModel(StratifiedModel):
                 = (1. - self.params['tb_prop_casefatality_untreated' + organ]) \
                   / self.params['tb_timeperiod_activeuntreated']
 
-    ########################################################################
-    ### Methods that calculate variables to be used in calculating flows ###
-    ### (Note that all scaleup_fns have already been calculated.)        ###
-    ########################################################################
+    ''' Methods that calculate variables to be used in calculating flows
+    (Note that all scaleup_fns have already been calculated.) '''
 
     def calculate_vars(self):
         """
@@ -943,15 +939,32 @@ class ConsolidatedModel(StratifiedModel):
                     if 'transmission_modifier' in self.vars:
                         self.vars['rate_force' + strain + riskgroup + agegroup] *= self.vars['transmission_modifier']
 
+
+
                     # adjust for immunity in various groups
-                    force_types = ['_immune', '_latent']
+                    force_types = ['_fully', '_immune', '_latent']
                     if 'int_prop_novel_vaccination' in self.relevant_interventions: force_types.append('_novelvac')
+
                     for force_type in force_types:
+                        vaccination_immunity_multiplier = self.params['tb_multiplier' + force_type + '_protection']
+                        if t_k.interrogate_age_string(agegroup)[0][1] <= 15. and force_type == '_immune':
+                            vaccination_immunity_multiplier *= 3. / 5.
+
+                        self.vars['rate_force' + force_type + strain + riskgroup + agegroup] \
+                            = self.vars['rate_force' + strain + riskgroup + agegroup] * vaccination_immunity_multiplier
+
                         for history in self.histories:
-                            self.vars['rate_force' + force_type + strain + history + riskgroup + agegroup] \
-                                = self.vars['rate_force' + strain + riskgroup + agegroup] \
-                                  * self.params['tb_multiplier' + force_type + '_protection'] \
-                                  * self.params['tb_multiplier' + history + '_protection']
+                            treatment_immunity_multiplier = 1.
+                            if history == '_treated':
+                                treatment_immunity_multiplier = self.params['tb_multiplier_treated_protection']
+
+                            if force_type != '_fully' or history == self.histories[0]:
+                                self.vars['rate_force' + force_type + strain + history + riskgroup + agegroup] \
+                                    = self.vars['rate_force' + force_type + strain + riskgroup + agegroup] \
+                                      * treatment_immunity_multiplier
+
+
+
 
                 # distribute IPT treatments across risk groups if homogeneous mixing
                 if ('agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions) \
@@ -1155,41 +1168,30 @@ class ConsolidatedModel(StratifiedModel):
         Set force of infection flows that were estimated by strain in calculate_force_infection_vars above.
         """
 
-        for agegroup in self.agegroups:
+        for strain in self.strains:
 
             # vary force of infection by risk-group if heterogeneous mixing is incorporated
             for riskgroup in self.riskgroups:
                 force_riskgroup = ''
-                if self.vary_force_infection_by_riskgroup:
-                    force_riskgroup = riskgroup
+                if self.vary_force_infection_by_riskgroup: force_riskgroup = riskgroup
 
-                for strain in self.strains:
+                for agegroup in self.agegroups:
 
-                    # new patients can only be fully susceptible
-                    self.set_var_transfer_rate_flow(
-                        'susceptible_fully' + riskgroup + self.histories[0] + agegroup,
-                        'latent_early' + strain + riskgroup + self.histories[0] + agegroup,
-                        'rate_force' + strain + force_riskgroup + agegroup)
-
-                    # set infection rates according to susceptibility status
-                    # age adjustment for infections averted through IPT
-                    for history in self.histories:
-                        self.set_var_transfer_rate_flow(
-                            'susceptible_immune' + riskgroup + history + agegroup,
-                            'latent_early' + strain + riskgroup + history + agegroup,
-                            'rate_force_immune' + strain + history + force_riskgroup + agegroup)
-                        for from_strain in self.strains:
-                            self.set_var_transfer_rate_flow(
-                                'latent_late' + from_strain + riskgroup + history + agegroup,
-                                'latent_early' + strain + riskgroup + history + agegroup,
-                                'rate_force_latent' + strain + history + force_riskgroup + agegroup)
-
-                        # novel vaccination
-                        if 'int_prop_novel_vaccination' in self.relevant_interventions:
-                            self.set_var_transfer_rate_flow(
-                                'susceptible_novelvac' + riskgroup + history + agegroup,
-                                'latent_early' + strain + riskgroup + history + agegroup,
-                                'rate_force_novelvac' + strain + history + force_riskgroup + agegroup)
+                    force_types = ['_fully', '_immune', '_latent']
+                    if 'int_prop_novel_vaccination' in self.relevant_interventions: force_types.append('_novelvac')
+                    for force_type in force_types:
+                        for history in self.histories:
+                            if force_type == '_immune' or (force_type == '_fully' and history == self.histories[0]):
+                                self.set_var_transfer_rate_flow(
+                                    'susceptible' + force_type + riskgroup + history + agegroup,
+                                    'latent_early' + strain + riskgroup + history + agegroup,
+                                    'rate_force' + force_type + strain + history + force_riskgroup + agegroup)
+                            elif force_type == '_latent':
+                                for from_strain in self.strains:
+                                    self.set_var_transfer_rate_flow(
+                                        'latent_late' + from_strain + riskgroup + history + agegroup,
+                                        'latent_early' + strain + riskgroup + history + agegroup,
+                                        'rate_force' + force_type + strain + history + force_riskgroup + agegroup)
 
     def set_progression_flows(self):
         """

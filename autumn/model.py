@@ -939,17 +939,23 @@ class ConsolidatedModel(StratifiedModel):
                     if 'transmission_modifier' in self.vars:
                         self.vars['rate_force' + strain + riskgroup + agegroup] *= self.vars['transmission_modifier']
 
-                    # adjust for immunity in various groups
+                    # adjust for immunity in various groups, first defining broad immunity categories
                     force_types = ['_fully', '_immune', '_latent']
                     if 'int_prop_novel_vaccination' in self.relevant_interventions: force_types.append('_novelvac')
                     for force_type in force_types:
                         immunity_multiplier = self.params['tb_multiplier' + force_type + '_protection']
+
+                        # give children greater protection from BCG vaccination
                         if t_k.interrogate_age_string(agegroup)[0][1] <= self.params['int_age_bcg_immunity_wane'] \
                                 and force_type == '_immune':
                             immunity_multiplier *= self.params['int_multiplier_bcg_child_relative_immunity']
+
+                        # increase immunity for previously treated
                         for history in self.histories:
                             if history == '_treated':
                                 immunity_multiplier *= self.params['tb_multiplier_treated_protection']
+
+                        # find forces of infection, except that there is no previously treated fully susceptible group
                             if force_type != '_fully' or (force_type == '_fully' and history == self.histories[0]):
                                 self.vars['rate_force' + force_type + strain + history + riskgroup + agegroup] \
                                     = self.vars['rate_force' + strain + riskgroup + agegroup] * immunity_multiplier

@@ -939,32 +939,20 @@ class ConsolidatedModel(StratifiedModel):
                     if 'transmission_modifier' in self.vars:
                         self.vars['rate_force' + strain + riskgroup + agegroup] *= self.vars['transmission_modifier']
 
-
-
                     # adjust for immunity in various groups
                     force_types = ['_fully', '_immune', '_latent']
                     if 'int_prop_novel_vaccination' in self.relevant_interventions: force_types.append('_novelvac')
-
                     for force_type in force_types:
-                        vaccination_immunity_multiplier = self.params['tb_multiplier' + force_type + '_protection']
-                        if t_k.interrogate_age_string(agegroup)[0][1] <= 15. and force_type == '_immune':
-                            vaccination_immunity_multiplier *= 3. / 5.
-
-                        self.vars['rate_force' + force_type + strain + riskgroup + agegroup] \
-                            = self.vars['rate_force' + strain + riskgroup + agegroup] * vaccination_immunity_multiplier
-
+                        immunity_multiplier = self.params['tb_multiplier' + force_type + '_protection']
+                        if t_k.interrogate_age_string(agegroup)[0][1] <= self.params['int_age_bcg_immunity_wane'] \
+                                and force_type == '_immune':
+                            immunity_multiplier *= self.params['int_multiplier_bcg_child_relative_immunity']
                         for history in self.histories:
-                            treatment_immunity_multiplier = 1.
                             if history == '_treated':
-                                treatment_immunity_multiplier = self.params['tb_multiplier_treated_protection']
-
-                            if force_type != '_fully' or history == self.histories[0]:
+                                immunity_multiplier *= self.params['tb_multiplier_treated_protection']
+                            if force_type != '_fully' or (force_type == '_fully' and history == self.histories[0]):
                                 self.vars['rate_force' + force_type + strain + history + riskgroup + agegroup] \
-                                    = self.vars['rate_force' + force_type + strain + riskgroup + agegroup] \
-                                      * treatment_immunity_multiplier
-
-
-
+                                    = self.vars['rate_force' + strain + riskgroup + agegroup] * immunity_multiplier
 
                 # distribute IPT treatments across risk groups if homogeneous mixing
                 if ('agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions) \

@@ -38,7 +38,6 @@ def find_latest_value_from_year_dict(dictionary, ceiling):
 
 
 class Inputs:
-
     def __init__(self, gui_inputs, runtime_outputs, js_gui=None):
 
         # GUI inputs
@@ -54,9 +53,11 @@ class Inputs:
         self.scaleup_data = {}
         self.scaleup_fns = {}
         self.param_ranges_unc = []
+        self.int_ranges_unc = []
         self.data_to_fit = {}
         # for incidence for ex, width of normal posterior relative to CI width in data
         self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
+        self.intervention_uncertainty = True
 
         # model structure
         self.available_strains = ['_ds', '_mdr', '_xdr']
@@ -1171,7 +1172,7 @@ class Inputs:
         """
 
         # specify the parameters to be used for uncertainty
-        if self.gui_inputs['output_uncertainty']:
+        if self.gui_inputs['output_uncertainty'] or self.intervention_uncertainty:
             self.find_uncertainty_distributions()
             self.get_data_to_fit()
 
@@ -1185,6 +1186,11 @@ class Inputs:
             if ('tb_' in param or '_time' in param) \
                     and '_uncertainty' in param and type(self.model_constants[param]) == dict:
                 self.param_ranges_unc += [{'key': param[:-12],
+                                           'bounds': [self.model_constants[param]['lower'],
+                                                      self.model_constants[param]['upper']],
+                                           'distribution': 'uniform'}]
+            elif 'int_' in param and '_uncertainty' in param and type(self.model_constants[param]) == dict:
+                self.int_ranges_unc += [{'key': param[:-12],
                                            'bounds': [self.model_constants[param]['lower'],
                                                       self.model_constants[param]['upper']],
                                            'distribution': 'uniform'}]

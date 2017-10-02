@@ -1,3 +1,4 @@
+
 import tool_kit
 import model
 import os
@@ -14,6 +15,7 @@ import outputs
 import autumn.economics
 import itertools
 from numpy import isfinite
+from pyDOE import lhs
 
 
 def generate_candidates(n_candidates, param_ranges_unc):
@@ -163,7 +165,7 @@ class ModelRunner:
         self.model_dict = {}
         self.interventions_to_cost = self.inputs.interventions_to_cost
 
-        # uncertainty-related attributes
+        # epidemiological uncertainty-related attributes
         self.is_last_run_success = False
         self.loglikelihoods = []
         self.outputs_unc = [{'key': 'incidence',
@@ -184,6 +186,9 @@ class ModelRunner:
         self.percentiles = [2.5, 50., 97.5]
         self.accepted_no_burn_in_indices = []
         self.random_start = False  # whether to start from a random point, as opposed to the manually calibrated value
+
+        # intervention uncertainty-related
+        self.intervention_uncertainty = False
 
         # optimisation attributes
         self.optimisation = False  # leave True even if loading optimisation results
@@ -257,7 +262,8 @@ class ModelRunner:
         # or run the manual scenarios as requested by user
         else:
             self.run_manual_calibration()
-            if self.gui_inputs['output_uncertainty']: self.run_uncertainty()
+            if self.gui_inputs['output_uncertainty']: self.run_epi_uncertainty()
+            if self.intervention_uncertainty: self.run_intervention_uncertainty()
 
         # save uncertainty if requested
         if self.gui_inputs['pickle_uncertainty'] == 'Save':
@@ -665,11 +671,9 @@ class ModelRunner:
                         = numpy.percentile(matrix_to_analyse, self.percentiles, axis=0)
         return uncertainty_centiles
 
-    ###########################
-    ### Uncertainty methods ###
-    ###########################
+    ''' Epidemiological uncertainty methods '''
 
-    def run_uncertainty(self):
+    def run_epi_uncertainty(self):
         """
         Main method to run all the uncertainty processes.
         """
@@ -1029,9 +1033,52 @@ class ModelRunner:
 
         return new_params
 
-    ############################
-    ### Optimisation methods ###
-    ############################
+    ''' Intervention uncertainty methods '''
+
+    def run_intervention_uncertainty(self, intervention='int_prop_xpert', n_samples=5):
+        """
+        Master method for running intervention uncertainty. That is, starting from the calibrated baseline simulated,
+        project forward scenarios based on varying parameters for the effectiveness of the intervention under
+        consideration.
+
+        Args:
+            intervention: String for intervention of interest
+            n_samples: Number of samples to explore
+        """
+
+        # this should be moved to data processing at least, and preferably ultimately to inputs
+        intervention_param_dict = {'int_prop_xpert': ['int_prop_xpert_sensitivity_mdr']}
+
+        # extract relevant intervention parameters from the intervention uncertainty dictionary
+        working_param_dict = {}
+        for param in intervention_param_dict[intervention]:
+            for int_param in range(len(self.inputs.int_ranges_unc)):
+                if self.inputs.int_ranges_unc[int_param]['key'] in intervention_param_dict[intervention]:
+                    working_param_dict[param] = self.inputs.int_ranges_unc[int_param]
+
+        # generate samples using latin hypercube design
+        sample_values = lhs(len(working_param_dict), samples=n_samples)
+        parameter_values = {}
+        for p, param in enumerate(working_param_dict):
+            parameter_values[param] = []
+            for sample in range(n_samples):
+                parameter_values[param].append(
+                    working_param_dict[param]['bounds'][0]
+                    + (working_param_dict[param]['bounds'][1] - working_param_dict[param]['bounds'][0])
+                    * sample_values[sample][p])
+
+        # prepare for integration of scenario
+        self.model_dict['intervention_uncertainty'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
+        self.prepare_new_model_from_baseline('manual', 'intervention_uncertainty')
+        self.model_dict['intervention_uncertainty'].relevant_interventions = [intervention]
+
+        # loop through parameter values
+        for sample in range(n_samples):
+            for param in parameter_values:
+                self.model_dict['intervention_uncertainty'].set_parameter(param, parameter_values[param][sample])
+            self.model_dict['intervention_uncertainty'].integrate()
+
+    ''' Optimisation methods '''
 
     def run_optimisation(self):
         """
@@ -1263,9 +1310,7 @@ class ModelRunner:
             tool_kit.pickle_save(self.opti_results, filename)
             self.add_comment_to_gui_window('Optimisation results saved')
 
-    ###########################
-    ### GUI-related methods ###
-    ###########################
+    ''' GUI-related methods '''
 
     def add_comment_to_gui_window(self, comment):
 
@@ -1379,17 +1424,3 @@ class ModelRunner:
         })
         self.plot_count += 1
 
-# # moved js_gui stuff here
-# import time
-# from flask_socketio import emit
-# import eventlet
-#
-# def js_gui_model_output(output_type, data):
-#     if output_type == "init":
-#         eventlet.monkey_patch()
-#     elif output_type == "console":
-#         emit('console', data)
-#         time.sleep(self.emit_delay)
-#         print(">> js_gui websocket emitting:", data["message"])
-#     elif output_type == "uncertainty_graph":
-#         print(">> js_gui websocket uncertainty graph:", data)

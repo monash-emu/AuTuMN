@@ -324,7 +324,7 @@ def find_scenario_number_from_string(scenario):
         scenario_string = scenario
 
     # find number or None for baseline scenario
-    if scenario_string == 'baseline':
+    if scenario_string == 'baseline' or scenario_string == 'intervention_uncertainty':
         scenario_number = None
     else:
         scenario_number = int(scenario_string[9:])

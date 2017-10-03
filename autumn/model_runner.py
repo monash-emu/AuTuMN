@@ -997,9 +997,11 @@ class ModelRunner:
                     = numpy.empty(shape=[0, len(self.cost_outputs[scenario_name]['times'])])
 
         # add uncertainty data to dictionaries
+        scenario_for_length = 'manual_baseline'
+        if scenario_name == 'intervention_uncertainty': scenario_for_length = 'intervention_uncertainty'
         for output in epi_outputs_to_analyse:
             new_output = tool_kit.force_list_to_length(self.epi_outputs[scenario_name][output],
-                                                       len(self.epi_outputs['manual_baseline'][output]))
+                                                       len(self.epi_outputs[scenario_for_length][output]))
             self.epi_outputs_uncertainty[scenario_name][output] \
                 = numpy.vstack([self.epi_outputs_uncertainty[scenario_name][output], new_output])
         for output in self.cost_outputs[scenario_name]:
@@ -1077,6 +1079,8 @@ class ModelRunner:
             for param in parameter_values:
                 self.model_dict['intervention_uncertainty'].set_parameter(param, parameter_values[param][sample])
             self.model_dict['intervention_uncertainty'].integrate()
+            self.store_uncertainty('intervention_uncertainty', epi_outputs_to_analyse=self.epi_outputs_to_analyse)
+            print()
 
     ''' Optimisation methods '''
 

@@ -2,7 +2,7 @@
 import openpyxl as xl
 import tool_kit as t_k
 from docx import Document
-from matplotlib import pyplot, patches, style
+from matplotlib import pyplot, patches, style, cm
 import numpy
 import pylab
 import platform
@@ -356,31 +356,37 @@ def get_line_pattern(label, strain_or_organ):
     return pattern
 
 
-def create_patch_from_dictionary(dict):
-
+def create_patch_from_dictionary(dictionary):
     """
     Creates an array that can be used as a patch for plotting.
 
     Args:
-        dict: Dictionary with keys 'lower_limit', 'upper_limit' and 'year'
+        dictionary: Dictionary with keys 'lower_limit', 'upper_limit' and 'year'
             (at least, although 'point_estimate' will also usually be there)
     Returns:
         patch_array: The patch array for plotting
     """
 
-    patch_array = numpy.zeros(shape=(len(dict['lower_limit']) * 2, 2))
+    patch_array = numpy.zeros(shape=(len(dictionary['lower_limit']) * 2, 2))
     j = 0
-    for i in dict['lower_limit']:
-        # Years going forwards
-        patch_array[j][0] = i
-        # Years going backwards
-        patch_array[-(j + 1)][0] = i
-        # Lower limit data going forwards
-        patch_array[j][1] = dict['lower_limit'][i]
-        # Upper limit data going backwards
-        patch_array[-(j + 1)][1] = dict['upper_limit'][i]
+    for i in dictionary['lower_limit']:
+        patch_array[j][0] = i  # years going forwards
+        patch_array[-(j + 1)][0] = i  # years going backwards
+        patch_array[j][1] = dictionary['lower_limit'][i]  # lower limit data going forwards
+        patch_array[-(j + 1)][1] = dictionary['upper_limit'][i]  # upper limit data going backwards
         j += 1
+    return patch_array
 
+
+def create_patch_from_list(x_list, lower_list, upper_list):
+
+    assert len(x_list) == len(lower_list) == len(upper_list), 'Attempted to create patch out of lists of unequal length'
+    patch_array = numpy.zeros(shape=(len(x_list) * 2, 2))
+    for x_num, x in enumerate(x_list):
+        patch_array[x_num][0] = x  # x_values going forwards
+        patch_array[-(x_num + 1)][0] = x  # years going backwards
+        patch_array[x_num][1] = lower_list[x_num]  # lower limit data going forwards
+        patch_array[-(x_num + 1)][1] = upper_list[x_num]  # upper limit data going backwards
     return patch_array
 
 
@@ -567,9 +573,7 @@ def write_param_to_sheet(country_sheet, working_list, median_run_index):
 
 
 class Project:
-
     def __init__(self, model_runner, gui_inputs):
-
         """
         Initialises an object of class Project, that will contain all the information (data + outputs) for writing a
         report for a country.
@@ -610,16 +614,14 @@ class Project:
         # to have a look at some individual vars scaling over time
         self.vars_to_view = []
 
-        # Comes up so often that we need to find this index, that best to do once in instantiation
+        # comes up so often that we need to find this index, that best to do once in instantiation
         self.start_time_index \
             = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
                                                          self.inputs.model_constants['plot_start_time'])
 
         self.plot_true_outcomes = False
 
-    #################################
-    # General methods for use below #
-    #################################
+    ''' General methods for use below '''
 
     def find_years_to_write(self, scenario, output, epi=True):
         """
@@ -718,7 +720,6 @@ class Project:
                   prop={'size': 7})
 
     def make_default_line_styles(self, n, return_all=True):
-
         """
         Produces a standard set of line styles that isn't adapted to the data being plotted.
 
@@ -730,7 +731,7 @@ class Project:
                 then the single item (for methods that are iterating through plots.
         """
 
-        # Iterate through a standard set of line styles
+        # iterate through a standard set of line styles
         for i in range(n):
             line_styles = []
             for line in ["-", ":", "-.", "--"]:
@@ -962,13 +963,13 @@ class Project:
                                         = self.model_runner.epi_outputs_integer_dict['manual_' + scenario][output][
                                         year]
 
-                            # With uncertainty
+                            # with uncertainty
                             else:
 
                                 # 1, 0, 2 indicates point estimate, lower limit, upper limit
                                 order_to_write = [1, 0, 2]
 
-                                # Write the scenario names and confidence interval titles
+                                # write the scenario names and confidence interval titles
                                 row = 1
                                 column = o * 3 + 2
                                 if horizontal: column, row = row, column
@@ -982,7 +983,7 @@ class Project:
                                 if horizontal: column, row = row, column
                                 sheet.cell(row=row, column=column).value = 'Upper'
 
-                                # Write the columns of data
+                                # write the columns of data
                                 for y, year in enumerate(years):
                                     year_index \
                                         = t_k.find_first_list_element_at_least_value(
@@ -1035,7 +1036,6 @@ class Project:
                 wb.save(path)
 
     def write_xls_by_output(self):
-
         """
         Write a spreadsheet with the sheet referring to one output.
         """
@@ -1176,7 +1176,6 @@ class Project:
                 wb.save(path)
 
     def write_docs_by_output(self):
-
         """
         Write word documents using the docx package. Writes with or without uncertainty according to whether Run
         uncertainty selected in the GUI.
@@ -1221,7 +1220,6 @@ class Project:
             document.save(path)
 
     def write_docs_by_scenario(self):
-
         """
         Write word documents using the docx package. Writes with or without uncertainty according to whether Run
         uncertainty selected in the GUI.
@@ -1326,6 +1324,7 @@ class Project:
             if self.gui_inputs['output_uncertainty']:
                 self.plot_outputs_against_gtb(self.gtb_available_outputs, ci_plot=True)
                 self.plot_outputs_against_gtb(self.gtb_available_outputs, ci_plot=False)
+                self.plot_shaded_outputs_gtb(self.gtb_available_outputs)
             if self.gui_inputs['n_strains'] > 1:
                 self.plot_resistant_strain_outputs(['incidence', 'mortality', 'prevalence', 'perc_incidence'])
 
@@ -1341,9 +1340,9 @@ class Project:
             self.plot_force_infection()
 
         # plot mixing matrix if relevant
-        if self.model_runner.model_dict['manual_baseline'].vary_force_infection_by_riskgroup \
-                and len(self.inputs.riskgroups) > 1:
-            self.plot_mixing_matrix()
+        # if self.model_runner.model_dict['manual_baseline'].vary_force_infection_by_riskgroup \
+        #         and len(self.inputs.riskgroups) > 1:
+        #     self.plot_mixing_matrix()
 
         # plot economic outputs
         if self.gui_inputs['output_plot_economics']:
@@ -1426,7 +1425,7 @@ class Project:
             # preliminaries
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
 
-            # plotting GTB data in background___________________________________________________________________________
+            ''' plotting GTB data in background '''
             gtb_data = {}
 
             # notifications
@@ -1444,7 +1443,7 @@ class Project:
                 ax.plot(gtb_data['point_estimate'].keys(), gtb_data['point_estimate'].values(),
                         color=colour[o], linewidth=0.5, label=None)
 
-            # plotting modelled data____________________________________________________________________________________
+            ''' plotting modelled data '''
 
             # plot scenarios without uncertainty
             if ci_plot is None:
@@ -1480,7 +1479,7 @@ class Project:
                         color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
                         linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
 
-                    # Upper and lower confidence bounds
+                    # upper and lower confidence bounds
                     for centile in [2.5, 97.5]:
                         ax.plot(
                             self.model_runner.epi_outputs_uncertainty['uncertainty_' + scenario_name]['times'][
@@ -1490,7 +1489,7 @@ class Project:
                             color=self.output_colours[scenario][1], linestyle='--', linewidth=.5, label=None)
                     end_filename = '_ci'
 
-            # Plot progressive model run outputs for baseline scenario
+            # plot progressive model run outputs for baseline scenario
             elif self.gui_inputs['output_uncertainty']:
                 for run in range(len(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output])):
                     if run not in self.model_runner.accepted_indices and self.plot_rejected_runs:
@@ -1510,6 +1509,91 @@ class Project:
                                 label=t_k.capitalise_and_remove_underscore('baseline'))
                     end_filename = '_progress'
 
+            self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
+                           legend=(o == len(outputs) - 1 and len(self.scenarios) > 1),
+                           y_axis_type='raw', y_label=yaxis_label[o])
+
+        # add main title and save
+        fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
+        self.save_figure(fig, '_gtb' + end_filename)
+
+    def plot_shaded_outputs_gtb(self, outputs, ci_plot=None, gtb_ci_plot='patch'):
+
+        # standard preliminaries
+        start_time = self.inputs.model_constants['plot_start_time']
+        colour, indices, yaxis_label, title, patch_colour = find_standard_output_styles(outputs, lightening_factor=0.3)
+        subplot_grid = find_subplot_numbers(len(outputs))
+        fig = self.set_and_update_figure()
+
+        # loop through indicators
+        for o, output in enumerate(outputs):
+
+            # preliminaries
+            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
+
+            ''' plot modelled data '''
+
+            # plot with uncertainty confidence intervals
+            scenario_name = t_k.find_scenario_string_from_number(None)
+            start_index = self.find_start_index(None)
+
+            # plot median and upper and lower CIs if requested
+            if ci_plot:
+                ax.plot(
+                    self.model_runner.epi_outputs_uncertainty['uncertainty_' + scenario_name][
+                        'times'][start_index:],
+                    self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_' + scenario_name][
+                        output][self.model_runner.percentiles.index(50), :][start_index:],
+                    color=self.output_colours[None][1], linestyle=self.output_colours[None][0],
+                    linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
+                for centile in [2.5, 97.5]:
+                    ax.plot(
+                        self.model_runner.epi_outputs_uncertainty['uncertainty_' + scenario_name]['times'][
+                            start_index:],
+                        self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_' + scenario_name][output][
+                        self.model_runner.percentiles.index(centile), :][start_index:],
+                        color=self.output_colours[None][1], linestyle='--', linewidth=.5, label=None)
+
+            progressive_patch_colours = [cm.Blues(x) for x in numpy.linspace(0., 1., 49)]
+            for i in range(1, 49):
+                patch = create_patch_from_list(
+                    self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['times'][start_index:],
+                    self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_baseline'][output][
+                    self.model_runner.percentiles.index(i), :][start_index:],
+                    self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_baseline'][output][
+                    self.model_runner.percentiles.index(100 - i), :][start_index:])
+                ax.add_patch(patches.Polygon(patch, color=progressive_patch_colours[i]))
+
+            ''' plotting GTB data in background '''
+
+            gtb_data = {}
+
+            if gtb_ci_plot == 'hatch':
+                alpha = 1.
+            elif gtb_ci_plot == 'patch':
+                alpha = .2
+
+            # notifications
+            if output == 'notifications':
+                gtb_data['point_estimate'] = self.inputs.original_data['notifications']['c_newinc']
+
+            # extract the relevant data from the Global TB Report and use to plot a patch (for inc, prev and mortality)
+            elif output in self.gtb_available_outputs:
+                for level in self.level_conversion_dict:
+                    gtb_data[level] = self.inputs.original_data['tb'][indices[o] + self.level_conversion_dict[level]]
+                if gtb_ci_plot == 'patch':
+                    ax.add_patch(patches.Polygon(create_patch_from_dictionary(gtb_data),
+                                                 color=patch_colour[o], alpha=alpha))
+                elif gtb_ci_plot == 'hatch':
+                    ax.add_patch(patches.Polygon(create_patch_from_dictionary(gtb_data),
+                                                 color='.3', hatch='/', fill=False, linewidth=.4))
+
+            # plot point estimates
+            if output in self.gtb_available_outputs:
+                ax.plot(gtb_data['point_estimate'].keys(), gtb_data['point_estimate'].values(),
+                        color='.3', linewidth=0.8, label=None, alpha=alpha)
+
+            end_filename = '_shaded'
             self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
                            legend=(o == len(outputs) - 1 and len(self.scenarios) > 1),
                            y_axis_type='raw', y_label=yaxis_label[o])

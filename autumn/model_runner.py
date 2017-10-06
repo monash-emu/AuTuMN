@@ -183,7 +183,7 @@ class ModelRunner:
         self.acceptance_dict = {}
         self.rejection_dict = {}
         self.uncertainty_percentiles = {}
-        self.percentiles = [2.5, 50., 97.5]
+        self.percentiles = [2.5, 50., 97.5] + list(numpy.linspace(0., 100., 101))
         self.accepted_no_burn_in_indices = []
         self.random_start = False  # whether to start from a random point, as opposed to the manually calibrated value
 
@@ -1074,13 +1074,14 @@ class ModelRunner:
         self.prepare_new_model_from_baseline('manual', 'intervention_uncertainty')
         self.model_dict['intervention_uncertainty'].relevant_interventions = [intervention]
 
+        # need to think about the coverage of the intervention and make sure it is non-zero next
+
         # loop through parameter values
         for sample in range(n_samples):
             for param in parameter_values:
                 self.model_dict['intervention_uncertainty'].set_parameter(param, parameter_values[param][sample])
             self.model_dict['intervention_uncertainty'].integrate()
             self.store_uncertainty('intervention_uncertainty', epi_outputs_to_analyse=self.epi_outputs_to_analyse)
-            print()
 
     ''' Optimisation methods '''
 

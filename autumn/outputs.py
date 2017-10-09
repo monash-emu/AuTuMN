@@ -399,6 +399,24 @@ def extract_dict_to_list_key_ordering(dictionary, key_string):
     return extracted_lists
 
 
+def find_exponential_constants(times, y_values):
+    """
+    In order to find an exponential function that passes through the point (times[0], y_values[0])
+    and (times[1], y_values[1]) and is of the form: y = exp(-a * (t - b)), where t is the independent variable.
+
+    Args:
+        times: List of the two time or x coordinates of the points to be fitted to
+        y_values: List of the two outputs or y coordinates of the points to be fitted to
+    Returns:
+        a: Parameter for the horizontal transformation of the function
+        b: Parameter for the horizontal translation of the function
+    """
+
+    b = (times[0] * numpy.log(y_values[1]) - times[1] * numpy.log(y_values[0])) \
+        / (numpy.log(y_values[1]) - numpy.log(y_values[0]))
+    a = - numpy.log(y_values[0]) / (times[0] - b)
+    return a, b
+
 def save_png(png):
 
     # Should be redundant once Project module complete
@@ -833,9 +851,7 @@ class Project:
         png = os.path.join(self.model_runner.opti_outputs_dir, self.country + last_part_of_name_for_figure + '.png')
         fig.savefig(png, dpi=300)
 
-    #####################################################
-    ### Methods for outputting to Office applications ###
-    #####################################################
+    ''' Methods for outputting to Office applications '''
 
     def master_outputs_runner(self):
         """
@@ -1308,9 +1324,7 @@ class Project:
             # Save workbook
             wb.save(path)
 
-    ########################
-    ### Plotting methods ###
-    ########################
+    ''' Plotting methods '''
 
     def run_plotting(self):
         """
@@ -1412,7 +1426,7 @@ class Project:
             self.plot_optimised_epi_outputs()
             self.plot_piecharts_opti()
 
-    def plot_outputs_against_gtb(self, outputs, ci_plot=None):
+    def plot_outputs_against_gtb(self, outputs, ci_plot=None, plot_targets=True):
         """
         Produces the plot for the main outputs, loops over multiple scenarios.
 
@@ -1434,6 +1448,7 @@ class Project:
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
 
             ''' plotting GTB data in background '''
+
             gtb_data = {}
             gtb_data_lists = {}
 
@@ -1446,7 +1461,6 @@ class Project:
                 for level in self.level_conversion_dict:
                     gtb_data[level] = self.inputs.original_data['tb'][indices[o] + self.level_conversion_dict[level]]
                     gtb_data_lists.update(extract_dict_to_list_key_ordering(gtb_data[level], level))
-
                 ax.add_patch(patches.Polygon(
                     create_patch_from_list(gtb_data_lists['times'],
                                            gtb_data_lists['lower_limit'],
@@ -1455,8 +1469,48 @@ class Project:
 
             # plot point estimates
             if output in self.gtb_available_outputs:
-                ax.plot(gtb_data['point_estimate'].keys(), gtb_data['point_estimate'].values(),
-                        color=colour[o], linewidth=0.5, label=None)
+                ax.plot(gtb_data['point_estimate'].keys(), gtb_data['point_estimate'].values(), color=colour[o],
+                        linewidth=0.5, label=None)
+
+                # plot the targets (and milestones) and the fitted exponential function to achieve them
+                if plot_targets:
+                    base_value = gtb_data['point_estimate'][2014]  # should be 2015, but data not yet available
+                    times = [2015., 2020., 2025., 2030., 2035.]
+
+                    if output == 'mortality':
+
+                        # hard coded to the End TB Targets
+                        target_values \
+                            = [base_value, base_value * .65, base_value * .25, base_value * .1, base_value * .05]
+
+                        # plot the individual targets themselves
+                        ax.plot(times[1:], target_values[1:],
+                                marker='o', color=patch_colour[o], markeredgewidth=0., linewidth=0.)
+
+                        # plot the fitted exponential curve marking the pathway to achieve the targets
+                        for t in range(len(times) - 1):
+                            a, b = find_exponential_constants([times[t], times[t+1]],
+                                                              [target_values[t], target_values[t+1]])
+                            times_to_plot = numpy.linspace(times[t], times[t+1], 1e2)
+                            output_to_reach_target = [numpy.exp(-a * (x - b)) for x in times_to_plot]
+                            ax.plot(times_to_plot, output_to_reach_target, color=patch_colour[o])
+
+                    elif output == 'incidence':
+
+                        # hard coded to the End TB Targets
+                        target_values = [base_value, base_value * .8, base_value * .5, base_value * .2, base_value * .1]
+
+                        # plot the individual targets themselves
+                        ax.plot(times[1:], target_values[1:],
+                                marker='o', color=patch_colour[o], markeredgewidth=0., linewidth=0.)
+
+                        # plot the fitted exponential curve marking the pathway to achieve the targets
+                        for t in range(len(times) - 1):
+                            a, b = find_exponential_constants([times[t], times[t+1]],
+                                                              [target_values[t], target_values[t+1]])
+                            times_to_plot = numpy.linspace(times[t], times[t+1], 1e2)
+                            output_to_reach_target = [numpy.exp(-a * (x - b)) for x in times_to_plot]
+                            ax.plot(times_to_plot, output_to_reach_target, color=patch_colour[o])
 
             ''' plotting modelled data '''
 
@@ -1464,7 +1518,7 @@ class Project:
             if ci_plot is None:
 
                 # plot model estimates
-                for scenario in self.scenarios[::-1]:  # Reversing ensures black baseline plotted over top
+                for scenario in self.scenarios[::-1]:  # reversing to ensure black baseline plotted over top
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
                     start_index = self.find_start_index(scenario)
                     ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'][start_index:],
@@ -1472,8 +1526,8 @@ class Project:
                             color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
                             linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
 
-                # plot "true" model outputs
-                if output in ['incidence', 'mortality'] and self.plot_true_outcomes:
+                # plot "true" mortality
+                if output == 'mortality' and self.plot_true_outcomes:
                     ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'][start_index:],
                             self.model_runner.epi_outputs['manual_' + scenario_name]['true_' + output][start_index:],
                             color=self.output_colours[scenario][1], linestyle=':', linewidth=1)
@@ -1604,7 +1658,6 @@ class Project:
 
             # extract the relevant data from the Global TB Report and use to plot a patch (for inc, prev and mortality)
             elif output in self.gtb_available_outputs:
-
                 gtb_data_lists = {}
                 for level in self.level_conversion_dict:
                     gtb_data[level] = self.inputs.original_data['tb'][indices[o] + self.level_conversion_dict[level]]

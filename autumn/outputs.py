@@ -378,15 +378,26 @@ def create_patch_from_dictionary(dictionary):
     return patch_array
 
 
-def create_patch_from_list(x_list, lower_list, upper_list):
+def create_patch_from_list(x_list, lower_border, upper_border):
+    """
+    Creates an array that can be used to plot a patch using the add patch plotting function in matplotlib.
 
-    assert len(x_list) == len(lower_list) == len(upper_list), 'Attempted to create patch out of lists of unequal length'
+    Args:
+        x_list: The x-values to go forward and backward with
+        lower_border: The lower edge of the patch
+        upper_border: The upper edge of the patch
+    Returns:
+        An array for use in plotting patches (with length of double the length of the inputs lists and height of two)
+    """
+
+    assert len(x_list) == len(lower_border) == len(upper_border), \
+        'Attempted to create patch out of lists of unequal length'
     patch_array = numpy.zeros(shape=(len(x_list) * 2, 2))
-    for x_num, x in enumerate(x_list):
-        patch_array[x_num][0] = x  # x_values going forwards
-        patch_array[-(x_num + 1)][0] = x  # years going backwards
-        patch_array[x_num][1] = lower_list[x_num]  # lower limit data going forwards
-        patch_array[-(x_num + 1)][1] = upper_list[x_num]  # upper limit data going backwards
+    for x_num, x_value in enumerate(x_list):
+        patch_array[x_num][0] = x_value  # x_values going forwards
+        patch_array[-(x_num + 1)][0] = x_value  # years going backwards
+        patch_array[x_num][1] = lower_border[x_num]  # lower limit data going forwards
+        patch_array[-(x_num + 1)][1] = upper_border[x_num]  # upper limit data going backwards
     return patch_array
 
 
@@ -1517,7 +1528,7 @@ class Project:
         fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb' + end_filename)
 
-    def plot_shaded_outputs_gtb(self, outputs, ci_plot=None, gtb_ci_plot='patch'):
+    def plot_shaded_outputs_gtb(self, outputs, ci_plot=None, gtb_ci_plot='hatch'):
 
         # standard preliminaries
         start_time = self.inputs.model_constants['plot_start_time']
@@ -1586,12 +1597,16 @@ class Project:
                                                  color=patch_colour[o], alpha=alpha))
                 elif gtb_ci_plot == 'hatch':
                     ax.add_patch(patches.Polygon(create_patch_from_dictionary(gtb_data),
-                                                 color='.3', hatch='/', fill=False, linewidth=.4))
+                                                 color='.3', hatch='/', fill=False, linewidth=0.))
 
             # plot point estimates
             if output in self.gtb_available_outputs:
                 ax.plot(gtb_data['point_estimate'].keys(), gtb_data['point_estimate'].values(),
                         color='.3', linewidth=0.8, label=None, alpha=alpha)
+                if gtb_ci_plot == 'hatch' and output != 'notifications':
+                    for limit in ['lower_limit', 'upper_limit']:
+                        ax.plot(gtb_data['upper_limit'].keys(), gtb_data[limit].values(),
+                                color='.3', linewidth=0.3, label=None, alpha=alpha)
 
             end_filename = '_shaded'
             self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,

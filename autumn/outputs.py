@@ -401,6 +401,15 @@ def create_patch_from_list(x_list, lower_border, upper_border):
     return patch_array
 
 
+def extract_dict_to_list_key_ordering(dictionary, key_string):
+
+    extracted_lists = {}
+    extracted_lists['times'] = sorted(dictionary.keys())
+    extracted_lists[key_string] = []
+    for time in extracted_lists['times']: extracted_lists[key_string].append(dictionary[time])
+    return extracted_lists
+
+
 def save_png(png):
 
     # Should be redundant once Project module complete
@@ -815,7 +824,6 @@ class Project:
             axis_to_change.grid(self.grid)
 
     def save_figure(self, fig, last_part_of_name_for_figure):
-
         """
         Simple method to standardise names for output figure files.
 
@@ -1529,6 +1537,16 @@ class Project:
         self.save_figure(fig, '_gtb' + end_filename)
 
     def plot_shaded_outputs_gtb(self, outputs, ci_plot=None, gtb_ci_plot='hatch'):
+        """
+        Creates visualisation of uncertainty outputs with density of shading proportional to the number of model runs
+        that went through a certain output value. Similar to our plotting approach for the award-winning figure in
+        American Journal of Epidemiology.
+
+        Args:
+            outputs: The types of output to plot
+            ci_plot: Whether to add dotted lines at the edges of the shaded modelled output areas
+            gtb_ci_plot: How to overlay the GTB data - either 'hatch' for hatched area, or 'patch' for translucent area
+        """
 
         # standard preliminaries
         start_time = self.inputs.model_constants['plot_start_time']
@@ -1570,9 +1588,9 @@ class Project:
                 patch = create_patch_from_list(
                     self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['times'][start_index:],
                     self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_baseline'][output][
-                    self.model_runner.percentiles.index(i), :][start_index:],
+                        self.model_runner.percentiles.index(i), :][start_index:],
                     self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_baseline'][output][
-                    self.model_runner.percentiles.index(100 - i), :][start_index:])
+                        self.model_runner.percentiles.index(100 - i), :][start_index:])
                 ax.add_patch(patches.Polygon(patch, color=progressive_patch_colours[i]))
 
             ''' plotting GTB data in background '''
@@ -1590,14 +1608,24 @@ class Project:
 
             # extract the relevant data from the Global TB Report and use to plot a patch (for inc, prev and mortality)
             elif output in self.gtb_available_outputs:
+
+                gtb_data_lists = {}
                 for level in self.level_conversion_dict:
                     gtb_data[level] = self.inputs.original_data['tb'][indices[o] + self.level_conversion_dict[level]]
+                    gtb_data_lists.update(extract_dict_to_list_key_ordering(gtb_data[level], level))
+
                 if gtb_ci_plot == 'patch':
-                    ax.add_patch(patches.Polygon(create_patch_from_dictionary(gtb_data),
-                                                 color=patch_colour[o], alpha=alpha))
+                    ax.add_patch(patches.Polygon(
+                        create_patch_from_list(gtb_data_lists['times'],
+                                               gtb_data_lists['lower_limit'],
+                                               gtb_data_lists['upper_limit']),
+                        color=patch_colour[o], alpha=alpha))
                 elif gtb_ci_plot == 'hatch':
-                    ax.add_patch(patches.Polygon(create_patch_from_dictionary(gtb_data),
-                                                 color='.3', hatch='/', fill=False, linewidth=0.))
+                    ax.add_patch(patches.Polygon(
+                        create_patch_from_list(gtb_data_lists['times'],
+                                               gtb_data_lists['lower_limit'],
+                                               gtb_data_lists['upper_limit']),
+                        color='.3', hatch='/', fill=False, linewidth=0.))
 
             # plot point estimates
             if output in self.gtb_available_outputs:
@@ -1608,14 +1636,13 @@ class Project:
                         ax.plot(gtb_data['upper_limit'].keys(), gtb_data[limit].values(),
                                 color='.3', linewidth=0.3, label=None, alpha=alpha)
 
-            end_filename = '_shaded'
             self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
                            legend=(o == len(outputs) - 1 and len(self.scenarios) > 1),
                            y_axis_type='raw', y_label=yaxis_label[o])
 
         # add main title and save
         fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
-        self.save_figure(fig, '_gtb' + end_filename)
+        self.save_figure(fig, '_gtb_shaded')
 
     def plot_resistant_strain_outputs(self, outputs):
         """

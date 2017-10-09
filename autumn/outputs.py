@@ -417,6 +417,70 @@ def find_exponential_constants(times, y_values):
     a = - numpy.log(y_values[0]) / (times[0] - b)
     return a, b
 
+
+def plot_endtb_targets(ax, output, base_value, plot_colour):
+    """
+    Plot the End TB Targets and the direction that we need to head to achieve them.
+
+    Args:
+        ax: The axis to be plotted on to
+        o: Output number
+        output: Output string
+        gtb_data: GTB data values
+        plot_colour: List of colours for plotting
+    """
+
+    times = [2015., 2020., 2025., 2030., 2035.]
+    if output == 'mortality':
+
+        # hard coded to the End TB Targets
+        target_values \
+            = [base_value, base_value * .65, base_value * .25, base_value * .1, base_value * .05]
+
+        # plot the individual targets themselves
+        ax.plot(times[1:], target_values[1:],
+                marker='o', markersize=4, color=plot_colour, markeredgewidth=0., linewidth=0.)
+
+        # cycle through times and plot
+        for t in range(len(times) - 1):
+            times_to_plot, output_to_reach_target = find_times_from_exp_function(t, times, target_values)
+            ax.plot(times_to_plot, output_to_reach_target, color=plot_colour, linewidth=.5)
+
+    elif output == 'incidence':
+
+        # hard coded to the End TB Targets
+        target_values = [base_value, base_value * .8, base_value * .5, base_value * .2, base_value * .1]
+
+        # plot the individual targets themselves
+        ax.plot(times[1:], target_values[1:],
+                marker='o', markersize=4, color=plot_colour, markeredgewidth=0., linewidth=0.)
+
+        # cycle through times and plot
+        for t in range(len(times) - 1):
+            times_to_plot, output_to_reach_target = find_times_from_exp_function(t, times, target_values)
+            ax.plot(times_to_plot, output_to_reach_target, color=plot_colour, linewidth=.5)
+
+
+def find_times_from_exp_function(t, times, target_values, number_x_values=1e2):
+    """
+    Find the times to plot and the outputs tracking towards the targets from the list of times and target values,
+    using the function to fit exponential functions.
+
+    Args:
+        t: The sequence number for the time point
+        times: The list of times being worked through
+        target_values: The list fo target values corresponding to the times
+    Returns:
+        times_to_plot: List of the x-values or times for plotting
+        outputs_to_reach_target: Corresponding list of values for the output needed to track towards the target
+    """
+
+    a, b = find_exponential_constants([times[t], times[t + 1]], [target_values[t], target_values[t + 1]])
+    times_to_plot = numpy.linspace(times[t], times[t + 1], number_x_values)
+    output_to_reach_target = [numpy.exp(-a * (x - b)) for x in times_to_plot]
+    return times_to_plot, output_to_reach_target
+
+
 def save_png(png):
 
     # Should be redundant once Project module complete
@@ -1473,44 +1537,8 @@ class Project:
                         linewidth=0.5, label=None)
 
                 # plot the targets (and milestones) and the fitted exponential function to achieve them
-                if plot_targets:
-                    base_value = gtb_data['point_estimate'][2014]  # should be 2015, but data not yet available
-                    times = [2015., 2020., 2025., 2030., 2035.]
-
-                    if output == 'mortality':
-
-                        # hard coded to the End TB Targets
-                        target_values \
-                            = [base_value, base_value * .65, base_value * .25, base_value * .1, base_value * .05]
-
-                        # plot the individual targets themselves
-                        ax.plot(times[1:], target_values[1:],
-                                marker='o', color=patch_colour[o], markeredgewidth=0., linewidth=0.)
-
-                        # plot the fitted exponential curve marking the pathway to achieve the targets
-                        for t in range(len(times) - 1):
-                            a, b = find_exponential_constants([times[t], times[t+1]],
-                                                              [target_values[t], target_values[t+1]])
-                            times_to_plot = numpy.linspace(times[t], times[t+1], 1e2)
-                            output_to_reach_target = [numpy.exp(-a * (x - b)) for x in times_to_plot]
-                            ax.plot(times_to_plot, output_to_reach_target, color=patch_colour[o])
-
-                    elif output == 'incidence':
-
-                        # hard coded to the End TB Targets
-                        target_values = [base_value, base_value * .8, base_value * .5, base_value * .2, base_value * .1]
-
-                        # plot the individual targets themselves
-                        ax.plot(times[1:], target_values[1:],
-                                marker='o', color=patch_colour[o], markeredgewidth=0., linewidth=0.)
-
-                        # plot the fitted exponential curve marking the pathway to achieve the targets
-                        for t in range(len(times) - 1):
-                            a, b = find_exponential_constants([times[t], times[t+1]],
-                                                              [target_values[t], target_values[t+1]])
-                            times_to_plot = numpy.linspace(times[t], times[t+1], 1e2)
-                            output_to_reach_target = [numpy.exp(-a * (x - b)) for x in times_to_plot]
-                            ax.plot(times_to_plot, output_to_reach_target, color=patch_colour[o])
+                base_value = gtb_data['point_estimate'][2014]  # should be 2015, but data not yet available
+                if plot_targets: plot_endtb_targets(ax, output, base_value, patch_colour[o])
 
             ''' plotting modelled data '''
 
@@ -1586,7 +1614,7 @@ class Project:
         fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb' + end_filename)
 
-    def plot_shaded_outputs_gtb(self, outputs, ci_plot=None, gtb_ci_plot='hatch'):
+    def plot_shaded_outputs_gtb(self, outputs, ci_plot=None, gtb_ci_plot='hatch', plot_targets=True):
         """
         Creates visualisation of uncertainty outputs with density of shading proportional to the number of model runs
         that went through a certain output value. Similar to our plotting approach for the award-winning figure in
@@ -1684,6 +1712,10 @@ class Project:
                     for limit in ['lower_limit', 'upper_limit']:
                         ax.plot(gtb_data['upper_limit'].keys(), gtb_data[limit].values(),
                                 color='.3', linewidth=0.3, label=None, alpha=alpha)
+
+                # plot the targets (and milestones) and the fitted exponential function to achieve them
+                base_value = gtb_data['point_estimate'][2014]  # should be 2015, but data not yet available
+                if plot_targets: plot_endtb_targets(ax, output, base_value, '.7')
 
             self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
                            legend=(o == len(outputs) - 1 and len(self.scenarios) > 1),

@@ -356,28 +356,6 @@ def get_line_pattern(label, strain_or_organ):
     return pattern
 
 
-def create_patch_from_dictionary(dictionary):
-    """
-    Creates an array that can be used as a patch for plotting.
-
-    Args:
-        dictionary: Dictionary with keys 'lower_limit', 'upper_limit' and 'year'
-            (at least, although 'point_estimate' will also usually be there)
-    Returns:
-        patch_array: The patch array for plotting
-    """
-
-    patch_array = numpy.zeros(shape=(len(dictionary['lower_limit']) * 2, 2))
-    j = 0
-    for i in dictionary['lower_limit']:
-        patch_array[j][0] = i  # years going forwards
-        patch_array[-(j + 1)][0] = i  # years going backwards
-        patch_array[j][1] = dictionary['lower_limit'][i]  # lower limit data going forwards
-        patch_array[-(j + 1)][1] = dictionary['upper_limit'][i]  # upper limit data going backwards
-        j += 1
-    return patch_array
-
-
 def create_patch_from_list(x_list, lower_border, upper_border):
     """
     Creates an array that can be used to plot a patch using the add patch plotting function in matplotlib.
@@ -387,7 +365,8 @@ def create_patch_from_list(x_list, lower_border, upper_border):
         lower_border: The lower edge of the patch
         upper_border: The upper edge of the patch
     Returns:
-        An array for use in plotting patches (with length of double the length of the inputs lists and height of two)
+        patch_array: An array for use in plotting patches
+            (with length of double the length of the inputs lists and height of two)
     """
 
     assert len(x_list) == len(lower_border) == len(upper_border), \
@@ -402,6 +381,16 @@ def create_patch_from_list(x_list, lower_border, upper_border):
 
 
 def extract_dict_to_list_key_ordering(dictionary, key_string):
+    """
+    Create a dictionary with each element lists, one giving the "times" that the list element refers to and the others
+    giving the data content that these times refer to - maintainting the order that the keys were originally in.
+
+    Args:
+        dictionary: The dictionary containing the data to be extracted (N.B. Assumption is that the keys refer to times)
+        key_string: The key of interest within the dictionary
+    Returns:
+        extracted_lists: Dictionary containing the extracted lists with keys 'times' and "key_string"
+    """
 
     extracted_lists = {}
     extracted_lists['times'] = sorted(dictionary.keys())
@@ -1446,6 +1435,7 @@ class Project:
 
             ''' plotting GTB data in background '''
             gtb_data = {}
+            gtb_data_lists = {}
 
             # notifications
             if output == 'notifications':
@@ -1455,7 +1445,13 @@ class Project:
             elif output in self.gtb_available_outputs:
                 for level in self.level_conversion_dict:
                     gtb_data[level] = self.inputs.original_data['tb'][indices[o] + self.level_conversion_dict[level]]
-                ax.add_patch(patches.Polygon(create_patch_from_dictionary(gtb_data), color=patch_colour[o]))
+                    gtb_data_lists.update(extract_dict_to_list_key_ordering(gtb_data[level], level))
+
+                ax.add_patch(patches.Polygon(
+                    create_patch_from_list(gtb_data_lists['times'],
+                                           gtb_data_lists['lower_limit'],
+                                           gtb_data_lists['upper_limit']),
+                    color=patch_colour[o]))
 
             # plot point estimates
             if output in self.gtb_available_outputs:

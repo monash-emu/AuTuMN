@@ -44,6 +44,7 @@ class Inputs:
         self.gui_inputs = gui_inputs
         self.country = gui_inputs['country']
         self.scenarios = self.gui_inputs['scenarios_to_run']
+        self.scenarios.append(15)
 
         # parameter structures
         self.original_data = None
@@ -1191,9 +1192,9 @@ class Inputs:
                                            'distribution': 'uniform'}]
             elif 'int_' in param and '_uncertainty' in param and type(self.model_constants[param]) == dict:
                 self.int_ranges_unc += [{'key': param[:-12],
-                                           'bounds': [self.model_constants[param]['lower'],
-                                                      self.model_constants[param]['upper']],
-                                           'distribution': 'uniform'}]
+                                         'bounds': [self.model_constants[param]['lower'],
+                                                    self.model_constants[param]['upper']],
+                                         'distribution': 'uniform'}]
 
     def get_data_to_fit(self):
         """

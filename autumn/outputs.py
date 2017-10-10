@@ -1661,14 +1661,15 @@ class Project:
                         self.model_runner.percentiles.index(centile), :][start_index:],
                         color=self.output_colours[None][1], linestyle='--', linewidth=.5, label=None)
 
-            progressive_patch_colours = [cm.Blues(x) for x in numpy.linspace(0., 1., 49)]
-            for i in range(1, 49):
+            progressive_patch_colours \
+                = [cm.Blues(x) for x in numpy.linspace(0., 1., self.model_runner.n_centiles_for_shading)]
+            for i in range(self.model_runner.n_centiles_for_shading):
                 patch = create_patch_from_list(
                     self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['times'][start_index:],
-                    self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_baseline'][output][
-                        self.model_runner.percentiles.index(i), :][start_index:],
-                    self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_baseline'][output][
-                        self.model_runner.percentiles.index(100 - i), :][start_index:])
+                    self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_baseline'][output][i+3, :][
+                        start_index:],
+                    self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_baseline'][output][-i-1, :][
+                        start_index:])
                 ax.add_patch(patches.Polygon(patch, color=progressive_patch_colours[i]))
 
             ''' plotting GTB data in background '''

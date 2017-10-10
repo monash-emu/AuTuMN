@@ -183,7 +183,8 @@ class ModelRunner:
         self.acceptance_dict = {}
         self.rejection_dict = {}
         self.uncertainty_percentiles = {}
-        self.percentiles = [2.5, 50., 97.5] + list(numpy.linspace(0., 100., 101))
+        self.n_centiles_for_shading = 1e2
+        self.percentiles = [2.5, 50., 97.5] + list(numpy.linspace(0., 100., self.n_centiles_for_shading * 2 + 1))
         self.accepted_no_burn_in_indices = []
         self.random_start = False  # whether to start from a random point, as opposed to the manually calibrated value
 

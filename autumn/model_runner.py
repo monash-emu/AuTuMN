@@ -183,7 +183,7 @@ class ModelRunner:
         self.acceptance_dict = {}
         self.rejection_dict = {}
         self.uncertainty_percentiles = {}
-        self.n_centiles_for_shading = 1e2
+        self.n_centiles_for_shading = 100
         self.percentiles = [2.5, 50., 97.5] + list(numpy.linspace(0., 100., self.n_centiles_for_shading * 2 + 1))
         self.accepted_no_burn_in_indices = []
         self.random_start = False  # whether to start from a random point, as opposed to the manually calibrated value
@@ -1049,7 +1049,7 @@ class ModelRunner:
             n_samples: Number of samples to explore
         """
 
-        # this should be moved to data processing at least, and preferably ultimately to inputs
+        # this should be moved to data processing
         intervention_param_dict = {'int_prop_xpert': ['int_prop_xpert_sensitivity_mdr']}
 
         # extract relevant intervention parameters from the intervention uncertainty dictionary

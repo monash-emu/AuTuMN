@@ -61,12 +61,9 @@ class BaseModel:
         self.loaded_compartments = None
         self.scenario = None
 
-    ##############################
-    ### Time-related functions ###
-    ##############################
+    ''' Time-related functions '''
 
     def make_times(self, start, end, delta):
-
         """
         Simple method to create time steps for reporting of outputs.
 
@@ -533,15 +530,15 @@ class BaseModel:
                     for i in range(n_compartment):
                         y_candidate.append(y[i] + (adaptive_dt / 6.) * (k1[i] + 2. * k2[i] + 2. * k3[i] + k4[i]))
 
-                if (numpy.asarray(y_candidate) >= 0.).all():  # Accept the new integration step temp_time
+                if (numpy.asarray(y_candidate) >= 0.).all():  # accept the new integration step temp_time
                     dt_is_ok = True
                     prev_time = temp_time
                     cpt_reduce_step = 0
                     for i in range(n_compartment):
                         y[i] = y_candidate[i]
                     if is_temp_time_in_times:
-                        store_step = True  # To end the while loop and update i_time
-                else:  # If integration failed at proposed step, reduce time step
+                        store_step = True  # to end the while loop and update i_time
+                else:  # if integration failed at proposed step, reduce time step
                     dt_is_ok = False
                     cpt_reduce_step += 1
                     if cpt_reduce_step > 50:
@@ -549,7 +546,7 @@ class BaseModel:
                         print [self.labels[i] for i in range(len(y_candidate)) if y_candidate[i] < 0.]
                         break
 
-            # Adjustments for risk groups
+            # adjustments for risk groups
             y = self.make_adjustments_during_integration(y)
 
             # For stored steps only, store compartment state, vars and intercompartmental flows
@@ -561,11 +558,9 @@ class BaseModel:
                 self.flow_array[i_time + 1, i_label] = self.flows[label]
 
         # self.calculate_diagnostics()
-        if self.run_costing:
-            self.calculate_economics_diagnostics()
+        if self.run_costing: self.calculate_economics_diagnostics()
 
     def process_uncertainty_params(self):
-
         """
         Perform some simple parameter processing - just for those that are used as uncertainty parameters and so can't
         be processed in the data_processing module.
@@ -574,7 +569,6 @@ class BaseModel:
         pass
 
     def make_adjustments_during_integration(self, y):
-
         """
         Adjusts the proportions of the population in each risk group according to the calculations
         made in assess_riskgroup_props.
@@ -588,21 +582,16 @@ class BaseModel:
         pass
 
     def checks(self):
-
         """
         Assertion(s) run during simulation.
         """
 
-        # Check all compartments are positive
-        for label in self.labels:
-            assert self.compartments[label] >= 0.
+        # check all compartments are positive
+        for label in self.labels: assert self.compartments[label] >= 0.
 
-    ######################################
-    ### Output/diagnostic calculations ###
-    ######################################
+    ''' Output/diagnostic calculations '''
 
     def calculate_output_vars(self):
-
         """
         Calculate diagnostic vars that can depend on self.flows, as well as self.vars calculated in calculate_vars.
         """
@@ -610,7 +599,6 @@ class BaseModel:
         pass
 
     def calculate_economics_diagnostics(self):
-
         """
         Run the economics diagnostics associated with a model run.
         Integration has been completed by this point.
@@ -619,16 +607,16 @@ class BaseModel:
 
         self.determine_whether_startups_apply()
 
-        # Find start and end indices for economics calculations
+        # find start and end indices for economics calculations
         start_index = tool_kit.find_first_list_element_at_least_value(self.times,
                                                                       self.inputs.model_constants['recent_time'])
         self.cost_times = self.times[start_index:]
         self.costs = numpy.zeros((len(self.cost_times), len(self.interventions_to_cost)))
 
-        # Loop over interventions to be costed
+        # loop over interventions to be costed
         for int_index, intervention in enumerate(self.interventions_to_cost):
 
-            # Loop over times to be costed
+            # loop over times to be costed
             for i, t in enumerate(self.cost_times):
                 cost = get_cost_from_coverage(self.scaleup_fns['int_prop_' + intervention](t),
                                               self.inputs.model_constants['econ_inflectioncost_' + intervention],
@@ -636,13 +624,13 @@ class BaseModel:
                                               self.inputs.model_constants['econ_unitcost_' + intervention],
                                               self.var_array[i, self.var_labels.index('popsize_' + intervention)])
 
-                # Start-up costs
+                # start-up costs
                 if self.startups_apply[intervention] \
                         and self.inputs.model_constants['scenario_start_time'] < t \
                                 < self.inputs.model_constants['scenario_start_time'] \
                                         + self.inputs.model_constants['econ_startupduration_' + intervention]:
 
-                    # New code with beta PDF used to smooth out scale-up costs
+                    # new code with beta PDF used to smooth out scale-up costs
                     cost += scipy.stats.beta.pdf((t - self.inputs.model_constants['scenario_start_time'])
                                                  / self.inputs.model_constants['econ_startupduration_' + intervention],
                                                  2.,
@@ -653,7 +641,6 @@ class BaseModel:
                 self.costs[i, int_index] = cost
 
     def update_vars_from_cost(self):
-
         """
         Update parameter values according to the funding allocated to each interventions. This process is done during
         integration.
@@ -688,7 +675,6 @@ class BaseModel:
             self.vars[vars_key] = coverage
 
     def get_compartment_soln(self, label):
-
         """
         Extract the column of the compartment array pertaining to a particular compartment.
 
@@ -701,7 +687,6 @@ class BaseModel:
         return numpy.array(self.compartment_soln[label])
 
     def get_var_soln(self, label):
-
         """
         Extract the column of var_array that pertains to a particular var.
 
@@ -715,7 +700,6 @@ class BaseModel:
         return self.var_array[:, i_label]
 
     def get_flow_soln(self, label):
-
         """
         Extract the column of flow_array that pertains to a particular intercompartmental flow.
 
@@ -729,7 +713,6 @@ class BaseModel:
         return self.flow_array[:, i_label]
 
     def load_state(self, i_time):
-
         """
         Returns the recorded compartment values at a particular point in time for the model.
 
@@ -745,7 +728,6 @@ class BaseModel:
         return state_compartments
 
     def calculate_outgoing_compartment_flows(self, from_compartment, to_compartment=''):
-
         """
         Method to sum the total flows emanating from a set of compartments containing a particular string, restricting
         to the flows entering a particular compartment of interest, if required.
@@ -779,7 +761,6 @@ class BaseModel:
         return outgoing_flows
 
     def calculate_outgoing_proportion(self, from_compartment, to_compartment=''):
-
         """
         Method that uses the previous method (calculate_outgoing_compartment_flows) to determine the proportion of all
         flows coming out of a compartment that go a specific compartment.
@@ -825,12 +806,9 @@ class BaseModel:
                 denominator += self.vars[flow[1]]
         return numerator / denominator
 
-    ###############################
-    ### Flow diagram production ###
-    ###############################
+    ''' Flow diagram production '''
 
     def make_flow_diagram(self, png):
-
         """
         Use graphviz module to create flow diagram of compartments and intercompartmental flows.
         """

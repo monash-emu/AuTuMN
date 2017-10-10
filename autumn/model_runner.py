@@ -781,7 +781,7 @@ class ModelRunner:
                 # describe progression of likelihood analysis
                 self.add_comment_to_gui_window(
                     'Previous log likelihood:\n%4.3f\nLog likelihood this run:\n%4.3f\nAcceptance probability:\n%4.3f'
-                    % (prev_log_likelihood, log_likelihood, min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
+                    % (log_likelihood, prev_log_likelihood, min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
                     + '\nWhether accepted:\n%s\n________________\n' % str(bool(accepted)))
                 self.loglikelihoods.append(log_likelihood)
 

@@ -84,7 +84,6 @@ class ConsolidatedModel(StratifiedModel):
 
         # model attributes set from model runner object
         self.inputs = inputs
-        self.scenario = scenario
 
         # model attributes to be set directly to attributes of the inputs object
         for attribute in ['compartment_types', 'organ_status', 'strains', 'riskgroups', 'agegroups',

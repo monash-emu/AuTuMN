@@ -157,6 +157,7 @@ class Inputs:
     ''' Constant parameter processing methods '''
 
     # populate with first round of unprocessed parameters (called before model structure defined)
+
     def process_model_constants(self):
         """
         Master method to call methods for processing constant model parameters.
@@ -217,6 +218,7 @@ class Inputs:
         self.model_constants['tb_multiplier_fully_protection'] = 1.
 
     # derive further parameters (called after model structure defined)
+
     def find_additional_parameters(self):
         """
         Find additional parameters.
@@ -524,6 +526,7 @@ class Inputs:
         self.adjust_param_for_reporting('program_prop_detect', 'Bulgaria', 0.95)  # Bulgaria thought over-estimated CDR
 
     # general and demographic methods
+
     def extract_freeze_times(self):
         """
         Extract the freeze_times for each scenario, if specified.
@@ -596,6 +599,7 @@ class Inputs:
                         self.time_variants[perc_name][year] = self.time_variants[time_variant][year]
 
     # treatment outcome methods
+
     def find_treatment_outcomes(self):
         """
         Master method for working through all the processes for finding treatment outcome functions.
@@ -735,6 +739,7 @@ class Inputs:
                                     = self.derived_data['prop' + strain + history + outcome][year]
 
     # miscellaneous methods
+
     def find_irrelevant_treatment_timevariants(self):
         """
         Find treatment time-variant functions that are irrelevant to requested model structure (such as those specific
@@ -1002,6 +1007,7 @@ class Inputs:
                     self.interventions_to_cost[scenario] += [intervention]
 
     # actually has to be called later and is just required for optimisation
+
     def find_intervention_startdates(self):
         """
         Find the dates when the different interventions start and populate self.intervention_startdates

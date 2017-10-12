@@ -115,7 +115,7 @@ class ConsolidatedModel(StratifiedModel):
         self.outcomes = ['_success', '_death', '_default']
         self.treatment_stages = ['_infect', '_noninfect']
 
-        # intervention and economics-related initialisiations
+        # intervention and economics-related initialisations
         if self.eco_drives_epi: self.distribute_funding_across_years()
 
         # list of risk groups affected by ngo activities for detection
@@ -693,6 +693,7 @@ class ConsolidatedModel(StratifiedModel):
                         -= self.vars['program_prop_treatment' + history + '_death' + strain] \
                            * self.params['int_prop_treatment_support_improvement'] \
                            * self.vars['int_prop_treatment_support_relative']
+
             elif 'int_prop_treatment_support_absolute' in self.relevant_interventions and strain == self.strains[0]:
                 for history in self.histories:
                     self.vars['program_prop_treatment' + history + '_success' + strain] \
@@ -1014,7 +1015,7 @@ class ConsolidatedModel(StratifiedModel):
                     if 'latent_early' in to_label and strain in to_label and agegroup in to_label:
                         self.vars['popsize_ipt' + agegroup] += self.compartments[from_label] * self.vars[rate]
 
-        # BCG (So simple that it's almost unnecessary, but needed for loops over int names)
+        # BCG (so simple that it's almost unnecessary, but needed for loops over int names)
         self.vars['popsize_vaccination'] = self.vars['births_total']
 
         # Xpert and improve DST - all presentations for assessment for active TB
@@ -1110,7 +1111,7 @@ class ConsolidatedModel(StratifiedModel):
                 if 'treatment' in compartment and '_mdr' in compartment:
                     self.vars['popsize_shortcourse_mdr'] += self.compartments[compartment]
 
-        # OpenDoors activities
+        # open doors activities
         if 'int_prop_opendoors_activities' in self.relevant_interventions:
             # number of diagnosed cases (LTBI + TB) if coverage was 100%
             self.vars['popsize_opendoors_activities'] = 598*2.

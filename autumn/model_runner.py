@@ -1038,7 +1038,7 @@ class ModelRunner:
 
     ''' Intervention uncertainty methods '''
 
-    def run_intervention_uncertainty(self, intervention='int_prop_xpert', n_samples=5):
+    def run_intervention_uncertainty(self, intervention='int_perc_treatment_support_relative', n_samples=5):
         """
         Master method for running intervention uncertainty. That is, starting from the calibrated baseline simulated,
         project forward scenarios based on varying parameters for the effectiveness of the intervention under
@@ -1050,7 +1050,7 @@ class ModelRunner:
         """
 
         # this should be moved to data processing
-        intervention_param_dict = {'int_prop_xpert': ['int_prop_xpert_sensitivity_mdr']}
+        intervention_param_dict = {'int_perc_treatment_support_relative': ['int_prop_treatment_support_improvement']}
 
         # extract relevant intervention parameters from the intervention uncertainty dictionary
         working_param_dict = {}
@@ -1070,17 +1070,18 @@ class ModelRunner:
                     + (working_param_dict[param]['bounds'][1] - working_param_dict[param]['bounds'][0])
                     * sample_values[sample][p])
 
-        # prepare for integration of scenario
-        self.model_dict['intervention_uncertainty'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
-        self.prepare_new_model_from_baseline('manual', 'intervention_uncertainty')
-        self.model_dict['intervention_uncertainty'].relevant_interventions = [intervention]
-
-        # need to think about the coverage of the intervention and make sure it is non-zero next
-
         # loop through parameter values
         for sample in range(n_samples):
+
+            # prepare for integration of scenario
+            self.model_dict['intervention_uncertainty'] = model.ConsolidatedModel(15, self.inputs, self.gui_inputs)
+            self.prepare_new_model_from_baseline('manual', 'intervention_uncertainty')
+            self.model_dict['intervention_uncertainty'].relevant_interventions.append(
+                'int_prop_treatment_support_relative')
             for param in parameter_values:
                 self.model_dict['intervention_uncertainty'].set_parameter(param, parameter_values[param][sample])
+
+            # integrate and save
             self.model_dict['intervention_uncertainty'].integrate()
             self.store_uncertainty('intervention_uncertainty', epi_outputs_to_analyse=self.epi_outputs_to_analyse)
 

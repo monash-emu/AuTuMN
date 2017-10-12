@@ -44,7 +44,6 @@ class Inputs:
         self.gui_inputs = gui_inputs
         self.country = gui_inputs['country']
         self.scenarios = self.gui_inputs['scenarios_to_run']
-        self.scenarios.append(15)
 
         # parameter structures
         self.original_data = None
@@ -59,6 +58,7 @@ class Inputs:
         # for incidence for ex, width of normal posterior relative to CI width in data
         self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
         self.intervention_uncertainty = False
+        if self.intervention_uncertainty: self.scenarios.append(15)
 
         # model structure
         self.available_strains = ['_ds', '_mdr', '_xdr']

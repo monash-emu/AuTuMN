@@ -1407,10 +1407,10 @@ class Project:
         # plot main outputs
         if self.gui_inputs['output_gtb_plots']:
             self.plot_outputs_against_gtb(self.gtb_available_outputs, ci_plot=None)
-            if self.gui_inputs['output_uncertainty']:
+            if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
                 self.plot_outputs_against_gtb(self.gtb_available_outputs, ci_plot=True)
                 self.plot_outputs_against_gtb(self.gtb_available_outputs, ci_plot=False)
-                self.plot_shaded_outputs_gtb(self.gtb_available_outputs)
+                # self.plot_shaded_outputs_gtb(self.gtb_available_outputs)
             if self.gui_inputs['n_strains'] > 1:
                 self.plot_resistant_strain_outputs(['incidence', 'mortality', 'prevalence', 'perc_incidence'])
 
@@ -1586,28 +1586,43 @@ class Project:
                             color=self.output_colours[scenario][1], linestyle='--', linewidth=.5, label=None)
                     end_filename = '_ci'
 
-            # plot progressive model run outputs for baseline scenario
-            elif self.gui_inputs['output_uncertainty']:
-                for run in range(len(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output])):
+            # plot progressive model run outputs for uncertainty analyses
+            elif self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
+
+                # get relevant data according to whether intervention or baseline uncertainty is being run
+                if self.inputs.intervention_uncertainty:
+                    runs = self.inputs.n_samples
+                    self.start_time_index = 0
+                    uncertainty_type = 'intervention_uncertainty'
+                    ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'][self.start_time_index:],
+                            self.model_runner.epi_outputs['manual_baseline'][output][self.start_time_index:],
+                            color='k', linewidth=1.2)
+                else:
+                    uncertainty_type = 'uncertainty_baseline'
+                    runs = len(self.model_runner.epi_outputs_uncertainty[uncertainty_type][output])
+
+                # plot the runs
+                for run in range(runs):
                     if run not in self.model_runner.accepted_indices and self.plot_rejected_runs:
                         ax.plot(self.model_runner.epi_outputs_uncertainty[
-                                    'uncertainty_baseline']['times'][self.start_time_index:],
+                                    uncertainty_type]['times'][self.start_time_index:],
                                 self.model_runner.epi_outputs_uncertainty[
-                                    'uncertainty_baseline'][output][run, self.start_time_index:],
+                                    uncertainty_type][output][run, self.start_time_index:],
                                 linewidth=.2, color='y', label=t_k.capitalise_and_remove_underscore('baseline'))
                     else:
                         ax.plot(self.model_runner.epi_outputs_uncertainty[
-                                    'uncertainty_baseline']['times'][self.start_time_index:],
+                                    uncertainty_type]['times'][self.start_time_index:],
                                 self.model_runner.epi_outputs_uncertainty[
-                                    'uncertainty_baseline'][output][run, self.start_time_index:],
+                                    uncertainty_type][output][run, self.start_time_index:],
                                 linewidth=1.2,
                                 color=str(1. - float(run) / float(len(
-                                    self.model_runner.epi_outputs_uncertainty['uncertainty_baseline'][output]))),
+                                    self.model_runner.epi_outputs_uncertainty[uncertainty_type][output]))),
                                 label=t_k.capitalise_and_remove_underscore('baseline'))
                     end_filename = '_progress'
 
             self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
-                           legend=(o == len(outputs) - 1 and len(self.scenarios) > 1),
+                           legend=(o == len(outputs) - 1 and len(self.scenarios) > 1
+                                   and not self.inputs.intervention_uncertainty),
                            y_axis_type='raw', y_label=yaxis_label[o])
 
         # add main title and save
@@ -1647,8 +1662,7 @@ class Project:
             # plot median and upper and lower CIs if requested
             if ci_plot:
                 ax.plot(
-                    self.model_runner.epi_outputs_uncertainty['uncertainty_' + scenario_name][
-                        'times'][start_index:],
+                    self.model_runner.epi_outputs_uncertainty['uncertainty_' + scenario_name]['times'][start_index:],
                     self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_' + scenario_name][
                         output][self.model_runner.percentiles.index(50), :][start_index:],
                     color=self.output_colours[None][1], linestyle=self.output_colours[None][0],

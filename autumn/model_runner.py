@@ -1036,7 +1036,7 @@ class ModelRunner:
 
     ''' Intervention uncertainty methods '''
 
-    def run_intervention_uncertainty(self, intervention='int_perc_treatment_support_relative', n_samples=5):
+    def run_intervention_uncertainty(self, intervention='int_perc_treatment_support_relative'):
         """
         Master method for running intervention uncertainty. That is, starting from the calibrated baseline simulated,
         project forward scenarios based on varying parameters for the effectiveness of the intervention under
@@ -1058,18 +1058,18 @@ class ModelRunner:
                     working_param_dict[param] = self.inputs.int_ranges_unc[int_param]
 
         # generate samples using latin hypercube design
-        sample_values = lhs(len(working_param_dict), samples=n_samples)
+        sample_values = lhs(len(working_param_dict), samples=self.inputs.n_samples)
         parameter_values = {}
         for p, param in enumerate(working_param_dict):
             parameter_values[param] = []
-            for sample in range(n_samples):
+            for sample in range(self.inputs.n_samples):
                 parameter_values[param].append(
                     working_param_dict[param]['bounds'][0]
                     + (working_param_dict[param]['bounds'][1] - working_param_dict[param]['bounds'][0])
                     * sample_values[sample][p])
 
         # loop through parameter values
-        for sample in range(n_samples):
+        for sample in range(self.inputs.n_samples):
 
             # prepare for integration of scenario
             self.model_dict['intervention_uncertainty'] = model.ConsolidatedModel(15, self.inputs, self.gui_inputs)

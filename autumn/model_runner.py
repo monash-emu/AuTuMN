@@ -165,7 +165,7 @@ class ModelRunner:
         self.model_dict = {}
         self.interventions_to_cost = self.inputs.interventions_to_cost
 
-        # epidemiological uncertainty-related attributes
+        # uncertainty-related attributes
         self.is_last_run_success = False
         self.loglikelihoods = []
         self.outputs_unc = [{'key': 'incidence',
@@ -187,9 +187,7 @@ class ModelRunner:
         self.percentiles = [2.5, 50., 97.5] + list(numpy.linspace(0., 100., self.n_centiles_for_shading * 2 + 1))
         self.accepted_no_burn_in_indices = []
         self.random_start = False  # whether to start from a random point, as opposed to the manually calibrated value
-
-        # intervention uncertainty-related
-        self.intervention_uncertainty = False
+        self.intervention_uncertainty = self.inputs.intervention_uncertainty
 
         # optimisation attributes
         self.optimisation = False  # leave True even if loading optimisation results

@@ -57,7 +57,7 @@ class Inputs:
         self.data_to_fit = {}
         # for incidence for ex, width of normal posterior relative to CI width in data
         self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
-        self.intervention_uncertainty = False
+        self.intervention_uncertainty = True
         if self.intervention_uncertainty: self.scenarios.append(15)
 
         # model structure

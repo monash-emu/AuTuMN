@@ -295,14 +295,14 @@ def find_scenario_string_from_number(scenario):
 
     Args:
         scenario: The scenario value or None for baseline
-        return: The string representing the scenario
+    Returns:
+        The string representing the scenario
     """
 
     if scenario is None:
-        scenario_name = 'baseline'
+        return 'baseline'
     else:
-        scenario_name = 'scenario_' + str(scenario)
-    return scenario_name
+        return 'scenario_' + str(scenario)
 
 
 def find_scenario_number_from_string(scenario):

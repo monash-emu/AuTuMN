@@ -186,6 +186,7 @@ class ModelRunner:
 
         # optimisation attributes
         self.optimisation = False  # leave True even if loading optimisation results
+        self.opti_outputs_dir = 'saved_optimisation_analyses'
         self.indicator_to_minimise = 'incidence'  # currently must be 'incidence' or 'mortality'
         self.annual_envelope = [112.5e6]  # size of funding envelope in scenarios to be run
         self.save_opti = True
@@ -271,7 +272,6 @@ class ModelRunner:
         if self.optimisation and not self.load_optimisation: self.run_optimisation()
 
         # prepare file for saving, save and load as requested
-        self.opti_outputs_dir = 'saved_optimisation_analyses'
         if not os.path.isdir(self.opti_outputs_dir): os.makedirs(self.opti_outputs_dir)
         self.load_opti_results()
         self.save_opti_results()
@@ -316,10 +316,10 @@ class ModelRunner:
         # if integer-based dictionaries required
         self.epi_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.epi_outputs_dict))
 
-        # same for costs
-        if len(self.model_dict[scenario_name].interventions_to_cost) > 0:
-            self.cost_outputs_dict.update(
-                get_output_dicts_from_lists(models_to_analyse=self.model_dict, output_dict_of_lists=self.cost_outputs))
+        # same for costs if the interventions to cost list has at least one entry
+        if self.model_dict[scenario_name].interventions_to_cost:
+            self.cost_outputs_dict.update(get_output_dicts_from_lists(models_to_analyse=self.model_dict,
+                                                                      output_dict_of_lists=self.cost_outputs))
             self.cost_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.cost_outputs_dict))
 
     def prepare_new_model_from_baseline(self, run_type, scenario_name):

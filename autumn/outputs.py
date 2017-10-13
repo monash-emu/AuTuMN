@@ -1410,7 +1410,7 @@ class Project:
             if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
                 self.plot_outputs_against_gtb(self.gtb_available_outputs, ci_plot=True)
                 self.plot_outputs_against_gtb(self.gtb_available_outputs, ci_plot=False)
-                # self.plot_shaded_outputs_gtb(self.gtb_available_outputs)
+                self.plot_shaded_outputs_gtb(self.gtb_available_outputs)
             if self.gui_inputs['n_strains'] > 1:
                 self.plot_resistant_strain_outputs(['incidence', 'mortality', 'prevalence', 'perc_incidence'])
 
@@ -1641,7 +1641,7 @@ class Project:
         fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb' + end_filename)
 
-    def plot_shaded_outputs_gtb(self, outputs, ci_plot=None, gtb_ci_plot='hatch', plot_targets=True):
+    def plot_shaded_outputs_gtb(self, outputs, ci_plot=False, gtb_ci_plot='hatch', plot_targets=True):
         """
         Creates visualisation of uncertainty outputs with density of shading proportional to the number of model runs
         that went through a certain output value. Similar to our plotting approach for the award-winning figure in
@@ -1668,22 +1668,28 @@ class Project:
             ''' plot modelled data '''
 
             # plot with uncertainty confidence intervals
-            scenario_name = t_k.find_scenario_string_from_number(None)
+            scenario_name = 'baseline'
             start_index = self.find_start_index(None)
+
+            if self.inputs.intervention_uncertainty:
+                uncertainty_type = 'intervention_uncertainty'
+                start_index = 0
+            else:
+                uncertainty_type = 'uncertainty_baseline'
 
             # plot median and upper and lower CIs if requested
             if ci_plot:
                 ax.plot(
-                    self.model_runner.epi_outputs_uncertainty['uncertainty_' + scenario_name]['times'][start_index:],
-                    self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_' + scenario_name][
+                    self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
+                    self.model_runner.epi_outputs_uncertainty_centiles[uncertainty_type][
                         output][self.model_runner.percentiles.index(50), :][start_index:],
                     color=self.output_colours[None][1], linestyle=self.output_colours[None][0],
                     linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
                 for centile in [2.5, 97.5]:
                     ax.plot(
-                        self.model_runner.epi_outputs_uncertainty['uncertainty_' + scenario_name]['times'][
+                        self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][
                             start_index:],
-                        self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_' + scenario_name][output][
+                        self.model_runner.epi_outputs_uncertainty_centiles[uncertainty_type][output][
                         self.model_runner.percentiles.index(centile), :][start_index:],
                         color=self.output_colours[None][1], linestyle='--', linewidth=.5, label=None)
 
@@ -1691,17 +1697,21 @@ class Project:
                 = [cm.Blues(x) for x in numpy.linspace(0., 1., self.model_runner.n_centiles_for_shading)]
             for i in range(self.model_runner.n_centiles_for_shading):
                 patch = create_patch_from_list(
-                    self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['times'][start_index:],
-                    self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_baseline'][output][i+3, :][
+                    self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
+                    self.model_runner.epi_outputs_uncertainty_centiles[uncertainty_type][output][i+3, :][
                         start_index:],
-                    self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_baseline'][output][-i-1, :][
+                    self.model_runner.epi_outputs_uncertainty_centiles[uncertainty_type][output][-i-1, :][
                         start_index:])
                 ax.add_patch(patches.Polygon(patch, color=progressive_patch_colours[i]))
+
+            if self.inputs.intervention_uncertainty:
+                ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'][self.start_time_index:],
+                        self.model_runner.epi_outputs['manual_baseline'][output][self.start_time_index:],
+                        color='k', linewidth=1.2)
 
             ''' plotting GTB data in background '''
 
             gtb_data = {}
-
             if gtb_ci_plot == 'hatch':
                 alpha = 1.
             elif gtb_ci_plot == 'patch':
@@ -1717,7 +1727,6 @@ class Project:
                 for level in self.level_conversion_dict:
                     gtb_data[level] = self.inputs.original_data['tb'][indices[o] + self.level_conversion_dict[level]]
                     gtb_data_lists.update(extract_dict_to_list_key_ordering(gtb_data[level], level))
-
                 if gtb_ci_plot == 'patch':
                     ax.add_patch(patches.Polygon(
                         create_patch_from_list(gtb_data_lists['times'],

@@ -61,6 +61,9 @@ class Inputs:
         if self.intervention_uncertainty:
             self.scenarios.append(15)
             self.n_samples = 5
+            self.intervention_param_dict \
+                = {'int_prop_treatment_support_relative': ['int_prop_treatment_support_improvement']}
+
 
         # model structure
         self.available_strains = ['_ds', '_mdr', '_xdr']

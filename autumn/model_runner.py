@@ -8,7 +8,6 @@ import datetime
 from scipy.stats import norm, beta
 from Tkinter import *
 from scipy.optimize import minimize
-from random import uniform
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import outputs
@@ -27,10 +26,10 @@ def generate_candidates(n_candidates, param_ranges_unc):
     param_candidates = {}
     for param_dict in param_ranges_unc:
 
-        # Find bounds of parameter
+        # find bounds of parameter
         bound_low, bound_high = param_dict['bounds'][0], param_dict['bounds'][1]
 
-        # Draw from distribution
+        # draw from distribution
         if param_dict['distribution'] == 'beta':
             x = bound_low + numpy.random.beta(2., 2., n_candidates) * (bound_high - bound_low)
         elif param_dict['distribution'] == 'uniform':
@@ -210,8 +209,7 @@ class ModelRunner:
             = ['engage_lowquality', 'ipt_age0to5', 'intensive_screening']
 
         # output-related attributes
-        self.epi_outputs_to_analyse \
-            = ['population', 'incidence', 'prevalence', 'mortality', 'true_mortality', 'notifications']
+        self.epi_outputs_to_analyse = ['incidence', 'prevalence', 'mortality', 'true_mortality', 'notifications']
         self.epi_outputs = {}
         self.epi_outputs_dict = {}
         self.epi_outputs_integer_dict = {}
@@ -239,7 +237,7 @@ class ModelRunner:
         if self.js_gui:
             self.js_gui('init')
 
-    ''' Master methods to run other methods '''
+    ''' master methods to run other methods '''
 
     def master_runner(self):
         """
@@ -344,33 +342,40 @@ class ModelRunner:
         start_time = self.model_dict[run_type + '_baseline'].times[scenario_start_time_index]
         self.model_dict[scenario_name].start_time = start_time
         self.model_dict[scenario_name].next_time_point = start_time
-        self.model_dict[scenario_name].loaded_compartments = \
-            self.model_dict[run_type + '_baseline'].load_state(scenario_start_time_index)
+        self.model_dict[scenario_name].loaded_compartments \
+            = self.model_dict[run_type + '_baseline'].load_state(scenario_start_time_index)
 
-    ''' Model interpretation methods '''
+    ''' model interpretation methods '''
 
     def find_epi_outputs(self, scenario, outputs_to_analyse, stratifications=[]):
         """
         Method to extract all requested epidemiological outputs from the models. Intended ultimately to be flexible\
         enough for use for analysis of scenarios, uncertainty and optimisation.
+
+        Args:
+            scenario: The number value representing the scenario of the model to be analysed
+            outputs_to_analyse: List of strigs for the outputs of interest to be worked through
+            stratifications: Whether it is necessary to provide outputs by any model compartmental stratifications
         """
 
+        ''' compulsory elements to return '''
+
+        outputs_to_analyse.append('population')
         epi_outputs = {'times': self.model_dict[scenario].times}
 
         ''' unstratified outputs '''
 
-        # initialise lists
+        # initialise lists to zeros to allow incrementation
         for output in outputs_to_analyse:
             epi_outputs[output] = [0.] * len(epi_outputs['times'])
             for strain in self.model_dict[scenario].strains:
                 epi_outputs[output + strain] = [0.] * len(epi_outputs['times'])
 
         # population
-        if 'population' in outputs_to_analyse:
-            for compartment in self.model_dict[scenario].compartments:
-                epi_outputs['population'] \
-                    = elementwise_list_addition(self.model_dict[scenario].get_compartment_soln(compartment),
-                                                epi_outputs['population'])
+        for compartment in self.model_dict[scenario].compartments:
+            epi_outputs['population'] \
+                = elementwise_list_addition(self.model_dict[scenario].get_compartment_soln(compartment),
+                                            epi_outputs['population'])
 
         # replace zeroes with small numbers for division
         total_denominator = tool_kit.prepare_denominator(epi_outputs['population'])
@@ -471,13 +476,12 @@ class ModelRunner:
                         epi_outputs[output + stratum] = [0.] * len(epi_outputs['times'])
 
                     # population
-                    if 'population' in outputs_to_analyse:
-                        for compartment in self.model_dict[scenario].compartments:
-                            if stratum in compartment:
-                                epi_outputs['population' + stratum] \
-                                    = elementwise_list_addition(
-                                    self.model_dict[scenario].get_compartment_soln(compartment),
-                                    epi_outputs['population' + stratum])
+                    for compartment in self.model_dict[scenario].compartments:
+                        if stratum in compartment:
+                            epi_outputs['population' + stratum] \
+                                = elementwise_list_addition(
+                                self.model_dict[scenario].get_compartment_soln(compartment),
+                                epi_outputs['population' + stratum])
 
                     # the population denominator to be used with zeros replaced with small numbers
                     stratum_denominator \
@@ -1036,7 +1040,7 @@ class ModelRunner:
 
     ''' Intervention uncertainty methods '''
 
-    def run_intervention_uncertainty(self, intervention='int_perc_treatment_support_relative'):
+    def run_intervention_uncertainty(self, intervention='int_prop_treatment_support_relative'):
         """
         Master method for running intervention uncertainty. That is, starting from the calibrated baseline simulated,
         project forward scenarios based on varying parameters for the effectiveness of the intervention under
@@ -1047,14 +1051,11 @@ class ModelRunner:
             n_samples: Number of samples to explore
         """
 
-        # this should be moved to data processing
-        intervention_param_dict = {'int_perc_treatment_support_relative': ['int_prop_treatment_support_improvement']}
-
         # extract relevant intervention parameters from the intervention uncertainty dictionary
         working_param_dict = {}
-        for param in intervention_param_dict[intervention]:
+        for param in self.inputs.intervention_param_dict[intervention]:
             for int_param in range(len(self.inputs.int_ranges_unc)):
-                if self.inputs.int_ranges_unc[int_param]['key'] in intervention_param_dict[intervention]:
+                if self.inputs.int_ranges_unc[int_param]['key'] in self.inputs.intervention_param_dict[intervention]:
                     working_param_dict[param] = self.inputs.int_ranges_unc[int_param]
 
         # generate samples using latin hypercube design
@@ -1074,8 +1075,7 @@ class ModelRunner:
             # prepare for integration of scenario
             self.model_dict['intervention_uncertainty'] = model.ConsolidatedModel(15, self.inputs, self.gui_inputs)
             self.prepare_new_model_from_baseline('manual', 'intervention_uncertainty')
-            self.model_dict['intervention_uncertainty'].relevant_interventions.append(
-                'int_prop_treatment_support_relative')
+            self.model_dict['intervention_uncertainty'].relevant_interventions.append(intervention)
             for param in parameter_values:
                 self.model_dict['intervention_uncertainty'].set_parameter(param, parameter_values[param][sample])
 
@@ -1200,10 +1200,8 @@ class ModelRunner:
                     self.model_dict['optimisation'].available_funding[intervention] = x[i] * self.total_funding
                 self.model_dict['optimisation'].distribute_funding_across_years()
                 self.model_dict['optimisation'].integrate()
-                output_list \
-                    = self.find_epi_outputs('optimisation',
-                                            outputs_to_analyse=['population', 'incidence', 'mortality',
-                                                                'true_mortality'])
+                output_list = self.find_epi_outputs('optimisation',
+                                                    outputs_to_analyse=['incidence', 'mortality', 'true_mortality'])
                 return output_list[self.indicator_to_minimise][-1]
 
             # if only one intervention, the distribution is obvious
@@ -1288,8 +1286,7 @@ class ModelRunner:
 
         # find epi results
         output_list = self.find_epi_outputs('optimisation',
-                                            outputs_to_analyse=['population', 'incidence',
-                                                                'mortality', 'true_mortality'])
+                                            outputs_to_analyse=['incidence', 'mortality', 'true_mortality'])
         del self.model_dict['optimisation']
         return {'best_allocation': self.optimal_allocation, 'incidence': output_list['incidence'][-1],
                 'mortality': output_list['mortality'][-1]}

@@ -53,12 +53,21 @@ def elementwise_list_addition(increment, list_to_increment):
 
 def elementwise_list_division(numerator, denominator):
     """
-    Simple method to element-wise increment a list by the values in another list of the same length.
+    Simple method to element-wise divide a list by the values in another list of the same length.
     """
 
     assert len(numerator) == len(denominator), 'Attempted to divide two lists of different lengths'
     return [n / d for n, d in zip(numerator, denominator)]
 
+
+def elementwise_list_percentage(numerator, denominator):
+    """
+    Simple method to element-wise divide a list by the values in another list of the same length to produce a
+    percentage.
+    """
+
+    assert len(numerator) == len(denominator), 'Attempted to divide two lists of different lengths'
+    return [n / d * 1e2 for n, d in zip(numerator, denominator)]
 
 def find_integer_dict_from_float_dict(float_dict):
     # Method may be redundant with better code
@@ -352,7 +361,7 @@ class ModelRunner:
             stratifications: Whether it is necessary to provide outputs by any model compartmental stratifications
         """
 
-        ''' compulsory elements to return '''
+        ''' compulsory elements to calculate '''
 
         outputs_to_analyse.append('population')
         epi_outputs = {'times': self.model_dict[scenario].times}
@@ -382,9 +391,8 @@ class ModelRunner:
             for strain in strains:
                 for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:  # variable flows
                     if 'latent' in from_label and 'active' in to_label and strain in to_label:
-                        incidence_increment \
-                            = self.model_dict[scenario].get_compartment_soln(from_label) \
-                              * self.model_dict[scenario].get_var_soln(rate) / total_denominator * 1e5
+                        incidence_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
+                                              * self.model_dict[scenario].get_var_soln(rate) / total_denominator * 1e5
                         epi_outputs['incidence' + strain] \
                             = elementwise_list_addition(incidence_increment, epi_outputs['incidence' + strain])
                 for from_label, to_label, rate in self.model_dict[scenario].fixed_transfer_rate_flows:  # fixed flows
@@ -398,8 +406,8 @@ class ModelRunner:
             if len(self.model_dict[scenario].strains) > 1:
                 for strain in self.model_dict[scenario].strains:
                     epi_outputs['perc_incidence' + strain] \
-                        = [i / j * 1e2 for i, j in zip(epi_outputs['incidence' + strain],
-                                                       tool_kit.prepare_denominator(epi_outputs['incidence']))]
+                        = elementwise_list_percentage(epi_outputs['incidence' + strain],
+                                                      tool_kit.prepare_denominator(epi_outputs['incidence']))
 
         # notifications
         if 'notifications' in outputs_to_analyse:
@@ -415,25 +423,27 @@ class ModelRunner:
         # mortality
         if 'mortality' in outputs_to_analyse:
             for strain in strains:
-                for from_label, rate in self.model_dict[scenario].fixed_infection_death_rate_flows:  # fixed flows
+
+                # fixed flows are outside of the health system and so the natural death contribution is reduced
+                for from_label, rate in self.model_dict[scenario].fixed_infection_death_rate_flows:
                     if strain in from_label:
                         mortality_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
                                               * rate / total_denominator * 1e5
                         epi_outputs['true_mortality' + strain] \
                             = elementwise_list_addition(mortality_increment, epi_outputs['true_mortality' + strain])
-                        # reduce outside health system contribution
                         epi_outputs['mortality' + strain] \
                             = elementwise_list_addition(
-                            mortality_increment * self.model_dict[scenario].params['program_prop_death_reporting'],
-                            epi_outputs['mortality' + strain])
-                for from_label, rate in self.model_dict[scenario].var_infection_death_rate_flows:  # variable flows
+                                mortality_increment * self.model_dict[scenario].params['program_prop_death_reporting'],
+                                epi_outputs['mortality' + strain])
+
+                # variable flows are within the health system and so true and reported are dealt with the same way
+                for from_label, rate in self.model_dict[scenario].var_infection_death_rate_flows:
                     if strain in from_label:
                         mortality_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
                                               * self.model_dict[scenario].get_var_soln(rate) / total_denominator * 1e5
-                        epi_outputs['true_mortality' + strain] \
-                            = elementwise_list_addition(mortality_increment, epi_outputs['true_mortality' + strain])
-                        epi_outputs['mortality' + strain] \
-                            = elementwise_list_addition(mortality_increment, epi_outputs['mortality' + strain])
+                        for mortality_type in ['true_mortality', 'mortality']:
+                            epi_outputs[mortality_type + strain] \
+                                = elementwise_list_addition(mortality_increment, epi_outputs[mortality_type + strain])
 
         # prevalence
         if 'prevalence' in outputs_to_analyse:
@@ -445,19 +455,19 @@ class ModelRunner:
                         epi_outputs['prevalence' + strain] \
                             = elementwise_list_addition(prevalence_increment, epi_outputs['prevalence' + strain])
 
-        # infections
+        # infections (absolute number)
         if 'infections' in outputs_to_analyse:
             for strain in strains:
                 for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
                     if 'latent_early' in to_label and strain in to_label:
-                        # absolute number of infections
                         epi_outputs['infections' + strain] \
                             = elementwise_list_addition(self.model_dict[scenario].get_compartment_soln(from_label)
                                                         * self.model_dict[scenario].get_var_soln(rate),
                                                         epi_outputs['infections' + strain])
+
                 # annual risk of infection (as a percentage)
                 epi_outputs['annual_risk_infection' + strain] \
-                    = [i / j * 1e2 for i, j in zip(epi_outputs['infections' + strain], total_denominator)]
+                    = elementwise_list_percentage(epi_outputs['infections' + strain], total_denominator)
 
         ''' stratified outputs (currently not repeated for each strain) '''
 
@@ -466,24 +476,20 @@ class ModelRunner:
                 for stratum in stratification:
 
                     # initialise lists
-                    for output in outputs_to_analyse:
-                        epi_outputs[output + stratum] = [0.] * len(epi_outputs['times'])
+                    for output in outputs_to_analyse: epi_outputs[output + stratum] = [0.] * len(epi_outputs['times'])
 
                     # population
                     for compartment in self.model_dict[scenario].compartments:
                         if stratum in compartment:
                             epi_outputs['population' + stratum] \
-                                = elementwise_list_addition(
-                                self.model_dict[scenario].get_compartment_soln(compartment),
-                                epi_outputs['population' + stratum])
+                                = elementwise_list_addition(self.model_dict[scenario].get_compartment_soln(compartment),
+                                                            epi_outputs['population' + stratum])
 
                     # the population denominator to be used with zeros replaced with small numbers
-                    stratum_denominator \
-                        = tool_kit.prepare_denominator(epi_outputs['population' + stratum])
+                    stratum_denominator = tool_kit.prepare_denominator(epi_outputs['population' + stratum])
 
                     # incidence
                     if 'incidence' in outputs_to_analyse:
-                        # variable flows
                         for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
                             if 'latent' in from_label and 'active' in to_label and stratum in from_label:
                                 incidence_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
@@ -491,7 +497,6 @@ class ModelRunner:
                                                       / stratum_denominator * 1e5
                                 epi_outputs['incidence' + stratum] \
                                     = elementwise_list_addition(incidence_increment, epi_outputs['incidence' + stratum])
-                        # fixed flows
                         for from_label, to_label, rate in self.model_dict[scenario].fixed_transfer_rate_flows:
                             if 'latent' in from_label and 'active' in to_label and stratum in from_label:
                                 incidence_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
@@ -510,10 +515,12 @@ class ModelRunner:
                                           * self.model_dict[scenario].get_var_soln(rate)
                                     epi_outputs['notifications' + strain + stratum] \
                                         = elementwise_list_addition(
-                                        notifications_increment, epi_outputs['notifications' + strain + stratum])
+                                            notifications_increment, epi_outputs['notifications' + strain + stratum])
 
                     # mortality
                     if 'mortality' in outputs_to_analyse:
+
+                        # fixed flows are outside of the health system and so the natural death contribution is reduced
                         for from_label, rate in self.model_dict[scenario].fixed_infection_death_rate_flows:
                             if stratum in from_label:
                                 mortality_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
@@ -521,25 +528,22 @@ class ModelRunner:
                                 epi_outputs['true_mortality' + stratum] \
                                     = elementwise_list_addition(mortality_increment,
                                                                 epi_outputs['true_mortality' + stratum])
-                                # reduce outside health system contribution
                                 epi_outputs['mortality' + stratum] \
                                     = elementwise_list_addition(
-                                    mortality_increment
-                                    * self.model_dict[scenario].params['program_prop_death_reporting'],
-                                    epi_outputs['mortality' + stratum])
+                                        mortality_increment
+                                        * self.model_dict[scenario].params['program_prop_death_reporting'],
+                                        epi_outputs['mortality' + stratum])
+
+                        # variable flows are within the health system and so dealt with as described above
                         for from_label, rate in self.model_dict[scenario].var_infection_death_rate_flows:
-                            if stratum in from_label:  # variable flows
+                            if stratum in from_label:
                                 mortality_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
                                                       * self.model_dict[scenario].get_var_soln(rate) \
                                                       / stratum_denominator * 1e5
-                                epi_outputs['true_mortality' + stratum] \
-                                    = elementwise_list_addition(mortality_increment,
-                                                                epi_outputs['true_mortality' + stratum])
-                                epi_outputs['mortality' + stratum] \
-                                    = elementwise_list_addition(
-                                    mortality_increment
-                                    * self.model_dict[scenario].params['program_prop_death_reporting'],
-                                    epi_outputs['mortality' + stratum])
+                                for mortality_type in ['true_mortality', 'mortality']:
+                                    epi_outputs[mortality_type + stratum] \
+                                        = elementwise_list_addition(mortality_increment,
+                                                                    epi_outputs[mortality_type + stratum])
 
                     # prevalence
                     if 'prevalence' in outputs_to_analyse:
@@ -551,19 +555,19 @@ class ModelRunner:
                                     = elementwise_list_addition(prevalence_increment,
                                                                 epi_outputs['prevalence' + stratum])
 
-                    # infections
+                    # infections (absolute number)
                     if 'infections' in outputs_to_analyse:
                         for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
                             if 'latent_early' in to_label and stratum in from_label:
-                                # absolute number of infections
                                 epi_outputs['infections' + stratum] \
                                     = elementwise_list_addition(
-                                    self.model_dict[scenario].get_compartment_soln(from_label)
-                                    * self.model_dict[scenario].get_var_soln(rate),
-                                    epi_outputs['infections' + stratum])
+                                        self.model_dict[scenario].get_compartment_soln(from_label)
+                                        * self.model_dict[scenario].get_var_soln(rate),
+                                        epi_outputs['infections' + stratum])
+
                         # annual risk of infection (as a percentage)
                         epi_outputs['annual_risk_infection' + stratum] \
-                            = [i / j * 1e2 for i, j in zip(epi_outputs['infections' + stratum], stratum_denominator)]
+                            = elementwise_list_percentage(epi_outputs['infections' + stratum], stratum_denominator)
 
         return epi_outputs
 

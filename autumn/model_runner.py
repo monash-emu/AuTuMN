@@ -13,7 +13,6 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import outputs
 import autumn.economics
 import itertools
-from numpy import isfinite
 from pyDOE import lhs
 
 
@@ -35,10 +34,10 @@ def generate_candidates(n_candidates, param_ranges_unc):
         elif param_dict['distribution'] == 'uniform':
             x = numpy.random.uniform(bound_low, bound_high, n_candidates)
         else:
-            x = 0.5 * (param_dict['bounds'][0] + param_dict['bounds'][1])
-            print "Unsupported statistical distribution specified to generate a candidate. Returned the midpoint of the range."
+            x = .5 * (param_dict['bounds'][0] + param_dict['bounds'][1])
+            print 'Unsupported distribution specified to parameter. Defaulting to the midpoint of the range.'
 
-        # Return values
+        # return values
         param_candidates[param_dict['key']] = x
     return param_candidates
 
@@ -62,14 +61,13 @@ def elementwise_list_division(numerator, denominator):
 
 
 def find_integer_dict_from_float_dict(float_dict):
-    # Method may be redundant with optimal code
+    # Method may be redundant with better code
 
-    integer_dict = {}
     times = float_dict.keys()
     times.sort()
-    start = numpy.floor(times[0])
-    finish = numpy.floor(times[-1])
+    start, finish = (numpy.floor(times[0]), numpy.floor(times[-1]))
     float_years = numpy.linspace(start, finish, finish - start + 1.)
+    integer_dict = {}
     for year in float_years:
         key = [t for t in times if t >= year][0]
         integer_dict[int(key)] = float_dict[key]
@@ -77,14 +75,13 @@ def find_integer_dict_from_float_dict(float_dict):
 
 
 def extract_integer_dicts(models_to_analyse={}, dict_to_extract_from={}):
-    # Method may be redundant with optimal code
+    # Method may be redundant with better code
 
     integer_dict = {}
     for scenario in models_to_analyse:
         integer_dict[scenario] = {}
         for output in dict_to_extract_from[scenario]:
-            integer_dict[scenario][output] \
-                = find_integer_dict_from_float_dict(dict_to_extract_from[scenario][output])
+            integer_dict[scenario][output] = find_integer_dict_from_float_dict(dict_to_extract_from[scenario][output])
     return integer_dict
 
 
@@ -114,46 +111,45 @@ def find_uncertainty_output_weights(list, method, relative_weights=[1., 2.]):
         relative_weights: Relative size of the starting and ending weights if method is 1.
     """
 
-    # Linearly scaling weights summing to one
+    # linearly scaling weights summing to one
     if method == 1:
-        weights = []
         if len(list) == 1:
             return [1.]
         else:
             weights = numpy.linspace(relative_weights[0], relative_weights[1], num=len(list))
             return [i / sum(weights) for i in weights]
 
-    # Equally distributed weights summing to one
+    # equally distributed weights summing to one
     elif method == 2:
         return [1. / float(len(list))] * len(list)
 
-    # All weights equal to one
+    # all weights equal to one
     elif method == 3:
         return [1.] * len(list)
 
 
 def is_parameter_value_valid(parameter):
     """
-    Determine whether a number (typically a parameter value) is finite and positive.
+    Determine whether a number is finite and positive and so valid for the model as a parameter.
     """
 
-    return isfinite(parameter) and parameter > 0.
+    return numpy.isfinite(parameter) and parameter > 0.
 
 
 class ModelRunner:
     def __init__(self, gui_inputs, runtime_outputs, figure_frame, js_gui=None):
         """
-        Instantiation method for model runner - currently including many attributes that should be set externally, e.g.
+        Instantiation method for model runner - currently including some attributes that should be set externally, e.g.
         in the GUI(s).
 
         Args:
             gui_inputs: Inputs from the off-line Tkinter GUI
-            runtime_outputs: Off-line GUI window for commenting
+            runtime_outputs: Offline GUI window for commenting
             figure_frame: Uncertainty parameter plotting window of Tkinter GUI
             js_gui: JavaScript GUI inputs
         """
 
-        # loading of inputs
+        # conversion of inputs to attributes
         self.gui_inputs = gui_inputs
         self.runtime_outputs = runtime_outputs
         self.figure_frame = figure_frame
@@ -171,7 +167,7 @@ class ModelRunner:
                              'posterior_width': None,
                              'width_multiplier': 2.  # width of normal posterior relative to range of allowed values
                              }]
-        self.all_parameters_tried = {}  # all refers to applying to all runs of model (rather than accepted only)
+        self.all_parameters_tried = {}  # all refers to applying to every model run (rather than accepted only)
         self.all_compartment_values_tried = {}
         self.all_other_adjustments_made = {}
         self.whether_accepted_list = []
@@ -205,8 +201,7 @@ class ModelRunner:
         self.interventions_considered_for_opti \
             = ['engage_lowquality', 'xpert', 'cxrxpertacf_prison', 'cxrxpertacf_urbanpoor', 'ipt_age0to5',
                'intensive_screening']  # interventions that must appear in optimal plan
-        self.interventions_forced_for_opti \
-            = ['engage_lowquality', 'ipt_age0to5', 'intensive_screening']
+        self.interventions_forced_for_opti = ['engage_lowquality', 'ipt_age0to5', 'intensive_screening']
 
         # output-related attributes
         self.epi_outputs_to_analyse = ['incidence', 'prevalence', 'mortality', 'true_mortality', 'notifications']
@@ -234,8 +229,7 @@ class ModelRunner:
         self.emit_delay = 0.1
         self.plot_count = 0
         self.js_gui = js_gui
-        if self.js_gui:
-            self.js_gui('init')
+        if self.js_gui: self.js_gui('init')
 
     ''' master methods to run other methods '''
 

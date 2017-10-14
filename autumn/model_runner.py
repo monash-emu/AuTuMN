@@ -848,7 +848,7 @@ class ModelRunner:
                 if 'target_population' in self.inputs.model_constants:
                     population_adjustment \
                         = self.inputs.model_constants['target_population'] \
-                          / self.epi_outputs_uncertainty['uncertainty_baseline']['population'][-1,
+                          / self.epi_outputs['uncertainty_baseline']['population'][
                               tool_kit.find_first_list_element_above_value(
                                   self.epi_outputs['uncertainty_baseline']['times'],
                                   self.inputs.model_constants['current_time'])]

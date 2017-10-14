@@ -944,7 +944,7 @@ class ModelRunner:
         """
 
         # adjust starting populations if target_population in sheets (i.e. country sheet, because not in defaults)
-        if accepted == 1 and population_adjustment != 1.:
+        if accepted and population_adjustment != 1.:
             for compartment_type in self.inputs.compartment_types:
                 if compartment_type in self.inputs.model_constants:
                     self.inputs.model_constants[compartment_type] *= population_adjustment
@@ -976,7 +976,7 @@ class ModelRunner:
         # get outputs
         self.epi_outputs[scenario_name] \
             = self.find_epi_outputs(scenario_name, outputs_to_analyse=self.epi_outputs_to_analyse)
-        if len(self.model_dict[scenario_name].interventions_to_cost) > 0: self.find_cost_outputs(scenario_name)
+        if self.model_dict[scenario_name].interventions_to_cost: self.find_cost_outputs(scenario_name)
 
         # initialise dictionaries if needed
         if scenario_name not in self.epi_outputs_uncertainty:

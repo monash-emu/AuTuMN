@@ -69,6 +69,7 @@ def elementwise_list_percentage(numerator, denominator):
     assert len(numerator) == len(denominator), 'Attempted to divide two lists of different lengths'
     return [n / d * 1e2 for n, d in zip(numerator, denominator)]
 
+
 def find_integer_dict_from_float_dict(float_dict):
     # Method may be redundant with better code
 
@@ -192,6 +193,8 @@ class ModelRunner:
         self.accepted_no_burn_in_indices = []
         self.random_start = False  # whether to start from a random point, as opposed to the manually calibrated value
         self.intervention_uncertainty = self.inputs.intervention_uncertainty
+        self.relative_difference_to_adjust_mortality = 1.1
+        self.amount_to_adjust_mortality = .02
 
         # optimisation attributes
         self.optimisation = False  # leave True even if loading optimisation results
@@ -615,7 +618,7 @@ class ModelRunner:
 
         costs_all_programs \
             = [0.] * len(self.cost_outputs[scenario_name]['raw_cost_' + self.interventions_to_cost[
-            tool_kit.find_scenario_number_from_string(scenario_name)][0]])
+                tool_kit.find_scenario_number_from_string(scenario_name)][0]])
         for intervention in self.interventions_to_cost[tool_kit.find_scenario_number_from_string(scenario_name)]:
             costs_all_programs \
                 = elementwise_list_addition(self.cost_outputs[scenario_name]['raw_cost_' + intervention],
@@ -635,7 +638,7 @@ class ModelRunner:
         current_cpi = self.inputs.scaleup_fns[None]['econ_cpi'](year_current)
         discount_rate = self.inputs.model_constants['econ_discount_rate']
 
-        # loop over interventions to be costed and cost types
+        # loop over interventions for costing and cost types
         cost_outputs = {}
         for intervention in self.interventions_to_cost[tool_kit.find_scenario_number_from_string(scenario_name)] \
                 + ['all_programs']:
@@ -663,10 +666,14 @@ class ModelRunner:
             uncertainty_centiles[scenario] = {}
             for output in full_uncertainty_outputs[scenario]:
                 if output != 'times':
-                    if scenario == 'uncertainty_baseline':  # select the baseline runs for analysis
+
+                    # select the baseline runs for analysis from the larger number that were saved
+                    if scenario == 'uncertainty_baseline':
                         matrix_to_analyse \
                             = full_uncertainty_outputs[scenario][output][self.accepted_no_burn_in_indices, :]
-                    else:  # use all runs for scenarios (as we only save those that were accepted)
+
+                    # use all runs for scenario analysis (as we only save those that were accepted)
+                    else:
                         matrix_to_analyse = full_uncertainty_outputs[scenario][output]
                     uncertainty_centiles[scenario][output] \
                         = numpy.percentile(matrix_to_analyse, self.percentiles, axis=0)
@@ -707,8 +714,7 @@ class ModelRunner:
         for param in self.inputs.param_ranges_unc:
             self.all_parameters_tried[param['key']] = []
             self.acceptance_dict[param['key']] = {}
-            self.rejection_dict[param['key']] = {}
-            self.rejection_dict[param['key']][n_accepted] = []
+            self.rejection_dict[param['key']] = {n_accepted: []}
         for compartment_type in self.inputs.compartment_types:
             if compartment_type in self.inputs.model_constants:
                 self.all_compartment_values_tried[compartment_type] = []
@@ -792,19 +798,6 @@ class ModelRunner:
                         self.all_compartment_values_tried[compartment_type].append(
                             self.inputs.model_constants[compartment_type])
 
-                # iteratively adjusting proportion of mortality reported
-                last_year_of_data = 2014.
-                ratio = self.epi_outputs['uncertainty_baseline'][
-                            'mortality'][tool_kit.find_first_list_element_above_value(
-                    self.epi_outputs['uncertainty_baseline']['times'], last_year_of_data)] \
-                        / self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k'][int(last_year_of_data)]
-                if ratio < 0.9 and accepted == 1:
-                    self.inputs.model_constants['program_prop_death_reporting'] += .02
-                elif ratio > 1.1 and accepted == 1:
-                    self.inputs.model_constants['program_prop_death_reporting'] -= .02
-                self.all_other_adjustments_made['program_prop_death_reporting'].append(
-                    self.inputs.model_constants['program_prop_death_reporting'])
-
                 # record uncertainty calculations for all runs
                 if bool(accepted):
                     self.whether_accepted_list.append(True)
@@ -820,12 +813,23 @@ class ModelRunner:
 
                     # run scenarios other than baseline and store uncertainty (only if accepted)
                     for scenario in self.gui_inputs['scenarios_to_run']:
-                        if scenario is not None:
+                        if scenario:
                             scenario_name = 'uncertainty_' + tool_kit.find_scenario_string_from_number(scenario)
                             self.prepare_new_model_from_baseline('uncertainty', scenario_name)
                             scenario_name = 'uncertainty_' + tool_kit.find_scenario_string_from_number(scenario)
                             self.run_with_params(new_param_list, model_object=scenario_name)
                             self.store_uncertainty(scenario_name, epi_outputs_to_analyse=self.epi_outputs_to_analyse)
+
+                    # iteratively adjusting proportion of mortality reported
+                    last_year_of_data = 2014.
+                    ratio = self.epi_outputs[
+                                'uncertainty_baseline']['mortality'][tool_kit.find_first_list_element_above_value(
+                        self.epi_outputs['uncertainty_baseline']['times'], last_year_of_data)] \
+                            / self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k'][int(last_year_of_data)]
+                    if ratio < 1. / self.relative_difference_to_adjust_mortality:
+                        self.inputs.model_constants['program_prop_death_reporting'] += self.amount_to_adjust_mortality
+                    elif ratio > self.relative_difference_to_adjust_mortality:
+                        self.inputs.model_constants['program_prop_death_reporting'] -= self.amount_to_adjust_mortality
 
                 else:
                     self.whether_accepted_list.append(False)
@@ -848,6 +852,10 @@ class ModelRunner:
                               tool_kit.find_first_list_element_above_value(
                                   self.epi_outputs['uncertainty_baseline']['times'],
                                   self.inputs.model_constants['current_time'])]
+
+                # record death reporting proportion, which may or may not have been adjusted
+                self.all_other_adjustments_made['program_prop_death_reporting'].append(
+                    self.inputs.model_constants['program_prop_death_reporting'])
 
             # generate more candidates if required
             if not self.gui_inputs['adaptive_uncertainty'] and run >= len(param_candidates.keys()):

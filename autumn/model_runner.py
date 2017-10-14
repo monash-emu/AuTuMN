@@ -703,7 +703,6 @@ class ModelRunner:
                 param_candidates[param['key']] = [self.inputs.model_constants[param['key']]]
 
         # find weights for outputs that are being calibrated to
-        fitting_data = self.get_fitting_data()
         years_to_compare = range(1990, 2015)
         weights = find_uncertainty_output_weights(years_to_compare, 1, [1., 2.])
         self.add_comment_to_gui_window('"Weights": \n' + str(weights))
@@ -774,7 +773,7 @@ class ModelRunner:
                 for output_dict in self.outputs_unc:
 
                     # the GTB values for the output of interest
-                    working_output_dictionary = fitting_data[output_dict['key']]
+                    working_output_dictionary = self.get_fitting_data()[output_dict['key']]
                     for y, year in enumerate(years_to_compare):
                         if year in working_output_dictionary.keys():
                             model_result_for_output = integer_dictionary['uncertainty_baseline']['incidence'][year]
@@ -913,40 +912,25 @@ class ModelRunner:
                 print 'Warning: parameter%d=%f is invalid for model' % (p, param)
                 self.is_last_run_success = False
                 return
-            bounds = self.inputs.param_ranges_unc[p]['bounds']
 
             # whether the parameter value is within acceptable ranges
-            if (param < bounds[0]) or (param > bounds[1]):
-                # print 'Warning: parameter%d=%f is outside of the allowed bounds' % (p, param)
+            bounds = self.inputs.param_ranges_unc[p]['bounds']
+            if param < bounds[0] or param > bounds[1]:
+                print 'Warning: parameter%d=%f is outside of the allowed bounds' % (p, param)
                 self.is_last_run_success = False
                 return
 
-        param_dict = self.convert_param_list_to_dict(params)
+        param_dict = {names['key']: vals for names, vals in zip(self.inputs.param_ranges_unc, params)}
 
         # set parameters and run
-        self.set_model_with_params(param_dict, model_object,
-                                   population_adjustment=population_adjustment, accepted=accepted)
+        self.set_model_with_params(param_dict, model_object, population_adjustment=population_adjustment,
+                                   accepted=accepted)
         self.is_last_run_success = True
         try:
             self.model_dict[model_object].integrate()
         except:
-            print "Warning: parameters=%s failed with model" % params
+            print 'Warning: parameters=%s failed with model' % params
             self.is_last_run_success = False
-
-    def convert_param_list_to_dict(self, params):
-        """
-        Extract parameters from list into dictionary that can be used for setting in the model through the
-        set_model_with_params method.
-
-        Args:
-            params: The parameter names for extraction.
-        Returns:
-            param_dict: The dictionary returned in appropriate format.
-        """
-
-        param_dict = {}
-        for names, vals in zip(self.inputs.param_ranges_unc, params): param_dict[names['key']] = vals
-        return param_dict
 
     def set_model_with_params(self, param_dict, model_object='baseline', population_adjustment=1., accepted=0):
         """

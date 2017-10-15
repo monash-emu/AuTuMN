@@ -438,8 +438,7 @@ def plot_endtb_targets(ax, output, base_value, plot_colour, annotate=True):
 
         # find targets
         target_props = [1., .65, .25, .1, .05]
-        target_values = []
-        for i in range(len(times)): target_values.append(base_value * target_props[i])
+        target_values = [base_value * t for t in target_props]
 
         # plot the individual targets themselves
         ax.plot(times[1:], target_values[1:],
@@ -454,8 +453,7 @@ def plot_endtb_targets(ax, output, base_value, plot_colour, annotate=True):
 
         # find targets
         target_props = [1., .8, .5, .2, .1]
-        target_values = []
-        for i in range(len(times)): target_values.append(base_value * target_props[i])
+        target_values = [base_value * t for t in target_props]
 
         # plot the individual targets themselves
         ax.plot(times[1:], target_values[1:],

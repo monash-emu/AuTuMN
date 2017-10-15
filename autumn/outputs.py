@@ -1506,7 +1506,8 @@ class Project:
 
         Args:
             outputs: A list of the outputs to be plotted
-            purpose:
+            purpose: Reason for plotting or type of plot, can be either 'scenario', 'ci_plot' or 'progress'
+            compare_gtb: Whether overlaid End TB Targets should be comparisons against calibration or modelled data
         """
 
         # standard preliminaries
@@ -1673,6 +1674,8 @@ class Project:
             outputs: The types of output to plot
             ci_plot: Whether to add dotted lines at the edges of the shaded modelled output areas
             gtb_ci_plot: How to overlay the GTB data - either 'hatch' for hatched area, or 'patch' for translucent area
+            plot_targets: Whether to plot the End TB Targets, milestones, etc.
+            compare_gtb: Whether to have Targets compared against GTB or modelled data
         """
 
         # standard preliminaries

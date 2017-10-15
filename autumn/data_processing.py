@@ -66,7 +66,6 @@ class Inputs:
             self.intervention_param_dict \
                 = {'int_prop_treatment_support_relative': ['int_prop_treatment_support_improvement']}
 
-
         # model structure
         self.available_strains = ['_ds', '_mdr', '_xdr']
         self.available_organs = ['_smearpos', '_smearneg', '_extrapul']
@@ -253,7 +252,6 @@ class Inputs:
 
         for agegroup in self.agegroups:
             for riskgroup in self.riskgroups:
-
                 prop_early = self.model_constants['tb_prop_early_progression' + riskgroup + agegroup]
                 time_early = self.model_constants['tb_timeperiod_early_latent']
 
@@ -597,13 +595,13 @@ class Inputs:
 
         for time_variant in self.time_variants.keys():
             if 'perc_' in time_variant:  # if a percentage
-                perc_name = time_variant.replace('perc', 'prop')
-                self.time_variants[perc_name] = {}
+                prop_name = time_variant.replace('perc', 'prop')
+                self.time_variants[prop_name] = {}
                 for year in self.time_variants[time_variant]:
                     if type(year) == int or 'scenario' in year:  # to exclude load_data, smoothness, etc.
-                        self.time_variants[perc_name][year] = self.time_variants[time_variant][year] / 1e2
+                        self.time_variants[prop_name][year] = self.time_variants[time_variant][year] / 1e2
                     else:
-                        self.time_variants[perc_name][year] = self.time_variants[time_variant][year]
+                        self.time_variants[prop_name][year] = self.time_variants[time_variant][year]
 
     # treatment outcome methods
 
@@ -707,8 +705,8 @@ class Inputs:
                 self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]] = {}
                 self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]] \
                     = tool_kit.increment_dictionary_with_dictionary(
-                    self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]],
-                    self.original_data['outcomes'][strain[1:] + outcome])
+                        self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]],
+                        self.original_data['outcomes'][strain[1:] + outcome])
 
         # duplicate outcomes by treatment history because not provided as disaggregated for resistant strains
         for history in self.histories:
@@ -845,8 +843,7 @@ class Inputs:
 
         if self.country == country:
             for year in self.time_variants[param]:
-                if type(year) == int:
-                    self.time_variants[param][year] *= adjustment_factor
+                if type(year) == int: self.time_variants[param][year] *= adjustment_factor
 
     ''' Classify interventions '''
 
@@ -1025,10 +1022,9 @@ class Inputs:
             for intervention in self.interventions_to_cost[scenario]:
                 self.intervention_startdates[scenario][intervention] = None
                 years_pos_coverage \
-                    = [key for (key, value) in
-                       self.scaleup_data[scenario]['int_prop_' + intervention].items()
-                       if value > 0.]
-                if len(years_pos_coverage) > 0:  # i.e. some coverage present from start
+                    = [key for (key, value)
+                       in self.scaleup_data[scenario]['int_prop_' + intervention].items() if value > 0.]
+                if years_pos_coverage:  # i.e. some coverage present from start
                     self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
 
     ''' Finding scale-up functions and related methods '''
@@ -1074,11 +1070,9 @@ class Inputs:
                                 self.time_variants[time_variant][i]
                         elif type(i) == str:
                             if 'scenario_' not in i:
-                                self.scaleup_data[scenario][str(time_variant)][i] = \
-                                self.time_variants[time_variant][i]
+                                self.scaleup_data[scenario][str(time_variant)][i] = self.time_variants[time_variant][i]
                         else:
-                            self.scaleup_data[scenario][str(time_variant)][i] = \
-                            self.time_variants[time_variant][i]
+                            self.scaleup_data[scenario][str(time_variant)][i] = self.time_variants[time_variant][i]
 
     def find_constant_functions(self):
         """
@@ -1151,8 +1145,7 @@ class Inputs:
 
         self.model_constants['tb_multiplier_force'] \
             = self.model_constants['epi_prop_smearpos'] \
-              + self.model_constants['epi_prop_smearneg'] * self.model_constants[
-            'tb_multiplier_force_smearneg']
+              + self.model_constants['epi_prop_smearneg'] * self.model_constants['tb_multiplier_force_smearneg']
 
     def add_missing_economics(self):
         """
@@ -1162,8 +1155,7 @@ class Inputs:
         of parameters need to be entered.
         """
 
-        for param in ['_saturation', '_inflectioncost', '_unitcost', '_startupduration',
-                      '_startupcost']:
+        for param in ['_saturation', '_inflectioncost', '_unitcost', '_startupduration', '_startupcost']:
 
             # ipt
             for agegroup in self.agegroups:
@@ -1280,7 +1272,6 @@ class Inputs:
         return keys_of_sheets_to_read
 
     def add_comment_to_gui_window(self, comment):
-
         """
         Output message to either JavaScript or Tkinter GUI.
         """
@@ -1297,7 +1288,7 @@ class Inputs:
         data entry.
         """
 
-        # Check that all entered times occur after the model start time
+        # check that all entered times occur after the model start time
         for time in self.model_constants:
             if time[-5:] == '_time' and '_step_time' not in time:
                 assert self.model_constants[time] >= self.model_constants['start_time'], \

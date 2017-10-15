@@ -222,14 +222,12 @@ class ConsolidatedModel(StratifiedModel):
               * self.params['tb_relative_casefatality_untreated_smearneg']
 
         # add the extrapulmonary case fatality (currently not entered from the spreadsheets)
-        self.params['tb_prop_casefatality_untreated_extrapul'] \
-            = self.params['tb_prop_casefatality_untreated_smearneg']
+        self.params['tb_prop_casefatality_untreated_extrapul'] = self.params['tb_prop_casefatality_untreated_smearneg']
 
         # calculate the rates of death and recovery from the above parameters
         for organ in self.organ_status:
             self.params['tb_rate_death' + organ] \
-                = self.params['tb_prop_casefatality_untreated' + organ] \
-                  / self.params['tb_timeperiod_activeuntreated']
+                = self.params['tb_prop_casefatality_untreated' + organ] / self.params['tb_timeperiod_activeuntreated']
             self.params['tb_rate_recover' + organ] \
                 = (1. - self.params['tb_prop_casefatality_untreated' + organ]) \
                   / self.params['tb_timeperiod_activeuntreated']
@@ -289,7 +287,6 @@ class ConsolidatedModel(StratifiedModel):
             self.vars['population' + riskgroup] = 0.
             for label in self.labels:
                 if riskgroup in label: self.vars['population' + riskgroup] += self.compartments[label]
-
         for history in self.histories:
             self.vars['population' + history] = 0.
             for label in self.labels:
@@ -309,8 +306,7 @@ class ConsolidatedModel(StratifiedModel):
         vac_props = {'vac': self.vars['int_prop_vaccination']}
         vac_props['unvac'] = 1. - vac_props['vac']
         if 'int_prop_novel_vaccination' in self.relevant_interventions:
-            vac_props['novelvac'] = self.vars['int_prop_vaccination'] \
-                                    * self.vars['int_prop_novel_vaccination']
+            vac_props['novelvac'] = self.vars['int_prop_vaccination'] * self.vars['int_prop_novel_vaccination']
             vac_props['vac'] -= vac_props['novelvac']
 
         # calculate birth rates
@@ -614,7 +610,6 @@ class ConsolidatedModel(StratifiedModel):
                             = self.vars['program_rate_detect' + organ + riskgroup]
 
     def calculate_lowquality_detection_vars(self):
-
         """
         Calculate rate of entry to low-quality care ffom the proportion of treatment administered in low-quality sector.
         Note that this now means that the case detection proportion only applies to those with access to care, so
@@ -625,7 +620,7 @@ class ConsolidatedModel(StratifiedModel):
         if 'int_prop_engage_lowquality' in self.relevant_interventions:
             prop_lowqual *= (1. - self.vars['int_prop_engage_lowquality'])
 
-        # Note that there is still a program_rate_detect var even if detection is varied by organ and/or risk group
+        # note that there is still a program_rate_detect var even if detection is varied by organ and/or risk group
         self.vars['program_rate_enterlowquality'] \
             = self.vars['program_rate_detect'] * prop_lowqual / (1. - prop_lowqual)
 
@@ -1168,9 +1163,7 @@ class ConsolidatedModel(StratifiedModel):
             for riskgroup in self.riskgroups:
                 force_riskgroup = ''
                 if self.vary_force_infection_by_riskgroup: force_riskgroup = riskgroup
-
                 for agegroup in self.agegroups:
-
                     force_types = ['_fully', '_immune', '_latent']
                     if 'int_prop_novel_vaccination' in self.relevant_interventions: force_types.append('_novelvac')
                     for force_type in force_types:

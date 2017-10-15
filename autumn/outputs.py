@@ -430,12 +430,13 @@ def plot_endtb_targets(ax, output, base_value, plot_colour):
         plot_colour: List of colours for plotting
     """
 
+    # hard coded to the End TB Targets
     times = [2015., 2020., 2025., 2030., 2035.]
-    if output == 'mortality':
+    target_props = [1., .65, .25, .1, .05]
+    target_values = []
+    for i in range(len(times)): target_values.append(base_value * target_props[i])
 
-        # hard coded to the End TB Targets
-        target_values \
-            = [base_value, base_value * .65, base_value * .25, base_value * .1, base_value * .05]
+    if output == 'mortality':
 
         # plot the individual targets themselves
         ax.plot(times[1:], target_values[1:],

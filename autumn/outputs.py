@@ -418,7 +418,7 @@ def find_exponential_constants(times, y_values):
     return a, b
 
 
-def plot_endtb_targets(ax, output, base_value, plot_colour):
+def plot_endtb_targets(ax, output, base_value, plot_colour, annotate=True):
     """
     Plot the End TB Targets and the direction that we need to head to achieve them.
 
@@ -430,13 +430,16 @@ def plot_endtb_targets(ax, output, base_value, plot_colour):
         plot_colour: List of colours for plotting
     """
 
-    # hard coded to the End TB Targets
+    # End TB Targets
     times = [2015., 2020., 2025., 2030., 2035.]
-    target_props = [1., .65, .25, .1, .05]
-    target_values = []
-    for i in range(len(times)): target_values.append(base_value * target_props[i])
+    target_text = ['', 'M', 'M', 'S', 'E']  # M for milestone, S for Sustainable Development Goal, E for End TB Target
 
     if output == 'mortality':
+
+        # find targets
+        target_props = [1., .65, .25, .1, .05]
+        target_values = []
+        for i in range(len(times)): target_values.append(base_value * target_props[i])
 
         # plot the individual targets themselves
         ax.plot(times[1:], target_values[1:],
@@ -449,8 +452,10 @@ def plot_endtb_targets(ax, output, base_value, plot_colour):
 
     elif output == 'incidence':
 
-        # hard coded to the End TB Targets
-        target_values = [base_value, base_value * .8, base_value * .5, base_value * .2, base_value * .1]
+        # find targets
+        target_props = [1., .8, .5, .2, .1]
+        target_values = []
+        for i in range(len(times)): target_values.append(base_value * target_props[i])
 
         # plot the individual targets themselves
         ax.plot(times[1:], target_values[1:],
@@ -460,6 +465,12 @@ def plot_endtb_targets(ax, output, base_value, plot_colour):
         for t in range(len(times) - 1):
             times_to_plot, output_to_reach_target = find_times_from_exp_function(t, times, target_values)
             ax.plot(times_to_plot, output_to_reach_target, color=plot_colour, linewidth=.5)
+
+    # annotate points with letters if requested
+    if annotate:
+        for i, text in enumerate(target_props):
+            ax.annotate(target_text[i], (times[i], target_values[i] + target_values[1] / 20.),
+                        horizontalalignment='center', verticalalignment='bottom', fontsize=8, color=plot_colour)
 
 
 def find_times_from_exp_function(t, times, target_values, number_x_values=1e2):
@@ -1538,7 +1549,8 @@ class Project:
 
                 # plot the targets (and milestones) and the fitted exponential function to achieve them
                 base_value = gtb_data['point_estimate'][2014]  # should be 2015, but data not yet incorporated
-                if plot_targets: plot_endtb_targets(ax, output, base_value, patch_colour[o])
+                if plot_targets and (output == 'incidence' or output == 'mortality'):
+                    plot_endtb_targets(ax, output, base_value, patch_colour[o])
 
             ''' plotting modelled data '''
 

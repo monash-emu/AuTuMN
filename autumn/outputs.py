@@ -1416,10 +1416,10 @@ class Project:
 
         # plot main outputs
         if self.gui_inputs['output_gtb_plots']:
-            self.plot_outputs_against_gtb(self.gtb_available_outputs, ci_plot=None)
+            self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose='scenario')
             if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
-                self.plot_outputs_against_gtb(self.gtb_available_outputs, ci_plot=True)
-                self.plot_outputs_against_gtb(self.gtb_available_outputs, ci_plot=False)
+                self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose='ci_plot')
+                self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose='progress')
                 self.plot_shaded_outputs_gtb(self.gtb_available_outputs)
             if self.gui_inputs['n_strains'] > 1:
                 self.plot_resistant_strain_outputs(['incidence', 'mortality', 'prevalence', 'perc_incidence'])
@@ -1500,13 +1500,13 @@ class Project:
             self.plot_optimised_epi_outputs()
             self.plot_piecharts_opti()
 
-    def plot_outputs_against_gtb(self, outputs, ci_plot=None, plot_targets=True):
+    def plot_outputs_against_gtb(self, outputs, purpose='scenario', plot_targets=True, compare_gtb=False):
         """
         Produces the plot for the main outputs, loops over multiple scenarios.
 
         Args:
-            outputs: A list of the outputs to be plotted.
-            ci_plot: Whether to plot uncertainty intervals around the estimates generated from uncertainty runs.
+            outputs: A list of the outputs to be plotted
+            purpose:
         """
 
         # standard preliminaries
@@ -1546,14 +1546,24 @@ class Project:
                         linewidth=0.5, label=None)
 
                 # plot the targets (and milestones) and the fitted exponential function to achieve them
-                base_value = gtb_data['point_estimate'][2014]  # should be 2015, but data not yet incorporated
+                if compare_gtb:
+                    base_value = gtb_data['point_estimate'][2014]  # should be 2015, but data not yet incorporated
+                elif purpose is 'scenario':
+                    base_value = self.model_runner.epi_outputs['manual_baseline'][output][
+                        t_k.find_first_list_element_at_least_value(
+                            self.model_runner.epi_outputs['manual_baseline']['times'], 2015.)]
+                else:
+                    base_value = self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_baseline'][output][
+                            self.model_runner.percentiles.index(50), :][t_k.find_first_list_element_at_least_value(
+                            self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['times'], 2015.)]
+
                 if plot_targets and (output == 'incidence' or output == 'mortality'):
                     plot_endtb_targets(ax, output, base_value, patch_colour[o])
 
             ''' plotting modelled data '''
 
             # plot scenarios without uncertainty
-            if ci_plot is None:
+            if purpose is 'scenario':
 
                 # plot model estimates
                 for scenario in self.scenarios[::-1]:  # reversing to ensure black baseline plotted over top
@@ -1572,7 +1582,7 @@ class Project:
                 end_filename = '_scenario'
 
             # plot with uncertainty confidence intervals
-            elif ci_plot and (self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty):
+            elif purpose == 'ci_plot':
                 if self.inputs.intervention_uncertainty:
                     scenarios = [None, 15]
                     uncertainty_type = 'intervention_uncertainty'
@@ -1608,7 +1618,7 @@ class Project:
                     end_filename = '_ci'
 
             # plot progressive model run outputs for uncertainty analyses
-            elif self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
+            elif purpose == 'progress':
 
                 # get relevant data according to whether intervention or baseline uncertainty is being run
                 if self.inputs.intervention_uncertainty:
@@ -1652,7 +1662,8 @@ class Project:
         fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb' + end_filename)
 
-    def plot_shaded_outputs_gtb(self, outputs, ci_plot=False, gtb_ci_plot='hatch', plot_targets=True):
+    def plot_shaded_outputs_gtb(self, outputs, ci_plot=False, gtb_ci_plot='hatch', plot_targets=True,
+                                compare_gtb=False):
         """
         Creates visualisation of uncertainty outputs with density of shading proportional to the number of model runs
         that went through a certain output value. Similar to our plotting approach for the award-winning figure in
@@ -1760,8 +1771,15 @@ class Project:
                                 color='.3', linewidth=0.3, label=None, alpha=alpha)
 
                 # plot the targets (and milestones) and the fitted exponential function to achieve them
-                base_value = gtb_data['point_estimate'][2014]  # should be 2015, but data not yet available
-                if plot_targets: plot_endtb_targets(ax, output, base_value, '.7')
+                if compare_gtb:
+                    base_value = gtb_data['point_estimate'][2014]  # should be 2015, but data not yet incorporated
+                else:
+                    base_value = self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_baseline'][output][
+                            self.model_runner.percentiles.index(50), :][t_k.find_first_list_element_at_least_value(
+                            self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['times'], 2015.)]
+
+                if plot_targets and (output == 'incidence' or output == 'mortality'):
+                    plot_endtb_targets(ax, output, base_value, '.7')
 
             self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
                            legend=(o == len(outputs) - 1 and len(self.scenarios) > 1),

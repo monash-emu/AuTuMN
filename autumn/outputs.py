@@ -894,7 +894,10 @@ class Project:
             ax.set_yticklabels(labels)
             ax.set_ylabel(axis_modifier + y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
         elif y_axis_type == 'proportion':
-            ax.set_ylim(top=1.)
+            ax.set_ylim((0., 1.))
+            ax.set_ylabel(y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
+        elif y_axis_type == 'limited_proportion':
+            ax.set_ylim((0., .25))
             ax.set_ylabel(y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
         else:
             ax.set_ylim(top=max_val * y_relative_limit)
@@ -1934,7 +1937,12 @@ class Project:
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1)
 
                 start_time = self.inputs.model_constants['early_time']
-                if i: start_time = self.inputs.model_constants['plot_start_time']
+                if i:
+                    start_time = self.inputs.model_constants['plot_start_time']
+                elif 'diabetes' in function:
+                    start_time = 1900.
+                elif 'vacc' in function:
+                    start_time = 1920.
                 x_vals = numpy.linspace(start_time, end_time, 1e3)
 
                 # iterate through the scenarios
@@ -1963,9 +1971,14 @@ class Project:
 
                 # little fudge to get height for birth rate displaying correctly for Fiji
                 y_relative_limit = 0.95
-                if function == 'demo_rate_birth':
+                if function == 'demo_rate_birth' and i:
                     y_relative_limit = 1.1
-                    y_label  = 'births per 1,000 per year'
+                    y_label = ''
+                elif function == 'demo_rate_birth':
+                    y_relative_limit = 1.1
+                    y_label = 'Births per 1,000 per year'
+                elif ('program_' in function and 'death' in function) or 'diabetes' in function:
+                    y_axis_type = 'limited_proportion'
 
                 self.tidy_axis(ax, subplot_grid, start_time=start_time, legend=False, y_axis_type=y_axis_type,
                                end_time=self.inputs.model_constants['recent_time'], y_label=y_label,

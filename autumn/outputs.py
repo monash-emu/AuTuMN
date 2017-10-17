@@ -162,7 +162,7 @@ def find_reasonable_year_ticks(start_time, end_time):
 
     times = []
     working_time = start_time
-    while working_time < end_time:
+    while working_time <= end_time:
         times.append(working_time)
         working_time += spacing
     return times
@@ -552,7 +552,6 @@ def plot_comparative_age_parameters(data_strat_list, data_value_list, model_valu
 
 
 def find_subplot_numbers(n):
-
     """
     Method to find a good number of rows and columns for subplots of figure.
 
@@ -568,10 +567,9 @@ def find_subplot_numbers(n):
     i = 0
     while i < 10:
         if abs(answer[0] - answer[1]) > 3:
-            n = n + 1
+            n += 1
             answer = find_smallest_factors_of_integer(n)
-        i = i + 1
-
+        i += 1
     return answer
 
 
@@ -696,7 +694,7 @@ class Project:
         self.classifications = ['demo_', 'econ_', 'epi_prop_smear', 'epi_rr', 'program_prop_', 'program_timeperiod_',
                                 'program_prop_novel', 'program_prop_treatment', 'program_prop_detect',
                                 'int_prop_vaccination', 'program_prop_treatment_success',
-                                'program_prop_treatment_death', 'transmission_modifier']
+                                'program_prop_treatment_death', 'transmission_modifier', 'algorithm']
         self.output_colours = {}
         self.uncertainty_output_colours = {}
         self.program_colours = {}
@@ -845,13 +843,17 @@ class Project:
             return line_styles[n - 1]
 
     def tidy_axis(self, ax, subplot_grid, title='', start_time=0., legend=False, x_label='', y_label='',
-                  x_axis_type='time', y_axis_type='scaled', x_sig_figs=0, y_sig_figs=0):
+                  x_axis_type='time', y_axis_type='scaled', x_sig_figs=0, y_sig_figs=0,
+                  end_time=None):
         """
         Method to make cosmetic changes to a set of plot axes.
         """
 
         # add the sub-plot title with slightly larger titles than the rest of the text on the panel
         if title: ax.set_title(title, fontsize=get_nice_font_size(subplot_grid) + 2.)
+
+        # default end time for plots to end at
+        if not end_time: end_time = self.inputs.model_constants['plot_end_time']
 
         # add a legend if needed
         if legend == 'for_single':
@@ -861,8 +863,8 @@ class Project:
 
         # sort x-axis
         if x_axis_type == 'time':
-            ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
-            ax.set_xticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))
+            ax.set_xlim((start_time, end_time))
+            ax.set_xticks(find_reasonable_year_ticks(start_time, end_time))
         elif x_axis_type == 'scaled':
             vals = list(ax.get_xticks())
             max_val = max([abs(v) for v in vals])
@@ -873,8 +875,8 @@ class Project:
             ax.set_xlabel(x_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
             ax.set_xlim((0., 1.))
         elif x_axis_type == 'individual_years':
-            ax.set_xlim((start_time, self.inputs.model_constants['plot_end_time']))
-            ax.set_xticks(range(int(start_time), int(self.inputs.model_constants['plot_end_time']), 1))
+            ax.set_xlim((start_time, end_time))
+            ax.set_xticks(range(int(start_time), int(end_time, 1)))
             for tick in ax.xaxis.get_major_ticks():
                 tick.label.set_rotation(45)
         else:
@@ -885,8 +887,8 @@ class Project:
         vals = list(ax.get_yticks())
         max_val = max([abs(v) for v in vals])
         if y_axis_type == 'time':
-            ax.set_ylim((start_time, self.inputs.model_constants['plot_end_time']))
-            ax.set_yticks(find_reasonable_year_ticks(start_time, self.inputs.model_constants['plot_end_time']))
+            ax.set_ylim((start_time, end_time))
+            ax.set_yticks(find_reasonable_year_ticks(start_time, end_time))
         elif y_axis_type == 'scaled':
             labels, axis_modifier = scale_axes(vals, max_val, y_sig_figs)
             ax.set_yticklabels(labels)
@@ -1430,10 +1432,11 @@ class Project:
                 self.individual_var_viewer()
             self.classify_scaleups()
             self.plot_scaleup_fns_against_data()
+            self.plot_individual_scaleups_against_data()
             self.plot_programmatic_scaleups()
 
             # not technically a scale-up function in the same sense, but put in here anyway
-            self.plot_force_infection()
+            # self.plot_force_infection()
 
         # plot mixing matrix if relevant
         # if self.model_runner.model_dict['manual_baseline'].vary_force_infection_by_riskgroup \
@@ -1832,9 +1835,7 @@ class Project:
         for classification in self.classifications:
             self.classified_scaleups[classification] = []
             for fn in self.model_runner.model_dict['manual_baseline'].scaleup_fns:
-                if classification in fn:
-                    self.classified_scaleups[classification] += [fn]
-        self.classified_scaleups['misc'] = ['program_prop_firstline_dst', 'program_prop_algorithm_sensitivity']
+                if classification in fn: self.classified_scaleups[classification] += [fn]
 
     def individual_var_viewer(self):
 
@@ -1871,7 +1872,7 @@ class Project:
                 fig = self.set_and_update_figure()
                 subplot_grid = find_subplot_numbers(len(function_list))
                 start_time, end_time \
-                    = self.inputs.model_constants['plot_start_time'], self.inputs.model_constants['plot_end_time']
+                    = self.inputs.model_constants['plot_start_time'], self.inputs.model_constants['recent_time']
                 x_vals = numpy.linspace(start_time, end_time, 1e3)
 
                 # iterate through functions
@@ -1912,6 +1913,58 @@ class Project:
                 if len(function_list) > 1: title += 's'
                 fig.suptitle(title, fontsize=self.suptitle_size)
                 self.save_figure(fig, '_' + classification + '_scale_ups')
+
+    def plot_individual_scaleups_against_data(self):
+        """
+        This method more intended for technical appendices to papers, where it is important to be comprehensive in
+        presenting every fitted time-variant parameter that is used.
+        """
+
+        # different figure for each type of function
+        for function in self.model_runner.model_dict['manual_baseline'].scaleup_fns:
+
+            # standard prelims
+            fig = self.set_and_update_figure()
+            subplot_grid = [1, 2]
+            end_time = 2020.
+
+            for i in range(2):
+
+                # initialise axis
+                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1)
+
+                start_time = self.inputs.model_constants['early_time']
+                if i: start_time = self.inputs.model_constants['plot_start_time']
+                x_vals = numpy.linspace(start_time, end_time, 1e3)
+
+                # iterate through the scenarios
+                for scenario in reversed(self.scenarios):
+                    scenario_name = t_k.find_scenario_string_from_number(scenario)
+
+                    # line plot of scaling parameter functions
+                    ax.plot(x_vals,
+                            map(self.model_runner.model_dict['manual_' + scenario_name].scaleup_fns[function], x_vals),
+                            color=self.output_colours[scenario][1],
+                            label=t_k.capitalise_and_remove_underscore(scenario_name))
+
+                if function in self.inputs.scaleup_data[None]:
+                    data_to_plot = self.inputs.scaleup_data[None][function]
+                    ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
+
+                # adjust tick font size and add panel title
+                if 'prop_treatment_death' in function:
+                    y_axis_type = 'raw'
+                elif 'prop_' in function:
+                    y_axis_type = 'proportion'
+                else:
+                    y_axis_type = 'raw'
+                self.tidy_axis(ax, subplot_grid, start_time=start_time, legend=False, y_axis_type=y_axis_type,
+                               end_time=self.inputs.model_constants['recent_time'])
+
+            # finish off
+            fig.suptitle(t_k.capitalise_first_letter(t_k.find_title_from_dictionary(function)),
+                         fontsize=self.suptitle_size)
+            self.save_figure(fig, '_' + function + '_scale_up')
 
     def plot_programmatic_scaleups(self):
 

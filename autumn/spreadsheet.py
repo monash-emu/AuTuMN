@@ -54,9 +54,8 @@ def parse_year_data(year_data, blank, endcolumn):
         return year_vals
 
 
-#######################################
-###  Individual spreadsheet readers ###
-#######################################
+'''  Individual spreadsheet readers '''
+
 
 class BcgCoverageSheetReader:
     """
@@ -66,7 +65,6 @@ class BcgCoverageSheetReader:
     """
 
     def __init__(self, country_to_read):
-
         self.country_to_read = country_to_read  # country being read
         self.data = {}  # empty dictionary to contain the data that is read
         self.tab_name = 'BCG'  # tab of spreadsheet to be read
@@ -245,7 +243,6 @@ class ControlPanelReader:
 
 
 class FixedParametersReader(ControlPanelReader):
-
     def __init__(self):
 
         self.tab_name = 'constants'
@@ -423,7 +420,6 @@ class MdrReportReader:
 class LaboratoriesReader(GlobalTbReportReader):
 
     def __init__(self, country_to_read):
-
         self.data = {}
         self.tab_name = 'TB_laboratories_2016-12-22'
         self.key = 'laboratories'
@@ -439,7 +435,6 @@ class LaboratoriesReader(GlobalTbReportReader):
 class StrategyReader(MdrReportReader):
 
     def __init__(self, country_to_read):
-
         self.data = {}
         self.tab_name = 'TB_policies_services_2016-12-22'
         self.key = 'strategy'
@@ -455,7 +450,6 @@ class StrategyReader(MdrReportReader):
 class DiabetesReportReader:
 
     def __init__(self, country_to_read):
-
         self.data = {}
         self.tab_name = 'DM estimates 2015'
         self.key = 'diabetes'
@@ -484,9 +478,7 @@ class DiabetesReportReader:
         return self.data
 
 
-######################
-### Master scripts ###
-######################
+''' Master scripts '''
 
 
 def read_xls_with_sheet_readers(sheet_readers):

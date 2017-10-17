@@ -392,6 +392,8 @@ def adjust_country_name(country_name, adjustment='default'):
     if adjustment == 'for_vaccination':
         if country_name == 'Moldova':
             return 'Republic of ' + country_name + ' (the)'
+        else:
+            return country_name
     else:
         if country_name == 'Philippines':
             return country_name + ' (the)'

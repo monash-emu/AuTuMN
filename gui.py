@@ -265,7 +265,7 @@ class App:
         # self.boolean_dictionary['output_uncertainty'].set(True)
         self.boolean_dictionary['adaptive_uncertainty'].set(True)
         # self.boolean_dictionary['write_uncertainty_outcome_params'].set(True)
-        # self.boolean_dictionary['is_amplification'].set(True)
+        self.boolean_dictionary['output_scaleups'].set(True)
         # self.boolean_dictionary['is_misassignment'].set(True)
         # self.boolean_dictionary['is_lowquality'].set(True)
         self.boolean_dictionary['is_vary_detection_by_organ'].set(True)
@@ -278,7 +278,7 @@ class App:
         self.boolean_dictionary['riskgroup_diabetes'].set(True)
         # self.boolean_dictionary['riskgroup_hiv'].set(True)
         # self.boolean_dictionary['riskgroup_indigenous'].set(True)
-        self.boolean_dictionary['is_timevariant_organs'].set(True)
+        # self.boolean_dictionary['is_timevariant_organs'].set(True)
 
         for numeric in uncertainty_numeric_list.keys():
             numeric_label = Label(self.frame, text=uncertainty_numeric_list[numeric][0], font=label_font)

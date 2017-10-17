@@ -844,7 +844,7 @@ class Project:
 
     def tidy_axis(self, ax, subplot_grid, title='', start_time=0., legend=False, x_label='', y_label='',
                   x_axis_type='time', y_axis_type='scaled', x_sig_figs=0, y_sig_figs=0,
-                  end_time=None):
+                  end_time=None, y_relative_limit=0.95):
         """
         Method to make cosmetic changes to a set of plot axes.
         """
@@ -897,7 +897,7 @@ class Project:
             ax.set_ylim(top=1.)
             ax.set_ylabel(y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
         else:
-            ax.set_ylim(top=max_val * .95)
+            ax.set_ylim(top=max_val * y_relative_limit)
             ax.set_ylabel(y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
 
         # set size of font for x-ticks and add a grid if requested
@@ -1898,12 +1898,11 @@ class Project:
                         ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
 
                     # adjust tick font size and add panel title
-                    if 'prop_treatment_death' in function:
-                        y_axis_type = 'raw'
-                    elif 'prop_' in function:
+                    if 'prop_' in function:
                         y_axis_type = 'proportion'
                     else:
                         y_axis_type = 'raw'
+
                     self.tidy_axis(ax, subplot_grid, start_time=start_time,
                                    title=t_k.capitalise_first_letter(t_k.find_title_from_dictionary(function)),
                                    legend=(f == len(function_list) - 1), y_axis_type=y_axis_type)
@@ -1925,6 +1924,7 @@ class Project:
 
             # standard prelims
             fig = self.set_and_update_figure()
+            fig.set_figheight(4)
             subplot_grid = [1, 2]
             end_time = 2020.
 
@@ -1952,14 +1952,24 @@ class Project:
                     ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
 
                 # adjust tick font size and add panel title
-                if 'prop_treatment_death' in function:
-                    y_axis_type = 'raw'
-                elif 'prop_' in function:
+                if 'prop_' in function and not i:
                     y_axis_type = 'proportion'
+                    y_label = 'Proportion'
+                elif 'prop_' in function and i:
+                    y_axis_type = 'proportion'
+                    y_label = ''
                 else:
                     y_axis_type = 'raw'
+
+                # little fudge to get height for birth rate displaying correctly for Fiji
+                y_relative_limit = 0.95
+                if function == 'demo_rate_birth':
+                    y_relative_limit = 1.1
+                    y_label  = 'births per 1,000 per year'
+
                 self.tidy_axis(ax, subplot_grid, start_time=start_time, legend=False, y_axis_type=y_axis_type,
-                               end_time=self.inputs.model_constants['recent_time'])
+                               end_time=self.inputs.model_constants['recent_time'], y_label=y_label,
+                               y_relative_limit=y_relative_limit)
 
             # finish off
             fig.suptitle(t_k.capitalise_first_letter(t_k.find_title_from_dictionary(function)),

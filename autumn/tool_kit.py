@@ -420,6 +420,16 @@ def find_title_from_dictionary(name):
             'vaccination coverage',
         'program_prop_treatment_success':
             'treatment success rate',
+        'program_prop_treatment_new_death':
+            'death on treatment, new cases',
+        'program_prop_treatment_treated_death':
+            'death on treatment, previously treated',
+        'int_prop_ipt_age0to5':
+            'Isoniazid preventive therapy in under-5s',
+        'program_prop_treatment_new_success':
+            'treatment success, new cases',
+        'program_prop_treatment_treated_success':
+            'treatment success, previously treated',
         'program_prop_xpert':
             'GeneXpert coverage',
         'program_prop_detect':
@@ -476,6 +486,8 @@ def find_title_from_dictionary(name):
             ' over recent years',
         '_diabetes':
             'Diabetes',
+        'riskgroup_prop_diabetes':
+            'Diabetes prevalence',
         '_hiv':
             'HIV',
         '_nocomorb':

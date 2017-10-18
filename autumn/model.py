@@ -246,8 +246,7 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_populations()
         self.calculate_birth_rates_vars()
         self.calculate_progression_vars()
-        if 'int_prop_decentralisation' in self.relevant_interventions:
-            self.adjust_case_detection_for_decentralisation()
+        if 'int_prop_decentralisation' in self.relevant_interventions: self.adjust_case_detection_for_decentralisation()
         if 'int_prop_opendoors_activities' in self.relevant_interventions \
                 or 'int_prop_ngo_activities' in self.relevant_interventions:
             self.adjust_ipt_for_opendoors()

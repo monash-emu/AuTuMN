@@ -1920,6 +1920,8 @@ class Project:
         """
         This method more intended for technical appendices to papers, where it is important to be comprehensive in
         presenting every fitted time-variant parameter that is used.
+
+        Several pieces of dodgy code here in an attempt to get figures looking correct for Fiji paper supplement.
         """
 
         # different figure for each type of function
@@ -1965,6 +1967,12 @@ class Project:
                     y_label = 'Proportion'
                 elif 'prop_' in function and i:
                     y_axis_type = 'proportion'
+                    y_label = ''
+                elif 'life_expectancy' in function and not i:
+                    y_axis_type = 'raw'
+                    y_label = 'Years'
+                elif 'life_expectancy' in function and i:
+                    y_axis_type = 'raw'
                     y_label = ''
                 else:
                     y_axis_type = 'raw'

@@ -1522,6 +1522,9 @@ class Project:
         subplot_grid = find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
 
+        uncertainty_type = 'uncertainty_baseline'
+        if self.inputs.intervention_uncertainty: uncertainty_type = 'intervention_uncertainty'
+
         # loop through indicators
         for o, output in enumerate(outputs):
 
@@ -1555,14 +1558,14 @@ class Project:
                 # plot the targets (and milestones) and the fitted exponential function to achieve them
                 if compare_gtb:
                     base_value = gtb_data['point_estimate'][2014]  # should be 2015, but data not yet incorporated
-                elif purpose is 'scenario':
+                elif purpose == 'scenario':
                     base_value = self.model_runner.epi_outputs['manual_baseline'][output][
                         t_k.find_first_list_element_at_least_value(
                             self.model_runner.epi_outputs['manual_baseline']['times'], 2015.)]
                 else:
-                    base_value = self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_baseline'][output][
+                    base_value = self.model_runner.epi_outputs_uncertainty_centiles[uncertainty_type][output][
                             self.model_runner.percentiles.index(50), :][t_k.find_first_list_element_at_least_value(
-                            self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['times'], 2015.)]
+                            self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'], 2015.)]
 
                 if plot_targets and (output == 'incidence' or output == 'mortality'):
                     plot_endtb_targets(ax, output, base_value, patch_colour[o])
@@ -1783,9 +1786,9 @@ class Project:
                 if compare_gtb:
                     base_value = gtb_data['point_estimate'][2014]  # should be 2015, but data not yet incorporated
                 else:
-                    base_value = self.model_runner.epi_outputs_uncertainty_centiles['uncertainty_baseline'][output][
+                    base_value = self.model_runner.epi_outputs_uncertainty_centiles[uncertainty_type][output][
                             self.model_runner.percentiles.index(50), :][t_k.find_first_list_element_at_least_value(
-                            self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['times'], 2015.)]
+                            self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'], 2015.)]
 
                 if plot_targets and (output == 'incidence' or output == 'mortality'):
                     plot_endtb_targets(ax, output, base_value, '.7')

@@ -344,7 +344,8 @@ class ModelRunner:
         """
 
         scenario_start_time_index = \
-            self.model_dict[run_type + '_baseline'].find_time_index(self.inputs.model_constants['recent_time'])
+            self.model_dict[run_type + '_baseline'].find_time_index(
+                self.inputs.model_constants['before_intervention_time'])
         start_time = self.model_dict[run_type + '_baseline'].times[scenario_start_time_index]
         self.model_dict[scenario_name].start_time = start_time
         self.model_dict[scenario_name].next_time_point = start_time

@@ -1031,7 +1031,7 @@ class ModelRunner:
 
     ''' Intervention uncertainty methods '''
 
-    def run_intervention_uncertainty(self, intervention='int_prop_treatment_support_relative'):
+    def run_intervention_uncertainty(self):
         """
         Master method for running intervention uncertainty. That is, starting from the calibrated baseline simulated,
         project forward scenarios based on varying parameters for the effectiveness of the intervention under
@@ -1044,9 +1044,10 @@ class ModelRunner:
 
         # extract relevant intervention parameters from the intervention uncertainty dictionary
         working_param_dict = {}
-        for param in self.inputs.intervention_param_dict[intervention]:
+        for param in self.inputs.intervention_param_dict[self.inputs.uncertainty_intervention]:
             for int_param in range(len(self.inputs.int_ranges_unc)):
-                if self.inputs.int_ranges_unc[int_param]['key'] in self.inputs.intervention_param_dict[intervention]:
+                if self.inputs.int_ranges_unc[int_param]['key'] \
+                        in self.inputs.intervention_param_dict[self.inputs.uncertainty_intervention]:
                     working_param_dict[param] = self.inputs.int_ranges_unc[int_param]
 
         # generate samples using latin hypercube design
@@ -1066,7 +1067,8 @@ class ModelRunner:
             # prepare for integration of scenario
             self.model_dict['intervention_uncertainty'] = model.ConsolidatedModel(15, self.inputs, self.gui_inputs)
             self.prepare_new_model_from_baseline('manual', 'intervention_uncertainty')
-            self.model_dict['intervention_uncertainty'].relevant_interventions.append(intervention)
+            self.model_dict['intervention_uncertainty'].relevant_interventions.append(
+                self.inputs.uncertainty_intervention)
             for param in parameter_values:
                 self.model_dict['intervention_uncertainty'].set_parameter(param, parameter_values[param][sample])
 

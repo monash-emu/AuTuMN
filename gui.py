@@ -265,7 +265,7 @@ class App:
         # self.boolean_dictionary['output_uncertainty'].set(True)
         self.boolean_dictionary['adaptive_uncertainty'].set(True)
         # self.boolean_dictionary['write_uncertainty_outcome_params'].set(True)
-        self.boolean_dictionary['output_scaleups'].set(True)
+        # self.boolean_dictionary['output_scaleups'].set(True)
         # self.boolean_dictionary['is_misassignment'].set(True)
         # self.boolean_dictionary['is_lowquality'].set(True)
         self.boolean_dictionary['is_vary_detection_by_organ'].set(True)

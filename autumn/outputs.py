@@ -844,7 +844,7 @@ class Project:
 
     def tidy_axis(self, ax, subplot_grid, title='', start_time=0., legend=False, x_label='', y_label='',
                   x_axis_type='time', y_axis_type='scaled', x_sig_figs=0, y_sig_figs=0,
-                  end_time=None, y_relative_limit=0.95):
+                  end_time=None, y_relative_limit=0.95, y_absolute_limit=None):
         """
         Method to make cosmetic changes to a set of plot axes.
         """
@@ -899,8 +899,11 @@ class Project:
         elif y_axis_type == 'limited_proportion':
             ax.set_ylim((0., .25))
             ax.set_ylabel(y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
-        else:
+        elif not y_absolute_limit:
             ax.set_ylim(top=max_val * y_relative_limit)
+            ax.set_ylabel(y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
+        else:
+            ax.set_ylim(top=y_absolute_limit)
             ax.set_ylabel(y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
 
         # set size of font for x-ticks and add a grid if requested
@@ -1518,6 +1521,7 @@ class Project:
 
         # standard preliminaries
         start_time = self.inputs.model_constants['plot_start_time']
+        if self.inputs.intervention_uncertainty: start_time = self.inputs.model_constants['before_intervention_time']
         colour, indices, yaxis_label, title, patch_colour = find_standard_output_styles(outputs, lightening_factor=0.3)
         subplot_grid = find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
@@ -1663,13 +1667,22 @@ class Project:
                         self.model_runner.epi_outputs['manual_baseline'][output][self.start_time_index:],
                         color='k', linewidth=1.2)
 
+            y_absolute_limit = None
+            if self.inputs.intervention_uncertainty:
+                plot_start_time_index \
+                    = t_k.find_first_list_element_at_least_value(
+                        self.model_runner.epi_outputs['manual_baseline']['times'], start_time)
+                y_absolute_limit = max(self.model_runner.epi_outputs['manual_baseline'][output][plot_start_time_index:])
+
             self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
                            legend=(o == len(outputs) - 1 and len(self.scenarios) > 1
                                    and not self.inputs.intervention_uncertainty),
-                           y_axis_type='raw', y_label=yaxis_label[o])
+                           y_axis_type='raw', y_label=yaxis_label[o],
+                           y_absolute_limit=y_absolute_limit)
 
         # add main title and save
-        fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
+        if not self.inputs.intervention_uncertainty:
+            fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb' + end_filename)
 
     def plot_shaded_outputs_gtb(self, outputs, ci_plot=False, gtb_ci_plot='hatch', plot_targets=True,
@@ -1689,6 +1702,7 @@ class Project:
 
         # standard preliminaries
         start_time = self.inputs.model_constants['plot_start_time']
+        if self.inputs.intervention_uncertainty: start_time = self.inputs.model_constants['before_intervention_time']
         colour, indices, yaxis_label, title, patch_colour = find_standard_output_styles(outputs, lightening_factor=0.3)
         subplot_grid = find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
@@ -1705,11 +1719,10 @@ class Project:
             scenario_name = 'baseline'
             start_index = self.find_start_index(None)
 
+            uncertainty_type = 'uncertainty_baseline'
             if self.inputs.intervention_uncertainty:
                 uncertainty_type = 'intervention_uncertainty'
                 start_index = 0
-            else:
-                uncertainty_type = 'uncertainty_baseline'
 
             # overlay median and upper and lower CIs if requested
             if ci_plot:
@@ -1721,21 +1734,19 @@ class Project:
                     linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
                 for centile in [2.5, 97.5]:
                     ax.plot(
-                        self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][
-                            start_index:],
+                        self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
                         self.model_runner.epi_outputs_uncertainty_centiles[uncertainty_type][output][
-                        self.model_runner.percentiles.index(centile), :][start_index:],
+                            self.model_runner.percentiles.index(centile), :][start_index:],
                         color=self.output_colours[None][1], linestyle='--', linewidth=.5, label=None)
 
             # plot shaded areas as patches
-            progressive_patch_colours \
-                = [cm.Blues(x) for x in numpy.linspace(0., 1., self.model_runner.n_centiles_for_shading)]
+            patch_colours = [cm.Blues(x) for x in numpy.linspace(0., 1., self.model_runner.n_centiles_for_shading)]
             for i in range(self.model_runner.n_centiles_for_shading):
                 patch = create_patch_from_list(
                     self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
                     self.model_runner.epi_outputs_uncertainty_centiles[uncertainty_type][output][i+3, :][start_index:],
                     self.model_runner.epi_outputs_uncertainty_centiles[uncertainty_type][output][-i-1, :][start_index:])
-                ax.add_patch(patches.Polygon(patch, color=progressive_patch_colours[i]))
+                ax.add_patch(patches.Polygon(patch, color=patch_colours[i]))
 
             if self.inputs.intervention_uncertainty:
                 ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'][self.start_time_index:],
@@ -1760,26 +1771,25 @@ class Project:
                 for level in self.level_conversion_dict:
                     gtb_data[level] = self.inputs.original_data['tb'][indices[o] + self.level_conversion_dict[level]]
                     gtb_data_lists.update(extract_dict_to_list_key_ordering(gtb_data[level], level))
+                gtb_index = t_k.find_first_list_element_at_least_value(gtb_data_lists['times'], start_time)
                 if gtb_ci_plot == 'patch':
-                    ax.add_patch(patches.Polygon(
-                        create_patch_from_list(gtb_data_lists['times'],
-                                               gtb_data_lists['lower_limit'],
-                                               gtb_data_lists['upper_limit']),
-                        color=patch_colour[o], alpha=alpha))
+                    ax.add_patch(patches.Polygon(create_patch_from_list(gtb_data_lists['times'][gtb_index:],
+                                                                        gtb_data_lists['lower_limit'][gtb_index:],
+                                                                        gtb_data_lists['upper_limit'][gtb_index:]),
+                                                 color=patch_colour[o], alpha=alpha))
                 elif gtb_ci_plot == 'hatch':
-                    ax.add_patch(patches.Polygon(
-                        create_patch_from_list(gtb_data_lists['times'],
-                                               gtb_data_lists['lower_limit'],
-                                               gtb_data_lists['upper_limit']),
-                        color='.3', hatch='/', fill=False, linewidth=0.))
+                    ax.add_patch(patches.Polygon(create_patch_from_list(gtb_data_lists['times'][gtb_index:],
+                                                                        gtb_data_lists['lower_limit'][gtb_index:],
+                                                                        gtb_data_lists['upper_limit'][gtb_index:]),
+                                                 color='.3', hatch='/', fill=False, linewidth=0.))
 
             # plot point estimates
             if output in self.gtb_available_outputs:
-                ax.plot(gtb_data['point_estimate'].keys(), gtb_data['point_estimate'].values(),
+                ax.plot(gtb_data['point_estimate'].keys()[gtb_index:], gtb_data['point_estimate'].values()[gtb_index:],
                         color='.3', linewidth=0.8, label=None, alpha=alpha)
                 if gtb_ci_plot == 'hatch' and output != 'notifications':
                     for limit in ['lower_limit', 'upper_limit']:
-                        ax.plot(gtb_data['upper_limit'].keys(), gtb_data[limit].values(),
+                        ax.plot(gtb_data['upper_limit'].keys()[gtb_index:], gtb_data[limit].values()[gtb_index:],
                                 color='.3', linewidth=0.3, label=None, alpha=alpha)
 
                 # plot the targets (and milestones) and the fitted exponential function to achieve them
@@ -1788,17 +1798,25 @@ class Project:
                 else:
                     base_value = self.model_runner.epi_outputs_uncertainty_centiles[uncertainty_type][output][
                             self.model_runner.percentiles.index(50), :][t_k.find_first_list_element_at_least_value(
-                            self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'], 2015.)]
+                                self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'], 2015.)]
 
                 if plot_targets and (output == 'incidence' or output == 'mortality'):
                     plot_endtb_targets(ax, output, base_value, '.7')
 
+            y_absolute_limit = None
+            if self.inputs.intervention_uncertainty:
+                plot_start_time_index \
+                    = t_k.find_first_list_element_at_least_value(
+                        self.model_runner.epi_outputs['manual_baseline']['times'], start_time)
+                y_absolute_limit = max(self.model_runner.epi_outputs['manual_baseline'][output][plot_start_time_index:])
+
             self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
                            legend=(o == len(outputs) - 1 and len(self.scenarios) > 1),
-                           y_axis_type='raw', y_label=yaxis_label[o])
+                           y_axis_type='raw', y_label=yaxis_label[o], y_absolute_limit=y_absolute_limit)
 
         # add main title and save
-        fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
+        if not self.inputs.intervention_uncertainty:
+            fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb_shaded')
 
     def plot_resistant_strain_outputs(self, outputs):

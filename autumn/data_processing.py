@@ -61,10 +61,12 @@ class Inputs:
 
         # intervention uncertainty (needs to be fleshed out considerably to cover even one intervention)
         if self.intervention_uncertainty:
+            self.uncertainty_intervention = 'int_prop_decentralisation'
             self.scenarios.append(15)
-            self.n_samples = 5
+            self.n_samples = 1
             self.intervention_param_dict \
-                = {'int_prop_treatment_support_relative': ['int_prop_treatment_support_improvement']}
+                = {'int_prop_treatment_support_relative': ['int_prop_treatment_support_improvement'],
+                   'int_prop_decentralisation': ['int_ideal_detection']}
 
         # model structure
         self.available_strains = ['_ds', '_mdr', '_xdr']

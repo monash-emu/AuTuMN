@@ -285,9 +285,8 @@ def force_list_to_length(list, length):
         return [0.] * (length - len(list)) + list
 
 
-##################################
-### Scenario name manipulation ###
-##################################
+''' Scenario name manipulation '''
+
 
 def find_scenario_string_from_number(scenario):
     """
@@ -331,9 +330,8 @@ def find_scenario_number_from_string(scenario):
     return scenario_number
 
 
-###########################
-### String manipulation ###
-###########################
+''' String manipulation '''
+
 
 def capitalise_first_letter(old_string):
     """

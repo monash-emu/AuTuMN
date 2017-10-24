@@ -1542,11 +1542,10 @@ class Project:
             # preliminaries
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
 
+            # overlay first so it's at the back
             self.overlay_gtb_data(ax, o, output, start_time, indices, patch_colour, compare_gtb=False,
                                   gtb_ci_plot='patch', plot_targets=True, uncertainty_type=uncertainty_type,
                                   alpha=1.)
-
-            ''' plotting modelled data '''
 
             # plot scenarios without uncertainty
             if purpose is 'scenario':
@@ -1570,14 +1569,10 @@ class Project:
             # plot with uncertainty confidence intervals
             elif purpose == 'ci_plot':
                 if self.inputs.intervention_uncertainty:
-                    scenarios = [None, 15]
-                    uncertainty_type = 'intervention_uncertainty'
-                    start_index = 0
-                    linewidth = 1.
-                    linecolour = 'r'
+                    (scenarios, uncertainty_type, start_index, linewidth, linecolour) \
+                        = ([None, 15], 'intervention_uncertainty', 0, 1., 'r')
                 else:
-                    scenarios = self.scenarios
-                    linewidth = 1.5
+                    (scenarios, linewidth) = (self.scenarios, 1.5)
 
                 for scenario in scenarios[::-1]:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
@@ -1666,9 +1661,6 @@ class Project:
         Args:
             outputs: The types of output to plot
             ci_plot: Whether to add dotted lines at the edges of the shaded modelled output areas
-            gtb_ci_plot: How to overlay the GTB data - either 'hatch' for hatched area, or 'patch' for translucent area
-            plot_targets: Whether to plot the End TB Targets, milestones, etc.
-            compare_gtb: Whether to have Targets compared against GTB or modelled data
         """
 
         # standard preliminaries
@@ -1685,15 +1677,12 @@ class Project:
             # preliminaries
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
 
-            ''' plot modelled data '''
-
             # plot with uncertainty confidence intervals
             scenario_name = 'baseline'
             start_index = self.find_start_index(None)
 
             if self.inputs.intervention_uncertainty:
-                uncertainty_type = 'intervention_uncertainty'
-                start_index = 0
+                (uncertainty_type, start_index) = ('intervention_uncertainty', 0)
             elif self.inputs.mode == 'uncertainty':
                 uncertainty_type = 'uncertainty_baseline'
 

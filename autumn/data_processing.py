@@ -57,20 +57,22 @@ class Inputs:
         self.data_to_fit = {}
         # for incidence for ex, width of normal posterior relative to CI width in data
         self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
-        self.intervention_uncertainty = True
+        self.intervention_uncertainty = False
 
         # intervention uncertainty (needs to be fleshed out considerably to cover even one intervention)
         if self.intervention_uncertainty:
-            self.uncertainty_intervention = 'int_prop_ipt'
+            self.uncertainty_intervention = 'int_prop_awareness_raising'
             self.scenarios.append(15)
-            self.n_samples = 2
+            self.n_samples = 20
             self.intervention_param_dict \
                 = {'int_prop_treatment_support_relative': ['int_prop_treatment_support_improvement'],
                    'int_prop_decentralisation': ['int_ideal_detection'],
                    'int_prop_xpert': ['int_prop_xpert_smearneg_sensitivity', 'int_prop_xpert_sensitivity_mdr',
                                       'int_timeperiod_await_treatment_smearneg_xpert'],
                    'int_prop_ipt': ['int_prop_ipt_effectiveness', 'int_prop_ltbi_test_sensitivity',
-                                    'int_prop_infections_in_household']}
+                                    'int_prop_infections_in_household'],
+                   'int_prop_acf': ['int_prop_acf_detections_per_round'],
+                   'int_prop_awareness_raising': ['int_multiplier_detection_with_raised_awareness']}
 
         # model structure
         self.available_strains = ['_ds', '_mdr', '_xdr']
@@ -81,9 +83,8 @@ class Inputs:
         self.riskgroups = []
         self.vary_force_infection_by_riskgroup = self.gui_inputs['is_vary_force_infection_by_riskgroup']
         self.mixing = {}
-        self.compartment_types \
-            = ['susceptible_fully', 'susceptible_immune', 'latent_early', 'latent_late', 'active',
-               'detect', 'missed', 'treatment_infect', 'treatment_noninfect']
+        self.compartment_types = ['susceptible_fully', 'susceptible_immune', 'latent_early', 'latent_late', 'active',
+                                  'detect', 'missed', 'treatment_infect', 'treatment_noninfect']
         self.histories = ['']
 
         # interventions

@@ -1519,15 +1519,22 @@ class Project:
             compare_gtb: Whether overlaid End TB Targets should be comparisons against calibration or modelled data
         """
 
-        # standard preliminaries
+        # preliminaries
         start_time = self.inputs.model_constants['plot_start_time']
-        if self.inputs.intervention_uncertainty: start_time = self.inputs.model_constants['before_intervention_time']
+        if self.inputs.intervention_uncertainty or len(self.scenarios) > 1:
+            start_time = self.inputs.model_constants['before_intervention_time']
         colour, indices, yaxis_label, title, patch_colour = find_standard_output_styles(outputs, lightening_factor=0.3)
         subplot_grid = find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
 
-        uncertainty_type = 'uncertainty_baseline'
-        if self.inputs.intervention_uncertainty: uncertainty_type = 'intervention_uncertainty'
+        # type of analysis requested
+        if self.inputs.intervention_uncertainty:
+            uncertainty_type = 'intervention_uncertainty'
+            start_index = 0
+        elif purpose == 'scenario':
+            uncertainty_type = 'manual_baseline'
+        else:
+            uncertainty_type = 'uncertainty_baseline'
 
         # loop through indicators
         for o, output in enumerate(outputs):
@@ -1535,44 +1542,9 @@ class Project:
             # preliminaries
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
 
-            ''' plotting GTB data in background '''
-
-            gtb_data = {}
-            gtb_data_lists = {}
-
-            # notifications
-            if output == 'notifications':
-                gtb_data['point_estimate'] = self.inputs.original_data['notifications']['c_newinc']
-
-            # extract the relevant data from the Global TB Report and use to plot a patch (for inc, prev and mortality)
-            elif output in self.gtb_available_outputs:
-                for level in self.level_conversion_dict:
-                    gtb_data[level] = self.inputs.original_data['tb'][indices[o] + self.level_conversion_dict[level]]
-                    gtb_data_lists.update(extract_dict_to_list_key_ordering(gtb_data[level], level))
-                ax.add_patch(patches.Polygon(
-                    create_patch_from_list(
-                        gtb_data_lists['times'], gtb_data_lists['lower_limit'], gtb_data_lists['upper_limit']),
-                    color=patch_colour[o]))
-
-            # plot point estimates
-            if output in self.gtb_available_outputs:
-                ax.plot(gtb_data['point_estimate'].keys(), gtb_data['point_estimate'].values(), color=colour[o],
-                        linewidth=0.5, label=None)
-
-                # plot the targets (and milestones) and the fitted exponential function to achieve them
-                if compare_gtb:
-                    base_value = gtb_data['point_estimate'][2014]  # should be 2015, but data not yet incorporated
-                elif purpose == 'scenario':
-                    base_value = self.model_runner.epi_outputs['manual_baseline'][output][
-                        t_k.find_first_list_element_at_least_value(
-                            self.model_runner.epi_outputs['manual_baseline']['times'], 2015.)]
-                else:
-                    base_value = self.model_runner.epi_outputs_uncertainty_centiles[uncertainty_type][output][
-                            self.model_runner.percentiles.index(50), :][t_k.find_first_list_element_at_least_value(
-                            self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'], 2015.)]
-
-                if plot_targets and (output == 'incidence' or output == 'mortality'):
-                    plot_endtb_targets(ax, output, base_value, patch_colour[o])
+            self.overlay_gtb_data(ax, o, output, start_time, indices, patch_colour, compare_gtb=False,
+                                  gtb_ci_plot='patch', plot_targets=True, uncertainty_type=uncertainty_type,
+                                  alpha=1.)
 
             ''' plotting modelled data '''
 
@@ -1685,8 +1657,7 @@ class Project:
             fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb' + end_filename)
 
-    def plot_shaded_outputs_gtb(self, outputs, ci_plot=False, gtb_ci_plot='hatch', plot_targets=True,
-                                compare_gtb=False):
+    def plot_shaded_outputs_gtb(self, outputs, ci_plot=False):
         """
         Creates visualisation of uncertainty outputs with density of shading proportional to the number of model runs
         that went through a certain output value. Similar to our plotting approach for the award-winning figure in
@@ -1702,7 +1673,8 @@ class Project:
 
         # standard preliminaries
         start_time = self.inputs.model_constants['plot_start_time']
-        if self.inputs.intervention_uncertainty: start_time = self.inputs.model_constants['before_intervention_time']
+        if self.inputs.intervention_uncertainty:
+            start_time = self.inputs.model_constants['before_intervention_time']
         colour, indices, yaxis_label, title, patch_colour = find_standard_output_styles(outputs, lightening_factor=0.3)
         subplot_grid = find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
@@ -1719,10 +1691,11 @@ class Project:
             scenario_name = 'baseline'
             start_index = self.find_start_index(None)
 
-            uncertainty_type = 'uncertainty_baseline'
             if self.inputs.intervention_uncertainty:
                 uncertainty_type = 'intervention_uncertainty'
                 start_index = 0
+            elif self.inputs.mode == 'uncertainty':
+                uncertainty_type = 'uncertainty_baseline'
 
             # overlay median and upper and lower CIs if requested
             if ci_plot:
@@ -1753,55 +1726,8 @@ class Project:
                         self.model_runner.epi_outputs['manual_baseline'][output][self.start_time_index:],
                         color='k', linewidth=1.2)
 
-            ''' plotting GTB data in background '''
-
-            gtb_data = {}
-            if gtb_ci_plot == 'hatch':
-                alpha = 1.
-            elif gtb_ci_plot == 'patch':
-                alpha = .2
-
-            # notifications
-            if output == 'notifications':
-                gtb_data['point_estimate'] = self.inputs.original_data['notifications']['c_newinc']
-
-            # extract the relevant data from the Global TB Report and use to plot a patch (for inc, prev and mortality)
-            elif output in self.gtb_available_outputs:
-                gtb_data_lists = {}
-                for level in self.level_conversion_dict:
-                    gtb_data[level] = self.inputs.original_data['tb'][indices[o] + self.level_conversion_dict[level]]
-                    gtb_data_lists.update(extract_dict_to_list_key_ordering(gtb_data[level], level))
-                gtb_index = t_k.find_first_list_element_at_least_value(gtb_data_lists['times'], start_time)
-                if gtb_ci_plot == 'patch':
-                    ax.add_patch(patches.Polygon(create_patch_from_list(gtb_data_lists['times'][gtb_index:],
-                                                                        gtb_data_lists['lower_limit'][gtb_index:],
-                                                                        gtb_data_lists['upper_limit'][gtb_index:]),
-                                                 color=patch_colour[o], alpha=alpha))
-                elif gtb_ci_plot == 'hatch':
-                    ax.add_patch(patches.Polygon(create_patch_from_list(gtb_data_lists['times'][gtb_index:],
-                                                                        gtb_data_lists['lower_limit'][gtb_index:],
-                                                                        gtb_data_lists['upper_limit'][gtb_index:]),
-                                                 color='.3', hatch='/', fill=False, linewidth=0.))
-
-            # plot point estimates
-            if output in self.gtb_available_outputs:
-                ax.plot(gtb_data['point_estimate'].keys()[gtb_index:], gtb_data['point_estimate'].values()[gtb_index:],
-                        color='.3', linewidth=0.8, label=None, alpha=alpha)
-                if gtb_ci_plot == 'hatch' and output != 'notifications':
-                    for limit in ['lower_limit', 'upper_limit']:
-                        ax.plot(gtb_data['upper_limit'].keys()[gtb_index:], gtb_data[limit].values()[gtb_index:],
-                                color='.3', linewidth=0.3, label=None, alpha=alpha)
-
-                # plot the targets (and milestones) and the fitted exponential function to achieve them
-                if compare_gtb:
-                    base_value = gtb_data['point_estimate'][2014]  # should be 2015, but data not yet incorporated
-                else:
-                    base_value = self.model_runner.epi_outputs_uncertainty_centiles[uncertainty_type][output][
-                            self.model_runner.percentiles.index(50), :][t_k.find_first_list_element_at_least_value(
-                                self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'], 2015.)]
-
-                if plot_targets and (output == 'incidence' or output == 'mortality'):
-                    plot_endtb_targets(ax, output, base_value, '.7')
+            # now packaged into a function to overlay the GTB data over the existing plot
+            self.overlay_gtb_data(ax, o, output, start_time, indices, patch_colour)
 
             y_absolute_limit = None
             if self.inputs.intervention_uncertainty:
@@ -1818,6 +1744,72 @@ class Project:
         if not self.inputs.intervention_uncertainty:
             fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb_shaded')
+
+    def overlay_gtb_data(self, ax, o, output, start_time, indices, patch_colour, compare_gtb=False, gtb_ci_plot='hatch',
+                         plot_targets=True, uncertainty_type='uncertainty_baseline', alpha=1.):
+        """
+        Method to plot the data loaded directly from the GTB report in the background.
+
+        Args:
+            ax: Axis for plotting
+            o: Order of output
+            output: String for output
+            start_time:
+            indices:
+            patch_colour:
+            compare_gtb: Whether to plot the targets/milestones relative to GTB data rather than modelled outputs
+            gtb_ci_plot:
+            plot_targets:
+            uncertainty_type:
+            alpha: Alpha value for patch
+        """
+
+        # prelims
+        gtb_data = {}
+        gtb_data_lists = {}
+
+        # notifications
+        if output == 'notifications':
+            gtb_data['point_estimate'] = self.inputs.original_data['notifications']['c_newinc']
+            gtb_data_lists.update(extract_dict_to_list_key_ordering(gtb_data['point_estimate'], 'point_estimate'))
+            gtb_index = t_k.find_first_list_element_at_least_value(gtb_data_lists['times'], start_time)
+
+        # extract the relevant data from the Global TB Report and use to plot a patch (for inc, prev and mortality)
+        elif output in self.gtb_available_outputs:
+            for level in self.level_conversion_dict:
+                gtb_data[level] = self.inputs.original_data['tb'][indices[o] + self.level_conversion_dict[level]]
+                gtb_data_lists.update(extract_dict_to_list_key_ordering(gtb_data[level], level))
+            gtb_index = t_k.find_first_list_element_at_least_value(gtb_data_lists['times'], start_time)
+            if gtb_ci_plot == 'patch':
+                (colour, hatch, fill, linewidth, alpha) = (patch_colour[o], None, True, 1., 1.)
+            elif gtb_ci_plot == 'hatch':
+                (colour, hatch, fill, linewidth, alpha) = ('.3', '/', False, 0., 1.)
+            ax.add_patch(patches.Polygon(create_patch_from_list(gtb_data_lists['times'][gtb_index:],
+                                                                gtb_data_lists['lower_limit'][gtb_index:],
+                                                                gtb_data_lists['upper_limit'][gtb_index:]),
+                                         color=colour, hatch=hatch, fill=fill, linewidth=linewidth))
+
+        # plot point estimates
+        if output in self.gtb_available_outputs:
+            ax.plot(gtb_data['point_estimate'].keys()[gtb_index:], gtb_data['point_estimate'].values()[gtb_index:],
+                    color='.3', linewidth=0.8, label=None, alpha=alpha)
+            if gtb_ci_plot == 'hatch' and output != 'notifications':
+                for limit in ['lower_limit', 'upper_limit']:
+                    ax.plot(gtb_data['upper_limit'].keys()[gtb_index:], gtb_data[limit].values()[gtb_index:],
+                            color='.3', linewidth=0.3, label=None, alpha=alpha)
+
+            # plot the targets (and milestones) and the fitted exponential function to achieve them
+            if 'uncertainty' in uncertainty_type:
+                base_value = self.model_runner.epi_outputs_uncertainty_centiles[uncertainty_type][output][
+                             self.model_runner.percentiles.index(50), :][t_k.find_first_list_element_at_least_value(
+                                self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'], 2015.)]
+            else:
+                base_value = self.model_runner.epi_outputs[uncertainty_type][output][
+                    t_k.find_first_list_element_at_least_value(
+                        self.model_runner.epi_outputs[uncertainty_type]['times'], 2015.)]
+            if compare_gtb: base_value = gtb_data['point_estimate'][2014]  # should be 2015, but data not yet inputted
+            if plot_targets and (output == 'incidence' or output == 'mortality'):
+                plot_endtb_targets(ax, output, base_value, '.7')
 
     def plot_resistant_strain_outputs(self, outputs):
         """

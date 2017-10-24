@@ -1635,7 +1635,7 @@ class Project:
                         color='k', linewidth=1.2)
 
             y_absolute_limit = None
-            if self.inputs.intervention_uncertainty:
+            if self.inputs.intervention_uncertainty or len(self.scenarios) > 1:
                 plot_start_time_index \
                     = t_k.find_first_list_element_at_least_value(
                         self.model_runner.epi_outputs['manual_baseline']['times'], start_time)
@@ -1647,9 +1647,8 @@ class Project:
                            y_axis_type='raw', y_label=yaxis_label[o],
                            y_absolute_limit=y_absolute_limit)
 
-        # add main title and save
-        if not self.inputs.intervention_uncertainty:
-            fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
+        # add main title and s
+        # fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb' + end_filename)
 
     def plot_shaded_outputs_gtb(self, outputs, ci_plot=False):
@@ -1730,8 +1729,7 @@ class Project:
                            y_axis_type='raw', y_label=yaxis_label[o], y_absolute_limit=y_absolute_limit)
 
         # add main title and save
-        if not self.inputs.intervention_uncertainty:
-            fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
+        # fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb_shaded')
 
     def overlay_gtb_data(self, ax, o, output, start_time, indices, patch_colour, compare_gtb=False, gtb_ci_plot='hatch',

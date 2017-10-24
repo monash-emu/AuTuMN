@@ -232,6 +232,12 @@ class ConsolidatedModel(StratifiedModel):
                 = (1. - self.params['tb_prop_casefatality_untreated' + organ]) \
                   / self.params['tb_timeperiod_activeuntreated']
 
+        # ipt completion
+        self.params['rate_ipt_completion'] \
+            = 1. / self.params['tb_timeperiod_onipt'] * self.params['int_prop_ipt_effectiveness']
+        self.params['rate_ipt_noncompletion'] \
+            = 1. / self.params['tb_timeperiod_onipt'] * (1. - self.params['int_prop_ipt_effectiveness'])
+
     ''' Methods that calculate variables to be used in calculating flows
     (Note that all scaleup_fns have already been calculated.) '''
 
@@ -403,7 +409,7 @@ class ConsolidatedModel(StratifiedModel):
                 self.vars['program_prop' + parameter + '_smearneg'] \
                     += (self.vars['program_prop' + parameter + '_smearpos'] -
                         self.vars['program_prop' + parameter + '_smearneg']) \
-                       * self.params['tb_prop_xpert_smearneg_sensitivity'] * self.vars['int_prop_xpert']
+                       * self.params['int_prop_xpert_smearneg_sensitivity'] * self.vars['int_prop_xpert']
 
     def calculate_detect_missed_vars(self):
         """"
@@ -502,7 +508,7 @@ class ConsolidatedModel(StratifiedModel):
                                 self.vars['int_rate_acf_smearneg' + riskgroup] = 0.
                             self.vars['int_rate_acf_smearneg' + riskgroup] \
                                 += self.vars['int_rate_acf_smearpos' + riskgroup] \
-                                  * self.params['tb_prop_xpert_smearneg_sensitivity']
+                                  * self.params['int_prop_xpert_smearneg_sensitivity']
 
     def calculate_intensive_screening_rate(self):
         """
@@ -528,7 +534,7 @@ class ConsolidatedModel(StratifiedModel):
 
                 # adjust smear-negative detections for Xpert's sensitivity
                 self.vars['int_rate_intensive_screening_smearneg' + riskgroup] \
-                    *= self.params['tb_prop_xpert_smearneg_sensitivity']
+                    *= self.params['int_prop_xpert_smearneg_sensitivity']
 
     def adjust_case_detection_for_acf(self):
         """
@@ -830,7 +836,7 @@ class ConsolidatedModel(StratifiedModel):
         # first calculate the proportion of new infections that are detected and so potentially targeted with IPT
         self.vars['tb_prop_infections_reachable_ipt'] \
             = self.calculate_aggregate_outgoing_proportion('active', 'detect') \
-              * self.params['tb_prop_infections_in_household'] * self.params['tb_prop_ltbi_test_sensitivity']
+              * self.params['int_prop_infections_in_household'] * self.params['int_prop_ltbi_test_sensitivity']
 
         # for each age group, calculate proportion of infections averted by IPT program
         for agegroup in self.agegroups:

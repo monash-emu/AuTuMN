@@ -57,16 +57,20 @@ class Inputs:
         self.data_to_fit = {}
         # for incidence for ex, width of normal posterior relative to CI width in data
         self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
-        self.intervention_uncertainty = False
+        self.intervention_uncertainty = True
 
         # intervention uncertainty (needs to be fleshed out considerably to cover even one intervention)
         if self.intervention_uncertainty:
-            self.uncertainty_intervention = 'int_prop_decentralisation'
+            self.uncertainty_intervention = 'int_prop_ipt'
             self.scenarios.append(15)
-            self.n_samples = 1
+            self.n_samples = 2
             self.intervention_param_dict \
                 = {'int_prop_treatment_support_relative': ['int_prop_treatment_support_improvement'],
-                   'int_prop_decentralisation': ['int_ideal_detection']}
+                   'int_prop_decentralisation': ['int_ideal_detection'],
+                   'int_prop_xpert': ['int_prop_xpert_smearneg_sensitivity', 'int_prop_xpert_sensitivity_mdr',
+                                      'int_timeperiod_await_treatment_smearneg_xpert'],
+                   'int_prop_ipt': ['int_prop_ipt_effectiveness', 'int_prop_ltbi_test_sensitivity',
+                                    'int_prop_infections_in_household']}
 
         # model structure
         self.available_strains = ['_ds', '_mdr', '_xdr']
@@ -244,7 +248,7 @@ class Inputs:
         self.find_noninfectious_period()
 
         # derive some basic parameters for IPT
-        self.find_ipt_params()
+        # self.find_ipt_params()
 
     def find_latency_progression_rates(self):
         """
@@ -302,19 +306,6 @@ class Inputs:
             self.model_constants['tb_timeperiod_noninfect_ontreatment' + strain] \
                 = self.model_constants['tb_timeperiod_ontreatment' + strain] \
                   - self.model_constants['tb_timeperiod_infect_ontreatment' + strain]
-
-    def find_ipt_params(self):
-        """
-        Calculate number of persons eligible for IPT per person commencing treatment and then the number of persons
-        who receive effective IPT per person assessed for LTBI.
-        """
-
-        # completion
-        self.model_constants['rate_ipt_completion'] \
-            = 1. / self.model_constants['tb_timeperiod_onipt'] * self.model_constants['tb_prop_ipt_effectiveness']
-        self.model_constants['rate_ipt_noncompletion'] \
-            = 1. / self.model_constants['tb_timeperiod_onipt'] \
-              * (1. - self.model_constants['tb_prop_ipt_effectiveness'])
 
     ''' Methods to define model structure '''
 
@@ -1191,7 +1182,7 @@ class Inputs:
         """
 
         for param in self.model_constants:
-            if ('tb_' in param or '_time' in param) \
+            if ('tb_' in param or 'start_time' in param) \
                     and '_uncertainty' in param and type(self.model_constants[param]) == dict:
                 self.param_ranges_unc += [{'key': param[:-12],
                                            'bounds': [self.model_constants[param]['lower'],

@@ -352,7 +352,7 @@ class ModelRunner:
         self.model_dict[scenario_name].loaded_compartments \
             = self.model_dict[run_type + '_baseline'].load_state(scenario_start_time_index)
 
-    ''' model interpretation methods '''
+    ''' output interpretation methods '''
 
     def find_epi_outputs(self, scenario, outputs_to_analyse, stratifications=[]):
         """
@@ -680,7 +680,7 @@ class ModelRunner:
                         = numpy.percentile(matrix_to_analyse, self.percentiles, axis=0)
         return uncertainty_centiles
 
-    ''' Epidemiological uncertainty methods '''
+    ''' epidemiological uncertainty methods '''
 
     def run_epi_uncertainty(self):
         """
@@ -1029,7 +1029,7 @@ class ModelRunner:
 
         return new_params
 
-    ''' Intervention uncertainty methods '''
+    ''' other run type methods '''
 
     def run_intervention_uncertainty(self):
         """
@@ -1076,7 +1076,7 @@ class ModelRunner:
             self.model_dict['intervention_uncertainty'].integrate()
             self.store_uncertainty('intervention_uncertainty', epi_outputs_to_analyse=self.epi_outputs_to_analyse)
 
-    ''' Optimisation methods '''
+    ''' optimisation methods '''
 
     def run_optimisation(self):
         """

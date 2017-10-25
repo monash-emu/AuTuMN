@@ -720,7 +720,7 @@ class Project:
 
         self.plot_true_outcomes = False
 
-    ''' General methods for use below '''
+    ''' general methods for use below '''
 
     def find_years_to_write(self, scenario, output, epi=True):
         """
@@ -859,7 +859,7 @@ class Project:
         if legend == 'for_single':
             ax.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., frameon=False, prop={'size': 7})
         elif legend:
-            ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False)
+            ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False, loc=3)
 
         # sort x-axis
         if x_axis_type == 'time':
@@ -933,7 +933,7 @@ class Project:
         png = os.path.join(self.model_runner.opti_outputs_dir, self.country + last_part_of_name_for_figure + '.png')
         fig.savefig(png, dpi=300)
 
-    ''' Methods for outputting to Office applications '''
+    ''' methods for outputting to Office applications '''
 
     def master_outputs_runner(self):
         """
@@ -1406,7 +1406,7 @@ class Project:
             # Save workbook
             wb.save(path)
 
-    ''' Plotting methods '''
+    ''' plotting methods '''
 
     def run_plotting(self):
         """
@@ -1554,16 +1554,27 @@ class Project:
                 for scenario in self.scenarios[::-1]:  # reversing to ensure black baseline plotted over top
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
                     start_index = self.find_start_index(scenario)
+
+                    # work out colour depending on whether purpose is scenario analysis or incrementing comorbidities
+                    colour = self.output_colours[scenario][1]
+                    t_k.capitalise_and_remove_underscore(scenario_name)
+                    if self.inputs.increment_comorbidity and scenario:
+                        colour = cm.Reds(.2 + .8 * self.inputs.comorbidity_prevalences[scenario])
+                        label = str(int(self.inputs.comorbidity_prevalences[scenario] * 1e2)) + '%'
+                    elif self.inputs.increment_comorbidity:
+                        (colour, label) = ('k', 'Baseline')
+
+                    # plot
                     ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'][start_index:],
                             self.model_runner.epi_outputs['manual_' + scenario_name][output][start_index:],
-                            color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
-                            linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
+                            color=colour, linestyle=self.output_colours[scenario][0],
+                            linewidth=1.5, label=label)
 
                 # plot "true" mortality
                 if output == 'mortality' and self.plot_true_outcomes:
                     ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'][start_index:],
                             self.model_runner.epi_outputs['manual_' + scenario_name]['true_' + output][start_index:],
-                            color=self.output_colours[scenario][1], linestyle=':', linewidth=1)
+                            color=colour, linestyle=':', linewidth=1)
                 end_filename = '_scenario'
 
             # plot with uncertainty confidence intervals

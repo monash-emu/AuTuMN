@@ -74,6 +74,12 @@ class Inputs:
                    'int_prop_acf': ['int_prop_acf_detections_per_round'],
                    'int_prop_awareness_raising': ['int_multiplier_detection_with_raised_awareness']}
 
+        # increment comorbidity
+        self.increment_comorbidity = True
+        if self.increment_comorbidity:
+            self.comorbidity_to_increment = 'diabetes'
+            self.comorbidity_prevalences = {1: .05, 2: .1, 3: .2, 4: .3, 5: .4, 6: .5}
+
         # model structure
         self.available_strains = ['_ds', '_mdr', '_xdr']
         self.available_organs = ['_smearpos', '_smearneg', '_extrapul']
@@ -108,7 +114,7 @@ class Inputs:
         self.treatment_outcome_types = []
         self.include_relapse_in_ds_outcomes = True
 
-    ''' Master method '''
+    ''' master method '''
 
     def read_and_load_data(self):
         """
@@ -167,7 +173,7 @@ class Inputs:
         # perform checks (undeveloped still)
         self.checks()
 
-    ''' Constant parameter processing methods '''
+    ''' constant parameter processing methods '''
 
     # populate with first round of unprocessed parameters (called before model structure defined)
 
@@ -308,7 +314,7 @@ class Inputs:
                 = self.model_constants['tb_timeperiod_ontreatment' + strain] \
                   - self.model_constants['tb_timeperiod_infect_ontreatment' + strain]
 
-    ''' Methods to define model structure '''
+    ''' methods to define model structure '''
 
     def define_treatment_history_structure(self):
         """
@@ -502,7 +508,7 @@ class Inputs:
         if 'int_prop_novel_vaccination' in self.relevant_interventions:
             self.compartment_types += ['susceptible_novelvac']
 
-    ''' Time variant parameter processing methods '''
+    ''' time variant parameter processing methods '''
 
     def process_time_variants(self):
         """
@@ -839,7 +845,7 @@ class Inputs:
             for year in self.time_variants[param]:
                 if type(year) == int: self.time_variants[param][year] *= adjustment_factor
 
-    ''' Classify interventions '''
+    ''' classify interventions '''
 
     def classify_interventions(self):
         """
@@ -1021,7 +1027,7 @@ class Inputs:
                 if years_pos_coverage:  # i.e. some coverage present from start
                     self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
 
-    ''' Finding scale-up functions and related methods '''
+    ''' finding scale-up functions and related methods '''
 
     def find_scaleup_functions(self):
         """
@@ -1032,6 +1038,7 @@ class Inputs:
         self.find_data_for_functions_or_params()
 
         # find scale-up functions or constant parameters
+        if self.increment_comorbidity: self.create_comorbidity_scaleups()
         self.find_constant_functions()
         self.find_scaleups()
 
@@ -1085,6 +1092,20 @@ class Inputs:
                 for organ in ['pos', 'neg']:
                     self.scaleup_fns[scenario]['epi_prop_smear' + organ] \
                         = make_constant_function(self.model_constants['epi_prop_smear' + organ])
+
+    def create_comorbidity_scaleups(self):
+        """
+        Another method that is hard-coded and not elegantly embedded with the GUI, but aiming towards creating better
+        appearing outputs when we want to look at what varying levels of comorbidities do over time.
+        """
+
+        for scenario in self.comorbidity_prevalences:
+            self.scenarios.append(scenario)
+            for attribute in ['scaleup_data', 'interventions_to_cost', 'relevant_interventions']:
+                getattr(self, attribute)[scenario] = copy.deepcopy(getattr(self, attribute)[None])
+                self.mixing[scenario] = {}
+            self.scaleup_data[scenario]['riskgroup_prop_' + self.comorbidity_to_increment]['scenario'] \
+                = self.comorbidity_prevalences[scenario]
 
     def find_scaleups(self):
         """
@@ -1164,7 +1185,7 @@ class Inputs:
                 self.model_constants['econ' + param + '_treatment_support' + treatment_support_type] \
                     = self.model_constants['econ' + param + '_treatment_support']
 
-    ''' Uncertainty-related methods '''
+    ''' uncertainty-related methods '''
 
     def process_uncertainty_parameters(self):
         """
@@ -1225,7 +1246,7 @@ class Inputs:
                 self.add_comment_to_gui_window(
                     'Warning: Calibrated output %s is not directly available from the data' % output['key'])
 
-    ''' Miscellaneous methods '''
+    ''' miscellaneous methods '''
 
     def reconcile_user_inputs(self):
         """

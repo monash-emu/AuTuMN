@@ -361,13 +361,13 @@ class ModelRunner:
 
         Args:
             scenario: The number value representing the scenario of the model to be analysed
-            outputs_to_analyse: List of strigs for the outputs of interest to be worked through
+            outputs_to_analyse: List of strings for the outputs of interest to be worked through
             stratifications: Whether it is necessary to provide outputs by any model compartmental stratifications
         """
 
         ''' compulsory elements to calculate '''
 
-        outputs_to_analyse.append('population')
+        if 'population' not in outputs_to_analyse: outputs_to_analyse.append('population')
         epi_outputs = {'times': self.model_dict[scenario].times}
 
         ''' unstratified outputs '''

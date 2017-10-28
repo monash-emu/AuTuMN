@@ -1019,8 +1019,7 @@ class Project:
         horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
         result_types = ['epi_', 'raw_cost_', 'inflated_cost_', 'discounted_cost_', 'discounted_inflated_cost_']
         uncertainty_string_to_add = 'uncertainty_'
-        if self.inputs.intervention_uncertainty:
-            scenarios, uncertainty_string_to_add = [15], 'manual_'
+        if self.inputs.intervention_uncertainty: scenarios, uncertainty_string_to_add = [15], 'manual_'
 
         # write a new file for each scenario and for each broad category of output
         for result_type in result_types:
@@ -1065,7 +1064,7 @@ class Project:
                                 if horizontal: column, row = row, column
                                 sheet.cell(row=row, column=column).value = 'Upper'
 
-                                # write the columns of data
+                                # data columns
                                 for y, year in enumerate(years):
                                     year_index = t_k.find_first_list_element_at_least_value(
                                         self.model_runner.epi_outputs_uncertainty[uncertainty_string_to_add
@@ -1248,6 +1247,57 @@ class Project:
                 # save workbook
                 wb.save(path)
 
+    def write_docs_by_scenario(self):
+        """
+        Write word documents using the docx package. Writes with or without uncertainty according to whether Run
+        uncertainty selected in the GUI. Currently only working for epidemiological outputs.
+        """
+
+        scenarios = self.scenarios
+        uncertainty_string_to_add = 'uncertainty_'
+        if self.inputs.intervention_uncertainty: scenarios, uncertainty_string_to_add = [15], 'manual_'
+        for scenario in scenarios:
+
+            # initialise document, years of interest and table
+            scenario_name = t_k.find_scenario_string_from_number(scenario)
+            path = os.path.join(self.out_dir_project, scenario_name) + ".docx"
+            years = self.find_years_to_write('manual_' + scenario_name, 'population', epi=True)
+            document = Document()
+            table = document.add_table(rows=len(years) + 1, cols=len(self.model_runner.epi_outputs_to_analyse) + 1)
+
+            # for each epidemiological indicator
+            for o, output in enumerate(self.model_runner.epi_outputs_to_analyse):
+
+                # outputs across the top
+                row_cells = table.rows[0].cells
+                row_cells[0].text = 'Year'
+                row_cells[o + 1].text = t_k.capitalise_and_remove_underscore(output)
+
+                # data columns
+                for y, year in enumerate(years):
+
+                    # write year column
+                    row_cells = table.rows[y + 1].cells
+                    row_cells[0].text = str(year)
+
+                    # with uncertainty
+                    if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
+                        year_index = t_k.find_first_list_element_at_least_value(
+                            self.model_runner.epi_outputs_uncertainty[uncertainty_string_to_add + scenario_name][
+                                'times'], year)
+                        (lower_limit, point_estimate, upper_limit) = self.model_runner.epi_outputs_uncertainty_centiles[
+                            uncertainty_string_to_add + scenario_name][output][0:3, year_index]
+                        row_cells[o + 1].text = '%.2f (%.2f to %.2f)' % (point_estimate, lower_limit, upper_limit)
+
+                    # without
+                    else:
+                        point_estimate = self.model_runner.epi_outputs_integer_dict[
+                            'manual_' + scenario_name][output][year]
+                        row_cells[o + 1].text = '%.2f' % point_estimate
+
+            # save document
+            document.save(path)
+
     def write_docs_by_output(self):
         """
         Write word documents using the docx package. Writes with or without uncertainty according to whether Run
@@ -1257,27 +1307,22 @@ class Project:
         # write a new file for each output
         for output in self.model_runner.epi_outputs_to_analyse:
 
-            # initialise document
+            # initialise document, years of interest and table
             path = os.path.join(self.out_dir_project, output) + ".docx"
-
-            # find years to write
             years = self.find_years_to_write('manual_baseline', output, epi=True)
-
-            # make table
             document = Document()
             table = document.add_table(rows=len(years) + 1, cols=len(self.scenario_names) + 1)
 
             for s, scenario in enumerate(self.scenario_names):
 
-                # write outputs across the top
+                # outputs across the top
                 row_cells = table.rows[0].cells
                 row_cells[0].text = 'Year'
                 row_cells[s + 1].text = t_k.capitalise_and_remove_underscore(scenario)
 
                 for y, year in enumerate(years):
-                    year_index \
-                        = t_k.find_first_list_element_at_least_value(
-                            self.model_runner.epi_outputs['uncertainty_' + scenario]['times'], year)
+                    year_index = t_k.find_first_list_element_at_least_value(
+                        self.model_runner.epi_outputs['uncertainty_' + scenario]['times'], year)
                     row_cells = table.rows[y + 1].cells
                     row_cells[0].text = str(year)
                     if self.gui_inputs['output_uncertainty']:
@@ -1287,50 +1332,6 @@ class Project:
                     else:
                         point_estimate = self.model_runner.epi_outputs_integer_dict['manual_' + scenario][output][year]
                         row_cells[s + 1].text = '%.2f' % point_estimate
-
-            # save document
-            document.save(path)
-
-    def write_docs_by_scenario(self):
-        """
-        Write word documents using the docx package. Writes with or without uncertainty according to whether Run
-        uncertainty selected in the GUI.
-        """
-
-        for scenario in self.scenario_names:
-
-            # initialise document
-            path = os.path.join(self.out_dir_project, scenario)
-            path += ".docx"
-
-            # find years to write
-            years = self.find_years_to_write('manual_' + scenario, 'population', epi=True)
-
-            # make table
-            document = Document()
-            table = document.add_table(rows=len(years) + 1, cols=len(self.model_runner.epi_outputs_to_analyse) + 1)
-
-            # only working for epidemiological outputs
-            for o, output in enumerate(self.model_runner.epi_outputs_to_analyse):
-
-                # write outputs across the top
-                row_cells = table.rows[0].cells
-                row_cells[0].text = 'Year'
-                row_cells[o + 1].text = t_k.capitalise_and_remove_underscore(output)
-
-                for y, year in enumerate(years):
-                    year_index = t_k.find_first_list_element_at_least_value(
-                        self.model_runner.epi_outputs['uncertainty_' + scenario]['times'], year)
-
-                    row_cells = table.rows[y + 1].cells
-                    row_cells[0].text = str(year)
-                    if self.gui_inputs['output_uncertainty']:
-                        (lower_limit, point_estimate, upper_limit) = self.model_runner.epi_outputs_uncertainty_centiles[
-                            'uncertainty_' + scenario][output][0:3, year_index]
-                        row_cells[o + 1].text = '%.2f (%.2f to %.2f)' % (point_estimate, lower_limit, upper_limit)
-                    else:
-                        point_estimate = self.model_runner.epi_outputs_integer_dict['manual_' + scenario][output][year]
-                        row_cells[o + 1].text = '%.2f' % point_estimate
 
             # save document
             document.save(path)

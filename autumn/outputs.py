@@ -1295,7 +1295,6 @@ class Project:
                             'manual_' + scenario_name][output][year]
                         row_cells[o + 1].text = '%.2f' % point_estimate
 
-            # save document
             document.save(path)
 
     def write_docs_by_output(self):
@@ -1313,27 +1312,38 @@ class Project:
             document = Document()
             table = document.add_table(rows=len(years) + 1, cols=len(self.scenario_names) + 1)
 
-            for s, scenario in enumerate(self.scenario_names):
+            # for each scenario
+            scenarios = self.scenarios
+            uncertainty_string_to_add = 'uncertainty_'
+            if self.inputs.intervention_uncertainty: scenarios, uncertainty_string_to_add = [15], 'manual_'
+
+            for s, scenario in enumerate(scenarios):
+                scenario_name = t_k.find_scenario_string_from_number(scenario)
 
                 # outputs across the top
                 row_cells = table.rows[0].cells
                 row_cells[0].text = 'Year'
-                row_cells[s + 1].text = t_k.capitalise_and_remove_underscore(scenario)
+                row_cells[s + 1].text = t_k.capitalise_and_remove_underscore(scenario_name)
 
                 for y, year in enumerate(years):
-                    year_index = t_k.find_first_list_element_at_least_value(
-                        self.model_runner.epi_outputs['uncertainty_' + scenario]['times'], year)
                     row_cells = table.rows[y + 1].cells
                     row_cells[0].text = str(year)
-                    if self.gui_inputs['output_uncertainty']:
+
+                    # with uncertainty
+                    if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
+                        year_index = t_k.find_first_list_element_at_least_value(
+                            self.model_runner.epi_outputs_uncertainty[
+                                uncertainty_string_to_add + scenario_name]['times'], year)
                         (lower_limit, point_estimate, upper_limit) = self.model_runner.epi_outputs_uncertainty_centiles[
-                            'uncertainty_' + scenario][output][0:3, year_index]
+                            uncertainty_string_to_add + scenario_name][output][0:3, year_index]
                         row_cells[s + 1].text = '%.2f (%.2f to %.2f)' % (point_estimate, lower_limit, upper_limit)
+
+                    # without
                     else:
-                        point_estimate = self.model_runner.epi_outputs_integer_dict['manual_' + scenario][output][year]
+                        point_estimate \
+                            = self.model_runner.epi_outputs_integer_dict['manual_' + scenario_name][output][year]
                         row_cells[s + 1].text = '%.2f' % point_estimate
 
-            # save document
             document.save(path)
 
     def write_opti_outputs_spreadsheet(self):

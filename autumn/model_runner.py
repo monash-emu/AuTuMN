@@ -992,7 +992,7 @@ class ModelRunner:
 
         # add uncertainty data to dictionaries
         scenario_for_length = 'manual_baseline'
-        if scenario_name == 'intervention_uncertainty': scenario_for_length = 'intervention_uncertainty'
+        if scenario_name == 'manual_scenario_15': scenario_for_length = 'manual_scenario_15'
         for output in epi_outputs_to_analyse:
             new_output = tool_kit.force_list_to_length(self.epi_outputs[scenario_name][output],
                                                        len(self.epi_outputs[scenario_for_length][output]))
@@ -1065,16 +1065,16 @@ class ModelRunner:
         for sample in range(self.inputs.n_samples):
 
             # prepare for integration of scenario
-            self.model_dict['intervention_uncertainty'] = model.ConsolidatedModel(15, self.inputs, self.gui_inputs)
-            self.prepare_new_model_from_baseline('manual', 'intervention_uncertainty')
-            self.model_dict['intervention_uncertainty'].relevant_interventions.append(
+            self.model_dict['manual_scenario_15'] = model.ConsolidatedModel(15, self.inputs, self.gui_inputs)
+            self.prepare_new_model_from_baseline('manual', 'manual_scenario_15')
+            self.model_dict['manual_scenario_15'].relevant_interventions.append(
                 self.inputs.uncertainty_intervention)
             for param in parameter_values:
-                self.model_dict['intervention_uncertainty'].set_parameter(param, parameter_values[param][sample])
+                self.model_dict['manual_scenario_15'].set_parameter(param, parameter_values[param][sample])
 
             # integrate and save
-            self.model_dict['intervention_uncertainty'].integrate()
-            self.store_uncertainty('intervention_uncertainty', epi_outputs_to_analyse=self.epi_outputs_to_analyse)
+            self.model_dict['manual_scenario_15'].integrate()
+            self.store_uncertainty('manual_scenario_15', epi_outputs_to_analyse=self.epi_outputs_to_analyse)
 
     ''' optimisation methods '''
 

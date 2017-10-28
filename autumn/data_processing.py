@@ -57,9 +57,9 @@ class Inputs:
         self.data_to_fit = {}
         # for incidence for ex, width of normal posterior relative to CI width in data
         self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
-        self.intervention_uncertainty = False
 
-        # intervention uncertainty (needs to be fleshed out considerably to cover even one intervention)
+        # intervention uncertainty
+        self.intervention_uncertainty = False
         if self.intervention_uncertainty:
             self.uncertainty_intervention = 'int_prop_awareness_raising'
             self.scenarios.append(15)
@@ -73,9 +73,10 @@ class Inputs:
                                     'int_prop_infections_in_household'],
                    'int_prop_acf': ['int_prop_acf_detections_per_round'],
                    'int_prop_awareness_raising': ['int_multiplier_detection_with_raised_awareness']}
+            self.gui_inputs['output_by_scenario'] = True
 
         # increment comorbidity
-        self.increment_comorbidity = True
+        self.increment_comorbidity = False
         if self.increment_comorbidity:
             self.comorbidity_to_increment = 'diabetes'
             self.comorbidity_prevalences = {1: .05, 2: .1, 3: .2, 4: .3, 5: .4, 6: .5}
@@ -1009,6 +1010,8 @@ class Inputs:
             for intervention in self.potential_interventions_to_cost:
                 if 'int_prop_' + intervention in self.relevant_interventions[scenario]:
                     self.interventions_to_cost[scenario] += [intervention]
+
+        if self.intervention_uncertainty: self.interventions_to_cost[15] = self.interventions_to_cost[None]
 
     # actually has to be called later and is just required for optimisation
 

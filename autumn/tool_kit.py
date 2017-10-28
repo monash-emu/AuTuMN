@@ -70,16 +70,16 @@ def find_list_element_equal_to(list, value):
     return next(x[0] for x in enumerate(list) if x[1] == value)
 
 
-def find_first_list_element_at_least_value(list, value):
+def find_first_list_element_at_least_value(list_to_search, value):
     """
     Simple method to return the index of the first element of a list that is greater than a specified value.
 
     Args:
-        list: The list of floats
+        list_to_search: The list of floats
         value: The value that the element must be greater than
     """
 
-    return next(x[0] for x in enumerate(list) if x[1] >= value)
+    return next(x[0] for x in enumerate(list_to_search) if x[1] >= value)
 
 
 def prepare_denominator(list_to_prepare):
@@ -323,14 +323,14 @@ def find_scenario_number_from_string(scenario):
         scenario_string = scenario
 
     # find number or None for baseline scenario
-    if scenario_string == 'baseline' or scenario_string == 'intervention_uncertainty':
+    if scenario_string == 'baseline':
         scenario_number = None
     else:
         scenario_number = int(scenario_string[9:])
     return scenario_number
 
 
-''' String manipulation '''
+''' string manipulation '''
 
 
 def capitalise_first_letter(old_string):

@@ -146,6 +146,17 @@ def is_parameter_value_valid(parameter):
     return numpy.isfinite(parameter) and parameter > 0.
 
 
+def find_probability_density(distribution, param_val, bounds, prior_log_likelihood,
+                             additional_params=None):
+
+    # normalise value and find log of PDF from appropriate distribution
+    if distribution == 'beta_2_2':
+        prior_log_likelihood += beta.logpdf((param_val - bounds[0]) / (bounds[1] - bounds[0]), 2., 2.)
+    elif distribution == 'uniform':
+        prior_log_likelihood += numpy.log(1. / (bounds[1] - bounds[0]))
+    return prior_log_likelihood
+
+
 class ModelRunner:
     def __init__(self, gui_inputs, runtime_outputs, figure_frame, js_gui=None):
         """
@@ -743,15 +754,8 @@ class ModelRunner:
                 for p, param in enumerate(self.inputs.param_ranges_unc):
                     param_val = new_param_list[p]
                     self.all_parameters_tried[param['key']].append(new_param_list[p])
-
-                    # calculate the density of param_val
-                    bound_low, bound_high = param['bounds']
-
-                    # normalise value and find log of PDF from appropriate distribution
-                    if param['distribution'] == 'beta_2_2':
-                        prior_log_likelihood += beta.logpdf((param_val - bound_low) / (bound_high - bound_low), 2., 2.)
-                    elif param['distribution'] == 'uniform':
-                        prior_log_likelihood += numpy.log(1. / (bound_high - bound_low))
+                    prior_log_likelihood = find_probability_density(param['distribution'], param_val, param['bounds'],
+                                                                    prior_log_likelihood)
 
                 # calculate posterior
                 posterior_log_likelihood = 0.

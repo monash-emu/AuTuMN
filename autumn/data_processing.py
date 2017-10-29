@@ -1262,8 +1262,6 @@ class Inputs:
                     self.param_ranges_unc[n_param]['additional_params'] \
                         = self.alternative_distribution_dict[self.param_ranges_unc[n_param]['key']][1:]
 
-        print()
-
     def get_data_to_fit(self):
         """
         Extract data for model fitting. Choices currently hard-coded above.

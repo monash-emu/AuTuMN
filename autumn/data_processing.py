@@ -4,6 +4,7 @@ import copy
 import tool_kit
 from curve import scale_up_function, freeze_curve
 from Tkinter import *
+import numpy
 
 
 def make_constant_function(value):
@@ -527,9 +528,12 @@ class Inputs:
         self.find_treatment_outcomes()
         self.find_irrelevant_treatment_timevariants()
         self.add_demo_dictionaries_to_timevariants()
-        if self.gui_inputs['is_timevariant_organs']: self.add_organ_status_to_timevariants()
+        if self.gui_inputs['is_timevariant_organs']:
+            self.add_organ_status_to_timevariants()
+        else:
+            self.find_average_organ_status()
         self.tidy_time_variants()
-        self.adjust_param_for_reporting('program_prop_detect', 'Bulgaria', 0.95)  # Bulgaria thought over-estimated CDR
+        self.adjust_param_for_reporting('program_prop_detect', 'Bulgaria', 0.95)  # Bulgaria thought CDR over-estimated
 
     # general and demographic methods
 
@@ -796,7 +800,7 @@ class Inputs:
         Populate organ status dictionaries where requested and not already loaded.
         """
 
-        # conversion from GTB code to AuTuMN code
+        # conversion from GTB terminology to AuTuMN
         name_conversion_dict = {'_smearpos': '_sp', '_smearneg': '_sn'}
 
         # for the time variant progression parameters that are used (extrapulmonary just calculated as a complement)
@@ -812,6 +816,33 @@ class Inputs:
             # otherwise if no input data available, just take the derived data straight from the loaded sheets
             else:
                 self.time_variants['epi_prop' + organ] = self.derived_data['prop_new' + name_conversion_dict[organ]]
+
+    def find_average_organ_status(self):
+        """
+        Determine proportion of incident cases that go to each organ status. If specified in input sheets, take the
+        user-requested value. However if not, use the proportions of total notifications for the country being
+        simulated.
+        """
+
+        name_conversion_dict = {'_smearpos': '_sp', '_smearneg': '_sn', '_extrapul': '_ep'}
+
+        # if specific values requested
+        if 'epi_prop_smearpos' in self.model_constants and 'epi_prop_smearneg' in self.model_constants:
+            self.model_constants['epi_prop_extrapul'] \
+                = 1. - self.model_constants['epi_prop_smearpos'] - self.model_constants['epi_prop_smearneg']
+
+        # otherwise use aggregate notifications
+        else:
+
+            # count totals notified by each organ status and find denominator
+            count_by_organ_status = {}
+            for organ in name_conversion_dict.values():
+                count_by_organ_status[organ] = numpy.sum(self.original_data['notifications']['new' + organ].values())
+            total = numpy.sum(count_by_organ_status.values())
+
+            # calculate proportions from totals
+            for organ in name_conversion_dict:
+                self.model_constants['epi_prop' + organ] = count_by_organ_status[name_conversion_dict[organ]] / total
 
     def tidy_time_variants(self):
         """

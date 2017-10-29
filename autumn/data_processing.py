@@ -53,11 +53,14 @@ class Inputs:
         self.model_constants = {}
         self.scaleup_data = {}
         self.scaleup_fns = {}
+
+        # uncertainty
         self.param_ranges_unc = []
         self.int_ranges_unc = []
         self.data_to_fit = {}
         # for incidence for ex, width of normal posterior relative to CI width in data
         self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
+        self.alternative_distribution_dict = {}
 
         # intervention uncertainty
         self.intervention_uncertainty = False
@@ -1249,6 +1252,17 @@ class Inputs:
                                          'bounds': [self.model_constants[param]['lower'],
                                                     self.model_constants[param]['upper']],
                                          'distribution': 'uniform'}]
+
+        # change distributions for parameters hard-coded to alternative distributions in instantiation above
+        for n_param in range(len(self.param_ranges_unc)):
+            if self.param_ranges_unc[n_param]['key'] in self.alternative_distribution_dict:
+                self.param_ranges_unc[n_param]['distribution'] \
+                    = self.alternative_distribution_dict[self.param_ranges_unc[n_param]['key']][0]
+                if len(self.alternative_distribution_dict[self.param_ranges_unc[n_param]['key']]) > 1:
+                    self.param_ranges_unc[n_param]['additional_params'] \
+                        = self.alternative_distribution_dict[self.param_ranges_unc[n_param]['key']][1:]
+
+        print()
 
     def get_data_to_fit(self):
         """

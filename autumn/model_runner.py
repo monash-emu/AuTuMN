@@ -713,12 +713,11 @@ class ModelRunner:
             scenario_name = 'uncertainty_' + tool_kit.find_scenario_string_from_number(scenario)
             self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
+        # set initial parameter values
         new_param_list = []
         for param in self.inputs.param_ranges_unc:
             new_param_list.append(param_candidates[param['key']][0])
             params = new_param_list
-
-        # until a sufficient number of parameters are accepted
         run, population_adjustment, accepted = 0, 1., 0
 
         while n_accepted < self.gui_inputs['uncertainty_runs']:
@@ -749,7 +748,7 @@ class ModelRunner:
                     bound_low, bound_high = param['bounds']
 
                     # normalise value and find log of PDF from appropriate distribution
-                    if param['distribution'] == 'beta':
+                    if param['distribution'] == 'beta_2_2':
                         prior_log_likelihood += beta.logpdf((param_val - bound_low) / (bound_high - bound_low), 2., 2.)
                     elif param['distribution'] == 'uniform':
                         prior_log_likelihood += numpy.log(1. / (bound_high - bound_low))

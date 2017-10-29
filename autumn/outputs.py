@@ -1018,8 +1018,12 @@ class Project:
         # general prelims to work out what to write
         horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
         result_types = ['epi_', 'raw_cost_', 'inflated_cost_', 'discounted_cost_', 'discounted_inflated_cost_']
-        uncertainty_string_to_add = 'uncertainty_'
-        if self.inputs.intervention_uncertainty: scenarios, uncertainty_string_to_add = [15], 'manual_'
+        if self.inputs.intervention_uncertainty:
+            scenarios, string_to_add = [15], 'manual_'
+        elif self.gui_inputs['output_uncertainty']:
+            string_to_add = 'uncertainty_'
+        else:
+            string_to_add = 'manual_'
 
         # write a new file for each scenario and for each broad category of output
         for result_type in result_types:
@@ -1033,66 +1037,71 @@ class Project:
                 sheet.title = scenario_name
                 sheet.cell(row=1, column=1).value = 'Year'  # year text cell
 
-                # for epidemiological outputs
+                # epi outputs
                 if result_type == 'epi_':
-                    for output in self.model_runner.epi_outputs_to_analyse:
-                        years = self.find_years_to_write('manual_' + scenario_name, output, epi=True)
 
-                        # write year column
-                        for y, year in enumerate(years):
-                            row, column = y + 2, 1
+                    # find years of interest
+                    years = range(int(self.inputs.model_constants['report_start_time']),
+                                  int(self.inputs.model_constants['report_end_time']),
+                                  int(self.inputs.model_constants['report_step_time']))
+
+                    # write year column
+                    for y, year in enumerate(years):
+                        row, column = y + 2, 1
+                        if horizontal: column, row = row, column
+                        sheet.cell(row=row, column=column).value = year
+
+                    # loop over outputs
+                    for out, output in enumerate(self.model_runner.epi_outputs_to_analyse):
+
+                        # with uncertainty
+                        if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
+
+                            # 1, 0 and 2 indicate point estimate, lower limit, upper limit respectively
+                            order_to_write = [1, 0, 2]
+
+                            # scenario names and confidence interval titles
+                            row, column = 1, out * 3 + 2
                             if horizontal: column, row = row, column
-                            sheet.cell(row=row, column=column).value = year
+                            sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(output)
+                            row, column = 1, out * 3 + 3
+                            if horizontal: column, row = row, column
+                            sheet.cell(row=row, column=column).value = 'Lower'
+                            row, column = 1, out * 3 + 4
+                            if horizontal: column, row = row, column
+                            sheet.cell(row=row, column=column).value = 'Upper'
 
-                        # loop over outputs
-                        for out, output in enumerate(self.model_runner.epi_outputs_to_analyse):
-
-                            # with uncertainty
-                            if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
-
-                                # 1, 0 and 2 indicate point estimate, lower limit, upper limit respectively
-                                order_to_write = [1, 0, 2]
-
-                                # scenario names and confidence interval titles
-                                row, column = 1, out * 3 + 2
-                                if horizontal: column, row = row, column
-                                sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(output)
-                                row, column = 1, out * 3 + 3
-                                if horizontal: column, row = row, column
-                                sheet.cell(row=row, column=column).value = 'Lower'
-                                row, column = 1, out * 3 + 4
-                                if horizontal: column, row = row, column
-                                sheet.cell(row=row, column=column).value = 'Upper'
-
-                                # data columns
-                                for y, year in enumerate(years):
-                                    year_index = t_k.find_first_list_element_at_least_value(
-                                        self.model_runner.epi_outputs_uncertainty[uncertainty_string_to_add
-                                                                                  + scenario_name]['times'], year)
-                                    for o, order in enumerate(order_to_write):
-                                        row, column = y + 2, out * 3 + 2 + o
-                                        if horizontal: column, row = row, column
-                                        sheet.cell(row=row, column=column).value \
-                                            = self.model_runner.epi_outputs_uncertainty_centiles[
-                                                uncertainty_string_to_add + scenario_name][output][order, year_index]
-
-                            # without uncertainty
-                            else:
-
-                                # names across top
-                                row, column = 1, out + 2
-                                if horizontal: column, row = row, column
-                                sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(output)
-
-                                # columns of data
-                                for y, year in enumerate(years):
-                                    row, column = y + 2, out + 2
+                            # data columns
+                            for y, year in enumerate(years):
+                                for o, order in enumerate(order_to_write):
+                                    row, column = y + 2, out * 3 + 2 + o
                                     if horizontal: column, row = row, column
                                     sheet.cell(row=row, column=column).value \
-                                        = self.model_runner.epi_outputs_integer_dict['manual_'
-                                                                                     + scenario_name][output][year]
+                                        = self.model_runner.epi_outputs_uncertainty_centiles[
+                                            string_to_add + scenario_name][output][
+                                                order, t_k.find_first_list_element_at_least_value(
+                                                    self.model_runner.epi_outputs_uncertainty[
+                                                        string_to_add + scenario_name]['times'], year)]
 
-                # economic outputs
+                        # without uncertainty
+                        else:
+
+                            # names across top
+                            row, column = 1, out + 2
+                            if horizontal: column, row = row, column
+                            sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(output)
+
+                            # columns of data
+                            for y, year in enumerate(years):
+                                row, column = y + 2, out + 2
+                                if horizontal: column, row = row, column
+                                sheet.cell(row=row, column=column).value \
+                                    = self.model_runner.epi_outputs['manual_' + scenario_name][output][
+                                        t_k.find_first_list_element_at_least_value(
+                                            self.model_runner.epi_outputs[string_to_add
+                                                                          + scenario_name]['times'], year)]
+
+                # economic outputs (uncertainty unavailable)
                 elif 'cost_' in result_type:
                     for inter in self.inputs.interventions_to_cost[scenario]:
 
@@ -1119,8 +1128,11 @@ class Project:
                                 row, column = y + 2, out + 2
                                 if horizontal: column, row = row, column
                                 sheet.cell(row=row, column=column).value \
-                                    = self.model_runner.cost_outputs_integer_dict[
-                                        'manual_' + scenario_name][result_type + output][year]
+                                    = self.model_runner.cost_outputs[
+                                        'manual_' + scenario_name][result_type + output][
+                                            t_k.find_first_list_element_at_least_value(
+                                                self.model_runner.cost_outputs[string_to_add
+                                                                               + scenario_name]['times'], year)]
 
                 workbook.save(path)
 
@@ -1131,9 +1143,12 @@ class Project:
 
         # general prelims to work out what to write
         horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
-        uncertainty_string_to_add = 'uncertainty_'
         if self.inputs.intervention_uncertainty:
-            scenarios, uncertainty_string_to_add = [15], 'manual_'
+            scenarios, string_to_add = [15], 'manual_'
+        elif self.gui_inputs['output_uncertainty']:
+            string_to_add = 'uncertainty_'
+        else:
+            string_to_add = 'manual_'
 
         # write a new file for each output
         for inter in self.model_runner.epi_outputs_to_analyse:
@@ -1145,63 +1160,65 @@ class Project:
             sheet.title = inter
             sheet.cell(row=1, column=1).value = 'Year'  # year text cell
 
-            # for each scenario
-            for scenario in self.scenarios:
+            # find years of interest
+            years = range(int(self.inputs.model_constants['report_start_time']),
+                          int(self.inputs.model_constants['report_end_time']),
+                          int(self.inputs.model_constants['report_step_time']))
+
+            # write the year column
+            for y, year in enumerate(years):
+                row, column = y + 2, 1
+                if horizontal: column, row = row, column
+                sheet.cell(row=row, column=column).value = year
+
+            # cycle over scenarios
+            for s, scenario in enumerate(scenarios):
                 scenario_name = t_k.find_scenario_string_from_number(scenario)
-                years = self.find_years_to_write('manual_' + scenario_name, inter, epi=True)
 
-                # write the year column
-                for y, year in enumerate(years):
-                    row, column = y + 2, 1
+                # with uncertainty
+                if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
+
+                    # 1, 0, 2 indicates point estimate, lower limit, upper limit
+                    order_to_write = [1, 0, 2]
+
+                    # write the scenario names and confidence interval titles
+                    row, column = 1, s * 3 + 2
                     if horizontal: column, row = row, column
-                    sheet.cell(row=row, column=column).value = year
+                    sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(scenario_name)
+                    row, column = 1, s * 3 + 3
+                    if horizontal: column, row = row, column
+                    sheet.cell(row=row, column=column).value = 'Lower'
+                    row, column = 1, s * 3 + 4
+                    if horizontal: column, row = row, column
+                    sheet.cell(row=row, column=column).value = 'Upper'
 
-                # cycle over scenarios
-                for s, scenario_name in enumerate(self.scenario_names):
-
-                    # with uncertainty
-                    if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
-
-                        # 1, 0, 2 indicates point estimate, lower limit, upper limit
-                        order_to_write = [1, 0, 2]
-
-                        # write the scenario names and confidence interval titles
-                        row, column = 1, s * 3 + 2
-                        if horizontal: column, row = row, column
-                        sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(scenario_name)
-                        row, column = 1, s * 3 + 3
-                        if horizontal: column, row = row, column
-                        sheet.cell(row=row, column=column).value = 'Lower'
-                        row, column = 1, s * 3 + 4
-                        if horizontal: column, row = row, column
-                        sheet.cell(row=row, column=column).value = 'Upper'
-
-                        # write the columns of data
-                        for y, year in enumerate(years):
-                            year_index = t_k.find_first_list_element_at_least_value(
-                                self.model_runner.epi_outputs_uncertainty[uncertainty_string_to_add
-                                                                          + scenario_name]['times'], year)
-                            for o, order in enumerate(order_to_write):
-                                row, column = y + 2, s * 3 + 2 + o
-                                if horizontal: column, row = row, column
-                                sheet.cell(row=row, column=column).value \
-                                    = self.model_runner.epi_outputs_uncertainty_centiles[
-                                        uncertainty_string_to_add + scenario_name][inter][order, year_index]
-
-                    # without uncertainty
-                    else:
-
-                        # write scenario names across first row
-                        row, column = 1, s + 2
-                        if horizontal: column, row = row, column
-                        sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(scenario_name)
-
-                        # write columns of data
-                        for y, year in enumerate(years):
-                            row, column = y + 2, s + 2
+                    # write the columns of data
+                    for y, year in enumerate(years):
+                        for o, order in enumerate(order_to_write):
+                            row, column = y + 2, s * 3 + 2 + o
                             if horizontal: column, row = row, column
                             sheet.cell(row=row, column=column).value \
-                                = self.model_runner.epi_outputs_integer_dict['manual_' + scenario_name][inter][year]
+                                = self.model_runner.epi_outputs_uncertainty_centiles[string_to_add + scenario_name][
+                                    inter][order, t_k.find_first_list_element_at_least_value(
+                                        self.model_runner.epi_outputs_uncertainty[string_to_add
+                                                                                  + scenario_name]['times'], year)]
+
+                # without uncertainty
+                else:
+
+                    # write scenario names across first row
+                    row, column = 1, s + 2
+                    if horizontal: column, row = row, column
+                    sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(scenario_name)
+
+                    # write columns of data
+                    for y, year in enumerate(years):
+                        row, column = y + 2, s + 2
+                        if horizontal: column, row = row, column
+                        sheet.cell(row=row, column=column).value \
+                            = self.model_runner.epi_outputs['manual_' + scenario_name][inter][
+                                t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs[string_to_add
+                                                                           + scenario_name]['times'], year)]
 
             # wave workbook
             wb.save(path)
@@ -1229,7 +1246,8 @@ class Project:
                     sheet.cell(row=row, column=column).value = year
 
                 # cycle over scenarios
-                for s, scenario_name in enumerate(self.scenario_names):
+                for s, scenario in enumerate(scenarios):
+                    scenario_name = t_k.find_scenario_string_from_number(scenario)
 
                     # scenario names
                     row, column = 1, s + 2
@@ -1241,8 +1259,9 @@ class Project:
                         row, column = y + 2, s + 2
                         if horizontal: column, row = row, column
                         sheet.cell(row=row, column=column).value \
-                            = self.model_runner.cost_outputs_integer_dict['manual_'
-                                                                          + scenario_name][cost_type + inter][year]
+                            = self.model_runner.cost_outputs['manual_' + scenario_name][cost_type + inter][
+                                t_k.find_first_list_element_at_least_value(self.model_runner.cost_outputs[
+                                   string_to_add + scenario_name]['times'], year)]
 
                 # save workbook
                 wb.save(path)

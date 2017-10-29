@@ -10,8 +10,6 @@ def find_button_name_from_string(working_string):
 
     button_name_dictionary = {'output_uncertainty':
                                   'Run uncertainty',
-                              'adaptive_uncertainty':
-                                  'Adaptive search',
                               'write_uncertainty_outcome_params':
                                   'Record parameters',
                               'output_spreadsheets':
@@ -129,8 +127,8 @@ class App:
                                'output_age_fractions', 'output_by_subgroups', 'output_fractions', 'output_scaleups',
                                'output_gtb_plots', 'output_plot_economics', 'output_plot_riskgroup_checks',
                                'output_param_plots', 'output_popsize_plot', 'output_likelihood_plot',
-                               'output_uncertainty', 'adaptive_uncertainty', 'write_uncertainty_outcome_params',
-                               'output_spreadsheets', 'output_documents', 'output_by_scenario', 'output_horizontally',
+                               'output_uncertainty', 'write_uncertainty_outcome_params', 'output_spreadsheets',
+                               'output_documents', 'output_by_scenario', 'output_horizontally',
                                'output_age_calculations', 'riskgroup_diabetes', 'riskgroup_hiv',
                                'riskgroup_prison', 'riskgroup_indigenous', 'riskgroup_urbanpoor',
                                'riskgroup_ruralpoor',
@@ -263,7 +261,6 @@ class App:
                                     'burn_in_runs': ['Number of burn-in runs', 0],
                                     'search_width': ['Relative search width', .08]}
         # self.boolean_dictionary['output_uncertainty'].set(True)
-        self.boolean_dictionary['adaptive_uncertainty'].set(True)
         # self.boolean_dictionary['write_uncertainty_outcome_params'].set(True)
         # self.boolean_dictionary['output_scaleups'].set(True)
         # self.boolean_dictionary['is_misassignment'].set(True)

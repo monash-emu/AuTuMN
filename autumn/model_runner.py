@@ -689,19 +689,9 @@ class ModelRunner:
 
         self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
-        # if not doing an adaptive search, only need to start with a single parameter set
-        if self.gui_inputs['adaptive_uncertainty']:
-            n_candidates = 1
-        else:
-            n_candidates = self.gui_inputs['uncertainty_runs'] * 10
-
-        # decide whether to start analysis from a random point or the manual values of the parameters
-        if not self.gui_inputs['adaptive_uncertainty'] or self.random_start:
-            param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
-        else:
-            param_candidates = {}
-            for param in self.inputs.param_ranges_unc:
-                param_candidates[param['key']] = [self.inputs.model_constants[param['key']]]
+        param_candidates = {}
+        for param in self.inputs.param_ranges_unc:
+            param_candidates[param['key']] = [self.inputs.model_constants[param['key']]]
 
         # find weights for outputs that are being calibrated to
         years_to_compare = range(1990, 2015)
@@ -709,15 +699,13 @@ class ModelRunner:
         self.add_comment_to_gui_window('"Weights": \n' + str(weights))
 
         # prepare for uncertainty loop
-        n_accepted = 0
-        prev_log_likelihood = -5e2
+        n_accepted, prev_log_likelihood = 0, -5e2
         for param in self.inputs.param_ranges_unc:
             self.all_parameters_tried[param['key']] = []
             self.acceptance_dict[param['key']] = {}
             self.rejection_dict[param['key']] = {n_accepted: []}
         for compartment_type in self.inputs.compartment_types:
-            if compartment_type in self.inputs.model_constants:
-                self.all_compartment_values_tried[compartment_type] = []
+            if compartment_type in self.inputs.model_constants: self.all_compartment_values_tried[compartment_type] = []
         self.all_other_adjustments_made['program_prop_death_reporting'] = []
 
         # instantiate uncertainty model objects
@@ -731,9 +719,7 @@ class ModelRunner:
             params = new_param_list
 
         # until a sufficient number of parameters are accepted
-        run = 0
-        population_adjustment = 1.
-        accepted = 0
+        run, population_adjustment, accepted = 0, 1., 0
 
         while n_accepted < self.gui_inputs['uncertainty_runs']:
 
@@ -750,9 +736,8 @@ class ModelRunner:
                 # get outputs for calibration and store results
                 self.store_uncertainty('uncertainty_baseline', epi_outputs_to_analyse=self.epi_outputs_to_analyse)
                 integer_dictionary \
-                    = extract_integer_dicts(['uncertainty_baseline'],
-                                            get_output_dicts_from_lists(models_to_analyse=['uncertainty_baseline'],
-                                                                        output_dict_of_lists=self.epi_outputs))
+                    = extract_integer_dicts(['uncertainty_baseline'], get_output_dicts_from_lists(
+                        models_to_analyse=['uncertainty_baseline'], output_dict_of_lists=self.epi_outputs))
 
                 # calculate prior
                 prior_log_likelihood = 0.
@@ -761,7 +746,7 @@ class ModelRunner:
                     self.all_parameters_tried[param['key']].append(new_param_list[p])
 
                     # calculate the density of param_val
-                    bound_low, bound_high = param['bounds'][0], param['bounds'][1]
+                    bound_low, bound_high = param['bounds']
 
                     # normalise value and find log of PDF from appropriate distribution
                     if param['distribution'] == 'beta':
@@ -799,7 +784,7 @@ class ModelRunner:
                             self.inputs.model_constants[compartment_type])
 
                 # record uncertainty calculations for all runs
-                if bool(accepted):
+                if accepted:
                     self.whether_accepted_list.append(True)
                     self.accepted_indices.append(run)
                     n_accepted += 1
@@ -824,7 +809,7 @@ class ModelRunner:
                     last_year_of_data = 2014.
                     ratio = self.epi_outputs[
                                 'uncertainty_baseline']['mortality'][tool_kit.find_first_list_element_above_value(
-                        self.epi_outputs['uncertainty_baseline']['times'], last_year_of_data)] \
+                                    self.epi_outputs['uncertainty_baseline']['times'], last_year_of_data)] \
                             / self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k'][int(last_year_of_data)]
                     if ratio < 1. / self.relative_difference_to_adjust_mortality:
                         self.inputs.model_constants['program_prop_death_reporting'] += self.amount_to_adjust_mortality
@@ -839,10 +824,9 @@ class ModelRunner:
 
                 # plot parameter progression and report on progress
                 self.plot_progressive_parameters()
-                self.add_comment_to_gui_window(str(n_accepted) + ' accepted / ' + str(run) +
-                                               ' candidates. Running time: '
-                                               + str(datetime.datetime.now() - start_timer_run))
-                run += 1
+                self.add_comment_to_gui_window(
+                    str(n_accepted) + ' accepted / ' + str(run) + ' candidates. Running time: '
+                    + str(datetime.datetime.now() - start_timer_run))
 
                 # find value to adjust starting population by, if a target population specified
                 if 'target_population' in self.inputs.model_constants:
@@ -857,10 +841,7 @@ class ModelRunner:
                 self.all_other_adjustments_made['program_prop_death_reporting'].append(
                     self.inputs.model_constants['program_prop_death_reporting'])
 
-            # generate more candidates if required
-            if not self.gui_inputs['adaptive_uncertainty'] and run >= len(param_candidates.keys()):
-                param_candidates = generate_candidates(n_candidates, self.inputs.param_ranges_unc)
-                run = 0
+                run += 1
 
             new_param_list = self.update_params(params)
 

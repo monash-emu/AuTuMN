@@ -8,7 +8,6 @@ import datetime
 from scipy.stats import norm, beta
 from Tkinter import *
 from scipy.optimize import minimize
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import outputs
 import autumn.economics
@@ -149,9 +148,16 @@ def is_parameter_value_valid(parameter):
 def find_probability_density(distribution, param_val, bounds, prior_log_likelihood,
                              additional_params=None):
 
-    # normalise value and find log of PDF from appropriate distribution
     if distribution == 'beta_2_2':
         prior_log_likelihood += beta.logpdf((param_val - bounds[0]) / (bounds[1] - bounds[0]), 2., 2.)
+    elif distribution == 'beta_mean_stdev':
+        alpha_value = ((1. - additional_params[0]) / additional_params[1] ** 2. - 1. / additional_params[0]) \
+                      * additional_params[0] ** 2.
+        beta_value = alpha_value * (1. / additional_params[0] - 1.)
+        prior_log_likelihood += beta.logpdf((param_val - bounds[0]) / (bounds[1] - bounds[0]), alpha_value, beta_value)
+    elif distribution == 'beta_params':
+        prior_log_likelihood += beta.logpdf((param_val - bounds[0]) / (bounds[1] - bounds[0]),
+                                            additional_params[0], additional_params[1])
     elif distribution == 'uniform':
         prior_log_likelihood += numpy.log(1. / (bounds[1] - bounds[0]))
     return prior_log_likelihood
@@ -695,7 +701,8 @@ class ModelRunner:
 
     def run_epi_uncertainty(self):
         """
-        Main method to run all the uncertainty processes.
+        Main method to run all the uncertainty processes using a Metropolis-Hastings algorithm with normal proposal
+        distribution.
         """
 
         self.add_comment_to_gui_window('Uncertainty analysis commenced')
@@ -754,8 +761,10 @@ class ModelRunner:
                 for p, param in enumerate(self.inputs.param_ranges_unc):
                     param_val = new_param_list[p]
                     self.all_parameters_tried[param['key']].append(new_param_list[p])
-                    prior_log_likelihood = find_probability_density(param['distribution'], param_val, param['bounds'],
-                                                                    prior_log_likelihood)
+                    if 'additional_params' not in param: param['additional_params'] = None
+                    prior_log_likelihood \
+                        = find_probability_density(param['distribution'], param_val, param['bounds'],
+                                                   prior_log_likelihood, additional_params=param['additional_params'])
 
                 # calculate posterior
                 posterior_log_likelihood = 0.
@@ -1402,4 +1411,5 @@ class ModelRunner:
             "count": self.plot_count
         })
         self.plot_count += 1
+
 

@@ -838,14 +838,17 @@ class ModelRunner:
                             self.store_uncertainty(scenario_name, epi_outputs_to_analyse=self.epi_outputs_to_analyse)
 
                     # iteratively adjusting proportion of mortality reported
-                    last_year_of_data = 2014.
-                    ratio = self.epi_outputs[
-                                'uncertainty_baseline']['mortality'][tool_kit.find_first_list_element_above_value(
-                                    self.epi_outputs['uncertainty_baseline']['times'], last_year_of_data)] \
-                            / self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k'][int(last_year_of_data)]
-                    if ratio < 1. / self.relative_difference_to_adjust_mortality:
+                    ratios = []
+                    for year in years_to_compare:
+                        if year in self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k']:
+                            ratios.append(self.epi_outputs['uncertainty_baseline']['mortality'][
+                                             tool_kit.find_first_list_element_above_value(self.epi_outputs[
+                                                  'uncertainty_baseline']['times'], float(year))]
+                                         / self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k'][year])
+                    average_ratio = numpy.mean(ratios)
+                    if average_ratio < 1. / self.relative_difference_to_adjust_mortality:
                         self.inputs.model_constants['program_prop_death_reporting'] += self.amount_to_adjust_mortality
-                    elif ratio > self.relative_difference_to_adjust_mortality:
+                    elif average_ratio > self.relative_difference_to_adjust_mortality:
                         self.inputs.model_constants['program_prop_death_reporting'] -= self.amount_to_adjust_mortality
 
                 else:

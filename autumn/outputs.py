@@ -954,7 +954,7 @@ class Project:
 
     def write_automatic_calibration_outputs(self):
         """
-        Write median values from automatic calbiration process back to input spreadsheets, using the parameter values
+        Write median values from automatic calibration process back to input spreadsheets, using the parameter values
         that were associated with the median model output value.
         """
 
@@ -969,23 +969,13 @@ class Project:
             country_input_book = xl.load_workbook(path)
             country_sheet = country_input_book['constants']
 
-            # find the position of the median value by incidence
-            list_to_find_median \
-                = list(self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['incidence'][
-                           self.model_runner.accepted_indices,
-                           t_k.find_first_list_element_at_least_value(
-                               self.model_runner.epi_outputs_uncertainty['uncertainty_baseline']['times'],
-                               self.inputs.model_constants['current_time'])])
-
-            # find index of the median value - not very happy with this code yet
-            median_run_index \
-                = t_k.find_list_element_equal_to(
-                list_to_find_median, numpy.percentile(list_to_find_median, 50, interpolation='nearest'))
+            # find the integration run with the best likelihood
+            best_likelihood_index = self.model_runner.loglikelihoods.index(max(self.model_runner.loglikelihoods))
 
             # write the parameters and starting compartment sizes back in to input sheets
-            write_param_to_sheet(country_sheet, self.model_runner.all_parameters_tried, median_run_index)
-            write_param_to_sheet(country_sheet, self.model_runner.all_compartment_values_tried, median_run_index)
-            write_param_to_sheet(country_sheet, self.model_runner.all_other_adjustments_made, median_run_index)
+            write_param_to_sheet(country_sheet, self.model_runner.all_parameters_tried, best_likelihood_index)
+            write_param_to_sheet(country_sheet, self.model_runner.all_compartment_values_tried, best_likelihood_index)
+            write_param_to_sheet(country_sheet, self.model_runner.all_other_adjustments_made, best_likelihood_index)
 
             # save
             country_input_book.save(path)
@@ -2606,6 +2596,10 @@ class Project:
         self.save_figure(fig, '_param_histogram')
 
     def plot_priors(self):
+        """
+        Function to plot the prior distributions that are logged to get the prior contribution to the acceptance
+        probability in the epidemiological uncertainty running.
+        """
 
         fig = self.set_and_update_figure()
         subplot_grid = find_subplot_numbers(len(self.model_runner.inputs.param_ranges_unc))
@@ -2802,7 +2796,6 @@ class Project:
         self.save_figure(fig, '_case_detection')
 
     def plot_likelihoods(self):
-
         """
         Method to plot likelihoods over runs, differentiating accepted and rejected runs to illustrate progression.
         """

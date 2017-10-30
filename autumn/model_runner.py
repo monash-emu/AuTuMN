@@ -5,7 +5,8 @@ import os
 import data_processing
 import numpy
 import datetime
-from scipy.stats import norm, beta
+import matplotlib.pyplot as plt
+from scipy.stats import norm, beta, gamma
 from Tkinter import *
 from scipy.optimize import minimize
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -145,19 +146,36 @@ def is_parameter_value_valid(parameter):
     return numpy.isfinite(parameter) and parameter > 0.
 
 
-def find_probability_density(distribution, param_val, bounds, prior_log_likelihood,
-                             additional_params=None):
+def find_log_probability_density(distribution, param_val, bounds, prior_log_likelihood,
+                                 additional_params=None):
+    """
+    Find the log probability density for the parameter value being considered.
+    :param distribution:
+    :param param_val:
+    :param bounds:
+    :param prior_log_likelihood:
+    :param additional_params:
+    :return:
+    """
 
+    # save some code repetition by finding the parameter value's distance through the distribution width
+    normalised_param_value = (param_val - bounds[0]) / (bounds[1] - bounds[0])
+
+    # find hte log probability density
     if distribution == 'beta_2_2':
-        prior_log_likelihood += beta.logpdf((param_val - bounds[0]) / (bounds[1] - bounds[0]), 2., 2.)
+        prior_log_likelihood += beta.logpdf(normalised_param_value, 2., 2.)
     elif distribution == 'beta_mean_stdev':
         alpha_value = ((1. - additional_params[0]) / additional_params[1] ** 2. - 1. / additional_params[0]) \
                       * additional_params[0] ** 2.
         beta_value = alpha_value * (1. / additional_params[0] - 1.)
-        prior_log_likelihood += beta.logpdf((param_val - bounds[0]) / (bounds[1] - bounds[0]), alpha_value, beta_value)
+        prior_log_likelihood += beta.logpdf(normalised_param_value, alpha_value, beta_value)
     elif distribution == 'beta_params':
-        prior_log_likelihood += beta.logpdf((param_val - bounds[0]) / (bounds[1] - bounds[0]),
-                                            additional_params[0], additional_params[1])
+        prior_log_likelihood += beta.logpdf(normalised_param_value, additional_params[0], additional_params[1])
+    elif distribution == 'gamma_mean_stdev':
+        prior_log_likelihood += gamma.logpdf(param_val, (additional_params[0] / additional_params[1]) ** 2.,
+                                             scale=additional_params[1] ** 2. / additional_params[0])
+    elif distribution == 'gamma_params':
+        prior_log_likelihood += gamma.logpdf(param_val, additional_params[0])
     elif distribution == 'uniform':
         prior_log_likelihood += numpy.log(1. / (bounds[1] - bounds[0]))
     return prior_log_likelihood
@@ -763,8 +781,8 @@ class ModelRunner:
                     self.all_parameters_tried[param['key']].append(new_param_list[p])
                     if 'additional_params' not in param: param['additional_params'] = None
                     prior_log_likelihood \
-                        = find_probability_density(param['distribution'], param_val, param['bounds'],
-                                                   prior_log_likelihood, additional_params=param['additional_params'])
+                        = find_log_probability_density(param['distribution'], param_val, param['bounds'],
+                                                       prior_log_likelihood, additional_params=param['additional_params'])
 
                 # calculate posterior
                 posterior_log_likelihood = 0.

@@ -1283,7 +1283,7 @@ class Project:
                                     0:3, t_k.find_first_list_element_at_least_value(
                                         self.model_runner.epi_outputs_uncertainty[
                                             string_to_add + scenario_name]['times'], year)]
-                        row_cells[o + 1].text = '%.2f (%.2f to %.2f)' % (point_estimate, lower_limit, upper_limit)
+                        row_cells[o + 1].text = '%.1f (%.1f to %.1f)' % (point_estimate, lower_limit, upper_limit)
 
                     # without
                     else:
@@ -1291,7 +1291,7 @@ class Project:
                             = self.model_runner.epi_outputs['manual_' + scenario_name][output][
                                 t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs[
                                    string_to_add + scenario_name]['times'], year)]
-                        row_cells[o + 1].text = '%.2f' % point_estimate
+                        row_cells[o + 1].text = '%.1f' % point_estimate
 
             document.save(path)
 
@@ -1340,7 +1340,7 @@ class Project:
                                     0:3, t_k.find_first_list_element_at_least_value(
                                         self.model_runner.epi_outputs_uncertainty[string_to_add
                                                                                   + scenario_name]['times'], year)]
-                        row_cells[s + 1].text = '%.2f (%.2f to %.2f)' % (point_estimate, lower_limit, upper_limit)
+                        row_cells[s + 1].text = '%.1f (%.1f to %.1f)' % (point_estimate, lower_limit, upper_limit)
 
                     # without
                     else:
@@ -1348,7 +1348,7 @@ class Project:
                             = self.model_runner.epi_outputs['manual_' + scenario_name][output][
                                 t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs[
                                    string_to_add + scenario_name]['times'], year)]
-                        row_cells[s + 1].text = '%.2f' % point_estimate
+                        row_cells[s + 1].text = '%.1f' % point_estimate
 
             document.save(path)
 
@@ -2898,7 +2898,6 @@ class Project:
     ''' miscellaneous method '''
 
     def open_output_directory(self):
-
         """
         Opens the directory into which all the outputs have been placed.
         """

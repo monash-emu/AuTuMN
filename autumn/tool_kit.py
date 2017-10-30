@@ -477,7 +477,7 @@ def find_title_from_dictionary(name):
         'program_other':
             'unclassified',
         'start_time':
-            ' from start of model run',
+            'run starting time',
         'early_time':
             ' from start of model run',  # this is a bit of a fib
         'recent_time':
@@ -603,7 +603,15 @@ def find_title_from_dictionary(name):
         'program_timeperiod_':
             'waiting period',
         'misc':
-            'miscellaneous'
+            'miscellaneous',
+        'tb_multiplier_treated_protection':
+            'relative susceptibility after treatment',
+        'tb_timeperiod_activeuntreated':
+            'duration active untreated',
+        'beta_2_2':
+            'beta, params: 2, 2',
+        '':
+            ''
     }
 
     if name in dictionary_of_names:

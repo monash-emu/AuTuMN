@@ -12,6 +12,8 @@ import economics
 import pandas
 import copy
 import model_runner
+import scipy
+
 
 
 def find_smallest_factors_of_integer(n):
@@ -1482,6 +1484,7 @@ class Project:
                                                                                      input_figure=param_tracking_figure)
             self.save_figure(param_tracking_figure, '_param_tracking')
             self.plot_param_histograms()
+            self.plot_priors()
 
         # plot popsizes for checking cost-coverage curves
         if self.gui_inputs['output_popsize_plot']:
@@ -2601,6 +2604,62 @@ class Project:
             ax.hist(param_values)
             ax.set_title(t_k.find_title_from_dictionary(param))
         self.save_figure(fig, '_param_histogram')
+
+    def plot_priors(self):
+
+        fig = self.set_and_update_figure()
+        subplot_grid = find_subplot_numbers(len(self.model_runner.inputs.param_ranges_unc))
+        n_plot_points = 1000
+
+        for p, param in enumerate(self.model_runner.inputs.param_ranges_unc):
+            distribution, lower, upper = param['distribution'], param['bounds'][0], param['bounds'][1]
+            if distribution == 'uniform':
+                x_values = numpy.linspace(lower, upper, n_plot_points)
+                y_values = [1. / (upper - lower)] * len(x_values)
+                description = t_k.capitalise_first_letter(distribution)
+            elif distribution == 'beta_2_2':
+                lower, upper = 0., 1.
+                x_values = numpy.linspace(lower, upper, n_plot_points)
+                y_values = [scipy.stats.beta.pdf((x - lower) / (upper - lower), 2., 2.) for x in x_values]
+                description = t_k.find_title_from_dictionary(distribution)
+            elif distribution == 'beta_mean_stdev':
+                lower, upper = 0., 1.
+                x_values = numpy.linspace(lower, upper, n_plot_points)
+                alpha_value = ((1. - param['additional_params'][0]) / param['additional_params'][1] ** 2. - 1.
+                               / param['additional_params'][0]) * param['additional_params'][0] ** 2.
+                beta_value = alpha_value * (1. / param['additional_params'][0] - 1.)
+                y_values = [scipy.stats.beta.pdf(x, alpha_value, beta_value) for x in x_values]
+                description = 'Beta, params:\n%.2g, %.2g' % (alpha_value, beta_value)
+            elif distribution == 'beta_params':
+                lower, upper = 0., 1.
+                x_values = numpy.linspace(lower, upper, n_plot_points)
+                y_values = [scipy.stats.beta.pdf(x, param['additional_params'][0], param['additional_params'][1])
+                            for x in x_values]
+                description \
+                    = 'Beta, params:\n%.2g, %.2g' % (param['additional_params'][0], param['additional_params'][1])
+            elif distribution == 'gamma_mean_stdev':
+                x_values = numpy.linspace(lower, upper, n_plot_points)
+                alpha_value = (param['additional_params'][0] / param['additional_params'][1]) ** 2.
+                beta_value = param['additional_params'][1] ** 2. / param['additional_params'][0]
+                y_values = [scipy.stats.gamma.pdf(x, alpha_value, scale=beta_value) for x in x_values]
+                description = 'Gamma, params:\n%.2g, %.2g' % (alpha_value, beta_value)
+            elif distribution == 'gamma_params':
+                x_values = numpy.linspace(lower, upper, n_plot_points)
+                y_values = [scipy.stats.gamma.pdf(x, param['additional_params'][0]) for x in x_values]
+                description = 'Gamma, params:\n%.2g' % param['additional_params'][0]
+
+            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
+            ax.set_title(t_k.capitalise_first_letter(t_k.find_title_from_dictionary(param['key'])),
+                         fontsize=get_nice_font_size(subplot_grid))
+            ax.plot(x_values, y_values)
+            ax.text(lower + .05, max(y_values) / 2., description, fontsize=get_nice_font_size(subplot_grid))
+            ax.set_ylim(bottom=0.)
+            for axis_to_change in [ax.xaxis, ax.yaxis]:
+                for tick in axis_to_change.get_major_ticks():
+                    tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+                axis_to_change.grid(self.grid)
+
+        self.save_figure(fig, '_priors')
 
     def plot_force_infection(self):
         """

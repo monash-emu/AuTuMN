@@ -146,38 +146,40 @@ def is_parameter_value_valid(parameter):
     return numpy.isfinite(parameter) and parameter > 0.
 
 
-def find_log_probability_density(distribution, param_val, bounds, prior_log_likelihood,
-                                 additional_params=None):
+def find_log_probability_density(distribution, param_val, bounds, additional_params=None):
     """
     Find the log probability density for the parameter value being considered.
-    :param distribution:
-    :param param_val:
-    :param bounds:
-    :param prior_log_likelihood:
-    :param additional_params:
-    :return:
+
+    Args:
+        distribution: String specifying the general type of distribution
+        param_val: The parameter value
+        bounds: Two element list for the upper and lower limits of the distribution
+        prior_log_likelihood: Preceding log likelihood for incrementing
+        additional_params: Any additional parameters to the distribution if not completely specified with bounds
+    Returns:
+        prior_log_likelihood: Prior log likelihood associated with the individual parameter fed in to this function
     """
 
     # save some code repetition by finding the parameter value's distance through the distribution width
     normalised_param_value = (param_val - bounds[0]) / (bounds[1] - bounds[0])
 
-    # find hte log probability density
-    if distribution == 'beta_2_2':
-        prior_log_likelihood += beta.logpdf(normalised_param_value, 2., 2.)
+    # find the log probability density
+    if distribution == 'uniform':
+        prior_log_likelihood = numpy.log(1. / (bounds[1] - bounds[0]))
+    elif distribution == 'beta_2_2':
+        prior_log_likelihood = beta.logpdf(normalised_param_value, 2., 2.)
     elif distribution == 'beta_mean_stdev':
         alpha_value = ((1. - additional_params[0]) / additional_params[1] ** 2. - 1. / additional_params[0]) \
                       * additional_params[0] ** 2.
         beta_value = alpha_value * (1. / additional_params[0] - 1.)
-        prior_log_likelihood += beta.logpdf(normalised_param_value, alpha_value, beta_value)
+        prior_log_likelihood = beta.logpdf(normalised_param_value, alpha_value, beta_value)
     elif distribution == 'beta_params':
-        prior_log_likelihood += beta.logpdf(normalised_param_value, additional_params[0], additional_params[1])
+        prior_log_likelihood = beta.logpdf(normalised_param_value, additional_params[0], additional_params[1])
     elif distribution == 'gamma_mean_stdev':
-        prior_log_likelihood += gamma.logpdf(param_val, (additional_params[0] / additional_params[1]) ** 2.,
+        prior_log_likelihood = gamma.logpdf(param_val, (additional_params[0] / additional_params[1]) ** 2.,
                                              scale=additional_params[1] ** 2. / additional_params[0])
     elif distribution == 'gamma_params':
-        prior_log_likelihood += gamma.logpdf(param_val, additional_params[0])
-    elif distribution == 'uniform':
-        prior_log_likelihood += numpy.log(1. / (bounds[1] - bounds[0]))
+        prior_log_likelihood = gamma.logpdf(param_val, additional_params[0])
     return prior_log_likelihood
 
 
@@ -781,8 +783,8 @@ class ModelRunner:
                     self.all_parameters_tried[param['key']].append(new_param_list[p])
                     if 'additional_params' not in param: param['additional_params'] = None
                     prior_log_likelihood \
-                        = find_log_probability_density(param['distribution'], param_val, param['bounds'],
-                                                       prior_log_likelihood, additional_params=param['additional_params'])
+                        += find_log_probability_density(param['distribution'], param_val,  param['bounds'],
+                                                        additional_params=param['additional_params'])
 
                 # calculate posterior
                 posterior_log_likelihood = 0.
@@ -1335,7 +1337,10 @@ class ModelRunner:
         if self.js_gui:
             self.plot_progressive_parameters_js()
         else:
-            self.plot_progressive_parameters_tk(from_runner=True)
+            try:
+                self.plot_progressive_parameters_tk(from_runner=True)
+            except:
+                pass
 
     def plot_progressive_parameters_tk(self, from_runner=True, input_figure=None):
 
@@ -1429,5 +1434,4 @@ class ModelRunner:
             "count": self.plot_count
         })
         self.plot_count += 1
-
 

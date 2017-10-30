@@ -60,9 +60,9 @@ class Inputs:
         self.data_to_fit = {}
         # for incidence for ex, width of normal posterior relative to CI width in data
         self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
-        self.alternative_distribution_dict = {'tb_prop_casefatality_untreated_smearpos': ['beta_mean_stdev', .7, .3],
-                                              'tb_timeperiod_activeuntreated': ['gamma_mean_stdev', 2., 1.],
-                                              'tb_multiplier_treated_protection': ['gamma_mean_stdev', 1., .5]}
+        self.alternative_distribution_dict = {'tb_prop_casefatality_untreated_smearpos': ['beta_mean_stdev', .7, .15],
+                                              'tb_timeperiod_activeuntreated': ['gamma_mean_stdev', 3., .5],
+                                              'tb_multiplier_treated_protection': ['gamma_mean_stdev', 1., .6]}
 
         # intervention uncertainty
         self.intervention_uncertainty = False

@@ -257,11 +257,11 @@ class App:
         console_label.grid(row=running_row, column=0, sticky=SW)
 
         # numeric entry box
-        uncertainty_numeric_list = {'uncertainty_runs': ['Number of uncertainty runs', 2],
+        uncertainty_numeric_list = {'uncertainty_runs': ['Number of uncertainty runs', 100],
                                     'burn_in_runs': ['Number of burn-in runs', 0],
                                     'search_width': ['Relative search width', .08]}
-        # self.boolean_dictionary['output_uncertainty'].set(True)
-        # self.boolean_dictionary['write_uncertainty_outcome_params'].set(True)
+        self.boolean_dictionary['output_uncertainty'].set(True)
+        self.boolean_dictionary['write_uncertainty_outcome_params'].set(True)
         # self.boolean_dictionary['output_scaleups'].set(True)
         # self.boolean_dictionary['is_misassignment'].set(True)
         # self.boolean_dictionary['is_lowquality'].set(True)
@@ -294,7 +294,7 @@ class App:
         uncertainty_dropdown_list = ['pickle_uncertainty']
         for dropdown in uncertainty_dropdown_list:
             self.raw_outputs[dropdown] = StringVar()
-        self.raw_outputs['pickle_uncertainty'].set('No saving or loading')
+        self.raw_outputs['pickle_uncertainty'].set('Save')
         self.drop_downs['pickle_uncertainty'] \
             = OptionMenu(self.frame, self.raw_outputs['pickle_uncertainty'],
                          'No saving or loading', 'Load', 'Save')

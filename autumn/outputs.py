@@ -939,6 +939,8 @@ class Project:
             if self.gui_inputs['output_by_scenario']:
                 print('Writing scenario documents')
                 self.write_docs_by_scenario()
+                if self.inputs.intervention_uncertainty:
+                    self.find_relative_changes(year=2035.)
             else:
                 print('Writing output indicator documents')
                 self.write_docs_by_output()
@@ -1283,7 +1285,7 @@ class Project:
                                     0:3, t_k.find_first_list_element_at_least_value(
                                         self.model_runner.epi_outputs_uncertainty[
                                             string_to_add + scenario_name]['times'], year)]
-                        row_cells[o + 1].text = '%.1f (%.1f to %.1f)' % (point_estimate, lower_limit, upper_limit)
+                        row_cells[o + 1].text = '%.1f\n(%.1f to %.1f)' % (point_estimate, lower_limit, upper_limit)
 
                     # without
                     else:
@@ -1294,6 +1296,29 @@ class Project:
                         row_cells[o + 1].text = '%.1f' % point_estimate
 
             document.save(path)
+
+    def find_relative_changes(self, year):
+        """
+        Print some text giving percentage change in output indicators relativel to baseline.
+
+        Args:
+            year: Year for the comparisons to be made at
+        """
+
+        scenario, string_to_add = 15, 'manual_'
+        scenario_name = t_k.find_scenario_string_from_number(scenario)
+        changes = {}
+        for output in self.model_runner.epi_outputs_to_analyse:
+            absolute_values \
+                = self.model_runner.epi_outputs_uncertainty_centiles[string_to_add + scenario_name][output][0:3,
+                    t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs_uncertainty[
+                                                                   string_to_add + scenario_name]['times'], year)]
+
+            baseline = self.model_runner.epi_outputs['manual_baseline'][output][
+                t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
+                                                           year)]
+            changes[output] = [(i / baseline - 1.) * 1e2 for i in absolute_values]
+            print(output + '\n%.1f\n(%.1f to %.1f)' % tuple(changes[output]))
 
     def write_docs_by_output(self):
         """
@@ -1340,7 +1365,7 @@ class Project:
                                     0:3, t_k.find_first_list_element_at_least_value(
                                         self.model_runner.epi_outputs_uncertainty[string_to_add
                                                                                   + scenario_name]['times'], year)]
-                        row_cells[s + 1].text = '%.1f (%.1f to %.1f)' % (point_estimate, lower_limit, upper_limit)
+                        row_cells[s + 1].text = '%.1f\n(%.1f to %.1f)' % (point_estimate, lower_limit, upper_limit)
 
                     # without
                     else:

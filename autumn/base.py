@@ -665,12 +665,12 @@ class BaseModel:
                 else:
                     pop_size = 0.
 
-                # Starting costs
-                # Is a program starting right now? In that case, update intervention_startdates
-                if self.inputs.intervention_startdates[self.scenario][int] is None:  # Intervention hadn't started yet
+                # starting costs
+                # is a program starting right now? in that case, update intervention_startdates
+                if self.inputs.intervention_startdates[self.scenario][int] is None:  # intervention hadn't started yet
                     self.inputs.intervention_startdates[self.scenario][int] = self.time
 
-                # Starting cost has already been taken into account in 'distribute_funding_across_years'
+                # starting cost has already been taken into account in 'distribute_funding_across_years'
                 coverage = get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.)
             self.vars[vars_key] = coverage
 

@@ -1,20 +1,18 @@
 
 import random
 from scipy import exp
-# import outputs
 import cPickle as pickle
 import numpy
 
 
-"""
+'''
 Note that this module is intended only to contain stand-alone functions for use by multiple other modules.
 Object-oriented structures are not intended to be kept here.
-"""
+'''
 
 
-###########################################
-### General data manipulation functions ###
-###########################################
+''' general data manipulation functions '''
+
 
 def increment_dictionary_with_dictionary(dict_a, dict_b):
     """
@@ -610,8 +608,10 @@ def find_title_from_dictionary(name):
             'duration active untreated',
         'beta_2_2':
             'beta, params: 2, 2',
-        '':
-            ''
+        'program_prop_treatment_support_relative':
+            'Treatment support',
+        'program_prop_vaccination':
+            'BCG vaccination'
     }
 
     if name in dictionary_of_names:

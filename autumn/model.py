@@ -208,7 +208,7 @@ class ConsolidatedModel(StratifiedModel):
                                     self.initial_compartments[compartment] * start_risk_prop[riskgroup]
                                     / len(self.organ_status) / len(self.agegroups))
 
-    ''' Single method to process uncertainty parameters '''
+    ''' single method to process uncertainty parameters '''
 
     def process_uncertainty_params(self):
         """
@@ -1121,7 +1121,11 @@ class ConsolidatedModel(StratifiedModel):
             # number of diagnosed cases (LTBI + TB) if coverage was 100%
             self.vars['popsize_ngo_activities'] = 456*2
 
-    ''' Methods that calculate the flows of all the compartments '''
+        # awareness raising
+        if 'int_prop_awareness_raising' in self.relevant_interventions:
+            self.vars['popsize_awareness_raising'] = self.vars['population']
+
+    ''' methods that calculate the flows of all the compartments '''
 
     def set_flows(self):
         """

@@ -948,6 +948,8 @@ class Project:
         # write optimisation spreadsheets
         self.write_opti_outputs_spreadsheet()
 
+        # self.find_average_costs()
+
         # master plotting method
         self.run_plotting()
 
@@ -1320,6 +1322,18 @@ class Project:
             changes[output] = [(i / baseline - 1.) * 1e2 for i in absolute_values]
             print(output + '\n%.1f\n(%.1f to %.1f)' % tuple(changes[output]))
 
+    def find_average_costs(self):
+
+        for scenario in self.scenarios:
+            print('\n' + t_k.find_scenario_string_from_number(scenario))
+            mean_cost = {}
+            for inter in self.model_runner.interventions_to_cost[scenario]:
+                print('\n' + inter)
+                mean_cost[inter] = numpy.mean(self.model_runner.cost_outputs[
+                    'manual_' + t_k.find_scenario_string_from_number(scenario)]['raw_cost_' + inter])
+                print('%.1f' % mean_cost[inter])
+            print('total: %.1f' % sum(mean_cost.values()))
+
     def write_docs_by_output(self):
         """
         Write word documents using the docx package. Writes with or without uncertainty according to whether Run
@@ -1458,7 +1472,7 @@ class Project:
             self.plot_cost_coverage_curves()
             self.plot_cost_over_time()
             # self.plot_intervention_costs_by_scenario(2015, 2030)
-            self.plot_cost_over_time_stacked_bars()
+            # self.plot_cost_over_time_stacked_bars()
 
         # plot compartment population sizes
         if self.gui_inputs['output_compartment_populations']:
@@ -2041,16 +2055,15 @@ class Project:
         self.save_figure(fig, '_programmatic_scale_ups')
 
     def plot_cost_coverage_curves(self):
-
         """
         Plots cost-coverage curves at times specified in the report times inputs in control panel.
         """
 
-        # Plot figures by scenario
+        # plot figures by scenario
         for scenario in self.scenario_names:
             fig = self.set_and_update_figure()
 
-            # Subplots by program
+            # subplots by program
             subplot_grid = find_subplot_numbers(len(self.programs[t_k.find_scenario_number_from_string(scenario)]))
             for p, program in enumerate(self.programs[t_k.find_scenario_number_from_string(scenario)]):
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
@@ -2090,8 +2103,8 @@ class Project:
                                x_label='$US ')
 
             # Finish off with title and save file for scenario
-            fig.suptitle('Cost-coverage curves for ' + t_k.replace_underscore_with_space(scenario),
-                         fontsize=self.suptitle_size)
+            # fig.suptitle('Cost-coverage curves for ' + t_k.replace_underscore_with_space(scenario),
+            #              fontsize=self.suptitle_size)
             self.save_figure(fig, '_' + scenario + '_cost_coverage')
 
     def plot_cost_over_time(self):
@@ -2207,14 +2220,14 @@ class Project:
             fig = self.set_and_update_figure()
 
             # each scenario being implemented
-            for int, intervention in enumerate(self.inputs.interventions_to_cost[scenario]):
+            for inter, intervention in enumerate(self.inputs.interventions_to_cost[scenario]):
 
                 # find the data to plot for the current intervention
                 data = self.model_runner.cost_outputs_integer_dict[
                     'manual_' + t_k.find_scenario_string_from_number(scenario)][cost_type + '_cost_' + intervention]
 
                 # initialise the dictionaries at the first iteration
-                if int == 0:
+                if inter == 0:
                     base = {i: 0. for i in data}
                     upper = {i: 0. for i in data}
 

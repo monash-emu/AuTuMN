@@ -15,7 +15,6 @@ import model_runner
 import scipy
 
 
-
 def find_smallest_factors_of_integer(n):
     """
     Quick method to iterate through integers to find the smallest whole number fractions.
@@ -494,17 +493,15 @@ def find_times_from_exp_function(t, times, target_values, number_x_values=1e2):
 
 
 def save_png(png):
+    # should be redundant once Project module complete
 
-    # Should be redundant once Project module complete
-
-    if png is not None:
-        pylab.savefig(png, dpi=300)
+    if png is not None: pylab.savefig(png, dpi=300)
 
 
 def plot_comparative_age_parameters(data_strat_list, data_value_list, model_value_list, model_strat_list,
                                     parameter_name):
 
-    # Get good tick labels from the stratum lists
+    # get good tick labels from the stratum lists
     data_strat_labels = []
     for i in range(len(data_strat_list)):
         data_strat_labels += [t_k.turn_strat_into_label(data_strat_list[i])]
@@ -512,10 +509,10 @@ def plot_comparative_age_parameters(data_strat_list, data_value_list, model_valu
     for i in range(len(model_strat_list)):
         model_strat_labels += [t_k.turn_strat_into_label(model_strat_list[i])]
 
-    # Find a reasonable upper limit for the y-axis
+    # find a reasonable upper limit for the y-axis
     ymax = max(data_value_list + model_value_list) * 1.2
 
-    # Plot original data bar charts
+    # plot original data bar charts
     subplot_grid = (1, 2)
     fig = pyplot.figure()
     ax = fig.add_axes([0.1, 0.2, 0.35, 0.6])
@@ -530,7 +527,7 @@ def plot_comparative_age_parameters(data_strat_list, data_value_list, model_valu
     ax.set_ylim(0., ymax)
     ax.set_xlim(-1. + width, x_positions[-1] + 1)
 
-    # Plot adjusted parameters bar charts
+    # plot adjusted parameters bar charts
     ax = fig.add_axes([0.55, 0.2, 0.35, 0.6])
     x_positions = range(len(model_strat_list))
     ax.bar(x_positions, model_value_list, width)
@@ -540,7 +537,7 @@ def plot_comparative_age_parameters(data_strat_list, data_value_list, model_valu
     ax.set_ylim(0., ymax)
     ax.set_xlim(-1. + width, x_positions[-1] + 1)
 
-    # Overall title
+    # overall title
     fig.suptitle(t_k.capitalise_and_remove_underscore(parameter_name)
                  + ' adjustment',
                  fontsize=15)
@@ -689,8 +686,7 @@ class Project:
         self.country = self.gui_inputs['country'].lower()
         self.name = 'test_' + self.country
         self.out_dir_project = os.path.join('projects', self.name)
-        if not os.path.isdir(self.out_dir_project):
-            os.makedirs(self.out_dir_project)
+        if not os.path.isdir(self.out_dir_project): os.makedirs(self.out_dir_project)
 
         self.figure_number = 1
         self.classifications = ['demo_', 'econ_', 'epi_prop_smear', 'epi_rr', 'program_prop_', 'program_timeperiod_',
@@ -705,7 +701,12 @@ class Project:
         self.grid = False
         self.plot_rejected_runs = False
 
-        # Extract some characteristics from the models within model runner
+        # pre-analysis processing attributes
+        self.accepted_no_burn_in_indices = []
+        self.epi_outputs_uncertainty_centiles = {}
+        self.cost_outputs_uncertainty_centiles = {}
+
+        # extract some characteristics from the models within model runner
         self.scenarios = self.gui_inputs['scenarios_to_run']
         self.scenario_names = self.gui_inputs['scenario_names_to_run']
         self.programs = self.inputs.interventions_to_cost
@@ -913,6 +914,34 @@ class Project:
         png = os.path.join(self.model_runner.opti_outputs_dir, self.country + last_part_of_name_for_figure + '.png')
         fig.savefig(png, dpi=300)
 
+    ''' methods for pre-processing model runner outputs to more interpretable forms '''
+
+    def find_uncertainty_centiles(self, full_uncertainty_outputs):
+        """
+        Find percentiles from uncertainty dictionaries.
+
+        Updates:
+            self.percentiles: Adds all the required percentiles to this dictionary.
+        """
+
+        uncertainty_centiles = {}
+        for scenario in full_uncertainty_outputs:
+            uncertainty_centiles[scenario] = {}
+            for output in full_uncertainty_outputs[scenario]:
+                if output != 'times':
+
+                    # select the baseline runs for analysis from the larger number that were saved
+                    if scenario == 'uncertainty_baseline':
+                        matrix_to_analyse \
+                            = full_uncertainty_outputs[scenario][output][self.accepted_no_burn_in_indices, :]
+
+                    # use all runs for scenario analysis (as we only save those that were accepted)
+                    else:
+                        matrix_to_analyse = full_uncertainty_outputs[scenario][output]
+                    uncertainty_centiles[scenario][output] \
+                        = numpy.percentile(matrix_to_analyse, self.model_runner.percentiles, axis=0)
+        return uncertainty_centiles
+
     ''' methods for outputting to Office applications '''
 
     def master_outputs_runner(self):
@@ -920,6 +949,15 @@ class Project:
         Method to work through all the fundamental output methods, which then call all the specific output
         methods for plotting and writing as required.
         """
+
+        # processing methods that are only required for outputs
+        if self.gui_inputs['output_uncertainty']:
+            self.accepted_no_burn_in_indices \
+                = [i for i in self.model_runner.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
+            self.epi_outputs_uncertainty_centiles \
+                = self.find_uncertainty_centiles(self.model_runner.epi_outputs_uncertainty)
+            self.cost_outputs_uncertainty_centiles \
+                = self.find_uncertainty_centiles(self.model_runner.cost_outputs_uncertainty)
 
         # write automatic calibration values back to sheets
         if self.gui_inputs['output_uncertainty'] and self.gui_inputs['write_uncertainty_outcome_params']:
@@ -948,7 +986,7 @@ class Project:
         # write optimisation spreadsheets
         self.write_opti_outputs_spreadsheet()
 
-        # self.find_average_costs()
+        self.find_average_costs()
 
         # master plotting method
         self.run_plotting()
@@ -1051,7 +1089,7 @@ class Project:
                                     row, column = y + 2, inter * 3 + 2 + o
                                     if horizontal: column, row = row, column
                                     sheet.cell(row=row, column=column).value \
-                                        = self.model_runner.epi_outputs_uncertainty_centiles[
+                                        = self.epi_outputs_uncertainty_centiles[
                                             string_to_add + scenario_name][intervention][
                                                 order, t_k.find_first_list_element_at_least_value(
                                                     self.model_runner.epi_outputs_uncertainty[
@@ -1170,7 +1208,7 @@ class Project:
                             row, column = y + 2, s * 3 + 2 + o
                             if horizontal: column, row = row, column
                             sheet.cell(row=row, column=column).value \
-                                = self.model_runner.epi_outputs_uncertainty_centiles[string_to_add + scenario_name][
+                                = self.epi_outputs_uncertainty_centiles[string_to_add + scenario_name][
                                     inter][order, t_k.find_first_list_element_at_least_value(
                                         self.model_runner.epi_outputs_uncertainty[string_to_add
                                                                                   + scenario_name]['times'], year)]
@@ -1282,7 +1320,7 @@ class Project:
                     # with uncertainty
                     if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
                         (lower_limit, point_estimate, upper_limit) \
-                            = self.model_runner.epi_outputs_uncertainty_centiles[
+                            = self.epi_outputs_uncertainty_centiles[
                                   string_to_add + scenario_name][output][
                                     0:3, t_k.find_first_list_element_at_least_value(
                                         self.model_runner.epi_outputs_uncertainty[
@@ -1312,7 +1350,7 @@ class Project:
         changes = {}
         for output in self.model_runner.epi_outputs_to_analyse:
             absolute_values \
-                = self.model_runner.epi_outputs_uncertainty_centiles[string_to_add + scenario_name][output][0:3,
+                = self.epi_outputs_uncertainty_centiles[string_to_add + scenario_name][output][0:3,
                     t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs_uncertainty[
                                                                    string_to_add + scenario_name]['times'], year)]
 
@@ -1374,7 +1412,7 @@ class Project:
                     # with uncertainty
                     if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
                         (lower_limit, point_estimate, upper_limit) \
-                            = self.model_runner.epi_outputs_uncertainty_centiles[
+                            = self.epi_outputs_uncertainty_centiles[
                                   string_to_add + scenario_name][output][
                                     0:3, t_k.find_first_list_element_at_least_value(
                                         self.model_runner.epi_outputs_uncertainty[string_to_add
@@ -1615,7 +1653,7 @@ class Project:
                     # median
                     ax.plot(
                         self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
-                        self.model_runner.epi_outputs_uncertainty_centiles[uncertainty_type][output][
+                        self.epi_outputs_uncertainty_centiles[uncertainty_type][output][
                             self.model_runner.percentiles.index(50), :][start_index:],
                         color=linecolour, linestyle=self.output_colours[scenario][0],
                         linewidth=linewidth, label=t_k.capitalise_and_remove_underscore(scenario_name))
@@ -1624,7 +1662,7 @@ class Project:
                     for centile in [2.5, 97.5]:
                         ax.plot(
                             self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
-                            self.model_runner.epi_outputs_uncertainty_centiles[uncertainty_type][output][
+                            self.epi_outputs_uncertainty_centiles[uncertainty_type][output][
                                 self.model_runner.percentiles.index(centile), :][start_index:],
                             color=linecolour, linestyle='--', linewidth=.5, label=None)
                     end_filename = '_ci'
@@ -1719,14 +1757,14 @@ class Project:
             if ci_plot:
                 ax.plot(
                     self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
-                    self.model_runner.epi_outputs_uncertainty_centiles[uncertainty_type][
+                    self.epi_outputs_uncertainty_centiles[uncertainty_type][
                         output][self.model_runner.percentiles.index(50), :][start_index:],
                     color=self.output_colours[None][1], linestyle=self.output_colours[None][0],
                     linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
                 for centile in [2.5, 97.5]:
                     ax.plot(
                         self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
-                        self.model_runner.epi_outputs_uncertainty_centiles[uncertainty_type][output][
+                        self.epi_outputs_uncertainty_centiles[uncertainty_type][output][
                             self.model_runner.percentiles.index(centile), :][start_index:],
                         color=self.output_colours[None][1], linestyle='--', linewidth=.5, label=None)
 
@@ -1735,8 +1773,8 @@ class Project:
             for i in range(self.model_runner.n_centiles_for_shading):
                 patch = create_patch_from_list(
                     self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
-                    self.model_runner.epi_outputs_uncertainty_centiles[uncertainty_type][output][i+3, :][start_index:],
-                    self.model_runner.epi_outputs_uncertainty_centiles[uncertainty_type][output][-i-1, :][start_index:])
+                    self.epi_outputs_uncertainty_centiles[uncertainty_type][output][i+3, :][start_index:],
+                    self.epi_outputs_uncertainty_centiles[uncertainty_type][output][-i-1, :][start_index:])
                 ax.add_patch(patches.Polygon(patch, color=patch_colours[i]))
 
             if self.inputs.intervention_uncertainty:
@@ -1817,7 +1855,7 @@ class Project:
 
             # plot the targets (and milestones) and the fitted exponential function to achieve them
             if 'uncertainty' in uncertainty_type:
-                base_value = self.model_runner.epi_outputs_uncertainty_centiles[uncertainty_type][output][
+                base_value = self.epi_outputs_uncertainty_centiles[uncertainty_type][output][
                              self.model_runner.percentiles.index(50), :][t_k.find_first_list_element_at_least_value(
                                 self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'], 2015.)]
             else:
@@ -2626,7 +2664,7 @@ class Project:
 
             # restrict to those accepted and after burn-in complete
             param_values = [self.model_runner.all_parameters_tried[param][i]
-                            for i in self.model_runner.accepted_no_burn_in_indices]
+                            for i in self.accepted_no_burn_in_indices]
 
             # plot
             ax.hist(param_values)

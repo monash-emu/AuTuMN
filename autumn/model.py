@@ -1063,6 +1063,7 @@ class ConsolidatedModel(StratifiedModel):
                                * self.params['tb_prop_smearneg_culturepos']
 
         # ACF
+        # loop over risk groups, including '', which is no stratification
         for riskgroup in [''] + self.riskgroups:
 
             # allow proportion of persons actually receiving the screening to vary by risk-group, as per user inputs
@@ -1070,14 +1071,15 @@ class ConsolidatedModel(StratifiedModel):
                 int_prop_population_screened = self.params['int_prop_population_screened' + riskgroup]
             else:
                 int_prop_population_screened = self.params['int_prop_population_screened']
-            for acf_type in ['_smearacf', '_xpertacf','_cxrxpertacf']:
+
+            # loop over ACF types
+            for acf_type in ['_smearacf', '_xpertacf', '_cxrxpertacf']:
                 if 'int_prop' + acf_type + riskgroup in self.relevant_interventions:
                     self.vars['popsize' + acf_type + riskgroup] = 0.
                     for compartment in self.compartments:
                         if riskgroup == '' or riskgroup in compartment:
                             self.vars['popsize' + acf_type + riskgroup] \
-                                += self.compartments[compartment] \
-                                   / self.params['int_timeperiod_acf_rounds'] \
+                                += self.compartments[compartment] / self.params['int_timeperiod_acf_rounds'] \
                                    * int_prop_population_screened
 
         # intensive_screening
@@ -1085,7 +1087,7 @@ class ConsolidatedModel(StratifiedModel):
         if 'int_prop_intensive_screening' in self.relevant_interventions:
             self.vars['popsize_intensive_screening'] = 0.
             screened_subgroups = ['_diabetes', '_hiv']  # may be incorporated into the GUI
-            # Loop covers risk groups
+            # loop covers risk groups
             for riskgroup in screened_subgroups:
                 for compartment in self.compartments:
                     if riskgroup in compartment and 'active' in compartment:

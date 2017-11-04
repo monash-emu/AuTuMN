@@ -227,7 +227,6 @@ class ModelRunner:
         self.uncertainty_percentiles = {}
         self.n_centiles_for_shading = 100
         self.percentiles = [2.5, 50., 97.5] + list(numpy.linspace(0., 100., self.n_centiles_for_shading * 2 + 1))
-        self.accepted_no_burn_in_indices = []
         self.random_start = False  # whether to start from a random point, as opposed to the manually calibrated value
         self.intervention_uncertainty = self.inputs.intervention_uncertainty
         self.relative_difference_to_adjust_mortality = 1.1
@@ -273,7 +272,7 @@ class ModelRunner:
             = ['epi_outputs', 'epi_outputs_dict', 'epi_outputs_integer_dict', 'epi_outputs_uncertainty', 'cost_outputs',
                'cost_outputs_dict', 'cost_outputs_integer_dict', 'cost_outputs_uncertainty', 'accepted_indices',
                'rejected_indices', 'all_parameters_tried', 'whether_accepted_list', 'acceptance_dict',
-               'accepted_no_burn_in_indices', 'rejection_dict', 'loglikelihoods']
+               'rejection_dict', 'loglikelihoods']
 
         # GUI-related
         self.emit_delay = 0.1
@@ -312,10 +311,6 @@ class ModelRunner:
             for attribute in self.attributes_to_save: data_to_save[attribute] = getattr(self, attribute)
             tool_kit.pickle_save(data_to_save, storage_file_name)
             self.add_comment_to_gui_window('Uncertainty results saved to disc')
-
-        # processing methods that are only required for outputs
-        self.epi_outputs_uncertainty_centiles = self.find_uncertainty_centiles(self.epi_outputs_uncertainty)
-        self.cost_outputs_uncertainty_centiles = self.find_uncertainty_centiles(self.cost_outputs_uncertainty)
 
         # master optimisation method
         if self.optimisation and not self.load_optimisation: self.run_optimisation()
@@ -689,33 +684,33 @@ class ModelRunner:
                             self.inputs.scaleup_fns[None]['econ_cpi'](time), discount_rate,
                             max(0., (time - year_current))))
         return cost_outputs
-
-    def find_uncertainty_centiles(self, full_uncertainty_outputs):
-        """
-        Find percentiles from uncertainty dictionaries.
-
-        Updates:
-            self.percentiles: Adds all the required percentiles to this dictionary.
-        """
-
-        uncertainty_centiles = {}
-        self.accepted_no_burn_in_indices = [i for i in self.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
-        for scenario in full_uncertainty_outputs:
-            uncertainty_centiles[scenario] = {}
-            for output in full_uncertainty_outputs[scenario]:
-                if output != 'times':
-
-                    # select the baseline runs for analysis from the larger number that were saved
-                    if scenario == 'uncertainty_baseline':
-                        matrix_to_analyse \
-                            = full_uncertainty_outputs[scenario][output][self.accepted_no_burn_in_indices, :]
-
-                    # use all runs for scenario analysis (as we only save those that were accepted)
-                    else:
-                        matrix_to_analyse = full_uncertainty_outputs[scenario][output]
-                    uncertainty_centiles[scenario][output] \
-                        = numpy.percentile(matrix_to_analyse, self.percentiles, axis=0)
-        return uncertainty_centiles
+    #
+    # def find_uncertainty_centiles(self, full_uncertainty_outputs):
+    #     """
+    #     Find percentiles from uncertainty dictionaries.
+    #
+    #     Updates:
+    #         self.percentiles: Adds all the required percentiles to this dictionary.
+    #     """
+    #
+    #     uncertainty_centiles = {}
+    #     self.accepted_no_burn_in_indices = [i for i in self.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
+    #     for scenario in full_uncertainty_outputs:
+    #         uncertainty_centiles[scenario] = {}
+    #         for output in full_uncertainty_outputs[scenario]:
+    #             if output != 'times':
+    #
+    #                 # select the baseline runs for analysis from the larger number that were saved
+    #                 if scenario == 'uncertainty_baseline':
+    #                     matrix_to_analyse \
+    #                         = full_uncertainty_outputs[scenario][output][self.accepted_no_burn_in_indices, :]
+    #
+    #                 # use all runs for scenario analysis (as we only save those that were accepted)
+    #                 else:
+    #                     matrix_to_analyse = full_uncertainty_outputs[scenario][output]
+    #                 uncertainty_centiles[scenario][output] \
+    #                     = numpy.percentile(matrix_to_analyse, self.percentiles, axis=0)
+    #     return uncertainty_centiles
 
     ''' epidemiological uncertainty methods '''
 

@@ -65,7 +65,7 @@ class Inputs:
                                               'tb_multiplier_treated_protection': ['gamma_mean_stdev', 1., .6]}
 
         # intervention uncertainty
-        self.intervention_uncertainty = True
+        self.intervention_uncertainty = False
         if self.intervention_uncertainty:
             self.uncertainty_intervention = 'int_prop_awareness_raising'
             self.scenarios.append(15)

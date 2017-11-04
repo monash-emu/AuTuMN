@@ -272,7 +272,7 @@ class ModelRunner:
             = ['epi_outputs', 'epi_outputs_dict', 'epi_outputs_integer_dict', 'epi_outputs_uncertainty', 'cost_outputs',
                'cost_outputs_dict', 'cost_outputs_integer_dict', 'cost_outputs_uncertainty', 'accepted_indices',
                'rejected_indices', 'all_parameters_tried', 'whether_accepted_list', 'acceptance_dict',
-               'rejection_dict', 'loglikelihoods']
+               'rejection_dict', 'loglikelihoods', 'all_other_adjustments_made']
 
         # GUI-related
         self.emit_delay = 0.1

@@ -263,7 +263,7 @@ class App:
         # self.boolean_dictionary['output_uncertainty'].set(True)
         # self.boolean_dictionary['write_uncertainty_outcome_params'].set(True)
         self.boolean_dictionary['output_param_plots'].set(True)
-        # self.boolean_dictionary['is_misassignment'].set(True)
+        self.boolean_dictionary['output_documents'].set(True)
         # self.boolean_dictionary['is_lowquality'].set(True)
         self.boolean_dictionary['is_vary_detection_by_organ'].set(True)
         self.boolean_dictionary['is_treatment_history'].set(True)
@@ -308,7 +308,7 @@ class App:
         """
 
         # collate check-box boolean options
-        self.gui_outputs['scenarios_to_run'] = [None]
+        self.gui_outputs['scenarios_to_run'] = [0]
         self.gui_outputs['scenario_names_to_run'] = ['baseline']
         for boolean in self.boolean_inputs:
             if 'scenario_' in boolean:

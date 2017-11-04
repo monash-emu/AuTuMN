@@ -740,14 +740,13 @@ class Project:
 
         return self.model_runner.model_dict['manual_baseline'].var_labels.index(var)
 
-    def find_start_index(self, scenario=None):
-
+    def find_start_index(self, scenario=0):
         """
         Very simple, but commonly used bit of code to determine whether to start from the start of the epidemiological
         outputs, or - if we're dealing with the baseline scenario - to start from the appropriate time index.
 
         Args:
-            scenario: Scenario number (i.e. None for baseline or single integer for scenario)
+            scenario: Scenario number (i.e. zero for baseline or single integer for scenario)
         Returns:
             Index that can be used to find starting point in epidemiological output lists
         """
@@ -951,7 +950,7 @@ class Project:
         """
 
         # processing methods that are only required for outputs
-        if self.gui_inputs['output_uncertainty']:
+        if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
             self.accepted_no_burn_in_indices \
                 = [i for i in self.model_runner.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
             self.epi_outputs_uncertainty_centiles \
@@ -1234,7 +1233,7 @@ class Project:
             wb.save(path)
 
         # CODE PROBABLY WRONG because interventions can differ by scenario
-        for inter in self.inputs.interventions_to_cost[None]:
+        for inter in self.inputs.interventions_to_cost[0]:
             for cost_type in ['raw_cost_', 'inflated_cost_', 'discounted_cost_', 'discounted_inflated_cost_']:
 
                 # make filename
@@ -1639,7 +1638,7 @@ class Project:
             elif purpose == 'ci_plot':
                 if self.inputs.intervention_uncertainty:
                     (scenarios, uncertainty_type, start_index, linewidth, linecolour) \
-                        = ([None, 15], 'manual_scenario_15', 0, 1., 'r')
+                        = ([0, 15], 'manual_scenario_15', 0, 1., 'r')
                 else:
                     (scenarios, linewidth) = (self.scenarios, 1.5)
 
@@ -1746,7 +1745,7 @@ class Project:
 
             # plot with uncertainty confidence intervals
             scenario_name = 'baseline'
-            start_index = self.find_start_index(None)
+            start_index = self.find_start_index(0)
 
             if self.inputs.intervention_uncertainty:
                 uncertainty_type, start_index = 'manual_scenario_15', 0
@@ -1759,14 +1758,14 @@ class Project:
                     self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
                     self.epi_outputs_uncertainty_centiles[uncertainty_type][
                         output][self.model_runner.percentiles.index(50), :][start_index:],
-                    color=self.output_colours[None][1], linestyle=self.output_colours[None][0],
+                    color=self.output_colours[0][1], linestyle=self.output_colours[0][0],
                     linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
                 for centile in [2.5, 97.5]:
                     ax.plot(
                         self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
                         self.epi_outputs_uncertainty_centiles[uncertainty_type][output][
                             self.model_runner.percentiles.index(centile), :][start_index:],
-                        color=self.output_colours[None][1], linestyle='--', linewidth=.5, label=None)
+                        color=self.output_colours[0][1], linestyle='--', linewidth=.5, label=0)
 
             # plot shaded areas as patches
             patch_colours = [cm.Blues(x) for x in numpy.linspace(0., 1., self.model_runner.n_centiles_for_shading)]
@@ -1964,8 +1963,8 @@ class Project:
                                 label=t_k.capitalise_and_remove_underscore(scenario_name))
 
                     # plot the raw data from which the scale-up functions were produced
-                    if function in self.inputs.scaleup_data[None]:
-                        data_to_plot = self.inputs.scaleup_data[None][function]
+                    if function in self.inputs.scaleup_data[0]:
+                        data_to_plot = self.inputs.scaleup_data[0][function]
                         ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
 
                     # adjust tick font size and add panel title
@@ -2025,8 +2024,8 @@ class Project:
                             color=self.output_colours[scenario][1],
                             label=t_k.capitalise_and_remove_underscore(scenario_name))
 
-                if function in self.inputs.scaleup_data[None]:
-                    data_to_plot = self.inputs.scaleup_data[None][function]
+                if function in self.inputs.scaleup_data[0]:
+                    data_to_plot = self.inputs.scaleup_data[0][function]
                     ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
 
                 # adjust tick font size and add panel title
@@ -2083,7 +2082,7 @@ class Project:
         # Plot functions for baseline model run only
         ax = self.make_single_axis(fig)
         for figure_number, function in enumerate(functions):
-            ax.plot(x_vals, map(self.inputs.scaleup_fns[None][function], x_vals), line_styles[figure_number],
+            ax.plot(x_vals, map(self.inputs.scaleup_fns[0][function], x_vals), line_styles[figure_number],
                     label=t_k.find_title_from_dictionary(function))
 
         # Finish off
@@ -2819,18 +2818,18 @@ class Project:
         ACF on improving detection rates relative to passive case finding alone.
         """
 
-        # Prelims
+        # prelims
         riskgroup_styles = self.make_default_line_styles(5, True)
         fig = self.set_and_update_figure()
         ax_left = fig.add_subplot(1, 2, 1)
         ax_right = fig.add_subplot(1, 2, 2)
         separation = 0.
-        separation_increment = .003  # Artificial shifting of lines away from each other
+        separation_increment = .003  # artificial shifting of lines away from each other
 
-        # Specif interventions of interest for this plotting function - needs to be changed for each country
-        interventions_affecting_case_detection = [None, 5, 6]
+        # specify interventions of interest for this plotting function - needs to be changed for each country
+        interventions_affecting_case_detection = [0, 5, 6]
 
-        # Loop over scenarios
+        # loop over scenarios
         for scenario in interventions_affecting_case_detection:
             scenario_name = t_k.find_scenario_string_from_number(scenario)
             manual_scenario_name = 'manual_' + scenario_name

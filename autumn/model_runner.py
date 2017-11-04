@@ -335,7 +335,7 @@ class ModelRunner:
             self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
             # sort out times for scenario runs
-            if scenario is not None: self.prepare_new_model_from_baseline('manual', scenario_name)
+            if scenario > 0: self.prepare_new_model_from_baseline('manual', scenario_name)
 
             # describe model and integrate
             self.add_comment_to_gui_window('Running %s conditions for %s using point estimates for parameters.'
@@ -668,7 +668,7 @@ class ModelRunner:
 
         # get some preliminary parameters
         year_current = self.inputs.model_constants['recent_time']
-        current_cpi = self.inputs.scaleup_fns[None]['econ_cpi'](year_current)
+        current_cpi = self.inputs.scaleup_fns[0]['econ_cpi'](year_current)
         discount_rate = self.inputs.model_constants['econ_discount_rate']
 
         # loop over interventions for costing and cost types
@@ -681,7 +681,7 @@ class ModelRunner:
                     cost_outputs[cost_type + '_cost_' + intervention].append(
                         autumn.economics.get_adjusted_cost(
                             self.cost_outputs[scenario_name]['raw_cost_' + intervention][t], cost_type, current_cpi,
-                            self.inputs.scaleup_fns[None]['econ_cpi'](time), discount_rate,
+                            self.inputs.scaleup_fns[0]['econ_cpi'](time), discount_rate,
                             max(0., (time - year_current))))
         return cost_outputs
 
@@ -1101,8 +1101,7 @@ class ModelRunner:
         for combination in all_possible_combinations:
             total_startup_costs = 0.
             for intervention in combination:
-                if self.inputs.intervention_startdates[None][self.interventions_considered_for_opti[intervention]] \
-                        is None:
+                if self.inputs.intervention_startdates[0][self.interventions_considered_for_opti[intervention]] is 0:
                     total_startup_costs \
                         += self.inputs.model_constants['econ_startupcost_' +
                                                        self.interventions_considered_for_opti[intervention]]
@@ -1134,7 +1133,7 @@ class ModelRunner:
         self.optimised_combinations = []
 
         # initialise a new model that will be run from recent_time and set basic attributes for optimisation
-        self.model_dict['optimisation'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
+        self.model_dict['optimisation'] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs)
         self.prepare_new_model_from_baseline('manual', 'optimisation')
         self.model_dict['optimisation'].eco_drives_epi = True
         self.model_dict['optimisation'].inputs.model_constants['scenario_end_time'] = self.year_end_opti
@@ -1203,7 +1202,7 @@ class ModelRunner:
                     minimal_allocation = 0.
 
                     # if start-up costs apply
-                    if self.inputs.intervention_startdates[None][
+                    if self.inputs.intervention_startdates[0][
                         self.model_dict['manual_baseline'].interventions_to_cost[combination[i]]] is None:
                         minimal_allocation \
                             = self.model_dict['manual_baseline'].inputs.model_constants[
@@ -1246,7 +1245,7 @@ class ModelRunner:
         """
 
         # prepare new model to run full scenario duration
-        self.model_dict['optimisation'] = model.ConsolidatedModel(None, self.inputs, self.gui_inputs)
+        self.model_dict['optimisation'] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs)
         self.prepare_new_model_from_baseline('manual', 'optimisation')
         self.model_dict['optimisation'].eco_drives_epi = True
         self.model_dict['optimisation'].interventions_considered_for_opti = self.interventions_considered_for_opti

@@ -296,7 +296,7 @@ def find_scenario_string_from_number(scenario):
         The string representing the scenario
     """
 
-    if scenario is None:
+    if scenario == 0:
         return 'baseline'
     else:
         return 'scenario_' + str(scenario)
@@ -320,9 +320,9 @@ def find_scenario_number_from_string(scenario):
     else:
         scenario_string = scenario
 
-    # find number or None for baseline scenario
+    # find number or zero for baseline scenario
     if scenario_string == 'baseline':
-        scenario_number = None
+        scenario_number = 0
     else:
         scenario_number = int(scenario_string[9:])
     return scenario_number

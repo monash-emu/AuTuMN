@@ -684,33 +684,6 @@ class ModelRunner:
                             self.inputs.scaleup_fns[None]['econ_cpi'](time), discount_rate,
                             max(0., (time - year_current))))
         return cost_outputs
-    #
-    # def find_uncertainty_centiles(self, full_uncertainty_outputs):
-    #     """
-    #     Find percentiles from uncertainty dictionaries.
-    #
-    #     Updates:
-    #         self.percentiles: Adds all the required percentiles to this dictionary.
-    #     """
-    #
-    #     uncertainty_centiles = {}
-    #     self.accepted_no_burn_in_indices = [i for i in self.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
-    #     for scenario in full_uncertainty_outputs:
-    #         uncertainty_centiles[scenario] = {}
-    #         for output in full_uncertainty_outputs[scenario]:
-    #             if output != 'times':
-    #
-    #                 # select the baseline runs for analysis from the larger number that were saved
-    #                 if scenario == 'uncertainty_baseline':
-    #                     matrix_to_analyse \
-    #                         = full_uncertainty_outputs[scenario][output][self.accepted_no_burn_in_indices, :]
-    #
-    #                 # use all runs for scenario analysis (as we only save those that were accepted)
-    #                 else:
-    #                     matrix_to_analyse = full_uncertainty_outputs[scenario][output]
-    #                 uncertainty_centiles[scenario][output] \
-    #                     = numpy.percentile(matrix_to_analyse, self.percentiles, axis=0)
-    #     return uncertainty_centiles
 
     ''' epidemiological uncertainty methods '''
 

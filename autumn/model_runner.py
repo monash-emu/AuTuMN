@@ -204,7 +204,7 @@ class ModelRunner:
         self.inputs.read_and_load_data()
 
         # preparing for basic runs
-        self.model_dict = {}
+        self.models = {}
         self.interventions_to_cost = self.inputs.interventions_to_cost
 
         # uncertainty-related attributes
@@ -332,7 +332,7 @@ class ModelRunner:
 
             # name and initialise model
             scenario_name = 'manual_' + tool_kit.find_scenario_string_from_number(scenario)
-            self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
+            self.models[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
             # sort out times for scenario runs
             if scenario > 0: self.prepare_new_model_from_baseline('manual', scenario_name)
@@ -340,31 +340,30 @@ class ModelRunner:
             # describe model and integrate
             self.add_comment_to_gui_window('Running %s conditions for %s using point estimates for parameters.'
                                            % (scenario_name, self.gui_inputs['country']))
-            self.model_dict[scenario_name].integrate()
+            self.models[scenario_name].integrate()
 
             # model interpretation for each scenario
             self.epi_outputs[scenario_name] \
                 = self.find_epi_outputs(scenario_name, outputs_to_analyse=self.epi_outputs_to_analyse,
-                                        stratifications=[self.model_dict[scenario_name].agegroups,
-                                                         self.model_dict[scenario_name].riskgroups])
-            if len(self.model_dict[scenario_name].interventions_to_cost) > 0: self.find_cost_outputs(scenario_name)
-
-        # model interpretation that applies to baseline run only
-        self.find_population_fractions(stratifications=[self.model_dict['manual_baseline'].agegroups,
-                                                        self.model_dict['manual_baseline'].riskgroups])
+                                        stratifications=[self.models[scenario_name].agegroups,
+                                                         self.models[scenario_name].riskgroups])
+            if len(self.models[scenario_name].interventions_to_cost) > 0: self.find_cost_outputs(scenario_name)
+            self.find_population_fractions(
+                scenario_name=scenario_name, stratifications=[self.models[scenario_name].agegroups,
+                                                              self.models[scenario_name].riskgroups])
 
         # if you want some dictionaries based on the lists created above (may not be necessary)
-        self.epi_outputs_dict.update(get_output_dicts_from_lists(models_to_analyse=self.model_dict,
+        self.epi_outputs_dict.update(get_output_dicts_from_lists(models_to_analyse=self.models,
                                                                  output_dict_of_lists=self.epi_outputs))
 
         # if integer-based dictionaries required
-        self.epi_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.epi_outputs_dict))
+        self.epi_outputs_integer_dict.update(extract_integer_dicts(self.models, self.epi_outputs_dict))
 
         # same for costs if the interventions to cost list has at least one entry
-        if self.model_dict[scenario_name].interventions_to_cost:
-            self.cost_outputs_dict.update(get_output_dicts_from_lists(models_to_analyse=self.model_dict,
+        if self.models[scenario_name].interventions_to_cost:
+            self.cost_outputs_dict.update(get_output_dicts_from_lists(models_to_analyse=self.models,
                                                                       output_dict_of_lists=self.cost_outputs))
-            self.cost_outputs_integer_dict.update(extract_integer_dicts(self.model_dict, self.cost_outputs_dict))
+            self.cost_outputs_integer_dict.update(extract_integer_dicts(self.models, self.cost_outputs_dict))
 
     def prepare_new_model_from_baseline(self, run_type, scenario_name):
         """
@@ -376,13 +375,13 @@ class ModelRunner:
         """
 
         scenario_start_time_index = \
-            self.model_dict[run_type + '_baseline'].find_time_index(
+            self.models[run_type + '_baseline'].find_time_index(
                 self.inputs.model_constants['before_intervention_time'])
-        start_time = self.model_dict[run_type + '_baseline'].times[scenario_start_time_index]
-        self.model_dict[scenario_name].start_time = start_time
-        self.model_dict[scenario_name].next_time_point = start_time
-        self.model_dict[scenario_name].loaded_compartments \
-            = self.model_dict[run_type + '_baseline'].load_state(scenario_start_time_index)
+        start_time = self.models[run_type + '_baseline'].times[scenario_start_time_index]
+        self.models[scenario_name].start_time = start_time
+        self.models[scenario_name].next_time_point = start_time
+        self.models[scenario_name].loaded_compartments \
+            = self.models[run_type + '_baseline'].load_state(scenario_start_time_index)
 
     ''' output interpretation methods '''
 
@@ -400,47 +399,47 @@ class ModelRunner:
         ''' compulsory elements to calculate '''
 
         if 'population' not in outputs_to_analyse: outputs_to_analyse.append('population')
-        epi_outputs = {'times': self.model_dict[scenario].times}
+        epi_outputs = {'times': self.models[scenario].times}
 
         ''' unstratified outputs '''
 
         # initialise lists to zeros to allow incrementation
         for output in outputs_to_analyse:
             epi_outputs[output] = [0.] * len(epi_outputs['times'])
-            for strain in self.model_dict[scenario].strains:
+            for strain in self.models[scenario].strains:
                 epi_outputs[output + strain] = [0.] * len(epi_outputs['times'])
 
         # population
-        for compartment in self.model_dict[scenario].compartments:
+        for compartment in self.models[scenario].compartments:
             epi_outputs['population'] \
-                = elementwise_list_addition(self.model_dict[scenario].get_compartment_soln(compartment),
+                = elementwise_list_addition(self.models[scenario].get_compartment_soln(compartment),
                                             epi_outputs['population'])
 
         # replace zeroes with small numbers for division
         total_denominator = tool_kit.prepare_denominator(epi_outputs['population'])
 
         # to allow calculation by strain and the total output
-        strains = self.model_dict[scenario].strains + ['']
+        strains = self.models[scenario].strains + ['']
 
         # incidence
         if 'incidence' in outputs_to_analyse:
             for strain in strains:
-                for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:  # variable flows
+                for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:  # variable flows
                     if 'latent' in from_label and 'active' in to_label and strain in to_label:
-                        incidence_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
-                                              * self.model_dict[scenario].get_var_soln(rate) / total_denominator * 1e5
+                        incidence_increment = self.models[scenario].get_compartment_soln(from_label) \
+                                              * self.models[scenario].get_var_soln(rate) / total_denominator * 1e5
                         epi_outputs['incidence' + strain] \
                             = elementwise_list_addition(incidence_increment, epi_outputs['incidence' + strain])
-                for from_label, to_label, rate in self.model_dict[scenario].fixed_transfer_rate_flows:  # fixed flows
+                for from_label, to_label, rate in self.models[scenario].fixed_transfer_rate_flows:  # fixed flows
                     if 'latent' in from_label and 'active' in to_label and strain in to_label:
-                        incidence_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
+                        incidence_increment = self.models[scenario].get_compartment_soln(from_label) \
                                               * rate / total_denominator * 1e5
                         epi_outputs['incidence' + strain] \
                             = elementwise_list_addition(incidence_increment, epi_outputs['incidence' + strain])
 
             # find percentage incidence by strain
-            if len(self.model_dict[scenario].strains) > 1:
-                for strain in self.model_dict[scenario].strains:
+            if len(self.models[scenario].strains) > 1:
+                for strain in self.models[scenario].strains:
                     epi_outputs['perc_incidence' + strain] \
                         = elementwise_list_percentage(epi_outputs['incidence' + strain],
                                                       tool_kit.prepare_denominator(epi_outputs['incidence']))
@@ -448,11 +447,11 @@ class ModelRunner:
         # notifications
         if 'notifications' in outputs_to_analyse:
             for strain in strains:
-                for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
+                for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
                     if 'active' in from_label and 'detect' in to_label and strain in to_label:
                         notifications_increment \
-                            = self.model_dict[scenario].get_compartment_soln(from_label) \
-                              * self.model_dict[scenario].get_var_soln(rate)
+                            = self.models[scenario].get_compartment_soln(from_label) \
+                              * self.models[scenario].get_var_soln(rate)
                         epi_outputs['notifications' + strain] \
                             = elementwise_list_addition(notifications_increment, epi_outputs['notifications' + strain])
 
@@ -461,22 +460,22 @@ class ModelRunner:
             for strain in strains:
 
                 # fixed flows are outside of the health system and so the natural death contribution is reduced
-                for from_label, rate in self.model_dict[scenario].fixed_infection_death_rate_flows:
+                for from_label, rate in self.models[scenario].fixed_infection_death_rate_flows:
                     if strain in from_label:
-                        mortality_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
+                        mortality_increment = self.models[scenario].get_compartment_soln(from_label) \
                                               * rate / total_denominator * 1e5
                         epi_outputs['true_mortality' + strain] \
                             = elementwise_list_addition(mortality_increment, epi_outputs['true_mortality' + strain])
                         epi_outputs['mortality' + strain] \
                             = elementwise_list_addition(
-                                mortality_increment * self.model_dict[scenario].params['program_prop_death_reporting'],
+                                mortality_increment * self.models[scenario].params['program_prop_death_reporting'],
                                 epi_outputs['mortality' + strain])
 
                 # variable flows are within the health system and so true and reported are dealt with the same way
-                for from_label, rate in self.model_dict[scenario].var_infection_death_rate_flows:
+                for from_label, rate in self.models[scenario].var_infection_death_rate_flows:
                     if strain in from_label:
-                        mortality_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
-                                              * self.model_dict[scenario].get_var_soln(rate) / total_denominator * 1e5
+                        mortality_increment = self.models[scenario].get_compartment_soln(from_label) \
+                                              * self.models[scenario].get_var_soln(rate) / total_denominator * 1e5
                         for mortality_type in ['true_mortality', 'mortality']:
                             epi_outputs[mortality_type + strain] \
                                 = elementwise_list_addition(mortality_increment, epi_outputs[mortality_type + strain])
@@ -484,21 +483,21 @@ class ModelRunner:
         # prevalence
         if 'prevalence' in outputs_to_analyse:
             for strain in strains:
-                for label in self.model_dict[scenario].labels:
+                for label in self.models[scenario].labels:
                     if 'susceptible' not in label and 'latent' not in label and strain in label:
                         prevalence_increment \
-                            = self.model_dict[scenario].get_compartment_soln(label) / total_denominator * 1e5
+                            = self.models[scenario].get_compartment_soln(label) / total_denominator * 1e5
                         epi_outputs['prevalence' + strain] \
                             = elementwise_list_addition(prevalence_increment, epi_outputs['prevalence' + strain])
 
         # infections (absolute number)
         if 'infections' in outputs_to_analyse:
             for strain in strains:
-                for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
+                for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
                     if 'latent_early' in to_label and strain in to_label:
                         epi_outputs['infections' + strain] \
-                            = elementwise_list_addition(self.model_dict[scenario].get_compartment_soln(from_label)
-                                                        * self.model_dict[scenario].get_var_soln(rate),
+                            = elementwise_list_addition(self.models[scenario].get_compartment_soln(from_label)
+                                                        * self.models[scenario].get_var_soln(rate),
                                                         epi_outputs['infections' + strain])
 
                 # annual risk of infection (as a percentage)
@@ -515,10 +514,10 @@ class ModelRunner:
                     for output in outputs_to_analyse: epi_outputs[output + stratum] = [0.] * len(epi_outputs['times'])
 
                     # population
-                    for compartment in self.model_dict[scenario].compartments:
+                    for compartment in self.models[scenario].compartments:
                         if stratum in compartment:
                             epi_outputs['population' + stratum] \
-                                = elementwise_list_addition(self.model_dict[scenario].get_compartment_soln(compartment),
+                                = elementwise_list_addition(self.models[scenario].get_compartment_soln(compartment),
                                                             epi_outputs['population' + stratum])
 
                     # the population denominator to be used with zeros replaced with small numbers
@@ -526,16 +525,16 @@ class ModelRunner:
 
                     # incidence
                     if 'incidence' in outputs_to_analyse:
-                        for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
+                        for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
                             if 'latent' in from_label and 'active' in to_label and stratum in from_label:
-                                incidence_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
-                                                      * self.model_dict[scenario].get_var_soln(rate) \
+                                incidence_increment = self.models[scenario].get_compartment_soln(from_label) \
+                                                      * self.models[scenario].get_var_soln(rate) \
                                                       / stratum_denominator * 1e5
                                 epi_outputs['incidence' + stratum] \
                                     = elementwise_list_addition(incidence_increment, epi_outputs['incidence' + stratum])
-                        for from_label, to_label, rate in self.model_dict[scenario].fixed_transfer_rate_flows:
+                        for from_label, to_label, rate in self.models[scenario].fixed_transfer_rate_flows:
                             if 'latent' in from_label and 'active' in to_label and stratum in from_label:
-                                incidence_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
+                                incidence_increment = self.models[scenario].get_compartment_soln(from_label) \
                                                       * rate / stratum_denominator * 1e5
                                 epi_outputs['incidence' + stratum] \
                                     = elementwise_list_addition(incidence_increment, epi_outputs['incidence' + stratum])
@@ -543,12 +542,12 @@ class ModelRunner:
                     # notifications
                     if 'notifications' in outputs_to_analyse:
                         for strain in strains:
-                            for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
+                            for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
                                 if 'active' in from_label and 'detect' in to_label and strain in to_label \
                                         and stratum in from_label:
                                     notifications_increment \
-                                        = self.model_dict[scenario].get_compartment_soln(from_label) \
-                                          * self.model_dict[scenario].get_var_soln(rate)
+                                        = self.models[scenario].get_compartment_soln(from_label) \
+                                          * self.models[scenario].get_var_soln(rate)
                                     epi_outputs['notifications' + strain + stratum] \
                                         = elementwise_list_addition(
                                             notifications_increment, epi_outputs['notifications' + strain + stratum])
@@ -557,9 +556,9 @@ class ModelRunner:
                     if 'mortality' in outputs_to_analyse:
 
                         # fixed flows are outside of the health system and so the natural death contribution is reduced
-                        for from_label, rate in self.model_dict[scenario].fixed_infection_death_rate_flows:
+                        for from_label, rate in self.models[scenario].fixed_infection_death_rate_flows:
                             if stratum in from_label:
-                                mortality_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
+                                mortality_increment = self.models[scenario].get_compartment_soln(from_label) \
                                                       * rate / stratum_denominator * 1e5
                                 epi_outputs['true_mortality' + stratum] \
                                     = elementwise_list_addition(mortality_increment,
@@ -567,14 +566,14 @@ class ModelRunner:
                                 epi_outputs['mortality' + stratum] \
                                     = elementwise_list_addition(
                                         mortality_increment
-                                        * self.model_dict[scenario].params['program_prop_death_reporting'],
+                                        * self.models[scenario].params['program_prop_death_reporting'],
                                         epi_outputs['mortality' + stratum])
 
                         # variable flows are within the health system and so dealt with as described above
-                        for from_label, rate in self.model_dict[scenario].var_infection_death_rate_flows:
+                        for from_label, rate in self.models[scenario].var_infection_death_rate_flows:
                             if stratum in from_label:
-                                mortality_increment = self.model_dict[scenario].get_compartment_soln(from_label) \
-                                                      * self.model_dict[scenario].get_var_soln(rate) \
+                                mortality_increment = self.models[scenario].get_compartment_soln(from_label) \
+                                                      * self.models[scenario].get_var_soln(rate) \
                                                       / stratum_denominator * 1e5
                                 for mortality_type in ['true_mortality', 'mortality']:
                                     epi_outputs[mortality_type + stratum] \
@@ -583,9 +582,9 @@ class ModelRunner:
 
                     # prevalence
                     if 'prevalence' in outputs_to_analyse:
-                        for label in self.model_dict[scenario].labels:
+                        for label in self.models[scenario].labels:
                             if 'susceptible' not in label and 'latent' not in label and stratum in label:
-                                prevalence_increment = self.model_dict[scenario].get_compartment_soln(label) \
+                                prevalence_increment = self.models[scenario].get_compartment_soln(label) \
                                                        / stratum_denominator * 1e5
                                 epi_outputs['prevalence' + stratum] \
                                     = elementwise_list_addition(prevalence_increment,
@@ -593,12 +592,12 @@ class ModelRunner:
 
                     # infections (absolute number)
                     if 'infections' in outputs_to_analyse:
-                        for from_label, to_label, rate in self.model_dict[scenario].var_transfer_rate_flows:
+                        for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
                             if 'latent_early' in to_label and stratum in from_label:
                                 epi_outputs['infections' + stratum] \
                                     = elementwise_list_addition(
-                                        self.model_dict[scenario].get_compartment_soln(from_label)
-                                        * self.model_dict[scenario].get_var_soln(rate),
+                                        self.models[scenario].get_compartment_soln(from_label)
+                                        * self.models[scenario].get_var_soln(rate),
                                         epi_outputs['infections' + stratum])
 
                         # annual risk of infection (as a percentage)
@@ -607,19 +606,18 @@ class ModelRunner:
 
         return epi_outputs
 
-    def find_population_fractions(self, stratifications=[]):
+    def find_population_fractions(self, scenario_name, stratifications=[]):
         """
         Find the proportion of the population in various strata. The stratifications must apply to the entire
         population, so this method should not be used for strains, health systems, etc.
         """
 
-        for scenario in self.model_dict:
-            for stratification in stratifications:
-                if len(stratification) > 1:
-                    for stratum in stratification:
-                        self.epi_outputs[scenario]['fraction' + stratum] \
-                            = elementwise_list_division(self.epi_outputs[scenario]['population' + stratum],
-                                                        self.epi_outputs[scenario]['population'])
+        for stratification in stratifications:
+            if len(stratification) > 1:
+                for stratum in stratification:
+                    self.epi_outputs[scenario_name]['fraction' + stratum] \
+                        = elementwise_list_division(self.epi_outputs[scenario_name]['population' + stratum],
+                                                    self.epi_outputs[scenario_name]['population'])
 
     def find_cost_outputs(self, scenario_name):
         """
@@ -638,10 +636,10 @@ class ModelRunner:
         Find cost dictionaries to add to cost_outputs attribute.
         """
 
-        cost_outputs = {'times': self.model_dict[scenario_name].cost_times}
+        cost_outputs = {'times': self.models[scenario_name].cost_times}
         for i, intervention \
                 in enumerate(self.interventions_to_cost[tool_kit.find_scenario_number_from_string(scenario_name)]):
-            cost_outputs['raw_cost_' + intervention] = self.model_dict[scenario_name].costs[:, i]
+            cost_outputs['raw_cost_' + intervention] = self.models[scenario_name].costs[:, i]
         return cost_outputs
 
     def find_costs_all_programs(self, scenario_name):
@@ -717,7 +715,7 @@ class ModelRunner:
         # instantiate uncertainty model objects
         for scenario in self.gui_inputs['scenarios_to_run']:
             scenario_name = 'uncertainty_' + tool_kit.find_scenario_string_from_number(scenario)
-            self.model_dict[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
+            self.models[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
         # set initial parameter values
         new_param_list = []
@@ -912,7 +910,7 @@ class ModelRunner:
                                    accepted=accepted)
         self.is_last_run_success = True
         try:
-            self.model_dict[model_object].integrate()
+            self.models[model_object].integrate()
         except:
             print 'Warning: parameters=%s failed with model' % params
             self.is_last_run_success = False
@@ -937,11 +935,11 @@ class ModelRunner:
         for key in param_dict:
 
             # start time usually set in instantiation, which has already been done here, so needs to be set separately
-            if key == 'start_time': self.model_dict[model_object].start_time = param_dict[key]
+            if key == 'start_time': self.models[model_object].start_time = param_dict[key]
 
             # set parameters
-            elif key in self.model_dict[model_object].params:
-                self.model_dict[model_object].set_parameter(key, param_dict[key])
+            elif key in self.models[model_object].params:
+                self.models[model_object].set_parameter(key, param_dict[key])
             else:
                 raise ValueError('%s not in model_object params' % key)
 
@@ -961,7 +959,7 @@ class ModelRunner:
         # get outputs
         self.epi_outputs[scenario_name] \
             = self.find_epi_outputs(scenario_name, outputs_to_analyse=self.epi_outputs_to_analyse)
-        if self.model_dict[scenario_name].interventions_to_cost: self.find_cost_outputs(scenario_name)
+        if self.models[scenario_name].interventions_to_cost: self.find_cost_outputs(scenario_name)
 
         # initialise dictionaries if needed
         if scenario_name not in self.epi_outputs_uncertainty:
@@ -1049,15 +1047,15 @@ class ModelRunner:
         for sample in range(self.inputs.n_samples):
 
             # prepare for integration of scenario
-            self.model_dict['manual_scenario_15'] = model.ConsolidatedModel(15, self.inputs, self.gui_inputs)
+            self.models['manual_scenario_15'] = model.ConsolidatedModel(15, self.inputs, self.gui_inputs)
             self.prepare_new_model_from_baseline('manual', 'manual_scenario_15')
-            self.model_dict['manual_scenario_15'].relevant_interventions.append(
+            self.models['manual_scenario_15'].relevant_interventions.append(
                 self.inputs.uncertainty_intervention)
             for param in parameter_values:
-                self.model_dict['manual_scenario_15'].set_parameter(param, parameter_values[param][sample])
+                self.models['manual_scenario_15'].set_parameter(param, parameter_values[param][sample])
 
             # integrate and save
-            self.model_dict['manual_scenario_15'].integrate()
+            self.models['manual_scenario_15'].integrate()
             self.store_uncertainty('manual_scenario_15', epi_outputs_to_analyse=self.epi_outputs_to_analyse)
 
     ''' optimisation methods '''
@@ -1133,11 +1131,11 @@ class ModelRunner:
         self.optimised_combinations = []
 
         # initialise a new model that will be run from recent_time and set basic attributes for optimisation
-        self.model_dict['optimisation'] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs)
+        self.models['optimisation'] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs)
         self.prepare_new_model_from_baseline('manual', 'optimisation')
-        self.model_dict['optimisation'].eco_drives_epi = True
-        self.model_dict['optimisation'].inputs.model_constants['scenario_end_time'] = self.year_end_opti
-        self.model_dict['optimisation'].interventions_considered_for_opti = self.interventions_considered_for_opti
+        self.models['optimisation'].eco_drives_epi = True
+        self.models['optimisation'].inputs.model_constants['scenario_end_time'] = self.year_end_opti
+        self.models['optimisation'].interventions_considered_for_opti = self.interventions_considered_for_opti
 
         # find the combinations of interventions to be optimised
         self.get_acceptable_combinations()
@@ -1168,14 +1166,14 @@ class ModelRunner:
 
                 # initialise funding at zero for each intervention
                 for intervention in self.interventions_considered_for_opti:
-                    self.model_dict['optimisation'].available_funding[intervention] = 0.
+                    self.models['optimisation'].available_funding[intervention] = 0.
 
                 # input values from x
                 for i in range(len(x)):
                     intervention = self.interventions_considered_for_opti[combination[i]]
-                    self.model_dict['optimisation'].available_funding[intervention] = x[i] * self.total_funding
-                self.model_dict['optimisation'].distribute_funding_across_years()
-                self.model_dict['optimisation'].integrate()
+                    self.models['optimisation'].available_funding[intervention] = x[i] * self.total_funding
+                self.models['optimisation'].distribute_funding_across_years()
+                self.models['optimisation'].integrate()
                 output_list = self.find_epi_outputs('optimisation',
                                                     outputs_to_analyse=['incidence', 'mortality', 'true_mortality'])
                 return output_list[self.indicator_to_minimise][-1]
@@ -1203,11 +1201,11 @@ class ModelRunner:
 
                     # if start-up costs apply
                     if self.inputs.intervention_startdates[0][
-                        self.model_dict['manual_baseline'].interventions_to_cost[combination[i]]] is None:
+                        self.models['manual_baseline'].interventions_to_cost[combination[i]]] is None:
                         minimal_allocation \
-                            = self.model_dict['manual_baseline'].inputs.model_constants[
+                            = self.models['manual_baseline'].inputs.model_constants[
                                   'econ_startupcost_'
-                                  + self.model_dict['manual_baseline'].interventions_to_cost[combination[i]]] \
+                                  + self.models['manual_baseline'].interventions_to_cost[combination[i]]] \
                               / self.total_funding
                     cost_bounds.append((minimal_allocation, 1.))
 
@@ -1245,25 +1243,25 @@ class ModelRunner:
         """
 
         # prepare new model to run full scenario duration
-        self.model_dict['optimisation'] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs)
+        self.models['optimisation'] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs)
         self.prepare_new_model_from_baseline('manual', 'optimisation')
-        self.model_dict['optimisation'].eco_drives_epi = True
-        self.model_dict['optimisation'].interventions_considered_for_opti = self.interventions_considered_for_opti
+        self.models['optimisation'].eco_drives_epi = True
+        self.models['optimisation'].interventions_considered_for_opti = self.interventions_considered_for_opti
 
         # initialise funding at zero for each intervention
         for intervention in self.interventions_considered_for_opti:
-            self.model_dict['optimisation'].available_funding[intervention] = 0.
+            self.models['optimisation'].available_funding[intervention] = 0.
 
         # distribute funding and integrate
         for intervention, prop in self.optimal_allocation.iteritems():
-            self.model_dict['optimisation'].available_funding[intervention] = prop * self.total_funding
-        self.model_dict['optimisation'].distribute_funding_across_years()
-        self.model_dict['optimisation'].integrate()
+            self.models['optimisation'].available_funding[intervention] = prop * self.total_funding
+        self.models['optimisation'].distribute_funding_across_years()
+        self.models['optimisation'].integrate()
 
         # find epi results
         output_list = self.find_epi_outputs('optimisation',
                                             outputs_to_analyse=['incidence', 'mortality', 'true_mortality'])
-        del self.model_dict['optimisation']
+        del self.models['optimisation']
         return {'best_allocation': self.optimal_allocation, 'incidence': output_list['incidence'][-1],
                 'mortality': output_list['mortality'][-1]}
 

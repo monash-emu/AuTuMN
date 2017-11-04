@@ -2325,7 +2325,6 @@ class Project:
         self.save_figure(fig, '_population')
 
     def plot_fractions(self, strain_or_organ):
-
         """
         Plot population fractions by the compartment to which they belong.
 
@@ -2338,24 +2337,24 @@ class Project:
             strain_or_organ: Whether the plotting style should be done by strain or by organ.
         """
 
-        # Get values to be plotted
+        # get values to be plotted
         _, subgroup_fractions = t_k.find_fractions(self.model_runner.model_dict['manual_baseline'])
         for c, category in enumerate(subgroup_fractions):
             values = subgroup_fractions[category]
 
-            # Standard prelims
+            # standard prelims
             fig = self.set_and_update_figure()
             ax = self.make_single_axis(fig)
             colours, patterns, compartment_full_names, markers \
                 = make_related_line_styles(values.keys(), strain_or_organ)
 
-            # Plot population fractions
+            # plot population fractions
             for plot_label in values.keys():
                 ax.plot(self.model_runner.model_dict['manual_baseline'].times, values[plot_label],
                         label=t_k.find_title_from_dictionary(plot_label), linewidth=1, color=colours[plot_label],
                         marker=markers[plot_label], linestyle=patterns[plot_label])
 
-            # Finishing up
+            # finishing up
             self.tidy_axis(ax, [1, 1], legend='for_single', start_time=self.inputs.model_constants['plot_start_time'],
                            y_axis_type='proportion')
             self.save_figure(fig, '_fraction')

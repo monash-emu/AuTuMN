@@ -255,8 +255,6 @@ class ModelRunner:
         # output-related attributes
         self.epi_outputs_to_analyse = ['incidence', 'prevalence', 'mortality', 'true_mortality', 'notifications']
         self.epi_outputs = {}
-        self.epi_outputs_dict = {}
-        self.epi_outputs_integer_dict = {}
         self.epi_outputs_uncertainty = {}
         self.epi_outputs_uncertainty_centiles = None
         self.cost_outputs = {}
@@ -269,10 +267,10 @@ class ModelRunner:
 
         # saving-related
         self.attributes_to_save \
-            = ['epi_outputs', 'epi_outputs_dict', 'epi_outputs_integer_dict', 'epi_outputs_uncertainty', 'cost_outputs',
-               'cost_outputs_dict', 'cost_outputs_integer_dict', 'cost_outputs_uncertainty', 'accepted_indices',
-               'rejected_indices', 'all_parameters_tried', 'whether_accepted_list', 'acceptance_dict',
-               'rejection_dict', 'loglikelihoods', 'all_other_adjustments_made']
+            = ['epi_outputs', 'epi_outputs_uncertainty', 'cost_outputs', 'cost_outputs_dict',
+               'cost_outputs_integer_dict', 'cost_outputs_uncertainty', 'accepted_indices', 'rejected_indices',
+               'all_parameters_tried', 'whether_accepted_list', 'acceptance_dict', 'rejection_dict', 'loglikelihoods',
+               'all_other_adjustments_made']
 
         # GUI-related
         self.emit_delay = 0.1
@@ -351,13 +349,6 @@ class ModelRunner:
             self.find_population_fractions(
                 scenario_name=scenario_name, stratifications=[self.models[scenario_name].agegroups,
                                                               self.models[scenario_name].riskgroups])
-
-        # if you want some dictionaries based on the lists created above (may not be necessary)
-        self.epi_outputs_dict.update(get_output_dicts_from_lists(models_to_analyse=self.models,
-                                                                 output_dict_of_lists=self.epi_outputs))
-
-        # if integer-based dictionaries required
-        self.epi_outputs_integer_dict.update(extract_integer_dicts(self.models, self.epi_outputs_dict))
 
         # same for costs if the interventions to cost list has at least one entry
         if self.models[scenario_name].interventions_to_cost:

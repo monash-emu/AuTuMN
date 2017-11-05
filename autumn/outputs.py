@@ -2243,6 +2243,8 @@ class Project:
 
     def plot_cost_over_time_stacked_bars(self, cost_type='raw'):
         """
+        Not called, but won't be working any more because cost_outputs_integer_dict has been abandoned.
+
         Plotting method to plot bar graphs of spending by programs to look the way Tan gets them to look with Excel.
         That is, separated bars with costs by years.
 
@@ -2551,6 +2553,8 @@ class Project:
 
     def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):
         """
+        Not called, but won't be working any more because cost_outputs_integer_dict has been abandoned.
+
         Function for plotting total cost of interventions under different scenarios over a given range of years.
         Will throw error if defined year range is not present in economic model outputs.
 
@@ -2594,7 +2598,7 @@ class Project:
 
         years = range(year_start, year_end + 1)
 
-        # Make data frame (columns: interventions, rows: scenarios)
+        # make data frame (columns: interventions, rows: scenarios)
         data_frame = pandas.DataFrame(index=self.scenarios, columns=intervention_names)
         for scenario in self.scenarios:
             data_frame.loc[scenario] \
@@ -2604,7 +2608,7 @@ class Project:
                    for intervention in options['interventions']]
         data_frame.columns = intervention_names
 
-        # Make and style plot
+        # make and style plot
         if horizontal:
             plot = data_frame.plot.barh(stacked=True, rot=options['x_label_rotation'], title=options['title'])
             plot.set_xlabel(options['y_label'])
@@ -2618,7 +2622,7 @@ class Project:
         lgd = plot.legend(handles, labels, bbox_to_anchor=(1., 0.5), loc='center left',
                           fontsize=options['legend_size'], frameon=options['legend_frame'])
 
-        # Save plot
+        # save plot
         pyplot.savefig(os.path.join(self.out_dir_project, self.country + '_totalcost' + '.png'),
                        bbox_extra_artists=(lgd,), bbox_inches='tight')
 

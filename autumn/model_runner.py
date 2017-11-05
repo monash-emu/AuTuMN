@@ -85,7 +85,7 @@ def find_integer_dict_from_float_dict(float_dict):
 
 
 def extract_integer_dicts(models_to_analyse={}, dict_to_extract_from={}):
-    # Method may be redundant with better code
+    # method may be redundant with better code
 
     integer_dict = {}
     for scenario in models_to_analyse:
@@ -335,7 +335,7 @@ class ModelRunner:
             # sort out times for scenario runs
             if scenario > 0: self.prepare_new_model_from_baseline('manual', scenario_name)
 
-            # describe model and integrate
+            # describe model to user and integrate
             self.add_comment_to_gui_window('Running %s conditions for %s using point estimates for parameters.'
                                            % (scenario_name, self.gui_inputs['country']))
             self.models[scenario_name].integrate()
@@ -349,12 +349,6 @@ class ModelRunner:
             self.find_population_fractions(
                 scenario_name=scenario_name, stratifications=[self.models[scenario_name].agegroups,
                                                               self.models[scenario_name].riskgroups])
-
-        # same for costs if the interventions to cost list has at least one entry
-        if self.models[scenario_name].interventions_to_cost:
-            self.cost_outputs_dict.update(get_output_dicts_from_lists(models_to_analyse=self.models,
-                                                                      output_dict_of_lists=self.cost_outputs))
-            self.cost_outputs_integer_dict.update(extract_integer_dicts(self.models, self.cost_outputs_dict))
 
     def prepare_new_model_from_baseline(self, run_type, scenario_name):
         """

@@ -68,7 +68,7 @@ class ConsolidatedModel(StratifiedModel):
         7. Calculating the diagnostic solutions
     """
 
-    def __init__(self, scenario=None, inputs=None, gui_inputs=None):
+    def __init__(self, scenario=0, inputs=None, gui_inputs=None):
         """
         Instantiation, partly inherited from the lower level model objects through nested inheritance.
 

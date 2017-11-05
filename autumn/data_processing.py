@@ -69,7 +69,7 @@ class Inputs:
         if self.intervention_uncertainty:
             self.uncertainty_intervention = 'int_prop_awareness_raising'
             self.scenarios.append(15)
-            self.n_samples = 20
+            self.n_samples = 4
             self.intervention_param_dict \
                 = {'int_prop_treatment_support_relative': ['int_prop_treatment_support_improvement'],
                    'int_prop_decentralisation': ['int_ideal_detection'],
@@ -1047,7 +1047,7 @@ class Inputs:
                 if 'int_prop_' + intervention in self.relevant_interventions[scenario]:
                     self.interventions_to_cost[scenario] += [intervention]
 
-        if self.intervention_uncertainty: self.interventions_to_cost[15] = self.interventions_to_cost[None]
+        if self.intervention_uncertainty: self.interventions_to_cost[15] = self.interventions_to_cost[0]
 
     # actually has to be called later and is just required for optimisation
 
@@ -1141,7 +1141,7 @@ class Inputs:
         for scenario in self.comorbidity_prevalences:
             self.scenarios.append(scenario)
             for attribute in ['scaleup_data', 'interventions_to_cost', 'relevant_interventions']:
-                getattr(self, attribute)[scenario] = copy.deepcopy(getattr(self, attribute)[None])
+                getattr(self, attribute)[scenario] = copy.deepcopy(getattr(self, attribute)[0])
                 self.mixing[scenario] = {}
             self.scaleup_data[scenario]['riskgroup_prop_' + self.comorbidity_to_increment]['scenario'] \
                 = self.comorbidity_prevalences[scenario]

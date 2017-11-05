@@ -59,7 +59,7 @@ class BaseModel:
         self.startups_apply = {}
         self.graph = None
         self.loaded_compartments = None
-        self.scenario = None
+        self.scenario = 0
 
     ''' Time-related functions '''
 

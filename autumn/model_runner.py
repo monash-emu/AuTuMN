@@ -198,6 +198,7 @@ class ModelRunner:
 
         # conversion of inputs to attributes
         self.gui_inputs = gui_inputs
+        self.scenarios = self.gui_inputs['scenarios_to_run']
         self.runtime_outputs = runtime_outputs
         self.figure_frame = figure_frame
         self.inputs = data_processing.Inputs(gui_inputs, runtime_outputs, js_gui=js_gui)
@@ -326,7 +327,7 @@ class ModelRunner:
         Runs the scenarios a single time, starting from baseline with parameter values as specified in spreadsheets.
         """
 
-        for scenario in self.gui_inputs['scenarios_to_run']:
+        for scenario in self.scenarios:
 
             # name and initialise model
             scenario_name = 'manual_' + tool_kit.find_scenario_string_from_number(scenario)
@@ -698,7 +699,7 @@ class ModelRunner:
         self.all_other_adjustments_made['program_prop_death_reporting'] = []
 
         # instantiate uncertainty model objects
-        for scenario in self.gui_inputs['scenarios_to_run']:
+        for scenario in self.scenarios:
             scenario_name = 'uncertainty_' + tool_kit.find_scenario_string_from_number(scenario)
             self.models[scenario_name] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
@@ -780,7 +781,7 @@ class ModelRunner:
                     params = new_param_list
 
                     # run scenarios other than baseline and store uncertainty (only if accepted)
-                    for scenario in self.gui_inputs['scenarios_to_run']:
+                    for scenario in self.scenarios:
                         if scenario:
                             scenario_name = 'uncertainty_' + tool_kit.find_scenario_string_from_number(scenario)
                             self.prepare_new_model_from_baseline('uncertainty', scenario_name)

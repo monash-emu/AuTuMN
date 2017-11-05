@@ -1,3 +1,4 @@
+import collections
 from Tkinter import *
 import autumn.model_runner
 import autumn.outputs
@@ -87,7 +88,7 @@ def find_button_name_from_string(working_string):
 
 
 def get_autumn_params():
-    params = {}
+    params = collections.OrderedDict()
 
     bool_keys = [
         'output_flow_diagram', 'output_compartment_populations', 'output_riskgroup_fractions',
@@ -283,7 +284,7 @@ def convert_params_to_inputs(params):
         if param['type'] == "boolean":
             if 'scenario_' not in key:
                 inputs[key] = param['value']
-            else:
+            elif param['value']:
                 i_scenario = int(key[9:])
                 inputs['scenarios_to_run'] \
                     += [i_scenario]
@@ -432,6 +433,10 @@ class App:
                 param['value'] = param['tk_var'].get()
 
         self.gui_outputs = convert_params_to_inputs(self.params)
+
+        with open('bgui_outputs.json', 'w') as f:
+            import json
+            json.dump(self.gui_outputs, f, indent=2)
 
         # record thread number
         self.thread_number += 1

@@ -8,7 +8,8 @@ import threading
 
 def find_button_name_from_string(working_string):
 
-    button_name_dictionary = {'output_uncertainty':
+    button_name_dictionary = {
+        'output_uncertainty':
                                   'Run uncertainty',
                               'write_uncertainty_outcome_params':
                                   'Record parameters',

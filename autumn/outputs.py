@@ -716,9 +716,9 @@ class Project:
         # to have a look at some individual vars scaling over time
         self.vars_to_view = []
 
-        # comes up so often that we need to find this index, that best to do once in instantiation
+        # comes up so often that we need to find this index, that best done in instantiation
         self.start_time_index \
-            = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
+            = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs[0]['times'],
                                                          self.inputs.model_constants['plot_start_time'])
 
         self.plot_true_outcomes = False
@@ -738,7 +738,7 @@ class Project:
 
         """
 
-        return self.model_runner.model_dict['manual_baseline'].var_labels.index(var)
+        return self.model_runner.models[0].var_labels.index(var)
 
     def find_start_index(self, scenario=0):
         """
@@ -1107,10 +1107,9 @@ class Project:
                                 row, column = y + 2, inter + 2
                                 if horizontal: column, row = row, column
                                 sheet.cell(row=row, column=column).value \
-                                    = self.model_runner.epi_outputs['manual_' + scenario_name][intervention][
+                                    = self.model_runner.epi_outputs[scenario][intervention][
                                         t_k.find_first_list_element_at_least_value(
-                                            self.model_runner.epi_outputs[string_to_add
-                                                                          + scenario_name]['times'], year)]
+                                            self.model_runner.epi_outputs[scenario]['times'], year)]
 
                 # economic outputs (uncertainty unavailable)
                 elif 'cost_' in result_type:
@@ -1137,11 +1136,9 @@ class Project:
                             row, column = y + 2, inter + 2
                             if horizontal: column, row = row, column
                             sheet.cell(row=row, column=column).value \
-                                = self.model_runner.cost_outputs[
-                                    'manual_' + scenario_name][result_type + intervention][
+                                = self.model_runner.cost_outputs[scenario][result_type + intervention][
                                         t_k.find_first_list_element_at_least_value(
-                                            self.model_runner.cost_outputs[string_to_add
-                                                                           + scenario_name]['times'], year)]
+                                            self.model_runner.cost_outputs[scenario]['times'], year)]
 
                 workbook.save(path)
 
@@ -1225,9 +1222,9 @@ class Project:
                         row, column = y + 2, s + 2
                         if horizontal: column, row = row, column
                         sheet.cell(row=row, column=column).value \
-                            = self.model_runner.epi_outputs['manual_' + scenario_name][inter][
-                                t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs[string_to_add
-                                                                           + scenario_name]['times'], year)]
+                            = self.model_runner.epi_outputs[scenario][inter][
+                                t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs[scenario][
+                                                                               'times'], year)]
 
             # wave workbook
             wb.save(path)
@@ -1267,9 +1264,9 @@ class Project:
                         row, column = y + 2, s + 2
                         if horizontal: column, row = row, column
                         sheet.cell(row=row, column=column).value \
-                            = self.model_runner.cost_outputs['manual_' + scenario_name][cost_type + inter][
-                                t_k.find_first_list_element_at_least_value(self.model_runner.cost_outputs[
-                                   string_to_add + scenario_name]['times'], year)]
+                            = self.model_runner.cost_outputs[scenario][cost_type + inter][
+                                t_k.find_first_list_element_at_least_value(self.model_runner.cost_outputs[scenario][
+                                                                               'times'], year)]
 
                 # save workbook
                 wb.save(path)
@@ -1329,9 +1326,9 @@ class Project:
                     # without
                     else:
                         point_estimate \
-                            = self.model_runner.epi_outputs['manual_' + scenario_name][output][
-                                t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs[
-                                   string_to_add + scenario_name]['times'], year)]
+                            = self.model_runner.epi_outputs[scenario][output][
+                                t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs[scenario][
+                                                                               'times'], year)]
                         row_cells[o + 1].text = '%.1f' % point_estimate
 
             document.save(path)
@@ -1366,8 +1363,7 @@ class Project:
             mean_cost = {}
             for inter in self.model_runner.interventions_to_cost[scenario]:
                 print('\n' + inter)
-                mean_cost[inter] = numpy.mean(self.model_runner.cost_outputs[
-                    'manual_' + t_k.find_scenario_string_from_number(scenario)]['raw_cost_' + inter])
+                mean_cost[inter] = numpy.mean(self.model_runner.cost_outputs[scenario]['raw_cost_' + inter])
                 print('%.1f' % mean_cost[inter])
             print('total: %.1f' % sum(mean_cost.values()))
 
@@ -1411,19 +1407,17 @@ class Project:
                     # with uncertainty
                     if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
                         (lower_limit, point_estimate, upper_limit) \
-                            = self.epi_outputs_uncertainty_centiles[
-                                  string_to_add + scenario_name][output][
-                                    0:3, t_k.find_first_list_element_at_least_value(
-                                        self.model_runner.epi_outputs_uncertainty[string_to_add
-                                                                                  + scenario_name]['times'], year)]
+                            = self.epi_outputs_uncertainty_centiles[scenario][output][0:3,
+                                t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs_uncertainty[
+                                                                               scenario]['times'], year)]
                         row_cells[s + 1].text = '%.1f\n(%.1f to %.1f)' % (point_estimate, lower_limit, upper_limit)
 
                     # without
                     else:
                         point_estimate \
-                            = self.model_runner.epi_outputs['manual_' + scenario_name][output][
+                            = self.model_runner.epi_outputs[scenario][output][
                                 t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs[
-                                   string_to_add + scenario_name]['times'], year)]
+                                                                               scenario]['times'], year)]
                         row_cells[s + 1].text = '%.1f' % point_estimate
 
             document.save(path)
@@ -1500,7 +1494,7 @@ class Project:
             # self.plot_force_infection()
 
         # plot mixing matrix if relevant
-        # if self.model_runner.model_dict['manual_baseline'].vary_force_infection_by_riskgroup \
+        # if self.model_runner.models[0].vary_force_infection_by_riskgroup \
         #         and len(self.inputs.riskgroups) > 1:
         #     self.plot_mixing_matrix()
 
@@ -1536,11 +1530,11 @@ class Project:
         # make a flow-diagram
         if self.gui_inputs['output_flow_diagram']:
             png = os.path.join(self.out_dir_project, self.country + '_flow_diagram' + '.png')
-            self.model_runner.model_dict['manual_baseline'].make_flow_diagram(png)
+            self.model_runner.models[0].make_flow_diagram(png)
 
         # plot risk group proportions
         if self.gui_inputs['output_plot_riskgroup_checks'] \
-                and len(self.model_runner.model_dict['manual_baseline'].riskgroups) > 1:
+                and len(self.model_runner.models[0].riskgroups) > 1:
             self.plot_riskgroup_checks()
 
         # save figure that is produced in the uncertainty running process
@@ -1585,11 +1579,11 @@ class Project:
 
         # type of analysis requested
         if self.inputs.intervention_uncertainty:
-            uncertainty_type, start_index = 'manual_scenario_15', 0
+            uncertainty_type, start_index = 15, 0
         elif purpose == 'scenario':
-            uncertainty_type = 'manual_baseline'
+            uncertainty_type = 0
         else:
-            uncertainty_type = 'uncertainty_baseline'
+            uncertainty_type = 0
 
         # loop through indicators
         for o, output in enumerate(outputs):
@@ -1619,51 +1613,47 @@ class Project:
                     elif self.inputs.increment_comorbidity:
                         (colour, label) = ('k', 'Baseline')
                     else:
-                        label=''
+                        label = ''
 
                     # plot
-                    ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'][start_index:],
-                            self.model_runner.epi_outputs['manual_' + scenario_name][output][start_index:],
-                            color=colour, linestyle=self.output_colours[scenario][0],
-                            linewidth=1.5, label=label)
+                    ax.plot(self.model_runner.epi_outputs[scenario]['times'][start_index:],
+                            self.model_runner.epi_outputs[scenario][output][start_index:],
+                            color=colour, linestyle=self.output_colours[scenario][0], linewidth=1.5, label=label)
 
-                # plot "true" mortality
+                # plot true mortality
                 if output == 'mortality' and self.plot_true_outcomes:
-                    ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'][start_index:],
-                            self.model_runner.epi_outputs['manual_' + scenario_name]['true_' + output][start_index:],
+                    ax.plot(self.model_runner.epi_outputs[scenario]['times'][start_index:],
+                            self.model_runner.epi_outputs[scenario]['true_' + output][start_index:],
                             color=colour, linestyle=':', linewidth=1)
                 end_filename = '_scenario'
 
             # plot with uncertainty confidence intervals
             elif purpose == 'ci_plot':
                 if self.inputs.intervention_uncertainty:
-                    (scenarios, uncertainty_type, start_index, linewidth, linecolour) \
-                        = ([0, 15], 'manual_scenario_15', 0, 1., 'r')
+                    scenarios, uncertainty_type, start_index, linewidth, linecolour = [0, 15], 15, 0, 1., 'r'
                 else:
                     (scenarios, linewidth) = (self.scenarios, 1.5)
 
                 for scenario in scenarios[::-1]:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
                     if not self.inputs.intervention_uncertainty:
-                        uncertainty_type = 'uncertainty_' + scenario_name
+                        uncertainty_type = scenario
                         start_index = self.find_start_index(scenario)
                         linecolour = self.output_colours[scenario][1]
 
                     # median
-                    ax.plot(
-                        self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
-                        self.epi_outputs_uncertainty_centiles[uncertainty_type][output][
-                            self.model_runner.percentiles.index(50), :][start_index:],
-                        color=linecolour, linestyle=self.output_colours[scenario][0],
-                        linewidth=linewidth, label=t_k.capitalise_and_remove_underscore(scenario_name))
+                    ax.plot(self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
+                            self.epi_outputs_uncertainty_centiles[uncertainty_type][output][
+                                self.model_runner.percentiles.index(50), :][start_index:],
+                            color=linecolour, linestyle=self.output_colours[scenario][0],
+                            linewidth=linewidth, label=t_k.capitalise_and_remove_underscore(scenario_name))
 
                     # upper and lower confidence bounds
                     for centile in [2.5, 97.5]:
-                        ax.plot(
-                            self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
-                            self.epi_outputs_uncertainty_centiles[uncertainty_type][output][
-                                self.model_runner.percentiles.index(centile), :][start_index:],
-                            color=linecolour, linestyle='--', linewidth=.5, label=None)
+                        ax.plot(self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
+                                self.epi_outputs_uncertainty_centiles[uncertainty_type][output][
+                                    self.model_runner.percentiles.index(centile), :][start_index:],
+                                color=linecolour, linestyle='--', linewidth=.5, label=None)
                     end_filename = '_ci'
 
             # plot progressive model run outputs for uncertainty analyses
@@ -1672,9 +1662,9 @@ class Project:
                 # get relevant data according to whether intervention or baseline uncertainty is being run
                 if self.inputs.intervention_uncertainty:
                     self.start_time_index = 0
-                    uncertainty_type, runs = 'manual_scenario_15', self.inputs.n_samples
+                    uncertainty_type, runs = 15, self.inputs.n_samples
                 else:
-                    uncertainty_type = 'uncertainty_baseline'
+                    uncertainty_type = 0
                     runs = len(self.model_runner.epi_outputs_uncertainty[uncertainty_type][output])
 
                 # plot the runs
@@ -1697,16 +1687,15 @@ class Project:
                     end_filename = '_progress'
 
             if self.inputs.intervention_uncertainty:
-                ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'][self.start_time_index:],
-                        self.model_runner.epi_outputs['manual_baseline'][output][self.start_time_index:],
+                ax.plot(self.model_runner.epi_outputs[0]['times'][self.start_time_index:],
+                        self.model_runner.epi_outputs[0][output][self.start_time_index:],
                         color='k', linewidth=1.2)
 
             y_absolute_limit = None
             if self.inputs.intervention_uncertainty or len(self.scenarios) > 1:
                 plot_start_time_index \
-                    = t_k.find_first_list_element_at_least_value(
-                        self.model_runner.epi_outputs['manual_baseline']['times'], start_time)
-                y_absolute_limit = max(self.model_runner.epi_outputs['manual_baseline'][output][plot_start_time_index:])
+                    = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs[0]['times'], start_time)
+                y_absolute_limit = max(self.model_runner.epi_outputs[0][output][plot_start_time_index:])
 
             self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
                            legend=(o == len(outputs) - 1 and len(self.scenarios) > 1
@@ -1748,9 +1737,9 @@ class Project:
             start_index = self.find_start_index(0)
 
             if self.inputs.intervention_uncertainty:
-                uncertainty_type, start_index = 'manual_scenario_15', 0
+                uncertainty_type, start_index = 15, 0
             elif self.inputs.mode == 'uncertainty':
-                uncertainty_type = 'uncertainty_baseline'
+                uncertainty_type = 0
 
             # overlay median and upper and lower CIs if requested
             if ci_plot:
@@ -1761,11 +1750,10 @@ class Project:
                     color=self.output_colours[0][1], linestyle=self.output_colours[0][0],
                     linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
                 for centile in [2.5, 97.5]:
-                    ax.plot(
-                        self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
-                        self.epi_outputs_uncertainty_centiles[uncertainty_type][output][
-                            self.model_runner.percentiles.index(centile), :][start_index:],
-                        color=self.output_colours[0][1], linestyle='--', linewidth=.5, label=0)
+                    ax.plot(self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
+                            self.epi_outputs_uncertainty_centiles[uncertainty_type][output][
+                                self.model_runner.percentiles.index(centile), :][start_index:],
+                            color=self.output_colours[0][1], linestyle='--', linewidth=.5, label=0)
 
             # plot shaded areas as patches
             patch_colours = [cm.Blues(x) for x in numpy.linspace(0., 1., self.model_runner.n_centiles_for_shading)]
@@ -1777,8 +1765,8 @@ class Project:
                 ax.add_patch(patches.Polygon(patch, color=patch_colours[i]))
 
             if self.inputs.intervention_uncertainty:
-                ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'][self.start_time_index:],
-                        self.model_runner.epi_outputs['manual_baseline'][output][self.start_time_index:],
+                ax.plot(self.model_runner.epi_outputs[0]['times'][self.start_time_index:],
+                        self.model_runner.epi_outputs[0][output][self.start_time_index:],
                         color='k', linewidth=1.2)
 
             # now packaged into a function to overlay the GTB data over the existing plot
@@ -1787,9 +1775,8 @@ class Project:
             y_absolute_limit = None
             if self.inputs.intervention_uncertainty:
                 plot_start_time_index \
-                    = t_k.find_first_list_element_at_least_value(
-                        self.model_runner.epi_outputs['manual_baseline']['times'], start_time)
-                y_absolute_limit = max(self.model_runner.epi_outputs['manual_baseline'][output][plot_start_time_index:])
+                    = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs[0]['times'], start_time)
+                y_absolute_limit = max(self.model_runner.epi_outputs[0][output][plot_start_time_index:])
 
             self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
                            legend=(o == len(outputs) - 1 and len(self.scenarios) > 1),
@@ -1800,7 +1787,7 @@ class Project:
         self.save_figure(fig, '_gtb_shaded')
 
     def overlay_gtb_data(self, ax, o, output, start_time, indices, patch_colour, compare_gtb=False, gtb_ci_plot='hatch',
-                         plot_targets=True, uncertainty_type='manual_baseline', alpha=1.):
+                         plot_targets=True, uncertainty_type=0, alpha=1.):
         """
         Method to plot the data loaded directly from the GTB report in the background.
 
@@ -1853,7 +1840,7 @@ class Project:
                             color='.3', linewidth=0.3, label=None, alpha=alpha)
 
             # plot the targets (and milestones) and the fitted exponential function to achieve them
-            if 'uncertainty' in uncertainty_type:
+            if self.gui_inputs['output_uncertainty'] and not self.inputs.intervention_uncertainty:
                 base_value = self.epi_outputs_uncertainty_centiles[uncertainty_type][output][
                              self.model_runner.percentiles.index(50), :][t_k.find_first_list_element_at_least_value(
                                 self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'], 2015.)]
@@ -1904,11 +1891,10 @@ class Project:
 
         for classification in self.classifications:
             self.classified_scaleups[classification] = []
-            for fn in self.model_runner.model_dict['manual_baseline'].scaleup_fns:
+            for fn in self.model_runner.models[0].scaleup_fns:
                 if classification in fn: self.classified_scaleups[classification] += [fn]
 
     def individual_var_viewer(self):
-
         """
         Function that can be used to visualise a particular var or several vars, by adding them to the function input
         list, which is now an attribute of this object (i.e. vars_to_view).
@@ -1918,9 +1904,8 @@ class Project:
             fig = self.set_and_update_figure()
             ax = fig.add_subplot(1, 1, 1)
             for scenario in reversed(self.scenarios):
-                scenario_name = t_k.find_scenario_string_from_number(scenario)
-                ax.plot(self.model_runner.model_dict['manual_' + scenario_name].times,
-                        self.model_runner.model_dict['manual_' + scenario_name].get_var_soln(function),
+                ax.plot(self.model_runner.models[scenario].times,
+                        self.model_runner.models[scenario].get_var_soln(function),
                         color=self.output_colours[scenario][1])
             self.tidy_axis(ax, [1, 1], start_time=self.inputs.model_constants['plot_start_time'])
             fig.suptitle(t_k.find_title_from_dictionary(function))
@@ -1953,14 +1938,14 @@ class Project:
 
                     # iterate through the scenarios
                     for scenario in reversed(self.scenarios):
-                        scenario_name = t_k.find_scenario_string_from_number(scenario)
 
                         # line plot of scaling parameter functions
                         ax.plot(x_vals,
-                                map(self.model_runner.model_dict['manual_' + scenario_name].scaleup_fns[function],
+                                map(self.model_runner.models[scenario].scaleup_fns[function],
                                     x_vals),
                                 color=self.output_colours[scenario][1],
-                                label=t_k.capitalise_and_remove_underscore(scenario_name))
+                                label=t_k.capitalise_and_remove_underscore(
+                                    t_k.find_scenario_string_from_number(scenario)))
 
                     # plot the raw data from which the scale-up functions were produced
                     if function in self.inputs.scaleup_data[0]:
@@ -1992,7 +1977,7 @@ class Project:
         """
 
         # different figure for each type of function
-        for function in self.model_runner.model_dict['manual_baseline'].scaleup_fns:
+        for function in self.model_runner.models['manual_baseline'].scaleup_fns:
 
             # standard prelims
             fig = self.set_and_update_figure()
@@ -2016,13 +2001,12 @@ class Project:
 
                 # iterate through the scenarios
                 for scenario in reversed(self.scenarios):
-                    scenario_name = t_k.find_scenario_string_from_number(scenario)
 
                     # line plot of scaling parameter functions
                     ax.plot(x_vals,
-                            map(self.model_runner.model_dict['manual_' + scenario_name].scaleup_fns[function], x_vals),
+                            map(self.model_runner.models[scenario].scaleup_fns[function], x_vals),
                             color=self.output_colours[scenario][1],
-                            label=t_k.capitalise_and_remove_underscore(scenario_name))
+                            label=t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario)))
 
                 if function in self.inputs.scaleup_data[0]:
                     data_to_plot = self.inputs.scaleup_data[0][function]
@@ -2097,24 +2081,24 @@ class Project:
         """
 
         # plot figures by scenario
-        for scenario in self.scenario_names:
+        for scenario in self.scenarios:
             fig = self.set_and_update_figure()
 
             # subplots by program
-            subplot_grid = find_subplot_numbers(len(self.programs[t_k.find_scenario_number_from_string(scenario)]))
-            for p, program in enumerate(self.programs[t_k.find_scenario_number_from_string(scenario)]):
+            subplot_grid = find_subplot_numbers(len(self.programs[scenario]))
+            for p, program in enumerate(self.programs[scenario]):
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
 
-                # Make times that each curve is produced for from control panel inputs
+                # make times that each curve is produced for from control panel inputs
                 times = range(int(self.inputs.model_constants['cost_curve_start_time']),
                               int(self.inputs.model_constants['cost_curve_end_time']),
                               int(self.inputs.model_constants['cost_curve_step_time']))
 
                 for t, time in enumerate(times):
                     time_index = t_k.find_first_list_element_at_least_value(
-                        self.model_runner.model_dict['manual_' + scenario].times, time)
+                        self.model_runner.models['manual_' + scenario].times, time)
 
-                    # Make cost coverage curve
+                    # make cost coverage curve
                     x_values, y_values = [], []
                     for coverage in numpy.linspace(0, 1, 101):
                         if coverage < self.inputs.model_constants['econ_saturation_' + program]:
@@ -2123,23 +2107,23 @@ class Project:
                                 self.inputs.model_constants['econ_inflectioncost_' + program],
                                 self.inputs.model_constants['econ_saturation_' + program],
                                 self.inputs.model_constants['econ_unitcost_' + program],
-                                self.model_runner.model_dict['manual_' + scenario].var_array[
-                                    time_index, self.model_runner.model_dict['manual_' + scenario].var_labels.index(
+                                self.model_runner.models['manual_' + scenario].var_array[
+                                    time_index, self.model_runner.models['manual_' + scenario].var_labels.index(
                                         'popsize_' + program)])
                             x_values += [cost]
                             y_values += [coverage]
 
-                    # Find darkness
+                    # find darkness
                     darkness = .9 - (float(t) / float(len(times))) * .9
 
-                    # Plot
+                    # plot
                     ax.plot(x_values, y_values, color=(darkness, darkness, darkness), label=str(int(time)))
 
                 self.tidy_axis(ax, subplot_grid, title=t_k.find_title_from_dictionary('program_prop_' + program),
                                x_axis_type='scaled', legend=(p == len(self.programs) - 1), y_axis_type='proportion',
                                x_label='$US ')
 
-            # Finish off with title and save file for scenario
+            # finish off with title and save file for scenario
             # fig.suptitle('Cost-coverage curves for ' + t_k.replace_underscore_with_space(scenario),
             #              fontsize=self.suptitle_size)
             self.save_figure(fig, '_' + scenario + '_cost_coverage')
@@ -2151,7 +2135,7 @@ class Project:
         """
 
         # separate figures for each scenario
-        for scenario in self.scenario_names:
+        for scenario in self.scenarios:
 
             # standard prelims, but separate for each type of plot - individual and stacked
             fig_individual = self.set_and_update_figure()
@@ -2161,7 +2145,7 @@ class Project:
 
             # find the index for the first time after the current time
             reference_time_index \
-                = t_k.find_first_list_element_above_value(self.model_runner.cost_outputs['manual_' + scenario]['times'],
+                = t_k.find_first_list_element_above_value(self.model_runner.cost_outputs[scenario]['times'],
                                                           self.inputs.model_constants['reference_time'])
 
             # plot each type of cost to its own subplot and ensure same y-axis scale
@@ -2182,7 +2166,7 @@ class Project:
                         = fig_relative.add_subplot(subplot_grid[0], subplot_grid[1], c + 1, sharey=ax_reference_first)
 
                 # create empty list for legend
-                cumulative_data = [0.] * len(self.model_runner.cost_outputs['manual_' + scenario]['times'])
+                cumulative_data = [0.] * len(self.model_runner.cost_outputs[scenario]['times'])
 
                 # plot for each intervention
                 for intervention in self.inputs.interventions_to_cost[t_k.find_scenario_number_from_string(scenario)]:
@@ -2198,29 +2182,25 @@ class Project:
 
                     # Scale the cost data
                     individual_data \
-                        = self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_' + intervention]
+                        = self.model_runner.cost_outputs[scenario][cost_type + '_cost_' + intervention]
                     reference_cost \
-                        = self.model_runner.cost_outputs['manual_' + scenario][cost_type + '_cost_'
-                                                                               + intervention][reference_time_index]
+                        = self.model_runner.cost_outputs[scenario][cost_type + '_cost_' + intervention][
+                            reference_time_index]
                     relative_data = [(d - reference_cost) for d in individual_data]
 
-                    # Plot lines
-                    ax_individual.plot(self.model_runner.cost_outputs['manual_' + scenario]['times'],
-                                       individual_data,
-                                       color=self.program_colours[
-                                           t_k.find_scenario_number_from_string(scenario)][intervention][1],
+                    # plot lines
+                    ax_individual.plot(self.model_runner.cost_outputs[scenario]['times'], individual_data,
+                                       color=self.program_colours[scenario][intervention][1],
                                        label=t_k.find_title_from_dictionary(intervention))
                     ax_relative.plot(self.model_runner.cost_outputs['manual_' + scenario]['times'],
                                      relative_data,
-                                     color=self.program_colours[
-                                         t_k.find_scenario_number_from_string(scenario)][intervention][1],
+                                     color=self.program_colours[scenario][intervention][1],
                                      label=t_k.find_title_from_dictionary(intervention))
 
-                    # Plot stacked areas
-                    ax_stacked.fill_between(self.model_runner.model_dict['manual_' + scenario].cost_times,
+                    # plot stacked areas
+                    ax_stacked.fill_between(self.model_runner.models[scenario].cost_times,
                                             previous_data, cumulative_data,
-                                            color=self.program_colours[
-                                                t_k.find_scenario_number_from_string(scenario)][intervention][1],
+                                            color=self.program_colours[scenario][intervention][1],
                                             linewidth=0., label=t_k.find_title_from_dictionary(intervention))
 
                 # final tidying
@@ -2305,18 +2285,17 @@ class Project:
         fig = self.set_and_update_figure()
         ax = self.make_single_axis(fig)
         colours, patterns, compartment_full_names, markers \
-            = make_related_line_styles(self.model_runner.model_dict['manual_baseline'].labels, strain_or_organ)
+            = make_related_line_styles(self.model_runner.models[0].labels, strain_or_organ)
 
         # plot total population
-        ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'][self.start_time_index:],
-                self.model_runner.epi_outputs['manual_baseline']['population'][self.start_time_index:],
+        ax.plot(self.model_runner.epi_outputs[0]['times'][self.start_time_index:],
+                self.model_runner.epi_outputs[0]['population'][self.start_time_index:],
                 'k', label='total', linewidth=2)
 
         # plot sub-populations
-        for plot_label in self.model_runner.model_dict['manual_baseline'].labels:
-            ax.plot(self.model_runner.epi_outputs['manual_baseline']['times'][self.start_time_index:],
-                    self.model_runner.model_dict['manual_baseline'].compartment_soln[plot_label][
-                        self.start_time_index:],
+        for plot_label in self.model_runner.models[0].labels:
+            ax.plot(self.model_runner.epi_outputs[0]['times'][self.start_time_index:],
+                    self.model_runner.models[0].compartment_soln[plot_label][self.start_time_index:],
                     label=t_k.find_title_from_dictionary(plot_label), linewidth=1, color=colours[plot_label],
                     marker=markers[plot_label], linestyle=patterns[plot_label])
 
@@ -2340,7 +2319,7 @@ class Project:
         """
 
         # get values to be plotted
-        _, subgroup_fractions = t_k.find_fractions(self.model_runner.model_dict['manual_baseline'])
+        _, subgroup_fractions = t_k.find_fractions(self.model_runner.models['manual_baseline'])
         for c, category in enumerate(subgroup_fractions):
             values = subgroup_fractions[category]
 
@@ -2352,7 +2331,7 @@ class Project:
 
             # plot population fractions
             for plot_label in values.keys():
-                ax.plot(self.model_runner.model_dict['manual_baseline'].times, values[plot_label],
+                ax.plot(self.model_runner.models['manual_baseline'].times, values[plot_label],
                         label=t_k.find_title_from_dictionary(plot_label), linewidth=1, color=colours[plot_label],
                         marker=markers[plot_label], linestyle=patterns[plot_label])
 
@@ -2384,13 +2363,13 @@ class Project:
 
                 # plot the modelled data
                 for scenario in self.scenarios[::-1]:
-                    scenario_name = t_k.find_scenario_string_from_number(scenario)
                     start_index = self.find_start_index(scenario)
                     ax.plot(
-                        self.model_runner.epi_outputs['manual_' + scenario_name]['times'][start_index:],
-                        self.model_runner.epi_outputs['manual_' + scenario_name][output + stratum][start_index:],
+                        self.model_runner.epi_outputs[scenario]['times'][start_index:],
+                        self.model_runner.epi_outputs[scenario][output + stratum][start_index:],
                         color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
-                        linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
+                        linewidth=1.5, label=t_k.capitalise_and_remove_underscore(
+                            t_k.find_scenario_string_from_number(scenario)))
 
                 # finish off
                 if s == 0:
@@ -2428,7 +2407,7 @@ class Project:
         # prelims
         fig = self.set_and_update_figure()
         ax = fig.add_subplot(1, 1, 1)
-        times = self.model_runner.model_dict['manual_baseline'].times
+        times = self.model_runner.models['manual_baseline'].times
         lower_plot_margin = numpy.zeros(len(times))
         upper_plot_margin = numpy.zeros(len(times))
 
@@ -2496,7 +2475,7 @@ class Project:
                 title_time_text = t_k.find_title_from_dictionary(time)
 
                 # initialise some variables
-                times = self.model_runner.model_dict['manual_baseline'].times
+                times = self.model_runner.models['manual_baseline'].times
                 lower_plot_margin_count = numpy.zeros(len(times))
                 upper_plot_margin_count = numpy.zeros(len(times))
                 lower_plot_margin_fraction = numpy.zeros(len(times))
@@ -2637,12 +2616,12 @@ class Project:
         ax = self.make_single_axis(fig)
 
         # plotting
-        for riskgroup in self.model_runner.model_dict['manual_baseline'].riskgroups:
-            ax.plot(self.model_runner.model_dict['manual_baseline'].times,
-                    self.model_runner.model_dict['manual_baseline'].actual_risk_props[riskgroup], 'g-',
+        for riskgroup in self.model_runner.models['manual_baseline'].riskgroups:
+            ax.plot(self.model_runner.models['manual_baseline'].times,
+                    self.model_runner.models['manual_baseline'].actual_risk_props[riskgroup], 'g-',
                     label='Actual ' + riskgroup)
-            ax.plot(self.model_runner.model_dict['manual_baseline'].times,
-                    self.model_runner.model_dict['manual_baseline'].target_risk_props[riskgroup][1:], 'k--',
+            ax.plot(self.model_runner.models['manual_baseline'].times,
+                    self.model_runner.models['manual_baseline'].target_risk_props[riskgroup][1:], 'k--',
                     label='Target ' + riskgroup)
 
         # end bits
@@ -2739,18 +2718,18 @@ class Project:
         """
 
         # separate plot for each strain
-        for strain in self.model_runner.model_dict['manual_baseline'].strains:
+        for strain in self.model_runner.models['manual_baseline'].strains:
             fig = self.set_and_update_figure()
             ax = fig.add_subplot(1, 1, 1)
 
             # loop over risk groups and plot line for each - now need to restrict to single age-group, as IPT modifies
             # the force of infection for some age-groups.
-            for riskgroup in self.model_runner.model_dict['manual_baseline'].riskgroups:
-                data_to_plot = self.model_runner.model_dict['manual_baseline'].get_var_soln(
+            for riskgroup in self.model_runner.models['manual_baseline'].riskgroups:
+                data_to_plot = self.model_runner.models['manual_baseline'].get_var_soln(
                             'rate_force' + strain + riskgroup
-                            + self.model_runner.model_dict['manual_baseline'].agegroups[-1])[
+                            + self.model_runner.models['manual_baseline'].agegroups[-1])[
                         self.start_time_index:]
-                ax.plot(self.model_runner.model_dict['manual_baseline'].times[self.start_time_index:],
+                ax.plot(self.model_runner.models['manual_baseline'].times[self.start_time_index:],
                         data_to_plot * 1e2,
                         label=t_k.capitalise_first_letter(t_k.find_title_from_dictionary(riskgroup)))
 
@@ -2769,11 +2748,11 @@ class Project:
         ax = self.make_single_axis(fig)
         output_colours = self.make_default_line_styles(5, True)
         bar_width = .7
-        last_data = list(numpy.zeros(len(self.model_runner.model_dict['manual_baseline'].riskgroups)))
-        for r, to_riskgroup in enumerate(self.model_runner.model_dict['manual_baseline'].riskgroups):
+        last_data = list(numpy.zeros(len(self.model_runner.models['manual_baseline'].riskgroups)))
+        for r, to_riskgroup in enumerate(self.model_runner.models['manual_baseline'].riskgroups):
             data = []
-            for from_riskgroup in self.model_runner.model_dict['manual_baseline'].riskgroups:
-                data += [self.model_runner.model_dict['manual_baseline'].mixing[from_riskgroup][to_riskgroup]]
+            for from_riskgroup in self.model_runner.models['manual_baseline'].riskgroups:
+                data += [self.model_runner.models['manual_baseline'].mixing[from_riskgroup][to_riskgroup]]
             next_data = [i + j for i, j in zip(last_data, data)]
             x_positions = numpy.linspace(.5, .5 + len(next_data) - 1., len(next_data))
             ax.bar(x_positions, data,
@@ -2781,7 +2760,7 @@ class Project:
                    label=t_k.capitalise_and_remove_underscore(t_k.find_title_from_dictionary(to_riskgroup)))
             last_data = next_data
         xlabels = [t_k.capitalise_first_letter(t_k.find_title_from_dictionary(i))
-                   for i in self.model_runner.model_dict['manual_baseline'].riskgroups]
+                   for i in self.model_runner.models['manual_baseline'].riskgroups]
         self.tidy_axis(ax, [1, 1], y_label='Proportion',
                        x_axis_type='raw', y_axis_type='proportion', legend='for_single', title='Source of contacts')
         ax.set_xlim(0.2, max(x_positions) + 1.)
@@ -2802,10 +2781,10 @@ class Project:
         ax = self.make_single_axis(fig)
 
         # Plotting
-        for var in self.model_runner.model_dict['manual_baseline'].var_labels:
+        for var in self.model_runner.models['manual_baseline'].var_labels:
             if 'popsize_' in var:
-                ax.plot(self.model_runner.model_dict['manual_baseline'].times[self.start_time_index:],
-                        self.model_runner.model_dict['manual_baseline'].get_var_soln(var)[self.start_time_index:],
+                ax.plot(self.model_runner.models['manual_baseline'].times[self.start_time_index:],
+                        self.model_runner.models['manual_baseline'].get_var_soln(var)[self.start_time_index:],
                         label=t_k.find_title_from_dictionary(var[8:]))
 
         # Finishing up
@@ -2815,7 +2794,6 @@ class Project:
         self.save_figure(fig, '_popsizes')
 
     def plot_case_detection_rate(self):
-
         """
         Method to visualise case detection rates across scenarios and sub-groups, to better understand the impact of
         ACF on improving detection rates relative to passive case finding alone.
@@ -2835,30 +2813,30 @@ class Project:
         # loop over scenarios
         for scenario in interventions_affecting_case_detection:
             scenario_name = t_k.find_scenario_string_from_number(scenario)
-            manual_scenario_name = 'manual_' + scenario_name
+            manual_scenario_name = scenario
             if scenario in self.scenarios:
                 start_index = self.find_start_index(scenario)
 
                 # Repeat for each sub-group
-                for r, riskgroup in enumerate(self.model_runner.model_dict[manual_scenario_name].riskgroups[::-1]):
+                for r, riskgroup in enumerate(self.model_runner.models[manual_scenario_name].riskgroups[::-1]):
 
                     # Find weighted case detection rate over organ statuses
-                    case_detection = numpy.zeros(len(self.model_runner.model_dict[manual_scenario_name].times[
+                    case_detection = numpy.zeros(len(self.model_runner.models[manual_scenario_name].times[
                                                      start_index:]))
                     for organ in self.inputs.organ_status:
                         case_detection_increment \
-                            = [i * j for i, j in zip(self.model_runner.model_dict[manual_scenario_name].get_var_soln(
+                            = [i * j for i, j in zip(self.model_runner.models[manual_scenario_name].get_var_soln(
                                                          'program_rate_detect' + organ + riskgroup)[start_index:],
-                                                     self.model_runner.model_dict[manual_scenario_name].get_var_soln(
+                                                     self.model_runner.models[manual_scenario_name].get_var_soln(
                                                          'epi_prop' + organ)[start_index:])]
                         case_detection \
                             = model_runner.elementwise_list_addition(case_detection, case_detection_increment)
                     case_detection = [i + separation for i in case_detection]
                     delay_to_presentation = [12. / i for i in case_detection]  # Convert rate to delay
-                    ax_left.plot(self.model_runner.model_dict[manual_scenario_name].times[start_index:],
+                    ax_left.plot(self.model_runner.models[manual_scenario_name].times[start_index:],
                                  case_detection,
                                  color=self.output_colours[scenario][1], linestyle=riskgroup_styles[r * 7][:-1])
-                    ax_right.plot(self.model_runner.model_dict[manual_scenario_name].times[start_index:],
+                    ax_right.plot(self.model_runner.models[manual_scenario_name].times[start_index:],
                                   delay_to_presentation,
                                   label=t_k.capitalise_first_letter(t_k.find_title_from_dictionary(riskgroup)) + ', '
                                         + t_k.replace_underscore_with_space(scenario_name),

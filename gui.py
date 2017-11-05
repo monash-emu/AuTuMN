@@ -263,7 +263,7 @@ class App:
         # self.boolean_dictionary['output_uncertainty'].set(True)
         # self.boolean_dictionary['write_uncertainty_outcome_params'].set(True)
         self.boolean_dictionary['output_param_plots'].set(True)
-        self.boolean_dictionary['output_documents'].set(True)
+        # self.boolean_dictionary['output_documents'].set(True)
         # self.boolean_dictionary['is_lowquality'].set(True)
         self.boolean_dictionary['is_vary_detection_by_organ'].set(True)
         self.boolean_dictionary['is_treatment_history'].set(True)

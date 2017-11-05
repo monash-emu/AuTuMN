@@ -16,32 +16,6 @@ import itertools
 from pyDOE import lhs
 
 
-def generate_candidates(n_candidates, param_ranges_unc):
-    """
-    Function for generating candidate parameters.
-    """
-
-    # dictionary for storing candidates
-    param_candidates = {}
-    for param_dict in param_ranges_unc:
-
-        # find bounds of parameter
-        bound_low, bound_high = param_dict['bounds'][0], param_dict['bounds'][1]
-
-        # draw from distribution
-        if param_dict['distribution'] == 'beta':
-            x = bound_low + numpy.random.beta(2., 2., n_candidates) * (bound_high - bound_low)
-        elif param_dict['distribution'] == 'uniform':
-            x = numpy.random.uniform(bound_low, bound_high, n_candidates)
-        else:
-            x = .5 * (param_dict['bounds'][0] + param_dict['bounds'][1])
-            print 'Unsupported distribution specified to parameter. Defaulting to the midpoint of the range.'
-
-        # return values
-        param_candidates[param_dict['key']] = x
-    return param_candidates
-
-
 def elementwise_list_addition(increment, list_to_increment):
     """
     Simple method to element-wise increment a list by the values in another list of the same length.
@@ -70,47 +44,7 @@ def elementwise_list_percentage(numerator, denominator):
     return [n / d * 1e2 for n, d in zip(numerator, denominator)]
 
 
-def find_integer_dict_from_float_dict(float_dict):
-    # Method may be redundant with better code
-
-    times = float_dict.keys()
-    times.sort()
-    start, finish = (numpy.floor(times[0]), numpy.floor(times[-1]))
-    float_years = numpy.linspace(start, finish, finish - start + 1.)
-    integer_dict = {}
-    for year in float_years:
-        key = [t for t in times if t >= year][0]
-        integer_dict[int(key)] = float_dict[key]
-    return integer_dict
-
-
-def extract_integer_dicts(models_to_analyse={}, dict_to_extract_from={}):
-    # method may be redundant with better code
-
-    integer_dict = {}
-    for scenario in models_to_analyse:
-        integer_dict[scenario] = {}
-        for output in dict_to_extract_from[scenario]:
-            integer_dict[scenario][output] = find_integer_dict_from_float_dict(dict_to_extract_from[scenario][output])
-    return integer_dict
-
-
-def get_output_dicts_from_lists(models_to_analyse={}, output_dict_of_lists={}):
-    """
-    Convert output lists to dictionaries. Also may ultimately be unnecessary.
-    """
-
-    output_dictionary = {}
-    for scenario in models_to_analyse:
-        output_dictionary[scenario] = {}
-        for output in output_dict_of_lists[scenario]:
-            if output != 'times':
-                output_dictionary[scenario][output] \
-                    = dict(zip(output_dict_of_lists[scenario]['times'], output_dict_of_lists[scenario][output]))
-    return output_dictionary
-
-
-def find_uncertainty_output_weights(list, method, relative_weights=[1., 2.]):
+def find_uncertainty_output_weights(list, method, relative_weights=(1., 2.)):
     """
     Creates a set of "weights" to determine the proportion of the log-likelihood to be contributed by the years
     considered in the calibration.
@@ -148,13 +82,13 @@ def is_parameter_value_valid(parameter):
 
 def find_log_probability_density(distribution, param_val, bounds, additional_params=None):
     """
-    Find the log probability density for the parameter value being considered.
+    Find the log probability density for the parameter value being considered. Uniform is the default distribution if no
+    other distribution is specified.
 
     Args:
-        distribution: String specifying the general type of distribution
+        distribution: String specifying the general type of distribution (uniform default)
         param_val: The parameter value
         bounds: Two element list for the upper and lower limits of the distribution
-        prior_log_likelihood: Preceding log likelihood for incrementing
         additional_params: Any additional parameters to the distribution if not completely specified with bounds
     Returns:
         prior_log_likelihood: Prior log likelihood associated with the individual parameter fed in to this function
@@ -164,9 +98,7 @@ def find_log_probability_density(distribution, param_val, bounds, additional_par
     normalised_param_value = (param_val - bounds[0]) / (bounds[1] - bounds[0])
 
     # find the log probability density
-    if distribution == 'uniform':
-        prior_log_likelihood = numpy.log(1. / (bounds[1] - bounds[0]))
-    elif distribution == 'beta_2_2':
+    if distribution == 'beta_2_2':
         prior_log_likelihood = beta.logpdf(normalised_param_value, 2., 2.)
     elif distribution == 'beta_mean_stdev':
         alpha_value = ((1. - additional_params[0]) / additional_params[1] ** 2. - 1. / additional_params[0]) \
@@ -180,6 +112,8 @@ def find_log_probability_density(distribution, param_val, bounds, additional_par
                                              scale=additional_params[1] ** 2. / additional_params[0])
     elif distribution == 'gamma_params':
         prior_log_likelihood = gamma.logpdf(param_val, additional_params[0])
+    else:
+        prior_log_likelihood = numpy.log(1. / (bounds[1] - bounds[0]))
     return prior_log_likelihood
 
 
@@ -707,9 +641,9 @@ class ModelRunner:
 
                 # get outputs for calibration and store results
                 self.store_uncertainty(0, epi_outputs_to_analyse=self.epi_outputs_to_analyse)
-                integer_dictionary \
-                    = extract_integer_dicts([0], get_output_dicts_from_lists(models_to_analyse=[0],
-                                                                             output_dict_of_lists=self.epi_outputs))
+                outputs_for_comparison \
+                    = [self.epi_outputs[0]['incidence'][tool_kit.find_first_list_element_at_least_value(
+                        self.epi_outputs[0]['times'], float(year))] for year in years_to_compare]
 
                 # calculate prior
                 prior_log_likelihood = 0.
@@ -729,7 +663,7 @@ class ModelRunner:
                     working_output_dictionary = self.get_fitting_data()[output_dict['key']]
                     for y, year in enumerate(years_to_compare):
                         if year in working_output_dictionary.keys():
-                            model_result_for_output = integer_dictionary[0]['incidence'][year]
+                            model_result_for_output = outputs_for_comparison[y]
                             mu, sd = working_output_dictionary[year][0], working_output_dictionary[year][1]
                             posterior_log_likelihood += norm.logpdf(model_result_for_output, mu, sd) * weights[y]
 

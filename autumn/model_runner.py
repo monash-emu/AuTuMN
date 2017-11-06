@@ -1203,7 +1203,6 @@ class ModelRunner:
                 pass
 
     def plot_progressive_parameters_tk(self, from_runner=True, input_figure=None):
-
         # initialise plotting
         if from_runner:
             param_tracking_figure = plt.Figure()
@@ -1268,16 +1267,16 @@ class ModelRunner:
         names = [tool_kit.find_title_from_dictionary(param) for p, param in
                  enumerate(self.all_parameters_tried)]
         import json
-        import os.path
-        with open('graph.json', 'wt') as f:
-            f.write(json.dumps({
-                "all_parameters_tried": self.all_parameters_tried,
-                "whether_accepted": self.whether_accepted_list,
-                "rejected_dict": self.rejection_dict,
-                "names": names,
-                "count": self.plot_count
-            }, indent=2))
-        print('> writing', os.path.abspath('graph.json'))
+        graph_data = {
+            "all_parameters_tried": self.all_parameters_tried,
+            "whether_accepted": self.whether_accepted_list,
+            "rejected_dict": self.rejection_dict,
+            "names": names,
+            "count": self.plot_count,
+            "param_ranges_unc": self.inputs.param_ranges_unc
+        }
+        with open('graph_data.json', 'wt') as f:
+            json.dump(graph_data, f, indent=2)
 
     def plot_progressive_parameters_js(self):
         """

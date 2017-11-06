@@ -114,7 +114,7 @@ def get_autumn_params():
             'label': find_button_name_from_string(key),
         }
 
-    defaultBooleanKeys = [
+    default_boolean_keys = [
         # 'output_uncertainty',
         # 'write_uncertainty_outcome_params',
         'output_param_plots',
@@ -133,7 +133,7 @@ def get_autumn_params():
         # 'is_timevariant_organs'
     ]
 
-    for k in defaultBooleanKeys:
+    for k in default_boolean_keys:
         params[k]['value'] = True
 
     # Model running options
@@ -277,7 +277,7 @@ def convert_params_to_inputs(params):
         'DS / MDR / XDR': 3}
 
     inputs = {}
-    inputs['scenarios_to_run'] = [None]
+    inputs['scenarios_to_run'] = [0]
     inputs['scenario_names_to_run'] = ['baseline']
     for key, param in params.iteritems():
         value = param['value']
@@ -327,12 +327,18 @@ class App:
         self.master.minsize(1500, 500)
         self.master.title('AuTuMN - version 1.0')
 
-        label_font = 'Helvetica 9 bold italic'
-        title_font = 'Helvetica 10 bold italic'
+        self.title_font = 'Helvetica 10 bold italic'
+        self.label_font = 'Helvetica 9 bold italic'
 
         autumn_params = get_autumn_params()
 
         self.params = autumn_params['params']
+        self.make_tk_controls_in_params()
+
+        self.param_groups = autumn_params['param_groups']
+        self.set_tk_controls_in_frame()
+
+    def make_tk_controls_in_params(self):
         for key, param in self.params.iteritems():
             if param['type'] == "boolean":
                 param['tk_var'] = IntVar()
@@ -356,7 +362,7 @@ class App:
                 param['tk_label'] = Label(
                     self.frame,
                     text=param['label'],
-                    font=label_font)
+                    font=self.label_font)
                 param['tk_control'] = Entry(
                     self.frame,
                     textvariable=param['tk_var'])
@@ -366,7 +372,7 @@ class App:
                 param['tk_label'] = Label(
                     self.frame,
                     text=param['label'],
-                    font=label_font)
+                    font=self.label_font)
                 param['tk_control'] = Entry(
                     self.frame,
                     textvariable=param['tk_var'])
@@ -376,7 +382,7 @@ class App:
                 param['tk_label'] = Label(
                     self.frame,
                     text=param['label'],
-                    font=label_font)
+                    font=self.label_font)
                 param['tk_control'] = Scale(
                     self.frame,
                     from_=param['min'],
@@ -388,19 +394,19 @@ class App:
                     sliderlength=20,
                     variable=param['tk_var'])
 
-        self.param_groups = autumn_params['param_groups']
+    def set_tk_controls_in_frame(self):
         for column, param_group in enumerate(self.param_groups):
             row = 0
             title = Label(self.frame, text=param_group['name'])
             title.grid(row=row, column=column, sticky=NW, pady=10)
-            title.config(font=title_font)
+            title.config(font=self.title_font)
             self.frame.grid_columnconfigure(column, minsize=200)
             row += 1
             if column == 0:
                 # model running button
                 self.run = Button(self.frame, text='Run', command=self.execute, width=10)
                 self.run.grid(row=1, column=0, sticky=W, padx=2)
-                self.run.config(font=title_font, fg='darkgreen', bg='grey')
+                self.run.config(font=self.title_font, fg='darkgreen', bg='grey')
                 row += 1
             for key in param_group['keys']:
                 param = self.params[key]
@@ -414,7 +420,7 @@ class App:
                 console_label = Label(
                     self.frame,
                     text='Runtime outputs console',
-                    font=label_font)
+                    font=self.label_font)
                 console_label.grid(row=row, column=0, sticky=SW)
                 row += 1
                 self.runtime_outputs = Text(self.frame)
@@ -470,7 +476,8 @@ class App:
         # if not self.gui_outputs['output_uncertainty']:
         #     self.figure_frame.withdraw()
 
-        model_runner = autumn.model_runner.ModelRunner(self.gui_outputs, self.runtime_outputs, self.figure_frame)
+        model_runner = autumn.model_runner.ModelRunner(
+            self.gui_outputs, self.runtime_outputs, self.figure_frame)
         model_runner.master_runner()
         project = autumn.outputs.Project(model_runner, self.gui_outputs)
         project.master_outputs_runner()

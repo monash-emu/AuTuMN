@@ -339,6 +339,10 @@ class App:
             else:
                 self.gui_outputs[option] = self.raw_outputs[option].get()
 
+        with open('gui_outputs.json', 'w') as f:
+            import json
+            json.dump(self.gui_outputs, f, indent=2)
+
         # record thread number
         self.thread_number += 1
 

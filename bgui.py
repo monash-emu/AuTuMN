@@ -1,9 +1,13 @@
 import collections
-from Tkinter import *
-import autumn.model_runner
-import autumn.outputs
-import autumn.tool_kit
 import threading
+
+import autumn.model_runner
+import autumn.outputs as outputs
+import autumn.tool_kit as tool_kit
+
+from Tkinter import *
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
 def find_button_name_from_string(working_string):
@@ -82,7 +86,7 @@ def find_button_name_from_string(working_string):
     if working_string in button_name_dictionary:
         return button_name_dictionary[working_string]
     elif 'scenario_' in working_string:
-        return autumn.tool_kit.capitalise_first_letter(autumn.tool_kit.replace_underscore_with_space(working_string))
+        return tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(working_string))
     else:
         return working_string
 
@@ -289,7 +293,7 @@ def convert_params_to_inputs(params):
                 inputs['scenarios_to_run'] \
                     += [i_scenario]
                 inputs['scenario_names_to_run'] \
-                    += [autumn.tool_kit.find_scenario_string_from_number(i_scenario)]
+                    += [tool_kit.find_scenario_string_from_number(i_scenario)]
         elif param['type'] == "drop_down":
             if key == 'fitting_method':
                 inputs[key] = int(value[-1])
@@ -476,11 +480,86 @@ class App:
         # if not self.gui_outputs['output_uncertainty']:
         #     self.figure_frame.withdraw()
 
-        model_runner = autumn.model_runner.ModelRunner(
-            self.gui_outputs, self.runtime_outputs, self.figure_frame)
-        model_runner.master_runner()
-        project = autumn.outputs.Project(model_runner, self.gui_outputs)
+        self.model_runner = autumn.model_runner.ModelRunner(
+            self.gui_outputs, self.runtime_outputs, js_gui=self.handle_message)
+        self.model_runner.master_runner()
+        project = outputs.Project(self.model_runner, self.gui_outputs)
         project.master_outputs_runner()
+
+    def handle_message(self, command, data={}):
+        if command == "console":
+            self.runtime_outputs.insert(END, data["message"] + '\n')
+            self.runtime_outputs.see(END)
+        elif command == "graph":
+            self.graph(data)
+
+    def graph(self, data, input_figure=None):
+        import json
+        with open('graph_data.json', 'wt') as f:
+            json.dump(data, f, indent=2)
+
+        # initialise plotting
+        if not input_figure:
+            param_tracking_figure = plt.Figure()
+            parameter_plots = FigureCanvasTkAgg(param_tracking_figure, master=self.figure_frame)
+
+        else:
+            param_tracking_figure = input_figure
+
+        subplot_grid = outputs.find_subplot_numbers(len(data["all_parameters_tried"]))
+
+        # cycle through parameters with one subplot for each parameter
+        for p, param in enumerate(data["all_parameters_tried"]):
+
+            # extract accepted params from all tried params
+            accepted_params = list(
+                p for p, a in zip(
+                    data["all_parameters_tried"][param],
+                    data["whether_accepted_list"])
+                if a)
+
+            # plot
+            ax = param_tracking_figure.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
+            ax.plot(range(1, len(accepted_params) + 1), accepted_params, linewidth=2, marker='o', markersize=4,
+                    mec='b', mfc='b')
+            ax.set_xlim((1., len(data["accepted_indices"]) + 1))
+
+            # find the y-limits from the parameter bounds and the parameter values tried
+            for param_number in range(len(data["param_ranges_unc"])):
+                if data["param_ranges_unc"][param_number]['key'] == param:
+                    bounds = data["param_ranges_unc"][param_number]['bounds']
+            ylim_margins = .1
+            min_ylimit = min(accepted_params + [bounds[0]])
+            max_ylimit = max(accepted_params + [bounds[1]])
+            ax.set_ylim((min_ylimit * (1 - ylim_margins), max_ylimit * (1 + ylim_margins)))
+
+            # indicate the prior bounds
+            ax.plot([1, len(data["accepted_indices"]) + 1], [min_ylimit, min_ylimit], color='0.8')
+            ax.plot([1, len(data["accepted_indices"]) + 1], [max_ylimit, max_ylimit], color='0.8')
+
+            # plot rejected parameters
+            for run, rejected_params in data["rejection_dict"][param].items():
+                if data["rejection_dict"][param][run]:
+                    ax.plot([run + 1] * len(rejected_params), rejected_params, marker='o', linestyle='None',
+                            mec='0.5', mfc='0.5', markersize=3)
+                    for r in range(len(rejected_params)):
+                        ax.plot([run, run + 1], [data["acceptance_dict"][param][run], rejected_params[r]], color='0.5',
+                                linestyle='--')
+
+            # label
+            ax.set_title(data["names"][param])
+            if p > len(data["all_parameters_tried"]) - subplot_grid[1] - 1:
+                ax.set_xlabel('Accepted runs')
+
+            if not input_figure:
+                # output to GUI window
+                parameter_plots.show()
+                parameter_plots.draw()
+                parameter_plots.get_tk_widget().grid(row=1, column=1)
+
+        if input_figure:
+            return param_tracking_figure
+
 
 
 if __name__ == '__main__':

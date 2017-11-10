@@ -117,6 +117,42 @@ def find_log_probability_density(distribution, param_val, bounds, additional_par
     return prior_log_likelihood
 
 
+def solve_by_dichotomia(f, objective, a, b, tolerance):
+    """
+    Apply the dichotomia method to solve the equation f(x)=objective, x being the unknown variable.
+    a and b are initial x values satisfying the following inequation: (f(a) - objective)*(f(b) - objective) < 0.
+    The iterative method stops once f(x) is found close enough to the objective, that is when |objective-f(x)| <= tolerance.
+    Returns the value of x.
+    """
+
+    # Check that f(a) - objective)*(f(b) - objective) < 0
+    y_a = f(a)
+    y_b = f(b)
+    assert (y_a - objective)*(y_b - objective) <= 0.
+    assert a < b  # check the order
+
+    monotony = 1. # will be used as a multiplier in various tests that depend on the function monotony (incr. or decr.)
+    if y_a >= objective:
+        monotony = -1.
+
+    while min(abs(y_a - objective), abs(y_b - objective)) > tolerance:
+        dist_a = abs(y_a - objective)
+        dist_b = abs(y_b - objective)
+        # the x update is based on the Thales theorem. That is, if f is linear, the exact solution is obtained in 1 step.
+        x = a + (dist_a*b-a*dist_a)/(dist_a+dist_b)
+        y = f(x)
+        if (y - objective) * monotony >= 0:
+            b = x
+            y_b = y
+        else:
+            a = x
+            y_a = y
+
+    if abs(y_a - objective) <= abs(y_b - objective):
+        return a
+    else:
+        return b
+
 class ModelRunner:
     def __init__(self, gui_inputs, runtime_outputs, figure_frame, js_gui=None):
         """
@@ -1294,4 +1330,5 @@ class ModelRunner:
             "count": self.plot_count
         })
         self.plot_count += 1
+
 

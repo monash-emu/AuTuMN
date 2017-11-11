@@ -683,6 +683,7 @@ class Project:
         self.model_runner = model_runner
         self.inputs = self.model_runner.inputs
         self.gui_inputs = gui_inputs
+        self.outputs = self.model_runner.outputs
         self.country = self.gui_inputs['country'].lower()
         self.name = 'test_' + self.country
         self.out_dir_project = os.path.join('projects', self.name)
@@ -718,7 +719,7 @@ class Project:
 
         # comes up so often that we need to find this index, that best done in instantiation
         self.start_time_index \
-            = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs[0]['times'],
+            = t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][0]['times'],
                                                          self.inputs.model_constants['plot_start_time'])
 
         self.plot_true_outcomes = False
@@ -726,7 +727,6 @@ class Project:
     ''' general methods for use below '''
 
     def find_var_index(self, var):
-
         """
         Finds the index number for a var in the var arrays. (Arbitrarily uses the baseline model from the model runner.)
 
@@ -954,9 +954,9 @@ class Project:
             self.accepted_no_burn_in_indices \
                 = [i for i in self.model_runner.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
             self.epi_outputs_uncertainty_centiles \
-                = self.find_uncertainty_centiles(self.model_runner.epi_outputs_uncertainty)
+                = self.find_uncertainty_centiles(self.outputs['uncertainty']['epi'])
             self.cost_outputs_uncertainty_centiles \
-                = self.find_uncertainty_centiles(self.model_runner.cost_outputs_uncertainty)
+                = self.find_uncertainty_centiles(self.outputs['uncertainty']['cost'])
 
         # write automatic calibration values back to sheets
         if self.gui_inputs['output_uncertainty'] and self.gui_inputs['write_uncertainty_outcome_params']:
@@ -1363,7 +1363,8 @@ class Project:
             mean_cost = {}
             for inter in self.model_runner.interventions_to_cost[scenario]:
                 print('\n' + inter)
-                mean_cost[inter] = numpy.mean(self.model_runner.cost_outputs[scenario]['raw_cost_' + inter])
+                mean_cost[inter] \
+                    = numpy.mean(self.model_runner.outputs['manual']['cost'][scenario]['raw_cost_' + inter])
                 print('%.1f' % mean_cost[inter])
             print('total: %.1f' % sum(mean_cost.values()))
 
@@ -1616,14 +1617,14 @@ class Project:
                         label = ''
 
                     # plot
-                    ax.plot(self.model_runner.epi_outputs[scenario]['times'][start_index:],
-                            self.model_runner.epi_outputs[scenario][output][start_index:],
+                    ax.plot(self.model_runner.outputs['manual']['epi'][scenario]['times'][start_index:],
+                            self.model_runner.outputs['manual']['epi'][scenario][output][start_index:],
                             color=colour, linestyle=self.output_colours[scenario][0], linewidth=1.5, label=label)
 
                 # plot true mortality
                 if output == 'mortality' and self.plot_true_outcomes:
-                    ax.plot(self.model_runner.epi_outputs[scenario]['times'][start_index:],
-                            self.model_runner.epi_outputs[scenario]['true_' + output][start_index:],
+                    ax.plot(self.model_runner.outputs['manual']['epi'][scenario]['times'][start_index:],
+                            self.model_runner.outputs['manual']['epi'][scenario]['true_' + output][start_index:],
                             color=colour, linestyle=':', linewidth=1)
                 end_filename = '_scenario'
 
@@ -1642,7 +1643,7 @@ class Project:
                         linecolour = self.output_colours[scenario][1]
 
                     # median
-                    ax.plot(self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
+                    ax.plot(self.outputs['manual']['epi'][uncertainty_type]['times'][start_index:],
                             self.epi_outputs_uncertainty_centiles[uncertainty_type][output][
                                 self.model_runner.percentiles.index(50), :][start_index:],
                             color=linecolour, linestyle=self.output_colours[scenario][0],
@@ -1650,7 +1651,7 @@ class Project:
 
                     # upper and lower confidence bounds
                     for centile in [2.5, 97.5]:
-                        ax.plot(self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
+                        ax.plot(self.outputs['manual']['epi'][uncertainty_type]['times'][start_index:],
                                 self.epi_outputs_uncertainty_centiles[uncertainty_type][output][
                                     self.model_runner.percentiles.index(centile), :][start_index:],
                                 color=linecolour, linestyle='--', linewidth=.5, label=None)
@@ -1665,7 +1666,7 @@ class Project:
                     uncertainty_type, runs = 15, self.inputs.n_samples
                 else:
                     uncertainty_type = 0
-                    runs = len(self.model_runner.epi_outputs_uncertainty[uncertainty_type][output])
+                    runs = len(self.model_runner.outputs['uncertainty']['epi'][uncertainty_type][output])
 
                 # plot the runs
                 for run in range(runs):
@@ -1676,13 +1677,11 @@ class Project:
                                     uncertainty_type][output][run, self.start_time_index:],
                                 linewidth=.2, color='y', label=t_k.capitalise_and_remove_underscore('baseline'))
                     else:
-                        ax.plot(self.model_runner.epi_outputs_uncertainty[
-                                    uncertainty_type]['times'][self.start_time_index:],
-                                self.model_runner.epi_outputs_uncertainty[
-                                    uncertainty_type][output][run, self.start_time_index:],
-                                linewidth=1.2,
-                                color=str(1. - float(run) / float(len(
-                                    self.model_runner.epi_outputs_uncertainty[uncertainty_type][output]))),
+                        ax.plot(self.outputs['manual']['epi'][uncertainty_type]['times'][self.start_time_index:],
+                                self.outputs['uncertainty']['epi'][uncertainty_type][output][run,
+                                    self.start_time_index:],
+                                linewidth=1.2, color=str(1. - float(run) / float(len(
+                                    self.outputs['uncertainty']['epi'][uncertainty_type][output]))),
                                 label=t_k.capitalise_and_remove_underscore('baseline'))
                     end_filename = '_progress'
 
@@ -1720,8 +1719,7 @@ class Project:
 
         # standard preliminaries
         start_time = self.inputs.model_constants['plot_start_time']
-        if self.inputs.intervention_uncertainty:
-            start_time = self.inputs.model_constants['before_intervention_time']
+        if self.inputs.intervention_uncertainty: start_time = self.inputs.model_constants['before_intervention_time']
         colour, indices, yaxis_label, title, patch_colour = find_standard_output_styles(outputs, lightening_factor=0.3)
         subplot_grid = find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
@@ -1759,7 +1757,7 @@ class Project:
             patch_colours = [cm.Blues(x) for x in numpy.linspace(0., 1., self.model_runner.n_centiles_for_shading)]
             for i in range(self.model_runner.n_centiles_for_shading):
                 patch = create_patch_from_list(
-                    self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
+                    self.outputs['manual']['epi'][uncertainty_type]['times'][start_index:],
                     self.epi_outputs_uncertainty_centiles[uncertainty_type][output][i+3, :][start_index:],
                     self.epi_outputs_uncertainty_centiles[uncertainty_type][output][-i-1, :][start_index:])
                 ax.add_patch(patches.Polygon(patch, color=patch_colours[i]))
@@ -1843,11 +1841,11 @@ class Project:
             if self.gui_inputs['output_uncertainty'] and not self.inputs.intervention_uncertainty:
                 base_value = self.epi_outputs_uncertainty_centiles[uncertainty_type][output][
                              self.model_runner.percentiles.index(50), :][t_k.find_first_list_element_at_least_value(
-                                self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'], 2015.)]
+                                self.outputs['manual']['epi'][uncertainty_type]['times'], 2015.)]
             else:
-                base_value = self.model_runner.epi_outputs[uncertainty_type][output][
+                base_value = self.model_runner.outputs['manual']['epi'][uncertainty_type][output][
                     t_k.find_first_list_element_at_least_value(
-                        self.model_runner.epi_outputs[uncertainty_type]['times'], 2015.)]
+                        self.model_runner.outputs['manual']['epi'][uncertainty_type]['times'], 2015.)]
             if compare_gtb: base_value = gtb_data['point_estimate'][2014]  # should be 2015, but data not yet inputted
             if plot_targets and (output == 'incidence' or output == 'mortality'):
                 plot_endtb_targets(ax, output, base_value, '.7')

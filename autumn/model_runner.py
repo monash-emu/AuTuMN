@@ -655,7 +655,9 @@ class ModelRunner:
         self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
         # prepare parameters and other basic variables for uncertainty loop
-        n_accepted, prev_log_likelihood, new_param_list, param_candidates = 0, -5e2, [], {}
+        n_accepted, prev_log_likelihood, new_param_list, param_candidates, run, population_adjustment, accepted \
+            = 0, -5e2, [], {}, 0, 1., 0
+
         for param in self.inputs.param_ranges_unc:
             param_candidates[param['key']] = [self.inputs.model_constants[param['key']]]
             self.all_parameters_tried[param['key']] = []
@@ -676,8 +678,6 @@ class ModelRunner:
         for scenario in self.scenarios:
             self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
-        run, population_adjustment, accepted = 0, 1., 0
-
         while n_accepted < self.gui_inputs['uncertainty_runs']:
 
             # set timer
@@ -696,11 +696,12 @@ class ModelRunner:
                 outputs_for_comparison \
                     = [self.outputs['uncertainty']['epi'][0]['incidence'][
                            last_run_output_index, tool_kit.find_first_list_element_at_least_value(
-                               self.outputs['manual']['epi'][0]['times'], float(year))]
-                       for year in years_to_compare]
+                               self.outputs['manual']['epi'][0]['times'], float(year))] for year in years_to_compare]
+
+                # calculate likelihood
+                prior_log_likelihood, posterior_log_likelihood = 0., 0.
 
                 # calculate prior
-                prior_log_likelihood = 0.
                 for p, param in enumerate(self.inputs.param_ranges_unc):
                     param_val = new_param_list[p]
                     self.all_parameters_tried[param['key']].append(new_param_list[p])
@@ -709,7 +710,6 @@ class ModelRunner:
                         param['distribution'], param_val, param['bounds'], additional_params=param['additional_params'])
 
                 # calculate posterior
-                posterior_log_likelihood = 0.
                 for output_dict in self.outputs_unc:
 
                     # the GTB values for the output of interest
@@ -789,8 +789,7 @@ class ModelRunner:
                     population_adjustment \
                         = self.inputs.model_constants['target_population'] \
                           / self.outputs['uncertainty']['epi'][0]['population'][last_run_output_index,
-                              tool_kit.find_first_list_element_above_value(
-                                  self.outputs['manual']['epi'][0]['times'],
+                              tool_kit.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'],
                                   self.inputs.model_constants['current_time'])]
 
                 # record death reporting proportion, which may or may not have been adjusted
@@ -819,10 +818,9 @@ class ModelRunner:
             # incidence
             if output_dict['key'] == 'incidence':
                 for year in self.inputs.data_to_fit[output_dict['key']].keys():
-                    low = self.inputs.data_to_fit['incidence_low'][year]
-                    high = self.inputs.data_to_fit['incidence_high'][year]
-                    sd = output_dict['width_multiplier'] * (high - low) / (2. * 1.96)
-                    mu = (high + low) / 2.
+                    low, high = self.inputs.data_to_fit['incidence_low'][year], \
+                                self.inputs.data_to_fit['incidence_high'][year]
+                    sd, mu = output_dict['width_multiplier'] * (high - low) / (2. * 1.96), (high + low) / 2.
                     normal_char[output_dict['key']][year] = [mu, sd]
 
             # mortality
@@ -840,6 +838,8 @@ class ModelRunner:
 
         Args:
             params: The parameters to be set in the model.
+            scenario: Numeral for the scenario to be run
+            population_adjustment and accepted are just being fed through to set_model_with_params
         """
 
         # check whether parameter values are acceptable
@@ -847,27 +847,28 @@ class ModelRunner:
 
             # whether the parameter value is valid
             if not is_parameter_value_valid(param):
-                print 'Warning: parameter%d=%f is invalid for model' % (p, param)
+                self.add_comment_to_gui_window('Warning: parameter%d=%f is invalid for model' % (p, param))
                 self.is_last_run_success = False
                 return
 
             # whether the parameter value is within acceptable ranges
             bounds = self.inputs.param_ranges_unc[p]['bounds']
             if param < bounds[0] or param > bounds[1]:
-                print 'Warning: parameter%d=%f is outside of the allowed bounds' % (p, param)
+                self.add_comment_to_gui_window('Warning: parameter%d=%f is outside of the allowed bounds' % (p, param))
                 self.is_last_run_success = False
                 return
 
         param_dict = {names['key']: vals for names, vals in zip(self.inputs.param_ranges_unc, params)}
 
         # set parameters and run
-        self.set_model_with_params(param_dict, scenario, population_adjustment=population_adjustment,
-                                   accepted=accepted)
+        self.set_model_with_params(param_dict, scenario, population_adjustment=population_adjustment, accepted=accepted)
         self.is_last_run_success = True
+
+        # noinspection PyBroadException
         try:
             self.models[scenario].integrate()
         except:
-            print 'Warning: parameters=%s failed with model' % params
+            self.add_comment_to_gui_window('Warning: parameters=%s failed with model' % params)
             self.is_last_run_success = False
 
     def set_model_with_params(self, param_dict, scenario=0, population_adjustment=1., accepted=0):
@@ -879,6 +880,9 @@ class ModelRunner:
         Args:
             param_dict: Dictionary of the parameters to be set within the model (keys parameter name strings and values
                 parameter values)
+            scenario: Numeral for scenario to run
+            population_adjustment: Ratio by which to adjust population by (finally gets used here, as does accepted)
+            accepted: Boolean that is only needed because we should only adjust population for accepted runs
         """
 
         # adjust starting populations if target_population in sheets (i.e. country sheet, because not in defaults)
@@ -920,7 +924,7 @@ class ModelRunner:
             if scenario not in self.outputs['uncertainty'][output_type]:
                 self.outputs['uncertainty'][output_type] = {scenario: {}}
 
-        for output in self.epi_outputs_to_analyse:
+        for output in epi_outputs:
             if output not in self.outputs['uncertainty']['epi'][scenario]:
                 self.outputs['uncertainty']['epi'][scenario].update({output: numpy.array(epi_outputs[output])})
             else:
@@ -950,9 +954,8 @@ class ModelRunner:
 
         # iterate through the parameters being used
         for p, param_dict in enumerate(self.inputs.param_ranges_unc):
-            bounds = param_dict['bounds']
+            bounds, random = param_dict['bounds'], -100.
             sd = self.gui_inputs['search_width'] * (bounds[1] - bounds[0]) / (2. * 1.96)
-            random = -100.
 
             # search for new parameters
             while random < bounds[0] or random > bounds[1]: random = norm.rvs(loc=old_params[p], scale=sd, size=1)

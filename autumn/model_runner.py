@@ -153,6 +153,7 @@ def solve_by_dichotomia(f, objective, a, b, tolerance):
     else:
         return b
 
+
 class ModelRunner:
     def __init__(self, gui_inputs, runtime_outputs, figure_frame, js_gui=None):
         """
@@ -225,14 +226,6 @@ class ModelRunner:
 
         # output-related attributes
         self.epi_outputs_to_analyse = ['incidence', 'prevalence', 'mortality', 'true_mortality', 'notifications']
-        self.epi_outputs = {}
-        self.epi_outputs_uncertainty = {}
-        self.epi_outputs_uncertainty_centiles = None
-        self.cost_outputs = {}
-        self.cost_outputs_dict = {}
-        self.cost_outputs_integer_dict = {}
-        self.cost_outputs_uncertainty = {}
-        self.cost_outputs_uncertainty_centiles = None
         self.additional_cost_types = ['inflated', 'discounted', 'discounted_inflated']
         self.cost_types = self.additional_cost_types + ['raw']
 
@@ -319,8 +312,8 @@ class ModelRunner:
                 = self.find_epi_outputs(scenario, outputs_to_analyse=self.epi_outputs_to_analyse,
                                         strata=[self.models[scenario].agegroups, self.models[scenario].riskgroups])
             self.outputs['manual']['epi'][scenario].update(
-                self.find_population_fractions(scenario=scenario, strata=[self.models[scenario].agegroups,
-                                                                          self.models[scenario].riskgroups]))
+                self.find_population_fractions(scenario=scenario, all_stratifications_to_assess=[self.models[scenario].agegroups,
+                                                                                                 self.models[scenario].riskgroups]))
             if self.interventions_to_cost[scenario]:
                 self.outputs['manual']['cost'][scenario] = self.find_cost_outputs(scenario)
 
@@ -332,16 +325,15 @@ class ModelRunner:
             scenario: Scenario number
         """
 
-        scenario_start_time_index \
-            = self.models[0].find_time_index(self.inputs.model_constants['before_intervention_time'])
-        start_time = self.models[0].times[scenario_start_time_index]
+        start_time_index = self.models[0].find_time_index(self.inputs.model_constants['before_intervention_time'])
+        start_time = self.models[0].times[start_time_index]
         self.models[scenario].start_time = start_time
         self.models[scenario].next_time_point = start_time
-        self.models[scenario].loaded_compartments = self.models[0].load_state(scenario_start_time_index)
+        self.models[scenario].loaded_compartments = self.models[0].load_state(start_time_index)
 
     ''' output interpretation methods '''
 
-    def find_epi_outputs(self, scenario, outputs_to_analyse, strata=[]):
+    def find_epi_outputs(self, scenario, outputs_to_analyse, strata=()):
         """
         Method to extract all requested epidemiological outputs from the models. Intended ultimately to be flexible\
         enough for use for analysis of scenarios, uncertainty and optimisation.
@@ -349,7 +341,7 @@ class ModelRunner:
         Args:
             scenario: The number value representing the scenario of the model to be analysed
             outputs_to_analyse: List of strings for the outputs of interest to be worked through
-            strata: Whether it is necessary to provide outputs by any model compartmental stratifications
+            strata: List of any stratifications that outputs are required over
         """
 
         ''' compulsory elements to calculate '''
@@ -362,8 +354,7 @@ class ModelRunner:
         # initialise lists to zeros to allow incrementation
         for output in outputs_to_analyse:
             epi_outputs[output] = [0.] * len(epi_outputs['times'])
-            for strain in self.models[scenario].strains:
-                epi_outputs[output + strain] = [0.] * len(epi_outputs['times'])
+            for strain in self.models[scenario].strains: epi_outputs[output + strain] = [0.] * len(epi_outputs['times'])
 
         # population
         for compartment in self.models[scenario].compartments:
@@ -562,14 +553,18 @@ class ModelRunner:
 
         return epi_outputs
 
-    def find_population_fractions(self, scenario, strata=[]):
+    def find_population_fractions(self, scenario, all_stratifications_to_assess=()):
         """
         Find the proportion of the population in various strata. The stratifications must apply to the entire
         population, so this method should not be used for strains, health systems, etc.
+
+        Args:
+            scenario: The numeral for the scenario to be analysed
+            all_stratifications_to_assess: List/tuple with each element being a list of model stratifications
         """
 
         fractions = {}
-        for stratification in strata:
+        for stratification in all_stratifications_to_assess:
             if len(stratification) > 1:
                 for stratum in stratification:
                     fractions['fraction' + stratum] \
@@ -580,21 +575,25 @@ class ModelRunner:
 
     def find_cost_outputs(self, scenario):
         """
-        Master method to call methods to find and update costs below.
+        Master method to call methods to find and update costs below. Note that cost_outputs has to be passed through
+        the sub-methods below and then returned, so that something can be returned to both manual and uncertainty
+        analysis methods for the appropriate handling.
 
         Args:
-            scenario: Number of the name of the model being costed
+            scenario: Numeral for the scenario being costed
         """
 
         cost_outputs = self.find_raw_cost_outputs(scenario)
-        cost_outputs.update(
-            {'raw_cost_all_programs': self.find_costs_all_programs(scenario, cost_outputs)})
+        cost_outputs.update({'raw_cost_all_programs': self.find_costs_all_programs(scenario, cost_outputs)})
         cost_outputs.update(self.find_adjusted_costs(scenario, cost_outputs))
         return cost_outputs
 
     def find_raw_cost_outputs(self, scenario):
         """
         Find cost dictionaries to add to cost_outputs attribute.
+
+        Args:
+            scenario: Numeral for the scenario being costed
         """
 
         cost_outputs = {'times': self.models[scenario].cost_times}
@@ -605,16 +604,18 @@ class ModelRunner:
     def find_costs_all_programs(self, scenario, cost_outputs):
         """
         Sum costs across all programs and populate to cost_outputs dictionary for each scenario.
+
+        Args:
+            scenario: Numeral for the scenario being costed
+            cost_outputs: The cost output structure being passed through these various cost methods
         """
 
-        # arbitrary (first) program to get the list length for elementwise addition
-        costs_all_programs = [0.] * len(
-            cost_outputs['raw_cost_' + self.interventions_to_cost[scenario][0]])
+        # arbitrary program (the first) to get the list length for elementwise addition
+        costs_all_programs = [0.] * len(cost_outputs['raw_cost_' + self.interventions_to_cost[scenario][0]])
 
-        # add on each program
+        # increment for each intervention
         for intervention in self.interventions_to_cost[scenario]:
-            costs_all_programs = elementwise_list_addition(
-                cost_outputs['raw_cost_' + intervention], costs_all_programs)
+            costs_all_programs = elementwise_list_addition(cost_outputs['raw_cost_' + intervention], costs_all_programs)
         return costs_all_programs
 
     def find_adjusted_costs(self, scenario, cost_outputs):
@@ -623,6 +624,7 @@ class ModelRunner:
 
         Args:
             scenario: Scenario being costed
+            cost_outputs: The cost output structure being passed through these various cost methods
         """
 
         # get some preliminary parameters
@@ -720,8 +722,7 @@ class ModelRunner:
 
                 # determine acceptance
                 log_likelihood = prior_log_likelihood + posterior_log_likelihood
-                # accepted = numpy.random.binomial(n=1, p=min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
-                accepted = 1.
+                accepted = numpy.random.binomial(n=1, p=min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
 
                 # describe progression of likelihood analysis
                 self.add_comment_to_gui_window(
@@ -905,7 +906,6 @@ class ModelRunner:
 
         Args:
             scenario: The scenario being run
-            epi_outputs_to_analyse: The epidemiological outputs of interest
         Updates:
             self.outputs: Which contains all the outputs in a tiered dictionary format
         """

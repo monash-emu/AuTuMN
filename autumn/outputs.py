@@ -951,10 +951,9 @@ class Project:
         if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
             self.accepted_no_burn_in_indices \
                 = [i for i in self.model_runner.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
-            self.uncertainty_centiles['epi'] \
-                = self.find_uncertainty_centiles(self.outputs['uncertainty']['epi'])
-            self.uncertainty_centiles['cost'] \
-                = self.find_uncertainty_centiles(self.outputs['uncertainty']['cost'])
+            for output_type in ['epi', 'cost']:
+                self.uncertainty_centiles[output_type] \
+                    = self.find_uncertainty_centiles(self.outputs['uncertainty'][output_type])
 
         # write automatic calibration values back to sheets
         if self.gui_inputs['output_uncertainty'] and self.gui_inputs['write_uncertainty_outcome_params']:

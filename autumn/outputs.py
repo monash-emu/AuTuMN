@@ -913,28 +913,31 @@ class Project:
 
     ''' methods for pre-processing model runner outputs to more interpretable forms '''
 
-    def find_uncertainty_centiles(self, full_uncertainty_outputs):
+    def find_uncertainty_centiles(self, output_type):
         """
         Find percentiles from uncertainty dictionaries.
 
+        Args:
+            output_type: Whether the output to be calculated is 'epi' or 'cost'
         Updates:
             self.percentiles: Adds all the required percentiles to this dictionary.
         """
 
         uncertainty_centiles = {}
-        for scenario in full_uncertainty_outputs:
+        for scenario in self.outputs['uncertainty'][output_type]:
             uncertainty_centiles[scenario] = {}
-            for output in full_uncertainty_outputs[scenario]:
+            for output in self.outputs['uncertainty'][output_type][scenario]:
                 if output != 'times':
 
-                    # select the baseline runs for analysis from the larger number that were saved
-                    if scenario == 'uncertainty_baseline':
-                        matrix_to_analyse \
-                            = full_uncertainty_outputs[scenario][output][self.accepted_no_burn_in_indices, :]
+                    # use all runs for scenario analysis (as only those that were accepted are saved)
+                    if scenario:
+                        matrix_to_analyse = self.outputs['uncertainty'][output_type][scenario][output]
 
-                    # use all runs for scenario analysis (as we only save those that were accepted)
+                    # select the baseline runs for analysis from the larger number that were saved
                     else:
-                        matrix_to_analyse = full_uncertainty_outputs[scenario][output]
+                        matrix_to_analyse = self.outputs['uncertainty'][output_type][scenario][output][
+                                            self.accepted_no_burn_in_indices, :]
+
                     uncertainty_centiles[scenario][output] \
                         = numpy.percentile(matrix_to_analyse, self.model_runner.percentiles, axis=0)
         return uncertainty_centiles
@@ -952,8 +955,7 @@ class Project:
             self.accepted_no_burn_in_indices \
                 = [i for i in self.model_runner.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
             for output_type in ['epi', 'cost']:
-                self.uncertainty_centiles[output_type] \
-                    = self.find_uncertainty_centiles(self.outputs['uncertainty'][output_type])
+                self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles(output_type)
 
         # write automatic calibration values back to sheets
         if self.gui_inputs['output_uncertainty'] and self.gui_inputs['write_uncertainty_outcome_params']:
@@ -1573,8 +1575,6 @@ class Project:
         # type of analysis requested
         if self.inputs.intervention_uncertainty:
             uncertainty_type, start_index = 15, 0
-        elif purpose == 'scenario':
-            uncertainty_type = 0
         else:
             uncertainty_type = 0
 

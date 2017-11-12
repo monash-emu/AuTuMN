@@ -5,12 +5,8 @@ import os
 import data_processing
 import numpy
 import datetime
-import matplotlib.pyplot as plt
 from scipy.stats import norm, beta, gamma
-from Tkinter import *
 from scipy.optimize import minimize
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import outputs
 import autumn.economics
 import itertools
 from pyDOE import lhs
@@ -153,7 +149,7 @@ def solve_by_dichotomy(f, objective, a, b, tolerance):
 
 
 class ModelRunner:
-    def __init__(self, gui_inputs, runtime_outputs, figure_frame, js_gui=None):
+    def __init__(self, gui_inputs, runtime_outputs, js_gui=None):
         """
         Instantiation method for model runner - currently including some attributes that should be set externally, e.g.
         in the GUI(s).
@@ -161,7 +157,6 @@ class ModelRunner:
         Args:
             gui_inputs: Inputs from the off-line Tkinter GUI
             runtime_outputs: Offline GUI window for commenting
-            figure_frame: Uncertainty parameter plotting window of Tkinter GUI
             js_gui: JavaScript GUI inputs
         """
 
@@ -169,7 +164,6 @@ class ModelRunner:
         self.gui_inputs = gui_inputs
         self.scenarios = self.gui_inputs['scenarios_to_run']
         self.runtime_outputs = runtime_outputs
-        self.figure_frame = figure_frame
         self.inputs = data_processing.Inputs(gui_inputs, runtime_outputs, js_gui=js_gui)
         self.inputs.read_and_load_data()
 
@@ -1248,11 +1242,7 @@ class ModelRunner:
     def add_comment_to_gui_window(self, comment):
 
         if self.js_gui:
-            self.js_gui('console', {"message": comment})
-
-        else:
-            self.runtime_outputs.insert(END, comment + '\n')
-            self.runtime_outputs.see(END)
+            self.js_gui('console', { "message": comment })
 
     def plot_progressive_parameters(self):
         """
@@ -1260,104 +1250,21 @@ class ModelRunner:
         """
 
         if self.js_gui:
-            self.plot_progressive_parameters_js()
-        else:
-            try:
-                self.plot_progressive_parameters_tk(from_runner=True)
-            except:
-                pass
-
-    def plot_progressive_parameters_tk(self, from_runner=True, input_figure=None):
-
-        # initialise plotting
-        if from_runner:
-            param_tracking_figure = plt.Figure()
-            parameter_plots = FigureCanvasTkAgg(param_tracking_figure, master=self.figure_frame)
-
-        else:
-            param_tracking_figure = input_figure
-
-        subplot_grid = outputs.find_subplot_numbers(len(self.all_parameters_tried))
-
-        # cycle through parameters with one subplot for each parameter
-        for p, param in enumerate(self.all_parameters_tried):
-
-            # extract accepted params from all tried params
-            accepted_params = list(p for p, a in zip(self.all_parameters_tried[param], self.whether_accepted_list) if a)
-
-            # plot
-            ax = param_tracking_figure.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
-            ax.plot(range(1, len(accepted_params) + 1), accepted_params, linewidth=2, marker='o', markersize=4,
-                    mec='b', mfc='b')
-            ax.set_xlim((1., len(self.accepted_indices) + 1))
-
-            # find the y-limits from the parameter bounds and the parameter values tried
-            for param_number in range(len(self.inputs.param_ranges_unc)):
-                if self.inputs.param_ranges_unc[param_number]['key'] == param:
-                    bounds = self.inputs.param_ranges_unc[param_number]['bounds']
-            ylim_margins = .1
-            min_ylimit = min(accepted_params + [bounds[0]])
-            max_ylimit = max(accepted_params + [bounds[1]])
-            ax.set_ylim((min_ylimit * (1 - ylim_margins), max_ylimit * (1 + ylim_margins)))
-
-            # indicate the prior bounds
-            ax.plot([1, len(self.accepted_indices) + 1], [min_ylimit, min_ylimit], color='0.8')
-            ax.plot([1, len(self.accepted_indices) + 1], [max_ylimit, max_ylimit], color='0.8')
-
-            # plot rejected parameters
-            for run, rejected_params in self.rejection_dict[param].items():
-                if self.rejection_dict[param][run]:
-                    ax.plot([run + 1] * len(rejected_params), rejected_params, marker='o', linestyle='None',
-                            mec='0.5', mfc='0.5', markersize=3)
-                    for r in range(len(rejected_params)):
-                        ax.plot([run, run + 1], [self.acceptance_dict[param][run], rejected_params[r]], color='0.5',
-                                linestyle='--')
-
-            # label
-            ax.set_title(tool_kit.find_title_from_dictionary(param))
-            if p > len(self.all_parameters_tried) - subplot_grid[1] - 1:
-                ax.set_xlabel('Accepted runs')
-
-            if from_runner:
-                # output to GUI window
-                parameter_plots.show()
-                parameter_plots.draw()
-                parameter_plots.get_tk_widget().grid(row=1, column=1)
-
-        if not from_runner:
-            return param_tracking_figure
-
-        accepted_params = [
-            list(p for p, a in zip(self.all_parameters_tried[param], self.whether_accepted_list) if a)[-1]
-            for p, param in enumerate(self.all_parameters_tried)]
-        names = [tool_kit.find_title_from_dictionary(param) for p, param in
-                 enumerate(self.all_parameters_tried)]
-        import json
-        import os.path
-        with open('graph.json', 'wt') as f:
-            f.write(json.dumps({
+            self.js_gui('graph', {
                 "all_parameters_tried": self.all_parameters_tried,
-                "whether_accepted": self.whether_accepted_list,
-                "rejected_dict": self.rejection_dict,
-                "names": names,
-                "count": self.plot_count
-            }, indent=2))
-        print('> writing', os.path.abspath('graph.json'))
+                "whether_accepted_list": self.whether_accepted_list,
+                "rejection_dict": self.rejection_dict,
+                "accepted_indices": self.accepted_indices,
+                "acceptance_dict": self.acceptance_dict,
+                "names": {
+                    param: tool_kit.find_title_from_dictionary(param)
+                    for p, param in enumerate(self.all_parameters_tried)
+                },
+                "param_ranges_unc": self.inputs.param_ranges_unc
+            })
 
-    def plot_progressive_parameters_js(self):
-        """
-        Method to shadow previous method in JavaScript GUI.
-        """
 
-        names = [tool_kit.find_title_from_dictionary(param) for p, param in
-                 enumerate(self.all_parameters_tried)]
-        self.js_gui('uncertainty_graph', {
-            "all_parameters_tried": self.all_parameters_tried,
-            "whether_accepted": self.whether_accepted_list,
-            "rejected_dict": self.rejection_dict,
-            "names": names,
-            "count": self.plot_count
-        })
-        self.plot_count += 1
+
+
 
 

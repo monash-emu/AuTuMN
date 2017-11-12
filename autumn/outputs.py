@@ -704,8 +704,7 @@ class Project:
 
         # pre-analysis processing attributes
         self.accepted_no_burn_in_indices = []
-        self.epi_outputs_uncertainty_centiles = {}
-        self.cost_outputs_uncertainty_centiles = {}
+        self.uncertainty_centiles = {'epi': {}, 'cost': {}}
 
         # extract some characteristics from the models within model runner
         self.scenarios = self.gui_inputs['scenarios_to_run']
@@ -719,7 +718,7 @@ class Project:
 
         # comes up so often that we need to find this index, that best done in instantiation
         self.start_time_index \
-            = t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][0]['times'],
+            = t_k.find_first_list_element_at_least_value(self.outputs['manual']['epi'][0]['times'],
                                                          self.inputs.model_constants['plot_start_time'])
 
         self.plot_true_outcomes = False
@@ -953,9 +952,9 @@ class Project:
         if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
             self.accepted_no_burn_in_indices \
                 = [i for i in self.model_runner.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
-            self.epi_outputs_uncertainty_centiles \
+            self.uncertainty_centiles['epi'] \
                 = self.find_uncertainty_centiles(self.outputs['uncertainty']['epi'])
-            self.cost_outputs_uncertainty_centiles \
+            self.uncertainty_centiles['cost'] \
                 = self.find_uncertainty_centiles(self.outputs['uncertainty']['cost'])
 
         # write automatic calibration values back to sheets
@@ -1088,11 +1087,9 @@ class Project:
                                     row, column = y + 2, inter * 3 + 2 + o
                                     if horizontal: column, row = row, column
                                     sheet.cell(row=row, column=column).value \
-                                        = self.epi_outputs_uncertainty_centiles[
-                                            string_to_add + scenario_name][intervention][
-                                                order, t_k.find_first_list_element_at_least_value(
-                                                    self.model_runner.epi_outputs_uncertainty[
-                                                        string_to_add + scenario_name]['times'], year)]
+                                        = self.uncertainty_centiles['epi'][scenario][intervention][
+                                            order, t_k.find_first_list_element_at_least_value(
+                                                self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
 
                         # without uncertainty
                         else:
@@ -1107,9 +1104,9 @@ class Project:
                                 row, column = y + 2, inter + 2
                                 if horizontal: column, row = row, column
                                 sheet.cell(row=row, column=column).value \
-                                    = self.model_runner.epi_outputs[scenario][intervention][
+                                    = self.outputs['manual']['epi'][scenario][intervention][
                                         t_k.find_first_list_element_at_least_value(
-                                            self.model_runner.epi_outputs[scenario]['times'], year)]
+                                            self.outputs['manual']['epi'][scenario]['times'], year)]
 
                 # economic outputs (uncertainty unavailable)
                 elif 'cost_' in result_type:
@@ -1136,9 +1133,9 @@ class Project:
                             row, column = y + 2, inter + 2
                             if horizontal: column, row = row, column
                             sheet.cell(row=row, column=column).value \
-                                = self.model_runner.cost_outputs[scenario][result_type + intervention][
+                                = self.outputs['manual']['cost'][scenario][result_type + intervention][
                                         t_k.find_first_list_element_at_least_value(
-                                            self.model_runner.cost_outputs[scenario]['times'], year)]
+                                            self.outputs['manual']['cost'][scenario]['times'], year)]
 
                 workbook.save(path)
 
@@ -1204,10 +1201,9 @@ class Project:
                             row, column = y + 2, s * 3 + 2 + o
                             if horizontal: column, row = row, column
                             sheet.cell(row=row, column=column).value \
-                                = self.epi_outputs_uncertainty_centiles[string_to_add + scenario_name][
-                                    inter][order, t_k.find_first_list_element_at_least_value(
-                                        self.model_runner.epi_outputs_uncertainty[string_to_add
-                                                                                  + scenario_name]['times'], year)]
+                                = self.uncertainty_centiles['epi'][scenario][inter][
+                                    order, t_k.find_first_list_element_at_least_value(
+                                        self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
 
                 # without uncertainty
                 else:
@@ -1222,9 +1218,9 @@ class Project:
                         row, column = y + 2, s + 2
                         if horizontal: column, row = row, column
                         sheet.cell(row=row, column=column).value \
-                            = self.model_runner.epi_outputs[scenario][inter][
-                                t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs[scenario][
-                                                                               'times'], year)]
+                            = self.model_runner.outputs['manual']['epi'][scenario][inter][
+                                t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][
+                                                                               scenario]['times'], year)]
 
             # wave workbook
             wb.save(path)
@@ -1264,8 +1260,8 @@ class Project:
                         row, column = y + 2, s + 2
                         if horizontal: column, row = row, column
                         sheet.cell(row=row, column=column).value \
-                            = self.model_runner.cost_outputs[scenario][cost_type + inter][
-                                t_k.find_first_list_element_at_least_value(self.model_runner.cost_outputs[scenario][
+                            = self.outputs['manual']['cost'][scenario][cost_type + inter][
+                                t_k.find_first_list_element_at_least_value(self.outputs['manual']['cost'][scenario][
                                                                                'times'], year)]
 
                 # save workbook
@@ -1316,26 +1312,24 @@ class Project:
                     # with uncertainty
                     if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
                         (lower_limit, point_estimate, upper_limit) \
-                            = self.epi_outputs_uncertainty_centiles[
-                                  string_to_add + scenario_name][output][
+                            = self.uncertainty_centiles['epi'][scenario][output][
                                     0:3, t_k.find_first_list_element_at_least_value(
-                                        self.model_runner.epi_outputs_uncertainty[
-                                            string_to_add + scenario_name]['times'], year)]
+                                        self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
                         row_cells[o + 1].text = '%.1f\n(%.1f to %.1f)' % (point_estimate, lower_limit, upper_limit)
 
                     # without
                     else:
                         point_estimate \
-                            = self.model_runner.epi_outputs[scenario][output][
-                                t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs[scenario][
-                                                                               'times'], year)]
+                            = self.model_runner.outputs['manual']['epi'][scenario][output][
+                                t_k.find_first_list_element_at_least_value(
+                                    self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
                         row_cells[o + 1].text = '%.1f' % point_estimate
 
             document.save(path)
 
     def find_relative_changes(self, year):
         """
-        Print some text giving percentage change in output indicators relativel to baseline.
+        Print some text giving percentage change in output indicators relative to baseline.
 
         Args:
             year: Year for the comparisons to be made at
@@ -1346,7 +1340,7 @@ class Project:
         changes = {}
         for output in self.model_runner.epi_outputs_to_analyse:
             absolute_values \
-                = self.epi_outputs_uncertainty_centiles[string_to_add + scenario_name][output][0:3,
+                = self.uncertainty_centiles['epi'][scenario][output][0:3,
                     t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs_uncertainty[
                                                                    string_to_add + scenario_name]['times'], year)]
 
@@ -1408,17 +1402,17 @@ class Project:
                     # with uncertainty
                     if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
                         (lower_limit, point_estimate, upper_limit) \
-                            = self.epi_outputs_uncertainty_centiles[scenario][output][0:3,
-                                t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs_uncertainty[
+                            = self.uncertainty_centiles['epi'][scenario][output][0:3,
+                                t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][
                                                                                scenario]['times'], year)]
                         row_cells[s + 1].text = '%.1f\n(%.1f to %.1f)' % (point_estimate, lower_limit, upper_limit)
 
                     # without
                     else:
                         point_estimate \
-                            = self.model_runner.epi_outputs[scenario][output][
-                                t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs[
-                                                                               scenario]['times'], year)]
+                            = self.model_runner.outputs['manual']['epi'][scenario][output][
+                                t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual'][
+                                                                               'epi'][scenario]['times'], year)]
                         row_cells[s + 1].text = '%.1f' % point_estimate
 
             document.save(path)
@@ -1644,7 +1638,7 @@ class Project:
 
                     # median
                     ax.plot(self.outputs['manual']['epi'][uncertainty_type]['times'][start_index:],
-                            self.epi_outputs_uncertainty_centiles[uncertainty_type][output][
+                            self.uncertainty_centiles['epi'][uncertainty_type][output][
                                 self.model_runner.percentiles.index(50), :][start_index:],
                             color=linecolour, linestyle=self.output_colours[scenario][0],
                             linewidth=linewidth, label=t_k.capitalise_and_remove_underscore(scenario_name))
@@ -1652,7 +1646,7 @@ class Project:
                     # upper and lower confidence bounds
                     for centile in [2.5, 97.5]:
                         ax.plot(self.outputs['manual']['epi'][uncertainty_type]['times'][start_index:],
-                                self.epi_outputs_uncertainty_centiles[uncertainty_type][output][
+                                self.uncertainty_centiles['epi'][uncertainty_type][output][
                                     self.model_runner.percentiles.index(centile), :][start_index:],
                                 color=linecolour, linestyle='--', linewidth=.5, label=None)
                     end_filename = '_ci'
@@ -1671,10 +1665,10 @@ class Project:
                 # plot the runs
                 for run in range(runs):
                     if run not in self.model_runner.accepted_indices and self.plot_rejected_runs:
-                        ax.plot(self.model_runner.epi_outputs_uncertainty[
-                                    uncertainty_type]['times'][self.start_time_index:],
-                                self.model_runner.epi_outputs_uncertainty[
-                                    uncertainty_type][output][run, self.start_time_index:],
+                        ax.plot(self.model_runner.outputs['manual']['epi'][uncertainty_type]['times'][
+                                    self.start_time_index:],
+                                self.model_runner.outputs['uncertainty']['epi'][uncertainty_type][output][
+                                    run, self.start_time_index:],
                                 linewidth=.2, color='y', label=t_k.capitalise_and_remove_underscore('baseline'))
                     else:
                         ax.plot(self.outputs['manual']['epi'][uncertainty_type]['times'][self.start_time_index:],
@@ -1693,8 +1687,9 @@ class Project:
             y_absolute_limit = None
             if self.inputs.intervention_uncertainty or len(self.scenarios) > 1:
                 plot_start_time_index \
-                    = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs[0]['times'], start_time)
-                y_absolute_limit = max(self.model_runner.epi_outputs[0][output][plot_start_time_index:])
+                    = t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][0]['times'],
+                                                                 start_time)
+                y_absolute_limit = max(self.model_runner.outputs['manual']['epi'][0][output][plot_start_time_index:])
 
             self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
                            legend=(o == len(outputs) - 1 and len(self.scenarios) > 1
@@ -1742,14 +1737,14 @@ class Project:
             # overlay median and upper and lower CIs if requested
             if ci_plot:
                 ax.plot(
-                    self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
-                    self.epi_outputs_uncertainty_centiles[uncertainty_type][
+                    self.model_runner.outputs['manual']['epi'][uncertainty_type]['times'][start_index:],
+                    self.uncertainty_centiles['epi'][uncertainty_type][
                         output][self.model_runner.percentiles.index(50), :][start_index:],
                     color=self.output_colours[0][1], linestyle=self.output_colours[0][0],
                     linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
                 for centile in [2.5, 97.5]:
-                    ax.plot(self.model_runner.epi_outputs_uncertainty[uncertainty_type]['times'][start_index:],
-                            self.epi_outputs_uncertainty_centiles[uncertainty_type][output][
+                    ax.plot(self.model_runner.outputs['manual'][uncertainty_type]['times'][start_index:],
+                            self.uncertainty_centiles['epi'][uncertainty_type][output][
                                 self.model_runner.percentiles.index(centile), :][start_index:],
                             color=self.output_colours[0][1], linestyle='--', linewidth=.5, label=0)
 
@@ -1758,8 +1753,8 @@ class Project:
             for i in range(self.model_runner.n_centiles_for_shading):
                 patch = create_patch_from_list(
                     self.outputs['manual']['epi'][uncertainty_type]['times'][start_index:],
-                    self.epi_outputs_uncertainty_centiles[uncertainty_type][output][i+3, :][start_index:],
-                    self.epi_outputs_uncertainty_centiles[uncertainty_type][output][-i-1, :][start_index:])
+                    self.uncertainty_centiles['epi'][uncertainty_type][output][i+3, :][start_index:],
+                    self.uncertainty_centiles['epi'][uncertainty_type][output][-i-1, :][start_index:])
                 ax.add_patch(patches.Polygon(patch, color=patch_colours[i]))
 
             if self.inputs.intervention_uncertainty:
@@ -1839,7 +1834,7 @@ class Project:
 
             # plot the targets (and milestones) and the fitted exponential function to achieve them
             if self.gui_inputs['output_uncertainty'] and not self.inputs.intervention_uncertainty:
-                base_value = self.epi_outputs_uncertainty_centiles[uncertainty_type][output][
+                base_value = self.uncertainty_centiles['epi'][uncertainty_type][output][
                              self.model_runner.percentiles.index(50), :][t_k.find_first_list_element_at_least_value(
                                 self.outputs['manual']['epi'][uncertainty_type]['times'], 2015.)]
             else:
@@ -1870,8 +1865,8 @@ class Project:
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
             for scenario in self.scenarios[::-1]:
                 scenario_name = t_k.find_scenario_string_from_number(scenario)
-                ax.plot(self.model_runner.epi_outputs['manual_' + scenario_name]['times'],
-                        self.model_runner.epi_outputs['manual_' + scenario_name][output + '_mdr'],
+                ax.plot(self.model_runner.outputs['manual']['epi'][scenario]['times'],
+                        self.model_runner.outputs['manual']['epi'][scenario][output + '_mdr'],
                         color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0])
             self.tidy_axis(ax, subplot_grid, title=title[o], y_label=yaxis_label[o],
                            start_time=self.inputs.model_constants['recent_time'],
@@ -2143,7 +2138,7 @@ class Project:
 
             # find the index for the first time after the current time
             reference_time_index \
-                = t_k.find_first_list_element_above_value(self.model_runner.cost_outputs[scenario]['times'],
+                = t_k.find_first_list_element_above_value(self.outputs['manual']['cost'][scenario]['times'],
                                                           self.inputs.model_constants['reference_time'])
 
             # plot each type of cost to its own subplot and ensure same y-axis scale
@@ -2164,7 +2159,7 @@ class Project:
                         = fig_relative.add_subplot(subplot_grid[0], subplot_grid[1], c + 1, sharey=ax_reference_first)
 
                 # create empty list for legend
-                cumulative_data = [0.] * len(self.model_runner.cost_outputs[scenario]['times'])
+                cumulative_data = [0.] * len(self.outputs['manual']['cost'][scenario]['times'])
 
                 # plot for each intervention
                 for intervention in self.inputs.interventions_to_cost[t_k.find_scenario_number_from_string(scenario)]:
@@ -2173,24 +2168,24 @@ class Project:
                     previous_data = copy.copy(cumulative_data)
 
                     # Calculate the cumulative sum for the upper edge of the fill
-                    for i in range(len(self.model_runner.cost_outputs['manual_' + scenario]['times'])):
+                    for i in range(len(self.outputs['manual']['cost'][scenario]['times'])):
                         cumulative_data[i] \
-                            += self.model_runner.cost_outputs['manual_' + scenario][cost_type
+                            += self.outputs['manual']['cost'][scenario][cost_type
                                                                                     + '_cost_' + intervention][i]
 
                     # Scale the cost data
                     individual_data \
-                        = self.model_runner.cost_outputs[scenario][cost_type + '_cost_' + intervention]
+                        = self.outputs['manual']['cost'][scenario][cost_type + '_cost_' + intervention]
                     reference_cost \
-                        = self.model_runner.cost_outputs[scenario][cost_type + '_cost_' + intervention][
+                        = self.outputs['manual']['cost'][scenario][cost_type + '_cost_' + intervention][
                             reference_time_index]
                     relative_data = [(d - reference_cost) for d in individual_data]
 
                     # plot lines
-                    ax_individual.plot(self.model_runner.cost_outputs[scenario]['times'], individual_data,
+                    ax_individual.plot(self.outputs['manual']['cost'][scenario]['times'], individual_data,
                                        color=self.program_colours[scenario][intervention][1],
                                        label=t_k.find_title_from_dictionary(intervention))
-                    ax_relative.plot(self.model_runner.cost_outputs['manual_' + scenario]['times'],
+                    ax_relative.plot(self.outputs['manual']['cost'][scenario]['times'],
                                      relative_data,
                                      color=self.program_colours[scenario][intervention][1],
                                      label=t_k.find_title_from_dictionary(intervention))
@@ -2286,13 +2281,13 @@ class Project:
             = make_related_line_styles(self.model_runner.models[0].labels, strain_or_organ)
 
         # plot total population
-        ax.plot(self.model_runner.epi_outputs[0]['times'][self.start_time_index:],
-                self.model_runner.epi_outputs[0]['population'][self.start_time_index:],
+        ax.plot(self.model_runner.outputs['manual']['epi'][0]['times'][self.start_time_index:],
+                self.model_runner.outputs['manual']['epi'][0]['population'][self.start_time_index:],
                 'k', label='total', linewidth=2)
 
         # plot sub-populations
         for plot_label in self.model_runner.models[0].labels:
-            ax.plot(self.model_runner.epi_outputs[0]['times'][self.start_time_index:],
+            ax.plot(self.model_runner.outputs['manual']['epi'][0]['times'][self.start_time_index:],
                     self.model_runner.models[0].compartment_soln[plot_label][self.start_time_index:],
                     label=t_k.find_title_from_dictionary(plot_label), linewidth=1, color=colours[plot_label],
                     marker=markers[plot_label], linestyle=patterns[plot_label])
@@ -2363,8 +2358,8 @@ class Project:
                 for scenario in self.scenarios[::-1]:
                     start_index = self.find_start_index(scenario)
                     ax.plot(
-                        self.model_runner.epi_outputs[scenario]['times'][start_index:],
-                        self.model_runner.epi_outputs[scenario][output + stratum][start_index:],
+                        self.model_runner.outputs['manual']['epi'][scenario]['times'][start_index:],
+                        self.model_runner.outputs['manual']['epi'][scenario][output + stratum][start_index:],
                         color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
                         linewidth=1.5, label=t_k.capitalise_and_remove_underscore(
                             t_k.find_scenario_string_from_number(scenario)))
@@ -2413,8 +2408,8 @@ class Project:
 
             # find numbers or fractions in that group
             stratum_count = t_k.calculate_proportion_list(
-                self.model_runner.epi_outputs['manual_baseline']['notifications' + stratum],
-                self.model_runner.epi_outputs['manual_baseline']['notifications'])
+                self.model_runner.outputs['manual']['epi'][0]['notifications' + stratum],
+                self.model_runner.outputs['manual']['epi'][0]['notifications'])
 
             for i in range(len(upper_plot_margin)): upper_plot_margin[i] += stratum_count[i]
 
@@ -2444,7 +2439,7 @@ class Project:
         """
 
         early_time_index \
-            = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
+            = t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][0]['times'],
                                                          self.inputs.model_constants['early_time'])
 
         # find stratification to work with
@@ -2482,8 +2477,8 @@ class Project:
                 for s, stratum in enumerate(stratification):
 
                     # find numbers or fractions in that group
-                    stratum_count = self.model_runner.epi_outputs['manual_baseline']['population' + stratum]
-                    stratum_fraction = self.model_runner.epi_outputs['manual_baseline']['fraction' + stratum]
+                    stratum_count = self.model_runner.outputs['manual']['epi'][0]['population' + stratum]
+                    stratum_fraction = self.model_runner.outputs['manual']['epi'][0]['fraction' + stratum]
 
                     # add group values to the upper plot range for area plot
                     for i in range(len(upper_plot_margin_count)):

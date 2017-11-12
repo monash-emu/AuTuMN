@@ -117,36 +117,34 @@ def find_log_probability_density(distribution, param_val, bounds, additional_par
     return prior_log_likelihood
 
 
-def solve_by_dichotomia(f, objective, a, b, tolerance):
+def solve_by_dichotomy(f, objective, a, b, tolerance):
     """
-    Apply the dichotomia method to solve the equation f(x)=objective, x being the unknown variable.
+    Apply the dichotomy method to solve the equation f(x)=objective, x being the unknown variable.
     a and b are initial x values satisfying the following inequation: (f(a) - objective)*(f(b) - objective) < 0.
-    The iterative method stops once f(x) is found close enough to the objective, that is when |objective-f(x)| <= tolerance.
-    Returns the value of x.
+    The iterative method stops once f(x) is found close enough to the objective, that is when |objective-f(x)|
+    <= tolerance. Returns the value of x.
     """
 
-    # Check that f(a) - objective)*(f(b) - objective) < 0
-    y_a = f(a)
-    y_b = f(b)
-    assert (y_a - objective)*(y_b - objective) <= 0.
+    # check that f(a) - objective)*(f(b) - objective) < 0
+    y_a, y_b = f(a), f(b)
+    assert (y_a - objective) * (y_b - objective) <= 0.
+
+    # check o
     assert a < b  # check the order
 
-    monotony = 1. # will be used as a multiplier in various tests that depend on the function monotony (incr. or decr.)
-    if y_a >= objective:
-        monotony = -1.
+    # will be used as a multiplier in various tests that depend on the function monotony (incr. or decr.)
+    monotony = -1. if y_a >= objective else 1.
 
     while min(abs(y_a - objective), abs(y_b - objective)) > tolerance:
-        dist_a = abs(y_a - objective)
-        dist_b = abs(y_b - objective)
-        # the x update is based on the Thales theorem. That is, if f is linear, the exact solution is obtained in 1 step.
-        x = a + (dist_a*b-a*dist_a)/(dist_a+dist_b)
+        dist_a, dist_b = abs(y_a - objective), abs(y_b - objective)
+        # the x update is based on the Thales theorem
+        # - that is, if f is linear, the exact solution is obtained in one step
+        x = a + (dist_a * b - a * dist_a) / (dist_a + dist_b)
         y = f(x)
         if (y - objective) * monotony >= 0:
-            b = x
-            y_b = y
+            b, y_b = x, y
         else:
-            a = x
-            y_a = y
+            a, y_a = x, y
 
     if abs(y_a - objective) <= abs(y_b - objective):
         return a
@@ -310,8 +308,9 @@ class ModelRunner:
                 = self.find_epi_outputs(scenario, outputs_to_analyse=self.epi_outputs_to_analyse,
                                         strata=[self.models[scenario].agegroups, self.models[scenario].riskgroups])
             self.outputs['manual']['epi'][scenario].update(
-                self.find_population_fractions(scenario=scenario, all_stratifications_to_assess=[self.models[scenario].agegroups,
-                                                                                                 self.models[scenario].riskgroups]))
+                self.find_population_fractions(scenario=scenario,
+                                               all_stratifications_to_assess=[self.models[scenario].agegroups,
+                                                                              self.models[scenario].riskgroups]))
             if self.interventions_to_cost[scenario]:
                 self.outputs['manual']['cost'][scenario] = self.find_cost_outputs(scenario)
 

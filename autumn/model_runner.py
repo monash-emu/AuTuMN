@@ -770,7 +770,7 @@ class ModelRunner:
                         self.rejection_dict[param['key']][n_accepted].append(new_param_list[p])
 
                 # plot parameter progression and report on progress
-                self.plot_progressive_parameters()
+                # self.plot_progressive_parameters()
                 self.add_comment_to_gui_window(
                     str(n_accepted) + ' accepted / ' + str(run) + ' candidates. Running time: '
                     + str(datetime.datetime.now() - start_timer_run))
@@ -1262,6 +1262,7 @@ class ModelRunner:
                 },
                 "param_ranges_unc": self.inputs.param_ranges_unc
             })
+
 
 
 

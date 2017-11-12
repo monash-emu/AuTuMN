@@ -234,10 +234,8 @@ class ModelRunner:
 
         # saving-related
         self.attributes_to_save \
-            = ['epi_outputs', 'epi_outputs_uncertainty', 'cost_outputs', 'cost_outputs_dict',
-               'cost_outputs_integer_dict', 'cost_outputs_uncertainty', 'accepted_indices', 'rejected_indices',
-               'all_parameters_tried', 'whether_accepted_list', 'acceptance_dict', 'rejection_dict', 'loglikelihoods',
-               'all_other_adjustments_made']
+            = ['outputs', 'accepted_indices', 'rejected_indices', 'all_parameters_tried', 'whether_accepted_list',
+               'acceptance_dict', 'rejection_dict', 'loglikelihoods', 'all_other_adjustments_made']
 
         # GUI-related
         self.emit_delay = 0.1
@@ -654,7 +652,7 @@ class ModelRunner:
 
         self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
-        # prepare parameters and other basic variables for uncertainty loop
+        # prepare basic local variables for uncertainty loop
         n_accepted, prev_log_likelihood, new_param_list, param_candidates, run, population_adjustment, accepted \
             = 0, -5e2, [], {}, 0, 1., 0
 
@@ -779,7 +777,7 @@ class ModelRunner:
                         self.rejection_dict[param['key']][n_accepted].append(new_param_list[p])
 
                 # plot parameter progression and report on progress
-                self.plot_progressive_parameters()
+                # self.plot_progressive_parameters()
                 self.add_comment_to_gui_window(
                     str(n_accepted) + ' accepted / ' + str(run) + ' candidates. Running time: '
                     + str(datetime.datetime.now() - start_timer_run))
@@ -914,31 +912,42 @@ class ModelRunner:
             self.outputs: Which contains all the outputs in a tiered dictionary format
         """
 
-        # get outputs
-        epi_outputs = self.find_epi_outputs(scenario, outputs_to_analyse=self.epi_outputs_to_analyse)
-        if self.models[scenario].interventions_to_cost: cost_outputs = self.find_cost_outputs(scenario)
+        # get outputs to add to outputs attribute
+        new_outputs = {'epi': self.find_epi_outputs(scenario, outputs_to_analyse=self.epi_outputs_to_analyse)}
+        new_outputs['cost'] = self.find_cost_outputs(scenario) if self.models[scenario].interventions_to_cost else {}
 
+        # create top two tiers for uncertainty outputs if not present (first run only)
         if 'uncertainty' not in self.outputs:
             self.outputs['uncertainty'] = {'epi': {}, 'cost': {}}
-        for output_type in ['cost', 'epi']:
+
+        # incorporate new data
+        for output_type in ['epi', 'cost']:
+
+            # create third tier if outputs haven't been recorded yet for this scenario
             if scenario not in self.outputs['uncertainty'][output_type]:
                 self.outputs['uncertainty'][output_type] = {scenario: {}}
 
-        for output in epi_outputs:
-            if output not in self.outputs['uncertainty']['epi'][scenario]:
-                self.outputs['uncertainty']['epi'][scenario].update({output: numpy.array(epi_outputs[output])})
-            else:
-                shape_index = 0 if self.outputs['uncertainty']['epi'][0][output].ndim == 1 else 1
-                new_output = tool_kit.force_list_to_length(
-                    epi_outputs[output], int(self.outputs['uncertainty']['epi'][scenario][output].shape[shape_index]))
-                self.outputs['uncertainty']['epi'][scenario][output] \
-                    = numpy.vstack([self.outputs['uncertainty']['epi'][scenario][output], new_output])
-        for output in cost_outputs:
-            if output not in self.outputs['uncertainty']['cost'][scenario]:
-                self.outputs['uncertainty']['cost'][scenario].update({output: numpy.array(cost_outputs[output])})
-            else:
-                self.outputs['uncertainty']['cost'][scenario][output] \
-                    = numpy.vstack([self.outputs['uncertainty']['cost'][scenario][output], cost_outputs[output]])
+            # for each epi or cost output available
+            for output in new_outputs[output_type]:
+
+                # if output hasn't been added yet, start array off from list output
+                if output not in self.outputs['uncertainty'][output_type][scenario]:
+                    self.outputs['uncertainty'][output_type][scenario].update(
+                        {output: numpy.array(new_outputs[output_type][output])})
+
+                # adjust list size if necessary or just use output directly
+                else:
+                    if output_type == 'epi':
+                        shape_index = 0 if self.outputs['uncertainty']['epi'][0][output].ndim == 1 else 1
+                        new_output = tool_kit.force_list_to_length(
+                            new_outputs['epi'][output],
+                            int(self.outputs['uncertainty']['epi'][scenario][output].shape[shape_index]))
+                    else:
+                        new_output = new_outputs['cost'][output]
+
+                    # stack onto previous output if seen before
+                    self.outputs['uncertainty'][output_type][scenario][output] \
+                        = numpy.vstack([self.outputs['uncertainty'][output_type][scenario][output], new_output])
 
     def update_params(self, old_params):
         """

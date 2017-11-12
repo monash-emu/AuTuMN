@@ -113,6 +113,41 @@ def find_log_probability_density(distribution, param_val, bounds, additional_par
     return prior_log_likelihood
 
 
+def solve_by_dichotomy(f, objective, a, b, tolerance):
+    """
+    Apply the dichotomy method to solve the equation f(x)=objective, x being the unknown variable.
+    a and b are initial x values satisfying the following inequation: (f(a) - objective)*(f(b) - objective) < 0.
+    The iterative method stops once f(x) is found close enough to the objective, that is when |objective-f(x)|
+    <= tolerance. Returns the value of x.
+    """
+
+    # check that f(a) - objective)*(f(b) - objective) < 0
+    y_a, y_b = f(a), f(b)
+    assert (y_a - objective) * (y_b - objective) <= 0.
+
+    # check o
+    assert a < b  # check the order
+
+    # will be used as a multiplier in various tests that depend on the function monotony (incr. or decr.)
+    monotony = -1. if y_a >= objective else 1.
+
+    while min(abs(y_a - objective), abs(y_b - objective)) > tolerance:
+        dist_a, dist_b = abs(y_a - objective), abs(y_b - objective)
+        # the x update is based on the Thales theorem
+        # - that is, if f is linear, the exact solution is obtained in one step
+        x = a + (dist_a * b - a * dist_a) / (dist_a + dist_b)
+        y = f(x)
+        if (y - objective) * monotony >= 0:
+            b, y_b = x, y
+        else:
+            a, y_a = x, y
+
+    if abs(y_a - objective) <= abs(y_b - objective):
+        return a
+    else:
+        return b
+
+
 class ModelRunner:
     def __init__(self, gui_inputs, runtime_outputs, js_gui=None):
         """
@@ -183,23 +218,16 @@ class ModelRunner:
 
         # output-related attributes
         self.epi_outputs_to_analyse = ['incidence', 'prevalence', 'mortality', 'true_mortality', 'notifications']
-        self.epi_outputs = {}
-        self.epi_outputs_uncertainty = {}
-        self.epi_outputs_uncertainty_centiles = None
-        self.cost_outputs = {}
-        self.cost_outputs_dict = {}
-        self.cost_outputs_integer_dict = {}
-        self.cost_outputs_uncertainty = {}
-        self.cost_outputs_uncertainty_centiles = None
         self.additional_cost_types = ['inflated', 'discounted', 'discounted_inflated']
         self.cost_types = self.additional_cost_types + ['raw']
 
+        # new single main output attribute
+        self.outputs = {}
+
         # saving-related
         self.attributes_to_save \
-            = ['epi_outputs', 'epi_outputs_uncertainty', 'cost_outputs', 'cost_outputs_dict',
-               'cost_outputs_integer_dict', 'cost_outputs_uncertainty', 'accepted_indices', 'rejected_indices',
-               'all_parameters_tried', 'whether_accepted_list', 'acceptance_dict', 'rejection_dict', 'loglikelihoods',
-               'all_other_adjustments_made']
+            = ['outputs', 'accepted_indices', 'rejected_indices', 'all_parameters_tried', 'whether_accepted_list',
+               'acceptance_dict', 'rejection_dict', 'loglikelihoods', 'all_other_adjustments_made']
 
         # GUI-related
         self.emit_delay = 0.1
@@ -255,26 +283,30 @@ class ModelRunner:
         Runs the scenarios a single time, starting from baseline with parameter values as specified in spreadsheets.
         """
 
-        # run fo each scenario, including baseline which is always included by default
+        # run for each scenario, including baseline which is always included by default
+        self.outputs['manual'] = {'epi': {}, 'cost': {}}
         for scenario in self.scenarios:
 
             # name, initialise and describe model, with appropriate times for scenario runs if required
             self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
             if scenario > 0: self.prepare_new_model_from_baseline(scenario)
-            self.add_comment_to_gui_window('Running %s conditions for %s using point estimates for parameters.'
-                                           % ('manual_' + tool_kit.find_scenario_string_from_number(scenario),
-                                              self.gui_inputs['country']))
+            self.add_comment_to_gui_window(
+                'Running %s conditions for %s using point estimates for parameters.'
+                    % ('manual_' + tool_kit.find_scenario_string_from_number(scenario), self.gui_inputs['country']))
 
             # integrate
             self.models[scenario].integrate()
 
             # interpret
-            self.epi_outputs[scenario] \
+            self.outputs['manual']['epi'][scenario] \
                 = self.find_epi_outputs(scenario, outputs_to_analyse=self.epi_outputs_to_analyse,
                                         strata=[self.models[scenario].agegroups, self.models[scenario].riskgroups])
-            if self.models[scenario].interventions_to_cost: self.find_cost_outputs(scenario)
-            self.find_population_fractions(
-                scenario=scenario, strata=[self.models[scenario].agegroups, self.models[scenario].riskgroups])
+            self.outputs['manual']['epi'][scenario].update(
+                self.find_population_fractions(scenario=scenario,
+                                               all_stratifications_to_assess=[self.models[scenario].agegroups,
+                                                                              self.models[scenario].riskgroups]))
+            if self.interventions_to_cost[scenario]:
+                self.outputs['manual']['cost'][scenario] = self.find_cost_outputs(scenario)
 
     def prepare_new_model_from_baseline(self, scenario):
         """
@@ -284,16 +316,15 @@ class ModelRunner:
             scenario: Scenario number
         """
 
-        scenario_start_time_index \
-            = self.models[0].find_time_index(self.inputs.model_constants['before_intervention_time'])
-        start_time = self.models[0].times[scenario_start_time_index]
+        start_time_index = self.models[0].find_time_index(self.inputs.model_constants['before_intervention_time'])
+        start_time = self.models[0].times[start_time_index]
         self.models[scenario].start_time = start_time
         self.models[scenario].next_time_point = start_time
-        self.models[scenario].loaded_compartments = self.models[0].load_state(scenario_start_time_index)
+        self.models[scenario].loaded_compartments = self.models[0].load_state(start_time_index)
 
     ''' output interpretation methods '''
 
-    def find_epi_outputs(self, scenario, outputs_to_analyse, strata=[]):
+    def find_epi_outputs(self, scenario, outputs_to_analyse, strata=()):
         """
         Method to extract all requested epidemiological outputs from the models. Intended ultimately to be flexible\
         enough for use for analysis of scenarios, uncertainty and optimisation.
@@ -301,7 +332,7 @@ class ModelRunner:
         Args:
             scenario: The number value representing the scenario of the model to be analysed
             outputs_to_analyse: List of strings for the outputs of interest to be worked through
-            strata: Whether it is necessary to provide outputs by any model compartmental stratifications
+            strata: List of any stratifications that outputs are required over
         """
 
         ''' compulsory elements to calculate '''
@@ -314,8 +345,7 @@ class ModelRunner:
         # initialise lists to zeros to allow incrementation
         for output in outputs_to_analyse:
             epi_outputs[output] = [0.] * len(epi_outputs['times'])
-            for strain in self.models[scenario].strains:
-                epi_outputs[output + strain] = [0.] * len(epi_outputs['times'])
+            for strain in self.models[scenario].strains: epi_outputs[output + strain] = [0.] * len(epi_outputs['times'])
 
         # population
         for compartment in self.models[scenario].compartments:
@@ -514,34 +544,47 @@ class ModelRunner:
 
         return epi_outputs
 
-    def find_population_fractions(self, scenario, strata=[]):
+    def find_population_fractions(self, scenario, all_stratifications_to_assess=()):
         """
         Find the proportion of the population in various strata. The stratifications must apply to the entire
         population, so this method should not be used for strains, health systems, etc.
+
+        Args:
+            scenario: The numeral for the scenario to be analysed
+            all_stratifications_to_assess: List/tuple with each element being a list of model stratifications
         """
 
-        for stratification in strata:
+        fractions = {}
+        for stratification in all_stratifications_to_assess:
             if len(stratification) > 1:
                 for stratum in stratification:
-                    self.epi_outputs[scenario]['fraction' + stratum] \
-                        = elementwise_list_division(self.epi_outputs[scenario]['population' + stratum],
-                                                    self.epi_outputs[scenario]['population'])
+                    fractions['fraction' + stratum] \
+                        = elementwise_list_division(self.outputs['manual']['epi'][scenario]['population' + stratum],
+                                                    self.outputs['manual']['epi'][scenario]['population'])
+
+        return fractions
 
     def find_cost_outputs(self, scenario):
         """
-        Master method to call methods to find and update costs below.
+        Master method to call methods to find and update costs below. Note that cost_outputs has to be passed through
+        the sub-methods below and then returned, so that something can be returned to both manual and uncertainty
+        analysis methods for the appropriate handling.
 
         Args:
-            scenario: Number of the name of the model being costed
+            scenario: Numeral for the scenario being costed
         """
 
-        self.cost_outputs[scenario] = self.find_raw_cost_outputs(scenario)
-        self.cost_outputs[scenario]['raw_cost_all_programs'] = self.find_costs_all_programs(scenario)
-        self.cost_outputs[scenario].update(self.find_adjusted_costs(scenario))
+        cost_outputs = self.find_raw_cost_outputs(scenario)
+        cost_outputs.update({'raw_cost_all_programs': self.find_costs_all_programs(scenario, cost_outputs)})
+        cost_outputs.update(self.find_adjusted_costs(scenario, cost_outputs))
+        return cost_outputs
 
     def find_raw_cost_outputs(self, scenario):
         """
         Find cost dictionaries to add to cost_outputs attribute.
+
+        Args:
+            scenario: Numeral for the scenario being costed
         """
 
         cost_outputs = {'times': self.models[scenario].cost_times}
@@ -549,24 +592,30 @@ class ModelRunner:
             cost_outputs['raw_cost_' + intervention] = self.models[scenario].costs[:, i]
         return cost_outputs
 
-    def find_costs_all_programs(self, scenario):
+    def find_costs_all_programs(self, scenario, cost_outputs):
         """
         Sum costs across all programs and populate to cost_outputs dictionary for each scenario.
+
+        Args:
+            scenario: Numeral for the scenario being costed
+            cost_outputs: The cost output structure being passed through these various cost methods
         """
 
-        costs_all_programs \
-            = [0.] * len(self.cost_outputs[scenario]['raw_cost_' + self.interventions_to_cost[scenario][0]])
+        # arbitrary program (the first) to get the list length for elementwise addition
+        costs_all_programs = [0.] * len(cost_outputs['raw_cost_' + self.interventions_to_cost[scenario][0]])
+
+        # increment for each intervention
         for intervention in self.interventions_to_cost[scenario]:
-            costs_all_programs \
-                = elementwise_list_addition(self.cost_outputs[scenario]['raw_cost_' + intervention], costs_all_programs)
+            costs_all_programs = elementwise_list_addition(cost_outputs['raw_cost_' + intervention], costs_all_programs)
         return costs_all_programs
 
-    def find_adjusted_costs(self, scenario):
+    def find_adjusted_costs(self, scenario, cost_outputs):
         """
         Find costs adjusted for inflation, discounting and both.
 
         Args:
             scenario: Scenario being costed
+            cost_outputs: The cost output structure being passed through these various cost methods
         """
 
         # get some preliminary parameters
@@ -575,15 +624,14 @@ class ModelRunner:
         discount_rate = self.inputs.model_constants['econ_discount_rate']
 
         # loop over interventions for costing and cost types
-        cost_outputs = {}
         for intervention in self.interventions_to_cost[scenario] + ['all_programs']:
             for cost_type in self.additional_cost_types:
                 cost_outputs[cost_type + '_cost_' + intervention] = []
-                for t, time in enumerate(self.cost_outputs[scenario]['times']):
+                for t, time in enumerate(self.models[scenario].cost_times):
                     cost_outputs[cost_type + '_cost_' + intervention].append(
                         autumn.economics.get_adjusted_cost(
-                            self.cost_outputs[scenario]['raw_cost_' + intervention][t], cost_type, current_cpi,
-                            self.inputs.scaleup_fns[0]['econ_cpi'](time), discount_rate,
+                            cost_outputs['raw_cost_' + intervention][t], cost_type,
+                            current_cpi, self.inputs.scaleup_fns[0]['econ_cpi'](time), discount_rate,
                             max(0., (time - year_current))))
         return cost_outputs
 
@@ -597,8 +645,10 @@ class ModelRunner:
 
         self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
-        # prepare parameters and other basic variables for uncertainty loop
-        n_accepted, prev_log_likelihood, new_param_list, param_candidates = 0, -5e2, [], {}
+        # prepare basic local variables for uncertainty loop
+        n_accepted, prev_log_likelihood, new_param_list, param_candidates, run, population_adjustment, accepted \
+            = 0, -5e2, [], {}, 0, 1., 0
+
         for param in self.inputs.param_ranges_unc:
             param_candidates[param['key']] = [self.inputs.model_constants[param['key']]]
             self.all_parameters_tried[param['key']] = []
@@ -619,8 +669,6 @@ class ModelRunner:
         for scenario in self.scenarios:
             self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
-        run, population_adjustment, accepted = 0, 1., 0
-
         while n_accepted < self.gui_inputs['uncertainty_runs']:
 
             # set timer
@@ -634,23 +682,25 @@ class ModelRunner:
             if self.is_last_run_success:
 
                 # get outputs for calibration and store results
-                self.store_uncertainty(0, epi_outputs_to_analyse=self.epi_outputs_to_analyse)
+                self.store_uncertainty(0)
+                last_run_output_index = None if self.outputs['uncertainty']['epi'][0]['mortality'].ndim == 1 else -1
                 outputs_for_comparison \
-                    = [self.epi_outputs[0]['incidence'][tool_kit.find_first_list_element_at_least_value(
-                        self.epi_outputs[0]['times'], float(year))] for year in years_to_compare]
+                    = [self.outputs['uncertainty']['epi'][0]['incidence'][
+                           last_run_output_index, tool_kit.find_first_list_element_at_least_value(
+                               self.outputs['manual']['epi'][0]['times'], float(year))] for year in years_to_compare]
+
+                # calculate likelihood
+                prior_log_likelihood, posterior_log_likelihood = 0., 0.
 
                 # calculate prior
-                prior_log_likelihood = 0.
                 for p, param in enumerate(self.inputs.param_ranges_unc):
                     param_val = new_param_list[p]
                     self.all_parameters_tried[param['key']].append(new_param_list[p])
                     if 'additional_params' not in param: param['additional_params'] = None
-                    prior_log_likelihood \
-                        += find_log_probability_density(param['distribution'], param_val,  param['bounds'],
-                                                        additional_params=param['additional_params'])
+                    prior_log_likelihood += find_log_probability_density(
+                        param['distribution'], param_val, param['bounds'], additional_params=param['additional_params'])
 
                 # calculate posterior
-                posterior_log_likelihood = 0.
                 for output_dict in self.outputs_unc:
 
                     # the GTB values for the output of interest
@@ -696,15 +746,16 @@ class ModelRunner:
                         if scenario:
                             self.prepare_new_model_from_baseline(scenario)
                             self.run_with_params(new_param_list, scenario=scenario)
-                            self.store_uncertainty(scenario, epi_outputs_to_analyse=self.epi_outputs_to_analyse)
+                            self.store_uncertainty(scenario)
 
                     # iteratively adjusting proportion of mortality reported
                     ratios = []
                     for year in years_to_compare:
                         if year in self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k']:
-                            ratios.append(self.epi_outputs[0]['mortality'][
-                                             tool_kit.find_first_list_element_above_value(self.epi_outputs[0]['times'],
-                                                                                          float(year))]
+                            ratios.append(self.outputs['uncertainty']['epi'][0]['mortality'][last_run_output_index,
+                                             tool_kit.find_first_list_element_above_value(
+                                                 self.outputs['manual']['epi'][0]['times'],
+                                                 float(year))]
                                          / self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k'][year])
                     average_ratio = numpy.mean(ratios)
                     if average_ratio < 1. / self.relative_difference_to_adjust_mortality:
@@ -728,8 +779,9 @@ class ModelRunner:
                 if 'target_population' in self.inputs.model_constants:
                     population_adjustment \
                         = self.inputs.model_constants['target_population'] \
-                          / self.epi_outputs[0]['population'][tool_kit.find_first_list_element_above_value(
-                                self.epi_outputs[0]['times'], self.inputs.model_constants['current_time'])]
+                          / self.outputs['uncertainty']['epi'][0]['population'][last_run_output_index,
+                              tool_kit.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'],
+                                  self.inputs.model_constants['current_time'])]
 
                 # record death reporting proportion, which may or may not have been adjusted
                 self.all_other_adjustments_made['program_prop_death_reporting'].append(
@@ -757,10 +809,9 @@ class ModelRunner:
             # incidence
             if output_dict['key'] == 'incidence':
                 for year in self.inputs.data_to_fit[output_dict['key']].keys():
-                    low = self.inputs.data_to_fit['incidence_low'][year]
-                    high = self.inputs.data_to_fit['incidence_high'][year]
-                    sd = output_dict['width_multiplier'] * (high - low) / (2. * 1.96)
-                    mu = (high + low) / 2.
+                    low, high = self.inputs.data_to_fit['incidence_low'][year], \
+                                self.inputs.data_to_fit['incidence_high'][year]
+                    sd, mu = output_dict['width_multiplier'] * (high - low) / (2. * 1.96), (high + low) / 2.
                     normal_char[output_dict['key']][year] = [mu, sd]
 
             # mortality
@@ -778,6 +829,8 @@ class ModelRunner:
 
         Args:
             params: The parameters to be set in the model.
+            scenario: Numeral for the scenario to be run
+            population_adjustment and accepted are just being fed through to set_model_with_params
         """
 
         # check whether parameter values are acceptable
@@ -785,27 +838,28 @@ class ModelRunner:
 
             # whether the parameter value is valid
             if not is_parameter_value_valid(param):
-                print 'Warning: parameter%d=%f is invalid for model' % (p, param)
+                self.add_comment_to_gui_window('Warning: parameter%d=%f is invalid for model' % (p, param))
                 self.is_last_run_success = False
                 return
 
             # whether the parameter value is within acceptable ranges
             bounds = self.inputs.param_ranges_unc[p]['bounds']
             if param < bounds[0] or param > bounds[1]:
-                print 'Warning: parameter%d=%f is outside of the allowed bounds' % (p, param)
+                self.add_comment_to_gui_window('Warning: parameter%d=%f is outside of the allowed bounds' % (p, param))
                 self.is_last_run_success = False
                 return
 
         param_dict = {names['key']: vals for names, vals in zip(self.inputs.param_ranges_unc, params)}
 
         # set parameters and run
-        self.set_model_with_params(param_dict, scenario, population_adjustment=population_adjustment,
-                                   accepted=accepted)
+        self.set_model_with_params(param_dict, scenario, population_adjustment=population_adjustment, accepted=accepted)
         self.is_last_run_success = True
+
+        # noinspection PyBroadException
         try:
             self.models[scenario].integrate()
         except:
-            print 'Warning: parameters=%s failed with model' % params
+            self.add_comment_to_gui_window('Warning: parameters=%s failed with model' % params)
             self.is_last_run_success = False
 
     def set_model_with_params(self, param_dict, scenario=0, population_adjustment=1., accepted=0):
@@ -817,6 +871,9 @@ class ModelRunner:
         Args:
             param_dict: Dictionary of the parameters to be set within the model (keys parameter name strings and values
                 parameter values)
+            scenario: Numeral for scenario to run
+            population_adjustment: Ratio by which to adjust population by (finally gets used here, as does accepted)
+            accepted: Boolean that is only needed because we should only adjust population for accepted runs
         """
 
         # adjust starting populations if target_population in sheets (i.e. country sheet, because not in defaults)
@@ -837,44 +894,53 @@ class ModelRunner:
             else:
                 raise ValueError('%s not in model_object params' % key)
 
-    def store_uncertainty(self, scenario, epi_outputs_to_analyse):
+    def store_uncertainty(self, scenario):
         """
         Add model results from one uncertainty run to the appropriate outputs dictionary, vertically stacking
         results on to the previous matrix.
 
         Args:
             scenario: The scenario being run
-            epi_outputs_to_analyse: The epidemiological outputs of interest
         Updates:
-            self.epi_outputs_uncertainty
-            self.cost_outputs_uncertainty
+            self.outputs: Which contains all the outputs in a tiered dictionary format
         """
 
-        # get outputs
-        self.epi_outputs[scenario] = self.find_epi_outputs(scenario, outputs_to_analyse=self.epi_outputs_to_analyse)
-        if self.models[scenario].interventions_to_cost: self.find_cost_outputs(scenario)
+        # get outputs to add to outputs attribute
+        new_outputs = {'epi': self.find_epi_outputs(scenario, outputs_to_analyse=self.epi_outputs_to_analyse)}
+        new_outputs['cost'] = self.find_cost_outputs(scenario) if self.models[scenario].interventions_to_cost else {}
 
-        # initialise dictionaries if necessary
-        if scenario not in self.epi_outputs_uncertainty:
-            self.epi_outputs_uncertainty[scenario] = {'times': self.epi_outputs[scenario]['times']}
-            self.cost_outputs_uncertainty[scenario] = {'times': self.cost_outputs[scenario]['times']}
-            for output in epi_outputs_to_analyse:
-                self.epi_outputs_uncertainty[scenario][output] \
-                    = numpy.empty(shape=[0, len(self.epi_outputs[scenario]['times'])])
-            for output in self.cost_outputs[scenario]:
-                self.cost_outputs_uncertainty[scenario][output] \
-                    = numpy.empty(shape=[0, len(self.cost_outputs[scenario]['times'])])
+        # create top two tiers for uncertainty outputs if not present (first run only)
+        if 'uncertainty' not in self.outputs:
+            self.outputs['uncertainty'] = {'epi': {}, 'cost': {}}
 
-        # add uncertainty data to dictionaries
-        for output in epi_outputs_to_analyse:
-            new_output = tool_kit.force_list_to_length(self.epi_outputs[scenario][output],
-                                                       int(self.epi_outputs_uncertainty[scenario][output].shape[1]))
-            self.epi_outputs_uncertainty[scenario][output] \
-                = numpy.vstack([self.epi_outputs_uncertainty[scenario][output], new_output])
-        for output in self.cost_outputs[scenario]:
-            self.cost_outputs_uncertainty[scenario][output] \
-                = numpy.vstack([self.cost_outputs_uncertainty[scenario][output],
-                                self.cost_outputs[scenario][output]])
+        # incorporate new data
+        for output_type in ['epi', 'cost']:
+
+            # create third tier if outputs haven't been recorded yet for this scenario
+            if scenario not in self.outputs['uncertainty'][output_type]:
+                self.outputs['uncertainty'][output_type] = {scenario: {}}
+
+            # for each epi or cost output available
+            for output in new_outputs[output_type]:
+
+                # if output hasn't been added yet, start array off from list output
+                if output not in self.outputs['uncertainty'][output_type][scenario]:
+                    self.outputs['uncertainty'][output_type][scenario].update(
+                        {output: numpy.array(new_outputs[output_type][output])})
+
+                # adjust list size if necessary or just use output directly
+                else:
+                    if output_type == 'epi':
+                        shape_index = 0 if self.outputs['uncertainty']['epi'][0][output].ndim == 1 else 1
+                        new_output = tool_kit.force_list_to_length(
+                            new_outputs['epi'][output],
+                            int(self.outputs['uncertainty']['epi'][scenario][output].shape[shape_index]))
+                    else:
+                        new_output = new_outputs['cost'][output]
+
+                    # stack onto previous output if seen before
+                    self.outputs['uncertainty'][output_type][scenario][output] \
+                        = numpy.vstack([self.outputs['uncertainty'][output_type][scenario][output], new_output])
 
     def update_params(self, old_params):
         """
@@ -890,9 +956,8 @@ class ModelRunner:
 
         # iterate through the parameters being used
         for p, param_dict in enumerate(self.inputs.param_ranges_unc):
-            bounds = param_dict['bounds']
+            bounds, random = param_dict['bounds'], -100.
             sd = self.gui_inputs['search_width'] * (bounds[1] - bounds[0]) / (2. * 1.96)
-            random = -100.
 
             # search for new parameters
             while random < bounds[0] or random > bounds[1]: random = norm.rvs(loc=old_params[p], scale=sd, size=1)
@@ -1197,6 +1262,7 @@ class ModelRunner:
                 },
                 "param_ranges_unc": self.inputs.param_ranges_unc
             })
+
 
 
 

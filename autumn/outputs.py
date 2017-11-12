@@ -61,6 +61,17 @@ def humanise_y_ticks(ax):
     ax.set_yticklabels(labels)
 
 
+def make_single_axis(fig):
+    """
+    Create axes for a figure with a single plot with a reasonable amount of space around.
+
+    Returns:
+        ax: The axes that can be plotted on
+    """
+
+    return fig.add_axes([0.1, 0.1, 0.6, 0.75])
+
+
 def make_axes_with_room_for_legend():
     """
     Create axes for a figure with a single plot with a reasonable amount of space around.
@@ -677,7 +688,8 @@ class Project:
         report for a country.
 
         Args:
-            models: dictionary such as: models = {'baseline': model, 'scenario_1': model_1,  ...}
+            model_runner: The main model runner object used to execute all the analyses
+            gui_inputs: All inputs from the graphical user interface
         """
 
         self.model_runner = model_runner
@@ -734,7 +746,6 @@ class Project:
 
         Returns:
             The var's index (unnamed).
-
         """
 
         return self.model_runner.models[0].var_labels.index(var)
@@ -765,18 +776,6 @@ class Project:
         fig = pyplot.figure(self.figure_number)
         self.figure_number += 1
         return fig
-
-    def make_single_axis(self, fig):
-
-        """
-        Create axes for a figure with a single plot with a reasonable amount of space around.
-
-        Returns:
-            ax: The axes that can be plotted on
-        """
-
-        ax = fig.add_axes([0.1, 0.1, 0.6, 0.75])
-        return ax
 
     def make_legend_to_single_axis(self, ax, scenario_handles, scenario_labels):
 
@@ -2057,7 +2056,7 @@ class Project:
         x_vals = numpy.linspace(start_time, self.inputs.model_constants['plot_end_time'], 1e3)
 
         # Plot functions for baseline model run only
-        ax = self.make_single_axis(fig)
+        ax = make_single_axis(fig)
         for figure_number, function in enumerate(functions):
             ax.plot(x_vals, map(self.inputs.scaleup_fns[0][function], x_vals), line_styles[figure_number],
                     label=t_k.find_title_from_dictionary(function))
@@ -2247,7 +2246,7 @@ class Project:
                 upper = {i: upper[i] + data[i] for i in data}
 
                 # plot
-                ax = self.make_single_axis(fig)
+                ax = make_single_axis(fig)
                 ax.bar(upper.keys(), upper.values(), .6, bottom=base.values(),
                        color=self.program_colours[scenario][intervention][1],
                        label=t_k.find_title_from_dictionary(intervention))
@@ -2276,7 +2275,7 @@ class Project:
 
         # standard prelims
         fig = self.set_and_update_figure()
-        ax = self.make_single_axis(fig)
+        ax = make_single_axis(fig)
         colours, patterns, compartment_full_names, markers \
             = make_related_line_styles(self.model_runner.models[0].labels, strain_or_organ)
 
@@ -2318,7 +2317,7 @@ class Project:
 
             # standard prelims
             fig = self.set_and_update_figure()
-            ax = self.make_single_axis(fig)
+            ax = make_single_axis(fig)
             colours, patterns, compartment_full_names, markers \
                 = make_related_line_styles(values.keys(), strain_or_organ)
 
@@ -2606,7 +2605,7 @@ class Project:
 
         # standard prelims
         fig = self.set_and_update_figure()
-        ax = self.make_single_axis(fig)
+        ax = make_single_axis(fig)
 
         # plotting
         for riskgroup in self.model_runner.models['manual_baseline'].riskgroups:
@@ -2738,7 +2737,7 @@ class Project:
         """
 
         fig = self.set_and_update_figure()
-        ax = self.make_single_axis(fig)
+        ax = make_single_axis(fig)
         output_colours = self.make_default_line_styles(5, True)
         bar_width = .7
         last_data = list(numpy.zeros(len(self.model_runner.models['manual_baseline'].riskgroups)))
@@ -2771,7 +2770,7 @@ class Project:
 
         # Prelims
         fig = self.set_and_update_figure()
-        ax = self.make_single_axis(fig)
+        ax = make_single_axis(fig)
 
         # Plotting
         for var in self.model_runner.models['manual_baseline'].var_labels:
@@ -2877,13 +2876,12 @@ class Project:
         self.save_figure(fig, '_likelihoods')
 
     def plot_optimised_epi_outputs(self):
-
         """
         Plot incidence and mortality over funding. This corresponds to the outputs obtained under optimal allocation.
         """
 
         fig = self.set_and_update_figure()
-        left_ax = self.make_single_axis(fig)
+        left_ax = make_single_axis(fig)
         right_ax = left_ax.twinx()
         plots = {'incidence': [left_ax, 'b^', 'TB incidence per 100,000 per year'],
                 'mortality': [right_ax, 'r+', 'TB mortality per 100,000 per year']}

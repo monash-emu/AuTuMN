@@ -787,8 +787,6 @@ class ModelRunner:
 
                 # record death reporting proportion, which may or may not have been adjusted
                 self.all_other_adjustments_made['program_prop_death_reporting'].append(self.prop_death_reporting)
-    
-                print(self.prop_death_reporting)
 
                 run += 1
 

@@ -195,6 +195,7 @@ class ModelRunner:
         self.intervention_uncertainty = self.inputs.intervention_uncertainty
         self.relative_difference_to_adjust_mortality = 1.1
         self.amount_to_adjust_mortality = .02
+        self.prop_death_reporting = self.inputs.model_constants['program_prop_death_reporting']
 
         # optimisation attributes
         self.optimisation = False  # leave True even if loading optimisation results
@@ -406,7 +407,7 @@ class ModelRunner:
                             = elementwise_list_addition(mortality_increment, epi_outputs['true_mortality' + strain])
                         epi_outputs['mortality' + strain] \
                             = elementwise_list_addition(
-                                mortality_increment * self.models[scenario].params['program_prop_death_reporting'],
+                                mortality_increment * self.prop_death_reporting,
                                 epi_outputs['mortality' + strain])
 
                 # variable flows are within the health system and so true and reported are dealt with the same way
@@ -504,7 +505,7 @@ class ModelRunner:
                                 epi_outputs['mortality' + stratum] \
                                     = elementwise_list_addition(
                                         mortality_increment
-                                        * self.models[scenario].params['program_prop_death_reporting'],
+                                        * self.prop_death_reporting,
                                         epi_outputs['mortality' + stratum])
 
                         # variable flows are within the health system and so dealt with as described above
@@ -758,10 +759,11 @@ class ModelRunner:
                                                  float(year))]
                                          / self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k'][year])
                     average_ratio = numpy.mean(ratios)
+
                     if average_ratio < 1. / self.relative_difference_to_adjust_mortality:
-                        self.inputs.model_constants['program_prop_death_reporting'] += self.amount_to_adjust_mortality
+                        self.prop_death_reporting += self.amount_to_adjust_mortality
                     elif average_ratio > self.relative_difference_to_adjust_mortality:
-                        self.inputs.model_constants['program_prop_death_reporting'] -= self.amount_to_adjust_mortality
+                        self.prop_death_reporting -= self.amount_to_adjust_mortality
 
                 else:
                     self.whether_accepted_list.append(False)
@@ -784,8 +786,9 @@ class ModelRunner:
                                   self.inputs.model_constants['current_time'])]
 
                 # record death reporting proportion, which may or may not have been adjusted
-                self.all_other_adjustments_made['program_prop_death_reporting'].append(
-                    self.inputs.model_constants['program_prop_death_reporting'])
+                self.all_other_adjustments_made['program_prop_death_reporting'].append(self.prop_death_reporting)
+    
+                print(self.prop_death_reporting)
 
                 run += 1
 

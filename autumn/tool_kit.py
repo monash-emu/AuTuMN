@@ -267,6 +267,9 @@ def force_list_to_length(list, length):
     """
     Force a list to be a certain list in order that it can be stacked with other lists to make an array when working out
     epidemiological outputs.
+    No longer used because was for use in model_runner to make all the new data outputs the same length as the first.
+    However, now the approach is to make all the data outputs the same length as the longest one, by sticking zeros on
+    at the start where necessary.
 
     Args:
         list: The list that needs its length adapted
@@ -283,7 +286,7 @@ def force_list_to_length(list, length):
         return [0.] * (length - len(list)) + list
 
 
-''' Scenario name manipulation '''
+''' scenario name manipulation '''
 
 
 def find_scenario_string_from_number(scenario):
@@ -659,9 +662,8 @@ def find_string_from_starting_letters(string_to_analyse, string_start_to_find):
     return result_string, stem
 
 
-###############################
-### Age string manipulation ###
-###############################
+'''  age string manipulation '''
+
 
 def interrogate_age_string(age_string):
     """
@@ -1087,5 +1089,4 @@ def pickle_load(file):
     with open(file, 'rb') as input:
         loaded_object = pickle.load(input)
     return loaded_object
-
 

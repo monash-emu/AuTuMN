@@ -113,6 +113,24 @@ def find_log_probability_density(distribution, param_val, bounds, additional_par
     return prior_log_likelihood
 
 
+def join_array_of_zeros_to_left(number_of_zeros, array_to_extend):
+    """
+    Quick method to concatenate a list of zeros on to the left of an existing array.
+
+    Args:
+        number_of_zeros: Number of zeros to add on
+        array_to_extend: The original array
+    Returns:
+        The new numpy array with the zeros joined on
+    """
+
+    if type(array_to_extend) == list or array_to_extend.ndim == 1:
+        zeros = numpy.zeros(number_of_zeros)
+    else:
+        zeros = numpy.zeros((array_to_extend.shape[0], number_of_zeros))
+    return numpy.hstack((zeros, array_to_extend))
+
+
 def solve_by_dichotomy(f, objective, a, b, tolerance):
     """
     Apply the dichotomy method to solve the equation f(x)=objective, x being the unknown variable.
@@ -911,8 +929,7 @@ class ModelRunner:
         new_outputs['cost'] = self.find_cost_outputs(scenario) if self.models[scenario].interventions_to_cost else {}
 
         # create top two tiers for uncertainty outputs if not present (first run only)
-        if 'uncertainty' not in self.outputs:
-            self.outputs['uncertainty'] = {'epi': {}, 'cost': {}}
+        if 'uncertainty' not in self.outputs: self.outputs['uncertainty'] = {'epi': {}, 'cost': {}}
 
         # incorporate new data
         for output_type in ['epi', 'cost']:
@@ -929,19 +946,34 @@ class ModelRunner:
                     self.outputs['uncertainty'][output_type][scenario].update(
                         {output: numpy.array(new_outputs[output_type][output])})
 
-                # adjust list size if necessary or just use output directly
+                # otherwise append new data
                 else:
+
+                    # adjust list size if necessary or just use output directly
                     if output_type == 'epi':
                         shape_index = 0 if self.outputs['uncertainty']['epi'][0][output].ndim == 1 else 1
-                        new_output = tool_kit.force_list_to_length(
-                            new_outputs['epi'][output],
-                            int(self.outputs['uncertainty']['epi'][scenario][output].shape[shape_index]))
-                    else:
-                        new_output = new_outputs['cost'][output]
+
+                        # extend new output data with zeros if too short
+                        if len(new_outputs['epi'][output]) \
+                                < self.outputs['uncertainty']['epi'][0][output].shape[shape_index]:
+                            new_outputs['epi'][output] \
+                                = join_array_of_zeros_to_left(
+                                    self.outputs['uncertainty']['epi'][0][output].shape[shape_index]
+                                    - len(new_outputs['epi'][output]), new_outputs['epi'][output])
+
+                        # extend existing output data array if too long
+                        elif len(new_outputs['epi'][output]) \
+                                > self.outputs['uncertainty']['epi'][0][output].shape[shape_index]:
+                            self.outputs['uncertainty']['epi'][0][output] \
+                                = join_array_of_zeros_to_left(len(new_outputs['epi'][output])
+                                   - self.outputs['uncertainty']['epi'][0][output].shape[shape_index],
+                                                                       self.outputs['uncertainty']['epi'][0][output])
 
                     # stack onto previous output if seen before
                     self.outputs['uncertainty'][output_type][scenario][output] \
-                        = numpy.vstack([self.outputs['uncertainty'][output_type][scenario][output], new_output])
+                        = numpy.vstack((self.outputs['uncertainty'][output_type][scenario][output],
+                                        new_outputs[output_type][output]))
+
 
     def update_params(self, old_params):
         """
@@ -1263,9 +1295,4 @@ class ModelRunner:
                 },
                 "param_ranges_unc": self.inputs.param_ranges_unc
             })
-
-
-
-
-
 

@@ -1635,7 +1635,8 @@ class Project:
                         linecolour = self.output_colours[scenario][1]
 
                     # median
-                    ax.plot(self.outputs['manual']['epi'][uncertainty_type]['times'][start_index:],
+                    ax.plot(self.outputs['uncertainty']['epi'][uncertainty_type][output][
+                                self.model_runner.percentiles.index(50), :][start_index:],
                             self.uncertainty_centiles['epi'][uncertainty_type][output][
                                 self.model_runner.percentiles.index(50), :][start_index:],
                             color=linecolour, linestyle=self.output_colours[scenario][0],
@@ -1643,7 +1644,8 @@ class Project:
 
                     # upper and lower confidence bounds
                     for centile in [2.5, 97.5]:
-                        ax.plot(self.outputs['manual']['epi'][uncertainty_type]['times'][start_index:],
+                        ax.plot(self.outputs['uncertainty']['epi'][uncertainty_type]['times'][
+                                    self.model_runner.percentiles.index(centile), :][start_index:],
                                 self.uncertainty_centiles['epi'][uncertainty_type][output][
                                     self.model_runner.percentiles.index(centile), :][start_index:],
                                 color=linecolour, linestyle='--', linewidth=.5, label=None)

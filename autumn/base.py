@@ -457,10 +457,10 @@ class BaseModel:
 
         derivative = self.make_derivative_fn()
 
-        # Previously done in calculate_diagnostics
+        # previously done in calculate_diagnostics
         for i, label in enumerate(self.labels):
-            self.compartment_soln[label] = [None] * n_time  # Initialise lists
-            self.compartment_soln[label][0] = y[i]  # Store initial state
+            self.compartment_soln[label] = [None] * n_time  # initialise lists
+            self.compartment_soln[label][0] = y[i]  # store initial state
 
         # Need to run derivative here to get the initial vars
         k1 = derivative(y, self.times[0])
@@ -549,7 +549,7 @@ class BaseModel:
             # adjustments for risk groups
             y = self.make_adjustments_during_integration(y)
 
-            # For stored steps only, store compartment state, vars and intercompartmental flows
+            # for stored steps only, store compartment state, vars and intercompartmental flows
             for i, label in enumerate(self.labels):
                 self.compartment_soln[label][i_time + 1] = y[i]
             for i_label, var_label in enumerate(self.var_labels):
@@ -684,6 +684,10 @@ class BaseModel:
             The solution for the compartment.
         """
 
+        for i in range(len(self.compartment_soln[label])):
+            if type(self.compartment_soln[label][i]) == numpy.array \
+                    or type(self.compartment_soln[label][i]) == numpy.ndarray:
+                self.compartment_soln[label][i] = self.compartment_soln[label][i][0]
         return numpy.array(self.compartment_soln[label])
 
     def get_var_soln(self, label):

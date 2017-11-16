@@ -717,6 +717,8 @@ class Project:
         # pre-analysis processing attributes
         self.accepted_no_burn_in_indices = []
         self.uncertainty_centiles = {'epi': {}, 'cost': {}}
+        self.quantities_to_write_back \
+            = ['all_parameters_tried', 'all_compartment_values_tried', 'all_other_adjustments_made']
 
         # extract some characteristics from the models within model runner
         self.scenarios = self.gui_inputs['scenarios_to_run']
@@ -1004,16 +1006,17 @@ class Project:
 
     def write_automatic_calibration_outputs(self):
         """
-        Write median values from automatic calibration process back to input spreadsheets, using the parameter values
-        that were associated with the median model output value.
+        Write values from automatic calibration process back to input spreadsheets, using the parameter values
+        that were associated with the model run with the greatest likelihood.
         """
 
+        # noinspection PyBroadException
         try:
             path = os.path.join('autumn/xls/data_' + self.country + '.xlsx')
         except:
-            print('No country input spreadsheet for requested uncertainty parameter writing')
+            print('No country input spreadsheet available for requested uncertainty parameter writing')
         else:
-            print('Writing calibration parameters back to input spreadsheet')
+            print('Writing automatic calibration parameters back to input spreadsheet')
 
             # open workbook and sheet
             country_input_book = xl.load_workbook(path)
@@ -1023,9 +1026,8 @@ class Project:
             best_likelihood_index = self.model_runner.loglikelihoods.index(max(self.model_runner.loglikelihoods))
 
             # write the parameters and starting compartment sizes back in to input sheets
-            write_param_to_sheet(country_sheet, self.model_runner.all_parameters_tried, best_likelihood_index)
-            write_param_to_sheet(country_sheet, self.model_runner.all_compartment_values_tried, best_likelihood_index)
-            write_param_to_sheet(country_sheet, self.model_runner.all_other_adjustments_made, best_likelihood_index)
+            for attribute in self.quantities_to_write_back:
+                write_param_to_sheet(country_sheet, getattr(self.model_runner, attribute), best_likelihood_index)
 
             # save
             country_input_book.save(path)

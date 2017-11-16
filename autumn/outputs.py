@@ -913,6 +913,17 @@ class Project:
 
     ''' methods for pre-processing model runner outputs to more interpretable forms '''
 
+    def find_uncertainty_indices(self):
+        """
+        Quick method to create a list of the indices of interest for the runs of the uncertainty analysis.
+
+        Updates:
+            self.accepted_no_burn_in_indices: List of the uncertainty indices of interest
+        """
+
+        self.accepted_no_burn_in_indices \
+            = [i for i in self.model_runner.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
+
     def find_uncertainty_centiles(self, output_type):
         """
         Find percentiles from uncertainty dictionaries.
@@ -952,8 +963,7 @@ class Project:
 
         # processing methods that are only required for outputs
         if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
-            self.accepted_no_burn_in_indices \
-                = [i for i in self.model_runner.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
+            self.find_uncertainty_indices()
             for output_type in ['epi', 'cost']:
                 self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles(output_type)
 

@@ -974,7 +974,6 @@ class ModelRunner:
                         = numpy.vstack((self.outputs['uncertainty'][output_type][scenario][output],
                                         new_outputs[output_type][output]))
 
-
     def update_params(self, old_params):
         """
         Update all the parameter values being used in the uncertainty analysis.

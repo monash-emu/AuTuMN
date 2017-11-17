@@ -953,7 +953,7 @@ class ModelRunner:
                 else:
 
                     # adjust list size if necessary or just use output directly
-                    if output_type == 'epi':
+                    if output_type == 'epi' and scenario == 0:
                         shape_index \
                             = 0 if self.outputs[uncertainty_type]['epi'][scenario][output].ndim == 1 else 1
 
@@ -1042,7 +1042,7 @@ class ModelRunner:
 
             # integrate and save
             self.models[15].integrate()
-            self.store_uncertainty(15)
+            self.store_uncertainty(15, uncertainty_type=['int_uncertainty'])
 
     ''' optimisation methods '''
 

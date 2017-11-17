@@ -711,19 +711,19 @@ class ConsolidatedModel(StratifiedModel):
             if 'int_prop_ngo_activities' in self.relevant_interventions:
                 self.vars['program_prop_treatment_success' + strain] \
                     -= self.vars['program_prop_treatment_success' + strain] \
-                       * self.params['int_prop_treatment_support_improvement'] \
-                       * (1. - self.vars['int_prop_ngo_activities'])
+                        * self.params['int_prop_treatment_support_improvement'] \
+                        * (1. - self.vars['int_prop_ngo_activities'])
 
             # add some extra treatment success if food vouchers are provided to treated cases
             if 'int_prop_food_voucher' + strain in self.relevant_interventions:
                 self.vars['program_prop_treatment_success' + strain] \
-                    += (1. - self.vars['program_prop_treatment_success' + strain]) \
-                       * self.params['int_prop_food_voucher_improvement'] \
-                       * self.vars['int_prop_food_voucher' + strain]
+                   += (1. - self.vars['program_prop_treatment_success' + strain]) \
+                      * self.params['int_prop_food_voucher_improvement'] \
+                      * self.vars['int_prop_food_voucher' + strain]
                 self.vars['program_prop_treatment_death' + strain] \
                     -= self.vars['program_prop_treatment_death' + strain] \
-                       * self.params['int_prop_food_voucher_improvement'] \
-                       * self.vars['int_prop_food_voucher' + strain]
+                      * self.params['int_prop_food_voucher_improvement'] \
+                      * self.vars['int_prop_food_voucher' + strain]
 
             # calculate the default proportion as the remainder from success and death
             for history in self.histories:
@@ -972,10 +972,13 @@ class ConsolidatedModel(StratifiedModel):
                                   * self.vars['riskgroup_prop' + riskgroup]
                             self.vars['rate_ipt_commencement_norisk' + agegroup] \
                                 -= self.vars['rate_ipt_commencement' + riskgroup + agegroup]
-                        for history in self.histories:
-                            self.vars['rate_ipt_commencement' + riskgroup + history + agegroup] \
-                                = self.vars['rate_ipt_commencement' + riskgroup + agegroup] \
-                                  * self.vars['prop_population' + history]
+
+                # distribute IPT treatment across treatment history stratification
+                for riskgroup in self.riskgroups:
+                    for history in self.histories:
+                        self.vars['rate_ipt_commencement' + riskgroup + history + agegroup] \
+                            = self.vars['rate_ipt_commencement' + riskgroup + agegroup] \
+                              * self.vars['prop_population' + history]
 
     def calculate_population_sizes(self):
         """

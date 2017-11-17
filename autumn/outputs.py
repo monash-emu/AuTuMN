@@ -1548,9 +1548,9 @@ class Project:
 
         # type of analysis requested
         if self.inputs.intervention_uncertainty:
-            uncertainty_type, start_index = 15, 0
+            uncertainty_scenario, start_index = 15, 0
         else:
-            uncertainty_type = 0
+            uncertainty_scenario = 0
 
         # loop through indicators
         for o, output in enumerate(outputs):
@@ -1560,7 +1560,7 @@ class Project:
 
             # overlay first so it's at the back
             self.overlay_gtb_data(ax, o, output, start_time, indices, patch_colour, compare_gtb=False,
-                                  gtb_ci_plot='patch', plot_targets=True, uncertainty_type=uncertainty_type,
+                                  gtb_ci_plot='patch', plot_targets=True, uncertainty_scenario=uncertainty_scenario,
                                   alpha=1.)
 
             # plot scenarios without uncertainty
@@ -1597,30 +1597,31 @@ class Project:
             # plot with uncertainty confidence intervals
             elif purpose == 'ci_plot':
                 if self.inputs.intervention_uncertainty:
-                    scenarios, uncertainty_type, start_index, linewidth, linecolour = [0, 15], 15, 0, 1., 'r'
+                    scenarios, uncertainty_type, uncertainty_scenario, start_index, linewidth, linecolour \
+                        = [0, 15], 'int_uncertainty', 15, 0, 1., 'r'
                 else:
-                    (scenarios, linewidth) = (self.scenarios, 1.5)
+                    scenarios, uncertainty_type, linewidth = self.scenarios, 'epi_uncertainty', 1.5
 
                 for scenario in scenarios[::-1]:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
                     if not self.inputs.intervention_uncertainty:
-                        uncertainty_type = scenario
+                        uncertainty_scenario = scenario
                         start_index = self.find_start_index(scenario)
                         linecolour = self.output_colours[scenario][1]
 
                     # median
-                    ax.plot(self.outputs['epi_uncertainty']['epi'][uncertainty_type]['times'][
+                    ax.plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][
                                 self.model_runner.percentiles.index(50), :][start_index:],
-                            self.uncertainty_centiles['epi'][uncertainty_type][output][
+                            self.uncertainty_centiles['epi'][uncertainty_scenario][output][
                                 self.model_runner.percentiles.index(50), :][start_index:],
                             color=linecolour, linestyle=self.output_colours[scenario][0],
                             linewidth=linewidth, label=t_k.capitalise_and_remove_underscore(scenario_name))
 
                     # upper and lower confidence bounds
                     for centile in [2.5, 97.5]:
-                        ax.plot(self.outputs['epi_uncertainty']['epi'][uncertainty_type]['times'][
+                        ax.plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][
                                     self.model_runner.percentiles.index(centile), :][start_index:],
-                                self.uncertainty_centiles['epi'][uncertainty_type][output][
+                                self.uncertainty_centiles['epi'][uncertainty_scenario][output][
                                     self.model_runner.percentiles.index(centile), :][start_index:],
                                 color=linecolour, linestyle='--', linewidth=.5, label=None)
                     end_filename = '_ci'
@@ -1631,32 +1632,32 @@ class Project:
                 # get relevant data according to whether intervention or baseline uncertainty is being run
                 if self.inputs.intervention_uncertainty:
                     self.start_time_index = 0
-                    uncertainty_type, runs = 15, self.inputs.n_samples
+                    uncertainty_scenario, runs = 15, self.inputs.n_samples
                 else:
-                    uncertainty_type = 0
-                    runs = len(self.model_runner.outputs['epi_uncertainty']['epi'][uncertainty_type][output])
+                    uncertainty_scenario = 0
+                    runs = len(self.model_runner.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output])
 
                 # plot the runs
                 for run in range(runs):
                     if run not in self.model_runner.accepted_indices and self.plot_rejected_runs:
-                        ax.plot(self.model_runner.outputs['epi_uncertainty']['epi'][uncertainty_type]['times'][run,
+                        ax.plot(self.model_runner.outputs['epi_uncertainty']['epi'][uncertainty_scenario]['times'][run,
                                     self.start_time_index:],
-                                self.model_runner.outputs['epi_uncertainty']['epi'][uncertainty_type][output][run,
+                                self.model_runner.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output][run,
                                     self.start_time_index:],
                                 linewidth=.2, color='y', label=t_k.capitalise_and_remove_underscore('baseline'))
                     else:
-                        ax.plot(self.outputs['epi_uncertainty']['epi'][uncertainty_type]['times'][run,
+                        ax.plot(self.outputs['epi_uncertainty']['epi'][uncertainty_scenario]['times'][run,
                                     self.start_time_index:],
-                                self.outputs['epi_uncertainty']['epi'][uncertainty_type][output][run,
+                                self.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output][run,
                                     self.start_time_index:],
                                 linewidth=1.2, color=str(1. - float(run) / float(len(
-                                    self.outputs['epi_uncertainty']['epi'][uncertainty_type][output]))),
+                                    self.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output]))),
                                 label=t_k.capitalise_and_remove_underscore('baseline'))
                     end_filename = '_progress'
 
             if self.inputs.intervention_uncertainty:
-                ax.plot(self.model_runner.epi_outputs[0]['times'][self.start_time_index:],
-                        self.model_runner.epi_outputs[0][output][self.start_time_index:],
+                ax.plot(self.outputs['int_uncertainty']['epi'][15]['times'][self.start_time_index:],
+                        self.outputs['int_uncertainty']['epi'][15][output][self.start_time_index:],
                         color='k', linewidth=1.2)
 
             y_absolute_limit = None
@@ -1755,7 +1756,7 @@ class Project:
         self.save_figure(fig, '_gtb_shaded')
 
     def overlay_gtb_data(self, ax, o, output, start_time, indices, patch_colour, compare_gtb=False, gtb_ci_plot='hatch',
-                         plot_targets=True, uncertainty_type=0, alpha=1.):
+                         plot_targets=True, uncertainty_scenario=0, alpha=1.):
         """
         Method to plot the data loaded directly from the GTB report in the background.
 
@@ -1769,7 +1770,7 @@ class Project:
             compare_gtb: Whether to plot the targets/milestones relative to GTB data rather than modelled outputs
             gtb_ci_plot:
             plot_targets:
-            uncertainty_type:
+            uncertainty_scenario:
             alpha: Alpha value for patch
         """
 
@@ -1809,13 +1810,13 @@ class Project:
 
             # plot the targets (and milestones) and the fitted exponential function to achieve them
             if self.gui_inputs['output_uncertainty'] and not self.inputs.intervention_uncertainty:
-                base_value = self.uncertainty_centiles['epi'][uncertainty_type][output][
+                base_value = self.uncertainty_centiles['epi'][uncertainty_scenario][output][
                              self.model_runner.percentiles.index(50), :][t_k.find_first_list_element_at_least_value(
-                                self.outputs['manual']['epi'][uncertainty_type]['times'], 2015.)]
+                                self.outputs['manual']['epi'][uncertainty_scenario]['times'], 2015.)]
             else:
-                base_value = self.model_runner.outputs['manual']['epi'][uncertainty_type][output][
+                 base_value = self.outputs['manual']['epi'][uncertainty_scenario][output][
                     t_k.find_first_list_element_at_least_value(
-                        self.model_runner.outputs['manual']['epi'][uncertainty_type]['times'], 2015.)]
+                        self.outputs['manual']['epi'][uncertainty_scenario]['times'], 2015.)]
             if compare_gtb: base_value = gtb_data['point_estimate'][2014]  # should be 2015, but data not yet inputted
             if plot_targets and (output == 'incidence' or output == 'mortality'):
                 plot_endtb_targets(ax, output, base_value, '.7')

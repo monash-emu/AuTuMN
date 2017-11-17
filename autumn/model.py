@@ -1055,15 +1055,17 @@ class ConsolidatedModel(StratifiedModel):
                         detection_organ = ''
                         if self.vary_detection_by_organ:
                             detection_organ = '_smearpos'
-                        self.vars['popsize_bulgaria_improve_dst'] \
-                            += self.vars['program_rate_detect' + detection_organ + detection_riskgroup] \
-                               * self.compartments['active' + detection_organ + strain + riskgroup + agegroup]
+                        for history in self.histories:
+                            self.vars['popsize_bulgaria_improve_dst'] \
+                                += self.vars['program_rate_detect' + detection_organ + detection_riskgroup] \
+                                   * self.compartments['active' + detection_organ + strain + riskgroup + history + agegroup]
                         if self.vary_detection_by_organ:
                             detection_organ = '_smearneg'
-                        self.vars['popsize_bulgaria_improve_dst'] \
-                            += self.vars['program_rate_detect' + detection_organ + detection_riskgroup] \
-                               * self.compartments['active' + detection_organ + strain + riskgroup + agegroup] \
-                               * self.params['tb_prop_smearneg_culturepos']
+                        for history in self.histories:
+                            self.vars['popsize_bulgaria_improve_dst'] \
+                                += self.vars['program_rate_detect' + detection_organ + detection_riskgroup] \
+                                   * self.compartments['active' + detection_organ + strain + riskgroup + history + agegroup] \
+                                   * self.params['tb_prop_smearneg_culturepos']
 
         # ACF
         # loop over risk groups, including '', which is no stratification

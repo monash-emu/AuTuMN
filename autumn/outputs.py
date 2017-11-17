@@ -1549,9 +1549,9 @@ class Project:
 
         # type of analysis requested
         if self.inputs.intervention_uncertainty:
-            uncertainty_scenario, start_index = 15, 0
+            uncertainty_scenario, start_index, uncertainty_type = 15, 0, 'int_uncertainty'
         else:
-            uncertainty_scenario = 0
+            uncertainty_scenario, uncertainty_type = 0, 'epi_uncertainty'
 
         # loop through indicators
         for o, output in enumerate(outputs):
@@ -1640,31 +1640,32 @@ class Project:
 
                 # plot the runs
                 for run in range(runs):
-                    if run in self.accepted_indices or self.plot_rejected_runs:
-                        linewidth, colour = .2, 'y'
+                    if run in self.accepted_indices or self.plot_rejected_runs or self.inputs.intervention_uncertainty:
                         if run in self.accepted_indices:
                             linewidth = 1.2
                             colour = str(1. - float(run) / float(len(
-                                self.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output])))
-                        ax.plot(self.outputs['epi_uncertainty']['epi'][uncertainty_scenario]['times'][run,
+                                self.outputs[uncertainty_type]['epi'][uncertainty_scenario][output])))
+                        elif self.inputs.intervention_uncertainty:
+                            linewidth, colour = .8, '.4'
+                        else:
+                            linewidth, colour = .2, 'y'
+                        ax.plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][run,
                                 self.start_time_index:],
-                                self.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output][run,
+                                self.outputs[uncertainty_type]['epi'][uncertainty_scenario][output][run,
                                 self.start_time_index:],
                                 linewidth=linewidth, color=colour,
                                 label=t_k.capitalise_and_remove_underscore('baseline'))
-
                     end_filename = '_progress'
 
+            # plot baseline in the case of intervention uncertainty
             if self.inputs.intervention_uncertainty:
-                ax.plot(self.outputs['int_uncertainty']['epi'][15]['times'][self.start_time_index:],
-                        self.outputs['int_uncertainty']['epi'][15][output][self.start_time_index:],
-                        color='k', linewidth=1.2)
+                ax.plot(self.outputs['manual']['epi'][15]['times'][self.start_time_index:],
+                        self.outputs['manual']['epi'][15][output][self.start_time_index:], color='k', linewidth=1.2)
 
             y_absolute_limit = None
             if self.inputs.intervention_uncertainty or len(self.scenarios) > 1:
-                plot_start_time_index \
-                    = t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][0]['times'],
-                                                                 start_time)
+                plot_start_time_index = t_k.find_first_list_element_at_least_value(
+                    self.model_runner.outputs['manual']['epi'][0]['times'], start_time)
                 y_absolute_limit = max(self.model_runner.outputs['manual']['epi'][0][output][plot_start_time_index:])
 
             self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
@@ -1706,21 +1707,21 @@ class Project:
             start_index = self.find_start_index(0)
 
             if self.inputs.intervention_uncertainty:
-                uncertainty_type, start_index = 15, 0
+                uncertainty_scenario, start_index, uncertainty_type = 15, 0, 'int_uncertainty'
             elif self.inputs.mode == 'epi_uncertainty':
-                uncertainty_type = 0
+                uncertainty_scenario, uncertainty_type = 0, 'epi_uncertainty'
 
             # overlay median and upper and lower CIs if requested
             if ci_plot:
                 ax.plot(
-                    self.model_runner.outputs['manual']['epi'][uncertainty_type]['times'][start_index:],
-                    self.uncertainty_centiles['epi'][uncertainty_type][
+                    self.outputs['manual']['epi'][uncertainty_scenario]['times'][start_index:],
+                    self.uncertainty_centiles['epi'][uncertainty_scenario][
                         output][self.model_runner.percentiles.index(50), :][start_index:],
                     color=self.output_colours[0][1], linestyle=self.output_colours[0][0],
                     linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
                 for centile in [2.5, 97.5]:
-                    ax.plot(self.model_runner.outputs['manual'][uncertainty_type]['times'][start_index:],
-                            self.uncertainty_centiles['epi'][uncertainty_type][output][
+                    ax.plot(self.model_runner.outputs['manual'][uncertainty_scenario]['times'][start_index:],
+                            self.uncertainty_centiles['epi'][uncertainty_scenario][output][
                                 self.model_runner.percentiles.index(centile), :][start_index:],
                             color=self.output_colours[0][1], linestyle='--', linewidth=.5, label=0)
 
@@ -1728,15 +1729,14 @@ class Project:
             patch_colours = [cm.Blues(x) for x in numpy.linspace(0., 1., self.model_runner.n_centiles_for_shading)]
             for i in range(self.model_runner.n_centiles_for_shading):
                 patch = create_patch_from_list(
-                    self.outputs['epi_uncertainty']['epi'][uncertainty_type]['times'][0, start_index:],
-                    self.uncertainty_centiles['epi'][uncertainty_type][output][i+3, :][start_index:],
-                    self.uncertainty_centiles['epi'][uncertainty_type][output][-i-1, :][start_index:])
+                    self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][0, start_index:],
+                    self.uncertainty_centiles['epi'][uncertainty_scenario][output][i+3, :][start_index:],
+                    self.uncertainty_centiles['epi'][uncertainty_scenario][output][-i-1, :][start_index:])
                 ax.add_patch(patches.Polygon(patch, color=patch_colours[i]))
 
             if self.inputs.intervention_uncertainty:
-                ax.plot(self.model_runner.epi_outputs[0]['times'][self.start_time_index:],
-                        self.model_runner.epi_outputs[0][output][self.start_time_index:],
-                        color='k', linewidth=1.2)
+                ax.plot(self.outputs['manual']['epi'][0]['times'][self.start_time_index:],
+                        self.outputs['manual']['epi'][0][output][self.start_time_index:], color='k', linewidth=1.2)
 
             # now packaged into a function to overlay the GTB data over the existing plot
             self.overlay_gtb_data(ax, o, output, start_time, indices, patch_colour)
@@ -1744,8 +1744,8 @@ class Project:
             y_absolute_limit = None
             if self.inputs.intervention_uncertainty:
                 plot_start_time_index \
-                    = t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs[0]['times'], start_time)
-                y_absolute_limit = max(self.model_runner.epi_outputs[0][output][plot_start_time_index:])
+                    = t_k.find_first_list_element_at_least_value(self.outputs['manual']['epi'][0]['times'], start_time)
+                y_absolute_limit = max(self.outputs['manual']['epi'][0][output][plot_start_time_index:])
 
             self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
                            legend=(o == len(outputs) - 1 and len(self.scenarios) > 1),

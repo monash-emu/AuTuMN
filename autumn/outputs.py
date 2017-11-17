@@ -1272,7 +1272,8 @@ class Project:
             scenario_name = t_k.find_scenario_string_from_number(scenario)
             path = os.path.join(self.out_dir_project, scenario_name) + ".docx"
             document = Document()
-            table = document.add_table(rows=len(self.years_to_write) + 1, cols=len(self.model_runner.epi_outputs_to_analyse) + 1)
+            table = document.add_table(rows=len(self.years_to_write) + 1,
+                                       cols=len(self.model_runner.epi_outputs_to_analyse) + 1)
 
             # for each epidemiological indicator
             for o, output in enumerate(self.model_runner.epi_outputs_to_analyse):
@@ -1291,11 +1292,11 @@ class Project:
 
                     # with uncertainty
                     if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
-                        (lower_limit, point_estimate, upper_limit) \
-                            = self.uncertainty_centiles['epi'][scenario][output][
+                        point_lower_upper \
+                            = tuple(self.uncertainty_centiles['epi'][scenario][output][
                                     0:3, t_k.find_first_list_element_at_least_value(
-                                        self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
-                        row_cells[o + 1].text = '%.1f\n(%.1f to %.1f)' % (point_estimate, lower_limit, upper_limit)
+                                        self.model_runner.outputs['manual']['epi'][scenario]['times'], year)])
+                        row_cells[o + 1].text = '%.1f\n(%.1f to %.1f)' % point_lower_upper
 
                     # without
                     else:

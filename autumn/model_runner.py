@@ -1273,8 +1273,7 @@ class ModelRunner:
 
     def add_comment_to_gui_window(self, comment):
 
-        if self.js_gui:
-            self.js_gui('console', { "message": comment })
+        if self.js_gui: self.js_gui('console', {'message': comment})
 
     def plot_progressive_parameters(self):
         """

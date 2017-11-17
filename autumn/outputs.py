@@ -976,10 +976,10 @@ class Project:
         # write spreadsheets - with sheet for each scenario or each output
         if self.gui_inputs['output_spreadsheets'] or self.inputs.intervention_uncertainty:
             if self.gui_inputs['output_by_scenario']:
-                print('Writing scenario spreadsheets')
+                self.model_runner.add_comment_to_gui_window('Writing scenario spreadsheets')
                 self.write_xls_by_scenario()
             else:
-                print('Writing output indicator spreadsheets')
+                self.model_runner.add_comment_to_gui_window('Writing output indicator spreadsheets')
                 self.write_xls_by_output()
 
         # write documents - with document for each scenario or each output
@@ -1014,9 +1014,11 @@ class Project:
         try:
             path = os.path.join('autumn/xls/data_' + self.country + '.xlsx')
         except:
-            print('No country input spreadsheet available for requested uncertainty parameter writing')
+            self.model_runner.add_comment_to_gui_window(
+                'No country input spreadsheet available for requested uncertainty parameter writing')
         else:
-            print('Writing automatic calibration parameters back to input spreadsheet')
+            self.model_runner.add_comment_to_gui_window(
+                'Writing automatic calibration parameters back to input spreadsheet')
 
             # open workbook and sheet
             country_input_book = xl.load_workbook(path)
@@ -1040,12 +1042,7 @@ class Project:
         # general prelims to work out what to write
         horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
         result_types = ['epi_', 'raw_cost_', 'inflated_cost_', 'discounted_cost_', 'discounted_inflated_cost_']
-        if self.inputs.intervention_uncertainty:
-            scenarios, string_to_add = [15], 'manual_'
-        elif self.gui_inputs['output_uncertainty']:
-            string_to_add = 'uncertainty_'
-        else:
-            string_to_add = 'manual_'
+        if self.inputs.intervention_uncertainty: scenarios = [15]
 
         # find years of interest
         years = range(int(self.inputs.model_constants['report_start_time']),

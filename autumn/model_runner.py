@@ -468,7 +468,10 @@ class ModelRunner:
                 for stratum in stratification:
 
                     # initialise lists
-                    for output in outputs_to_analyse: epi_outputs[output + stratum] = [0.] * len(epi_outputs['times'])
+                    for output in outputs_to_analyse:
+                        epi_outputs[output + stratum] = [0.] * len(epi_outputs['times'])
+                        for strain in strains:
+                            epi_outputs[output + strain + stratum] = [0.] * len(epi_outputs['times'])
 
                     # population
                     for compartment in self.models[scenario].compartments:

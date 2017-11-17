@@ -1042,7 +1042,7 @@ class ModelRunner:
 
             # integrate and save
             self.models[15].integrate()
-            self.store_uncertainty(15, uncertainty_type=['int_uncertainty'])
+            self.store_uncertainty(15, uncertainty_type='int_uncertainty')
 
     ''' optimisation methods '''
 

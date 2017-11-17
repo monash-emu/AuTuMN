@@ -933,7 +933,7 @@ class Project:
         self.accepted_no_burn_in_indices \
             = [i for i in self.model_runner.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
 
-    def find_uncertainty_centiles(self, output_type):
+    def find_uncertainty_centiles(self, run_type, output_type):
         """
         Find percentiles from uncertainty dictionaries.
 
@@ -944,18 +944,18 @@ class Project:
         """
 
         uncertainty_centiles = {}
-        for scenario in self.outputs['epi_uncertainty'][output_type]:
+        for scenario in self.outputs[run_type][output_type]:
             uncertainty_centiles[scenario] = {}
-            for output in self.outputs['epi_uncertainty'][output_type][scenario]:
+            for output in self.outputs[run_type][output_type][scenario]:
                 if output != 'times':
 
                     # use all runs for scenario analysis (as only those that were accepted are saved)
                     if scenario:
-                        matrix_to_analyse = self.outputs['epi_uncertainty'][output_type][scenario][output]
+                        matrix_to_analyse = self.outputs[run_type][output_type][scenario][output]
 
                     # select the baseline runs for analysis from the larger number that were saved
                     else:
-                        matrix_to_analyse = self.outputs['epi_uncertainty'][output_type][scenario][output][
+                        matrix_to_analyse = self.outputs[run_type][output_type][scenario][output][
                                             self.accepted_no_burn_in_indices, :]
 
                     uncertainty_centiles[scenario][output] \
@@ -971,10 +971,13 @@ class Project:
         """
 
         # processing methods that are only required for outputs
-        if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
+        if self.gui_inputs['output_uncertainty']:
             self.find_uncertainty_indices()
             for output_type in ['epi', 'cost']:
-                self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles(output_type)
+                self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles('epi_uncertainty', output_type)
+        if self.inputs.intervention_uncertainty:
+            for output_type in ['epi', 'cost']:
+                self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles('int_uncertainty', output_type)
 
         # write automatic calibration values back to sheets
         if self.gui_inputs['output_uncertainty'] and self.gui_inputs['write_uncertainty_outcome_params']:

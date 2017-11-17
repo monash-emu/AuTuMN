@@ -1447,7 +1447,8 @@ class Project:
             if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
                 self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose='ci_plot')
                 self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose='progress')
-                self.plot_shaded_outputs_gtb(self.gtb_available_outputs)
+                self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose='shaded')
+                # self.plot_shaded_outputs_gtb(self.gtb_available_outputs)
             if self.gui_inputs['n_strains'] > 1:
                 self.plot_resistant_strain_outputs(['incidence', 'mortality', 'prevalence', 'perc_incidence'])
 
@@ -1529,7 +1530,7 @@ class Project:
             self.plot_optimised_epi_outputs()
             self.plot_piecharts_opti()
 
-    def plot_outputs_against_gtb(self, outputs, purpose='scenario'):
+    def plot_outputs_against_gtb(self, outputs, purpose='scenario', ci_plot=False):
         """
         Produces the plot for the main outputs, loops over multiple scenarios.
 
@@ -1562,8 +1563,10 @@ class Project:
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
 
             # overlay first so it's at the back
+            gtb_ci_plot = 'patch'
+            if purpose == 'shaded': gtb_ci_plot = 'hatch'
             self.overlay_gtb_data(
-                ax, o, output, start_time, indices, patch_colour, compare_gtb=False, gtb_ci_plot='patch',
+                ax, o, output, start_time, indices, patch_colour, compare_gtb=False, gtb_ci_plot=gtb_ci_plot,
                 plot_targets=True, uncertainty_scenario=uncertainty_scenario, alpha=1.)
 
             # plot scenarios without uncertainty
@@ -1647,11 +1650,44 @@ class Project:
                                 label=t_k.capitalise_and_remove_underscore('baseline'))
                     end_filename = '_progress'
 
+            elif purpose == 'shaded':
+
+                # plot with uncertainty confidence intervals
+                start_index = self.find_start_index(0)
+
+                if self.inputs.intervention_uncertainty:
+                    start_index = 0
+
+                # overlay median and upper and lower CIs if requested
+                if ci_plot:
+                    ax.plot(
+                        self.outputs['manual']['epi'][uncertainty_scenario]['times'][start_index:],
+                        self.uncertainty_centiles['epi'][uncertainty_scenario][
+                            output][self.model_runner.percentiles.index(50), :][start_index:],
+                        color=self.output_colours[0][1], linestyle=self.output_colours[0][0],
+                        linewidth=1.5)
+                    for centile in [2.5, 97.5]:
+                        ax.plot(self.model_runner.outputs['manual'][uncertainty_scenario]['times'][start_index:],
+                                self.uncertainty_centiles['epi'][uncertainty_scenario][output][
+                                self.model_runner.percentiles.index(centile), :][start_index:],
+                                color=self.output_colours[0][1], linestyle='--', linewidth=.5, label=0)
+
+                # plot shaded areas as patches
+                patch_colours = [cm.Blues(x) for x in numpy.linspace(0., 1., self.model_runner.n_centiles_for_shading)]
+                for i in range(self.model_runner.n_centiles_for_shading):
+                    patch = create_patch_from_list(
+                        self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][0, start_index:],
+                        self.uncertainty_centiles['epi'][uncertainty_scenario][output][i + 3, :][start_index:],
+                        self.uncertainty_centiles['epi'][uncertainty_scenario][output][-i - 1, :][start_index:])
+                    ax.add_patch(patches.Polygon(patch, color=patch_colours[i]))
+                end_filename = '_shaded'
+
             # plot baseline in the case of intervention uncertainty
             if self.inputs.intervention_uncertainty:
                 ax.plot(self.outputs['manual']['epi'][15]['times'][self.start_time_index:],
                         self.outputs['manual']['epi'][15][output][self.start_time_index:], color='k', linewidth=1.2)
 
+            # find limits to the axes
             y_absolute_limit = None
             if self.inputs.intervention_uncertainty or len(self.scenarios) > 1:
                 plot_start_time_index = t_k.find_first_list_element_at_least_value(
@@ -1667,83 +1703,6 @@ class Project:
         # add main title and s
         # fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb' + end_filename)
-
-    def plot_shaded_outputs_gtb(self, outputs, ci_plot=False):
-        """
-        Creates visualisation of uncertainty outputs with density of shading proportional to the number of model runs
-        that went through a certain output value. Similar to our plotting approach for the award-winning figure in
-        American Journal of Epidemiology.
-
-        Args:
-            outputs: The types of output to plot
-            ci_plot: Whether to add dotted lines at the edges of the shaded modelled output areas
-        """
-
-        # standard preliminaries
-        start_time = self.inputs.model_constants['plot_start_time']
-        if self.inputs.intervention_uncertainty: start_time = self.inputs.model_constants['before_intervention_time']
-        colour, indices, yaxis_label, title, patch_colour = find_standard_output_styles(outputs, lightening_factor=0.3)
-        subplot_grid = find_subplot_numbers(len(outputs))
-        fig = self.set_and_update_figure()
-
-        # loop through indicators
-        for o, output in enumerate(outputs):
-
-            # preliminaries
-            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
-
-            # plot with uncertainty confidence intervals
-            scenario_name = 'baseline'
-            start_index = self.find_start_index(0)
-
-            if self.inputs.intervention_uncertainty:
-                uncertainty_scenario, start_index, uncertainty_type = 15, 0, 'int_uncertainty'
-            elif self.inputs.mode == 'epi_uncertainty':
-                uncertainty_scenario, uncertainty_type = 0, 'epi_uncertainty'
-
-            # overlay median and upper and lower CIs if requested
-            if ci_plot:
-                ax.plot(
-                    self.outputs['manual']['epi'][uncertainty_scenario]['times'][start_index:],
-                    self.uncertainty_centiles['epi'][uncertainty_scenario][
-                        output][self.model_runner.percentiles.index(50), :][start_index:],
-                    color=self.output_colours[0][1], linestyle=self.output_colours[0][0],
-                    linewidth=1.5, label=t_k.capitalise_and_remove_underscore(scenario_name))
-                for centile in [2.5, 97.5]:
-                    ax.plot(self.model_runner.outputs['manual'][uncertainty_scenario]['times'][start_index:],
-                            self.uncertainty_centiles['epi'][uncertainty_scenario][output][
-                                self.model_runner.percentiles.index(centile), :][start_index:],
-                            color=self.output_colours[0][1], linestyle='--', linewidth=.5, label=0)
-
-            # plot shaded areas as patches
-            patch_colours = [cm.Blues(x) for x in numpy.linspace(0., 1., self.model_runner.n_centiles_for_shading)]
-            for i in range(self.model_runner.n_centiles_for_shading):
-                patch = create_patch_from_list(
-                    self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][0, start_index:],
-                    self.uncertainty_centiles['epi'][uncertainty_scenario][output][i+3, :][start_index:],
-                    self.uncertainty_centiles['epi'][uncertainty_scenario][output][-i-1, :][start_index:])
-                ax.add_patch(patches.Polygon(patch, color=patch_colours[i]))
-
-            if self.inputs.intervention_uncertainty:
-                ax.plot(self.outputs['manual']['epi'][0]['times'][self.start_time_index:],
-                        self.outputs['manual']['epi'][0][output][self.start_time_index:], color='k', linewidth=1.2)
-
-            # now packaged into a function to overlay the GTB data over the existing plot
-            self.overlay_gtb_data(ax, o, output, start_time, indices, patch_colour)
-
-            y_absolute_limit = None
-            if self.inputs.intervention_uncertainty:
-                plot_start_time_index \
-                    = t_k.find_first_list_element_at_least_value(self.outputs['manual']['epi'][0]['times'], start_time)
-                y_absolute_limit = max(self.outputs['manual']['epi'][0][output][plot_start_time_index:])
-
-            self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
-                           legend=(o == len(outputs) - 1 and len(self.scenarios) > 1),
-                           y_axis_type='raw', y_label=yaxis_label[o], y_absolute_limit=y_absolute_limit)
-
-        # add main title and save
-        # fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
-        self.save_figure(fig, '_gtb_shaded')
 
     def overlay_gtb_data(self, ax, o, output, start_time, indices, patch_colour, compare_gtb=False, gtb_ci_plot='hatch',
                          plot_targets=True, uncertainty_scenario=0, alpha=1.):
@@ -1794,8 +1753,8 @@ class Project:
             ax.plot(gtb_data['point_estimate'].keys()[gtb_index:], gtb_data['point_estimate'].values()[gtb_index:],
                     color='.3', linewidth=0.8, label=None, alpha=alpha)
             if gtb_ci_plot == 'hatch' and output != 'notifications':
-                for limit in ['lower', 'upper']:
-                    ax.plot(gtb_data[limit + '_limit'].keys()[gtb_index:], gtb_data[limit].values()[gtb_index:],
+                for limit in ['lower_limit', 'upper_limit']:
+                    ax.plot(gtb_data[limit].keys()[gtb_index:], gtb_data[limit].values()[gtb_index:],
                             color='.3', linewidth=0.3, label=None, alpha=alpha)
 
             # plot the targets (and milestones) and the fitted exponential function to achieve them

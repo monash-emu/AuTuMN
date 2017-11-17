@@ -701,10 +701,10 @@ class ModelRunner:
             if self.is_last_run_success:
 
                 # get outputs for calibration and store results
-                self.store_uncertainty(0)
-                last_run_output_index = None if self.outputs['uncertainty']['epi'][0]['mortality'].ndim == 1 else -1
+                self.store_uncertainty(0, 'epi_uncertainty')
+                last_run_output_index = None if self.outputs['epi_uncertainty']['epi'][0]['mortality'].ndim == 1 else -1
                 outputs_for_comparison \
-                    = [self.outputs['uncertainty']['epi'][0]['incidence'][
+                    = [self.outputs['epi_uncertainty']['epi'][0]['incidence'][
                            last_run_output_index, tool_kit.find_first_list_element_at_least_value(
                                self.outputs['manual']['epi'][0]['times'], float(year))] for year in years_to_compare]
 
@@ -765,13 +765,13 @@ class ModelRunner:
                         if scenario:
                             self.prepare_new_model_from_baseline(scenario)
                             self.run_with_params(new_param_list, scenario=scenario)
-                            self.store_uncertainty(scenario)
+                            self.store_uncertainty(scenario, 'epi_uncertainty')
 
                     # iteratively adjusting proportion of mortality reported
                     ratios = []
                     for year in years_to_compare:
                         if year in self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k']:
-                            ratios.append(self.outputs['uncertainty']['epi'][0]['mortality'][last_run_output_index,
+                            ratios.append(self.outputs['epi_uncertainty']['epi'][0]['mortality'][last_run_output_index,
                                              tool_kit.find_first_list_element_above_value(
                                                  self.outputs['manual']['epi'][0]['times'],
                                                  float(year))]
@@ -799,7 +799,7 @@ class ModelRunner:
                 if 'target_population' in self.inputs.model_constants:
                     population_adjustment \
                         = self.inputs.model_constants['target_population'] \
-                          / self.outputs['uncertainty']['epi'][0]['population'][last_run_output_index,
+                          / self.outputs['epi_uncertainty']['epi'][0]['population'][last_run_output_index,
                               tool_kit.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'],
                                   self.inputs.model_constants['current_time'])]
 
@@ -913,7 +913,7 @@ class ModelRunner:
             else:
                 raise ValueError('%s not in model_object params' % key)
 
-    def store_uncertainty(self, scenario):
+    def store_uncertainty(self, scenario, uncertainty_type='epi_uncertainty'):
         """
         Add model results from one uncertainty run to the appropriate outputs dictionary, vertically stacking
         results on to the previous matrix.
@@ -929,21 +929,21 @@ class ModelRunner:
         new_outputs['cost'] = self.find_cost_outputs(scenario) if self.models[scenario].interventions_to_cost else {}
 
         # create top two tiers for uncertainty outputs if not present (first run only)
-        if 'uncertainty' not in self.outputs: self.outputs['uncertainty'] = {'epi': {}, 'cost': {}}
+        if uncertainty_type not in self.outputs: self.outputs[uncertainty_type] = {'epi': {}, 'cost': {}}
 
         # incorporate new data
         for output_type in ['epi', 'cost']:
 
             # create third tier if outputs haven't been recorded yet for this scenario
-            if scenario not in self.outputs['uncertainty'][output_type]:
-                self.outputs['uncertainty'][output_type] = {scenario: {}}
+            if scenario not in self.outputs[uncertainty_type][output_type]:
+                self.outputs[uncertainty_type][output_type] = {scenario: {}}
 
             # for each epi or cost output available
             for output in new_outputs[output_type]:
 
                 # if output hasn't been added yet, start array off from list output
-                if output not in self.outputs['uncertainty'][output_type][scenario]:
-                    self.outputs['uncertainty'][output_type][scenario].update(
+                if output not in self.outputs[uncertainty_type][output_type][scenario]:
+                    self.outputs[uncertainty_type][output_type][scenario].update(
                         {output: numpy.array(new_outputs[output_type][output])})
 
                 # otherwise append new data
@@ -951,27 +951,28 @@ class ModelRunner:
 
                     # adjust list size if necessary or just use output directly
                     if output_type == 'epi':
-                        shape_index = 0 if self.outputs['uncertainty']['epi'][0][output].ndim == 1 else 1
+                        shape_index \
+                            = 0 if self.outputs[uncertainty_type]['epi'][scenario][output].ndim == 1 else 1
 
                         # extend new output data with zeros if too short
                         if len(new_outputs['epi'][output]) \
-                                < self.outputs['uncertainty']['epi'][0][output].shape[shape_index]:
+                                < self.outputs[uncertainty_type]['epi'][scenario][output].shape[shape_index]:
                             new_outputs['epi'][output] \
                                 = join_array_of_zeros_to_left(
-                                    self.outputs['uncertainty']['epi'][0][output].shape[shape_index]
+                                    self.outputs[uncertainty_type]['epi'][scenario][output].shape[shape_index]
                                     - len(new_outputs['epi'][output]), new_outputs['epi'][output])
 
                         # extend existing output data array if too long
                         elif len(new_outputs['epi'][output]) \
-                                > self.outputs['uncertainty']['epi'][0][output].shape[shape_index]:
-                            self.outputs['uncertainty']['epi'][0][output] \
+                                > self.outputs[uncertainty_type]['epi'][scenario][output].shape[shape_index]:
+                            self.outputs[uncertainty_type]['epi'][scenario][output] \
                                 = join_array_of_zeros_to_left(len(new_outputs['epi'][output])
-                                   - self.outputs['uncertainty']['epi'][0][output].shape[shape_index],
-                                                                       self.outputs['uncertainty']['epi'][0][output])
+                                    - self.outputs[uncertainty_type]['epi'][scenario][output].shape[shape_index],
+                                        self.outputs[uncertainty_type]['epi'][scenario][output])
 
                     # stack onto previous output if seen before
-                    self.outputs['uncertainty'][output_type][scenario][output] \
-                        = numpy.vstack((self.outputs['uncertainty'][output_type][scenario][output],
+                    self.outputs[uncertainty_type][output_type][scenario][output] \
+                        = numpy.vstack((self.outputs[uncertainty_type][output_type][scenario][output],
                                         new_outputs[output_type][output]))
 
     def update_params(self, old_params):
@@ -1032,14 +1033,13 @@ class ModelRunner:
 
             # prepare for integration of scenario
             self.models[15] = model.ConsolidatedModel(15, self.inputs, self.gui_inputs)
-            self.prepare_new_model_from_baseline(0, 15)
+            self.prepare_new_model_from_baseline(15)
             self.models[15].relevant_interventions.append(self.inputs.uncertainty_intervention)
-            for param in parameter_values:
-                self.models[15].set_parameter(param, parameter_values[param][sample])
+            for param in parameter_values: self.models[15].set_parameter(param, parameter_values[param][sample])
 
             # integrate and save
             self.models[15].integrate()
-            self.store_uncertainty(15, epi_outputs_to_analyse=self.epi_outputs_to_analyse)
+            self.store_uncertainty(15)
 
     ''' optimisation methods '''
 

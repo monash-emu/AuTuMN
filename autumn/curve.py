@@ -47,7 +47,6 @@ def make_sigmoidal_curve(y_low=0, y_high=1., x_start=0, x_inflect=0.5, multiplie
 
 
 def make_two_step_curve(y_low, y_med, y_high, x_start, x_med, x_end):
-
     """
     The following function should no longer be relevant as scale_up_function with argument method=4 is equivalent.
     """

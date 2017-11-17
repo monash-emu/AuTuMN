@@ -113,7 +113,7 @@ class Inputs:
 
         # miscellaneous
         self.runtime_outputs = runtime_outputs
-        self.mode = 'uncertainty'
+        self.mode = 'epi_uncertainty'
         self.js_gui = js_gui
         if self.js_gui: self.js_gui('init')
         self.plot_count = 0
@@ -1272,7 +1272,7 @@ class Inputs:
         # decide whether calibration or uncertainty analysis is being run
         if self.mode == 'calibration':
             var_to_iterate = self.calib_outputs
-        elif self.mode == 'uncertainty':
+        elif self.mode == 'epi_uncertainty':
             var_to_iterate = self.outputs_unc
 
         inc_conversion_dict = {'incidence': 'e_inc_100k',

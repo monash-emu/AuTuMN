@@ -944,18 +944,18 @@ class Project:
         """
 
         uncertainty_centiles = {}
-        for scenario in self.outputs['uncertainty'][output_type]:
+        for scenario in self.outputs['epi_uncertainty'][output_type]:
             uncertainty_centiles[scenario] = {}
-            for output in self.outputs['uncertainty'][output_type][scenario]:
+            for output in self.outputs['epi_uncertainty'][output_type][scenario]:
                 if output != 'times':
 
                     # use all runs for scenario analysis (as only those that were accepted are saved)
                     if scenario:
-                        matrix_to_analyse = self.outputs['uncertainty'][output_type][scenario][output]
+                        matrix_to_analyse = self.outputs['epi_uncertainty'][output_type][scenario][output]
 
                     # select the baseline runs for analysis from the larger number that were saved
                     else:
-                        matrix_to_analyse = self.outputs['uncertainty'][output_type][scenario][output][
+                        matrix_to_analyse = self.outputs['epi_uncertainty'][output_type][scenario][output][
                                             self.accepted_no_burn_in_indices, :]
 
                     uncertainty_centiles[scenario][output] \
@@ -1606,7 +1606,7 @@ class Project:
                         linecolour = self.output_colours[scenario][1]
 
                     # median
-                    ax.plot(self.outputs['uncertainty']['epi'][uncertainty_type][output][
+                    ax.plot(self.outputs['epi_uncertainty']['epi'][uncertainty_type]['times'][
                                 self.model_runner.percentiles.index(50), :][start_index:],
                             self.uncertainty_centiles['epi'][uncertainty_type][output][
                                 self.model_runner.percentiles.index(50), :][start_index:],
@@ -1615,7 +1615,7 @@ class Project:
 
                     # upper and lower confidence bounds
                     for centile in [2.5, 97.5]:
-                        ax.plot(self.outputs['uncertainty']['epi'][uncertainty_type]['times'][
+                        ax.plot(self.outputs['epi_uncertainty']['epi'][uncertainty_type]['times'][
                                     self.model_runner.percentiles.index(centile), :][start_index:],
                                 self.uncertainty_centiles['epi'][uncertainty_type][output][
                                     self.model_runner.percentiles.index(centile), :][start_index:],
@@ -1631,22 +1631,23 @@ class Project:
                     uncertainty_type, runs = 15, self.inputs.n_samples
                 else:
                     uncertainty_type = 0
-                    runs = len(self.model_runner.outputs['uncertainty']['epi'][uncertainty_type][output])
+                    runs = len(self.model_runner.outputs['epi_uncertainty']['epi'][uncertainty_type][output])
 
                 # plot the runs
                 for run in range(runs):
                     if run not in self.model_runner.accepted_indices and self.plot_rejected_runs:
-                        ax.plot(self.model_runner.outputs['manual']['epi'][uncertainty_type]['times'][
+                        ax.plot(self.model_runner.outputs['epi_uncertainty']['epi'][uncertainty_type]['times'][run,
                                     self.start_time_index:],
-                                self.model_runner.outputs['uncertainty']['epi'][uncertainty_type][output][
-                                    run, self.start_time_index:],
+                                self.model_runner.outputs['epi_uncertainty']['epi'][uncertainty_type][output][run,
+                                    self.start_time_index:],
                                 linewidth=.2, color='y', label=t_k.capitalise_and_remove_underscore('baseline'))
                     else:
-                        ax.plot(self.outputs['manual']['epi'][uncertainty_type]['times'][self.start_time_index:],
-                                self.outputs['uncertainty']['epi'][uncertainty_type][output][run,
+                        ax.plot(self.outputs['epi_uncertainty']['epi'][uncertainty_type]['times'][run,
+                                    self.start_time_index:],
+                                self.outputs['epi_uncertainty']['epi'][uncertainty_type][output][run,
                                     self.start_time_index:],
                                 linewidth=1.2, color=str(1. - float(run) / float(len(
-                                    self.outputs['uncertainty']['epi'][uncertainty_type][output]))),
+                                    self.outputs['epi_uncertainty']['epi'][uncertainty_type][output]))),
                                 label=t_k.capitalise_and_remove_underscore('baseline'))
                     end_filename = '_progress'
 
@@ -1702,7 +1703,7 @@ class Project:
 
             if self.inputs.intervention_uncertainty:
                 uncertainty_type, start_index = 15, 0
-            elif self.inputs.mode == 'uncertainty':
+            elif self.inputs.mode == 'epi_uncertainty':
                 uncertainty_type = 0
 
             # overlay median and upper and lower CIs if requested
@@ -1723,7 +1724,7 @@ class Project:
             patch_colours = [cm.Blues(x) for x in numpy.linspace(0., 1., self.model_runner.n_centiles_for_shading)]
             for i in range(self.model_runner.n_centiles_for_shading):
                 patch = create_patch_from_list(
-                    self.outputs['manual']['epi'][uncertainty_type]['times'][start_index:],
+                    self.outputs['epi_uncertainty']['epi'][uncertainty_type]['times'][0, start_index:],
                     self.uncertainty_centiles['epi'][uncertainty_type][output][i+3, :][start_index:],
                     self.uncertainty_centiles['epi'][uncertainty_type][output][-i-1, :][start_index:])
                 ax.add_patch(patches.Polygon(patch, color=patch_colours[i]))

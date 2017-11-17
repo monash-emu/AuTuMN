@@ -1562,28 +1562,26 @@ class Project:
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
 
             # overlay first so it's at the back
-            self.overlay_gtb_data(ax, o, output, start_time, indices, patch_colour, compare_gtb=False,
-                                  gtb_ci_plot='patch', plot_targets=True, uncertainty_scenario=uncertainty_scenario,
-                                  alpha=1.)
+            self.overlay_gtb_data(
+                ax, o, output, start_time, indices, patch_colour, compare_gtb=False, gtb_ci_plot='patch',
+                plot_targets=True, uncertainty_scenario=uncertainty_scenario, alpha=1.)
 
             # plot scenarios without uncertainty
             if purpose is 'scenario':
 
                 # plot model estimates
-                for scenario in self.scenarios[::-1]:  # reversing to ensure black baseline plotted over top
-                    scenario_name = t_k.find_scenario_string_from_number(scenario)
+                for scenario in self.scenarios[::-1]:  # reversing to ensure black baseline plotted over the top
                     start_index = self.find_start_index(scenario)
 
                     # work out colour depending on whether purpose is scenario analysis or incrementing comorbidities
                     colour = self.output_colours[scenario][1]
-                    t_k.capitalise_and_remove_underscore(scenario_name)
                     if self.inputs.increment_comorbidity and scenario:
                         colour = cm.Reds(.2 + .8 * self.inputs.comorbidity_prevalences[scenario])
                         label = str(int(self.inputs.comorbidity_prevalences[scenario] * 1e2)) + '%'
                     elif self.inputs.increment_comorbidity:
                         colour, label = 'k', 'Baseline'
                     else:
-                        label = ''
+                        label = t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario))
 
                     # plot
                     ax.plot(self.model_runner.outputs['manual']['epi'][scenario]['times'][start_index:],

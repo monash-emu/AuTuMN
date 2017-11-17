@@ -701,6 +701,10 @@ class Project:
         self.out_dir_project = os.path.join('projects', self.name)
         if not os.path.isdir(self.out_dir_project): os.makedirs(self.out_dir_project)
 
+        self.years_to_write = range(int(self.inputs.model_constants['report_start_time']),
+                                    int(self.inputs.model_constants['report_end_time']),
+                                    int(self.inputs.model_constants['report_step_time']))
+
         self.figure_number = 1
         self.classifications = ['demo_', 'econ_', 'epi_prop_smear', 'epi_rr', 'program_prop_', 'program_timeperiod_',
                                 'program_prop_novel', 'program_prop_treatment', 'program_prop_detect',
@@ -1047,11 +1051,6 @@ class Project:
         result_types = ['epi_', 'raw_cost_', 'inflated_cost_', 'discounted_cost_', 'discounted_inflated_cost_']
         if self.inputs.intervention_uncertainty: scenarios = [15]
 
-        # find years of interest
-        years = range(int(self.inputs.model_constants['report_start_time']),
-                      int(self.inputs.model_constants['report_end_time']),
-                      int(self.inputs.model_constants['report_step_time']))
-
         # write a new file for each scenario and for each broad category of output
         for result_type in result_types:
             for scenario in scenarios:
@@ -1068,7 +1067,7 @@ class Project:
                 if result_type == 'epi_':
 
                     # write year column
-                    for y, year in enumerate(years):
+                    for y, year in enumerate(self.years_to_write):
                         row, column = y + 2, 1
                         if horizontal: column, row = row, column
                         sheet.cell(row=row, column=column).value = year
@@ -1082,13 +1081,13 @@ class Project:
                             # scenario names and confidence interval titles
                             strings_to_write = [t_k.capitalise_and_remove_underscore(output), 'Lower', 'Upper']
 
-                            for i in range(len(strings_to_write)):
-                                row, column = 1, out * 3 + 2 + i
+                            for ci in range(len(strings_to_write)):
+                                row, column = 1, out * 3 + 2 + ci
                                 if horizontal: column, row = row, column
-                                sheet.cell(row=row, column=column).value = strings_to_write[i]
+                                sheet.cell(row=row, column=column).value = strings_to_write[ci]
 
                             # data columns
-                            for y, year in enumerate(years):
+                            for y, year in enumerate(self.years_to_write):
                                 for o, order in enumerate(self.order_to_write):
                                     row, column = y + 2, out * 3 + 2 + o
                                     if horizontal: column, row = row, column
@@ -1106,7 +1105,7 @@ class Project:
                             sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(output)
 
                             # columns of data
-                            for y, year in enumerate(years):
+                            for y, year in enumerate(self.years_to_write):
                                 row, column = y + 2, out + 2
                                 if horizontal: column, row = row, column
                                 sheet.cell(row=row, column=column).value \
@@ -1121,7 +1120,7 @@ class Project:
                     sheet.cell(row=1, column=1).value = 'Year'
 
                     # year column
-                    for y, year in enumerate(years):
+                    for y, year in enumerate(self.years_to_write):
                         row, column = y + 2, 1
                         if horizontal: column, row = row, column
                         sheet.cell(row=row, column=column).value = year
@@ -1135,7 +1134,7 @@ class Project:
                         sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(intervention)
 
                         # data columns
-                        for y, year in enumerate(years):
+                        for y, year in enumerate(self.years_to_write):
                             row, column = y + 2, inter + 2
                             if horizontal: column, row = row, column
                             sheet.cell(row=row, column=column).value \
@@ -1152,17 +1151,7 @@ class Project:
 
         # general prelims to work out what to write
         horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
-        if self.inputs.intervention_uncertainty:
-            scenarios, string_to_add = [15], 'manual_'
-        elif self.gui_inputs['output_uncertainty']:
-            string_to_add = 'uncertainty_'
-        else:
-            string_to_add = 'manual_'
-
-        # find years of interest
-        years = range(int(self.inputs.model_constants['report_start_time']),
-                      int(self.inputs.model_constants['report_end_time']),
-                      int(self.inputs.model_constants['report_step_time']))
+        if self.inputs.intervention_uncertainty: scenarios, string_to_add = [15]
 
         # write a new file for each output
         for inter in self.model_runner.epi_outputs_to_analyse:
@@ -1175,7 +1164,7 @@ class Project:
             sheet.cell(row=1, column=1).value = 'Year'  # year text cell
 
             # write the year column
-            for y, year in enumerate(years):
+            for y, year in enumerate(self.years_to_write):
                 row, column = y + 2, 1
                 if horizontal: column, row = row, column
                 sheet.cell(row=row, column=column).value = year
@@ -1187,23 +1176,18 @@ class Project:
                 # with uncertainty
                 if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
 
-                    # 1, 0, 2 indicates point estimate, lower limit, upper limit
-                    order_to_write = [1, 0, 2]
+                    # scenario names and confidence interval titles
+                    strings_to_write = [t_k.capitalise_and_remove_underscore(scenario_name), 'Lower', 'Upper']
 
                     # write the scenario names and confidence interval titles
-                    row, column = 1, s * 3 + 2
-                    if horizontal: column, row = row, column
-                    sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(scenario_name)
-                    row, column = 1, s * 3 + 3
-                    if horizontal: column, row = row, column
-                    sheet.cell(row=row, column=column).value = 'Lower'
-                    row, column = 1, s * 3 + 4
-                    if horizontal: column, row = row, column
-                    sheet.cell(row=row, column=column).value = 'Upper'
+                    for ci in range(len(strings_to_write)):
+                        row, column = 1, s * 3 + 2 + ci
+                        if horizontal: column, row = row, column
+                        sheet.cell(row=row, column=column).value = strings_to_write[ci]
 
                     # write the columns of data
-                    for y, year in enumerate(years):
-                        for o, order in enumerate(order_to_write):
+                    for y, year in enumerate(self.years_to_write):
+                        for o, order in enumerate(self.order_to_write):
                             row, column = y + 2, s * 3 + 2 + o
                             if horizontal: column, row = row, column
                             sheet.cell(row=row, column=column).value \
@@ -1220,7 +1204,7 @@ class Project:
                     sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(scenario_name)
 
                     # write columns of data
-                    for y, year in enumerate(years):
+                    for y, year in enumerate(self.years_to_write):
                         row, column = y + 2, s + 2
                         if horizontal: column, row = row, column
                         sheet.cell(row=row, column=column).value \
@@ -1247,7 +1231,7 @@ class Project:
                 sheet.cell(row=1, column=1).value = 'Year'
 
                 # write the year text column
-                for y, year in enumerate(years):
+                for y, year in enumerate(self.years_to_write):
                     row, column = y + 2, 1
                     if horizontal: column, row = row, column
                     sheet.cell(row=row, column=column).value = year
@@ -1262,7 +1246,7 @@ class Project:
                     sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(scenario_name)
 
                     # data columns
-                    for y, year in enumerate(years):
+                    for y, year in enumerate(self.years_to_write):
                         row, column = y + 2, s + 2
                         if horizontal: column, row = row, column
                         sheet.cell(row=row, column=column).value \
@@ -1280,25 +1264,15 @@ class Project:
         """
 
         horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
-        if self.inputs.intervention_uncertainty:
-            scenarios, string_to_add = [15], 'manual_'
-        elif self.gui_inputs['output_uncertainty']:
-            string_to_add = 'uncertainty_'
-        else:
-            string_to_add = 'manual_'
+        if self.inputs.intervention_uncertainty: scenarios = [15]
 
         for scenario in scenarios:
-
-            # find years of interest
-            years = range(int(self.inputs.model_constants['report_start_time']),
-                          int(self.inputs.model_constants['report_end_time']),
-                          int(self.inputs.model_constants['report_step_time']))
 
             # initialise document and table
             scenario_name = t_k.find_scenario_string_from_number(scenario)
             path = os.path.join(self.out_dir_project, scenario_name) + ".docx"
             document = Document()
-            table = document.add_table(rows=len(years) + 1, cols=len(self.model_runner.epi_outputs_to_analyse) + 1)
+            table = document.add_table(rows=len(self.years_to_write) + 1, cols=len(self.model_runner.epi_outputs_to_analyse) + 1)
 
             # for each epidemiological indicator
             for o, output in enumerate(self.model_runner.epi_outputs_to_analyse):
@@ -1309,7 +1283,7 @@ class Project:
                 row_cells[o + 1].text = t_k.capitalise_and_remove_underscore(output)
 
                 # data columns
-                for y, year in enumerate(years):
+                for y, year in enumerate(self.years_to_write):
 
                     # write year column
                     row_cells = table.rows[y + 1].cells
@@ -1379,19 +1353,11 @@ class Project:
 
             # initialise document, years of interest and table
             path = os.path.join(self.out_dir_project, output) + ".docx"
-            years = range(int(self.inputs.model_constants['report_start_time']),
-                          int(self.inputs.model_constants['report_end_time']),
-                          int(self.inputs.model_constants['report_step_time']))
             document = Document()
-            table = document.add_table(rows=len(years) + 1, cols=len(self.scenario_names) + 1)
+            table = document.add_table(rows=len(self.years_to_write) + 1, cols=len(self.scenario_names) + 1)
 
             horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
-            if self.inputs.intervention_uncertainty:
-                scenarios, string_to_add = [15], 'manual_'
-            elif self.gui_inputs['output_uncertainty']:
-                string_to_add = 'uncertainty_'
-            else:
-                string_to_add = 'manual_'
+            if self.inputs.intervention_uncertainty: scenarios = [15]
 
             for s, scenario in enumerate(scenarios):
                 scenario_name = t_k.find_scenario_string_from_number(scenario)
@@ -1401,7 +1367,7 @@ class Project:
                 row_cells[0].text = 'Year'
                 row_cells[s + 1].text = t_k.capitalise_and_remove_underscore(scenario_name)
 
-                for y, year in enumerate(years):
+                for y, year in enumerate(self.years_to_write):
                     row_cells = table.rows[y + 1].cells
                     row_cells[0].text = str(year)
 

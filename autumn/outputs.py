@@ -1547,11 +1547,13 @@ class Project:
         subplot_grid = find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
 
-        # type of analysis requested
+        # local variables relevant to the type of analysis requested
         if self.inputs.intervention_uncertainty:
-            uncertainty_scenario, start_index, uncertainty_type = 15, 0, 'int_uncertainty'
+            uncertainty_scenario, scenarios, start_index, uncertainty_type, linewidth, linecolour, runs \
+                = 15, [0, 15], 0, 'int_uncertainty', 1., 'r', self.inputs.n_samples
+            self.start_time_index = 0
         else:
-            uncertainty_scenario, uncertainty_type = 0, 'epi_uncertainty'
+            uncertainty_scenario, scenarios, uncertainty_type, linewidth = 0, self.scenarios, 'epi_uncertainty', 1.5
 
         # loop through indicators
         for o, output in enumerate(outputs):
@@ -1579,7 +1581,7 @@ class Project:
                         colour = cm.Reds(.2 + .8 * self.inputs.comorbidity_prevalences[scenario])
                         label = str(int(self.inputs.comorbidity_prevalences[scenario] * 1e2)) + '%'
                     elif self.inputs.increment_comorbidity:
-                        (colour, label) = ('k', 'Baseline')
+                        colour, label = 'k', 'Baseline'
                     else:
                         label = ''
 
@@ -1597,18 +1599,12 @@ class Project:
 
             # plot with uncertainty confidence intervals
             elif purpose == 'ci_plot':
-                if self.inputs.intervention_uncertainty:
-                    scenarios, uncertainty_type, uncertainty_scenario, start_index, linewidth, linecolour \
-                        = [0, 15], 'int_uncertainty', 15, 0, 1., 'r'
-                else:
-                    scenarios, uncertainty_type, linewidth = self.scenarios, 'epi_uncertainty', 1.5
 
                 for scenario in scenarios[::-1]:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
                     if not self.inputs.intervention_uncertainty:
-                        uncertainty_scenario = scenario
-                        start_index = self.find_start_index(scenario)
-                        linecolour = self.output_colours[scenario][1]
+                        uncertainty_scenario, start_index, linecolour \
+                            = scenario, self.find_start_index(scenario), self.output_colours[scenario][1]
 
                     # median
                     ax.plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][
@@ -1631,11 +1627,7 @@ class Project:
             elif purpose == 'progress':
 
                 # get relevant data according to whether intervention or baseline uncertainty is being run
-                if self.inputs.intervention_uncertainty:
-                    self.start_time_index = 0
-                    uncertainty_scenario, runs = 15, self.inputs.n_samples
-                else:
-                    uncertainty_scenario = 0
+                if not self.inputs.intervention_uncertainty:
                     runs = len(self.model_runner.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output])
 
                 # plot the runs

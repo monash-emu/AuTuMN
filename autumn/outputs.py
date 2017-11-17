@@ -1443,12 +1443,11 @@ class Project:
 
         # plot main outputs
         if self.gui_inputs['output_gtb_plots']:
-            self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose='scenario')
+            purposes = ['scenario']
             if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
-                self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose='ci_plot')
-                self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose='progress')
-                self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose='shaded')
-                # self.plot_shaded_outputs_gtb(self.gtb_available_outputs)
+                purposes.extend(['ci_plot', 'progress', 'shaded'])
+            for purpose in purposes:
+                self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose=purpose)
             if self.gui_inputs['n_strains'] > 1:
                 self.plot_resistant_strain_outputs(['incidence', 'mortality', 'prevalence', 'perc_incidence'])
 

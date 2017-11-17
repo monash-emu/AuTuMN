@@ -719,6 +719,9 @@ class Project:
         self.uncertainty_centiles = {'epi': {}, 'cost': {}}
         self.quantities_to_write_back \
             = ['all_parameters_tried', 'all_compartment_values_tried', 'all_other_adjustments_made']
+        self.order_to_write = [self.model_runner.percentiles.index(50),
+                               self.model_runner.percentiles.index(2.5),
+                               self.model_runner.percentiles.index(97.5)]
 
         # extract some characteristics from the models within model runner
         self.scenarios = self.gui_inputs['scenarios_to_run']
@@ -1071,32 +1074,26 @@ class Project:
                         sheet.cell(row=row, column=column).value = year
 
                     # loop over outputs
-                    for inter, intervention in enumerate(self.model_runner.epi_outputs_to_analyse):
+                    for out, output in enumerate(self.model_runner.epi_outputs_to_analyse):
 
                         # with uncertainty
                         if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
 
-                            # 1, 0 and 2 indicate point estimate, lower limit, upper limit respectively
-                            order_to_write = [1, 0, 2]
-
                             # scenario names and confidence interval titles
-                            row, column = 1, inter * 3 + 2
-                            if horizontal: column, row = row, column
-                            sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(intervention)
-                            row, column = 1, inter * 3 + 3
-                            if horizontal: column, row = row, column
-                            sheet.cell(row=row, column=column).value = 'Lower'
-                            row, column = 1, inter * 3 + 4
-                            if horizontal: column, row = row, column
-                            sheet.cell(row=row, column=column).value = 'Upper'
+                            strings_to_write = [t_k.capitalise_and_remove_underscore(output), 'Lower', 'Upper']
+
+                            for i in range(len(strings_to_write)):
+                                row, column = 1, out * 3 + 2 + i
+                                if horizontal: column, row = row, column
+                                sheet.cell(row=row, column=column).value = strings_to_write[i]
 
                             # data columns
                             for y, year in enumerate(years):
-                                for o, order in enumerate(order_to_write):
-                                    row, column = y + 2, inter * 3 + 2 + o
+                                for o, order in enumerate(self.order_to_write):
+                                    row, column = y + 2, out * 3 + 2 + o
                                     if horizontal: column, row = row, column
                                     sheet.cell(row=row, column=column).value \
-                                        = self.uncertainty_centiles['epi'][scenario][intervention][
+                                        = self.uncertainty_centiles['epi'][scenario][output][
                                             order, t_k.find_first_list_element_at_least_value(
                                                 self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
 
@@ -1104,16 +1101,16 @@ class Project:
                         else:
 
                             # names across top
-                            row, column = 1, inter + 2
+                            row, column = 1, out + 2
                             if horizontal: column, row = row, column
-                            sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(intervention)
+                            sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(output)
 
                             # columns of data
                             for y, year in enumerate(years):
-                                row, column = y + 2, inter + 2
+                                row, column = y + 2, out + 2
                                 if horizontal: column, row = row, column
                                 sheet.cell(row=row, column=column).value \
-                                    = self.outputs['manual']['epi'][scenario][intervention][
+                                    = self.outputs['manual']['epi'][scenario][output][
                                         t_k.find_first_list_element_at_least_value(
                                             self.outputs['manual']['epi'][scenario]['times'], year)]
 

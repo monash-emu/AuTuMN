@@ -716,6 +716,7 @@ class Project:
         self.suptitle_size = 13
         self.classified_scaleups = {}
         self.grid = False
+        self.accepted_indices = []
         self.plot_rejected_runs = False
 
         # pre-analysis processing attributes
@@ -930,8 +931,8 @@ class Project:
             self.accepted_no_burn_in_indices: List of the uncertainty indices of interest
         """
 
-        self.accepted_no_burn_in_indices \
-            = [i for i in self.model_runner.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
+        self.accepted_indices = self.model_runner.accepted_indices
+        self.accepted_no_burn_in_indices = [i for i in self.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
 
     def find_uncertainty_centiles(self, run_type, output_type):
         """
@@ -1639,13 +1640,13 @@ class Project:
 
                 # plot the runs
                 for run in range(runs):
-                    if run not in self.model_runner.accepted_indices and self.plot_rejected_runs:
-                        ax.plot(self.model_runner.outputs['epi_uncertainty']['epi'][uncertainty_scenario]['times'][run,
+                    if run not in self.accepted_indices and self.plot_rejected_runs:
+                        ax.plot(self.outputs['epi_uncertainty']['epi'][uncertainty_scenario]['times'][run,
                                     self.start_time_index:],
-                                self.model_runner.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output][run,
+                                self.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output][run,
                                     self.start_time_index:],
                                 linewidth=.2, color='y', label=t_k.capitalise_and_remove_underscore('baseline'))
-                    else:
+                    elif run in self.accepted_indices:
                         ax.plot(self.outputs['epi_uncertainty']['epi'][uncertainty_scenario]['times'][run,
                                     self.start_time_index:],
                                 self.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output][run,
@@ -2825,28 +2826,28 @@ class Project:
         Method to plot likelihoods over runs, differentiating accepted and rejected runs to illustrate progression.
         """
 
-        # Plotting prelims
+        # plotting prelims
         fig = self.set_and_update_figure()
         ax = fig.add_subplot(1, 1, 1)
 
-        # Find accepted likelihoods
-        accepted_log_likelihoods = [self.model_runner.loglikelihoods[i] for i in self.model_runner.accepted_indices]
+        # find accepted likelihoods
+        accepted_log_likelihoods = [self.model_runner.loglikelihoods[i] for i in self.accepted_indices]
 
-        # Plot the rejected values
+        # plot the rejected values
         for i in self.model_runner.rejected_indices:
 
             # Find the index of the last accepted index before the rejected one we're currently interested in
-            last_acceptance_before = [j for j in self.model_runner.accepted_indices if j < i][-1]
+            last_acceptance_before = [j for j in self.accepted_indices if j < i][-1]
 
             # Plot from the previous acceptance to the current rejection
             ax.plot([last_acceptance_before, i],
                     [self.model_runner.loglikelihoods[last_acceptance_before],
                      self.model_runner.loglikelihoods[i]], marker='o', linestyle='--', color='.5')
 
-        # Plot the accepted values
-        ax.plot(self.model_runner.accepted_indices, accepted_log_likelihoods, marker='o', color='k')
+        # plot the accepted values
+        ax.plot(self.accepted_indices, accepted_log_likelihoods, marker='o', color='k')
 
-        # Finishing up
+        # finishing up
         fig.suptitle('Progression of likelihood', fontsize=self.suptitle_size)
         ax.set_xlabel('All runs', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         ax.set_ylabel('Likelihood', fontsize=get_nice_font_size([1, 1]), labelpad=1)

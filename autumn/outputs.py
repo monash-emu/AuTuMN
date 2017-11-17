@@ -1640,20 +1640,19 @@ class Project:
 
                 # plot the runs
                 for run in range(runs):
-                    if run not in self.accepted_indices and self.plot_rejected_runs:
+                    if run in self.accepted_indices or self.plot_rejected_runs:
+                        linewidth, colour = .2, 'y'
+                        if run in self.accepted_indices:
+                            linewidth = 1.2
+                            colour = str(1. - float(run) / float(len(
+                                self.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output])))
                         ax.plot(self.outputs['epi_uncertainty']['epi'][uncertainty_scenario]['times'][run,
-                                    self.start_time_index:],
+                                self.start_time_index:],
                                 self.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output][run,
-                                    self.start_time_index:],
-                                linewidth=.2, color='y', label=t_k.capitalise_and_remove_underscore('baseline'))
-                    elif run in self.accepted_indices:
-                        ax.plot(self.outputs['epi_uncertainty']['epi'][uncertainty_scenario]['times'][run,
-                                    self.start_time_index:],
-                                self.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output][run,
-                                    self.start_time_index:],
-                                linewidth=1.2, color=str(1. - float(run) / float(len(
-                                    self.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output]))),
+                                self.start_time_index:],
+                                linewidth=linewidth, color=colour,
                                 label=t_k.capitalise_and_remove_underscore('baseline'))
+
                     end_filename = '_progress'
 
             if self.inputs.intervention_uncertainty:

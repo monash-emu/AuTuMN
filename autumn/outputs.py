@@ -1292,19 +1292,64 @@ class Project:
 
                     # with uncertainty
                     if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
-                        point_lower_upper \
+                        lower_point_upper \
                             = tuple(self.uncertainty_centiles['epi'][scenario][output][
                                     0:3, t_k.find_first_list_element_at_least_value(
                                         self.model_runner.outputs['manual']['epi'][scenario]['times'], year)])
-                        row_cells[o + 1].text = '%.1f\n(%.1f to %.1f)' % point_lower_upper
+                        row_cells[o + 1].text = '%.1f\n(%.1f to %.1f)' % lower_point_upper
 
                     # without
                     else:
-                        point_estimate \
-                            = self.model_runner.outputs['manual']['epi'][scenario][output][
-                                t_k.find_first_list_element_at_least_value(
-                                    self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
-                        row_cells[o + 1].text = '%.1f' % point_estimate
+                        point = self.model_runner.outputs['manual']['epi'][scenario][output][
+                            t_k.find_first_list_element_at_least_value(
+                                self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
+                        row_cells[o + 1].text = '%.1f' % point
+
+            document.save(path)
+
+    def write_docs_by_output(self):
+        """
+        Write word documents using the docx package. Writes with or without uncertainty according to whether Run
+        uncertainty selected in the GUI.
+        """
+
+        # write a new file for each output
+        for output in self.model_runner.epi_outputs_to_analyse:
+
+            # initialise document, years of interest and table
+            path = os.path.join(self.out_dir_project, output) + ".docx"
+            document = Document()
+            table = document.add_table(rows=len(self.years_to_write) + 1, cols=len(self.scenario_names) + 1)
+
+            horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
+            if self.inputs.intervention_uncertainty: scenarios = [15]
+
+            for s, scenario in enumerate(scenarios):
+                scenario_name = t_k.find_scenario_string_from_number(scenario)
+
+                # outputs across the top
+                row_cells = table.rows[0].cells
+                row_cells[0].text = 'Year'
+                row_cells[s + 1].text = t_k.capitalise_and_remove_underscore(scenario_name)
+
+                for y, year in enumerate(self.years_to_write):
+                    row_cells = table.rows[y + 1].cells
+                    row_cells[0].text = str(year)
+
+                    # with uncertainty
+                    if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
+                        lower_point_upper \
+                            = tuple(self.uncertainty_centiles['epi'][scenario][output][0:3,
+                                t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][
+                                                                               scenario]['times'], year)])
+                        row_cells[s + 1].text = '%.1f\n(%.1f to %.1f)' % lower_point_upper
+
+                    # without
+                    else:
+                        point = self.model_runner.outputs['manual']['epi'][scenario][output][
+                            t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual'][
+                                                                           'epi'][scenario]['times'], year)]
+                        row_cells[s + 1].text = '%.1f' % point
 
             document.save(path)
 
@@ -1342,53 +1387,6 @@ class Project:
                     = numpy.mean(self.model_runner.outputs['manual']['cost'][scenario]['raw_cost_' + inter])
                 print('%.1f' % mean_cost[inter])
             print('total: %.1f' % sum(mean_cost.values()))
-
-    def write_docs_by_output(self):
-        """
-        Write word documents using the docx package. Writes with or without uncertainty according to whether Run
-        uncertainty selected in the GUI.
-        """
-
-        # write a new file for each output
-        for output in self.model_runner.epi_outputs_to_analyse:
-
-            # initialise document, years of interest and table
-            path = os.path.join(self.out_dir_project, output) + ".docx"
-            document = Document()
-            table = document.add_table(rows=len(self.years_to_write) + 1, cols=len(self.scenario_names) + 1)
-
-            horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
-            if self.inputs.intervention_uncertainty: scenarios = [15]
-
-            for s, scenario in enumerate(scenarios):
-                scenario_name = t_k.find_scenario_string_from_number(scenario)
-
-                # outputs across the top
-                row_cells = table.rows[0].cells
-                row_cells[0].text = 'Year'
-                row_cells[s + 1].text = t_k.capitalise_and_remove_underscore(scenario_name)
-
-                for y, year in enumerate(self.years_to_write):
-                    row_cells = table.rows[y + 1].cells
-                    row_cells[0].text = str(year)
-
-                    # with uncertainty
-                    if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
-                        (lower_limit, point_estimate, upper_limit) \
-                            = self.uncertainty_centiles['epi'][scenario][output][0:3,
-                                t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][
-                                                                               scenario]['times'], year)]
-                        row_cells[s + 1].text = '%.1f\n(%.1f to %.1f)' % (point_estimate, lower_limit, upper_limit)
-
-                    # without
-                    else:
-                        point_estimate \
-                            = self.model_runner.outputs['manual']['epi'][scenario][output][
-                                t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual'][
-                                                                               'epi'][scenario]['times'], year)]
-                        row_cells[s + 1].text = '%.1f' % point_estimate
-
-            document.save(path)
 
     def write_opti_outputs_spreadsheet(self):
 

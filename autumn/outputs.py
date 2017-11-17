@@ -1758,9 +1758,9 @@ class Project:
             indices:
             patch_colour:
             compare_gtb: Whether to plot the targets/milestones relative to GTB data rather than modelled outputs
-            gtb_ci_plot:
-            plot_targets:
-            uncertainty_scenario:
+            gtb_ci_plot: How to display the confidence intervals of the GTB data
+            plot_targets: Whether to display the End TB Targets and the lines to achieve them
+            uncertainty_scenario: Generally 0 to index the baseline or 15 to index the intervention uncertainty scenario
             alpha: Alpha value for patch
         """
 
@@ -1781,9 +1781,9 @@ class Project:
                 gtb_data_lists.update(extract_dict_to_list_key_ordering(gtb_data[level], level))
             gtb_index = t_k.find_first_list_element_at_least_value(gtb_data_lists['times'], start_time)
             if gtb_ci_plot == 'patch':
-                (colour, hatch, fill, linewidth, alpha) = (patch_colour[o], None, True, 1., 1.)
+                colour, hatch, fill, linewidth, alpha = patch_colour[o], None, True, 1., 1.
             elif gtb_ci_plot == 'hatch':
-                (colour, hatch, fill, linewidth, alpha) = ('.3', '/', False, 0., 1.)
+                colour, hatch, fill, linewidth, alpha = '.3', '/', False, 0., 1.
             ax.add_patch(patches.Polygon(create_patch_from_list(gtb_data_lists['times'][gtb_index:],
                                                                 gtb_data_lists['lower_limit'][gtb_index:],
                                                                 gtb_data_lists['upper_limit'][gtb_index:]),
@@ -1794,8 +1794,8 @@ class Project:
             ax.plot(gtb_data['point_estimate'].keys()[gtb_index:], gtb_data['point_estimate'].values()[gtb_index:],
                     color='.3', linewidth=0.8, label=None, alpha=alpha)
             if gtb_ci_plot == 'hatch' and output != 'notifications':
-                for limit in ['lower_limit', 'upper_limit']:
-                    ax.plot(gtb_data['upper_limit'].keys()[gtb_index:], gtb_data[limit].values()[gtb_index:],
+                for limit in ['lower', 'upper']:
+                    ax.plot(gtb_data[limit + '_limit'].keys()[gtb_index:], gtb_data[limit].values()[gtb_index:],
                             color='.3', linewidth=0.3, label=None, alpha=alpha)
 
             # plot the targets (and milestones) and the fitted exponential function to achieve them
@@ -1804,7 +1804,7 @@ class Project:
                              self.model_runner.percentiles.index(50), :][t_k.find_first_list_element_at_least_value(
                                 self.outputs['manual']['epi'][uncertainty_scenario]['times'], 2015.)]
             else:
-                 base_value = self.outputs['manual']['epi'][uncertainty_scenario][output][
+                base_value = self.outputs['manual']['epi'][uncertainty_scenario][output][
                     t_k.find_first_list_element_at_least_value(
                         self.outputs['manual']['epi'][uncertainty_scenario]['times'], 2015.)]
             if compare_gtb: base_value = gtb_data['point_estimate'][2014]  # should be 2015, but data not yet inputted

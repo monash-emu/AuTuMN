@@ -700,11 +700,9 @@ class Project:
         self.name = 'test_' + self.country
         self.out_dir_project = os.path.join('projects', self.name)
         if not os.path.isdir(self.out_dir_project): os.makedirs(self.out_dir_project)
-
         self.years_to_write = range(int(self.inputs.model_constants['report_start_time']),
                                     int(self.inputs.model_constants['report_end_time']),
                                     int(self.inputs.model_constants['report_step_time']))
-
         self.figure_number = 1
         self.classifications = ['demo_', 'econ_', 'epi_prop_smear', 'epi_rr', 'program_prop_', 'program_timeperiod_',
                                 'program_prop_novel', 'program_prop_treatment', 'program_prop_detect',
@@ -745,7 +743,7 @@ class Project:
 
         self.plot_true_outcomes = False
 
-    ''' general methods for use below '''
+    ''' general methods for use by specific methods below '''
 
     def find_var_index(self, var):
         """
@@ -963,7 +961,7 @@ class Project:
                         = numpy.percentile(matrix_to_analyse, self.model_runner.percentiles, axis=0)
         return uncertainty_centiles
 
-    ''' methods for outputting to Office applications '''
+    ''' methods for outputting to documents and spreadsheets '''
 
     def master_outputs_runner(self):
         """
@@ -2835,7 +2833,7 @@ class Project:
         fig.suptitle('Optimal allocation of resource')
         self.save_opti_figure(fig, '_optimal_allocation')
 
-    ''' miscellaneous method '''
+    ''' miscellaneous '''
 
     def open_output_directory(self):
         """

@@ -1476,12 +1476,10 @@ class Project:
             # self.plot_cost_over_time_stacked_bars()
 
         # plot compartment population sizes
-        if self.gui_inputs['output_compartment_populations']:
-            self.plot_populations()
+        if self.gui_inputs['output_compartment_populations']: self.plot_populations()
 
         # plot fractions
-        if self.gui_inputs['output_fractions']:
-            self.plot_fractions('strain')
+        if self.gui_inputs['output_fractions']: self.plot_fractions('strain')
 
         # plot outputs by age group
         if self.gui_inputs['output_by_subgroups']:
@@ -1490,21 +1488,18 @@ class Project:
             self.plot_proportion_cases_by_stratum()
 
         # plot proportions of population
-        if self.gui_inputs['output_age_fractions']:
-            self.plot_stratified_populations(age_or_risk='age')
+        if self.gui_inputs['output_age_fractions']: self.plot_stratified_populations(age_or_risk='age')
 
         # plot risk group proportions
-        if self.gui_inputs['output_riskgroup_fractions']:
-            self.plot_stratified_populations(age_or_risk='risk')
+        if self.gui_inputs['output_riskgroup_fractions']: self.plot_stratified_populations(age_or_risk='risk')
 
         # make a flow-diagram
         if self.gui_inputs['output_flow_diagram']:
-            png = os.path.join(self.out_dir_project, self.country + '_flow_diagram' + '.png')
-            self.model_runner.models[0].make_flow_diagram(png)
+            self.model_runner.models[0].make_flow_diagram(
+                os.path.join(self.out_dir_project, self.country + '_flow_diagram' + '.png'))
 
         # plot risk group proportions
-        if self.gui_inputs['output_plot_riskgroup_checks'] \
-                and len(self.model_runner.models[0].riskgroups) > 1:
+        if self.gui_inputs['output_plot_riskgroup_checks'] and len(self.model_runner.models[0].riskgroups) > 1:
             self.plot_riskgroup_checks()
 
         # save figure that is produced in the uncertainty running process
@@ -1517,26 +1512,23 @@ class Project:
             self.plot_priors()
 
         # plot popsizes for checking cost-coverage curves
-        if self.gui_inputs['output_popsize_plot']:
-            self.plot_popsizes()
+        if self.gui_inputs['output_popsize_plot']: self.plot_popsizes()
 
         # plot likelihood estimates
-        if self.gui_inputs['output_likelihood_plot']:
-            self.plot_likelihoods()
+        if self.gui_inputs['output_likelihood_plot']: self.plot_likelihoods()
 
         # optimisation plotting
         if self.model_runner.optimisation:
             self.plot_optimised_epi_outputs()
             self.plot_piecharts_opti()
 
-    def plot_outputs_against_gtb(self, outputs, purpose='scenario', ci_plot=False):
+    def plot_outputs_against_gtb(self, outputs, purpose='scenario'):
         """
         Produces the plot for the main outputs, loops over multiple scenarios.
 
         Args:
             outputs: A list of the outputs to be plotted
             purpose: Reason for plotting or type of plot, can be either 'scenario', 'ci_plot' or 'progress'
-            compare_gtb: Whether overlaid End TB Targets should be comparisons against calibration or modelled data
         """
 
         # preliminaries
@@ -1553,7 +1545,8 @@ class Project:
                 = 15, [0, 15], 0, 'int_uncertainty', 1., 'r', self.inputs.n_samples
             self.start_time_index = 0
         else:
-            uncertainty_scenario, scenarios, uncertainty_type, linewidth = 0, self.scenarios, 'epi_uncertainty', 1.5
+            uncertainty_scenario, scenarios, uncertainty_type, linewidth \
+                = 0, self.scenarios[::-1], 'epi_uncertainty', 1.5
 
         # loop through indicators
         for o, output in enumerate(outputs):
@@ -1568,39 +1561,10 @@ class Project:
                 ax, o, output, start_time, indices, patch_colour, compare_gtb=False, gtb_ci_plot=gtb_ci_plot,
                 plot_targets=True, uncertainty_scenario=uncertainty_scenario, alpha=1.)
 
-            # plot scenarios without uncertainty
-            if purpose is 'scenario':
-
-                # plot model estimates
-                for scenario in self.scenarios[::-1]:  # reversing to ensure black baseline plotted over the top
-                    start_index = self.find_start_index(scenario)
-
-                    # work out colour depending on whether purpose is scenario analysis or incrementing comorbidities
-                    colour = self.output_colours[scenario][1]
-                    if self.inputs.increment_comorbidity and scenario:
-                        colour = cm.Reds(.2 + .8 * self.inputs.comorbidity_prevalences[scenario])
-                        label = str(int(self.inputs.comorbidity_prevalences[scenario] * 1e2)) + '%'
-                    elif self.inputs.increment_comorbidity:
-                        colour, label = 'k', 'Baseline'
-                    else:
-                        label = t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario))
-
-                    # plot
-                    ax.plot(self.model_runner.outputs['manual']['epi'][scenario]['times'][start_index:],
-                            self.model_runner.outputs['manual']['epi'][scenario][output][start_index:],
-                            color=colour, linestyle=self.output_colours[scenario][0], linewidth=1.5, label=label)
-
-                # plot true mortality
-                if output == 'mortality' and self.plot_true_outcomes:
-                    ax.plot(self.model_runner.outputs['manual']['epi'][scenario]['times'][start_index:],
-                            self.model_runner.outputs['manual']['epi'][scenario]['true_' + output][start_index:],
-                            color=colour, linestyle=':', linewidth=1)
-                end_filename = '_scenario'
-
             # plot with uncertainty confidence intervals
-            elif purpose == 'ci_plot':
+            if purpose == 'ci_plot':
 
-                for scenario in scenarios[::-1]:
+                for scenario in scenarios:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
                     if not self.inputs.intervention_uncertainty:
                         uncertainty_scenario, start_index, linecolour \
@@ -1621,7 +1585,6 @@ class Project:
                                 self.uncertainty_centiles['epi'][uncertainty_scenario][output][
                                     self.model_runner.percentiles.index(centile), :][start_index:],
                                 color=linecolour, linestyle='--', linewidth=.5, label=None)
-                    end_filename = '_ci'
 
             # plot progressive model run outputs for uncertainty analyses
             elif purpose == 'progress':
@@ -1647,29 +1610,12 @@ class Project:
                                 self.start_time_index:],
                                 linewidth=linewidth, color=colour,
                                 label=t_k.capitalise_and_remove_underscore('baseline'))
-                    end_filename = '_progress'
 
             elif purpose == 'shaded':
 
                 # plot with uncertainty confidence intervals
                 start_index = self.find_start_index(0)
-
-                if self.inputs.intervention_uncertainty:
-                    start_index = 0
-
-                # overlay median and upper and lower CIs if requested
-                if ci_plot:
-                    ax.plot(
-                        self.outputs['manual']['epi'][uncertainty_scenario]['times'][start_index:],
-                        self.uncertainty_centiles['epi'][uncertainty_scenario][
-                            output][self.model_runner.percentiles.index(50), :][start_index:],
-                        color=self.output_colours[0][1], linestyle=self.output_colours[0][0],
-                        linewidth=1.5)
-                    for centile in [2.5, 97.5]:
-                        ax.plot(self.model_runner.outputs['manual'][uncertainty_scenario]['times'][start_index:],
-                                self.uncertainty_centiles['epi'][uncertainty_scenario][output][
-                                self.model_runner.percentiles.index(centile), :][start_index:],
-                                color=self.output_colours[0][1], linestyle='--', linewidth=.5, label=0)
+                if self.inputs.intervention_uncertainty: start_index = 0
 
                 # plot shaded areas as patches
                 patch_colours = [cm.Blues(x) for x in numpy.linspace(0., 1., self.model_runner.n_centiles_for_shading)]
@@ -1679,29 +1625,51 @@ class Project:
                         self.uncertainty_centiles['epi'][uncertainty_scenario][output][i + 3, :][start_index:],
                         self.uncertainty_centiles['epi'][uncertainty_scenario][output][-i - 1, :][start_index:])
                     ax.add_patch(patches.Polygon(patch, color=patch_colours[i]))
-                end_filename = '_shaded'
 
-            # plot baseline in the case of intervention uncertainty
-            if self.inputs.intervention_uncertainty:
-                ax.plot(self.outputs['manual']['epi'][15]['times'][self.start_time_index:],
-                        self.outputs['manual']['epi'][15][output][self.start_time_index:], color='k', linewidth=1.2)
+            # plot scenarios without uncertainty
+            if purpose == 'scenario' or self.inputs.intervention_uncertainty:
+
+                if self.inputs.intervention_uncertainty: scenarios = [0]
+
+                # plot model estimates
+                for scenario in scenarios:  # reversing to ensure black baseline plotted over the top
+                    start_index = self.find_start_index(scenario)
+
+                    # work out colour depending on whether purpose is scenario analysis or incrementing comorbidities
+                    colour = self.output_colours[scenario][1]
+                    if self.inputs.increment_comorbidity and scenario:
+                        colour = cm.Reds(.2 + .8 * self.inputs.comorbidity_prevalences[scenario])
+                        label = str(int(self.inputs.comorbidity_prevalences[scenario] * 1e2)) + '%'
+                    elif self.inputs.increment_comorbidity:
+                        colour, label = 'k', 'Baseline'
+                    else:
+                        label = t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario))
+
+                    # plot
+                    ax.plot(self.model_runner.outputs['manual']['epi'][scenario]['times'][start_index:],
+                            self.model_runner.outputs['manual']['epi'][scenario][output][start_index:],
+                            color=colour, linestyle=self.output_colours[scenario][0], linewidth=1.5, label=label)
+
+                # plot true mortality
+                if output == 'mortality' and self.plot_true_outcomes:
+                    ax.plot(self.model_runner.outputs['manual']['epi'][scenario]['times'][start_index:],
+                            self.model_runner.outputs['manual']['epi'][scenario]['true_' + output][start_index:],
+                            color=colour, linestyle=':', linewidth=1)
 
             # find limits to the axes
             y_absolute_limit = None
-            if self.inputs.intervention_uncertainty or len(self.scenarios) > 1:
+            if self.inputs.intervention_uncertainty or len(scenarios) > 1:
                 plot_start_time_index = t_k.find_first_list_element_at_least_value(
                     self.model_runner.outputs['manual']['epi'][0]['times'], start_time)
                 y_absolute_limit = max(self.model_runner.outputs['manual']['epi'][0][output][plot_start_time_index:])
 
             self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
-                           legend=(o == len(outputs) - 1 and len(self.scenarios) > 1
+                           legend=(o == len(outputs) - 1 and len(scenarios) > 1
                                    and not self.inputs.intervention_uncertainty),
-                           y_axis_type='raw', y_label=yaxis_label[o],
-                           y_absolute_limit=y_absolute_limit)
+                           y_axis_type='raw', y_label=yaxis_label[o], y_absolute_limit=y_absolute_limit)
 
-        # add main title and s
         # fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
-        self.save_figure(fig, '_gtb' + end_filename)
+        self.save_figure(fig, '_gtb_' + purpose)
 
     def overlay_gtb_data(self, ax, o, output, start_time, indices, patch_colour, compare_gtb=False, gtb_ci_plot='hatch',
                          plot_targets=True, uncertainty_scenario=0, alpha=1.):

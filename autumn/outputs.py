@@ -1589,7 +1589,7 @@ class Project:
 
                 # get relevant data according to whether intervention or baseline uncertainty is being run
                 if not self.inputs.intervention_uncertainty:
-                    runs = len(self.model_runner.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output])
+                    runs = len(self.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output])
 
                 # plot the runs
                 for run in range(runs):
@@ -1644,14 +1644,14 @@ class Project:
                         label = t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario))
 
                     # plot
-                    ax.plot(self.model_runner.outputs['manual']['epi'][scenario]['times'][start_index:],
-                            self.model_runner.outputs['manual']['epi'][scenario][output][start_index:],
+                    ax.plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
+                            self.outputs['manual']['epi'][scenario][output][start_index:],
                             color=colour, linestyle=self.output_colours[scenario][0], linewidth=1.5, label=label)
 
                 # plot true mortality
                 if output == 'mortality' and self.plot_true_outcomes:
-                    ax.plot(self.model_runner.outputs['manual']['epi'][scenario]['times'][start_index:],
-                            self.model_runner.outputs['manual']['epi'][scenario]['true_' + output][start_index:],
+                    ax.plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
+                            self.outputs['manual']['epi'][scenario]['true_' + output][start_index:],
                             color=colour, linestyle=':', linewidth=1)
 
             # find limits to the axes

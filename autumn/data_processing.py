@@ -434,10 +434,6 @@ class Inputs:
         # stratified
         else:
             self.strains = self.available_strains[:self.gui_inputs['n_strains']]
-            if self.gui_inputs['is_amplification']:
-                self.time_variants['epi_prop_amplification'] \
-                    = {self.model_constants['start_mdr_introduce_time']: 0.,
-                       self.model_constants['end_mdr_introduce_time']: self.model_constants['tb_prop_amplification']}
             if self.gui_inputs['is_misassignment']:
                 self.treatment_outcome_types = copy.copy(self.strains)
 

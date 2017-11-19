@@ -622,7 +622,7 @@ def scale_axes(vals, max_val, y_sig_figs):
     """
 
     y_number_format = '%.' + str(y_sig_figs) + 'f'
-    y_number_format_just_below_one = '%.' + str(max(2, y_sig_figs)) + 'f'
+    y_number_format_around_one = '%.' + str(max(2, y_sig_figs)) + 'f'
     if max_val < 5e-9:
         labels = [y_number_format % (v * 1e12) for v in vals]
         axis_modifier = 'Trillionth '
@@ -638,8 +638,11 @@ def scale_axes(vals, max_val, y_sig_figs):
     elif max_val < .1:
         labels = [y_number_format % (v * 1e2) for v in vals]
         axis_modifier = 'Hundredth '
+    elif max_val < 5:
+        labels = [y_number_format_around_one % v for v in vals]
+        axis_modifier = ''
     elif max_val < 5e3:
-        labels = [y_number_format_just_below_one % v for v in vals]
+        labels = [y_number_format % v for v in vals]
         axis_modifier = ''
     elif max_val < 5e6:
         labels = [y_number_format % (v / 1e3) for v in vals]

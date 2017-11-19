@@ -268,6 +268,7 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_misassignment_detection_vars()
         if self.is_lowquality: self.calculate_lowquality_detection_vars()
         self.calculate_await_treatment_var()
+        if self.is_amplification: self.calculate_amplification_var()
         self.calculate_treatment_rates_vars()
         if 'agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions:
             self.calculate_ipt_effect()
@@ -651,6 +652,16 @@ class ConsolidatedModel(StratifiedModel):
 
             # find the rate as the reciprocal of the time to treatment
             self.vars['program_rate_start_treatment' + organ] = 1. / time_to_treatment
+
+    def calculate_amplification_var(self):
+        """
+        Previously had a sigmoidal function for amplification proportion, but now thinking that the following switch is
+        a better approach because scale-up functions are all calculated in data_processing and we need to be able to
+        adjust the time that MDR emerges during model running.
+        """
+
+        self.vars['epi_prop_amplification'] = 0. if self.time < self.params['start_mdr_introduce_time'] \
+            else self.params['tb_prop_amplification']
 
     def calculate_treatment_rates_vars(self):
         """

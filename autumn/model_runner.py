@@ -799,15 +799,11 @@ class ModelRunner:
 
                     if ratio_mdr_prevalence < 1. / self.relative_difference_to_adjust_mdr:
                         self.start_mdr_introduce_time -= self.amount_to_adjust_mdr_year
-                        self.end_mdr_introduce_time = self.start_mdr_introduce_time + 10.
                     elif ratio_mdr_prevalence > self.relative_difference_to_adjust_mdr:
                         self.start_mdr_introduce_time += self.amount_to_adjust_mdr_year
-                        self.end_mdr_introduce_time = self.start_mdr_introduce_time + 10.
 
                     for scenario in self.scenarios:
-                        for time_point in ['start', 'end']:
-                            self.models[scenario].set_parameter(time_point + '_mdr_introduce_time',
-                                                                self.start_mdr_introduce_time)
+                        self.models[scenario].set_parameter('start_mdr_introduce_time', self.start_mdr_introduce_time)
 
                     # find value to adjust starting population by, if a target population specified
                     if 'target_population' in self.inputs.model_constants:

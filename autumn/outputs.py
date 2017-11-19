@@ -1007,7 +1007,7 @@ class Project:
         # write optimisation spreadsheets
         self.write_opti_outputs_spreadsheet()
 
-        self.find_average_costs()
+        # self.find_average_costs()
 
         # master plotting method
         self.run_plotting()

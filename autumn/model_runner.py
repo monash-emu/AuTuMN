@@ -216,8 +216,7 @@ class ModelRunner:
         self.amount_to_adjust_mortality = .02
         self.amount_to_adjust_mdr_year = 1.
         self.prop_death_reporting = self.inputs.model_constants['program_prop_death_reporting']
-        self.start_mdr_introduce_time = self.inputs.model_constants['start_mdr_introduce_time']
-        self.end_mdr_introduce_time = self.inputs.model_constants['end_mdr_introduce_time']
+        self.mdr_introduce_time = self.inputs.model_constants['mdr_introduce_time']
 
         # optimisation attributes
         self.optimisation = False  # leave True even if loading optimisation results
@@ -798,12 +797,12 @@ class ModelRunner:
                           / self.inputs.model_constants['tb_perc_mdr_prevalence']
 
                     if ratio_mdr_prevalence < 1. / self.relative_difference_to_adjust_mdr:
-                        self.start_mdr_introduce_time -= self.amount_to_adjust_mdr_year
+                        self.mdr_introduce_time -= self.amount_to_adjust_mdr_year
                     elif ratio_mdr_prevalence > self.relative_difference_to_adjust_mdr:
-                        self.start_mdr_introduce_time += self.amount_to_adjust_mdr_year
+                        self.mdr_introduce_time += self.amount_to_adjust_mdr_year
 
                     for scenario in self.scenarios:
-                        self.models[scenario].set_parameter('start_mdr_introduce_time', self.start_mdr_introduce_time)
+                        self.models[scenario].set_parameter('mdr_introduce_time', self.mdr_introduce_time)
 
                     # find value to adjust starting population by, if a target population specified
                     if 'target_population' in self.inputs.model_constants:

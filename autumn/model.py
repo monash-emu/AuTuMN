@@ -660,7 +660,7 @@ class ConsolidatedModel(StratifiedModel):
         adjust the time that MDR emerges during model running.
         """
 
-        self.vars['epi_prop_amplification'] = 0. if self.time < self.params['start_mdr_introduce_time'] \
+        self.vars['epi_prop_amplification'] = 0. if self.time < self.params['mdr_introduce_time'] \
             else self.params['tb_prop_amplification']
 
     def calculate_treatment_rates_vars(self):

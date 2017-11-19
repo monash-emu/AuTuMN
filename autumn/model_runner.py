@@ -212,8 +212,12 @@ class ModelRunner:
         self.random_start = False  # whether to start from a random point, as opposed to the manually calibrated value
         self.intervention_uncertainty = self.inputs.intervention_uncertainty
         self.relative_difference_to_adjust_mortality = 1.1
+        self.relative_difference_to_adjust_mdr = 1.1
         self.amount_to_adjust_mortality = .02
+        self.amount_to_adjust_mdr_year = 1.
         self.prop_death_reporting = self.inputs.model_constants['program_prop_death_reporting']
+        self.start_mdr_introduce_time = self.inputs.model_constants['start_mdr_introduce_time']
+        self.end_mdr_introduce_time = self.inputs.model_constants['end_mdr_introduce_time']
 
         # optimisation attributes
         self.optimisation = False  # leave True even if loading optimisation results
@@ -786,6 +790,33 @@ class ModelRunner:
                     elif average_ratio > self.relative_difference_to_adjust_mortality:
                         self.prop_death_reporting -= self.amount_to_adjust_mortality
 
+                    # MDR introduction time adjustment
+                    ratio_mdr_prevalence \
+                        = float(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'][
+                                    last_run_output_index, tool_kit.find_first_list_element_at_least_value(self.outputs[
+                                        'manual']['epi'][0]['times'], self.inputs.model_constants['current_time'])]) \
+                          / self.inputs.model_constants['tb_perc_mdr_prevalence']
+
+                    if ratio_mdr_prevalence < 1. / self.relative_difference_to_adjust_mdr:
+                        self.start_mdr_introduce_time -= self.amount_to_adjust_mdr_year
+                        self.end_mdr_introduce_time = self.start_mdr_introduce_time + 10.
+                    elif ratio_mdr_prevalence > self.relative_difference_to_adjust_mdr:
+                        self.start_mdr_introduce_time += self.amount_to_adjust_mdr_year
+                        self.end_mdr_introduce_time = self.start_mdr_introduce_time + 10.
+
+                    for scenario in self.scenarios:
+                        for time_point in ['start', 'end']:
+                            self.models[scenario].set_parameter(time_point + '_mdr_introduce_time',
+                                                                self.start_mdr_introduce_time)
+
+                    # find value to adjust starting population by, if a target population specified
+                    if 'target_population' in self.inputs.model_constants:
+                        population_adjustment \
+                            = self.inputs.model_constants['target_population'] \
+                              / float(self.outputs['epi_uncertainty']['epi'][0]['population'][last_run_output_index,
+                                tool_kit.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'],
+                                                                         self.inputs.model_constants['current_time'])])
+
                 else:
                     self.whether_accepted_list.append(False)
                     self.rejected_indices.append(run)
@@ -797,14 +828,6 @@ class ModelRunner:
                 self.add_comment_to_gui_window(
                     str(n_accepted) + ' accepted / ' + str(run) + ' candidates. Running time: '
                     + str(datetime.datetime.now() - start_timer_run))
-
-                # find value to adjust starting population by, if a target population specified
-                if 'target_population' in self.inputs.model_constants:
-                    population_adjustment \
-                        = self.inputs.model_constants['target_population'] \
-                          / self.outputs['epi_uncertainty']['epi'][0]['population'][last_run_output_index,
-                              tool_kit.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'],
-                                  self.inputs.model_constants['current_time'])]
 
                 # record death reporting proportion, which may or may not have been adjusted
                 self.all_other_adjustments_made['program_prop_death_reporting'].append(self.prop_death_reporting)

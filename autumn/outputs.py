@@ -1555,8 +1555,7 @@ class Project:
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
 
             # overlay first so it's at the back
-            gtb_ci_plot = 'patch'
-            if purpose == 'shaded': gtb_ci_plot = 'hatch'
+            gtb_ci_plot = 'hatch' if purpose == 'shaded' else 'patch'
             self.overlay_gtb_data(
                 ax, o, output, start_time, indices, patch_colour, compare_gtb=False, gtb_ci_plot=gtb_ci_plot,
                 plot_targets=True, uncertainty_scenario=uncertainty_scenario, alpha=1.)

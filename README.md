@@ -11,14 +11,9 @@ pluggable API to other system. Applied to tuberculosis.
 
 ## TODO
 - setup.py file to load all dependent modules
-- add markers to GTB graphs to indicate target values
-- uncertainty for economics
-- intervention uncertainty
-- automatic calibration
-- update last two sheet readers - all done except:
-    - latest GTB reader doesn't have prevalence data
-        - seems very strange, but needs to be sorted
-    - treatment outcomes reader seems unchanged and bugs when updated
-        - also strange because this is should be mutually inconsistent
-    - (World Bank demographic data is current, as 2014 seems to be the last year with data available still)
+- uncertainty for economics (an extension to intervention uncertainty I think)
+- update last sheet readers to latest GTB data (without losing old data preferable)
+- tidy up MDR introduction time code and reconcile with population adjustment
+- simplify population adjustment code to save that variable being passed through multiple methods
+- record adjustments made in uncertainty as runs progress
 

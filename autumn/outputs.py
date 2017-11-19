@@ -615,7 +615,7 @@ def scale_axes(vals, max_val, y_sig_figs):
     Args:
         vals: List of the current y-ticks
         max_val: The maximum value of this list
-        y_sig_figs: The number of significant figures for the ticks
+        y_sig_figs: The preferred number of significant figures for the ticks
     Returns:
         labels: List of the modified tick labels
         axis_modifier: The text to be added to the axis
@@ -624,33 +624,32 @@ def scale_axes(vals, max_val, y_sig_figs):
     y_number_format = '%.' + str(y_sig_figs) + 'f'
     y_number_format_just_below_one = '%.' + str(max(2, y_sig_figs)) + 'f'
     if max_val < 5e-9:
-        labels = [y_number_format % v * 1e12 for v in vals]
+        labels = [y_number_format % (v * 1e12) for v in vals]
         axis_modifier = 'Trillionth '
     elif max_val < 5e-6:
-        labels = [y_number_format % v * 1e9 for v in vals]
+        labels = [y_number_format % (v * 1e9) for v in vals]
         axis_modifier = 'Billionth '
     elif max_val < 5e-3:
-        labels = [y_number_format % v * 1e6 for v in vals]
+        labels = [y_number_format % (v * 1e6) for v in vals]
         axis_modifier = 'Millionth '
     elif max_val < 5e-2:
-        labels = [y_number_format % v * 1e3 for v in vals]
+        labels = [y_number_format % (v * 1e3) for v in vals]
         axis_modifier = 'Thousandth '
     elif max_val < .1:
-        labels = [y_number_format % v * 1e2 for v in vals]
+        labels = [y_number_format % (v * 1e2) for v in vals]
         axis_modifier = 'Hundredth '
     elif max_val < 5e3:
         labels = [y_number_format_just_below_one % v for v in vals]
         axis_modifier = ''
     elif max_val < 5e6:
-        labels = [y_number_format % v / 1e3 for v in vals]
+        labels = [y_number_format % (v / 1e3) for v in vals]
         axis_modifier = 'Thousand '
     elif max_val < 5e9:
-        labels = [y_number_format % v / 1e6 for v in vals]
+        labels = [y_number_format % (v / 1e6) for v in vals]
         axis_modifier = 'Million '
     else:
-        labels = [y_number_format % v / 1e9 for v in vals]
+        labels = [y_number_format % (v / 1e9) for v in vals]
         axis_modifier = 'Billion '
-
     return labels, axis_modifier
 
 

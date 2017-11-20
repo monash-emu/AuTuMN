@@ -791,8 +791,8 @@ class ModelRunner:
                     if len(self.inputs.strains) > 1:
                         ratio_mdr_prevalence \
                             = float(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'][
-                                        last_run_output_index, tool_kit.find_first_list_element_at_least_value(self.outputs[
-                                            'manual']['epi'][0]['times'], self.inputs.model_constants['current_time'])]) \
+                                    last_run_output_index, tool_kit.find_first_list_element_at_least_value(self.outputs[
+                                        'manual']['epi'][0]['times'], self.inputs.model_constants['current_time'])]) \
                               / self.inputs.model_constants['tb_perc_mdr_prevalence']
 
                         if ratio_mdr_prevalence < 1. / self.relative_difference_to_adjust_mdr:

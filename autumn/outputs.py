@@ -1467,9 +1467,8 @@ class Project:
             # self.plot_force_infection()
 
         # plot mixing matrix if relevant
-        # if self.model_runner.models[0].vary_force_infection_by_riskgroup \
-        #         and len(self.inputs.riskgroups) > 1:
-        #     self.plot_mixing_matrix()
+        if self.inputs.vary_force_infection_by_riskgroup and len(self.inputs.riskgroups) > 1:
+            self.plot_mixing_matrix()
 
         # plot economic outputs
         if self.gui_inputs['output_plot_economics']:
@@ -2642,8 +2641,7 @@ class Project:
                 data += [self.model_runner.models['manual_baseline'].mixing[from_riskgroup][to_riskgroup]]
             next_data = [i + j for i, j in zip(last_data, data)]
             x_positions = numpy.linspace(.5, .5 + len(next_data) - 1., len(next_data))
-            ax.bar(x_positions, data,
-                   width=bar_width, bottom=last_data, color=output_colours[r][1],
+            ax.bar(x_positions, data, width=bar_width, bottom=last_data, color=output_colours[r][1],
                    label=t_k.capitalise_and_remove_underscore(t_k.find_title_from_dictionary(to_riskgroup)))
             last_data = next_data
         xlabels = [t_k.capitalise_first_letter(t_k.find_title_from_dictionary(i))

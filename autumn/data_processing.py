@@ -465,8 +465,6 @@ class Inputs:
         method below only.
         """
 
-        ### up to hear in run-through
-
         # create mixing matrix separately for each scenario, just in case risk groups being managed differently
         for scenario in self.scenarios:
             self.mixing[scenario] = {}

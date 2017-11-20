@@ -61,7 +61,7 @@ class BaseModel:
         self.loaded_compartments = None
         self.scenario = 0
 
-    ''' Time-related functions '''
+    ''' time-related functions '''
 
     def make_times(self, start, end, delta):
         """
@@ -93,24 +93,20 @@ class BaseModel:
         return [i for i, j in enumerate(self.times) if j >= time][0] - 1
         raise ValueError('Time not found')
 
-    #####################################################
-    ### Methods to set values to aspects of the model ###
-    #####################################################
+    ''' methods to set values to aspects of the model '''
 
     def set_parameter(self, label, val):
-
         """
         Almost to simple to need a method. Sets a single parameter value.
 
         Args:
-            label: Parameter name.
-            val: Parameter value.
+            label: Parameter name
+            val: Parameter value
         """
 
         self.params[label] = val
 
     def get_constant_or_variable_param(self, param):
-
         """
         Now obselete with new approach to determining whether parameters are constant or time variant in the data
         processing module.
@@ -159,7 +155,6 @@ class BaseModel:
         del self.init_compartments[label]
 
     def initialise_compartments(self):
-
         """
         Initialise compartments to starting values.
         """
@@ -230,7 +225,6 @@ class BaseModel:
         add_unique_tuple_to_list(self.var_entry_rate_flows, (label, var_label))
 
     def set_fixed_infection_death_rate_flow(self, label, param_label):
-
         """
         Set fixed infection death rate flow.
 
@@ -254,7 +248,6 @@ class BaseModel:
         add_unique_tuple_to_list(self.var_infection_death_rate_flows, (label, var_label))
 
     def set_fixed_transfer_rate_flow(self, from_label, to_label, param_label):
-
         """
         Set fixed inter-compartmental transfer rate flows.
 
@@ -404,9 +397,7 @@ class BaseModel:
 
         pass
 
-    ################################
-    ### Main integration methods ###
-    ################################
+    ''' main integration methods '''
 
     def init_run(self):
 

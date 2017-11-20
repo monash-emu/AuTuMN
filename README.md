@@ -14,6 +14,5 @@ pluggable API to other system. Applied to tuberculosis.
 - uncertainty for economics (an extension to intervention uncertainty I think)
 - update last sheet readers to latest GTB data (without losing old data preferable)
 - tidy up MDR introduction time code and reconcile with population adjustment
-- simplify population adjustment code to save that variable being passed through multiple methods
 - record adjustments made in uncertainty as runs progress
 

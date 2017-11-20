@@ -135,7 +135,7 @@ class ConsolidatedModel(StratifiedModel):
         # extract values for compartment initialisation by compartment type
         for compartment in self.compartment_types:
             if compartment in self.inputs.model_constants:
-                self.initial_compartments[compartment] = self.inputs.model_constants[compartment]
+                self.initial_compartments[compartment] = self.params[compartment]
 
         # initialise to zero
         for agegroup in self.agegroups:

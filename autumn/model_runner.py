@@ -671,8 +671,7 @@ class ModelRunner:
         self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
         # prepare basic local variables for uncertainty loop
-        n_accepted, prev_log_likelihood, new_param_list, param_candidates, run, population_adjustment, accepted \
-            = 0, -5e2, [], {}, 0, 1., 0
+        n_accepted, prev_log_likelihood, new_param_list, param_candidates, run, accepted = 0, -5e2, [], {}, 0, 0
 
         for param in self.inputs.param_ranges_unc:
             param_candidates[param['key']] = [self.inputs.model_constants[param['key']]]
@@ -700,8 +699,7 @@ class ModelRunner:
             start_timer_run = datetime.datetime.now()
 
             # run baseline scenario (includes parameter checking, parameter setting and recording success/failure)
-            self.run_with_params(
-                new_param_list, scenario=0, population_adjustment=population_adjustment, accepted=accepted)
+            self.run_with_params(new_param_list, scenario=0)
 
             # store outputs regardless of acceptance, provided run was completed successfully
             if self.is_last_run_success:
@@ -805,13 +803,16 @@ class ModelRunner:
                     for scenario in self.scenarios:
                         self.models[scenario].set_parameter('mdr_introduce_time', self.mdr_introduce_time)
 
-                    # find value to adjust starting population by, if a target population specified
+                    # adjust starting population, if a target population has been specified
                     if 'target_population' in self.inputs.model_constants:
                         population_adjustment \
                             = self.inputs.model_constants['target_population'] \
                               / float(self.outputs['epi_uncertainty']['epi'][0]['population'][last_run_output_index,
                                 tool_kit.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'],
                                                                          self.inputs.model_constants['current_time'])])
+                        for compartment in self.models[0].initial_compartments:
+                            self.models[0].set_parameter(compartment,
+                                                         self.models[0].params[compartment] * population_adjustment)
 
                 else:
                     self.whether_accepted_list.append(False)
@@ -864,14 +865,13 @@ class ModelRunner:
 
         return normal_char
 
-    def run_with_params(self, params, scenario=0, population_adjustment=1., accepted=0):
+    def run_with_params(self, params, scenario=0):
         """
         Integrate the model with the proposed parameter set.
 
         Args:
-            params: The parameters to be set in the model.
+            params: The parameters to be set in the model
             scenario: Numeral for the scenario to be run
-            population_adjustment and accepted are just being fed through to set_model_with_params
         """
 
         # check whether parameter values are acceptable
@@ -893,7 +893,7 @@ class ModelRunner:
         param_dict = {names['key']: vals for names, vals in zip(self.inputs.param_ranges_unc, params)}
 
         # set parameters and run
-        self.set_model_with_params(param_dict, scenario, population_adjustment=population_adjustment, accepted=accepted)
+        self.set_model_with_params(param_dict, scenario)
         self.is_last_run_success = True
 
         # noinspection PyBroadException
@@ -903,7 +903,7 @@ class ModelRunner:
             self.add_comment_to_gui_window('Warning: parameters=%s failed with model' % params)
             self.is_last_run_success = False
 
-    def set_model_with_params(self, param_dict, scenario=0, population_adjustment=1., accepted=0):
+    def set_model_with_params(self, param_dict, scenario=0):
         """
         Populates baseline model with params from uncertainty calculations, including adjusting starting time.
         Also adjusts starting population to better match target population at current time using target_population input
@@ -913,15 +913,7 @@ class ModelRunner:
             param_dict: Dictionary of the parameters to be set within the model (keys parameter name strings and values
                 parameter values)
             scenario: Numeral for scenario to run
-            population_adjustment: Ratio by which to adjust population by (finally gets used here, as does accepted)
-            accepted: Boolean that is only needed because we should only adjust population for accepted runs
         """
-
-        # adjust starting populations if target_population in sheets (i.e. country sheet, because not in defaults)
-        if accepted and population_adjustment != 1.:
-            for compartment_type in self.inputs.compartment_types:
-                if compartment_type in self.inputs.model_constants:
-                    self.inputs.model_constants[compartment_type] *= population_adjustment
 
         for key in param_dict:
 

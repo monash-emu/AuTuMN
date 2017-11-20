@@ -132,9 +132,6 @@ class Inputs:
         self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
         self.original_data = spreadsheet.read_input_data_xls(True, self.find_keys_of_sheets_to_read(), self.country)
 
-        # make sure user inputs make sense
-        self.reconcile_user_inputs()
-
         # define treatment history structure (should ideally go in define_model_structure, but can't)
         self.define_treatment_history_structure()
 
@@ -176,6 +173,9 @@ class Inputs:
 
         # optimisation-related methods
         self.find_intervention_startdates()  # currently sitting with intervention classification methods, though
+
+        # make sure user inputs make sense
+        self.reconcile_user_inputs()
 
         # perform checks (undeveloped still)
         self.checks()
@@ -489,14 +489,14 @@ class Inputs:
                                 self.scaleup_data[scenario]['riskgroup_prop' + from_riskgroup],
                                 self.model_constants['current_time'])
 
-                    # give the remainder to the "_norisk" group without any risk factors
-                    else:
-                        if sum(self.mixing[scenario][to_riskgroup].values) >= 1.:
-                            self.add_comment_to_gui_window(
-                                'Total of proportions of contacts for risk group %s greater than one. Model invalid.'
-                                % to_riskgroup)
-                        self.mixing[scenario][to_riskgroup]['_norisk'] \
-                            = 1. - sum(self.mixing[scenario][to_riskgroup].values())
+                # give the remainder to the "_norisk" group without any risk factors
+                if sum(self.mixing[scenario][to_riskgroup].values()) >= 1.:
+                    self.add_comment_to_gui_window(
+                        'Total of proportions of contacts for risk group %s greater than one. Model invalid.'
+                        % to_riskgroup)
+                something = sum(self.mixing[scenario][to_riskgroup].values())
+                self.mixing[scenario][to_riskgroup]['_norisk'] \
+                    = 1. - sum(self.mixing[scenario][to_riskgroup].values())
 
     def define_compartment_structure(self):
         """
@@ -1304,10 +1304,10 @@ class Inputs:
             self.add_comment_to_gui_window(
                 'Resistance amplification requested, but not implemented as single strain model only')
             self.gui_inputs['is_amplification'] = False
-        if len(self.riskgroups) == 0 and self.vary_force_infection_by_riskgroup:
-            self.add_comment_to_gui_window(
-                'Heterogeneous mixing requested, but not implemented as no risk groups are present')
-            self.vary_force_infection_by_riskgroup = False
+        # if len(self.riskgroups) == 0 and self.vary_force_infection_by_riskgroup:
+        #     self.add_comment_to_gui_window(
+        #         'Heterogeneous mixing requested, but not implemented as no risk groups are present')
+        #     self.vary_force_infection_by_riskgroup = False
         if self.gui_inputs['n_organs'] <= 1 and self.gui_inputs['is_timevariant_organs']:
             self.add_comment_to_gui_window(
                 'Time-variant organ status requested, but not implemented as no stratification by organ status')

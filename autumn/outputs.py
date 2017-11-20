@@ -2293,7 +2293,7 @@ class Project:
         # prelims
         fig = self.set_and_update_figure()
         ax = fig.add_subplot(1, 1, 1)
-        times = self.model_runner.models['manual_baseline'].times
+        times = self.model_runner.models[0].times
         lower_plot_margin = numpy.zeros(len(times))
         upper_plot_margin = numpy.zeros(len(times))
 

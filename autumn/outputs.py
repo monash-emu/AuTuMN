@@ -2634,18 +2634,17 @@ class Project:
         ax = make_single_axis(fig)
         output_colours = self.make_default_line_styles(5, True)
         bar_width = .7
-        last_data = list(numpy.zeros(len(self.model_runner.models['manual_baseline'].riskgroups)))
-        for r, to_riskgroup in enumerate(self.model_runner.models['manual_baseline'].riskgroups):
-            data = []
-            for from_riskgroup in self.model_runner.models['manual_baseline'].riskgroups:
-                data += [self.model_runner.models['manual_baseline'].mixing[from_riskgroup][to_riskgroup]]
-            next_data = [i + j for i, j in zip(last_data, data)]
+        last_data = list(numpy.zeros(len(self.inputs.riskgroups)))
+        for r, to_riskgroup in enumerate(self.inputs.riskgroups):
+            this_data = []
+            for from_riskgroup in self.inputs.riskgroups:
+                this_data.append(self.inputs.mixing[0][from_riskgroup][to_riskgroup])
+            next_data = [last + this for last, this in zip(last_data, this_data)]
             x_positions = numpy.linspace(.5, .5 + len(next_data) - 1., len(next_data))
-            ax.bar(x_positions, data, width=bar_width, bottom=last_data, color=output_colours[r][1],
+            ax.bar(x_positions, this_data, width=bar_width, bottom=last_data, color=output_colours[r][1],
                    label=t_k.capitalise_and_remove_underscore(t_k.find_title_from_dictionary(to_riskgroup)))
             last_data = next_data
-        xlabels = [t_k.capitalise_first_letter(t_k.find_title_from_dictionary(i))
-                   for i in self.model_runner.models['manual_baseline'].riskgroups]
+        xlabels = [t_k.capitalise_first_letter(t_k.find_title_from_dictionary(last)) for last in self.inputs.riskgroups]
         self.tidy_axis(ax, [1, 1], y_label='Proportion',
                        x_axis_type='raw', y_axis_type='proportion', legend='for_single', title='Source of contacts')
         ax.set_xlim(0.2, max(x_positions) + 1.)

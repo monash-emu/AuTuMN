@@ -923,9 +923,9 @@ class ConsolidatedModel(StratifiedModel):
                         = self.params['tb_n_contact'] \
                           * self.vars['effective_infectious_population' + strain + riskgroup] \
                           / self.vars['population' + riskgroup]
-                    self.vars['rate_ipt_commencement' + riskgroup + agegroup] = 0.
 
                     # separate infections out into those treated and those not treated for DS-TB infection
+                    self.vars['rate_ipt_commencement' + riskgroup + agegroup] = 0.
                     if ('agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions) \
                             and strain == self.strains[0]:
                         self.vars['rate_ipt_commencement' + riskgroup + agegroup] \

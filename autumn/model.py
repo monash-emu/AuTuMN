@@ -238,7 +238,7 @@ class ConsolidatedModel(StratifiedModel):
         self.params['rate_ipt_noncompletion'] \
             = 1. / self.params['tb_timeperiod_onipt'] * (1. - self.params['int_prop_ipt_effectiveness'])
 
-    ''' Methods that calculate variables to be used in calculating flows
+    ''' methods that calculate variables to be used in calculating flows
     (Note that all scaleup_fns have already been calculated.) '''
 
     def calculate_vars(self):

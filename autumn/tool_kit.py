@@ -551,8 +551,6 @@ def find_title_from_dictionary(name):
             'start of model run',
         'program_prop_decentralisation':
             'Decentralisation coverage',
-        'epi_rr_diabetes':
-            'Diabetes progression relative risk',
         'tb_n_contact':
             'Effective contact rate',
         'tb_prop_early_progression':

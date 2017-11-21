@@ -494,7 +494,6 @@ class Inputs:
                     self.add_comment_to_gui_window(
                         'Total of proportions of contacts for risk group %s greater than one. Model invalid.'
                         % to_riskgroup)
-                something = sum(self.mixing[scenario][to_riskgroup].values())
                 self.mixing[scenario][to_riskgroup]['_norisk'] \
                     = 1. - sum(self.mixing[scenario][to_riskgroup].values())
 

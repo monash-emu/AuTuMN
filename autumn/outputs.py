@@ -709,7 +709,7 @@ class Project:
                                     int(self.inputs.model_constants['report_end_time']),
                                     int(self.inputs.model_constants['report_step_time']))
         self.figure_number = 1
-        self.classifications = ['demo_', 'econ_', 'epi_prop_smear', 'epi_rr', 'program_prop_', 'program_timeperiod_',
+        self.classifications = ['demo_', 'econ_', 'epi_prop_smear', 'program_prop_', 'program_timeperiod_',
                                 'program_prop_novel', 'program_prop_treatment', 'program_prop_detect',
                                 'int_prop_vaccination', 'program_prop_treatment_success',
                                 'program_prop_treatment_death', 'transmission_modifier', 'algorithm']

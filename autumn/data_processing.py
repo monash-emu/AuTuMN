@@ -1099,8 +1099,8 @@ class Inputs:
                     self.scaleup_data[scenario][str(time_variant)] = {}
                     for i in self.time_variants[time_variant]:
                         if i == 'scenario_' + str(scenario):
-                            self.scaleup_data[scenario][str(time_variant)]['scenario'] = \
-                                self.time_variants[time_variant][i]
+                            self.scaleup_data[scenario][str(time_variant)]['scenario'] \
+                                = self.time_variants[time_variant][i]
                         elif type(i) == str:
                             if 'scenario_' not in i:
                                 self.scaleup_data[scenario][str(time_variant)][i] = self.time_variants[time_variant][i]

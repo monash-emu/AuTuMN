@@ -870,15 +870,14 @@ class ConsolidatedModel(StratifiedModel):
         calculate the raw force of infection, then adjust for various levels of susceptibility.
         """
 
+        # to loop over all risk groups if needed, or otherwise to just run once
+        force_riskgroups = copy.copy(self.riskgroups) if self.vary_force_infection_by_riskgroup else ['']
+
         # find the effective infectious population for each strain
         for strain in self.strains:
 
             # initialise infectious population vars as needed
-            if self.vary_force_infection_by_riskgroup:
-                for riskgroup in self.riskgroups:
-                    self.vars['effective_infectious_population' + strain + riskgroup] = 0.
-            else:
-                self.vars['effective_infectious_population' + strain] = 0.
+            for riskgroup in force_riskgroups: self.vars['effective_infectious_population' + strain + riskgroup] = 0.
 
             # loop through compartments, skipping on as soon as possible if not relevant
             for label in self.labels:
@@ -922,12 +921,6 @@ class ConsolidatedModel(StratifiedModel):
                                        * self.params['tb_multiplier_child_infectiousness' + agegroup] \
                                        * self.compartments[label]
 
-            # to loop over all risk groups if needed, or otherwise to just run once
-            if self.vary_force_infection_by_riskgroup:
-                force_riskgroups = copy.copy(self.riskgroups)
-            else:
-                force_riskgroups = ['']
-
             # first calculate force of infection unadjusted for immunity and IPT
             for agegroup in self.agegroups:
                 for riskgroup in force_riskgroups:
@@ -966,7 +959,7 @@ class ConsolidatedModel(StratifiedModel):
                             if history == '_treated':
                                 immunity_multiplier *= self.params['tb_multiplier_treated_protection']
 
-                        # find forces of infection, except that there is no previously treated fully susceptible group
+                                # find forces of infection, except that there is no previously treated fully susceptible group
                             if force_type != '_fully' or (force_type == '_fully' and history == self.histories[0]):
                                 self.vars['rate_force' + force_type + strain + history + riskgroup + agegroup] \
                                     = self.vars['rate_force' + strain + riskgroup + agegroup] * immunity_multiplier

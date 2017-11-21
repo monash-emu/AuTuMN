@@ -739,7 +739,7 @@ class Project:
         self.level_conversion_dict = {'lower_limit': '_lo', 'upper_limit': '_hi', 'point_estimate': ''}
 
         # to have a look at some individual vars scaling over time
-        self.vars_to_view = []
+        self.vars_to_view = ['riskgroup_prop_diabetes']
 
         # comes up so often that we need to find this index, that best done in instantiation
         self.start_time_index \
@@ -1481,7 +1481,7 @@ class Project:
         if self.gui_inputs['output_compartment_populations']: self.plot_populations()
 
         # plot fractions
-        if self.gui_inputs['output_fractions']: self.plot_fractions('strain')
+        # if self.gui_inputs['output_fractions']: self.plot_fractions('strain')
 
         # plot outputs by age group
         if self.gui_inputs['output_by_subgroups']:
@@ -1863,7 +1863,7 @@ class Project:
         """
 
         # different figure for each type of function
-        for function in self.model_runner.models['manual_baseline'].scaleup_fns:
+        for function in self.model_runner.models[0].scaleup_fns:
 
             # standard prelims
             fig = self.set_and_update_figure()
@@ -2393,8 +2393,8 @@ class Project:
                     # plot population proportions
                     ax_lower = fig.add_subplot(2, 2, 3 + t)
                     ax_lower.fill_between(times[time_index:], lower_plot_margin_fraction[time_index:],
-                                          upper_plot_margin_fraction[time_index:],
-                                          facecolors=colours[s][1], label=legd_text)
+                                          upper_plot_margin_fraction[time_index:], facecolors=colours[s][1],
+                                          label=legd_text)
 
                     # tidy up plots
                     self.tidy_axis(ax_upper, [2, 2], start_time=self.inputs.model_constants[time],

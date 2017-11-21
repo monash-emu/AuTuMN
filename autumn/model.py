@@ -876,41 +876,36 @@ class ConsolidatedModel(StratifiedModel):
         # find the effective infectious population for each strain
         for strain in self.strains:
 
-            # initialise infectious population vars as needed
+            # initialise infectious population vars
             for riskgroup in force_riskgroups: self.vars['effective_infectious_population' + strain + riskgroup] = 0.
 
-            # loop through compartments, skipping on as soon as possible if not relevant
+            # loop through compartments, skipping on as soon as possible if irrelevant
             for label in self.labels:
-                if strain not in label and strain != '':
-                    continue
+                if strain not in label and strain != '': continue
                 for organ in self.organ_status:
-                    if organ not in label and organ != '':
-                        continue
+                    if organ not in label and organ != '': continue
                     for agegroup in self.agegroups:
-                        if agegroup not in label and agegroup != '':
-                            continue
+                        if agegroup not in label and agegroup != '': continue
 
                         # calculate effective infectious population with stratification for risk-group
                         if self.vary_force_infection_by_riskgroup:
-                            for riskgroup in self.riskgroups:
-                                if riskgroup not in label:
-                                    continue
-                                elif t_k.label_intersects_tags(label, self.infectious_tags):
+                            for target_riskgroup in self.riskgroups:
+                                if target_riskgroup not in label: continue
+                                if t_k.label_intersects_tags(label, self.infectious_tags):
                                     for source_riskgroup in self.riskgroups:
 
                                         # adjustment for increased infectiousness of risk-groups as required
-                                        if 'riskgroup_multiplier_force_infection' + source_riskgroup in self.params:
-                                            riskgroup_multiplier_force_infection \
-                                                = self.params['riskgroup_multiplier_force_infection' + source_riskgroup]
-                                        else:
-                                            riskgroup_multiplier_force_infection = 1.
+                                        riskgroup_multiplier_force_infection = self.params[
+                                            'riskgroup_multiplier_force_infection' + source_riskgroup] \
+                                            if 'riskgroup_multiplier_force_infection' + source_riskgroup \
+                                               in self.params else 1.
 
                                         # calculate effective infectious population for each risk group
-                                        self.vars['effective_infectious_population' + strain + riskgroup] \
+                                        self.vars['effective_infectious_population' + strain + target_riskgroup] \
                                             += self.params['tb_multiplier_force' + organ] \
                                                * self.params['tb_multiplier_child_infectiousness' + agegroup] \
                                                * self.compartments[label] \
-                                               * self.mixing[riskgroup][source_riskgroup] \
+                                               * self.mixing[target_riskgroup][source_riskgroup] \
                                                * riskgroup_multiplier_force_infection
 
                         # now without risk-group stratification
@@ -930,7 +925,7 @@ class ConsolidatedModel(StratifiedModel):
                           / self.vars['population' + riskgroup]
                     self.vars['rate_ipt_commencement' + riskgroup + agegroup] = 0.
 
-                    # separate infections out into those treated and those not treated for DS-TB
+                    # separate infections out into those treated and those not treated for DS-TB infection
                     if ('agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions) \
                             and strain == self.strains[0]:
                         self.vars['rate_ipt_commencement' + riskgroup + agegroup] \
@@ -959,7 +954,7 @@ class ConsolidatedModel(StratifiedModel):
                             if history == '_treated':
                                 immunity_multiplier *= self.params['tb_multiplier_treated_protection']
 
-                                # find forces of infection, except that there is no previously treated fully susceptible group
+                            # find forces of infection, except that there is no previously treated fully susceptible
                             if force_type != '_fully' or (force_type == '_fully' and history == self.histories[0]):
                                 self.vars['rate_force' + force_type + strain + history + riskgroup + agegroup] \
                                     = self.vars['rate_force' + strain + riskgroup + agegroup] * immunity_multiplier

@@ -2250,11 +2250,10 @@ class Project:
                 # plot the modelled data
                 for scenario in self.scenarios[::-1]:
                     start_index = self.find_start_index(scenario)
-                    ax.plot(
-                        self.model_runner.outputs['manual']['epi'][scenario]['times'][start_index:],
-                        self.model_runner.outputs['manual']['epi'][scenario][output + stratum][start_index:],
-                        color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
-                        linewidth=1.5, label=t_k.capitalise_and_remove_underscore(
+                    ax.plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
+                            self.outputs['manual']['epi'][scenario][output + stratum][start_index:],
+                            color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
+                            linewidth=1.5, label=t_k.capitalise_and_remove_underscore(
                             t_k.find_scenario_string_from_number(scenario)))
 
                 # finish off
@@ -2361,7 +2360,7 @@ class Project:
                 title_time_text = t_k.find_title_from_dictionary(time)
 
                 # initialise some variables
-                times = self.model_runner.models['manual_baseline'].times
+                times = self.outputs['manual']['epi'][0]['times']
                 lower_plot_margin_count = numpy.zeros(len(times))
                 upper_plot_margin_count = numpy.zeros(len(times))
                 lower_plot_margin_fraction = numpy.zeros(len(times))
@@ -2384,10 +2383,7 @@ class Project:
                     elif age_or_risk == 'risk':
                         legd_text = t_k.find_title_from_dictionary(stratum)
 
-                    if t == 0:
-                        time_index = self.start_time_index
-                    else:
-                        time_index = early_time_index
+                    time_index = self.start_time_index if t == 0 else early_time_index
 
                     # plot total numbers
                     ax_upper = fig.add_subplot(2, 2, 1 + t)

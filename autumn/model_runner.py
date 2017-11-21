@@ -473,8 +473,7 @@ class ModelRunner:
                     # initialise lists
                     for output in outputs_to_analyse:
                         epi_outputs[output + stratum] = [0.] * len(epi_outputs['times'])
-                        for strain in strains:
-                            epi_outputs[output + strain + stratum] = [0.] * len(epi_outputs['times'])
+                        for strain in strains: epi_outputs[output + strain + stratum] = [0.] * len(epi_outputs['times'])
 
                     # population
                     for compartment in self.models[scenario].compartments:
@@ -490,9 +489,9 @@ class ModelRunner:
                     if 'incidence' in outputs_to_analyse:
                         for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
                             if 'latent' in from_label and 'active' in to_label and stratum in from_label:
-                                incidence_increment = self.models[scenario].get_compartment_soln(from_label) \
-                                                      * self.models[scenario].get_var_soln(rate) \
-                                                      / stratum_denominator * 1e5
+                                incidence_increment \
+                                    = self.models[scenario].get_compartment_soln(from_label) \
+                                      * self.models[scenario].get_var_soln(rate) / stratum_denominator * 1e5
                                 epi_outputs['incidence' + stratum] \
                                     = elementwise_list_addition(incidence_increment, epi_outputs['incidence' + stratum])
                         for from_label, to_label, rate in self.models[scenario].fixed_transfer_rate_flows:
@@ -527,10 +526,8 @@ class ModelRunner:
                                     = elementwise_list_addition(mortality_increment,
                                                                 epi_outputs['true_mortality' + stratum])
                                 epi_outputs['mortality' + stratum] \
-                                    = elementwise_list_addition(
-                                        mortality_increment
-                                        * self.prop_death_reporting,
-                                        epi_outputs['mortality' + stratum])
+                                    = elementwise_list_addition(mortality_increment * self.prop_death_reporting,
+                                                                epi_outputs['mortality' + stratum])
 
                         # variable flows are within the health system and so dealt with as described above
                         for from_label, rate in self.models[scenario].var_infection_death_rate_flows:

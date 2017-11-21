@@ -270,10 +270,10 @@ class Inputs:
         stabilisation into late latency.
         """
 
+        time_early = self.model_constants['tb_timeperiod_early_latent']
         for agegroup in self.agegroups:
             for riskgroup in self.riskgroups:
                 prop_early = self.model_constants['tb_prop_early_progression' + riskgroup + agegroup]
-                time_early = self.model_constants['tb_timeperiod_early_latent']
 
                 # early progression rate is early progression proportion divided by early time period
                 self.model_constants['tb_rate_early_progression' + riskgroup + agegroup] = prop_early / time_early
@@ -283,7 +283,7 @@ class Inputs:
 
     def find_riskgroup_progressions(self):
         """
-        Code to adjust the progression rates to active disease for various risk groups - so fa.
+        Code to adjust the progression rates to active disease for various risk groups.
         """
 
         for riskgroup in self.riskgroups:

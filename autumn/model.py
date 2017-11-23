@@ -1044,9 +1044,9 @@ class ConsolidatedModel(StratifiedModel):
                                                'active' + organ + strain + riskgroup + history + agegroup] \
                                            * (self.params['int_number_tests_per_tb_presentation'] + 1.)
 
-        # improve DST in Bulgaria - the number of culture-positive cases
-        if 'int_prop_bulgaria_improve_dst' in self.relevant_interventions:
-            self.vars['popsize_bulgaria_improve_dst'] = 0.
+        # improve DST - the number of culture-positive cases
+        if 'int_prop_improve_dst' in self.relevant_interventions:
+            self.vars['popsize_improve_dst'] = 0.
             for agegroup in self.agegroups:
                 for riskgroup in self.riskgroups:
                     detection_riskgroup = ''
@@ -1056,13 +1056,13 @@ class ConsolidatedModel(StratifiedModel):
                         if self.vary_detection_by_organ:
                             detection_organ = '_smearpos'
                         for history in self.histories:
-                            self.vars['popsize_bulgaria_improve_dst'] \
+                            self.vars['popsize_improve_dst'] \
                                 += self.vars['program_rate_detect' + detection_organ + detection_riskgroup] \
                                    * self.compartments['active' + detection_organ + strain + riskgroup + history + agegroup]
                         if self.vary_detection_by_organ:
                             detection_organ = '_smearneg'
                         for history in self.histories:
-                            self.vars['popsize_bulgaria_improve_dst'] \
+                            self.vars['popsize_improve_dst'] \
                                 += self.vars['program_rate_detect' + detection_organ + detection_riskgroup] \
                                    * self.compartments['active' + detection_organ + strain + riskgroup + history + agegroup] \
                                    * self.params['tb_prop_smearneg_culturepos']

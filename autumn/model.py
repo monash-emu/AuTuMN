@@ -912,7 +912,7 @@ class ConsolidatedModel(StratifiedModel):
                                        * riskgroup_force_multiplier \
                                        / self.vars['population' + riskgroup]
 
-            # calculate actual force of infection using mixing matrix to weight the infectious populations if required
+            # calculate force of infection using mixing matrix to weight the infectious populations if required
             if self.vary_force_infection_by_riskgroup:
                 for to_riskgroup in force_riskgroups:
                     self.vars['rate_force' + strain + to_riskgroup] = 0.
@@ -944,39 +944,44 @@ class ConsolidatedModel(StratifiedModel):
                                 self.vars['rate_force' + force_type + strain + history + riskgroup + agegroup] \
                                     = self.vars['rate_force' + strain + riskgroup] * immunity_multiplier
 
-            # # first calculate force of infection unadjusted for immunity and IPT
-            # for agegroup in self.agegroups:
-            #     for riskgroup in force_riskgroups:
-            #
-            #         # separate infections out into those treated and those not treated for DS-TB infection
-            #         self.vars['rate_ipt_commencement' + riskgroup + agegroup] = 0.
-            #         if ('agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions) \
-            #                 and strain == self.strains[0]:
-            #             self.vars['rate_ipt_commencement' + riskgroup + agegroup] \
-            #                 += self.vars['rate_force' + strain + riskgroup + agegroup] \
-            #                    * self.vars['prop_infections_averted_ipt' + agegroup]
-            #             self.vars['rate_force' + strain + riskgroup + agegroup] \
-            #                 -= self.vars['rate_ipt_commencement' + riskgroup + agegroup]
-            #
-            #     # distribute IPT treatments across risk groups if homogeneous mixing
-            #     if ('agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions) \
-            #             and strain == self.strains[0] \
-            #             and len(self.riskgroups) > 1 and not self.vary_force_infection_by_riskgroup:
-            #         self.vars['rate_ipt_commencement_norisk' + agegroup] = self.vars['rate_ipt_commencement' + agegroup]
-            #         for riskgroup in self.riskgroups:
-            #             if riskgroup != '_norisk':
-            #                 self.vars['rate_ipt_commencement' + riskgroup + agegroup] \
-            #                     = self.vars['rate_ipt_commencement' + agegroup] \
-            #                       * self.vars['riskgroup_prop' + riskgroup]
-            #                 self.vars['rate_ipt_commencement_norisk' + agegroup] \
-            #                     -= self.vars['rate_ipt_commencement' + riskgroup + agegroup]
-            #
-            #     # distribute IPT treatment across treatment history stratification
-            #     for riskgroup in self.riskgroups:
-            #         for history in self.histories:
-            #             self.vars['rate_ipt_commencement' + riskgroup + history + agegroup] \
-            #                 = self.vars['rate_ipt_commencement' + riskgroup + agegroup] \
-            #                   * self.vars['prop_population' + history]
+        # first calculate force of infection unadjusted for immunity and IPT
+        for strain in self.strains:
+            for riskgroup in force_riskgroups:
+                for agegroup in self.agegroups:
+                    for history in self.histories:
+
+                        # separate infections out into those treated and those not treated for DS-TB infection
+                        stratum = force_type + strain + history + riskgroup + agegroup
+                        self.vars['rate_ipt_commencement' + stratum] = 0.
+                        if ('agestratified_ipt' in self.relevant_interventions
+                            or 'ipt' in self.relevant_interventions) and strain == self.strains[0]:
+                            self.vars['rate_ipt_commencement' + stratum] \
+                                += self.vars['rate_force' + stratum] \
+                                   * self.vars['prop_infections_averted_ipt' + agegroup]
+                            self.vars['rate_force' + stratum] \
+                                -= self.vars['rate_ipt_commencement' + stratum]
+
+                            # distribute IPT treatments across risk groups if homogeneous mixing
+                            if ('agestratified_ipt' in self.relevant_interventions
+                                or 'ipt' in self.relevant_interventions) \
+                                    and strain == self.strains[0] \
+                                    and len(self.riskgroups) > 1 and not self.vary_force_infection_by_riskgroup:
+                                self.vars['rate_ipt_commencement_norisk' + agegroup] \
+                                    = self.vars['rate_ipt_commencement' + agegroup]
+                                for riskgroup in self.riskgroups:
+                                    if riskgroup != '_norisk':
+                                        self.vars['rate_ipt_commencement' + riskgroup + agegroup] \
+                                            = self.vars['rate_ipt_commencement' + agegroup] \
+                                              * self.vars['riskgroup_prop' + riskgroup]
+                                        self.vars['rate_ipt_commencement_norisk' + agegroup] \
+                                            -= self.vars['rate_ipt_commencement' + riskgroup + agegroup]
+
+                            # distribute IPT treatment across treatment history stratification
+                            for riskgroup in self.riskgroups:
+                                for history in self.histories:
+                                    self.vars['rate_ipt_commencement' + riskgroup + history + agegroup] \
+                                        = self.vars['rate_ipt_commencement' + riskgroup + agegroup] \
+                                          * self.vars['prop_population' + history]
 
     def calculate_population_sizes(self):
         """

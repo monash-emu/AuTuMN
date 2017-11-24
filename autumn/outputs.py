@@ -1982,7 +1982,7 @@ class Project:
 
                 for t, time in enumerate(times):
                     time_index = t_k.find_first_list_element_at_least_value(
-                        self.model_runner.models['manual_' + scenario].times, time)
+                        self.model_runner.models[scenario].times, time)
 
                     # make cost coverage curve
                     x_values, y_values = [], []
@@ -1993,8 +1993,8 @@ class Project:
                                 self.inputs.model_constants['econ_inflectioncost_' + program],
                                 self.inputs.model_constants['econ_saturation_' + program],
                                 self.inputs.model_constants['econ_unitcost_' + program],
-                                self.model_runner.models['manual_' + scenario].var_array[
-                                    time_index, self.model_runner.models['manual_' + scenario].var_labels.index(
+                                self.model_runner.models[scenario].var_array[
+                                    time_index, self.model_runner.models[scenario].var_labels.index(
                                         'popsize_' + program)])
                             x_values += [cost]
                             y_values += [coverage]
@@ -2012,7 +2012,7 @@ class Project:
             # finish off with title and save file for scenario
             # fig.suptitle('Cost-coverage curves for ' + t_k.replace_underscore_with_space(scenario),
             #              fontsize=self.suptitle_size)
-            self.save_figure(fig, '_' + scenario + '_cost_coverage')
+            self.save_figure(fig, '_' + str(scenario) + '_cost_coverage')
 
     def plot_cost_over_time(self):
         """
@@ -2099,13 +2099,13 @@ class Project:
             # finishing off with title and save
             fig_individual.suptitle('Individual program costs for ' + t_k.find_title_from_dictionary(scenario),
                                     fontsize=self.suptitle_size)
-            self.save_figure(fig_individual, '_' + scenario + '_timecost_individual')
+            self.save_figure(fig_individual, '_' + str(scenario) + '_timecost_individual')
             fig_stacked.suptitle('Stacked program costs for ' + t_k.find_title_from_dictionary(scenario),
                                  fontsize=self.suptitle_size)
-            self.save_figure(fig_stacked, '_' + scenario + '_timecost_stacked')
+            self.save_figure(fig_stacked, '_' + str(scenario) + '_timecost_stacked')
             fig_relative.suptitle('Relative program costs for ' + t_k.find_title_from_dictionary(scenario),
                                   fontsize=self.suptitle_size)
-            self.save_figure(fig_relative, '_' + scenario + '_timecost_relative')
+            self.save_figure(fig_relative, '_' + str(scenario) + '_timecost_relative')
 
     def plot_cost_over_time_stacked_bars(self, cost_type='raw'):
         """
@@ -2205,7 +2205,7 @@ class Project:
         """
 
         # get values to be plotted
-        _, subgroup_fractions = t_k.find_fractions(self.model_runner.models['manual_baseline'])
+        _, subgroup_fractions = t_k.find_fractions(self.model_runner.models[0])
         for c, category in enumerate(subgroup_fractions):
             values = subgroup_fractions[category]
 
@@ -2217,7 +2217,7 @@ class Project:
 
             # plot population fractions
             for plot_label in values.keys():
-                ax.plot(self.model_runner.models['manual_baseline'].times, values[plot_label],
+                ax.plot(self.model_runner.models[0].times, values[plot_label],
                         label=t_k.find_title_from_dictionary(plot_label), linewidth=1, color=colours[plot_label],
                         marker=markers[plot_label], linestyle=patterns[plot_label])
 
@@ -2498,12 +2498,12 @@ class Project:
         ax = make_single_axis(fig)
 
         # plotting
-        for riskgroup in self.model_runner.models['manual_baseline'].riskgroups:
-            ax.plot(self.model_runner.models['manual_baseline'].times,
-                    self.model_runner.models['manual_baseline'].actual_risk_props[riskgroup], 'g-',
+        for riskgroup in self.model_runner.models[0].riskgroups:
+            ax.plot(self.model_runner.models[0].times,
+                    self.model_runner.models[0].actual_risk_props[riskgroup], 'g-',
                     label='Actual ' + riskgroup)
-            ax.plot(self.model_runner.models['manual_baseline'].times,
-                    self.model_runner.models['manual_baseline'].target_risk_props[riskgroup][1:], 'k--',
+            ax.plot(self.model_runner.models[0].times,
+                    self.model_runner.models[0].target_risk_props[riskgroup][1:], 'k--',
                     label='Target ' + riskgroup)
 
         # end bits
@@ -2600,18 +2600,18 @@ class Project:
         """
 
         # separate plot for each strain
-        for strain in self.model_runner.models['manual_baseline'].strains:
+        for strain in self.model_runner.models[0].strains:
             fig = self.set_and_update_figure()
             ax = fig.add_subplot(1, 1, 1)
 
             # loop over risk groups and plot line for each - now need to restrict to single age-group, as IPT modifies
             # the force of infection for some age-groups.
-            for riskgroup in self.model_runner.models['manual_baseline'].riskgroups:
-                data_to_plot = self.model_runner.models['manual_baseline'].get_var_soln(
+            for riskgroup in self.model_runner.models[0].riskgroups:
+                data_to_plot = self.model_runner.models[0].get_var_soln(
                             'rate_force' + strain + riskgroup
-                            + self.model_runner.models['manual_baseline'].agegroups[-1])[
+                            + self.model_runner.models[0].agegroups[-1])[
                         self.start_time_index:]
-                ax.plot(self.model_runner.models['manual_baseline'].times[self.start_time_index:],
+                ax.plot(self.model_runner.models[0].times[self.start_time_index:],
                         data_to_plot * 1e2,
                         label=t_k.capitalise_first_letter(t_k.find_title_from_dictionary(riskgroup)))
 
@@ -2661,10 +2661,10 @@ class Project:
         ax = make_single_axis(fig)
 
         # Plotting
-        for var in self.model_runner.models['manual_baseline'].var_labels:
+        for var in self.model_runner.models[0].var_labels:
             if 'popsize_' in var:
-                ax.plot(self.model_runner.models['manual_baseline'].times[self.start_time_index:],
-                        self.model_runner.models['manual_baseline'].get_var_soln(var)[self.start_time_index:],
+                ax.plot(self.model_runner.models[0].times[self.start_time_index:],
+                        self.model_runner.models[0].get_var_soln(var)[self.start_time_index:],
                         label=t_k.find_title_from_dictionary(var[8:]))
 
         # Finishing up

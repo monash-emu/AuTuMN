@@ -880,28 +880,28 @@ class ConsolidatedModel(StratifiedModel):
         force_types = ['_fully', '_immune', '_latent']
         if 'int_prop_novel_vaccination' in self.relevant_interventions: force_types.append('_novelvac')
 
-        # find the effective infectious population for each strain
+        # find the effective infectious population for each strain and risk group
         for strain in self.strains:
+            for riskgroup in force_riskgroups:
 
-            # initialise infectiousness vars
-            for riskgroup in force_riskgroups: self.vars['infectiousness' + strain + riskgroup] = 0.
+                # initialise infectiousness vars
+                self.vars['infectiousness' + strain + riskgroup] = 0.
 
-            # loop through compartments, skipping on as soon as possible if irrelevant
-            for label in self.labels:
-                if strain not in label and strain != '': continue
-                for agegroup in self.agegroups:
-                    if agegroup not in label and agegroup != '': continue
-                    for organ in self.organ_status:
-                        if (organ not in label and organ != '') or organ == '_extrapul': continue
-                        for riskgroup in force_riskgroups:
-                            if riskgroup not in label and riskgroup != '': continue
+                # loop through compartments, skipping on as soon as possible if irrelevant
+                for label in self.labels:
+                    if riskgroup not in label and riskgroup != '': continue
+                    if strain not in label and strain != '': continue
+                    for agegroup in self.agegroups:
+                        if agegroup not in label and agegroup != '': continue
+                        for organ in self.organ_status:
+                            if (organ not in label and organ != '') or organ == '_extrapul': continue
 
                             # adjustment for increased infectiousness in riskgroup
                             riskgroup_force_multiplier \
                                 = self.params['riskgroup_multiplier_force_infection' + riskgroup] \
                                 if 'riskgroup_multiplier_force_infection' + riskgroup in self.params else 1.
 
-                            # increment infectiousness
+                            # increment "infectiousness", the effective number of infectious people in the stratum
                             if t_k.label_intersects_tags(label, self.infectious_tags):
                                 self.vars['infectiousness' + strain + riskgroup] \
                                     += self.params['tb_n_contact'] \
@@ -944,7 +944,7 @@ class ConsolidatedModel(StratifiedModel):
                                 self.vars['rate_force' + force_type + strain + history + riskgroup + agegroup] \
                                     = self.vars['rate_force' + strain + riskgroup] * immunity_multiplier
 
-        # first calculate force of infection unadjusted for immunity and IPT
+        # adjusted for IPT and create IPT flow rate
         for strain in self.strains:
             for riskgroup in force_riskgroups:
                 for force_type in force_types:
@@ -1442,14 +1442,10 @@ class ConsolidatedModel(StratifiedModel):
                 for riskgroup in self.riskgroups:
 
                     # treatment completion flows
-                    self.set_fixed_transfer_rate_flow(
-                        'onipt' + riskgroup + history + agegroup,
-                        'susceptible_immune' + riskgroup + history + agegroup,
-                        'rate_ipt_completion')
+                    self.set_fixed_transfer_rate_flow('onipt' + riskgroup + history + agegroup,
+                        'susceptible_immune' + riskgroup + history + agegroup, 'rate_ipt_completion')
 
                     # treatment non-completion flows
-                    self.set_fixed_transfer_rate_flow(
-                        'onipt' + riskgroup + history + agegroup,
-                        'latent_early' + self.strains[0] + riskgroup + history + agegroup,
-                        'rate_ipt_noncompletion')
+                    self.set_fixed_transfer_rate_flow('onipt' + riskgroup + history + agegroup,
+                        'latent_early' + self.strains[0] + riskgroup + history + agegroup, 'rate_ipt_noncompletion')
 

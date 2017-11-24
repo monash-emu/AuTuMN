@@ -947,41 +947,22 @@ class ConsolidatedModel(StratifiedModel):
         # first calculate force of infection unadjusted for immunity and IPT
         for strain in self.strains:
             for riskgroup in force_riskgroups:
-                for agegroup in self.agegroups:
-                    for history in self.histories:
+                for force_type in force_types:
+                    for agegroup in self.agegroups:
+                        for history in self.histories:
 
-                        # separate infections out into those treated and those not treated for DS-TB infection
-                        stratum = force_type + strain + history + riskgroup + agegroup
-                        self.vars['rate_ipt_commencement' + stratum] = 0.
-                        if ('agestratified_ipt' in self.relevant_interventions
-                            or 'ipt' in self.relevant_interventions) and strain == self.strains[0]:
-                            self.vars['rate_ipt_commencement' + stratum] \
-                                += self.vars['rate_force' + stratum] \
-                                   * self.vars['prop_infections_averted_ipt' + agegroup]
-                            self.vars['rate_force' + stratum] \
-                                -= self.vars['rate_ipt_commencement' + stratum]
+                            if force_type != '_fully' or (force_type == '_fully' and history == self.histories[0]):
 
-                            # distribute IPT treatments across risk groups if homogeneous mixing
-                            if ('agestratified_ipt' in self.relevant_interventions
-                                or 'ipt' in self.relevant_interventions) \
-                                    and strain == self.strains[0] \
-                                    and len(self.riskgroups) > 1 and not self.vary_force_infection_by_riskgroup:
-                                self.vars['rate_ipt_commencement_norisk' + agegroup] \
-                                    = self.vars['rate_ipt_commencement' + agegroup]
-                                for riskgroup in self.riskgroups:
-                                    if riskgroup != '_norisk':
-                                        self.vars['rate_ipt_commencement' + riskgroup + agegroup] \
-                                            = self.vars['rate_ipt_commencement' + agegroup] \
-                                              * self.vars['riskgroup_prop' + riskgroup]
-                                        self.vars['rate_ipt_commencement_norisk' + agegroup] \
-                                            -= self.vars['rate_ipt_commencement' + riskgroup + agegroup]
-
-                            # distribute IPT treatment across treatment history stratification
-                            for riskgroup in self.riskgroups:
-                                for history in self.histories:
-                                    self.vars['rate_ipt_commencement' + riskgroup + history + agegroup] \
-                                        = self.vars['rate_ipt_commencement' + riskgroup + agegroup] \
-                                          * self.vars['prop_population' + history]
+                                # separate infections out into those treated and those not treated for DS-TB infection
+                                stratum = force_type + strain + history + riskgroup + agegroup
+                                self.vars['rate_ipt_commencement' + stratum] = 0.
+                                if ('agestratified_ipt' in self.relevant_interventions
+                                    or 'ipt' in self.relevant_interventions) and strain == self.strains[0]:
+                                    self.vars['rate_ipt_commencement' + stratum] \
+                                        += self.vars['rate_force' + stratum] \
+                                           * self.vars['prop_infections_averted_ipt' + agegroup]
+                                    self.vars['rate_force' + stratum] \
+                                        -= self.vars['rate_ipt_commencement' + stratum]
 
     def calculate_population_sizes(self):
         """
@@ -1192,12 +1173,20 @@ class ConsolidatedModel(StratifiedModel):
                                     'susceptible' + force_type + riskgroup + history + agegroup,
                                     'latent_early' + strain + riskgroup + history + agegroup,
                                     'rate_force' + force_type + strain + history + force_riskgroup + agegroup)
+                                self.set_var_transfer_rate_flow(
+                                    'susceptible' + force_type + riskgroup + history + agegroup,
+                                    'onipt' + riskgroup + history + agegroup,
+                                    'rate_ipt_commencement' + force_type + strain + history + riskgroup + agegroup)
                             elif force_type == '_latent':
                                 for from_strain in self.strains:
                                     self.set_var_transfer_rate_flow(
                                         'latent_late' + from_strain + riskgroup + history + agegroup,
                                         'latent_early' + strain + riskgroup + history + agegroup,
                                         'rate_force' + force_type + strain + history + force_riskgroup + agegroup)
+                                    self.set_var_transfer_rate_flow(
+                                        'latent_late' + from_strain + riskgroup + history + agegroup,
+                                        'onipt' + riskgroup + history + agegroup,
+                                        'rate_ipt_commencement' + force_type + strain + history + riskgroup + agegroup)
 
     def set_progression_flows(self):
         """
@@ -1445,19 +1434,12 @@ class ConsolidatedModel(StratifiedModel):
 
     def set_ipt_flows(self):
         """
-        Implement IPT-related transitions: treatment commencement (linked to force of infection), completion of
-        treatment and failure to complete treatment.
+        Implement IPT-related transitions: completion of treatment and failure to complete treatment.
         """
 
         for agegroup in self.agegroups:
             for history in self.histories:
                 for riskgroup in self.riskgroups:
-
-                    # treatment commencement
-                    self.set_linked_transfer_rate_flow(
-                        'latent_early' + self.strains[0] + riskgroup + history + agegroup,
-                        'onipt' + riskgroup + history + agegroup,
-                        'rate_ipt_commencement' + riskgroup + history + agegroup)
 
                     # treatment completion flows
                     self.set_fixed_transfer_rate_flow(

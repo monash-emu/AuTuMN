@@ -583,7 +583,6 @@ class ConsolidatedModel(StratifiedModel):
 
             # add effect of improve_dst program for culture-positive cases only
             if 'int_prop_improve_dst' in self.relevant_interventions:
-                # prop_culturepos = prop_sp + prop_sn * self.params['tb_prop_smearneg_culturepos'] * prop_sn_cultured
                 if organ == '_smearpos':
                     prop_firstline += (1. - prop_firstline) * self.vars['int_prop_improve_dst'] * \
                                       self.params['program_prop_smearpos_cultured']

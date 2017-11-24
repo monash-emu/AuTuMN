@@ -571,7 +571,6 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         # with misassignment
-        prop_firstline = {}
         for organ in self.organs_for_detection:
             prop_firstline = self.vars['program_prop_firstline_dst']
 

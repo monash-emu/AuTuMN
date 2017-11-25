@@ -280,6 +280,8 @@ class ConsolidatedModel(StratifiedModel):
         if 'agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions:
             self.calculate_ipt_effect()
         self.calculate_force_infection_vars()
+        self.adjust_force_infection_for_immunity()
+        self.adjust_force_infection_for_ipt()
         self.calculate_population_sizes()
 
     def ticker(self):
@@ -931,6 +933,10 @@ class ConsolidatedModel(StratifiedModel):
             else:
                 self.vars['rate_force' + strain] = self.vars['infectiousness' + strain]
 
+    def adjust_force_infection_for_immunity(self):
+
+        for strain in self.strains:
+
             # adjust for immunity in various groups, first defining broad immunity categories
             for riskgroup in self.force_riskgroups:
                 for force_type in self.force_types:
@@ -952,25 +958,28 @@ class ConsolidatedModel(StratifiedModel):
                                 self.vars['rate_force' + force_type + strain + history + riskgroup + agegroup] \
                                     = self.vars['rate_force' + strain + riskgroup] * immunity_multiplier
 
-        # adjusted for IPT and create IPT flow rate
+    def adjust_force_infection_for_ipt(self):
+        """
+        Adjust the previously calculated force of infection for the use of IPT in contacts. Uses the previously
+        calculated proportion of infections averted IPT var to determine how much of the force of infection to assign
+        to go to IPT instead and how much to remain as force of infection
+        """
+
         for strain in self.strains:
             for riskgroup in self.force_riskgroups:
                 for force_type in self.force_types:
                     for agegroup in self.agegroups:
                         for history in self.histories:
-
                             if force_type != '_fully' or (force_type == '_fully' and history == self.histories[0]):
-
-                                # separate infections out into those treated and those not treated for DS-TB infection
                                 stratum = force_type + strain + history + riskgroup + agegroup
-                                self.vars['rate_ipt_commencement' + stratum] = 0.
                                 if ('agestratified_ipt' in self.relevant_interventions
                                     or 'ipt' in self.relevant_interventions) and strain == self.strains[0]:
                                     self.vars['rate_ipt_commencement' + stratum] \
-                                        += self.vars['rate_force' + stratum] \
-                                           * self.vars['prop_infections_averted_ipt' + agegroup]
-                                    self.vars['rate_force' + stratum] \
-                                        -= self.vars['rate_ipt_commencement' + stratum]
+                                        = self.vars['rate_force' + stratum] \
+                                          * self.vars['prop_infections_averted_ipt' + agegroup]
+                                    self.vars['rate_force' + stratum] -= self.vars['rate_ipt_commencement' + stratum]
+                                else:
+                                    self.vars['rate_ipt_commencement' + stratum] = 0.
 
     def calculate_population_sizes(self):
         """

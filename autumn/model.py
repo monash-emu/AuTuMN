@@ -115,6 +115,9 @@ class ConsolidatedModel(StratifiedModel):
         self.infectious_tags = ['active', 'missed', 'detect', 'treatment_infect', 'lowquality']
         self.initial_compartments = {}
 
+        # to loop over all risk groups if needed, or otherwise to just run once
+        self.force_riskgroups = copy.copy(self.riskgroups) if self.vary_force_infection_by_riskgroup else ['']
+
         # treatment outcomes
         self.outcomes = ['_success', '_death', '_default']
         self.treatment_stages = ['_infect', '_noninfect']
@@ -269,7 +272,7 @@ class ConsolidatedModel(StratifiedModel):
             self.calculate_intensive_screening_rate()
             self.adjust_case_detection_for_acf()
             self.adjust_case_detection_for_intensive_screening()
-        self.calculate_misassignment_detection_vars()
+        if self.is_misassignment: self.calculate_misassignment_detection_vars()
         if self.is_lowquality: self.calculate_lowquality_detection_vars()
         self.calculate_await_treatment_var()
         if self.is_amplification: self.calculate_amplification_var()
@@ -882,15 +885,12 @@ class ConsolidatedModel(StratifiedModel):
         calculate the raw force of infection, then adjust for various levels of susceptibility.
         """
 
-        # to loop over all risk groups if needed, or otherwise to just run once
-        force_riskgroups = copy.copy(self.riskgroups) if self.vary_force_infection_by_riskgroup else ['']
-
         # if any modifications to transmission parameter to be made over time
         transmission_modifier = self.vars['transmission_modifier'] if 'transmission_modifier' in self.vars else 1.
 
         # find the effective infectious population for each strain and risk group
         for strain in self.strains:
-            for riskgroup in force_riskgroups:
+            for riskgroup in self.force_riskgroups:
 
                 # initialise infectiousness vars
                 self.vars['infectiousness' + strain + riskgroup] = 0.
@@ -922,9 +922,9 @@ class ConsolidatedModel(StratifiedModel):
 
             # calculate force of infection using mixing matrix to weight the infectious populations if required
             if self.vary_force_infection_by_riskgroup:
-                for to_riskgroup in force_riskgroups:
+                for to_riskgroup in self.force_riskgroups:
                     self.vars['rate_force' + strain + to_riskgroup] = 0.
-                    for from_riskgroup in force_riskgroups:
+                    for from_riskgroup in self.force_riskgroups:
                         self.vars['rate_force' + strain + to_riskgroup] \
                             += self.vars['infectiousness' + strain + to_riskgroup] \
                                * self.mixing[to_riskgroup][from_riskgroup]
@@ -932,7 +932,7 @@ class ConsolidatedModel(StratifiedModel):
                 self.vars['rate_force' + strain] = self.vars['infectiousness' + strain]
 
             # adjust for immunity in various groups, first defining broad immunity categories
-            for riskgroup in force_riskgroups:
+            for riskgroup in self.force_riskgroups:
                 for force_type in self.force_types:
                     immunity_multiplier = self.params['tb_multiplier' + force_type + '_protection']
 
@@ -954,7 +954,7 @@ class ConsolidatedModel(StratifiedModel):
 
         # adjusted for IPT and create IPT flow rate
         for strain in self.strains:
-            for riskgroup in force_riskgroups:
+            for riskgroup in self.force_riskgroups:
                 for force_type in self.force_types:
                     for agegroup in self.agegroups:
                         for history in self.histories:
@@ -1160,7 +1160,8 @@ class ConsolidatedModel(StratifiedModel):
                                 self.set_var_transfer_rate_flow(
                                     'susceptible' + force_type + riskgroup + history + agegroup,
                                     'onipt' + riskgroup + history + agegroup,
-                                    'rate_ipt_commencement' + force_type + strain + history + riskgroup + agegroup)
+                                    'rate_ipt_commencement' + force_type + strain + history + force_riskgroup
+                                    + agegroup)
                             elif force_type == '_latent':
                                 for from_strain in self.strains:
                                     self.set_var_transfer_rate_flow(
@@ -1170,7 +1171,8 @@ class ConsolidatedModel(StratifiedModel):
                                     self.set_var_transfer_rate_flow(
                                         'latent_late' + from_strain + riskgroup + history + agegroup,
                                         'onipt' + riskgroup + history + agegroup,
-                                        'rate_ipt_commencement' + force_type + strain + history + riskgroup + agegroup)
+                                        'rate_ipt_commencement' + force_type + strain + history + force_riskgroup
+                                        + agegroup)
 
     def set_progression_flows(self):
         """

@@ -576,21 +576,28 @@ class ConsolidatedModel(StratifiedModel):
 
         # with misassignment
         for organ in self.organs_for_detection:
+            prop_firstline = self.vars['program_prop_firstline_dst']
+
+            # add effect of Xpert on identification, assuming that independent distribution to conventional DST
+            if 'int_prop_xpert' in self.relevant_interventions:
+                prop_firstline \
+                    += (1. - prop_firstline) \
+                       * self.vars['int_prop_xpert'] * self.params['int_prop_xpert_sensitivity_mdr']
+
+            # add effect of improve_dst program for culture-positive cases only
+            if 'int_prop_improve_dst' in self.relevant_interventions:
+                if organ == '_smearpos':
+                    prop_firstline += (1. - prop_firstline) * self.vars['int_prop_improve_dst'] * \
+                                      self.params['program_prop_smearpos_cultured']
+                elif organ == '_smearneg':
+                    prop_firstline += (1. - prop_firstline) * self.vars['int_prop_improve_dst'] * \
+                                      self.params['program_prop_smearneg_cultured'] * \
+                                      self.params['tb_prop_smearneg_culturepos']
+                elif organ == '_extrapul':
+                    prop_firstline = 0.
+
             for riskgroup in self.riskgroups_for_detection:
                 if len(self.strains) > 1 and self.is_misassignment:
-
-                    prop_firstline = self.vars['program_prop_firstline_dst']
-
-                    # add effect of improve_dst program
-                    if 'int_prop_improve_dst' in self.relevant_interventions:
-                        prop_firstline += (1. - prop_firstline) * self.vars['int_prop_improve_dst']
-
-                    # add effect of Xpert on identification, assuming that independent distribution to conventional DST
-                    if 'int_prop_xpert' in self.relevant_interventions:
-                        prop_firstline \
-                            += (1. - prop_firstline) \
-                               * self.vars['int_prop_xpert'] * self.params['int_prop_xpert_sensitivity_mdr']
-
                     # determine rates of identification/misidentification as each strain
                     self.vars['program_rate_detect' + organ + riskgroup + '_ds_asds'] \
                         = self.vars['program_rate_detect' + organ + riskgroup]
@@ -1015,6 +1022,8 @@ class ConsolidatedModel(StratifiedModel):
                         for strain in self.strains:
                             for history in self.histories:
                                 for organ in self.organ_status:
+                                    if active_tb_presentations_intervention == 'improve_dst' and organ == '_extrapul':
+                                        continue
                                     if self.vary_detection_by_organ:
                                         detection_organ = organ
                                     else:
@@ -1028,29 +1037,6 @@ class ConsolidatedModel(StratifiedModel):
                                            * self.compartments[
                                                'active' + organ + strain + riskgroup + history + agegroup] \
                                            * (self.params['int_number_tests_per_tb_presentation'] + 1.)
-
-        # improve DST - the number of culture-positive cases
-        if 'int_prop_improve_dst' in self.relevant_interventions:
-            self.vars['popsize_improve_dst'] = 0.
-            for agegroup in self.agegroups:
-                for riskgroup in self.riskgroups:
-                    detection_riskgroup = ''
-                    if self.vary_detection_by_riskgroup: detection_riskgroup = riskgroup
-                    for strain in self.strains:
-                        detection_organ = ''
-                        if self.vary_detection_by_organ:
-                            detection_organ = '_smearpos'
-                        for history in self.histories:
-                            self.vars['popsize_improve_dst'] \
-                                += self.vars['program_rate_detect' + detection_organ + detection_riskgroup] \
-                                   * self.compartments['active' + detection_organ + strain + riskgroup + history + agegroup]
-                        if self.vary_detection_by_organ:
-                            detection_organ = '_smearneg'
-                        for history in self.histories:
-                            self.vars['popsize_improve_dst'] \
-                                += self.vars['program_rate_detect' + detection_organ + detection_riskgroup] \
-                                   * self.compartments['active' + detection_organ + strain + riskgroup + history + agegroup] \
-                                   * self.params['tb_prop_smearneg_culturepos']
 
         # ACF
         # loop over risk groups, including '', which is no stratification

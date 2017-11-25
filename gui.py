@@ -122,13 +122,14 @@ def get_autumn_params():
         # 'output_uncertainty',
         # 'write_uncertainty_outcome_params',
         'output_param_plots',
-        # 'is_misassignment',
+        'is_amplification',
+        'is_misassignment',
         # 'is_lowquality',
         'is_vary_detection_by_organ',
         'is_treatment_history',
-        # 'riskgroup_prison',
+        'riskgroup_prison',
         # 'riskgroup_urbanpoor',
-        # 'riskgroup_ruralpoor',
+        'riskgroup_ruralpoor',
         'output_gtb_plots',
         'is_vary_force_infection_by_riskgroup',
         'riskgroup_diabetes',
@@ -152,7 +153,7 @@ def get_autumn_params():
     params['country'] = {
         'type': 'drop_down',
         'options': options,
-        'value': 'Fiji'
+        'value': 'Bulgaria'
     }
 
     options = ['Runge Kutta', 'Explicit']
@@ -198,7 +199,7 @@ def get_autumn_params():
     params['n_strains'] = {
         'type': 'drop_down',
         'options': options,
-        'value': options[0]
+        'value': options[1]
     }
 
     # Uncertainty options

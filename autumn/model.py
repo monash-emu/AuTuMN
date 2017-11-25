@@ -932,7 +932,7 @@ class ConsolidatedModel(StratifiedModel):
                     self.vars['rate_force' + strain + to_riskgroup] = 0.
                     for from_riskgroup in self.force_riskgroups:
                         self.vars['rate_force' + strain + to_riskgroup] \
-                            += self.vars['infectiousness' + strain + to_riskgroup] \
+                            += self.vars['infectiousness' + strain + from_riskgroup] \
                                * self.mixing[to_riskgroup][from_riskgroup]
             else:
                 self.vars['rate_force' + strain] = self.vars['infectiousness' + strain]

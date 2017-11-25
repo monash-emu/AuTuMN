@@ -107,6 +107,10 @@ class ConsolidatedModel(StratifiedModel):
         for key, value in inputs.model_constants.items():
             if type(value) == float: self.set_parameter(key, value)
 
+        # susceptibility classes
+        self.force_types = ['_fully', '_immune', '_latent']
+        if 'int_prop_novel_vaccination' in self.relevant_interventions: self.force_types.append('_novelvac')
+
         # list of infectious compartments
         self.infectious_tags = ['active', 'missed', 'detect', 'treatment_infect', 'lowquality']
         self.initial_compartments = {}
@@ -877,10 +881,6 @@ class ConsolidatedModel(StratifiedModel):
         # if any modifications to transmission parameter to be made over time
         transmission_modifier = self.vars['transmission_modifier'] if 'transmission_modifier' in self.vars else 1.
 
-        # susceptibility classes
-        force_types = ['_fully', '_immune', '_latent']
-        if 'int_prop_novel_vaccination' in self.relevant_interventions: force_types.append('_novelvac')
-
         # find the effective infectious population for each strain and risk group
         for strain in self.strains:
             for riskgroup in force_riskgroups:
@@ -926,7 +926,7 @@ class ConsolidatedModel(StratifiedModel):
 
             # adjust for immunity in various groups, first defining broad immunity categories
             for riskgroup in force_riskgroups:
-                for force_type in force_types:
+                for force_type in self.force_types:
                     immunity_multiplier = self.params['tb_multiplier' + force_type + '_protection']
 
                     # give children greater protection from BCG vaccination
@@ -948,7 +948,7 @@ class ConsolidatedModel(StratifiedModel):
         # adjusted for IPT and create IPT flow rate
         for strain in self.strains:
             for riskgroup in force_riskgroups:
-                for force_type in force_types:
+                for force_type in self.force_types:
                     for agegroup in self.agegroups:
                         for history in self.histories:
 
@@ -1162,12 +1162,9 @@ class ConsolidatedModel(StratifiedModel):
 
             # vary force of infection by risk-group if heterogeneous mixing is incorporated
             for riskgroup in self.riskgroups:
-                force_riskgroup = ''
-                if self.vary_force_infection_by_riskgroup: force_riskgroup = riskgroup
+                force_riskgroup = riskgroup if self.vary_force_infection_by_riskgroup else ''
                 for agegroup in self.agegroups:
-                    force_types = ['_fully', '_immune', '_latent']
-                    if 'int_prop_novel_vaccination' in self.relevant_interventions: force_types.append('_novelvac')
-                    for force_type in force_types:
+                    for force_type in self.force_types:
                         for history in self.histories:
                             if force_type == '_immune' or (force_type == '_fully' and history == self.histories[0]):
                                 self.set_var_transfer_rate_flow(

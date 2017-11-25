@@ -280,6 +280,7 @@ class ConsolidatedModel(StratifiedModel):
         if 'agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions:
             self.calculate_ipt_effect()
         self.calculate_force_infection_vars()
+        self.adjust_force_infection_for_mixing()
         self.adjust_force_infection_for_immunity()
         self.adjust_force_infection_for_ipt()
         self.calculate_population_sizes()
@@ -919,7 +920,13 @@ class ConsolidatedModel(StratifiedModel):
                                        * self.compartments[label] * riskgroup_multiplier \
                                        / self.vars['population' + riskgroup]
 
-            # calculate force of infection using mixing matrix to weight the infectious populations if required
+    def adjust_force_infection_for_mixing(self):
+        """
+        Use the mixing matrix to ajdust the force of infection vars for the proportion of contacts received from each
+        group. Otherwise, just assign the total infectiousness of the population to be the overall force of infection.
+        """
+
+        for strain in self.strains:
             if self.vary_force_infection_by_riskgroup:
                 for to_riskgroup in self.force_riskgroups:
                     self.vars['rate_force' + strain + to_riskgroup] = 0.

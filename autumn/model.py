@@ -1149,30 +1149,44 @@ class ConsolidatedModel(StratifiedModel):
             # vary force of infection by risk-group if heterogeneous mixing is incorporated
             for riskgroup in self.riskgroups:
                 force_riskgroup = riskgroup if self.vary_force_infection_by_riskgroup else ''
+
                 for agegroup in self.agegroups:
-                    for force_type in self.force_types:
-                        for history in self.histories:
-                            if force_type == '_immune' or (force_type == '_fully' and history == self.histories[0]):
-                                self.set_var_transfer_rate_flow(
-                                    'susceptible' + force_type + riskgroup + history + agegroup,
-                                    'latent_early' + strain + riskgroup + history + agegroup,
-                                    'rate_force' + force_type + strain + history + force_riskgroup + agegroup)
-                                self.set_var_transfer_rate_flow(
-                                    'susceptible' + force_type + riskgroup + history + agegroup,
-                                    'onipt' + riskgroup + history + agegroup,
-                                    'rate_ipt_commencement' + force_type + strain + history + force_riskgroup
-                                    + agegroup)
+                    for history in self.histories:
+                        for force_type in self.force_types:
+
+                            # source compartment is split by riskgropup, history and agegroup - plus force type for
+                            # the susceptibles and strain for the latents
+                            source_extension = riskgroup + history + agegroup
+
+                            # force of infections differ by immunity, strain, history, risk group and age group
+                            force_extension = force_type + strain + history + force_riskgroup + agegroup
+
+                            # destination compartments differ by strain, risk group, history and age group
+                            latent_compartment = 'latent_early' + strain + riskgroup + history + agegroup
+
+                            # on IPT treatment destination compartment differs by risk group, history and age group
+                            onipt_destination_compartment = 'onipt' + riskgroup + history + agegroup
+
+                            # inapplicable situation of previously treated but fully susceptible
+                            if force_type == '_fully' and history != self.histories[0]:
+                                continue
+
+                            # loop across all strains for infection during latency
                             elif force_type == '_latent':
                                 for from_strain in self.strains:
-                                    self.set_var_transfer_rate_flow(
-                                        'latent_late' + from_strain + riskgroup + history + agegroup,
-                                        'latent_early' + strain + riskgroup + history + agegroup,
-                                        'rate_force' + force_type + strain + history + force_riskgroup + agegroup)
-                                    self.set_var_transfer_rate_flow(
-                                        'latent_late' + from_strain + riskgroup + history + agegroup,
-                                        'onipt' + riskgroup + history + agegroup,
-                                        'rate_ipt_commencement' + force_type + strain + history + force_riskgroup
-                                        + agegroup)
+                                    source_compartment = 'latent_late' + from_strain + source_extension
+                                    self.set_var_transfer_rate_flow(source_compartment, latent_compartment,
+                                                                    'rate_force' + force_extension)
+                                    self.set_var_transfer_rate_flow(source_compartment, onipt_destination_compartment,
+                                                                    'rate_ipt_commencement' + force_extension)
+
+                            # susceptible compartments
+                            else:
+                                source_compartment = 'susceptible' + force_type + source_extension
+                                self.set_var_transfer_rate_flow(source_compartment, latent_compartment,
+                                                                'rate_force' + force_extension)
+                                self.set_var_transfer_rate_flow(source_compartment, onipt_destination_compartment,
+                                                                'rate_ipt_commencement' + force_extension)
 
     def set_progression_flows(self):
         """

@@ -907,19 +907,16 @@ class ConsolidatedModel(StratifiedModel):
                             if (organ not in label and organ != '') or organ == '_extrapul': continue
 
                             # adjustment for increased infectiousness in riskgroup
-                            riskgroup_force_multiplier \
-                                = self.params['riskgroup_multiplier_force_infection' + riskgroup] \
+                            riskgroup_multiplier = self.params['riskgroup_multiplier_force_infection' + riskgroup] \
                                 if 'riskgroup_multiplier_force_infection' + riskgroup in self.params else 1.
 
                             # increment "infectiousness", the effective number of infectious people in the stratum
                             if t_k.label_intersects_tags(label, self.infectious_tags):
                                 self.vars['infectiousness' + strain + riskgroup] \
                                     += self.params['tb_n_contact'] \
-                                       * transmission_modifier \
-                                       * self.params['tb_multiplier_force' + organ] \
+                                       * transmission_modifier * self.params['tb_multiplier_force' + organ] \
                                        * self.params['tb_multiplier_child_infectiousness' + agegroup] \
-                                       * self.compartments[label] \
-                                       * riskgroup_force_multiplier \
+                                       * self.compartments[label] * riskgroup_multiplier \
                                        / self.vars['population' + riskgroup]
 
             # calculate force of infection using mixing matrix to weight the infectious populations if required
@@ -934,10 +931,12 @@ class ConsolidatedModel(StratifiedModel):
                 self.vars['rate_force' + strain] = self.vars['infectiousness' + strain]
 
     def adjust_force_infection_for_immunity(self):
+        """
+        Find the actual rate of infection for each compartment type depending on the relative immunity/susceptibility
+        associated with being in that compartment.
+        """
 
         for strain in self.strains:
-
-            # adjust for immunity in various groups, first defining broad immunity categories
             for riskgroup in self.force_riskgroups:
                 for force_type in self.force_types:
                     immunity_multiplier = self.params['tb_multiplier' + force_type + '_protection']
@@ -953,7 +952,7 @@ class ConsolidatedModel(StratifiedModel):
                             if history == '_treated':
                                 immunity_multiplier *= self.params['tb_multiplier_treated_protection']
 
-                            # find forces of infection, except that there is no previously treated fully susceptible
+                            # find final rates of infection, except there is no previously treated fully susceptible
                             if force_type != '_fully' or (force_type == '_fully' and history == self.histories[0]):
                                 self.vars['rate_force' + force_type + strain + history + riskgroup + agegroup] \
                                     = self.vars['rate_force' + strain + riskgroup] * immunity_multiplier

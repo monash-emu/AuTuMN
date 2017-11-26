@@ -471,9 +471,7 @@ class ModelRunner:
                 for stratum in stratification:
 
                     # initialise lists
-                    for output in outputs_to_analyse:
-                        epi_outputs[output + stratum] = [0.] * len(epi_outputs['times'])
-                        for strain in strains: epi_outputs[output + strain + stratum] = [0.] * len(epi_outputs['times'])
+                    for output in outputs_to_analyse: epi_outputs[output + stratum] = [0.] * len(epi_outputs['times'])
 
                     # population
                     for compartment in self.models[scenario].compartments:
@@ -503,16 +501,14 @@ class ModelRunner:
 
                     # notifications
                     if 'notifications' in outputs_to_analyse:
-                        for strain in strains:
-                            for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
-                                if 'active' in from_label and 'detect' in to_label and strain in to_label \
-                                        and stratum in from_label:
-                                    notifications_increment \
-                                        = self.models[scenario].get_compartment_soln(from_label) \
-                                          * self.models[scenario].get_var_soln(rate)
-                                    epi_outputs['notifications' + strain + stratum] \
-                                        = elementwise_list_addition(
-                                            notifications_increment, epi_outputs['notifications' + strain + stratum])
+                        for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
+                            if 'active' in from_label and 'detect' in to_label and stratum in from_label:
+                                notifications_increment \
+                                    = self.models[scenario].get_compartment_soln(from_label) \
+                                      * self.models[scenario].get_var_soln(rate)
+                                epi_outputs['notifications' + stratum] \
+                                    = elementwise_list_addition(
+                                        notifications_increment, epi_outputs['notifications' + stratum])
 
                     # mortality
                     if 'mortality' in outputs_to_analyse:

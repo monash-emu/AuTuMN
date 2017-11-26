@@ -352,15 +352,9 @@ class ConsolidatedModel(StratifiedModel):
             for agegroup in self.agegroups:
                 for riskgroup in self.riskgroups:
                     for timing in ['_early', '_late']:
-                        if riskgroup == '_diabetes':
-                            self.vars['tb_rate' + timing + '_progression' + organ + riskgroup + agegroup] \
-                                = self.vars['epi_prop' + organ] \
-                                  * self.params['tb_rate' + timing + '_progression_norisk' + agegroup] \
-                                  * self.params['riskgroup_multiplier_diabetes_progression']
-                        else:
-                            self.vars['tb_rate' + timing + '_progression' + organ + riskgroup + agegroup] \
-                                = self.vars['epi_prop' + organ] \
-                                  * self.params['tb_rate' + timing + '_progression' + riskgroup + agegroup]
+                        self.vars['tb_rate' + timing + '_progression' + organ + riskgroup + agegroup] \
+                            = self.vars['epi_prop' + organ] \
+                              * self.params['tb_rate' + timing + '_progression' + riskgroup + agegroup]
 
     def adjust_case_detection_for_decentralisation(self):
         """

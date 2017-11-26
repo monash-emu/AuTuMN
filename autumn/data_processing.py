@@ -163,7 +163,7 @@ class Inputs:
         if self.vary_force_infection_by_riskgroup:
             self.create_mixing_matrix()
         else:
-            for scenario in self.scenarios: self.mixing[scenario] = {}
+            self.mixing = {}
 
         # define compartmental structure
         self.define_compartment_structure()
@@ -466,36 +466,33 @@ class Inputs:
         """
 
         # create mixing matrix separately for each scenario, just in case risk groups being managed differently
-        for scenario in self.scenarios:
-            self.mixing[scenario] = {}
+        self.mixing = {}
 
-            # next tier of dictionary is the "to" risk group that is being infected
-            for to_riskgroup in self.riskgroups:
-                self.mixing[scenario][to_riskgroup] = {}
+        # next tier of dictionary is the "to" risk group that is being infected
+        for to_riskgroup in self.riskgroups:
+            self.mixing[to_riskgroup] = {}
 
-                # last tier of dictionary is the "from" risk group describing the make up of contacts
-                for from_riskgroup in self.riskgroups:
-                    if from_riskgroup != '_norisk':
+            # last tier of dictionary is the "from" risk group describing the make up of contacts
+            for from_riskgroup in self.riskgroups:
+                if from_riskgroup != '_norisk':
 
-                        # use parameters for risk groups other than "_norisk" if available
-                        if 'prop_mix' + to_riskgroup + '_from' + from_riskgroup in self.model_constants:
-                            self.mixing[scenario][to_riskgroup][from_riskgroup] \
-                                = self.model_constants['prop_mix' + to_riskgroup + '_from' + from_riskgroup]
+                    # use parameters for risk groups other than "_norisk" if available
+                    if 'prop_mix' + to_riskgroup + '_from' + from_riskgroup in self.model_constants:
+                        self.mixing[to_riskgroup][from_riskgroup] \
+                            = self.model_constants['prop_mix' + to_riskgroup + '_from' + from_riskgroup]
 
-                        # otherwise use the latest value for the proportion of the population with that risk factor
-                        else:
-                            self.mixing[scenario][to_riskgroup][from_riskgroup] \
-                                = find_latest_value_from_year_dict(
-                                self.scaleup_data[scenario]['riskgroup_prop' + from_riskgroup],
-                                self.model_constants['current_time'])
+                    # otherwise use the latest value for the proportion of the population with that risk factor
+                    else:
+                        self.mixing[to_riskgroup][from_riskgroup] \
+                            = find_latest_value_from_year_dict(self.scaleup_data[0]['riskgroup_prop' + from_riskgroup],
+                                                               self.model_constants['current_time'])
 
-                # give the remainder to the "_norisk" group without any risk factors
-                if sum(self.mixing[scenario][to_riskgroup].values()) >= 1.:
-                    self.add_comment_to_gui_window(
-                        'Total of proportions of contacts for risk group %s greater than one. Model invalid.'
-                        % to_riskgroup)
-                self.mixing[scenario][to_riskgroup]['_norisk'] \
-                    = 1. - sum(self.mixing[scenario][to_riskgroup].values())
+            # give the remainder to the "_norisk" group without any risk factors
+            if sum(self.mixing[to_riskgroup].values()) >= 1.:
+                self.add_comment_to_gui_window(
+                    'Total of proportions of contacts for risk group %s greater than one. Model invalid.'
+                    % to_riskgroup)
+            self.mixing[to_riskgroup]['_norisk'] = 1. - sum(self.mixing[to_riskgroup].values())
 
     def define_compartment_structure(self):
         """
@@ -1135,7 +1132,7 @@ class Inputs:
             self.scenarios.append(scenario)
             for attribute in ['scaleup_data', 'interventions_to_cost', 'relevant_interventions']:
                 getattr(self, attribute)[scenario] = copy.deepcopy(getattr(self, attribute)[0])
-                self.mixing[scenario] = {}
+                self.mixing = {}
             self.scaleup_data[scenario]['riskgroup_prop_' + self.comorbidity_to_increment]['scenario'] \
                 = self.comorbidity_prevalences[scenario]
 

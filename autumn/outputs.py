@@ -2634,7 +2634,7 @@ class Project:
         for r, to_riskgroup in enumerate(self.inputs.riskgroups):
             this_data = []
             for from_riskgroup in self.inputs.riskgroups:
-                this_data.append(self.inputs.mixing[0][from_riskgroup][to_riskgroup])
+                this_data.append(self.inputs.mixing[from_riskgroup][to_riskgroup])
             next_data = [last + this for last, this in zip(last_data, this_data)]
             x_positions = numpy.linspace(.5, .5 + len(next_data) - 1., len(next_data))
             ax.bar(x_positions, this_data, width=bar_width, bottom=last_data, color=output_colours[r][1],

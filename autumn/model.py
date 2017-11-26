@@ -891,12 +891,15 @@ class ConsolidatedModel(StratifiedModel):
         # if any modifications to transmission parameter to be made over time
         transmission_modifier = self.vars['transmission_modifier'] if 'transmission_modifier' in self.vars else 1.
 
+        # whether directly calculating the force of infection or a temporary "infectiousness" from which it is derived
+        force_string = 'infectiousness' if self.vary_force_infection_by_riskgroup else 'rate_force'
+
         # find the effective infectious population for each strain and risk group
         for strain in self.strains:
             for riskgroup in self.force_riskgroups:
 
                 # initialise infectiousness vars
-                self.vars['infectiousness' + strain + riskgroup] = 0.
+                self.vars[force_string + strain + riskgroup] = 0.
 
                 # loop through compartments, skipping on as soon as possible if irrelevant
                 for label in self.labels:
@@ -913,7 +916,7 @@ class ConsolidatedModel(StratifiedModel):
 
                             # increment "infectiousness", the effective number of infectious people in the stratum
                             if t_k.label_intersects_tags(label, self.infectious_tags):
-                                self.vars['infectiousness' + strain + riskgroup] \
+                                self.vars[force_string + strain + riskgroup] \
                                     += self.params['tb_n_contact'] \
                                        * transmission_modifier * self.params['tb_multiplier_force' + organ] \
                                        * self.params['tb_multiplier_child_infectiousness' + agegroup] \
@@ -934,8 +937,6 @@ class ConsolidatedModel(StratifiedModel):
                         self.vars['rate_force' + strain + to_riskgroup] \
                             += self.vars['infectiousness' + strain + from_riskgroup] \
                                * self.mixing[to_riskgroup][from_riskgroup]
-            else:
-                self.vars['rate_force' + strain] = self.vars['infectiousness' + strain]
 
     def adjust_force_infection_for_immunity(self):
         """

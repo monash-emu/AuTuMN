@@ -902,8 +902,7 @@ class ConsolidatedModel(StratifiedModel):
 
             # loop through compartments, skipping on as soon as possible if irrelevant
             for label in self.labels:
-                if riskgroup not in label and riskgroup != '': continue
-                if strain not in label and strain != '': continue
+                if (riskgroup not in label and riskgroup != '') or (strain not in label and strain != ''): continue
                 for agegroup in self.agegroups:
                     if agegroup not in label and agegroup != '': continue
                     for organ in self.organ_status:

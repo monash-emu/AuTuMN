@@ -279,10 +279,11 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_treatment_rates_vars()
         if 'agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions:
             self.calculate_ipt_effect()
-        self.calculate_force_infection_vars()
-        self.adjust_force_infection_for_mixing()
-        self.adjust_force_infection_for_immunity()
-        self.adjust_force_infection_for_ipt()
+        for strain in self.strains:
+            self.calculate_force_infection_vars(strain)
+            if self.vary_force_infection_by_riskgroup: self.adjust_force_infection_for_mixing(strain)
+            self.adjust_force_infection_for_immunity(strain)
+            self.adjust_force_infection_for_ipt(strain)
         self.calculate_population_sizes()
 
     def ticker(self):
@@ -881,7 +882,7 @@ class ConsolidatedModel(StratifiedModel):
             self.vars['prop_infections_averted_ipt' + agegroup] \
                 = self.vars['tb_prop_infections_reachable_ipt'] * coverage
 
-    def calculate_force_infection_vars(self):
+    def calculate_force_infection_vars(self, strain):
         """
         Calculate force of infection independently for each strain, incorporating partial immunity and infectiousness.
         First calculate the effective infectious population (incorporating infectiousness by organ involvement), then
@@ -894,99 +895,91 @@ class ConsolidatedModel(StratifiedModel):
         # whether directly calculating the force of infection or a temporary "infectiousness" from which it is derived
         force_string = 'infectiousness' if self.vary_force_infection_by_riskgroup else 'rate_force'
 
-        # find the effective infectious population for each strain and risk group
-        for strain in self.strains:
-            for riskgroup in self.force_riskgroups:
+        for riskgroup in self.force_riskgroups:
 
-                # initialise infectiousness vars
-                self.vars[force_string + strain + riskgroup] = 0.
+            # initialise infectiousness vars
+            self.vars[force_string + strain + riskgroup] = 0.
 
-                # loop through compartments, skipping on as soon as possible if irrelevant
-                for label in self.labels:
-                    if riskgroup not in label and riskgroup != '': continue
-                    if strain not in label and strain != '': continue
-                    for agegroup in self.agegroups:
-                        if agegroup not in label and agegroup != '': continue
-                        for organ in self.organ_status:
-                            if (organ not in label and organ != '') or organ == '_extrapul': continue
+            # loop through compartments, skipping on as soon as possible if irrelevant
+            for label in self.labels:
+                if riskgroup not in label and riskgroup != '': continue
+                if strain not in label and strain != '': continue
+                for agegroup in self.agegroups:
+                    if agegroup not in label and agegroup != '': continue
+                    for organ in self.organ_status:
+                        if (organ not in label and organ != '') or organ == '_extrapul': continue
 
-                            # adjustment for increased infectiousness in riskgroup
-                            riskgroup_multiplier = self.params['riskgroup_multiplier_force_infection' + riskgroup] \
-                                if 'riskgroup_multiplier_force_infection' + riskgroup in self.params else 1.
+                        # adjustment for increased infectiousness in riskgroup
+                        riskgroup_multiplier = self.params['riskgroup_multiplier_force_infection' + riskgroup] \
+                            if 'riskgroup_multiplier_force_infection' + riskgroup in self.params else 1.
 
-                            # increment "infectiousness", the effective number of infectious people in the stratum
-                            if t_k.label_intersects_tags(label, self.infectious_tags):
-                                self.vars[force_string + strain + riskgroup] \
-                                    += self.params['tb_n_contact'] \
-                                       * transmission_modifier * self.params['tb_multiplier_force' + organ] \
-                                       * self.params['tb_multiplier_child_infectiousness' + agegroup] \
-                                       * self.compartments[label] * riskgroup_multiplier \
-                                       / self.vars['population' + riskgroup]
+                        # increment "infectiousness", the effective number of infectious people in the stratum
+                        if t_k.label_intersects_tags(label, self.infectious_tags):
+                            self.vars[force_string + strain + riskgroup] \
+                                += self.params['tb_n_contact'] \
+                                   * transmission_modifier * self.params['tb_multiplier_force' + organ] \
+                                   * self.params['tb_multiplier_child_infectiousness' + agegroup] \
+                                   * self.compartments[label] * riskgroup_multiplier \
+                                   / self.vars['population' + riskgroup]
 
-    def adjust_force_infection_for_mixing(self):
+    def adjust_force_infection_for_mixing(self, strain):
         """
         Use the mixing matrix to ajdust the force of infection vars for the proportion of contacts received from each
         group. Otherwise, just assign the total infectiousness of the population to be the overall force of infection.
         """
 
-        for strain in self.strains:
-            if self.vary_force_infection_by_riskgroup:
-                for to_riskgroup in self.force_riskgroups:
-                    self.vars['rate_force' + strain + to_riskgroup] = 0.
-                    for from_riskgroup in self.force_riskgroups:
-                        self.vars['rate_force' + strain + to_riskgroup] \
-                            += self.vars['infectiousness' + strain + from_riskgroup] \
-                               * self.mixing[to_riskgroup][from_riskgroup]
+        for to_riskgroup in self.force_riskgroups:
+            self.vars['rate_force' + strain + to_riskgroup] = 0.
+            for from_riskgroup in self.force_riskgroups:
+                self.vars['rate_force' + strain + to_riskgroup] \
+                    += self.vars['infectiousness' + strain + from_riskgroup] * self.mixing[to_riskgroup][from_riskgroup]
 
-    def adjust_force_infection_for_immunity(self):
+    def adjust_force_infection_for_immunity(self, strain):
         """
         Find the actual rate of infection for each compartment type depending on the relative immunity/susceptibility
         associated with being in that compartment.
         """
 
-        for strain in self.strains:
-            for riskgroup in self.force_riskgroups:
-                for force_type in self.force_types:
-                    immunity_multiplier = self.params['tb_multiplier' + force_type + '_protection']
+        for riskgroup in self.force_riskgroups:
+            for force_type in self.force_types:
+                immunity_multiplier = self.params['tb_multiplier' + force_type + '_protection']
 
-                    # give children greater protection from BCG vaccination
-                    for agegroup in self.agegroups:
-                        if t_k.interrogate_age_string(agegroup)[0][1] <= self.params['int_age_bcg_immunity_wane'] \
-                                and force_type == '_immune':
-                            immunity_multiplier *= self.params['int_multiplier_bcg_child_relative_immunity']
+                # give children greater protection from BCG vaccination
+                for agegroup in self.agegroups:
+                    if t_k.interrogate_age_string(agegroup)[0][1] <= self.params['int_age_bcg_immunity_wane'] \
+                            and force_type == '_immune':
+                        immunity_multiplier *= self.params['int_multiplier_bcg_child_relative_immunity']
 
-                        # increase immunity for previously treated
-                        for history in self.histories:
-                            if history == '_treated':
-                                immunity_multiplier *= self.params['tb_multiplier_treated_protection']
+                    # increase immunity for previously treated
+                    for history in self.histories:
+                        if history == '_treated': immunity_multiplier *= self.params['tb_multiplier_treated_protection']
 
-                            # find final rates of infection, except there is no previously treated fully susceptible
-                            if force_type != '_fully' or (force_type == '_fully' and history == self.histories[0]):
-                                self.vars['rate_force' + force_type + strain + history + riskgroup + agegroup] \
-                                    = self.vars['rate_force' + strain + riskgroup] * immunity_multiplier
+                        # find final rates of infection, except there is no previously treated fully susceptible
+                        if force_type != '_fully' or (force_type == '_fully' and history == self.histories[0]):
+                            self.vars['rate_force' + force_type + strain + history + riskgroup + agegroup] \
+                                = self.vars['rate_force' + strain + riskgroup] * immunity_multiplier
 
-    def adjust_force_infection_for_ipt(self):
+    def adjust_force_infection_for_ipt(self, strain):
         """
         Adjust the previously calculated force of infection for the use of IPT in contacts. Uses the previously
         calculated proportion of infections averted IPT var to determine how much of the force of infection to assign
         to go to IPT instead and how much to remain as force of infection
         """
 
-        for strain in self.strains:
-            for riskgroup in self.force_riskgroups:
-                for force_type in self.force_types:
-                    for agegroup in self.agegroups:
-                        for history in self.histories:
-                            if force_type != '_fully' or (force_type == '_fully' and history == self.histories[0]):
-                                stratum = force_type + strain + history + riskgroup + agegroup
-                                if ('agestratified_ipt' in self.relevant_interventions
-                                    or 'ipt' in self.relevant_interventions) and strain == self.strains[0]:
-                                    self.vars['rate_ipt_commencement' + stratum] \
-                                        = self.vars['rate_force' + stratum] \
-                                          * self.vars['prop_infections_averted_ipt' + agegroup]
-                                    self.vars['rate_force' + stratum] -= self.vars['rate_ipt_commencement' + stratum]
-                                else:
-                                    self.vars['rate_ipt_commencement' + stratum] = 0.
+        for riskgroup in self.force_riskgroups:
+            for force_type in self.force_types:
+                for agegroup in self.agegroups:
+                    for history in self.histories:
+                        if force_type != '_fully' or (force_type == '_fully' and history == self.histories[0]):
+                            stratum = force_type + strain + history + riskgroup + agegroup
+                            if ('agestratified_ipt' in self.relevant_interventions
+                                or 'ipt' in self.relevant_interventions) and strain == self.strains[0]:
+                                self.vars['rate_ipt_commencement' + stratum] \
+                                    = self.vars['rate_force' + stratum] \
+                                      * self.vars['prop_infections_averted_ipt' + agegroup]
+                                self.vars['rate_force' + stratum] -= self.vars['rate_ipt_commencement' + stratum]
+                            else:
+                                self.vars['rate_ipt_commencement' + stratum] = 0.
 
     def calculate_population_sizes(self):
         """

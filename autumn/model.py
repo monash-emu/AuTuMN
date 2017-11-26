@@ -1173,7 +1173,7 @@ class ConsolidatedModel(StratifiedModel):
                             # the susceptibles and strain for the latents
                             source_extension = riskgroup + history + agegroup
 
-                            # force of infections differ by immunity, strain, history, risk group and age group
+                            # force of infection differs by immunity, strain, history, age group and possibly risk group
                             force_extension = force_type + strain + history + force_riskgroup + agegroup
 
                             # destination compartments differ by strain, risk group, history and age group
@@ -1214,21 +1214,19 @@ class ConsolidatedModel(StratifiedModel):
                     for strain in self.strains:
 
                         # stabilisation
-                        self.set_fixed_transfer_rate_flow(
-                            'latent_early' + strain + riskgroup + history + agegroup,
-                            'latent_late' + strain + riskgroup + history + agegroup,
-                            'tb_rate_stabilise' + riskgroup + agegroup)
+                        compartment_extension = strain + riskgroup + history + agegroup
+                        self.set_fixed_transfer_rate_flow('latent_early' + compartment_extension,
+                                                          'latent_late' + compartment_extension,
+                                                          'tb_rate_stabilise' + riskgroup + agegroup)
 
                         # now smear-pos/smear-neg is always a var, even when a constant function
                         for organ in self.organ_status:
-                            self.set_var_transfer_rate_flow(
-                                'latent_early' + strain + riskgroup + history + agegroup,
-                                'active' + organ + strain + riskgroup + history + agegroup,
-                                'tb_rate_early_progression' + organ + riskgroup + agegroup)
-                            self.set_var_transfer_rate_flow(
-                                'latent_late' + strain + riskgroup + history + agegroup,
-                                'active' + organ + strain + riskgroup + history + agegroup,
-                                'tb_rate_late_progression' + organ + riskgroup + agegroup)
+                            self.set_var_transfer_rate_flow('latent_early' + compartment_extension,
+                                                            'active' + organ + compartment_extension,
+                                                            'tb_rate_early_progression' + organ + riskgroup + agegroup)
+                            self.set_var_transfer_rate_flow('latent_late' + compartment_extension,
+                                                            'active' + organ + compartment_extension,
+                                                            'tb_rate_late_progression' + organ + riskgroup + agegroup)
 
     def set_natural_history_flows(self):
         """

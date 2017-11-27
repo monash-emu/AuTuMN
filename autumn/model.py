@@ -740,7 +740,7 @@ class ConsolidatedModel(StratifiedModel):
                 self.vars['program_prop_treatment' + history + '_success' + strain] \
                     = t_k.increase_parameter_closer_to_value(
                     self.vars['program_prop_treatment' + history + '_success' + strain],
-                    self.vars['program_prop_treatment' + history + '_success' + strain],
+                    self.vars['program_prop_treatment_success_ideal'],
                     self.vars['int_prop_treatment_support_absolute'])
                 self.vars['program_prop_treatment' + history + '_death' + strain] \
                     = t_k.decrease_parameter_closer_to_value(
@@ -885,7 +885,7 @@ class ConsolidatedModel(StratifiedModel):
                     coverage += self.vars['int_prop_ipt' + agegroup_or_entire_population]
             coverage = min(coverage, 1.)
 
-            # calculate infections averted as product of infections of identified cases, coverage and effectiveness
+            # calculate infections averted as product of infections of identified cases and coverage
             self.vars['prop_infections_averted_ipt' + agegroup] \
                 = self.vars['tb_prop_infections_reachable_ipt'] * coverage
 

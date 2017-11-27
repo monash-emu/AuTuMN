@@ -868,8 +868,7 @@ class Project:
         elif x_axis_type == 'individual_years':
             ax.set_xlim((start_time, end_time))
             ax.set_xticks(range(int(start_time), int(end_time, 1)))
-            for tick in ax.xaxis.get_major_ticks():
-                tick.label.set_rotation(45)
+            for tick in ax.xaxis.get_major_ticks(): tick.label.set_rotation(45)
         else:
             ax.set_xlabel(x_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
 
@@ -899,8 +898,7 @@ class Project:
 
         # set size of font for x-ticks and add a grid if requested
         for axis_to_change in [ax.xaxis, ax.yaxis]:
-            for tick in axis_to_change.get_major_ticks():
-                tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+            for tick in axis_to_change.get_major_ticks(): tick.label.set_fontsize(get_nice_font_size(subplot_grid))
             axis_to_change.grid(self.grid)
 
     def save_figure(self, fig, last_part_of_name_for_figure):
@@ -2356,6 +2354,10 @@ class Project:
             # run plotting from early in the model run and from the standard start time for plotting
             for t, time in enumerate(['plot_start_time', 'early_time']):
 
+                # initialise axes
+                ax_upper = fig.add_subplot(2, 2, 1 + t)
+                ax_lower = fig.add_subplot(2, 2, 3 + t)
+
                 # find starting times
                 title_time_text = t_k.find_title_from_dictionary(time)
 
@@ -2386,27 +2388,25 @@ class Project:
                     time_index = self.start_time_index if t == 0 else early_time_index
 
                     # plot total numbers
-                    ax_upper = fig.add_subplot(2, 2, 1 + t)
                     ax_upper.fill_between(times[time_index:], lower_plot_margin_count[time_index:],
                                           upper_plot_margin_count[time_index:], facecolors=colours[s][1])
 
                     # plot population proportions
-                    ax_lower = fig.add_subplot(2, 2, 3 + t)
                     ax_lower.fill_between(times[time_index:], lower_plot_margin_fraction[time_index:],
                                           upper_plot_margin_fraction[time_index:], facecolors=colours[s][1],
                                           label=legd_text)
-
-                    # tidy up plots
-                    self.tidy_axis(ax_upper, [2, 2], start_time=self.inputs.model_constants[time],
-                                   title='Total numbers from ' + title_time_text, y_label='population')
-                    self.tidy_axis(ax_lower, [2, 2], y_axis_type='proportion',
-                                   start_time=self.inputs.model_constants[time],
-                                   title='Proportion of population from ' + title_time_text, legend=(t == 1))
 
                     # add group values to the lower plot range for next iteration
                     for i in range(len(lower_plot_margin_count)):
                         lower_plot_margin_count[i] += stratum_count[i]
                         lower_plot_margin_fraction[i] += stratum_fraction[i]
+
+                # tidy up plots
+                self.tidy_axis(ax_upper, [2, 2], start_time=self.inputs.model_constants[time],
+                               title='Total numbers from ' + title_time_text, y_label='population', y_axis_type='')
+                self.tidy_axis(ax_lower, [2, 2], y_axis_type='proportion',
+                               start_time=self.inputs.model_constants[time],
+                               title='Proportion of population from ' + title_time_text, legend=(t == 1))
 
             # finish up
             fig.suptitle('Population by ' + t_k.find_title_from_dictionary(age_or_risk), fontsize=self.suptitle_size)

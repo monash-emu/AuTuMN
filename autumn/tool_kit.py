@@ -487,6 +487,10 @@ def find_title_from_dictionary(name):
             'Diabetes',
         'riskgroup_prop_diabetes':
             'Diabetes prevalence',
+        'riskgroup_prop_prison':
+            'Prison population',
+        'riskgroup_prop_ruralpoor':
+            'Roma population',
         '_hiv':
             'HIV',
         '_nocomorb':
@@ -622,7 +626,13 @@ def find_title_from_dictionary(name):
         'program_prop_treatment_ds_treated_success':
             'Treatment success DS-TB, previously treated',
         'program_prop_treatment_mdr_new_success':
-            'Treatment success MDR-TB, new cases'
+            'Treatment success MDR-TB',
+        'program_prop_treatment_mdr_treated_death':
+            'Death on treatment MDR-TB',
+        'program_prop_treatment_inappropriate_new_death':
+            'Death on treatment MDR-TB on inappropriate regimen',
+        'program_prop_treatment_inappropriate_new_success':
+            'Treatment success MDR-TB on inappropriate regimen'
     }
 
     if name in dictionary_of_names:
@@ -1024,7 +1034,7 @@ def sum_over_compartments_bycategory(model, compartment_types, categories):
 
 def find_fractions(model):
 
-    # All compartmental disease stages
+    # all compartmental disease stages
     dictionary_of_classifications = {
         'compartment_types':
             ['susceptible_fully',
@@ -1048,7 +1058,7 @@ def find_fractions(model):
         dictionary_of_classifications['compartment_types'] += ['lowquality']
         dictionary_of_classifications['broad_compartment_types'] += ['lowquality']
 
-    # The following was previously the additional diagnostics code in model.py
+    # the following was previously the additional diagnostics code in model.py
     subgroup_solns = {}
     subgroup_fractions = {}
     for category in dictionary_of_classifications:

@@ -284,11 +284,7 @@ class ConsolidatedModel(StratifiedModel):
             self.adjust_treatment_outcomes_shortcourse()
         if 'agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions:
             self.calculate_ipt_effect()
-        for strain in self.strains:
-            self.calculate_force_infection_vars(strain)
-            if self.vary_force_infection_by_riskgroup: self.adjust_force_infection_for_mixing(strain)
-            self.adjust_force_infection_for_immunity(strain)
-            self.adjust_force_infection_for_ipt(strain)
+        self.calculate_force_infection()
         self.calculate_population_sizes()
 
     def ticker(self):
@@ -893,7 +889,18 @@ class ConsolidatedModel(StratifiedModel):
             self.vars['prop_infections_averted_ipt' + agegroup] \
                 = self.vars['tb_prop_infections_reachable_ipt'] * coverage
 
-    def calculate_force_infection_vars(self, strain):
+    def calculate_force_infection(self):
+        """
+        Method to coordinate calculation of the force of infection, calling the various other methods involved.
+        """
+
+        for strain in self.strains:
+            self.set_initial_force_infection(strain)
+            if self.vary_force_infection_by_riskgroup: self.adjust_force_infection_for_mixing(strain)
+            self.adjust_force_infection_for_immunity(strain)
+            self.adjust_force_infection_for_ipt(strain)
+
+    def set_initial_force_infection(self, strain):
         """
         Calculate force of infection independently for each strain, incorporating partial immunity and infectiousness.
         First calculate the effective infectious population (incorporating infectiousness by organ involvement), then

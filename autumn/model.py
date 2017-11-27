@@ -685,25 +685,31 @@ class ConsolidatedModel(StratifiedModel):
 
             # find baseline treatment period for total duration and for period infectious
             for treatment_stage in ['', '_infect']:
-                self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
-                    = self.params['tb_timeperiod' + treatment_stage + '_ontreatment' + strain]
 
-            # adapt treatment periods for short-course regimen
-            if strain == '_mdr' and 'int_prop_shortcourse_mdr' in self.relevant_interventions:
-                relative_treatment_duration_mdr \
-                    = 1. - self.vars['int_prop_shortcourse_mdr'] \
-                           * (1. - self.params['int_prop_shortcourse_mdr_relativeduration'])
-                for treatment_stage in ['', '_infect']:
+                # if short-course regimen being implemented
+                if strain == '_mdr' and 'int_prop_shortcourse_mdr' in self.relevant_interventions:
+
+                    # adapt treatment periods for short-course regimen
                     self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
-                        *= relative_treatment_duration_mdr
+                        = t_k.decrease_parameter_closer_to_value(
+                        self.params['tb_timeperiod' + treatment_stage + '_ontreatment' + strain],
+                        self.params['int_timeperiod_shortcourse_mdr' + treatment_stage],
+                        self.vars['int_prop_shortcourse_mdr'])
 
-                # adapt treatment outcomes for short-course regimen
+                # in absence of short-course regimen
+                else:
+                    self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
+                        = self.params['tb_timeperiod' + treatment_stage + '_ontreatment' + strain]
+
+            # adapt treatment outcomes for short-course regimen
+            if strain == '_mdr' and 'int_prop_shortcourse_mdr' in self.relevant_interventions:
                 if self.shortcourse_improves_outcomes:
                     for outcome in ['_success', '_death']:
                         self.vars['program_prop_treatment' + outcome + '_mdr'] \
-                            += (self.params['program_prop_treatment' + outcome + '_shortcoursemdr']
-                                - self.vars['program_prop_treatment' + outcome + '_mdr']) \
-                               * self.vars['int_prop_shortcourse_mdr']
+                            = t_k.increase_parameter_closer_to_value(
+                            self.vars['program_prop_treatment' + outcome + '_mdr'],
+                            self.params['program_prop_treatment' + outcome + '_shortcoursemdr'],
+                            self.vars['int_prop_shortcourse_mdr'])
 
             # add some extra treatment success if the treatment support intervention is active
             if 'int_prop_treatment_support_relative' in self.relevant_interventions:

@@ -2394,7 +2394,7 @@ class Project:
                     # plot population proportions
                     ax_lower.fill_between(times[time_index:], lower_plot_margin_fraction[time_index:],
                                           upper_plot_margin_fraction[time_index:], facecolors=colours[s][1],
-                                          label=legd_text)
+                                          label=t_k.capitalise_first_letter(legd_text))
 
                     # add group values to the lower plot range for next iteration
                     for i in range(len(lower_plot_margin_count)):
@@ -2403,7 +2403,7 @@ class Project:
 
                 # tidy up plots
                 self.tidy_axis(ax_upper, [2, 2], start_time=self.inputs.model_constants[time],
-                               title='Total numbers from ' + title_time_text, y_label='population', y_axis_type='')
+                               title='Total numbers from ' + title_time_text, y_label='Population', y_axis_type='')
                 self.tidy_axis(ax_lower, [2, 2], y_axis_type='proportion',
                                start_time=self.inputs.model_constants[time],
                                title='Proportion of population from ' + title_time_text, legend=(t == 1))
@@ -2651,7 +2651,6 @@ class Project:
         self.save_figure(fig, '_mixing')
 
     def plot_popsizes(self):
-
         """
         Plot popsizes over recent time for each program in baseline scenario.
         """

@@ -129,7 +129,7 @@ class ConsolidatedModel(StratifiedModel):
         self.ngo_groups = ['_ruralpoor']
 
         # whether short-course MDR-TB regimen improves outcomes
-        self.shortcourse_improves_outcomes = False
+        self.shortcourse_improves_outcomes = True
 
         # create time ticker
         self.next_time_point = copy.copy(self.start_time)
@@ -702,14 +702,18 @@ class ConsolidatedModel(StratifiedModel):
                         = self.params['tb_timeperiod' + treatment_stage + '_ontreatment' + strain]
 
             # adapt treatment outcomes for short-course regimen
-            if strain == '_mdr' and 'int_prop_shortcourse_mdr' in self.relevant_interventions:
-                if self.shortcourse_improves_outcomes:
-                    for outcome in ['_success', '_death']:
-                        self.vars['program_prop_treatment' + outcome + '_mdr'] \
-                            = t_k.increase_parameter_closer_to_value(
-                            self.vars['program_prop_treatment' + outcome + '_mdr'],
-                            self.params['program_prop_treatment' + outcome + '_shortcoursemdr'],
-                            self.vars['int_prop_shortcourse_mdr'])
+            if 'int_prop_shortcourse_mdr' in self.relevant_interventions and self.shortcourse_improves_outcomes:
+                for history in self.histories:
+                    self.vars['program_prop_treatment_mdr' + history + '_success'] \
+                        = t_k.increase_parameter_closer_to_value(
+                        self.vars['program_prop_treatment_mdr' + history + '_success'],
+                        self.params['int_prop_treatment_success_shortcoursemdr'],
+                        self.vars['int_prop_shortcourse_mdr'])
+                    self.vars['program_prop_treatment_mdr' + history + '_death'] \
+                        = t_k.decrease_parameter_closer_to_value(
+                        self.vars['program_prop_treatment_mdr' + history + '_death'],
+                        self.params['int_prop_treatment_death_shortcoursemdr'],
+                        self.vars['int_prop_shortcourse_mdr'])
 
             # add some extra treatment success if the treatment support intervention is active
             if 'int_prop_treatment_support_relative' in self.relevant_interventions:

@@ -255,12 +255,13 @@ def apply_odds_ratio_to_proportion(proportion, odds_ratio):
 
 def increase_parameter_closer_to_value(old_value, target_value, coverage):
 
-    if old_value < target_value: return old_value + (target_value - old_value) * coverage
-
+    value_to_return = old_value + (target_value - old_value) * coverage if old_value < target_value else old_value
+    return value_to_return
 
 def decrease_parameter_closer_to_value(old_value, target_value, coverage):
 
-    if old_value > target_value: return old_value - (old_value - target_value) * coverage
+    value_to_return = old_value - (old_value - target_value) * coverage if old_value > target_value else old_value
+    return value_to_return
 
 
 def force_list_to_length(list, length):

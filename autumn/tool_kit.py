@@ -612,7 +612,17 @@ def find_title_from_dictionary(name):
         'program_prop_treatment_support_relative':
             'Treatment support',
         'program_prop_vaccination':
-            'BCG vaccination'
+            'BCG vaccination',
+        'program_prop_treatment_ds_new_death':
+            'Death on treatment DS-TB, new cases',
+        'program_prop_treatment_ds_new_success':
+            'Treatment success DS-TB, new cases',
+        'program_prop_treatment_ds_treated_death':
+            'Death on treatment DS-TB, previously treated',
+        'program_prop_treatment_ds_treated_success':
+            'Treatment success DS-TB, previously treated',
+        'program_prop_treatment_mdr_new_success':
+            'Treatment success MDR-TB, new cases'
     }
 
     if name in dictionary_of_names:

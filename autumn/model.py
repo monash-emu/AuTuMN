@@ -279,6 +279,9 @@ class ConsolidatedModel(StratifiedModel):
         for strain in self.strains:
             self.calculate_treatment_timeperiod_vars(strain)
             self.calculate_treatment_rates_vars(strain)
+        if 'int_prop_shortcourse_mdr' in self.relevant_interventions \
+                and self.shortcourse_improves_outcomes and len(self.strains) > 1:
+            self.adjust_treatment_outcomes_shortcourse()
         if 'agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions:
             self.calculate_ipt_effect()
         for strain in self.strains:
@@ -702,25 +705,27 @@ class ConsolidatedModel(StratifiedModel):
         self.vars['tb_timeperiod_noninfect_ontreatment' + strain] \
             = self.vars['tb_timeperiod_ontreatment' + strain] - self.vars['tb_timeperiod_infect_ontreatment' + strain]
 
+    def adjust_treatment_outcomes_shortcourse(self):
+        """
+        Adapt treatment outcomes for short-course regimen. Restricted such that can only improve outcomes by selection
+        of the functions used to adjust the treatment outcomes.
+        """
+
+        for history in self.histories:
+            self.vars['program_prop_treatment_mdr' + history + '_success'] \
+                = t_k.increase_parameter_closer_to_value(self.vars['program_prop_treatment_mdr' + history + '_success'],
+                                                         self.params['int_prop_treatment_success_shortcoursemdr'],
+                                                         self.vars['int_prop_shortcourse_mdr'])
+            self.vars['program_prop_treatment_mdr' + history + '_death'] \
+                = t_k.decrease_parameter_closer_to_value(self.vars['program_prop_treatment_mdr' + history + '_death'],
+                                                         self.params['int_prop_treatment_death_shortcoursemdr'],
+                                                         self.vars['int_prop_shortcourse_mdr'])
+
     def calculate_treatment_rates_vars(self, strain):
         """
         Work out rates of progression through treatment by stage of treatment from the proportions provided for success
         and death.
         """
-
-        # adapt treatment outcomes for short-course regimen
-        if 'int_prop_shortcourse_mdr' in self.relevant_interventions and self.shortcourse_improves_outcomes:
-            for history in self.histories:
-                self.vars['program_prop_treatment_mdr' + history + '_success'] \
-                    = t_k.increase_parameter_closer_to_value(
-                    self.vars['program_prop_treatment_mdr' + history + '_success'],
-                    self.params['int_prop_treatment_success_shortcoursemdr'],
-                    self.vars['int_prop_shortcourse_mdr'])
-                self.vars['program_prop_treatment_mdr' + history + '_death'] \
-                    = t_k.decrease_parameter_closer_to_value(
-                    self.vars['program_prop_treatment_mdr' + history + '_death'],
-                    self.params['int_prop_treatment_death_shortcoursemdr'],
-                    self.vars['int_prop_shortcourse_mdr'])
 
         # add some extra treatment success if the treatment support intervention is active
         if 'int_prop_treatment_support_relative' in self.relevant_interventions:
@@ -854,7 +859,7 @@ class ConsolidatedModel(StratifiedModel):
 
                                 # split default according to whether amplification occurs
                                 if self.is_amplification:
-                                    start = 'program_rate_treatment' + treatment_type + history + '_default'\
+                                    start = 'program_rate_treatment' + treatment_type + history + '_default' \
                                             + treatment_stage
                                     self.vars[start + '_amplify'] \
                                         = self.vars[start] * self.vars['epi_prop_amplification']

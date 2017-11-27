@@ -276,7 +276,9 @@ class ConsolidatedModel(StratifiedModel):
         if self.is_lowquality: self.calculate_lowquality_detection_vars()
         self.calculate_await_treatment_var()
         if self.is_amplification: self.calculate_amplification_var()
-        self.calculate_treatment_rates_vars()
+        for strain in self.strains:
+            self.calculate_treatment_timeperiod_vars(strain)
+            self.calculate_treatment_rates_vars(strain)
         if 'agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions:
             self.calculate_ipt_effect()
         for strain in self.strains:
@@ -675,189 +677,189 @@ class ConsolidatedModel(StratifiedModel):
         self.vars['epi_prop_amplification'] = 0. if self.time < self.params['mdr_introduce_time'] \
             else self.params['tb_prop_amplification']
 
-    def calculate_treatment_rates_vars(self):
+    def calculate_treatment_timeperiod_vars(self, strain):
+        """
+        Find the time periods on treatment and in each stage of treatment for the strain being considered.
+        """
+
+        # find baseline treatment period for the total duration (i.e. '') and for the infectious period
+        for treatment_stage in ['', '_infect']:
+
+            # if short-course regimen being implemented, adapt treatment periods
+            if strain == '_mdr' and 'int_prop_shortcourse_mdr' in self.relevant_interventions:
+                self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
+                    = t_k.decrease_parameter_closer_to_value(
+                    self.params['tb_timeperiod' + treatment_stage + '_ontreatment' + strain],
+                    self.params['int_timeperiod_shortcourse_mdr' + treatment_stage],
+                    self.vars['int_prop_shortcourse_mdr'])
+
+            # in absence of short-course regimen
+            else:
+                self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
+                    = self.params['tb_timeperiod' + treatment_stage + '_ontreatment' + strain]
+
+        # find non-infectious period as the difference between the infectious period and the total duration
+        self.vars['tb_timeperiod_noninfect_ontreatment' + strain] \
+            = self.vars['tb_timeperiod_ontreatment' + strain] - self.vars['tb_timeperiod_infect_ontreatment' + strain]
+
+    def calculate_treatment_rates_vars(self, strain):
         """
         Work out rates of progression through treatment by stage of treatment from the proportions provided for success
         and death.
         """
 
-        for strain in self.strains:
-
-            # find baseline treatment period for total duration and for period infectious
-            for treatment_stage in ['', '_infect']:
-
-                # if short-course regimen being implemented
-                if strain == '_mdr' and 'int_prop_shortcourse_mdr' in self.relevant_interventions:
-
-                    # adapt treatment periods for short-course regimen
-                    self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
-                        = t_k.decrease_parameter_closer_to_value(
-                        self.params['tb_timeperiod' + treatment_stage + '_ontreatment' + strain],
-                        self.params['int_timeperiod_shortcourse_mdr' + treatment_stage],
-                        self.vars['int_prop_shortcourse_mdr'])
-
-                # in absence of short-course regimen
-                else:
-                    self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
-                        = self.params['tb_timeperiod' + treatment_stage + '_ontreatment' + strain]
-
-            # adapt treatment outcomes for short-course regimen
-            if 'int_prop_shortcourse_mdr' in self.relevant_interventions and self.shortcourse_improves_outcomes:
-                for history in self.histories:
-                    self.vars['program_prop_treatment_mdr' + history + '_success'] \
-                        = t_k.increase_parameter_closer_to_value(
-                        self.vars['program_prop_treatment_mdr' + history + '_success'],
-                        self.params['int_prop_treatment_success_shortcoursemdr'],
-                        self.vars['int_prop_shortcourse_mdr'])
-                    self.vars['program_prop_treatment_mdr' + history + '_death'] \
-                        = t_k.decrease_parameter_closer_to_value(
-                        self.vars['program_prop_treatment_mdr' + history + '_death'],
-                        self.params['int_prop_treatment_death_shortcoursemdr'],
-                        self.vars['int_prop_shortcourse_mdr'])
-
-            # add some extra treatment success if the treatment support intervention is active
-            if 'int_prop_treatment_support_relative' in self.relevant_interventions:
-                for history in self.histories:
-                    self.vars['program_prop_treatment' + history + '_success' + strain] \
-                        += (1. - self.vars['program_prop_treatment' + history + '_success' + strain]) \
-                           * self.params['int_prop_treatment_support_improvement'] \
-                           * self.vars['int_prop_treatment_support_relative']
-                    self.vars['program_prop_treatment' + history + '_death' + strain] \
-                        -= self.vars['program_prop_treatment' + history + '_death' + strain] \
-                           * self.params['int_prop_treatment_support_improvement'] \
-                           * self.vars['int_prop_treatment_support_relative']
-
-            elif 'int_prop_treatment_support_absolute' in self.relevant_interventions and strain == self.strains[0]:
-                for history in self.histories:
-                    self.vars['program_prop_treatment' + history + '_success' + strain] \
-                        = t_k.increase_parameter_closer_to_value(
-                        self.vars['program_prop_treatment' + history + '_success' + strain],
-                        self.vars['program_prop_treatment' + history + '_success' + strain],
-                        self.vars['int_prop_treatment_support_absolute'])
-                    self.vars['program_prop_treatment' + history + '_death' + strain] \
-                        = t_k.decrease_parameter_closer_to_value(
-                        self.vars['program_prop_treatment' + history + '_death' + strain],
-                        self.params['int_prop_treatment_death_ideal'],
-                        self.vars['int_prop_treatment_support_absolute'])
-
-            # subtract some treatment success if ngo activities program has discontinued
-            # if 'int_prop_ngo_activities' in self.relevant_interventions:
-            #     self.vars['program_prop_treatment_success' + strain] \
-            #         -= self.vars['program_prop_treatment_success' + strain] \
-            #             * self.params['int_prop_treatment_support_improvement'] \
-            #             * (1. - self.vars['int_prop_ngo_activities'])
-
-            #  add some extra treatment success if food vouchers are provided to treated cases
-            if 'int_prop_food_voucher' + strain in self.relevant_interventions:
-                for history in self.histories:
-                    self.vars['program_prop_treatment' + strain + history + '_success'] \
-                       += (1. - self.vars['program_prop_treatment' + strain + history + '_success']) \
-                          * self.params['int_prop_food_voucher_improvement'] \
-                          * self.vars['int_prop_food_voucher' + strain]
-                    self.vars['program_prop_treatment' + strain + history + '_death'] \
-                        -= self.vars['program_prop_treatment' + strain + history + '_death'] \
-                          * self.params['int_prop_food_voucher_improvement'] \
-                          * self.vars['int_prop_food_voucher' + strain]
-
-            # calculate the default proportion as the remainder from success and death
+        # adapt treatment outcomes for short-course regimen
+        if 'int_prop_shortcourse_mdr' in self.relevant_interventions and self.shortcourse_improves_outcomes:
             for history in self.histories:
+                self.vars['program_prop_treatment_mdr' + history + '_success'] \
+                    = t_k.increase_parameter_closer_to_value(
+                    self.vars['program_prop_treatment_mdr' + history + '_success'],
+                    self.params['int_prop_treatment_success_shortcoursemdr'],
+                    self.vars['int_prop_shortcourse_mdr'])
+                self.vars['program_prop_treatment_mdr' + history + '_death'] \
+                    = t_k.decrease_parameter_closer_to_value(
+                    self.vars['program_prop_treatment_mdr' + history + '_death'],
+                    self.params['int_prop_treatment_death_shortcoursemdr'],
+                    self.vars['int_prop_shortcourse_mdr'])
+
+        # add some extra treatment success if the treatment support intervention is active
+        if 'int_prop_treatment_support_relative' in self.relevant_interventions:
+            for history in self.histories:
+                self.vars['program_prop_treatment' + history + '_success' + strain] \
+                    += (1. - self.vars['program_prop_treatment' + history + '_success' + strain]) \
+                       * self.params['int_prop_treatment_support_improvement'] \
+                       * self.vars['int_prop_treatment_support_relative']
+                self.vars['program_prop_treatment' + history + '_death' + strain] \
+                    -= self.vars['program_prop_treatment' + history + '_death' + strain] \
+                       * self.params['int_prop_treatment_support_improvement'] \
+                       * self.vars['int_prop_treatment_support_relative']
+
+        elif 'int_prop_treatment_support_absolute' in self.relevant_interventions and strain == self.strains[0]:
+            for history in self.histories:
+                self.vars['program_prop_treatment' + history + '_success' + strain] \
+                    = t_k.increase_parameter_closer_to_value(
+                    self.vars['program_prop_treatment' + history + '_success' + strain],
+                    self.vars['program_prop_treatment' + history + '_success' + strain],
+                    self.vars['int_prop_treatment_support_absolute'])
+                self.vars['program_prop_treatment' + history + '_death' + strain] \
+                    = t_k.decrease_parameter_closer_to_value(
+                    self.vars['program_prop_treatment' + history + '_death' + strain],
+                    self.params['int_prop_treatment_death_ideal'],
+                    self.vars['int_prop_treatment_support_absolute'])
+
+        # subtract some treatment success if ngo activities program has discontinued
+        # if 'int_prop_ngo_activities' in self.relevant_interventions:
+        #     self.vars['program_prop_treatment_success' + strain] \
+        #         -= self.vars['program_prop_treatment_success' + strain] \
+        #             * self.params['int_prop_treatment_support_improvement'] \
+        #             * (1. - self.vars['int_prop_ngo_activities'])
+
+        #  add some extra treatment success if food vouchers are provided to treated cases
+        if 'int_prop_food_voucher' + strain in self.relevant_interventions:
+            for history in self.histories:
+                self.vars['program_prop_treatment' + strain + history + '_success'] \
+                   += (1. - self.vars['program_prop_treatment' + strain + history + '_success']) \
+                      * self.params['int_prop_food_voucher_improvement'] \
+                      * self.vars['int_prop_food_voucher' + strain]
+                self.vars['program_prop_treatment' + strain + history + '_death'] \
+                    -= self.vars['program_prop_treatment' + strain + history + '_death'] \
+                      * self.params['int_prop_food_voucher_improvement'] \
+                      * self.vars['int_prop_food_voucher' + strain]
+
+        # calculate the default proportion as the remainder from success and death
+        for history in self.histories:
+            start = 'program_prop_treatment' + strain + history
+            self.vars[start + '_default'] \
+                = max([1. - self.vars[start + '_success'] - self.vars[start + '_death'], 0.])
+            sum_of_success_and_death = self.vars[start + '_success'] + self.vars[start + '_death']
+            if sum_of_success_and_death > 1.:
+                print('Success and death sum to %s for %s outcome at %s time'
+                      %(sum_of_success_and_death, start, self.time))
+
+        # find the proportion of deaths/defaults during the infectious and non-infectious stages
+        props = {}
+        for history in self.histories:
+            for outcome in self.outcomes[1:]:
+                props['_infect'], props['_noninfect'] \
+                    = find_outcome_proportions_by_period(
+                    self.vars['program_prop_treatment' + strain + history + outcome],
+                    self.vars['tb_timeperiod_infect_ontreatment' + strain],
+                    self.vars['tb_timeperiod_ontreatment' + strain])
+                for treatment_stage in props:
+                    self.vars['program_prop_treatment' + strain + history + outcome + treatment_stage] \
+                        = props[treatment_stage]
+
+            for treatment_stage in self.treatment_stages:
+
+                # find the success proportions
                 start = 'program_prop_treatment' + strain + history
-                self.vars[start + '_default'] \
-                    = max([1. - self.vars[start + '_success'] - self.vars[start + '_death'], 0.])
-                sum_of_success_and_death = self.vars[start + '_success'] + self.vars[start + '_death']
-                if sum_of_success_and_death > 1.:
-                    print('Success and death sum to %s for %s outcome at %s time'
-                          %(sum_of_success_and_death, start, self.time))
+                self.vars[start + '_success' + treatment_stage] \
+                    = 1. - self.vars[start + '_default' + treatment_stage] \
+                      - self.vars[start + '_death' + treatment_stage]
 
-            # find non-infectious period from infectious and total
-            self.vars['tb_timeperiod_noninfect_ontreatment' + strain] \
-                = self.vars['tb_timeperiod_ontreatment' + strain] \
-                  - self.vars['tb_timeperiod_infect_ontreatment' + strain]
+                # find the corresponding rates from the proportions
+                for outcome in self.outcomes:
+                    end = strain + history + outcome + treatment_stage
+                    self.vars['program_rate_treatment' + end] \
+                        = self.vars['program_prop_treatment' + end]\
+                          / self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain]
 
-            # find the proportion of deaths/defaults during the infectious and non-infectious stages
-            props = {}
-            for history in self.histories:
-                for outcome in self.outcomes[1:]:
-                    props['_infect'], props['_noninfect'] \
-                        = find_outcome_proportions_by_period(
-                        self.vars['program_prop_treatment' + strain + history + outcome],
-                        self.vars['tb_timeperiod_infect_ontreatment' + strain],
-                        self.vars['tb_timeperiod_ontreatment' + strain])
-                    for treatment_stage in props:
-                        self.vars['program_prop_treatment' + strain + history + outcome + treatment_stage] \
-                            = props[treatment_stage]
+                # split default according to whether amplification occurs (if not the most resistant strain)
+                if self.is_amplification:
+                    start = 'program_rate_treatment' + strain + history + '_default' + treatment_stage
+                    self.vars[start + '_amplify'] \
+                        = self.vars[start] * self.vars['epi_prop_amplification']
+                    self.vars[start + '_noamplify'] \
+                        = self.vars[start] * (1. - self.vars['epi_prop_amplification'])
 
-                for treatment_stage in self.treatment_stages:
+        # create new vars for misassigned individuals
+        if len(self.strains) > 1 and self.is_misassignment and strain != '_ds':
+            for treated_as in self.strains:  # for each strain
+                if treated_as != strain:  # misassigned strain has to be different from the actual strain
+                    if self.strains.index(treated_as) < self.strains.index(strain):  # if treated with worse regimen
+                        for history in self.histories:
 
-                    # find the success proportions
-                    start = 'program_prop_treatment' + strain + history
-                    self.vars[start + '_success' + treatment_stage] \
-                        = 1. - self.vars[start + '_default' + treatment_stage] \
-                          - self.vars[start + '_death' + treatment_stage]
+                            # calculate the default proportion as the remainder from success and death
+                            start = 'program_prop_treatment_inappropriate' + history
+                            self.vars[start + '_default'] \
+                                = 1. - self.vars[start + '_success'] - self.vars[start + '_death']
 
-                    # find the corresponding rates from the proportions
-                    for outcome in self.outcomes:
-                        end = strain + history + outcome + treatment_stage
-                        self.vars['program_rate_treatment' + end] \
-                            = self.vars['program_prop_treatment' + end]\
-                              / self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain]
+                            props = {}
+                            for outcome in self.outcomes[1:]:
+                                treatment_type = strain + '_as' + treated_as[1:]
+                                props['_infect'], props['_noninfect'] \
+                                    = find_outcome_proportions_by_period(
+                                    self.vars['program_prop_treatment_inappropriate' + history + outcome],
+                                    self.params['tb_timeperiod_infect_ontreatment' + treated_as],
+                                    self.params['tb_timeperiod_ontreatment' + treated_as])
+                                for treatment_stage in props:
+                                    self.vars['program_prop_treatment' + treatment_type + history + outcome
+                                              + treatment_stage] \
+                                        = props[treatment_stage]
 
-                    # split default according to whether amplification occurs (if not the most resistant strain)
-                    if self.is_amplification:
-                        start = 'program_rate_treatment' + strain + history + '_default' + treatment_stage
-                        self.vars[start + '_amplify'] \
-                            = self.vars[start] * self.vars['epi_prop_amplification']
-                        self.vars[start + '_noamplify'] \
-                            = self.vars[start] * (1. - self.vars['epi_prop_amplification'])
+                            for treatment_stage in self.treatment_stages:
+                                # find the success proportions
+                                start = 'program_prop_treatment' + treatment_type + history
+                                self.vars[start + '_success' + treatment_stage] \
+                                    = 1. - self.vars[start + '_default' + treatment_stage] \
+                                      - self.vars[start + '_death' + treatment_stage]
 
-            # create new vars for misassigned individuals
-            if len(self.strains) > 1 and self.is_misassignment and strain != '_ds':
-                for treated_as in self.strains:  # for each strain
-                    if treated_as != strain:  # misassigned strain has to be different from the actual strain
-                        if self.strains.index(treated_as) < self.strains.index(strain):  # if treated with worse regimen
-                            for history in self.histories:
+                                # find the corresponding rates from the proportions
+                                for outcome in self.outcomes:
+                                    end = treatment_type + history + outcome + treatment_stage
+                                    self.vars['program_rate_treatment' + end] \
+                                        = self.vars['program_prop_treatment' + end] \
+                                          / self.vars['tb_timeperiod' + treatment_stage + '_ontreatment'
+                                                      + treated_as]
 
-                                # calculate the default proportion as the remainder from success and death
-                                start = 'program_prop_treatment_inappropriate' + history
-                                self.vars[start + '_default'] \
-                                    = 1. - self.vars[start + '_success'] - self.vars[start + '_death']
-
-                                props = {}
-                                for outcome in self.outcomes[1:]:
-                                    treatment_type = strain + '_as' + treated_as[1:]
-                                    props['_infect'], props['_noninfect'] \
-                                        = find_outcome_proportions_by_period(
-                                        self.vars['program_prop_treatment_inappropriate' + history + outcome],
-                                        self.params['tb_timeperiod_infect_ontreatment' + treated_as],
-                                        self.params['tb_timeperiod_ontreatment' + treated_as])
-                                    for treatment_stage in props:
-                                        self.vars['program_prop_treatment' + treatment_type + history + outcome
-                                                  + treatment_stage] \
-                                            = props[treatment_stage]
-
-                                for treatment_stage in self.treatment_stages:
-                                    # find the success proportions
-                                    start = 'program_prop_treatment' + treatment_type + history
-                                    self.vars[start + '_success' + treatment_stage] \
-                                        = 1. - self.vars[start + '_default' + treatment_stage] \
-                                          - self.vars[start + '_death' + treatment_stage]
-
-                                    # find the corresponding rates from the proportions
-                                    for outcome in self.outcomes:
-                                        end = treatment_type + history + outcome + treatment_stage
-                                        self.vars['program_rate_treatment' + end] \
-                                            = self.vars['program_prop_treatment' + end] \
-                                              / self.vars['tb_timeperiod' + treatment_stage + '_ontreatment'
-                                                          + treated_as]
-
-                                    # split default according to whether amplification occurs
-                                    if self.is_amplification:
-                                        start = 'program_rate_treatment' + treatment_type + history + '_default'\
-                                                + treatment_stage
-                                        self.vars[start + '_amplify'] \
-                                            = self.vars[start] * self.vars['epi_prop_amplification']
-                                        self.vars[start + '_noamplify'] \
-                                            = self.vars[start] * (1. - self.vars['epi_prop_amplification'])
+                                # split default according to whether amplification occurs
+                                if self.is_amplification:
+                                    start = 'program_rate_treatment' + treatment_type + history + '_default'\
+                                            + treatment_stage
+                                    self.vars[start + '_amplify'] \
+                                        = self.vars[start] * self.vars['epi_prop_amplification']
+                                    self.vars[start + '_noamplify'] \
+                                        = self.vars[start] * (1. - self.vars['epi_prop_amplification'])
 
     def calculate_ipt_effect(self):
         """

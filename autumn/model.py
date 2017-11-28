@@ -675,7 +675,7 @@ class ConsolidatedModel(StratifiedModel):
             self.adjust_treatment_outcomes_support(strain)
             self.calculate_default_rates(strain)
             self.calculate_treatment_rates_from_props(strain)
-            self.calculate_amplification_prop(strain)
+            if self.is_amplification: self.calculate_amplification_props(strain)
             self.calculate_misassigned_outcomes(strain)
 
     def calculate_amplification_var(self):
@@ -816,22 +816,21 @@ class ConsolidatedModel(StratifiedModel):
                         = self.vars['program_prop_treatment' + end] \
                           / self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain]
 
-    def calculate_amplification_prop(self, strain):
-        # split default according to whether amplification occurs (if not the most resistant strain)
+    def calculate_amplification_props(self, strain):
+        """
+        Split default according to whether amplification occurs (if not the most resistant strain).
+        """
 
-        if self.is_amplification:
-            for history in self.histories:
-                for treatment_stage in self.treatment_stages:
-                    start = 'program_rate_treatment' + strain + history + '_default' + treatment_stage
-                    self.vars[start + '_amplify'] \
-                        = self.vars[start] * self.vars['epi_prop_amplification']
-                    self.vars[start + '_noamplify'] \
-                        = self.vars[start] * (1. - self.vars['epi_prop_amplification'])
+        for history in self.histories:
+            for treatment_stage in self.treatment_stages:
+                start = 'program_rate_treatment' + strain + history + '_default' + treatment_stage
+                self.vars[start + '_amplify'] = self.vars[start] * self.vars['epi_prop_amplification']
+                self.vars[start + '_noamplify'] = self.vars[start] * (1. - self.vars['epi_prop_amplification'])
 
     def calculate_misassigned_outcomes(self, strain):
 
         # create new vars for misassigned individuals
-        if len(self.strains) > 1 and self.is_misassignment and strain != '_ds':
+        if len(self.strains) > 1 and self.is_misassignment and strain != self.strains[0]:
             for treated_as in self.strains:  # for each strain
                 if treated_as != strain:  # misassigned strain has to be different from the actual strain
                     if self.strains.index(treated_as) < self.strains.index(strain):  # if treated with worse regimen

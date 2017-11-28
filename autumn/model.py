@@ -276,14 +276,7 @@ class ConsolidatedModel(StratifiedModel):
         if self.is_misassignment: self.calculate_misassignment_detection_vars()
         if self.is_lowquality: self.calculate_lowquality_detection_vars()
         self.calculate_await_treatment_var()
-        if self.is_amplification: self.calculate_amplification_var()
-        if 'int_prop_shortcourse_mdr' in self.relevant_interventions \
-                and self.shortcourse_improves_outcomes and len(self.strains) > 1:
-            self.adjust_treatment_outcomes_shortcourse()
-        for strain in self.strains:
-            self.calculate_treatment_timeperiod_vars(strain)
-            self.adjust_treatment_outcomes_support(strain)
-            self.calculate_treatment_rates_vars(strain)
+        self.calculate_treatment_rates()
         if 'agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions:
             self.calculate_ipt_effect()
         self.calculate_force_infection()
@@ -668,6 +661,23 @@ class ConsolidatedModel(StratifiedModel):
             # find the rate as the reciprocal of the time to treatment
             self.vars['program_rate_start_treatment' + organ] = 1. / time_to_treatment
 
+    def calculate_treatment_rates(self):
+        """
+        Master method to coordinate all treatment var-related methods.
+        """
+
+        if self.is_amplification: self.calculate_amplification_var()
+        if 'int_prop_shortcourse_mdr' in self.relevant_interventions \
+                and self.shortcourse_improves_outcomes and len(self.strains) > 1:
+            self.adjust_treatment_outcomes_shortcourse()
+        for strain in self.strains:
+            self.calculate_treatment_timeperiod_vars(strain)
+            self.adjust_treatment_outcomes_support(strain)
+            self.calculate_default_rates(strain)
+            self.calculate_treatment_rates_from_props(strain)
+            self.calculate_amplification_prop(strain)
+            self.calculate_misassigned_outcomes(strain)
+
     def calculate_amplification_var(self):
         """
         Previously had a sigmoidal function for amplification proportion, but now thinking that the following switch is
@@ -688,9 +698,9 @@ class ConsolidatedModel(StratifiedModel):
 
             # if short-course regimen being implemented, adapt treatment periods
             if strain == '_mdr' and 'int_prop_shortcourse_mdr' in self.relevant_interventions:
-                self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
+                self.vars['tb_timeperiod' + treatment_stage + '_ontreatment_mdr'] \
                     = t_k.decrease_parameter_closer_to_value(
-                    self.params['tb_timeperiod' + treatment_stage + '_ontreatment' + strain],
+                    self.params['tb_timeperiod' + treatment_stage + '_ontreatment_mdr'],
                     self.params['int_timeperiod_shortcourse_mdr' + treatment_stage],
                     self.vars['int_prop_shortcourse_mdr'])
 
@@ -757,7 +767,20 @@ class ConsolidatedModel(StratifiedModel):
                         self.params['int_prop_treatment_death_ideal' + strain_type],
                         self.vars['int_prop_treatment_support_absolute' + strain_type])
 
-    def calculate_treatment_rates_vars(self, strain):
+    def calculate_default_rates(self, strain):
+        """
+        Calculate the default proportion as the remainder from success and death and warn if numbers don't make sense.
+        """
+
+        for history in self.histories:
+            start = 'program_prop_treatment' + strain + history
+            self.vars[start + '_default'] = 1. - self.vars[start + '_success'] - self.vars[start + '_death']
+            if self.vars[start + '_default'] < 0.:
+                print('Success and death sum to %s for %s outcome at %s time'
+                      % (self.vars[start + '_success'] + self.vars[start + '_death'], start, self.time))
+                self.vars[start + '_default'] = 0.
+
+    def calculate_treatment_rates_from_props(self, strain):
 
         # subtract some treatment success if ngo activities program has discontinued
         # if 'int_prop_ngo_activities' in self.relevant_interventions:
@@ -765,16 +788,6 @@ class ConsolidatedModel(StratifiedModel):
         #         -= self.vars['program_prop_treatment_success' + strain] \
         #             * self.params['int_prop_treatment_support_improvement'] \
         #             * (1. - self.vars['int_prop_ngo_activities'])
-
-        # calculate the default proportion as the remainder from success and death
-        for history in self.histories:
-            start = 'program_prop_treatment' + strain + history
-            self.vars[start + '_default'] \
-                = max([1. - self.vars[start + '_success'] - self.vars[start + '_death'], 0.])
-            sum_of_success_and_death = self.vars[start + '_success'] + self.vars[start + '_death']
-            if sum_of_success_and_death > 1.:
-                print('Success and death sum to %s for %s outcome at %s time'
-                      %(sum_of_success_and_death, start, self.time))
 
         # find the proportion of deaths/defaults during the infectious and non-infectious stages
         props = {}
@@ -793,24 +806,29 @@ class ConsolidatedModel(StratifiedModel):
 
                 # find the success proportions
                 start = 'program_prop_treatment' + strain + history
-                self.vars[start + '_success' + treatment_stage] \
-                    = 1. - self.vars[start + '_default' + treatment_stage] \
-                      - self.vars[start + '_death' + treatment_stage]
+                self.vars[start + '_success' + treatment_stage] = 1. - self.vars[start + '_default' + treatment_stage] \
+                                                                  - self.vars[start + '_death' + treatment_stage]
 
                 # find the corresponding rates from the proportions
                 for outcome in self.outcomes:
                     end = strain + history + outcome + treatment_stage
                     self.vars['program_rate_treatment' + end] \
-                        = self.vars['program_prop_treatment' + end]\
+                        = self.vars['program_prop_treatment' + end] \
                           / self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain]
 
-                # split default according to whether amplification occurs (if not the most resistant strain)
-                if self.is_amplification:
+    def calculate_amplification_prop(self, strain):
+        # split default according to whether amplification occurs (if not the most resistant strain)
+
+        if self.is_amplification:
+            for history in self.histories:
+                for treatment_stage in self.treatment_stages:
                     start = 'program_rate_treatment' + strain + history + '_default' + treatment_stage
                     self.vars[start + '_amplify'] \
                         = self.vars[start] * self.vars['epi_prop_amplification']
                     self.vars[start + '_noamplify'] \
                         = self.vars[start] * (1. - self.vars['epi_prop_amplification'])
+
+    def calculate_misassigned_outcomes(self, strain):
 
         # create new vars for misassigned individuals
         if len(self.strains) > 1 and self.is_misassignment and strain != '_ds':
@@ -849,8 +867,7 @@ class ConsolidatedModel(StratifiedModel):
                                     end = treatment_type + history + outcome + treatment_stage
                                     self.vars['program_rate_treatment' + end] \
                                         = self.vars['program_prop_treatment' + end] \
-                                          / self.vars['tb_timeperiod' + treatment_stage + '_ontreatment'
-                                                      + treated_as]
+                                          / self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + treated_as]
 
                                 # split default according to whether amplification occurs
                                 if self.is_amplification:

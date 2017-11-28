@@ -1004,20 +1004,15 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         # treatment support
+        strain_types = copy.copy(self.strains)
+        if '' not in self.strains: strain_types.append('')
         for intervention in ['treatment_support_relative', 'treatment_support_absolute']:
-            if 'int_prop_' + intervention in self.relevant_interventions:
-                self.vars['popsize_' + intervention] = 0.
-                for compartment in self.compartments:
-                    if 'treatment_' in compartment:
-                        self.vars['popsize_' + intervention] += self.compartments[compartment]
-
-        # treatment support by strain
-        for strain in self.strains:
-            if 'int_prop_treatment_support_relative' + strain in self.relevant_interventions:
-                self.vars['popsize_treatment_support_relative' + strain] = 0.
-                for compartment in self.compartments:
-                    if 'treatment_' in compartment and strain + '_' in compartment:
-                        self.vars['popsize_treatment_support_relative' + strain] += self.compartments[compartment]
+            for strain in strain_types:
+                if 'int_prop_' + intervention + strain in self.relevant_interventions:
+                    self.vars['popsize_' + intervention + strain] = 0.
+                    for compartment in self.compartments:
+                        if 'treatment_' in compartment and strain in compartment:
+                            self.vars['popsize_' + intervention + strain] += self.compartments[compartment]
 
         # ambulatory care
         for organ in self.organ_status:

@@ -277,12 +277,13 @@ class ConsolidatedModel(StratifiedModel):
         if self.is_lowquality: self.calculate_lowquality_detection_vars()
         self.calculate_await_treatment_var()
         if self.is_amplification: self.calculate_amplification_var()
-        for strain in self.strains:
-            self.calculate_treatment_timeperiod_vars(strain)
-            self.calculate_treatment_rates_vars(strain)
         if 'int_prop_shortcourse_mdr' in self.relevant_interventions \
                 and self.shortcourse_improves_outcomes and len(self.strains) > 1:
             self.adjust_treatment_outcomes_shortcourse()
+        for strain in self.strains:
+            self.calculate_treatment_timeperiod_vars(strain)
+            self.adjust_treatment_outcomes_support(strain)
+            self.calculate_treatment_rates_vars(strain)
         if 'agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions:
             self.calculate_ipt_effect()
         self.calculate_force_infection()
@@ -718,36 +719,42 @@ class ConsolidatedModel(StratifiedModel):
                                                          self.params['int_prop_treatment_death_shortcoursemdr'],
                                                          self.vars['int_prop_shortcourse_mdr'])
 
+    def adjust_treatment_outcomes_support(self, strain):
+        """
+        Add some extra treatment success if the treatment support intervention is active, either for a specific strain
+        or for all outcomes. Also able to select as to whether the improvement is a relative reduction in poor outcomes
+        or an improvement towards an idealised value. Note that the idealised values do not differ by treatment history
+        but can differ by strain.
+        """
+
+        strain_types = [strain]
+        if '' not in self.strains: strain_types.append('')
+        for strain_type in strain_types:
+            if 'int_prop_treatment_support_relative' + strain_type in self.relevant_interventions:
+                for history in self.histories:
+                    self.vars['program_prop_treatment' + strain + history + '_success'] \
+                        += (1. - self.vars['program_prop_treatment' + strain + history + '_success']) \
+                           * self.params['int_prop_treatment_support_improvement' + strain_type] \
+                           * self.vars['int_prop_treatment_support_relative' + strain_type]
+                    self.vars['program_prop_treatment' + strain + history + '_death'] \
+                        -= self.vars['program_prop_treatment' + strain + history + '_death'] \
+                           * self.params['int_prop_treatment_support_improvement' + strain_type] \
+                           * self.vars['int_prop_treatment_support_relative' + strain_type]
+
+            elif 'int_prop_treatment_support_absolute' + strain_type in self.relevant_interventions:
+                for history in self.histories:
+                    self.vars['program_prop_treatment' + strain + history + '_success'] \
+                        = t_k.increase_parameter_closer_to_value(
+                        self.vars['program_prop_treatment' + strain + history + '_success'],
+                        self.vars['program_prop_treatment_success_ideal' + strain_type],
+                        self.vars['int_prop_treatment_support_absolute' + strain_type])
+                    self.vars['program_prop_treatment' + strain + history + '_death'] \
+                        = t_k.decrease_parameter_closer_to_value(
+                        self.vars['program_prop_treatment' + strain + history + '_death'],
+                        self.params['int_prop_treatment_death_ideal' + strain_type],
+                        self.vars['int_prop_treatment_support_absolute' + strain_type])
+
     def calculate_treatment_rates_vars(self, strain):
-        """
-        Work out rates of progression through treatment by stage of treatment from the proportions provided for success
-        and death.
-        """
-
-        # add some extra treatment success if the treatment support intervention is active
-        if 'int_prop_treatment_support_relative' in self.relevant_interventions:
-            for history in self.histories:
-                self.vars['program_prop_treatment' + history + '_success' + strain] \
-                    += (1. - self.vars['program_prop_treatment' + history + '_success' + strain]) \
-                       * self.params['int_prop_treatment_support_improvement'] \
-                       * self.vars['int_prop_treatment_support_relative']
-                self.vars['program_prop_treatment' + history + '_death' + strain] \
-                    -= self.vars['program_prop_treatment' + history + '_death' + strain] \
-                       * self.params['int_prop_treatment_support_improvement'] \
-                       * self.vars['int_prop_treatment_support_relative']
-
-        elif 'int_prop_treatment_support_absolute' in self.relevant_interventions and strain == self.strains[0]:
-            for history in self.histories:
-                self.vars['program_prop_treatment' + history + '_success' + strain] \
-                    = t_k.increase_parameter_closer_to_value(
-                    self.vars['program_prop_treatment' + history + '_success' + strain],
-                    self.vars['program_prop_treatment_success_ideal'],
-                    self.vars['int_prop_treatment_support_absolute'])
-                self.vars['program_prop_treatment' + history + '_death' + strain] \
-                    = t_k.decrease_parameter_closer_to_value(
-                    self.vars['program_prop_treatment' + history + '_death' + strain],
-                    self.params['int_prop_treatment_death_ideal'],
-                    self.vars['int_prop_treatment_support_absolute'])
 
         # subtract some treatment success if ngo activities program has discontinued
         # if 'int_prop_ngo_activities' in self.relevant_interventions:

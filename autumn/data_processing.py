@@ -911,6 +911,7 @@ class Inputs:
                     or (len(self.organ_status) == 1 and 'smearneg' in time_variant) \
                     or ('lowquality' in time_variant and not self.gui_inputs['is_lowquality']) \
                     or (len(self.strains) > 1 and 'treatment_' in time_variant and 'timeperiod_' not in time_variant
+                        and '_support' not in time_variant
                         and ('_ds' not in time_variant and 'dr' not in time_variant
                              and '_inappropriate' not in time_variant)):
                 self.irrelevant_time_variants += [time_variant]

@@ -725,6 +725,9 @@ class ConsolidatedModel(StratifiedModel):
         or for all outcomes. Also able to select as to whether the improvement is a relative reduction in poor outcomes
         or an improvement towards an idealised value. Note that the idealised values do not differ by treatment history
         but can differ by strain.
+
+        Note that the strain-specific absolute interventions still need ideal values to be specified (at the time of
+        writing).
         """
 
         strain_types = [strain]
@@ -746,7 +749,7 @@ class ConsolidatedModel(StratifiedModel):
                     self.vars['program_prop_treatment' + strain + history + '_success'] \
                         = t_k.increase_parameter_closer_to_value(
                         self.vars['program_prop_treatment' + strain + history + '_success'],
-                        self.vars['program_prop_treatment_success_ideal' + strain_type],
+                        self.params['program_prop_treatment_success_ideal' + strain_type],
                         self.vars['int_prop_treatment_support_absolute' + strain_type])
                     self.vars['program_prop_treatment' + strain + history + '_death'] \
                         = t_k.decrease_parameter_closer_to_value(
@@ -762,18 +765,6 @@ class ConsolidatedModel(StratifiedModel):
         #         -= self.vars['program_prop_treatment_success' + strain] \
         #             * self.params['int_prop_treatment_support_improvement'] \
         #             * (1. - self.vars['int_prop_ngo_activities'])
-
-        #  add some extra treatment success if food vouchers are provided to treated cases
-        if 'int_prop_food_voucher' + strain in self.relevant_interventions:
-            for history in self.histories:
-                self.vars['program_prop_treatment' + strain + history + '_success'] \
-                   += (1. - self.vars['program_prop_treatment' + strain + history + '_success']) \
-                      * self.params['int_prop_food_voucher_improvement'] \
-                      * self.vars['int_prop_food_voucher' + strain]
-                self.vars['program_prop_treatment' + strain + history + '_death'] \
-                    -= self.vars['program_prop_treatment' + strain + history + '_death'] \
-                      * self.params['int_prop_food_voucher_improvement'] \
-                      * self.vars['int_prop_food_voucher' + strain]
 
         # calculate the default proportion as the remainder from success and death
         for history in self.histories:
@@ -1020,6 +1011,14 @@ class ConsolidatedModel(StratifiedModel):
                     if 'treatment_' in compartment:
                         self.vars['popsize_' + intervention] += self.compartments[compartment]
 
+        # treatment support by strain
+        for strain in self.strains:
+            if 'int_prop_treatment_support_relative' + strain in self.relevant_interventions:
+                self.vars['popsize_treatment_support_relative' + strain] = 0.
+                for compartment in self.compartments:
+                    if 'treatment_' in compartment and strain + '_' in compartment:
+                        self.vars['popsize_treatment_support_relative' + strain] += self.compartments[compartment]
+
         # ambulatory care
         for organ in self.organ_status:
             if 'int_prop_ambulatorycare' + organ in self.relevant_interventions:
@@ -1027,14 +1026,6 @@ class ConsolidatedModel(StratifiedModel):
                 for compartment in self.compartments:
                     if 'treatment_' in compartment and organ in compartment:
                         self.vars['popsize_ambulatorycare' + organ] += self.compartments[compartment]
-
-        # food vouchers
-        for strain in self.strains:
-            if 'int_prop_food_voucher' + strain in self.relevant_interventions:
-                self.vars['popsize_food_voucher' + strain] = 0.
-                for compartment in self.compartments:
-                    if 'treatment_' in compartment and strain + '_' in compartment:
-                        self.vars['popsize_food_voucher' + strain] += self.compartments[compartment]
 
         # IPT: popsize defined as the household contacts of active cases identified by the high-quality sector
         for agegroup in self.agegroups:

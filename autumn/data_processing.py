@@ -1016,8 +1016,8 @@ class Inputs:
 
         if len(self.strains) > 1:
             self.potential_interventions_to_cost += ['shortcourse_mdr']
-            self.potential_interventions_to_cost += ['food_voucher_ds']
-            self.potential_interventions_to_cost += ['food_voucher_mdr']
+            self.potential_interventions_to_cost += ['treatment_support_relative_ds']
+            self.potential_interventions_to_cost += ['treatment_support_relative_mdr']
         for organ in self.organ_status:
             self.potential_interventions_to_cost += ['ambulatorycare' + organ]
         if self.gui_inputs['is_lowquality']:

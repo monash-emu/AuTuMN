@@ -108,7 +108,7 @@ class Inputs:
         self.potential_interventions_to_cost \
             = ['vaccination', 'xpert', 'treatment_support_relative', 'treatment_support_absolute', 'smearacf',
                'xpertacf', 'ipt_age0to5', 'ipt_age5to15', 'decentralisation', 'improve_dst', 'bulgaria_improve_dst',
-               'intensive_screening', 'ipt_age15up', 'ngo_activities', 'opendoors_activities', 'awareness_raising']
+               'intensive_screening', 'ipt_age15up', 'ngo_activities', 'awareness_raising']
         self.freeze_times = {}
 
         # miscellaneous
@@ -847,7 +847,8 @@ class Inputs:
         for time_variant in self.time_variants:
 
             # add zero at starting time for model run to all program proportions
-            if ('program_prop' in time_variant or 'int_prop' in time_variant) and '_death' not in time_variant:
+            if ('program_prop' in time_variant or 'int_prop' in time_variant) and '_death' not in time_variant\
+                    and '_dots_contributor' not in time_variant:
                 self.time_variants[time_variant][int(self.model_constants['start_time'])] = 0.
 
             # remove the load_data keys, as they have been used and are now redundant

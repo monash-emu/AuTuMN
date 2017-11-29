@@ -346,6 +346,9 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         if 'int_prop_decentralisation' in self.relevant_interventions: self.adjust_case_detection_for_decentralisation()
+        if 'int_prop_dots_contributor' in self.relevant_interventions \
+            and self.vars['int_prop_dots_contributor'] < 1.:
+            self.adjust_case_detection_for_dots_contributor()
         # if 'int_prop_opendoors_activities' in self.relevant_interventions \
         #         or 'int_prop_ngo_activities' in self.relevant_interventions:
         #     self.adjust_ipt_for_opendoors()
@@ -370,6 +373,17 @@ class ConsolidatedModel(StratifiedModel):
             = t_k.increase_parameter_closer_to_value(self.vars['program_prop_detect'],
                                                      self.params['int_ideal_detection'],
                                                      self.vars['int_prop_decentralisation'])
+
+    def adjust_case_detection_for_dots_contributor(self):
+        """
+        Adjust detection rates for a program that contributes to basic DOTS activities in all groups. Originally coded
+        for the "Open Doors" program in Bulgaria, which contributes a small proportion of all case detection in the
+        country. Essentially this is passive case finding as persons with symptoms are encouraged to present, so the
+        reported case detection rate for the country is assumed to incorporate this.
+        """
+
+        self.vars['program_prop_detect'] \
+            *= 1. - self.params['int_prop_detection_dots_contributor'] * (1. - self.vars['int_prop_dots_contributor'])
 
     # def adjust_ipt_for_opendoors(self):
     #     """
@@ -448,13 +462,6 @@ class ConsolidatedModel(StratifiedModel):
                     = self.vars['program_prop_detect' + organ] \
                       * (1. / self.params['tb_timeperiod_activeuntreated'] + 1. / self.vars['demo_life_expectancy']) \
                       / (1. - self.vars['program_prop_detect' + organ])
-
-                # adjust detection rates for opendoors activities in all groups
-                if 'int_prop_opendoors_activities' in self.relevant_interventions \
-                        and self.vars['int_prop_opendoors_activities'] < 1.:
-                    self.vars['program_rate_detect' + organ + riskgroup] \
-                        *= 1. - self.params['int_prop_detection_opendoors'] \
-                                * (1. - self.vars['int_prop_opendoors_activities'])
 
                 # adjust detection rates for ngo activities in specific risk-groups
                 if 'int_prop_ngo_activities' in self.relevant_interventions \
@@ -1122,10 +1129,10 @@ class ConsolidatedModel(StratifiedModel):
                 if 'treatment' in compartment and '_mdr' in compartment:
                     self.vars['popsize_shortcourse_mdr'] += self.compartments[compartment]
 
-        # open doors activities
-        if 'int_prop_opendoors_activities' in self.relevant_interventions:
-            # number of diagnosed cases (LTBI + TB) if coverage was 100%
-            self.vars['popsize_opendoors_activities'] = 598 * 2.
+        # # open doors activities
+        # if 'int_prop_opendoors_activities' in self.relevant_interventions:
+        #     # number of diagnosed cases (LTBI + TB) if coverage was 100%
+        #     self.vars['popsize_opendoors_activities'] = 598 * 2.
 
         # NGO activities
         if 'int_prop_ngo_activities' in self.relevant_interventions:

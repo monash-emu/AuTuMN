@@ -829,27 +829,28 @@ class ConsolidatedModel(StratifiedModel):
         self.vars[start + '_noamplify'] = self.vars[start] * (1. - self.vars['epi_prop_amplification'])
 
     def calculate_misassigned_outcomes(self, strain, history):
+        """
+        Find treatment outcomes for patients assigned to an incorrect regimen.
+        """
 
-        # create new vars for misassigned individuals
         for treated_as in self.strains:  # for each strain
-            if treated_as != strain:  # misassigned strain has to be different from the actual strain
-                if self.strains.index(treated_as) < self.strains.index(strain):  # if treated with worse regimen
+            if treated_as != strain:  # if assigned strain is different from the actual strain
+                if self.strains.index(treated_as) < self.strains.index(strain):  # if regimen is worse
 
                     # calculate the default proportion as the remainder from success and death
                     start = 'program_prop_treatment_inappropriate' + history
                     self.vars[start + '_default'] = 1. - self.vars[start + '_success'] - self.vars[start + '_death']
 
-                    props = {}
                     for outcome in self.outcomes[1:]:
                         treatment_type = strain + '_as' + treated_as[1:]
-                        props['_infect'], props['_noninfect'] \
+                        outcomes_by_stage \
                             = find_outcome_proportions_by_period(
                             self.vars['program_prop_treatment_inappropriate' + history + outcome],
                             self.params['tb_timeperiod_infect_ontreatment' + treated_as],
                             self.params['tb_timeperiod_ontreatment' + treated_as])
-                        for treatment_stage in props:
+                        for s, stage in enumerate(self.treatment_stages):
                             self.vars['program_prop_treatment' + treatment_type + history + outcome + treatment_stage] \
-                                = props[treatment_stage]
+                                = outcomes_by_stage[s]
 
                     for treatment_stage in self.treatment_stages:
                         # find the success proportions

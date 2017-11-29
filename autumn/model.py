@@ -573,36 +573,37 @@ class ConsolidatedModel(StratifiedModel):
 
         # with misassignment
         for organ in self.organs_for_detection:
-            prop_firstline = self.vars['program_prop_firstline_dst']
+            if len(self.strains) > 1 and self.is_misassignment:
+                prop_firstline_dst = self.vars['program_prop_firstline_dst']
 
-            # add effect of Xpert on identification, assuming that independent distribution to conventional DST
-            if 'int_prop_xpert' in self.relevant_interventions:
-                prop_firstline \
-                    += (1. - prop_firstline) \
-                       * self.vars['int_prop_xpert'] * self.params['int_prop_xpert_sensitivity_mdr']
+                # add effect of Xpert on identification, assuming that independent distribution to conventional DST
+                if 'int_prop_xpert' in self.relevant_interventions:
+                    prop_firstline_dst \
+                        += (1. - prop_firstline_dst) \
+                           * self.vars['int_prop_xpert'] * self.params['int_prop_xpert_sensitivity_mdr']
 
-            # add effect of improve_dst program for culture-positive cases only
-            if 'int_prop_improve_dst' in self.relevant_interventions:
-                if organ == '_smearpos':
-                    prop_firstline += (1. - prop_firstline) * self.vars['int_prop_improve_dst'] * \
-                                      self.params['program_prop_smearpos_cultured']
-                elif organ == '_smearneg':
-                    prop_firstline += (1. - prop_firstline) * self.vars['int_prop_improve_dst'] * \
-                                      self.params['program_prop_smearneg_cultured'] * \
-                                      self.params['tb_prop_smearneg_culturepos']
-                elif organ == '_extrapul':
-                    prop_firstline = 0.
+                # add effect of improve_dst program for culture-positive cases only
+                if 'int_prop_improve_dst' in self.relevant_interventions:
+                    if organ == '_smearpos':
+                        prop_firstline_dst += (1. - prop_firstline_dst) * self.vars['int_prop_improve_dst'] * \
+                                              self.params['program_prop_smearpos_cultured']
+                    elif organ == '_smearneg':
+                        prop_firstline_dst += (1. - prop_firstline_dst) * self.vars['int_prop_improve_dst'] * \
+                                              self.params['program_prop_smearneg_cultured'] * \
+                                              self.params['tb_prop_smearneg_culturepos']
+                    elif organ == '_extrapul':
+                        prop_firstline_dst = 0.
 
-            for riskgroup in self.riskgroups_for_detection:
-                if len(self.strains) > 1 and self.is_misassignment:
+                for riskgroup in self.riskgroups_for_detection:
+
                     # determine rates of identification/misidentification as each strain
                     self.vars['program_rate_detect' + organ + riskgroup + '_ds_asds'] \
                         = self.vars['program_rate_detect' + organ + riskgroup]
                     self.vars['program_rate_detect' + organ + riskgroup + '_ds_asmdr'] = 0.
                     self.vars['program_rate_detect' + organ + riskgroup + '_mdr_asds'] \
-                        = (1. - prop_firstline) * self.vars['program_rate_detect' + organ + riskgroup]
+                        = (1. - prop_firstline_dst) * self.vars['program_rate_detect' + organ + riskgroup]
                     self.vars['program_rate_detect' + organ + riskgroup + '_mdr_asmdr'] \
-                        = prop_firstline * self.vars['program_rate_detect' + organ + riskgroup]
+                        = prop_firstline_dst * self.vars['program_rate_detect' + organ + riskgroup]
 
                     # if a third strain is present
                     if len(self.strains) > 2:
@@ -610,15 +611,16 @@ class ConsolidatedModel(StratifiedModel):
                         self.vars['program_rate_detect' + organ + riskgroup + '_ds_asxdr'] = 0.
                         self.vars['program_rate_detect' + organ + riskgroup + '_mdr_asxdr'] = 0.
                         self.vars['program_rate_detect' + organ + riskgroup + '_xdr_asds'] \
-                            = (1. - prop_firstline) * self.vars['program_rate_detect' + organ + riskgroup]
+                            = (1. - prop_firstline_dst) * self.vars['program_rate_detect' + organ + riskgroup]
                         self.vars['program_rate_detect' + organ + riskgroup + '_xdr_asmdr'] \
-                            = prop_firstline \
+                            = prop_firstline_dst \
                               * (1. - prop_secondline) * self.vars['program_rate_detect' + organ + riskgroup]
                         self.vars['program_rate_detect' + organ + riskgroup + '_xdr_asxdr'] \
-                            = prop_firstline * prop_secondline * self.vars['program_rate_detect' + organ + riskgroup]
+                            = prop_firstline_dst * prop_secondline * self.vars['program_rate_detect' + organ + riskgroup]
 
-                # without misassignment, everyone is correctly allocated
-                elif len(self.strains) > 1:
+            # without misassignment, everyone is correctly allocated
+            elif len(self.strains) > 1:
+                for riskgroup in self.riskgroups_for_detection:
                     for strain in self.strains:
                         self.vars['program_rate_detect' + organ + riskgroup + strain + '_as' + strain[1:]] \
                             = self.vars['program_rate_detect' + organ + riskgroup]

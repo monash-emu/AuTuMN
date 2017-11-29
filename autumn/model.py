@@ -260,19 +260,7 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_populations()
         self.calculate_birth_rates_vars()
         self.calculate_progression_vars()
-        if 'int_prop_decentralisation' in self.relevant_interventions: self.adjust_case_detection_for_decentralisation()
-        if 'int_prop_opendoors_activities' in self.relevant_interventions \
-                or 'int_prop_ngo_activities' in self.relevant_interventions:
-            self.adjust_ipt_for_opendoors()
-        if self.vary_detection_by_organ:
-            self.calculate_case_detection_by_organ()
-            self.adjust_smearneg_detection_for_xpert()
-        self.calculate_detect_missed_vars()
-        if self.vary_detection_by_riskgroup:
-            self.calculate_acf_rate()
-            self.calculate_intensive_screening_rate()
-            self.adjust_case_detection_for_acf()
-            self.adjust_case_detection_for_intensive_screening()
+        self.calculate_detection_vars()
         if self.is_misassignment: self.calculate_assignment_by_strain()
         if self.is_lowquality: self.calculate_lowquality_detection_vars()
         self.calculate_await_treatment_var()
@@ -351,6 +339,25 @@ class ConsolidatedModel(StratifiedModel):
                         self.vars['tb_rate' + timing + '_progression' + organ + riskgroup + agegroup] \
                             = self.vars['epi_prop' + organ] \
                               * self.params['tb_rate' + timing + '_progression' + riskgroup + agegroup]
+
+    def calculate_detection_vars(self):
+        """
+        Master case detection method to collate all the methods relating to case detection.
+        """
+
+        if 'int_prop_decentralisation' in self.relevant_interventions: self.adjust_case_detection_for_decentralisation()
+        if 'int_prop_opendoors_activities' in self.relevant_interventions \
+                or 'int_prop_ngo_activities' in self.relevant_interventions:
+            self.adjust_ipt_for_opendoors()
+        if self.vary_detection_by_organ:
+            self.calculate_case_detection_by_organ()
+            self.adjust_smearneg_detection_for_xpert()
+        self.calculate_detect_missed_vars()
+        if self.vary_detection_by_riskgroup:
+            self.calculate_acf_rate()
+            self.calculate_intensive_screening_rate()
+            self.adjust_case_detection_for_acf()
+            self.adjust_case_detection_for_intensive_screening()
 
     def adjust_case_detection_for_decentralisation(self):
         """

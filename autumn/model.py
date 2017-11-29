@@ -663,7 +663,7 @@ class ConsolidatedModel(StratifiedModel):
 
     def calculate_treatment_rates(self):
         """
-        Master method to coordinate all treatment var-related methods.
+        Master method to coordinate treatment var-related methods.
         """
 
         self.vars['epi_prop_amplification'] = self.params['tb_prop_amplification'] \
@@ -681,7 +681,8 @@ class ConsolidatedModel(StratifiedModel):
                 for stage in self.treatment_stages:
                     self.assign_success_prop_by_treatment_stage(strain, history, stage)
                     self.convert_treatment_props_to_rates(strain, history, stage)
-                    if self.is_amplification: self.calculate_amplification_props(strain, history, stage)
+                    if self.is_amplification:
+                        self.calculate_amplification_props(strain + history + '_default' + stage)
                 if len(self.strains) > 1 and self.is_misassignment and strain != self.strains[0]:
                     self.calculate_misassigned_outcomes(strain, history)
 
@@ -816,7 +817,7 @@ class ConsolidatedModel(StratifiedModel):
             self.vars['program_rate_treatment' + end] = self.vars['program_prop_treatment' + end] \
                                                         / self.vars['tb_timeperiod' + stage + '_ontreatment' + strain]
 
-    def calculate_amplification_props(self, strain, history, stage):
+    def calculate_amplification_props(self, start):
         """
         Split default according to whether amplification occurs (if not the most resistant strain).
         Previously had a sigmoidal function for amplification proportion, but now thinking that the following switch is
@@ -824,7 +825,7 @@ class ConsolidatedModel(StratifiedModel):
         adjust the time that MDR emerges during model running.
         """
 
-        start = 'program_rate_treatment' + strain + history + '_default' + stage
+        start = 'program_rate_treatment' + start
         self.vars[start + '_amplify'] = self.vars[start] * self.vars['epi_prop_amplification']
         self.vars[start + '_noamplify'] = self.vars[start] * (1. - self.vars['epi_prop_amplification'])
 
@@ -849,7 +850,7 @@ class ConsolidatedModel(StratifiedModel):
                             self.params['tb_timeperiod_infect_ontreatment' + treated_as],
                             self.params['tb_timeperiod_ontreatment' + treated_as])
                         for s, stage in enumerate(self.treatment_stages):
-                            self.vars['program_prop_treatment' + treatment_type + history + outcome + treatment_stage] \
+                            self.vars['program_prop_treatment' + treatment_type + history + outcome + stage] \
                                 = outcomes_by_stage[s]
 
                     for treatment_stage in self.treatment_stages:
@@ -866,12 +867,8 @@ class ConsolidatedModel(StratifiedModel):
                                 = self.vars['program_prop_treatment' + end] \
                                   / self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + treated_as]
 
-                        # split default according to whether amplification occurs
                         if self.is_amplification:
-                            start = 'program_rate_treatment' + treatment_type + history + '_default' + treatment_stage
-                            self.vars[start + '_amplify'] = self.vars[start] * self.vars['epi_prop_amplification']
-                            self.vars[start + '_noamplify'] \
-                                = self.vars[start] * (1. - self.vars['epi_prop_amplification'])
+                            self.calculate_amplification_props(treatment_type + history + '_default' + treatment_stage)
 
     def calculate_ipt_effect(self):
         """

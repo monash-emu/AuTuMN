@@ -666,7 +666,6 @@ class ConsolidatedModel(StratifiedModel):
         Master method to coordinate all treatment var-related methods.
         """
 
-        if self.is_amplification: self.calculate_amplification_var()
         if 'int_prop_shortcourse_mdr' in self.relevant_interventions \
                 and self.shortcourse_improves_outcomes and len(self.strains) > 1:
             self.adjust_treatment_outcomes_shortcourse()
@@ -677,16 +676,6 @@ class ConsolidatedModel(StratifiedModel):
             self.calculate_treatment_rates_from_props(strain)
             if self.is_amplification: self.calculate_amplification_props(strain)
             self.calculate_misassigned_outcomes(strain)
-
-    def calculate_amplification_var(self):
-        """
-        Previously had a sigmoidal function for amplification proportion, but now thinking that the following switch is
-        a better approach because scale-up functions are all calculated in data_processing and we need to be able to
-        adjust the time that MDR emerges during model running.
-        """
-
-        self.vars['epi_prop_amplification'] = 0. if self.time < self.params['mdr_introduce_time'] \
-            else self.params['tb_prop_amplification']
 
     def calculate_treatment_timeperiod_vars(self, strain):
         """
@@ -790,8 +779,8 @@ class ConsolidatedModel(StratifiedModel):
         #             * (1. - self.vars['int_prop_ngo_activities'])
 
         # find the proportion of deaths/defaults during the infectious and non-infectious stages
-        props = {}
         for history in self.histories:
+            props = {}
             for outcome in self.outcomes[1:]:
                 props['_infect'], props['_noninfect'] \
                     = find_outcome_proportions_by_period(
@@ -819,8 +808,13 @@ class ConsolidatedModel(StratifiedModel):
     def calculate_amplification_props(self, strain):
         """
         Split default according to whether amplification occurs (if not the most resistant strain).
+        Previously had a sigmoidal function for amplification proportion, but now thinking that the following switch is
+        a better approach because scale-up functions are all calculated in data_processing and we need to be able to
+        adjust the time that MDR emerges during model running.
         """
 
+        self.vars['epi_prop_amplification'] = self.params['tb_prop_amplification'] \
+            if self.time > self.params['mdr_introduce_time'] else 0.
         for history in self.histories:
             for treatment_stage in self.treatment_stages:
                 start = 'program_rate_treatment' + strain + history + '_default' + treatment_stage

@@ -31,7 +31,8 @@ def find_outcome_proportions_by_period(proportion, early_period, total_period):
     """
 
     if proportion > 1. or proportion < 0.:
-        warnings.warn('Proportion parameter not between zero and one, value is %s' %proportion)
+        warnings.warn('Proportion parameter not between zero and one, value is %s' % proportion)
+
     # to avoid errors where the proportion is exactly one (although the function isn't really intended for this):
     if proportion > .99:
         early_proportion = 0.99
@@ -86,18 +87,18 @@ class ConsolidatedModel(StratifiedModel):
         self.inputs = inputs
         self.scenario = scenario
 
-        # model attributes to be set directly to attributes of the inputs object
+        # start_time can't stay as a model constant, as it must be set for each scenario individually
+        self.start_time = inputs.model_constants['start_time']
+
+        # model attributes to be set directly to inputs object attributes
         for attribute in ['compartment_types', 'organ_status', 'strains', 'riskgroups', 'agegroups', 'mixing',
                           'vary_detection_by_organ', 'organs_for_detection', 'riskgroups_for_detection',
                           'vary_detection_by_riskgroup', 'vary_force_infection_by_riskgroup', 'histories']:
             setattr(self, attribute, getattr(inputs, attribute))
 
-        # model attributes to set to just the relevant scenario key from an inputs dictionary
+        # model attributes to set to only the relevant scenario key from an inputs dictionary
         for attribute in ['relevant_interventions', 'scaleup_fns', 'interventions_to_cost']:
             setattr(self, attribute, getattr(inputs, attribute)[scenario])
-
-        # start_time can't be given as a model constant, as it must be set for each scenario individually
-        self.start_time = inputs.model_constants['start_time']
 
         # model attributes to be set directly to attributes from the GUI object
         for attribute in ['is_lowquality', 'is_amplification', 'is_misassignment', 'is_timevariant_organs', 'country',
@@ -114,12 +115,11 @@ class ConsolidatedModel(StratifiedModel):
 
         # list of infectious compartments
         self.infectious_tags = ['active', 'missed', 'detect', 'treatment_infect', 'lowquality']
-        self.initial_compartments = {}
 
-        # to loop over all risk groups if needed, or otherwise to just run once
+        # to loop force of infection code over all risk groups if variable, or otherwise to just run once
         self.force_riskgroups = copy.copy(self.riskgroups) if self.vary_force_infection_by_riskgroup else ['']
 
-        # treatment outcomes
+        # treatment strings
         self.outcomes = ['_success', '_death', '_default']
         self.treatment_stages = ['_infect', '_noninfect']
 
@@ -141,31 +141,32 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         # extract values for compartment initialisation by compartment type
+        initial_compartments = {}
         for compartment in self.compartment_types:
             if compartment in self.inputs.model_constants:
-                self.initial_compartments[compartment] = self.params[compartment]
+                initial_compartments[compartment] = self.params[compartment]
 
         # initialise to zero
         for agegroup in self.agegroups:
             for riskgroup in self.riskgroups:
                 for history in self.histories:
                     for compartment in self.compartment_types:
+                        end = riskgroup + history + agegroup
 
                         # replicate susceptible for age and risk groups
                         if 'susceptible' in compartment or 'onipt' in compartment:
-                            self.set_compartment(compartment + riskgroup + history + agegroup, 0.)
+                            self.set_compartment(compartment + end, 0.)
 
                         # replicate latent classes for age groups, risk groups and strains
                         elif 'latent' in compartment:
                             for strain in self.strains:
-                                self.set_compartment(compartment + strain + riskgroup + history + agegroup, 0.)
+                                self.set_compartment(compartment + strain + end, 0.)
 
                         # replicate active classes for age groups, risk groups, strains and organs
                         elif 'active' in compartment or 'missed' in compartment or 'lowquality' in compartment:
                             for strain in self.strains:
                                 for organ in self.organ_status:
-                                    self.set_compartment(compartment + organ + strain + riskgroup + history + agegroup,
-                                                         0.)
+                                    self.set_compartment(compartment + organ + strain + end, 0.)
 
                         # replicate treatment classes for age groups, risk groups, strains, organs and assigned strains
                         else:
@@ -174,46 +175,61 @@ class ConsolidatedModel(StratifiedModel):
                                     if self.is_misassignment:
                                         for assigned_strain in self.strains:
                                             self.set_compartment(
-                                                compartment + organ + strain + '_as' + assigned_strain[1:] + riskgroup
-                                                + history + agegroup, 0.)
+                                                compartment + organ + strain + '_as' + assigned_strain[1:] + end, 0.)
                                     else:
-                                        self.set_compartment(
-                                            compartment + organ + strain + riskgroup + history + agegroup, 0.)
+                                        self.set_compartment(compartment + organ + strain + end, 0.)
 
                 # remove the unnecessary fully susceptible treated compartments
                 self.remove_compartment('susceptible_fully' + riskgroup + self.histories[-1] + agegroup)
 
-        # find starting proportions for risk groups
         if len(self.riskgroups) > 1:
-            start_risk_prop = {'_norisk': 1.}
-            for riskgroup in self.riskgroups:
-                if riskgroup != '_norisk':
-                    start_risk_prop[riskgroup] \
-                        = self.scaleup_fns['riskgroup_prop' + riskgroup](self.inputs.model_constants['start_time'])
-                    start_risk_prop['_norisk'] -= start_risk_prop[riskgroup]
+            start_risk_prop = self.find_starting_riskgroup_props()
         else:
             start_risk_prop = {'': 1.}
+        self.populate_initial_compartments(initial_compartments, start_risk_prop)
 
-        # arbitrarily split equally by age-groups and organ status
-        # start with everyone having least resistant strain (first in list) and having no treatment history
+    def find_starting_riskgroup_props(self):
+        """
+        Find starting proportions for risk groups using the functions for their scale-up evaluated at the starting time.
+        """
+
+        start_risk_prop = {'_norisk': 1.}
+        for riskgroup in self.riskgroups:
+            if riskgroup != '_norisk':
+                start_risk_prop[riskgroup] \
+                    = self.scaleup_fns['riskgroup_prop' + riskgroup](self.inputs.model_constants['start_time'])
+                start_risk_prop['_norisk'] -= start_risk_prop[riskgroup]
+        return start_risk_prop
+
+    def populate_initial_compartments(self, initial_compartments, start_risk_prop):
+        """
+        Arbitrarily split equally by age-groups and organ status start with everyone having least resistant strain and
+        no treatment history.
+
+        Args:
+            initial_compartments: The initial compartment values to set, but without stratifications
+            start_risk_prop: Proportions to be allocated by risk group
+        """
+
         for compartment in self.compartment_types:
-            if compartment in self.initial_compartments:
+            if compartment in initial_compartments:
                 for agegroup in self.agegroups:
                     for riskgroup in self.riskgroups:
+                        end = riskgroup + self.histories[0] + agegroup
                         if 'susceptible' in compartment:
-                            self.set_compartment(compartment + riskgroup + self.histories[0] + agegroup,
-                                                 self.initial_compartments[compartment] * start_risk_prop[riskgroup]
-                                                 / len(self.agegroups))
+                            self.set_compartment(
+                                compartment + end,
+                                initial_compartments[compartment] * start_risk_prop[riskgroup] / len(self.agegroups))
                         elif 'latent' in compartment:
                             self.set_compartment(
-                                compartment + self.strains[0] + riskgroup + self.histories[0] + agegroup,
+                                compartment + self.strains[0] + end,
                                 self.initial_compartments[compartment] * start_risk_prop[riskgroup]
                                 / len(self.agegroups))
                         else:
                             for organ in self.organ_status:
                                 self.set_compartment(
-                                    compartment + organ + self.strains[0] + riskgroup + self.histories[0] + agegroup,
-                                    self.initial_compartments[compartment] * start_risk_prop[riskgroup]
+                                    compartment + organ + self.strains[0] + end,
+                                    initial_compartments[compartment] * start_risk_prop[riskgroup]
                                     / len(self.organ_status) / len(self.agegroups))
 
     ''' single method to process uncertainty parameters '''
@@ -224,13 +240,11 @@ class ConsolidatedModel(StratifiedModel):
         be processed in the data processing module.
         """
 
-        # find the case fatality of smear-negative TB using the relative case fatality
-        self.params['tb_prop_casefatality_untreated_smearneg'] \
-            = self.params['tb_prop_casefatality_untreated_smearpos'] \
-              * self.params['tb_relative_casefatality_untreated_smearneg']
-
-        # add the extrapulmonary case fatality (currently not entered from the spreadsheets)
-        self.params['tb_prop_casefatality_untreated_extrapul'] = self.params['tb_prop_casefatality_untreated_smearneg']
+        # find the case fatality of smear-negative and extrapulmonary TB using the relative case fatality
+        for organ in self.organ_status[1:]:
+            self.params['tb_prop_casefatality_untreated' + organ] \
+                = self.params['tb_prop_casefatality_untreated_smearpos'] \
+                  * self.params['tb_relative_casefatality_untreated_smearneg']
 
         # calculate the rates of death and recovery from the above parameters
         for organ in self.organ_status:

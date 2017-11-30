@@ -271,12 +271,9 @@ class ConsolidatedModel(StratifiedModel):
         self.ticker()
         # parameter values are calculated from the costs, but only in the future
         if self.eco_drives_epi and self.time > self.inputs.model_constants['recent_time']: self.update_vars_from_cost()
-        self.calculate_populations()
-        self.calculate_birth_rates_vars()
+        self.calculate_demographic_vars()
         self.calculate_progression_vars()
         self.calculate_detection_vars()
-        if self.is_misassignment: self.calculate_assignment_by_strain()
-        if self.is_lowquality: self.calculate_lowquality_detection_vars()
         self.calculate_await_treatment_var()
         self.calculate_treatment_rates()
         if 'agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions:
@@ -293,12 +290,22 @@ class ConsolidatedModel(StratifiedModel):
             print(int(self.time))
             self.next_time_point += 10.
 
+    def calculate_demographic_vars(self):
+        """
+        Short master method to all demographic calculations.
+        """
+
+        self.calculate_populations()
+        self.calculate_birth_rates_vars()
+
     def calculate_populations(self):
         """
         Find the total absolute numbers of people in the population by each risk-group and overall.
         """
 
-        for riskgroup in self.riskgroups + ['']:
+        population_riskgroups = copy.copy(self.riskgroups)
+        if '' not in population_riskgroups: population_riskgroups.append('')
+        for riskgroup in population_riskgroups:
             self.vars['population' + riskgroup] = 0.
             for label in self.labels:
                 if riskgroup in label: self.vars['population' + riskgroup] += self.compartments[label]
@@ -306,7 +313,6 @@ class ConsolidatedModel(StratifiedModel):
             self.vars['population' + history] = 0.
             for label in self.labels:
                 if history in label: self.vars['population' + history] += self.compartments[label]
-        for history in self.histories:
             self.vars['prop_population' + history] = self.vars['population' + history] / self.vars['population']
 
     def calculate_birth_rates_vars(self):
@@ -375,6 +381,8 @@ class ConsolidatedModel(StratifiedModel):
             self.calculate_intensive_screening_rate()
             self.adjust_case_detection_for_acf()
             self.adjust_case_detection_for_intensive_screening()
+        if self.is_misassignment: self.calculate_assignment_by_strain()
+        if self.is_lowquality: self.calculate_lowquality_detection_vars()
 
     def adjust_case_detection_for_decentralisation(self):
         """

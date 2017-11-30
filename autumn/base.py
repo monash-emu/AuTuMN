@@ -801,7 +801,7 @@ class BaseModel:
                 denominator += self.vars[flow[1]]
         return numerator / denominator
 
-    ''' Flow diagram production '''
+    ''' flow diagram production '''
 
     def make_flow_diagram(self, png):
         """

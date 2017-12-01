@@ -669,7 +669,7 @@ class ConsolidatedModel(StratifiedModel):
         Create treatment proportion vars that are specific to the different riskgroups.
         The values are initially the same for all riskgroups but this may change later with interventions.
         """
-        strains_for_treatment = self.strains
+        strains_for_treatment = copy.copy(self.strains)
         if self.is_misassignment:
             strains_for_treatment.append('_inappropriate')
         for riskgroup in self.riskgroups:
@@ -677,7 +677,7 @@ class ConsolidatedModel(StratifiedModel):
                 for history in self.histories:
                     for outcome in ['_success', '_death']:
                         self.vars['program_prop_treatment' + riskgroup + strain + history + outcome] = \
-                            self.vars['program_prop_treatment'+ strain + history + outcome]
+                            copy.copy(self.vars['program_prop_treatment' + strain + history + outcome])
 
     def calculate_await_treatment_var(self):
         """
@@ -757,15 +757,13 @@ class ConsolidatedModel(StratifiedModel):
         Adapt treatment outcomes for short-course regimen. Restricted such that can only improve outcomes by selection
         of the functions used to adjust the treatment outcomes.
         """
-
-        self.vars['program_prop_treatment_mdr' + history + '_success'] \
-            = t_k.increase_parameter_closer_to_value(self.vars['program_prop_treatment_mdr' + history + '_success'],
-                                                     self.params['int_prop_treatment_success_shortcoursemdr'],
-                                                     self.vars['int_prop_shortcourse_mdr'])
-        self.vars['program_prop_treatment_mdr' + history + '_death'] \
-            = t_k.decrease_parameter_closer_to_value(self.vars['program_prop_treatment_mdr' + history + '_death'],
-                                                     self.params['int_prop_treatment_death_shortcoursemdr'],
-                                                     self.vars['int_prop_shortcourse_mdr'])
+        for riskgroup in self.riskgroups:
+            for outcome in ['_success', '_death']:
+                self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + outcome] \
+                    = t_k.increase_parameter_closer_to_value(
+                    self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + outcome],
+                    self.params['int_prop_treatment' + outcome + '_shortcoursemdr'],
+                    self.vars['int_prop_shortcourse_mdr'])
 
     def adjust_treatment_outcomes_support(self, strain, history):
         """

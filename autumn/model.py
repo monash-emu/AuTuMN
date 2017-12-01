@@ -762,12 +762,16 @@ class ConsolidatedModel(StratifiedModel):
         of the functions used to adjust the treatment outcomes.
         """
         for riskgroup in self.riskgroups:
-            for outcome in ['_success', '_death']:
-                self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + outcome] \
-                    = t_k.increase_parameter_closer_to_value(
-                    self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + outcome],
-                    self.params['int_prop_treatment' + outcome + '_shortcoursemdr'],
-                    self.vars['int_prop_shortcourse_mdr'])
+            self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + '_success'] \
+                = t_k.increase_parameter_closer_to_value(
+                self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + '_success'],
+                self.params['int_prop_treatment_success_shortcoursemdr'],
+                self.vars['int_prop_shortcourse_mdr'])
+            self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + '_death'] \
+                = t_k.decrease_parameter_closer_to_value(
+                self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + '_death'],
+                self.params['int_prop_treatment_death_shortcoursemdr'],
+                self.vars['int_prop_shortcourse_mdr'])
 
     def adjust_treatment_outcomes_support(self, riskgroup, strain, history):
         """
@@ -818,9 +822,7 @@ class ConsolidatedModel(StratifiedModel):
             self.vars[start + '_default'] = 0.
 
     def adjust_treatment_outcomes_for_ngo(self, strain):
-
         pass
-
         # subtract some treatment success if ngo activities program has discontinued
         # if 'int_prop_ngo_activities' in self.relevant_interventions:
         #     self.vars['program_prop_treatment_success' + strain] \

@@ -275,6 +275,7 @@ class ConsolidatedModel(StratifiedModel):
         self.calculate_organ_progressions()
         self.calculate_progression_vars()
         self.calculate_detection_vars()
+        self.split_treatment_props_by_riskgroup()
         self.calculate_await_treatment_var()
         self.calculate_treatment_rates()
         if 'agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions:
@@ -662,6 +663,21 @@ class ConsolidatedModel(StratifiedModel):
         # note that there is still a program_rate_detect var even if detection is varied by organ and/or risk group
         self.vars['program_rate_enterlowquality'] \
             = self.vars['program_rate_detect'] * prop_lowqual / (1. - prop_lowqual)
+
+    def split_treatment_props_by_riskgroup(self):
+        """
+        Create treatment proportion vars that are specific to the different riskgroups.
+        The values are initially the same for all riskgroups but this may change later with interventions.
+        """
+        strains_for_treatment = self.strains
+        if self.is_misassignment:
+            strains_for_treatment.append('_inappropriate')
+        for riskgroup in self.riskgroups:
+            for strain in strains_for_treatment:
+                for history in self.histories:
+                    for outcome in ['_success', '_death']:
+                        self.vars['program_prop_treatment' + riskgroup + strain + history + outcome] = \
+                            self.vars['program_prop_treatment'+ strain + history + outcome]
 
     def calculate_await_treatment_var(self):
         """

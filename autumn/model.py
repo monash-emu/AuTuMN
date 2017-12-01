@@ -672,12 +672,15 @@ class ConsolidatedModel(StratifiedModel):
         strains_for_treatment = copy.copy(self.strains)
         if self.is_misassignment:
             strains_for_treatment.append('_inappropriate')
-        for riskgroup in self.riskgroups:
-            for strain in strains_for_treatment:
-                for history in self.histories:
-                    for outcome in ['_success', '_death']:
+
+        for strain in strains_for_treatment:
+            for history in self.histories:
+                for outcome in ['_success', '_death']:
+                    for riskgroup in self.riskgroups:
                         self.vars['program_prop_treatment' + riskgroup + strain + history + outcome] = \
                             copy.copy(self.vars['program_prop_treatment' + strain + history + outcome])
+                    # delete the var that is not riskgroup-specific
+                    del self.vars['program_prop_treatment' + strain + history + outcome]
 
     def calculate_await_treatment_var(self):
         """
@@ -716,16 +719,17 @@ class ConsolidatedModel(StratifiedModel):
         for strain in self.strains:
             self.calculate_treatment_timeperiod_vars(strain)
             for history in self.histories:
-                self.adjust_treatment_outcomes_support(strain, history)
-                self.calculate_default_rates(strain, history)
-                self.split_treatment_props_by_stage(strain, history)
-                for stage in self.treatment_stages:
-                    self.assign_success_prop_by_treatment_stage(strain, history, stage)
-                    self.convert_treatment_props_to_rates(strain, history, stage)
-                    if self.is_amplification:
-                        self.calculate_amplification_props(strain + history + '_default' + stage)
-                if len(self.strains) > 1 and self.is_misassignment and strain != self.strains[0]:
-                    self.calculate_misassigned_outcomes(strain, history)
+                for riskgroup in self.riskgroups:
+                    self.adjust_treatment_outcomes_support(riskgroup, strain, history)
+                    self.calculate_default_rates(riskgroup, strain, history)
+                    self.split_treatment_props_by_stage(riskgroup, strain, history)
+                    for stage in self.treatment_stages:
+                        self.assign_success_prop_by_treatment_stage(riskgroup, strain, history, stage)
+                        self.convert_treatment_props_to_rates(riskgroup, strain, history, stage)
+                        if self.is_amplification:
+                            self.calculate_amplification_props(riskgroup + strain + history + '_default' + stage)
+                    if len(self.strains) > 1 and self.is_misassignment and strain != self.strains[0]:
+                        self.calculate_misassigned_outcomes(riskgroup, strain, history)
 
     def calculate_treatment_timeperiod_vars(self, strain):
         """
@@ -765,7 +769,7 @@ class ConsolidatedModel(StratifiedModel):
                     self.params['int_prop_treatment' + outcome + '_shortcoursemdr'],
                     self.vars['int_prop_shortcourse_mdr'])
 
-    def adjust_treatment_outcomes_support(self, strain, history):
+    def adjust_treatment_outcomes_support(self, riskgroup, strain, history):
         """
         Add some extra treatment success if the treatment support intervention is active, either for a specific strain
         or for all outcomes. Also able to select as to whether the improvement is a relative reduction in poor outcomes
@@ -780,33 +784,33 @@ class ConsolidatedModel(StratifiedModel):
         if '' not in self.strains: strain_types.append('')
         for strain_type in strain_types:
             if 'int_prop_treatment_support_relative' + strain_type in self.relevant_interventions:
-                self.vars['program_prop_treatment' + strain + history + '_success'] \
-                    += (1. - self.vars['program_prop_treatment' + strain + history + '_success']) \
+                self.vars['program_prop_treatment' + riskgroup + strain + history + '_success'] \
+                    += (1. - self.vars['program_prop_treatment' + riskgroup + strain + history + '_success']) \
                        * self.params['int_prop_treatment_support_improvement' + strain_type] \
                        * self.vars['int_prop_treatment_support_relative' + strain_type]
-                self.vars['program_prop_treatment' + strain + history + '_death'] \
-                    -= self.vars['program_prop_treatment' + strain + history + '_death'] \
+                self.vars['program_prop_treatment' + riskgroup + strain + history + '_death'] \
+                    -= self.vars['program_prop_treatment' + riskgroup + strain + history + '_death'] \
                        * self.params['int_prop_treatment_support_improvement' + strain_type] \
                        * self.vars['int_prop_treatment_support_relative' + strain_type]
 
             elif 'int_prop_treatment_support_absolute' + strain_type in self.relevant_interventions:
-                self.vars['program_prop_treatment' + strain + history + '_success'] \
+                self.vars['program_prop_treatment' + riskgroup + strain + history + '_success'] \
                     = t_k.increase_parameter_closer_to_value(
-                    self.vars['program_prop_treatment' + strain + history + '_success'],
+                    self.vars['program_prop_treatment' + riskgroup + strain + history + '_success'],
                     self.params['program_prop_treatment_success_ideal' + strain_type],
                     self.vars['int_prop_treatment_support_absolute' + strain_type])
-                self.vars['program_prop_treatment' + strain + history + '_death'] \
+                self.vars['program_prop_treatment' + riskgroup + strain + history + '_death'] \
                     = t_k.decrease_parameter_closer_to_value(
-                    self.vars['program_prop_treatment' + strain + history + '_death'],
+                    self.vars['program_prop_treatment' + riskgroup + strain + history + '_death'],
                     self.params['int_prop_treatment_death_ideal' + strain_type],
                     self.vars['int_prop_treatment_support_absolute' + strain_type])
 
-    def calculate_default_rates(self, strain, history):
+    def calculate_default_rates(self, riskgroup, strain, history):
         """
         Calculate the default proportion as the remainder from success and death and warn if numbers don't make sense.
         """
 
-        start = 'program_prop_treatment' + strain + history
+        start = 'program_prop_treatment' + riskgroup + strain + history
         self.vars[start + '_default'] = 1. - self.vars[start + '_success'] - self.vars[start + '_death']
         if self.vars[start + '_default'] < 0.:
             print('Success and death sum to %s for %s outcome at %s time'
@@ -824,35 +828,35 @@ class ConsolidatedModel(StratifiedModel):
         #             * self.params['int_prop_treatment_support_improvement'] \
         #             * (1. - self.vars['int_prop_ngo_activities'])
 
-    def split_treatment_props_by_stage(self, strain, history):
+    def split_treatment_props_by_stage(self, riskgroup, strain, history):
         """
         Assign proportions of default and death to early/infectious and late/non-infectious stages of treatment.
         """
 
         for outcome in self.outcomes[1:]:
             outcomes_by_stage = find_outcome_proportions_by_period(
-                self.vars['program_prop_treatment' + strain + history + outcome],
+                self.vars['program_prop_treatment' + riskgroup + strain + history + outcome],
                 self.vars['tb_timeperiod_infect_ontreatment' + strain],
                 self.vars['tb_timeperiod_ontreatment' + strain])
             for s, stage in enumerate(self.treatment_stages):
-                self.vars['program_prop_treatment' + strain + history + outcome + stage] = outcomes_by_stage[s]
+                self.vars['program_prop_treatment' + riskgroup + strain + history + outcome + stage] = outcomes_by_stage[s]
 
-    def assign_success_prop_by_treatment_stage(self, strain, history, stage):
+    def assign_success_prop_by_treatment_stage(self, riskgroup, strain, history, stage):
         """
         Calculate success proportion by stage as the remainder after death and default accounted for.
         """
 
-        start = 'program_prop_treatment' + strain + history
+        start = 'program_prop_treatment' + riskgroup + strain + history
         self.vars[start + '_success' + stage] \
             = 1. - self.vars[start + '_default' + stage] - self.vars[start + '_death' + stage]
 
-    def convert_treatment_props_to_rates(self, strain, history, stage):
+    def convert_treatment_props_to_rates(self, riskgroup, strain, history, stage):
         """
         Convert the outcomes proportions by stage of treatment to rates by dividing by the appropriate time period.
         """
 
         for outcome in self.outcomes:
-            end = strain + history + outcome + stage
+            end = riskgroup + strain + history + outcome + stage
             self.vars['program_rate_treatment' + end] = self.vars['program_prop_treatment' + end] \
                                                         / self.vars['tb_timeperiod' + stage + '_ontreatment' + strain]
 
@@ -868,7 +872,7 @@ class ConsolidatedModel(StratifiedModel):
         self.vars[start + '_amplify'] = self.vars[start] * self.vars['epi_prop_amplification']
         self.vars[start + '_noamplify'] = self.vars[start] * (1. - self.vars['epi_prop_amplification'])
 
-    def calculate_misassigned_outcomes(self, strain, history):
+    def calculate_misassigned_outcomes(self, riskgroup, strain, history):
         """
         Find treatment outcomes for patients assigned to an incorrect regimen.
         """
@@ -878,36 +882,36 @@ class ConsolidatedModel(StratifiedModel):
                 if self.strains.index(treated_as) < self.strains.index(strain):  # if regimen is worse
 
                     # calculate the default proportion as the remainder from success and death
-                    start = 'program_prop_treatment_inappropriate' + history
+                    start = 'program_prop_treatment' + riskgroup + '_inappropriate' + history
                     self.vars[start + '_default'] = 1. - self.vars[start + '_success'] - self.vars[start + '_death']
 
                     for outcome in self.outcomes[1:]:
                         treatment_type = strain + '_as' + treated_as[1:]
                         outcomes_by_stage \
                             = find_outcome_proportions_by_period(
-                            self.vars['program_prop_treatment_inappropriate' + history + outcome],
+                            self.vars[start + outcome],
                             self.params['tb_timeperiod_infect_ontreatment' + treated_as],
                             self.params['tb_timeperiod_ontreatment' + treated_as])
                         for s, stage in enumerate(self.treatment_stages):
-                            self.vars['program_prop_treatment' + treatment_type + history + outcome + stage] \
+                            self.vars['program_prop_treatment' + riskgroup + treatment_type + history + outcome + stage] \
                                 = outcomes_by_stage[s]
 
                     for treatment_stage in self.treatment_stages:
                         # find the success proportions
-                        start = 'program_prop_treatment' + treatment_type + history
+                        start = 'program_prop_treatment' + riskgroup + treatment_type + history
                         self.vars[start + '_success' + treatment_stage] \
                             = 1. - self.vars[start + '_default' + treatment_stage] \
                               - self.vars[start + '_death' + treatment_stage]
 
                         # find the corresponding rates from the proportions
                         for outcome in self.outcomes:
-                            end = treatment_type + history + outcome + treatment_stage
+                            end = riskgroup + treatment_type + history + outcome + treatment_stage
                             self.vars['program_rate_treatment' + end] \
                                 = self.vars['program_prop_treatment' + end] \
                                   / self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + treated_as]
 
                         if self.is_amplification:
-                            self.calculate_amplification_props(treatment_type + history + '_default' + treatment_stage)
+                            self.calculate_amplification_props(riskgroup + treatment_type + history + '_default' + treatment_stage)
 
     def calculate_ipt_effect(self):
         """
@@ -1438,17 +1442,17 @@ class ConsolidatedModel(StratifiedModel):
                                 self.set_var_transfer_rate_flow(
                                     'treatment_infect' + end,
                                     'treatment_noninfect' + end,
-                                    'program_rate_treatment' + strain_or_inappropriate + history + '_success_infect')
+                                    'program_rate_treatment' + riskgroup + strain_or_inappropriate + history + '_success_infect')
                                 self.set_var_transfer_rate_flow(
                                     'treatment_noninfect' + end,
                                     'susceptible_immune' + riskgroup + self.histories[-1] + agegroup,
-                                    'program_rate_treatment' + strain_or_inappropriate + history + '_success_noninfect')
+                                    'program_rate_treatment' + riskgroup + strain_or_inappropriate + history + '_success_noninfect')
 
                                 # death on treatment
                                 for treatment_stage in self.treatment_stages:
                                     self.set_var_infection_death_rate_flow(
                                         'treatment' + treatment_stage + end,
-                                        'program_rate_treatment' + strain_or_inappropriate + history + '_death'
+                                        'program_rate_treatment' + riskgroup + strain_or_inappropriate + history + '_death'
                                         + treatment_stage)
 
                                 # default
@@ -1459,7 +1463,7 @@ class ConsolidatedModel(StratifiedModel):
                                         self.set_var_transfer_rate_flow(
                                             'treatment' + treatment_stage + end,
                                             'active' + organ + strain + riskgroup + history + agegroup,
-                                            'program_rate_treatment' + strain_or_inappropriate + history + '_default'
+                                            'program_rate_treatment' + riskgroup + strain_or_inappropriate + history + '_default'
                                             + treatment_stage)
 
                                     # otherwise with amplification
@@ -1468,12 +1472,12 @@ class ConsolidatedModel(StratifiedModel):
                                         self.set_var_transfer_rate_flow(
                                             'treatment' + treatment_stage + end,
                                             'active' + organ + strain + riskgroup + history + agegroup,
-                                            'program_rate_treatment' + strain_or_inappropriate + history + '_default'
+                                            'program_rate_treatment' + riskgroup + strain_or_inappropriate + history + '_default'
                                             + treatment_stage + '_noamplify')
                                         self.set_var_transfer_rate_flow(
                                             'treatment' + treatment_stage + end,
                                             'active' + organ + amplify_to_strain + riskgroup + history + agegroup,
-                                            'program_rate_treatment' + strain_or_inappropriate + history + '_default'
+                                            'program_rate_treatment' + riskgroup + strain_or_inappropriate + history + '_default'
                                             + treatment_stage + '_amplify')
 
     def set_ipt_flows(self):

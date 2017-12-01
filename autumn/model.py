@@ -377,9 +377,7 @@ class ConsolidatedModel(StratifiedModel):
         if 'int_prop_dots_contributor' in self.relevant_interventions \
             and self.vars['int_prop_dots_contributor'] < 1.:
             self.adjust_case_detection_for_dots_contributor()
-        # if 'int_prop_opendoors_activities' in self.relevant_interventions \
-        #         or 'int_prop_ngo_activities' in self.relevant_interventions:
-        #     self.adjust_ipt_for_opendoors()
+
         if self.vary_detection_by_organ:
             self.calculate_case_detection_by_organ()
             self.adjust_smearneg_detection_for_xpert()
@@ -414,20 +412,6 @@ class ConsolidatedModel(StratifiedModel):
 
         self.vars['program_prop_detect'] \
             *= 1. - self.params['int_prop_detection_dots_contributor'] * (1. - self.vars['int_prop_dots_contributor'])
-
-    # def adjust_ipt_for_opendoors(self):
-    #     """
-    #     If opendoors programs are stopped, case detection and IPT coverage are reduced.
-    #     This applies to the whole population, as opposed to NGOs activities that apply to specific risk groups.
-    #     """
-    #
-    #     if 'int_prop_opendoors_activities' in self.relevant_interventions \
-    #             and self.vars['int_prop_opendoors_activities'] < 1.:
-    #         for agegroup in self.agegroups:
-    #             if 'int_prop_ipt' + agegroup in self.vars:
-    #                 self.vars['int_prop_ipt' + agegroup] \
-    #                     *= 1. - self.params['int_prop_ipt_opendoors'] \
-    #                             * (1. - self.vars['int_prop_opendoors_activities'])
 
     def calculate_case_detection_by_organ(self):
         """

@@ -1185,15 +1185,12 @@ class ConsolidatedModel(StratifiedModel):
                 if 'treatment' in compartment and '_mdr' in compartment:
                     self.vars['popsize_shortcourse_mdr'] += self.compartments[compartment]
 
-        # # open doors activities
-        # if 'int_prop_opendoors_activities' in self.relevant_interventions:
-        #     # number of diagnosed cases (LTBI + TB) if coverage was 100%
-        #     self.vars['popsize_opendoors_activities'] = 598 * 2.
-
         # NGO activities
         if 'int_prop_ngo_activities' in self.relevant_interventions:
-            # number of diagnosed cases (LTBI + TB) if coverage was 100%
-            self.vars['popsize_ngo_activities'] = 456*2
+            # this is the size of the Roma population
+            self.vars['popsize_ngo_activities'] = 0.
+            for riskgroup in self.ngo_groups:
+                self.vars['popsize_ngo_activities'] += self.vars['population' + riskgroup]
 
         # awareness raising
         if 'int_prop_awareness_raising' in self.relevant_interventions:

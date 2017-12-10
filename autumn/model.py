@@ -482,7 +482,8 @@ class ConsolidatedModel(StratifiedModel):
                 if 'int_prop_ngo_activities' in self.relevant_interventions \
                         and self.vars['int_prop_ngo_activities'] < 1. and riskgroup in self.ngo_groups:
                     self.vars['program_rate_detect' + organ + riskgroup] \
-                        *= 1. - self.params['int_prop_detection_ngo'] * (1. - self.vars['int_prop_ngo_activities'])
+                        *= 1. - self.params['int_prop_detection_ngo' + riskgroup] \
+                                * (1. - self.vars['int_prop_ngo_activities'])
 
                 # adjust for awareness raising
                 if 'int_prop_awareness_raising' in self.vars:
@@ -666,19 +667,20 @@ class ConsolidatedModel(StratifiedModel):
 
     def split_treatment_props_by_riskgroup(self):
         """
-        Create treatment proportion vars that are specific to the different riskgroups.
-        The values are initially the same for all riskgroups but this may change later with interventions.
+        Create treatment proportion vars that are specific to the different risk groups.
+        The values are initially the same for all risk groups but this may change later with interventions.
         """
+
         strains_for_treatment = copy.copy(self.strains)
-        if self.is_misassignment:
-            strains_for_treatment.append('_inappropriate')
+        if self.is_misassignment: strains_for_treatment.append('_inappropriate')
 
         for strain in strains_for_treatment:
             for history in self.histories:
                 for outcome in ['_success', '_death']:
                     for riskgroup in self.riskgroups:
-                        self.vars['program_prop_treatment' + riskgroup + strain + history + outcome] = \
-                            copy.copy(self.vars['program_prop_treatment' + strain + history + outcome])
+                        self.vars['program_prop_treatment' + riskgroup + strain + history + outcome] \
+                            = copy.copy(self.vars['program_prop_treatment' + strain + history + outcome])
+
                     # delete the var that is not riskgroup-specific
                     del self.vars['program_prop_treatment' + strain + history + outcome]
 

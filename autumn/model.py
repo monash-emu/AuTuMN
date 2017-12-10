@@ -829,30 +829,30 @@ class ConsolidatedModel(StratifiedModel):
     def adjust_treatment_outcomes_for_ngo(self):
         """
         Adjust treatment success and death for ngo activities. These activities are already running at baseline so we
-        need to account for some effect that is already ongoing. The efficacy parameter represents the proportional reduction
-        in negative outcomes obtained from the intervention when used at 100% coverage as compared to no intervention.
-        The programmatic parameters obtained from the spreadsheets have to be interpreted as being affected by the
-        intervention that is already running at some level of coverage.
+        need to account for some effect that is already ongoing. The efficacy parameter represents the proportional
+        reduction in negative outcomes obtained from the intervention when used at 100% coverage as compared to no
+        intervention. The programmatic parameters obtained from the spreadsheets have to be interpreted as being
+        affected by the intervention that is already running at some level of coverage.
         """
-        # fetch the baseline coverage for the intervention
-        baseline_coverage = self.scaleup_fns['int_prop_ngo_activities'](self.params['reference_time'])
 
-        # calculate the ratio (1-efficacy*current_coverage)/(1-efficacy*baseline_coverage)
-        effect_coverage_ratio = (1. - self.params['int_prop_treatment_improvement_ngo'] * self.vars['int_prop_ngo_activities']) \
-                                / (1. - self.params['int_prop_treatment_improvement_ngo'] * baseline_coverage)
+        # calculate the ratio (1 - efficacy * current_coverage) / (1 - efficacy * baseline_coverage)
+        coverage_ratio \
+            = (1. - self.params['int_prop_treatment_improvement_ngo'] * self.vars['int_prop_ngo_activities']) \
+              / (1. - self.params['int_prop_treatment_improvement_ngo']
+                 * self.scaleup_fns['int_prop_ngo_activities'](self.params['reference_time']))
 
         for riskgroup in self.ngo_groups:
             for strain in self.strains:
                 for history in self.histories:
-                    # treatment success
+
+                    # treatment success (which may have become negative in the pre-treatment era)
                     self.vars['program_prop_treatment' + riskgroup + strain + history + '_success'] \
-                        = 1. - effect_coverage_ratio * (1. - self.vars['program_prop_treatment' + riskgroup + strain + history + '_success'])
-                    # this quantity may have become negative for pre-treatment
-                    if self.vars['program_prop_treatment' + riskgroup + strain + history + '_success'] < 0.:
-                        self.vars['program_prop_treatment' + riskgroup + strain + history + '_success'] = 0.
+                        = max(1. - coverage_ratio
+                              * (1. - self.vars['program_prop_treatment' + riskgroup + strain + history + '_success']),
+                              0.)
 
                     # treatment death
-                    self.vars['program_prop_treatment' + riskgroup + strain + history + '_death'] *= effect_coverage_ratio
+                    self.vars['program_prop_treatment' + riskgroup + strain + history + '_death'] *= coverage_ratio
 
     def split_treatment_props_by_stage(self, riskgroup, strain, history):
         """
@@ -865,7 +865,8 @@ class ConsolidatedModel(StratifiedModel):
                 self.vars['tb_timeperiod_infect_ontreatment' + strain],
                 self.vars['tb_timeperiod_ontreatment' + strain])
             for s, stage in enumerate(self.treatment_stages):
-                self.vars['program_prop_treatment' + riskgroup + strain + history + outcome + stage] = outcomes_by_stage[s]
+                self.vars['program_prop_treatment' + riskgroup + strain + history + outcome + stage] \
+                    = outcomes_by_stage[s]
 
     def assign_success_prop_by_treatment_stage(self, riskgroup, strain, history, stage):
         """
@@ -919,7 +920,8 @@ class ConsolidatedModel(StratifiedModel):
                             self.params['tb_timeperiod_infect_ontreatment' + treated_as],
                             self.params['tb_timeperiod_ontreatment' + treated_as])
                         for s, stage in enumerate(self.treatment_stages):
-                            self.vars['program_prop_treatment' + riskgroup + treatment_type + history + outcome + stage] \
+                            self.vars[
+                                'program_prop_treatment' + riskgroup + treatment_type + history + outcome + stage] \
                                 = outcomes_by_stage[s]
 
                     for treatment_stage in self.treatment_stages:
@@ -937,7 +939,8 @@ class ConsolidatedModel(StratifiedModel):
                                   / self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + treated_as]
 
                         if self.is_amplification:
-                            self.calculate_amplification_props(riskgroup + treatment_type + history + '_default' + treatment_stage)
+                            self.calculate_amplification_props(
+                                riskgroup + treatment_type + history + '_default' + treatment_stage)
 
     def calculate_ipt_effect(self):
         """

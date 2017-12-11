@@ -15,4 +15,4 @@ pluggable API to other system. Applied to tuberculosis.
 - update last sheet readers to latest GTB data (without losing old data preferable)
 - tidy up MDR introduction time code and reconcile with population adjustment
 - record adjustments made in uncertainty outputs dictionary as runs progress
-
+- document Bulgaria interventions properly in handbook

@@ -127,7 +127,7 @@ class ConsolidatedModel(StratifiedModel):
         if self.eco_drives_epi: self.distribute_funding_across_years()
 
         # list of risk groups affected by ngo activities for detection
-        self.ngo_groups = ['_ruralpoor']
+        self.contributor_groups = ['_ruralpoor']
 
         # whether short-course MDR-TB regimen improves outcomes
         self.shortcourse_improves_outcomes = True
@@ -479,11 +479,11 @@ class ConsolidatedModel(StratifiedModel):
                       / (1. - self.vars['program_prop_detect' + organ])
 
                 # adjust detection rates for ngo activities in specific risk-groups
-                if 'int_prop_ngo_activities' in self.relevant_interventions \
-                        and self.vars['int_prop_ngo_activities'] < 1. and riskgroup in self.ngo_groups:
+                if 'int_prop_dot_groupcontributor' in self.relevant_interventions \
+                        and self.vars['int_prop_dot_groupcontributor'] < 1. and riskgroup in self.contributor_groups:
                     self.vars['program_rate_detect' + organ + riskgroup] \
                         *= 1. - self.params['int_prop_detection_ngo' + riskgroup] \
-                                * (1. - self.vars['int_prop_ngo_activities'])
+                                * (1. - self.vars['int_prop_dot_groupcontributor'])
 
                 # adjust for awareness raising
                 if 'int_prop_awareness_raising' in self.vars:
@@ -719,8 +719,8 @@ class ConsolidatedModel(StratifiedModel):
             for history in self.histories:
                 self.adjust_treatment_outcomes_shortcourse(history)
 
-        if 'int_prop_ngo_activities' in self.relevant_interventions:
-            self.adjust_treatment_outcomes_for_ngo()
+        if 'int_prop_dot_groupcontributor' in self.relevant_interventions:
+            self.adjust_treatment_outcomes_for_groupcontributor()
         for strain in self.strains:
             self.calculate_treatment_timeperiod_vars(strain)
             for history in self.histories:
@@ -826,9 +826,9 @@ class ConsolidatedModel(StratifiedModel):
                   % (self.vars[start + '_success'] + self.vars[start + '_death'], start, self.time))
             self.vars[start + '_default'] = 0.
 
-    def adjust_treatment_outcomes_for_ngo(self):
+    def adjust_treatment_outcomes_for_groupcontributor(self):
         """
-        Adjust treatment success and death for ngo activities. These activities are already running at baseline so we
+        Adjust treatment success and death for NGO activities. These activities are already running at baseline so we
         need to account for some effect that is already ongoing. The efficacy parameter represents the proportional
         reduction in negative outcomes obtained from the intervention when used at 100% coverage as compared to no
         intervention. The programmatic parameters obtained from the spreadsheets have to be interpreted as being
@@ -837,11 +837,12 @@ class ConsolidatedModel(StratifiedModel):
 
         # calculate the ratio (1 - efficacy * current_coverage) / (1 - efficacy * baseline_coverage)
         coverage_ratio \
-            = (1. - self.params['int_prop_treatment_improvement_ngo'] * self.vars['int_prop_ngo_activities']) \
-              / (1. - self.params['int_prop_treatment_improvement_ngo']
-                 * self.scaleup_fns['int_prop_ngo_activities'](self.params['reference_time']))
+            = (1. - self.params['int_prop_treatment_improvement_contributor']
+               * self.vars['int_prop_dot_groupcontributor']) \
+              / (1. - self.params['int_prop_treatment_improvement_contributor']
+                 * self.scaleup_fns['int_prop_dot_groupcontributor'](self.params['reference_time']))
 
-        for riskgroup in self.ngo_groups:
+        for riskgroup in self.contributor_groups:
             for strain in self.strains:
                 for history in self.histories:
 
@@ -1191,11 +1192,11 @@ class ConsolidatedModel(StratifiedModel):
                     self.vars['popsize_shortcourse_mdr'] += self.compartments[compartment]
 
         # NGO activities
-        if 'int_prop_ngo_activities' in self.relevant_interventions:
+        if 'int_prop_dot_groupcontributor' in self.relevant_interventions:
             # this is the size of the Roma population
-            self.vars['popsize_ngo_activities'] = 0.
-            for riskgroup in self.ngo_groups:
-                self.vars['popsize_ngo_activities'] += self.vars['population' + riskgroup]
+            self.vars['popsize_dot_groupcontributor'] = 0.
+            for riskgroup in self.contributor_groups:
+                self.vars['popsize_dot_groupcontributor'] += self.vars['population' + riskgroup]
 
         # awareness raising
         if 'int_prop_awareness_raising' in self.relevant_interventions:

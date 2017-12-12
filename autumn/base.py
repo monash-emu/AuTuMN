@@ -580,7 +580,7 @@ class BaseModel:
         # check all compartments are positive
         for label in self.labels: assert self.compartments[label] >= 0.
 
-    ''' Output/diagnostic calculations '''
+    ''' output/diagnostic calculations '''
 
     def calculate_output_vars(self):
         """

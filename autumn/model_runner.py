@@ -801,11 +801,13 @@ class ModelRunner:
                         population_adjustment \
                             = self.inputs.model_constants['target_population'] \
                               / float(self.outputs['epi_uncertainty']['epi'][0]['population'][last_run_output_index,
-                                tool_kit.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'],
-                                                                         self.inputs.model_constants['current_time'])])
-                        for compartment in self.models[0].initial_compartments:
-                            self.models[0].set_parameter(compartment,
-                                                         self.models[0].params[compartment] * population_adjustment)
+                                tool_kit.find_first_list_element_above_value(
+                                    self.outputs['manual']['epi'][0]['times'],
+                                    self.inputs.model_constants['current_time'])])
+                        for compartment in self.inputs.compartment_types:
+                            if compartment in self.models[0].params:
+                                self.models[0].set_parameter(compartment,
+                                                             self.models[0].params[compartment] * population_adjustment)
 
                 else:
                     self.whether_accepted_list.append(False)
@@ -1006,6 +1008,25 @@ class ModelRunner:
             new_params.append(random[0])
 
         return new_params
+
+    def plot_progressive_parameters(self):
+        """
+        Produce real-time parameter plot, according to which GUI is in use.
+        """
+
+        if self.js_gui:
+            self.js_gui('graph', {
+                "all_parameters_tried": self.all_parameters_tried,
+                "whether_accepted_list": self.whether_accepted_list,
+                "rejection_dict": self.rejection_dict,
+                "accepted_indices": self.accepted_indices,
+                "acceptance_dict": self.acceptance_dict,
+                "names": {
+                    param: tool_kit.find_title_from_dictionary(param)
+                    for p, param in enumerate(self.all_parameters_tried)
+                },
+                "param_ranges_unc": self.inputs.param_ranges_unc
+            })
 
     ''' other run type methods '''
 
@@ -1282,22 +1303,4 @@ class ModelRunner:
 
         if self.js_gui: self.js_gui('console', {'message': comment})
 
-    def plot_progressive_parameters(self):
-        """
-        Produce real-time parameter plot, according to which GUI is in use.
-        """
-
-        if self.js_gui:
-            self.js_gui('graph', {
-                "all_parameters_tried": self.all_parameters_tried,
-                "whether_accepted_list": self.whether_accepted_list,
-                "rejection_dict": self.rejection_dict,
-                "accepted_indices": self.accepted_indices,
-                "acceptance_dict": self.acceptance_dict,
-                "names": {
-                    param: tool_kit.find_title_from_dictionary(param)
-                    for p, param in enumerate(self.all_parameters_tried)
-                },
-                "param_ranges_unc": self.inputs.param_ranges_unc
-            })
 

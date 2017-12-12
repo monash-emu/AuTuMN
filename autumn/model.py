@@ -223,7 +223,7 @@ class ConsolidatedModel(StratifiedModel):
                         elif 'latent' in compartment:
                             self.set_compartment(
                                 compartment + self.strains[0] + end,
-                                self.initial_compartments[compartment] * start_risk_prop[riskgroup]
+                                initial_compartments[compartment] * start_risk_prop[riskgroup]
                                 / len(self.agegroups))
                         else:
                             for organ in self.organ_status:

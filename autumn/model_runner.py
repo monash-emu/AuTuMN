@@ -676,6 +676,7 @@ class ModelRunner:
         for compartment_type in self.inputs.compartment_types:
             if compartment_type in self.inputs.model_constants: self.all_compartment_values_tried[compartment_type] = []
         self.all_other_adjustments_made['program_prop_death_reporting'] = []
+        self.all_other_adjustments_made['mdr_introduce_time'] = []
 
         # find weights for outputs that are being calibrated to
         years_to_compare = range(1990, 2015)
@@ -821,8 +822,9 @@ class ModelRunner:
                     str(n_accepted) + ' accepted / ' + str(run) + ' candidates. Running time: '
                     + str(datetime.datetime.now() - start_timer_run))
 
-                # record death reporting proportion, which may or may not have been adjusted
+                # record death reporting proportion and mdr introduction time, which may or may not have been adjusted
                 self.all_other_adjustments_made['program_prop_death_reporting'].append(self.prop_death_reporting)
+                self.all_other_adjustments_made['mdr_introduce_time'].append(self.mdr_introduce_time)
 
                 run += 1
 

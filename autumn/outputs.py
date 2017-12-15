@@ -2774,6 +2774,10 @@ class Project:
         ax = make_single_axis(fig)
         runs = len(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'])
 
+        # plot the target
+        ax.plot(self.inputs.model_constants['current_time'], self.inputs.model_constants['tb_perc_mdr_prevalence'],
+                marker='o', markersize=5, markeredgewidth=0., linewidth=0.)
+
         # plot the runs
         for run in range(runs):
             if run in self.accepted_indices or self.plot_rejected_runs:

@@ -1,0 +1,3 @@
+List of bugs that will need to get fixed at some point:
+
+- The model would not run without age-stratification (detected when running Bulgaria)

@@ -1517,6 +1517,10 @@ class Project:
         # plot likelihood estimates
         if self.gui_inputs['output_likelihood_plot']: self.plot_likelihoods()
 
+        # plot percentage of MDR for different uncertainty runs
+        if self.gui_inputs['output_uncertainty'] and self.gui_inputs['n_strains'] > 1:
+            self.plot_perc_MDR_progress()
+
         # optimisation plotting
         if self.model_runner.optimisation:
             self.plot_optimised_epi_outputs()
@@ -2761,6 +2765,38 @@ class Project:
         ax.set_xlabel('All runs', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         ax.set_ylabel('Likelihood', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         self.save_figure(fig, '_likelihoods')
+
+    def plot_perc_MDR_progress(self):
+        """
+        Plot the percentage of MDR-TB among incident TB cases over time, for the different accepted runs.
+        """
+        fig = self.set_and_update_figure()
+        ax = make_single_axis(fig)
+        runs = len(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'])
+
+        # plot the runs
+        for run in range(runs):
+            if run in self.accepted_indices or self.plot_rejected_runs:
+                if run in self.accepted_indices:
+                    linewidth = 1.2
+                    colour = str(1. - float(run) / float(len(
+                        self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'])))
+                elif self.inputs.intervention_uncertainty:
+                    linewidth, colour = .8, '.4'
+                else:
+                    linewidth, colour = .2, 'y'
+                ax.plot(self.outputs['epi_uncertainty']['epi'][0]['times'][run,
+                        self.start_time_index:],
+                        self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'][run,
+                        self.start_time_index:],
+                        linewidth=linewidth, color=colour,
+                        label=t_k.capitalise_and_remove_underscore('baseline'))
+
+        # finishing up
+        fig.suptitle('Progression of MDR-TB proportion', fontsize=self.suptitle_size)
+        ax.set_xlabel('', fontsize=get_nice_font_size([1, 1]), labelpad=1)
+        ax.set_ylabel('% of MDR-TB in TB incidence', fontsize=get_nice_font_size([1, 1]), labelpad=1)
+        self.save_figure(fig, '_perc_mdr_progress')
 
     def plot_optimised_epi_outputs(self):
         """

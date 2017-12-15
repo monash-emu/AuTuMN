@@ -1521,6 +1521,10 @@ class Project:
         if self.gui_inputs['output_uncertainty'] and self.gui_inputs['n_strains'] > 1:
             self.plot_perc_MDR_progress()
 
+        # for MDR debugging purpose
+        if self.gui_inputs['n_strains'] > 1:
+            self.plot_MDR_cases_by_compartment_type()
+
         # optimisation plotting
         if self.model_runner.optimisation:
             self.plot_optimised_epi_outputs()
@@ -2801,6 +2805,33 @@ class Project:
         ax.set_xlabel('', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         ax.set_ylabel('% of MDR-TB in TB incidence', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         self.save_figure(fig, '_perc_mdr_progress')
+
+    def plot_MDR_cases_by_compartment_type(self):
+        """
+        Plot the number of MDR-TB cases in active, detected, on treatment and treated compartments.
+        Mostly for debugging purpose.
+        Returns:
+        """
+        fig = self.set_and_update_figure()
+        compartment_types = ['active', 'detect', 'treatment']
+        subplot_grid = find_subplot_numbers(len(compartment_types))
+        start_time, end_time \
+            = self.inputs.model_constants['start_time'], self.inputs.model_constants['recent_time']
+
+        xvals = self.model_runner.models[0].times
+
+        for i, compartment_type in enumerate(compartment_types):
+            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1)
+            strings_of_interest = ['mdr', compartment_type]
+            yvals = self.model_runner.models[0].calculate_aggregate_compartment_sizes_from_strings(strings_of_interest)
+
+            ax.plot(xvals, yvals)
+
+            self.tidy_axis(ax, subplot_grid, start_time=start_time,
+                           title='MDR-TB ' + compartment_type)
+
+        # finishing up
+        self.save_figure(fig, '_MDR_by_compartment_type')
 
     def plot_optimised_epi_outputs(self):
         """

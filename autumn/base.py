@@ -801,6 +801,25 @@ class BaseModel:
                 denominator += self.vars[flow[1]]
         return numerator / denominator
 
+    def calculate_aggregate_compartment_sizes_from_strings(self, strings):
+        """
+        Calculate aggregate compartment sizes for the compartments that have a name containing the elements of
+        the list strings. This method has to be run after integration.
+        Args:
+            strings: a list of strings
+        Returns: A time-series providing the aggregate size for the different times of self.times.
+        """
+        aggregate_sizes = [0. for i in range(len(self.times))]  # initial list with zeros
+
+        compartments_to_aggregate = self.labels  # initially all compartments and then becomes the required subset
+        for string in strings:
+            compartments_to_aggregate = [c for c in compartments_to_aggregate if string in c]
+
+        for compartment in compartments_to_aggregate:
+            aggregate_sizes += self.compartment_soln[compartment]
+
+        return aggregate_sizes
+
     ''' flow diagram production '''
 
     def make_flow_diagram(self, png):

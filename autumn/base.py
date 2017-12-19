@@ -819,10 +819,9 @@ class BaseModel:
                 = model_runner.elementwise_list_addition(aggregate_sizes, self.compartment_soln[compartment])
         return aggregate_sizes
 
-    def calculate_aggregate_compartment_divisions_from_strings(self, compartments_to_divide_over,
-                                                               required_string_1='', required_string_2='',
-                                                               exclusion_string='we all love futsal',
-                                                               allocate_to_one_division_only=True):
+    def calculate_aggregate_compartment_divisions_from_strings(
+            self, compartments_to_divide_over, required_string_1='', required_string_2='',
+            exclusion_string='we all love futsal', allocate_to_one_division_only=True):
         """
         Similar to previous method, but hopefully more general and able to handle the string not being found in any of
         the compartments.
@@ -843,14 +842,14 @@ class BaseModel:
             if required_string_1 not in compartment: continue
             if required_string_2 not in compartment: continue
             if exclusion_string in compartment: continue
-            division_not_found = True
+            division_found = False
             for division in compartments_to_divide_over:
                 if division in compartment:
-                    division_not_found = False
+                    division_found = True
                     aggregates[division] = model_runner.elementwise_list_addition(self.compartment_soln[compartment],
                                                                                   aggregates[division])
-                    if allocate_to_one_division_only: continue
-            if division_not_found:
+                if allocate_to_one_division_only and division_found: break
+            if not division_found:
                 aggregates['remainder'] = model_runner.elementwise_list_addition(self.compartment_soln[compartment],
                                                                                  aggregates['remainder'])
         return aggregates, compartments_to_divide_over

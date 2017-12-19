@@ -1519,11 +1519,12 @@ class Project:
 
         # plot percentage of MDR for different uncertainty runs
         if self.gui_inputs['output_uncertainty'] and self.gui_inputs['n_strains'] > 1:
-            self.plot_perc_MDR_progress()
+            self.plot_perc_mdr_progress()
 
         # for MDR debugging purpose
         if self.gui_inputs['n_strains'] > 1:
-            self.plot_MDR_cases_by_compartment_type()
+            self.plot_mdr_cases_by_compartment_type()
+            print('hello')
 
         # optimisation plotting
         if self.model_runner.optimisation:
@@ -2663,18 +2664,18 @@ class Project:
         Plot popsizes over recent time for each program in baseline scenario.
         """
 
-        # Prelims
+        # prelims
         fig = self.set_and_update_figure()
         ax = make_single_axis(fig)
 
-        # Plotting
+        # plotting
         for var in self.model_runner.models[0].var_labels:
             if 'popsize_' in var:
                 ax.plot(self.model_runner.models[0].times[self.start_time_index:],
                         self.model_runner.models[0].get_var_soln(var)[self.start_time_index:],
                         label=t_k.find_title_from_dictionary(var[8:]))
 
-        # Finishing up
+        # finishing up
         self.tidy_axis(ax, [1, 1], legend='for_single', start_time=self.inputs.model_constants['plot_start_time'],
                        y_label=' persons', y_axis_type='scaled')
         fig.suptitle('Population sizes for cost-coverage curves under baseline scenario')
@@ -2770,25 +2771,24 @@ class Project:
         ax.set_ylabel('Likelihood', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         self.save_figure(fig, '_likelihoods')
 
-    def plot_perc_MDR_progress(self):
+    def plot_perc_mdr_progress(self):
         """
         Plot the percentage of MDR-TB among incident TB cases over time, for the different accepted runs.
         """
+
         fig = self.set_and_update_figure()
         ax = make_single_axis(fig)
-        runs = len(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'])
 
         # plot the target
         ax.plot(self.inputs.model_constants['current_time'], self.inputs.model_constants['tb_perc_mdr_prevalence'],
                 marker='o', markersize=5, markeredgewidth=0., linewidth=0.)
 
         # plot the runs
-        for run in range(runs):
+        for run in range(len(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'])):
             if run in self.accepted_indices or self.plot_rejected_runs:
                 if run in self.accepted_indices:
-                    linewidth = 1.2
-                    colour = str(1. - float(run) / float(len(
-                        self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'])))
+                    linewidth, colour = 1.2, str(
+                        1. - float(run) / float(len(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'])))
                 elif self.inputs.intervention_uncertainty:
                     linewidth, colour = .8, '.4'
                 else:
@@ -2806,32 +2806,25 @@ class Project:
         ax.set_ylabel('% of MDR-TB in TB incidence', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         self.save_figure(fig, '_perc_mdr_progress')
 
-    def plot_MDR_cases_by_compartment_type(self):
+    def plot_mdr_cases_by_compartment_type(self):
         """
         Plot the number of MDR-TB cases in active, detected, on treatment and treated compartments.
         Mostly for debugging purpose.
-        Returns:
         """
+
         fig = self.set_and_update_figure()
         compartment_types = ['active', 'detect', 'treatment']
         subplot_grid = find_subplot_numbers(len(compartment_types))
-        start_time, end_time \
-            = self.inputs.model_constants['start_time'], self.inputs.model_constants['recent_time']
-
-        xvals = self.model_runner.models[0].times
-
         for i, compartment_type in enumerate(compartment_types):
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1)
-            strings_of_interest = ['mdr', compartment_type]
-            yvals = self.model_runner.models[0].calculate_aggregate_compartment_sizes_from_strings(strings_of_interest)
-
-            ax.plot(xvals, yvals)
-
-            self.tidy_axis(ax, subplot_grid, start_time=start_time,
+            ax.plot(self.model_runner.models[0].times,
+                    self.model_runner.models[0].calculate_aggregate_compartment_sizes_from_strings(
+                        ['mdr', compartment_type]))
+            self.tidy_axis(ax, subplot_grid, start_time=self.inputs.model_constants['start_time'],
                            title='MDR-TB ' + compartment_type)
 
         # finishing up
-        self.save_figure(fig, '_MDR_by_compartment_type')
+        self.save_figure(fig, '_mdr_by_compartment_type')
 
     def plot_optimised_epi_outputs(self):
         """

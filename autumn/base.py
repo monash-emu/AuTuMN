@@ -807,17 +807,18 @@ class BaseModel:
         the list strings. This method has to be run after integration.
         Args:
             strings: a list of strings
-        Returns: A time-series providing the aggregate size for the different times of self.times.
+        Returns:
+            A time-series providing the aggregate size for the different times of self.times.
         """
-        aggregate_sizes = [0. for i in range(len(self.times))]  # initial list with zeros
 
-        compartments_to_aggregate = self.labels  # initially all compartments and then becomes the required subset
+        aggregate_sizes = numpy.zeros(len(self.times))
+
+        # initially all compartments and then becomes the required subset
+        compartments_to_aggregate = self.labels
         for string in strings:
             compartments_to_aggregate = [c for c in compartments_to_aggregate if string in c]
-
         for compartment in compartments_to_aggregate:
             aggregate_sizes = [x + y for x, y in zip(aggregate_sizes, self.compartment_soln[compartment])]
-
         return aggregate_sizes
 
     ''' flow diagram production '''

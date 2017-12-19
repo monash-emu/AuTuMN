@@ -812,11 +812,11 @@ class BaseModel:
         """
 
         aggregate_sizes = numpy.zeros(len(self.times))
+        compartments_to_aggregate = []
 
         # initially all compartments and then becomes the required subset
-        compartments_to_aggregate = self.labels
         for string in strings:
-            compartments_to_aggregate = [c for c in compartments_to_aggregate if string in c]
+            compartments_to_aggregate = [c for c in self.labels if string in c]
         for compartment in compartments_to_aggregate:
             aggregate_sizes = [x + y for x, y in zip(aggregate_sizes, self.compartment_soln[compartment])]
         return aggregate_sizes

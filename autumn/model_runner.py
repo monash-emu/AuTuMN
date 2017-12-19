@@ -17,6 +17,7 @@ def elementwise_list_addition(increment, list_to_increment):
     Simple method to element-wise increment a list by the values in another list of the same length.
     """
 
+    if not list_to_increment: return increment
     assert len(increment) == len(list_to_increment), 'Attempted to add two lists of different lengths'
     return [sum(x) for x in zip(list_to_increment, increment)]
 

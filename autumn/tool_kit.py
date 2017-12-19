@@ -258,6 +258,7 @@ def increase_parameter_closer_to_value(old_value, target_value, coverage):
     value_to_return = old_value + (target_value - old_value) * coverage if old_value < target_value else old_value
     return value_to_return
 
+
 def decrease_parameter_closer_to_value(old_value, target_value, coverage):
 
     value_to_return = old_value - (old_value - target_value) * coverage if old_value > target_value else old_value

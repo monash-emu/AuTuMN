@@ -5,6 +5,7 @@ from scipy.integrate import odeint
 import tool_kit
 from autumn.economics import get_cost_from_coverage, get_coverage_from_cost
 import scipy.stats
+import model_runner
 
 
 def add_unique_tuple_to_list(a_list, a_tuple):
@@ -161,9 +162,7 @@ class BaseModel:
 
         pass
 
-    ####################################################
-    ### Methods to manipulate compartment data items ###
-    ####################################################
+    ''' methods to manipulate compartment data items '''
 
     def convert_list_to_compartments(self, compartment_vector):
 
@@ -804,7 +803,9 @@ class BaseModel:
     def calculate_aggregate_compartment_sizes_from_strings(self, strings):
         """
         Calculate aggregate compartment sizes for the compartments that have a name containing the elements of
-        the list strings. This method has to be run after integration.
+        the list strings. This is a diagnostic method to be run after integration. Initially all compartments and then
+        becomes the required subset.
+
         Args:
             strings: a list of strings
         Returns:
@@ -812,14 +813,44 @@ class BaseModel:
         """
 
         aggregate_sizes = numpy.zeros(len(self.times))
-        compartments_to_aggregate = []
-
-        # initially all compartments and then becomes the required subset
-        for string in strings:
-            compartments_to_aggregate = [c for c in self.labels if string in c]
+        for string in strings: compartments_to_aggregate = [c for c in self.labels if string in c]
         for compartment in compartments_to_aggregate:
-            aggregate_sizes = [x + y for x, y in zip(aggregate_sizes, self.compartment_soln[compartment])]
+            aggregate_sizes \
+                = model_runner.elementwise_list_addition(aggregate_sizes, self.compartment_soln[compartment])
         return aggregate_sizes
+
+    def calculate_aggregate_compartment_divisions_from_strings(self, compartments_to_divide_over,
+                                                               required_string_1='', required_string_2='',
+                                                               allocate_to_one_division_only=True):
+        """
+        Similar to previous method, but hopefully more general and able to handle the string not being found in any of
+        the compartments.
+
+        Args:
+            compartments_to_divide_over: List of sub-divisions to divide over
+            required_string_1: First string that must be present in the compartment name
+            required_string_2: Second string that must be present
+            allocate_to_one_division_only: Whether to skip on once the division string is found
+        Returns:
+            aggregates: A dictionary with keys from compartments_to_divide_over and a remainder key
+        """
+
+        compartments_to_divide_over.append('remainder')
+        aggregates = dict.fromkeys(compartments_to_divide_over)
+        for compartment in self.labels:
+            if required_string_1 not in compartment: continue
+            if required_string_2 not in compartment: continue
+            division_not_found = True
+            for division in compartments_to_divide_over:
+                if division in compartment:
+                    division_not_found = False
+                    aggregates[division] = model_runner.elementwise_list_addition(self.compartment_soln[compartment],
+                                                                                  aggregates[division])
+                    if allocate_to_one_division_only: continue
+            if division_not_found:
+                aggregates['remainder'] = model_runner.elementwise_list_addition(self.compartment_soln[compartment],
+                                                                                 aggregates['remainder'])
+        return aggregates, compartments_to_divide_over
 
     ''' flow diagram production '''
 

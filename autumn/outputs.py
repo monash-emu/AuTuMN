@@ -1523,8 +1523,7 @@ class Project:
 
         # for MDR debugging purpose
         if self.gui_inputs['n_strains'] > 1:
-            self.plot_mdr_cases_by_compartment_type()
-            print('hello')
+            self.plot_cases_by_division(['active', 'detect', '_mdr_asds', 'treat'], '_mdr')
 
         # optimisation plotting
         if self.model_runner.optimisation:
@@ -2806,22 +2805,23 @@ class Project:
         ax.set_ylabel('% of MDR-TB in TB incidence', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         self.save_figure(fig, '_perc_mdr_progress')
 
-    def plot_mdr_cases_by_compartment_type(self):
+    def plot_cases_by_division(self, divisions, restriction=''):
         """
-        Plot the number of MDR-TB cases in active, detected, on treatment and treated compartments.
-        Mostly for debugging purpose.
+        Plot the number cases in across various categories, within the population specified in the restriction string.
+        Mostly for debugging purposes.
         """
 
         fig = self.set_and_update_figure()
-        compartment_types = ['active', 'detect', 'treatment']
+        divisions, compartment_types \
+            = self.model_runner.models[0].calculate_aggregate_compartment_divisions_from_strings(
+                divisions, restriction)
         subplot_grid = find_subplot_numbers(len(compartment_types))
-        for i, compartment_type in enumerate(compartment_types):
-            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1)
-            ax.plot(self.model_runner.models[0].times,
-                    self.model_runner.models[0].calculate_aggregate_compartment_sizes_from_strings(
-                        ['mdr', compartment_type]))
-            self.tidy_axis(ax, subplot_grid, start_time=self.inputs.model_constants['start_time'],
-                           title='MDR-TB ' + compartment_type)
+        for c, compartment_type in enumerate(compartment_types):
+            if divisions[compartment_type]:
+                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
+                ax.plot(self.model_runner.models[0].times, divisions[compartment_type])
+                self.tidy_axis(ax, subplot_grid, start_time=self.inputs.model_constants['start_time'],
+                               title=restriction + compartment_type)
 
         # finishing up
         self.save_figure(fig, '_mdr_by_compartment_type')

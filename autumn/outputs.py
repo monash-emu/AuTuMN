@@ -1523,7 +1523,8 @@ class Project:
 
         # for MDR debugging purpose
         if self.gui_inputs['n_strains'] > 1:
-            self.plot_cases_by_division(['active', 'detect', '_mdr_asds', 'treat'], '_mdr')
+            self.plot_cases_by_division(['active', 'detect', 'missed', '_asds', 'treat'], '_mdr',
+                                        exclusion_string='latent')
 
         # optimisation plotting
         if self.model_runner.optimisation:
@@ -2805,25 +2806,25 @@ class Project:
         ax.set_ylabel('% of MDR-TB in TB incidence', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         self.save_figure(fig, '_perc_mdr_progress')
 
-    def plot_cases_by_division(self, divisions, restriction=''):
+    def plot_cases_by_division(self, divisions, restriction='', exclusion_string='we all love futsal'):
         """
         Plot the number cases in across various categories, within the population specified in the restriction string.
         Mostly for debugging purposes.
         """
 
+        print(exclusion_string)
+
         fig = self.set_and_update_figure()
         divisions, compartment_types \
             = self.model_runner.models[0].calculate_aggregate_compartment_divisions_from_strings(
-                divisions, restriction)
+                divisions, restriction, exclusion_string=exclusion_string)
         subplot_grid = find_subplot_numbers(len(compartment_types))
         for c, compartment_type in enumerate(compartment_types):
             if divisions[compartment_type]:
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
                 ax.plot(self.model_runner.models[0].times, divisions[compartment_type])
                 self.tidy_axis(ax, subplot_grid, start_time=self.inputs.model_constants['start_time'],
-                               title=restriction + compartment_type)
-
-        # finishing up
+                               title=compartment_type + restriction)
         self.save_figure(fig, '_mdr_by_compartment_type')
 
     def plot_optimised_epi_outputs(self):

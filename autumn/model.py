@@ -1469,18 +1469,20 @@ class ConsolidatedModel(StratifiedModel):
                                 self.set_var_transfer_rate_flow(
                                     'treatment_infect' + end,
                                     'treatment_noninfect' + end,
-                                    'program_rate_treatment' + riskgroup + strain_or_inappropriate + history + '_success_infect')
+                                    'program_rate_treatment' + riskgroup + strain_or_inappropriate + history
+                                    + '_success_infect')
                                 self.set_var_transfer_rate_flow(
                                     'treatment_noninfect' + end,
                                     'susceptible_immune' + riskgroup + self.histories[-1] + agegroup,
-                                    'program_rate_treatment' + riskgroup + strain_or_inappropriate + history + '_success_noninfect')
+                                    'program_rate_treatment' + riskgroup + strain_or_inappropriate + history
+                                    + '_success_noninfect')
 
                                 # death on treatment
                                 for treatment_stage in self.treatment_stages:
                                     self.set_var_infection_death_rate_flow(
                                         'treatment' + treatment_stage + end,
-                                        'program_rate_treatment' + riskgroup + strain_or_inappropriate + history + '_death'
-                                        + treatment_stage)
+                                        'program_rate_treatment' + riskgroup + strain_or_inappropriate + history
+                                        + '_death' + treatment_stage)
 
                                 # default
                                 for treatment_stage in self.treatment_stages:
@@ -1490,8 +1492,8 @@ class ConsolidatedModel(StratifiedModel):
                                         self.set_var_transfer_rate_flow(
                                             'treatment' + treatment_stage + end,
                                             'active' + organ + strain + riskgroup + history + agegroup,
-                                            'program_rate_treatment' + riskgroup + strain_or_inappropriate + history + '_default'
-                                            + treatment_stage)
+                                            'program_rate_treatment' + riskgroup + strain_or_inappropriate + history
+                                            + '_default' + treatment_stage)
 
                                     # otherwise with amplification
                                     else:
@@ -1499,13 +1501,13 @@ class ConsolidatedModel(StratifiedModel):
                                         self.set_var_transfer_rate_flow(
                                             'treatment' + treatment_stage + end,
                                             'active' + organ + strain + riskgroup + history + agegroup,
-                                            'program_rate_treatment' + riskgroup + strain_or_inappropriate + history + '_default'
-                                            + treatment_stage + '_noamplify')
+                                            'program_rate_treatment' + riskgroup + strain_or_inappropriate + history
+                                            + '_default' + treatment_stage + '_noamplify')
                                         self.set_var_transfer_rate_flow(
                                             'treatment' + treatment_stage + end,
                                             'active' + organ + amplify_to_strain + riskgroup + history + agegroup,
-                                            'program_rate_treatment' + riskgroup + strain_or_inappropriate + history + '_default'
-                                            + treatment_stage + '_amplify')
+                                            'program_rate_treatment' + riskgroup + strain_or_inappropriate + history
+                                            + '_default' + treatment_stage + '_amplify')
 
     def set_ipt_flows(self):
         """

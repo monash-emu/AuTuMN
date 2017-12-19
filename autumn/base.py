@@ -837,15 +837,12 @@ class BaseModel:
             aggregates: A dictionary with keys from compartments_to_divide_over and a remainder key
         """
 
-        print(exclusion_string)
-
         compartments_to_divide_over.append('remainder')
         aggregates = dict.fromkeys(compartments_to_divide_over)
         for compartment in self.labels:
             if required_string_1 not in compartment: continue
             if required_string_2 not in compartment: continue
             if exclusion_string in compartment: continue
-            print(compartment)
             division_not_found = True
             for division in compartments_to_divide_over:
                 if division in compartment:

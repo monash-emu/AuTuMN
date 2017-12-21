@@ -1518,10 +1518,9 @@ class Project:
         if self.gui_inputs['output_likelihood_plot']: self.plot_likelihoods()
 
         # plot percentage of MDR for different uncertainty runs
-        if self.gui_inputs['output_uncertainty'] and self.gui_inputs['n_strains'] > 1:
-            self.plot_perc_mdr_progress()
+        if self.gui_inputs['output_uncertainty'] and self.gui_inputs['n_strains'] > 1: self.plot_perc_mdr_progress()
 
-        # for MDR debugging purpose
+        # for debugging
         if self.gui_inputs['n_strains'] > 1:
             self.plot_cases_by_division(['_asds', '_asmdr'],
                                         restriction_1='_mdr', restriction_2='treatment', exclusion_string='latent')
@@ -1763,7 +1762,6 @@ class Project:
         for o, output in enumerate(outputs):
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
             for scenario in self.scenarios[::-1]:
-                scenario_name = t_k.find_scenario_string_from_number(scenario)
                 ax.plot(self.model_runner.outputs['manual']['epi'][scenario]['times'],
                         self.model_runner.outputs['manual']['epi'][scenario][output + '_mdr'],
                         color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0])

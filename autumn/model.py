@@ -114,7 +114,7 @@ class ConsolidatedModel(StratifiedModel):
         if 'int_prop_novel_vaccination' in self.relevant_interventions: self.force_types.append('_novelvac')
 
         # list of infectious compartments
-        self.infectious_tags = ['active', 'missed', 'detect', 'treatment_infect', 'lowquality']
+        self.infectious_tags = ['active', 'missed', 'detect', 'treatment', 'lowquality']
 
         # to loop force of infection code over all risk groups if variable, or otherwise to just run once
         self.force_riskgroups = copy.copy(self.riskgroups) if self.vary_force_infection_by_riskgroup else ['']
@@ -1001,11 +1001,16 @@ class ConsolidatedModel(StratifiedModel):
 
             # loop through compartments, skipping on as soon as possible if irrelevant
             for label in self.labels:
-                if (riskgroup not in label and riskgroup != '') or (strain not in label and strain != ''): continue
+                if strain not in label and strain != '': continue
+                if riskgroup not in label and riskgroup != '': continue
+
+                # will only work for 2 strains
+                if 'treatment_noninfect' in label and '_mdr_asds' not in label: continue
                 for agegroup in self.agegroups:
                     if agegroup not in label and agegroup != '': continue
                     for organ in self.organ_status:
-                        if (organ not in label and organ != '') or organ == '_extrapul': continue
+                        if organ not in label and organ != '': continue
+                        if organ == '_extrapul': continue
 
                         # adjustment for increased infectiousness in riskgroup
                         riskgroup_multiplier = self.params['riskgroup_multiplier_force_infection' + riskgroup] \

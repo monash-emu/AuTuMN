@@ -90,6 +90,14 @@ class ConsolidatedModel(StratifiedModel):
         # start_time can't stay as a model constant, as it must be set for each scenario individually
         self.start_time = inputs.model_constants['start_time']
 
+        # this code just stops the code checker complaining about attributes being undefined in instantiation
+        self.compartment_types, self.organ_status, self.strains, self.riskgroups, self.agegroups, self.mixing, \
+            self.vary_detection_by_organ, self.organs_for_detection, self.riskgroups_for_detection, \
+            self.vary_detection_by_riskgroup, self.vary_force_infection_by_riskgroup, self.histories, \
+            self.relevant_interventions, self.scaleup_fns, self.interventions_to_cost, self.is_lowquality, \
+            self.is_amplification, self.is_misassignment, self.is_timevariant_organs, self.country, self.time_step, \
+            self.integration_method = [None] * 22
+
         # model attributes to be set directly to inputs object attributes
         for attribute in ['compartment_types', 'organ_status', 'strains', 'riskgroups', 'agegroups', 'mixing',
                           'vary_detection_by_organ', 'organs_for_detection', 'riskgroups_for_detection',

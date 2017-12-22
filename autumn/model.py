@@ -116,6 +116,12 @@ class ConsolidatedModel(StratifiedModel):
         # list of infectious compartments
         self.infectious_tags = ['active', 'missed', 'detect', 'treatment', 'lowquality']
 
+        # list out the inappropriate regimens
+        self.inappropriate_regimens = []
+        for s, strain in enumerate(self.strains):
+            for a, as_strain in enumerate(self.strains):
+                if s > a: self.inappropriate_regimens.append(strain + '_as' + as_strain[1:])
+
         # to loop force of infection code over all risk groups if variable, or otherwise to just run once
         self.force_riskgroups = copy.copy(self.riskgroups) if self.vary_force_infection_by_riskgroup else ['']
 
@@ -1004,8 +1010,12 @@ class ConsolidatedModel(StratifiedModel):
                 if strain not in label and strain != '': continue
                 if riskgroup not in label and riskgroup != '': continue
 
-                # will only work for 2 strains
-                if 'treatment_noninfect' in label and '_mdr_asds' not in label: continue
+                # skip on for those in the non-infectious stages of treatment, except if inappropriate
+                appropriate_regimen = True
+                for regimen in self.inappropriate_regimens:
+                    if regimen in label: appropriate_regimen = False
+                if 'treatment_noninfect' in label and not appropriate_regimen: continue
+
                 for agegroup in self.agegroups:
                     if agegroup not in label and agegroup != '': continue
                     for organ in self.organ_status:
@@ -1453,41 +1463,37 @@ class ConsolidatedModel(StratifiedModel):
             for history in self.histories:
                 for riskgroup in self.riskgroups:
                     for organ in self.organ_status:
-                        for strain_number, strain in enumerate(self.strains):
+                        for s, strain in enumerate(self.strains):
 
                             # which strains to loop over for strain assignment
                             assignment_strains = ['']
                             if self.is_misassignment: assignment_strains = self.strains
-                            for assigned_strain_number, assigned_strain in enumerate(assignment_strains):
-                                as_assigned_strain = ''
-                                strain_or_inappropriate = strain
-                                if self.is_misassignment:
-                                    as_assigned_strain = '_as' + assigned_strain[1:]
-
-                                    # which treatment parameters to use - for the strain or for inappropriate treatment
-                                    strain_or_inappropriate = assigned_strain
-                                    if strain_number > assigned_strain_number:
-                                        strain_or_inappropriate = strain + '_as' + assigned_strain[1:]
+                            for a, assigned_strain in enumerate(assignment_strains):
+                                as_assigned_strain = '_as' + assigned_strain[1:] if self.is_misassignment else ''
+                                if self.is_misassignment and s > a:
+                                    regimen = strain + '_as' + assigned_strain[1:]
+                                elif self.is_misassignment:
+                                    regimen = assigned_strain
+                                else:
+                                    regimen = strain
 
                                 # success by treatment stage
                                 end = organ + strain + as_assigned_strain + riskgroup + history + agegroup
                                 self.set_var_transfer_rate_flow(
                                     'treatment_infect' + end,
                                     'treatment_noninfect' + end,
-                                    'program_rate_treatment' + riskgroup + strain_or_inappropriate + history
-                                    + '_success_infect')
+                                    'program_rate_treatment' + riskgroup + regimen + history + '_success_infect')
                                 self.set_var_transfer_rate_flow(
                                     'treatment_noninfect' + end,
                                     'susceptible_immune' + riskgroup + self.histories[-1] + agegroup,
-                                    'program_rate_treatment' + riskgroup + strain_or_inappropriate + history
-                                    + '_success_noninfect')
+                                    'program_rate_treatment' + riskgroup + regimen + history + '_success_noninfect')
 
                                 # death on treatment
                                 for treatment_stage in self.treatment_stages:
                                     self.set_var_infection_death_rate_flow(
                                         'treatment' + treatment_stage + end,
-                                        'program_rate_treatment' + riskgroup + strain_or_inappropriate + history
-                                        + '_death' + treatment_stage)
+                                        'program_rate_treatment' + riskgroup + regimen + history + '_death'
+                                        + treatment_stage)
 
                                 # default
                                 for treatment_stage in self.treatment_stages:
@@ -1497,22 +1503,22 @@ class ConsolidatedModel(StratifiedModel):
                                         self.set_var_transfer_rate_flow(
                                             'treatment' + treatment_stage + end,
                                             'active' + organ + strain + riskgroup + history + agegroup,
-                                            'program_rate_treatment' + riskgroup + strain_or_inappropriate + history
-                                            + '_default' + treatment_stage)
+                                            'program_rate_treatment' + riskgroup + regimen + history + '_default'
+                                            + treatment_stage)
 
                                     # otherwise with amplification
                                     else:
-                                        amplify_to_strain = self.strains[strain_number + 1]
+                                        amplify_to_strain = self.strains[s + 1]
                                         self.set_var_transfer_rate_flow(
                                             'treatment' + treatment_stage + end,
                                             'active' + organ + strain + riskgroup + history + agegroup,
-                                            'program_rate_treatment' + riskgroup + strain_or_inappropriate + history
+                                            'program_rate_treatment' + riskgroup + regimen + history
                                             + '_default' + treatment_stage + '_noamplify')
                                         self.set_var_transfer_rate_flow(
                                             'treatment' + treatment_stage + end,
                                             'active' + organ + amplify_to_strain + riskgroup + history + agegroup,
-                                            'program_rate_treatment' + riskgroup + strain_or_inappropriate + history
-                                            + '_default' + treatment_stage + '_amplify')
+                                            'program_rate_treatment' + riskgroup + regimen + history + '_default'
+                                            + treatment_stage + '_amplify')
 
     def set_ipt_flows(self):
         """

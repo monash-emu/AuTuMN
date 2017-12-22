@@ -1469,13 +1469,13 @@ class ConsolidatedModel(StratifiedModel):
                             assignment_strains = ['']
                             if self.is_misassignment: assignment_strains = self.strains
                             for a, assigned_strain in enumerate(assignment_strains):
-                                as_assigned_strain = '_as' + assigned_strain[1:] if self.is_misassignment else ''
                                 if self.is_misassignment and s > a:
-                                    regimen = strain + '_as' + assigned_strain[1:]
+                                    regimen, as_assigned_strain \
+                                        = strain + '_as' + assigned_strain[1:], '_as' + assigned_strain[1:]
                                 elif self.is_misassignment:
-                                    regimen = assigned_strain
+                                    regimen, as_assigned_strain = assigned_strain, '_as' + assigned_strain[1:]
                                 else:
-                                    regimen = strain
+                                    regimen, as_assigned_strain = strain, ''
 
                                 # success by treatment stage
                                 end = organ + strain + as_assigned_strain + riskgroup + history + agegroup

@@ -199,7 +199,7 @@ class ModelRunner:
                              }]
         self.all_parameters_tried = {}  # all refers to applying to every model run (rather than accepted only)
         self.all_compartment_values_tried = {}
-        self.all_other_adjustments_made = {}
+        self.other_adjustments = {}
         self.whether_accepted_list = []
         self.accepted_indices = []
         self.rejected_indices = []
@@ -218,6 +218,7 @@ class ModelRunner:
         self.amount_to_adjust_mdr_year = 1.
         self.prop_death_reporting = self.inputs.model_constants['program_prop_death_reporting']
         self.adjust_mdr = False
+        if len(self.inputs.strains) <= 1: self.adjust_mdr = False
         self.mdr_introduce_time = self.inputs.model_constants['mdr_introduce_time']
 
         # optimisation attributes
@@ -677,8 +678,8 @@ class ModelRunner:
             params = new_param_list
         for compartment_type in self.inputs.compartment_types:
             if compartment_type in self.inputs.model_constants: self.all_compartment_values_tried[compartment_type] = []
-        self.all_other_adjustments_made['program_prop_death_reporting'] = []
-        self.all_other_adjustments_made['mdr_introduce_time'] = []
+        self.other_adjustments['program_prop_death_reporting'] = []
+        self.other_adjustments['mdr_introduce_time'] = []
 
         # find weights for outputs that are being calibrated to
         years_to_compare = range(1990, 2015)
@@ -784,11 +785,7 @@ class ModelRunner:
                         self.prop_death_reporting -= self.amount_to_adjust_mortality
 
                     # MDR introduction time adjustment
-                    if self.adjust_mdr and len(self.inputs.strains) > 1:
-                        self.adjust_mdr_introduction(last_run_output_index)
-
-                    for scenario in self.scenarios:
-                        self.models[scenario].set_parameter('mdr_introduce_time', self.mdr_introduce_time)
+                    if self.adjust_mdr: self.adjust_mdr_introduction(last_run_output_index)
 
                     # adjust starting population, if a target population has been specified
                     if 'target_population' in self.inputs.model_constants:
@@ -816,8 +813,8 @@ class ModelRunner:
                     + str(datetime.datetime.now() - start_timer_run))
 
                 # record death reporting proportion and mdr introduction time, which may or may not have been adjusted
-                self.all_other_adjustments_made['program_prop_death_reporting'].append(self.prop_death_reporting)
-                self.all_other_adjustments_made['mdr_introduce_time'].append(self.mdr_introduce_time)
+                self.other_adjustments['program_prop_death_reporting'].append(self.prop_death_reporting)
+                if self.adjust_mdr: self.other_adjustments['mdr_introduce_time'].append(self.mdr_introduce_time)
 
                 run += 1
 
@@ -1019,6 +1016,8 @@ class ModelRunner:
             self.mdr_introduce_time -= self.amount_to_adjust_mdr_year
         elif ratio_mdr_prevalence > self.relative_difference_to_adjust_mdr:
             self.mdr_introduce_time += self.amount_to_adjust_mdr_year
+        for scenario in self.scenarios:
+            self.models[scenario].set_parameter('mdr_introduce_time', self.mdr_introduce_time)
 
     def plot_progressive_parameters(self):
         """

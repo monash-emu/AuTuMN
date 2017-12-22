@@ -198,8 +198,8 @@ class ModelRunner:
                              'width_multiplier': 2.  # width of normal posterior relative to range of allowed values
                              }]
         self.all_parameters_tried = {}  # all refers to applying to every model run (rather than accepted only)
-        self.all_compartment_values_tried = {}
-        self.other_adjustments = {}
+        self.compartment_values_tried = {}
+        self.adjustments = {}
         self.whether_accepted_list = []
         self.accepted_indices = []
         self.rejected_indices = []
@@ -217,6 +217,7 @@ class ModelRunner:
         self.amount_to_adjust_mortality = .02
         self.amount_to_adjust_mdr_year = 1.
         self.prop_death_reporting = self.inputs.model_constants['program_prop_death_reporting']
+        self.adjust_mortality = True
         self.adjust_mdr = False
         if len(self.inputs.strains) <= 1: self.adjust_mdr = False
         self.mdr_introduce_time = self.inputs.model_constants['mdr_introduce_time']
@@ -677,9 +678,9 @@ class ModelRunner:
             new_param_list.append(param_candidates[param['key']][0])
             params = new_param_list
         for compartment_type in self.inputs.compartment_types:
-            if compartment_type in self.inputs.model_constants: self.all_compartment_values_tried[compartment_type] = []
-        self.other_adjustments['program_prop_death_reporting'] = []
-        self.other_adjustments['mdr_introduce_time'] = []
+            if compartment_type in self.inputs.model_constants: self.compartment_values_tried[compartment_type] = []
+        self.adjustments['program_prop_death_reporting'] = []
+        self.adjustments['mdr_introduce_time'] = []
 
         # find weights for outputs that are being calibrated to
         years_to_compare = range(1990, 2015)
@@ -744,8 +745,8 @@ class ModelRunner:
 
                 # record starting population
                 if self.gui_inputs['write_uncertainty_outcome_params']:
-                    for compartment_type in self.all_compartment_values_tried:
-                        self.all_compartment_values_tried[compartment_type].append(
+                    for compartment_type in self.compartment_values_tried:
+                        self.compartment_values_tried[compartment_type].append(
                             self.inputs.model_constants[compartment_type])
 
                 # record uncertainty calculations for all runs
@@ -758,8 +759,7 @@ class ModelRunner:
                         self.rejection_dict[param['key']][n_accepted] = []
 
                     # update likelihood and parameter set for next run
-                    prev_log_likelihood = log_likelihood
-                    params = new_param_list
+                    prev_log_likelihood, params = log_likelihood, new_param_list
 
                     # run scenarios other than baseline and store uncertainty (only if accepted)
                     for scenario in self.scenarios:
@@ -768,23 +768,8 @@ class ModelRunner:
                             self.run_with_params(new_param_list, scenario=scenario)
                             self.store_uncertainty(scenario, 'epi_uncertainty')
 
-                    # iteratively adjusting proportion of mortality reported
-                    ratios = []
-                    for year in years_to_compare:
-                        if year in self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k']:
-                            ratios.append(self.outputs['epi_uncertainty']['epi'][0]['mortality'][last_run_output_index,
-                                             tool_kit.find_first_list_element_above_value(
-                                                 self.outputs['manual']['epi'][0]['times'],
-                                                 float(year))]
-                                         / self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k'][year])
-                    average_ratio = numpy.mean(ratios)
-
-                    if average_ratio < 1. / self.relative_difference_to_adjust_mortality:
-                        self.prop_death_reporting += self.amount_to_adjust_mortality
-                    elif average_ratio > self.relative_difference_to_adjust_mortality:
-                        self.prop_death_reporting -= self.amount_to_adjust_mortality
-
-                    # MDR introduction time adjustment
+                    # make algorithmic adjustments
+                    if self.adjust_mortality: self.adjust_mortality_reporting(last_run_output_index, years_to_compare)
                     if self.adjust_mdr: self.adjust_mdr_introduction(last_run_output_index)
 
                     # adjust starting population, if a target population has been specified
@@ -813,8 +798,9 @@ class ModelRunner:
                     + str(datetime.datetime.now() - start_timer_run))
 
                 # record death reporting proportion and mdr introduction time, which may or may not have been adjusted
-                self.other_adjustments['program_prop_death_reporting'].append(self.prop_death_reporting)
-                if self.adjust_mdr: self.other_adjustments['mdr_introduce_time'].append(self.mdr_introduce_time)
+                if self.adjust_mortality:
+                    self.adjustments['program_prop_death_reporting'].append(self.prop_death_reporting)
+                if self.adjust_mdr: self.adjustments['mdr_introduce_time'].append(self.mdr_introduce_time)
 
                 run += 1
 
@@ -1000,6 +986,28 @@ class ModelRunner:
             new_params.append(random[0])
 
         return new_params
+
+    def adjust_mortality_reporting(self, last_run_output_index, years_to_compare):
+        """
+        Adjust the proportion of mortality captured by reporting systems to better match reported data.
+
+        Args:
+            last_run_output_index: Integer to index the run
+            years_to_compare: Years to compare the reported mortality to the modelled mortality over
+        """
+
+        ratios = []
+        for year in years_to_compare:
+            if year in self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k']:
+                ratios.append(self.outputs['epi_uncertainty']['epi'][0]['mortality'][last_run_output_index,
+                    tool_kit.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'],
+                                                                 float(year))]
+                              / self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k'][year])
+        average_ratio = numpy.mean(ratios)
+        if average_ratio < 1. / self.relative_difference_to_adjust_mortality:
+            self.prop_death_reporting += self.amount_to_adjust_mortality
+        elif average_ratio > self.relative_difference_to_adjust_mortality:
+            self.prop_death_reporting -= self.amount_to_adjust_mortality
 
     def adjust_mdr_introduction(self, last_run_output_index):
         """

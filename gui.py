@@ -119,9 +119,9 @@ def get_autumn_params():
         }
 
     default_boolean_keys = [
-        # 'output_uncertainty',
-        # 'write_uncertainty_outcome_params',
-        # 'output_param_plots',
+        'output_uncertainty',
+        'write_uncertainty_outcome_params',
+        'output_param_plots',
         'is_amplification',
         'is_misassignment',
         # 'is_lowquality',
@@ -129,6 +129,7 @@ def get_autumn_params():
         'is_vary_detection_by_organ',
         'is_treatment_history',
         'riskgroup_prison',
+        'output_likelihood_plot',
         # 'riskgroup_urbanpoor',
         # 'output_scaleups',
         # 'output_by_subgroups',
@@ -218,7 +219,7 @@ def get_autumn_params():
     }
     params['search_width'] = {
         'type': 'double',
-        'value': 0.08,
+        'value': 0.05,
         'label': 'Relative search width'
     }
     options = ['No saving or loading', 'Load', 'Save']

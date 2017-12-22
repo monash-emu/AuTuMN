@@ -199,7 +199,7 @@ class ModelRunner:
                              }]
         self.all_parameters_tried = {}  # all refers to applying to every model run (rather than accepted only)
         self.compartment_values_tried = {}
-        self.adjustments = {}
+        self.adjustments = {'program_prop_death_reporting': [], 'mdr_introduce_time': []}
         self.whether_accepted_list = []
         self.accepted_indices = []
         self.rejected_indices = []
@@ -680,8 +680,6 @@ class ModelRunner:
             params = new_param_list
         for compartment_type in self.inputs.compartment_types:
             if compartment_type in self.inputs.model_constants: self.compartment_values_tried[compartment_type] = []
-        self.adjustments['program_prop_death_reporting'] = []
-        self.adjustments['mdr_introduce_time'] = []
 
         # find weights for outputs that are being calibrated to
         years_to_compare = range(1990, 2015)

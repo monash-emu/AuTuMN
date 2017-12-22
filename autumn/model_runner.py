@@ -219,6 +219,7 @@ class ModelRunner:
         self.prop_death_reporting = self.inputs.model_constants['program_prop_death_reporting']
         self.adjust_mortality = True
         self.adjust_mdr = False
+        self.adjust_population = True
         if len(self.inputs.strains) <= 1: self.adjust_mdr = False
         self.mdr_introduce_time = self.inputs.model_constants['mdr_introduce_time']
 
@@ -771,19 +772,7 @@ class ModelRunner:
                     # make algorithmic adjustments
                     if self.adjust_mortality: self.adjust_mortality_reporting(last_run_output_index, years_to_compare)
                     if self.adjust_mdr: self.adjust_mdr_introduction(last_run_output_index)
-
-                    # adjust starting population, if a target population has been specified
-                    if 'target_population' in self.inputs.model_constants:
-                        population_adjustment \
-                            = self.inputs.model_constants['target_population'] \
-                              / float(self.outputs['epi_uncertainty']['epi'][0]['population'][last_run_output_index,
-                                tool_kit.find_first_list_element_above_value(
-                                    self.outputs['manual']['epi'][0]['times'],
-                                    self.inputs.model_constants['current_time'])])
-                        for compartment in self.inputs.compartment_types:
-                            if compartment in self.models[0].params:
-                                self.models[0].set_parameter(compartment,
-                                                             self.models[0].params[compartment] * population_adjustment)
+                    if self.adjust_population: self.adjust_start_population(last_run_output_index)
 
                 else:
                     self.whether_accepted_list.append(False)
@@ -986,6 +975,25 @@ class ModelRunner:
             new_params.append(random[0])
 
         return new_params
+
+    def adjust_start_population(self, last_run_output_index):
+        """
+        Algorithmically adjust the starting population to better match the modern population we are aiming for.
+
+        Args:
+            last_run_output_index: Integer to index last output
+        """
+
+        if 'target_population' in self.inputs.model_constants:
+            population_adjustment \
+                = self.inputs.model_constants['target_population'] \
+                  / float(self.outputs['epi_uncertainty']['epi'][0]['population'][last_run_output_index,
+                    tool_kit.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'],
+                                                                 self.inputs.model_constants['current_time'])])
+            for compartment in self.inputs.compartment_types:
+                if compartment in self.models[0].params:
+                    self.models[0].set_parameter(compartment,
+                                                 self.models[0].params[compartment] * population_adjustment)
 
     def adjust_mortality_reporting(self, last_run_output_index, years_to_compare):
         """

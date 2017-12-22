@@ -217,6 +217,7 @@ class ModelRunner:
         self.amount_to_adjust_mortality = .02
         self.amount_to_adjust_mdr_year = 1.
         self.prop_death_reporting = self.inputs.model_constants['program_prop_death_reporting']
+        self.adjust_mdr = False
         self.mdr_introduce_time = self.inputs.model_constants['mdr_introduce_time']
 
         # optimisation attributes
@@ -783,17 +784,8 @@ class ModelRunner:
                         self.prop_death_reporting -= self.amount_to_adjust_mortality
 
                     # MDR introduction time adjustment
-                    if len(self.inputs.strains) > 1:
-                        ratio_mdr_prevalence \
-                            = float(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'][
-                                    last_run_output_index, tool_kit.find_first_list_element_at_least_value(self.outputs[
-                                        'manual']['epi'][0]['times'], self.inputs.model_constants['current_time'])]) \
-                              / self.inputs.model_constants['tb_perc_mdr_prevalence']
-
-                        if ratio_mdr_prevalence < 1. / self.relative_difference_to_adjust_mdr:
-                            self.mdr_introduce_time -= self.amount_to_adjust_mdr_year
-                        elif ratio_mdr_prevalence > self.relative_difference_to_adjust_mdr:
-                            self.mdr_introduce_time += self.amount_to_adjust_mdr_year
+                    if self.adjust_mdr and len(self.inputs.strains) > 1:
+                        self.adjust_mdr_introduction(last_run_output_index)
 
                     for scenario in self.scenarios:
                         self.models[scenario].set_parameter('mdr_introduce_time', self.mdr_introduce_time)
@@ -1011,6 +1003,22 @@ class ModelRunner:
             new_params.append(random[0])
 
         return new_params
+
+    def adjust_mdr_introduction(self, last_run_output_index):
+        """
+        Adjust timing of MDR-TB algorithmically to better match modern proportionate burden observed. May not work if
+        introducing earlier doesn't consistently result in a greater burden of disease - as was the case for Bulgaria.
+        """
+
+        ratio_mdr_prevalence \
+            = float(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'][last_run_output_index,
+                tool_kit.find_first_list_element_at_least_value(self.outputs['manual']['epi'][0]['times'],
+                                                                self.inputs.model_constants['current_time'])]) \
+              / self.inputs.model_constants['tb_perc_mdr_prevalence']
+        if ratio_mdr_prevalence < 1. / self.relative_difference_to_adjust_mdr:
+            self.mdr_introduce_time -= self.amount_to_adjust_mdr_year
+        elif ratio_mdr_prevalence > self.relative_difference_to_adjust_mdr:
+            self.mdr_introduce_time += self.amount_to_adjust_mdr_year
 
     def plot_progressive_parameters(self):
         """

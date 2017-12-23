@@ -1,11 +1,13 @@
-# -*- coding: utf-8 -*-
 
-from __future__ import print_function
+
 from xlrd import open_workbook
 from numpy import nan
 import numpy
 import os
 import tool_kit
+
+
+''' static functions '''
 
 
 def is_all_same_value(a_list, test_val):
@@ -46,15 +48,31 @@ def parse_year_data(year_data, blank, endcolumn):
     """
 
     year_data = replace_specified_value(year_data, nan, blank)
-    assumption_val = year_data[-1]
-    year_vals = year_data[:endcolumn]
+    assumption_val, year_vals = year_data[-1], year_data[:endcolumn]
     if is_all_same_value(year_vals, nan):
-        return [assumption_val] 
+        return [assumption_val]
     else:
         return year_vals
 
 
-'''  Individual spreadsheet readers '''
+def adapt_country_name(country, purpose):
+    """
+    Use a dictionary to adapt the basic country name to the name used in specific spreadsheets.
+
+    Args:
+        country: The original string for the country
+        purpose: The "purpose", which is the string to index the second tier of the country_name_adaptations dictionary
+    """
+
+    country_name_adaptations =\
+        {'Kyrgyzstan': {'demographic': 'Kyrgyz Republic'},
+         'Moldova': {'tb': 'Republic of Moldova'}}
+    if country in country_name_adaptations:
+        if purpose in country_name_adaptations[country]:
+            return country_name_adaptations[country][purpose]
+    return country
+
+'''  individual spreadsheet readers '''
 
 
 class BcgCoverageSheetReader:
@@ -78,23 +96,16 @@ class BcgCoverageSheetReader:
 
     def parse_row(self, row):
 
-        # parse first row
+        # first row
         if row[0] == self.first_cell:
             self.parlist = parse_year_data(row, '', len(row))
-            for i in range(len(self.parlist)):
-                self.parlist[i] = str(self.parlist[i])
+            for i in range(len(self.parlist)): self.parlist[i] = str(self.parlist[i])
 
         # subsequent rows
         elif row[self.column_for_keys] \
                 == tool_kit.adjust_country_name(self.country_to_read, adjustment='for_vaccination'):
             for i in range(self.start_col, len(row)):
-                if type(row[i]) == float:
-                    self.data[int(self.parlist[i])] = row[i]
-
-    def get_data(self):
-
-        # simply return the data that has been collected
-        return self.data
+                if type(row[i]) == float: self.data[int(self.parlist[i])] = row[i]
 
 
 class BirthRateReader:
@@ -124,10 +135,6 @@ class BirthRateReader:
                 if type(row[i]) == float:
                     self.data[int(self.parlist[i])] = row[i]
 
-    def get_data(self):
-
-        return self.data
-
 
 class LifeExpectancyReader:
 
@@ -151,10 +158,6 @@ class LifeExpectancyReader:
             for i in range(4, len(row)):
                 if type(row[i]) == float:
                     self.data[int(self.parlist[i])] = row[i]
-
-    def get_data(self):
-
-        return self.data
 
 
 class ControlPanelReader:
@@ -237,10 +240,6 @@ class ControlPanelReader:
                                     'upper': row[3]}
                 self.data[str(row[0]) + '_uncertainty'] = uncertainty_dict
 
-    def get_data(self):
-
-        return self.data
-
 
 class FixedParametersReader(ControlPanelReader):
     def __init__(self):
@@ -293,10 +292,6 @@ class DefaultProgramReader:
                 elif row[i] != '':
                     self.data[str(row[0])][str(self.parlist[i])] = row[i]
 
-    def get_data(self):
-
-        return self.data
-
 
 class CountryProgramReader(DefaultProgramReader):
 
@@ -348,10 +343,6 @@ class GlobalTbReportReader:
             for year in self.year_indices:
                 if not numpy.isnan(col[self.year_indices[year]]):
                     self.data[col[0]][year] = col[self.year_indices[year]]
-
-    def get_data(self):
-
-        return self.data
 
 
 class NotificationsReader(GlobalTbReportReader):
@@ -412,10 +403,6 @@ class MdrReportReader:
             for i in range(len(self.dictionary_keys)):
                 self.data[self.dictionary_keys[i]] = row[i]
 
-    def get_data(self):
-
-        return self.data
-
 
 class LaboratoriesReader(GlobalTbReportReader):
 
@@ -473,12 +460,8 @@ class DiabetesReportReader:
                 if self.dictionary_keys[i][:28] == u'Diabetes national prevalence':
                     self.data['comorb_prop_diabetes'] = float(row[i][:row[i].find('\n')]) / 1E2
 
-    def get_data(self):
 
-        return self.data
-
-
-''' Master scripts '''
+''' master functions to call readers '''
 
 
 def read_xls_with_sheet_readers(sheet_readers):
@@ -494,102 +477,64 @@ def read_xls_with_sheet_readers(sheet_readers):
     result = {}
     for reader in sheet_readers:
 
+        # check that the spreadsheet to be read exists
         try:
-
-            # check that the spreadsheet to be read exists
             print('Reading file', os.getcwd(), reader.filename)
             workbook = open_workbook(reader.filename)
 
+        # if sheet unavailable, report error
         except:
-
-            # if sheet unavailable, print error message
             print('Unable to open country spreadsheet')
 
+        # if the workbook is available, read the sheet in question
         else:
-
-            # if the workbook is available, read the sheet in question
             sheet = workbook.sheet_by_name(reader.tab_name)
-
-            # read in the direction that the reader expects (either horizontal or vertical)
             if reader.horizontal:
-                for i_row in range(reader.start_row, sheet.nrows):
-                    reader.parse_row(sheet.row_values(i_row))
+                for i_row in range(reader.start_row, sheet.nrows): reader.parse_row(sheet.row_values(i_row))
             else:
-                for i_col in range(reader.start_column, sheet.ncols):
-                    reader.parse_col(sheet.col_values(i_col))
-            result[reader.key] = reader.get_data()
+                for i_col in range(reader.start_column, sheet.ncols): reader.parse_col(sheet.col_values(i_col))
+            result[reader.key] = reader.data
 
     return result
 
 
-def read_input_data_xls(from_test, sheets_to_read, country=None):
+def read_input_data_xls(from_test, sheets_to_read, country):
     """
     Compile sheet readers into a list according to which ones have been selected.
-    Note that most readers now take the country in question as an input,
-    while only the fixed parameters sheet reader does not.
+    Note that most readers now take the country in question as an input, while only the fixed parameters sheet reader
+    does not.
 
     Args:
         from_test: Whether being called from the directory above
-        sheets_to_read: A list containing the strings that are also the
-            'keys' attribute of the reader
+        sheets_to_read: A list containing the strings that are also the 'keys' attribute of the reader
         country: Country being read for
-
     Returns:
-        A single data structure containing all the data to be read
-            (by calling the read_xls_with_sheet_readers method)
+        A single data structure containing all the data to be read (by calling the read_xls_with_sheet_readers method)
     """
 
+    # add sheet readers as required
     sheet_readers = []
-
-    if 'bcg' in sheets_to_read:
-        sheet_readers.append(BcgCoverageSheetReader(country))
-    if 'rate_birth' in sheets_to_read:
-        # don't like this code - should be dealt with through dictionaries in tool-kit, will re-code at some stage
-        if country == 'Kyrgyzstan':
-             sheet_readers.append(BirthRateReader('Kyrgyz Republic'))
-        else:
-            sheet_readers.append(BirthRateReader(country))
+    if 'default_constants' in sheets_to_read: sheet_readers.append(FixedParametersReader())
+    if 'bcg' in sheets_to_read: sheet_readers.append(BcgCoverageSheetReader(country))
+    if 'rate_birth' in sheets_to_read: sheet_readers.append(BirthRateReader(adapt_country_name(country, 'demographic')))
     if 'life_expectancy' in sheets_to_read:
-        if country == 'Kyrgyzstan':
-            sheet_readers.append(LifeExpectancyReader('Kyrgyz Republic'))
-        else:
-            sheet_readers.append(LifeExpectancyReader(country))
-    if 'control_panel' in sheets_to_read:
-        sheet_readers.append(ControlPanelReader())
-    if 'default_constants' in sheets_to_read:
-        sheet_readers.append(FixedParametersReader())
-    if 'country_constants' in sheets_to_read:
-        sheet_readers.append(CountryParametersReader(country))
-    if 'default_programs' in sheets_to_read:
-        sheet_readers.append(DefaultProgramReader())
-    if 'country_programs' in sheets_to_read:
-        sheet_readers.append(CountryProgramReader(country))
-    if 'tb' in sheets_to_read:
-        if country == 'Moldova':
-            sheet_readers.append(GlobalTbReportReader('Republic of Moldova'))
-        else:
-            sheet_readers.append(GlobalTbReportReader(country))
-    if 'notifications' in sheets_to_read:
-        if country == 'Moldova':
-            sheet_readers.append(NotificationsReader('Republic of Moldova'))
-        else:
-            sheet_readers.append(NotificationsReader(country))
-    if 'outcomes' in sheets_to_read:
-        sheet_readers.append(TreatmentOutcomesReader(country))
-    if 'mdr' in sheets_to_read:
-        sheet_readers.append(MdrReportReader(country))
-    if 'laboratories' in sheets_to_read:
-        sheet_readers.append(LaboratoriesReader(country))
-    if 'strategy' in sheets_to_read:
-        sheet_readers.append(StrategyReader(country))
-    if 'diabetes' in sheets_to_read:
-        sheet_readers.append(DiabetesReportReader(country))
+        sheet_readers.append(LifeExpectancyReader(adapt_country_name(country, 'demographic')))
+    if 'country_constants' in sheets_to_read: sheet_readers.append(CountryParametersReader(country))
+    if 'default_programs' in sheets_to_read: sheet_readers.append(DefaultProgramReader())
+    if 'country_programs' in sheets_to_read: sheet_readers.append(CountryProgramReader(country))
+    if 'tb' in sheets_to_read: sheet_readers.append(GlobalTbReportReader(adapt_country_name(country, 'tb')))
+    if 'notifications' in sheets_to_read: sheet_readers.append(NotificationsReader(adapt_country_name(country, 'tb')))
+    if 'outcomes' in sheets_to_read: sheet_readers.append(TreatmentOutcomesReader(country))
+    if 'mdr' in sheets_to_read: sheet_readers.append(MdrReportReader(country))
+    if 'laboratories' in sheets_to_read: sheet_readers.append(LaboratoriesReader(country))
+    if 'strategy' in sheets_to_read: sheet_readers.append(StrategyReader(country))
+    if 'diabetes' in sheets_to_read: sheet_readers.append(DiabetesReportReader(country))
 
     # if being run from the directory above
     if from_test:
-        for reader in sheet_readers:
-            reader.filename = os.path.join('autumn/', reader.filename)
+        for reader in sheet_readers: reader.filename = os.path.join('autumn/', reader.filename)
 
+    # return data
     return read_xls_with_sheet_readers(sheet_readers)
 
 

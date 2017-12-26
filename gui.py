@@ -119,7 +119,7 @@ def get_autumn_params():
         }
 
     default_boolean_keys = [
-        'output_uncertainty',
+        # 'output_uncertainty',
         'write_uncertainty_outcome_params',
         'output_param_plots',
         'is_amplification',

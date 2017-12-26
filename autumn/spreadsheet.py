@@ -70,51 +70,56 @@ class MasterReader:
         self.key = purpose  # string that defines the data type in this file
         self.country_to_read = country_to_read  # country being read
         self.data = {}  # empty dictionary to contain the data that is read
-        self.tab_dictionary = {'bcg': 'BCG',
-                               'rate_birth': 'Data',
-                               'life_expectancy': 'Data',
-                               'tb': 'TB_burden_countries_2016-04-19',
-                               'default_constants': 'constants',
-                               'country_constants': 'constants'}
-        self.tab_name = self.tab_dictionary[purpose]
-        self.filenames = {'bcg': 'xls/who_unicef_bcg_coverage.xlsx',
-                          'rate_birth': 'xls/world_bank_crude_birth_rate.xlsx',
-                          'life_expectancy': 'xls/world_bank_life_expectancy.xlsx',
-                          'tb': 'xls/gtb_data.xlsx',
-                          'default_constants': 'xls/data_default.xlsx',
-                          'country_constants': 'xls/data_' + country_to_read.lower() + '.xlsx'}
-        self.filename = self.filenames[purpose]
-        self.start_rows = {'bcg': 0,
-                           'rate_birth': 0,
-                           'life_expectancy': 3,
-                           'tb': 1,
-                           'default_constants': 1,
-                           'country_constants': 1}
-        self.start_row = self.start_rows[purpose]
-        self.start_cols = {'bcg': 4,
-                           'rate_birth': 'n/a',
-                           'life_expectancy': 'n/a',
-                           'tb': 0,
-                           'default_constants': 'n/a',
-                           'country_constants': 'n/a'}
-        self.start_col = self.start_cols[purpose]
-        self.columns_for_keys = {'bcg': 2,
-                                 'rate_birth': 2,
-                                 'life_expectancy': 0,
-                                 'tb': 'n/a',
-                                 'default_constants': 0,
-                                 'country_constants': 0}
-        self.column_for_keys = self.columns_for_keys[purpose]
-        self.first_cells = {'bcg': 'WHO_REGION',
-                            'rate_birth': 'n/a',
-                            'life_expectancy': 'n/a',
+        tab_dictionary = {'bcg': 'BCG',
+                          'rate_birth': 'Data',
+                          'life_expectancy': 'Data',
+                          'tb': 'TB_burden_countries_2016-04-19',
+                          'default_constants': 'constants',
+                          'country_constants': 'constants',
+                          'default_programs': 'time_variants'}
+        self.tab_name = tab_dictionary[purpose]
+        filenames = {'bcg': 'xls/who_unicef_bcg_coverage.xlsx',
+                     'rate_birth': 'xls/world_bank_crude_birth_rate.xlsx',
+                     'life_expectancy': 'xls/world_bank_life_expectancy.xlsx',
+                     'tb': 'xls/gtb_data.xlsx',
+                     'default_constants': 'xls/data_default.xlsx',
+                     'country_constants': 'xls/data_' + country_to_read.lower() + '.xlsx',
+                     'default_programs': 'xls/data_default.xlsx'}
+        self.filename = filenames[purpose]
+        start_rows = {'bcg': 0,
+                      'rate_birth': 0,
+                      'life_expectancy': 3,
+                      'tb': 1,
+                      'default_constants': 1,
+                      'country_constants': 1,
+                      'default_programs': 0}
+        self.start_row = start_rows[purpose]
+        start_cols = {'bcg': 4,
+                      'rate_birth': 'n/a',
+                      'life_expectancy': 'n/a',
+                      'tb': 0,
+                      'default_constants': 'n/a',
+                      'country_constants': 'n/a',
+                      'default_programs': 1}
+        self.start_col = start_cols[purpose]
+        columns_for_keys = {'bcg': 2,
+                            'rate_birth': 2,
+                            'life_expectancy': 0,
                             'tb': 'n/a',
-                            'default_constants': 'n/a',
-                            'country_constants': 'n/a'}
-        self.first_cell = self.first_cells[purpose]
+                            'default_constants': 0,
+                            'country_constants': 0,
+                            'default_programs': 0}
+        self.column_for_keys = columns_for_keys[purpose]
+        first_cells = {'bcg': 'WHO_REGION',
+                       'rate_birth': 'n/a',
+                       'life_expectancy': 'n/a',
+                       'tb': 'n/a',
+                       'default_constants': 'n/a',
+                       'country_constants': 'n/a',
+                       'default_programs': 'program'}
+        self.first_cell = first_cells[purpose]
         self.horizontal = True  # spreadsheet orientation
-        if self.key in ['tb']:
-            self.horizontal = False
+        if self.key in ['tb']: self.horizontal = False
 
         self.indices = []
         self.parlist = []
@@ -212,6 +217,20 @@ class MasterReader:
                                         'lower': row[2],
                                         'upper': row[3]}
                     self.data[str(row[0]) + '_uncertainty'] = uncertainty_dict
+
+        elif self.key == 'default_programs':
+
+            if row[0] == self.first_cell:
+                self.parlist = parse_year_data(row, '', len(row))
+            else:
+                self.data[str(row[0])] = {}
+                for i in range(self.start_col, len(row)):
+                    parlist_item_string = str(self.parlist[i])
+                    if ('19' in parlist_item_string or '20' in parlist_item_string) and row[i] != '':
+                        self.data[row[0]][int(self.parlist[i])] = \
+                            row[i]
+                    elif row[i] != '':
+                        self.data[str(row[0])][str(self.parlist[i])] = row[i]
 
     def parse_col(self, col):
 
@@ -506,7 +525,8 @@ def read_input_data_xls(from_test, sheets_to_read, country):
         sheet_readers.append(MasterReader(tool_kit.adjust_country_name(country, 'demographic'), 'life_expectancy'))
     if 'country_constants' in sheets_to_read:
         sheet_readers.append(MasterReader(country, 'country_constants'))
-    if 'default_programs' in sheets_to_read: sheet_readers.append(DefaultProgramReader())
+    if 'default_programs' in sheets_to_read:
+        sheet_readers.append(DefaultProgramReader())
     if 'country_programs' in sheets_to_read: sheet_readers.append(CountryProgramReader(country))
     if 'tb' in sheets_to_read:
         sheet_readers.append(MasterReader(tool_kit.adjust_country_name(country, 'tb'), 'tb'))

@@ -76,7 +76,8 @@ class MasterReader:
                           'tb': 'TB_burden_countries_2016-04-19',
                           'default_constants': 'constants',
                           'country_constants': 'constants',
-                          'default_programs': 'time_variants'}
+                          'default_programs': 'time_variants',
+                          'country_programs': 'time_variants'}
         self.tab_name = tab_dictionary[purpose]
         filenames = {'bcg': 'xls/who_unicef_bcg_coverage.xlsx',
                      'rate_birth': 'xls/world_bank_crude_birth_rate.xlsx',
@@ -84,7 +85,8 @@ class MasterReader:
                      'tb': 'xls/gtb_data.xlsx',
                      'default_constants': 'xls/data_default.xlsx',
                      'country_constants': 'xls/data_' + country_to_read.lower() + '.xlsx',
-                     'default_programs': 'xls/data_default.xlsx'}
+                     'default_programs': 'xls/data_default.xlsx',
+                     'country_programs': 'xls/data_' + country_to_read.lower() + '.xlsx'}
         self.filename = filenames[purpose]
         start_rows = {'bcg': 0,
                       'rate_birth': 0,
@@ -92,7 +94,8 @@ class MasterReader:
                       'tb': 1,
                       'default_constants': 1,
                       'country_constants': 1,
-                      'default_programs': 0}
+                      'default_programs': 0,
+                      'country_programs': 0}
         self.start_row = start_rows[purpose]
         start_cols = {'bcg': 4,
                       'rate_birth': 'n/a',
@@ -100,7 +103,8 @@ class MasterReader:
                       'tb': 0,
                       'default_constants': 'n/a',
                       'country_constants': 'n/a',
-                      'default_programs': 1}
+                      'default_programs': 1,
+                      'country_programs': 1}
         self.start_col = start_cols[purpose]
         columns_for_keys = {'bcg': 2,
                             'rate_birth': 2,
@@ -108,7 +112,8 @@ class MasterReader:
                             'tb': 'n/a',
                             'default_constants': 0,
                             'country_constants': 0,
-                            'default_programs': 0}
+                            'default_programs': 0,
+                            'country_programs': 0}
         self.column_for_keys = columns_for_keys[purpose]
         first_cells = {'bcg': 'WHO_REGION',
                        'rate_birth': 'n/a',
@@ -116,7 +121,8 @@ class MasterReader:
                        'tb': 'n/a',
                        'default_constants': 'n/a',
                        'country_constants': 'n/a',
-                       'default_programs': 'program'}
+                       'default_programs': 'program',
+                       'country_programs': 'program'}
         self.first_cell = first_cells[purpose]
         self.horizontal = True  # spreadsheet orientation
         if self.key in ['tb']: self.horizontal = False
@@ -218,7 +224,7 @@ class MasterReader:
                                         'upper': row[3]}
                     self.data[str(row[0]) + '_uncertainty'] = uncertainty_dict
 
-        elif self.key == 'default_programs':
+        elif self.key == 'default_programs' or self.key == 'country_programs':
 
             if row[0] == self.first_cell:
                 self.parlist = parse_year_data(row, '', len(row))
@@ -259,49 +265,6 @@ class MasterReader:
                 for year in self.year_indices:
                     if not numpy.isnan(col[self.year_indices[year]]):
                         self.data[col[0]][year] = col[self.year_indices[year]]
-
-
-class DefaultProgramReader:
-
-    def __init__(self):
-
-        self.filename = 'xls/data_default.xlsx'
-        self.key = 'default_programs'
-        self.general_program_intialisations()
-
-    def general_program_intialisations(self):
-
-        self.data = {}
-        self.tab_name = 'time_variants'
-        self.start_row = 0
-        self.column_for_keys = 0
-        self.horizontal = True
-        self.start_col = 1
-        self.first_cell = 'program'
-
-    def parse_row(self, row):
-
-        if row[0] == self.first_cell:
-            self.parlist = parse_year_data(row, '', len(row))
-        else:
-            self.data[str(row[0])] = {}
-            for i in range(self.start_col, len(row)):
-                parlist_item_string = str(self.parlist[i])
-                if ('19' in parlist_item_string or '20' in parlist_item_string) and row[i] != '':
-                    self.data[row[0]][int(self.parlist[i])] = \
-                        row[i]
-                elif row[i] != '':
-                    self.data[str(row[0])][str(self.parlist[i])] = row[i]
-
-
-class CountryProgramReader(DefaultProgramReader):
-
-    def __init__(self, country_to_read):
-
-        self.filename = 'xls/data_' + country_to_read.lower() + '.xlsx'
-        self.country_to_read = tool_kit.adjust_country_name(country_to_read, 'tb')
-        self.key = 'country_programs'
-        self.general_program_intialisations()
 
 
 class GlobalTbReportReader:
@@ -526,8 +489,9 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     if 'country_constants' in sheets_to_read:
         sheet_readers.append(MasterReader(country, 'country_constants'))
     if 'default_programs' in sheets_to_read:
-        sheet_readers.append(DefaultProgramReader())
-    if 'country_programs' in sheets_to_read: sheet_readers.append(CountryProgramReader(country))
+        sheet_readers.append(MasterReader(country, 'default_programs'))
+    if 'country_programs' in sheets_to_read:
+        sheet_readers.append(MasterReader(country, 'country_programs'))
     if 'tb' in sheets_to_read:
         sheet_readers.append(MasterReader(tool_kit.adjust_country_name(country, 'tb'), 'tb'))
     if 'notifications' in sheets_to_read:

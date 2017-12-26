@@ -73,32 +73,38 @@ class MasterReader:
         self.tab_dictionary = {'bcg': 'BCG',
                                'rate_birth': 'Data',
                                'life_expectancy': 'Data',
-                               'tb': 'TB_burden_countries_2016-04-19'}
+                               'tb': 'TB_burden_countries_2016-04-19',
+                               'default_constants': 'constants'}
         self.tab_name = self.tab_dictionary[purpose]
         self.filenames = {'bcg': 'xls/who_unicef_bcg_coverage.xlsx',
                           'rate_birth': 'xls/world_bank_crude_birth_rate.xlsx',
                           'life_expectancy': 'xls/world_bank_life_expectancy.xlsx',
-                          'tb': 'xls/gtb_data.xlsx'}
+                          'tb': 'xls/gtb_data.xlsx',
+                          'default_constants': 'xls/data_default.xlsx'}
         self.filename = self.filenames[purpose]
         self.start_rows = {'bcg': 0,
                            'rate_birth': 0,
                            'life_expectancy': 3,
-                           'tb': 1}
+                           'tb': 1,
+                           'default_constants': 1}
         self.start_row = self.start_rows[purpose]
         self.start_cols = {'bcg': 4,
                            'rate_birth': 'n/a',
                            'life_expectancy': 'n/a',
-                           'tb': 0}
+                           'tb': 0,
+                           'default_constants': 'n/a'}
         self.start_col = self.start_cols[purpose]
         self.columns_for_keys = {'bcg': 2,
                                  'rate_birth': 2,
                                  'life_expectancy': 0,
-                                 'tb': 'n/a'}
+                                 'tb': 'n/a',
+                                 'default_constants': 0}
         self.column_for_keys = self.columns_for_keys[purpose]
         self.first_cells = {'bcg': 'WHO_REGION',
                             'rate_birth': 'n/a',
                             'life_expectancy': 'n/a',
-                            'tb': 'n/a'}
+                            'tb': 'n/a',
+                            'default_constants': 'n/a'}
         self.first_cell = self.first_cells[purpose]
         self.horizontal = True  # spreadsheet orientation
         if self.key in ['tb']:
@@ -140,6 +146,66 @@ class MasterReader:
                 for i in range(4, len(row)):
                     if type(row[i]) == float:
                         self.data[int(self.parlist[i])] = row[i]
+
+        elif self.key == 'default_constants':
+
+            if row[0] != 'age_breakpoints' and row[1] == '':
+                pass
+
+            # for the country to be analysed
+            elif row[0] == 'country':
+                self.data[str(row[0])] = str(row[1])
+
+            # integration method
+            elif row[0] == 'integration':
+                self.data[str(row[0])] = str(row[1])
+
+            # stratifications
+            elif row[0][:2] == 'n_':
+                self.data[str(row[0])] = int(row[1])
+
+            # for the calendar year times
+            elif 'time' in row[0] or 'smoothness' in row[0]:
+                self.data[str(row[0])] = float(row[1])
+
+            # fitting approach
+            elif 'fitting' in row[0]:
+                self.data[str(row[0])] = int(row[1])
+
+            # all instructions around outputs, plotting and spreadsheet/document writing
+            elif 'output_' in row[0]:
+                self.data[str(row[0])] = bool(row[1])
+
+            # conditionals for model
+            elif row[0][:3] == 'is_' or row[0][:11] == 'comorbidity':
+                self.data[str(row[0])] = bool(row[1])
+
+            # don't set scenarios through the default sheet
+            elif row[0] == 'scenarios_to_run':
+                self.data[str(row[0])] = [None]
+                if self.key == 'control_panel':
+                    for i in range(1, len(row)):
+                        if not row[i] == '': self.data[str(row[0])] += [int(row[i])]
+
+            # age breakpoints (arguably should just be an empty list always)
+            elif row[0] == 'age_breakpoints':
+                self.data[str(row[0])] = []
+                for i in range(1, len(row)):
+                    if not row[i] == '': self.data[str(row[0])] += [int(row[i])]
+
+            # parameters values
+            else:
+                self.data[str(row[0])] = row[1]
+
+            # uncertainty parameters
+            # not sure why this if statement needs to be split exactly, but huge bugs seem to occur if it isn't
+            if len(row) >= 4:
+                # if an entry present in second column and it is a constant parameter that can be modified in uncertainty
+                if row[2] != '':
+                    uncertainty_dict = {'point': row[1],
+                                        'lower': row[2],
+                                        'upper': row[3]}
+                    self.data[str(row[0]) + '_uncertainty'] = uncertainty_dict
 
     def parse_col(self, col):
 
@@ -249,15 +315,6 @@ class ControlPanelReader:
                                     'lower': row[2],
                                     'upper': row[3]}
                 self.data[str(row[0]) + '_uncertainty'] = uncertainty_dict
-
-
-class FixedParametersReader(ControlPanelReader):
-    def __init__(self):
-
-        self.tab_name = 'constants'
-        self.key = 'default_constants'
-        self.filename = 'xls/data_default.xlsx'
-        self.general_program_intialisations()
 
 
 class CountryParametersReader(ControlPanelReader):
@@ -524,7 +581,7 @@ def read_input_data_xls(from_test, sheets_to_read, country):
 
     # add sheet readers as required
     sheet_readers = []
-    if 'default_constants' in sheets_to_read: sheet_readers.append(FixedParametersReader())
+    if 'default_constants' in sheets_to_read: sheet_readers.append(MasterReader(country, 'default_constants'))
     if 'bcg' in sheets_to_read: sheet_readers.append(MasterReader(country, 'bcg'))
     if 'rate_birth' in sheets_to_read:
         sheet_readers.append(MasterReader(tool_kit.adjust_country_name(country, 'demographic'), 'rate_birth'))

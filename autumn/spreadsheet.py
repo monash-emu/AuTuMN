@@ -55,23 +55,6 @@ def parse_year_data(year_data, blank, endcolumn):
         return year_vals
 
 
-def adapt_country_name(country, purpose):
-    """
-    Use a dictionary to adapt the basic country name to the name used in specific spreadsheets.
-
-    Args:
-        country: The original string for the country
-        purpose: The "purpose", which is the string to index the second tier of the country_name_adaptations dictionary
-    """
-
-    country_name_adaptations =\
-        {'Kyrgyzstan': {'demographic': 'Kyrgyz Republic'},
-         'Moldova': {'tb': 'Republic of Moldova'}}
-    if country in country_name_adaptations:
-        if purpose in country_name_adaptations[country]:
-            return country_name_adaptations[country][purpose]
-    return country
-
 '''  individual spreadsheet readers '''
 
 
@@ -103,7 +86,7 @@ class BcgCoverageSheetReader:
 
         # subsequent rows
         elif row[self.column_for_keys] \
-                == tool_kit.adjust_country_name(self.country_to_read, adjustment='for_vaccination'):
+                == tool_kit.adjust_country_name(self.country_to_read, 'tb'):
             for i in range(self.start_col, len(row)):
                 if type(row[i]) == float: self.data[int(self.parlist[i])] = row[i]
 
@@ -298,7 +281,7 @@ class CountryProgramReader(DefaultProgramReader):
     def __init__(self, country_to_read):
 
         self.filename = 'xls/data_' + country_to_read.lower() + '.xlsx'
-        self.country_to_read = tool_kit.adjust_country_name(country_to_read)
+        self.country_to_read = tool_kit.adjust_country_name(country_to_read, 'tb')
         self.key = 'country_programs'
         self.general_program_intialisations()
 
@@ -391,7 +374,7 @@ class MdrReportReader:
         self.start_row = 0
         self.horizontal = True
         self.dictionary_keys = []
-        self.country_to_read = tool_kit.adjust_country_name(country_to_read)
+        self.country_to_read = tool_kit.adjust_country_name(country_to_read, 'tb')
 
     def parse_row(self, row):
 
@@ -416,7 +399,7 @@ class LaboratoriesReader(GlobalTbReportReader):
         self.horizontal = False
         self.start_column = 0
         self.indices = []
-        self.country_to_read = tool_kit.adjust_country_name(country_to_read)
+        self.country_to_read = tool_kit.adjust_country_name(country_to_read, 'tb')
 
 
 class StrategyReader(MdrReportReader):
@@ -431,7 +414,7 @@ class StrategyReader(MdrReportReader):
         self.column_for_keys = 0
         self.horizontal = True
         self.dictionary_keys = []
-        self.country_to_read = tool_kit.adjust_country_name(country_to_read)
+        self.country_to_read = tool_kit.adjust_country_name(country_to_read, 'tb')
 
 
 class DiabetesReportReader:
@@ -446,7 +429,7 @@ class DiabetesReportReader:
         self.column_for_keys = 0
         self.horizontal = True
         self.dictionary_keys = []
-        self.country_to_read = tool_kit.adjust_country_name(country_to_read)
+        self.country_to_read = tool_kit.adjust_country_name(country_to_read, 'tb')
 
     def parse_row(self, row):
 
@@ -516,14 +499,17 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     sheet_readers = []
     if 'default_constants' in sheets_to_read: sheet_readers.append(FixedParametersReader())
     if 'bcg' in sheets_to_read: sheet_readers.append(BcgCoverageSheetReader(country))
-    if 'rate_birth' in sheets_to_read: sheet_readers.append(BirthRateReader(adapt_country_name(country, 'demographic')))
+    if 'rate_birth' in sheets_to_read:
+        sheet_readers.append(BirthRateReader(tool_kit.adjust_country_name(country, 'demographic')))
     if 'life_expectancy' in sheets_to_read:
-        sheet_readers.append(LifeExpectancyReader(adapt_country_name(country, 'demographic')))
+        sheet_readers.append(LifeExpectancyReader(tool_kit.adjust_country_name(country, 'demographic')))
     if 'country_constants' in sheets_to_read: sheet_readers.append(CountryParametersReader(country))
     if 'default_programs' in sheets_to_read: sheet_readers.append(DefaultProgramReader())
     if 'country_programs' in sheets_to_read: sheet_readers.append(CountryProgramReader(country))
-    if 'tb' in sheets_to_read: sheet_readers.append(GlobalTbReportReader(adapt_country_name(country, 'tb')))
-    if 'notifications' in sheets_to_read: sheet_readers.append(NotificationsReader(adapt_country_name(country, 'tb')))
+    if 'tb' in sheets_to_read:
+        sheet_readers.append(GlobalTbReportReader(tool_kit.adjust_country_name(country, 'tb')))
+    if 'notifications' in sheets_to_read:
+        sheet_readers.append(NotificationsReader(tool_kit.adjust_country_name(country, 'tb')))
     if 'outcomes' in sheets_to_read: sheet_readers.append(TreatmentOutcomesReader(country))
     if 'mdr' in sheets_to_read: sheet_readers.append(MdrReportReader(country))
     if 'laboratories' in sheets_to_read: sheet_readers.append(LaboratoriesReader(country))

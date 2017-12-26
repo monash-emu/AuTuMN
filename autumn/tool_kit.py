@@ -378,30 +378,40 @@ def capitalise_and_remove_underscore(original_string):
     return capitalise_first_letter(replace_underscore_with_space(original_string))
 
 
-def adjust_country_name(country_name, adjustment='default'):
+def adjust_country_name(country, purpose):
     """
-    Currently very simple method to convert one country's name into that used by the GTB Report. However, likely to
-    need to expand this as we work with more countries.
+    Use a dictionary to adapt the basic country name to the name used in specific spreadsheets.
 
     Args:
-        country_name: String for the original country name
-        adjustment: In case multiple adjustments could be required, allow for alternative sets of name adjustments
+        country: String for the original country name
+        purpose: The "purpose", which is the string to index the second tier of the country_name_adaptations dictionary
     Returns:
         adjusted_country_name: Adjusted string
     """
 
-    if adjustment == 'for_vaccination':
-        if country_name == 'Moldova':
-            return 'Republic of ' + country_name + ' (the)'
-        else:
-            return country_name
-    else:
-        if country_name == 'Philippines':
-            return country_name + ' (the)'
-        elif country_name == 'Moldova':
-            return 'Republic of ' + country_name
-        else:
-            return country_name
+    country_name_adaptations =\
+        {'Kyrgyzstan': {'demographic': 'Kyrgyz Republic'},
+         'Moldova': {'tb': 'Republic of Moldova'},
+         'Philippines': {'tb': 'Philippines (the)'}}
+    if country in country_name_adaptations:
+        if purpose in country_name_adaptations[country]:
+            return country_name_adaptations[country][purpose]
+    return country
+
+    #
+    #
+    # if adjustment == 'for_vaccination':
+    #     if country_name == 'Moldova':
+    #         return 'Republic of ' + country_name + ' (the)'
+    #     else:
+    #         return country_name
+    # else:
+    #     if country_name == 'Philippines':
+    #         return country_name + ' (the)'
+    #     elif country_name == 'Moldova':
+    #         return 'Republic of ' + country_name
+    #     else:
+    #         return country_name
 
 
 def find_title_from_dictionary(name):

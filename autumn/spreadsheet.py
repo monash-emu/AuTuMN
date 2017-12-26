@@ -58,89 +58,116 @@ def parse_year_data(year_data, blank, endcolumn):
 '''  individual spreadsheet readers '''
 
 
-class BcgCoverageSheetReader:
+class MasterReader:
     """
     Reader for the WHO/UNICEF BCG coverage data.
     Creates a single dictionary with years keys and coverage as a float representing BCG coverage.
     Comments to each method and attribute apply to the other sheet readers below as well.
     """
 
-    def __init__(self, country_to_read):
+    def __init__(self, country_to_read, purpose):
+
+        self.key = purpose  # string that defines the data type in this file
         self.country_to_read = country_to_read  # country being read
         self.data = {}  # empty dictionary to contain the data that is read
-        self.tab_name = 'BCG'  # tab of spreadsheet to be read
-        self.key = 'bcg'  # string that defines the data type in this file
-        self.filename = 'xls/who_unicef_bcg_coverage.xlsx'  # filename
-        self.start_row = 0  # first row to be read in
-        self.start_col = 4
-        self.column_for_keys = 2  # column that keys come from
+        self.tab_dictionary = {'bcg': 'BCG',
+                               'rate_birth': 'Data',
+                               'life_expectancy': 'Data',
+                               'tb': 'TB_burden_countries_2016-04-19'}
+        self.tab_name = self.tab_dictionary[purpose]
+        self.filenames = {'bcg': 'xls/who_unicef_bcg_coverage.xlsx',
+                          'rate_birth': 'xls/world_bank_crude_birth_rate.xlsx',
+                          'life_expectancy': 'xls/world_bank_life_expectancy.xlsx',
+                          'tb': 'xls/gtb_data.xlsx'}
+        self.filename = self.filenames[purpose]
+        self.start_rows = {'bcg': 0,
+                           'rate_birth': 0,
+                           'life_expectancy': 3,
+                           'tb': 1}
+        self.start_row = self.start_rows[purpose]
+        self.start_cols = {'bcg': 4,
+                           'rate_birth': 'n/a',
+                           'life_expectancy': 'n/a',
+                           'tb': 0}
+        self.start_col = self.start_cols[purpose]
+        self.columns_for_keys = {'bcg': 2,
+                                 'rate_birth': 2,
+                                 'life_expectancy': 0,
+                                 'tb': 'n/a'}
+        self.column_for_keys = self.columns_for_keys[purpose]
+        self.first_cells = {'bcg': 'WHO_REGION',
+                            'rate_birth': 'n/a',
+                            'life_expectancy': 'n/a',
+                            'tb': 'n/a'}
+        self.first_cell = self.first_cells[purpose]
         self.horizontal = True  # spreadsheet orientation
-        self.first_cell = 'WHO_REGION'
+        if self.key in ['tb']:
+            self.horizontal = False
 
-    def parse_row(self, row):
-
-        # first row
-        if row[0] == self.first_cell:
-            self.parlist = parse_year_data(row, '', len(row))
-            for i in range(len(self.parlist)): self.parlist[i] = str(self.parlist[i])
-
-        # subsequent rows
-        elif row[self.column_for_keys] \
-                == tool_kit.adjust_country_name(self.country_to_read, 'tb'):
-            for i in range(self.start_col, len(row)):
-                if type(row[i]) == float: self.data[int(self.parlist[i])] = row[i]
-
-
-class BirthRateReader:
-    """
-    Reader for the WHO/UNICEF BCG coverage data. Same structure and approach as for BcgCoverageSheetReader above.
-    """
-
-    def __init__(self, country_to_read):
-
-        self.country_to_read = country_to_read
-        self.data = {}
-        self.tab_name = 'Data'
-        self.key = 'rate_birth'
+        self.indices = []
         self.parlist = []
-        self.filename = 'xls/world_bank_crude_birth_rate.xlsx'
-        self.start_row = 0
-        self.column_for_keys = 2
-        self.horizontal = True
 
     def parse_row(self, row):
 
-        if row[0] == 'Series Name':
-            for i in range(len(row)):
-                self.parlist += [row[i][:4]]
-        elif row[self.column_for_keys] == self.country_to_read:
-            for i in range(4, len(row)):
-                if type(row[i]) == float:
-                    self.data[int(self.parlist[i])] = row[i]
+        if self.key == 'bcg':
 
+            # first row
+            if row[0] == self.first_cell:
+                self.parlist = parse_year_data(row, '', len(row))
+                for i in range(len(self.parlist)): self.parlist[i] = str(self.parlist[i])
 
-class LifeExpectancyReader:
+            # subsequent rows
+            elif row[self.column_for_keys] \
+                    == tool_kit.adjust_country_name(self.country_to_read, 'tb'):
+                for i in range(self.start_col, len(row)):
+                    if type(row[i]) == float: self.data[int(self.parlist[i])] = row[i]
 
-    def __init__(self, country_to_read):
+        elif self.key == 'rate_birth':
 
-        self.country_to_read = country_to_read
-        self.data = {}
-        self.tab_name = 'Data'
-        self.key = 'life_expectancy'
-        self.parlist = []
-        self.filename = 'xls/world_bank_life_expectancy.xlsx'
-        self.start_row = 3
-        self.column_for_keys = 0
-        self.horizontal = True
+            if row[0] == 'Series Name':
+                for i in range(len(row)):
+                    self.parlist += [row[i][:4]]
+            elif row[self.column_for_keys] == self.country_to_read:
+                for i in range(4, len(row)):
+                    if type(row[i]) == float:
+                        self.data[int(self.parlist[i])] = row[i]
 
-    def parse_row(self, row):
+        elif self.key == 'life_expectancy':
 
-        if row[0] == 'Country Name':
-            self.parlist += row
-        elif row[self.column_for_keys] == self.country_to_read:
-            for i in range(4, len(row)):
-                if type(row[i]) == float:
-                    self.data[int(self.parlist[i])] = row[i]
+            if row[0] == 'Country Name':
+                self.parlist += row
+            elif row[self.column_for_keys] == self.country_to_read:
+                for i in range(4, len(row)):
+                    if type(row[i]) == float:
+                        self.data[int(self.parlist[i])] = row[i]
+
+    def parse_col(self, col):
+
+        if self.key == 'tb':
+
+            col = replace_specified_value(col, nan, '')
+
+            # if it's the country column (the first one)
+            if col[0] == 'country':
+
+                # find the indices for the country in question
+                for i in range(len(col)):
+                    if col[i] == self.country_to_read: self.indices += [i]
+
+            elif 'iso' in col[0] or 'g_who' in col[0] or 'source' in col[0]:
+                pass
+
+            elif col[0] == 'year':
+                self.year_indices = {}
+                for i in self.indices:
+                    self.year_indices[int(col[i])] = i
+
+            # all other columns
+            else:
+                self.data[str(col[0])] = {}
+                for year in self.year_indices:
+                    if not numpy.isnan(col[self.year_indices[year]]):
+                        self.data[col[0]][year] = col[self.year_indices[year]]
 
 
 class ControlPanelReader:
@@ -297,7 +324,7 @@ class GlobalTbReportReader:
         self.filename = 'xls/gtb_data.xlsx'
         self.start_row = 1
         self.horizontal = False
-        self.start_column = 0
+        self.start_col = 0
         self.indices = []
         self.country_to_read = country_to_read
 
@@ -339,7 +366,7 @@ class NotificationsReader(GlobalTbReportReader):
         self.filename = 'xls/notifications_data.xlsx'
         self.start_row = 1
         self.horizontal = False
-        self.start_column = 0
+        self.start_col = 0
         self.start_row = 1
         self.indices = []
         self.country_to_read = country_to_read
@@ -356,7 +383,7 @@ class TreatmentOutcomesReader(GlobalTbReportReader):
         self.filename = 'xls/outcome_data.xlsx'
         self.start_row = 1
         self.horizontal = False
-        self.start_column = 0
+        self.start_col = 0
         self.start_row = 1
         self.indices = []
         self.country_to_read = country_to_read
@@ -397,7 +424,7 @@ class LaboratoriesReader(GlobalTbReportReader):
         self.filename = 'xls/laboratories_data.xlsx'
         self.start_row = 1
         self.horizontal = False
-        self.start_column = 0
+        self.start_col = 0
         self.indices = []
         self.country_to_read = tool_kit.adjust_country_name(country_to_read, 'tb')
 
@@ -475,7 +502,7 @@ def read_xls_with_sheet_readers(sheet_readers):
             if reader.horizontal:
                 for i_row in range(reader.start_row, sheet.nrows): reader.parse_row(sheet.row_values(i_row))
             else:
-                for i_col in range(reader.start_column, sheet.ncols): reader.parse_col(sheet.col_values(i_col))
+                for i_col in range(reader.start_col, sheet.ncols): reader.parse_col(sheet.col_values(i_col))
             result[reader.key] = reader.data
 
     return result
@@ -498,16 +525,16 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     # add sheet readers as required
     sheet_readers = []
     if 'default_constants' in sheets_to_read: sheet_readers.append(FixedParametersReader())
-    if 'bcg' in sheets_to_read: sheet_readers.append(BcgCoverageSheetReader(country))
+    if 'bcg' in sheets_to_read: sheet_readers.append(MasterReader(country, 'bcg'))
     if 'rate_birth' in sheets_to_read:
-        sheet_readers.append(BirthRateReader(tool_kit.adjust_country_name(country, 'demographic')))
+        sheet_readers.append(MasterReader(tool_kit.adjust_country_name(country, 'demographic'), 'rate_birth'))
     if 'life_expectancy' in sheets_to_read:
-        sheet_readers.append(LifeExpectancyReader(tool_kit.adjust_country_name(country, 'demographic')))
+        sheet_readers.append(MasterReader(tool_kit.adjust_country_name(country, 'demographic'), 'life_expectancy'))
     if 'country_constants' in sheets_to_read: sheet_readers.append(CountryParametersReader(country))
     if 'default_programs' in sheets_to_read: sheet_readers.append(DefaultProgramReader())
     if 'country_programs' in sheets_to_read: sheet_readers.append(CountryProgramReader(country))
     if 'tb' in sheets_to_read:
-        sheet_readers.append(GlobalTbReportReader(tool_kit.adjust_country_name(country, 'tb')))
+        sheet_readers.append(MasterReader(tool_kit.adjust_country_name(country, 'tb'), 'tb'))
     if 'notifications' in sheets_to_read:
         sheet_readers.append(NotificationsReader(tool_kit.adjust_country_name(country, 'tb')))
     if 'outcomes' in sheets_to_read: sheet_readers.append(TreatmentOutcomesReader(country))

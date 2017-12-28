@@ -98,7 +98,17 @@ class MasterReader:
             = {'bcg': 'WHO_REGION'}
         vertical_sheets = ['tb', 'notifications', 'outcomes', 'laboratories']
 
-        self.key, self.country_to_read = purpose, country_to_read
+        country_adjustment_types \
+            = {'rate_birth': 'demographic',
+               'life_expectancy': 'demographic',
+               'tb': 'tb',
+               'notifications': 'tb',
+               'outcomes': 'tb'}
+
+        country_adjustment = country_adjustment_types[purpose] if purpose in country_adjustment_types else ''
+
+        self.key = purpose
+        self.country_to_read = tool_kit.adjust_country_name(country_to_read, country_adjustment)
         self.tab_name = tab_names[purpose]
         self.filename = filenames[purpose]
         self.start_row = start_rows[purpose] if purpose in start_rows else 0
@@ -337,34 +347,11 @@ def read_input_data_xls(from_test, sheets_to_read, country):
 
     # add sheet readers as required
     sheet_readers = []
-    if 'default_constants' in sheets_to_read:
-        sheet_readers.append(MasterReader(country, 'default_constants'))
-    if 'bcg' in sheets_to_read:
-        sheet_readers.append(MasterReader(country, 'bcg'))
-    if 'rate_birth' in sheets_to_read:
-        sheet_readers.append(MasterReader(tool_kit.adjust_country_name(country, 'demographic'), 'rate_birth'))
-    if 'life_expectancy' in sheets_to_read:
-        sheet_readers.append(MasterReader(tool_kit.adjust_country_name(country, 'demographic'), 'life_expectancy'))
-    if 'country_constants' in sheets_to_read:
-        sheet_readers.append(MasterReader(country, 'country_constants'))
-    if 'default_programs' in sheets_to_read:
-        sheet_readers.append(MasterReader(country, 'default_programs'))
-    if 'country_programs' in sheets_to_read:
-        sheet_readers.append(MasterReader(country, 'country_programs'))
-    if 'tb' in sheets_to_read:
-        sheet_readers.append(MasterReader(tool_kit.adjust_country_name(country, 'tb'), 'tb'))
-    if 'notifications' in sheets_to_read:
-        sheet_readers.append(MasterReader(tool_kit.adjust_country_name(country, 'tb'), 'notifications'))
-    if 'outcomes' in sheets_to_read:
-        sheet_readers.append(MasterReader(tool_kit.adjust_country_name(country, 'tb'), 'outcomes'))
-    if 'mdr' in sheets_to_read:
-        sheet_readers.append(MasterReader(country, 'mdr'))
-    if 'laboratories' in sheets_to_read:
-        sheet_readers.append(MasterReader(country, 'laboratories'))
-    if 'strategy' in sheets_to_read:
-        sheet_readers.append(MasterReader(country, 'strategy'))
-    if 'diabetes' in sheets_to_read:
-        sheet_readers.append(MasterReader(country, 'diabetes'))
+    available_sheets \
+        = ['default_constants', 'bcg', 'rate_birth', 'life_expectancy', 'country_constants', 'default_programs',
+           'country_programs', 'tb', 'notifications', 'outcomes', 'mdr', 'laboratories', 'strategy', 'diabetes']
+    for sheet_name in available_sheets:
+        if sheet_name in sheets_to_read: sheet_readers.append(MasterReader(country, sheet_name))
 
     # if being run from the directory above
     if from_test:

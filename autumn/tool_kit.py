@@ -425,21 +425,6 @@ def adjust_country_name(country, purpose):
             return country_name_adaptations[country][purpose]
     return country
 
-    #
-    #
-    # if adjustment == 'for_vaccination':
-    #     if country_name == 'Moldova':
-    #         return 'Republic of ' + country_name + ' (the)'
-    #     else:
-    #         return country_name
-    # else:
-    #     if country_name == 'Philippines':
-    #         return country_name + ' (the)'
-    #     elif country_name == 'Moldova':
-    #         return 'Republic of ' + country_name
-    #     else:
-    #         return country_name
-
 
 def find_title_from_dictionary(name):
     """

@@ -77,7 +77,11 @@ class MasterReader:
                           'default_constants': 'constants',
                           'country_constants': 'constants',
                           'default_programs': 'time_variants',
-                          'country_programs': 'time_variants'}
+                          'country_programs': 'time_variants',
+                          'notifications': 'TB_notifications_2016-12-22',
+                          'outcomes': 'TB_outcomes_2016-04-21',
+                          'laboratories': 'TB_laboratories_2016-12-22',
+                          'strategy': 'TB_policies_services_2016-12-22'}
         self.tab_name = tab_dictionary[purpose]
         filenames = {'bcg': 'xls/who_unicef_bcg_coverage.xlsx',
                      'rate_birth': 'xls/world_bank_crude_birth_rate.xlsx',
@@ -86,7 +90,11 @@ class MasterReader:
                      'default_constants': 'xls/data_default.xlsx',
                      'country_constants': 'xls/data_' + country_to_read.lower() + '.xlsx',
                      'default_programs': 'xls/data_default.xlsx',
-                     'country_programs': 'xls/data_' + country_to_read.lower() + '.xlsx'}
+                     'country_programs': 'xls/data_' + country_to_read.lower() + '.xlsx',
+                     'notifications': 'xls/notifications_data.xlsx',
+                     'outcomes': 'xls/outcome_data.xlsx',
+                     'laboratores': 'xls/laboratories_data.xlsx',
+                     'strategy': 'xls/strategy_data.xlsx'}
         self.filename = filenames[purpose]
         start_rows = {'bcg': 0,
                       'rate_birth': 0,
@@ -95,7 +103,11 @@ class MasterReader:
                       'default_constants': 1,
                       'country_constants': 1,
                       'default_programs': 0,
-                      'country_programs': 0}
+                      'country_programs': 0,
+                      'notifications': 1,
+                      'outcomes': 1,
+                      'laboratories': 1,
+                      'strategy': 0}
         self.start_row = start_rows[purpose]
         start_cols = {'bcg': 4,
                       'rate_birth': 'n/a',
@@ -104,7 +116,11 @@ class MasterReader:
                       'default_constants': 'n/a',
                       'country_constants': 'n/a',
                       'default_programs': 1,
-                      'country_programs': 1}
+                      'country_programs': 1,
+                      'notifications': 0,
+                      'outcomes': 0,
+                      'laboratories': 0,
+                      'strategy': 'n/a'}
         self.start_col = start_cols[purpose]
         columns_for_keys = {'bcg': 2,
                             'rate_birth': 2,
@@ -113,7 +129,11 @@ class MasterReader:
                             'default_constants': 0,
                             'country_constants': 0,
                             'default_programs': 0,
-                            'country_programs': 0}
+                            'country_programs': 0,
+                            'notifications': 'n/a',
+                            'outcomes': 'n/a',
+                            'laboratories': 'n/a',
+                            'strategy': 0}
         self.column_for_keys = columns_for_keys[purpose]
         first_cells = {'bcg': 'WHO_REGION',
                        'rate_birth': 'n/a',
@@ -122,10 +142,14 @@ class MasterReader:
                        'default_constants': 'n/a',
                        'country_constants': 'n/a',
                        'default_programs': 'program',
-                       'country_programs': 'program'}
+                       'country_programs': 'program',
+                       'notifications': 'n/a',
+                       'outcomes': 'n/a',
+                       'laboratories': 'n/a',
+                       'strategy': 'n/a'}
         self.first_cell = first_cells[purpose]
         self.horizontal = True  # spreadsheet orientation
-        if self.key in ['tb']: self.horizontal = False
+        if self.key in ['tb', 'notifications', 'outcomes', 'laboratories']: self.horizontal = False
 
         self.indices = []
         self.parlist = []
@@ -238,9 +262,21 @@ class MasterReader:
                     elif row[i] != '':
                         self.data[str(row[0])][str(self.parlist[i])] = row[i]
 
+        elif self.key == 'strategy':
+
+            # create the list to turn in to dictionary keys later
+            if row[0] == 'country':
+                self.dictionary_keys += row
+
+            # populate when country to read is encountered
+            elif row[0] == self.country_to_read:
+                for i in range(len(self.dictionary_keys)):
+                    self.data[self.dictionary_keys[i]] = row[i]
+
     def parse_col(self, col):
 
-        if self.key == 'tb':
+        if self.key == 'tb' or self.key == 'notifications' or self.key == 'outcomes' or self.key == 'laboratories'\
+                or self.key == 'strategy':
 
             col = replace_specified_value(col, nan, '')
 
@@ -309,38 +345,6 @@ class GlobalTbReportReader:
                     self.data[col[0]][year] = col[self.year_indices[year]]
 
 
-class NotificationsReader(GlobalTbReportReader):
-
-    def __init__(self, country_to_read):
-
-        self.data = {}
-        self.tab_name = 'TB_notifications_2016-12-22'
-        self.key = 'notifications'
-        self.parlist = []
-        self.filename = 'xls/notifications_data.xlsx'
-        self.start_row = 1
-        self.horizontal = False
-        self.start_col = 0
-        self.start_row = 1
-        self.indices = []
-        self.country_to_read = country_to_read
-
-
-class TreatmentOutcomesReader(GlobalTbReportReader):
-
-    def __init__(self, country_to_read):
-
-        self.data = {}
-        self.tab_name = 'TB_outcomes_2016-04-21'
-        self.key = 'outcomes'
-        self.parlist = []
-        self.filename = 'xls/outcome_data.xlsx'
-        self.start_row = 1
-        self.horizontal = False
-        self.start_col = 0
-        self.start_row = 1
-        self.indices = []
-        self.country_to_read = country_to_read
 
 
 class MdrReportReader:
@@ -366,21 +370,6 @@ class MdrReportReader:
         elif row[0] == self.country_to_read:
             for i in range(len(self.dictionary_keys)):
                 self.data[self.dictionary_keys[i]] = row[i]
-
-
-class LaboratoriesReader(GlobalTbReportReader):
-
-    def __init__(self, country_to_read):
-        self.data = {}
-        self.tab_name = 'TB_laboratories_2016-12-22'
-        self.key = 'laboratories'
-        self.parlist = []
-        self.filename = 'xls/laboratories_data.xlsx'
-        self.start_row = 1
-        self.horizontal = False
-        self.start_col = 0
-        self.indices = []
-        self.country_to_read = tool_kit.adjust_country_name(country_to_read, 'tb')
 
 
 class StrategyReader(MdrReportReader):
@@ -495,11 +484,15 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     if 'tb' in sheets_to_read:
         sheet_readers.append(MasterReader(tool_kit.adjust_country_name(country, 'tb'), 'tb'))
     if 'notifications' in sheets_to_read:
-        sheet_readers.append(NotificationsReader(tool_kit.adjust_country_name(country, 'tb')))
-    if 'outcomes' in sheets_to_read: sheet_readers.append(TreatmentOutcomesReader(country))
-    if 'mdr' in sheets_to_read: sheet_readers.append(MdrReportReader(country))
-    if 'laboratories' in sheets_to_read: sheet_readers.append(LaboratoriesReader(country))
-    if 'strategy' in sheets_to_read: sheet_readers.append(StrategyReader(country))
+        sheet_readers.append(MasterReader(tool_kit.adjust_country_name(country, 'tb'), 'notifications'))
+    if 'outcomes' in sheets_to_read:
+        sheet_readers.append(MasterReader(tool_kit.adjust_country_name(country, 'tb'), 'outcomes'))
+    if 'mdr' in sheets_to_read:
+        sheet_readers.append(MdrReportReader(country))
+    if 'laboratories' in sheets_to_read:
+        sheet_readers.append(MasterReader(country), 'laboratories')
+    if 'strategy' in sheets_to_read:
+        sheet_readers.append(MasterReader(country), 'strategy')
     if 'diabetes' in sheets_to_read: sheet_readers.append(DiabetesReportReader(country))
 
     # if being run from the directory above

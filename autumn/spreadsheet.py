@@ -37,18 +37,18 @@ def replace_specified_value(a_list, new_val, old_value):
     return [new_val if val == old_value else val for val in a_list]
 
 
-def parse_year_data(year_data, blank, endcolumn):
+def parse_year_data(year_data, blank, end_column):
     """
     Code to parse rows of data that are years.
 
     Args:
         year_data: The row to parse
         blank: A value for blanks to be ignored
-        endcolumn: Column to end at
+        end_column: Column to end at
     """
 
     year_data = replace_specified_value(year_data, nan, blank)
-    assumption_val, year_vals = year_data[-1], year_data[:endcolumn]
+    assumption_val, year_vals = year_data[-1], year_data[:end_column]
     if is_all_same_value(year_vals, nan):
         return [assumption_val]
     else:
@@ -60,12 +60,21 @@ def parse_year_data(year_data, blank, endcolumn):
 
 class MasterReader:
     """
-    Reader for the WHO/UNICEF BCG coverage data.
-    Creates a single dictionary with years keys and coverage as a float representing BCG coverage.
-    Comments to each method and attribute apply to the other sheet readers below as well.
+    The master spreadsheet reader that now subsumes all of the previous readers (which had been structured as one
+    sheet reader per spreadsheet to be read. Now the consistently required data is indexed from dictionaries in
+    instantiation before the row or column reading methods are called as required with if/elif statements to use the
+    appropriate reading approach.
     """
 
     def __init__(self, country_to_read, purpose):
+        """
+        Use the "purpose" input to index static dictionaries to set basic reader characteristics.
+
+        Args:
+            country_to_read: The adapted country name
+            purpose: String that defines the spreadsheet type to be read
+        """
+
         tab_names \
             = {'bcg': 'BCG',
                'rate_birth': 'Data',
@@ -268,35 +277,31 @@ class MasterReader:
                     if self.dictionary_keys[i][:28] == u'Diabetes national prevalence':
                         self.data['comorb_prop_diabetes'] = float(row[i][:row[i].find('\n')]) / 1E2
 
-
     def parse_col(self, col):
 
-        if self.key == 'tb' or self.key == 'notifications' or self.key == 'outcomes' or self.key == 'laboratories'\
-                or self.key == 'strategy':
+        col = replace_specified_value(col, nan, '')
 
-            col = replace_specified_value(col, nan, '')
+        # if it's the country column (the first one)
+        if col[0] == 'country':
 
-            # if it's the country column (the first one)
-            if col[0] == 'country':
+            # find the indices for the country in question
+            for i in range(len(col)):
+                if col[i] == self.country_to_read: self.indices += [i]
 
-                # find the indices for the country in question
-                for i in range(len(col)):
-                    if col[i] == self.country_to_read: self.indices += [i]
+        elif 'iso' in col[0] or 'g_who' in col[0] or 'source' in col[0]:
+            pass
 
-            elif 'iso' in col[0] or 'g_who' in col[0] or 'source' in col[0]:
-                pass
+        elif col[0] == 'year':
+            self.year_indices = {}
+            for i in self.indices:
+                self.year_indices[int(col[i])] = i
 
-            elif col[0] == 'year':
-                self.year_indices = {}
-                for i in self.indices:
-                    self.year_indices[int(col[i])] = i
-
-            # all other columns
-            else:
-                self.data[str(col[0])] = {}
-                for year in self.year_indices:
-                    if not numpy.isnan(col[self.year_indices[year]]):
-                        self.data[col[0]][year] = col[self.year_indices[year]]
+        # all other columns
+        else:
+            self.data[str(col[0])] = {}
+            for year in self.year_indices:
+                if not numpy.isnan(col[self.year_indices[year]]):
+                    self.data[col[0]][year] = col[self.year_indices[year]]
 
 
 ''' master functions to call readers '''

@@ -856,7 +856,6 @@ class ModelRunner:
         self.set_model_with_params(param_dict, scenario)
         self.is_last_run_success = True
 
-        # noinspection PyBroadException
         try:
             self.models[scenario].integrate()
         except:

@@ -1022,7 +1022,6 @@ class Project:
         that were associated with the model run with the greatest likelihood.
         """
 
-        # noinspection PyBroadException
         try:
             path = os.path.join('autumn/xls/data_' + self.country + '.xlsx')
         except:

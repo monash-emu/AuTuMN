@@ -288,6 +288,33 @@ def force_list_to_length(list, length):
         return [0.] * (length - len(list)) + list
 
 
+def is_all_same_value(a_list, test_val):
+    """
+    Simple method to find whether all values in list are equal to a particular value.
+
+    Args:
+        a_list: The list being interrogated
+        test_val: The value to compare the elements of the list against
+    """
+
+    for val in a_list:
+        if val != test_val: return False
+    return True
+
+
+def replace_specified_value(a_list, new_val, old_value):
+    """
+    Replace all elements of a list that are a certain value with a new value specified in the inputs.
+
+    Args:
+         a_list: The list being modified
+         new_val: The value to insert into the list
+         old_value: The value of the list to be replaced
+    """
+
+    return [new_val if val == old_value else val for val in a_list]
+
+
 ''' scenario name manipulation '''
 
 

@@ -7,34 +7,7 @@ import os
 import tool_kit
 
 
-''' static functions '''
-
-
-def is_all_same_value(a_list, test_val):
-    """
-    Simple method to find whether all values in list are equal to a particular value.
-
-    Args:
-        a_list: The list being interrogated
-        test_val: The value to compare the elements of the list against
-    """
-
-    for val in a_list:
-        if val != test_val: return False
-    return True
-
-
-def replace_specified_value(a_list, new_val, old_value):
-    """
-    Replace all elements of a list that are a certain value with a new value specified in the inputs.
-
-    Args:
-         a_list: The list being modified
-         new_val: The value to insert into the list
-         old_value: The value of the list to be replaced
-    """
-
-    return [new_val if val == old_value else val for val in a_list]
+''' static function '''
 
 
 def parse_year_data(year_data, blank, end_column):
@@ -47,9 +20,9 @@ def parse_year_data(year_data, blank, end_column):
         end_column: Column to end at
     """
 
-    year_data = replace_specified_value(year_data, nan, blank)
+    year_data = tool_kit.replace_specified_value(year_data, nan, blank)
     assumption_val, year_vals = year_data[-1], year_data[:end_column]
-    if is_all_same_value(year_vals, nan):
+    if tool_kit.is_all_same_value(year_vals, nan):
         return [assumption_val]
     else:
         return year_vals
@@ -133,7 +106,7 @@ class MasterReader:
         self.column_for_keys = columns_for_keys[purpose] if purpose in columns_for_keys else 0
         self.first_cell = first_cells[purpose] if purpose in first_cells else 'program'
         self.horizontal = False if self.key in vertical_sheets else True
-        self.indices, self.parlist, self.dictionary_keys, self.data = [], [], [], {}
+        self.indices, self.parlist, self.dictionary_keys, self.data, self.year_indices = [], [], [], {}, {}
 
     def parse_row(self, row):
 
@@ -278,30 +251,37 @@ class MasterReader:
                         self.data['comorb_prop_diabetes'] = float(row[i][:row[i].find('\n')]) / 1E2
 
     def parse_col(self, col):
+        """
+        Read columns of data. Note that all the vertically oriented spreadsheets currently run off the same reading
+        method, so there is not need for an outer if/elif statement to determine which approach to use - this is likely
+        to change.
 
-        col = replace_specified_value(col, nan, '')
+        Args:
+            col: The column of data
+        """
 
-        # if it's the country column (the first one)
+        col = tool_kit.replace_specified_value(col, nan, '')
+
+        # country column (the first one)
         if col[0] == 'country':
 
-            # find the indices for the country in question
+            # find the indices for the country
             for i in range(len(col)):
-                if col[i] == self.country_to_read: self.indices += [i]
+                if col[i] == self.country_to_read: self.indices.append(i)
 
+        # skip some irrelevant columns
         elif 'iso' in col[0] or 'g_who' in col[0] or 'source' in col[0]:
             pass
 
+        # year column
         elif col[0] == 'year':
-            self.year_indices = {}
-            for i in self.indices:
-                self.year_indices[int(col[i])] = i
+            self.year_indices = {int(col[i]): i for i in self.indices}
 
         # all other columns
         else:
             self.data[str(col[0])] = {}
             for year in self.year_indices:
-                if not numpy.isnan(col[self.year_indices[year]]):
-                    self.data[col[0]][year] = col[self.year_indices[year]]
+                if not numpy.isnan(col[self.year_indices[year]]): self.data[col[0]][year] = col[self.year_indices[year]]
 
 
 ''' master functions to call readers '''

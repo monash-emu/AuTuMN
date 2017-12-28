@@ -294,41 +294,7 @@ class MasterReader:
                 if not numpy.isnan(col[self.year_indices[year]]): self.data[col[0]][year] = col[self.year_indices[year]]
 
 
-''' master functions to call readers '''
-
-
-def read_xls_with_sheet_readers(sheet_readers):
-    """
-    Runs the individual readers to gather all the data from the sheets
-
-    Args:
-        sheet_readers: The sheet readers that were previously collated into a list
-    Returns:
-        All the data for reading as a single object
-    """
-
-    result = {}
-    for reader in sheet_readers:
-
-        # check that the spreadsheet to be read exists
-        try:
-            print('Reading file', os.getcwd(), reader.filename)
-            workbook = open_workbook(reader.filename)
-
-        # if sheet unavailable, report error
-        except:
-            print('Unable to open country spreadsheet')
-
-        # if the workbook is available, read the sheet in question
-        else:
-            sheet = workbook.sheet_by_name(reader.tab_name)
-            if reader.horizontal:
-                for i_row in range(reader.start_row, sheet.nrows): reader.parse_row(sheet.row_values(i_row))
-            else:
-                for i_col in range(reader.start_col, sheet.ncols): reader.parse_col(sheet.col_values(i_col))
-            result[reader.key] = reader.data
-
-    return result
+''' master function to call readers '''
 
 
 def read_input_data_xls(from_test, sheets_to_read, country):
@@ -340,7 +306,7 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     Args:
         from_test: Whether being called from the directory above
         sheets_to_read: A list containing the strings that are also the 'keys' attribute of the reader
-        country: Country being read for
+        country: Country being read
     Returns:
         A single data structure containing all the data to be read (by calling the read_xls_with_sheet_readers method)
     """
@@ -357,7 +323,28 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     if from_test:
         for reader in sheet_readers: reader.filename = os.path.join('autumn/', reader.filename)
 
-    # return data
-    return read_xls_with_sheet_readers(sheet_readers)
+    result = {}
+    for reader in sheet_readers:
+
+        # check that the spreadsheet to be read exists
+        # noinspection PyBroadException
+        try:
+            print('Reading file', os.getcwd(), reader.filename)
+            workbook = open_workbook(reader.filename)
+
+        # if sheet unavailable, report error
+        except:
+            print('Unable to open country spreadsheet')
+
+        # read the sheet according to its orientation
+        else:
+            sheet = workbook.sheet_by_name(reader.tab_name)
+            if reader.horizontal:
+                for i_row in range(reader.start_row, sheet.nrows): reader.parse_row(sheet.row_values(i_row))
+            else:
+                for i_col in range(reader.start_col, sheet.ncols): reader.parse_col(sheet.col_values(i_col))
+            result[reader.key] = reader.data
+    return result
+
 
 

@@ -81,7 +81,9 @@ class MasterReader:
                           'notifications': 'TB_notifications_2016-12-22',
                           'outcomes': 'TB_outcomes_2016-04-21',
                           'laboratories': 'TB_laboratories_2016-12-22',
-                          'strategy': 'TB_policies_services_2016-12-22'}
+                          'strategy': 'TB_policies_services_2016-12-22',
+                          'mdr': 'MDR_RR_TB_burden_estimates_2016',
+                          'diabetes': 'DM estimates 2015'}
         self.tab_name = tab_dictionary[purpose]
         filenames = {'bcg': 'xls/who_unicef_bcg_coverage.xlsx',
                      'rate_birth': 'xls/world_bank_crude_birth_rate.xlsx',
@@ -94,7 +96,9 @@ class MasterReader:
                      'notifications': 'xls/notifications_data.xlsx',
                      'outcomes': 'xls/outcome_data.xlsx',
                      'laboratores': 'xls/laboratories_data.xlsx',
-                     'strategy': 'xls/strategy_data.xlsx'}
+                     'strategy': 'xls/strategy_data.xlsx',
+                     'mdr': 'xls/mdr_data.xlsx',
+                     'diabetes': 'xls/diabetes_internationaldiabetesfederation.xlsx'}
         self.filename = filenames[purpose]
         start_rows = {'bcg': 0,
                       'rate_birth': 0,
@@ -107,7 +111,9 @@ class MasterReader:
                       'notifications': 1,
                       'outcomes': 1,
                       'laboratories': 1,
-                      'strategy': 0}
+                      'strategy': 0,
+                      'mdr': 0,
+                      'diabetes': 2}
         self.start_row = start_rows[purpose]
         start_cols = {'bcg': 4,
                       'rate_birth': 'n/a',
@@ -120,7 +126,9 @@ class MasterReader:
                       'notifications': 0,
                       'outcomes': 0,
                       'laboratories': 0,
-                      'strategy': 'n/a'}
+                      'strategy': 'n/a',
+                      'mdr': 'n/a',
+                      'diabetes': 'n/a'}
         self.start_col = start_cols[purpose]
         columns_for_keys = {'bcg': 2,
                             'rate_birth': 2,
@@ -133,7 +141,9 @@ class MasterReader:
                             'notifications': 'n/a',
                             'outcomes': 'n/a',
                             'laboratories': 'n/a',
-                            'strategy': 0}
+                            'strategy': 0,
+                            'mdr': 'n/a',
+                            'diabetes': 0}
         self.column_for_keys = columns_for_keys[purpose]
         first_cells = {'bcg': 'WHO_REGION',
                        'rate_birth': 'n/a',
@@ -146,13 +156,16 @@ class MasterReader:
                        'notifications': 'n/a',
                        'outcomes': 'n/a',
                        'laboratories': 'n/a',
-                       'strategy': 'n/a'}
+                       'strategy': 'n/a',
+                       'mdr': 'n/a',
+                       'diabetes': 'n/a'}
         self.first_cell = first_cells[purpose]
         self.horizontal = True  # spreadsheet orientation
         if self.key in ['tb', 'notifications', 'outcomes', 'laboratories']: self.horizontal = False
 
         self.indices = []
         self.parlist = []
+        self.dictionary_keys = []
 
     def parse_row(self, row):
 
@@ -273,6 +286,30 @@ class MasterReader:
                 for i in range(len(self.dictionary_keys)):
                     self.data[self.dictionary_keys[i]] = row[i]
 
+        elif self.key == 'mdr':
+
+            # create the list to turn in to dictionary keys later
+            if row[0] == 'country':
+                self.dictionary_keys += row
+
+            # populate when country to read is encountered
+            elif row[0] == self.country_to_read:
+                for i in range(len(self.dictionary_keys)):
+                    self.data[self.dictionary_keys[i]] = row[i]
+
+        elif self.key == 'diabetes':
+
+            # create the list to turn in to dictionary keys later
+            if row[0] == u'Country/territory':
+                self.dictionary_keys += row
+
+            # populate when country to read is encountered
+            elif row[0] == self.country_to_read:
+                for i in range(len(self.dictionary_keys)):
+                    if self.dictionary_keys[i][:28] == u'Diabetes national prevalence':
+                        self.data['comorb_prop_diabetes'] = float(row[i][:row[i].find('\n')]) / 1E2
+
+
     def parse_col(self, col):
 
         if self.key == 'tb' or self.key == 'notifications' or self.key == 'outcomes' or self.key == 'laboratories'\
@@ -301,117 +338,6 @@ class MasterReader:
                 for year in self.year_indices:
                     if not numpy.isnan(col[self.year_indices[year]]):
                         self.data[col[0]][year] = col[self.year_indices[year]]
-
-
-class GlobalTbReportReader:
-
-    def __init__(self, country_to_read):
-
-        self.data = {}
-        self.tab_name = 'TB_burden_countries_2016-04-19'
-        self.key = 'tb'
-        self.parlist = []
-        self.filename = 'xls/gtb_data.xlsx'
-        self.start_row = 1
-        self.horizontal = False
-        self.start_col = 0
-        self.indices = []
-        self.country_to_read = country_to_read
-
-    def parse_col(self, col):
-
-        col = replace_specified_value(col, nan, '')
-
-        # if it's the country column (the first one)
-        if col[0] == 'country':
-
-            # find the indices for the country in question
-            for i in range(len(col)):
-                if col[i] == self.country_to_read: self.indices += [i]
-
-        elif 'iso' in col[0] or 'g_who' in col[0] or 'source' in col[0]:
-            pass
-
-        elif col[0] == 'year':
-            self.year_indices = {}
-            for i in self.indices:
-                self.year_indices[int(col[i])] = i
-
-        # all other columns
-        else:
-            self.data[str(col[0])] = {}
-            for year in self.year_indices:
-                if not numpy.isnan(col[self.year_indices[year]]):
-                    self.data[col[0]][year] = col[self.year_indices[year]]
-
-
-
-
-class MdrReportReader:
-
-    def __init__(self, country_to_read):
-
-        self.data = {}
-        self.tab_name = 'MDR_RR_TB_burden_estimates_2016'
-        self.key = 'mdr'
-        self.parlist = []
-        self.filename = 'xls/mdr_data.xlsx'
-        self.start_row = 0
-        self.horizontal = True
-        self.dictionary_keys = []
-        self.country_to_read = tool_kit.adjust_country_name(country_to_read, 'tb')
-
-    def parse_row(self, row):
-
-        # create the list to turn in to dictionary keys later
-        if row[0] == 'country': self.dictionary_keys += row
-
-        # populate when country to read is encountered
-        elif row[0] == self.country_to_read:
-            for i in range(len(self.dictionary_keys)):
-                self.data[self.dictionary_keys[i]] = row[i]
-
-
-class StrategyReader(MdrReportReader):
-
-    def __init__(self, country_to_read):
-        self.data = {}
-        self.tab_name = 'TB_policies_services_2016-12-22'
-        self.key = 'strategy'
-        self.parlist = []
-        self.filename = 'xls/strategy_data.xlsx'
-        self.start_row = 0
-        self.column_for_keys = 0
-        self.horizontal = True
-        self.dictionary_keys = []
-        self.country_to_read = tool_kit.adjust_country_name(country_to_read, 'tb')
-
-
-class DiabetesReportReader:
-
-    def __init__(self, country_to_read):
-        self.data = {}
-        self.tab_name = 'DM estimates 2015'
-        self.key = 'diabetes'
-        self.parlist = []
-        self.filename = 'xls/diabetes_internationaldiabetesfederation.xlsx'
-        self.start_row = 2
-        self.column_for_keys = 0
-        self.horizontal = True
-        self.dictionary_keys = []
-        self.country_to_read = tool_kit.adjust_country_name(country_to_read, 'tb')
-
-    def parse_row(self, row):
-
-        # create the list to turn in to dictionary keys later
-        if row[0] == u'Country/territory':
-            self.dictionary_keys += row
-
-        # populate when country to read is encountered
-        elif row[0] == self.country_to_read:
-            for i in range(len(self.dictionary_keys)):
-                if self.dictionary_keys[i][:28] == u'Diabetes national prevalence':
-                    self.data['comorb_prop_diabetes'] = float(row[i][:row[i].find('\n')]) / 1E2
 
 
 ''' master functions to call readers '''
@@ -488,12 +414,13 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     if 'outcomes' in sheets_to_read:
         sheet_readers.append(MasterReader(tool_kit.adjust_country_name(country, 'tb'), 'outcomes'))
     if 'mdr' in sheets_to_read:
-        sheet_readers.append(MdrReportReader(country))
+        sheet_readers.append(MasterReader(country, 'mdr'))
     if 'laboratories' in sheets_to_read:
-        sheet_readers.append(MasterReader(country), 'laboratories')
+        sheet_readers.append(MasterReader(country, 'laboratories'))
     if 'strategy' in sheets_to_read:
-        sheet_readers.append(MasterReader(country), 'strategy')
-    if 'diabetes' in sheets_to_read: sheet_readers.append(DiabetesReportReader(country))
+        sheet_readers.append(MasterReader(country, 'strategy'))
+    if 'diabetes' in sheets_to_read:
+        sheet_readers.append(MasterReader(country, 'diabetes'))
 
     # if being run from the directory above
     if from_test:

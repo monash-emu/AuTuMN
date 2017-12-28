@@ -66,106 +66,65 @@ class MasterReader:
     """
 
     def __init__(self, country_to_read, purpose):
+        tab_names \
+            = {'bcg': 'BCG',
+               'rate_birth': 'Data',
+               'life_expectancy': 'Data',
+               'tb': 'TB_burden_countries_2016-04-19',
+               'default_constants': 'constants',
+               'country_constants': 'constants',
+               'default_programs': 'time_variants',
+               'country_programs': 'time_variants',
+               'notifications': 'TB_notifications_2016-12-22',
+               'outcomes': 'TB_outcomes_2016-04-21',
+               'laboratories': 'TB_laboratories_2016-12-22',
+               'strategy': 'TB_policies_services_2016-12-22',
+               'mdr': 'MDR_RR_TB_burden_estimates_2016',
+               'diabetes': 'DM estimates 2015'}
+        filenames \
+            = {'bcg': 'xls/who_unicef_bcg_coverage.xlsx',
+               'rate_birth': 'xls/world_bank_crude_birth_rate.xlsx',
+               'life_expectancy': 'xls/world_bank_life_expectancy.xlsx',
+               'tb': 'xls/gtb_data.xlsx',
+               'default_constants': 'xls/data_default.xlsx',
+               'country_constants': 'xls/data_' + country_to_read.lower() + '.xlsx',
+               'default_programs': 'xls/data_default.xlsx',
+               'country_programs': 'xls/data_' + country_to_read.lower() + '.xlsx',
+               'notifications': 'xls/notifications_data.xlsx',
+               'outcomes': 'xls/outcome_data.xlsx',
+               'laboratores': 'xls/laboratories_data.xlsx',
+               'strategy': 'xls/strategy_data.xlsx',
+               'mdr': 'xls/mdr_data.xlsx',
+               'diabetes': 'xls/diabetes_internationaldiabetesfederation.xlsx'}
+        start_rows \
+            = {'life_expectancy': 3,
+               'tb': 1,
+               'default_constants': 1,
+               'country_constants': 1,
+               'notifications': 1,
+               'outcomes': 1,
+               'laboratories': 1,
+               'diabetes': 2}
+        start_cols \
+            = {'bcg': 4,
+               'default_programs': 1,
+               'country_programs': 1}
+        columns_for_keys \
+            = {'bcg': 2,
+               'rate_birth': 2}
+        first_cells \
+            = {'bcg': 'WHO_REGION'}
+        vertical_sheets = ['tb', 'notifications', 'outcomes', 'laboratories']
 
-        self.key = purpose  # string that defines the data type in this file
-        self.country_to_read = country_to_read  # country being read
-        self.data = {}  # empty dictionary to contain the data that is read
-        tab_dictionary = {'bcg': 'BCG',
-                          'rate_birth': 'Data',
-                          'life_expectancy': 'Data',
-                          'tb': 'TB_burden_countries_2016-04-19',
-                          'default_constants': 'constants',
-                          'country_constants': 'constants',
-                          'default_programs': 'time_variants',
-                          'country_programs': 'time_variants',
-                          'notifications': 'TB_notifications_2016-12-22',
-                          'outcomes': 'TB_outcomes_2016-04-21',
-                          'laboratories': 'TB_laboratories_2016-12-22',
-                          'strategy': 'TB_policies_services_2016-12-22',
-                          'mdr': 'MDR_RR_TB_burden_estimates_2016',
-                          'diabetes': 'DM estimates 2015'}
-        self.tab_name = tab_dictionary[purpose]
-        filenames = {'bcg': 'xls/who_unicef_bcg_coverage.xlsx',
-                     'rate_birth': 'xls/world_bank_crude_birth_rate.xlsx',
-                     'life_expectancy': 'xls/world_bank_life_expectancy.xlsx',
-                     'tb': 'xls/gtb_data.xlsx',
-                     'default_constants': 'xls/data_default.xlsx',
-                     'country_constants': 'xls/data_' + country_to_read.lower() + '.xlsx',
-                     'default_programs': 'xls/data_default.xlsx',
-                     'country_programs': 'xls/data_' + country_to_read.lower() + '.xlsx',
-                     'notifications': 'xls/notifications_data.xlsx',
-                     'outcomes': 'xls/outcome_data.xlsx',
-                     'laboratores': 'xls/laboratories_data.xlsx',
-                     'strategy': 'xls/strategy_data.xlsx',
-                     'mdr': 'xls/mdr_data.xlsx',
-                     'diabetes': 'xls/diabetes_internationaldiabetesfederation.xlsx'}
+        self.key, self.country_to_read = purpose, country_to_read
+        self.tab_name = tab_names[purpose]
         self.filename = filenames[purpose]
-        start_rows = {'bcg': 0,
-                      'rate_birth': 0,
-                      'life_expectancy': 3,
-                      'tb': 1,
-                      'default_constants': 1,
-                      'country_constants': 1,
-                      'default_programs': 0,
-                      'country_programs': 0,
-                      'notifications': 1,
-                      'outcomes': 1,
-                      'laboratories': 1,
-                      'strategy': 0,
-                      'mdr': 0,
-                      'diabetes': 2}
-        self.start_row = start_rows[purpose]
-        start_cols = {'bcg': 4,
-                      'rate_birth': 'n/a',
-                      'life_expectancy': 'n/a',
-                      'tb': 0,
-                      'default_constants': 'n/a',
-                      'country_constants': 'n/a',
-                      'default_programs': 1,
-                      'country_programs': 1,
-                      'notifications': 0,
-                      'outcomes': 0,
-                      'laboratories': 0,
-                      'strategy': 'n/a',
-                      'mdr': 'n/a',
-                      'diabetes': 'n/a'}
-        self.start_col = start_cols[purpose]
-        columns_for_keys = {'bcg': 2,
-                            'rate_birth': 2,
-                            'life_expectancy': 0,
-                            'tb': 'n/a',
-                            'default_constants': 0,
-                            'country_constants': 0,
-                            'default_programs': 0,
-                            'country_programs': 0,
-                            'notifications': 'n/a',
-                            'outcomes': 'n/a',
-                            'laboratories': 'n/a',
-                            'strategy': 0,
-                            'mdr': 'n/a',
-                            'diabetes': 0}
-        self.column_for_keys = columns_for_keys[purpose]
-        first_cells = {'bcg': 'WHO_REGION',
-                       'rate_birth': 'n/a',
-                       'life_expectancy': 'n/a',
-                       'tb': 'n/a',
-                       'default_constants': 'n/a',
-                       'country_constants': 'n/a',
-                       'default_programs': 'program',
-                       'country_programs': 'program',
-                       'notifications': 'n/a',
-                       'outcomes': 'n/a',
-                       'laboratories': 'n/a',
-                       'strategy': 'n/a',
-                       'mdr': 'n/a',
-                       'diabetes': 'n/a'}
-        self.first_cell = first_cells[purpose]
-        self.horizontal = True  # spreadsheet orientation
-        if self.key in ['tb', 'notifications', 'outcomes', 'laboratories']: self.horizontal = False
-
-        self.indices = []
-        self.parlist = []
-        self.dictionary_keys = []
+        self.start_row = start_rows[purpose] if purpose in start_rows else 0
+        self.start_col = start_cols[purpose] if purpose in start_cols else 0
+        self.column_for_keys = columns_for_keys[purpose] if purpose in columns_for_keys else 0
+        self.first_cell = first_cells[purpose] if purpose in first_cells else 'program'
+        self.horizontal = False if self.key in vertical_sheets else True
+        self.indices, self.parlist, self.dictionary_keys, self.data = [], [], [], {}
 
     def parse_row(self, row):
 

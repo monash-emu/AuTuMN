@@ -61,7 +61,8 @@ class SpreadsheetReader:
                'notifications_2014': 'xls/notifications_data_2014.xlsx',
                'notifications_2015': 'xls/notifications_data_2015.xlsx',
                'notifications_2016': 'xls/notifications_data_2016.xlsx',
-               'outcomes': 'xls/outcome_data.xlsx',
+               'outcomes_2013': 'xls/outcome_data_2013.xlsx',
+               'outcomes_2015': 'xls/outcome_data_2015.xlsx',
                'laboratories_2014': 'xls/laboratories_data_2014.xlsx',
                'laboratories_2015': 'xls/laboratories_data_2015.xlsx',
                'laboratories_2016': 'xls/laboratories_data_2016.xlsx',
@@ -85,7 +86,8 @@ class SpreadsheetReader:
                'notifications_2014': 'TB_notifications_2016-04-20',
                'notifications_2015': 'TB_notifications_2016-12-22',
                'notifications_2016': 'TB_notifications_2017-12-29',
-               'outcomes': 'TB_outcomes_2016-04-21',
+               'outcomes_2013': 'TB_outcomes_2016-04-21',
+               'outcomes_2015': 'TB_outcomes_2017-12-29',
                'laboratories_2014': 'TB_laboratories_2016-04-21',
                'laboratories_2015': 'TB_laboratories_2016-12-22',
                'laboratories_2016': 'TB_laboratories_2017-12-29',
@@ -103,7 +105,7 @@ class SpreadsheetReader:
                'default_constants': 1,
                'country_constants': 1,
                'notifications_2015': 1,
-               'outcomes': 1,
+               'outcomes_2013': 1,
                'laboratories_2014': 1,
                'laboratories_2015': 1,
                'laboratories_2016': 1,
@@ -127,8 +129,8 @@ class SpreadsheetReader:
                'country_programs': 'program',
                'diabetes': u'Country/territory'}
         vertical_sheets \
-            = ['gtb_2015', 'gtb_2016', 'notifications_2014', 'notifications_2015', 'notifications_2016', 'outcomes',
-               'laboratories_2014', 'laboratories_2015', 'laboratories_2016']
+            = ['gtb_2015', 'gtb_2016', 'notifications_2014', 'notifications_2015', 'notifications_2016',
+               'outcomes_2013', 'outcomes_2015', 'laboratories_2014', 'laboratories_2015', 'laboratories_2016']
         country_adjustment_types \
             = {'rate_birth': 'demographic',
                'life_expectancy': 'demographic',
@@ -137,7 +139,8 @@ class SpreadsheetReader:
                'notifications_2014': 'tb',
                'notifications_2015': 'tb',
                'notifications_2016': 'tb',
-               'outcomes': 'tb'}
+               'outcomes_2013': 'tb',
+               'outcomes_2015': 'tb'}
 
         self.purpose = purpose
         country_adjustment = country_adjustment_types[purpose] if purpose in country_adjustment_types else ''
@@ -320,9 +323,9 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     sheet_readers, data_read_from_sheets = [], {}
     available_sheets \
         = ['default_constants', 'bcg', 'rate_birth', 'life_expectancy', 'country_constants', 'default_programs',
-           'country_programs', 'notifications_2014', 'notifications_2015', 'notifications_2016', 'outcomes', 'mdr_2014',
-           'mdr_2015', 'mdr_2016', 'laboratories_2014', 'laboratories_2015', 'laboratories_2016', 'strategy',
-           'diabetes', 'gtb_2015', 'gtb_2016', 'latent_2016', 'tb_hiv_2016']
+           'country_programs', 'notifications_2014', 'notifications_2015', 'notifications_2016', 'outcomes_2013',
+           'outcomes_2015', 'mdr_2014', 'mdr_2015', 'mdr_2016', 'laboratories_2014', 'laboratories_2015',
+           'laboratories_2016', 'strategy', 'diabetes', 'gtb_2015', 'gtb_2016', 'latent_2016', 'tb_hiv_2016']
     for sheet_name in available_sheets:
         if sheet_name in sheets_to_read: sheet_readers.append(SpreadsheetReader(country, sheet_name))
 

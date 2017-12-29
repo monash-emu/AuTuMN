@@ -1453,8 +1453,7 @@ class Project:
 
         # plot scale-up functions - currently only doing this for the baseline model run
         if self.gui_inputs['output_scaleups']:
-            if self.vars_to_view:
-                self.individual_var_viewer()
+            if self.vars_to_view: self.individual_var_viewer()
             self.classify_scaleups()
             self.plot_scaleup_fns_against_data()
             self.plot_individual_scaleups_against_data()
@@ -1929,8 +1928,7 @@ class Project:
                     y_axis_type = 'limited_proportion'
 
                 self.tidy_axis(ax, subplot_grid, start_time=start_time, legend=False, y_axis_type=y_axis_type,
-                               end_time=self.inputs.model_constants['recent_time'], y_label=y_label,
-                               y_relative_limit=y_relative_limit)
+                               end_time=end_time, y_label=y_label, y_relative_limit=y_relative_limit)
 
             # finish off
             fig.suptitle(t_k.capitalise_first_letter(t_k.find_title_from_dictionary(function)),

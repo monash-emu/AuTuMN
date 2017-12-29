@@ -653,13 +653,13 @@ class Inputs:
                         self.derived_data[self.strains[0] + '_new' + pre2011_map_gtb_to_autumn[outcome]] \
                             = tool_kit.increment_dictionary_with_dictionary(
                             self.derived_data[self.strains[0] + '_new' + pre2011_map_gtb_to_autumn[outcome]],
-                            self.original_data['outcomes'][hiv_status + 'new_' + organ + outcome])
+                            self.original_data['outcomes_2015'][hiv_status + 'new_' + organ + outcome])
 
                 # re-treatment outcomes are only disaggregated by hiv status pre-2011
                 self.derived_data[self.strains[0] + '_treated' + pre2011_map_gtb_to_autumn[outcome]] \
                     = tool_kit.increment_dictionary_with_dictionary(
                     self.derived_data[self.strains[0] + '_treated' + pre2011_map_gtb_to_autumn[outcome]],
-                    self.original_data['outcomes'][hiv_status + 'ret' + outcome])
+                    self.original_data['outcomes_2015'][hiv_status + 'ret' + outcome])
 
         ''' post-2011 fields for DS-TB '''
 
@@ -679,13 +679,13 @@ class Inputs:
                 self.derived_data[self.strains[0] + '_new' + post2011_map_gtb_to_autumn[outcome]] \
                     = tool_kit.increment_dictionary_with_dictionary(
                     self.derived_data[self.strains[0] + '_new' + post2011_map_gtb_to_autumn[outcome]],
-                    self.original_data['outcomes'][hiv_status + outcome])
+                    self.original_data['outcomes_2015'][hiv_status + outcome])
 
             # previously treated outcomes (now excluding relapse) are not disaggregated post-2011
             self.derived_data[self.strains[0] + '_treated' + post2011_map_gtb_to_autumn[outcome]] \
                 = tool_kit.increment_dictionary_with_dictionary(
                 self.derived_data[self.strains[0] + '_treated' + post2011_map_gtb_to_autumn[outcome]],
-                self.original_data['outcomes']['ret_nrel' + outcome])
+                self.original_data['outcomes_2015']['ret_nrel' + outcome])
 
         # add re-treatment rates on to new if the model is not stratified by treatment history
         if not self.gui_inputs['is_treatment_history']:
@@ -706,7 +706,7 @@ class Inputs:
                 self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]] \
                     = tool_kit.increment_dictionary_with_dictionary(
                         self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]],
-                        self.original_data['outcomes'][strain[1:] + outcome])
+                        self.original_data['outcomes_2015'][strain[1:] + outcome])
 
         # duplicate outcomes by treatment history because not provided as disaggregated for resistant strains
         for history in self.histories:
@@ -1319,8 +1319,8 @@ class Inputs:
         """
 
         keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy', 'default_parameters', 'gtb_2015',
-                                  'gtb_2016', 'notifications_2016', 'outcomes', 'country_constants',
-                                  'default_constants', 'country_programs', 'default_programs', 'tb_hiv_2016']
+                                  'gtb_2016', 'notifications_2016', 'outcomes_2015', 'country_constants',
+                                  'default_constants', 'country_programs', 'default_programs']
 
         # add any optional sheets required for specific model being run (currently just diabetes)
         if 'riskgroup_diabetes' in self.gui_inputs: keys_of_sheets_to_read.append('diabetes')

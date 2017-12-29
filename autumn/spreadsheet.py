@@ -66,7 +66,9 @@ class SpreadsheetReader:
                'laboratories_2014': 'xls/laboratories_data_2014.xlsx',
                'laboratories_2015': 'xls/laboratories_data_2015.xlsx',
                'laboratories_2016': 'xls/laboratories_data_2016.xlsx',
-               'strategy': 'xls/strategy_data.xlsx',
+               'strategy_2014': 'xls/strategy_data_2014.xlsx',
+               'strategy_2015': 'xls/strategy_data_2015.xlsx',
+               'strategy_2016': 'xls/strategy_data_2016.xlsx',
                'mdr_2014': 'xls/mdr_data_2014.xlsx',
                'mdr_2015': 'xls/mdr_data_2015.xlsx',
                'mdr_2016': 'xls/mdr_data_2016.xlsx',
@@ -91,7 +93,9 @@ class SpreadsheetReader:
                'laboratories_2014': 'TB_laboratories_2016-04-21',
                'laboratories_2015': 'TB_laboratories_2016-12-22',
                'laboratories_2016': 'TB_laboratories_2017-12-29',
-               'strategy': 'TB_policies_services_2016-12-22',
+               'strategy_2014': 'TB_strategy_2016-04-21',
+               'strategy_2015': 'TB_policies_services_2016-12-22',
+               'strategy_2016': 'TB_policies_services_2017-12-29',
                'mdr_2014': 'MDR-TB_burden_estimates_2016-04',
                'mdr_2015': 'MDR_RR_TB_burden_estimates_2016',
                'mdr_2016': 'MDR_RR_TB_burden_estimates_2017',
@@ -325,7 +329,8 @@ def read_input_data_xls(from_test, sheets_to_read, country):
         = ['default_constants', 'bcg', 'rate_birth', 'life_expectancy', 'country_constants', 'default_programs',
            'country_programs', 'notifications_2014', 'notifications_2015', 'notifications_2016', 'outcomes_2013',
            'outcomes_2015', 'mdr_2014', 'mdr_2015', 'mdr_2016', 'laboratories_2014', 'laboratories_2015',
-           'laboratories_2016', 'strategy', 'diabetes', 'gtb_2015', 'gtb_2016', 'latent_2016', 'tb_hiv_2016']
+           'laboratories_2016', 'strategy_2014', 'strategy_2015', 'strategy_2016', 'diabetes', 'gtb_2015', 'gtb_2016',
+           'latent_2016', 'tb_hiv_2016']
     for sheet_name in available_sheets:
         if sheet_name in sheets_to_read: sheet_readers.append(SpreadsheetReader(country, sheet_name))
 

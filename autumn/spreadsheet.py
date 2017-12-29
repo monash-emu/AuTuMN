@@ -52,7 +52,7 @@ class SpreadsheetReader:
             = {'bcg': 'xls/who_unicef_bcg_coverage.xlsx',
                'rate_birth': 'xls/world_bank_crude_birth_rate.xlsx',
                'life_expectancy': 'xls/world_bank_life_expectancy.xlsx',
-               'gtb_2015': 'xls/gtb_data.xlsx',
+               'gtb_2015': 'xls/gtb_data_2015.xlsx',
                'gtb_2016': 'xls/gtb_data_2016.xlsx',
                'default_constants': 'xls/data_default.xlsx',
                'country_constants': 'xls/data_' + country_to_read.lower() + '.xlsx',
@@ -62,7 +62,9 @@ class SpreadsheetReader:
                'outcomes': 'xls/outcome_data.xlsx',
                'laboratores': 'xls/laboratories_data.xlsx',
                'strategy': 'xls/strategy_data.xlsx',
-               'mdr': 'xls/mdr_data.xlsx',
+               'mdr_2014': 'xls/mdr_data_2014.xlsx',
+               'mdr_2015': 'xls/mdr_data_2015.xlsx',
+               'mdr_2016': 'xls/mdr_data_2016.xlsx',
                'diabetes': 'xls/diabetes_internationaldiabetesfederation.xlsx'}
         tab_names \
             = {'bcg': 'BCG',
@@ -78,7 +80,9 @@ class SpreadsheetReader:
                'outcomes': 'TB_outcomes_2016-04-21',
                'laboratories': 'TB_laboratories_2016-12-22',
                'strategy': 'TB_policies_services_2016-12-22',
-               'mdr': 'MDR_RR_TB_burden_estimates_2016',
+               'mdr_2014': 'MDR-TB_burden_estimates_2016-04',
+               'mdr_2015': 'MDR_RR_TB_burden_estimates_2016',
+               'mdr_2016': 'MDR_RR_TB_burden_estimates_2017',
                'diabetes': 'DM estimates 2015'}
         start_rows \
             = {'life_expectancy': 3,
@@ -223,7 +227,7 @@ class SpreadsheetReader:
 
             # create the list to turn in to dictionary keys later
             if row[0] == self.first_cell:
-                self.dictionary_keys.append(row)
+                self.dictionary_keys = row
 
             # populate when country to read is encountered
             elif row[0] == self.country_to_read:
@@ -284,8 +288,8 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     sheet_readers = []
     available_sheets \
         = ['default_constants', 'bcg', 'rate_birth', 'life_expectancy', 'country_constants', 'default_programs',
-           'country_programs', 'notifications', 'outcomes', 'mdr', 'laboratories', 'strategy', 'diabetes', 'gtb_2015',
-           'gtb_2016']
+           'country_programs', 'notifications', 'outcomes', 'mdr_2014', 'mdr_2015', 'mdr_2016', 'laboratories',
+           'strategy', 'diabetes', 'gtb_2015', 'gtb_2016']
     for sheet_name in available_sheets:
         if sheet_name in sheets_to_read: sheet_readers.append(SpreadsheetReader(country, sheet_name))
 

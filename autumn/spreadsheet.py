@@ -49,70 +49,20 @@ class SpreadsheetReader:
         """
 
         filenames \
-            = {'bcg': 'xls/who_unicef_bcg_coverage.xlsx',
-               'rate_birth': 'xls/world_bank_crude_birth_rate.xlsx',
-               'life_expectancy': 'xls/world_bank_life_expectancy.xlsx',
-               'gtb_2015': 'xls/gtb_data_2015.xlsx',
-               'gtb_2016': 'xls/gtb_data_2016.xlsx',
-               'default_constants': 'xls/data_default.xlsx',
+            = {'default_constants': 'xls/data_default.xlsx',
                'country_constants': 'xls/data_' + country_to_read.lower() + '.xlsx',
                'default_programs': 'xls/data_default.xlsx',
-               'country_programs': 'xls/data_' + country_to_read.lower() + '.xlsx',
-               'notifications_2014': 'xls/notifications_data_2014.xlsx',
-               'notifications_2015': 'xls/notifications_data_2015.xlsx',
-               'notifications_2016': 'xls/notifications_data_2016.xlsx',
-               'outcomes_2013': 'xls/outcome_data_2013.xlsx',
-               'outcomes_2015': 'xls/outcome_data_2015.xlsx',
-               'laboratories_2014': 'xls/laboratories_data_2014.xlsx',
-               'laboratories_2015': 'xls/laboratories_data_2015.xlsx',
-               'laboratories_2016': 'xls/laboratories_data_2016.xlsx',
-               'strategy_2014': 'xls/strategy_data_2014.xlsx',
-               'strategy_2015': 'xls/strategy_data_2015.xlsx',
-               'strategy_2016': 'xls/strategy_data_2016.xlsx',
-               'mdr_2014': 'xls/mdr_data_2014.xlsx',
-               'mdr_2015': 'xls/mdr_data_2015.xlsx',
-               'mdr_2016': 'xls/mdr_data_2016.xlsx',
-               'latent_2016': 'xls/latent_data_2016.xlsx',
-               'tb_hiv_2016': 'xls/tb_hiv_data_2016.xlsx',
-               'diabetes': 'xls/diabetes_internationaldiabetesfederation.xlsx'}
+               'country_programs': 'xls/data_' + country_to_read.lower() + '.xlsx'}
         tab_names \
-            = {'bcg': 'BCG',
-               'rate_birth': 'Data',
-               'life_expectancy': 'Data',
-               'gtb_2015': 'TB_burden_countries_2016-04-19',
-               'gtb_2016': 'gtb_data_2016',
-               'default_constants': 'constants',
+            = {'default_constants': 'constants',
                'country_constants': 'constants',
                'default_programs': 'time_variants',
-               'country_programs': 'time_variants',
-               'notifications_2014': 'TB_notifications_2016-04-20',
-               'notifications_2015': 'TB_notifications_2016-12-22',
-               'notifications_2016': 'TB_notifications_2017-12-29',
-               'outcomes_2013': 'TB_outcomes_2016-04-21',
-               'outcomes_2015': 'TB_outcomes_2017-12-29',
-               'laboratories_2014': 'TB_laboratories_2016-04-21',
-               'laboratories_2015': 'TB_laboratories_2016-12-22',
-               'laboratories_2016': 'TB_laboratories_2017-12-29',
-               'strategy_2014': 'TB_strategy_2016-04-21',
-               'strategy_2015': 'TB_policies_services_2016-12-22',
-               'strategy_2016': 'TB_policies_services_2017-12-29',
-               'mdr_2014': 'MDR-TB_burden_estimates_2016-04',
-               'mdr_2015': 'MDR_RR_TB_burden_estimates_2016',
-               'mdr_2016': 'MDR_RR_TB_burden_estimates_2017',
-               'latent_2016': 'LTBI_estimates_2017-12-29',
-               'tb_hiv_2016': 'TB_hiv_nonroutine_surveillance_',
-               'diabetes': 'DM estimates 2015'}
+               'country_programs': 'time_variants'}
+        sheets_starting_row_one \
+            = ['gtb_2015', 'gtb_2016', 'default_constants', 'country_constants', 'notifications_2015', 'outcomes_2013',
+               'laboratories_2014', 'laboratories_2015', 'laboratories_2016']
         start_rows \
             = {'life_expectancy': 3,
-               'gtb_2015': 1,
-               'gtb_2016': 1,
-               'default_constants': 1,
-               'country_constants': 1,
-               'notifications_2015': 1,
-               'outcomes_2013': 1,
-               'laboratories_2014': 1,
-               'laboratories_2015': 1,
-               'laboratories_2016': 1,
                'diabetes': 2}
         start_cols \
             = {'bcg': 4,
@@ -135,23 +85,29 @@ class SpreadsheetReader:
         vertical_sheets \
             = ['gtb_2015', 'gtb_2016', 'notifications_2014', 'notifications_2015', 'notifications_2016',
                'outcomes_2013', 'outcomes_2015', 'laboratories_2014', 'laboratories_2015', 'laboratories_2016']
+        tb_adjustment_countries \
+            = ['gtb_2015', 'gtb_2016', 'notifications_2014', 'notifications_2015', 'notifications_2016',
+               'outcomes_2013', 'outcomes_2015']
         country_adjustment_types \
             = {'rate_birth': 'demographic',
-               'life_expectancy': 'demographic',
-               'gtb_2015': 'tb',
-               'gtb_2016': 'tb',
-               'notifications_2014': 'tb',
-               'notifications_2015': 'tb',
-               'notifications_2016': 'tb',
-               'outcomes_2013': 'tb',
-               'outcomes_2015': 'tb'}
+               'life_expectancy': 'demographic'}
 
         self.purpose = purpose
-        country_adjustment = country_adjustment_types[purpose] if purpose in country_adjustment_types else ''
+        if purpose in country_adjustment_types:
+            country_adjustment = country_adjustment_types[purpose]
+        elif purpose in tb_adjustment_countries:
+            country_adjustment = 'tb'
+        else:
+            country_adjustment = ''
         self.country_to_read = tool_kit.adjust_country_name(country_to_read, country_adjustment)
-        self.filename = filenames[purpose]
-        self.tab_name = tab_names[purpose]
-        self.start_row = start_rows[purpose] if purpose in start_rows else 0
+        self.filename = filenames[purpose] if purpose in filenames else 'xls/' + purpose + '.xlsx'
+        self.tab_name = tab_names[purpose] if purpose in tab_names else purpose
+        if purpose in sheets_starting_row_one:
+            self.start_row = 1
+        elif purpose in start_rows:
+            self.start_row = start_rows[purpose]
+        else:
+            self.start_row = 0
         self.start_col = start_cols[purpose] if purpose in start_cols else 0
         self.column_for_keys = columns_for_keys[purpose] if purpose in columns_for_keys else 0
         self.first_cell = first_cells[purpose] if purpose in first_cells else 'country'

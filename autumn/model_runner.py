@@ -1003,11 +1003,11 @@ class ModelRunner:
 
         ratios = []
         for year in years_to_compare:
-            if year in self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k']:
+            if year in self.inputs.original_data['gtb_2015']['e_mort_exc_tbhiv_100k']:
                 ratios.append(self.outputs['epi_uncertainty']['epi'][0]['mortality'][last_run_output_index,
                     tool_kit.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'],
                                                                  float(year))]
-                              / self.inputs.original_data['tb']['e_mort_exc_tbhiv_100k'][year])
+                              / self.inputs.original_data['gtb_2015']['e_mort_exc_tbhiv_100k'][year])
         average_ratio = numpy.mean(ratios)
         if average_ratio < 1. / self.relative_difference_to_adjust_mortality:
             self.prop_death_reporting += self.amount_to_adjust_mortality

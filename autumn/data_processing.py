@@ -584,9 +584,9 @@ class Inputs:
 
         # case detection
         if self.time_variants['program_perc_detect']['load_data'] == u'yes':
-            for year in self.original_data['tb']['c_cdr']:
+            for year in self.original_data['gtb_2015']['c_cdr']:
                 if year not in self.time_variants['program_perc_detect']:
-                    self.time_variants['program_perc_detect'][year] = self.original_data['tb']['c_cdr'][year]
+                    self.time_variants['program_perc_detect'][year] = self.original_data['gtb_2015']['c_cdr'][year]
 
     def convert_percentages_to_proportions(self):
         """
@@ -1279,10 +1279,10 @@ class Inputs:
         for output in var_to_iterate:
             if output['key'] == 'incidence':
                 for key in inc_conversion_dict:
-                    self.data_to_fit[key] = self.original_data['tb'][inc_conversion_dict[key]]
+                    self.data_to_fit[key] = self.original_data['gtb_2015'][inc_conversion_dict[key]]
             elif output['key'] == 'mortality':
                 for key in mort_conversion_dict:
-                    self.data_to_fit[key] = self.original_data['tb'][mort_conversion_dict[key]]
+                    self.data_to_fit[key] = self.original_data['gtb_2015'][mort_conversion_dict[key]]
             else:
                 self.add_comment_to_gui_window(
                     'Warning: Calibrated output %s is not directly available from the data' % output['key'])
@@ -1318,9 +1318,9 @@ class Inputs:
         other sheets (like diabetes) are added as optional.
         """
 
-        keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy', 'default_parameters', 'tb', 'notifications',
-                                  'outcomes', 'country_constants', 'default_constants', 'country_programs',
-                                  'default_programs']
+        keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy', 'default_parameters', 'gtb_2015',
+                                  'gtb_2016', 'notifications', 'outcomes', 'country_constants', 'default_constants',
+                                  'country_programs', 'default_programs']
 
         # add any optional sheets required for specific model being run (currently just diabetes)
         if 'riskgroup_diabetes' in self.gui_inputs: keys_of_sheets_to_read += ['diabetes']

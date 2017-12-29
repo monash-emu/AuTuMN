@@ -52,7 +52,8 @@ class SpreadsheetReader:
             = {'bcg': 'xls/who_unicef_bcg_coverage.xlsx',
                'rate_birth': 'xls/world_bank_crude_birth_rate.xlsx',
                'life_expectancy': 'xls/world_bank_life_expectancy.xlsx',
-               'tb': 'xls/gtb_data.xlsx',
+               'gtb_2015': 'xls/gtb_data.xlsx',
+               'gtb_2016': 'xls/gtb_data_2016.xlsx',
                'default_constants': 'xls/data_default.xlsx',
                'country_constants': 'xls/data_' + country_to_read.lower() + '.xlsx',
                'default_programs': 'xls/data_default.xlsx',
@@ -67,7 +68,8 @@ class SpreadsheetReader:
             = {'bcg': 'BCG',
                'rate_birth': 'Data',
                'life_expectancy': 'Data',
-               'tb': 'TB_burden_countries_2016-04-19',
+               'gtb_2015': 'TB_burden_countries_2016-04-19',
+               'gtb_2016': 'gtb_data_2016',
                'default_constants': 'constants',
                'country_constants': 'constants',
                'default_programs': 'time_variants',
@@ -80,7 +82,8 @@ class SpreadsheetReader:
                'diabetes': 'DM estimates 2015'}
         start_rows \
             = {'life_expectancy': 3,
-               'tb': 1,
+               'gtb_2015': 1,
+               'gtb_2016': 1,
                'default_constants': 1,
                'country_constants': 1,
                'notifications': 1,
@@ -98,18 +101,20 @@ class SpreadsheetReader:
             = {'bcg': 'WHO_REGION',
                'rate_birth': 'Series Name',
                'life_expectancy': 'Country Name',
-               'tb': 'country',
+               'gtb_2015': 'country',
+               'gtb_2016': 'country',
                'default_constants': 'program',
                'country_constants': 'program',
                'default_programs': 'program',
                'country_programs': 'program',
                'diabetes': u'Country/territory'}
         vertical_sheets \
-            = ['tb', 'notifications', 'outcomes', 'laboratories']
+            = ['gtb_2015', 'gtb_2016', 'notifications', 'outcomes', 'laboratories']
         country_adjustment_types \
             = {'rate_birth': 'demographic',
                'life_expectancy': 'demographic',
-               'tb': 'tb',
+               'gtb_2015': 'tb',
+               'gtb_2016': 'tb',
                'notifications': 'tb',
                'outcomes': 'tb'}
 
@@ -279,7 +284,8 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     sheet_readers = []
     available_sheets \
         = ['default_constants', 'bcg', 'rate_birth', 'life_expectancy', 'country_constants', 'default_programs',
-           'country_programs', 'tb', 'notifications', 'outcomes', 'mdr', 'laboratories', 'strategy', 'diabetes']
+           'country_programs', 'notifications', 'outcomes', 'mdr', 'laboratories', 'strategy', 'diabetes', 'gtb_2015',
+           'gtb_2016']
     for sheet_name in available_sheets:
         if sheet_name in sheets_to_read: sheet_readers.append(SpreadsheetReader(country, sheet_name))
 
@@ -292,12 +298,12 @@ def read_input_data_xls(from_test, sheets_to_read, country):
 
         # check that the spreadsheet to be read exists
         try:
-            print('Reading file', os.getcwd(), reader.filename)
+            print('Reading file ' + reader.filename)
             workbook = open_workbook(reader.filename)
 
         # if sheet unavailable, warn of issue
         except:
-            print('Unable to open country spreadsheet')
+            print('Unable to open spreadsheet ' + reader.filename)
 
         # read the sheet according to reading orientation
         else:

@@ -1320,10 +1320,10 @@ class Inputs:
 
         keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy', 'default_parameters', 'gtb_2015',
                                   'gtb_2016', 'notifications_2016', 'outcomes', 'country_constants',
-                                  'default_constants', 'country_programs', 'default_programs']
+                                  'default_constants', 'country_programs', 'default_programs', 'tb_hiv_2016']
 
         # add any optional sheets required for specific model being run (currently just diabetes)
-        if 'riskgroup_diabetes' in self.gui_inputs: keys_of_sheets_to_read += ['diabetes']
+        if 'riskgroup_diabetes' in self.gui_inputs: keys_of_sheets_to_read.append('diabetes')
 
         return keys_of_sheets_to_read
 

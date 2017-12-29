@@ -70,6 +70,7 @@ class SpreadsheetReader:
                'mdr_2015': 'xls/mdr_data_2015.xlsx',
                'mdr_2016': 'xls/mdr_data_2016.xlsx',
                'latent_2016': 'xls/latent_data_2016.xlsx',
+               'tb_hiv_2016': 'xls/tb_hiv_data_2016.xlsx',
                'diabetes': 'xls/diabetes_internationaldiabetesfederation.xlsx'}
         tab_names \
             = {'bcg': 'BCG',
@@ -93,6 +94,7 @@ class SpreadsheetReader:
                'mdr_2015': 'MDR_RR_TB_burden_estimates_2016',
                'mdr_2016': 'MDR_RR_TB_burden_estimates_2017',
                'latent_2016': 'LTBI_estimates_2017-12-29',
+               'tb_hiv_2016': 'TB_hiv_nonroutine_surveillance_',
                'diabetes': 'DM estimates 2015'}
         start_rows \
             = {'life_expectancy': 3,
@@ -320,7 +322,7 @@ def read_input_data_xls(from_test, sheets_to_read, country):
         = ['default_constants', 'bcg', 'rate_birth', 'life_expectancy', 'country_constants', 'default_programs',
            'country_programs', 'notifications_2014', 'notifications_2015', 'notifications_2016', 'outcomes', 'mdr_2014',
            'mdr_2015', 'mdr_2016', 'laboratories_2014', 'laboratories_2015', 'laboratories_2016', 'strategy',
-           'diabetes', 'gtb_2015', 'gtb_2016', 'latent_2016']
+           'diabetes', 'gtb_2015', 'gtb_2016', 'latent_2016', 'tb_hiv_2016']
     for sheet_name in available_sheets:
         if sheet_name in sheets_to_read: sheet_readers.append(SpreadsheetReader(country, sheet_name))
 

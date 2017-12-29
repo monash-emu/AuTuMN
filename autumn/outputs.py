@@ -1701,7 +1701,7 @@ class Project:
 
         # notifications
         if output == 'notifications':
-            gtb_data['point_estimate'] = self.inputs.original_data['notifications']['c_newinc']
+            gtb_data['point_estimate'] = self.inputs.original_data['notifications_2016']['c_newinc']
             gtb_data_lists.update(extract_dict_to_list_key_ordering(gtb_data['point_estimate'], 'point_estimate'))
             gtb_index = t_k.find_first_list_element_at_least_value(gtb_data_lists['times'], start_time)
 

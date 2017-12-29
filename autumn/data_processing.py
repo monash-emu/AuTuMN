@@ -546,7 +546,7 @@ class Inputs:
         the derived_data attribute of the object.
         """
 
-        self.derived_data.update(tool_kit.calculate_proportion_dict(self.original_data['notifications'],
+        self.derived_data.update(tool_kit.calculate_proportion_dict(self.original_data['notifications_2016'],
                                                                     ['new_sp', 'new_sn', 'new_ep']))
 
     def add_time_variant_defaults(self):
@@ -832,7 +832,7 @@ class Inputs:
             # count totals notified by each organ status and find denominator
             count_by_organ_status = {}
             for organ in name_conversion_dict.values():
-                count_by_organ_status[organ] = numpy.sum(self.original_data['notifications']['new' + organ].values())
+                count_by_organ_status[organ] = numpy.sum(self.original_data['notifications_2016']['new' + organ].values())
             total = numpy.sum(count_by_organ_status.values())
 
             # calculate proportions from totals
@@ -1319,8 +1319,8 @@ class Inputs:
         """
 
         keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy', 'default_parameters', 'gtb_2015',
-                                  'gtb_2016', 'notifications', 'outcomes', 'country_constants', 'default_constants',
-                                  'country_programs', 'default_programs']
+                                  'gtb_2016', 'notifications_2016', 'outcomes', 'country_constants',
+                                  'default_constants', 'country_programs', 'default_programs']
 
         # add any optional sheets required for specific model being run (currently just diabetes)
         if 'riskgroup_diabetes' in self.gui_inputs: keys_of_sheets_to_read += ['diabetes']

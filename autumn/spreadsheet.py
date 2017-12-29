@@ -62,7 +62,9 @@ class SpreadsheetReader:
                'notifications_2015': 'xls/notifications_data_2015.xlsx',
                'notifications_2016': 'xls/notifications_data_2016.xlsx',
                'outcomes': 'xls/outcome_data.xlsx',
-               'laboratores': 'xls/laboratories_data.xlsx',
+               'laboratories_2014': 'xls/laboratories_data_2014.xlsx',
+               'laboratories_2015': 'xls/laboratories_data_2015.xlsx',
+               'laboratories_2016': 'xls/laboratories_data_2016.xlsx',
                'strategy': 'xls/strategy_data.xlsx',
                'mdr_2014': 'xls/mdr_data_2014.xlsx',
                'mdr_2015': 'xls/mdr_data_2015.xlsx',
@@ -83,7 +85,9 @@ class SpreadsheetReader:
                'notifications_2015': 'TB_notifications_2016-12-22',
                'notifications_2016': 'TB_notifications_2017-12-29',
                'outcomes': 'TB_outcomes_2016-04-21',
-               'laboratories': 'TB_laboratories_2016-12-22',
+               'laboratories_2014': 'TB_laboratories_2016-04-21',
+               'laboratories_2015': 'TB_laboratories_2016-12-22',
+               'laboratories_2016': 'TB_laboratories_2017-12-29',
                'strategy': 'TB_policies_services_2016-12-22',
                'mdr_2014': 'MDR-TB_burden_estimates_2016-04',
                'mdr_2015': 'MDR_RR_TB_burden_estimates_2016',
@@ -98,7 +102,9 @@ class SpreadsheetReader:
                'country_constants': 1,
                'notifications_2015': 1,
                'outcomes': 1,
-               'laboratories': 1,
+               'laboratories_2014': 1,
+               'laboratories_2015': 1,
+               'laboratories_2016': 1,
                'diabetes': 2}
         start_cols \
             = {'bcg': 4,
@@ -120,7 +126,7 @@ class SpreadsheetReader:
                'diabetes': u'Country/territory'}
         vertical_sheets \
             = ['gtb_2015', 'gtb_2016', 'notifications_2014', 'notifications_2015', 'notifications_2016', 'outcomes',
-               'laboratories']
+               'laboratories_2014', 'laboratories_2015', 'laboratories_2016']
         country_adjustment_types \
             = {'rate_birth': 'demographic',
                'life_expectancy': 'demographic',
@@ -313,7 +319,8 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     available_sheets \
         = ['default_constants', 'bcg', 'rate_birth', 'life_expectancy', 'country_constants', 'default_programs',
            'country_programs', 'notifications_2014', 'notifications_2015', 'notifications_2016', 'outcomes', 'mdr_2014',
-           'mdr_2015', 'mdr_2016', 'laboratories', 'strategy', 'diabetes', 'gtb_2015', 'gtb_2016', 'latent_2016']
+           'mdr_2015', 'mdr_2016', 'laboratories_2014', 'laboratories_2015', 'laboratories_2016', 'strategy',
+           'diabetes', 'gtb_2015', 'gtb_2016', 'latent_2016']
     for sheet_name in available_sheets:
         if sheet_name in sheets_to_read: sheet_readers.append(SpreadsheetReader(country, sheet_name))
 

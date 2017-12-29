@@ -776,19 +776,23 @@ class Inputs:
         Similarly to previous methods, only performed if requested and only populated where absent.
         """
 
+        temporary_dictionary \
+            = {'life_expectancy': 'life_expectancy_2015', 'rate_birth': 'rate_birth'}
+
         # for the two types of demographic parameters
         for demo_parameter in ['life_expectancy', 'rate_birth']:
 
             # if there are data available from the user-derived sheets and loading external data is requested
             if 'demo_' + demo_parameter in self.time_variants \
                     and self.time_variants['demo_' + demo_parameter]['load_data'] == u'yes':
-                for year in self.original_data[demo_parameter]:
+                for year in self.original_data[temporary_dictionary[demo_parameter]]:
                     if year not in self.time_variants['demo_' + demo_parameter]:
-                        self.time_variants['demo_' + demo_parameter][year] = self.original_data[demo_parameter][year]
+                        self.time_variants['demo_' + demo_parameter][year] \
+                            = self.original_data[temporary_dictionary[demo_parameter]][year]
 
             # if there are no data available from the user sheets
             else:
-                self.time_variants['demo_' + demo_parameter] = self.original_data[demo_parameter]
+                self.time_variants['demo_' + demo_parameter] = self.original_data[temporary_dictionary[demo_parameter]]
 
     def add_organ_status_to_timevariants(self):
         """
@@ -1318,9 +1322,9 @@ class Inputs:
         other sheets (like diabetes) are added as optional.
         """
 
-        keys_of_sheets_to_read = ['bcg_2016', 'rate_birth', 'life_expectancy', 'default_parameters', 'gtb_2015',
-                                  'gtb_2016', 'notifications_2016', 'outcomes_2015', 'country_constants',
-                                  'default_constants', 'country_programs', 'default_programs']
+        keys_of_sheets_to_read = ['bcg_2016', 'rate_birth', 'life_expectancy_2014', 'life_expectancy_2015',
+                                  'default_parameters', 'gtb_2015', 'gtb_2016', 'notifications_2016', 'outcomes_2015',
+                                  'country_constants', 'default_constants', 'country_programs', 'default_programs']
 
         # add any optional sheets required for specific model being run (currently just diabetes)
         if 'riskgroup_diabetes' in self.gui_inputs: keys_of_sheets_to_read.append('diabetes')

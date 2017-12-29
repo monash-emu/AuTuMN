@@ -48,21 +48,25 @@ class SpreadsheetReader:
             purpose: String that defines the spreadsheet type to be read
         """
 
-        filenames \
+        # file and sheet names
+        specific_sheet_names \
             = {'default_constants': 'xls/data_default.xlsx',
                'country_constants': 'xls/data_' + country_to_read.lower() + '.xlsx',
                'default_programs': 'xls/data_default.xlsx',
                'country_programs': 'xls/data_' + country_to_read.lower() + '.xlsx'}
-        tab_names \
+        specific_tab_names \
             = {'default_constants': 'constants',
                'country_constants': 'constants',
                'default_programs': 'time_variants',
                'country_programs': 'time_variants'}
+
+        # starting positions
         sheets_starting_row_one \
             = ['gtb_2015', 'gtb_2016', 'default_constants', 'country_constants', 'notifications_2015', 'outcomes_2013',
                'laboratories_2014', 'laboratories_2015', 'laboratories_2016']
         start_rows \
-            = {'life_expectancy': 3,
+            = {'life_expectancy_2014': 3,
+               'life_expectancy_2015': 3,
                'diabetes': 2}
         start_cols \
             = {'bcg_2014': 4,
@@ -80,7 +84,8 @@ class SpreadsheetReader:
                'bcg_2015': 'WHO_REGION',
                'bcg_2016': 'WHO_REGION',
                'rate_birth': 'Series Name',
-               'life_expectancy': 'Country Name',
+               'life_expectancy_2014': 'Country Name',
+               'life_expectancy_2015': 'Country Name',
                'gtb_2015': 'country',
                'gtb_2016': 'country',
                'default_constants': 'program',
@@ -88,15 +93,20 @@ class SpreadsheetReader:
                'default_programs': 'program',
                'country_programs': 'program',
                'diabetes': u'Country/territory'}
+
+        # spreadsheets to be read vertically
         vertical_sheets \
             = ['gtb_2015', 'gtb_2016', 'notifications_2014', 'notifications_2015', 'notifications_2016',
                'outcomes_2013', 'outcomes_2015', 'laboratories_2014', 'laboratories_2015', 'laboratories_2016']
+
+        # adaptation of the country name to the sheet's approach to naming
         tb_adjustment_countries \
             = ['gtb_2015', 'gtb_2016', 'notifications_2014', 'notifications_2015', 'notifications_2016',
                'outcomes_2013', 'outcomes_2015']
         country_adjustment_types \
             = {'rate_birth': 'demographic',
-               'life_expectancy': 'demographic'}
+               'life_expectancy_2014': 'demographic',
+               'life_expectancy_2015': 'demographic'}
 
         self.purpose = purpose
         if purpose in country_adjustment_types:
@@ -106,8 +116,8 @@ class SpreadsheetReader:
         else:
             country_adjustment = ''
         self.country_to_read = tool_kit.adjust_country_name(country_to_read, country_adjustment)
-        self.filename = filenames[purpose] if purpose in filenames else 'xls/' + purpose + '.xlsx'
-        self.tab_name = tab_names[purpose] if purpose in tab_names else purpose
+        self.filename = specific_sheet_names[purpose] if purpose in specific_sheet_names else 'xls/' + purpose + '.xlsx'
+        self.tab_name = specific_tab_names[purpose] if purpose in specific_tab_names else purpose
         if purpose in sheets_starting_row_one:
             self.start_row = 1
         elif purpose in start_rows:
@@ -154,7 +164,7 @@ class SpreadsheetReader:
                     if type(row[i]) == float: self.data[int(self.parlist[i])] = row[i]
 
         # demographics
-        elif self.purpose in ['rate_birth', 'life_expectancy']:
+        elif self.purpose in ['rate_birth', 'life_expectancy_2014', 'life_expectancy_2015']:
             if row[0] == self.first_cell:
                 for i in range(len(row)): self.parlist.append(row[i][:4])
             elif row[self.column_for_keys] == self.country_to_read:
@@ -288,10 +298,10 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     # add sheet readers as required
     sheet_readers, data_read_from_sheets = [], {}
     available_sheets \
-        = ['default_constants', 'bcg_2014', 'bcg_2015', 'bcg_2016', 'rate_birth', 'life_expectancy',
-           'country_constants', 'default_programs', 'country_programs', 'notifications_2014', 'notifications_2015',
-           'notifications_2016', 'outcomes_2013', 'outcomes_2015', 'mdr_2014', 'mdr_2015', 'mdr_2016',
-           'laboratories_2014', 'laboratories_2015', 'laboratories_2016', 'strategy_2014', 'strategy_2015',
+        = ['default_constants', 'bcg_2014', 'bcg_2015', 'bcg_2016', 'rate_birth', 'life_expectancy_2014',
+           'life_expectancy_2015', 'country_constants', 'default_programs', 'country_programs', 'notifications_2014',
+           'notifications_2015', 'notifications_2016', 'outcomes_2013', 'outcomes_2015', 'mdr_2014', 'mdr_2015',
+           'mdr_2016', 'laboratories_2014', 'laboratories_2015', 'laboratories_2016', 'strategy_2014', 'strategy_2015',
            'strategy_2016', 'diabetes', 'gtb_2015', 'gtb_2016', 'latent_2016', 'tb_hiv_2016']
     for sheet_name in available_sheets:
         if sheet_name in sheets_to_read: sheet_readers.append(SpreadsheetReader(country, sheet_name))

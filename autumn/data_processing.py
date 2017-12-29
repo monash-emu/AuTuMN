@@ -578,9 +578,9 @@ class Inputs:
 
         # vaccination
         if self.time_variants['int_perc_vaccination']['load_data'] == u'yes':
-            for year in self.original_data['bcg']:
+            for year in self.original_data['bcg_2016']:
                 if year not in self.time_variants['int_perc_vaccination']:
-                    self.time_variants['int_perc_vaccination'][year] = self.original_data['bcg'][year]
+                    self.time_variants['int_perc_vaccination'][year] = self.original_data['bcg_2016'][year]
 
         # case detection
         if self.time_variants['program_perc_detect']['load_data'] == u'yes':
@@ -1318,7 +1318,7 @@ class Inputs:
         other sheets (like diabetes) are added as optional.
         """
 
-        keys_of_sheets_to_read = ['bcg', 'rate_birth', 'life_expectancy', 'default_parameters', 'gtb_2015',
+        keys_of_sheets_to_read = ['bcg_2016', 'rate_birth', 'life_expectancy', 'default_parameters', 'gtb_2015',
                                   'gtb_2016', 'notifications_2016', 'outcomes_2015', 'country_constants',
                                   'default_constants', 'country_programs', 'default_programs']
 

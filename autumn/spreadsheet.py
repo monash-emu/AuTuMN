@@ -65,14 +65,20 @@ class SpreadsheetReader:
             = {'life_expectancy': 3,
                'diabetes': 2}
         start_cols \
-            = {'bcg': 4,
+            = {'bcg_2014': 4,
+               'bcg_2015': 4,
+               'bcg_2016': 4,
                'default_programs': 1,
                'country_programs': 1}
         columns_for_keys \
-            = {'bcg': 2,
+            = {'bcg_2014': 2,
+               'bcg_2015': 2,
+               'bcg_2016': 2,
                'rate_birth': 2}
         first_cells \
-            = {'bcg': 'WHO_REGION',
+            = {'bcg_2014': 'WHO_REGION',
+               'bcg_2015': 'WHO_REGION',
+               'bcg_2016': 'WHO_REGION',
                'rate_birth': 'Series Name',
                'life_expectancy': 'Country Name',
                'gtb_2015': 'country',
@@ -139,7 +145,7 @@ class SpreadsheetReader:
         """
 
         # vaccination sheet
-        if self.purpose == 'bcg':
+        if self.purpose == 'bcg_2016':
             if row[0] == self.first_cell:
                 self.parlist = parse_year_data(row, '', len(row))
                 for i in range(len(self.parlist)): self.parlist[i] = str(self.parlist[i])
@@ -282,11 +288,11 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     # add sheet readers as required
     sheet_readers, data_read_from_sheets = [], {}
     available_sheets \
-        = ['default_constants', 'bcg', 'rate_birth', 'life_expectancy', 'country_constants', 'default_programs',
-           'country_programs', 'notifications_2014', 'notifications_2015', 'notifications_2016', 'outcomes_2013',
-           'outcomes_2015', 'mdr_2014', 'mdr_2015', 'mdr_2016', 'laboratories_2014', 'laboratories_2015',
-           'laboratories_2016', 'strategy_2014', 'strategy_2015', 'strategy_2016', 'diabetes', 'gtb_2015', 'gtb_2016',
-           'latent_2016', 'tb_hiv_2016']
+        = ['default_constants', 'bcg_2014', 'bcg_2015', 'bcg_2016', 'rate_birth', 'life_expectancy',
+           'country_constants', 'default_programs', 'country_programs', 'notifications_2014', 'notifications_2015',
+           'notifications_2016', 'outcomes_2013', 'outcomes_2015', 'mdr_2014', 'mdr_2015', 'mdr_2016',
+           'laboratories_2014', 'laboratories_2015', 'laboratories_2016', 'strategy_2014', 'strategy_2015',
+           'strategy_2016', 'diabetes', 'gtb_2015', 'gtb_2016', 'latent_2016', 'tb_hiv_2016']
     for sheet_name in available_sheets:
         if sheet_name in sheets_to_read: sheet_readers.append(SpreadsheetReader(country, sheet_name))
 

@@ -777,7 +777,7 @@ class Inputs:
         """
 
         temporary_dictionary \
-            = {'life_expectancy': 'life_expectancy_2015', 'rate_birth': 'rate_birth'}
+            = {'life_expectancy': 'life_expectancy_2015', 'rate_birth': 'rate_birth_2015'}
 
         # for the two types of demographic parameters
         for demo_parameter in ['life_expectancy', 'rate_birth']:
@@ -1322,9 +1322,10 @@ class Inputs:
         other sheets (like diabetes) are added as optional.
         """
 
-        keys_of_sheets_to_read = ['bcg_2016', 'rate_birth', 'life_expectancy_2014', 'life_expectancy_2015',
-                                  'default_parameters', 'gtb_2015', 'gtb_2016', 'notifications_2016', 'outcomes_2015',
-                                  'country_constants', 'default_constants', 'country_programs', 'default_programs']
+        keys_of_sheets_to_read \
+            = ['bcg_2016', 'rate_birth_2014', 'rate_birth_2015', 'life_expectancy_2014', 'life_expectancy_2015',
+               'default_parameters', 'gtb_2015', 'gtb_2016', 'notifications_2016', 'outcomes_2015', 'country_constants',
+               'default_constants', 'country_programs', 'default_programs']
 
         # add any optional sheets required for specific model being run (currently just diabetes)
         if 'riskgroup_diabetes' in self.gui_inputs: keys_of_sheets_to_read.append('diabetes')

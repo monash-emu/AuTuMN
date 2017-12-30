@@ -67,23 +67,26 @@ class SpreadsheetReader:
         start_rows \
             = {'life_expectancy_2014': 3,
                'life_expectancy_2015': 3,
-               'diabetes': 2}
+               'diabetes': 2,
+               'rate_birth_2015': 3}
         start_cols \
             = {'bcg_2014': 4,
                'bcg_2015': 4,
                'bcg_2016': 4,
                'default_programs': 1,
-               'country_programs': 1}
+               'country_programs': 1,
+               'rate_birth_2015': 5}
         columns_for_keys \
             = {'bcg_2014': 2,
                'bcg_2015': 2,
                'bcg_2016': 2,
-               'rate_birth': 2}
+               'rate_birth_2014': 2}
         first_cells \
             = {'bcg_2014': 'WHO_REGION',
                'bcg_2015': 'WHO_REGION',
                'bcg_2016': 'WHO_REGION',
-               'rate_birth': 'Series Name',
+               'rate_birth_2014': 'Series Name',
+               'rate_birth_2015': 'Country Name',
                'life_expectancy_2014': 'Country Name',
                'life_expectancy_2015': 'Country Name',
                'gtb_2015': 'country',
@@ -104,7 +107,8 @@ class SpreadsheetReader:
             = ['gtb_2015', 'gtb_2016', 'notifications_2014', 'notifications_2015', 'notifications_2016',
                'outcomes_2013', 'outcomes_2015']
         country_adjustment_types \
-            = {'rate_birth': 'demographic',
+            = {'rate_birth_2014': 'demographic',
+               'rate_birth_2015': 'demographic',
                'life_expectancy_2014': 'demographic',
                'life_expectancy_2015': 'demographic'}
 
@@ -164,11 +168,13 @@ class SpreadsheetReader:
                     if type(row[i]) == float: self.data[int(self.parlist[i])] = row[i]
 
         # demographics
-        elif self.purpose in ['rate_birth', 'life_expectancy_2014', 'life_expectancy_2015']:
+        elif self.purpose in ['rate_birth_2014', 'rate_birth_2015', 'life_expectancy_2014', 'life_expectancy_2015']:
+            if self.purpose == 'rate_birth_2015':
+                print
             if row[0] == self.first_cell:
                 for i in range(len(row)): self.parlist.append(row[i][:4])
             elif row[self.column_for_keys] == self.country_to_read:
-                for i in range(4, len(row)):
+                for i in range(self.start_row, len(row)):
                     if type(row[i]) == float: self.data[int(self.parlist[i])] = row[i]
 
         # constants
@@ -298,11 +304,12 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     # add sheet readers as required
     sheet_readers, data_read_from_sheets = [], {}
     available_sheets \
-        = ['default_constants', 'bcg_2014', 'bcg_2015', 'bcg_2016', 'rate_birth', 'life_expectancy_2014',
-           'life_expectancy_2015', 'country_constants', 'default_programs', 'country_programs', 'notifications_2014',
-           'notifications_2015', 'notifications_2016', 'outcomes_2013', 'outcomes_2015', 'mdr_2014', 'mdr_2015',
-           'mdr_2016', 'laboratories_2014', 'laboratories_2015', 'laboratories_2016', 'strategy_2014', 'strategy_2015',
-           'strategy_2016', 'diabetes', 'gtb_2015', 'gtb_2016', 'latent_2016', 'tb_hiv_2016']
+        = ['default_constants', 'bcg_2014', 'bcg_2015', 'bcg_2016', 'rate_birth_2014', 'rate_birth_2015',
+           'life_expectancy_2014', 'life_expectancy_2015', 'country_constants', 'default_programs', 'country_programs',
+           'notifications_2014', 'notifications_2015', 'notifications_2016', 'outcomes_2013', 'outcomes_2015',
+           'mdr_2014', 'mdr_2015', 'mdr_2016', 'laboratories_2014', 'laboratories_2015', 'laboratories_2016',
+           'strategy_2014', 'strategy_2015', 'strategy_2016', 'diabetes', 'gtb_2015', 'gtb_2016', 'latent_2016',
+           'tb_hiv_2016']
     for sheet_name in available_sheets:
         if sheet_name in sheets_to_read: sheet_readers.append(SpreadsheetReader(country, sheet_name))
 

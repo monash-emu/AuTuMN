@@ -39,7 +39,7 @@ class SpreadsheetReader:
     appropriate reading approach.
     """
 
-    def __init__(self, country_to_read, purpose):
+    def __init__(self, country_to_read, purpose, from_test):
         """
         Use the "purpose" input to index static dictionaries to set basic reader characteristics.
 
@@ -121,6 +121,7 @@ class SpreadsheetReader:
             country_adjustment = ''
         self.country_to_read = tool_kit.adjust_country_name(country_to_read, country_adjustment)
         self.filename = specific_sheet_names[purpose] if purpose in specific_sheet_names else 'xls/' + purpose + '.xlsx'
+        if from_test: self.filename = os.path.join('autumn/', self.filename)  # if being run from the directory above
         self.tab_name = specific_tab_names[purpose] if purpose in specific_tab_names else purpose
         if purpose in sheets_starting_row_one:
             self.start_row = 1
@@ -134,8 +135,28 @@ class SpreadsheetReader:
         self.horizontal = False if self.purpose in vertical_sheets else True
         self.indices, self.parlist, self.dictionary_keys, self.data, self.year_indices = [], [], [], {}, {}
         self.revised_purpose = self.purpose[:-5] if self.purpose[-5:-2] == '_20' else self.purpose
+        self.data_read_from_sheets = {}
 
-    def read_data_list(self, workbook):
+    def read_data(self):
+        """
+        Read the data from the spreadsheet being read.
+        """
+
+        # check that the spreadsheet to be read exists
+        try:
+            print('Reading file ' + self.filename)
+            workbook = open_workbook(self.filename)
+
+        # if sheet unavailable, warn of issue
+        except:
+            print('Unable to open spreadsheet ' + self.filename)
+            return
+
+        # read the sheet according to reading orientation
+        else:
+            return self.read_data_by_line(workbook)
+
+    def read_data_by_line(self, workbook):
         """
         Short function to determine whether to read horizontally or vertically.
 
@@ -303,31 +324,16 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     # add sheet readers as required
     sheet_readers, data_read_from_sheets = [], {}
     available_sheets \
-        = ['default_constants', 'bcg_2014', 'bcg_2015', 'bcg_2016', 'rate_birth_2014', 'rate_birth_2015',
-           'life_expectancy_2014', 'life_expectancy_2015', 'country_constants', 'default_programs', 'country_programs',
+        = ['default_constants', 'country_constants', 'default_programs', 'country_programs', 'bcg_2014', 'bcg_2015',
+           'bcg_2016', 'rate_birth_2014', 'rate_birth_2015', 'life_expectancy_2014', 'life_expectancy_2015',
            'notifications_2014', 'notifications_2015', 'notifications_2016', 'outcomes_2013', 'outcomes_2015',
            'mdr_2014', 'mdr_2015', 'mdr_2016', 'laboratories_2014', 'laboratories_2015', 'laboratories_2016',
            'strategy_2014', 'strategy_2015', 'strategy_2016', 'diabetes', 'gtb_2015', 'gtb_2016', 'latent_2016',
            'tb_hiv_2016']
-    for sheet_name in available_sheets:
-        if sheet_name in sheets_to_read: sheet_readers.append(SpreadsheetReader(country, sheet_name))
+    final_sheets_to_read = tool_kit.find_common_elements(sheets_to_read, available_sheets)
+    for sheet_name in final_sheets_to_read: sheet_readers.append(SpreadsheetReader(country, sheet_name, from_test))
 
-    for reader in sheet_readers:
-
-        # if being run from the directory above
-        if from_test: reader.filename = os.path.join('autumn/', reader.filename)
-
-        # check that the spreadsheet to be read exists
-        try:
-            print('Reading file ' + reader.filename)
-            workbook = open_workbook(reader.filename)
-
-        # if sheet unavailable, warn of issue
-        except:
-            print('Unable to open spreadsheet ' + reader.filename)
-
-        # read the sheet according to reading orientation
-        else:
-            data_read_from_sheets[reader.revised_purpose] = reader.read_data_list(workbook)
+    # do the reading
+    for reader in sheet_readers: data_read_from_sheets[reader.revised_purpose] = reader.read_data()
     return data_read_from_sheets
 

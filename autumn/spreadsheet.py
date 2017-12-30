@@ -280,7 +280,7 @@ class SpreadsheetReader:
         # diabetes
         elif self.purpose == 'diabetes':
             if row[0] == self.first_cell:
-                self.dictionary_keys.append(row)
+                self.dictionary_keys = row
             elif row[0] == self.country_to_read:
                 for i in range(len(self.dictionary_keys)):
                     if self.dictionary_keys[i][:28] == u'Diabetes national prevalence':

@@ -546,7 +546,7 @@ class Inputs:
         the derived_data attribute of the object.
         """
 
-        self.derived_data.update(tool_kit.calculate_proportion_dict(self.original_data['notifications_2016'],
+        self.derived_data.update(tool_kit.calculate_proportion_dict(self.original_data['notifications'],
                                                                     ['new_sp', 'new_sn', 'new_ep']))
 
     def add_time_variant_defaults(self):
@@ -578,15 +578,15 @@ class Inputs:
 
         # vaccination
         if self.time_variants['int_perc_vaccination']['load_data'] == u'yes':
-            for year in self.original_data['bcg_2016']:
+            for year in self.original_data['bcg']:
                 if year not in self.time_variants['int_perc_vaccination']:
-                    self.time_variants['int_perc_vaccination'][year] = self.original_data['bcg_2016'][year]
+                    self.time_variants['int_perc_vaccination'][year] = self.original_data['bcg'][year]
 
         # case detection
         if self.time_variants['program_perc_detect']['load_data'] == u'yes':
-            for year in self.original_data['gtb_2015']['c_cdr']:
+            for year in self.original_data['gtb']['c_cdr']:
                 if year not in self.time_variants['program_perc_detect']:
-                    self.time_variants['program_perc_detect'][year] = self.original_data['gtb_2015']['c_cdr'][year]
+                    self.time_variants['program_perc_detect'][year] = self.original_data['gtb']['c_cdr'][year]
 
     def convert_percentages_to_proportions(self):
         """
@@ -653,13 +653,13 @@ class Inputs:
                         self.derived_data[self.strains[0] + '_new' + pre2011_map_gtb_to_autumn[outcome]] \
                             = tool_kit.increment_dictionary_with_dictionary(
                             self.derived_data[self.strains[0] + '_new' + pre2011_map_gtb_to_autumn[outcome]],
-                            self.original_data['outcomes_2015'][hiv_status + 'new_' + organ + outcome])
+                            self.original_data['outcomes'][hiv_status + 'new_' + organ + outcome])
 
                 # re-treatment outcomes are only disaggregated by hiv status pre-2011
                 self.derived_data[self.strains[0] + '_treated' + pre2011_map_gtb_to_autumn[outcome]] \
                     = tool_kit.increment_dictionary_with_dictionary(
                     self.derived_data[self.strains[0] + '_treated' + pre2011_map_gtb_to_autumn[outcome]],
-                    self.original_data['outcomes_2015'][hiv_status + 'ret' + outcome])
+                    self.original_data['outcomes'][hiv_status + 'ret' + outcome])
 
         ''' post-2011 fields for DS-TB '''
 
@@ -679,13 +679,13 @@ class Inputs:
                 self.derived_data[self.strains[0] + '_new' + post2011_map_gtb_to_autumn[outcome]] \
                     = tool_kit.increment_dictionary_with_dictionary(
                     self.derived_data[self.strains[0] + '_new' + post2011_map_gtb_to_autumn[outcome]],
-                    self.original_data['outcomes_2015'][hiv_status + outcome])
+                    self.original_data['outcomes'][hiv_status + outcome])
 
             # previously treated outcomes (now excluding relapse) are not disaggregated post-2011
             self.derived_data[self.strains[0] + '_treated' + post2011_map_gtb_to_autumn[outcome]] \
                 = tool_kit.increment_dictionary_with_dictionary(
                 self.derived_data[self.strains[0] + '_treated' + post2011_map_gtb_to_autumn[outcome]],
-                self.original_data['outcomes_2015']['ret_nrel' + outcome])
+                self.original_data['outcomes']['ret_nrel' + outcome])
 
         # add re-treatment rates on to new if the model is not stratified by treatment history
         if not self.gui_inputs['is_treatment_history']:
@@ -706,7 +706,7 @@ class Inputs:
                 self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]] \
                     = tool_kit.increment_dictionary_with_dictionary(
                         self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]],
-                        self.original_data['outcomes_2015'][strain[1:] + outcome])
+                        self.original_data['outcomes'][strain[1:] + outcome])
 
         # duplicate outcomes by treatment history because not provided as disaggregated for resistant strains
         for history in self.histories:
@@ -777,7 +777,7 @@ class Inputs:
         """
 
         temporary_dictionary \
-            = {'life_expectancy': 'life_expectancy_2015', 'rate_birth': 'rate_birth_2015'}
+            = {'life_expectancy': 'life_expectancy', 'rate_birth': 'rate_birth'}
 
         # for the two types of demographic parameters
         for demo_parameter in ['life_expectancy', 'rate_birth']:
@@ -836,7 +836,7 @@ class Inputs:
             # count totals notified by each organ status and find denominator
             count_by_organ_status = {}
             for organ in name_conversion_dict.values():
-                count_by_organ_status[organ] = numpy.sum(self.original_data['notifications_2016']['new' + organ].values())
+                count_by_organ_status[organ] = numpy.sum(self.original_data['notifications']['new' + organ].values())
             total = numpy.sum(count_by_organ_status.values())
 
             # calculate proportions from totals
@@ -1283,10 +1283,10 @@ class Inputs:
         for output in var_to_iterate:
             if output['key'] == 'incidence':
                 for key in inc_conversion_dict:
-                    self.data_to_fit[key] = self.original_data['gtb_2015'][inc_conversion_dict[key]]
+                    self.data_to_fit[key] = self.original_data['gtb'][inc_conversion_dict[key]]
             elif output['key'] == 'mortality':
                 for key in mort_conversion_dict:
-                    self.data_to_fit[key] = self.original_data['gtb_2015'][mort_conversion_dict[key]]
+                    self.data_to_fit[key] = self.original_data['gtb'][mort_conversion_dict[key]]
             else:
                 self.add_comment_to_gui_window(
                     'Warning: Calibrated output %s is not directly available from the data' % output['key'])
@@ -1322,10 +1322,10 @@ class Inputs:
         other sheets (like diabetes) are added as optional.
         """
 
+        # where sheets are available from multiple years, use _ and the year to choose the sheet, which will be dropped
         keys_of_sheets_to_read \
-            = ['bcg_2016', 'rate_birth_2014', 'rate_birth_2015', 'life_expectancy_2014', 'life_expectancy_2015',
-               'default_parameters', 'gtb_2015', 'gtb_2016', 'notifications_2016', 'outcomes_2015', 'country_constants',
-               'default_constants', 'country_programs', 'default_programs']
+            = ['bcg_2016', 'rate_birth_2015', 'life_expectancy_2015', 'gtb_2015', 'notifications_2016', 'outcomes_2015',
+               'default_parameters', 'country_constants', 'default_constants', 'country_programs', 'default_programs']
 
         # add any optional sheets required for specific model being run (currently just diabetes)
         if 'riskgroup_diabetes' in self.gui_inputs: keys_of_sheets_to_read.append('diabetes')

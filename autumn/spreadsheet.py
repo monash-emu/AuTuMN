@@ -133,6 +133,7 @@ class SpreadsheetReader:
         self.first_cell = first_cells[purpose] if purpose in first_cells else 'country'
         self.horizontal = False if self.purpose in vertical_sheets else True
         self.indices, self.parlist, self.dictionary_keys, self.data, self.year_indices = [], [], [], {}, {}
+        self.revised_purpose = self.purpose[:-5] if self.purpose[-5:-2] == '_20' else self.purpose
 
     def read_data_list(self, workbook):
         """
@@ -169,8 +170,6 @@ class SpreadsheetReader:
 
         # demographics
         elif self.purpose in ['rate_birth_2014', 'rate_birth_2015', 'life_expectancy_2014', 'life_expectancy_2015']:
-            if self.purpose == 'rate_birth_2015':
-                print
             if row[0] == self.first_cell:
                 for i in range(len(row)): self.parlist.append(row[i][:4])
             elif row[self.column_for_keys] == self.country_to_read:
@@ -329,6 +328,6 @@ def read_input_data_xls(from_test, sheets_to_read, country):
 
         # read the sheet according to reading orientation
         else:
-            data_read_from_sheets[reader.purpose] = reader.read_data_list(workbook)
+            data_read_from_sheets[reader.revised_purpose] = reader.read_data_list(workbook)
     return data_read_from_sheets
 

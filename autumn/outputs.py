@@ -1700,14 +1700,14 @@ class Project:
 
         # notifications
         if output == 'notifications':
-            gtb_data['point_estimate'] = self.inputs.original_data['notifications_2016']['c_newinc']
+            gtb_data['point_estimate'] = self.inputs.original_data['notifications']['c_newinc']
             gtb_data_lists.update(extract_dict_to_list_key_ordering(gtb_data['point_estimate'], 'point_estimate'))
             gtb_index = t_k.find_first_list_element_at_least_value(gtb_data_lists['times'], start_time)
 
         # extract the relevant data from the Global TB Report and use to plot a patch (for inc, prev and mortality)
         elif output in self.gtb_available_outputs:
             for level in self.level_conversion_dict:
-                gtb_data[level] = self.inputs.original_data['gtb_2015'][indices[o] + self.level_conversion_dict[level]]
+                gtb_data[level] = self.inputs.original_data['gtb'][indices[o] + self.level_conversion_dict[level]]
                 gtb_data_lists.update(extract_dict_to_list_key_ordering(gtb_data[level], level))
             gtb_index = t_k.find_first_list_element_at_least_value(gtb_data_lists['times'], start_time)
             if gtb_ci_plot == 'patch':

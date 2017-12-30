@@ -7,7 +7,7 @@ import os
 import tool_kit
 
 
-''' static function '''
+''' static functions '''
 
 
 def parse_year_data(year_data, blank, end_column):
@@ -26,6 +26,33 @@ def parse_year_data(year_data, blank, end_column):
         return [assumption_val]
     else:
         return year_vals
+
+
+def read_input_data_xls(from_test, sheets_to_read, country):
+    """
+    Compile sheet readers into a list according to which ones have been selected.
+
+    Args:
+        from_test: Whether being called from the directory above
+        sheets_to_read: A list containing the strings that are also the 'keys' attribute of the reader
+        country: Country being read
+    Returns:
+        A single data structure containing all the data to be read (by calling the read_xls_with_sheet_readers method)
+    """
+
+    available_sheets \
+        = ['default_constants', 'country_constants', 'default_programs', 'country_programs', 'bcg_2014', 'bcg_2015',
+           'bcg_2016', 'rate_birth_2014', 'rate_birth_2015', 'life_expectancy_2014', 'life_expectancy_2015',
+           'notifications_2014', 'notifications_2015', 'notifications_2016', 'outcomes_2013', 'outcomes_2015',
+           'mdr_2014', 'mdr_2015', 'mdr_2016', 'laboratories_2014', 'laboratories_2015', 'laboratories_2016',
+           'strategy_2014', 'strategy_2015', 'strategy_2016', 'diabetes', 'gtb_2015', 'gtb_2016', 'latent_2016',
+           'tb_hiv_2016']
+    final_sheets_to_read = tool_kit.find_common_elements(sheets_to_read, available_sheets)
+    data_read_from_sheets = {}
+    for sheet_name in final_sheets_to_read:
+        sheet_reader = SpreadsheetReader(country, sheet_name, from_test)
+        data_read_from_sheets[sheet_reader.revised_purpose] = sheet_reader.read_data()
+    return data_read_from_sheets
 
 
 ''' spreadsheet reader object '''
@@ -302,34 +329,4 @@ class SpreadsheetReader:
             self.data[str(col[0])] = {}
             for year in self.year_indices:
                 if not numpy.isnan(col[self.year_indices[year]]): self.data[col[0]][year] = col[self.year_indices[year]]
-
-
-''' master function to call readers '''
-
-
-def read_input_data_xls(from_test, sheets_to_read, country):
-    """
-    Compile sheet readers into a list according to which ones have been selected.
-
-    Args:
-        from_test: Whether being called from the directory above
-        sheets_to_read: A list containing the strings that are also the 'keys' attribute of the reader
-        country: Country being read
-    Returns:
-        A single data structure containing all the data to be read (by calling the read_xls_with_sheet_readers method)
-    """
-
-    available_sheets \
-        = ['default_constants', 'country_constants', 'default_programs', 'country_programs', 'bcg_2014', 'bcg_2015',
-           'bcg_2016', 'rate_birth_2014', 'rate_birth_2015', 'life_expectancy_2014', 'life_expectancy_2015',
-           'notifications_2014', 'notifications_2015', 'notifications_2016', 'outcomes_2013', 'outcomes_2015',
-           'mdr_2014', 'mdr_2015', 'mdr_2016', 'laboratories_2014', 'laboratories_2015', 'laboratories_2016',
-           'strategy_2014', 'strategy_2015', 'strategy_2016', 'diabetes', 'gtb_2015', 'gtb_2016', 'latent_2016',
-           'tb_hiv_2016']
-    final_sheets_to_read = tool_kit.find_common_elements(sheets_to_read, available_sheets)
-    data_read_from_sheets = {}
-    for sheet_name in final_sheets_to_read:
-        sheet_reader = SpreadsheetReader(country, sheet_name, from_test)
-        data_read_from_sheets[sheet_reader.revised_purpose] = sheet_reader.read_data()
-    return data_read_from_sheets
 

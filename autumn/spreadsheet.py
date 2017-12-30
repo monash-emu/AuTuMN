@@ -310,8 +310,6 @@ class SpreadsheetReader:
 def read_input_data_xls(from_test, sheets_to_read, country):
     """
     Compile sheet readers into a list according to which ones have been selected.
-    Note that most readers now take the country in question as an input, while only the fixed parameters sheet reader
-    does not.
 
     Args:
         from_test: Whether being called from the directory above
@@ -321,8 +319,6 @@ def read_input_data_xls(from_test, sheets_to_read, country):
         A single data structure containing all the data to be read (by calling the read_xls_with_sheet_readers method)
     """
 
-    # add sheet readers as required
-    sheet_readers, data_read_from_sheets = [], {}
     available_sheets \
         = ['default_constants', 'country_constants', 'default_programs', 'country_programs', 'bcg_2014', 'bcg_2015',
            'bcg_2016', 'rate_birth_2014', 'rate_birth_2015', 'life_expectancy_2014', 'life_expectancy_2015',
@@ -331,9 +327,9 @@ def read_input_data_xls(from_test, sheets_to_read, country):
            'strategy_2014', 'strategy_2015', 'strategy_2016', 'diabetes', 'gtb_2015', 'gtb_2016', 'latent_2016',
            'tb_hiv_2016']
     final_sheets_to_read = tool_kit.find_common_elements(sheets_to_read, available_sheets)
-    for sheet_name in final_sheets_to_read: sheet_readers.append(SpreadsheetReader(country, sheet_name, from_test))
-
-    # do the reading
-    for reader in sheet_readers: data_read_from_sheets[reader.revised_purpose] = reader.read_data()
+    data_read_from_sheets = {}
+    for sheet_name in final_sheets_to_read:
+        sheet_reader = SpreadsheetReader(country, sheet_name, from_test)
+        data_read_from_sheets[sheet_reader.revised_purpose] = sheet_reader.read_data()
     return data_read_from_sheets
 

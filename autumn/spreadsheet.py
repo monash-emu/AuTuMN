@@ -5,6 +5,7 @@ from numpy import nan
 import numpy
 import os
 import tool_kit
+import copy
 
 
 ''' static functions '''
@@ -52,6 +53,17 @@ def read_input_data_xls(from_test, sheets_to_read, country):
     for sheet_name in final_sheets_to_read:
         sheet_reader = SpreadsheetReader(country, sheet_name, from_test)
         data_read_from_sheets[sheet_reader.revised_purpose] = sheet_reader.read_data()
+
+    # a bit of a patch until we fully understand what's going on - some data that was in 2015 gtb is absent from 2016
+    data_read_from_sheets['gtb'] = copy.copy(data_read_from_sheets['gtb_2016'])
+    for gtb_key in data_read_from_sheets['gtb_2015']:
+        if gtb_key not in data_read_from_sheets['gtb']:
+            data_read_from_sheets['gtb'][gtb_key] = data_read_from_sheets['gtb_2015'][gtb_key]
+        else:
+            for year in data_read_from_sheets['gtb_2015'][gtb_key]:
+                if year not in data_read_from_sheets['gtb_2016'][gtb_key]:
+                    data_read_from_sheets['gtb'][gtb_key][year] = data_read_from_sheets['gtb_2015'][gtb_key][year]
+
     return data_read_from_sheets
 
 
@@ -161,7 +173,8 @@ class SpreadsheetReader:
         self.first_cell = first_cells[purpose] if purpose in first_cells else 'country'
         self.horizontal = False if self.purpose in vertical_sheets else True
         self.indices, self.parlist, self.dictionary_keys, self.data, self.year_indices = [], [], [], {}, {}
-        self.revised_purpose = self.purpose[:-5] if self.purpose[-5:-2] == '_20' else self.purpose
+        self.revised_purpose = self.purpose[:-5] \
+            if self.purpose[-5:-2] == '_20' and 'gtb_' not in self.purpose else self.purpose
         self.data_read_from_sheets = {}
 
     def read_data(self):

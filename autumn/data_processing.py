@@ -1324,8 +1324,9 @@ class Inputs:
 
         # where sheets are available from multiple years, use _ and the year to choose the sheet, which will be dropped
         keys_of_sheets_to_read \
-            = ['bcg_2016', 'rate_birth_2015', 'life_expectancy_2015', 'gtb_2015', 'notifications_2016', 'outcomes_2015',
-               'default_parameters', 'country_constants', 'default_constants', 'country_programs', 'default_programs']
+            = ['bcg_2016', 'rate_birth_2015', 'life_expectancy_2015', 'gtb_2015', 'gtb_2016', 'notifications_2016',
+               'outcomes_2015', 'default_parameters', 'country_constants', 'default_constants', 'country_programs',
+               'default_programs']
 
         # add any optional sheets required for specific model being run (currently just diabetes)
         if 'riskgroup_diabetes' in self.gui_inputs: keys_of_sheets_to_read.append('diabetes')

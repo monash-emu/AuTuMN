@@ -201,10 +201,12 @@ class SpreadsheetReader:
     def parse_row(self, row):
         """
         Method to read rows of the spreadsheets for sheets that read horizontally. Several different spreadsheet readers
-        use this method, so there is a boolean loop to determine which approach to use according to the sheet name.
+        use this method, so there is a conditional loop to determine which approach to use according to the sheet name.
+        Several of these approaches involve first determining the dictionary keys (as a list) from the first row
+        (identified by first_cell) and then reading values in for each key.
 
         Args:
-            row: The row of data
+            row: The row of data being interpreted
         """
 
         # vaccination sheet
@@ -288,12 +290,8 @@ class SpreadsheetReader:
 
         # other sheets, such as strategy and mdr
         else:
-
-            # create the list to turn in to dictionary keys later
             if row[0] == self.first_cell:
                 self.dictionary_keys = row
-
-            # populate when country to read is encountered
             elif row[0] == self.country_to_read:
                 for i in range(len(self.dictionary_keys)): self.data[self.dictionary_keys[i]] = row[i]
 
@@ -304,7 +302,7 @@ class SpreadsheetReader:
         to change.
 
         Args:
-            col: The column of data
+            col: The column of data being interpreted
         """
 
         col = tool_kit.replace_specified_value(col, nan, '')

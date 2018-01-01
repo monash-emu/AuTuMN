@@ -189,22 +189,12 @@ class SpreadsheetReader:
 
         # read the sheet according to reading orientation
         else:
-            return self.read_data_by_line(workbook)
-
-    def read_data_by_line(self, workbook):
-        """
-        Short function to determine whether to read horizontally or vertically.
-
-        Arg:
-            workbook: The Excel workbook for interrogation
-        """
-
-        sheet = workbook.sheet_by_name(self.tab_name)
-        if self.horizontal:
-            for i_row in range(self.start_row, sheet.nrows): self.parse_row(sheet.row_values(i_row))
-        else:
-            for i_col in range(self.start_col, sheet.ncols): self.parse_col(sheet.col_values(i_col))
-        return self.data
+            sheet = workbook.sheet_by_name(self.tab_name)
+            if self.horizontal:
+                for i_row in range(self.start_row, sheet.nrows): self.parse_row(sheet.row_values(i_row))
+            else:
+                for i_col in range(self.start_col, sheet.ncols): self.parse_col(sheet.col_values(i_col))
+            return self.data
 
     def parse_row(self, row):
         """

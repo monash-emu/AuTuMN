@@ -217,7 +217,7 @@ class SpreadsheetReader:
                     if type(row[i]) == float: self.data[int(self.parlist[i])] = row[i]
 
         # demographics
-        elif self.purpose in ['rate_birth_2014', 'rate_birth_2015', 'life_expectancy_2014', 'life_expectancy_2015']:
+        elif 'rate_birth_' in self.purpose or 'life_expectancy_' in self.purpose:
             if row[0] == self.first_cell:
                 for i in range(len(row)): self.parlist.append(row[i][:4])
             elif row[self.column_for_keys] == self.country_to_read:
@@ -258,10 +258,8 @@ class SpreadsheetReader:
                 self.data[str(row[0])] = row[1]
 
             # uncertainty parameters, which must have an entry present in the third column
-            # no idea why this if statement needs to be split and written like this, but huge bugs occur if it isn't
-            if len(row) > 3:
-                if row[2] != '':
-                    self.data[str(row[0]) + '_uncertainty'] = {'point': row[1], 'lower': row[2], 'upper': row[3]}
+            if row[2] != '' and len(row) > 3:
+                self.data[str(row[0]) + '_uncertainty'] = {'point': row[1], 'lower': row[2], 'upper': row[3]}
 
         # time-variant programs and interventions
         elif self.purpose in ['default_programs', 'country_programs']:

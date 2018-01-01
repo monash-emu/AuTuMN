@@ -115,8 +115,6 @@ class SpreadsheetReader:
         first_cells \
             = {'rate_birth_2014': 'Series Name',
                'rate_birth_2015': 'Country Name',
-               'default_constants': 'program',
-               'country_constants': 'program',
                'default_programs': 'program',
                'country_programs': 'program',
                'diabetes': u'Country/territory'}
@@ -208,7 +206,7 @@ class SpreadsheetReader:
         """
 
         # vaccination sheet
-        if self.purpose == 'bcg_2016':
+        if 'bcg_' in self.purpose:
             if row[0] == self.first_cell:
                 self.parlist = parse_year_data(row, '', len(row))
                 for i in range(len(self.parlist)): self.parlist[i] = str(self.parlist[i])
@@ -300,26 +298,27 @@ class SpreadsheetReader:
             col: The column of data being interpreted
         """
 
-        col = tool_kit.replace_specified_value(col, nan, '')
+        revised_col = tool_kit.replace_specified_value(col, nan, '')
 
         # country column (the first one)
-        if col[0] == self.first_cell:
+        if revised_col[0] == self.first_cell:
 
             # find the indices for the country
-            for i in range(len(col)):
-                if col[i] == self.country_to_read: self.indices.append(i)
+            for i in range(len(revised_col)):
+                if revised_col[i] == self.country_to_read: self.indices.append(i)
 
         # skip some irrelevant columns
-        elif 'iso' in col[0] or 'g_who' in col[0] or 'source' in col[0]:
+        elif 'iso' in revised_col[0] or 'g_who' in revised_col[0] or 'source' in revised_col[0]:
             pass
 
         # year column
-        elif col[0] == 'year':
-            self.year_indices = {int(col[i]): i for i in self.indices}
+        elif revised_col[0] == 'year':
+            self.year_indices = {int(revised_col[i]): i for i in self.indices}
 
         # all other columns
         else:
-            self.data[str(col[0])] = {}
+            self.data[str(revised_col[0])] = {}
             for year in self.year_indices:
-                if not numpy.isnan(col[self.year_indices[year]]): self.data[col[0]][year] = col[self.year_indices[year]]
+                if not numpy.isnan(revised_col[self.year_indices[year]]):
+                    self.data[revised_col[0]][year] = revised_col[self.year_indices[year]]
 

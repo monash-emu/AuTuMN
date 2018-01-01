@@ -22,23 +22,14 @@ def elementwise_list_addition(increment, list_to_increment):
     return [sum(x) for x in zip(list_to_increment, increment)]
 
 
-def elementwise_list_division(numerator, denominator):
+def elementwise_list_division(numerator, denominator, percentage=False):
     """
     Simple method to element-wise divide a list by the values in another list of the same length.
     """
 
     assert len(numerator) == len(denominator), 'Attempted to divide two lists of different lengths'
-    return [n / d for n, d in zip(numerator, denominator)]
-
-
-def elementwise_list_percentage(numerator, denominator):
-    """
-    Simple method to element-wise divide a list by the values in another list of the same length to produce a
-    percentage.
-    """
-
-    assert len(numerator) == len(denominator), 'Attempted to divide two lists of different lengths'
-    return [n / d * 1e2 for n, d in zip(numerator, denominator)]
+    percentage_multiplier = 100. if percentage else 1.
+    return [n / d * percentage_multiplier for n, d in zip(numerator, denominator)]
 
 
 def find_uncertainty_output_weights(list, method, relative_weights=(1., 2.)):
@@ -67,14 +58,6 @@ def find_uncertainty_output_weights(list, method, relative_weights=(1., 2.)):
     # all weights equal to one
     elif method == 3:
         return [1.] * len(list)
-
-
-def is_parameter_value_valid(parameter):
-    """
-    Determine whether a number is finite and positive and so valid for the model as a parameter.
-    """
-
-    return numpy.isfinite(parameter) and parameter > 0.
 
 
 def find_log_probability_density(distribution, param_val, bounds, additional_params=None):
@@ -406,8 +389,9 @@ class ModelRunner:
             if len(self.models[scenario].strains) > 1:
                 for strain in self.models[scenario].strains:
                     epi_outputs['perc_incidence' + strain] \
-                        = elementwise_list_percentage(epi_outputs['incidence' + strain],
-                                                      tool_kit.prepare_denominator(epi_outputs['incidence']))
+                        = elementwise_list_division(epi_outputs['incidence' + strain],
+                                                    tool_kit.prepare_denominator(epi_outputs['incidence']),
+                                                    percentage=True)
 
         # notifications
         if 'notifications' in outputs_to_analyse:
@@ -467,7 +451,7 @@ class ModelRunner:
 
                 # annual risk of infection (as a percentage)
                 epi_outputs['annual_risk_infection' + strain] \
-                    = elementwise_list_percentage(epi_outputs['infections' + strain], total_denominator)
+                    = elementwise_list_division(epi_outputs['infections' + strain], total_denominator, percentage=True)
 
         ''' stratified outputs (currently not repeated for each strain) '''
 
@@ -563,7 +547,8 @@ class ModelRunner:
 
                         # annual risk of infection (as a percentage)
                         epi_outputs['annual_risk_infection' + stratum] \
-                            = elementwise_list_percentage(epi_outputs['infections' + stratum], stratum_denominator)
+                            = elementwise_list_division(epi_outputs['infections' + stratum], stratum_denominator,
+                                                        percentage=True)
 
         return epi_outputs
 
@@ -838,7 +823,7 @@ class ModelRunner:
         for p, param in enumerate(params):
 
             # whether the parameter value is valid
-            if not is_parameter_value_valid(param):
+            if not numpy.isfinite(param) or param < 0.:
                 self.add_comment_to_gui_window('Warning: parameter%d=%f is invalid for model' % (p, param))
                 self.is_last_run_success = False
                 return

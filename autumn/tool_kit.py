@@ -315,6 +315,42 @@ def replace_specified_value(a_list, new_val, old_value):
     return [new_val if val == old_value else val for val in a_list]
 
 
+def elementwise_list_addition(increment, list_to_increment):
+    """
+    Simple method to element-wise increment a list by the values in another list of the same length.
+    """
+
+    if not list_to_increment: return increment
+    assert len(increment) == len(list_to_increment), 'Attempted to add two lists of different lengths'
+    return [sum(x) for x in zip(list_to_increment, increment)]
+
+
+def elementwise_list_division(numerator, denominator, percentage=False):
+    """
+    Simple method to element-wise divide a list by the values in another list of the same length.
+    """
+
+    assert len(numerator) == len(denominator), 'Attempted to divide two lists of different lengths'
+    percentage_multiplier = 100. if percentage else 1.
+    return [n / d * percentage_multiplier for n, d in zip(numerator, denominator)]
+
+
+def join_zero_array_to_left(number_of_zeros, array_to_extend):
+    """
+    Quick method to concatenate a list of zeros on to the left of an existing array.
+
+    Args:
+        number_of_zeros: Number of zeros to add on
+        array_to_extend: The original array
+    Returns:
+        The new numpy array with the zeros joined on
+    """
+
+    zeros = numpy.zeros(number_of_zeros) if type(array_to_extend) == list or array_to_extend.ndim == 1 \
+        else numpy.zeros((array_to_extend.shape[0], number_of_zeros))
+    return numpy.hstack((zeros, array_to_extend))
+
+
 ''' scenario name manipulation '''
 
 

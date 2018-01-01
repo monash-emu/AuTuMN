@@ -815,8 +815,7 @@ class BaseModel:
         aggregate_sizes = numpy.zeros(len(self.times))
         for string in strings: compartments_to_aggregate = [c for c in self.labels if string in c]
         for compartment in compartments_to_aggregate:
-            aggregate_sizes \
-                = model_runner.elementwise_list_addition(aggregate_sizes, self.compartment_soln[compartment])
+            aggregate_sizes = tool_kit.elementwise_list_addition(aggregate_sizes, self.compartment_soln[compartment])
         return aggregate_sizes
 
     def calculate_aggregate_compartment_divisions_from_strings(
@@ -846,11 +845,11 @@ class BaseModel:
             for division in compartments_to_divide_over:
                 if division in compartment:
                     division_found = True
-                    aggregates[division] = model_runner.elementwise_list_addition(self.compartment_soln[compartment],
+                    aggregates[division] = tool_kit.elementwise_list_addition(self.compartment_soln[compartment],
                                                                                   aggregates[division])
                 if allocate_to_one_division_only and division_found: break
             if not division_found:
-                aggregates['remainder'] = model_runner.elementwise_list_addition(self.compartment_soln[compartment],
+                aggregates['remainder'] = tool_kit.elementwise_list_addition(self.compartment_soln[compartment],
                                                                                  aggregates['remainder'])
         return aggregates, compartments_to_divide_over
 

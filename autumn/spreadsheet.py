@@ -267,10 +267,9 @@ class SpreadsheetReader:
             else:
                 self.data[str(row[0])] = row[1]
 
-            # uncertainty parameters
-            # not sure why this if statement needs to be split and written like this, but huge bugs occur if it isn't
-            if len(row) >= 4:
-                # if an entry present in the second column then it is a parameter that can be modified in uncertainty
+            # uncertainty parameters, which must have an entry present in the third column
+            # no idea why this if statement needs to be split and written like this, but huge bugs occur if it isn't
+            if len(row) > 3:
                 if row[2] != '':
                     self.data[str(row[0]) + '_uncertainty'] = {'point': row[1], 'lower': row[2], 'upper': row[3]}
 

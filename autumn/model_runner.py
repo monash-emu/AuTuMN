@@ -289,9 +289,8 @@ class ModelRunner:
         """
 
         start_time_index = self.models[0].find_time_index(self.inputs.model_constants['before_intervention_time'])
-        start_time = self.models[0].times[start_time_index]
-        self.models[scenario].start_time = start_time
-        self.models[scenario].next_time_point = start_time
+        self.models[scenario].start_time, self.models[scenario].next_time_point \
+            = [self.models[0].times[start_time_index]] * 2
         self.models[scenario].loaded_compartments = self.models[0].load_state(start_time_index)
 
     ''' output interpretation methods '''
@@ -307,7 +306,7 @@ class ModelRunner:
             strata: List of any stratifications that outputs are required over
         """
 
-        ''' compulsory elements to calculate '''
+        ''' compulsory element to calculate '''
 
         if 'population' not in outputs_to_analyse: outputs_to_analyse.append('population')
         epi_outputs = {'times': self.models[scenario].times}
@@ -317,13 +316,12 @@ class ModelRunner:
         # initialise lists to zeros to allow incrementation
         for output in outputs_to_analyse:
             epi_outputs[output] = [0.] * len(epi_outputs['times'])
-            for strain in self.models[scenario].strains: epi_outputs[output + strain] = [0.] * len(epi_outputs['times'])
+            for strain in self.models[scenario].strains: epi_outputs[output + strain] = epi_outputs[output]
 
         # population
         for compartment in self.models[scenario].compartments:
-            epi_outputs['population'] \
-                = tool_kit.elementwise_list_addition(self.models[scenario].get_compartment_soln(compartment),
-                                                     epi_outputs['population'])
+            epi_outputs['population'] = tool_kit.elementwise_list_addition(
+                self.models[scenario].get_compartment_soln(compartment), epi_outputs['population'])
 
         # replace zeroes with small numbers for division
         total_denominator = tool_kit.prepare_denominator(epi_outputs['population'])
@@ -342,8 +340,8 @@ class ModelRunner:
                             = tool_kit.elementwise_list_addition(incidence_increment, epi_outputs['incidence' + strain])
                 for from_label, to_label, rate in self.models[scenario].fixed_transfer_rate_flows:  # fixed flows
                     if 'latent' in from_label and 'active' in to_label and strain in to_label:
-                        incidence_increment = self.models[scenario].get_compartment_soln(from_label) \
-                                              * rate / total_denominator * 1e5
+                        incidence_increment \
+                            = self.models[scenario].get_compartment_soln(from_label) * rate / total_denominator * 1e5
                         epi_outputs['incidence' + strain] \
                             = tool_kit.elementwise_list_addition(incidence_increment, epi_outputs['incidence' + strain])
 
@@ -373,8 +371,8 @@ class ModelRunner:
                 # fixed flows are outside of the health system and so the natural death contribution is reduced
                 for from_label, rate in self.models[scenario].fixed_infection_death_rate_flows:
                     if strain in from_label:
-                        mortality_increment = self.models[scenario].get_compartment_soln(from_label) \
-                                              * rate / total_denominator * 1e5
+                        mortality_increment \
+                            = self.models[scenario].get_compartment_soln(from_label) * rate / total_denominator * 1e5
                         epi_outputs['true_mortality' + strain] = tool_kit.elementwise_list_addition(
                             mortality_increment, epi_outputs['true_mortality' + strain])
                         epi_outputs['mortality' + strain] = tool_kit.elementwise_list_addition(
@@ -406,8 +404,8 @@ class ModelRunner:
                     if 'latent_early' in to_label and strain in to_label:
                         epi_outputs['infections' + strain] \
                             = tool_kit.elementwise_list_addition(self.models[scenario].get_compartment_soln(from_label)
-                                                        * self.models[scenario].get_var_soln(rate),
-                                                        epi_outputs['infections' + strain])
+                                                                 * self.models[scenario].get_var_soln(rate),
+                                                                 epi_outputs['infections' + strain])
 
                 # annual risk of infection (as a percentage)
                 epi_outputs['annual_risk_infection' + strain] = tool_kit.elementwise_list_division(
@@ -469,7 +467,7 @@ class ModelRunner:
                                                       * rate / stratum_denominator * 1e5
                                 epi_outputs['true_mortality' + stratum] \
                                     = tool_kit.elementwise_list_addition(mortality_increment,
-                                                                epi_outputs['true_mortality' + stratum])
+                                                                         epi_outputs['true_mortality' + stratum])
                                 epi_outputs['mortality' + stratum] = tool_kit.elementwise_list_addition(
                                     mortality_increment * self.prop_death_reporting, epi_outputs['mortality' + stratum])
 
@@ -491,7 +489,7 @@ class ModelRunner:
                                                        / stratum_denominator * 1e5
                                 epi_outputs['prevalence' + stratum] \
                                     = tool_kit.elementwise_list_addition(prevalence_increment,
-                                                                epi_outputs['prevalence' + stratum])
+                                                                         epi_outputs['prevalence' + stratum])
 
                     # infections (absolute number)
                     if 'infections' in outputs_to_analyse:
@@ -523,10 +521,9 @@ class ModelRunner:
         for stratification in all_stratifications_to_assess:
             if len(stratification) > 1:
                 for stratum in stratification:
-                    fractions['fraction' + stratum] \
-                        = tool_kit.elementwise_list_division(
-                            self.outputs['manual']['epi'][scenario]['population' + stratum],
-                            self.outputs['manual']['epi'][scenario]['population'])
+                    fractions['fraction' + stratum] = tool_kit.elementwise_list_division(
+                        self.outputs['manual']['epi'][scenario]['population' + stratum],
+                        self.outputs['manual']['epi'][scenario]['population'])
 
         return fractions
 
@@ -984,17 +981,14 @@ class ModelRunner:
 
         if self.js_gui:
             self.js_gui('graph', {
-                "all_parameters_tried": self.all_parameters_tried,
-                "whether_accepted_list": self.whether_accepted_list,
-                "rejection_dict": self.rejection_dict,
-                "accepted_indices": self.accepted_indices,
-                "acceptance_dict": self.acceptance_dict,
-                "names": {
-                    param: tool_kit.find_title_from_dictionary(param)
-                    for p, param in enumerate(self.all_parameters_tried)
-                },
-                "param_ranges_unc": self.inputs.param_ranges_unc
-            })
+                'all_parameters_tried': self.all_parameters_tried,
+                'whether_accepted_list': self.whether_accepted_list,
+                'rejection_dict': self.rejection_dict,
+                'accepted_indices': self.accepted_indices,
+                'acceptance_dict': self.acceptance_dict,
+                'names': {param: tool_kit.find_title_from_dictionary(param)
+                          for p, param in enumerate(self.all_parameters_tried)},
+                'param_ranges_unc': self.inputs.param_ranges_unc})
 
     ''' other run type methods '''
 

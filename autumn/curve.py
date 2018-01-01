@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 """
 Sigmoidal and spline functions to generate cost coverage curves and historical input curves.
@@ -73,8 +72,7 @@ def make_two_step_curve(y_low, y_med, y_high, x_start, x_med, x_end):
     return curve
 
 
-################################################################################################
-# The functions test_a and get_spare_fit are only used inside of scale_up_function when method=5
+''' the functions test_a and get_spare_fit are only used inside of scale_up_function when method=5 '''
 
 
 def test_a(a, x_min, x_max, x_peak, bound_low, bound_up):

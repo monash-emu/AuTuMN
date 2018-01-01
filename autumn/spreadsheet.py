@@ -5,7 +5,6 @@ from numpy import nan
 import numpy
 import os
 import tool_kit
-import copy
 
 
 ''' static functions '''
@@ -41,6 +40,7 @@ def read_input_data_xls(from_test, sheets_to_read, country):
         A single data structure containing all the data to be read (by calling the read_xls_with_sheet_readers method)
     """
 
+    # sheets that have been checked and should definitely work being read in
     available_sheets \
         = ['default_constants', 'country_constants', 'default_programs', 'country_programs', 'bcg_2014', 'bcg_2015',
            'bcg_2016', 'rate_birth_2014', 'rate_birth_2015', 'life_expectancy_2014', 'life_expectancy_2015',
@@ -48,6 +48,8 @@ def read_input_data_xls(from_test, sheets_to_read, country):
            'mdr_2014', 'mdr_2015', 'mdr_2016', 'laboratories_2014', 'laboratories_2015', 'laboratories_2016',
            'strategy_2014', 'strategy_2015', 'strategy_2016', 'diabetes', 'gtb_2015', 'gtb_2016', 'latent_2016',
            'tb_hiv_2016']
+
+    # compile list of sheets to read and read them
     final_sheets_to_read = tool_kit.find_common_elements(sheets_to_read, available_sheets)
     data_read_from_sheets = {}
     for sheet_name in final_sheets_to_read:
@@ -84,7 +86,11 @@ class SpreadsheetReader:
             purpose: String that defines the spreadsheet type to be read
         """
 
-        # file and sheet names
+        self.indices, self.parlist, self.dictionary_keys, self.data, self.year_indices, country_adjustment_types, \
+            self.data_read_from_sheets, self.purpose, vertical_sheets, tb_adjustment_countries \
+            = [], [], [], {}, {}, {}, {}, purpose, [], []
+
+        # set basic sheet characteristics, either directly or in short loops by years
         specific_sheet_names \
             = {'default_constants': 'xls/data_default.xlsx',
                'country_constants': 'xls/data_' + country_to_read.lower() + '.xlsx',
@@ -95,60 +101,54 @@ class SpreadsheetReader:
                'country_constants': 'constants',
                'default_programs': 'time_variants',
                'country_programs': 'time_variants'}
-
-        # starting positions
         sheets_starting_row_one \
-            = ['gtb_2015', 'gtb_2016', 'default_constants', 'country_constants', 'notifications_2015', 'outcomes_2013',
-               'laboratories_2014', 'laboratories_2015', 'laboratories_2016']
+            = ['default_constants', 'country_constants', 'notifications_2015', 'outcomes_2013']
         start_rows \
-            = {'life_expectancy_2014': 3,
-               'life_expectancy_2015': 3,
-               'diabetes': 2,
+            = {'diabetes': 2,
                'rate_birth_2015': 3}
         start_cols \
-            = {'bcg_2014': 4,
-               'bcg_2015': 4,
-               'bcg_2016': 4,
-               'default_programs': 1,
+            = {'default_programs': 1,
                'country_programs': 1,
                'rate_birth_2015': 5}
         columns_for_keys \
-            = {'bcg_2014': 2,
-               'bcg_2015': 2,
-               'bcg_2016': 2,
-               'rate_birth_2014': 2}
+            = {'rate_birth_2014': 2}
         first_cells \
-            = {'bcg_2014': 'WHO_REGION',
-               'bcg_2015': 'WHO_REGION',
-               'bcg_2016': 'WHO_REGION',
-               'rate_birth_2014': 'Series Name',
+            = {'rate_birth_2014': 'Series Name',
                'rate_birth_2015': 'Country Name',
-               'life_expectancy_2014': 'Country Name',
-               'life_expectancy_2015': 'Country Name',
-               'gtb_2015': 'country',
-               'gtb_2016': 'country',
                'default_constants': 'program',
                'country_constants': 'program',
                'default_programs': 'program',
                'country_programs': 'program',
                'diabetes': u'Country/territory'}
+        for year in range(2015, 2017):
+            gtb_string = 'gtb_' + str(year)
+            sheets_starting_row_one.append(gtb_string)
+            first_cells.update({gtb_string: 'country'})
+            vertical_sheets.append(gtb_string)
+            tb_adjustment_countries.append(gtb_string)
+        for year in range(2014, 2017):
+            laboratories_string = 'laboratories_' + str(year)
+            sheets_starting_row_one.append(laboratories_string)
+            vertical_sheets.append(laboratories_string)
+            bcg_string = 'bcg_' + str(year)
+            start_cols.update({bcg_string: 4})
+            columns_for_keys.update({bcg_string: 2})
+            first_cells.update({bcg_string: 'WHO_REGION'})
+            notifications_string = 'notifications_' + str(year)
+            vertical_sheets.append(notifications_string)
+            tb_adjustment_countries.append(notifications_string)
+        for year in range(2014, 2016):
+            life_expectancy_string = 'life_expectancy_' + str(year)
+            start_rows.update({life_expectancy_string: 3})
+            first_cells.update({life_expectancy_string: 'Country Name'})
+            rate_birth_string = 'rate_birth_' + str(year)
+            country_adjustment_types.update({life_expectancy_string: 'demographic'})
+            country_adjustment_types.update({rate_birth_string: 'demographic'})
+        for year in range(2013, 2016, 2):
+            outcomes_string = 'outcomes_' + str(year)
+            vertical_sheets.append(outcomes_string)
+            tb_adjustment_countries.append(outcomes_string)
 
-        # spreadsheets to be read vertically
-        vertical_sheets \
-            = ['gtb_2015', 'gtb_2016', 'notifications_2014', 'notifications_2015', 'notifications_2016',
-               'outcomes_2013', 'outcomes_2015', 'laboratories_2014', 'laboratories_2015', 'laboratories_2016']
-
-        # adaptation of the country name to the sheet's approach to naming
-        tb_adjustment_countries \
-            = ['gtb_2015', 'gtb_2016', 'notifications_2014', 'notifications_2015', 'notifications_2016',
-               'outcomes_2013', 'outcomes_2015']
-        country_adjustment_types \
-            = {'rate_birth_2014': 'demographic',
-               'rate_birth_2015': 'demographic',
-               'life_expectancy_2014': 'demographic',
-               'life_expectancy_2015': 'demographic'}
-
-        self.purpose = purpose
         if purpose in country_adjustment_types:
             country_adjustment = country_adjustment_types[purpose]
         elif purpose in tb_adjustment_countries:
@@ -156,8 +156,8 @@ class SpreadsheetReader:
         else:
             country_adjustment = ''
         self.country_to_read = tool_kit.adjust_country_name(country_to_read, country_adjustment)
-        self.filename = specific_sheet_names[purpose] if purpose in specific_sheet_names else 'xls/' + purpose + '.xlsx'
-        if from_test: self.filename = os.path.join('autumn/', self.filename)  # if being run from the directory above
+        filename = specific_sheet_names[purpose] if purpose in specific_sheet_names else 'xls/' + purpose + '.xlsx'
+        self.filename = os.path.join('autumn/', filename) if from_test else filename  # if from directory above
         self.tab_name = specific_tab_names[purpose] if purpose in specific_tab_names else purpose
         if purpose in sheets_starting_row_one:
             self.start_row = 1
@@ -169,10 +169,8 @@ class SpreadsheetReader:
         self.column_for_keys = columns_for_keys[purpose] if purpose in columns_for_keys else 0
         self.first_cell = first_cells[purpose] if purpose in first_cells else 'country'
         self.horizontal = False if self.purpose in vertical_sheets else True
-        self.indices, self.parlist, self.dictionary_keys, self.data, self.year_indices = [], [], [], {}, {}
         self.revised_purpose = self.purpose[:-5] \
             if self.purpose[-5:-2] == '_20' and self.purpose != 'gtb_2016' else self.purpose
-        self.data_read_from_sheets = {}
 
     def read_data(self):
         """
@@ -272,7 +270,7 @@ class SpreadsheetReader:
             # uncertainty parameters
             # not sure why this if statement needs to be split and written like this, but huge bugs occur if it isn't
             if len(row) >= 4:
-                # if an entry present in the second column, then it is a parameter that can be modified in uncertainty
+                # if an entry present in the second column then it is a parameter that can be modified in uncertainty
                 if row[2] != '':
                     self.data[str(row[0]) + '_uncertainty'] = {'point': row[1], 'lower': row[2], 'upper': row[3]}
 

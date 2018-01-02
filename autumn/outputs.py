@@ -669,21 +669,21 @@ def write_param_to_sheet(country_sheet, working_list, median_run_index):
 
     for param in working_list:
 
-        # find value to write from list and index
-        value = working_list[param][median_run_index]
+        if working_list[param]:
 
-        # over-write existing parameter value if present
-        param_found = False
-        for row in country_sheet.rows:
-            if row[0].value == param:
-                row[1].value = value
-                param_found = True
+            # find value to write from list and index
+            value = working_list[param][median_run_index]
 
-        # if parameter not found in existing spreadsheet, write into new row at the bottom
-        if not param_found:
-            max_row = country_sheet.max_row
-            country_sheet.cell(row=max_row + 1, column=1).value = param
-            country_sheet.cell(row=max_row + 1, column=2).value = value
+            # over-write existing parameter value if present
+            param_found = False
+            for row in country_sheet.rows:
+                if row[0].value == param: row[1].value, param_found = value, True
+
+            # if parameter not found in existing spreadsheet, write into new row at the bottom
+            if not param_found:
+                max_row = country_sheet.max_row
+                country_sheet.cell(row=max_row + 1, column=1).value = param
+                country_sheet.cell(row=max_row + 1, column=2).value = value
 
 
 class Project:
@@ -725,9 +725,8 @@ class Project:
         self.accepted_no_burn_in_indices = []
         self.uncertainty_centiles = {'epi': {}, 'cost': {}}
         self.quantities_to_write_back = ['all_parameters', 'all_compartment_values', 'adjustments']
-        self.order_to_write = [self.model_runner.percentiles.index(50),
-                               self.model_runner.percentiles.index(2.5),
-                               self.model_runner.percentiles.index(97.5)]
+        centile_order_to_write, self.order_to_write = [50, 2.5, 97.5], []
+        for centile in centile_order_to_write: self.order_to_write.append(self.model_runner.percentiles.index(centile))
 
         # extract some characteristics from the models within model runner
         self.scenarios = self.gui_inputs['scenarios_to_run']
@@ -1039,8 +1038,7 @@ class Project:
 
             # write the parameters and starting compartment sizes back in to input sheets
             for attribute in self.quantities_to_write_back:
-                write_param_to_sheet(country_sheet, self.model_runner.outputs['epi_uncertainty'][attribute],
-                                     best_likelihood_index)
+                write_param_to_sheet(country_sheet, self.outputs['epi_uncertainty'][attribute], best_likelihood_index)
 
             # save
             country_input_book.save(path)

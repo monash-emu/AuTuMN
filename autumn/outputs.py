@@ -719,14 +719,12 @@ class Project:
         self.suptitle_size = 13
         self.classified_scaleups = {}
         self.grid = False
-        self.accepted_indices = []
         self.plot_rejected_runs = False
 
         # pre-analysis processing attributes
         self.accepted_no_burn_in_indices = []
         self.uncertainty_centiles = {'epi': {}, 'cost': {}}
-        self.quantities_to_write_back \
-            = ['all_parameters_tried', 'all_compartment_values_tried', 'adjustments']
+        self.quantities_to_write_back = ['all_parameters', 'all_compartment_values', 'adjustments']
         self.order_to_write = [self.model_runner.percentiles.index(50),
                                self.model_runner.percentiles.index(2.5),
                                self.model_runner.percentiles.index(97.5)]
@@ -932,7 +930,7 @@ class Project:
             self.accepted_no_burn_in_indices: List of the uncertainty indices of interest
         """
 
-        self.accepted_indices = self.model_runner.accepted_indices
+        self.accepted_indices = self.outputs['epi_uncertainty']['accepted_indices']
         self.accepted_no_burn_in_indices = [i for i in self.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
 
     def find_uncertainty_centiles(self, run_type, output_type):
@@ -1041,11 +1039,8 @@ class Project:
 
             # write the parameters and starting compartment sizes back in to input sheets
             for attribute in self.quantities_to_write_back:
-                if attribute == 'all_parameters_tried':
-                    write_param_to_sheet(country_sheet, self.model_runner.outputs['epi_uncertainty']['all_parameters'],
-                                         best_likelihood_index)
-                else:
-                    write_param_to_sheet(country_sheet, getattr(self.model_runner, attribute), best_likelihood_index)
+                write_param_to_sheet(country_sheet, self.model_runner.outputs['epi_uncertainty'][attribute],
+                                     best_likelihood_index)
 
             # save
             country_input_book.save(path)
@@ -2751,7 +2746,7 @@ class Project:
         accepted_log_likelihoods = [self.outputs['epi_uncertainty']['loglikelihoods'][i] for i in self.accepted_indices]
 
         # plot the rejected values
-        for i in self.outputs['epi_uncertainty']['whether_rejected']:
+        for i in self.outputs['epi_uncertainty']['rejected_indices']:
 
             # Find the index of the last accepted index before the rejected one we're currently interested in
             last_acceptance_before = [j for j in self.accepted_indices if j < i][-1]

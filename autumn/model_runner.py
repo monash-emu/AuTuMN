@@ -141,9 +141,6 @@ class ModelRunner:
                              'posterior_width': None,
                              'width_multiplier': 2.  # width of normal posterior relative to range of allowed values
                              }]
-        self.all_compartment_values_tried = {}
-        self.adjustments = {'program_prop_death_reporting': [], 'mdr_introduce_time': []}
-        self.accepted_indices = []
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
         self.uncertainty_percentiles = {}
@@ -159,7 +156,7 @@ class ModelRunner:
         self.adjust_mortality = True
         self.adjust_mdr = False
         self.adjust_population = True
-        if len(self.inputs.strains) <= 1: self.adjust_mdr = False
+        if len(self.inputs.strains) < 2: self.adjust_mdr = False
         self.mdr_introduce_time = self.inputs.model_constants['mdr_introduce_time']
 
         # optimisation attributes
@@ -190,10 +187,6 @@ class ModelRunner:
         # new single main output attribute
         self.outputs = {}
 
-        # saving-related
-        self.attributes_to_save \
-            = ['outputs', 'accepted_indices', 'rejection_dict', 'adjustments']
-
         # GUI-related
         self.emit_delay = 0.1
         self.plot_count = 0
@@ -215,9 +208,7 @@ class ModelRunner:
         # load a saved simulation
         if self.gui_inputs['pickle_uncertainty'] == 'Load':
             self.add_comment_to_gui_window('Loading results from previous simulation')
-            loaded_data = tool_kit.pickle_load(storage_file_name)
-            self.add_comment_to_gui_window('Loading finished')
-            for attribute in loaded_data: setattr(self, attribute, loaded_data[attribute])
+            self.outputs = tool_kit.pickle_load(storage_file_name)
 
         # or run the manual scenarios as requested by user
         else:
@@ -227,9 +218,7 @@ class ModelRunner:
 
         # save uncertainty if requested
         if self.gui_inputs['pickle_uncertainty'] == 'Save':
-            data_to_save = {}
-            for attribute in self.attributes_to_save: data_to_save[attribute] = getattr(self, attribute)
-            tool_kit.pickle_save(data_to_save, storage_file_name)
+            tool_kit.pickle_save(self.outputs, storage_file_name)
             self.add_comment_to_gui_window('Uncertainty results saved to disc')
 
         # master optimisation method
@@ -602,12 +591,14 @@ class ModelRunner:
 
         self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
-        # prepare basic local variables for uncertainty loop
+        # prepare basic storage and local variables for uncertainty loop
         self.outputs['epi_uncertainty'] = {}
-        output_dicts = ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters']
-        output_lists = ['loglikelihoods', 'whether_accepted', 'whether_rejected']
+        output_dicts = ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters', 'adjustments',
+                        'all_compartment_values']
+        output_lists = ['loglikelihoods', 'whether_accepted', 'accepted_indices', 'rejected_indices']
         for key in output_dicts: self.outputs['epi_uncertainty'][key] = {}
         for key in output_lists: self.outputs['epi_uncertainty'][key] = []
+        self.outputs['epi_uncertainty']['adjustments'] = {'program_prop_death_reporting': [], 'mdr_introduce_time': []}
         n_accepted, prev_log_likelihood, new_param_list, param_candidates, run, accepted = 0, -5e2, [], {}, 0, 0
 
         for param in self.inputs.param_ranges_unc:
@@ -618,7 +609,8 @@ class ModelRunner:
             new_param_list.append(param_candidates[param['key']][0])
             params = new_param_list
         for compartment_type in self.inputs.compartment_types:
-            if compartment_type in self.inputs.model_constants: self.all_compartment_values_tried[compartment_type] = []
+            if compartment_type in self.inputs.model_constants:
+                self.outputs['epi_uncertainty']['all_compartment_values'][compartment_type] = []
 
         # find weights for outputs that are being calibrated to
         years_to_compare = range(1990, 2015)
@@ -673,6 +665,7 @@ class ModelRunner:
                 # determine acceptance
                 log_likelihood = prior_log_likelihood + posterior_log_likelihood
                 accepted = numpy.random.binomial(n=1, p=min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
+                accepted = True
 
                 # describe progression of likelihood analysis
                 self.add_comment_to_gui_window(
@@ -683,14 +676,14 @@ class ModelRunner:
 
                 # record starting population
                 if self.gui_inputs['write_uncertainty_outcome_params']:
-                    for compartment_type in self.all_compartment_values_tried:
-                        self.all_compartment_values_tried[compartment_type].append(
+                    for compartment_type in self.outputs['epi_uncertainty']['all_compartment_values']:
+                        self.outputs['epi_uncertainty']['all_compartment_values'][compartment_type].append(
                             self.inputs.model_constants[compartment_type])
 
                 # record uncertainty calculations for all runs
                 if accepted:
                     self.outputs['epi_uncertainty']['whether_accepted'].append(True)
-                    self.accepted_indices.append(run)
+                    self.outputs['epi_uncertainty']['accepted_indices'].append(run)
                     n_accepted += 1
                     for p, param in enumerate(self.inputs.param_ranges_unc):
                         self.outputs['epi_uncertainty']['accepted_parameters'][param['key']][n_accepted] \
@@ -714,7 +707,7 @@ class ModelRunner:
 
                 else:
                     self.outputs['epi_uncertainty']['whether_accepted'].append(False)
-                    self.outputs['epi_uncertainty']['whether_rejected'].append(run)
+                    self.outputs['epi_uncertainty']['rejected_indices'].append(run)
                     for p, param in enumerate(self.inputs.param_ranges_unc):
                         self.outputs['epi_uncertainty']['rejected_parameters'][param['key']][n_accepted].append(
                             new_param_list[p])
@@ -727,8 +720,10 @@ class ModelRunner:
 
                 # record death reporting proportion and mdr introduction time, which may or may not have been adjusted
                 if self.adjust_mortality:
-                    self.adjustments['program_prop_death_reporting'].append(self.prop_death_reporting)
-                if self.adjust_mdr: self.adjustments['mdr_introduce_time'].append(self.mdr_introduce_time)
+                    self.outputs['epi_uncertainty']['adjustments']['program_prop_death_reporting'].append(
+                        self.prop_death_reporting)
+                if self.adjust_mdr:
+                    self.outputs['epi_uncertainty']['adjustments']['mdr_introduce_time'].append(self.mdr_introduce_time)
 
                 run += 1
 
@@ -980,7 +975,7 @@ class ModelRunner:
                 'all_parameters_tried': self.outputs['epi_uncertainty']['all_parameters'],
                 'whether_accepted_list': self.outputs['epi_uncertainty']['whether_accepted'],
                 'rejection_dict': self.outputs['epi_uncertainty']['rejected_parameters'],
-                'accepted_indices': self.accepted_indices,
+                'accepted_indices': self.outputs['epi_uncertainty']['accepted_indices'],
                 'acceptance_dict': self.outputs['epi_uncertainty']['accepted_parameters'],
                 'names': {param: tool_kit.find_title_from_dictionary(param)
                           for p, param in enumerate(self.outputs['epi_uncertainty']['all_parameters'])},

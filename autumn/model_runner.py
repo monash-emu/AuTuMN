@@ -675,7 +675,6 @@ class ModelRunner:
                 # determine acceptance
                 log_likelihood = prior_log_likelihood + posterior_log_likelihood
                 accepted = numpy.random.binomial(n=1, p=min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
-                accepted = True
 
                 # describe progression of likelihood analysis
                 self.add_comment_to_gui_window(

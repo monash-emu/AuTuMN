@@ -10,8 +10,8 @@ pluggable API to other system. Applied to tuberculosis.
 ```> python gui.py```
 
 ## TODO
+- debug uncertainty plotting after recent changes
+- reconcile intervention uncertainty with outputs structures for scenario and epi uncertainty
 - setup.py file to load all dependent modules
 - uncertainty for economics (an extension to intervention uncertainty I think)
-- tidy up MDR introduction time code and reconcile with population adjustment
-- record adjustments made in uncertainty outputs dictionary as runs progress
 - document Bulgaria interventions properly in handbook

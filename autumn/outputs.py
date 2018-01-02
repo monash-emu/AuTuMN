@@ -726,7 +726,7 @@ class Project:
         self.accepted_no_burn_in_indices = []
         self.uncertainty_centiles = {'epi': {}, 'cost': {}}
         self.quantities_to_write_back \
-            = ['all_parameters_tried', 'all_compartment_values_tried', 'all_other_adjustments_made']
+            = ['all_parameters_tried', 'all_compartment_values_tried', 'adjustments']
         self.order_to_write = [self.model_runner.percentiles.index(50),
                                self.model_runner.percentiles.index(2.5),
                                self.model_runner.percentiles.index(97.5)]
@@ -1036,7 +1036,8 @@ class Project:
             country_sheet = country_input_book['constants']
 
             # find the integration run with the best likelihood
-            best_likelihood_index = self.model_runner.loglikelihoods.index(max(self.model_runner.loglikelihoods))
+            best_likelihood_index = self.outputs['epi_uncertainty']['loglikelihoods'].index(
+                max(self.outputs['epi_uncertainty']['loglikelihoods']))
 
             # write the parameters and starting compartment sizes back in to input sheets
             for attribute in self.quantities_to_write_back:
@@ -2747,7 +2748,7 @@ class Project:
         ax = fig.add_subplot(1, 1, 1)
 
         # find accepted likelihoods
-        accepted_log_likelihoods = [self.model_runner.loglikelihoods[i] for i in self.accepted_indices]
+        accepted_log_likelihoods = [self.outputs['epi_uncertainty']['loglikelihoods'][i] for i in self.accepted_indices]
 
         # plot the rejected values
         for i in self.model_runner.rejected_indices:
@@ -2757,8 +2758,8 @@ class Project:
 
             # Plot from the previous acceptance to the current rejection
             ax.plot([last_acceptance_before, i],
-                    [self.model_runner.loglikelihoods[last_acceptance_before],
-                     self.model_runner.loglikelihoods[i]], marker='o', linestyle='--', color='.5')
+                    [self.outputs['epi_uncertainty']['loglikelihoods'][last_acceptance_before],
+                     self.outputs['epi_uncertainty']['loglikelihoods'][i]], marker='o', linestyle='--', color='.5')
 
         # plot the accepted values
         ax.plot(self.accepted_indices, accepted_log_likelihoods, marker='o', color='k')

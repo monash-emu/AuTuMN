@@ -1,3 +1,4 @@
+
 import collections
 import threading
 
@@ -145,7 +146,7 @@ def get_autumn_params():
     for k in default_boolean_keys:
         params[k]['value'] = True
 
-    # Model running options
+    # model running options
     options = [
         'Afghanistan', 'Albania', 'Angola', 'Argentina', 'Armenia', 'Australia', 'Austria',
         'Azerbaijan', 'Bahrain', 'Bangladesh', 'Belarus', 'Belgium', 'Benin',
@@ -191,7 +192,7 @@ def get_autumn_params():
         'interval': 0.005
     }
 
-    # Model stratifications options
+    # model stratifications options
     options = ['Pos / Neg / Extra', 'Pos / Neg', 'Unstratified']
     params['n_organs'] = {
         'type': 'drop_down',
@@ -206,10 +207,10 @@ def get_autumn_params():
         'value': options[1]
     }
 
-    # Uncertainty options
+    # uncertainty options
     params['uncertainty_runs'] = {
         'type': 'integer',
-        'value': 5,
+        'value': 2,
         'label': 'Number of uncertainty runs'
     }
     params['burn_in_runs'] = {

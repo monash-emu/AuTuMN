@@ -137,7 +137,6 @@ class ModelRunner:
 
         # uncertainty-related attributes
         self.is_last_run_success = False
-        self.loglikelihoods = []
         self.outputs_unc = [{'key': 'incidence',
                              'posterior_width': None,
                              'width_multiplier': 2.  # width of normal posterior relative to range of allowed values
@@ -196,7 +195,7 @@ class ModelRunner:
         # saving-related
         self.attributes_to_save \
             = ['outputs', 'accepted_indices', 'rejected_indices', 'whether_accepted_list', 'rejection_dict',
-               'loglikelihoods', 'all_other_adjustments_made']
+               'adjustments']
 
         # GUI-related
         self.emit_delay = 0.1
@@ -607,9 +606,10 @@ class ModelRunner:
         self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
         # prepare basic local variables for uncertainty loop
-        output_keys = ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters']
+        output_dicts = ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters']
         self.outputs['epi_uncertainty'] = {}
-        for key in output_keys: self.outputs['epi_uncertainty'][key] = {}
+        self.outputs['epi_uncertainty']['loglikelihoods'] = []
+        for key in output_dicts: self.outputs['epi_uncertainty'][key] = {}
         n_accepted, prev_log_likelihood, new_param_list, param_candidates, run, accepted = 0, -5e2, [], {}, 0, 0
 
         for param in self.inputs.param_ranges_unc:
@@ -675,13 +675,14 @@ class ModelRunner:
                 # determine acceptance
                 log_likelihood = prior_log_likelihood + posterior_log_likelihood
                 accepted = numpy.random.binomial(n=1, p=min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
+                accepted = True
 
                 # describe progression of likelihood analysis
                 self.add_comment_to_gui_window(
                     'Previous log likelihood:\n%4.3f\nLog likelihood this run:\n%4.3f\nAcceptance probability:\n%4.3f'
                     % (prev_log_likelihood, log_likelihood, min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
                     + '\nWhether accepted:\n%s\n________________\n' % str(bool(accepted)))
-                self.loglikelihoods.append(log_likelihood)
+                self.outputs['epi_uncertainty']['loglikelihoods'].append(log_likelihood)
 
                 # record starting population
                 if self.gui_inputs['write_uncertainty_outcome_params']:
@@ -718,7 +719,8 @@ class ModelRunner:
                     self.whether_accepted_list.append(False)
                     self.rejected_indices.append(run)
                     for p, param in enumerate(self.inputs.param_ranges_unc):
-                        self.outputs['epi_uncertainty']['rejected_parameters'][param['key']][n_accepted].append(new_param_list[p])
+                        self.outputs['epi_uncertainty']['rejected_parameters'][param['key']][n_accepted].append(
+                            new_param_list[p])
 
                 # plot parameter progression and report on progress
                 self.plot_progressive_parameters()

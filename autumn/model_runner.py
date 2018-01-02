@@ -592,41 +592,40 @@ class ModelRunner:
         self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
         # prepare basic storage and local variables for uncertainty loop
-        n_accepted, prev_log_likelihood, params, run, accepted = 0, -5e2, [], 0, 0
-        self.outputs['epi_uncertainty'] \
-            = {'adjustments': {'program_prop_death_reporting': [], 'mdr_introduce_time': []}}
+        n_accepted, prev_log_likelihood, starting_params, run, accepted, accepted_params, \
+            self.outputs['epi_uncertainty'] \
+            = 0, -5e2, [], 0, 0, None, {'adjustments': {'program_prop_death_reporting': [], 'mdr_introduce_time': []}}
         for key in ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters',
                     'all_compartment_values']:
             self.outputs['epi_uncertainty'][key] = {}
         for key in ['loglikelihoods', 'whether_accepted', 'accepted_indices', 'rejected_indices']:
             self.outputs['epi_uncertainty'][key] = []
-
         for param in self.inputs.param_ranges_unc:
             self.outputs['epi_uncertainty']['all_parameters'][param['key']] = []
             self.outputs['epi_uncertainty']['accepted_parameters'][param['key']] = {}
             self.outputs['epi_uncertainty']['rejected_parameters'][param['key']] = {n_accepted: []}
-            params.append(self.inputs.model_constants[param['key']])
+            starting_params.append(self.inputs.model_constants[param['key']])
         for compartment_type in self.inputs.compartment_types:
             if compartment_type in self.inputs.model_constants:
                 self.outputs['epi_uncertainty']['all_compartment_values'][compartment_type] = []
-
-        # find weights for outputs that are being calibrated to
-        years_to_compare = range(1990, 2015)
-        weights = find_uncertainty_output_weights(years_to_compare, 1, [1., 2.])
-        new_param_list = params
-        self.add_comment_to_gui_window('"Weights": \n' + str(weights))
 
         # instantiate model objects
         for scenario in self.scenarios:
             self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
+        # find weights for outputs that are being calibrated to
+        years_to_compare = range(1990, 2015)
+        weights = find_uncertainty_output_weights(years_to_compare, 1, [1., 2.])
+        self.add_comment_to_gui_window('"Weights": \n' + str(weights))
+
         while n_accepted < self.gui_inputs['uncertainty_runs']:
 
             # set timer
             start_timer_run = datetime.datetime.now()
+            proposed_params = self.update_params(accepted_params) if accepted_params else starting_params
 
             # run baseline scenario (includes parameter checking, parameter setting and recording success/failure)
-            self.run_with_params(new_param_list, scenario=0)
+            self.run_with_params(proposed_params, scenario=0)
 
             # store outputs regardless of acceptance, provided run was completed successfully
             if self.is_last_run_success:
@@ -644,8 +643,8 @@ class ModelRunner:
 
                 # calculate prior
                 for p, param in enumerate(self.inputs.param_ranges_unc):
-                    param_val = new_param_list[p]
-                    self.outputs['epi_uncertainty']['all_parameters'][param['key']].append(new_param_list[p])
+                    param_val = proposed_params[p]
+                    self.outputs['epi_uncertainty']['all_parameters'][param['key']].append(proposed_params[p])
                     if 'additional_params' not in param: param['additional_params'] = None
                     prior_log_likelihood += find_log_probability_density(
                         param['distribution'], param_val, param['bounds'], additional_params=param['additional_params'])
@@ -685,17 +684,17 @@ class ModelRunner:
                     n_accepted += 1
                     for p, param in enumerate(self.inputs.param_ranges_unc):
                         self.outputs['epi_uncertainty']['accepted_parameters'][param['key']][n_accepted] \
-                            = new_param_list[p]
+                            = proposed_params[p]
                         self.outputs['epi_uncertainty']['rejected_parameters'][param['key']][n_accepted] = []
 
                     # update likelihood and parameter set for next run
-                    prev_log_likelihood, params = log_likelihood, new_param_list
+                    prev_log_likelihood, accepted_params = log_likelihood, proposed_params
 
                     # run scenarios other than baseline and store uncertainty (only if accepted)
                     for scenario in self.scenarios:
                         if scenario:
                             self.prepare_new_model_from_baseline(scenario)
-                            self.run_with_params(new_param_list, scenario=scenario)
+                            self.run_with_params(accepted_params, scenario=scenario)
                             self.store_uncertainty(scenario, 'epi_uncertainty')
 
                     # make algorithmic adjustments
@@ -708,7 +707,7 @@ class ModelRunner:
                     self.outputs['epi_uncertainty']['rejected_indices'].append(run)
                     for p, param in enumerate(self.inputs.param_ranges_unc):
                         self.outputs['epi_uncertainty']['rejected_parameters'][param['key']][n_accepted].append(
-                            new_param_list[p])
+                            proposed_params[p])
 
                 # plot parameter progression and report on progress
                 self.plot_progressive_parameters()
@@ -724,8 +723,6 @@ class ModelRunner:
                     self.outputs['epi_uncertainty']['adjustments']['mdr_introduce_time'].append(self.mdr_introduce_time)
 
                 run += 1
-
-            new_param_list = self.update_params(params)
 
     def get_fitting_data(self):
         """

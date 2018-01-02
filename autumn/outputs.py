@@ -2751,7 +2751,7 @@ class Project:
         accepted_log_likelihoods = [self.outputs['epi_uncertainty']['loglikelihoods'][i] for i in self.accepted_indices]
 
         # plot the rejected values
-        for i in self.model_runner.rejected_indices:
+        for i in self.outputs['epi_uncertainty']['whether_rejected']:
 
             # Find the index of the last accepted index before the rejected one we're currently interested in
             last_acceptance_before = [j for j in self.accepted_indices if j < i][-1]

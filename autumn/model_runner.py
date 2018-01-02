@@ -143,9 +143,7 @@ class ModelRunner:
                              }]
         self.all_compartment_values_tried = {}
         self.adjustments = {'program_prop_death_reporting': [], 'mdr_introduce_time': []}
-        self.whether_accepted_list = []
         self.accepted_indices = []
-        self.rejected_indices = []
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
         self.uncertainty_percentiles = {}
@@ -194,8 +192,7 @@ class ModelRunner:
 
         # saving-related
         self.attributes_to_save \
-            = ['outputs', 'accepted_indices', 'rejected_indices', 'whether_accepted_list', 'rejection_dict',
-               'adjustments']
+            = ['outputs', 'accepted_indices', 'rejection_dict', 'adjustments']
 
         # GUI-related
         self.emit_delay = 0.1
@@ -606,10 +603,11 @@ class ModelRunner:
         self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
         # prepare basic local variables for uncertainty loop
-        output_dicts = ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters']
         self.outputs['epi_uncertainty'] = {}
-        self.outputs['epi_uncertainty']['loglikelihoods'] = []
+        output_dicts = ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters']
+        output_lists = ['loglikelihoods', 'whether_accepted', 'whether_rejected']
         for key in output_dicts: self.outputs['epi_uncertainty'][key] = {}
+        for key in output_lists: self.outputs['epi_uncertainty'][key] = []
         n_accepted, prev_log_likelihood, new_param_list, param_candidates, run, accepted = 0, -5e2, [], {}, 0, 0
 
         for param in self.inputs.param_ranges_unc:
@@ -691,7 +689,7 @@ class ModelRunner:
 
                 # record uncertainty calculations for all runs
                 if accepted:
-                    self.whether_accepted_list.append(True)
+                    self.outputs['epi_uncertainty']['whether_accepted'].append(True)
                     self.accepted_indices.append(run)
                     n_accepted += 1
                     for p, param in enumerate(self.inputs.param_ranges_unc):
@@ -715,8 +713,8 @@ class ModelRunner:
                     if self.adjust_population: self.adjust_start_population(last_run_output_index)
 
                 else:
-                    self.whether_accepted_list.append(False)
-                    self.rejected_indices.append(run)
+                    self.outputs['epi_uncertainty']['whether_accepted'].append(False)
+                    self.outputs['epi_uncertainty']['whether_rejected'].append(run)
                     for p, param in enumerate(self.inputs.param_ranges_unc):
                         self.outputs['epi_uncertainty']['rejected_parameters'][param['key']][n_accepted].append(
                             new_param_list[p])
@@ -980,7 +978,7 @@ class ModelRunner:
         if self.js_gui:
             self.js_gui('graph', {
                 'all_parameters_tried': self.outputs['epi_uncertainty']['all_parameters'],
-                'whether_accepted_list': self.whether_accepted_list,
+                'whether_accepted_list': self.outputs['epi_uncertainty']['whether_accepted'],
                 'rejection_dict': self.outputs['epi_uncertainty']['rejected_parameters'],
                 'accepted_indices': self.accepted_indices,
                 'acceptance_dict': self.outputs['epi_uncertainty']['accepted_parameters'],

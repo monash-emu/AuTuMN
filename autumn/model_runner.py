@@ -985,6 +985,8 @@ class ModelRunner:
         consideration.
         """
 
+        self.outputs['int_uncertainty'] = {'epi': {}, 'cost': {}}
+
         # extract relevant intervention parameters from the intervention uncertainty dictionary
         working_param_dict = {}
         for param in self.inputs.intervention_param_dict[self.inputs.uncertainty_intervention]:
@@ -995,11 +997,11 @@ class ModelRunner:
 
         # generate samples using latin hypercube design
         sample_values = lhs(len(working_param_dict), samples=self.inputs.n_samples)
-        parameter_values = {}
+        self.outputs['int_uncertainty']['parameter_values'] = {}
         for p, param in enumerate(working_param_dict):
-            parameter_values[param] = []
+            self.outputs['int_uncertainty']['parameter_values'][param] = []
             for sample in range(self.inputs.n_samples):
-                parameter_values[param].append(
+                self.outputs['int_uncertainty']['parameter_values'][param].append(
                     working_param_dict[param]['bounds'][0]
                     + (working_param_dict[param]['bounds'][1] - working_param_dict[param]['bounds'][0])
                     * sample_values[sample][p])
@@ -1011,11 +1013,11 @@ class ModelRunner:
             self.models[15] = model.ConsolidatedModel(15, self.inputs, self.gui_inputs)
             self.prepare_new_model_from_baseline(15)
             self.models[15].relevant_interventions.append(self.inputs.uncertainty_intervention)
-            for param in parameter_values: self.models[15].set_parameter(param, parameter_values[param][sample])
+            for param in self.outputs['int_uncertainty']['parameter_values']:
+                self.models[15].set_parameter(param, self.outputs['int_uncertainty']['parameter_values'][param][sample])
 
             # integrate and save
             self.models[15].integrate()
-            self.outputs['int_uncertainty'] = {'epi': {}, 'cost': {}}
             self.store_uncertainty(15, uncertainty_type='int_uncertainty')
 
     ''' optimisation methods '''

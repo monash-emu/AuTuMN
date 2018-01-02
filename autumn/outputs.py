@@ -1499,7 +1499,7 @@ class Project:
             self.plot_riskgroup_checks()
 
         # save figure that is produced in the uncertainty running process
-        if self.gui_inputs['output_param_plots']:
+        if self.gui_inputs['output_uncertainty'] and self.gui_inputs['output_param_plots']:
             param_tracking_figure = self.set_and_update_figure()
             # param_tracking_figure = self.model_runner.plot_progressive_parameters_tk(from_runner=False,
             #                                                                          input_figure=param_tracking_figure)
@@ -1511,7 +1511,7 @@ class Project:
         if self.gui_inputs['output_popsize_plot']: self.plot_popsizes()
 
         # plot likelihood estimates
-        if self.gui_inputs['output_likelihood_plot']: self.plot_likelihoods()
+        if self.gui_inputs['output_uncertainty'] and self.gui_inputs['output_likelihood_plot']: self.plot_likelihoods()
 
         # plot percentage of MDR for different uncertainty runs
         if self.gui_inputs['output_uncertainty'] and self.gui_inputs['n_strains'] > 1: self.plot_perc_mdr_progress()
@@ -1545,8 +1545,8 @@ class Project:
 
         # local variables relevant to the type of analysis requested
         if self.inputs.intervention_uncertainty:
-            uncertainty_scenario, scenarios, start_index, uncertainty_type, linewidth, linecolour, runs \
-                = 15, [0, 15], 0, 'int_uncertainty', 1., 'r', self.inputs.n_samples
+            uncertainty_scenario, scenarios, start_index, uncertainty_type, linewidth, linecolour, runs, \
+                self.accepted_indices = 15, [0, 15], 0, 'int_uncertainty', 1., 'r', self.inputs.n_samples, []
             self.start_time_index = 0
         else:
             uncertainty_scenario, scenarios, uncertainty_type, linewidth \

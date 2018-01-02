@@ -592,22 +592,20 @@ class ModelRunner:
         self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
         # prepare basic storage and local variables for uncertainty loop
-        self.outputs['epi_uncertainty'] = {}
-        output_dicts = ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters', 'adjustments',
-                        'all_compartment_values']
-        output_lists = ['loglikelihoods', 'whether_accepted', 'accepted_indices', 'rejected_indices']
-        for key in output_dicts: self.outputs['epi_uncertainty'][key] = {}
-        for key in output_lists: self.outputs['epi_uncertainty'][key] = []
-        self.outputs['epi_uncertainty']['adjustments'] = {'program_prop_death_reporting': [], 'mdr_introduce_time': []}
-        n_accepted, prev_log_likelihood, new_param_list, param_candidates, run, accepted = 0, -5e2, [], {}, 0, 0
+        n_accepted, prev_log_likelihood, params, run, accepted = 0, -5e2, [], 0, 0
+        self.outputs['epi_uncertainty'] \
+            = {'adjustments': {'program_prop_death_reporting': [], 'mdr_introduce_time': []}}
+        for key in ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters',
+                    'all_compartment_values']:
+            self.outputs['epi_uncertainty'][key] = {}
+        for key in ['loglikelihoods', 'whether_accepted', 'accepted_indices', 'rejected_indices']:
+            self.outputs['epi_uncertainty'][key] = []
 
         for param in self.inputs.param_ranges_unc:
-            param_candidates[param['key']] = [self.inputs.model_constants[param['key']]]
             self.outputs['epi_uncertainty']['all_parameters'][param['key']] = []
             self.outputs['epi_uncertainty']['accepted_parameters'][param['key']] = {}
             self.outputs['epi_uncertainty']['rejected_parameters'][param['key']] = {n_accepted: []}
-            new_param_list.append(param_candidates[param['key']][0])
-            params = new_param_list
+            params.append(self.inputs.model_constants[param['key']])
         for compartment_type in self.inputs.compartment_types:
             if compartment_type in self.inputs.model_constants:
                 self.outputs['epi_uncertainty']['all_compartment_values'][compartment_type] = []
@@ -615,9 +613,10 @@ class ModelRunner:
         # find weights for outputs that are being calibrated to
         years_to_compare = range(1990, 2015)
         weights = find_uncertainty_output_weights(years_to_compare, 1, [1., 2.])
+        new_param_list = params
         self.add_comment_to_gui_window('"Weights": \n' + str(weights))
 
-        # instantiate uncertainty model objects
+        # instantiate model objects
         for scenario in self.scenarios:
             self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 

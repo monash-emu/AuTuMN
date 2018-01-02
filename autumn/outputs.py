@@ -1040,7 +1040,11 @@ class Project:
 
             # write the parameters and starting compartment sizes back in to input sheets
             for attribute in self.quantities_to_write_back:
-                write_param_to_sheet(country_sheet, getattr(self.model_runner, attribute), best_likelihood_index)
+                if attribute == 'all_parameters_tried':
+                    write_param_to_sheet(country_sheet, self.model_runner.outputs['epi_uncertainty']['all_parameters'],
+                                         best_likelihood_index)
+                else:
+                    write_param_to_sheet(country_sheet, getattr(self.model_runner, attribute), best_likelihood_index)
 
             # save
             country_input_book.save(path)
@@ -2522,14 +2526,14 @@ class Project:
 
         # preliminaries
         fig = self.set_and_update_figure()
-        subplot_grid = find_subplot_numbers(len(self.model_runner.all_parameters_tried))
+        subplot_grid = find_subplot_numbers(len(self.model_runner.outputs['epi_uncertainty']['all_parameters']))
 
         # loop through parameters used in uncertainty
-        for p, param in enumerate(self.model_runner.all_parameters_tried):
+        for p, param in enumerate(self.model_runner.outputs['epi_uncertainty']['all_parameters']):
             ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
 
             # restrict to those accepted and after burn-in complete
-            param_values = [self.model_runner.all_parameters_tried[param][i]
+            param_values = [self.model_runner.outputs['epi_uncertainty']['all_parameters'][param][i]
                             for i in self.accepted_no_burn_in_indices]
 
             # plot

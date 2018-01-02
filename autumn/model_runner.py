@@ -142,16 +142,13 @@ class ModelRunner:
                              'posterior_width': None,
                              'width_multiplier': 2.  # width of normal posterior relative to range of allowed values
                              }]
-        self.all_parameters_tried = {}  # all refers to applying to every model run (rather than accepted only)
-        self.compartment_values_tried = {}
+        self.all_compartment_values_tried = {}
         self.adjustments = {'program_prop_death_reporting': [], 'mdr_introduce_time': []}
         self.whether_accepted_list = []
         self.accepted_indices = []
         self.rejected_indices = []
         self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
         self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
-        self.acceptance_dict = {}
-        self.rejection_dict = {}
         self.uncertainty_percentiles = {}
         self.n_centiles_for_shading = 100
         self.percentiles = [2.5, 50., 97.5] + list(numpy.linspace(0., 100., self.n_centiles_for_shading * 2 + 1))
@@ -198,8 +195,8 @@ class ModelRunner:
 
         # saving-related
         self.attributes_to_save \
-            = ['outputs', 'accepted_indices', 'rejected_indices', 'all_parameters_tried', 'whether_accepted_list',
-               'acceptance_dict', 'rejection_dict', 'loglikelihoods', 'all_other_adjustments_made']
+            = ['outputs', 'accepted_indices', 'rejected_indices', 'whether_accepted_list', 'rejection_dict',
+               'loglikelihoods', 'all_other_adjustments_made']
 
         # GUI-related
         self.emit_delay = 0.1
@@ -610,17 +607,20 @@ class ModelRunner:
         self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
         # prepare basic local variables for uncertainty loop
+        output_keys = ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters']
+        self.outputs['epi_uncertainty'] = {}
+        for key in output_keys: self.outputs['epi_uncertainty'][key] = {}
         n_accepted, prev_log_likelihood, new_param_list, param_candidates, run, accepted = 0, -5e2, [], {}, 0, 0
 
         for param in self.inputs.param_ranges_unc:
             param_candidates[param['key']] = [self.inputs.model_constants[param['key']]]
-            self.all_parameters_tried[param['key']] = []
-            self.acceptance_dict[param['key']] = {}
-            self.rejection_dict[param['key']] = {n_accepted: []}
+            self.outputs['epi_uncertainty']['all_parameters'][param['key']] = []
+            self.outputs['epi_uncertainty']['accepted_parameters'][param['key']] = {}
+            self.outputs['epi_uncertainty']['rejected_parameters'][param['key']] = {n_accepted: []}
             new_param_list.append(param_candidates[param['key']][0])
             params = new_param_list
         for compartment_type in self.inputs.compartment_types:
-            if compartment_type in self.inputs.model_constants: self.compartment_values_tried[compartment_type] = []
+            if compartment_type in self.inputs.model_constants: self.all_compartment_values_tried[compartment_type] = []
 
         # find weights for outputs that are being calibrated to
         years_to_compare = range(1990, 2015)
@@ -656,7 +656,7 @@ class ModelRunner:
                 # calculate prior
                 for p, param in enumerate(self.inputs.param_ranges_unc):
                     param_val = new_param_list[p]
-                    self.all_parameters_tried[param['key']].append(new_param_list[p])
+                    self.outputs['epi_uncertainty']['all_parameters'][param['key']].append(new_param_list[p])
                     if 'additional_params' not in param: param['additional_params'] = None
                     prior_log_likelihood += find_log_probability_density(
                         param['distribution'], param_val, param['bounds'], additional_params=param['additional_params'])
@@ -685,8 +685,8 @@ class ModelRunner:
 
                 # record starting population
                 if self.gui_inputs['write_uncertainty_outcome_params']:
-                    for compartment_type in self.compartment_values_tried:
-                        self.compartment_values_tried[compartment_type].append(
+                    for compartment_type in self.all_compartment_values_tried:
+                        self.all_compartment_values_tried[compartment_type].append(
                             self.inputs.model_constants[compartment_type])
 
                 # record uncertainty calculations for all runs
@@ -695,8 +695,9 @@ class ModelRunner:
                     self.accepted_indices.append(run)
                     n_accepted += 1
                     for p, param in enumerate(self.inputs.param_ranges_unc):
-                        self.acceptance_dict[param['key']][n_accepted] = new_param_list[p]
-                        self.rejection_dict[param['key']][n_accepted] = []
+                        self.outputs['epi_uncertainty']['accepted_parameters'][param['key']][n_accepted] \
+                            = new_param_list[p]
+                        self.outputs['epi_uncertainty']['rejected_parameters'][param['key']][n_accepted] = []
 
                     # update likelihood and parameter set for next run
                     prev_log_likelihood, params = log_likelihood, new_param_list
@@ -717,7 +718,7 @@ class ModelRunner:
                     self.whether_accepted_list.append(False)
                     self.rejected_indices.append(run)
                     for p, param in enumerate(self.inputs.param_ranges_unc):
-                        self.rejection_dict[param['key']][n_accepted].append(new_param_list[p])
+                        self.outputs['epi_uncertainty']['rejected_parameters'][param['key']][n_accepted].append(new_param_list[p])
 
                 # plot parameter progression and report on progress
                 self.plot_progressive_parameters()
@@ -842,9 +843,6 @@ class ModelRunner:
         new_outputs = {'epi': self.find_epi_outputs(scenario, outputs_to_analyse=self.epi_outputs_to_analyse)}
         new_outputs['cost'] = self.find_cost_outputs(scenario) if self.models[scenario].interventions_to_cost else {}
 
-        # create top two tiers for uncertainty outputs if not present (first run only)
-        if uncertainty_type not in self.outputs: self.outputs[uncertainty_type] = {'epi': {}, 'cost': {}}
-
         # incorporate new data
         for output_type in ['epi', 'cost']:
 
@@ -865,8 +863,7 @@ class ModelRunner:
 
                     # adjust list size if necessary or just use output directly
                     if output_type == 'epi' and scenario == 0:
-                        shape_index \
-                            = 0 if self.outputs[uncertainty_type]['epi'][scenario][output].ndim == 1 else 1
+                        shape_index = 0 if self.outputs[uncertainty_type]['epi'][scenario][output].ndim == 1 else 1
 
                         # extend new output data with zeros if too short
                         if len(new_outputs['epi'][output]) \
@@ -981,13 +978,13 @@ class ModelRunner:
 
         if self.js_gui:
             self.js_gui('graph', {
-                'all_parameters_tried': self.all_parameters_tried,
+                'all_parameters_tried': self.outputs['epi_uncertainty']['all_parameters'],
                 'whether_accepted_list': self.whether_accepted_list,
-                'rejection_dict': self.rejection_dict,
+                'rejection_dict': self.outputs['epi_uncertainty']['rejected_parameters'],
                 'accepted_indices': self.accepted_indices,
-                'acceptance_dict': self.acceptance_dict,
+                'acceptance_dict': self.outputs['epi_uncertainty']['accepted_parameters'],
                 'names': {param: tool_kit.find_title_from_dictionary(param)
-                          for p, param in enumerate(self.all_parameters_tried)},
+                          for p, param in enumerate(self.outputs['epi_uncertainty']['all_parameters'])},
                 'param_ranges_unc': self.inputs.param_ranges_unc})
 
     ''' other run type methods '''
@@ -1029,6 +1026,7 @@ class ModelRunner:
 
             # integrate and save
             self.models[15].integrate()
+            self.outputs['int_uncertainty'] = {'epi': {}, 'cost': {}}
             self.store_uncertainty(15, uncertainty_type='int_uncertainty')
 
     ''' optimisation methods '''

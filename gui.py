@@ -114,12 +114,12 @@ def get_autumn_params():
     for key in bool_keys:
         params[key] = {
             'value': False,
-            'type': "boolean",
+            'type': 'boolean',
             'label': find_button_name_from_string(key),
         }
 
     default_boolean_keys = [
-        # 'output_uncertainty',
+        'output_uncertainty',
         'write_uncertainty_outcome_params',
         'output_param_plots',
         'is_amplification',
@@ -290,7 +290,7 @@ def convert_params_to_inputs(params):
     inputs['scenario_names_to_run'] = ['baseline']
     for key, param in params.iteritems():
         value = param['value']
-        if param['type'] == "boolean":
+        if param['type'] == 'boolean':
             if 'scenario_' not in key:
                 inputs[key] = param['value']
             elif param['value']:
@@ -299,7 +299,7 @@ def convert_params_to_inputs(params):
                     += [i_scenario]
                 inputs['scenario_names_to_run'] \
                     += [tool_kit.find_scenario_string_from_number(i_scenario)]
-        elif param['type'] == "drop_down":
+        elif param['type'] == 'drop_down':
             if key == 'fitting_method':
                 inputs[key] = int(value[-1])
             elif key == 'n_organs':
@@ -349,7 +349,7 @@ class App:
 
     def make_tk_controls_in_params(self):
         for key, param in self.params.iteritems():
-            if param['type'] == "boolean":
+            if param['type'] == 'boolean':
                 param['tk_var'] = IntVar()
                 if param['value'] == True:
                     param['tk_var'].set(True)
@@ -442,7 +442,7 @@ class App:
         """
 
         for param in self.params.values():
-            if param['type'] == "boolean":
+            if param['type'] == 'boolean':
                 param['value'] = bool(param['tk_var'].get())
             else:
                 param['value'] = param['tk_var'].get()
@@ -492,10 +492,10 @@ class App:
         project.master_outputs_runner()
 
     def handle_message(self, command, data={}):
-        if command == "console":
-            self.runtime_outputs.insert(END, data["message"] + '\n')
+        if command == 'console':
+            self.runtime_outputs.insert(END, data['message'] + '\n')
             self.runtime_outputs.see(END)
-        elif command == "graph":
+        elif command == 'graph':
             self.graph(data)
 
     def graph(self, data, input_figure=None):
@@ -511,49 +511,49 @@ class App:
         else:
             param_tracking_figure = input_figure
 
-        subplot_grid = outputs.find_subplot_numbers(len(data["all_parameters_tried"]))
+        subplot_grid = outputs.find_subplot_numbers(len(data['all_parameters_tried']))
 
         # cycle through parameters with one subplot for each parameter
-        for p, param in enumerate(data["all_parameters_tried"]):
+        for p, param in enumerate(data['all_parameters_tried']):
 
             # extract accepted params from all tried params
             accepted_params = list(
                 p for p, a in zip(
-                    data["all_parameters_tried"][param],
-                    data["whether_accepted_list"])
+                    data['all_parameters_tried'][param],
+                    data['whether_accepted_list'])
                 if a)
 
             # plot
             ax = param_tracking_figure.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
             ax.plot(range(1, len(accepted_params) + 1), accepted_params, linewidth=2, marker='o', markersize=4,
                     mec='b', mfc='b')
-            ax.set_xlim((1., len(data["accepted_indices"]) + 1))
+            ax.set_xlim((1., len(data['accepted_indices']) + 1))
 
             # find the y-limits from the parameter bounds and the parameter values tried
-            for param_number in range(len(data["param_ranges_unc"])):
-                if data["param_ranges_unc"][param_number]['key'] == param:
-                    bounds = data["param_ranges_unc"][param_number]['bounds']
+            for param_number in range(len(data['param_ranges_unc'])):
+                if data['param_ranges_unc'][param_number]['key'] == param:
+                    bounds = data['param_ranges_unc'][param_number]['bounds']
             ylim_margins = .1
             min_ylimit = min(accepted_params + [bounds[0]])
             max_ylimit = max(accepted_params + [bounds[1]])
             ax.set_ylim((min_ylimit * (1 - ylim_margins), max_ylimit * (1 + ylim_margins)))
 
             # indicate the prior bounds
-            ax.plot([1, len(data["accepted_indices"]) + 1], [min_ylimit, min_ylimit], color='0.8')
-            ax.plot([1, len(data["accepted_indices"]) + 1], [max_ylimit, max_ylimit], color='0.8')
+            ax.plot([1, len(data['accepted_indices']) + 1], [min_ylimit, min_ylimit], color='0.8')
+            ax.plot([1, len(data['accepted_indices']) + 1], [max_ylimit, max_ylimit], color='0.8')
 
             # plot rejected parameters
-            for run, rejected_params in data["rejection_dict"][param].items():
-                if data["rejection_dict"][param][run]:
+            for run, rejected_params in data['rejection_dict'][param].items():
+                if data['rejection_dict'][param][run]:
                     ax.plot([run + 1] * len(rejected_params), rejected_params, marker='o', linestyle='None',
                             mec='0.5', mfc='0.5', markersize=3)
                     for r in range(len(rejected_params)):
-                        ax.plot([run, run + 1], [data["acceptance_dict"][param][run], rejected_params[r]], color='0.5',
+                        ax.plot([run, run + 1], [data['acceptance_dict'][param][run], rejected_params[r]], color='0.5',
                                 linestyle='--')
 
             # label
-            ax.set_title(data["names"][param])
-            if p > len(data["all_parameters_tried"]) - subplot_grid[1] - 1:
+            ax.set_title(data['names'][param])
+            if p > len(data['all_parameters_tried']) - subplot_grid[1] - 1:
                 ax.set_xlabel('Accepted runs')
 
             if not input_figure:

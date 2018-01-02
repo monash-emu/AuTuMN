@@ -177,7 +177,7 @@ class SpreadsheetReader:
 
         # check that the spreadsheet to be read exists
         try:
-            print('Reading file ' + self.filename)
+            print('Reading data from ' + self.filename)
             workbook = open_workbook(self.filename)
 
         # if sheet unavailable, warn of issue

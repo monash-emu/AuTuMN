@@ -558,15 +558,15 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         for strata in itertools.product(self.organs_for_detection, self.riskgroups):
-            organ, riskgroup = strata
+            organ = strata[0]
 
             # risk groups
-            if 'int_rate_acf' + organ + riskgroup in self.vars:
-                self.vars['program_rate_detect' + organ + riskgroup] += self.vars['int_rate_acf' + organ + riskgroup]
+            if 'int_rate_acf' + ''.join(strata) in self.vars:
+                self.vars['program_rate_detect' + ''.join(strata)] += self.vars['int_rate_acf' + ''.join(strata)]
 
             # general community
             if 'int_rate_acf' + organ in self.vars:
-                self.vars['program_rate_detect' + organ + riskgroup] += self.vars['int_rate_acf' + organ]
+                self.vars['program_rate_detect' + ''.join(strata)] += self.vars['int_rate_acf' + organ]
 
     def calculate_intensive_screening_rate(self):
         """
@@ -600,8 +600,8 @@ class ConsolidatedModel(StratifiedModel):
             screened_subgroups = ['_diabetes', '_hiv']
             for strata in itertools.product(self.organs_for_detection, screened_subgroups):
                 organ, riskgroup = strata
-                self.vars['program_rate_detect' + organ + riskgroup] \
-                    += self.vars['int_rate_intensive_screening' + organ + riskgroup]
+                self.vars['program_rate_detect' + ''.join(strata)] \
+                    += self.vars['int_rate_intensive_screening' + ''.join(strata)]
 
     def calculate_assignment_by_strain(self):
         """
@@ -684,11 +684,11 @@ class ConsolidatedModel(StratifiedModel):
         for strata in itertools.product(strains_for_treatment, self.histories, ['_success', '_death']):
             strain, history, outcome = strata
             for riskgroup in self.riskgroups:
-                self.vars['program_prop_treatment' + riskgroup + strain + history + outcome] \
-                    = copy.copy(self.vars['program_prop_treatment' + strain + history + outcome])
+                self.vars['program_prop_treatment' + riskgroup + ''.join(strata)] \
+                    = copy.copy(self.vars['program_prop_treatment' + ''.join(strata)])
 
             # delete the var that is not riskgroup-specific
-            del self.vars['program_prop_treatment' + strain + history + outcome]
+            del self.vars['program_prop_treatment' + ''.join(strata)]
 
     def calculate_await_treatment_var(self):
         """
@@ -733,10 +733,10 @@ class ConsolidatedModel(StratifiedModel):
             for strata in itertools.product(self.histories, self.riskgroups):
                 history, riskgroup = strata
                 self.adjust_treatment_outcomes_support(riskgroup, strain, history)
-                self.calculate_default_rates(riskgroup, strain, history)
+                self.calculate_default_rates(riskgroup + strain + history)
                 self.split_treatment_props_by_stage(riskgroup, strain, history)
                 for stage in self.treatment_stages:
-                    self.assign_success_prop_by_treatment_stage(riskgroup, strain, history, stage)
+                    self.assign_success_prop_by_treatment_stage(riskgroup + strain + history, stage)
                     self.convert_treatment_props_to_rates(riskgroup, strain, history, stage)
                     if self.is_amplification:
                         self.calculate_amplification_props(riskgroup + strain + history + '_default' + stage)
@@ -822,12 +822,12 @@ class ConsolidatedModel(StratifiedModel):
                     self.params['int_prop_treatment_death_ideal' + strain_type],
                     self.vars['int_prop_treatment_support_absolute' + strain_type])
 
-    def calculate_default_rates(self, riskgroup, strain, history):
+    def calculate_default_rates(self, stratum):
         """
         Calculate the default proportion as the remainder from success and death and warn if numbers don't make sense.
         """
 
-        start = 'program_prop_treatment' + riskgroup + strain + history
+        start = 'program_prop_treatment' + stratum
         self.vars[start + '_default'] = 1. - self.vars[start + '_success'] - self.vars[start + '_death']
         if self.vars[start + '_default'] < 0.:
             print('Success and death sum to %s for %s outcome at %s time'
@@ -854,12 +854,12 @@ class ConsolidatedModel(StratifiedModel):
             riskgroup, strain, history = strata
 
             # treatment success (which may have become negative in the pre-treatment era)
-            self.vars['program_prop_treatment' + riskgroup + strain + history + '_success'] \
+            self.vars['program_prop_treatment' + ''.join(strata) + '_success'] \
                 = max(1. - coverage_ratio
-                      * (1. - self.vars['program_prop_treatment' + riskgroup + strain + history + '_success']), 0.)
+                      * (1. - self.vars['program_prop_treatment' + ''.join(strata) + '_success']), 0.)
 
             # treatment death
-            self.vars['program_prop_treatment' + riskgroup + strain + history + '_death'] *= coverage_ratio
+            self.vars['program_prop_treatment' + ''.join(strata) + '_death'] *= coverage_ratio
 
     def split_treatment_props_by_stage(self, riskgroup, strain, history):
         """
@@ -875,12 +875,12 @@ class ConsolidatedModel(StratifiedModel):
                 self.vars['program_prop_treatment' + riskgroup + strain + history + outcome + stage] \
                     = outcomes_by_stage[s]
 
-    def assign_success_prop_by_treatment_stage(self, riskgroup, strain, history, stage):
+    def assign_success_prop_by_treatment_stage(self, stratum, stage):
         """
         Calculate success proportion by stage as the remainder after death and default accounted for.
         """
 
-        start = 'program_prop_treatment' + riskgroup + strain + history
+        start = 'program_prop_treatment' + stratum
         self.vars[start + '_success' + stage] \
             = 1. - self.vars[start + '_default' + stage] - self.vars[start + '_death' + stage]
 
@@ -1134,7 +1134,7 @@ class ConsolidatedModel(StratifiedModel):
 
                 for strata in itertools.product(
                         self.agegroups, self.riskgroups, self.strains, self.histories, self.organ_status):
-                    agegroup, riskgroup, strata, history, organ = strata
+                    agegroup, riskgroup, strain, history, organ = strata
                     if active_tb_presentations_intervention == 'improve_dst' and organ == '_extrapul': continue
                     detection_organ = organ if self.vary_detection_by_organ else ''
                     detection_riskgroup = riskgroup if self.vary_detection_by_riskgroup else ''
@@ -1286,17 +1286,16 @@ class ConsolidatedModel(StratifiedModel):
 
         for strata in itertools.product(self.strains, self.riskgroups, self.histories, self.agegroups):
             strain, riskgroup, history, agegroup = strata
-            end = ''.join(strata)
 
             # stabilisation
-            self.set_fixed_transfer_rate_flow('latent_early' + end, 'latent_late' + end,
+            self.set_fixed_transfer_rate_flow('latent_early' + ''.join(strata), 'latent_late' + ''.join(strata),
                                               'tb_rate_stabilise' + riskgroup + agegroup)
 
             # now smear-pos/smear-neg is always a var, even when a constant function
             for organ in self.organ_status:
-                self.set_var_transfer_rate_flow('latent_early' + end, 'active' + organ + end,
+                self.set_var_transfer_rate_flow('latent_early' + ''.join(strata), 'active' + organ + ''.join(strata),
                                                 'tb_rate_early_progression' + organ + riskgroup + agegroup)
-                self.set_var_transfer_rate_flow('latent_late' + end, 'active' + organ + end,
+                self.set_var_transfer_rate_flow('latent_late' + ''.join(strata), 'active' + organ + ''.join(strata),
                                                 'tb_rate_late_progression' + organ + riskgroup + agegroup)
 
     def set_natural_history_flows(self):
@@ -1312,7 +1311,7 @@ class ConsolidatedModel(StratifiedModel):
         for strata in itertools.product(
                 self.strains, self.riskgroups, self.histories, self.agegroups, self.organ_status):
             strain, riskgroup, history, agegroup, organ = strata
-            end = strain + riskgroup + history + agegroup
+            end = ''.join(strata[:-1])
             for compartment in active_compartments:
 
                 # recovery

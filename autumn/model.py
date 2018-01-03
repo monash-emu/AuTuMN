@@ -1247,8 +1247,8 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         for strata in itertools.product(
-                self.strains, self.riskgroups, self.agegroups, self.histories, self.force_types):
-            strain, riskgroup, agegroup, history, force_type = strata
+                self.force_types, self.strains, self.histories, self.riskgroups, self.agegroups):
+            force_type, strain, history, riskgroup, agegroup, = strata
             force_riskgroup = riskgroup if self.vary_force_infection_by_riskgroup else ''
 
             # source compartment is split by riskgropup, history and agegroup - plus force type for
@@ -1289,11 +1289,11 @@ class ConsolidatedModel(StratifiedModel):
         Set rates of progression from latency to active disease, with rates differing by organ status.
         """
 
-        for strata in itertools.product(self.agegroups, self.histories, self.riskgroups, self.strains):
-            agegroup, history, riskgroup, strain = strata
+        for strata in itertools.product(self.strains, self.riskgroups, self.histories, self.agegroups):
+            strain, riskgroup, history, agegroup = strata
+            end = ''.join(strata)
 
             # stabilisation
-            end = strain + riskgroup + history + agegroup
             self.set_fixed_transfer_rate_flow('latent_early' + end, 'latent_late' + end,
                                               'tb_rate_stabilise' + riskgroup + agegroup)
 
@@ -1315,11 +1315,9 @@ class ConsolidatedModel(StratifiedModel):
         if not self.is_misassignment: active_compartments.append('detect')
 
         for strata in itertools.product(
-                self.histories, self.agegroups, self.riskgroups, self.strains, self.organ_status):
-            history, agegroup, riskgroup, strain, organ = strata
-
+                self.strains, self.riskgroups, self.histories, self.agegroups, self.organ_status):
+            strain, riskgroup, history, agegroup, organ = strata
             end = strain + riskgroup + history + agegroup
-
             for compartment in active_compartments:
 
                 # recovery
@@ -1346,10 +1344,8 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         for strata in itertools.product(
-                self.histories, self.agegroups, self.riskgroups, self.strains, self.organ_status):
-            history, agegroup, riskgroup, strain, organ = strata
-
-            end = organ + strain + riskgroup + history + agegroup
+                self.organ_status, self.strains, self.riskgroups, self.histories, self.agegroups):
+            end = ''.join(strata)
 
             # re-start presenting after a missed diagnosis
             self.set_fixed_transfer_rate_flow('missed' + end, 'active' + end, 'program_rate_restart_presenting')
@@ -1364,11 +1360,11 @@ class ConsolidatedModel(StratifiedModel):
         not permitted or with proportional misassignment).
         """
 
-        for strata in itertools.product(self.agegroups, self.histories, self.riskgroups, self.organ_status):
-            agegroup, history, riskgroup, organ = strata
+        for strata in itertools.product(self.organ_status, self.riskgroups, self.histories, self.agegroups):
+            organ, riskgroup, history, agegroup = strata
             for strain_number, strain in enumerate(self.strains):
-                riskgroup_for_detection = riskgroup if self.vary_detection_by_riskgroup else ''
-                organ_for_detection = organ if self.vary_detection_by_organ else ''
+                detection_riskgroup = riskgroup if self.vary_detection_by_riskgroup else ''
+                detection_organ = organ if self.vary_detection_by_organ else ''
                 end = organ + strain + riskgroup + history + agegroup
 
                 # with misassignment
@@ -1381,14 +1377,13 @@ class ConsolidatedModel(StratifiedModel):
                             self.set_var_transfer_rate_flow(
                                 'active' + end,
                                 'detect' + organ + strain + as_assigned_strain + riskgroup + history + agegroup,
-                                'program_rate_detect' + organ_for_detection + riskgroup_for_detection + strain +
+                                'program_rate_detect' + detection_organ + detection_riskgroup + strain +
                                 as_assigned_strain)
 
                 # without misassignment
                 else:
                     self.set_var_transfer_rate_flow(
-                        'active' + end, 'detect' + end,
-                        'program_rate_detect' + organ_for_detection + riskgroup_for_detection)
+                        'active' + end, 'detect' + end, 'program_rate_detect' + detection_organ + detection_riskgroup)
 
     def set_variable_programmatic_flows(self):
         """
@@ -1400,11 +1395,11 @@ class ConsolidatedModel(StratifiedModel):
         # set rate of missed diagnoses and entry to low-quality health care
 
         for strata in itertools.product(
-                self.agegroups, self.histories, self.riskgroups, self.strains, self.organ_status):
-            agegroup, history, riskgroup, strain, organ = strata
+                self.organ_status, self.strains, self.riskgroups, self.histories, self.agegroups):
+            organ, strain, riskgroup, history, agegroup = strata
 
             detection_organ = organ if self.vary_detection_by_organ else ''
-            end = organ + strain + riskgroup + history + agegroup
+            end = ''.join(strata)
 
             self.set_var_transfer_rate_flow('active' + end, 'missed' + end, 'program_rate_missed' + detection_organ)
 
@@ -1430,8 +1425,8 @@ class ConsolidatedModel(StratifiedModel):
         either or both are implemented.
         """
 
-        for strata in itertools.product(self.agegroups, self.histories, self.riskgroups, self.organ_status):
-            agegroup, history, riskgroup, organ = strata
+        for strata in itertools.product(self.organ_status, self.riskgroups, self.agegroups, self.histories):
+            organ, riskgroup, agegroup, history = strata
 
             for s, strain in enumerate(self.strains):
 
@@ -1491,9 +1486,8 @@ class ConsolidatedModel(StratifiedModel):
         Implement IPT-related transitions: completion of treatment and failure to complete treatment.
         """
 
-        for strata in itertools.product(self.agegroups, self.histories, self.riskgroups):
-            agegroup, history, riskgroup = strata
-            end = riskgroup + history + agegroup
+        for strata in itertools.product(self.riskgroups, self.histories, self.agegroups):
+            end = ''.join(strata)
 
             # treatment completion flows
             self.set_fixed_transfer_rate_flow('onipt' + end, 'susceptible_immune' + end, 'rate_ipt_completion')

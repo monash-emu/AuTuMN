@@ -197,10 +197,7 @@ class ConsolidatedModel(StratifiedModel):
                 # remove the unnecessary fully susceptible treated compartments
                 self.remove_compartment('susceptible_fully' + riskgroup + self.histories[-1] + agegroup)
 
-        if len(self.riskgroups) > 1:
-            start_risk_prop = self.find_starting_riskgroup_props()
-        else:
-            start_risk_prop = {'': 1.}
+        start_risk_prop = self.find_starting_riskgroup_props() if len(self.riskgroups) > 1 else {'': 1.}
         self.populate_initial_compartments(initial_compartments, start_risk_prop)
 
     def find_starting_riskgroup_props(self):
@@ -226,26 +223,24 @@ class ConsolidatedModel(StratifiedModel):
             start_risk_prop: Proportions to be allocated by risk group
         """
 
-        for compartment in self.compartment_types:
+        for strata in itertools.product(self.compartment_types, self.agegroups, self.riskgroups):
+            compartment, agegroup, riskgroup = strata
             if compartment in initial_compartments:
-                for agegroup in self.agegroups:
-                    for riskgroup in self.riskgroups:
-                        end = riskgroup + self.histories[0] + agegroup
-                        if 'susceptible' in compartment:
-                            self.set_compartment(
-                                compartment + end,
-                                initial_compartments[compartment] * start_risk_prop[riskgroup] / len(self.agegroups))
-                        elif 'latent' in compartment:
-                            self.set_compartment(
-                                compartment + self.strains[0] + end,
-                                initial_compartments[compartment] * start_risk_prop[riskgroup]
-                                / len(self.agegroups))
-                        else:
-                            for organ in self.organ_status:
-                                self.set_compartment(
-                                    compartment + organ + self.strains[0] + end,
-                                    initial_compartments[compartment] * start_risk_prop[riskgroup]
-                                    / len(self.organ_status) / len(self.agegroups))
+                end = riskgroup + self.histories[0] + agegroup
+                if 'susceptible' in compartment:
+                    self.set_compartment(
+                        compartment + end,
+                        initial_compartments[compartment] * start_risk_prop[riskgroup] / len(self.agegroups))
+                elif 'latent' in compartment:
+                    self.set_compartment(
+                        compartment + self.strains[0] + end,
+                        initial_compartments[compartment] * start_risk_prop[riskgroup] / len(self.agegroups))
+                else:
+                    for organ in self.organ_status:
+                        self.set_compartment(
+                            compartment + organ + self.strains[0] + end,
+                            initial_compartments[compartment] * start_risk_prop[riskgroup] / len(self.organ_status)
+                            / len(self.agegroups))
 
     ''' single method to process uncertainty parameters '''
 

@@ -1,43 +1,46 @@
 
-import tool_kit
-import model
+# external imports
 import os
-import data_processing
 import numpy
 import datetime
 from scipy.stats import norm, beta, gamma
 from scipy.optimize import minimize
-import autumn.economics
-import itertools
 from pyDOE import lhs
+import itertools
+
+# AuTuMN imports
+import tool_kit
+import model
+import data_processing
+import economics
 
 
-def find_uncertainty_output_weights(list, method, relative_weights=(1., 2.)):
+''' static functions relevant to model runner only '''
+
+
+def find_uncertainty_output_weights(output_series, approach, relative_weights=(1., 2.)):
     """
     Creates a set of "weights" to determine the proportion of the log-likelihood to be contributed by the years
-    considered in the calibration.
+    considered in the automatic calibration / uncertainty process.
 
     Args:
-        list: A list of the years that the weights are to be applied to.
-        method: Choice of method.
-        relative_weights: Relative size of the starting and ending weights if method is 1.
+        output_series: List of the points (usually years) that the weights are to be applied to
+        approach: Choice of method
+        relative_weights: Relative size of the starting and ending weights if method is 1
     """
 
     # linearly scaling weights summing to one
-    if method == 1:
-        if len(list) == 1:
-            return [1.]
-        else:
-            weights = numpy.linspace(relative_weights[0], relative_weights[1], num=len(list))
-            return [i / sum(weights) for i in weights]
+    if approach == 1:
+        weights = numpy.linspace(relative_weights[0], relative_weights[1], num=len(output_series))
+        return [i / sum(weights) for i in weights]
 
     # equally distributed weights summing to one
-    elif method == 2:
-        return [1. / float(len(list))] * len(list)
+    elif approach == 2:
+        return [1. / float(len(output_series))] * len(output_series)
 
     # all weights equal to one
-    elif method == 3:
-        return [1.] * len(list)
+    elif approach == 3:
+        return [1.] * len(output_series)
 
 
 def find_log_probability_density(distribution, param_val, bounds, additional_params=None):
@@ -575,7 +578,7 @@ class ModelRunner:
                 cost_outputs[cost_type + '_cost_' + intervention] = []
                 for t, time in enumerate(self.models[scenario].cost_times):
                     cost_outputs[cost_type + '_cost_' + intervention].append(
-                        autumn.economics.get_adjusted_cost(
+                        economics.get_adjusted_cost(
                             cost_outputs['raw_cost_' + intervention][t], cost_type,
                             current_cpi, self.inputs.scaleup_fns[0]['econ_cpi'](time), discount_rate,
                             max(0., (time - year_current))))

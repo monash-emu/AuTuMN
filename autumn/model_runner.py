@@ -46,10 +46,10 @@ def find_uncertainty_output_weights(output_series, approach, relative_weights=(1
 def find_log_probability_density(distribution, param_val, bounds, additional_params=None):
     """
     Find the log probability density for the parameter value being considered. Uniform is the default distribution if no
-    other distribution is specified.
+    distribution is specified.
 
     Args:
-        distribution: String specifying the general type of distribution (uniform default)
+        distribution: String specifying the general type of distribution (uniform is default)
         param_val: The parameter value
         bounds: Two element list for the upper and lower limits of the distribution
         additional_params: Any additional parameters to the distribution if not completely specified with bounds
@@ -57,7 +57,7 @@ def find_log_probability_density(distribution, param_val, bounds, additional_par
         prior_log_likelihood: Prior log likelihood associated with the individual parameter fed in to this function
     """
 
-    # save some code repetition by finding the parameter value's distance through the distribution width
+    # finding the parameter value's distance through the distribution width
     normalised_param_value = (param_val - bounds[0]) / (bounds[1] - bounds[0])
 
     # find the log probability density
@@ -72,7 +72,7 @@ def find_log_probability_density(distribution, param_val, bounds, additional_par
         prior_log_likelihood = beta.logpdf(normalised_param_value, additional_params[0], additional_params[1])
     elif distribution == 'gamma_mean_stdev':
         prior_log_likelihood = gamma.logpdf(param_val, (additional_params[0] / additional_params[1]) ** 2.,
-                                             scale=additional_params[1] ** 2. / additional_params[0])
+                                            scale=additional_params[1] ** 2. / additional_params[0])
     elif distribution == 'gamma_params':
         prior_log_likelihood = gamma.logpdf(param_val, additional_params[0])
     else:
@@ -83,17 +83,17 @@ def find_log_probability_density(distribution, param_val, bounds, additional_par
 def solve_by_dichotomy(f, objective, a, b, tolerance):
     """
     Apply the dichotomy method to solve the equation f(x)=objective, x being the unknown variable.
-    a and b are initial x values satisfying the following inequation: (f(a) - objective)*(f(b) - objective) < 0.
-    The iterative method stops once f(x) is found close enough to the objective, that is when |objective-f(x)|
+    a and b are initial x values satisfying the following inequation: (f(a) - objective) * (f(b) - objective) < 0.
+    The iterative method stops once f(x) is found sufficiently close to the objective, that is when |objective-f(x)|
     <= tolerance. Returns the value of x.
     """
 
-    # check that f(a) - objective)*(f(b) - objective) < 0
+    # check that f(a) - objective) * (f(b) - objective) < 0
     y_a, y_b = f(a), f(b)
     assert (y_a - objective) * (y_b - objective) <= 0.
 
-    # check o
-    assert a < b  # check the order
+    # check the order
+    assert a < b
 
     # will be used as a multiplier in various tests that depend on the function monotony (incr. or decr.)
     monotony = -1. if y_a >= objective else 1.
@@ -123,7 +123,7 @@ class ModelRunner:
 
         Args:
             gui_inputs: Inputs from the off-line Tkinter GUI
-            runtime_outputs: Offline GUI window for commenting
+            runtime_outputs: GUI window for commenting
             js_gui: JavaScript GUI inputs
         """
 
@@ -144,8 +144,6 @@ class ModelRunner:
                              'posterior_width': None,
                              'width_multiplier': 2.  # width of normal posterior relative to range of allowed values
                              }]
-        self.solns_for_extraction = ['compartment_soln', 'fraction_soln']
-        self.arrays_for_extraction = ['flow_array', 'fraction_array', 'soln_array', 'var_array', 'costs']
         self.uncertainty_percentiles = {}
         self.n_centiles_for_shading = 100
         self.percentiles = [2.5, 50., 97.5] + list(numpy.linspace(0., 100., self.n_centiles_for_shading * 2 + 1))
@@ -157,9 +155,10 @@ class ModelRunner:
         self.amount_to_adjust_mdr_year = 1.
         self.prop_death_reporting = self.inputs.model_constants['program_prop_death_reporting']
         self.adjust_mortality = True
+        adjust_mdr = False
+        self.adjust_mdr = False if len(self.inputs.strains) < 2 else adjust_mdr
         self.adjust_mdr = False
         self.adjust_population = True
-        if len(self.inputs.strains) < 2: self.adjust_mdr = False
         self.mdr_introduce_time = self.inputs.model_constants['mdr_introduce_time']
 
         # optimisation attributes
@@ -221,8 +220,8 @@ class ModelRunner:
 
         # save uncertainty if requested
         if self.gui_inputs['pickle_uncertainty'] == 'Save':
-            tool_kit.pickle_save(self.outputs, storage_file_name)
             self.add_comment_to_gui_window('Uncertainty results saved to disc')
+            tool_kit.pickle_save(self.outputs, storage_file_name)
 
         # master optimisation method
         if self.optimisation and not self.load_optimisation: self.run_optimisation()

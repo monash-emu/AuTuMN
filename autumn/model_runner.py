@@ -236,7 +236,7 @@ class ModelRunner:
 
     def run_manual_calibration(self):
         """
-        Runs the scenarios a single time, starting from baseline with parameter values as specified in spreadsheets.
+        Runs the scenarios once each, starting from baseline with parameter values as specified in spreadsheets.
         """
 
         # run for each scenario, including baseline which is always included by default
@@ -255,8 +255,8 @@ class ModelRunner:
 
             # interpret
             self.outputs['manual']['epi'][scenario] \
-                = self.find_epi_outputs(scenario, outputs_to_analyse=self.epi_outputs_to_analyse,
-                                        strata=[self.models[scenario].agegroups, self.models[scenario].riskgroups])
+                = self.find_epi_outputs(scenario,
+                                        strata_to_analyse=[self.models[scenario].agegroups, self.models[scenario].riskgroups])
             self.outputs['manual']['epi'][scenario].update(
                 self.find_population_fractions(scenario=scenario,
                                                all_stratifications_to_assess=[self.models[scenario].agegroups,
@@ -266,7 +266,9 @@ class ModelRunner:
 
     def prepare_new_model_from_baseline(self, scenario):
         """
-        Method to set the start time of a model and load the compartment values from the baseline run.
+        Method to set the start time of a model and load the compartment values from the baseline run. From memory, I
+        think that it was essential to set both start_time and next_time_point to the new time to ensure that the new
+        model run took up where the last one left off.
 
         Args:
             scenario: Scenario number
@@ -279,74 +281,90 @@ class ModelRunner:
 
     ''' output interpretation methods '''
 
-    def find_epi_outputs(self, scenario, outputs_to_analyse, strata=()):
+    def find_epi_outputs(self, scenario, epi_outputs_to_analyse=None, strata_to_analyse=()):
         """
         Method to extract all requested epidemiological outputs from the models. Intended ultimately to be flexible\
         enough for use for analysis of scenarios, uncertainty and optimisation.
 
         Args:
-            scenario: The number value representing the scenario of the model to be analysed
-            outputs_to_analyse: List of strings for the outputs of interest to be worked through
-            strata: List of any stratifications that outputs are required over
+            scenario: The integer value representing the scenario of the model to be analysed
+            epi_outputs_to_analyse: List of strings for the outputs of interest to be worked through
+            strata_to_analyse: List of any stratifications that outputs are required over
         """
 
-        ''' compulsory element to calculate '''
-
-        if 'population' not in outputs_to_analyse: outputs_to_analyse.append('population')
+        # preliminaries
+        outputs_to_analyse = epi_outputs_to_analyse if epi_outputs_to_analyse else self.epi_outputs_to_analyse
         epi_outputs = {'times': self.models[scenario].times}
 
-        ''' unstratified outputs '''
+        for stratification_type in strata_to_analyse:
+            for stratum in [''] + stratification_type:
+
+                # population
+                epi_outputs['population' + stratum] = [0.] * len(epi_outputs['times'])
+                for compartment in self.models[scenario].compartments:
+                    if stratum in compartment:
+                        epi_outputs['population' + stratum] = tool_kit.elementwise_list_addition(
+                            self.models[scenario].get_compartment_soln(compartment),
+                            epi_outputs['population' + stratum])
+
+                # replace zeroes with small numbers for division
+                denominator = tool_kit.prepare_denominator(epi_outputs['population' + stratum])
+
+                # to allow calculation by strain and the total output
+                for strain in [''] + self.models[scenario].strains:
+
+                    # incidence
+                    if 'incidence' in outputs_to_analyse:
+                        epi_outputs['incidence' + strain + stratum] = [0.] * len(epi_outputs['times'])
+                        for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
+                            if 'latent' in from_label and 'active' in to_label \
+                                    and strain in to_label and stratum in from_label:
+                                incidence_increment = self.models[scenario].get_compartment_soln(from_label) \
+                                                      * self.models[scenario].get_var_soln(rate) / denominator * 1e5
+                                epi_outputs['incidence' + strain + stratum] \
+                                    = tool_kit.elementwise_list_addition(incidence_increment,
+                                                                         epi_outputs['incidence' + strain + stratum])
+                        for from_label, to_label, rate in self.models[scenario].fixed_transfer_rate_flows:
+                            if 'latent' in from_label and 'active' in to_label \
+                                    and strain in to_label and stratum in from_label:
+                                incidence_increment \
+                                    = self.models[scenario].get_compartment_soln(from_label) * rate / denominator * 1e5
+                                epi_outputs['incidence' + strain + stratum] \
+                                    = tool_kit.elementwise_list_addition(incidence_increment,
+                                                                         epi_outputs['incidence' + strain + stratum])
+
+                    # notifications
+                    if 'notifications' in outputs_to_analyse:
+                        epi_outputs['notifications' + strain + stratum] = [0.] * len(epi_outputs['times'])
+                        for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
+                            if 'active' in from_label and 'detect' in to_label \
+                                    and strain in to_label and stratum in from_label:
+                                notifications_increment \
+                                    = self.models[scenario].get_compartment_soln(from_label) \
+                                      * self.models[scenario].get_var_soln(rate)
+                                epi_outputs['notifications' + strain + stratum] \
+                                    = tool_kit.elementwise_list_addition(
+                                    notifications_increment, epi_outputs['notifications' + strain + stratum])
+
+                # find percentage incidence by strain
+                for strain in self.models[scenario].strains:
+                    if strain != '':
+                        epi_outputs['perc_incidence' + strain + stratum] \
+                            = tool_kit.elementwise_list_division(
+                                epi_outputs['incidence' + strain + stratum],
+                                tool_kit.prepare_denominator(epi_outputs['incidence' + stratum]), percentage=True)
 
         # initialise lists to zeros to allow incrementation
         for output in outputs_to_analyse:
-            epi_outputs[output] = [0.] * len(epi_outputs['times'])
-            for strain in self.models[scenario].strains: epi_outputs[output + strain] = epi_outputs[output]
-
-        # population
-        for compartment in self.models[scenario].compartments:
-            epi_outputs['population'] = tool_kit.elementwise_list_addition(
-                self.models[scenario].get_compartment_soln(compartment), epi_outputs['population'])
+            if output != 'incidence' and output != 'population' and output != 'notifications':
+                epi_outputs[output] = [0.] * len(epi_outputs['times'])
+                for strain in self.models[scenario].strains: epi_outputs[output + strain] = epi_outputs[output]
 
         # replace zeroes with small numbers for division
         total_denominator = tool_kit.prepare_denominator(epi_outputs['population'])
 
         # to allow calculation by strain and the total output
         strains = self.models[scenario].strains + ['']
-
-        # incidence
-        if 'incidence' in outputs_to_analyse:
-            for strain in strains:
-                for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:  # variable flows
-                    if 'latent' in from_label and 'active' in to_label and strain in to_label:
-                        incidence_increment = self.models[scenario].get_compartment_soln(from_label) \
-                                              * self.models[scenario].get_var_soln(rate) / total_denominator * 1e5
-                        epi_outputs['incidence' + strain] \
-                            = tool_kit.elementwise_list_addition(incidence_increment, epi_outputs['incidence' + strain])
-                for from_label, to_label, rate in self.models[scenario].fixed_transfer_rate_flows:  # fixed flows
-                    if 'latent' in from_label and 'active' in to_label and strain in to_label:
-                        incidence_increment \
-                            = self.models[scenario].get_compartment_soln(from_label) * rate / total_denominator * 1e5
-                        epi_outputs['incidence' + strain] \
-                            = tool_kit.elementwise_list_addition(incidence_increment, epi_outputs['incidence' + strain])
-
-            # find percentage incidence by strain
-            if len(self.models[scenario].strains) > 1:
-                for strain in self.models[scenario].strains:
-                    epi_outputs['perc_incidence' + strain] \
-                        = tool_kit.elementwise_list_division(epi_outputs['incidence' + strain],
-                                                             tool_kit.prepare_denominator(epi_outputs['incidence']),
-                                                             percentage=True)
-
-        # notifications
-        if 'notifications' in outputs_to_analyse:
-            for strain in strains:
-                for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
-                    if 'active' in from_label and 'detect' in to_label and strain in to_label:
-                        notifications_increment \
-                            = self.models[scenario].get_compartment_soln(from_label) \
-                              * self.models[scenario].get_var_soln(rate)
-                        epi_outputs['notifications' + strain] = tool_kit.elementwise_list_addition(
-                            notifications_increment, epi_outputs['notifications' + strain])
 
         # mortality
         if 'mortality' in outputs_to_analyse:
@@ -397,49 +415,15 @@ class ModelRunner:
 
         ''' stratified outputs (currently not repeated for each strain) '''
 
-        for stratification in strata:
-            if len(stratification) > 1:
-                for stratum in stratification:
+        for stratification_type in strata_to_analyse:
+            if len(stratification_type) > 1:
+                for stratum in stratification_type:
 
                     # initialise lists
                     for output in outputs_to_analyse: epi_outputs[output + stratum] = [0.] * len(epi_outputs['times'])
 
-                    # population
-                    for compartment in self.models[scenario].compartments:
-                        if stratum in compartment:
-                            epi_outputs['population' + stratum] = tool_kit.elementwise_list_addition(
-                                self.models[scenario].get_compartment_soln(compartment),
-                                epi_outputs['population' + stratum])
-
                     # the population denominator to be used with zeros replaced with small numbers
                     stratum_denominator = tool_kit.prepare_denominator(epi_outputs['population' + stratum])
-
-                    # incidence
-                    if 'incidence' in outputs_to_analyse:
-                        for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
-                            if 'latent' in from_label and 'active' in to_label and stratum in from_label:
-                                incidence_increment \
-                                    = self.models[scenario].get_compartment_soln(from_label) \
-                                      * self.models[scenario].get_var_soln(rate) / stratum_denominator * 1e5
-                                epi_outputs['incidence' + stratum] = tool_kit.elementwise_list_addition(
-                                    incidence_increment, epi_outputs['incidence' + stratum])
-                        for from_label, to_label, rate in self.models[scenario].fixed_transfer_rate_flows:
-                            if 'latent' in from_label and 'active' in to_label and stratum in from_label:
-                                incidence_increment = self.models[scenario].get_compartment_soln(from_label) \
-                                                      * rate / stratum_denominator * 1e5
-                                epi_outputs['incidence' + stratum] = tool_kit.elementwise_list_addition(
-                                    incidence_increment, epi_outputs['incidence' + stratum])
-
-                    # notifications
-                    if 'notifications' in outputs_to_analyse:
-                        for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
-                            if 'active' in from_label and 'detect' in to_label and stratum in from_label:
-                                notifications_increment \
-                                    = self.models[scenario].get_compartment_soln(from_label) \
-                                      * self.models[scenario].get_var_soln(rate)
-                                epi_outputs['notifications' + stratum] \
-                                    = tool_kit.elementwise_list_addition(
-                                        notifications_increment, epi_outputs['notifications' + stratum])
 
                     # mortality
                     if 'mortality' in outputs_to_analyse:
@@ -831,7 +815,7 @@ class ModelRunner:
         """
 
         # get outputs to add to outputs attribute
-        new_outputs = {'epi': self.find_epi_outputs(scenario, outputs_to_analyse=self.epi_outputs_to_analyse)}
+        new_outputs = {'epi': self.find_epi_outputs(scenario)}
         new_outputs['cost'] = self.find_cost_outputs(scenario) if self.models[scenario].interventions_to_cost else {}
 
         # incorporate new data

@@ -817,10 +817,8 @@ class ModelRunner:
             bounds, random = param_dict['bounds'], -100.
             sd = self.gui_inputs['search_width'] * (bounds[1] - bounds[0]) / (2. * 1.96)
 
-            # search for new parameters
+            # search for new parameters and add to dictionary
             while random < bounds[0] or random > bounds[1]: random = norm.rvs(loc=old_params[p], scale=sd, size=1)
-
-            # add them to the dictionary
             new_params.append(random[0])
 
         return new_params
@@ -838,7 +836,7 @@ class ModelRunner:
                 = self.inputs.model_constants['target_population'] \
                   / float(self.outputs['epi_uncertainty']['epi'][0]['population'][last_run_output_index,
                     t_k.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'],
-                                                                 self.inputs.model_constants['current_time'])])
+                                                            self.inputs.model_constants['current_time'])])
             for compartment in self.inputs.compartment_types:
                 if compartment in self.models[0].params:
                     self.models[0].set_parameter(compartment,
@@ -857,8 +855,7 @@ class ModelRunner:
         for year in years_to_compare:
             if year in self.inputs.original_data['gtb']['e_mort_exc_tbhiv_100k']:
                 ratios.append(self.outputs['epi_uncertainty']['epi'][0]['mortality'][last_run_output_index,
-                    t_k.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'],
-                                                                 float(year))]
+                    t_k.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'], float(year))]
                               / self.inputs.original_data['gtb']['e_mort_exc_tbhiv_100k'][year])
         average_ratio = numpy.mean(ratios)
         if average_ratio < 1. / self.relative_difference_to_adjust_mortality:

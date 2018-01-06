@@ -9,7 +9,7 @@ from pyDOE import lhs
 import itertools
 
 # AuTuMN imports
-import tool_kit
+import tool_kit as t_k
 import model
 import data_processing
 import economics
@@ -210,7 +210,7 @@ class ModelRunner:
         # load a saved simulation
         if self.gui_inputs['pickle_uncertainty'] == 'Load':
             self.add_comment_to_gui_window('Loading results from previous simulation')
-            self.outputs = tool_kit.pickle_load(storage_file_name)
+            self.outputs = t_k.pickle_load(storage_file_name)
 
         # or run the manual scenarios as requested by user
         else:
@@ -221,7 +221,7 @@ class ModelRunner:
         # save uncertainty if requested
         if self.gui_inputs['pickle_uncertainty'] == 'Save':
             self.add_comment_to_gui_window('Uncertainty results saved to disc')
-            tool_kit.pickle_save(self.outputs, storage_file_name)
+            t_k.pickle_save(self.outputs, storage_file_name)
 
         # master optimisation method
         if self.optimisation and not self.load_optimisation: self.run_optimisation()
@@ -248,7 +248,7 @@ class ModelRunner:
             if scenario > 0: self.prepare_new_model_from_baseline(scenario)
             self.add_comment_to_gui_window(
                 'Running %s conditions for %s using point estimates for parameters.'
-                    % ('manual_' + tool_kit.find_scenario_string_from_number(scenario), self.gui_inputs['country']))
+                    % ('manual_' + t_k.find_scenario_string_from_number(scenario), self.gui_inputs['country']))
 
             # integrate
             self.models[scenario].integrate()
@@ -289,7 +289,7 @@ class ModelRunner:
         Args:
             scenario: The integer value representing the scenario of the model to be analysed
             epi_outputs_to_analyse: List of strings for the outputs of interest to be worked through
-            strata_to_analyse: List of any stratifications that outputs are required over
+            strata_to_analyse: List of any stratifications that outputs are required over, i.e. list of lists
         """
 
         # preliminaries
@@ -297,6 +297,7 @@ class ModelRunner:
         epi_outputs = {'times': self.models[scenario].times}
         blank_output_list = [0.] * len(epi_outputs['times'])
 
+        # all outputs should cycle over each stratum, or at least be able to
         for stratification_type in strata_to_analyse:
             for stratum in [''] + stratification_type:
 
@@ -304,64 +305,65 @@ class ModelRunner:
                 epi_outputs['population' + stratum] = blank_output_list
                 for compartment in self.models[scenario].compartments:
                     if stratum in compartment:
-                        epi_outputs['population' + stratum] = tool_kit.elementwise_list_addition(
+                        epi_outputs['population' + stratum] = t_k.elementwise_list_addition(
                             self.models[scenario].get_compartment_soln(compartment),
                             epi_outputs['population' + stratum])
 
                 # replace zeroes with small numbers for division
-                denominator = tool_kit.prepare_denominator(epi_outputs['population' + stratum])
+                denominator = t_k.prepare_denominator(epi_outputs['population' + stratum])
 
                 # to allow calculation by strain and the total output
                 for strain in [''] + self.models[scenario].strains:
+                    strain_stratum = strain + stratum
 
                     # incidence
                     if 'incidence' in outputs_to_analyse:
-                        epi_outputs['incidence' + strain + stratum] = blank_output_list
+                        epi_outputs['incidence' + strain_stratum] = blank_output_list
                         for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
                             if 'latent' in from_label and 'active' in to_label \
                                     and strain in to_label and stratum in from_label:
                                 incidence_increment = self.models[scenario].get_compartment_soln(from_label) \
                                                       * self.models[scenario].get_var_soln(rate) / denominator * 1e5
-                                epi_outputs['incidence' + strain + stratum] \
-                                    = tool_kit.elementwise_list_addition(incidence_increment,
-                                                                         epi_outputs['incidence' + strain + stratum])
+                                epi_outputs['incidence' + strain_stratum] \
+                                    = t_k.elementwise_list_addition(incidence_increment,
+                                                                    epi_outputs['incidence' + strain_stratum])
                         for from_label, to_label, rate in self.models[scenario].fixed_transfer_rate_flows:
                             if 'latent' in from_label and 'active' in to_label \
                                     and strain in to_label and stratum in from_label:
                                 incidence_increment \
                                     = self.models[scenario].get_compartment_soln(from_label) * rate / denominator * 1e5
-                                epi_outputs['incidence' + strain + stratum] \
-                                    = tool_kit.elementwise_list_addition(incidence_increment,
-                                                                         epi_outputs['incidence' + strain + stratum])
+                                epi_outputs['incidence' + strain_stratum] \
+                                    = t_k.elementwise_list_addition(incidence_increment,
+                                                                    epi_outputs['incidence' + strain_stratum])
 
                     # notifications
                     if 'notifications' in outputs_to_analyse:
-                        epi_outputs['notifications' + strain + stratum] = blank_output_list
+                        epi_outputs['notifications' + strain_stratum] = blank_output_list
                         for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
                             if 'active' in from_label and 'detect' in to_label \
                                     and strain in to_label and stratum in from_label:
                                 notifications_increment \
                                     = self.models[scenario].get_compartment_soln(from_label) \
                                       * self.models[scenario].get_var_soln(rate)
-                                epi_outputs['notifications' + strain + stratum] \
-                                    = tool_kit.elementwise_list_addition(
-                                    notifications_increment, epi_outputs['notifications' + strain + stratum])
+                                epi_outputs['notifications' + strain_stratum] \
+                                    = t_k.elementwise_list_addition(
+                                        notifications_increment, epi_outputs['notifications' + strain_stratum])
 
                     # mortality
                     if 'mortality' in outputs_to_analyse:
-                        epi_outputs['mortality' + strain + stratum] = blank_output_list
-                        epi_outputs['true_mortality' + strain + stratum] = blank_output_list
+                        epi_outputs['mortality' + strain_stratum], epi_outputs['true_mortality' + strain_stratum] \
+                            = [blank_output_list] * 2
 
                         # fixed flows are outside of the health system and so the natural death contribution is reduced
                         for from_label, rate in self.models[scenario].fixed_infection_death_rate_flows:
                             if strain in from_label and stratum in from_label:
                                 mortality_increment \
                                     = self.models[scenario].get_compartment_soln(from_label) * rate / denominator * 1e5
-                                epi_outputs['true_mortality' + strain + stratum] = tool_kit.elementwise_list_addition(
-                                    mortality_increment, epi_outputs['true_mortality' + strain + stratum])
-                                epi_outputs['mortality' + strain + stratum] = tool_kit.elementwise_list_addition(
+                                epi_outputs['true_mortality' + strain_stratum] = t_k.elementwise_list_addition(
+                                    mortality_increment, epi_outputs['true_mortality' + strain_stratum])
+                                epi_outputs['mortality' + strain_stratum] = t_k.elementwise_list_addition(
                                     mortality_increment * self.prop_death_reporting,
-                                    epi_outputs['mortality' + strain + stratum])
+                                    epi_outputs['mortality' + strain_stratum])
 
                         # variable flows apply to the health system and so true and reported are dealt with the same way
                         for from_label, rate in self.models[scenario].var_infection_death_rate_flows:
@@ -369,44 +371,43 @@ class ModelRunner:
                                 mortality_increment = self.models[scenario].get_compartment_soln(from_label) \
                                                       * self.models[scenario].get_var_soln(rate) / denominator * 1e5
                                 for mortality_type in ['true_mortality', 'mortality']:
-                                    epi_outputs[mortality_type + strain + stratum] = tool_kit.elementwise_list_addition(
-                                        mortality_increment, epi_outputs[mortality_type + strain + stratum])
+                                    epi_outputs[mortality_type + strain_stratum] = t_k.elementwise_list_addition(
+                                        mortality_increment, epi_outputs[mortality_type + strain_stratum])
 
                     # prevalence
                     if 'prevalence' in outputs_to_analyse:
-                        epi_outputs['prevalence' + strain + stratum] = blank_output_list
+                        epi_outputs['prevalence' + strain_stratum] = blank_output_list
                         for label in self.models[scenario].labels:
                             if 'susceptible' not in label and 'latent' not in label \
                                     and strain in label and stratum in label:
                                 prevalence_increment \
                                     = self.models[scenario].get_compartment_soln(label) / denominator * 1e5
-                                epi_outputs['prevalence' + strain + stratum] \
-                                    = tool_kit.elementwise_list_addition(prevalence_increment,
-                                                                         epi_outputs['prevalence' + strain + stratum])
+                                epi_outputs['prevalence' + strain_stratum] \
+                                    = t_k.elementwise_list_addition(prevalence_increment,
+                                                                    epi_outputs['prevalence' + strain_stratum])
 
                     # absolute number of infections
                     if 'infections' in outputs_to_analyse:
-                        epi_outputs['infections' + strain + stratum] = blank_output_list
+                        epi_outputs['infections' + strain_stratum] = blank_output_list
                         for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
                             if 'latent_early' in to_label and stratum in from_label:
-                                epi_outputs['infections' + strain + stratum] \
-                                    = tool_kit.elementwise_list_addition(
-                                    self.models[scenario].get_compartment_soln(from_label)
-                                    * self.models[scenario].get_var_soln(rate),
-                                    epi_outputs['infections' + strain + stratum])
+                                epi_outputs['infections' + strain_stratum] \
+                                    = t_k.elementwise_list_addition(
+                                        self.models[scenario].get_compartment_soln(from_label)
+                                        * self.models[scenario].get_var_soln(rate),
+                                        epi_outputs['infections' + strain_stratum])
 
                 # annual risk of infection
                 if 'infections' in outputs_to_analyse:
-                    epi_outputs['annual_risk_infection' + stratum] = tool_kit.elementwise_list_division(
+                    epi_outputs['annual_risk_infection' + stratum] = t_k.elementwise_list_division(
                         epi_outputs['infections' + stratum], epi_outputs['population' + stratum], percentage=True)
 
                 # find percentage incidence by strain
                 for strain in self.models[scenario].strains:
                     if strain != '':
-                        epi_outputs['perc_incidence' + strain + stratum] \
-                            = tool_kit.elementwise_list_division(
-                                epi_outputs['incidence' + strain + stratum],
-                                tool_kit.prepare_denominator(epi_outputs['incidence' + stratum]), percentage=True)
+                        epi_outputs['perc_incidence' + strain_stratum] \
+                            = t_k.elementwise_list_division(epi_outputs['incidence' + strain_stratum],
+                                t_k.prepare_denominator(epi_outputs['incidence' + stratum]), percentage=True)
 
         return epi_outputs
 
@@ -424,7 +425,7 @@ class ModelRunner:
         for stratification in all_stratifications_to_assess:
             if len(stratification) > 1:
                 for stratum in stratification:
-                    fractions['fraction' + stratum] = tool_kit.elementwise_list_division(
+                    fractions['fraction' + stratum] = t_k.elementwise_list_division(
                         self.outputs['manual']['epi'][scenario]['population' + stratum],
                         self.outputs['manual']['epi'][scenario]['population'])
 
@@ -473,7 +474,7 @@ class ModelRunner:
         # increment for each intervention
         for intervention in self.interventions_to_cost[scenario]:
             costs_all_programs \
-                = tool_kit.elementwise_list_addition(cost_outputs['raw_cost_' + intervention], costs_all_programs)
+                = t_k.elementwise_list_addition(cost_outputs['raw_cost_' + intervention], costs_all_programs)
         return costs_all_programs
 
     def find_adjusted_costs(self, scenario, cost_outputs):
@@ -556,7 +557,7 @@ class ModelRunner:
                 last_run_output_index = None if self.outputs['epi_uncertainty']['epi'][0]['mortality'].ndim == 1 else -1
                 outputs_for_comparison \
                     = [self.outputs['epi_uncertainty']['epi'][0]['incidence'][
-                           last_run_output_index, tool_kit.find_first_list_element_at_least_value(
+                           last_run_output_index, t_k.find_first_list_element_at_least_value(
                                self.outputs['manual']['epi'][0]['times'], float(year))] for year in years_to_compare]
 
                 # calculate likelihood
@@ -779,7 +780,7 @@ class ModelRunner:
                         if len(new_outputs['epi'][output]) \
                                 < self.outputs[uncertainty_type]['epi'][scenario][output].shape[shape_index]:
                             new_outputs['epi'][output] \
-                                = tool_kit.join_zero_array_to_left(
+                                = t_k.join_zero_array_to_left(
                                     self.outputs[uncertainty_type]['epi'][scenario][output].shape[shape_index]
                                     - len(new_outputs['epi'][output]), new_outputs['epi'][output])
 
@@ -787,7 +788,7 @@ class ModelRunner:
                         elif len(new_outputs['epi'][output]) \
                                 > self.outputs[uncertainty_type]['epi'][scenario][output].shape[shape_index]:
                             self.outputs[uncertainty_type]['epi'][scenario][output] \
-                                = tool_kit.join_zero_array_to_left(
+                                = t_k.join_zero_array_to_left(
                                     len(new_outputs['epi'][output])
                                     - self.outputs[uncertainty_type]['epi'][scenario][output].shape[shape_index],
                                     self.outputs[uncertainty_type]['epi'][scenario][output])
@@ -834,7 +835,7 @@ class ModelRunner:
             population_adjustment \
                 = self.inputs.model_constants['target_population'] \
                   / float(self.outputs['epi_uncertainty']['epi'][0]['population'][last_run_output_index,
-                    tool_kit.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'],
+                    t_k.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'],
                                                                  self.inputs.model_constants['current_time'])])
             for compartment in self.inputs.compartment_types:
                 if compartment in self.models[0].params:
@@ -854,7 +855,7 @@ class ModelRunner:
         for year in years_to_compare:
             if year in self.inputs.original_data['gtb']['e_mort_exc_tbhiv_100k']:
                 ratios.append(self.outputs['epi_uncertainty']['epi'][0]['mortality'][last_run_output_index,
-                    tool_kit.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'],
+                    t_k.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'],
                                                                  float(year))]
                               / self.inputs.original_data['gtb']['e_mort_exc_tbhiv_100k'][year])
         average_ratio = numpy.mean(ratios)
@@ -871,7 +872,7 @@ class ModelRunner:
 
         ratio_mdr_prevalence \
             = float(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'][last_run_output_index,
-                tool_kit.find_first_list_element_at_least_value(self.outputs['manual']['epi'][0]['times'],
+                t_k.find_first_list_element_at_least_value(self.outputs['manual']['epi'][0]['times'],
                                                                 self.inputs.model_constants['current_time'])]) \
               / self.inputs.model_constants['tb_perc_mdr_prevalence']
         if ratio_mdr_prevalence < 1. / self.relative_difference_to_adjust_mdr:
@@ -893,7 +894,7 @@ class ModelRunner:
                 'rejection_dict': self.outputs['epi_uncertainty']['rejected_parameters'],
                 'accepted_indices': self.outputs['epi_uncertainty']['accepted_indices'],
                 'acceptance_dict': self.outputs['epi_uncertainty']['accepted_parameters'],
-                'names': {param: tool_kit.find_title_from_dictionary(param)
+                'names': {param: t_k.find_title_from_dictionary(param)
                           for p, param in enumerate(self.outputs['epi_uncertainty']['all_parameters'])},
                 'param_ranges_unc': self.inputs.param_ranges_unc})
 
@@ -1155,7 +1156,7 @@ class ModelRunner:
 
         if self.load_optimisation:
             storage_file_name = os.path.join(self.opti_outputs_dir, 'opti_outputs.pkl')
-            self.opti_results = tool_kit.pickle_load(storage_file_name)
+            self.opti_results = t_k.pickle_load(storage_file_name)
             self.add_comment_to_gui_window('Optimisation results loaded')
 
     def save_opti_results(self):
@@ -1166,7 +1167,7 @@ class ModelRunner:
         # save only if optimisation has been run and save requested
         if self.save_opti and self.optimisation:
             filename = os.path.join(self.opti_outputs_dir, 'opti_outputs.pkl')
-            tool_kit.pickle_save(self.opti_results, filename)
+            t_k.pickle_save(self.opti_results, filename)
             self.add_comment_to_gui_window('Optimisation results saved')
 
     ''' GUI-related methods '''

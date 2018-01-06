@@ -282,9 +282,9 @@ class ModelRunner:
 
     ''' output interpretation methods '''
 
-    def find_epi_outputs(self, scenario, epi_outputs_to_analyse=None, strata_to_analyse=([])):
+    def find_epi_outputs(self, scenario, epi_outputs_to_analyse=None, strata_to_analyse=[[]]):
         """
-        Method to extract all requested epidemiological outputs from the models. Intended ultimately to be flexible\
+        Method to extract all requested epidemiological outputs from the models. Intended ultimately to be flexible
         enough for use for analysis of scenarios, uncertainty and optimisation.
 
         Args:
@@ -580,7 +580,7 @@ class ModelRunner:
                     for y, year in enumerate(years_to_compare):
                         if year in working_output_dictionary.keys():
                             model_result_for_output = outputs_for_comparison[y]
-                            mu, sd = working_output_dictionary[year][0], working_output_dictionary[year][1]
+                            mu, sd = working_output_dictionary[year]
                             posterior_log_likelihood += norm.logpdf(model_result_for_output, mu, sd) * weights[y]
 
                 # determine acceptance
@@ -613,7 +613,7 @@ class ModelRunner:
                     # update likelihood and parameter set for next run
                     prev_log_likelihood, accepted_params = log_likelihood, proposed_params
 
-                    # run scenarios other than baseline and store uncertainty (only if accepted)
+                    # run scenarios - only if accepted and not for baseline
                     for scenario in self.scenarios:
                         if scenario:
                             self.prepare_new_model_from_baseline(scenario)
@@ -650,34 +650,34 @@ class ModelRunner:
     def get_fitting_data(self):
         """
         Define the characteristics (mean and standard deviation) of the normal distribution for model outputs
-        (incidence, mortality).
+        - currently incidence and mortality only.
 
         Returns:
-            normal_char: Dictionary with keys outputs and values dictionaries. Sub-dictionaries have keys years
+            norm_dist_params: Dictionary with keys outputs and values dictionaries. Sub-dictionaries have keys years
                 and values lists, with first element of list means and second standard deviations.
         """
 
         # dictionary storing the characteristics of the normal distributions
-        normal_char = {}
+        norm_dist_params = {}
         for output_dict in self.inputs.outputs_unc:
-            normal_char[output_dict['key']] = {}
+            norm_dist_params[output_dict['key']] = {}
 
             # incidence
             if output_dict['key'] == 'incidence':
                 for year in self.inputs.data_to_fit[output_dict['key']].keys():
                     low, high = self.inputs.data_to_fit['incidence_low'][year], \
                                 self.inputs.data_to_fit['incidence_high'][year]
-                    sd, mu = output_dict['width_multiplier'] * (high - low) / (2. * 1.96), (high + low) / 2.
-                    normal_char[output_dict['key']][year] = [mu, sd]
+                    norm_dist_params[output_dict['key']][year] \
+                        = [(high + low) / 2., output_dict['width_multiplier'] * (high - low) / (2. * 1.96)]
 
             # mortality
             elif output_dict['key'] == 'mortality':
                 sd = output_dict['posterior_width'] / (2. * 1.96)
                 for year in self.inputs.data_to_fit[output_dict['key']].keys():
                     mu = self.inputs.data_to_fit[output_dict['key']][year]
-                    normal_char[output_dict['key']][year] = [mu, sd]
+                    norm_dist_params[output_dict['key']][year] = [mu, sd]
 
-        return normal_char
+        return norm_dist_params
 
     def run_with_params(self, params, scenario=0):
         """
@@ -747,6 +747,7 @@ class ModelRunner:
 
         Args:
             scenario: The scenario being run
+            uncertainty_type: String for the approach to uncertainty, either epi_uncertainty or intervention_uncertainty
         Updates:
             self.outputs: Which contains all the outputs in a tiered dictionary format
         """

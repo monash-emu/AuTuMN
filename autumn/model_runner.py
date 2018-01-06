@@ -256,7 +256,8 @@ class ModelRunner:
             # interpret
             self.outputs['manual']['epi'][scenario] \
                 = self.find_epi_outputs(scenario,
-                                        strata_to_analyse=[self.models[scenario].agegroups, self.models[scenario].riskgroups])
+                                        strata_to_analyse=[self.models[scenario].agegroups,
+                                                           self.models[scenario].riskgroups])
             self.outputs['manual']['epi'][scenario].update(
                 self.find_population_fractions(scenario=scenario,
                                                all_stratifications_to_assess=[self.models[scenario].agegroups,
@@ -281,7 +282,7 @@ class ModelRunner:
 
     ''' output interpretation methods '''
 
-    def find_epi_outputs(self, scenario, epi_outputs_to_analyse=None, strata_to_analyse=()):
+    def find_epi_outputs(self, scenario, epi_outputs_to_analyse=None, strata_to_analyse=([])):
         """
         Method to extract all requested epidemiological outputs from the models. Intended ultimately to be flexible\
         enough for use for analysis of scenarios, uncertainty and optimisation.
@@ -425,9 +426,9 @@ class ModelRunner:
         for stratification in all_stratifications_to_assess:
             if len(stratification) > 1:
                 for stratum in stratification:
-                    fractions['fraction' + stratum] = t_k.elementwise_list_division(
-                        self.outputs['manual']['epi'][scenario]['population' + stratum],
-                        self.outputs['manual']['epi'][scenario]['population'])
+                    fractions['fraction' + stratum] \
+                        = t_k.elementwise_list_division(self.outputs['manual']['epi'][scenario]['population' + stratum],
+                                                        self.outputs['manual']['epi'][scenario]['population'])
 
         return fractions
 
@@ -488,7 +489,7 @@ class ModelRunner:
 
         # get some preliminary parameters
         year_current = self.inputs.model_constants['recent_time']
-        current_cpi = self.inputs.scaleup_fns[0]['econ_cpi'](year_current)
+        current_cpi = self.inputs.scaleup_fns[scenario]['econ_cpi'](year_current)
         discount_rate = self.inputs.model_constants['econ_discount_rate']
 
         # loop over interventions for costing and cost types
@@ -497,10 +498,9 @@ class ModelRunner:
                 cost_outputs[cost_type + '_cost_' + intervention] = []
                 for t, time in enumerate(self.models[scenario].cost_times):
                     cost_outputs[cost_type + '_cost_' + intervention].append(
-                        economics.get_adjusted_cost(
-                            cost_outputs['raw_cost_' + intervention][t], cost_type,
-                            current_cpi, self.inputs.scaleup_fns[0]['econ_cpi'](time), discount_rate,
-                            max(0., (time - year_current))))
+                        economics.get_adjusted_cost(cost_outputs['raw_cost_' + intervention][t], cost_type,
+                                                    current_cpi, self.inputs.scaleup_fns[0]['econ_cpi'](time),
+                                                    discount_rate, max(0., (time - year_current))))
         return cost_outputs
 
     ''' epidemiological uncertainty methods '''
@@ -517,11 +517,11 @@ class ModelRunner:
         n_accepted, prev_log_likelihood, starting_params, run, accepted, accepted_params, \
             self.outputs['epi_uncertainty'] \
             = 0, -5e2, [], 0, 0, None, {'adjustments': {'program_prop_death_reporting': [], 'mdr_introduce_time': []}}
-        for key in ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters',
-                    'all_compartment_values']:
-            self.outputs['epi_uncertainty'][key] = {}
-        for key in ['loglikelihoods', 'whether_accepted', 'accepted_indices', 'rejected_indices']:
-            self.outputs['epi_uncertainty'][key] = []
+        for key_for_dicts in ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters',
+                              'all_compartment_values']:
+            self.outputs['epi_uncertainty'][key_for_dicts] = {}
+        for key_for_lists in ['loglikelihoods', 'whether_accepted', 'accepted_indices', 'rejected_indices']:
+            self.outputs['epi_uncertainty'][key_for_lists] = []
         for param in self.inputs.param_ranges_unc:
             self.outputs['epi_uncertainty']['all_parameters'][param['key']] = []
             self.outputs['epi_uncertainty']['accepted_parameters'][param['key']] = {}
@@ -540,6 +540,7 @@ class ModelRunner:
         weights = find_uncertainty_output_weights(years_to_compare, 1, [1., 2.])
         self.add_comment_to_gui_window('"Weights": \n' + str(weights))
 
+        # start main uncertainty loop
         while n_accepted < self.gui_inputs['uncertainty_runs']:
 
             # set timer
@@ -561,7 +562,7 @@ class ModelRunner:
                                self.outputs['manual']['epi'][0]['times'], float(year))] for year in years_to_compare]
 
                 # calculate likelihood
-                prior_log_likelihood, posterior_log_likelihood = 0., 0.
+                prior_log_likelihood, posterior_log_likelihood = [0.] * 2
 
                 # calculate prior
                 for p, param in enumerate(self.inputs.param_ranges_unc):

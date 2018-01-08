@@ -295,120 +295,119 @@ class ModelRunner:
 
         # preliminaries
         outputs_to_analyse = epi_outputs_to_analyse if epi_outputs_to_analyse else self.epi_outputs_to_analyse
-        epi_outputs = {'times': self.models[scenario].times}
+        epi_outputs, strata = {'times': self.models[scenario].times}, ['']
         blank_output_list = [0.] * len(epi_outputs['times'])
+        for stratification_type in strata_to_analyse: strata += stratification_type
 
         # all outputs should cycle over each stratum, or at least be able to
-        for stratification_type in strata_to_analyse:
-            for stratum in [''] + stratification_type:
+        for stratum in strata:
 
-                # population
-                epi_outputs['population' + stratum] = blank_output_list
-                for compartment in self.models[scenario].compartments:
-                    if stratum in compartment:
-                        epi_outputs['population' + stratum] = t_k.elementwise_list_addition(
-                            self.models[scenario].get_compartment_soln(compartment),
-                            epi_outputs['population' + stratum])
+            # population
+            epi_outputs['population' + stratum] = blank_output_list
+            for compartment in self.models[scenario].compartments:
+                if stratum in compartment:
+                    epi_outputs['population' + stratum] = t_k.elementwise_list_addition(
+                        self.models[scenario].get_compartment_soln(compartment), epi_outputs['population' + stratum])
 
-                # replace zeroes with small numbers for division
-                denominator = t_k.prepare_denominator(epi_outputs['population' + stratum])
+            # replace zeroes with small numbers for division
+            denominator = t_k.prepare_denominator(epi_outputs['population' + stratum])
 
-                # to allow calculation by strain and the total output
-                for strain in [''] + self.models[scenario].strains:
-                    strain_stratum = strain + stratum
+            # to allow calculation by strain and the total output
+            for strain in [''] + self.models[scenario].strains:
+                strain_stratum = strain + stratum
 
-                    # incidence
-                    if 'incidence' in outputs_to_analyse:
-                        epi_outputs['incidence' + strain_stratum] = blank_output_list
-                        for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
-                            if 'latent' in from_label and 'active' in to_label \
-                                    and strain in to_label and stratum in from_label:
-                                incidence_increment = self.models[scenario].get_compartment_soln(from_label) \
-                                                      * self.models[scenario].get_var_soln(rate) / denominator * 1e5
-                                epi_outputs['incidence' + strain_stratum] \
-                                    = t_k.elementwise_list_addition(incidence_increment,
-                                                                    epi_outputs['incidence' + strain_stratum])
-                        for from_label, to_label, rate in self.models[scenario].fixed_transfer_rate_flows:
-                            if 'latent' in from_label and 'active' in to_label \
-                                    and strain in to_label and stratum in from_label:
-                                incidence_increment \
-                                    = self.models[scenario].get_compartment_soln(from_label) * rate / denominator * 1e5
-                                epi_outputs['incidence' + strain_stratum] \
-                                    = t_k.elementwise_list_addition(incidence_increment,
-                                                                    epi_outputs['incidence' + strain_stratum])
+                # incidence
+                if 'incidence' in outputs_to_analyse:
+                    epi_outputs['incidence' + strain_stratum] = blank_output_list
+                    for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
+                        if 'latent' in from_label and 'active' in to_label \
+                                and strain in to_label and stratum in from_label:
+                            incidence_increment = self.models[scenario].get_compartment_soln(from_label) \
+                                                  * self.models[scenario].get_var_soln(rate) / denominator * 1e5
+                            epi_outputs['incidence' + strain_stratum] \
+                                = t_k.elementwise_list_addition(incidence_increment,
+                                                                epi_outputs['incidence' + strain_stratum])
+                    for from_label, to_label, rate in self.models[scenario].fixed_transfer_rate_flows:
+                        if 'latent' in from_label and 'active' in to_label \
+                                and strain in to_label and stratum in from_label:
+                            incidence_increment \
+                                = self.models[scenario].get_compartment_soln(from_label) * rate / denominator * 1e5
+                            epi_outputs['incidence' + strain_stratum] \
+                                = t_k.elementwise_list_addition(incidence_increment,
+                                                                epi_outputs['incidence' + strain_stratum])
 
-                    # notifications
-                    if 'notifications' in outputs_to_analyse:
-                        epi_outputs['notifications' + strain_stratum] = blank_output_list
-                        for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
-                            if 'active' in from_label and 'detect' in to_label \
-                                    and strain in to_label and stratum in from_label:
-                                notifications_increment \
-                                    = self.models[scenario].get_compartment_soln(from_label) \
-                                      * self.models[scenario].get_var_soln(rate)
-                                epi_outputs['notifications' + strain_stratum] \
-                                    = t_k.elementwise_list_addition(
-                                        notifications_increment, epi_outputs['notifications' + strain_stratum])
+                # notifications
+                if 'notifications' in outputs_to_analyse:
+                    epi_outputs['notifications' + strain_stratum] = blank_output_list
+                    for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
+                        if 'active' in from_label and 'detect' in to_label \
+                                and strain in to_label and stratum in from_label:
+                            notifications_increment \
+                                = self.models[scenario].get_compartment_soln(from_label) \
+                                  * self.models[scenario].get_var_soln(rate)
+                            epi_outputs['notifications' + strain_stratum] \
+                                = t_k.elementwise_list_addition(notifications_increment,
+                                                                epi_outputs['notifications' + strain_stratum])
 
-                    # mortality
-                    if 'mortality' in outputs_to_analyse:
-                        epi_outputs['mortality' + strain_stratum], epi_outputs['true_mortality' + strain_stratum] \
-                            = [blank_output_list] * 2
+                # mortality
+                if 'mortality' in outputs_to_analyse:
+                    epi_outputs['mortality' + strain_stratum], epi_outputs['true_mortality' + strain_stratum] \
+                        = [blank_output_list] * 2
 
-                        # fixed flows are outside of the health system and so the natural death contribution is reduced
-                        for from_label, rate in self.models[scenario].fixed_infection_death_rate_flows:
-                            if strain in from_label and stratum in from_label:
-                                mortality_increment \
-                                    = self.models[scenario].get_compartment_soln(from_label) * rate / denominator * 1e5
-                                epi_outputs['true_mortality' + strain_stratum] = t_k.elementwise_list_addition(
-                                    mortality_increment, epi_outputs['true_mortality' + strain_stratum])
-                                epi_outputs['mortality' + strain_stratum] = t_k.elementwise_list_addition(
-                                    mortality_increment * self.prop_death_reporting,
-                                    epi_outputs['mortality' + strain_stratum])
+                    # fixed flows are outside of the health system and so the natural death contribution is reduced
+                    for from_label, rate in self.models[scenario].fixed_infection_death_rate_flows:
+                        if strain in from_label and stratum in from_label:
+                            mortality_increment \
+                                = self.models[scenario].get_compartment_soln(from_label) * rate / denominator * 1e5
+                            epi_outputs['true_mortality' + strain_stratum] = t_k.elementwise_list_addition(
+                                mortality_increment, epi_outputs['true_mortality' + strain_stratum])
+                            epi_outputs['mortality' + strain_stratum] = t_k.elementwise_list_addition(
+                                mortality_increment * self.prop_death_reporting,
+                                epi_outputs['mortality' + strain_stratum])
 
-                        # variable flows apply to the health system and so true and reported are dealt with the same way
-                        for from_label, rate in self.models[scenario].var_infection_death_rate_flows:
-                            if strain in from_label and stratum in from_label:
-                                mortality_increment = self.models[scenario].get_compartment_soln(from_label) \
-                                                      * self.models[scenario].get_var_soln(rate) / denominator * 1e5
-                                for mortality_type in ['true_mortality', 'mortality']:
-                                    epi_outputs[mortality_type + strain_stratum] = t_k.elementwise_list_addition(
-                                        mortality_increment, epi_outputs[mortality_type + strain_stratum])
+                    # variable flows apply to the health system and so true and reported are dealt with the same way
+                    for from_label, rate in self.models[scenario].var_infection_death_rate_flows:
+                        if strain in from_label and stratum in from_label:
+                            mortality_increment = self.models[scenario].get_compartment_soln(from_label) \
+                                                  * self.models[scenario].get_var_soln(rate) / denominator * 1e5
+                            for mortality_type in ['true_mortality', 'mortality']:
+                                epi_outputs[mortality_type + strain_stratum] = t_k.elementwise_list_addition(
+                                    mortality_increment, epi_outputs[mortality_type + strain_stratum])
 
-                    # prevalence
-                    if 'prevalence' in outputs_to_analyse:
-                        epi_outputs['prevalence' + strain_stratum] = blank_output_list
-                        for label in self.models[scenario].labels:
-                            if 'susceptible' not in label and 'latent' not in label \
-                                    and strain in label and stratum in label:
-                                prevalence_increment \
-                                    = self.models[scenario].get_compartment_soln(label) / denominator * 1e5
-                                epi_outputs['prevalence' + strain_stratum] \
-                                    = t_k.elementwise_list_addition(prevalence_increment,
-                                                                    epi_outputs['prevalence' + strain_stratum])
+                # prevalence
+                if 'prevalence' in outputs_to_analyse:
+                    epi_outputs['prevalence' + strain_stratum] = blank_output_list
+                    for label in self.models[scenario].labels:
+                        if 'susceptible' not in label and 'latent' not in label \
+                                and strain in label and stratum in label:
+                            prevalence_increment \
+                                = self.models[scenario].get_compartment_soln(label) / denominator * 1e5
+                            epi_outputs['prevalence' + strain_stratum] \
+                                = t_k.elementwise_list_addition(prevalence_increment,
+                                                                epi_outputs['prevalence' + strain_stratum])
 
-                    # absolute number of infections
-                    if 'infections' in outputs_to_analyse:
-                        epi_outputs['infections' + strain_stratum] = blank_output_list
-                        for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
-                            if 'latent_early' in to_label and stratum in from_label:
-                                epi_outputs['infections' + strain_stratum] \
-                                    = t_k.elementwise_list_addition(
-                                        self.models[scenario].get_compartment_soln(from_label)
-                                        * self.models[scenario].get_var_soln(rate),
-                                        epi_outputs['infections' + strain_stratum])
-
-                # annual risk of infection
+                # absolute number of infections
                 if 'infections' in outputs_to_analyse:
-                    epi_outputs['annual_risk_infection' + stratum] = t_k.elementwise_list_division(
-                        epi_outputs['infections' + stratum], epi_outputs['population' + stratum], percentage=True)
+                    epi_outputs['infections' + strain_stratum] = blank_output_list
+                    for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
+                        if 'latent_early' in to_label and stratum in from_label:
+                            epi_outputs['infections' + strain_stratum] \
+                                = t_k.elementwise_list_addition(
+                                    self.models[scenario].get_compartment_soln(from_label)
+                                    * self.models[scenario].get_var_soln(rate),
+                                epi_outputs['infections' + strain_stratum])
 
-                # find percentage incidence by strain
-                for strain in self.models[scenario].strains:
-                    if strain != '':
-                        epi_outputs['perc_incidence' + strain_stratum] \
-                            = t_k.elementwise_list_division(epi_outputs['incidence' + strain_stratum],
-                                t_k.prepare_denominator(epi_outputs['incidence' + stratum]), percentage=True)
+            # annual risk of infection
+            if 'infections' in outputs_to_analyse:
+                epi_outputs['annual_risk_infection' + stratum] = t_k.elementwise_list_division(
+                    epi_outputs['infections' + stratum], epi_outputs['population' + stratum], percentage=True)
+
+            # find percentage incidence by strain
+            for strain in self.models[scenario].strains:
+                if strain != '':
+                    epi_outputs['perc_incidence' + strain_stratum] \
+                        = t_k.elementwise_list_division(epi_outputs['incidence' + strain_stratum],
+                            t_k.prepare_denominator(epi_outputs['incidence' + stratum]), percentage=True)
 
         return epi_outputs
 

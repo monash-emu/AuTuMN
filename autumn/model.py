@@ -9,13 +9,15 @@ Nested inheritance from BaseModel and StratifiedModel in base.py - the former se
 creating intercompartmental flows, costs, etc., while the latter sets out the approach to population stratification.
 """
 
-
+# external imports
 from scipy import exp, log
-from autumn.base import BaseModel, StratifiedModel
 import copy
-import tool_kit as t_k
 import warnings
 import itertools
+
+# AuTuMN imports
+from autumn.base import BaseModel, StratifiedModel
+import tool_kit as t_k
 
 
 def find_outcome_proportions_by_period(proportion, early_period, total_period):
@@ -158,44 +160,42 @@ class ConsolidatedModel(StratifiedModel):
         # extract values for compartment initialisation by compartment type
         initial_compartments = {}
         for compartment in self.compartment_types:
-            if compartment in self.inputs.model_constants:
-                initial_compartments[compartment] = self.params[compartment]
+            if compartment in self.inputs.model_constants: initial_compartments[compartment] = self.params[compartment]
 
         # initialise to zero
-        for agegroup in self.agegroups:
-            for riskgroup in self.riskgroups:
-                for history in self.histories:
-                    for compartment in self.compartment_types:
-                        end = riskgroup + history + agegroup
+        for strata in itertools.product(self.riskgroups, self.agegroups):
+            riskgroup, agegroup = strata
+            for history in self.histories:
+                end = riskgroup + history + agegroup
+                for compartment in self.compartment_types:
 
-                        # replicate susceptible for age and risk groups
-                        if 'susceptible' in compartment or 'onipt' in compartment:
-                            self.set_compartment(compartment + end, 0.)
+                    # replicate susceptible for age and risk groups
+                    if 'susceptible' in compartment or 'onipt' in compartment:
+                        self.set_compartment(compartment + end, 0.)
 
-                        # replicate latent classes for age groups, risk groups and strains
-                        elif 'latent' in compartment:
-                            for strain in self.strains:
-                                self.set_compartment(compartment + strain + end, 0.)
+                    # replicate latent classes for age groups, risk groups and strains
+                    elif 'latent' in compartment:
+                        for strain in self.strains: self.set_compartment(compartment + strain + end, 0.)
 
-                        # replicate active classes for age groups, risk groups, strains and organs
-                        elif 'active' in compartment or 'missed' in compartment or 'lowquality' in compartment:
-                            for strain in self.strains:
-                                for organ in self.organ_status:
-                                    self.set_compartment(compartment + organ + strain + end, 0.)
+                    # replicate active classes for age groups, risk groups, strains and organs
+                    elif 'active' in compartment or 'missed' in compartment or 'lowquality' in compartment:
+                        for other_strata in itertools.product(self.strains, self.organ_status):
+                            strain, organ = other_strata
+                            self.set_compartment(compartment + organ + strain + end, 0.)
 
-                        # replicate treatment classes for age groups, risk groups, strains, organs and assigned strains
-                        else:
-                            for strain in self.strains:
-                                for organ in self.organ_status:
-                                    if self.is_misassignment:
-                                        for assigned_strain in self.strains:
-                                            self.set_compartment(
-                                                compartment + organ + strain + '_as' + assigned_strain[1:] + end, 0.)
-                                    else:
-                                        self.set_compartment(compartment + organ + strain + end, 0.)
+                    # replicate treatment classes for age groups, risk groups, strains, organs and assigned strains
+                    else:
+                        for other_strata in itertools.product(self.strains, self.organ_status):
+                            strain, organ = other_strata
+                            if self.is_misassignment:
+                                for assigned_strain in self.strains:
+                                    self.set_compartment(
+                                        compartment + organ + strain + '_as' + assigned_strain[1:] + end, 0.)
+                            else:
+                                self.set_compartment(compartment + organ + strain + end, 0.)
 
-                # remove the unnecessary fully susceptible treated compartments
-                self.remove_compartment('susceptible_fully' + riskgroup + self.histories[-1] + agegroup)
+            # remove the unnecessary fully susceptible treated compartments
+            self.remove_compartment('susceptible_fully' + riskgroup + self.histories[-1] + agegroup)
 
         start_risk_prop = self.find_starting_riskgroup_props() if len(self.riskgroups) > 1 else {'': 1.}
         self.populate_initial_compartments(initial_compartments, start_risk_prop)
@@ -223,8 +223,8 @@ class ConsolidatedModel(StratifiedModel):
             start_risk_prop: Proportions to be allocated by risk group
         """
 
-        for strata in itertools.product(self.compartment_types, self.agegroups, self.riskgroups):
-            compartment, agegroup, riskgroup = strata
+        for strata in itertools.product(self.compartment_types, self.riskgroups, self.agegroups):
+            compartment, riskgroup, agegroup = strata
             if compartment in initial_compartments:
                 end = riskgroup + self.histories[0] + agegroup
                 if 'susceptible' in compartment:
@@ -367,16 +367,15 @@ class ConsolidatedModel(StratifiedModel):
 
     def calculate_progression_vars(self):
         """
-        Multiply the previous progression directions by organ status by the total progression rates by riskvgroup and
+        Multiply the previous progression directions by organ status by the total progression rates by riskgroup and
         age group to get the actual flows to implement.
         """
 
-        for strata in itertools.product(self.organ_status, self.agegroups, self.riskgroups):
-            organ, agegroup, riskgroup = strata
-            for timing in ['_early', '_late']:
-                self.vars['tb_rate' + timing + '_progression' + organ + riskgroup + agegroup] \
-                    = self.vars['epi_prop' + organ] \
-                      * self.params['tb_rate' + timing + '_progression' + riskgroup + agegroup]
+        for strata in itertools.product(self.organ_status, self.agegroups, self.riskgroups, ['_early', '_late']):
+            organ, agegroup, riskgroup, timing = strata
+            self.vars['tb_rate' + timing + '_progression' + organ + riskgroup + agegroup] \
+                = self.vars['epi_prop' + organ] \
+                  * self.params['tb_rate' + timing + '_progression' + riskgroup + agegroup]
 
     def calculate_detection_vars(self):
         """
@@ -491,7 +490,7 @@ class ConsolidatedModel(StratifiedModel):
                         and self.vars['int_prop_dot_groupcontributor'] < 1. and riskgroup in self.contributor_groups:
                     self.vars['program_rate_detect' + organ + riskgroup] \
                         *= 1. - self.params['int_prop_detection_ngo' + riskgroup] \
-                                * (1. - self.vars['int_prop_dot_groupcontributor'])
+                           * (1. - self.vars['int_prop_dot_groupcontributor'])
 
                 # adjust for awareness raising
                 if 'int_prop_awareness_raising' in self.vars:
@@ -521,35 +520,35 @@ class ConsolidatedModel(StratifiedModel):
         for riskgroup in riskgroups_to_loop:
 
             # decide whether to use the general detection proportion (as default), otherwise a risk group-specific one
-            int_prop_acf_detections_per_round = self.params['int_prop_acf_detections_per_round']
-            if 'int_prop_acf_detections_per_round' + riskgroup in self.params:
-                int_prop_acf_detections_per_round = self.params['int_prop_acf_detections_per_round' + riskgroup]
+            int_prop_acf_detections_per_round = self.params['int_prop_acf_detections_per_round' + riskgroup] \
+                if 'int_prop_acf_detections_per_round' + riskgroup in self.params \
+                else self.params['int_prop_acf_detections_per_round']
 
             # implement ACF by approach and whether CXR first as screening tool
-            for acf_type in ['smear', 'xpert']:
-                for cxr_prescreen in ['', 'cxr']:
-                    intervention = 'int_prop_' + cxr_prescreen + acf_type + 'acf' + riskgroup
-                    if intervention in self.relevant_interventions and '_smearpos' in self.organ_status:
+            for acf_approach in itertools.product(['', 'cxr'], ['smear', 'xpert']):
+                cxr_prescreen, acf_type = acf_approach
+                intervention = 'int_prop_' + cxr_prescreen + acf_type + 'acf' + riskgroup
+                if intervention in self.relevant_interventions and '_smearpos' in self.organ_status:
 
-                        # find unadjusted coverage
-                        coverage = self.vars[intervention]
+                    # find unadjusted coverage
+                    coverage = self.vars[intervention]
 
-                        # adjust effective coverage for screening test, if being used
-                        if cxr_prescreen == 'cxr': coverage *= self.params['tb_sensitivity_cxr']
+                    # adjust effective coverage for screening test, if being used
+                    if cxr_prescreen == 'cxr': coverage *= self.params['tb_sensitivity_cxr']
 
-                        # find the additional rate of case finding with ACF for smear-positive cases
-                        if 'int_rate_acf_smearpos' + riskgroup not in self.vars:
-                            self.vars['int_rate_acf_smearpos' + riskgroup] = 0.
-                        self.vars['int_rate_acf_smearpos' + riskgroup] \
-                            += coverage * int_prop_acf_detections_per_round / self.params['int_timeperiod_acf_rounds']
+                    # find the additional rate of case finding with ACF for smear-positive cases
+                    if 'int_rate_acf_smearpos' + riskgroup not in self.vars:
+                        self.vars['int_rate_acf_smearpos' + riskgroup] = 0.
+                    self.vars['int_rate_acf_smearpos' + riskgroup] \
+                        += coverage * int_prop_acf_detections_per_round / self.params['int_timeperiod_acf_rounds']
 
-                        # find rate for smear-negatives, adjusted for Xpert sensitivity (if smear-negatives in model)
-                        if acf_type == 'xpert' and '_smearneg' in self.organ_status:
-                            if 'int_rate_acf_smearneg' + riskgroup not in self.vars:
-                                self.vars['int_rate_acf_smearneg' + riskgroup] = 0.
-                            self.vars['int_rate_acf_smearneg' + riskgroup] \
-                                += self.vars['int_rate_acf_smearpos' + riskgroup] \
-                                   * self.params['int_prop_xpert_smearneg_sensitivity']
+                    # find rate for smear-negatives, adjusted for Xpert sensitivity (if smear-negatives in model)
+                    if acf_type == 'xpert' and '_smearneg' in self.organ_status:
+                        if 'int_rate_acf_smearneg' + riskgroup not in self.vars:
+                            self.vars['int_rate_acf_smearneg' + riskgroup] = 0.
+                        self.vars['int_rate_acf_smearneg' + riskgroup] \
+                            += self.vars['int_rate_acf_smearpos' + riskgroup] \
+                               * self.params['int_prop_xpert_smearneg_sensitivity']
 
     def adjust_case_detection_for_acf(self):
         """
@@ -577,7 +576,7 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         if 'int_prop_intensive_screening' in self.relevant_interventions:
-            screened_subgroups = ['_diabetes', '_hiv']  # may be incorporated into the GUI
+            screened_subgroups = ['_diabetes', '_hiv']  # ultimately to be incorporated into the GUI
 
             # loop covers risk groups
             for riskgroup in screened_subgroups:
@@ -587,8 +586,8 @@ class ConsolidatedModel(StratifiedModel):
 
                 for organ in ['_smearpos', '_smearneg']:
                     self.vars['int_rate_intensive_screening' + organ + riskgroup] \
-                        += self.vars['int_prop_intensive_screening'] * \
-                           self.params['int_prop_attending_clinics' + riskgroup]
+                        += self.vars['int_prop_intensive_screening'] \
+                           * self.params['int_prop_attending_clinics' + riskgroup]
 
                 # adjust smear-negative detections for Xpert's sensitivity
                 self.vars['int_rate_intensive_screening_smearneg' + riskgroup] \
@@ -599,7 +598,6 @@ class ConsolidatedModel(StratifiedModel):
         if 'int_prop_intensive_screening' in self.relevant_interventions:
             screened_subgroups = ['_diabetes', '_hiv']
             for strata in itertools.product(self.organs_for_detection, screened_subgroups):
-                organ, riskgroup = strata
                 self.vars['program_rate_detect' + ''.join(strata)] \
                     += self.vars['int_rate_intensive_screening' + ''.join(strata)]
 
@@ -666,7 +664,7 @@ class ConsolidatedModel(StratifiedModel):
 
         prop_lowqual = self.vars['program_prop_lowquality']
         if 'int_prop_engage_lowquality' in self.relevant_interventions:
-            prop_lowqual *= (1. - self.vars['int_prop_engage_lowquality'])
+            prop_lowqual *= 1. - self.vars['int_prop_engage_lowquality']
 
         # note that there is still a program_rate_detect var even if detection is varied by organ and/or risk group
         self.vars['program_rate_enterlowquality'] \
@@ -682,7 +680,6 @@ class ConsolidatedModel(StratifiedModel):
         if self.is_misassignment: strains_for_treatment.append('_inappropriate')
 
         for strata in itertools.product(strains_for_treatment, self.histories, ['_success', '_death']):
-            strain, history, outcome = strata
             for riskgroup in self.riskgroups:
                 self.vars['program_prop_treatment' + riskgroup + ''.join(strata)] \
                     = copy.copy(self.vars['program_prop_treatment' + ''.join(strata)])
@@ -694,7 +691,7 @@ class ConsolidatedModel(StratifiedModel):
         """
         Take the reciprocal of the waiting times to calculate the flow rate to start treatment after detection.
         Note that the default behaviour for a single strain model is to use the waiting time for smear-positives.
-        Also weight the time period
+        Also weight the time period.
         """
 
         for organ in self.organ_status:
@@ -702,8 +699,7 @@ class ConsolidatedModel(StratifiedModel):
             # adjust smear-negative for Xpert coverage
             if organ == '_smearneg' and 'int_prop_xpert' in self.relevant_interventions:
                 time_to_treatment \
-                    = self.params['program_timeperiod_await_treatment_smearneg'] \
-                      * (1. - self.vars['int_prop_xpert']) \
+                    = self.params['program_timeperiod_await_treatment_smearneg'] * (1. - self.vars['int_prop_xpert']) \
                       + self.params['int_timeperiod_await_treatment_smearneg_xpert'] * self.vars['int_prop_xpert']
 
             # do other organ stratifications (including smear-negative if Xpert not an intervention)
@@ -730,8 +726,8 @@ class ConsolidatedModel(StratifiedModel):
         for strain in self.strains:
             self.calculate_treatment_timeperiod_vars(strain)
 
-            for strata in itertools.product(self.histories, self.riskgroups):
-                history, riskgroup = strata
+            for strata in itertools.product(self.riskgroups, self.histories):
+                riskgroup, history = strata
                 self.adjust_treatment_outcomes_support(riskgroup, strain, history)
                 self.calculate_default_rates(riskgroup + strain + history)
                 self.split_treatment_props_by_stage(riskgroup, strain, history)
@@ -774,16 +770,12 @@ class ConsolidatedModel(StratifiedModel):
         of the functions used to adjust the treatment outcomes.
         """
 
-        for riskgroup in self.riskgroups:
-            self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + '_success'] \
+        for strata in itertools.product(self.riskgroups, ['_success', '_death']):
+            riskgroup, outcome = strata
+            self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + outcome] \
                 = t_k.increase_parameter_closer_to_value(
-                self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + '_success'],
-                self.params['int_prop_treatment_success_shortcoursemdr'],
-                self.vars['int_prop_shortcourse_mdr'])
-            self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + '_death'] \
-                = t_k.decrease_parameter_closer_to_value(
-                self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + '_death'],
-                self.params['int_prop_treatment_death_shortcoursemdr'],
+                self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + outcome],
+                self.params['int_prop_treatment' + outcome + '_shortcoursemdr'],
                 self.vars['int_prop_shortcourse_mdr'])
 
     def adjust_treatment_outcomes_support(self, riskgroup, strain, history):
@@ -851,7 +843,6 @@ class ConsolidatedModel(StratifiedModel):
                  * self.scaleup_fns['int_prop_dot_groupcontributor'](self.params['reference_time']))
 
         for strata in itertools.product(self.contributor_groups, self.strains, self.histories):
-            riskgroup, strain, history = strata
 
             # treatment success (which may have become negative in the pre-treatment era)
             self.vars['program_prop_treatment' + ''.join(strata) + '_success'] \
@@ -867,13 +858,12 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         for outcome in self.outcomes[1:]:
+            end = riskgroup + strain + history + outcome
             outcomes_by_stage = find_outcome_proportions_by_period(
-                self.vars['program_prop_treatment' + riskgroup + strain + history + outcome],
-                self.vars['tb_timeperiod_infect_ontreatment' + strain],
+                self.vars['program_prop_treatment' + end], self.vars['tb_timeperiod_infect_ontreatment' + strain],
                 self.vars['tb_timeperiod_ontreatment' + strain])
             for s, stage in enumerate(self.treatment_stages):
-                self.vars['program_prop_treatment' + riskgroup + strain + history + outcome + stage] \
-                    = outcomes_by_stage[s]
+                self.vars['program_prop_treatment' + end + stage] = outcomes_by_stage[s]
 
     def assign_success_prop_by_treatment_stage(self, stratum, stage):
         """
@@ -932,6 +922,7 @@ class ConsolidatedModel(StratifiedModel):
                                 = outcomes_by_stage[s]
 
                     for treatment_stage in self.treatment_stages:
+
                         # find the success proportions
                         start = 'program_prop_treatment' + riskgroup + treatment_type + history
                         self.vars[start + '_success' + treatment_stage] \
@@ -1078,9 +1069,8 @@ class ConsolidatedModel(StratifiedModel):
         to go to IPT instead and how much to remain as force of infection
         """
 
-        for strata in itertools.product(self.force_riskgroups, self.force_types, self.agegroups, self.histories):
-            riskgroup, force_type, agegroup, history = strata
-
+        for strata in itertools.product(self.force_types, self.histories, self.force_riskgroups, self.agegroups):
+            force_type, history, riskgroup, agegroup = strata
             if force_type != '_fully' or (force_type == '_fully' and history == self.histories[0]):
                 stratum = force_type + strain + history + riskgroup + agegroup
                 if ('agestratified_ipt' in self.relevant_interventions
@@ -1242,8 +1232,8 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         for strata in itertools.product(
-                self.force_types, self.strains, self.histories, self.riskgroups, self.agegroups):
-            force_type, strain, history, riskgroup, agegroup, = strata
+                self.force_types, self.strains, self.riskgroups, self.histories, self.agegroups):
+            force_type, strain, riskgroup, history, agegroup, = strata
             force_riskgroup = riskgroup if self.vary_force_infection_by_riskgroup else ''
 
             # source compartment is split by riskgropup, history and agegroup - plus force type for
@@ -1406,8 +1396,8 @@ class ConsolidatedModel(StratifiedModel):
                         agegroup,
                         'program_rate_start_treatment' + organ)
             else:
-                self.set_var_transfer_rate_flow('detect' + end, 'treatment_infect' + end, 'program_rate_start_treatment'
-                                                + organ)
+                self.set_var_transfer_rate_flow(
+                    'detect' + end, 'treatment_infect' + end, 'program_rate_start_treatment' + organ)
 
             # enter the low quality health care system
             if self.is_lowquality:
@@ -1425,8 +1415,7 @@ class ConsolidatedModel(StratifiedModel):
             for s, strain in enumerate(self.strains):
 
                 # which strains to loop over for strain assignment
-                assignment_strains = ['']
-                if self.is_misassignment: assignment_strains = self.strains
+                assignment_strains = self.strains if self.is_misassignment else ['']
                 for a, assigned_strain in enumerate(assignment_strains):
                     if self.is_misassignment and s > a:
                         regimen, as_assigned_strain \

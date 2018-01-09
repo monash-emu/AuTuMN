@@ -157,7 +157,6 @@ class ModelRunner:
         self.adjust_mortality = True
         adjust_mdr = False
         self.adjust_mdr = False if len(self.inputs.strains) < 2 else adjust_mdr
-        self.adjust_mdr = False
         self.adjust_population = True
         self.mdr_introduce_time = self.inputs.model_constants['mdr_introduce_time']
 
@@ -255,13 +254,12 @@ class ModelRunner:
 
             # interpret
             self.outputs['manual']['epi'][scenario] \
-                = self.find_epi_outputs(scenario,
-                                        strata_to_analyse=[self.models[scenario].agegroups,
-                                                           self.models[scenario].riskgroups])
+                = self.find_epi_outputs(scenario, strata_to_analyse=[self.models[scenario].agegroups,
+                                                                     self.models[scenario].riskgroups])
             self.outputs['manual']['epi'][scenario].update(
                 self.find_population_fractions(scenario=scenario,
-                                               all_stratifications_to_assess=[self.models[scenario].agegroups,
-                                                                              self.models[scenario].riskgroups]))
+                                               strata_to_analyse=[self.models[scenario].agegroups,
+                                                                  self.models[scenario].riskgroups]))
             if self.interventions_to_cost[scenario]:
                 self.outputs['manual']['cost'][scenario] = self.find_cost_outputs(scenario)
 
@@ -404,25 +402,25 @@ class ModelRunner:
 
             # find percentage incidence by strain
             for strain in self.models[scenario].strains:
-                if strain != '':
+                if strain:
                     epi_outputs['perc_incidence' + strain_stratum] \
                         = t_k.elementwise_list_division(epi_outputs['incidence' + strain_stratum],
                             t_k.prepare_denominator(epi_outputs['incidence' + stratum]), percentage=True)
 
         return epi_outputs
 
-    def find_population_fractions(self, scenario, all_stratifications_to_assess=()):
+    def find_population_fractions(self, scenario, strata_to_analyse=()):
         """
         Find the proportion of the population in various strata. The stratifications must apply to the entire
         population, so this method should not be used for strains, health systems, etc.
 
         Args:
             scenario: The numeral for the scenario to be analysed
-            all_stratifications_to_assess: List/tuple with each element being a list of model stratifications
+            strata_to_analyse: List/tuple with each element being a list of model stratifications
         """
 
         fractions = {}
-        for stratification in all_stratifications_to_assess:
+        for stratification in strata_to_analyse:
             if len(stratification) > 1:
                 for stratum in stratification:
                     fractions['fraction' + stratum] \
@@ -442,7 +440,7 @@ class ModelRunner:
         """
 
         cost_outputs = self.find_raw_cost_outputs(scenario)
-        cost_outputs.update({'raw_cost_all_programs': self.find_costs_all_programs(scenario, cost_outputs)})
+        cost_outputs.update({'raw_cost_all_programs': self.find_cost_all_programs(scenario, cost_outputs)})
         cost_outputs.update(self.find_adjusted_costs(scenario, cost_outputs))
         return cost_outputs
 
@@ -459,7 +457,7 @@ class ModelRunner:
             cost_outputs['raw_cost_' + intervention] = self.models[scenario].costs[:, i]
         return cost_outputs
 
-    def find_costs_all_programs(self, scenario, cost_outputs):
+    def find_cost_all_programs(self, scenario, cost_outputs):
         """
         Sum costs across all programs and populate to cost_outputs dictionary for each scenario.
 
@@ -469,13 +467,13 @@ class ModelRunner:
         """
 
         # arbitrary program (the first) to get the list length for elementwise addition
-        costs_all_programs = [0.] * len(cost_outputs['raw_cost_' + self.interventions_to_cost[scenario][0]])
+        cost_all_programs = [0.] * len(cost_outputs['raw_cost_' + self.interventions_to_cost[scenario][0]])
 
         # increment for each intervention
         for intervention in self.interventions_to_cost[scenario]:
-            costs_all_programs \
-                = t_k.elementwise_list_addition(cost_outputs['raw_cost_' + intervention], costs_all_programs)
-        return costs_all_programs
+            cost_all_programs = t_k.elementwise_list_addition(cost_outputs['raw_cost_' + intervention],
+                                                              cost_all_programs)
+        return cost_all_programs
 
     def find_adjusted_costs(self, scenario, cost_outputs):
         """
@@ -753,7 +751,8 @@ class ModelRunner:
 
         # get outputs to add to outputs attribute
         new_outputs = {'epi': self.find_epi_outputs(scenario)}
-        new_outputs['cost'] = self.find_cost_outputs(scenario) if self.models[scenario].interventions_to_cost else {}
+        # new_outputs['cost'] = self.find_cost_outputs(scenario) if self.models[scenario].interventions_to_cost else {}
+        if self.models[scenario].interventions_to_cost: new_outputs.update({'cost': self.find_cost_outputs(scenario)})
 
         # incorporate new data
         for output_type in ['epi', 'cost']:
@@ -824,7 +823,7 @@ class ModelRunner:
 
     def adjust_start_population(self, last_run_output_index):
         """
-        Algorithmically adjust the starting population to better match the modern population we are aiming for.
+        Algorithmically adjust the starting population to better match the modern population targeted.
 
         Args:
             last_run_output_index: Integer to index last output

@@ -2062,7 +2062,7 @@ class Project:
                 cumulative_data = [0.] * len(self.outputs['manual']['cost'][scenario]['times'])
 
                 # plot for each intervention
-                for intervention in self.inputs.interventions_to_cost[t_k.find_scenario_number_from_string(scenario)]:
+                for intervention in self.inputs.interventions_to_cost[scenario]:
 
                     # Record the previous data for plotting as an independent object for the lower edge of the fill
                     previous_data = copy.copy(cumulative_data)
@@ -2104,13 +2104,13 @@ class Project:
                                    legend=(c == len(self.model_runner.cost_types) - 1))
 
             # finishing off with title and save
-            fig_individual.suptitle('Individual program costs for ' + t_k.find_title_from_dictionary(scenario),
+            fig_individual.suptitle('Individual program costs for ' + t_k.find_scenario_string_from_number(scenario),
                                     fontsize=self.suptitle_size)
             self.save_figure(fig_individual, '_' + str(scenario) + '_timecost_individual')
-            fig_stacked.suptitle('Stacked program costs for ' + t_k.find_title_from_dictionary(scenario),
+            fig_stacked.suptitle('Stacked program costs for ' + t_k.find_scenario_string_from_number(scenario),
                                  fontsize=self.suptitle_size)
             self.save_figure(fig_stacked, '_' + str(scenario) + '_timecost_stacked')
-            fig_relative.suptitle('Relative program costs for ' + t_k.find_title_from_dictionary(scenario),
+            fig_relative.suptitle('Relative program costs for ' + t_k.find_scenario_string_from_number(scenario),
                                   fontsize=self.suptitle_size)
             self.save_figure(fig_relative, '_' + str(scenario) + '_timecost_relative')
 

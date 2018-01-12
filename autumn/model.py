@@ -382,13 +382,14 @@ class ConsolidatedModel(StratifiedModel):
         Master case detection method to collate all the methods relating to case detection.
         """
 
+        if self.vary_detection_by_organ:
+            self.calculate_case_detection_by_organ()
+            self.adjust_smearneg_detection_for_xpert()
+
         if 'int_prop_decentralisation' in self.relevant_interventions: self.adjust_case_detection_for_decentralisation()
         if 'int_prop_dots_contributor' in self.relevant_interventions and self.vars['int_prop_dots_contributor'] < 1.:
             self.adjust_case_detection_for_dots_contributor()
 
-        if self.vary_detection_by_organ:
-            self.calculate_case_detection_by_organ()
-            self.adjust_smearneg_detection_for_xpert()
         self.calculate_detect_missed_vars()
         if self.vary_detection_by_riskgroup:
             self.calculate_acf_rate()
@@ -405,10 +406,11 @@ class ConsolidatedModel(StratifiedModel):
         Only do so if the current case detection ratio is lower than the idealised detection ratio.
         """
 
-        self.vars['program_prop_detect'] \
-            = t_k.increase_parameter_closer_to_value(self.vars['program_prop_detect'],
-                                                     self.params['int_ideal_detection'],
-                                                     self.vars['int_prop_decentralisation'])
+        for organ in self.organs_for_detection:
+            self.vars['program_prop_detect' + organ] \
+                = t_k.increase_parameter_closer_to_value(self.vars['program_prop_detect' + organ],
+                                                         self.params['int_ideal_detection'],
+                                                         self.vars['int_prop_decentralisation'])
 
     def adjust_case_detection_for_dots_contributor(self):
         """
@@ -417,9 +419,9 @@ class ConsolidatedModel(StratifiedModel):
         country. Essentially this is passive case finding as persons with symptoms are encouraged to present, so the
         reported case detection rate for the country is assumed to incorporate this.
         """
-
-        self.vars['program_prop_detect'] \
-            *= 1. - self.params['int_prop_detection_dots_contributor'] * (1. - self.vars['int_prop_dots_contributor'])
+        for organ in self.organs_for_detection:
+            self.vars['program_prop_detect' + organ] \
+                *= 1. - self.params['int_prop_detection_dots_contributor'] * (1. - self.vars['int_prop_dots_contributor'])
 
     def calculate_case_detection_by_organ(self):
         """

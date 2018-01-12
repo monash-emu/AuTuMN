@@ -1,15 +1,16 @@
 
+# external imports
 import os
 import numpy
-from scipy.integrate import odeint
 import tool_kit
-from autumn.economics import get_cost_from_coverage, get_coverage_from_cost
 import scipy.stats
-import model_runner
+from graphviz import Digraph
+
+# AuTuMN imports
+from autumn.economics import get_cost_from_coverage, get_coverage_from_cost
 
 
 def add_unique_tuple_to_list(a_list, a_tuple):
-
     """
     Adds or modifies a list of tuples, comparing only the items before the last in the tuples
     (i.e. the compartments), with the last value in the tuple assumed to be the value for the flow rate.
@@ -24,6 +25,10 @@ def add_unique_tuple_to_list(a_list, a_tuple):
 
 
 class BaseModel:
+    """
+    General class not specific to any particular infection, upon which disease-specific transmission models can be
+    built.
+    """
 
     def __init__(self):
 
@@ -61,6 +66,9 @@ class BaseModel:
         self.graph = None
         self.loaded_compartments = None
         self.scenario = 0
+        self.compartment_soln = {}
+        self.integration_method = None
+        self.relevant_interventions = []
 
     ''' time-related functions '''
 
@@ -74,16 +82,13 @@ class BaseModel:
             delta: Step size.
         """
 
-        self.times = []
-        time = start
+        self.times, time = [], start
         while time <= end:
             self.times.append(time)
             time += delta
-        if self.times[-1] < end:
-            self.times.append(end)
+        if self.times[-1] < end: self.times.append(end)
 
     def find_time_index(self, time):
-
         """
         Method to find first time point in times list at or after a certain specified time point.
 
@@ -109,7 +114,7 @@ class BaseModel:
 
     def get_constant_or_variable_param(self, param):
         """
-        Now obselete with new approach to determining whether parameters are constant or time variant in the data
+        Now obsolete with new approach to determining whether parameters are constant or time variant in the data
         processing module.
 
         Simple function to look first in vars then params for a parameter value and
@@ -165,22 +170,19 @@ class BaseModel:
     ''' methods to manipulate compartment data items '''
 
     def convert_list_to_compartments(self, compartment_vector):
-
         """
         Uses self.labels to convert list of compartments to dictionary.
 
         Args:
             compartment_vector: List of compartment values.
-
         Returns:
-            Dictionary with keys the compartment names (from the strings in self.labels) and values the elements
-                from compartment_vector.
+            A dictionary with keys being the compartment names (from the strings in self.labels) and values the elements
+                of compartment_vector
         """
 
         return {l: compartment_vector[i] for i, l in enumerate(self.labels)}
 
     def convert_compartments_to_list(self, compartment_dict):
-
         """
         Reverse of previous method. Converts
 
@@ -193,7 +195,6 @@ class BaseModel:
         return [compartment_dict[l] for l in self.labels]
 
     def get_init_list(self):
-
         """
         Sets starting state for model run according to whether initial conditions are specified, or
         whether we are taking up from where a previous run left off.
@@ -207,12 +208,9 @@ class BaseModel:
         else:
             return self.convert_compartments_to_list(self.init_compartments)
 
-    ############################################################
-    ### Methods to add intercompartmental flows to the model ###
-    ############################################################
+    ''' methods to add intercompartmental flows to the model '''
 
     def set_var_entry_rate_flow(self, label, var_label):
-
         """
         Set variable entry/birth/recruitment flow.
 
@@ -235,7 +233,6 @@ class BaseModel:
         add_unique_tuple_to_list(self.fixed_infection_death_rate_flows, (label, self.params[param_label]))
 
     def set_var_infection_death_rate_flow(self, label, var_label):
-
         """
         Set variable infection death rate flow.
 
@@ -259,7 +256,6 @@ class BaseModel:
         add_unique_tuple_to_list(self.fixed_transfer_rate_flows, (from_label, to_label, self.params[param_label]))
 
     def set_linked_transfer_rate_flow(self, from_label, to_label, var_label):
-
         """
         Set linked inter-compartmental transfer rate flows, where the flow between two compartments is dependent upon
         a flow between another two compartments.
@@ -273,7 +269,6 @@ class BaseModel:
         add_unique_tuple_to_list(self.linked_transfer_rate_flows, (from_label, to_label, var_label))
 
     def set_var_transfer_rate_flow(self, from_label, to_label, var_label):
-
         """
         Set variable inter-compartmental transfer rate flows.
 
@@ -285,12 +280,9 @@ class BaseModel:
 
         add_unique_tuple_to_list(self.var_transfer_rate_flows, (from_label, to_label, var_label))
 
-    #########################################
-    ### Variable and flow-related methods ###
-    #########################################
+    ''' variable and flow-related methods '''
 
     def set_scaleup_fn(self, label, fn):
-
         """
         Simple method to add a scale-up function to the dictionary of scale-ups.
 
@@ -302,7 +294,6 @@ class BaseModel:
         self.scaleup_fns[label] = fn
 
     def calculate_scaleup_vars(self):
-
         """
         Find the values of the scale-up functions at a specific point in time. Called within the integration process.
         """
@@ -323,12 +314,10 @@ class BaseModel:
         calculate_variable_rates.
         """
 
-        for label in self.labels:
-            self.flows[label] = 0.
+        for label in self.labels: self.flows[label] = 0.
 
         # birth flows
-        for label, vars_label in self.var_entry_rate_flows:
-            self.flows[label] += self.vars[vars_label]
+        for label, vars_label in self.var_entry_rate_flows: self.flows[label] += self.vars[vars_label]
 
         # dynamic transmission flows
         for from_label, to_label, vars_label in self.var_transfer_rate_flows:
@@ -366,25 +355,24 @@ class BaseModel:
             self.vars['rate_infection_death'] += val
 
     def prepare_vars_flows(self):
-
         """
         This function collects some other functions that previously led to a bug because not all of them were called
         in the diagnostics round.
         """
 
-        # Before clearing vars, we need to save the popsize vars for economics calculations
+        # before clearing vars, need to save the popsize vars for economics calculations
         saved_vars = {}
         if self.eco_drives_epi:
             for key in self.vars.keys():
                 if 'popsize' in key: saved_vars[key] = self.vars[key]
 
-        # Clear previously populated vars dictionary
+        # clear previously populated vars dictionary
         self.vars.clear()
 
-        # Re-populated from saved vars
+        # re-populated from saved vars
         self.vars = saved_vars
 
-        # Calculate vars and flows sequentially
+        # calculate vars and flows sequentially
         self.calculate_scaleup_vars()
         self.calculate_vars()
         self.calculate_flows()
@@ -399,21 +387,17 @@ class BaseModel:
     ''' main integration methods '''
 
     def init_run(self):
-
         """
         Works through the main methods in needed for the integration process.
         """
 
-        # More code that is dependent on correct naming of inputs, but should be universal to models based on this class
-        self.make_times(self.start_time,
-                        self.inputs.model_constants['scenario_end_time'],
-                        self.time_step)
+        # more code that is dependent on correct naming of inputs, but should be universal to models based on this class
+        self.make_times(self.start_time, self.inputs.model_constants['scenario_end_time'], self.time_step)
         self.initialise_compartments()
         self.set_flows()
         assert self.times is not None, 'Times have not been set yet'
 
     def make_derivative_fn(self):
-
         """
         Create the main derivative function.
         """
@@ -436,13 +420,12 @@ class BaseModel:
 
         self.process_uncertainty_params()
         self.init_run()
-        y = self.get_init_list()  # Get initial conditions (loaded compartments for scenarios)
+        y = self.get_init_list()  # get initial conditions (loaded compartments for scenarios)
         y = self.make_adjustments_during_integration(y)
 
-        # Prepare storage objects
+        # prepare storage objects
         n_compartment = len(y)
         n_time = len(self.times)
-        self.compartment_soln = {}
         self.flow_array = numpy.zeros((n_time, len(self.labels)))
 
         derivative = self.make_derivative_fn()
@@ -452,7 +435,7 @@ class BaseModel:
             self.compartment_soln[label] = [None] * n_time  # initialise lists
             self.compartment_soln[label][0] = y[i]  # store initial state
 
-        # Need to run derivative here to get the initial vars
+        # need to run derivative here to get the initial vars
         k1 = derivative(y, self.times[0])
 
         # 'make_adjustments_during_integration' was already run but needed to be done again now that derivative
@@ -463,37 +446,36 @@ class BaseModel:
         self.var_labels = self.vars.keys()
         self.var_array = numpy.zeros((n_time, len(self.var_labels)))
 
-        # Populate arrays for initial state
+        # populate arrays for initial state
         for i_label, var_label in enumerate(self.var_labels):
             self.var_array[0, i_label] = self.vars[var_label]
         for i_label, label in enumerate(self.labels):
             self.flow_array[0, i_label] = self.flows[label]
 
-        # Initialisation of iterative objects that will be used during integration
+        # initialisation of iterative objects that will be used during integration
         y_candidate = numpy.zeros((len(y)))
-        prev_time = self.times[0]  # Time of the latest successful integration step (not necessarily stored)
+        prev_time = self.times[0]  # time of the latest successful integration step (not necessarily stored)
         dt_is_ok = True  # Boolean to indicate whether previous proposed integration time was successfully passed
 
-        # For each time as stored in self.times, except the first one
+        # for each time as stored in self.times, except the first one
         for i_time, next_time in enumerate(self.times[1:]):
-            store_step = False  # Whether the calculated time is to be stored (i.e. appears in self.times)
+            store_step = False  # whether the calculated time is to be stored (i.e. appears in self.times)
             cpt_reduce_step = 0  # counts the number of times that the time step needs to be reduced
 
             while store_step is False:
-                if not dt_is_ok:  # Previous proposed time step was too wide
+                if not dt_is_ok:  # previous proposed time step was too wide
                     adaptive_dt /= 2.
-                    is_temp_time_in_times = False  # Whether the upcoming calculation step corresponds to next_time
+                    is_temp_time_in_times = False  # whether the upcoming calculation step corresponds to next_time
                 else:  # Previous time step was accepted
                     adaptive_dt = next_time - prev_time
-                    is_temp_time_in_times = True  # Upcoming attempted integration step corresponds to next_time
-                    k1 = numpy.asarray(derivative(y, prev_time))  # Evaluate function at previous successful step
+                    is_temp_time_in_times = True  # upcoming attempted integration step corresponds to next_time
+                    k1 = numpy.asarray(derivative(y, prev_time))  # evaluate function at previous successful step
 
-                temp_time = prev_time + adaptive_dt  # New attempted calculation time
+                temp_time = prev_time + adaptive_dt  # new attempted calculation time
 
-                # Explicit Euler integration
+                # explicit Euler integration
                 if self.integration_method == 'Explicit':
-                    for i in range(n_compartment):
-                        y_candidate[i] = y[i] + adaptive_dt * k1[i]
+                    for i in range(n_compartment): y_candidate[i] = y[i] + adaptive_dt * k1[i]
 
                 # Runge-Kutta 4 integration
                 elif self.integration_method == 'Runge Kutta':
@@ -818,9 +800,8 @@ class BaseModel:
             aggregate_sizes = tool_kit.elementwise_list_addition(aggregate_sizes, self.compartment_soln[compartment])
         return aggregate_sizes
 
-    def calculate_aggregate_compartment_divisions_from_strings(
-            self, compartments_to_divide_over, required_string_1='', required_string_2='',
-            exclusion_string='we all love futsal', allocate_to_one_division_only=True):
+    def calculate_aggregate_compartment_divisions_from_strings(self, compartments_to_divide_over, required_string_1='',
+                   required_string_2='', exclusion_string='we all love futsal', allocate_to_one_division_only=True):
         """
         Similar to previous method, but hopefully more general and able to handle the string not being found in any of
         the compartments.
@@ -846,11 +827,11 @@ class BaseModel:
                 if division in compartment:
                     division_found = True
                     aggregates[division] = tool_kit.elementwise_list_addition(self.compartment_soln[compartment],
-                                                                                  aggregates[division])
+                                                                              aggregates[division])
                 if allocate_to_one_division_only and division_found: break
             if not division_found:
                 aggregates['remainder'] = tool_kit.elementwise_list_addition(self.compartment_soln[compartment],
-                                                                                 aggregates['remainder'])
+                                                                             aggregates['remainder'])
         return aggregates, compartments_to_divide_over
 
     ''' flow diagram production '''
@@ -859,8 +840,6 @@ class BaseModel:
         """
         Use graphviz module to create flow diagram of compartments and intercompartmental flows.
         """
-
-        from graphviz import Digraph
 
         styles = {
             'graph': {'label': 'Dynamic Transmission Model',
@@ -883,22 +862,14 @@ class BaseModel:
 
         def num_str(f):
             abs_f = abs(f)
-            if abs_f > 1E9:
-                return '%.1fB' % (f/1E9)
-            if abs_f > 1E6:
-                return '%.1fM' % (f/1E6)
-            if abs_f > 1E3:
-                return '%.1fK' % (f/1E3)
-            if abs_f > 100.:
-                return '%.0f' % f
-            if abs_f > 0.5:
-                return '%.1f' % f
-            if abs_f > 0.05:
-                return '%.2f' % f
-            if abs_f > 0.0005:
-                return '%.4f' % f
-            if abs_f > 0.000005:
-                return '%.6f' % f
+            if abs_f > 1E9: return '%.1fB' % (f/1E9)
+            if abs_f > 1E6: return '%.1fM' % (f/1E6)
+            if abs_f > 1E3: return '%.1fK' % (f/1E3)
+            if abs_f > 100.: return '%.0f' % f
+            if abs_f > 0.5: return '%.1f' % f
+            if abs_f > 0.05: return '%.2f' % f
+            if abs_f > 0.0005: return '%.4f' % f
+            if abs_f > 0.000005: return '%.6f' % f
             return str(f)
 
         self.graph = Digraph(format='png')
@@ -916,24 +887,18 @@ class BaseModel:
         for label, rate in self.var_infection_death_rate_flows:
             self.graph.edge(label, 'tb_death', label=var_label[:4])
         base, ext = os.path.splitext(png)
-        if ext.lower() != '.png':
-            base = png
-
+        if ext.lower() != '.png': base = png
         self.graph = apply_styles(self.graph, styles)
-
         self.graph.render(base)
 
-    ####################################
-    ### Intervention-related methods ###
-    ####################################
+    ''' intervention-related methods '''
 
     def determine_whether_startups_apply(self):
-
         """
         Determine whether an intervention is applied and has start-up costs in the scenario being run.
         """
 
-        # Start assuming each costed intervention has no start-up costs in this scenario
+        # start assuming each costed intervention has no start-up costs in this scenario
         for program in self.interventions_to_cost:
             self.startups_apply[program] = False
 
@@ -944,7 +909,7 @@ class BaseModel:
 
     def distribute_funding_across_years(self):
 
-        # Number of years to fund
+        # number of years to fund
         n_years = self.end_period_costing - self.inputs.model_constants['scenario_start_time']
         for int in self.interventions_considered_for_opti:
             self.annual_available_funding[int] = 0.
@@ -963,7 +928,6 @@ class BaseModel:
 
 
 class StratifiedModel(BaseModel):
-
     def __init__(self):
 
         BaseModel.__init__(self)
@@ -973,7 +937,6 @@ class StratifiedModel(BaseModel):
         self.target_risk_props = {}
 
     def make_adjustments_during_integration(self, y):
-
         """
         Adjusts the proportions of the population in each risk group according to the calculations
         made in assess_risk_props above.
@@ -986,7 +949,7 @@ class StratifiedModel(BaseModel):
 
         risk_adjustment_factor = {}
 
-        # Find the target proportions for each risk group stratum
+        # find the target proportions for each risk group stratum
         if len(self.riskgroups) > 1:
             for riskgroup in self.riskgroups:
                 if riskgroup not in self.target_risk_props:
@@ -999,7 +962,7 @@ class StratifiedModel(BaseModel):
                     self.target_risk_props['_norisk'][-1] \
                         -= self.target_risk_props[riskgroup][-1]
 
-            # If integration has started properly
+            # if integration has started properly
             if self.compartments:
 
                 # Find the actual proportions in each risk group stratum
@@ -1021,17 +984,15 @@ class StratifiedModel(BaseModel):
                         risk_adjustment_factor[riskgroup] = 1.
         else:
 
-            # Otherwise, it's just a list of ones
-            if '' not in self.target_risk_props:
-                self.target_risk_props[''] = []
+            # otherwise, it's just a list of ones
+            if '' not in self.target_risk_props: self.target_risk_props[''] = []
             self.target_risk_props[''].append(1.)
 
         if risk_adjustment_factor != {}:
             compartments = self.convert_list_to_compartments(y)
             for c in compartments:
                 for riskgroup in self.riskgroups:
-                    if riskgroup in c:
-                        compartments[c] *= risk_adjustment_factor[riskgroup]
+                    if riskgroup in c: compartments[c] *= risk_adjustment_factor[riskgroup]
             return self.convert_compartments_to_list(compartments)
         else:
             return y
@@ -1044,9 +1005,7 @@ class StratifiedModel(BaseModel):
         for label in self.labels:
             for n_agegroup, agegroup in enumerate(self.agegroups):
                 if agegroup in label and n_agegroup < len(self.agegroups) - 1:
-                    self.set_fixed_transfer_rate_flow(
-                        label,
-                        label[0: label.find('_age')] + self.agegroups[n_agegroup + 1],
-                        'ageing_rate' + self.agegroups[n_agegroup])
-
+                    self.set_fixed_transfer_rate_flow(label,
+                                                      label[0: label.find('_age')] + self.agegroups[n_agegroup + 1],
+                                                      'ageing_rate' + self.agegroups[n_agegroup])
 

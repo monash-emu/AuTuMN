@@ -439,8 +439,8 @@ class BaseModel:
         k1 = derivative(y, self.times[0])
 
         # 'make_adjustments_during_integration' was already run but needed to be done again now that derivative
-        #  has been run. Indeed, derivate allows new vars to be created and these vars are used in
-        #  'make_adjustments_during_integration'
+        # has been run. Indeed, derivative allows new vars to be created and these vars are used in
+        # 'make_adjustments_during_integration'
         y = self.make_adjustments_during_integration(y)
 
         self.var_labels = self.vars.keys()
@@ -529,7 +529,6 @@ class BaseModel:
             for i_label, label in enumerate(self.labels):
                 self.flow_array[i_time + 1, i_label] = self.flows[label]
 
-        # self.calculate_diagnostics()
         if self.run_costing: self.calculate_economics_diagnostics()
 
     def process_uncertainty_params(self):
@@ -572,45 +571,51 @@ class BaseModel:
 
     def calculate_economics_diagnostics(self):
         """
-        Run the economics diagnostics associated with a model run.
-        Integration has been completed by this point.
-        Only the raw costs are stored in the model object. The other costs will be calculated when generating outputs
+        Run the economics diagnostics associated with a model run. Note that integration has been completed by this
+        point. Only the raw costs are stored in the model object, while the other costs will be calculated when
+        generating outputs.
         """
 
-        self.determine_whether_startups_apply()
-
-        # find start and end indices for economics calculations
-        start_index = tool_kit.find_first_list_element_at_least_value(self.times,
-                                                                      self.inputs.model_constants['recent_time'])
-        self.cost_times = self.times[start_index:]
+        self.cost_times = self.times[tool_kit.find_first_list_element_at_least_value(
+            self.times, self.inputs.model_constants['recent_time']):]
         self.costs = numpy.zeros((len(self.cost_times), len(self.interventions_to_cost)))
 
-        # loop over interventions to be costed
-        for int_index, intervention in enumerate(self.interventions_to_cost):
+        for i, inter in enumerate(self.interventions_to_cost):
+            for t, time in enumerate(self.cost_times):
 
-            # loop over times to be costed
-            for i, t in enumerate(self.cost_times):
-                cost = get_cost_from_coverage(self.scaleup_fns['int_prop_' + intervention](t),
-                                              self.inputs.model_constants['econ_inflectioncost_' + intervention],
-                                              self.inputs.model_constants['econ_saturation_' + intervention],
-                                              self.inputs.model_constants['econ_unitcost_' + intervention],
-                                              self.var_array[i, self.var_labels.index('popsize_' + intervention)])
+                # costs from cost-coverage curves
+                cost = get_cost_from_coverage(self.scaleup_fns['int_prop_' + inter](time),
+                                              self.inputs.model_constants['econ_inflectioncost_' + inter],
+                                              self.inputs.model_constants['econ_saturation_' + inter],
+                                              self.inputs.model_constants['econ_unitcost_' + inter],
+                                              self.var_array[t, self.var_labels.index('popsize_' + inter)])
 
                 # start-up costs
-                if self.startups_apply[intervention] \
-                        and self.inputs.model_constants['scenario_start_time'] < t \
-                                < self.inputs.model_constants['scenario_start_time'] \
-                                        + self.inputs.model_constants['econ_startupduration_' + intervention]:
+                if 'econ_startupcost_' + inter in self.inputs.model_constants \
+                        and 'econ_startupduration_' + inter in self.inputs.model_constants \
+                        and self.inputs.model_constants['econ_startupduration_' + inter] > 0.:
+                    cost = self.add_startup_costs(cost, time, inter)
+                self.costs[t, i] = cost
 
-                    # new code with beta PDF used to smooth out scale-up costs
-                    cost += scipy.stats.beta.pdf((t - self.inputs.model_constants['scenario_start_time'])
-                                                 / self.inputs.model_constants['econ_startupduration_' + intervention],
-                                                 2.,
-                                                 5.) \
-                            / self.inputs.model_constants['econ_startupduration_' + intervention] \
-                            * self.inputs.model_constants['econ_startupcost_' + intervention]
+    def add_startup_costs(self, cost, time, intervention):
+        """
+        Adds a smoothed out amount of start-up costs to the relevant times. Uses the beta PDF to smooth out scale-up
+        costs. Note that the beta PDF of scipy returns zeros if its first argument is not between zero and one, so the
+        code should still work.
 
-                self.costs[i, int_index] = cost
+        Args:
+            cost: The cost at the time in question before start-up costs are applied
+            time: Float for the calendar time being costed
+            intervention: String for the intervention being costed
+        Returns:
+            Costs at the time point considered for the intervention in question updated for start-ups as required
+        """
+
+        return cost + scipy.stats.beta.pdf((time - self.inputs.model_constants['scenario_start_time'])
+                                           / self.inputs.model_constants['econ_startupduration_' + intervention],
+                                           2., 5.) \
+                    / self.inputs.model_constants['econ_startupduration_' + intervention] \
+                    * self.inputs.model_constants['econ_startupcost_' + intervention]
 
     def update_vars_from_cost(self):
         """
@@ -893,38 +898,25 @@ class BaseModel:
 
     ''' intervention-related methods '''
 
-    def determine_whether_startups_apply(self):
-        """
-        Determine whether an intervention is applied and has start-up costs in the scenario being run.
-        """
-
-        # start assuming each costed intervention has no start-up costs in this scenario
-        for program in self.interventions_to_cost:
-            self.startups_apply[program] = False
-
-            # If the program reaches values greater than zero and start-up costs are greater than zero, change to True
-            if program in self.relevant_interventions \
-                    and self.inputs.model_constants['econ_startupcost_' + program] > 0.:
-                self.startups_apply[program] = True
-
     def distribute_funding_across_years(self):
 
         # number of years to fund
         n_years = self.end_period_costing - self.inputs.model_constants['scenario_start_time']
-        for int in self.interventions_considered_for_opti:
-            self.annual_available_funding[int] = 0.
-            # If intervention hasn't started
-            if self.inputs.intervention_startdates[self.scenario][int] is None:
-                if self.available_funding[int] < self.inputs.model_constants['econ_startupcost_' + int]:
+        for inter in self.interventions_considered_for_opti:
+            self.annual_available_funding[inter] = 0.
+            # if intervention hasn't started
+            if self.inputs.intervention_startdates[self.scenario][inter] is None:
+                if self.available_funding[inter] < self.inputs.model_constants['econ_startupcost_' + inter]:
                     # print 'available_funding insufficient to cover starting costs of ' + int
                     pass
                 else:
-                    self.inputs.intervention_startdates[self.scenario][int] = self.inputs.model_constants['scenario_start_time']
-                    self.annual_available_funding[int] \
-                        = (self.available_funding[int] - self.inputs.model_constants['econ_startupcost_' + int]) \
+                    self.inputs.intervention_startdates[self.scenario][inter] \
+                        = self.inputs.model_constants['scenario_start_time']
+                    self.annual_available_funding[inter] \
+                        = (self.available_funding[inter] - self.inputs.model_constants['econ_startupcost_' + inter]) \
                           / n_years
             else:
-                self.annual_available_funding[int] = (self.available_funding[int])/n_years
+                self.annual_available_funding[inter] = (self.available_funding[inter])/n_years
 
 
 class StratifiedModel(BaseModel):

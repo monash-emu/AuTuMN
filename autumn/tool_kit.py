@@ -351,6 +351,31 @@ def join_zero_array_to_left(number_of_zeros, array_to_extend):
     return numpy.hstack((zeros, array_to_extend))
 
 
+def are_all_values_the_same(dictionary_to_evaluate, keys_of_interest=(0, 1)):
+    """
+    Work out whether all values in a dictionary have the same value over a range of integer-valued keyed. If the key is
+    absent from the dictionary or the key isn't an integer, it doesn't matter and the loop continues.
+
+    Args:
+        dictionary_to_evaluate: The dictionary to loop through
+        keys_of_interest: List of the starting and finishing element for integers to loop through
+    Return:
+        Boolean value for the condition described above
+    """
+
+    value = None
+    for i in range(keys_of_interest[0], keys_of_interest[1]):
+        if i not in dictionary_to_evaluate:
+            continue
+        elif not value:
+            value = dictionary_to_evaluate[i]
+        elif dictionary_to_evaluate[i] == value:
+            continue
+        else:
+            return False
+    return True
+
+
 ''' scenario name manipulation '''
 
 

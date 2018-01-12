@@ -58,7 +58,10 @@ def read_input_data_xls(from_test, sheets_to_read, country):
 
     # update 2016 data with 2015 data where available
     for gtb_key in data_read_from_sheets['gtb_2016']:
-        if gtb_key in data_read_from_sheets['gtb']:
+        # except for the strange situation where all values from 2000 to 2015 are the same
+        if tool_kit.are_all_values_the_same(data_read_from_sheets['gtb_2016'][gtb_key], keys_of_interest=(2000, 2016)):
+            continue
+        elif gtb_key in data_read_from_sheets['gtb']:
             data_read_from_sheets['gtb'][gtb_key].update(data_read_from_sheets['gtb_2016'][gtb_key])
         else:
             data_read_from_sheets['gtb'][gtb_key] = data_read_from_sheets['gtb_2016'][gtb_key]

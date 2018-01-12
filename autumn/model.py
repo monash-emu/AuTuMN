@@ -486,11 +486,11 @@ class ConsolidatedModel(StratifiedModel):
                       / (1. - self.vars['program_prop_detect' + organ])
 
                 # adjust detection rates for ngo activities in specific risk-groups
-                if 'int_prop_dot_groupcontributor' in self.relevant_interventions \
-                        and self.vars['int_prop_dot_groupcontributor'] < 1. and riskgroup in self.contributor_groups:
+                if 'int_prop_dots_groupcontributor' in self.relevant_interventions \
+                        and self.vars['int_prop_dots_groupcontributor'] < 1. and riskgroup in self.contributor_groups:
                     self.vars['program_rate_detect' + organ + riskgroup] \
                         *= 1. - self.params['int_prop_detection_ngo' + riskgroup] \
-                           * (1. - self.vars['int_prop_dot_groupcontributor'])
+                           * (1. - self.vars['int_prop_dots_groupcontributor'])
 
                 # adjust for awareness raising
                 if 'int_prop_awareness_raising' in self.vars:

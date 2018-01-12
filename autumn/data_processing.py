@@ -1006,7 +1006,7 @@ class Inputs:
         self.vary_detection_by_riskgroup = False
         for scenario in self.scenarios:
             for intervention in self.relevant_interventions[scenario]:
-                if 'acf' in intervention or 'intensive_screening' in intervention or 'ngo' in intervention:
+                if 'acf' in intervention or 'intensive_screening' in intervention or 'groupcontributor' in intervention:
                     self.vary_detection_by_riskgroup = True
         self.riskgroups_for_detection = ['']
         if self.vary_detection_by_riskgroup: self.riskgroups_for_detection = self.riskgroups

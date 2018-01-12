@@ -1661,9 +1661,17 @@ class Project:
             # find limits to the axes
             y_absolute_limit = None
             if self.inputs.intervention_uncertainty or len(scenarios) > 1:
+                y_absolute_limit = -1.e15  # an absurd negative value to start from
                 plot_start_time_index = t_k.find_first_list_element_at_least_value(
                     self.model_runner.outputs['manual']['epi'][0]['times'], start_time)
-                y_absolute_limit = max(self.model_runner.outputs['manual']['epi'][0][output][plot_start_time_index:])
+                for scenario in self.model_runner.outputs['manual']['epi'].keys():
+                    relevant_start_index = plot_start_time_index
+                    if scenario != 0:
+                        relevant_start_index = 0
+                    y_absolute_limit_scenario = max(self.model_runner.outputs['manual']['epi'][scenario][output][relevant_start_index:])
+                    if y_absolute_limit_scenario > y_absolute_limit: y_absolute_limit = y_absolute_limit_scenario
+                y_absolute_limit *= 1.02  # to allow for some space between curves and top border of the box
+
 
             self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
                            legend=(o == len(outputs) - 1 and len(scenarios) > 1

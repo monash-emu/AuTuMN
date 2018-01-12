@@ -115,6 +115,9 @@ def solve_by_dichotomy(f, objective, a, b, tolerance):
         return b
 
 
+''' base class for running models for any disease '''
+
+
 class ModelRunner:
     def __init__(self, gui_inputs, runtime_outputs, js_gui=None):
         """
@@ -139,28 +142,15 @@ class ModelRunner:
         self.interventions_to_cost = self.inputs.interventions_to_cost
 
         # uncertainty-related attributes
+        self.outputs_unc = []
         self.is_last_run_success = False
-        self.outputs_unc = [{'key': 'incidence',
-                             'posterior_width': None,
-                             'width_multiplier': 2.  # width of normal posterior relative to range of allowed values
-                             }]
         self.uncertainty_percentiles = {}
         self.n_centiles_for_shading = 100
         self.percentiles = [2.5, 50., 97.5] + list(numpy.linspace(0., 100., self.n_centiles_for_shading * 2 + 1))
-        self.random_start = False  # whether to start from a random point, as opposed to the manually calibrated value
         self.intervention_uncertainty = self.inputs.intervention_uncertainty
-        self.relative_difference_to_adjust_mortality = 1.1
-        self.relative_difference_to_adjust_mdr = 1.1
-        self.amount_to_adjust_mortality = .02
-        self.amount_to_adjust_mdr_year = 1.
-        self.prop_death_reporting = self.inputs.model_constants['program_prop_death_reporting']
-        self.adjust_mortality = True
-        adjust_mdr = False
-        self.adjust_mdr = False if len(self.inputs.strains) < 2 else adjust_mdr
         self.adjust_population = True
-        self.mdr_introduce_time = self.inputs.model_constants['mdr_introduce_time']
 
-        # optimisation attributes
+        # optimisation attributes - note that this is currently dead
         self.optimisation = False  # leave True even if loading optimisation results
         self.opti_outputs_dir = 'saved_optimisation_analyses'
         self.indicator_to_minimise = 'incidence'  # currently must be 'incidence' or 'mortality'
@@ -181,12 +171,12 @@ class ModelRunner:
         self.interventions_forced_for_opti = ['engage_lowquality', 'ipt_age0to5', 'intensive_screening']
 
         # output-related attributes
-        self.epi_outputs_to_analyse = ['incidence', 'prevalence', 'mortality', 'true_mortality', 'notifications']
         self.additional_cost_types = ['inflated', 'discounted', 'discounted_inflated']
         self.cost_types = self.additional_cost_types + ['raw']
 
         # new single main output attribute
-        self.outputs = {}
+        self.epi_outputs_to_analyse = []
+        self.outputs = {'epi_uncertainty': {}}
 
         # GUI-related
         self.emit_delay = 0.1
@@ -279,135 +269,6 @@ class ModelRunner:
         self.models[scenario].loaded_compartments = self.models[0].load_state(start_time_index)
 
     ''' output interpretation methods '''
-
-    def find_epi_outputs(self, scenario, epi_outputs_to_analyse=None, strata_to_analyse=[[]]):
-        """
-        Method to extract all requested epidemiological outputs from the models. Intended ultimately to be flexible
-        enough for use for analysis of scenarios, uncertainty and optimisation.
-
-        Args:
-            scenario: The integer value representing the scenario of the model to be analysed
-            epi_outputs_to_analyse: List of strings for the outputs of interest to be worked through
-            strata_to_analyse: List of any stratifications that outputs are required over, i.e. list of lists
-        """
-
-        # preliminaries
-        outputs_to_analyse = epi_outputs_to_analyse if epi_outputs_to_analyse else self.epi_outputs_to_analyse
-        epi_outputs, strata = {'times': self.models[scenario].times}, ['']
-        blank_output_list = [0.] * len(epi_outputs['times'])
-        for stratification_type in strata_to_analyse: strata += stratification_type
-
-        # all outputs should cycle over each stratum, or at least be able to
-        for stratum in strata:
-
-            # population
-            epi_outputs['population' + stratum] = blank_output_list
-            for compartment in self.models[scenario].compartments:
-                if stratum in compartment:
-                    epi_outputs['population' + stratum] = t_k.elementwise_list_addition(
-                        self.models[scenario].get_compartment_soln(compartment), epi_outputs['population' + stratum])
-
-            # replace zeroes with small numbers for division
-            denominator = t_k.prepare_denominator(epi_outputs['population' + stratum])
-
-            # to allow calculation by strain and the total output
-            for strain in [''] + self.models[scenario].strains:
-                strain_stratum = strain + stratum
-
-                # incidence
-                if 'incidence' in outputs_to_analyse:
-                    epi_outputs['incidence' + strain_stratum] = blank_output_list
-                    for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
-                        if 'latent' in from_label and 'active' in to_label \
-                                and strain in to_label and stratum in from_label:
-                            incidence_increment = self.models[scenario].get_compartment_soln(from_label) \
-                                                  * self.models[scenario].get_var_soln(rate) / denominator * 1e5
-                            epi_outputs['incidence' + strain_stratum] \
-                                = t_k.elementwise_list_addition(incidence_increment,
-                                                                epi_outputs['incidence' + strain_stratum])
-                    for from_label, to_label, rate in self.models[scenario].fixed_transfer_rate_flows:
-                        if 'latent' in from_label and 'active' in to_label \
-                                and strain in to_label and stratum in from_label:
-                            incidence_increment \
-                                = self.models[scenario].get_compartment_soln(from_label) * rate / denominator * 1e5
-                            epi_outputs['incidence' + strain_stratum] \
-                                = t_k.elementwise_list_addition(incidence_increment,
-                                                                epi_outputs['incidence' + strain_stratum])
-
-                # notifications
-                if 'notifications' in outputs_to_analyse:
-                    epi_outputs['notifications' + strain_stratum] = blank_output_list
-                    for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
-                        if 'active' in from_label and 'detect' in to_label \
-                                and strain in to_label and stratum in from_label:
-                            notifications_increment \
-                                = self.models[scenario].get_compartment_soln(from_label) \
-                                  * self.models[scenario].get_var_soln(rate)
-                            epi_outputs['notifications' + strain_stratum] \
-                                = t_k.elementwise_list_addition(notifications_increment,
-                                                                epi_outputs['notifications' + strain_stratum])
-
-                # mortality
-                if 'mortality' in outputs_to_analyse:
-                    epi_outputs['mortality' + strain_stratum], epi_outputs['true_mortality' + strain_stratum] \
-                        = [blank_output_list] * 2
-
-                    # fixed flows are outside of the health system and so the natural death contribution is reduced
-                    for from_label, rate in self.models[scenario].fixed_infection_death_rate_flows:
-                        if strain in from_label and stratum in from_label:
-                            mortality_increment \
-                                = self.models[scenario].get_compartment_soln(from_label) * rate / denominator * 1e5
-                            epi_outputs['true_mortality' + strain_stratum] = t_k.elementwise_list_addition(
-                                mortality_increment, epi_outputs['true_mortality' + strain_stratum])
-                            epi_outputs['mortality' + strain_stratum] = t_k.elementwise_list_addition(
-                                mortality_increment * self.prop_death_reporting,
-                                epi_outputs['mortality' + strain_stratum])
-
-                    # variable flows apply to the health system and so true and reported are dealt with the same way
-                    for from_label, rate in self.models[scenario].var_infection_death_rate_flows:
-                        if strain in from_label and stratum in from_label:
-                            mortality_increment = self.models[scenario].get_compartment_soln(from_label) \
-                                                  * self.models[scenario].get_var_soln(rate) / denominator * 1e5
-                            for mortality_type in ['true_mortality', 'mortality']:
-                                epi_outputs[mortality_type + strain_stratum] = t_k.elementwise_list_addition(
-                                    mortality_increment, epi_outputs[mortality_type + strain_stratum])
-
-                # prevalence
-                if 'prevalence' in outputs_to_analyse:
-                    epi_outputs['prevalence' + strain_stratum] = blank_output_list
-                    for label in self.models[scenario].labels:
-                        if 'susceptible' not in label and 'latent' not in label \
-                                and strain in label and stratum in label:
-                            prevalence_increment \
-                                = self.models[scenario].get_compartment_soln(label) / denominator * 1e5
-                            epi_outputs['prevalence' + strain_stratum] \
-                                = t_k.elementwise_list_addition(prevalence_increment,
-                                                                epi_outputs['prevalence' + strain_stratum])
-
-                # absolute number of infections
-                if 'infections' in outputs_to_analyse:
-                    epi_outputs['infections' + strain_stratum] = blank_output_list
-                    for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
-                        if 'latent_early' in to_label and stratum in from_label:
-                            epi_outputs['infections' + strain_stratum] \
-                                = t_k.elementwise_list_addition(
-                                    self.models[scenario].get_compartment_soln(from_label)
-                                    * self.models[scenario].get_var_soln(rate),
-                                epi_outputs['infections' + strain_stratum])
-
-            # annual risk of infection
-            if 'infections' in outputs_to_analyse:
-                epi_outputs['annual_risk_infection' + stratum] = t_k.elementwise_list_division(
-                    epi_outputs['infections' + stratum], epi_outputs['population' + stratum], percentage=True)
-
-            # find percentage incidence by strain
-            for strain in self.models[scenario].strains:
-                if strain:
-                    epi_outputs['perc_incidence' + strain_stratum] \
-                        = t_k.elementwise_list_division(epi_outputs['incidence' + strain_stratum],
-                            t_k.prepare_denominator(epi_outputs['incidence' + stratum]), percentage=True)
-
-        return epi_outputs
 
     def find_population_fractions(self, scenario, strata_to_analyse=()):
         """
@@ -511,9 +372,7 @@ class ModelRunner:
         self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
         # prepare basic storage and local variables for uncertainty loop
-        n_accepted, prev_log_likelihood, starting_params, run, accepted, accepted_params, \
-            self.outputs['epi_uncertainty'] \
-            = 0, -5e2, [], 0, 0, None, {'adjustments': {'program_prop_death_reporting': [], 'mdr_introduce_time': []}}
+        n_accepted, prev_log_likelihood, starting_params, run, accepted, accepted_params = 0, -5e2, [], 0, 0, None
         for key_for_dicts in ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters',
                               'all_compartment_values']:
             self.outputs['epi_uncertainty'][key_for_dicts] = {}
@@ -617,9 +476,9 @@ class ModelRunner:
                             self.run_with_params(accepted_params, scenario=scenario)
                             self.store_uncertainty(scenario, 'epi_uncertainty')
 
+                    self.make_disease_specific_adjustments(last_run_output_index, years_to_compare)
+
                     # make algorithmic adjustments
-                    if self.adjust_mortality: self.adjust_mortality_reporting(last_run_output_index, years_to_compare)
-                    if self.adjust_mdr: self.adjust_mdr_introduction(last_run_output_index)
                     if self.adjust_population: self.adjust_start_population(last_run_output_index)
 
                 else:
@@ -635,46 +494,30 @@ class ModelRunner:
                     str(n_accepted) + ' accepted / ' + str(run) + ' candidates. Running time: '
                     + str(datetime.datetime.now() - start_timer_run))
 
-                # record death reporting proportion and mdr introduction time, which may or may not have been adjusted
-                if self.adjust_mortality:
-                    self.outputs['epi_uncertainty']['adjustments']['program_prop_death_reporting'].append(
-                        self.prop_death_reporting)
-                if self.adjust_mdr:
-                    self.outputs['epi_uncertainty']['adjustments']['mdr_introduce_time'].append(self.mdr_introduce_time)
+                self.record_disease_specific_adjustments()
 
                 run += 1
 
     def get_fitting_data(self):
         """
-        Define the characteristics (mean and standard deviation) of the normal distribution for model outputs
-        - currently incidence and mortality only.
-
-        Returns:
-            norm_dist_params: Dictionary with keys outputs and values dictionaries. Sub-dictionaries have keys years
-                and values lists, with first element of list means and second standard deviations.
+        Get data to fit the model outputs to, which will always be disease-specific.
         """
 
-        # dictionary storing the characteristics of the normal distributions
-        norm_dist_params = {}
-        for output_dict in self.inputs.outputs_unc:
-            norm_dist_params[output_dict['key']] = {}
+        pass
 
-            # incidence
-            if output_dict['key'] == 'incidence':
-                for year in self.inputs.data_to_fit[output_dict['key']].keys():
-                    low, high = self.inputs.data_to_fit['incidence_low'][year], \
-                                self.inputs.data_to_fit['incidence_high'][year]
-                    norm_dist_params[output_dict['key']][year] \
-                        = [(high + low) / 2., output_dict['width_multiplier'] * (high - low) / (2. * 1.96)]
+    def make_disease_specific_adjustments(self, last_run_output_index, years_to_compare):
+        """
+        Make any disease specific adjustments to improve automatic calibration.
+        """
 
-            # mortality
-            elif output_dict['key'] == 'mortality':
-                sd = output_dict['posterior_width'] / (2. * 1.96)
-                for year in self.inputs.data_to_fit[output_dict['key']].keys():
-                    mu = self.inputs.data_to_fit[output_dict['key']][year]
-                    norm_dist_params[output_dict['key']][year] = [mu, sd]
+        pass
 
-        return norm_dist_params
+    def record_disease_specific_adjustments(self):
+        """
+        Record the values of the adjustments made in disease-specific automatic calibration.
+        """
+
+        pass
 
     def run_with_params(self, params, scenario=0):
         """
@@ -840,45 +683,6 @@ class ModelRunner:
                     self.models[0].set_parameter(compartment,
                                                  self.models[0].params[compartment] * population_adjustment)
 
-    def adjust_mortality_reporting(self, last_run_output_index, years_to_compare):
-        """
-        Adjust the proportion of mortality captured by reporting systems to better match reported data.
-
-        Args:
-            last_run_output_index: Integer to index the run
-            years_to_compare: Years to compare the reported mortality to the modelled mortality over
-        """
-
-        ratios = []
-        for year in years_to_compare:
-            if year in self.inputs.original_data['gtb']['e_mort_exc_tbhiv_100k']:
-                ratios.append(self.outputs['epi_uncertainty']['epi'][0]['mortality'][last_run_output_index,
-                    t_k.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'], float(year))]
-                              / self.inputs.original_data['gtb']['e_mort_exc_tbhiv_100k'][year])
-        average_ratio = numpy.mean(ratios)
-        if average_ratio < 1. / self.relative_difference_to_adjust_mortality:
-            self.prop_death_reporting += self.amount_to_adjust_mortality
-        elif average_ratio > self.relative_difference_to_adjust_mortality:
-            self.prop_death_reporting -= self.amount_to_adjust_mortality
-
-    def adjust_mdr_introduction(self, last_run_output_index):
-        """
-        Adjust timing of MDR-TB algorithmically to better match modern proportionate burden observed. May not work if
-        introducing earlier doesn't consistently result in a greater burden of disease - as was the case for Bulgaria.
-        """
-
-        ratio_mdr_prevalence \
-            = float(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'][last_run_output_index,
-                t_k.find_first_list_element_at_least_value(self.outputs['manual']['epi'][0]['times'],
-                                                                self.inputs.model_constants['current_time'])]) \
-              / self.inputs.model_constants['tb_perc_mdr_prevalence']
-        if ratio_mdr_prevalence < 1. / self.relative_difference_to_adjust_mdr:
-            self.mdr_introduce_time -= self.amount_to_adjust_mdr_year
-        elif ratio_mdr_prevalence > self.relative_difference_to_adjust_mdr:
-            self.mdr_introduce_time += self.amount_to_adjust_mdr_year
-        for scenario in self.scenarios:
-            self.models[scenario].set_parameter('mdr_introduce_time', self.mdr_introduce_time)
-
     def plot_progressive_parameters(self):
         """
         Produce real-time parameter plot, according to which GUI is in use.
@@ -972,8 +776,8 @@ class ModelRunner:
         # find all possible combinations of the considered interventions
         all_possible_combinations \
             = list(itertools.chain.from_iterable(
-            itertools.combinations(range(len(self.interventions_considered_for_opti)), n) for n in
-            range(len(self.interventions_considered_for_opti) + 1)[1:]))
+                itertools.combinations(range(len(self.interventions_considered_for_opti)), n) for n in
+                range(len(self.interventions_considered_for_opti) + 1)[1:]))
 
         # determine whether each combination is fund-able given start-up costs
         fundable_combinations = []
@@ -1173,4 +977,253 @@ class ModelRunner:
 
         if self.js_gui: self.js_gui('console', {'message': comment})
 
+
+''' disease-specific model runners '''
+
+
+class TbRunner(ModelRunner):
+    def __init__(self, gui_inputs, runtime_outputs, js_gui=None):
+
+        ModelRunner.__init__(self, gui_inputs, runtime_outputs, js_gui)
+
+        # outputs
+        self.epi_outputs_to_analyse = ['incidence', 'prevalence', 'mortality', 'true_mortality', 'notifications']
+        self.outputs_unc = [{'key': 'incidence',
+                             'posterior_width': None,
+                             'width_multiplier': 2.  # width of normal posterior relative to range of allowed values
+                             }]
+
+        # uncertainty adjustments
+        self.outputs['epi_uncertainty'] \
+            = {'adjustments': {'program_prop_death_reporting': [], 'mdr_introduce_time': []}}
+        self.relative_difference_to_adjust_mortality = 1.1
+        self.relative_difference_to_adjust_mdr = 1.1
+        self.amount_to_adjust_mortality = .02
+        self.amount_to_adjust_mdr_year = 1.
+        self.prop_death_reporting = self.inputs.model_constants['program_prop_death_reporting']
+        self.adjust_mortality = True
+        adjust_mdr = False
+        self.adjust_mdr = False if len(self.inputs.strains) < 2 else adjust_mdr
+        self.mdr_introduce_time = self.inputs.model_constants['mdr_introduce_time']
+
+    ''' output interpretation methods '''
+
+    def find_epi_outputs(self, scenario, epi_outputs_to_analyse=None, strata_to_analyse=[[]]):
+        """
+        Method to extract all requested epidemiological outputs from the models. Intended ultimately to be flexible
+        enough for use for analysis of scenarios, uncertainty and optimisation.
+
+        Args:
+            scenario: The integer value representing the scenario of the model to be analysed
+            epi_outputs_to_analyse: List of strings for the outputs of interest to be worked through
+            strata_to_analyse: List of any stratifications that outputs are required over, i.e. list of lists
+        """
+
+        # preliminaries
+        outputs_to_analyse = epi_outputs_to_analyse if epi_outputs_to_analyse else self.epi_outputs_to_analyse
+        epi_outputs, strata = {'times': self.models[scenario].times}, ['']
+        blank_output_list = [0.] * len(epi_outputs['times'])
+        for stratification_type in strata_to_analyse: strata += stratification_type
+
+        # all outputs should cycle over each stratum, or at least be able to
+        for stratum in strata:
+
+            # population
+            epi_outputs['population' + stratum] = blank_output_list
+            for compartment in self.models[scenario].compartments:
+                if stratum in compartment:
+                    epi_outputs['population' + stratum] = t_k.elementwise_list_addition(
+                        self.models[scenario].get_compartment_soln(compartment), epi_outputs['population' + stratum])
+
+            # replace zeroes with small numbers for division
+            denominator = t_k.prepare_denominator(epi_outputs['population' + stratum])
+
+            # to allow calculation by strain and the total output
+            for strain in [''] + self.models[scenario].strains:
+                strain_stratum = strain + stratum
+
+                # incidence
+                if 'incidence' in outputs_to_analyse:
+                    epi_outputs['incidence' + strain_stratum] = blank_output_list
+                    for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
+                        if 'latent' in from_label and 'active' in to_label \
+                                and strain in to_label and stratum in from_label:
+                            incidence_increment = self.models[scenario].get_compartment_soln(from_label) \
+                                                  * self.models[scenario].get_var_soln(rate) / denominator * 1e5
+                            epi_outputs['incidence' + strain_stratum] \
+                                = t_k.elementwise_list_addition(incidence_increment,
+                                                                epi_outputs['incidence' + strain_stratum])
+                    for from_label, to_label, rate in self.models[scenario].fixed_transfer_rate_flows:
+                        if 'latent' in from_label and 'active' in to_label \
+                                and strain in to_label and stratum in from_label:
+                            incidence_increment \
+                                = self.models[scenario].get_compartment_soln(from_label) * rate / denominator * 1e5
+                            epi_outputs['incidence' + strain_stratum] \
+                                = t_k.elementwise_list_addition(incidence_increment,
+                                                                epi_outputs['incidence' + strain_stratum])
+
+                # notifications
+                if 'notifications' in outputs_to_analyse:
+                    epi_outputs['notifications' + strain_stratum] = blank_output_list
+                    for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
+                        if 'active' in from_label and 'detect' in to_label \
+                                and strain in to_label and stratum in from_label:
+                            notifications_increment \
+                                = self.models[scenario].get_compartment_soln(from_label) \
+                                  * self.models[scenario].get_var_soln(rate)
+                            epi_outputs['notifications' + strain_stratum] \
+                                = t_k.elementwise_list_addition(notifications_increment,
+                                                                epi_outputs['notifications' + strain_stratum])
+
+                # mortality
+                if 'mortality' in outputs_to_analyse:
+                    epi_outputs['mortality' + strain_stratum], epi_outputs['true_mortality' + strain_stratum] \
+                        = [blank_output_list] * 2
+
+                    # fixed flows are outside of the health system and so the natural death contribution is reduced
+                    for from_label, rate in self.models[scenario].fixed_infection_death_rate_flows:
+                        if strain in from_label and stratum in from_label:
+                            mortality_increment \
+                                = self.models[scenario].get_compartment_soln(from_label) * rate / denominator * 1e5
+                            epi_outputs['true_mortality' + strain_stratum] = t_k.elementwise_list_addition(
+                                mortality_increment, epi_outputs['true_mortality' + strain_stratum])
+                            epi_outputs['mortality' + strain_stratum] = t_k.elementwise_list_addition(
+                                mortality_increment * self.prop_death_reporting,
+                                epi_outputs['mortality' + strain_stratum])
+
+                    # variable flows apply to the health system and so true and reported are dealt with the same way
+                    for from_label, rate in self.models[scenario].var_infection_death_rate_flows:
+                        if strain in from_label and stratum in from_label:
+                            mortality_increment = self.models[scenario].get_compartment_soln(from_label) \
+                                                  * self.models[scenario].get_var_soln(rate) / denominator * 1e5
+                            for mortality_type in ['true_mortality', 'mortality']:
+                                epi_outputs[mortality_type + strain_stratum] = t_k.elementwise_list_addition(
+                                    mortality_increment, epi_outputs[mortality_type + strain_stratum])
+
+                # prevalence
+                if 'prevalence' in outputs_to_analyse:
+                    epi_outputs['prevalence' + strain_stratum] = blank_output_list
+                    for label in self.models[scenario].labels:
+                        if 'susceptible' not in label and 'latent' not in label \
+                                and strain in label and stratum in label:
+                            prevalence_increment \
+                                = self.models[scenario].get_compartment_soln(label) / denominator * 1e5
+                            epi_outputs['prevalence' + strain_stratum] \
+                                = t_k.elementwise_list_addition(prevalence_increment,
+                                                                epi_outputs['prevalence' + strain_stratum])
+
+                # absolute number of infections
+                if 'infections' in outputs_to_analyse:
+                    epi_outputs['infections' + strain_stratum] = blank_output_list
+                    for from_label, to_label, rate in self.models[scenario].var_transfer_rate_flows:
+                        if 'latent_early' in to_label and stratum in from_label:
+                            epi_outputs['infections' + strain_stratum] \
+                                = t_k.elementwise_list_addition(
+                                    self.models[scenario].get_compartment_soln(from_label)
+                                    * self.models[scenario].get_var_soln(rate),
+                                epi_outputs['infections' + strain_stratum])
+
+            # annual risk of infection
+            if 'infections' in outputs_to_analyse:
+                epi_outputs['annual_risk_infection' + stratum] = t_k.elementwise_list_division(
+                    epi_outputs['infections' + stratum], epi_outputs['population' + stratum], percentage=True)
+
+            # find percentage incidence by strain
+            for strain in self.models[scenario].strains:
+                if strain:
+                    epi_outputs['perc_incidence' + strain_stratum] \
+                        = t_k.elementwise_list_division(epi_outputs['incidence' + strain_stratum],
+                            t_k.prepare_denominator(epi_outputs['incidence' + stratum]), percentage=True)
+
+        return epi_outputs
+
+    ''' epidemiological uncertainty-related methods '''
+
+    def get_fitting_data(self):
+        """
+        Define the characteristics (mean and standard deviation) of the normal distribution for model outputs
+        - currently incidence and mortality only.
+
+        Returns:
+            norm_dist_params: Dictionary with keys outputs and values dictionaries. Sub-dictionaries have keys years
+                and values lists, with first element of list means and second standard deviations.
+        """
+
+        # dictionary storing the characteristics of the normal distributions
+        norm_dist_params = {}
+        for output_dict in self.inputs.outputs_unc:
+            norm_dist_params[output_dict['key']] = {}
+
+            # incidence
+            if output_dict['key'] == 'incidence':
+                for year in self.inputs.data_to_fit[output_dict['key']].keys():
+                    low, high = self.inputs.data_to_fit['incidence_low'][year], \
+                                self.inputs.data_to_fit['incidence_high'][year]
+                    norm_dist_params[output_dict['key']][year] \
+                        = [(high + low) / 2., output_dict['width_multiplier'] * (high - low) / (2. * 1.96)]
+
+            # mortality
+            elif output_dict['key'] == 'mortality':
+                sd = output_dict['posterior_width'] / (2. * 1.96)
+                for year in self.inputs.data_to_fit[output_dict['key']].keys():
+                    mu = self.inputs.data_to_fit[output_dict['key']][year]
+                    norm_dist_params[output_dict['key']][year] = [mu, sd]
+
+        return norm_dist_params
+
+    def make_disease_specific_adjustments(self, last_run_output_index, years_to_compare):
+        """
+        Make any TB-specific adjustments required for automatic calibration here. Arguments are just passed through to
+        the specific methods below.
+        """
+
+        if self.adjust_mortality: self.adjust_mortality_reporting(last_run_output_index, years_to_compare)
+        if self.adjust_mdr: self.adjust_mdr_introduction(last_run_output_index)
+
+    def adjust_mortality_reporting(self, last_run_output_index, years_to_compare):
+        """
+        Adjust the proportion of mortality captured by reporting systems to better match reported data.
+
+        Args:
+            last_run_output_index: Integer to index the run
+            years_to_compare: Years to compare the reported mortality to the modelled mortality over
+        """
+
+        ratios = []
+        for year in years_to_compare:
+            if year in self.inputs.original_data['gtb']['e_mort_exc_tbhiv_100k']:
+                ratios.append(self.outputs['epi_uncertainty']['epi'][0]['mortality'][last_run_output_index,
+                    t_k.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'], float(year))]
+                              / self.inputs.original_data['gtb']['e_mort_exc_tbhiv_100k'][year])
+        average_ratio = numpy.mean(ratios)
+        if average_ratio < 1. / self.relative_difference_to_adjust_mortality:
+            self.prop_death_reporting += self.amount_to_adjust_mortality
+        elif average_ratio > self.relative_difference_to_adjust_mortality:
+            self.prop_death_reporting -= self.amount_to_adjust_mortality
+
+    def adjust_mdr_introduction(self, last_run_output_index):
+        """
+        Adjust timing of MDR-TB algorithmically to better match modern proportionate burden observed. May not work if
+        introducing earlier doesn't consistently result in a greater burden of disease - as was the case for Bulgaria.
+        """
+
+        ratio_mdr_prevalence \
+            = float(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'][last_run_output_index,
+                t_k.find_first_list_element_at_least_value(self.outputs['manual']['epi'][0]['times'],
+                                                                self.inputs.model_constants['current_time'])]) \
+              / self.inputs.model_constants['tb_perc_mdr_prevalence']
+        if ratio_mdr_prevalence < 1. / self.relative_difference_to_adjust_mdr:
+            self.mdr_introduce_time -= self.amount_to_adjust_mdr_year
+        elif ratio_mdr_prevalence > self.relative_difference_to_adjust_mdr:
+            self.mdr_introduce_time += self.amount_to_adjust_mdr_year
+        for scenario in self.scenarios:
+            self.models[scenario].set_parameter('mdr_introduce_time', self.mdr_introduce_time)
+
+    def record_disease_specific_adjustments(self):
+        # record death reporting proportion and mdr introduction time, which may or may not have been adjusted
+        if self.adjust_mortality:
+            self.outputs['epi_uncertainty']['adjustments']['program_prop_death_reporting'].append(
+                self.prop_death_reporting)
+        if self.adjust_mdr:
+            self.outputs['epi_uncertainty']['adjustments']['mdr_introduce_time'].append(self.mdr_introduce_time)
 

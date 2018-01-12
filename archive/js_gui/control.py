@@ -164,8 +164,8 @@ class Autumn:
         self._emit_message("Running model...")
         self._emit_message("--------------------------------------------------")
 
-        model_runner = autumn.model_runner.ModelRunner(self.model_settings, runtime_outputs=None,
-                                                       figure_frame=None, js_gui=True)
+        model_runner = autumn.model_runner.TbRunner(self.model_settings, runtime_outputs=None,
+                                                    figure_frame=None, js_gui=True)
         model_runner.master_runner()
         model_outputs = autumn.outputs.Project(model_runner, self.model_settings)
         model_outputs.master_outputs_runner()

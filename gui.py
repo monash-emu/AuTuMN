@@ -486,7 +486,7 @@ class App:
         # if not self.gui_outputs['output_uncertainty']:
         #     self.figure_frame.withdraw()
 
-        self.model_runner = autumn.model_runner.ModelRunner(
+        self.model_runner = autumn.model_runner.TbRunner(
             self.gui_outputs, self.runtime_outputs, js_gui=self.handle_message)
         self.model_runner.master_runner()
         project = outputs.Project(self.model_runner, self.gui_outputs)

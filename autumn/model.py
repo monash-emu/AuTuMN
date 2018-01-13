@@ -1480,4 +1480,3 @@ class ConsolidatedModel(StratifiedModel):
             # treatment non-completion flows
             self.set_fixed_transfer_rate_flow('onipt' + end,
                                               'latent_early' + self.strains[0] + end, 'rate_ipt_noncompletion')
-

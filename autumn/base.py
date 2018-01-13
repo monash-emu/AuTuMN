@@ -40,7 +40,7 @@ class BaseModel:
         self.times = []
         self.time = 0.
         self.start_time = 0.
-        self.cost_times = []
+        self.time_step = 1.
         self.scaleup_fns = {}
         self.vars = {}
         self.var_labels = None
@@ -54,18 +54,10 @@ class BaseModel:
         self.var_transfer_rate_flows = []
         self.var_entry_rate_flows = []
         self.var_infection_death_rate_flows = []
-        self.costs = None
-        self.run_costing = True
-        self.end_period_costing = 2035
-        self.interventions_to_cost = []
-        self.interventions_considered_for_opti = []
-        self.eco_drives_epi = False
-        self.available_funding = {}
-        self.annual_available_funding = {}
-        self.startups_apply = {}
         self.graph = None
         self.loaded_compartments = None
         self.scenario = 0
+        self.run_costing = True
         self.compartment_soln = {}
         self.integration_method = None
         self.relevant_interventions = []
@@ -97,7 +89,6 @@ class BaseModel:
         """
 
         return [i for i, j in enumerate(self.times) if j >= time][0] - 1
-        raise ValueError('Time not found')
 
     ''' methods to set values to aspects of the model '''
 
@@ -287,11 +278,19 @@ class BaseModel:
         Simple method to add a scale-up function to the dictionary of scale-ups.
 
         Args:
-            label: String for name of function.
-            fn: The function to be added.
+            label: String for name of function
+            fn: The function to be added
         """
 
         self.scaleup_fns[label] = fn
+
+    def clear_vars(self):
+        """
+        Clear previously populated vars dictionary. Method over-written in economics structures in next tier of model
+        object up.
+        """
+
+        self.vars.clear()
 
     def calculate_scaleup_vars(self):
         """
@@ -303,7 +302,7 @@ class BaseModel:
     def calculate_vars(self):
         """
         Calculate the self.vars that depend on current model conditions (compartment sizes) rather than scale-up
-        functions. (Model-specific, so currently just "pass".)
+        functions. (model-specific)
         """
 
         pass
@@ -360,19 +359,7 @@ class BaseModel:
         in the diagnostics round.
         """
 
-        # before clearing vars, need to save the popsize vars for economics calculations
-        saved_vars = {}
-        if self.eco_drives_epi:
-            for key in self.vars.keys():
-                if 'popsize' in key: saved_vars[key] = self.vars[key]
-
-        # clear previously populated vars dictionary
-        self.vars.clear()
-
-        # re-populated from saved vars
-        self.vars = saved_vars
-
-        # calculate vars and flows sequentially
+        self.clear_vars()
         self.calculate_scaleup_vars()
         self.calculate_vars()
         self.calculate_flows()
@@ -388,10 +375,10 @@ class BaseModel:
 
     def init_run(self):
         """
-        Works through the main methods in needed for the integration process.
+        Works through the main methods in needed for the integration process. Contains more code that is dependent on
+        correct naming of inputs, but should be universal to models based on this class (i.e. scenario_end_time).
         """
 
-        # more code that is dependent on correct naming of inputs, but should be universal to models based on this class
         self.make_times(self.start_time, self.inputs.model_constants['scenario_end_time'], self.time_step)
         self.initialise_compartments()
         self.set_flows()
@@ -514,7 +501,7 @@ class BaseModel:
                     dt_is_ok = False
                     cpt_reduce_step += 1
                     if cpt_reduce_step > 50:
-                        print "integration did not complete. The following compartments became negative:"
+                        print 'integration did not complete. The following compartments became negative:'
                         print [self.labels[i] for i in range(len(y_candidate)) if y_candidate[i] < 0.]
                         break
 
@@ -541,115 +528,23 @@ class BaseModel:
 
     def make_adjustments_during_integration(self, y):
         """
-        Adjusts the proportions of the population in each risk group according to the calculations
-        made in assess_riskgroup_props.
-
-        Args:
-            y: The original compartment vector y to be adjusted.
-        Returns:
-            The adjusted compartment vector (y).
+        Only relevant to stratified models at this stage, because this is the only adjustment made.
         """
 
         pass
 
     def checks(self):
         """
-        Assertion(s) run during simulation.
+        Assertion(s) run during simulation. Currently only checks that compartments are positive.
         """
 
-        # check all compartments are positive
         for label in self.labels: assert self.compartments[label] >= 0.
 
     ''' output/diagnostic calculations '''
 
-    def calculate_output_vars(self):
-        """
-        Calculate diagnostic vars that can depend on self.flows, as well as self.vars calculated in calculate_vars.
-        """
+    def calculate_economics_diagnostics(self):
 
         pass
-
-    def calculate_economics_diagnostics(self):
-        """
-        Run the economics diagnostics associated with a model run. Note that integration has been completed by this
-        point. Only the raw costs are stored in the model object, while the other costs will be calculated when
-        generating outputs.
-        """
-
-        self.cost_times = self.times[tool_kit.find_first_list_element_at_least_value(
-            self.times, self.inputs.model_constants['recent_time']):]
-        self.costs = numpy.zeros((len(self.cost_times), len(self.interventions_to_cost)))
-
-        for i, inter in enumerate(self.interventions_to_cost):
-            for t, time in enumerate(self.cost_times):
-
-                # costs from cost-coverage curves
-                cost = get_cost_from_coverage(self.scaleup_fns['int_prop_' + inter](time),
-                                              self.inputs.model_constants['econ_inflectioncost_' + inter],
-                                              self.inputs.model_constants['econ_saturation_' + inter],
-                                              self.inputs.model_constants['econ_unitcost_' + inter],
-                                              self.var_array[t, self.var_labels.index('popsize_' + inter)])
-
-                # start-up costs
-                if 'econ_startupcost_' + inter in self.inputs.model_constants \
-                        and 'econ_startupduration_' + inter in self.inputs.model_constants \
-                        and self.inputs.model_constants['econ_startupduration_' + inter] > 0.:
-                    cost = self.add_startup_costs(cost, time, inter)
-                self.costs[t, i] = cost
-
-    def add_startup_costs(self, cost, time, intervention):
-        """
-        Adds a smoothed out amount of start-up costs to the relevant times. Uses the beta PDF to smooth out scale-up
-        costs. Note that the beta PDF of scipy returns zeros if its first argument is not between zero and one, so the
-        code should still work.
-
-        Args:
-            cost: The cost at the time in question before start-up costs are applied
-            time: Float for the calendar time being costed
-            intervention: String for the intervention being costed
-        Returns:
-            Costs at the time point considered for the intervention in question updated for start-ups as required
-        """
-
-        return cost + scipy.stats.beta.pdf((time - self.inputs.model_constants['scenario_start_time'])
-                                           / self.inputs.model_constants['econ_startupduration_' + intervention],
-                                           2., 5.) \
-                    / self.inputs.model_constants['econ_startupduration_' + intervention] \
-                    * self.inputs.model_constants['econ_startupcost_' + intervention]
-
-    def update_vars_from_cost(self):
-        """
-        Update parameter values according to the funding allocated to each interventions. This process is done during
-        integration.
-        """
-
-        interventions = self.interventions_considered_for_opti
-        for int in interventions:
-            if (int in ['ipt_age0to5', 'ipt_age5to15']) and (len(self.agegroups) < 2):
-                continue
-
-            vars_key = 'int_prop_' + int
-            cost = self.annual_available_funding[int]
-            if cost == 0.:
-                coverage = 0.
-            else:
-                unit_cost = self.inputs.model_constants['econ_unitcost_' + int]
-                c_inflection_cost = self.inputs.model_constants['econ_inflectioncost_' + int]
-                saturation = self.inputs.model_constants['econ_saturation_' + int]
-                popsize_key = 'popsize_' + int
-                if popsize_key in self.vars.keys():
-                    pop_size = self.vars[popsize_key]
-                else:
-                    pop_size = 0.
-
-                # starting costs
-                # is a program starting right now? in that case, update intervention_startdates
-                if self.inputs.intervention_startdates[self.scenario][int] is None:  # intervention hadn't started yet
-                    self.inputs.intervention_startdates[self.scenario][int] = self.time
-
-                # starting cost has already been taken into account in 'distribute_funding_across_years'
-                coverage = get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.)
-            self.vars[vars_key] = coverage
 
     def get_compartment_soln(self, label):
         """
@@ -839,7 +734,7 @@ class BaseModel:
                                                                              aggregates['remainder'])
         return aggregates, compartments_to_divide_over
 
-    ''' flow diagram production '''
+    ''' flow diagram '''
 
     def make_flow_diagram(self, png):
         """
@@ -867,9 +762,9 @@ class BaseModel:
 
         def num_str(f):
             abs_f = abs(f)
-            if abs_f > 1E9: return '%.1fB' % (f/1E9)
-            if abs_f > 1E6: return '%.1fM' % (f/1E6)
-            if abs_f > 1E3: return '%.1fK' % (f/1E3)
+            if abs_f > 1e9: return '%.1fB' % (f/1E9)
+            if abs_f > 1e6: return '%.1fM' % (f/1E6)
+            if abs_f > 1e3: return '%.1fK' % (f/1E3)
             if abs_f > 100.: return '%.0f' % f
             if abs_f > 0.5: return '%.1f' % f
             if abs_f > 0.05: return '%.2f' % f
@@ -896,7 +791,116 @@ class BaseModel:
         self.graph = apply_styles(self.graph, styles)
         self.graph.render(base)
 
-    ''' intervention-related methods '''
+
+class EconomicModel(BaseModel):
+    def __init__(self):
+        BaseModel.__init__(self)
+
+        self.cost_times = []
+        self.eco_drives_epi = False
+        self.costs = None
+        self.end_period_costing = 2035.
+        self.interventions_to_cost = []
+        self.interventions_considered_for_opti = []
+        self.available_funding = {}
+        self.annual_available_funding = {}
+        self.startups_apply = {}
+
+    def clear_vars(self):
+
+        # before clearing vars, need to save the popsize vars for economics calculations
+        saved_vars = {}
+        if self.eco_drives_epi:
+            for key in self.vars.keys():
+                if 'popsize' in key: saved_vars[key] = self.vars[key]
+
+        # clear previously populated vars dictionary
+        self.vars.clear()
+
+        # re-populated from saved vars
+        self.vars = saved_vars
+
+    def calculate_economics_diagnostics(self):
+        """
+        Run the economics diagnostics associated with a model run. Note that integration has been completed by this
+        point. Only the raw costs are stored in the model object, while the other costs will be calculated when
+        generating outputs.
+        """
+
+        self.cost_times = self.times[tool_kit.find_first_list_element_at_least_value(
+            self.times, self.inputs.model_constants['recent_time']):]
+        self.costs = numpy.zeros((len(self.cost_times), len(self.interventions_to_cost)))
+
+        for i, inter in enumerate(self.interventions_to_cost):
+            for t, time in enumerate(self.cost_times):
+
+                # costs from cost-coverage curves
+                cost = get_cost_from_coverage(self.scaleup_fns['int_prop_' + inter](time),
+                                              self.inputs.model_constants['econ_inflectioncost_' + inter],
+                                              self.inputs.model_constants['econ_saturation_' + inter],
+                                              self.inputs.model_constants['econ_unitcost_' + inter],
+                                              self.var_array[t, self.var_labels.index('popsize_' + inter)])
+
+                # start-up costs
+                if 'econ_startupcost_' + inter in self.inputs.model_constants \
+                        and 'econ_startupduration_' + inter in self.inputs.model_constants \
+                        and self.inputs.model_constants['econ_startupduration_' + inter] > 0.:
+                    cost = self.add_startup_costs(cost, time, inter)
+                self.costs[t, i] = cost
+
+    def add_startup_costs(self, cost, time, intervention):
+        """
+        Adds a smoothed out amount of start-up costs to the relevant times. Uses the beta PDF to smooth out scale-up
+        costs. Note that the beta PDF of scipy returns zeros if its first argument is not between zero and one, so the
+        code should still work.
+
+        Args:
+            cost: The cost at the time in question before start-up costs are applied
+            time: Float for the calendar time being costed
+            intervention: String for the intervention being costed
+        Returns:
+            Costs at the time point considered for the intervention in question updated for start-ups as required
+        """
+
+        return cost + scipy.stats.beta.pdf((time - self.inputs.model_constants['scenario_start_time'])
+                                           / self.inputs.model_constants['econ_startupduration_' + intervention],
+                                           2., 5.) \
+                    / self.inputs.model_constants['econ_startupduration_' + intervention] \
+                    * self.inputs.model_constants['econ_startupcost_' + intervention]
+
+    def update_vars_from_cost(self):
+        """
+        Update parameter values according to the funding allocated to each interventions. This process is done during
+        integration.
+        """
+
+        interventions = self.interventions_considered_for_opti
+        for i in interventions:
+            if i in ['ipt_age0to5', 'ipt_age5to15'] and len(self.agegroups) < 2:
+                continue
+
+            vars_key = 'int_prop_' + i
+            cost = self.annual_available_funding[i]
+            if cost == 0.:
+                coverage = 0.
+            else:
+                unit_cost = self.inputs.model_constants['econ_unitcost_' + i]
+                c_inflection_cost = self.inputs.model_constants['econ_inflectioncost_' + i]
+                saturation = self.inputs.model_constants['econ_saturation_' + i]
+                popsize_key = 'popsize_' + i
+                if popsize_key in self.vars.keys():
+                    pop_size = self.vars[popsize_key]
+                else:
+                    pop_size = 0.
+
+                # starting costs
+                # is a program starting right now? in that case, update intervention_startdates
+                if self.inputs.intervention_startdates[self.scenario][i] is None:  # intervention hadn't started yet
+                    self.inputs.intervention_startdates[self.scenario][i] = self.time
+
+                # starting cost has already been taken into account in 'distribute_funding_across_years'
+                coverage = get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.)
+            self.vars[vars_key] = coverage
 
     def distribute_funding_across_years(self):
 
@@ -919,10 +923,16 @@ class BaseModel:
                 self.annual_available_funding[inter] = (self.available_funding[inter])/n_years
 
 
-class StratifiedModel(BaseModel):
-    def __init__(self):
+class StratifiedModel(EconomicModel):
+    """
+    Adds the stratifications for the entire populations and some methods that are universally applicable to them. Note
+    that the stratifications into disease classes (e.g. pulmonary/extrapulmonary for TB) is done in the disease-specific
+    model module.
+    """
 
-        BaseModel.__init__(self)
+    def __init__(self):
+        EconomicModel.__init__(self)
+
         self.agegroups = []
         self.riskgroups = []
         self.actual_risk_props = {}
@@ -957,7 +967,7 @@ class StratifiedModel(BaseModel):
             # if integration has started properly
             if self.compartments:
 
-                # Find the actual proportions in each risk group stratum
+                # find the actual proportions in each risk group stratum
                 population = sum(self.compartments.values())
                 for riskgroup in self.riskgroups:
                     if riskgroup not in self.actual_risk_props:
@@ -967,7 +977,7 @@ class StratifiedModel(BaseModel):
                         if riskgroup in c:
                             self.actual_risk_props[riskgroup][-1] += self.compartments[c] / population
 
-                # Find the scaling factor for the risk group in question
+                # find the scaling factor for the risk group in question
                 for riskgroup in self.riskgroups:
                     if self.actual_risk_props[riskgroup][-1] > 0.:
                         risk_adjustment_factor[riskgroup] = self.target_risk_props[riskgroup][-1] \
@@ -991,7 +1001,7 @@ class StratifiedModel(BaseModel):
 
     def set_ageing_flows(self):
         """
-        Set ageing flows for any number of age stratifications.
+        Set ageing flows for any number of age groups.
         """
 
         for label in self.labels:

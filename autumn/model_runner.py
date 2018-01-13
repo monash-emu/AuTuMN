@@ -1226,4 +1226,3 @@ class TbRunner(ModelRunner):
                 self.prop_death_reporting)
         if self.adjust_mdr:
             self.outputs['epi_uncertainty']['adjustments']['mdr_introduce_time'].append(self.mdr_introduce_time)
-

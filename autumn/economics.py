@@ -1,119 +1,110 @@
 
+# external imports
 import scipy
 import numpy
 
 
-def get_cost_from_coverage(coverage, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.):
-
+def get_cost_from_coverage(coverage, inflection_cost, saturation, unit_cost, popsize, alpha=1.):
     """
-    Estimate the global uninflated cost associated with a given coverage
+    Estimate the raw cost associated with a given coverage for a specific intervention.
+
     Args:
-        coverage: the coverage (as a proportion, then lives in 0-1)
-        c_inflection_cost: cost at which inflection occurs on the curve. It's also the configuration leading to the
-                            best efficiency.
-        saturation: maximal acceptable coverage, ie upper asymptote
-        unit_cost: unit cost of the intervention
-        pop_size: size of the population targeted by the intervention
-        alpha: steepness parameter
-
+        coverage: The intervention's coverage as a proportion
+        inflection_cost: Cost at which inflection occurs on the curve (also the point of maximal efficiency)
+        saturation: Maximal possible coverage, i.e. upper asymptote of the logistic curve
+        unit_cost: Unit cost of the intervention
+        popsize: Size of the population targeted by the intervention
+        alpha: Steepness parameter determining the curve's shape
     Returns:
-        uninflated cost
-
+        The raw cost from the logistic function
     """
 
-    # If unit cost or pop_size is null, return 0
-    if pop_size * unit_cost == 0.:
-        return 0.
-    assert 0. <= coverage <= saturation, 'coverage must verify 0 <= coverage <= saturation'
+    # if unit cost or pop_size or coverage is null, return 0
+    if popsize == 0. or unit_cost == 0. or coverage == 0.: return 0.
+    assert 0. <= coverage <= saturation, 'Coverage must satisfy 0 <= coverage <= saturation'
+    if coverage == saturation: coverage = saturation - 1e-6
 
-    if coverage == 0.:
-        return 0.
-    elif coverage == saturation:
-        coverage = saturation - 1e-9
-    # Here's the logistic curve function code
+    # logistic curve function code
     a = saturation / (1. - 2. ** alpha)
-    b = ((2. ** (alpha + 1.)) / (alpha * (saturation - a) * unit_cost * pop_size))
-    cost_uninflated = c_inflection_cost - 1. / b * scipy.log(
-        (((saturation - a) / (coverage - a)) ** (1. / alpha)) - 1.)
-
-    return cost_uninflated
+    b = 2. ** (alpha + 1.) / (alpha * (saturation - a) * unit_cost * popsize)
+    return inflection_cost - 1. / b * scipy.log(((saturation - a) / (coverage - a)) ** (1. / alpha) - 1.)
 
 
-def get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.0):
-
+def get_coverage_from_cost(spending, inflection_cost, saturation, unit_cost, popsize, alpha=1.):
     """
-    Estimate the coverage associated with a spending in a programme
-    Args:
-       cost: the amount of money allocated to a programme (absolute number, not a proportion of global funding)
-       c_inflection_cost: cost at which inflection occurs on the curve. It's also the configuration leading to the
-                           best efficiency.
-       saturation: maximal acceptable coverage, ie upper asymptote
-       unit_cost: unit cost of the intervention
-       pop_size: size of the population targeted by the intervention
-       alpha: steepness parameter
+    Estimate the coverage associated with a spending in a program.
 
+    Args:
+        spending: The amount of money allocated to a program (absolute value, not a proportion of all funding)
+        inflection_cost: Cost at which inflection occurs on the curve (also the point of maximal efficiency)
+        saturation: Maximal possible coverage, i.e. upper asymptote of the logistic curve
+        unit_cost: Unit cost of the intervention
+        popsize: Size of the population targeted by the intervention
+        alpha: Steepness parameter determining the curve's shape
     Returns:
-       coverage (as a proportion, then lives in 0-1)
+        The proportional coverage of the intervention given the spending
    """
 
-    assert cost >= 0, 'cost must be positive or null'
-    if cost <= c_inflection_cost:  # if cost is smaller thar c_inflection_cost, then the starting cost necessary to get coverage has not been reached
-        return 0
+    assert spending >= 0, 'cost must be positive or null'
 
-    if pop_size * unit_cost == 0:  # if unit cost or pop_size is null, return 0
-        return 0
+    # if cost is smaller thar c_inflection_cost, then the starting cost necessary to get coverage has not been reached
+    if popsize == 0. or unit_cost == 0. or spending <= inflection_cost: return 0.
 
-    a = saturation / (1.0 - 2 ** alpha)
-    b = ((2.0 ** (alpha + 1.0)) / (alpha * (saturation - a) * unit_cost * pop_size))
-    coverage_estimated = a + (saturation - a) / (
-        (1 + numpy.exp((-b) * (cost - c_inflection_cost))) ** alpha)
-    return coverage_estimated
+    # if unit cost or pop_size is null, return 0
+    if popsize * unit_cost == 0: return 0
+
+    a = saturation / (1. - 2 ** alpha)
+    b = 2. ** (alpha + 1.) / (alpha * (saturation - a) * unit_cost * popsize)
+    return a + (saturation - a) / ((1 + numpy.exp((-b) * (spending - inflection_cost))) ** alpha)
 
 
-def inflate_cost(cost_uninflated, current_cpi, cpi_time_variant):
-
+def inflate_cost(raw_cost, current_cpi, cpi_time_variant):
     """
-    Calculate the inflated cost associated with cost_uninflated and considering the current cpi and the cpi correponding
-    to the date considered (cpi_time_variant)
+    Calculate the inflated cost associated with raw_cost, considering the current CPI and the CPI corresponding
+    to the date considered (cpi_time_variant).
 
     Returns:
-        the inflated cost
+        The inflated cost
     """
 
-    return cost_uninflated * current_cpi / cpi_time_variant
+    return raw_cost * current_cpi / cpi_time_variant
 
 
-def discount_cost(cost_uninflated, discount_rate, t_into_future):
-
+def discount_cost(raw_cost, discount_rate, t_into_future):
     """
-    Calculate the discounted cost associated with cost_uninflated at time (t + t_into_future)
+    Calculate the discounted cost associated with the raw cost at time (t + t_into_future)
+
     Args:
-        cost_uninflated: cost without accounting for discounting
-        discount_rate: discount rate (/year)
-        t_into_future: number of years into future at which we want to calculate the discounted cost
-
+        raw_cost: Cost without accounting for discounting
+        discount_rate: Discounting rate per year
+        t_into_future: Number of years into future at which we want to calculate the discounted cost
     Returns:
-        the discounted cost
+        The discounted cost
     """
 
-    assert t_into_future >= 0, 't_into_future must be >= 0'
-    return cost_uninflated / ((1 + discount_rate) ** t_into_future)
+    assert t_into_future >= 0., 't_into_future must be non-negative'
+    return raw_cost / ((1. + discount_rate) ** t_into_future)
 
 
-def get_adjusted_cost(raw_cost, type, current_cpi=None, cpi_time_variant=None, discount_rate=None, t_into_future=None):
-
+def get_adjusted_cost(raw_cost, approach, current_cpi=None, cpi_time_variant=None, discount_rate=None,
+                      time_into_future=None):
     """
-    calculate the adjusted cost corresponding to a given type
+    Calculate the adjusted cost corresponding to a given type.
+
     Args:
-        raw_cost: the raw cost
-        type: one of ['inflated', 'discounted', 'discounted_inflated']
-
-    Returns: the adjusted cost
+        raw_cost: The raw cost
+        approach: A string which must be one of 'inflated', 'discounted' or 'discounted_inflated'
+        current_cpi: Consumer price index at the current time
+        cpi_time_variant:
+        discount_rate: Discounting rate per year
+        time_into_future: Time into the future from the point at which the CPI was calculated
+    Returns:
+        The adjusted cost
     """
-    if type == 'inflated':
+
+    if approach == 'inflated':
         return inflate_cost(raw_cost, current_cpi, cpi_time_variant)
-    elif type == 'discounted':
-        return discount_cost(raw_cost, discount_rate, t_into_future)
-    elif type == 'discounted_inflated':
-        inflated_cost = inflate_cost(raw_cost, current_cpi, cpi_time_variant)
-        return discount_cost(inflated_cost, discount_rate, t_into_future)
+    elif approach == 'discounted':
+        return discount_cost(raw_cost, discount_rate, time_into_future)
+    elif approach == 'discounted_inflated':
+        return discount_cost(inflate_cost(raw_cost, current_cpi, cpi_time_variant), discount_rate, time_into_future)

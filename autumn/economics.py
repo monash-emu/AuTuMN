@@ -45,17 +45,12 @@ def get_coverage_from_cost(spending, inflection_cost, saturation, unit_cost, pop
         The proportional coverage of the intervention given the spending
    """
 
-    assert spending >= 0, 'cost must be positive or null'
-
     # if cost is smaller thar c_inflection_cost, then the starting cost necessary to get coverage has not been reached
-    if popsize == 0. or unit_cost == 0. or spending <= inflection_cost: return 0.
+    if popsize == 0. or unit_cost == 0. or spending == 0. or spending <= inflection_cost: return 0.
 
-    # if unit cost or pop_size is null, return 0
-    if popsize * unit_cost == 0: return 0
-
-    a = saturation / (1. - 2 ** alpha)
+    a = saturation / (1. - 2. ** alpha)
     b = 2. ** (alpha + 1.) / (alpha * (saturation - a) * unit_cost * popsize)
-    return a + (saturation - a) / ((1 + numpy.exp((-b) * (spending - inflection_cost))) ** alpha)
+    return a + (saturation - a) / ((1. + numpy.exp((-b) * (spending - inflection_cost))) ** alpha)
 
 
 def inflate_cost(raw_cost, current_cpi, cpi_time_variant):

@@ -876,31 +876,22 @@ class EconomicModel(BaseModel):
 
         interventions = self.interventions_considered_for_opti
         for i in interventions:
-            if i in ['ipt_age0to5', 'ipt_age5to15'] and len(self.agegroups) < 2:
-                continue
+            if i in ['ipt_age0to5', 'ipt_age5to15'] and len(self.agegroups) < 2: continue
+            int_key = 'int_prop_' + i
 
-            vars_key = 'int_prop_' + i
-            cost = self.annual_available_funding[i]
-            if cost == 0.:
-                coverage = 0.
-            else:
-                unit_cost = self.inputs.model_constants['econ_unitcost_' + i]
-                c_inflection_cost = self.inputs.model_constants['econ_inflectioncost_' + i]
-                saturation = self.inputs.model_constants['econ_saturation_' + i]
-                popsize_key = 'popsize_' + i
-                if popsize_key in self.vars.keys():
-                    pop_size = self.vars[popsize_key]
-                else:
-                    pop_size = 0.
+            # starting costs
+            # is a program starting right now? in that case, update intervention_startdates
+            if self.inputs.intervention_startdates[self.scenario][i] is None:  # intervention hadn't started yet
+                self.inputs.intervention_startdates[self.scenario][i] = self.time
 
-                # starting costs
-                # is a program starting right now? in that case, update intervention_startdates
-                if self.inputs.intervention_startdates[self.scenario][i] is None:  # intervention hadn't started yet
-                    self.inputs.intervention_startdates[self.scenario][i] = self.time
-
-                # starting cost has already been taken into account in 'distribute_funding_across_years'
-                coverage = get_coverage_from_cost(cost, c_inflection_cost, saturation, unit_cost, pop_size, alpha=1.)
-            self.vars[vars_key] = coverage
+            # starting cost has already been taken into account in 'distribute_funding_across_years'
+            self.vars[int_key] \
+                = get_coverage_from_cost(self.annual_available_funding[i],
+                                         self.inputs.model_constants['econ_inflectioncost_' + i],
+                                         self.inputs.model_constants['econ_saturation_' + i],
+                                         self.inputs.model_constants['econ_unitcost_' + i],
+                                         self.vars['popsize_' + i] if 'popsize_' + i in self.vars.keys() else 0.,
+                                         alpha=1.)
 
     def distribute_funding_across_years(self):
 

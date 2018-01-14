@@ -302,7 +302,15 @@ class BaseModel:
     def calculate_vars(self):
         """
         Calculate the self.vars that depend on current model conditions (compartment sizes) rather than scale-up
-        functions. (model-specific)
+        functions (model-specific).
+        """
+
+        pass
+
+    def calculate_vars_from_spending(self):
+        """
+        Method that can be used in economic calculations to calculate coverage of interventions from the spending
+        directed to them.
         """
 
         pass
@@ -361,6 +369,7 @@ class BaseModel:
 
         self.clear_vars()
         self.calculate_scaleup_vars()
+        self.calculate_vars_from_spending()
         self.calculate_vars()
         self.calculate_flows()
 
@@ -434,10 +443,8 @@ class BaseModel:
         self.var_array = numpy.zeros((n_time, len(self.var_labels)))
 
         # populate arrays for initial state
-        for i_label, var_label in enumerate(self.var_labels):
-            self.var_array[0, i_label] = self.vars[var_label]
-        for i_label, label in enumerate(self.labels):
-            self.flow_array[0, i_label] = self.flows[label]
+        for i_label, var_label in enumerate(self.var_labels): self.var_array[0, i_label] = self.vars[var_label]
+        for i_label, label in enumerate(self.labels): self.flow_array[0, i_label] = self.flows[label]
 
         # initialisation of iterative objects that will be used during integration
         y_candidate = numpy.zeros((len(y)))
@@ -868,30 +875,33 @@ class EconomicModel(BaseModel):
                     / self.inputs.model_constants['econ_startupduration_' + intervention] \
                     * self.inputs.model_constants['econ_startupcost_' + intervention]
 
-    def update_vars_from_cost(self):
+    def calculate_vars_from_spending(self):
         """
         Update parameter values according to the funding allocated to each interventions. This process is done during
         integration.
         """
 
-        interventions = self.interventions_considered_for_opti
-        for i in interventions:
-            if i in ['ipt_age0to5', 'ipt_age5to15'] and len(self.agegroups) < 2: continue
-            int_key = 'int_prop_' + i
+        if self.eco_drives_epi and self.time > self.inputs.model_constants['recent_time']:
+            interventions = self.interventions_considered_for_opti
+            for i in interventions:
 
-            # starting costs
-            # is a program starting right now? in that case, update intervention_startdates
-            if self.inputs.intervention_startdates[self.scenario][i] is None:  # intervention hadn't started yet
-                self.inputs.intervention_startdates[self.scenario][i] = self.time
+                # should ultimately remove this code
+                if i in ['ipt_age0to5', 'ipt_age5to15'] and len(self.agegroups) < 2: continue
 
-            # starting cost has already been taken into account in 'distribute_funding_across_years'
-            self.vars[int_key] \
-                = get_coverage_from_cost(self.annual_available_funding[i],
-                                         self.inputs.model_constants['econ_inflectioncost_' + i],
-                                         self.inputs.model_constants['econ_saturation_' + i],
-                                         self.inputs.model_constants['econ_unitcost_' + i],
-                                         self.vars['popsize_' + i] if 'popsize_' + i in self.vars.keys() else 0.,
-                                         alpha=1.)
+                int_key = 'int_prop_' + i
+
+                # update intervention_startdates if starting now
+                if self.inputs.intervention_startdates[self.scenario][i] is None:
+                    self.inputs.intervention_startdates[self.scenario][i] = self.time
+
+                # starting cost has already been taken into account in 'distribute_funding_across_years'
+                self.vars[int_key] \
+                    = get_coverage_from_cost(self.annual_available_funding[i],
+                                             self.inputs.model_constants['econ_inflectioncost_' + i],
+                                             self.inputs.model_constants['econ_saturation_' + i],
+                                             self.inputs.model_constants['econ_unitcost_' + i],
+                                             self.vars['popsize_' + i] if 'popsize_' + i in self.vars.keys() else 0.,
+                                             alpha=1.)
 
     def distribute_funding_across_years(self):
 
@@ -935,7 +945,7 @@ class StratifiedModel(EconomicModel):
         made in assess_risk_props above.
 
         Args:
-            y: The original compartment vector y to be adjusted.
+            y: The original compartment vector y to be adjusted
         Returns:
             The adjusted compartment vector (y).
         """

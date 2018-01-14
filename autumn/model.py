@@ -279,8 +279,6 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         self.ticker()
-        # parameter values are calculated from the costs, but only in the future
-        if self.eco_drives_epi and self.time > self.inputs.model_constants['recent_time']: self.update_vars_from_cost()
         self.calculate_demographic_vars()
         self.calculate_organ_progressions()
         self.calculate_progression_vars()

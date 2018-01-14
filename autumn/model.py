@@ -1110,7 +1110,7 @@ class ConsolidatedModel(StratifiedModel):
         for agegroup in self.agegroups:
             self.vars['popsize_ipt' + agegroup] = 0.
             for strain in self.strains:
-                for from_label, to_label, rate in self.var_transfer_rate_flows:
+                for from_label, to_label, rate in self.flows_by_type['var_transfer']:
                     if 'latent_early' in to_label and strain in to_label and agegroup in to_label:
                         self.vars['popsize_ipt' + agegroup] += self.compartments[from_label] * self.vars[rate]
 

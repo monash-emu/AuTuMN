@@ -48,12 +48,6 @@ class BaseModel:
         self.flow_array = None
         self.fraction_array = None
         self.flows = {}
-        self.fixed_transfer_rate_flows = []
-        self.linked_transfer_rate_flows = []
-        self.fixed_infection_death_rate_flows = []
-        self.var_transfer_rate_flows = []
-        self.var_entry_rate_flows = []
-        self.var_infection_death_rate_flows = []
         self.graph = None
         self.loaded_compartments = None
         self.scenario = 0
@@ -61,6 +55,18 @@ class BaseModel:
         self.compartment_soln = {}
         self.integration_method = None
         self.relevant_interventions = []
+        flow_types = ['var_entry', 'fixed_infection_death', 'var_infection_death', 'fixed_transfer', 'var_transfer',
+                      'linked_transfer']
+        self.flows_by_type = {}
+        for flow_type in flow_types: self.flows_by_type[flow_type] = []
+
+        self.flow_type_index = {
+            'var_entry': {'to': 0, 'rate': 1},
+            'fixed_infection_death': {'from': 0, 'rate': 1},
+            'var_infection_death': {'from': 0, 'rate': 1},
+            'fixed_transfer': {'from': 0, 'to': 1, 'rate': 2},
+            'var_transfer': {'from': 0, 'to': 1, 'rate': 2},
+            'linked_transfer': {'from': 0, 'to': 1, 'rate': 2}}
 
     ''' time-related functions '''
 
@@ -210,7 +216,7 @@ class BaseModel:
             var_label: String to index the parameters dictionary.
         """
 
-        add_unique_tuple_to_list(self.var_entry_rate_flows, (label, var_label))
+        add_unique_tuple_to_list(self.flows_by_type['var_entry'], (label, var_label))
 
     def set_fixed_infection_death_rate_flow(self, label, param_label):
         """
@@ -221,7 +227,7 @@ class BaseModel:
             param_label: String to index the parameters dictionary.
         """
 
-        add_unique_tuple_to_list(self.fixed_infection_death_rate_flows, (label, self.params[param_label]))
+        add_unique_tuple_to_list(self.flows_by_type['fixed_infection_death'], (label, self.params[param_label]))
 
     def set_var_infection_death_rate_flow(self, label, var_label):
         """
@@ -232,7 +238,7 @@ class BaseModel:
             var_label: String to index the parameters dictionary.
         """
 
-        add_unique_tuple_to_list(self.var_infection_death_rate_flows, (label, var_label))
+        add_unique_tuple_to_list(self.flows_by_type['var_infection_death'], (label, var_label))
 
     def set_fixed_transfer_rate_flow(self, from_label, to_label, param_label):
         """
@@ -244,7 +250,7 @@ class BaseModel:
             param_label: String to index the parameters dictionary.
         """
 
-        add_unique_tuple_to_list(self.fixed_transfer_rate_flows, (from_label, to_label, self.params[param_label]))
+        add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'], (from_label, to_label, self.params[param_label]))
 
     def set_linked_transfer_rate_flow(self, from_label, to_label, var_label):
         """
@@ -257,7 +263,7 @@ class BaseModel:
             var_label: String to index the vars dictionary.
         """
 
-        add_unique_tuple_to_list(self.linked_transfer_rate_flows, (from_label, to_label, var_label))
+        add_unique_tuple_to_list(self.flows_by_type['linked_transfer'], (from_label, to_label, var_label))
 
     def set_var_transfer_rate_flow(self, from_label, to_label, var_label):
         """
@@ -269,7 +275,7 @@ class BaseModel:
             var_label: String to index the vars dictionary.
         """
 
-        add_unique_tuple_to_list(self.var_transfer_rate_flows, (from_label, to_label, var_label))
+        add_unique_tuple_to_list(self.flows_by_type['var_transfer'], (from_label, to_label, var_label))
 
     ''' variable and flow-related methods '''
 
@@ -324,22 +330,23 @@ class BaseModel:
         for label in self.labels: self.flows[label] = 0.
 
         # birth flows
-        for label, vars_label in self.var_entry_rate_flows: self.flows[label] += self.vars[vars_label]
+        for label, vars_label in self.flows_by_type['var_entry']:
+            self.flows[label] += self.vars[vars_label]
 
         # dynamic transmission flows
-        for from_label, to_label, vars_label in self.var_transfer_rate_flows:
+        for from_label, to_label, vars_label in self.flows_by_type['var_transfer']:
             val = self.compartments[from_label] * self.vars[vars_label]
             self.flows[from_label] -= val
             self.flows[to_label] += val
 
         # fixed-rate flows
-        for from_label, to_label, rate in self.fixed_transfer_rate_flows:
+        for from_label, to_label, rate in self.flows_by_type['fixed_transfer']:
             val = self.compartments[from_label] * rate
             self.flows[from_label] -= val
             self.flows[to_label] += val
 
         # linked flows
-        for from_label, to_label, vars_label in self.linked_transfer_rate_flows:
+        for from_label, to_label, vars_label in self.flows_by_type['linked_transfer']:
             val = self.vars[vars_label]
             self.flows[from_label] -= val
             self.flows[to_label] += val
@@ -352,11 +359,11 @@ class BaseModel:
 
         # extra death flows
         self.vars['rate_infection_death'] = 0.
-        for label, rate in self.fixed_infection_death_rate_flows:
+        for label, rate in self.flows_by_type['fixed_infection_death']:
             val = self.compartments[label] * rate
             self.flows[label] -= val
             self.vars['rate_infection_death'] += val
-        for label, rate in self.var_infection_death_rate_flows:
+        for label, rate in self.flows_by_type['var_infection_death']:
             val = self.compartments[label] * self.vars[vars_label]
             self.flows[label] -= val
             self.vars['rate_infection_death'] += val
@@ -550,6 +557,10 @@ class BaseModel:
     ''' output/diagnostic calculations '''
 
     def calculate_economics_diagnostics(self):
+        """
+        Method that runs the costing processes after epidemiological integration has completed - i.e. where there is no
+        for the reverse direction of calculation where coverage is calculated from costs.
+        """
 
         pass
 
@@ -627,16 +638,16 @@ class BaseModel:
         for label in self.labels:
             if from_compartment in label:
                 outgoing_flows[label] = 0.
-                for flow in self.fixed_transfer_rate_flows:
+                for flow in self.flows_by_type['fixed_transfer']:
                     if flow[0] == label and to_compartment in flow[1]:
                         outgoing_flows[label] += flow[2]
-                for flow in self.var_transfer_rate_flows:
+                for flow in self.flows_by_type['var_transfer']:
                     if flow[0] == label and to_compartment in flow[1]:
                         outgoing_flows[label] += self.vars[flow[2]]
-                for flow in self.fixed_infection_death_rate_flows:
+                for flow in self.flows_by_type['fixed_infection_death']:
                     if flow[0] == label and to_compartment == '':
                         outgoing_flows[label] += flow[1]
-                for flow in self.var_infection_death_rate_flows:
+                for flow in self.flows_by_type['var_infection_death']:
                     if flow[0] == label and to_compartment == '':
                         outgoing_flows[label] += self.vars[flow[1]]
                 if to_compartment == '':
@@ -671,20 +682,20 @@ class BaseModel:
 
         numerator = 0.
         denominator = 0.
-        for flow in self.fixed_transfer_rate_flows:
+        for flow in self.flows_by_type['fixed_transfer']:
             if from_compartment in flow[0]:
                 denominator += flow[2]
                 if to_compartment in flow[1]:
                     numerator += flow[2]
-        for flow in self.var_transfer_rate_flows:
+        for flow in self.flows_by_type['var_transfer']:
             if from_compartment in flow[0]:
                 denominator += self.vars[flow[2]]
                 if to_compartment in flow[1]:
                     numerator += self.vars[flow[2]]
-        for flow in self.fixed_infection_death_rate_flows:
+        for flow in self.flows_by_type['fixed_infection_death']:
             if from_compartment in flow[0]:
                 denominator += flow[1]
-        for flow in self.var_infection_death_rate_flows:
+        for flow in self.flows_by_type['var_infection_death']:
             if from_compartment in flow[0]:
                 denominator += self.vars[flow[1]]
         return numerator / denominator
@@ -783,15 +794,15 @@ class BaseModel:
         for label in self.labels:
             self.graph.node(label)
         self.graph.node('tb_death')
-        for from_label, to_label, var_label in self.var_transfer_rate_flows:
+        for from_label, to_label, var_label in self.flows_by_type['var_transfer']:
             self.graph.edge(from_label, to_label, label=var_label[:4])
-        for from_label, to_label, rate in self.fixed_transfer_rate_flows:
+        for from_label, to_label, rate in self.flows_by_type['fixed_transfer']:
             self.graph.edge(from_label, to_label, label=num_str(rate))
-        for from_label, to_label, rate in self.linked_transfer_rate_flows:
+        for from_label, to_label, rate in self.flows_by_type['linked_transfer']:
             self.graph.edge(from_label, to_label, label='link')
-        for label, rate in self.fixed_infection_death_rate_flows:
+        for label, rate in self.flows_by_type['fixed_infection_death']:
             self.graph.edge(label, 'tb_death', label=num_str(rate))
-        for label, rate in self.var_infection_death_rate_flows:
+        for label, rate in self.flows_by_type['var_infection_death']:
             self.graph.edge(label, 'tb_death', label=var_label[:4])
         base, ext = os.path.splitext(png)
         if ext.lower() != '.png': base = png

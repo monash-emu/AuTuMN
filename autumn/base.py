@@ -59,7 +59,6 @@ class BaseModel:
                       'linked_transfer']
         self.flows_by_type = {}
         for flow_type in flow_types: self.flows_by_type[flow_type] = []
-
         self.flow_type_index = {
             'var_entry': {'to': 0, 'rate': 1},
             'fixed_infection_death': {'from': 0, 'rate': 1},

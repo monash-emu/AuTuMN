@@ -1024,6 +1024,7 @@ class TbRunner(ModelRunner):
         epi_outputs, strata = {'times': self.models[scenario].times}, ['']
         blank_output_list = [0.] * len(epi_outputs['times'])
         for stratification_type in strata_to_analyse: strata += stratification_type
+        master_mapper = self.models[scenario].flow_type_index
 
         # all outputs should cycle over each stratum, or at least be able to
         for stratum in strata:
@@ -1046,20 +1047,14 @@ class TbRunner(ModelRunner):
                 if 'incidence' in outputs_to_analyse:
                     epi_outputs['incidence' + strain_stratum] = blank_output_list
                     for flow_type in self.models[scenario].flows_by_type:
-                        mapping = self.models[scenario].flow_type_index[flow_type]
+                        mapper = master_mapper[flow_type]
                         for flow in self.models[scenario].flows_by_type[flow_type]:
-                            if 'from' in mapping and 'latent' in flow[mapping['from']] \
-                                    and 'to' in mapping and 'active' in flow[mapping['to']] \
-                                    and strain in flow[mapping['from']] and stratum in flow[mapping['from']]:
-                                if 'fixed' in flow_type:
-                                    incidence_increment \
-                                        = self.models[scenario].get_compartment_soln(flow[mapping['from']]) \
-                                          * flow[mapping['rate']] / denominator * 1e5
-                                else:
-                                    incidence_increment \
-                                        = self.models[scenario].get_compartment_soln(flow[mapping['from']]) \
-                                          * self.models[scenario].get_var_soln(flow[mapping['rate']]) \
-                                          / denominator * 1e5
+                            if self.compartment_related_to_flow(mapper, flow, 'latent', 'from') \
+                                    and self.compartment_related_to_flow(mapper, flow, 'active', 'to') \
+                                    and strain in flow[mapper['from']] and stratum in flow[mapper['from']]:
+                                incidence_increment \
+                                    = self.models[scenario].get_compartment_soln(flow[mapper['from']]) \
+                                      * self.get_rate_for_output(scenario, flow_type, flow) / denominator * 1e5
                                 epi_outputs['incidence' + strain_stratum] \
                                     = t_k.elementwise_list_addition(incidence_increment,
                                                                     epi_outputs['incidence' + strain_stratum])
@@ -1068,14 +1063,14 @@ class TbRunner(ModelRunner):
                 if 'notifications' in outputs_to_analyse:
                     epi_outputs['notifications' + strain_stratum] = blank_output_list
                     for flow_type in self.models[scenario].flows_by_type:
-                        mapping = self.models[scenario].flow_type_index[flow_type]
+                        mapper = master_mapper[flow_type]
                         for flow in self.models[scenario].flows_by_type[flow_type]:
-                            if 'from' in mapping and 'active' in flow[mapping['from']] \
-                                    and 'to' in mapping and 'detect' in flow[mapping['to']] \
-                                    and strain in flow[mapping['from']] and stratum in flow[mapping['from']]:
+                            if self.compartment_related_to_flow(mapper, flow, 'active', 'from') \
+                                    and self.compartment_related_to_flow(mapper, flow, 'detect', 'to') \
+                                    and strain in flow[mapper['from']] and stratum in flow[mapper['from']]:
                                 notifications_increment \
-                                    = self.models[scenario].get_compartment_soln(flow[mapping['from']]) \
-                                      * self.models[scenario].get_var_soln(flow[mapping['rate']])
+                                    = self.models[scenario].get_compartment_soln(flow[mapper['from']]) \
+                                      * self.get_rate_for_output(scenario, flow_type, flow)
                                 epi_outputs['notifications' + strain_stratum] \
                                     = t_k.elementwise_list_addition(notifications_increment,
                                                                     epi_outputs['notifications' + strain_stratum])
@@ -1085,27 +1080,19 @@ class TbRunner(ModelRunner):
                     epi_outputs['mortality' + strain_stratum], epi_outputs['true_mortality' + strain_stratum] \
                             = [blank_output_list] * 2
                     for flow_type in self.models[scenario].flows_by_type:
-                        mapping = self.models[scenario].flow_type_index[flow_type]
+                        mapper = master_mapper[flow_type]
                         for flow in self.models[scenario].flows_by_type[flow_type]:
-                            if 'death' in flow_type and strain in flow[mapping['from']] \
-                                    and stratum in flow[mapping['from']]:
-                                if 'fixed' in flow_type:
+                            if 'death' in flow_type and strain in flow[mapper['from']] \
+                                    and stratum in flow[mapper['from']]:
+                                for mortality_type in ['true_mortality', 'mortality']:
+                                    prop_death_reporting = self.prop_death_reporting \
+                                        if mortality_type == 'mortality' and 'fixed' in flow_type else 1.
                                     mortality_increment \
-                                        = self.models[scenario].get_compartment_soln(flow[mapping['from']]) \
-                                          * flow[mapping['rate']] / denominator * 1e5
-                                    epi_outputs['true_mortality' + strain_stratum] = t_k.elementwise_list_addition(
-                                        mortality_increment, epi_outputs['true_mortality' + strain_stratum])
-                                    epi_outputs['mortality' + strain_stratum] = t_k.elementwise_list_addition(
-                                        mortality_increment * self.prop_death_reporting,
-                                        epi_outputs['mortality' + strain_stratum])
-                                elif 'var' in flow_type:
-                                    mortality_increment \
-                                        = self.models[scenario].get_compartment_soln(flow[mapping['from']]) \
-                                          * self.models[scenario].get_var_soln(flow[mapping['rate']]) \
-                                          / denominator * 1e5
-                                    for mortality_type in ['true_mortality', 'mortality']:
-                                        epi_outputs[mortality_type + strain_stratum] = t_k.elementwise_list_addition(
-                                            mortality_increment, epi_outputs[mortality_type + strain_stratum])
+                                        = self.models[scenario].get_compartment_soln(flow[mapper['from']]) \
+                                          * self.get_rate_for_output(scenario, flow_type, flow) / denominator * 1e5
+                                    epi_outputs[mortality_type + strain_stratum] = t_k.elementwise_list_addition(
+                                        mortality_increment * prop_death_reporting,
+                                        epi_outputs[mortality_type + strain_stratum])
 
                 # prevalence
                 if 'prevalence' in outputs_to_analyse:
@@ -1123,14 +1110,14 @@ class TbRunner(ModelRunner):
                 if 'infections' in outputs_to_analyse:
                     epi_outputs['infections' + strain_stratum] = blank_output_list
                     for flow_type in self.models[scenario].flows_by_type:
-                        mapping = self.models[scenario].flow_type_index[flow_type]
+                        mapper = master_mapper[flow_type]
                         for flow in self.models[scenario].flows_by_type[flow_type]:
-                            if 'to' in mapping and 'latent_early' in flow[mapping['to']] \
-                                    and stratum in flow[mapping['to']] and strain in flow[mapping['from']]:
+                            if self.compartment_related_to_flow(mapper, flow, 'latent_early', 'to') \
+                                    and stratum in flow[mapper['to']] and strain in flow[mapper['from']]:
                                 epi_outputs['infections' + strain_stratum] \
                                     = t_k.elementwise_list_addition(
-                                        self.models[scenario].get_compartment_soln(flow[mapping['from']])
-                                        * self.models[scenario].get_var_soln(flow[mapping['rate']]),
+                                        self.models[scenario].get_compartment_soln(flow[mapper['from']])
+                                        * self.get_rate_for_output(scenario, flow_type, flow),
                                     epi_outputs['infections' + strain_stratum])
 
             # annual risk of infection
@@ -1143,9 +1130,26 @@ class TbRunner(ModelRunner):
                 if strain:
                     epi_outputs['perc_incidence' + strain_stratum] \
                         = t_k.elementwise_list_division(epi_outputs['incidence' + strain_stratum],
-                            t_k.prepare_denominator(epi_outputs['incidence' + stratum]), percentage=True)
+                                                        t_k.prepare_denominator(epi_outputs['incidence' + stratum]),
+                                                        percentage=True)
 
         return epi_outputs
+
+    def get_rate_for_output(self, scenario, flow_type, flow):
+
+        mapper = self.models[scenario].flow_type_index[flow_type]
+        if 'fixed_' in flow_type:
+            return flow[mapper['rate']]
+        else:
+            return self.models[scenario].get_var_soln(flow[mapper['rate']])
+
+    def compartment_related_to_flow(self, mapper, flow, compartment, from_or_to):
+
+        if from_or_to not in mapper:
+            return False
+        elif compartment in flow[mapper[from_or_to]]:
+            return True
+        return False
 
     ''' epidemiological uncertainty-related methods '''
 

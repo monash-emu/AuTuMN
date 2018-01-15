@@ -376,6 +376,26 @@ def are_all_values_the_same(dictionary_to_evaluate, keys_of_interest=(0, 1)):
     return True
 
 
+def are_strings_in_subdict(mapper, subdict, strings_of_interest, string_for_mapper):
+    """
+    Search an element of a sub-dictionary to determine whether a particular string is present in it. Mostly for use in
+    calculating outputs in the model runner module.
+
+    Args:
+        mapper: Dictionary describing the purpose of each element of the subdict
+        subdict: The sub-dictionary, which has one element being the string of interest to search
+        strings_of_interest: The strings being searched for
+        string_for_mapper: The string to be fed to the mapper to find which element of subdict we're after
+    """
+
+    if string_for_mapper not in mapper:
+        return False
+    else:
+        for string in strings_of_interest:
+            if string not in subdict[mapper[string_for_mapper]]: return False
+        return True
+
+
 ''' scenario name manipulation '''
 
 

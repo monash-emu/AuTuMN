@@ -1049,9 +1049,8 @@ class TbRunner(ModelRunner):
                     for flow_type in self.models[scenario].flows_by_type:
                         mapper = master_mapper[flow_type]
                         for flow in self.models[scenario].flows_by_type[flow_type]:
-                            if self.compartment_related_to_flow(mapper, flow, 'latent', 'from') \
-                                    and self.compartment_related_to_flow(mapper, flow, 'active', 'to') \
-                                    and strain in flow[mapper['from']] and stratum in flow[mapper['from']]:
+                            if t_k.are_strings_in_subdict(mapper, flow, ['latent', strain, stratum], 'from') \
+                                    and t_k.are_strings_in_subdict(mapper, flow, ['active'], 'to'):
                                 incidence_increment \
                                     = self.models[scenario].get_compartment_soln(flow[mapper['from']]) \
                                       * self.get_rate_for_output(scenario, flow_type, flow) / denominator * 1e5
@@ -1065,9 +1064,8 @@ class TbRunner(ModelRunner):
                     for flow_type in self.models[scenario].flows_by_type:
                         mapper = master_mapper[flow_type]
                         for flow in self.models[scenario].flows_by_type[flow_type]:
-                            if self.compartment_related_to_flow(mapper, flow, 'active', 'from') \
-                                    and self.compartment_related_to_flow(mapper, flow, 'detect', 'to') \
-                                    and strain in flow[mapper['from']] and stratum in flow[mapper['from']]:
+                            if t_k.are_strings_in_subdict(mapper, flow, ['active', strain, stratum], 'from') \
+                                    and t_k.are_strings_in_subdict(mapper, flow, ['detect'], 'to'):
                                 notifications_increment \
                                     = self.models[scenario].get_compartment_soln(flow[mapper['from']]) \
                                       * self.get_rate_for_output(scenario, flow_type, flow)
@@ -1090,21 +1088,19 @@ class TbRunner(ModelRunner):
                                     mortality_increment \
                                         = self.models[scenario].get_compartment_soln(flow[mapper['from']]) \
                                           * self.get_rate_for_output(scenario, flow_type, flow) / denominator * 1e5
-                                    epi_outputs[mortality_type + strain_stratum] = t_k.elementwise_list_addition(
-                                        mortality_increment * prop_death_reporting,
-                                        epi_outputs[mortality_type + strain_stratum])
+                                    epi_outputs[mortality_type + strain_stratum] \
+                                        = t_k.elementwise_list_addition(mortality_increment * prop_death_reporting,
+                                                                        epi_outputs[mortality_type + strain_stratum])
 
                 # prevalence
                 if 'prevalence' in outputs_to_analyse:
                     epi_outputs['prevalence' + strain_stratum] = blank_output_list
                     for label in self.models[scenario].labels:
-                        if 'susceptible' not in label and 'latent' not in label \
-                                and strain in label and stratum in label:
-                            prevalence_increment \
-                                = self.models[scenario].get_compartment_soln(label) / denominator * 1e5
-                            epi_outputs['prevalence' + strain_stratum] \
-                                = t_k.elementwise_list_addition(prevalence_increment,
-                                                                epi_outputs['prevalence' + strain_stratum])
+                        if 'susceptible' not in label and 'latent' not in label and strain in label \
+                                and stratum in label:
+                            prevalence_increment = self.models[scenario].get_compartment_soln(label) / denominator * 1e5
+                            epi_outputs['prevalence' + strain_stratum] = t_k.elementwise_list_addition(
+                                prevalence_increment, epi_outputs['prevalence' + strain_stratum])
 
                 # absolute number of infections
                 if 'infections' in outputs_to_analyse:
@@ -1112,8 +1108,7 @@ class TbRunner(ModelRunner):
                     for flow_type in self.models[scenario].flows_by_type:
                         mapper = master_mapper[flow_type]
                         for flow in self.models[scenario].flows_by_type[flow_type]:
-                            if self.compartment_related_to_flow(mapper, flow, 'latent_early', 'to') \
-                                    and stratum in flow[mapper['to']] and strain in flow[mapper['from']]:
+                            if t_k.are_strings_in_subdict(mapper, flow, ['latent_early', strain, stratum], 'to'):
                                 epi_outputs['infections' + strain_stratum] \
                                     = t_k.elementwise_list_addition(
                                         self.models[scenario].get_compartment_soln(flow[mapper['from']])
@@ -1136,20 +1131,22 @@ class TbRunner(ModelRunner):
         return epi_outputs
 
     def get_rate_for_output(self, scenario, flow_type, flow):
+        """
+        Find the numeric output for a flow rate, regardless of whether the intercompartmental flow is fixed or variable.
+
+        Args:
+            scenario: Integer for scenario
+            flow_type: String for the type of flow
+            flow: The tuple representing the individual flow
+        Returns:
+            The flow rate as a float value
+        """
 
         mapper = self.models[scenario].flow_type_index[flow_type]
         if 'fixed_' in flow_type:
             return flow[mapper['rate']]
         else:
             return self.models[scenario].get_var_soln(flow[mapper['rate']])
-
-    def compartment_related_to_flow(self, mapper, flow, compartment, from_or_to):
-
-        if from_or_to not in mapper:
-            return False
-        elif compartment in flow[mapper[from_or_to]]:
-            return True
-        return False
 
     ''' epidemiological uncertainty-related methods '''
 

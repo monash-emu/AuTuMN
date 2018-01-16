@@ -16,7 +16,7 @@ import warnings
 import itertools
 
 # AuTuMN imports
-from autumn.base import BaseModel, StratifiedModel
+from autumn.base import StratifiedModel, EconomicModel
 import tool_kit as t_k
 
 
@@ -47,7 +47,7 @@ def find_outcome_proportions_by_period(proportion, early_period, total_period):
     return early_proportion, late_proportion
 
 
-class ConsolidatedModel(StratifiedModel):
+class ConsolidatedModel(StratifiedModel, EconomicModel):
     """
     The transmission dynamic model to underpin all AuTuMN analyses.
     Inherits from BaseModel and then StratifiedModel, which is intended to be general to any infectious disease.
@@ -83,8 +83,8 @@ class ConsolidatedModel(StratifiedModel):
         """
 
         # inherited initialisations
-        BaseModel.__init__(self)
         StratifiedModel.__init__(self)
+        EconomicModel.__init__(self)
 
         # model attributes set from model runner object
         self.inputs = inputs

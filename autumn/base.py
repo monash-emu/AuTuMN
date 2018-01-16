@@ -31,7 +31,6 @@ class BaseModel:
     """
 
     def __init__(self):
-
         self.inputs = None
         self.labels = []
         self.init_compartments = {}
@@ -810,6 +809,11 @@ class BaseModel:
 
 
 class EconomicModel(BaseModel):
+    """
+    Class containing all the economic-related methods, although the BaseModel needs to have structure for placeholders
+    for these methods when economics is not being utilised.
+    """
+
     def __init__(self):
         BaseModel.__init__(self)
 
@@ -942,7 +946,7 @@ class StratifiedModel(EconomicModel):
     """
 
     def __init__(self):
-        EconomicModel.__init__(self)
+        BaseModel.__init__(self)
 
         self.agegroups = []
         self.riskgroups = []

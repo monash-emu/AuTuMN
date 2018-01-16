@@ -188,7 +188,8 @@ class ModelRunner:
         self.emit_delay = 0.1
         self.plot_count = 0
         self.js_gui = js_gui
-        if self.js_gui: self.js_gui('init')
+        if self.js_gui:
+            self.js_gui('init')
 
     ''' master methods to run other methods '''
 
@@ -199,7 +200,8 @@ class ModelRunner:
 
         # prepare file for saving
         out_dir = 'saved_uncertainty_analyses'
-        if not os.path.isdir(out_dir): os.makedirs(out_dir)
+        if not os.path.isdir(out_dir):
+            os.makedirs(out_dir)
         storage_file_name = os.path.join(out_dir, 'store.pkl')
 
         # load a saved simulation
@@ -210,8 +212,10 @@ class ModelRunner:
         # or run the manual scenarios as requested by user
         else:
             self.run_manual_calibration()
-            if self.gui_inputs['output_uncertainty']: self.run_epi_uncertainty()
-            if self.intervention_uncertainty: self.run_intervention_uncertainty()
+            if self.gui_inputs['output_uncertainty']:
+                self.run_epi_uncertainty()
+            if self.intervention_uncertainty:
+                self.run_intervention_uncertainty()
 
         # save uncertainty if requested
         if self.gui_inputs['pickle_uncertainty'] == 'Save':
@@ -219,10 +223,12 @@ class ModelRunner:
             t_k.pickle_save(self.outputs, storage_file_name)
 
         # master optimisation method
-        if self.optimisation and not self.load_optimisation: self.run_optimisation()
+        if self.optimisation and not self.load_optimisation:
+            self.run_optimisation()
 
         # prepare file for saving, save and load as requested
-        if not os.path.isdir(self.opti_outputs_dir): os.makedirs(self.opti_outputs_dir)
+        if not os.path.isdir(self.opti_outputs_dir):
+            os.makedirs(self.opti_outputs_dir)
         self.load_opti_results()
         self.save_opti_results()
 
@@ -240,10 +246,11 @@ class ModelRunner:
 
             # name, initialise and describe model, with appropriate times for scenario runs if required
             self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
-            if scenario > 0: self.prepare_new_model_from_baseline(scenario)
+            if scenario > 0:
+                self.prepare_new_model_from_baseline(scenario)
             self.add_comment_to_gui_window(
                 'Running %s conditions for %s using point estimates for parameters.'
-                    % ('manual_' + t_k.find_scenario_string_from_number(scenario), self.gui_inputs['country']))
+                % ('manual_' + t_k.find_scenario_string_from_number(scenario), self.gui_inputs['country']))
 
             # integrate
             self.models[scenario].integrate()
@@ -276,6 +283,24 @@ class ModelRunner:
 
     ''' output interpretation methods '''
 
+    def get_rate_for_output(self, scenario, flow_type, flow):
+        """
+        Find the numeric output for a flow rate, regardless of whether the intercompartmental flow is fixed or variable.
+
+        Args:
+            scenario: Integer for scenario
+            flow_type: String for the type of flow
+            flow: The tuple representing the individual flow
+        Returns:
+            The flow rate as a float value
+        """
+
+        mapper = self.models[scenario].flow_type_index[flow_type]
+        if 'fixed_' in flow_type:
+            return flow[mapper['rate']]
+        else:
+            return self.models[scenario].get_var_soln(flow[mapper['rate']])
+
     def find_epi_outputs(self, scenario, epi_outputs_to_analyse=None, strata_to_analyse=[[]]):
         """
         Method to extract all requested epidemiological outputs from the models. Intended ultimately to be flexible
@@ -290,7 +315,8 @@ class ModelRunner:
         # preliminaries
         outputs_to_analyse = epi_outputs_to_analyse if epi_outputs_to_analyse else self.epi_outputs_to_analyse
         epi_outputs, strata = {'times': self.models[scenario].times}, ['']
-        for stratification_type in strata_to_analyse: strata += stratification_type
+        for stratification_type in strata_to_analyse:
+            strata += stratification_type
 
         # all outputs should cycle over each stratum, or at least be able to
         for stratum in strata:
@@ -303,18 +329,22 @@ class ModelRunner:
 
                 # standard rate outputs
                 for output in self.standard_rate_outputs:
-                    epi_outputs = self.find_standard_rate_output(
-                        epi_outputs, scenario, output, outputs_to_analyse, strain, stratum)
+                    if output in outputs_to_analyse:
+                        epi_outputs = self.find_standard_rate_output(epi_outputs, scenario, output, strain, stratum)
 
                 # mortality and prevalence calculations
-                epi_outputs = self.find_mortality_output(epi_outputs, scenario, outputs_to_analyse, strain, stratum)
-                epi_outputs = self.find_prevalence_output(epi_outputs, scenario, outputs_to_analyse, strain, stratum)
+                if 'mortality' in outputs_to_analyse:
+                    epi_outputs = self.find_mortality_output(epi_outputs, scenario, strain, stratum)
+                if 'prevalence' in outputs_to_analyse:
+                    epi_outputs = self.find_prevalence_output(epi_outputs, scenario, strain, stratum)
 
             # aggregate outputs ignoring strain status
-            epi_outputs = self.find_outputs_aggregated_over_strain(epi_outputs, stratum, outputs_to_analyse)
+            if 'infections' in outputs_to_analyse:
+                epi_outputs = self.find_outputs_aggregated_over_strain(epi_outputs, stratum)
 
             # proportional outputs by strain
-            epi_outputs = self.find_outputs_proportional_by_strain(epi_outputs, scenario, stratum)
+            if 'incidence' in outputs_to_analyse:
+                epi_outputs = self.find_outputs_proportional_by_strain(epi_outputs, scenario, stratum)
 
         return epi_outputs
 
@@ -337,7 +367,7 @@ class ModelRunner:
                     self.models[scenario].get_compartment_soln(label), epi_outputs['population' + stratum])
         return epi_outputs
 
-    def find_standard_rate_output(self, epi_outputs, scenario, output, outputs_to_analyse, strain, stratum):
+    def find_standard_rate_output(self, epi_outputs, scenario, output, strain, stratum):
         """
         Standard method for looping through epidemiological outputs that are defined by their from and to compartments
         only (as specified in self.from_labels and self.to_labels).
@@ -345,7 +375,7 @@ class ModelRunner:
         Args:
             epi_outputs: Output data structure to be updated
             scenario: Integer for scenario value
-            outputs_to_analyse: List of the outputs of interest
+            output: String representing the output of interest
             strain: Strain being evaluated
             stratum: Population stratum being evaluated
         Returns:
@@ -358,28 +388,25 @@ class ModelRunner:
         denominator \
             = t_k.prepare_denominator(epi_outputs['population' + stratum]) if output in self.divide_population else 1.
         multiplier = self.multipliers[output] if output in self.multipliers else 1.
-        outputs_to_analyse = outputs_to_analyse if outputs_to_analyse else self.epi_outputs_to_analyse
-        if output in outputs_to_analyse:
-            epi_outputs[output + strain_stratum] = blank_output_list
-            for flow_type in self.models[scenario].flows_by_type:
-                mapper = master_mapper[flow_type]
-                for flow in self.models[scenario].flows_by_type[flow_type]:
-                    if t_k.are_strings_in_subdict(mapper, flow, self.from_labels[output] + [strain, stratum], 'from') \
-                            and t_k.are_strings_in_subdict(mapper, flow, self.to_labels[output], 'to'):
-                        increment = self.models[scenario].get_compartment_soln(flow[mapper['from']]) \
-                                    * self.get_rate_for_output(scenario, flow_type, flow) / denominator * multiplier
-                        epi_outputs[output + strain_stratum] \
-                            = t_k.elementwise_list_addition(increment, epi_outputs[output + strain_stratum])
+        epi_outputs[output + strain_stratum] = blank_output_list
+        for flow_type in self.models[scenario].flows_by_type:
+            mapper = master_mapper[flow_type]
+            for flow in self.models[scenario].flows_by_type[flow_type]:
+                if t_k.are_strings_in_subdict(mapper, flow, self.from_labels[output] + [strain, stratum], 'from') \
+                        and t_k.are_strings_in_subdict(mapper, flow, self.to_labels[output], 'to'):
+                    increment = self.models[scenario].get_compartment_soln(flow[mapper['from']]) \
+                                * self.get_rate_for_output(scenario, flow_type, flow) / denominator * multiplier
+                    epi_outputs[output + strain_stratum] \
+                        = t_k.elementwise_list_addition(increment, epi_outputs[output + strain_stratum])
         return epi_outputs
 
-    def find_mortality_output(self, epi_outputs, scenario, outputs_to_analyse, strain, stratum):
+    def find_mortality_output(self, epi_outputs, scenario, strain, stratum):
         """
         Currently only coded for TB, which is quite disease-specific.
 
         Args:
             epi_outputs: Output data structure to be updated
             scenario: Integer for scenario value
-            outputs_to_analyse: List of the outputs of interest
             strain: Strain being evaluated
             stratum: Population stratum being evaluated
         Returns:
@@ -388,22 +415,20 @@ class ModelRunner:
 
         return epi_outputs
 
-    def find_outputs_aggregated_over_strain(self, epi_outputs, stratum, outputs_to_analyse):
+    def find_outputs_aggregated_over_strain(self, epi_outputs, stratum):
         """
         Find any outputs that do not depend upon the strain being evaluated.
 
         Args:
             epi_outputs: Output data structure to be updated
-            outputs_to_analyse: List of the outputs of interest
             stratum: Population stratum being evaluated
         Returns:
             Updated version of epi_outputs
         """
 
         # annual risk of infection
-        if 'infections' in outputs_to_analyse:
-            epi_outputs['annual_risk_infection' + stratum] = t_k.elementwise_list_division(
-                epi_outputs['infections' + stratum], epi_outputs['population' + stratum], percentage=True)
+        epi_outputs['annual_risk_infection' + stratum] = t_k.elementwise_list_division(
+            epi_outputs['infections' + stratum], epi_outputs['population' + stratum], percentage=True)
         return epi_outputs
 
     def find_outputs_proportional_by_strain(self, epi_outputs, scenario, stratum):
@@ -426,7 +451,7 @@ class ModelRunner:
                                                     percentage=True)
         return epi_outputs
 
-    def find_prevalence_output(self, epi_outputs, scenario, outputs_to_analyse, strain, stratum):
+    def find_prevalence_output(self, epi_outputs, scenario, strain, stratum):
         """
         General method to calculate prevalence of disease based on a list of all the compartment strings that
         represent states without disease (i.e. self.non_disease_compartment_strings).
@@ -434,7 +459,6 @@ class ModelRunner:
         Args:
             epi_outputs: Output data structure to be updated
             scenario: Integer for scenario value
-            outputs_to_analyse: List of the outputs of interest
             strain: Strain being evaluated
             stratum: Population stratum being evaluated
         Returns:
@@ -444,14 +468,13 @@ class ModelRunner:
         blank_output_list = [0.] * len(epi_outputs['times'])
         strain_stratum = strain + stratum
         denominator = t_k.prepare_denominator(epi_outputs['population' + stratum])
-        if 'prevalence' in outputs_to_analyse:
-            epi_outputs['prevalence' + strain_stratum] = blank_output_list
-            for label in self.models[scenario].labels:
-                if not any(s in label for s in self.non_disease_compartment_strings) \
-                        and all(s in label for s in [strain, stratum]):
-                    prevalence_increment = self.models[scenario].get_compartment_soln(label) / denominator * 1e5
-                    epi_outputs['prevalence' + strain_stratum] = t_k.elementwise_list_addition(
-                        prevalence_increment, epi_outputs['prevalence' + strain_stratum])
+        epi_outputs['prevalence' + strain_stratum] = blank_output_list
+        for label in self.models[scenario].labels:
+            if not any(s in label for s in self.non_disease_compartment_strings) \
+                    and all(s in label for s in [strain, stratum]):
+                prevalence_increment = self.models[scenario].get_compartment_soln(label) / denominator * 1e5
+                epi_outputs['prevalence' + strain_stratum] = t_k.elementwise_list_addition(
+                    prevalence_increment, epi_outputs['prevalence' + strain_stratum])
         return epi_outputs
 
     def find_population_fractions(self, scenario, strata_to_analyse=()):
@@ -608,7 +631,8 @@ class ModelRunner:
                 for p, param in enumerate(self.inputs.param_ranges_unc):
                     param_val = proposed_params[p]
                     self.outputs['epi_uncertainty']['all_parameters'][param['key']].append(proposed_params[p])
-                    if 'additional_params' not in param: param['additional_params'] = None
+                    if 'additional_params' not in param:
+                        param['additional_params'] = None
                     prior_log_likelihood += find_log_probability_density(
                         param['distribution'], param_val, param['bounds'], additional_params=param['additional_params'])
 
@@ -663,7 +687,8 @@ class ModelRunner:
                     self.make_disease_specific_adjustments(last_run_output_index, years_to_compare)
 
                     # make algorithmic adjustments
-                    if self.adjust_population: self.adjust_start_population(last_run_output_index)
+                    if self.adjust_population:
+                        self.adjust_start_population(last_run_output_index)
 
                 else:
                     self.outputs['epi_uncertainty']['whether_accepted'].append(False)
@@ -779,7 +804,8 @@ class ModelRunner:
         # get outputs to add to outputs attribute
         new_outputs = {'epi': self.find_epi_outputs(scenario)}
         # new_outputs['cost'] = self.find_cost_outputs(scenario) if self.models[scenario].interventions_to_cost else {}
-        if self.models[scenario].interventions_to_cost: new_outputs.update({'cost': self.find_cost_outputs(scenario)})
+        if self.models[scenario].interventions_to_cost:
+            new_outputs.update({'cost': self.find_cost_outputs(scenario)})
 
         # incorporate new data
         for output_type in ['epi', 'cost']:
@@ -843,7 +869,8 @@ class ModelRunner:
             sd = self.gui_inputs['search_width'] * (bounds[1] - bounds[0]) / (2. * 1.96)
 
             # search for new parameters and add to dictionary
-            while random < bounds[0] or random > bounds[1]: random = norm.rvs(loc=old_params[p], scale=sd, size=1)
+            while random < bounds[0] or random > bounds[1]:
+                random = norm.rvs(loc=old_params[p], scale=sd, size=1)
             new_params.append(random[0])
 
         return new_params
@@ -858,10 +885,9 @@ class ModelRunner:
 
         if 'target_population' in self.inputs.model_constants:
             population_adjustment \
-                = self.inputs.model_constants['target_population'] \
-                  / float(self.outputs['epi_uncertainty']['epi'][0]['population'][last_run_output_index,
-                    t_k.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'],
-                                                            self.inputs.model_constants['current_time'])])
+                = self.inputs.model_constants['target_population'] / float(self.outputs['epi_uncertainty']['epi'][0][
+                    'population'][last_run_output_index, t_k.find_first_list_element_above_value(
+                    self.outputs['manual']['epi'][0]['times'], self.inputs.model_constants['current_time'])])
             for compartment in self.inputs.compartment_types:
                 if compartment in self.models[0].params:
                     self.models[0].set_parameter(compartment,
@@ -1159,7 +1185,8 @@ class ModelRunner:
 
     def add_comment_to_gui_window(self, comment):
 
-        if self.js_gui: self.js_gui('console', {'message': comment})
+        if self.js_gui:
+            self.js_gui('console', {'message': comment})
 
 
 ''' disease-specific model runners '''
@@ -1207,7 +1234,7 @@ class TbRunner(ModelRunner):
 
     ''' output interpretation methods '''
 
-    def find_mortality_output(self, epi_outputs, scenario, outputs_to_analyse, strain, stratum):
+    def find_mortality_output(self, epi_outputs, scenario, strain, stratum):
         """
         TB-specific method to calculate mortality rates, accounting for under-reporting of community deaths.
 
@@ -1226,41 +1253,22 @@ class TbRunner(ModelRunner):
         strain_stratum = strain + stratum
         denominator = t_k.prepare_denominator(epi_outputs['population' + stratum])
         multiplier = self.multipliers['mortality'] if 'mortality' in self.multipliers else 1.
-        if 'mortality' in outputs_to_analyse:
-            epi_outputs['mortality' + strain_stratum], epi_outputs['true_mortality' + strain_stratum] \
-                = [blank_output_list] * 2
-            for flow_type in self.models[scenario].flows_by_type:
-                mapper = master_mapper[flow_type]
-                for flow in self.models[scenario].flows_by_type[flow_type]:
-                    if 'death' in flow_type and strain in flow[mapper['from']] and stratum in flow[mapper['from']]:
-                        for mortality_type in ['true_mortality', 'mortality']:
-                            prop_death_reporting = self.prop_death_reporting \
-                                if mortality_type == 'mortality' and 'fixed' in flow_type else 1.
-                            mortality_increment \
-                                = self.models[scenario].get_compartment_soln(flow[mapper['from']]) \
-                                  * self.get_rate_for_output(scenario, flow_type, flow) / denominator * multiplier
-                            epi_outputs[mortality_type + strain_stratum] \
-                                = t_k.elementwise_list_addition(mortality_increment * prop_death_reporting,
-                                                                epi_outputs[mortality_type + strain_stratum])
+        epi_outputs['mortality' + strain_stratum], epi_outputs['true_mortality' + strain_stratum] \
+            = [blank_output_list] * 2
+        for flow_type in self.models[scenario].flows_by_type:
+            mapper = master_mapper[flow_type]
+            for flow in self.models[scenario].flows_by_type[flow_type]:
+                if 'death' in flow_type and strain in flow[mapper['from']] and stratum in flow[mapper['from']]:
+                    for mortality_type in ['true_mortality', 'mortality']:
+                        prop_death_reporting = self.prop_death_reporting \
+                            if mortality_type == 'mortality' and 'fixed' in flow_type else 1.
+                        mortality_increment \
+                            = self.models[scenario].get_compartment_soln(flow[mapper['from']]) \
+                              * self.get_rate_for_output(scenario, flow_type, flow) / denominator * multiplier
+                        epi_outputs[mortality_type + strain_stratum] \
+                            = t_k.elementwise_list_addition(mortality_increment * prop_death_reporting,
+                                                            epi_outputs[mortality_type + strain_stratum])
         return epi_outputs
-
-    def get_rate_for_output(self, scenario, flow_type, flow):
-        """
-        Find the numeric output for a flow rate, regardless of whether the intercompartmental flow is fixed or variable.
-
-        Args:
-            scenario: Integer for scenario
-            flow_type: String for the type of flow
-            flow: The tuple representing the individual flow
-        Returns:
-            The flow rate as a float value
-        """
-
-        mapper = self.models[scenario].flow_type_index[flow_type]
-        if 'fixed_' in flow_type:
-            return flow[mapper['rate']]
-        else:
-            return self.models[scenario].get_var_soln(flow[mapper['rate']])
 
     ''' epidemiological uncertainty-related methods '''
 
@@ -1302,8 +1310,10 @@ class TbRunner(ModelRunner):
         the specific methods below.
         """
 
-        if self.adjust_mortality: self.adjust_mortality_reporting(last_run_output_index, years_to_compare)
-        if self.adjust_mdr: self.adjust_mdr_introduction(last_run_output_index)
+        if self.adjust_mortality:
+            self.adjust_mortality_reporting(last_run_output_index, years_to_compare)
+        if self.adjust_mdr:
+            self.adjust_mdr_introduction(last_run_output_index)
 
     def adjust_mortality_reporting(self, last_run_output_index, years_to_compare):
         """
@@ -1335,7 +1345,7 @@ class TbRunner(ModelRunner):
         ratio_mdr_prevalence \
             = float(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'][last_run_output_index,
                 t_k.find_first_list_element_at_least_value(self.outputs['manual']['epi'][0]['times'],
-                                                                self.inputs.model_constants['current_time'])]) \
+                                                           self.inputs.model_constants['current_time'])]) \
               / self.inputs.model_constants['tb_perc_mdr_prevalence']
         if ratio_mdr_prevalence < 1. / self.relative_difference_to_adjust_mdr:
             self.mdr_introduce_time -= self.amount_to_adjust_mdr_year

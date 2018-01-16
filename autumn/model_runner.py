@@ -173,6 +173,12 @@ class ModelRunner:
         # output-related attributes
         self.additional_cost_types = ['inflated', 'discounted', 'discounted_inflated']
         self.cost_types = self.additional_cost_types + ['raw']
+        self.standard_rate_outputs = []
+        self.from_labels = {}
+        self.to_labels = {}
+        self.divide_population = []
+        self.multipliers = {}
+        self.non_disease_compartment_strings = ['susceptible']
 
         # new single main output attribute
         self.epi_outputs_to_analyse = []
@@ -269,6 +275,184 @@ class ModelRunner:
         self.models[scenario].loaded_compartments = self.models[0].load_state(start_time_index)
 
     ''' output interpretation methods '''
+
+    def find_epi_outputs(self, scenario, epi_outputs_to_analyse=None, strata_to_analyse=[[]]):
+        """
+        Method to extract all requested epidemiological outputs from the models. Intended ultimately to be flexible
+        enough for use for analysis of scenarios, uncertainty and optimisation.
+
+        Args:
+            scenario: The integer value representing the scenario of the model to be analysed
+            epi_outputs_to_analyse: List of strings for the outputs of interest to be worked through
+            strata_to_analyse: List of any stratifications that outputs are required over, i.e. list of lists
+        """
+
+        # preliminaries
+        outputs_to_analyse = epi_outputs_to_analyse if epi_outputs_to_analyse else self.epi_outputs_to_analyse
+        epi_outputs, strata = {'times': self.models[scenario].times}, ['']
+        for stratification_type in strata_to_analyse: strata += stratification_type
+
+        # all outputs should cycle over each stratum, or at least be able to
+        for stratum in strata:
+
+            # population
+            epi_outputs = self.find_population_totals(epi_outputs, scenario, stratum)
+
+            # to allow calculation by strain and the total output
+            for strain in [''] + self.models[scenario].strains:
+
+                # standard rate outputs
+                for output in self.standard_rate_outputs:
+                    epi_outputs = self.find_standard_rate_output(
+                        epi_outputs, scenario, output, outputs_to_analyse, strain, stratum)
+
+                # mortality and prevalence calculations
+                epi_outputs = self.find_mortality_output(epi_outputs, scenario, outputs_to_analyse, strain, stratum)
+                epi_outputs = self.find_prevalence_output(epi_outputs, scenario, outputs_to_analyse, strain, stratum)
+
+            # aggregate outputs ignoring strain status
+            epi_outputs = self.find_outputs_aggregated_over_strain(epi_outputs, stratum, outputs_to_analyse)
+
+            # proportional outputs by strain
+            epi_outputs = self.find_outputs_proportional_by_strain(epi_outputs, scenario, stratum)
+
+        return epi_outputs
+
+    def find_population_totals(self, epi_outputs, scenario, stratum):
+        """
+        Find the total population sizes for each population stratum.
+
+        Args:
+            epi_outputs: Output data structure to be updated
+            scenario: Integer for scenario value
+            stratum: Population stratum being evaluated
+        Returns:
+            Updated version of epi_outputs
+        """
+
+        epi_outputs['population' + stratum] = [0.] * len(epi_outputs['times'])
+        for label in self.models[scenario].labels:
+            if stratum in label:
+                epi_outputs['population' + stratum] = t_k.elementwise_list_addition(
+                    self.models[scenario].get_compartment_soln(label), epi_outputs['population' + stratum])
+        return epi_outputs
+
+    def find_standard_rate_output(self, epi_outputs, scenario, output, outputs_to_analyse, strain, stratum):
+        """
+        Standard method for looping through epidemiological outputs that are defined by their from and to compartments
+        only (as specified in self.from_labels and self.to_labels).
+
+        Args:
+            epi_outputs: Output data structure to be updated
+            scenario: Integer for scenario value
+            outputs_to_analyse: List of the outputs of interest
+            strain: Strain being evaluated
+            stratum: Population stratum being evaluated
+        Returns:
+            Updated version of epi_outputs
+        """
+
+        blank_output_list = [0.] * len(epi_outputs['times'])
+        master_mapper = self.models[scenario].flow_type_index
+        strain_stratum = strain + stratum
+        denominator \
+            = t_k.prepare_denominator(epi_outputs['population' + stratum]) if output in self.divide_population else 1.
+        multiplier = self.multipliers[output] if output in self.multipliers else 1.
+        outputs_to_analyse = outputs_to_analyse if outputs_to_analyse else self.epi_outputs_to_analyse
+        if output in outputs_to_analyse:
+            epi_outputs[output + strain_stratum] = blank_output_list
+            for flow_type in self.models[scenario].flows_by_type:
+                mapper = master_mapper[flow_type]
+                for flow in self.models[scenario].flows_by_type[flow_type]:
+                    if t_k.are_strings_in_subdict(mapper, flow, self.from_labels[output] + [strain, stratum], 'from') \
+                            and t_k.are_strings_in_subdict(mapper, flow, self.to_labels[output], 'to'):
+                        increment = self.models[scenario].get_compartment_soln(flow[mapper['from']]) \
+                                    * self.get_rate_for_output(scenario, flow_type, flow) / denominator * multiplier
+                        epi_outputs[output + strain_stratum] \
+                            = t_k.elementwise_list_addition(increment, epi_outputs[output + strain_stratum])
+        return epi_outputs
+
+    def find_mortality_output(self, epi_outputs, scenario, outputs_to_analyse, strain, stratum):
+        """
+        Currently only coded for TB, which is quite disease-specific.
+
+        Args:
+            epi_outputs: Output data structure to be updated
+            scenario: Integer for scenario value
+            outputs_to_analyse: List of the outputs of interest
+            strain: Strain being evaluated
+            stratum: Population stratum being evaluated
+        Returns:
+            Updated version of epi_outputs
+        """
+
+        return epi_outputs
+
+    def find_outputs_aggregated_over_strain(self, epi_outputs, stratum, outputs_to_analyse):
+        """
+        Find any outputs that do not depend upon the strain being evaluated.
+
+        Args:
+            epi_outputs: Output data structure to be updated
+            outputs_to_analyse: List of the outputs of interest
+            stratum: Population stratum being evaluated
+        Returns:
+            Updated version of epi_outputs
+        """
+
+        # annual risk of infection
+        if 'infections' in outputs_to_analyse:
+            epi_outputs['annual_risk_infection' + stratum] = t_k.elementwise_list_division(
+                epi_outputs['infections' + stratum], epi_outputs['population' + stratum], percentage=True)
+        return epi_outputs
+
+    def find_outputs_proportional_by_strain(self, epi_outputs, scenario, stratum):
+        """
+        Find percentage incidence by strain.
+
+        Args:
+            epi_outputs: Output data structure to be updated
+            scenario: Integer for scenario value
+            stratum: Population stratum being evaluated
+        Returns:
+            Updated version of epi_outputs
+        """
+
+        for strain in self.models[scenario].strains:
+            if strain:
+                epi_outputs['perc_incidence' + strain + stratum] \
+                    = t_k.elementwise_list_division(epi_outputs['incidence' + strain + stratum],
+                                                    t_k.prepare_denominator(epi_outputs['incidence' + stratum]),
+                                                    percentage=True)
+        return epi_outputs
+
+    def find_prevalence_output(self, epi_outputs, scenario, outputs_to_analyse, strain, stratum):
+        """
+        General method to calculate prevalence of disease based on a list of all the compartment strings that
+        represent states without disease (i.e. self.non_disease_compartment_strings).
+
+        Args:
+            epi_outputs: Output data structure to be updated
+            scenario: Integer for scenario value
+            outputs_to_analyse: List of the outputs of interest
+            strain: Strain being evaluated
+            stratum: Population stratum being evaluated
+        Returns:
+            Updated version of epi_outputs
+        """
+
+        blank_output_list = [0.] * len(epi_outputs['times'])
+        strain_stratum = strain + stratum
+        denominator = t_k.prepare_denominator(epi_outputs['population' + stratum])
+        if 'prevalence' in outputs_to_analyse:
+            epi_outputs['prevalence' + strain_stratum] = blank_output_list
+            for label in self.models[scenario].labels:
+                if not any(s in label for s in self.non_disease_compartment_strings) \
+                        and all(s in label for s in [strain, stratum]):
+                    prevalence_increment = self.models[scenario].get_compartment_soln(label) / denominator * 1e5
+                    epi_outputs['prevalence' + strain_stratum] = t_k.elementwise_list_addition(
+                        prevalence_increment, epi_outputs['prevalence' + strain_stratum])
+        return epi_outputs
 
     def find_population_fractions(self, scenario, strata_to_analyse=()):
         """
@@ -1023,102 +1207,6 @@ class TbRunner(ModelRunner):
 
     ''' output interpretation methods '''
 
-    def find_epi_outputs(self, scenario, epi_outputs_to_analyse=None, strata_to_analyse=[[]]):
-        """
-        Method to extract all requested epidemiological outputs from the models. Intended ultimately to be flexible
-        enough for use for analysis of scenarios, uncertainty and optimisation.
-
-        Args:
-            scenario: The integer value representing the scenario of the model to be analysed
-            epi_outputs_to_analyse: List of strings for the outputs of interest to be worked through
-            strata_to_analyse: List of any stratifications that outputs are required over, i.e. list of lists
-        """
-
-        # preliminaries
-        outputs_to_analyse = epi_outputs_to_analyse if epi_outputs_to_analyse else self.epi_outputs_to_analyse
-        epi_outputs, strata = {'times': self.models[scenario].times}, ['']
-        for stratification_type in strata_to_analyse: strata += stratification_type
-
-        # all outputs should cycle over each stratum, or at least be able to
-        for stratum in strata:
-
-            # population
-            epi_outputs = self.find_population_totals(epi_outputs, scenario, stratum)
-
-            # to allow calculation by strain and the total output
-            for strain in [''] + self.models[scenario].strains:
-
-                # standard rate outputs
-                for output in self.standard_rate_outputs:
-                    epi_outputs = self.find_standard_rate_output(
-                        epi_outputs, scenario, output, outputs_to_analyse, strain, stratum)
-
-                # mortality and prevalence calculations
-                epi_outputs = self.find_mortality_output(epi_outputs, scenario, outputs_to_analyse, strain, stratum)
-                epi_outputs = self.find_prevalence_output(epi_outputs, scenario, outputs_to_analyse, strain, stratum)
-
-            # aggregate outputs ignoring strain status
-            epi_outputs = self.find_outputs_aggregated_over_strain(epi_outputs, stratum, outputs_to_analyse)
-
-            # proportional outputs by strain
-            epi_outputs = self.find_outputs_proportional_by_strain(epi_outputs, scenario, stratum)
-
-        return epi_outputs
-
-    def find_population_totals(self, epi_outputs, scenario, stratum):
-        """
-        Find the total population sizes for each population stratum.
-
-        Args:
-            epi_outputs: Output data structure to be updated
-            scenario: Integer for scenario value
-            stratum: Population stratum being evaluated
-        Returns:
-            Updated version of epi_outputs
-        """
-
-        epi_outputs['population' + stratum] = [0.] * len(epi_outputs['times'])
-        for label in self.models[scenario].labels:
-            if stratum in label:
-                epi_outputs['population' + stratum] = t_k.elementwise_list_addition(
-                    self.models[scenario].get_compartment_soln(label), epi_outputs['population' + stratum])
-        return epi_outputs
-
-    def find_standard_rate_output(self, epi_outputs, scenario, output, outputs_to_analyse, strain, stratum):
-        """
-        Standard method for looping through epidemiological outputs that are defined by their from and to compartments
-        only (as specified in self.from_labels and self.to_labels).
-
-        Args:
-            epi_outputs: Output data structure to be updated
-            scenario: Integer for scenario value
-            outputs_to_analyse: List of the outputs of interest
-            strain: Strain being evaluated
-            stratum: Population stratum being evaluated
-        Returns:
-            Updated version of epi_outputs
-        """
-
-        blank_output_list = [0.] * len(epi_outputs['times'])
-        master_mapper = self.models[scenario].flow_type_index
-        strain_stratum = strain + stratum
-        denominator \
-            = t_k.prepare_denominator(epi_outputs['population' + stratum]) if output in self.divide_population else 1.
-        multiplier = self.multipliers[output] if output in self.multipliers else 1.
-        outputs_to_analyse = outputs_to_analyse if outputs_to_analyse else self.epi_outputs_to_analyse
-        if output in outputs_to_analyse:
-            epi_outputs[output + strain_stratum] = blank_output_list
-            for flow_type in self.models[scenario].flows_by_type:
-                mapper = master_mapper[flow_type]
-                for flow in self.models[scenario].flows_by_type[flow_type]:
-                    if t_k.are_strings_in_subdict(mapper, flow, self.from_labels[output] + [strain, stratum], 'from') \
-                            and t_k.are_strings_in_subdict(mapper, flow, self.to_labels[output], 'to'):
-                        increment = self.models[scenario].get_compartment_soln(flow[mapper['from']]) \
-                                    * self.get_rate_for_output(scenario, flow_type, flow) / denominator * multiplier
-                        epi_outputs[output + strain_stratum] \
-                            = t_k.elementwise_list_addition(increment, epi_outputs[output + strain_stratum])
-        return epi_outputs
-
     def find_mortality_output(self, epi_outputs, scenario, outputs_to_analyse, strain, stratum):
         """
         TB-specific method to calculate mortality rates, accounting for under-reporting of community deaths.
@@ -1154,72 +1242,6 @@ class TbRunner(ModelRunner):
                             epi_outputs[mortality_type + strain_stratum] \
                                 = t_k.elementwise_list_addition(mortality_increment * prop_death_reporting,
                                                                 epi_outputs[mortality_type + strain_stratum])
-        return epi_outputs
-
-    def find_prevalence_output(self, epi_outputs, scenario, outputs_to_analyse, strain, stratum):
-        """
-        General method to calculate prevalence of disease based on a list of all the compartment strings that
-        represent states without disease (i.e. self.non_disease_compartment_strings).
-
-        Args:
-            epi_outputs: Output data structure to be updated
-            scenario: Integer for scenario value
-            outputs_to_analyse: List of the outputs of interest
-            strain: Strain being evaluated
-            stratum: Population stratum being evaluated
-        Returns:
-            Updated version of epi_outputs
-        """
-
-        blank_output_list = [0.] * len(epi_outputs['times'])
-        strain_stratum = strain + stratum
-        denominator = t_k.prepare_denominator(epi_outputs['population' + stratum])
-        if 'prevalence' in outputs_to_analyse:
-            epi_outputs['prevalence' + strain_stratum] = blank_output_list
-            for label in self.models[scenario].labels:
-                if not any(s in label for s in self.non_disease_compartment_strings) \
-                        and all(s in label for s in [strain, stratum]):
-                    prevalence_increment = self.models[scenario].get_compartment_soln(label) / denominator * 1e5
-                    epi_outputs['prevalence' + strain_stratum] = t_k.elementwise_list_addition(
-                        prevalence_increment, epi_outputs['prevalence' + strain_stratum])
-        return epi_outputs
-
-    def find_outputs_aggregated_over_strain(self, epi_outputs, stratum, outputs_to_analyse):
-        """
-        Find any outputs that do not depend upon the strain being evaluated.
-
-        Args:
-            epi_outputs: Output data structure to be updated
-            outputs_to_analyse: List of the outputs of interest
-            stratum: Population stratum being evaluated
-        Returns:
-            Updated version of epi_outputs
-        """
-
-        # annual risk of infection
-        if 'infections' in outputs_to_analyse:
-            epi_outputs['annual_risk_infection' + stratum] = t_k.elementwise_list_division(
-                epi_outputs['infections' + stratum], epi_outputs['population' + stratum], percentage=True)
-        return epi_outputs
-
-    def find_outputs_proportional_by_strain(self, epi_outputs, scenario, stratum):
-        """
-        Find percentage incidence by strain.
-
-        Args:
-            epi_outputs: Output data structure to be updated
-            scenario: Integer for scenario value
-            stratum: Population stratum being evaluated
-        Returns:
-            Updated version of epi_outputs
-        """
-
-        for strain in self.models[scenario].strains:
-            if strain:
-                epi_outputs['perc_incidence' + strain + stratum] \
-                    = t_k.elementwise_list_division(epi_outputs['incidence' + strain + stratum],
-                                                    t_k.prepare_denominator(epi_outputs['incidence' + stratum]),
-                                                    percentage=True)
         return epi_outputs
 
     def get_rate_for_output(self, scenario, flow_type, flow):

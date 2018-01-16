@@ -80,6 +80,29 @@ def find_log_probability_density(distribution, param_val, bounds, additional_par
     return prior_log_likelihood
 
 
+def find_rate_from_aggregate(output_dict, output_string, numerator_string, denominator_string, strata,
+                             percentage=False):
+    """
+    Find any outputs that do not depend upon the strain being evaluated.
+
+    Args:
+        output_dict: Output data structure to be updated
+        strata: Population strata being evaluated over
+        output_string: String for the key to go into the dictionary
+        numerator_string: String to index the numerator from the output_dict being evaluated
+        denominator_string: String to index the denominator from the output_dict being evaluated
+        percentage: Whether to return result as a percentage (default being proportion)
+    Returns:
+        Updated version of epi_outputs
+    """
+
+    # annual risk of infection
+    for stratum in strata:
+        output_dict[output_string + stratum] = t_k.elementwise_list_division(
+            output_dict[numerator_string + stratum], output_dict[denominator_string + stratum], percentage=percentage)
+    return output_dict
+
+
 def solve_by_dichotomy(f, objective, a, b, tolerance):
     """
     Apply the dichotomy method to solve the equation f(x)=objective, x being the unknown variable.
@@ -301,7 +324,7 @@ class ModelRunner:
         else:
             return self.models[scenario].get_var_soln(flow[mapper['rate']])
 
-    def find_epi_outputs(self, scenario, epi_outputs_to_analyse=None, strata_to_analyse=[[]]):
+    def find_epi_outputs(self, scenario, epi_outputs_to_analyse=None, strata_to_analyse=([])):
         """
         Method to extract all requested epidemiological outputs from the models. Intended ultimately to be flexible
         enough for use for analysis of scenarios, uncertainty and optimisation.
@@ -340,7 +363,8 @@ class ModelRunner:
 
             # aggregate outputs ignoring strain status
             if 'infections' in outputs_to_analyse:
-                epi_outputs = self.find_outputs_aggregated_over_strain(epi_outputs, stratum)
+                epi_outputs = find_rate_from_aggregate(epi_outputs, 'annual_risk_infection', 'infections', 'population',
+                                                       strata, percentage=True)
 
             # proportional outputs by strain
             if 'incidence' in outputs_to_analyse:
@@ -413,22 +437,6 @@ class ModelRunner:
             Updated version of epi_outputs
         """
 
-        return epi_outputs
-
-    def find_outputs_aggregated_over_strain(self, epi_outputs, stratum):
-        """
-        Find any outputs that do not depend upon the strain being evaluated.
-
-        Args:
-            epi_outputs: Output data structure to be updated
-            stratum: Population stratum being evaluated
-        Returns:
-            Updated version of epi_outputs
-        """
-
-        # annual risk of infection
-        epi_outputs['annual_risk_infection' + stratum] = t_k.elementwise_list_division(
-            epi_outputs['infections' + stratum], epi_outputs['population' + stratum], percentage=True)
         return epi_outputs
 
     def find_outputs_proportional_by_strain(self, epi_outputs, scenario, stratum):
@@ -887,7 +895,7 @@ class ModelRunner:
             population_adjustment \
                 = self.inputs.model_constants['target_population'] / float(self.outputs['epi_uncertainty']['epi'][0][
                     'population'][last_run_output_index, t_k.find_first_list_element_above_value(
-                    self.outputs['manual']['epi'][0]['times'], self.inputs.model_constants['current_time'])])
+                        self.outputs['manual']['epi'][0]['times'], self.inputs.model_constants['current_time'])])
             for compartment in self.inputs.compartment_types:
                 if compartment in self.models[0].params:
                     self.models[0].set_parameter(compartment,
@@ -1027,7 +1035,7 @@ class ModelRunner:
 
         # initialise a new model that will be run from recent_time and set basic attributes for optimisation
         self.models['optimisation'] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs)
-        self.prepare_new_model_from_baseline('manual', 'optimisation')
+        self.prepare_new_model_from_baseline(0)
         self.models['optimisation'].eco_drives_epi = True
         self.models['optimisation'].inputs.model_constants['scenario_end_time'] = self.year_end_opti
         self.models['optimisation'].interventions_considered_for_opti = self.interventions_considered_for_opti
@@ -1060,17 +1068,16 @@ class ModelRunner:
                 """
 
                 # initialise funding at zero for each intervention
-                for intervention in self.interventions_considered_for_opti:
-                    self.models['optimisation'].available_funding[intervention] = 0.
+                for inter in self.interventions_considered_for_opti:
+                    self.models['optimisation'].available_funding[inter] = 0.
 
                 # input values from x
-                for i in range(len(x)):
-                    intervention = self.interventions_considered_for_opti[combination[i]]
-                    self.models['optimisation'].available_funding[intervention] = x[i] * self.total_funding
+                for x_i in range(len(x)):
+                    inter = self.interventions_considered_for_opti[combination[x_i]]
+                    self.models['optimisation'].available_funding[inter] = x[x_i] * self.total_funding
                 self.models['optimisation'].distribute_funding_across_years()
                 self.models['optimisation'].integrate()
-                output_list = self.find_epi_outputs('optimisation',
-                                                    outputs_to_analyse=['incidence', 'mortality', 'true_mortality'])
+                output_list = self.find_epi_outputs(0)
                 return output_list[self.indicator_to_minimise][-1]
 
             # if only one intervention, the distribution is obvious
@@ -1096,12 +1103,12 @@ class ModelRunner:
 
                     # if start-up costs apply
                     if self.inputs.intervention_startdates[0][
-                        self.models['manual_baseline'].interventions_to_cost[combination[i]]] is None:
+                            self.models['manual_baseline'].interventions_to_cost[combination[i]]] is None:
                         minimal_allocation \
                             = self.models['manual_baseline'].inputs.model_constants[
                                   'econ_startupcost_'
                                   + self.models['manual_baseline'].interventions_to_cost[combination[i]]] \
-                              / self.total_funding
+                            / self.total_funding
                     cost_bounds.append((minimal_allocation, 1.))
 
                 # ready to run optimisation
@@ -1139,7 +1146,7 @@ class ModelRunner:
 
         # prepare new model to run full scenario duration
         self.models['optimisation'] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs)
-        self.prepare_new_model_from_baseline('manual', 'optimisation')
+        self.prepare_new_model_from_baseline(0)
         self.models['optimisation'].eco_drives_epi = True
         self.models['optimisation'].interventions_considered_for_opti = self.interventions_considered_for_opti
 
@@ -1154,8 +1161,7 @@ class ModelRunner:
         self.models['optimisation'].integrate()
 
         # find epi results
-        output_list = self.find_epi_outputs('optimisation',
-                                            outputs_to_analyse=['incidence', 'mortality', 'true_mortality'])
+        output_list = self.find_epi_outputs(0)
         del self.models['optimisation']
         return {'best_allocation': self.optimal_allocation, 'incidence': output_list['incidence'][-1],
                 'mortality': output_list['mortality'][-1]}
@@ -1241,7 +1247,6 @@ class TbRunner(ModelRunner):
         Args:
             epi_outputs: Output data structure to be updated
             scenario: Integer for scenario value
-            outputs_to_analyse: List of the outputs of interest
             strain: Strain being evaluated
             stratum: Population stratum being evaluated
         Returns:
@@ -1264,7 +1269,7 @@ class TbRunner(ModelRunner):
                             if mortality_type == 'mortality' and 'fixed' in flow_type else 1.
                         mortality_increment \
                             = self.models[scenario].get_compartment_soln(flow[mapper['from']]) \
-                              * self.get_rate_for_output(scenario, flow_type, flow) / denominator * multiplier
+                            * self.get_rate_for_output(scenario, flow_type, flow) / denominator * multiplier
                         epi_outputs[mortality_type + strain_stratum] \
                             = t_k.elementwise_list_addition(mortality_increment * prop_death_reporting,
                                                             epi_outputs[mortality_type + strain_stratum])
@@ -1327,8 +1332,9 @@ class TbRunner(ModelRunner):
         ratios = []
         for year in years_to_compare:
             if year in self.inputs.original_data['gtb']['e_mort_exc_tbhiv_100k']:
-                ratios.append(self.outputs['epi_uncertainty']['epi'][0]['mortality'][last_run_output_index,
-                    t_k.find_first_list_element_above_value(self.outputs['manual']['epi'][0]['times'], float(year))]
+                ratios.append(self.outputs['epi_uncertainty']['epi'][0]['mortality'][
+                                  last_run_output_index, t_k.find_first_list_element_above_value(
+                                      self.outputs['manual']['epi'][0]['times'], float(year))]
                               / self.inputs.original_data['gtb']['e_mort_exc_tbhiv_100k'][year])
         average_ratio = numpy.mean(ratios)
         if average_ratio < 1. / self.relative_difference_to_adjust_mortality:
@@ -1343,10 +1349,10 @@ class TbRunner(ModelRunner):
         """
 
         ratio_mdr_prevalence \
-            = float(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'][last_run_output_index,
-                t_k.find_first_list_element_at_least_value(self.outputs['manual']['epi'][0]['times'],
-                                                           self.inputs.model_constants['current_time'])]) \
-              / self.inputs.model_constants['tb_perc_mdr_prevalence']
+            = float(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'][
+                        last_run_output_index, t_k.find_first_list_element_at_least_value(
+                            self.outputs['manual']['epi'][0]['times'], self.inputs.model_constants['current_time'])]) \
+            / self.inputs.model_constants['tb_perc_mdr_prevalence']
         if ratio_mdr_prevalence < 1. / self.relative_difference_to_adjust_mdr:
             self.mdr_introduce_time -= self.amount_to_adjust_mdr_year
         elif ratio_mdr_prevalence > self.relative_difference_to_adjust_mdr:

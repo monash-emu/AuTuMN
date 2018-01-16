@@ -832,17 +832,10 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         """
 
         start = 'program_prop_treatment' + stratum
-        self.vars[start + '_default'] \
-            = (1. - self.vars[start + '_success']) \
-            * (1. - self.vars['program_prop_nonsuccess_treatment' + stratum + '_death'])
-        self.vars[start + '_death'] \
-            = (1. - self.vars[start + '_success']) \
-            * self.vars['program_prop_nonsuccess_treatment' + stratum + '_death']
-
-        # if self.vars[start + '_default'] < 0.:
-        #     print('Success and death sum to %s for %s outcome at %s time'
-        #           % (self.vars[start + '_success'] + self.vars[start + '_death'], start, self.time))
-        #     self.vars[start + '_default'] = 0.
+        self.vars[start + '_default'] = (1. - self.vars[start + '_success']) \
+                                        * (1. - self.vars['program_prop_nonsuccess_treatment' + stratum + '_death'])
+        self.vars[start + '_death'] = (1. - self.vars[start + '_success']) \
+                                      * self.vars['program_prop_nonsuccess_treatment' + stratum + '_death']
 
     def adjust_treatment_outcomes_for_groupcontributor(self):
         """

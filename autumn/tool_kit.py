@@ -124,7 +124,7 @@ def find_common_elements_multiple_lists(list_of_lists):
     return intersection
 
 
-def calculate_proportion_dict(data, relevant_keys, percent=False, floor=0., underscore=True, additional_string=''):
+def calculate_proportion_dict(data, relevant_keys, percent=False, floor=0., underscore=True):
     """
     General method to calculate proportions from absolute values provided as dictionaries.
 
@@ -134,13 +134,11 @@ def calculate_proportion_dict(data, relevant_keys, percent=False, floor=0., unde
         floor: Minimum allowable value
         percent: Boolean describing whether the method should return the output as a percent or proportion
         underscore: Just whether the string stem has an underscore or not
-        additional_string: Any additional string name to be added to the dictionary keys
     Returns:
         proportions: A dictionary of the resulting proportions
     """
 
     string_stem = 'prop_' if underscore else 'prop'
-    string_stem = string_stem + additional_string
 
     # calculate multiplier for percentages if requested, otherwise leave as one
     multiplier = 1e2 if percent else 1.

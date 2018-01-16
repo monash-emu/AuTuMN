@@ -743,10 +743,9 @@ class Inputs:
                 nonsuccess_outcomes = tool_kit.calculate_proportion_dict(
                     self.derived_data,
                     [strain + history + '_death', strain + history + '_default'],
-                    percent=False, floor=self.model_constants['tb_n_outcome_minimum'], underscore=True,
-                    additional_string='nonsuccess')
+                    percent=False, floor=self.model_constants['tb_n_outcome_minimum'], underscore=False)
                 self.derived_data['prop_nonsuccess' + strain + history + '_death'] \
-                    = nonsuccess_outcomes['prop_nonsuccess' + strain + history + '_death']
+                    = nonsuccess_outcomes['prop' + strain + history + '_death']
 
     def add_treatment_outcomes_to_timevariants(self):
         """

@@ -166,10 +166,7 @@ class Inputs:
         self.find_scaleup_functions()
 
         # create mixing matrix (has to be run after scale-up functions, so can't go in model structure method)
-        if self.vary_force_infection_by_riskgroup:
-            self.create_mixing_matrix()
-        else:
-            self.mixing = {}
+        self.mixing = self.create_mixing_matrix() if self.vary_force_infection_by_riskgroup else {}
 
         # define compartmental structure
         self.define_compartment_structure()
@@ -476,11 +473,11 @@ class Inputs:
         """
 
         # create mixing matrix separately for each scenario, just in case risk groups being managed differently
-        self.mixing = {}
+        mixing = {}
 
         # next tier of dictionary is the "to" risk group that is being infected
         for to_riskgroup in self.riskgroups:
-            self.mixing[to_riskgroup] = {}
+            mixing[to_riskgroup] = {}
 
             # last tier of dictionary is the "from" risk group describing the make up of contacts
             for from_riskgroup in self.riskgroups:
@@ -488,21 +485,22 @@ class Inputs:
 
                     # use parameters for risk groups other than "_norisk" if available
                     if 'prop_mix' + to_riskgroup + '_from' + from_riskgroup in self.model_constants:
-                        self.mixing[to_riskgroup][from_riskgroup] \
+                        mixing[to_riskgroup][from_riskgroup] \
                             = self.model_constants['prop_mix' + to_riskgroup + '_from' + from_riskgroup]
 
                     # otherwise use the latest value for the proportion of the population with that risk factor
                     else:
-                        self.mixing[to_riskgroup][from_riskgroup] \
+                        mixing[to_riskgroup][from_riskgroup] \
                             = find_latest_value_from_year_dict(self.scaleup_data[0]['riskgroup_prop' + from_riskgroup],
                                                                self.model_constants['current_time'])
 
             # give the remainder to the "_norisk" group without any risk factors
-            if sum(self.mixing[to_riskgroup].values()) >= 1.:
+            if sum(mixing[to_riskgroup].values()) >= 1.:
                 self.add_comment_to_gui_window(
                     'Total of proportions of contacts for risk group %s greater than one. Model invalid.'
                     % to_riskgroup)
-            self.mixing[to_riskgroup]['_norisk'] = 1. - sum(self.mixing[to_riskgroup].values())
+            mixing[to_riskgroup]['_norisk'] = 1. - sum(mixing[to_riskgroup].values())
+        return mixing
 
     def define_compartment_structure(self):
         """
@@ -740,6 +738,11 @@ class Inputs:
                     self.derived_data,
                     [strain + history + '_success', strain + history + '_death', strain + history + '_default'],
                     percent=False, floor=self.model_constants['tb_n_outcome_minimum'], underscore=False))
+                self.derived_data.update(tool_kit.calculate_proportion_dict(
+                    self.derived_data,
+                    [strain + history + '_death', strain + history + '_default'],
+                    percent=False, floor=self.model_constants['tb_n_outcome_minimum'], underscore=True,
+                    additional_string='nonsuccess'))
 
     def add_treatment_outcomes_to_timevariants(self):
         """
@@ -750,12 +753,16 @@ class Inputs:
 
         for strain in self.strains:
             for outcome in ['_success', '_death']:
+                additional_string = '' if outcome == '_success' else '_nonsuccess'
                 for history in self.histories:
-                    if self.time_variants['program_prop_treatment' + strain + history + outcome]['load_data'] == u'yes':
-                        for year in self.derived_data['prop' + strain + history + outcome]:
-                            if year not in self.time_variants['program_prop_treatment' + strain + history + outcome]:
-                                self.time_variants['program_prop_treatment' + strain + history + outcome][year] \
-                                    = self.derived_data['prop' + strain + history + outcome][year]
+                    if self.time_variants['program_prop' + additional_string + '_treatment' + strain + history
+                                          + outcome]['load_data'] == u'yes':
+                        for year in self.derived_data['prop' + additional_string + strain + history + outcome]:
+                            if year not in self.time_variants['program_prop' + additional_string + '_treatment' + strain
+                                                              + history + outcome]:
+                                self.time_variants['program_prop' + additional_string + '_treatment' + strain + history
+                                                   + outcome][year] \
+                                    = self.derived_data['prop' + additional_string + strain + history + outcome][year]
 
     # miscellaneous methods
 

@@ -124,45 +124,47 @@ def find_common_elements_multiple_lists(list_of_lists):
     return intersection
 
 
-def calculate_proportion_dict(data, relevant_keys, percent=False, floor=0., underscore=True):
+def calculate_proportion_dict(data, relevant_keys, percent=False, floor=0., underscore=True, additional_string=''):
     """
     General method to calculate proportions from absolute values provided as dictionaries.
 
     Args:
-        data: Dictionary containing the absolute values.
-        relevant_keys: The keys of data from which proportions are to be calculated (generally a list of strings).
-        percent: Boolean describing whether the method should return the output as a percent or proportion.
+        data: Dictionary containing the absolute values
+        relevant_keys: The keys of data from which proportions are to be calculated (generally a list of strings)
+        floor: Minimum allowable value
+        percent: Boolean describing whether the method should return the output as a percent or proportion
+        underscore: Just whether the string stem has an underscore or not
+        additional_string: Any additional string name to be added to the dictionary keys
     Returns:
-        proportions: A dictionary of the resulting proportions.
+        proportions: A dictionary of the resulting proportions
     """
 
-    if underscore:
-        string_stem = 'prop_'
-    else:
-        string_stem = 'prop'
+    string_stem = 'prop_' if underscore else 'prop'
+    string_stem = string_stem + additional_string
 
     # calculate multiplier for percentages if requested, otherwise leave as one
-    multiplier = 1.
-    if percent:
-        multiplier = 1e2
+    multiplier = 1e2 if percent else 1.
 
     # create a list of the years that are common to all keys within data
     lists_of_years = []
-    for i in range(len(relevant_keys)): lists_of_years += [data[relevant_keys[i]].keys()]
+    for i in range(len(relevant_keys)):
+        lists_of_years.append(data[relevant_keys[i]].keys())
     common_years = find_common_elements_multiple_lists(lists_of_years)
 
     # calculate the denominator by summing the values for which proportions have been requested
     denominator = {}
     for i in common_years:
         denominator[i] = 0.
-        for j in relevant_keys: denominator[i] += data[j][i]
+        for j in relevant_keys:
+            denominator[i] += data[j][i]
 
     # calculate the proportions
     proportions = {}
     for j in relevant_keys:
         proportions[string_stem + j] = {}
         for i in common_years:
-            if denominator[i] > floor: proportions[string_stem + j][i] = data[j][i] / denominator[i] * multiplier
+            if denominator[i] > floor:
+                proportions[string_stem + j][i] = data[j][i] / denominator[i] * multiplier
     return proportions
 
 

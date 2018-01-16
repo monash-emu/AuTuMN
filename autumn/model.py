@@ -677,15 +677,19 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         """
 
         strains_for_treatment = copy.copy(self.strains)
-        if self.is_misassignment: strains_for_treatment.append('_inappropriate')
+        if self.is_misassignment:
+            strains_for_treatment.append('_inappropriate')
 
         for strata in itertools.product(strains_for_treatment, self.histories, ['_success', '_death']):
+
+            additional_string = '' if strata[-1] == '_success' else '_nonsuccess'
+
             for riskgroup in self.riskgroups:
-                self.vars['program_prop_treatment' + riskgroup + ''.join(strata)] \
-                    = copy.copy(self.vars['program_prop_treatment' + ''.join(strata)])
+                self.vars['program_prop' + additional_string + '_treatment' + riskgroup + ''.join(strata)] \
+                    = copy.copy(self.vars['program_prop' + additional_string + '_treatment' + ''.join(strata)])
 
             # delete the var that is not riskgroup-specific
-            del self.vars['program_prop_treatment' + ''.join(strata)]
+            del self.vars['program_prop' + additional_string + '_treatment' + ''.join(strata)]
 
     def calculate_await_treatment_var(self):
         """
@@ -700,7 +704,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             if organ == '_smearneg' and 'int_prop_xpert' in self.relevant_interventions:
                 time_to_treatment \
                     = self.params['program_timeperiod_await_treatment_smearneg'] * (1. - self.vars['int_prop_xpert']) \
-                      + self.params['int_timeperiod_await_treatment_smearneg_xpert'] * self.vars['int_prop_xpert']
+                    + self.params['int_timeperiod_await_treatment_smearneg_xpert'] * self.vars['int_prop_xpert']
 
             # do other organ stratifications (including smear-negative if Xpert not an intervention)
             else:
@@ -716,19 +720,27 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
         self.vars['epi_prop_amplification'] = self.params['tb_prop_amplification'] \
             if self.time > self.params['mdr_introduce_time'] else 0.
+
+        # come back to this
         if 'int_prop_shortcourse_mdr' in self.relevant_interventions \
                 and self.shortcourse_improves_outcomes and len(self.strains) > 1:
             for history in self.histories:
                 self.adjust_treatment_outcomes_shortcourse(history)
 
+        # and this
         if 'int_prop_dot_groupcontributor' in self.relevant_interventions:
             self.adjust_treatment_outcomes_for_groupcontributor()
+
+
         for strain in self.strains:
             self.calculate_treatment_timeperiod_vars(strain)
 
             for strata in itertools.product(self.riskgroups, self.histories):
                 riskgroup, history = strata
-                self.adjust_treatment_outcomes_support(riskgroup, strain, history)
+
+                # come back to this
+                # self.adjust_treatment_outcomes_support(riskgroup, strain, history)
+
                 self.calculate_default_rates(riskgroup + strain + history)
                 self.split_treatment_props_by_stage(riskgroup, strain, history)
                 for stage in self.treatment_stages:
@@ -820,11 +832,17 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         """
 
         start = 'program_prop_treatment' + stratum
-        self.vars[start + '_default'] = 1. - self.vars[start + '_success'] - self.vars[start + '_death']
-        if self.vars[start + '_default'] < 0.:
-            print('Success and death sum to %s for %s outcome at %s time'
-                  % (self.vars[start + '_success'] + self.vars[start + '_death'], start, self.time))
-            self.vars[start + '_default'] = 0.
+        self.vars[start + '_default'] \
+            = (1. - self.vars[start + '_success']) \
+            * (1. - self.vars['program_prop_nonsuccess_treatment' + stratum + '_death'])
+        self.vars[start + '_death'] \
+            = (1. - self.vars[start + '_success']) \
+            * self.vars['program_prop_nonsuccess_treatment' + stratum + '_death']
+
+        # if self.vars[start + '_default'] < 0.:
+        #     print('Success and death sum to %s for %s outcome at %s time'
+        #           % (self.vars[start + '_success'] + self.vars[start + '_death'], start, self.time))
+        #     self.vars[start + '_default'] = 0.
 
     def adjust_treatment_outcomes_for_groupcontributor(self):
         """

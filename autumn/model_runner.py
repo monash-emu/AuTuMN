@@ -992,6 +992,17 @@ class TbRunner(ModelRunner):
                              'posterior_width': None,
                              'width_multiplier': 2.  # width of normal posterior relative to range of allowed values
                              }]
+        self.from_labels \
+            = {'incidence': ['latent'],
+               'notifications': ['active'],
+               'infections': []}
+        self.to_labels \
+            = {'incidence': ['active'],
+               'notifications': ['detect'],
+               'infections': ['latent_early']}
+        self.divide_population = ['incidence']
+        self.multipliers \
+            = {'incidence': 1e5}
 
         # uncertainty adjustments
         self.outputs['epi_uncertainty'] \
@@ -1043,35 +1054,8 @@ class TbRunner(ModelRunner):
             for strain in [''] + self.models[scenario].strains:
                 strain_stratum = strain + stratum
 
-                # incidence
-                if 'incidence' in outputs_to_analyse:
-                    epi_outputs['incidence' + strain_stratum] = blank_output_list
-                    for flow_type in self.models[scenario].flows_by_type:
-                        mapper = master_mapper[flow_type]
-                        for flow in self.models[scenario].flows_by_type[flow_type]:
-                            if t_k.are_strings_in_subdict(mapper, flow, ['latent', strain, stratum], 'from') \
-                                    and t_k.are_strings_in_subdict(mapper, flow, ['active'], 'to'):
-                                incidence_increment \
-                                    = self.models[scenario].get_compartment_soln(flow[mapper['from']]) \
-                                      * self.get_rate_for_output(scenario, flow_type, flow) / denominator * 1e5
-                                epi_outputs['incidence' + strain_stratum] \
-                                    = t_k.elementwise_list_addition(incidence_increment,
-                                                                    epi_outputs['incidence' + strain_stratum])
-
-                # notifications
-                if 'notifications' in outputs_to_analyse:
-                    epi_outputs['notifications' + strain_stratum] = blank_output_list
-                    for flow_type in self.models[scenario].flows_by_type:
-                        mapper = master_mapper[flow_type]
-                        for flow in self.models[scenario].flows_by_type[flow_type]:
-                            if t_k.are_strings_in_subdict(mapper, flow, ['active', strain, stratum], 'from') \
-                                    and t_k.are_strings_in_subdict(mapper, flow, ['detect'], 'to'):
-                                notifications_increment \
-                                    = self.models[scenario].get_compartment_soln(flow[mapper['from']]) \
-                                      * self.get_rate_for_output(scenario, flow_type, flow)
-                                epi_outputs['notifications' + strain_stratum] \
-                                    = t_k.elementwise_list_addition(notifications_increment,
-                                                                    epi_outputs['notifications' + strain_stratum])
+                for output in ['incidence', 'notifications', 'infections']:
+                    self.update_output(epi_outputs, scenario, output, epi_outputs_to_analyse, strain, stratum)
 
                 # mortality
                 if 'mortality' in outputs_to_analyse:
@@ -1102,19 +1086,6 @@ class TbRunner(ModelRunner):
                             epi_outputs['prevalence' + strain_stratum] = t_k.elementwise_list_addition(
                                 prevalence_increment, epi_outputs['prevalence' + strain_stratum])
 
-                # absolute number of infections
-                if 'infections' in outputs_to_analyse:
-                    epi_outputs['infections' + strain_stratum] = blank_output_list
-                    for flow_type in self.models[scenario].flows_by_type:
-                        mapper = master_mapper[flow_type]
-                        for flow in self.models[scenario].flows_by_type[flow_type]:
-                            if t_k.are_strings_in_subdict(mapper, flow, ['latent_early', strain, stratum], 'to'):
-                                epi_outputs['infections' + strain_stratum] \
-                                    = t_k.elementwise_list_addition(
-                                        self.models[scenario].get_compartment_soln(flow[mapper['from']])
-                                        * self.get_rate_for_output(scenario, flow_type, flow),
-                                    epi_outputs['infections' + strain_stratum])
-
             # annual risk of infection
             if 'infections' in outputs_to_analyse:
                 epi_outputs['annual_risk_infection' + stratum] = t_k.elementwise_list_division(
@@ -1128,6 +1099,42 @@ class TbRunner(ModelRunner):
                                                         t_k.prepare_denominator(epi_outputs['incidence' + stratum]),
                                                         percentage=True)
 
+        return epi_outputs
+
+    def update_output(self, epi_outputs, scenario, output, epi_outputs_to_analyse, strain, stratum):
+        """
+        Standard method for looping through epidemiological outputs that are defined by their from and to compartments
+        as specified in self.from_labels and self.to_labels.
+
+        Args:
+            epi_outputs: The epidemiological outputs structure to be updated
+            scenario: Integer for the scenario value being evaluated
+            output: String for the output currently being evaluated
+            epi_outputs_to_analyse: All the possible epidemiological outputs to be considered
+            strain: Strain in question
+            stratum: Epidemiological stratum (risk group or age group) being considered
+        Returns:
+            Updated version of epi_outputs
+        """
+
+        blank_output_list = [0.] * len(epi_outputs['times'])
+        master_mapper = self.models[scenario].flow_type_index
+        strain_stratum = strain + stratum
+        denominator \
+            = t_k.prepare_denominator(epi_outputs['population' + stratum]) if output in self.divide_population else 1.
+        multiplier = self.multipliers[output] if output in self.multipliers else 1.
+        outputs_to_analyse = epi_outputs_to_analyse if epi_outputs_to_analyse else self.epi_outputs_to_analyse
+        if output in outputs_to_analyse:
+            epi_outputs[output + strain_stratum] = blank_output_list
+            for flow_type in self.models[scenario].flows_by_type:
+                mapper = master_mapper[flow_type]
+                for flow in self.models[scenario].flows_by_type[flow_type]:
+                    if t_k.are_strings_in_subdict(mapper, flow, self.from_labels[output] + [strain, stratum], 'from') \
+                            and t_k.are_strings_in_subdict(mapper, flow, self.to_labels[output], 'to'):
+                        increment = self.models[scenario].get_compartment_soln(flow[mapper['from']]) \
+                                    * self.get_rate_for_output(scenario, flow_type, flow) / denominator * multiplier
+                        epi_outputs[output + strain_stratum] \
+                            = t_k.elementwise_list_addition(increment, epi_outputs[output + strain_stratum])
         return epi_outputs
 
     def get_rate_for_output(self, scenario, flow_type, flow):

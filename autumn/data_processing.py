@@ -11,10 +11,11 @@ def make_constant_function(value):
     """
     Function that returns a function of constant returned value with a deliberately irrelevant argument,
     to maintain consistency with the number of arguments to other functions that take time as an argument.
+    Note that "time" is an irrelevant argument to the returned function, but necessary for consistency with other
+    functions.
 
     Args:
         value: The value for the created function to return
-        time: Irrelevant argument to the returned function, but necessary for consistency with other functions
     Returns:
         constant: The constant function
     """
@@ -99,6 +100,10 @@ class Inputs:
         self.compartment_types = ['susceptible_fully', 'susceptible_immune', 'latent_early', 'latent_late', 'active',
                                   'detect', 'missed', 'treatment_infect', 'treatment_noninfect']
         self.histories = ['']
+        self.vary_detection_by_organ = False
+        self.vary_detection_by_riskgroup = False
+        self.riskgroups_for_detection = ['']
+        self.organs_for_detection = ['']
 
         # interventions
         self.irrelevant_time_variants = []
@@ -115,7 +120,8 @@ class Inputs:
         self.runtime_outputs = runtime_outputs
         self.mode = 'epi_uncertainty'
         self.js_gui = js_gui
-        if self.js_gui: self.js_gui('init')
+        if self.js_gui:
+            self.js_gui('init')
         self.plot_count = 0
         self.emit_delay = .1
         self.treatment_outcome_types = []
@@ -191,7 +197,8 @@ class Inputs:
 
         # note ordering to list of sheets to be worked through is important for hierarchical loading of constants
         sheets_with_constants = ['country_constants', 'default_constants']
-        if self.gui_inputs['riskgroup_diabetes']: sheets_with_constants += ['diabetes']
+        if self.gui_inputs['riskgroup_diabetes']:
+            sheets_with_constants += ['diabetes']
         self.add_model_constant_defaults(sheets_with_constants)
 
         # add "by definition" hard-coded parameters
@@ -253,7 +260,8 @@ class Inputs:
         """
 
         # find risk group-specific parameters
-        if len(self.riskgroups) > 1: self.find_riskgroup_progressions()
+        if len(self.riskgroups) > 1:
+            self.find_riskgroup_progressions()
 
         # calculate rates of progression to active disease or late latency
         self.find_latency_progression_rates()
@@ -303,7 +311,7 @@ class Inputs:
                         self.model_constants['riskgroup_multiplier' + riskgroup + '_progression'])
                     self.model_constants['tb_rate_late_progression' + riskgroup + agegroup] \
                         = self.model_constants['tb_rate_late_progression' + agegroup] \
-                          * self.model_constants['riskgroup_multiplier' + riskgroup + '_progression']
+                        * self.model_constants['riskgroup_multiplier' + riskgroup + '_progression']
                 else:
                     self.model_constants['tb_prop_early_progression' + riskgroup + agegroup] \
                         = self.model_constants['tb_prop_early_progression' + agegroup]
@@ -319,7 +327,7 @@ class Inputs:
         for strain in self.strains:
             self.model_constants['tb_timeperiod_noninfect_ontreatment' + strain] \
                 = self.model_constants['tb_timeperiod_ontreatment' + strain] \
-                  - self.model_constants['tb_timeperiod_infect_ontreatment' + strain]
+                - self.model_constants['tb_timeperiod_infect_ontreatment' + strain]
 
     ''' methods to define model structure '''
 
@@ -330,7 +338,8 @@ class Inputs:
         string (for no stratification) in initialisation of this object.
         """
 
-        if self.gui_inputs['is_treatment_history']: self.histories = ['_new', '_treated']
+        if self.gui_inputs['is_treatment_history']:
+            self.histories = ['_new', '_treated']
 
     def define_model_structure(self):
         """
@@ -450,7 +459,8 @@ class Inputs:
         have smear-positive, smear-negative or extrapulmonary disease.
         """
 
-        if self.gui_inputs['n_organs'] > 1: self.organ_status = self.available_organs[:self.gui_inputs['n_organs']]
+        if self.gui_inputs['n_organs'] > 1:
+            self.organ_status = self.available_organs[:self.gui_inputs['n_organs']]
 
     def define_ipt_structure(self):
 
@@ -501,7 +511,8 @@ class Inputs:
         """
 
         # add elaboration compartments to default list of mandatory compartments
-        if self.gui_inputs['is_lowquality']: self.compartment_types += ['lowquality']
+        if self.gui_inputs['is_lowquality']:
+            self.compartment_types += ['lowquality']
         if 'int_prop_novel_vaccination' in self.relevant_interventions:
             self.compartment_types += ['susceptible_novelvac']
 
@@ -516,7 +527,8 @@ class Inputs:
 
         self.extract_freeze_times()  # goes first to remove from time-variants before they are processed
         self.find_organ_proportions()
-        if 'country_programs' in self.original_data: self.time_variants.update(self.original_data['country_programs'])
+        if 'country_programs' in self.original_data:
+            self.time_variants.update(self.original_data['country_programs'])
         self.add_time_variant_defaults()  # add any necessary time-variants from defaults if not in country programs
         self.load_vacc_detect_time_variants()
         self.convert_percentages_to_proportions()
@@ -629,7 +641,8 @@ class Inputs:
 
         # create string conversion structures for communcation between GTB report and AuTuMN
         hiv_statuses_to_include = ['']
-        if include_hiv: hiv_statuses_to_include.append('hiv_')
+        if include_hiv:
+            hiv_statuses_to_include.append('hiv_')
         pre2011_map_gtb_to_autumn = {'_cmplt': '_success',
                                      '_cur': '_success',
                                      '_def': '_default',
@@ -665,7 +678,8 @@ class Inputs:
 
         # create string conversion structures
         hiv_statuses_to_include = ['newrel']
-        if include_hiv: hiv_statuses_to_include.append('tbhiv')
+        if include_hiv:
+            hiv_statuses_to_include.append('tbhiv')
         post2011_map_gtb_to_autumn = {'_succ': '_success',
                                       '_fail': '_default',
                                       '_lost': '_default',
@@ -757,18 +771,24 @@ class Inputs:
             keep[time_variant] = True
             remove_on_strain = True
             strains = copy.copy(self.strains)
-            if self.gui_inputs['is_misassignment']: strains.append('_inappropriate')
+            if self.gui_inputs['is_misassignment']:
+                strains.append('_inappropriate')
             for strain in strains:
-                if strain in time_variant: remove_on_strain = False
+                if strain in time_variant:
+                    remove_on_strain = False
             remove_on_history = True
             for history in self.histories:
-                if history in time_variant: remove_on_history = False
+                if history in time_variant:
+                    remove_on_history = False
             if len(self.histories) == 1:
-                if '_new' in time_variant or '_treated' in time_variant: remove_on_history = True
+                if '_new' in time_variant or '_treated' in time_variant:
+                    remove_on_history = True
             if 'program_prop_treatment' in time_variant and (remove_on_strain or remove_on_history):
                 keep[time_variant] = False
-            if 'program_perc_treatment' in time_variant: keep[time_variant] = False
-            if not keep[time_variant]: self.irrelevant_time_variants += [time_variant]
+            if 'program_perc_treatment' in time_variant:
+                keep[time_variant] = False
+            if not keep[time_variant]:
+                self.irrelevant_time_variants += [time_variant]
 
     def add_demo_dictionaries_to_timevariants(self):
         """
@@ -873,7 +893,8 @@ class Inputs:
 
         if self.country == country:
             for year in self.time_variants[param]:
-                if type(year) == int: self.time_variants[param][year] *= adjustment_factor
+                if type(year) == int:
+                    self.time_variants[param][year] *= adjustment_factor
 
     ''' classify interventions '''
 
@@ -910,7 +931,7 @@ class Inputs:
                     or (len(self.strains) < 2 and 'line_dst' in time_variant) \
                     or (len(self.strains) < 3 and 'secondline_dst' in time_variant) \
                     or ('_inappropriate' in time_variant
-                                and (len(self.strains) < 2 or not self.gui_inputs['is_misassignment'])) \
+                        and (len(self.strains) < 2 or not self.gui_inputs['is_misassignment'])) \
                     or (len(self.organ_status) == 1 and 'smearneg' in time_variant) \
                     or ('lowquality' in time_variant and not self.gui_inputs['is_lowquality']) \
                     or (len(self.strains) > 1 and 'treatment_' in time_variant and 'timeperiod_' not in time_variant
@@ -950,7 +971,8 @@ class Inputs:
 
             # similarly, add universal terms for ACF interventions, regardless of the risk-group applied to
             riskgroups_to_loop = copy.copy(self.riskgroups)
-            if '' not in riskgroups_to_loop: riskgroups_to_loop.append('')
+            if '' not in riskgroups_to_loop:
+                riskgroups_to_loop.append('')
             for riskgroup in riskgroups_to_loop:
                 for acf_type in ['smear', 'xpert']:
                     for whether_cxr_screen in ['', 'cxr']:
@@ -994,8 +1016,7 @@ class Inputs:
                     'Effect of Xpert on smear-negative detection not simulated as model unstratified by organ status.')
 
         # set relevant attributes
-        self.organs_for_detection = ['']
-        if self.vary_detection_by_organ: self.organs_for_detection = self.organ_status
+        self.organs_for_detection = self.organ_status if self.vary_detection_by_organ else ['']
 
     def determine_riskgroup_detection_variation(self):
         """
@@ -1008,8 +1029,7 @@ class Inputs:
             for intervention in self.relevant_interventions[scenario]:
                 if 'acf' in intervention or 'intensive_screening' in intervention or 'groupcontributor' in intervention:
                     self.vary_detection_by_riskgroup = True
-        self.riskgroups_for_detection = ['']
-        if self.vary_detection_by_riskgroup: self.riskgroups_for_detection = self.riskgroups
+        self.riskgroups_for_detection = self.riskgroups if self.vary_detection_by_riskgroup else ['']
 
     def find_potential_interventions_to_cost(self):
         """
@@ -1041,7 +1061,8 @@ class Inputs:
                 if 'int_prop_' + intervention in self.relevant_interventions[scenario]:
                     self.interventions_to_cost[scenario] += [intervention]
 
-        if self.intervention_uncertainty: self.interventions_to_cost[15] = self.interventions_to_cost[0]
+        if self.intervention_uncertainty:
+            self.interventions_to_cost[15] = self.interventions_to_cost[0]
 
     # actually has to be called later and is just required for optimisation
 
@@ -1071,12 +1092,14 @@ class Inputs:
         self.find_data_for_functions_or_params()
 
         # find scale-up functions or constant parameters
-        if self.increment_comorbidity: self.create_comorbidity_scaleups()
+        if self.increment_comorbidity:
+            self.create_comorbidity_scaleups()
         self.find_constant_functions()
         self.find_scaleups()
 
         # find the proportion of cases that are infectious for models that are unstratified by organ status
-        if len(self.organ_status) < 2: self.set_fixed_infectious_proportion()
+        if len(self.organ_status) < 2:
+            self.set_fixed_infectious_proportion()
 
         # add parameters for IPT and treatment support
         self.add_missing_economics()
@@ -1167,8 +1190,7 @@ class Inputs:
                                                  self.scaleup_data[scenario][param].pop('scenario')]
 
                     # upper bound depends on whether the parameter is a proportion
-                    upper_bound = None
-                    if 'prop_' in param: upper_bound = 1.
+                    upper_bound = 1. if 'prop_' in param else None
 
                     # calculate the scaling function
                     self.scaleup_fns[scenario][param] \
@@ -1193,7 +1215,7 @@ class Inputs:
 
         self.model_constants['tb_multiplier_force'] \
             = self.model_constants['epi_prop_smearpos'] \
-              + self.model_constants['epi_prop_smearneg'] * self.model_constants['tb_multiplier_force_smearneg']
+            + self.model_constants['epi_prop_smearneg'] * self.model_constants['tb_multiplier_force_smearneg']
 
     def add_missing_economics(self):
         """
@@ -1326,7 +1348,8 @@ class Inputs:
                'default_programs']
 
         # add any optional sheets required for specific model being run (currently just diabetes)
-        if 'riskgroup_diabetes' in self.gui_inputs: keys_of_sheets_to_read.append('diabetes')
+        if 'riskgroup_diabetes' in self.gui_inputs:
+            keys_of_sheets_to_read.append('diabetes')
 
         return keys_of_sheets_to_read
 
@@ -1336,7 +1359,7 @@ class Inputs:
         """
 
         if self.js_gui:
-            self.js_gui('console', {"message":comment})
+            self.js_gui('console', {"message": comment})
         else:
             self.runtime_outputs.insert(END, comment + '\n')
             self.runtime_outputs.see(END)

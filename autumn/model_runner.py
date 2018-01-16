@@ -322,7 +322,7 @@ class ModelRunner:
         for stratum in strata:
 
             # population
-            epi_outputs = self.find_population_totals(epi_outputs, scenario, stratum)
+            epi_outputs.update(self.find_population_totals(scenario, stratum, len(self.models[scenario].times)))
 
             # to allow calculation by strain and the total output
             for strain in [''] + self.models[scenario].strains:
@@ -348,24 +348,24 @@ class ModelRunner:
 
         return epi_outputs
 
-    def find_population_totals(self, epi_outputs, scenario, stratum):
+    def find_population_totals(self, scenario, stratum, output_length):
         """
         Find the total population sizes for each population stratum.
 
         Args:
-            epi_outputs: Output data structure to be updated
             scenario: Integer for scenario value
             stratum: Population stratum being evaluated
+            output_length: Length of all the outputs (i.e. number of time points evaluated at)
         Returns:
             Updated version of epi_outputs
         """
 
-        epi_outputs['population' + stratum] = [0.] * len(epi_outputs['times'])
+        new_outputs = {'population' + stratum: [0.] * output_length}
         for label in self.models[scenario].labels:
             if stratum in label:
-                epi_outputs['population' + stratum] = t_k.elementwise_list_addition(
-                    self.models[scenario].get_compartment_soln(label), epi_outputs['population' + stratum])
-        return epi_outputs
+                new_outputs['population' + stratum] = t_k.elementwise_list_addition(
+                    self.models[scenario].get_compartment_soln(label), new_outputs['population' + stratum])
+        return new_outputs
 
     def find_standard_rate_output(self, epi_outputs, scenario, output, strain, stratum):
         """

@@ -709,6 +709,47 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             # find the rate as the reciprocal of the time to treatment
             self.vars['program_rate_start_treatment' + organ] = 1. / time_to_treatment
 
+    def calculate_treatment_rates(self):
+        """
+        Master method to coordinate treatment var-related methods.
+        """
+
+        self.split_treatment_props_by_riskgroup()
+        self.vars['epi_prop_amplification'] = self.params['tb_prop_amplification'] \
+            if self.time > self.params['mdr_introduce_time'] else 0.
+        if 'int_prop_shortcourse_mdr' in self.relevant_interventions and self.shortcourse_improves_outcomes \
+                and '_mdr' in self.strains:
+            for history in self.histories:
+                self.adjust_treatment_outcomes_shortcourse(history)
+        if 'int_prop_dot_groupcontributor' in self.relevant_interventions:
+            self.adjust_treatment_outcomes_for_groupcontributor()
+
+        for strain in self.strains:
+            self.calculate_treatment_timeperiod_vars(strain)
+            for strata in itertools.product(self.riskgroups, self.histories):
+                riskgroup, history = strata
+                self.adjust_treatment_outcomes_support(riskgroup, strain, history)
+
+        treatment_types = copy.copy(self.strains)
+        if self.is_misassignment:
+            treatment_types.append('_inappropriate')
+        for strain in treatment_types:
+            for strata in itertools.product(self.riskgroups, self.histories):
+                riskgroup, history = strata
+                self.calculate_default_death_props(riskgroup + strain + history)
+
+        for strain in self.strains:
+            for strata in itertools.product(self.riskgroups, self.histories):
+                riskgroup, history = strata
+                self.split_treatment_props_by_stage(riskgroup, strain, history)
+                for stage in self.treatment_stages:
+                    self.assign_success_prop_by_treatment_stage(riskgroup + strain + history, stage)
+                    self.convert_treatment_props_to_rates(riskgroup, strain, history, stage)
+                    if self.is_amplification:
+                        self.split_by_amplification(riskgroup + strain + history + '_default' + stage)
+                if len(self.strains) > 1 and self.is_misassignment and strain != self.strains[0]:
+                    self.calculate_misassigned_outcomes(riskgroup, strain, history)
+
     def split_treatment_props_by_riskgroup(self):
         """
         Create treatment proportion vars that are specific to the different risk groups.
@@ -727,40 +768,47 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             # delete the var that is not riskgroup-specific
             del self.vars['program_prop_' + converter[strata[-1]] + ''.join(strata)]
 
-    def calculate_treatment_rates(self):
+    def adjust_treatment_outcomes_shortcourse(self, history):
         """
-        Master method to coordinate treatment var-related methods.
+        Adapt treatment outcomes for short-course regimen. Restricted such that can only improve outcomes by selection
+        of the functions used to adjust the treatment outcomes.
         """
 
-        self.split_treatment_props_by_riskgroup()
-        self.vars['epi_prop_amplification'] = self.params['tb_prop_amplification'] \
-            if self.time > self.params['mdr_introduce_time'] else 0.
-        if 'int_prop_shortcourse_mdr' in self.relevant_interventions and self.shortcourse_improves_outcomes \
-                and len(self.strains) > 1:
-            for history in self.histories:
-                self.adjust_treatment_outcomes_shortcourse(history)
-        if 'int_prop_dot_groupcontributor' in self.relevant_interventions:
-            self.adjust_treatment_outcomes_for_groupcontributor()
+        for riskgroup in self.riskgroups:
+            self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + '_success'] \
+                = t_k.increase_parameter_closer_to_value(
+                self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + '_success'],
+                self.params['int_prop_treatment_success_shortcoursemdr'],
+                self.vars['int_prop_shortcourse_mdr'])
 
-        for strain in self.strains:
-            self.calculate_treatment_timeperiod_vars(strain)
+    def adjust_treatment_outcomes_for_groupcontributor(self):
+        """
+        Adjust treatment success and death for NGO activities. These activities are already running at baseline so we
+        need to account for some effect that is already ongoing. The efficacy parameter represents the proportional
+        reduction in negative outcomes obtained from the intervention when used at 100% coverage as compared to no
+        intervention. The programmatic parameters obtained from the spreadsheets have to be interpreted as being
+        affected by the intervention that is already running at some level of coverage.
+        """
 
-            for strata in itertools.product(self.riskgroups, self.histories):
-                riskgroup, history = strata
-                self.adjust_treatment_outcomes_support(riskgroup, strain, history)
-                self.calculate_default_death_props(riskgroup + strain + history)
-                self.split_treatment_props_by_stage(riskgroup, strain, history)
-                for stage in self.treatment_stages:
-                    self.assign_success_prop_by_treatment_stage(riskgroup + strain + history, stage)
-                    self.convert_treatment_props_to_rates(riskgroup, strain, history, stage)
-                    if self.is_amplification:
-                        self.calculate_amplification_props(riskgroup + strain + history + '_default' + stage)
-                if len(self.strains) > 1 and self.is_misassignment and strain != self.strains[0]:
-                    self.calculate_misassigned_outcomes(riskgroup, strain, history)
+        # calculate the ratio (1 - efficacy * current_coverage) / (1 - efficacy * baseline_coverage)
+        coverage_ratio \
+            = (1. - self.params['int_prop_treatment_improvement_contributor']
+               * self.vars['int_prop_dot_groupcontributor']) \
+            / (1. - self.params['int_prop_treatment_improvement_contributor']
+               * self.scaleup_fns['int_prop_dot_groupcontributor'](self.params['reference_time']))
+
+        for strata in itertools.product(self.contributor_groups, self.strains, self.histories):
+
+            # treatment success (which may have become negative in the pre-treatment era)
+            self.vars['program_prop_treatment' + ''.join(strata) + '_success'] \
+                = max(1. - coverage_ratio * (1. - self.vars['program_prop_treatment' + ''.join(strata) + '_success']),
+                      0.)
 
     def calculate_treatment_timeperiod_vars(self, strain):
         """
-        Find the time periods on treatment and in each stage of treatment for the strain being considered.
+        Find the time periods on treatment and in each stage of treatment for the strain being considered. (Note that
+        this doesn't need to include inappropriate, because inappropriately treated patients have treated durations that
+        come from regimen durations for appropriately treated patients.)
         """
 
         # find baseline treatment period for the total duration (i.e. '') and for the infectious period
@@ -777,22 +825,9 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                 self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
                     = self.params['tb_timeperiod' + treatment_stage + '_ontreatment' + strain]
 
-        # find non-infectious period as the difference between the infectious period and the total duration
+        # simply find non-infectious period as the difference between the infectious period and the total duration
         self.vars['tb_timeperiod_noninfect_ontreatment' + strain] \
             = self.vars['tb_timeperiod_ontreatment' + strain] - self.vars['tb_timeperiod_infect_ontreatment' + strain]
-
-    def adjust_treatment_outcomes_shortcourse(self, history):
-        """
-        Adapt treatment outcomes for short-course regimen. Restricted such that can only improve outcomes by selection
-        of the functions used to adjust the treatment outcomes.
-        """
-
-        for riskgroup in self.riskgroups:
-            self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + '_success'] \
-                = t_k.increase_parameter_closer_to_value(
-                self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + '_success'],
-                self.params['int_prop_treatment_success_shortcoursemdr'],
-                self.vars['int_prop_shortcourse_mdr'])
 
     def adjust_treatment_outcomes_support(self, riskgroup, strain, history):
         """
@@ -835,29 +870,6 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             = (1. - self.vars['program_prop_treatment' + stratum + '_success']) \
             * self.vars['program_prop_nonsuccess' + stratum + '_death']
 
-    def adjust_treatment_outcomes_for_groupcontributor(self):
-        """
-        Adjust treatment success and death for NGO activities. These activities are already running at baseline so we
-        need to account for some effect that is already ongoing. The efficacy parameter represents the proportional
-        reduction in negative outcomes obtained from the intervention when used at 100% coverage as compared to no
-        intervention. The programmatic parameters obtained from the spreadsheets have to be interpreted as being
-        affected by the intervention that is already running at some level of coverage.
-        """
-
-        # calculate the ratio (1 - efficacy * current_coverage) / (1 - efficacy * baseline_coverage)
-        coverage_ratio \
-            = (1. - self.params['int_prop_treatment_improvement_contributor']
-               * self.vars['int_prop_dot_groupcontributor']) \
-            / (1. - self.params['int_prop_treatment_improvement_contributor']
-               * self.scaleup_fns['int_prop_dot_groupcontributor'](self.params['reference_time']))
-
-        for strata in itertools.product(self.contributor_groups, self.strains, self.histories):
-
-            # treatment success (which may have become negative in the pre-treatment era)
-            self.vars['program_prop_treatment' + ''.join(strata) + '_success'] \
-                = max(1. - coverage_ratio * (1. - self.vars['program_prop_treatment' + ''.join(strata) + '_success']),
-                      0.)
-
     def split_treatment_props_by_stage(self, riskgroup, strain, history):
         """
         Assign proportions of default and death to early/infectious and late/non-infectious stages of treatment.
@@ -891,7 +903,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                 = self.vars['program_prop_treatment' + end] \
                 / self.vars['tb_timeperiod' + stage + '_ontreatment' + strain]
 
-    def calculate_amplification_props(self, treatment_group):
+    def split_by_amplification(self, treatment_group):
         """
         Split default according to whether amplification occurs (if not the most resistant strain).
         Previously had a sigmoidal function for amplification proportion, but now thinking that the following switch is
@@ -908,20 +920,15 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         Find treatment outcomes for patients assigned to an incorrect regimen.
         """
 
-        for treated_as in self.strains:  # for each strain
+        for treated_as in self.strains:
 
-            # if assigned strain is different from the actual strain and regimen is worse
+            # if assigned strain is different from the actual strain and regimen is inadequate
             if treated_as != strain and self.strains.index(treated_as) < self.strains.index(strain):
 
-                # calculate the default proportion as the remainder from success and death
                 start = riskgroup + '_inappropriate' + history
-                self.vars['program_prop_treatment' + start + '_default'] \
-                    = 1. - self.vars['program_prop_treatment' + start + '_success'] \
-                    - self.vars['program_prop_nonsuccess' + start + '_death']
-
                 for outcome in self.outcomes[1:]:
                     treatment_type = strain + '_as' + treated_as[1:]
-                    converter = {'_success': 'treatment', '_death': 'nonsuccess', '_default': 'treatment'}
+                    converter = {'_death': 'nonsuccess', '_default': 'treatment'}
                     outcomes_by_stage \
                         = find_outcome_proportions_by_period(
                             self.vars['program_prop_' + converter[outcome] + start + outcome],
@@ -947,8 +954,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                             / self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + treated_as]
 
                     if self.is_amplification:
-                        self.calculate_amplification_props(
-                            riskgroup + treatment_type + history + '_default' + treatment_stage)
+                        self.split_by_amplification(riskgroup + treatment_type + history + '_default' + treatment_stage)
 
     def calculate_ipt_effect(self):
         """

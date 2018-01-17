@@ -739,8 +739,6 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                 and len(self.strains) > 1:
             for history in self.histories:
                 self.adjust_treatment_outcomes_shortcourse(history)
-
-        # and this
         if 'int_prop_dot_groupcontributor' in self.relevant_interventions:
             self.adjust_treatment_outcomes_for_groupcontributor()
 
@@ -871,11 +869,8 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
             # treatment success (which may have become negative in the pre-treatment era)
             self.vars['program_prop_treatment' + ''.join(strata) + '_success'] \
-                = max(1. - coverage_ratio
-                      * (1. - self.vars['program_prop_treatment' + ''.join(strata) + '_success']), 0.)
-
-            # treatment death
-            self.vars['program_prop_treatment' + ''.join(strata) + '_death'] *= coverage_ratio
+                = max(1. - coverage_ratio * (1. - self.vars['program_prop_treatment' + ''.join(strata) + '_success']),
+                      0.)
 
     def split_treatment_props_by_stage(self, riskgroup, strain, history):
         """

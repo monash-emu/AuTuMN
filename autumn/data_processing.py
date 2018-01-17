@@ -5,6 +5,7 @@ import tool_kit
 from curve import scale_up_function, freeze_curve
 from Tkinter import *
 import numpy
+import itertools
 
 
 def make_constant_function(value):
@@ -738,13 +739,13 @@ class Inputs:
                     self.derived_data,
                     [strain + history + '_success', strain + history + '_death', strain + history + '_default'],
                     percent=False, floor=self.model_constants['tb_n_outcome_minimum'], underscore=False)
-                self.derived_data['prop' + strain + history + '_success'] \
+                self.derived_data['prop_treatment' + strain + history + '_success'] \
                     = overall_outcomes['prop' + strain + history + '_success']
                 nonsuccess_outcomes = tool_kit.calculate_proportion_dict(
                     self.derived_data,
                     [strain + history + '_death', strain + history + '_default'],
                     percent=False, floor=self.model_constants['tb_n_outcome_minimum'], underscore=False)
-                self.derived_data['prop' + strain + history + '_death'] \
+                self.derived_data['prop_nonsuccess' + strain + history + '_death'] \
                     = nonsuccess_outcomes['prop' + strain + history + '_death']
 
     def add_treatment_outcomes_to_timevariants(self):
@@ -754,14 +755,16 @@ class Inputs:
         because default is derived from these.
         """
 
-        for strain in self.strains:
-            for outcome in ['_success', '_death']:
-                for history in self.histories:
-                    if self.time_variants['program_prop_treatment' + strain + history + outcome]['load_data'] == u'yes':
-                        for year in self.derived_data['prop' + strain + history + outcome]:
-                            if year not in self.time_variants['program_prop_treatment' + strain + history + outcome]:
-                                self.time_variants['program_prop_treatment' + strain + history + outcome][year] \
-                                    = self.derived_data['prop' + strain + history + outcome][year]
+        converter = {'_success': 'treatment', '_death': 'nonsuccess'}
+        for strata in itertools.product(self.strains, ['_success', '_death'], self.histories):
+            strain, outcome, history = strata
+            if self.time_variants['program_prop_' + converter[outcome] + strain + history + outcome]['load_data'] \
+                    == u'yes':
+                for year in self.derived_data['prop_' + converter[outcome] + strain + history + outcome]:
+                    if year not in self.time_variants[
+                            'program_prop_' + converter[outcome] + strain + history + outcome]:
+                        self.time_variants['program_prop_' + converter[outcome] + strain + history + outcome][year] \
+                            = self.derived_data['prop_' + converter[outcome] + strain + history + outcome][year]
 
     # miscellaneous methods
 

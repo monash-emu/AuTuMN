@@ -687,24 +687,6 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         self.vars['program_rate_enterlowquality'] \
             = self.vars['program_rate_detect'] * prop_lowqual / (1. - prop_lowqual)
 
-    def split_treatment_props_by_riskgroup(self):
-        """
-        Create treatment proportion vars that are specific to the different risk groups.
-        The values are initially the same for all risk groups but this may change later with interventions.
-        """
-
-        strains_for_treatment = copy.copy(self.strains)
-        if self.is_misassignment:
-            strains_for_treatment.append('_inappropriate')
-
-        for strata in itertools.product(strains_for_treatment, self.histories, ['_success', '_death']):
-            for riskgroup in self.riskgroups:
-                self.vars['program_prop_treatment' + riskgroup + ''.join(strata)] \
-                    = copy.copy(self.vars['program_prop_treatment' + ''.join(strata)])
-
-            # delete the var that is not riskgroup-specific
-            del self.vars['program_prop_treatment' + ''.join(strata)]
-
     def calculate_await_treatment_var(self):
         """
         Take the reciprocal of the waiting times to calculate the flow rate to start treatment after detection.
@@ -726,6 +708,24 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
             # find the rate as the reciprocal of the time to treatment
             self.vars['program_rate_start_treatment' + organ] = 1. / time_to_treatment
+
+    def split_treatment_props_by_riskgroup(self):
+        """
+        Create treatment proportion vars that are specific to the different risk groups.
+        The values are initially the same for all risk groups but this may change later with interventions.
+        """
+
+        strains_for_treatment = copy.copy(self.strains)
+        if self.is_misassignment:
+            strains_for_treatment.append('_inappropriate')
+        converter = {'_success': 'treatment', '_death': 'nonsuccess'}
+        for strata in itertools.product(strains_for_treatment, self.histories, ['_success', '_death']):
+            for riskgroup in self.riskgroups:
+                self.vars['program_prop_' + converter[strata[-1]] + riskgroup + ''.join(strata)] \
+                    = copy.copy(self.vars['program_prop_' + converter[strata[-1]] + ''.join(strata)])
+
+            # delete the var that is not riskgroup-specific
+            del self.vars['program_prop_' + converter[strata[-1]] + ''.join(strata)]
 
     def calculate_treatment_rates(self):
         """
@@ -828,11 +828,12 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         different stages of the var calculations, but seems to work for now.
         """
 
-        start = 'program_prop_treatment' + stratum
-        self.vars[start + '_default'] \
-            = (1. - self.vars[start + '_success']) * (1. - self.vars[start + '_death'])
-        self.vars[start + '_death'] \
-            = (1. - self.vars[start + '_success']) * self.vars[start + '_death']
+        self.vars['program_prop_treatment' + stratum + '_default'] \
+            = (1. - self.vars['program_prop_treatment' + stratum + '_success']) \
+            * (1. - self.vars['program_prop_nonsuccess' + stratum + '_death'])
+        self.vars['program_prop_treatment' + stratum + '_death'] \
+            = (1. - self.vars['program_prop_treatment' + stratum + '_success']) \
+            * self.vars['program_prop_nonsuccess' + stratum + '_death']
 
     def adjust_treatment_outcomes_for_groupcontributor(self):
         """
@@ -913,14 +914,17 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             if treated_as != strain and self.strains.index(treated_as) < self.strains.index(strain):
 
                 # calculate the default proportion as the remainder from success and death
-                start = 'program_prop_treatment' + riskgroup + '_inappropriate' + history
-                self.vars[start + '_default'] = 1. - self.vars[start + '_success'] - self.vars[start + '_death']
+                start = riskgroup + '_inappropriate' + history
+                self.vars['program_prop_treatment' + start + '_default'] \
+                    = 1. - self.vars['program_prop_treatment' + start + '_success'] \
+                    - self.vars['program_prop_nonsuccess' + start + '_death']
 
                 for outcome in self.outcomes[1:]:
                     treatment_type = strain + '_as' + treated_as[1:]
+                    converter = {'_success': 'treatment', '_death': 'nonsuccess', '_default': 'treatment'}
                     outcomes_by_stage \
                         = find_outcome_proportions_by_period(
-                            self.vars[start + outcome],
+                            self.vars['program_prop_' + converter[outcome] + start + outcome],
                             self.params['tb_timeperiod_infect_ontreatment' + treated_as],
                             self.params['tb_timeperiod_ontreatment' + treated_as])
                     for s, stage in enumerate(self.treatment_stages):

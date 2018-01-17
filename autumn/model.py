@@ -747,11 +747,8 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
             for strata in itertools.product(self.riskgroups, self.histories):
                 riskgroup, history = strata
-
-                # come back to this
                 self.adjust_treatment_outcomes_support(riskgroup, strain, history)
-
-                self.calculate_default_rates(riskgroup + strain + history)
+                self.calculate_default_death_props(riskgroup + strain + history)
                 self.split_treatment_props_by_stage(riskgroup, strain, history)
                 for stage in self.treatment_stages:
                     self.assign_success_prop_by_treatment_stage(riskgroup + strain + history, stage)
@@ -824,18 +821,18 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                     self.params['program_prop_treatment_success_ideal' + strain_type],
                     self.vars['int_prop_treatment_support_absolute' + strain_type])
 
-    def calculate_default_rates(self, stratum):
+    def calculate_default_death_props(self, stratum):
         """
         Calculate the default proportion as the remainder from success and death and warn if numbers don't make sense.
+        This could be dangerous, because we are using the same var name for two quantities that are different at
+        different stages of the var calculations, but seems to work for now.
         """
 
         start = 'program_prop_treatment' + stratum
         self.vars[start + '_default'] \
-            = (1. - self.vars[start + '_success']) \
-            * (1. - self.vars['program_prop_treatment' + stratum + '_death'])
+            = (1. - self.vars[start + '_success']) * (1. - self.vars[start + '_death'])
         self.vars[start + '_death'] \
-            = (1. - self.vars[start + '_success']) \
-            * self.vars['program_prop_treatment' + stratum + '_death']
+            = (1. - self.vars[start + '_success']) * self.vars[start + '_death']
 
     def adjust_treatment_outcomes_for_groupcontributor(self):
         """
@@ -893,7 +890,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                 = self.vars['program_prop_treatment' + end] \
                 / self.vars['tb_timeperiod' + stage + '_ontreatment' + strain]
 
-    def calculate_amplification_props(self, start):
+    def calculate_amplification_props(self, treatment_group):
         """
         Split default according to whether amplification occurs (if not the most resistant strain).
         Previously had a sigmoidal function for amplification proportion, but now thinking that the following switch is
@@ -901,7 +898,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         adjust the time that MDR emerges during model running.
         """
 
-        start = 'program_rate_treatment' + start
+        start = 'program_rate_treatment' + treatment_group
         self.vars[start + '_amplify'] = self.vars[start] * self.vars['epi_prop_amplification']
         self.vars[start + '_noamplify'] = self.vars[start] * (1. - self.vars['epi_prop_amplification'])
 
@@ -911,43 +908,43 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         """
 
         for treated_as in self.strains:  # for each strain
-            if treated_as != strain:  # if assigned strain is different from the actual strain
-                if self.strains.index(treated_as) < self.strains.index(strain):  # if regimen is worse
 
-                    # calculate the default proportion as the remainder from success and death
-                    start = 'program_prop_treatment' + riskgroup + '_inappropriate' + history
-                    self.vars[start + '_default'] = 1. - self.vars[start + '_success'] - self.vars[start + '_death']
+            # if assigned strain is different from the actual strain and regimen is worse
+            if treated_as != strain and self.strains.index(treated_as) < self.strains.index(strain):
 
-                    for outcome in self.outcomes[1:]:
-                        treatment_type = strain + '_as' + treated_as[1:]
-                        outcomes_by_stage \
-                            = find_outcome_proportions_by_period(self.vars[start + outcome],
-                                                                 self.params['tb_timeperiod_infect_ontreatment'
-                                                                             + treated_as],
-                                                                 self.params['tb_timeperiod_ontreatment' + treated_as])
-                        for s, stage in enumerate(self.treatment_stages):
-                            self.vars[
-                                'program_prop_treatment' + riskgroup + treatment_type + history + outcome + stage] \
-                                = outcomes_by_stage[s]
+                # calculate the default proportion as the remainder from success and death
+                start = 'program_prop_treatment' + riskgroup + '_inappropriate' + history
+                self.vars[start + '_default'] = 1. - self.vars[start + '_success'] - self.vars[start + '_death']
 
-                    for treatment_stage in self.treatment_stages:
+                for outcome in self.outcomes[1:]:
+                    treatment_type = strain + '_as' + treated_as[1:]
+                    outcomes_by_stage \
+                        = find_outcome_proportions_by_period(
+                            self.vars[start + outcome],
+                            self.params['tb_timeperiod_infect_ontreatment' + treated_as],
+                            self.params['tb_timeperiod_ontreatment' + treated_as])
+                    for s, stage in enumerate(self.treatment_stages):
+                        self.vars['program_prop_treatment' + riskgroup + treatment_type + history + outcome + stage] \
+                            = outcomes_by_stage[s]
 
-                        # find the success proportions
-                        start = 'program_prop_treatment' + riskgroup + treatment_type + history
-                        self.vars[start + '_success' + treatment_stage] \
-                            = 1. - self.vars[start + '_default' + treatment_stage] \
-                            - self.vars[start + '_death' + treatment_stage]
+                for treatment_stage in self.treatment_stages:
 
-                        # find the corresponding rates from the proportions
-                        for outcome in self.outcomes:
-                            end = riskgroup + treatment_type + history + outcome + treatment_stage
-                            self.vars['program_rate_treatment' + end] \
-                                = self.vars['program_prop_treatment' + end] \
-                                / self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + treated_as]
+                    # find the success proportions
+                    start = 'program_prop_treatment' + riskgroup + treatment_type + history
+                    self.vars[start + '_success' + treatment_stage] \
+                        = 1. - self.vars[start + '_default' + treatment_stage] \
+                        - self.vars[start + '_death' + treatment_stage]
 
-                        if self.is_amplification:
-                            self.calculate_amplification_props(
-                                riskgroup + treatment_type + history + '_default' + treatment_stage)
+                    # find the corresponding rates from the proportions
+                    for outcome in self.outcomes:
+                        end = riskgroup + treatment_type + history + outcome + treatment_stage
+                        self.vars['program_rate_treatment' + end] \
+                            = self.vars['program_prop_treatment' + end] \
+                            / self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + treated_as]
+
+                    if self.is_amplification:
+                        self.calculate_amplification_props(
+                            riskgroup + treatment_type + history + '_default' + treatment_stage)
 
     def calculate_ipt_effect(self):
         """

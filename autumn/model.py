@@ -682,14 +682,12 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
         for strata in itertools.product(strains_for_treatment, self.histories, ['_success', '_death']):
 
-            additional_string = '' if strata[-1] == '_success' else '_nonsuccess'
-
             for riskgroup in self.riskgroups:
-                self.vars['program_prop' + additional_string + '_treatment' + riskgroup + ''.join(strata)] \
-                    = copy.copy(self.vars['program_prop' + additional_string + '_treatment' + ''.join(strata)])
+                self.vars['program_prop_treatment' + riskgroup + ''.join(strata)] \
+                    = copy.copy(self.vars['program_prop_treatment' + ''.join(strata)])
 
             # delete the var that is not riskgroup-specific
-            del self.vars['program_prop' + additional_string + '_treatment' + ''.join(strata)]
+            del self.vars['program_prop_treatment' + ''.join(strata)]
 
     def calculate_await_treatment_var(self):
         """
@@ -833,9 +831,9 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
         start = 'program_prop_treatment' + stratum
         self.vars[start + '_default'] = (1. - self.vars[start + '_success']) \
-                                        * (1. - self.vars['program_prop_nonsuccess_treatment' + stratum + '_death'])
+                                        * (1. - self.vars['program_prop_treatment' + stratum + '_death'])
         self.vars[start + '_death'] = (1. - self.vars[start + '_success']) \
-                                      * self.vars['program_prop_nonsuccess_treatment' + stratum + '_death']
+                                      * self.vars['program_prop_treatment' + stratum + '_death']
 
     def adjust_treatment_outcomes_for_groupcontributor(self):
         """

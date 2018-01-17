@@ -744,7 +744,7 @@ class Inputs:
                     self.derived_data,
                     [strain + history + '_death', strain + history + '_default'],
                     percent=False, floor=self.model_constants['tb_n_outcome_minimum'], underscore=False)
-                self.derived_data['prop_nonsuccess' + strain + history + '_death'] \
+                self.derived_data['prop' + strain + history + '_death'] \
                     = nonsuccess_outcomes['prop' + strain + history + '_death']
 
     def add_treatment_outcomes_to_timevariants(self):
@@ -756,16 +756,12 @@ class Inputs:
 
         for strain in self.strains:
             for outcome in ['_success', '_death']:
-                additional_string = '' if outcome == '_success' else '_nonsuccess'
                 for history in self.histories:
-                    if self.time_variants['program_prop' + additional_string + '_treatment' + strain + history
-                                          + outcome]['load_data'] == u'yes':
-                        for year in self.derived_data['prop' + additional_string + strain + history + outcome]:
-                            if year not in self.time_variants['program_prop' + additional_string + '_treatment' + strain
-                                                              + history + outcome]:
-                                self.time_variants['program_prop' + additional_string + '_treatment' + strain + history
-                                                   + outcome][year] \
-                                    = self.derived_data['prop' + additional_string + strain + history + outcome][year]
+                    if self.time_variants['program_prop_treatment' + strain + history + outcome]['load_data'] == u'yes':
+                        for year in self.derived_data['prop' + strain + history + outcome]:
+                            if year not in self.time_variants['program_prop_treatment' + strain + history + outcome]:
+                                self.time_variants['program_prop_treatment' + strain + history + outcome][year] \
+                                    = self.derived_data['prop' + strain + history + outcome][year]
 
     # miscellaneous methods
 

@@ -749,7 +749,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                 riskgroup, history = strata
 
                 # come back to this
-                # self.adjust_treatment_outcomes_support(riskgroup, strain, history)
+                self.adjust_treatment_outcomes_support(riskgroup, strain, history)
 
                 self.calculate_default_rates(riskgroup + strain + history)
                 self.split_treatment_props_by_stage(riskgroup, strain, history)
@@ -769,15 +769,13 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         # find baseline treatment period for the total duration (i.e. '') and for the infectious period
         for treatment_stage in ['', '_infect']:
 
-            # if short-course regimen being implemented, adapt treatment periods
+            # if short-course regimen being implemented
             if strain == '_mdr' and 'int_prop_shortcourse_mdr' in self.relevant_interventions:
                 self.vars['tb_timeperiod' + treatment_stage + '_ontreatment_mdr'] \
                     = t_k.decrease_parameter_closer_to_value(
                     self.params['tb_timeperiod' + treatment_stage + '_ontreatment_mdr'],
                     self.params['int_timeperiod_shortcourse_mdr' + treatment_stage],
                     self.vars['int_prop_shortcourse_mdr'])
-
-            # in absence of short-course regimen
             else:
                 self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + strain] \
                     = self.params['tb_timeperiod' + treatment_stage + '_ontreatment' + strain]
@@ -819,21 +817,11 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                     += (1. - self.vars['program_prop_treatment' + riskgroup + strain + history + '_success']) \
                     * self.params['int_prop_treatment_support_improvement' + strain_type] \
                     * self.vars['int_prop_treatment_support_relative' + strain_type]
-                self.vars['program_prop_treatment' + riskgroup + strain + history + '_death'] \
-                    -= self.vars['program_prop_treatment' + riskgroup + strain + history + '_death'] \
-                    * self.params['int_prop_treatment_support_improvement' + strain_type] \
-                    * self.vars['int_prop_treatment_support_relative' + strain_type]
-
             elif 'int_prop_treatment_support_absolute' + strain_type in self.relevant_interventions:
                 self.vars['program_prop_treatment' + riskgroup + strain + history + '_success'] \
                     = t_k.increase_parameter_closer_to_value(
                     self.vars['program_prop_treatment' + riskgroup + strain + history + '_success'],
                     self.params['program_prop_treatment_success_ideal' + strain_type],
-                    self.vars['int_prop_treatment_support_absolute' + strain_type])
-                self.vars['program_prop_treatment' + riskgroup + strain + history + '_death'] \
-                    = t_k.decrease_parameter_closer_to_value(
-                    self.vars['program_prop_treatment' + riskgroup + strain + history + '_death'],
-                    self.params['int_prop_treatment_death_ideal' + strain_type],
                     self.vars['int_prop_treatment_support_absolute' + strain_type])
 
     def calculate_default_rates(self, stratum):

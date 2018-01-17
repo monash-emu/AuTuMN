@@ -290,7 +290,6 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         self.calculate_organ_progressions()
         self.calculate_progression_vars()
         self.calculate_detection_vars()
-        self.split_treatment_props_by_riskgroup()
         self.calculate_await_treatment_var()
         self.calculate_treatment_rates()
         if 'agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions:
@@ -733,12 +732,11 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         Master method to coordinate treatment var-related methods.
         """
 
+        self.split_treatment_props_by_riskgroup()
         self.vars['epi_prop_amplification'] = self.params['tb_prop_amplification'] \
             if self.time > self.params['mdr_introduce_time'] else 0.
-
-        # come back to this
-        if 'int_prop_shortcourse_mdr' in self.relevant_interventions \
-                and self.shortcourse_improves_outcomes and len(self.strains) > 1:
+        if 'int_prop_shortcourse_mdr' in self.relevant_interventions and self.shortcourse_improves_outcomes \
+                and len(self.strains) > 1:
             for history in self.histories:
                 self.adjust_treatment_outcomes_shortcourse(history)
 
@@ -796,12 +794,11 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         of the functions used to adjust the treatment outcomes.
         """
 
-        for strata in itertools.product(self.riskgroups, ['_success', '_death']):
-            riskgroup, outcome = strata
-            self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + outcome] \
+        for riskgroup in self.riskgroups:
+            self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + '_success'] \
                 = t_k.increase_parameter_closer_to_value(
-                self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + outcome],
-                self.params['int_prop_treatment' + outcome + '_shortcoursemdr'],
+                self.vars['program_prop_treatment' + riskgroup + '_mdr' + history + '_success'],
+                self.params['int_prop_treatment_success_shortcoursemdr'],
                 self.vars['int_prop_shortcourse_mdr'])
 
     def adjust_treatment_outcomes_support(self, riskgroup, strain, history):

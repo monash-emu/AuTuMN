@@ -711,7 +711,8 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
     def calculate_treatment_rates(self):
         """
-        Master method to coordinate treatment var-related methods.
+        Master method to coordinate treatment var-related methods. See individual methods for explanation of what each
+        one does in sequence.
         """
 
         self.split_treatment_props_by_riskgroup()
@@ -723,25 +724,21 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                 self.adjust_treatment_outcomes_shortcourse(history)
         if 'int_prop_dot_groupcontributor' in self.relevant_interventions:
             self.adjust_treatment_outcomes_for_groupcontributor()
-
         for strain in self.strains:
             self.calculate_treatment_timeperiod_vars(strain)
             for stratum in itertools.product(self.riskgroups, self.histories):
-                riskgroup, history = stratum
-                self.adjust_treatment_outcomes_support(riskgroup, strain, history)
-
+                self.adjust_treatment_outcomes_support(strain, stratum)
         treatment_types = copy.copy(self.strains)
         if self.is_misassignment:
             treatment_types.append('_inappropriate')
         for stratum in itertools.product(self.riskgroups, self.histories):
+            riskgroup, history = stratum
             for strain in treatment_types:
-                riskgroup, history = stratum
                 self.calculate_default_death_props(riskgroup + strain + history)
             for strain in self.strains:
-                riskgroup, history = stratum
                 self.split_treatment_props_by_stage(strain, strain, strain, stratum)
                 for stage in self.treatment_stages:
-                    self.assign_success_prop_by_treatment_stage(riskgroup + strain + history, stage)
+                    self.assign_success_prop_by_treatment_stage(stage, riskgroup + strain + history)
                     self.convert_treatment_props_to_rates(strain, strain, stage, stratum)
                     if self.is_amplification:
                         self.split_by_amplification(riskgroup + strain + history + '_default' + stage)
@@ -827,7 +824,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         self.vars['tb_timeperiod_noninfect_ontreatment' + strain] \
             = self.vars['tb_timeperiod_ontreatment' + strain] - self.vars['tb_timeperiod_infect_ontreatment' + strain]
 
-    def adjust_treatment_outcomes_support(self, riskgroup, strain, history):
+    def adjust_treatment_outcomes_support(self, strain, stratum):
         """
         Add some extra treatment success if the treatment support intervention is active, either for a specific strain
         or for all outcomes. Also able to select as to whether the improvement is a relative reduction in poor outcomes
@@ -838,6 +835,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         writing).
         """
 
+        riskgroup, history = stratum
         strain_types = [strain]
         if '' not in self.strains:
             strain_types.append('')
@@ -890,7 +888,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                 self.vars['program_prop_treatment' + riskgroup + output_string + history + outcome + stage] \
                     = outcomes_by_stage[s]
 
-    def assign_success_prop_by_treatment_stage(self, stratum, stage):
+    def assign_success_prop_by_treatment_stage(self, stage, stratum):
         """
         Calculate success proportion by stage as the remainder after death and default accounted for.
         """
@@ -934,9 +932,9 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             # if assigned strain is different from the actual strain and regimen is inadequate
             if treated_as != strain and self.strains.index(treated_as) < self.strains.index(strain):
                 treatment_type = strain + '_as' + treated_as[1:]
-                self.split_treatment_props_by_stage('_inappropriate', treated_as, treatment_type, [riskgroup] + [history])
+                self.split_treatment_props_by_stage('_inappropriate', treated_as, treatment_type, stratum)
                 for stage in self.treatment_stages:
-                    self.assign_success_prop_by_treatment_stage(riskgroup + treatment_type + history, stage)
+                    self.assign_success_prop_by_treatment_stage(stage, riskgroup + treatment_type + history)
                     self.convert_treatment_props_to_rates(treatment_type, treated_as, stage, stratum)
                     if self.is_amplification:
                         self.split_by_amplification(riskgroup + treatment_type + history + '_default' + stage)

@@ -741,7 +741,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         for strain in self.strains:
             for strata in itertools.product(self.riskgroups, self.histories):
                 riskgroup, history = strata
-                self.split_treatment_props_by_stage(riskgroup, strain, history)
+                self.split_treatment_props_by_stage(riskgroup, strain, strain, history, strain)
                 for stage in self.treatment_stages:
                     self.assign_success_prop_by_treatment_stage(riskgroup + strain + history, stage)
                     self.convert_treatment_props_to_rates(riskgroup, strain, history, stage)
@@ -870,18 +870,27 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             = (1. - self.vars['program_prop_treatment' + stratum + '_success']) \
             * self.vars['program_prop_nonsuccess' + stratum + '_death']
 
-    def split_treatment_props_by_stage(self, riskgroup, strain, history):
+    def split_treatment_props_by_stage(self, riskgroup, regimen, treatment_type, history, treated_as):
         """
-        Assign proportions of default and death to early/infectious and late/non-infectious stages of treatment.
+        Assign proportions of default and death to early/infectious and late/non-infectious stages of treatment. For an
+        appropriately treated patient, the regimen, treatment_type and treated_as inputs are all the same.
+
+        Args:
+            riskgroup: Risk group stratification
+            regimen: The regimen whose treatment outcomes are used
+            treatment_type: The full name for the var that needs to come out the end (e.g. _mdr or _dsasmdr)
+            history: Treatment history status
+            treated_as: The regimen they have been assigned to
         """
 
         for outcome in self.outcomes[1:]:
-            end = riskgroup + strain + history + outcome
             outcomes_by_stage = find_outcome_proportions_by_period(
-                self.vars['program_prop_treatment' + end], self.vars['tb_timeperiod_infect_ontreatment' + strain],
-                self.vars['tb_timeperiod_ontreatment' + strain])
+                self.vars['program_prop_treatment' + riskgroup + regimen + history + outcome],
+                self.vars['tb_timeperiod_infect_ontreatment' + treated_as],
+                self.vars['tb_timeperiod_ontreatment' + treated_as])
             for s, stage in enumerate(self.treatment_stages):
-                self.vars['program_prop_treatment' + end + stage] = outcomes_by_stage[s]
+                self.vars['program_prop_treatment' + riskgroup + treatment_type + history + outcome + stage] \
+                    = outcomes_by_stage[s]
 
     def assign_success_prop_by_treatment_stage(self, stratum, stage):
         """
@@ -924,29 +933,18 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
             # if assigned strain is different from the actual strain and regimen is inadequate
             if treated_as != strain and self.strains.index(treated_as) < self.strains.index(strain):
-
-                start = riskgroup + '_inappropriate' + history
-                for outcome in self.outcomes[1:]:
-                    treatment_type = strain + '_as' + treated_as[1:]
-                    converter = {'_death': 'nonsuccess', '_default': 'treatment'}
-                    outcomes_by_stage \
-                        = find_outcome_proportions_by_period(
-                            self.vars['program_prop_' + converter[outcome] + start + outcome],
-                            self.params['tb_timeperiod_infect_ontreatment' + treated_as],
-                            self.params['tb_timeperiod_ontreatment' + treated_as])
-                    for s, stage in enumerate(self.treatment_stages):
-                        self.vars['program_prop_treatment' + riskgroup + treatment_type + history + outcome + stage] \
-                            = outcomes_by_stage[s]
+                treatment_type = strain + '_as' + treated_as[1:]
+                self.split_treatment_props_by_stage(riskgroup, '_inappropriate', treatment_type, history, treated_as)
 
                 for treatment_stage in self.treatment_stages:
 
-                    # find the success proportions
+                    # find the success proportions (analogous to assign_success_prop_by_treatment_stage)
                     start = 'program_prop_treatment' + riskgroup + treatment_type + history
                     self.vars[start + '_success' + treatment_stage] \
                         = 1. - self.vars[start + '_default' + treatment_stage] \
                         - self.vars[start + '_death' + treatment_stage]
 
-                    # find the corresponding rates from the proportions
+                    # find rates from proportions (analogous to convert_treatment_props_to_rates)
                     for outcome in self.outcomes:
                         end = riskgroup + treatment_type + history + outcome + treatment_stage
                         self.vars['program_rate_treatment' + end] \

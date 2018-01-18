@@ -533,7 +533,7 @@ class BaseModel:
     def process_uncertainty_params(self):
         """
         Perform some simple parameter processing - just for those that are used as uncertainty parameters and so can't
-        be processed in the data_processing module.
+        be processed in the inputs module.
         """
 
         pass

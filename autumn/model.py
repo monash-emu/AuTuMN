@@ -741,7 +741,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         for strain in self.strains:
             for strata in itertools.product(self.riskgroups, self.histories):
                 riskgroup, history = strata
-                self.split_treatment_props_by_stage(riskgroup, strain, strain, history, strain)
+                self.split_treatment_props_by_stage(strain, strain, strain, strata)
                 for stage in self.treatment_stages:
                     self.assign_success_prop_by_treatment_stage(riskgroup + strain + history, stage)
                     self.convert_treatment_props_to_rates(riskgroup, strain, history, stage)
@@ -870,26 +870,26 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             = (1. - self.vars['program_prop_treatment' + stratum + '_success']) \
             * self.vars['program_prop_nonsuccess' + stratum + '_death']
 
-    def split_treatment_props_by_stage(self, riskgroup, regimen, treatment_type, history, treated_as):
+    def split_treatment_props_by_stage(self, regimen_for_outcomes, treated_as, output_string, strata):
         """
         Assign proportions of default and death to early/infectious and late/non-infectious stages of treatment. For an
         appropriately treated patient, the regimen, treatment_type and treated_as inputs are all the same.
 
         Args:
-            riskgroup: Risk group stratification
-            regimen: The regimen whose treatment outcomes are used
-            treatment_type: The full name for the var that needs to come out the end (e.g. _mdr or _dsasmdr)
-            history: Treatment history status
+            regimen_for_outcomes: The regimen whose treatment outcomes are used
+            output_string: The full name for the var that needs to come out the end (e.g. _mdr or _dsasmdr)
             treated_as: The regimen they have been assigned to
+            strata: Riskgroup and treatment history strata
         """
 
+        riskgroup, history = strata
         for outcome in self.outcomes[1:]:
             outcomes_by_stage = find_outcome_proportions_by_period(
-                self.vars['program_prop_treatment' + riskgroup + regimen + history + outcome],
+                self.vars['program_prop_treatment' + riskgroup + regimen_for_outcomes + history + outcome],
                 self.vars['tb_timeperiod_infect_ontreatment' + treated_as],
                 self.vars['tb_timeperiod_ontreatment' + treated_as])
             for s, stage in enumerate(self.treatment_stages):
-                self.vars['program_prop_treatment' + riskgroup + treatment_type + history + outcome + stage] \
+                self.vars['program_prop_treatment' + riskgroup + output_string + history + outcome + stage] \
                     = outcomes_by_stage[s]
 
     def assign_success_prop_by_treatment_stage(self, stratum, stage):
@@ -934,7 +934,8 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             # if assigned strain is different from the actual strain and regimen is inadequate
             if treated_as != strain and self.strains.index(treated_as) < self.strains.index(strain):
                 treatment_type = strain + '_as' + treated_as[1:]
-                self.split_treatment_props_by_stage(riskgroup, '_inappropriate', treatment_type, history, treated_as)
+                self.split_treatment_props_by_stage(
+                    '_inappropriate', treated_as, treatment_type, [riskgroup] + [history])
 
                 for treatment_stage in self.treatment_stages:
 

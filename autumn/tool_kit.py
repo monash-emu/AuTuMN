@@ -741,7 +741,7 @@ def find_title_from_dictionary(name):
         'program_prop_nonsuccess_ds_new_death':
             'Death on treatment DS-TB, new cases',
         'program_prop_nonsuccess_ds_treated_death':
-            'Death on treatment DS-TB, retreatment cases'
+            'Death on treatment DS-TB, previously treated'
     }
 
     if name in dictionary_of_names:

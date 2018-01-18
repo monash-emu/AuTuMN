@@ -737,7 +737,11 @@ def find_title_from_dictionary(name):
         'program_prop_treatment_inappropriate_new_death':
             'Death on treatment MDR-TB on inappropriate regimen',
         'program_prop_treatment_inappropriate_new_success':
-            'Treatment success MDR-TB on inappropriate regimen'
+            'Treatment success MDR-TB on inappropriate regimen',
+        'program_prop_nonsuccess_new_death':
+            'Death on treatment, new cases',
+        'program_prop_nonsuccess_treated_death':
+            'Death on treatment, previously treated',
     }
 
     if name in dictionary_of_names:

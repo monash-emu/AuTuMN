@@ -726,29 +726,27 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
         for strain in self.strains:
             self.calculate_treatment_timeperiod_vars(strain)
-            for strata in itertools.product(self.riskgroups, self.histories):
-                riskgroup, history = strata
+            for stratum in itertools.product(self.riskgroups, self.histories):
+                riskgroup, history = stratum
                 self.adjust_treatment_outcomes_support(riskgroup, strain, history)
 
         treatment_types = copy.copy(self.strains)
         if self.is_misassignment:
             treatment_types.append('_inappropriate')
-        for strain in treatment_types:
-            for strata in itertools.product(self.riskgroups, self.histories):
-                riskgroup, history = strata
+        for stratum in itertools.product(self.riskgroups, self.histories):
+            for strain in treatment_types:
+                riskgroup, history = stratum
                 self.calculate_default_death_props(riskgroup + strain + history)
-
-        for strain in self.strains:
-            for strata in itertools.product(self.riskgroups, self.histories):
-                riskgroup, history = strata
-                self.split_treatment_props_by_stage(strain, strain, strain, strata)
+            for strain in self.strains:
+                riskgroup, history = stratum
+                self.split_treatment_props_by_stage(strain, strain, strain, stratum)
                 for stage in self.treatment_stages:
                     self.assign_success_prop_by_treatment_stage(riskgroup + strain + history, stage)
-                    self.convert_treatment_props_to_rates(riskgroup, strain, history, stage)
+                    self.convert_treatment_props_to_rates(strain, strain, stage, stratum)
                     if self.is_amplification:
                         self.split_by_amplification(riskgroup + strain + history + '_default' + stage)
                 if len(self.strains) > 1 and self.is_misassignment and strain != self.strains[0]:
-                    self.calculate_misassigned_outcomes(riskgroup, strain, history)
+                    self.calculate_misassigned_outcomes(strain, stratum)
 
     def split_treatment_props_by_riskgroup(self):
         """
@@ -901,16 +899,17 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         self.vars[start + '_success' + stage] \
             = 1. - self.vars[start + '_default' + stage] - self.vars[start + '_death' + stage]
 
-    def convert_treatment_props_to_rates(self, riskgroup, strain, history, stage):
+    def convert_treatment_props_to_rates(self, strain, treated_as, stage, stratum):
         """
         Convert the outcomes proportions by stage of treatment to rates by dividing by the appropriate time period.
         """
 
+        riskgroup, history = stratum
         for outcome in self.outcomes:
             end = riskgroup + strain + history + outcome + stage
             self.vars['program_rate_treatment' + end] \
                 = self.vars['program_prop_treatment' + end] \
-                / self.vars['tb_timeperiod' + stage + '_ontreatment' + strain]
+                / self.vars['tb_timeperiod' + stage + '_ontreatment' + treated_as]
 
     def split_by_amplification(self, treatment_group):
         """
@@ -924,30 +923,23 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         self.vars[start + '_amplify'] = self.vars[start] * self.vars['epi_prop_amplification']
         self.vars[start + '_noamplify'] = self.vars[start] * (1. - self.vars['epi_prop_amplification'])
 
-    def calculate_misassigned_outcomes(self, riskgroup, strain, history):
+    def calculate_misassigned_outcomes(self, strain, stratum):
         """
         Find treatment outcomes for patients assigned to an incorrect regimen.
         """
 
+        riskgroup, history = stratum
         for treated_as in self.strains:
 
             # if assigned strain is different from the actual strain and regimen is inadequate
             if treated_as != strain and self.strains.index(treated_as) < self.strains.index(strain):
                 treatment_type = strain + '_as' + treated_as[1:]
-                self.split_treatment_props_by_stage(
-                    '_inappropriate', treated_as, treatment_type, [riskgroup] + [history])
-                for treatment_stage in self.treatment_stages:
-                    self.assign_success_prop_by_treatment_stage(riskgroup + treatment_type + history, treatment_stage)
-
-                    # find rates from proportions (analogous to convert_treatment_props_to_rates)
-                    for outcome in self.outcomes:
-                        end = riskgroup + treatment_type + history + outcome + treatment_stage
-                        self.vars['program_rate_treatment' + end] \
-                            = self.vars['program_prop_treatment' + end] \
-                            / self.vars['tb_timeperiod' + treatment_stage + '_ontreatment' + treated_as]
-
+                self.split_treatment_props_by_stage('_inappropriate', treated_as, treatment_type, [riskgroup] + [history])
+                for stage in self.treatment_stages:
+                    self.assign_success_prop_by_treatment_stage(riskgroup + treatment_type + history, stage)
+                    self.convert_treatment_props_to_rates(treatment_type, treated_as, stage, stratum)
                     if self.is_amplification:
-                        self.split_by_amplification(riskgroup + treatment_type + history + '_default' + treatment_stage)
+                        self.split_by_amplification(riskgroup + treatment_type + history + '_default' + stage)
 
     def calculate_ipt_effect(self):
         """

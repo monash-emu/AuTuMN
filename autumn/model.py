@@ -936,14 +936,8 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                 treatment_type = strain + '_as' + treated_as[1:]
                 self.split_treatment_props_by_stage(
                     '_inappropriate', treated_as, treatment_type, [riskgroup] + [history])
-
                 for treatment_stage in self.treatment_stages:
-
-                    # find the success proportions (analogous to assign_success_prop_by_treatment_stage)
-                    start = 'program_prop_treatment' + riskgroup + treatment_type + history
-                    self.vars[start + '_success' + treatment_stage] \
-                        = 1. - self.vars[start + '_default' + treatment_stage] \
-                        - self.vars[start + '_death' + treatment_stage]
+                    self.assign_success_prop_by_treatment_stage(riskgroup + treatment_type + history, treatment_stage)
 
                     # find rates from proportions (analogous to convert_treatment_props_to_rates)
                     for outcome in self.outcomes:

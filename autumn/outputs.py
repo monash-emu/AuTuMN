@@ -884,7 +884,7 @@ class Project:
             ax.set_ylim((0., 1.))
             ax.set_ylabel(y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
         elif y_axis_type == 'limited_proportion':
-            ax.set_ylim((0., .25))
+            ax.set_ylim((0., 1.))
             ax.set_ylabel(y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
         elif not y_absolute_limit:
             ax.set_ylim(top=max_val * y_relative_limit)

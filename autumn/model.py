@@ -1127,14 +1127,14 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         self.vars['popsize_vaccination'] = self.vars['births_total']
 
         # Xpert and improve DST - all presentations for assessment for active TB
-        for active_tb_presentations_intervention in ['xpert', 'improve_dst']:
+        for active_tb_presentations_intervention in ['xpert', 'firstline_dst']:
             if 'int_prop_' + active_tb_presentations_intervention in self.relevant_interventions:
                 self.vars['popsize_' + active_tb_presentations_intervention] = 0.
 
                 for strata in itertools.product(
                         self.agegroups, self.riskgroups, self.strains, self.histories, self.organ_status):
                     agegroup, riskgroup, strain, history, organ = strata
-                    if active_tb_presentations_intervention == 'improve_dst' and organ == '_extrapul':
+                    if active_tb_presentations_intervention == 'firstline_dst' and organ == '_extrapul':
                         continue
                     detection_organ = organ if self.vary_detection_by_organ else ''
                     detection_riskgroup = riskgroup if self.vary_detection_by_riskgroup else ''

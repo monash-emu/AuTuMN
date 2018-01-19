@@ -706,7 +706,8 @@ class ModelRunner:
                             proposed_params[p])
 
                 # plot parameter progression and report on progress
-                self.plot_progressive_parameters()
+                if self.gui_inputs['uncertainty_runs'] <= 10:
+                    self.plot_progressive_parameters()
                 self.add_comment_to_gui_window(
                     str(n_accepted) + ' accepted / ' + str(run) + ' candidates. Running time: '
                     + str(datetime.datetime.now() - start_timer_run))

@@ -78,7 +78,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
         Args:
             scenario: Single number for the scenario to run (with None meaning baseline)
-            inputs: Non-GUI inputs from data_processing
+            inputs: Non-GUI inputs from inputs
             gui_inputs: GUI inputs from Tkinter or JS GUI
         """
 
@@ -913,7 +913,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         """
         Split default according to whether amplification occurs (if not the most resistant strain).
         Previously had a sigmoidal function for amplification proportion, but now thinking that the following switch is
-        a better approach because scale-up functions are all calculated in data_processing and we need to be able to
+        a better approach because scale-up functions are all calculated in inputs and we need to be able to
         adjust the time that MDR emerges during model running.
         """
 

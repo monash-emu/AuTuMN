@@ -3,7 +3,6 @@ import autumn.spreadsheet as spreadsheet
 import copy
 import tool_kit
 from curve import scale_up_function, freeze_curve
-from Tkinter import *
 import numpy
 import itertools
 

@@ -1,6 +1,4 @@
 **/*.pyc
 .idea
 .spyderworkspace
-*graph
-*graphs
 autumn/logistic_fitting

@@ -698,6 +698,8 @@ def find_title_from_dictionary(name):
             'Food vouchers, MDR-TB',
         'program_prop_firstline_dst':
             'DST availability',
+        'int_prop_firstline_dst':
+            'DST availability',
         'program_prop_treatment_success_mdr':
             'Treatment success MDR-TB',
         'program_prop_treatment_success_ds':
@@ -741,7 +743,12 @@ def find_title_from_dictionary(name):
         'program_prop_nonsuccess_ds_new_death':
             'Death on treatment DS-TB, new cases',
         'program_prop_nonsuccess_ds_treated_death':
-            'Death on treatment DS-TB, previously treated'
+            'Death on treatment DS-TB, previously treated',
+        'program_prop_nonsuccess_mdr_new_death':
+            'Death on treatment MDR-TB',
+        'program_prop_nonsuccess_inappropriate_death':
+            'Death on treatment MDR-TB on inappropriate regimen'
+
     }
 
     if name in dictionary_of_names:

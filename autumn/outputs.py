@@ -704,6 +704,7 @@ class Project:
         self.country = self.gui_inputs['country'].lower()
         self.name = 'test_' + self.country
         self.out_dir_project = os.path.join('projects', self.name)
+        self.figure_formats = ['png']   # possibly several formats. e.g. ['png', 'pdf']
         if not os.path.isdir(self.out_dir_project): os.makedirs(self.out_dir_project)
         self.years_to_write = range(int(self.inputs.model_constants['report_start_time']),
                                     int(self.inputs.model_constants['report_end_time']),
@@ -906,9 +907,9 @@ class Project:
             last_part_of_name_for_figure: The part of the figure name that is variable and input from the
                 plotting method.
         """
-
-        png = os.path.join(self.out_dir_project, self.country + last_part_of_name_for_figure + '.png')
-        fig.savefig(png, dpi=300)
+        for format in self.figure_formats:
+            filename = os.path.join(self.out_dir_project, self.country + last_part_of_name_for_figure + '.' + format)
+            fig.savefig(filename, dpi=300)
 
     def save_opti_figure(self, fig, last_part_of_name_for_figure):
 

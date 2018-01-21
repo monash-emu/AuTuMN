@@ -607,7 +607,7 @@ class ModelRunner:
             self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
         # find weights for outputs that are being calibrated to
-        years_to_compare = range(1990, 2015)
+        years_to_compare = range(2010, 2016)
         weights = find_uncertainty_output_weights(years_to_compare, 1, [1., 2.])
         self.add_comment_to_gui_window('"Weights": \n' + str(weights))
 
@@ -706,7 +706,7 @@ class ModelRunner:
                             proposed_params[p])
 
                 # plot parameter progression and report on progress
-                self.plot_progressive_parameters()
+                # self.plot_progressive_parameters()
                 self.add_comment_to_gui_window(
                     str(n_accepted) + ' accepted / ' + str(run) + ' candidates. Running time: '
                     + str(datetime.datetime.now() - start_timer_run))

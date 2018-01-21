@@ -78,7 +78,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
         Args:
             scenario: Single number for the scenario to run (with None meaning baseline)
-            inputs: Non-GUI inputs from data_processing
+            inputs: Non-GUI inputs from inputs
             gui_inputs: GUI inputs from Tkinter or JS GUI
         """
 
@@ -913,7 +913,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         """
         Split default according to whether amplification occurs (if not the most resistant strain).
         Previously had a sigmoidal function for amplification proportion, but now thinking that the following switch is
-        a better approach because scale-up functions are all calculated in data_processing and we need to be able to
+        a better approach because scale-up functions are all calculated in inputs and we need to be able to
         adjust the time that MDR emerges during model running.
         """
 
@@ -1127,14 +1127,14 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         self.vars['popsize_vaccination'] = self.vars['births_total']
 
         # Xpert and improve DST - all presentations for assessment for active TB
-        for active_tb_presentations_intervention in ['xpert', 'improve_dst']:
+        for active_tb_presentations_intervention in ['xpert', 'firstline_dst']:
             if 'int_prop_' + active_tb_presentations_intervention in self.relevant_interventions:
                 self.vars['popsize_' + active_tb_presentations_intervention] = 0.
 
                 for strata in itertools.product(
                         self.agegroups, self.riskgroups, self.strains, self.histories, self.organ_status):
                     agegroup, riskgroup, strain, history, organ = strata
-                    if active_tb_presentations_intervention == 'improve_dst' and organ == '_extrapul':
+                    if active_tb_presentations_intervention == 'firstline_dst' and organ == '_extrapul':
                         continue
                     detection_organ = organ if self.vary_detection_by_organ else ''
                     detection_riskgroup = riskgroup if self.vary_detection_by_riskgroup else ''

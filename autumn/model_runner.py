@@ -11,7 +11,7 @@ import itertools
 # AuTuMN imports
 import tool_kit as t_k
 import model
-import data_processing
+import inputs
 import economics
 
 
@@ -157,7 +157,7 @@ class ModelRunner:
         self.gui_inputs = gui_inputs
         self.scenarios = self.gui_inputs['scenarios_to_run']
         self.runtime_outputs = runtime_outputs
-        self.inputs = data_processing.Inputs(gui_inputs, runtime_outputs, js_gui=js_gui)
+        self.inputs = inputs.Inputs(gui_inputs, runtime_outputs, js_gui=js_gui)
         self.inputs.read_and_load_data()
 
         # preparing for basic runs
@@ -706,7 +706,8 @@ class ModelRunner:
                             proposed_params[p])
 
                 # plot parameter progression and report on progress
-                # self.plot_progressive_parameters()
+                if self.gui_inputs['uncertainty_runs'] <= 10:
+                    self.plot_progressive_parameters()
                 self.add_comment_to_gui_window(
                     str(n_accepted) + ' accepted / ' + str(run) + ' candidates. Running time: '
                     + str(datetime.datetime.now() - start_timer_run))

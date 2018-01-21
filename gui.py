@@ -1,10 +1,9 @@
 
-import collections
 import threading
 
 import autumn.model_runner
 import autumn.outputs as outputs
-import autumn.tool_kit as tool_kit
+import autumn.gui_params as gui_params
 
 from Tkinter import *
 import matplotlib.pyplot as plt
@@ -314,7 +313,6 @@ def convert_params_to_inputs(params):
 
     return inputs
 
-
 class App:
     def __init__(self, master):
         """
@@ -340,7 +338,7 @@ class App:
         self.title_font = 'Helvetica 10 bold italic'
         self.label_font = 'Helvetica 9 bold italic'
 
-        autumn_params = get_autumn_params()
+        autumn_params = gui_params.get_autumn_params()
 
         self.params = autumn_params['params']
         self.make_tk_controls_in_params()
@@ -448,11 +446,7 @@ class App:
             else:
                 param['value'] = param['tk_var'].get()
 
-        self.gui_outputs = convert_params_to_inputs(self.params)
-
-        with open('bgui_outputs.json', 'w') as f:
-            import json
-            json.dump(self.gui_outputs, f, indent=2)
+        self.gui_outputs = gui_params.convert_params_to_inputs(self.params)
 
         # record thread number
         self.thread_number += 1
@@ -500,10 +494,6 @@ class App:
             self.graph(data)
 
     def graph(self, data, input_figure=None):
-        import json
-        with open('graph_data.json', 'wt') as f:
-            json.dump(data, f, indent=2)
-
         # initialise plotting
         if not input_figure:
             param_tracking_figure = plt.Figure()

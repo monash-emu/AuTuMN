@@ -14,7 +14,6 @@ Vue.use(VueMaterial)
 
 auth.restoreLastUser()
   .then(res => {
-    console.log('> Got here')
     new Vue({
       el: '#app',
       router,

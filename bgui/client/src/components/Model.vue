@@ -2,15 +2,6 @@
   <div style=" padding: 1em">
     <md-layout md-column>
 
-      <div style="text-align: center;">
-        <br>
-        <div class="md-display-1">
-          TB Epidemiological Model
-        </div>
-        <br>
-        <br>
-      </div>
-
       <md-layout md-row>
 
         <md-whiteframe

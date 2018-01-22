@@ -146,69 +146,16 @@ def verify_db_session(db_session=None):
     return db_session
 
 
-# OBJECT functions
-
-def make_obj_query(user_id=None, obj_type="project", db_session=None, **kwargs):
-    db_session = verify_db_session(db_session)
-    kwargs = filter_dict_for_none(kwargs)
-    if user_id is not None:
-        kwargs['user_id'] = user_id
-    if obj_type is not None:
-        kwargs['obj_type'] = obj_type
-    print(">> dbmodel.make_obj_query", kwargs)
-    return db_session.query(ObjectDb).filter_by(**kwargs)
-
-
-def load_obj_attr(id=id, obj_type="project", db_session=None):
-    query = make_obj_query(id=id, obj_type=obj_type, db_session=db_session)
-    return query.one().attr
-
-
-def load_obj_records(user_id=None, obj_type="project", db_session=None):
-    query = make_obj_query(user_id=user_id, obj_type=obj_type, db_session=db_session)
-    return query.all()
-
-
-def load_obj_attr_list(user_id=None, obj_type="project", db_session=None):
-    records = load_obj_records(user_id=user_id, obj_type=obj_type, db_session=db_session)
-    return [record.attr for record in records]
-
-
-def create_obj_id(db_session=None, **kwargs):
-    db_session = verify_db_session(db_session)
-    record = ObjectDb(**kwargs)
-    db_session.add(record)
-    db_session.commit()
-    return record.id
-
-
-def save_object(id, obj_type, obj_str, obj_attr, db_session=None):
-    db_session = verify_db_session(db_session)
-    record = make_obj_query(id=id, obj_type=obj_type, db_session=db_session).one()
-    record.blob = obj_str
-    obj_attr = copy.deepcopy(obj_attr)
-    obj_attr['userId'] = str(record.user_id)
-    obj_attr['modifiedTime'] = repr(datetime.now(dateutil.tz.tzutc()))
-    record.attr = obj_attr
-    db_session.add(record)
-    db_session.commit()
-
-
-def get_user_id(obj_id, db_session=None):
-    record = make_obj_query(id=obj_id, db_session=db_session).one()
-    return record.user_id
-
-
-def load_obj_str(obj_id, obj_type, db_session=None):
-    record = make_obj_query(id=obj_id, obj_type=obj_type, db_session=db_session).one()
-    return record.blob
-
-
-def delete_obj(obj_id, db_session=None):
-    db_session = verify_db_session(db_session)
-    record = make_obj_query(id=obj_id, db_session=db_session).one()
-    db_session.delete(record)
-    db_session.commit()
+def get_server_filename(filename):
+    """
+    Returns the path to save a file on the server
+    """
+    dirname = get_user_server_dir(current_app.config['SAVE_FOLDER'])
+    if not (os.path.exists(dirname)):
+        os.makedirs(dirname)
+    if os.path.dirname(filename) == '' and not os.path.exists(filename):
+        filename = os.path.join(dirname, filename)
+    return filename
 
 
 # USER functions
@@ -319,15 +266,67 @@ def get_user_server_dir(dirpath, user_id=None):
     return dirpath
 
 
-def get_server_filename(filename):
-    """
-    Returns the path to save a file on the server
-    """
-    dirname = get_user_server_dir(current_app.config['SAVE_FOLDER'])
-    if not (os.path.exists(dirname)):
-        os.makedirs(dirname)
-    if os.path.dirname(filename) == '' and not os.path.exists(filename):
-        filename = os.path.join(dirname, filename)
-    return filename
+# OBJECT functions
 
+def make_obj_query(user_id=None, obj_type="project", db_session=None, **kwargs):
+    db_session = verify_db_session(db_session)
+    kwargs = filter_dict_for_none(kwargs)
+    if user_id is not None:
+        kwargs['user_id'] = user_id
+    if obj_type is not None:
+        kwargs['obj_type'] = obj_type
+    print(">> dbmodel.make_obj_query", kwargs)
+    return db_session.query(ObjectDb).filter_by(**kwargs)
+
+
+def load_obj_attr(id=id, obj_type="project", db_session=None):
+    query = make_obj_query(id=id, obj_type=obj_type, db_session=db_session)
+    return query.one().attr
+
+
+def load_obj_records(user_id=None, obj_type="project", db_session=None):
+    query = make_obj_query(user_id=user_id, obj_type=obj_type, db_session=db_session)
+    return query.all()
+
+
+def load_obj_attr_list(user_id=None, obj_type="project", db_session=None):
+    records = load_obj_records(user_id=user_id, obj_type=obj_type, db_session=db_session)
+    return [record.attr for record in records]
+
+
+def create_obj_id(db_session=None, **kwargs):
+    db_session = verify_db_session(db_session)
+    record = ObjectDb(**kwargs)
+    db_session.add(record)
+    db_session.commit()
+    return record.id
+
+
+def save_object(id, obj_type, obj_str, obj_attr, db_session=None):
+    db_session = verify_db_session(db_session)
+    record = make_obj_query(id=id, obj_type=obj_type, db_session=db_session).one()
+    record.blob = obj_str
+    obj_attr = copy.deepcopy(obj_attr)
+    obj_attr['userId'] = str(record.user_id)
+    obj_attr['modifiedTime'] = repr(datetime.now(dateutil.tz.tzutc()))
+    record.attr = obj_attr
+    db_session.add(record)
+    db_session.commit()
+
+
+def get_user_id(obj_id, db_session=None):
+    record = make_obj_query(id=obj_id, db_session=db_session).one()
+    return record.user_id
+
+
+def load_obj_str(obj_id, obj_type, db_session=None):
+    record = make_obj_query(id=obj_id, obj_type=obj_type, db_session=db_session).one()
+    return record.blob
+
+
+def delete_obj(obj_id, db_session=None):
+    db_session = verify_db_session(db_session)
+    record = make_obj_query(id=obj_id, db_session=db_session).one()
+    db_session.delete(record)
+    db_session.commit()
 

@@ -1,7 +1,9 @@
 <template>
   <md-toolbar class="md-dense">
 
-    <h2 class="md-title" style="padding-left: 1em; flex: 1" >AuTuMN</h2>
+    <h2 class="md-title" style="flex: 1" >
+      AuTuMN - TB Epi Modelling
+    </h2>
 
     <router-link to='/' class="md-button">
       Model

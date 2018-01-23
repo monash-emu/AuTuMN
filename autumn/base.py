@@ -554,13 +554,6 @@ class BaseModel:
 
     ''' output/diagnostic calculations '''
 
-    def calculate_economics_diagnostics(self):
-        """
-        Method that runs the costing processes after epidemiological integration has completed - i.e. where there is no
-        for the reverse direction of calculation where coverage is calculated from costs.
-        """
-
-        pass
 
     def get_compartment_soln(self, label):
         """
@@ -848,19 +841,19 @@ class EconomicModel(BaseModel):
         generating outputs.
         """
 
-        self.cost_times = self.times[tool_kit.find_first_list_element_at_least_value(
-            self.times, self.inputs.model_constants['recent_time']):]
+        start_index_for_costs = tool_kit.find_first_list_element_at_least_value(
+            self.times, self.inputs.model_constants['recent_time'])
+        self.cost_times = self.times[start_index_for_costs:]
         self.costs = numpy.zeros((len(self.cost_times), len(self.interventions_to_cost)))
 
         for i, inter in enumerate(self.interventions_to_cost):
             for t, time in enumerate(self.cost_times):
-
                 # costs from cost-coverage curves
                 cost = get_cost_from_coverage(self.scaleup_fns['int_prop_' + inter](time),
                                               self.inputs.model_constants['econ_inflectioncost_' + inter],
                                               self.inputs.model_constants['econ_saturation_' + inter],
                                               self.inputs.model_constants['econ_unitcost_' + inter],
-                                              self.var_array[t, self.var_labels.index('popsize_' + inter)])
+                                              self.var_array[start_index_for_costs + t, self.var_labels.index('popsize_' + inter)])
 
                 # start-up costs
                 if 'econ_startupcost_' + inter in self.inputs.model_constants \

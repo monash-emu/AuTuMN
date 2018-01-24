@@ -22,11 +22,9 @@ from conn import db
 
 
 class GUID(TypeDecorator):
-    """Platform-independent GUID type.
-
-    Uses PostgreSQL's UUID type, otherwise uses
-    CHAR(32), storing as stringified hex values.
-
+    """
+    Platform-independent GUID type. Uses PostgreSQL's UUID type,
+    otherwise uses CHAR(32), storing as stringified hex values.
     http://docs.sqlalchemy.org/en/latest/core/custom_types.html
     """
     impl = CHAR
@@ -58,20 +56,14 @@ class GUID(TypeDecorator):
 
 
 class JSONEncodedDict(TypeDecorator):
-    """Represents an immutable structure as a json-encoded string.
-
-    Usage::
-
-        JSONEncodedDict(255)
-
     """
-
+    Represents an immutable structure as a json-encoded string.
+    """
     impl = VARCHAR
 
     def process_bind_param(self, value, dialect):
         if value is not None:
             value = json.dumps(value)
-
         return value
 
     def process_result_value(self, value, dialect):

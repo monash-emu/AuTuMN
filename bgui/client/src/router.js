@@ -7,8 +7,6 @@ import Login from './components/Login'
 import Register from './components/Register'
 import EditUser from './components/EditUser'
 
-import auth from './modules/auth'
-
 let router = new Router({
   routes: [
     {

@@ -1,45 +1,37 @@
 <template>
   <md-toolbar class="md-dense">
 
-    <h2 class="md-title" style="flex: 1" >
+    <h2
+        class="md-title"
+        style="cursor: pointer; flex: 1"
+        @click="home()">
       AuTuMN - TB Epi Modelling
     </h2>
 
-    <router-link to='/' class="md-button">
-      Model
-    </router-link>
+    <md-menu v-if="user.authenticated">
 
-    <span v-if="user.authenticated">
+      <md-button md-menu-trigger>
+        {{user.name}}
+      </md-button>
 
-      <md-menu >
+      <md-menu-content>
+        <md-menu-item @click="editUser">Edit User</md-menu-item>
+        <md-menu-item @click="logout">Logout</md-menu-item>
+      </md-menu-content>
 
-        <md-button md-menu-trigger>
-            {{user.name}}
-        </md-button>
+    </md-menu>
 
-        <md-menu-content>
-          <md-menu-item @click="editUser">Edit User
-          </md-menu-item>
-          <md-menu-item @click="logout">Logout</md-menu-item>
-        </md-menu-content>
-      </md-menu>
-
-    </span>
-
-    <router-link v-else to='/login' tag='md-button'>
+    <router-link
+        v-else to='/login'
+        tag='md-button'>
       Login
     </router-link>
 
   </md-toolbar>
 </template>
 
-<style scoped>
-</style>
-
 <script>
 
-  import axios from 'axios'
-  import config from '../config'
   import auth from '../modules/auth'
   import router from '../router'
 
@@ -53,6 +45,9 @@
     methods: {
       editUser () {
         router.push('/edit-user')
+      },
+      home () {
+        router.push('/')
       },
       logout () {
         auth

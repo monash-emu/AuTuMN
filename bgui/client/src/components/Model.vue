@@ -1,121 +1,159 @@
 <template>
-  <div style=" padding: 1em">
+  <div style="">
     <md-layout md-column>
 
       <md-layout md-row>
 
-        <md-whiteframe
+        <md-layout
+            md-row
             style="
             width: 50%;
-            height: calc(100vh - 230px);
+            height: calc(100vh - 48px);
             overflow: auto">
-          <md-tabs>
-            <md-tab
-                v-for="(paramGroup, i) in paramGroups"
-                :key="i"
-                :id="paramGroup.name"
-                :md-label="paramGroup.name">
-              <div>
-                <div style="width: 18em;">
-                  <md-layout
-                      md-column
-                      v-for="(key, i) in paramGroup.keys"
-                      :key="i">
 
-                    <div v-if="params[key].type == 'boolean'">
-                      <md-checkbox
-                          type="checkbox"
-                          tabindex="0"
-                          :id="key"
-                          v-model="params[key].value">
-                        {{ params[key].label }}
-                      </md-checkbox>
-                    </div>
+          <md-whiteframe
+              style="width: 180px; padding-top: 30px ">
 
-                    <div v-else-if="params[key].type == 'drop_down'">
-                      <md-input-container>
-                        <label>{{ params[key].label }}</label>
-                        <md-select
-                            v-model="params[key].value">
-                          <md-option
-                              v-for="(option, i) in params[key].options"
-                              v-bind:value="option"
-                              :key="i">
-                            {{option}}
-                          </md-option>
-                        </md-select>
-                      </md-input-container>
-                    </div>
+            <h2 class="md-heading"
+                style="padding-left: 15px">
+              Parameter sets
+            </h2>
 
-                    <div v-else-if="params[key].type == 'number'">
-                      <md-input-container>
-                        <label>{{ params[key].label }}</label>
-                        <md-input
-                            type="number"
-                            step="any"
-                            v-model="params[key].value">
-                        </md-input>
+            <md-list>
+              <md-list-item
+                  v-for="(thisParamGroup, i) in paramGroups"
+                  :key="i"
+                  :id="thisParamGroup.name"
+                  @click="selectParamGroup(i)">
+                {{thisParamGroup.name}}
+              </md-list-item>
+            </md-list>
+          </md-whiteframe>
 
-                      </md-input-container>
-                    </div>
+          <md-whiteframe style="width: 220px">
 
-                    <div v-else-if="params[key].type == 'slider'">
-                      <label>{{ params[key].label }}</label>
-                      <div style="height: 2.5em"></div>
-                      <vue-slider
-                          :max="params[key].max"
-                          :interval="params[key].interval"
-                          v-model="params[key].value">
-                      </vue-slider>
-                    </div>
+            <md-layout
+                v-if="paramGroup"
+                md-column
+                style="padding: 30px 15px">
 
+              <h2 class="md-heading">
+                {{paramGroup.name}}
+              </h2>
+
+              <md-layout
+                  md-column
+                  v-for="(key, i) in paramGroup.keys"
+                  :key="i">
+
+                <div v-if="params[key].type == 'boolean'">
+                  <md-checkbox
+                      type="checkbox"
+                      tabindex="0"
+                      :id="key"
+                      v-model="params[key].value">
+                    {{ params[key].label }}
+                  </md-checkbox>
+                </div>
+
+                <div v-else-if="params[key].type == 'drop_down'">
+                  <md-input-container>
+                    <label>{{ params[key].label }}</label>
+                    <md-select
+                        v-model="params[key].value">
+                      <md-option
+                          v-for="(option, i) in params[key].options"
+                          v-bind:value="option"
+                          :key="i">
+                        {{option}}
+                      </md-option>
+                    </md-select>
+                  </md-input-container>
+                </div>
+
+                <div v-else-if="params[key].type == 'number'">
+                  <md-input-container>
+                    <label>{{ params[key].label }}</label>
+                    <md-input
+                        type="number"
+                        step="any"
+                        v-model="params[key].value">
+                    </md-input>
+
+                  </md-input-container>
+                </div>
+
+                <div v-else-if="params[key].type == 'slider'">
+                  <label>{{ params[key].label }}</label>
+                  <div style="height: 2.5em"></div>
+                  <vue-slider
+                      :max="params[key].max"
+                      :interval="params[key].interval"
+                      v-model="params[key].value">
+                  </vue-slider>
+                </div>
+
+              </md-layout>
+            </md-layout>
+          </md-whiteframe>
+
+          <md-layout md-flex>
+            <div style="padding: 30px 15px">
+              <md-layout
+                  md-column
+                  md-align="start"
+                  md-vertical-align="start">
+
+                <h2 class="md-heading">
+                  Run model
+                </h2>
+
+                <div style="width: 100%">
+                  <md-layout md-row>
+                    <md-button
+                        md-flex=true
+                        class="md-raised"
+                        :disabled="isRunning"
+                        @click="run()">
+                      Run
+                    </md-button>
+
+                    <md-spinner
+                        :md-size="30"
+                        md-indeterminate
+                        v-if="isRunning">
+                    </md-spinner>
                   </md-layout>
                 </div>
-              </div>
-            </md-tab>
-          </md-tabs>
-        </md-whiteframe>
 
-        <md-whiteframe
-            style="
-            padding: 1em;
-            height: calc(100vh - 230px);
-            width: 50%;">
-          <md-layout
-              md-column
-              md-align="start"
-              md-vertical-align="start">
-            <md-layout
-                md-row
-                md-vertical-align="center">
-              <md-button
-                  md-flex=true
-                  class="md-raised"
-                  :disabled="isRunning"
-                  @click="run()">
-                Run simulation
-              </md-button>
-              <md-spinner
-                  :md-size="30"
-                  md-indeterminate
-                  v-if="isRunning">
-              </md-spinner>
-            </md-layout>
-            <md-layout
-              id="console-output"
-              style="
-                width: 100%;
-                height: calc(100vh - 310px);
-                border: 1px solid #DDDDDD;
-                overflow: auto">
-              <ul style="width: 100%;">
-                <li v-for="line in consoleLines">
-                  {{ line }}
-                </li>
-              </ul>
-            </md-layout>
+                <h2 class="md-heading">
+                  Console Output
+                </h2>
+
+                <md-layout
+                    md-flex="100"
+                    style="background-color: #EEE;">
+                  <div
+                      id="console-output"
+                      style="
+                      height: 350px;
+                      overflow-y: scroll;
+                      font-family: Courier, fixed;
+                      font-size: 0.9em">
+
+                    <div style="margin: 0 8px" v-for="line in consoleLines">
+                      {{ line }}
+                    </div>
+
+                  </div>
+                </md-layout>
+
+              </md-layout>
+
+            </div>
           </md-layout>
-        </md-whiteframe>
+        </md-layout>
+
       </md-layout>
     </md-layout>
   </div>
@@ -142,7 +180,9 @@
         paramGroups: [],
         params: {},
         isRunning: false,
-        consoleLines: []
+        consoleLines: [],
+        paramGroup: null,
+        iParamGroup: -1,
       }
     },
     created () {
@@ -152,6 +192,7 @@
         .then(res => {
           this.paramGroups = res.data.paramGroups
           this.params = res.data.params
+          this.paramGroup = this.paramGroups[0]
         })
     },
     methods: {
@@ -163,16 +204,23 @@
             console.log('>> Home.checkRun', res.data.is_running, res.data.console)
             if (res.data.console) {
               this.$data.consoleLines = res.data.console
-              let container = this.$el.querySelector('#console-output')
-              container.scrollTop = container.scrollHeight
+              if (this.$el.querySelector) {
+                let container = this.$el.querySelector('#console-output')
+                container.scrollTop = container.scrollHeight
+              }
             }
             if (res.data.is_running) {
               this.$data.isRunning = true
-              setTimeout(() => { this.checkRun() }, 2000)
+              setTimeout(() => {
+                this.checkRun()
+              }, 2000)
             } else {
               this.$data.isRunning = false
             }
           })
+      },
+      selectParamGroup (i) {
+        this.paramGroup = this.paramGroups[i]
       },
       run () {
         let params = this.$data.params

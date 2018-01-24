@@ -1,91 +1,50 @@
-# Introduction to the BASE webserver
 
-- the main webserver is `api.py`, a `python` application, written in the `flask` framework.
- `api.py` defines the way URL requests are converted into HTTP responses to the
-  webclient
-- `flask` is a micro-framework to provide libraries to build `api.py`
-- `api.py` stores projects in a `postgres` database, a robust high-performant database. 
-  It uses the `sqlalchemy` python library to interface with the database, 
-  the database schema, tables and entries. You can directly interrogate the `postgres` 
-  database using the standard `postgres` command-line tools, such as `psql`. The
-  database schema is stored in `server/webapp/dbmodel.py`.
-- `bin/run_server.py` uses `twisted` to bridge `api.py` to the outgoing port of your computer using the 
-  `wsgi` specification. `run_server.py` also serves the client js files from the `client` folder 
-- to carry out parallel simulations, `server/webapp/tasks.py` is a  `celery` daemon that listens for jobs
-  from `api.py`, which is communicated through an in-memory/intermittent-disk-based `redis`
-  database.
+# AuTUMN web-server
 
-## Installing the server
+The web-server is a Python Flask app, which is synchronous, that is run
+through a Twisted Python asynchronous server. The Flask app uses SQLAlchemy
+to access the database, which is by default an SQLite file. 
+Uploaded files are saved in the SAVE_FOLDER config option.
 
-_On Mac_
+The compiled web-client is found in the `../client/dist` directory. To 
+develop the web-client, go to `../client`.
 
-1. install `brew` as it is the best package-manager for Mac OSX:
-    - `ruby -e “$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)”`
-2. install `python` and all the required third-party `python` modules:
-    - `brew install python`
-    - to make sure `python` can find the Optima `<root>` directory, in the top `<root>` folder, run: 
-        `python setup.py develop` 
-    - to load all the `python` modules needed (such as `celery`, `flask`, `twisted` etc), in the `<root>/server` folder, run:
-        `pip install -r localrequirements`
-3. install the ruby `lunchy` controller for MacOSX daemons
-    - `brew install ruby`
-    - `sudo gem install lunchy`
-4. install the `redis` and `postgres` database daemons:
-    - `brew install postgres redis`
-    - launch them: `lunchy start redis postgres`
+## How to run
 
-_On Ubuntu:_
+To install:
 
-1. `sudo apt-get install redis-server`
+    > pip install -r requirements.txt
+    
+To run the server:
 
-## Configuring the webserver
+    > python run_server.py
+    
+Then open the webserver:
 
-Next, we set up the databases, brokers, url's that `api.py` will we use. We do this through the `config.py` file in the `<root>/server` folder. Here's an example of a `config.py` file:
+    http://localhost:3000
+    
+## Configuring the web-server
+
+To setup the SQLAlchemy database, and the location where files are 
+uplaoded, edit `config.py`:
 
 ```
-SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://optima:optima@localhost:5432/optima'
+SQLALCHEMY_DATABASE_URI = 'sqlite:///database.sqlite'
 SECRET_KEY = 'F12Zr47j\3yX R~X@H!jmM]Lwf/,?KT'
-UPLOAD_FOLDER = '/tmp/uploads'
-CELERY_BROKER_URL = 'redis://localhost:6379'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-REDIS_URL = CELERY_BROKER_URL
-MATPLOTLIB_BACKEND = "agg"
+SAVE_FOLDER = '/tmp/autumn'
 ```
 
-You can choose which ports to use, the name of the databases. Matplotlib is the key python library 
-that generates the graphs, it must be set to the "agg" backend, otherwise it can cause GUI crashes with
-the windowing system of your computer.
+The config `config.py` is loaded in `conn.py`.
 
-The port that `api.py` is run on, is set in `<root>/server/_twisted_wsgi.py`, which by default is 8080.
-
-
-## Running the webserver
-
-If you haven't already launched `redis` and `postgres`, launch them:  
-
-`lunchy start redis postgres`
-
-Then, from the `<root>/bin` directory:
-
-- launch the webserver `./start_server.sh` 
-- launch the parallel-processing daemon `./start_celery.sh`
-
-__!__ Note: whenever you make a change that could affect a celery task, you need to restart it manually.
-
+The port is set in `_twisted_wsgi.py`. Make sure that this port 
+corresponds to the port expected in the web-client.
 
 ## Files
 
-- `api.py` - the webserver
-- `config.py` - the configuration of the postgres/redis databases and ports for the webserver
+- `run_server.py` - entry point to web-server, starts up Twisted
+- `api.py` - definition of the Flask app 
+- `config.py` - configuration of the SQLAlchemy database and save folder
 - `requirements.txt` - python modules to be installed
-
-In `server/webapp`:
-
-- `handlers.py` - the URL handlers are defined here. The handlers only deal with JSON-data structures,
-  UIDs, and upload/download files
-- `conn.py` - this is a central place to store references to the postgres and redis database
-- `dbmodel.py` - the adaptor to the Postgres database with objects that map onto the database tables
-- `tasks.py` - this is a conceptually difficult file - it defines both the daemons
-   and the tasks run by the daemon. This file is called by `api.py` as entry point to talk to `celery`,
-   and is run separately as the `celery` task-manager daemon.
-
+- `handlers.py` - the URL handlers for the RPC-JSON protocol
+- `conn.py` -  central place to store Flask and SQLAlchemy global variables
+- `dbmodel.py` - SQLALchemy database definition and accessor function

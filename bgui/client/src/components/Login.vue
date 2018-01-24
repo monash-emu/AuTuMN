@@ -34,9 +34,6 @@
       New to Versus? &nbsp;
       <router-link to="/register">Register</router-link>
 
-      </md-layout>
-
-
       <div v-if="msg" class="card error">
         {{ msg }}
       </div>

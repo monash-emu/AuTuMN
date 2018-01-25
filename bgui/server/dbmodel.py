@@ -2,8 +2,7 @@ from __future__ import print_function
 
 import copy
 import os
-from datetime import datetime
-import dateutil.tz
+import arrow
 import uuid
 import json
 
@@ -300,7 +299,7 @@ def save_object(id, obj_type, obj_str, obj_attr, db_session=None):
     record.blob = obj_str
     obj_attr = copy.deepcopy(obj_attr)
     obj_attr['userId'] = str(record.user_id)
-    obj_attr['modifiedTime'] = repr(datetime.now(dateutil.tz.tzutc()))
+    obj_attr['modifiedTime'] = repr(arrow.now.format())
     record.attr = obj_attr
     db_session.add(record)
     db_session.commit()

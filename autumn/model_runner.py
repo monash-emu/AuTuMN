@@ -142,22 +142,20 @@ def solve_by_dichotomy(f, objective, a, b, tolerance):
 
 
 class ModelRunner:
-    def __init__(self, gui_inputs, runtime_outputs, js_gui=None):
+    def __init__(self, gui_inputs, js_gui=None):
         """
         Instantiation method for model runner - currently including some attributes that should be set externally, e.g.
         in the GUI(s).
 
         Args:
             gui_inputs: Inputs from the off-line Tkinter GUI
-            runtime_outputs: GUI window for commenting
             js_gui: JavaScript GUI inputs
         """
 
         # conversion of inputs to attributes
         self.gui_inputs = gui_inputs
         self.scenarios = self.gui_inputs['scenarios_to_run']
-        self.runtime_outputs = runtime_outputs
-        self.inputs = inputs.Inputs(gui_inputs, runtime_outputs, js_gui=js_gui)
+        self.inputs = inputs.Inputs(gui_inputs, js_gui=js_gui)
         self.inputs.read_and_load_data()
 
         # preparing for basic runs
@@ -1200,9 +1198,9 @@ class ModelRunner:
 
 
 class TbRunner(ModelRunner):
-    def __init__(self, gui_inputs, runtime_outputs, js_gui=None):
+    def __init__(self, gui_inputs, js_gui=None):
 
-        ModelRunner.__init__(self, gui_inputs, runtime_outputs, js_gui)
+        ModelRunner.__init__(self, gui_inputs, js_gui)
 
         # outputs
         self.epi_outputs_to_analyse = ['incidence', 'prevalence', 'mortality', 'true_mortality', 'notifications']

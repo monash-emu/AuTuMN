@@ -40,7 +40,7 @@ def find_latest_value_from_year_dict(dictionary, ceiling):
 
 
 class Inputs:
-    def __init__(self, gui_inputs, runtime_outputs, js_gui=None):
+    def __init__(self, gui_inputs, js_gui=None):
 
         # GUI inputs
         self.gui_inputs = gui_inputs
@@ -117,7 +117,6 @@ class Inputs:
         self.freeze_times = {}
 
         # miscellaneous
-        self.runtime_outputs = runtime_outputs
         self.mode = 'epi_uncertainty'
         self.js_gui = js_gui
         if self.js_gui:
@@ -1368,9 +1367,6 @@ class Inputs:
 
         if self.js_gui:
             self.js_gui('console', {"message": comment})
-        else:
-            self.runtime_outputs.insert(END, comment + '\n')
-            self.runtime_outputs.see(END)
 
     def checks(self):
         """

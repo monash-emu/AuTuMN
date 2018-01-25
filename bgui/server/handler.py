@@ -148,8 +148,8 @@ def public_run_autumn(params):
     print(">> handler.public_run_autumn", json.dumps(model_inputs, indent=2))
 
     try:
-        model_runner = autumn.model_runner.ModelRunner(
-            model_inputs, None, bgui_model_output)
+        model_runner = autumn.model_runner.TbRunner(
+            model_inputs, bgui_model_output)
         model_runner.master_runner()
 
         project = autumn.outputs.Project(model_runner, model_inputs)

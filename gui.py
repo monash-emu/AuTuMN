@@ -178,7 +178,7 @@ class App:
         #     self.figure_frame.withdraw()
 
         self.model_runner = autumn.model_runner.TbRunner(
-            self.gui_outputs, self.runtime_outputs, js_gui=self.handle_message)
+            self.gui_outputs, js_gui=self.handle_message)
         self.model_runner.master_runner()
         project = outputs.Project(self.model_runner, self.gui_outputs)
         project.master_outputs_runner()

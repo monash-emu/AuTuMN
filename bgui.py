@@ -13,4 +13,3 @@ threading.Thread(target=open_page_delayed).start()
 os.chdir('bgui/server')
 subprocess.call(["python", "run_server.py"])
 
-R

@@ -2,6 +2,8 @@ import sys
 import os
 import shutil
 
+# Must be run in the server directory
+
 # Auto-generates config.py if not found
 if not os.path.isfile("config.py"):
     shutil.copy("config_default.py", "config.py")

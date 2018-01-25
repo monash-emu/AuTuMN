@@ -129,9 +129,7 @@ def bgui_model_output(output_type, data={}):
         bgui_output_lines.append(data["message"])
         print(">> handler.bgui_model_output console:", data["message"])
     elif output_type == "uncertainty_graph":
-        with open('graph.json', 'wt') as f:
-            f.write(json.dumps(data, indent=2))
-        print(">> handler.bgui_model_output uncertainty_graph:", data)
+        pass
 
 
 def public_run_autumn(params):
@@ -141,21 +139,28 @@ def public_run_autumn(params):
     global is_bgui_running
     global bgui_output_lines
     is_bgui_running = True
-    model_inputs = gui_params.convert_params_to_inputs(params)
-    print(">> handler.public_run_autumn", json.dumps(model_inputs, indent=2))
     bgui_output_lines = []
+
     autumn_dir = os.path.join(os.path.dirname(autumn.__file__), os.pardir)
     os.chdir(autumn_dir)
+
+    model_inputs = gui_params.convert_params_to_inputs(params)
+    print(">> handler.public_run_autumn", json.dumps(model_inputs, indent=2))
+
     try:
         model_runner = autumn.model_runner.ModelRunner(
             model_inputs, None, bgui_model_output)
         model_runner.master_runner()
+
         project = autumn.outputs.Project(model_runner, model_inputs)
         project.master_outputs_runner()
+
         result = {'success': True}
+
     except Exception:
         result = {'success': False}
         traceback.print_exc()
+
     is_bgui_running = False
     return result
 

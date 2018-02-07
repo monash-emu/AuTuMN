@@ -1138,10 +1138,15 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                         continue
                     detection_organ = organ if self.vary_detection_by_organ else ''
                     detection_riskgroup = riskgroup if self.vary_detection_by_riskgroup else ''
+                    # the number of tests effectively realised may be greater than the number of presenting TB cases
+                    if active_tb_presentations_intervention == 'xpert':
+                        multiplier = (self.params['int_number_tests_per_tb_presentation'] + 1.)
+                    else:
+                        multiplier = 1.
                     self.vars['popsize_' + active_tb_presentations_intervention] \
                         += self.vars['program_rate_detect' + detection_organ + detection_riskgroup] \
                         * self.compartments['active' + organ + strain + riskgroup + history + agegroup] \
-                        * (self.params['int_number_tests_per_tb_presentation'] + 1.)
+                        * multiplier
 
         # ACF
         # loop over risk groups, including '', which is no stratification

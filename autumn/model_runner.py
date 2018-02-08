@@ -15,6 +15,7 @@ import inputs
 import economics
 
 
+
 ''' static functions relevant to model runner only '''
 
 
@@ -1204,6 +1205,7 @@ class TbRunner(ModelRunner):
 
         # outputs
         self.epi_outputs_to_analyse = ['incidence', 'prevalence', 'mortality', 'true_mortality', 'notifications']
+        self.add_strain_specific_outputs_to_analyse()
         self.outputs_unc = [{'key': 'incidence',
                              'posterior_width': None,
                              'width_multiplier': 2.  # width of normal posterior relative to range of allowed values
@@ -1237,6 +1239,17 @@ class TbRunner(ModelRunner):
         self.adjust_mdr = False if len(self.inputs.strains) < 2 else adjust_mdr
         self.mdr_introduce_time = self.inputs.model_constants['mdr_introduce_time']
 
+    def add_strain_specific_outputs_to_analyse(self):
+        """
+        If several strains are simulated, we also want the strain-specific outputs to be analysed
+        """
+        if len(self.inputs.strains) > 1:
+            new_epi_outputs_to_analyse = []
+            for output in self.epi_outputs_to_analyse:
+                new_epi_outputs_to_analyse.append(output)
+                for strain in self.inputs.strains:
+                    new_epi_outputs_to_analyse.append(output + strain)
+            self.epi_outputs_to_analyse = new_epi_outputs_to_analyse
     ''' output interpretation methods '''
 
     def find_mortality_output(self, epi_outputs, scenario, strain, stratum):

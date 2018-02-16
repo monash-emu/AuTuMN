@@ -68,9 +68,9 @@ class Inputs:
         # intervention uncertainty
         self.intervention_uncertainty = False
         if self.intervention_uncertainty:
-            self.uncertainty_intervention = 'int_prop_decentralisation'
+            self.uncertainty_intervention = 'int_perc_dots_contributor'
             self.scenarios.append(15)
-            self.n_samples = 4
+            self.n_samples = 20
             self.intervention_param_dict \
                 = {'int_prop_treatment_support_relative': ['int_prop_treatment_support_improvement'],
                    'int_prop_decentralisation': ['int_ideal_detection'],
@@ -79,7 +79,13 @@ class Inputs:
                    'int_prop_ipt': ['int_prop_ipt_effectiveness', 'int_prop_ltbi_test_sensitivity',
                                     'int_prop_infections_in_household'],
                    'int_prop_acf': ['int_prop_acf_detections_per_round'],
-                   'int_prop_awareness_raising': ['int_multiplier_detection_with_raised_awareness']}
+                   'int_prop_awareness_raising': ['int_multiplier_detection_with_raised_awareness'],
+                   'int_perc_shortcourse_mdr': ['int_prop_treatment_success_shortcoursemdr'],
+                   'int_perc_firstline_dst': [],
+                   'int_perc_treatment_support_relative_ds': ['int_prop_treatment_support_improvement_ds'],
+                   'int_perc_dots_contributor': ['int_prop_detection_dots_contributor'],
+                   'int_perc_dots_groupcontributor': ['int_prop_detection_dots_contributor', 'int_prop_detection_ngo_ruralpoor']
+                   }
             self.gui_inputs['output_by_scenario'] = True
 
         # increment comorbidity

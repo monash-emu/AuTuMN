@@ -1370,13 +1370,15 @@ class Project:
         for output in self.model_runner.epi_outputs_to_analyse:
             absolute_values \
                 = self.uncertainty_centiles['epi'][scenario][output][0:3,
-                    t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs_uncertainty[
-                                                                   string_to_add + scenario_name]['times'], year)]
+                    t_k.find_first_list_element_at_least_value(self.model_runner.outputs['int_uncertainty']['epi'][
+                                                                   scenario]['times'][0], year)]
 
-            baseline = self.model_runner.epi_outputs['manual_baseline'][output][
-                t_k.find_first_list_element_at_least_value(self.model_runner.epi_outputs['manual_baseline']['times'],
+            baseline = self.model_runner.outputs['manual']['epi'][0][output][
+                t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][0]['times'],
                                                            year)]
             changes[output] = [(i / baseline - 1.) * 1e2 for i in absolute_values]
+            # swap tuple items so that the reporting order becomes: median (lower - upper)
+            changes[output][0], changes[output][1] = changes[output][1], changes[output][0]
             print(output + '\n%.1f\n(%.1f to %.1f)' % tuple(changes[output]))
 
     def find_average_costs(self):

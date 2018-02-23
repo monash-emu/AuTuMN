@@ -202,9 +202,7 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
     Returns:
         interpolation function
     """
-
     assert len(x) == len(y), 'x and y must have the same length'
-
     x = [float(i) for i in x]
     y = [float(i) for i in y]
 
@@ -253,9 +251,7 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
         neighbours.
         This is only relevant when method=1
         """
-
         v = np.zeros(len(x))  # Initialises all zeros
-
         for i in range(len(x))[1:-1]:  # For each interior point
             if (y[i] - y[i - 1]) * (y[i] - y[i + 1]) < 0:  # Not changing variation
                 slope_left = (y[i] - y[i - 1]) / (x[i] - x[i - 1])
@@ -629,10 +625,14 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
 
             while t < x[-1]:
                 ok = 1
-                if t < x[1]:
+                if t == x[0]:
+                    y_t = y[0]
+                elif t < x[1]:
                     y_t = a_init[0] + a_init[1] * t + a_init[2] * t ** 2 + a_init[3] * t ** 3
                 elif t < x[-2]:
                     y_t = f(t)
+                elif t == x[-1]:
+                    y_t = y[-1]
                 else:
                     y_t = a_f[0] + a_f[1] * t + a_f[2] * t ** 2 + a_f[3] * t ** 3
 

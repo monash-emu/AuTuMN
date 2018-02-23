@@ -62,9 +62,15 @@ def read_input_data_xls(from_test, sheets_to_read, country):
         if tool_kit.are_all_values_the_same(data_read_from_sheets['gtb_2016'][gtb_key], keys_of_interest=(2000, 2016)):
             continue
         elif gtb_key in data_read_from_sheets['gtb']:
-            data_read_from_sheets['gtb'][gtb_key].update(data_read_from_sheets['gtb_2016'][gtb_key])
+            # For Fiji, we want incidence to be loaded from gtb_2015 for years 1990-2015 and use gtb_2016 for year 2016
+            if country == 'Fiji' and 'inc' in gtb_key:
+                data_read_from_sheets['gtb'][gtb_key][2016] = data_read_from_sheets['gtb_2016'][gtb_key][2016]
+            else:
+                data_read_from_sheets['gtb'][gtb_key].update(data_read_from_sheets['gtb_2016'][gtb_key])
         else:
             data_read_from_sheets['gtb'][gtb_key] = data_read_from_sheets['gtb_2016'][gtb_key]
+
+
 
     return data_read_from_sheets
 

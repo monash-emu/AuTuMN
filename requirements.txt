@@ -3,11 +3,11 @@ xlrd==0.9.3
 matplotlib==1.4.2
 pandas==0.20.3
 graphviz==0.4.10
-scipy==0.17.0
+scipy==1.0.0
 docx==0.2.4
 pyDOE==0.3.8
 openpyxl==2.5.0a3
-numpy==1.10.1
+numpy==1.14.1
 python_docx==0.8.6
 flask-sqlalchemy==2.3.0
 Flask_Login==0.2.11

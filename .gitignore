@@ -13,3 +13,5 @@ saved_uncertainty_analyses/
 *pkl
 saved_*
 projects
+venv
+env*

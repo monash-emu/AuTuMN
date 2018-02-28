@@ -97,9 +97,6 @@ def find_button_name_from_string(working_string):
 def get_autumn_params():
     """
     Collate all the parameters and the groups to put them into.
-
-
-    :return:
     """
 
     params = collections.OrderedDict()
@@ -153,28 +150,32 @@ def get_autumn_params():
     for k in default_boolean_keys:
         params[k]['value'] = True
 
-    # drop down lists
-    options \
+    ''' drop down and sliders '''
+
+    # countries
+    country_options \
         = ['Afghanistan', 'Albania', 'Angola', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan', 'Bahrain',
            'Bangladesh', 'Belarus', 'Belgium', 'Benin', 'Bhutan', 'Botswana', 'Brazil', 'Bulgaria', 'Burundi',
            'Cameroon', 'Chad', 'Chile', 'Croatia', 'Djibouti', 'Ecuador', 'Estonia', 'Ethiopia', 'Fiji', 'Gabon',
            'Georgia', 'Ghana', 'Guatemala', 'Guinea', 'Philippines', 'Romania']
     params['country'] \
         = {'type': 'drop_down',
-           'options': options,
+           'options': country_options,
            'value': 'Fiji'}
-    options \
+
+    # methodology
+    integration_options \
         = ['Runge Kutta', 'Explicit']
     params['integration_method'] \
         = {'type': 'drop_down',
-           'options': options,
-           'value': options[1]}
-    options \
+           'options': integration_options,
+           'value': integration_options[1]}
+    fitting_options \
         = ['Method 1', 'Method 2', 'Method 3', 'Method 4', 'Method 5']
     params['fitting_method'] \
         = {'type': 'drop_down',
-           'options': options,
-           'value': options[-1]}
+           'options': fitting_options,
+           'value': fitting_options[-1]}
     params['default_smoothness'] \
         = {'type': 'slider',
            'label': 'Default fitting smoothness',
@@ -190,18 +191,17 @@ def get_autumn_params():
            'max': 0.5,
            'interval': 0.005}
 
-    # model stratifications options
-    options = ['Pos / Neg / Extra', 'Pos / Neg', 'Unstratified']
+    # model stratification
+    organ_options = ['Pos / Neg / Extra', 'Pos / Neg', 'Unstratified']
     params['n_organs'] \
         = {'type': 'drop_down',
-           'options': options,
-           'value': options[0]}
-
-    options = ['Single strain', 'DS / MDR', 'DS / MDR / XDR']
+           'options': organ_options,
+           'value': organ_options[0]}
+    strain_options = ['Single strain', 'DS / MDR', 'DS / MDR / XDR']
     params['n_strains'] \
         = {'type': 'drop_down',
-           'options': options,
-           'value': options[0]}
+           'options': strain_options,
+           'value': strain_options[0]}
 
     # uncertainty options
     params['uncertainty_runs'] \
@@ -222,10 +222,14 @@ def get_autumn_params():
            'options': options,
            'value': options[0]}
 
+    # set a default label for the key if none has been specified
     for key, value in params.items():
         if not value.get('label'):
             value['label'] = key
 
+    ''' parameter groupings '''
+
+    # initialise the groups
     param_group_keys \
         = ['Model running', 'Model Stratifications', 'Elaborations', 'Scenarios to run', 'Uncertainty', 'Plotting',
            'MS Office outputs']
@@ -233,6 +237,7 @@ def get_autumn_params():
     for group in param_group_keys:
         param_groups.append({'keys': [], 'name': group})
 
+    # distribute the boolean checkbox options
     for key in bool_keys:
         name = params[key]['label']
         if 'riskgroup_' in key or 'n_' in key:
@@ -250,12 +255,9 @@ def get_autumn_params():
 
     for k in ['country', 'integration_method', 'fitting_method', 'default_smoothness', 'time_step']:
         param_groups[0]['keys'].append(k)
-
     for k in ['n_organs', 'n_strains']:
         param_groups[1]['keys'].append(k)
-
-    for k in ['uncertainty_runs', 'burn_in_runs',
-              'search_width', 'pickle_uncertainty']:
+    for k in ['uncertainty_runs', 'burn_in_runs', 'search_width', 'pickle_uncertainty']:
         param_groups[4]['keys'].append(k)
 
     return {'params': params,

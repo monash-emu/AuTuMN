@@ -105,19 +105,15 @@ def get_autumn_params():
     params = collections.OrderedDict()
 
     # collate the boolean keys
-    bool_keys = [
-        'output_flow_diagram', 'output_compartment_populations', 'output_riskgroup_fractions',
-        'output_age_fractions', 'output_by_subgroups', 'output_fractions', 'output_scaleups',
-        'output_gtb_plots', 'output_plot_economics', 'output_plot_riskgroup_checks',
-        'output_param_plots', 'output_popsize_plot', 'output_likelihood_plot',
-        'output_uncertainty', 'write_uncertainty_outcome_params', 'output_spreadsheets',
-        'output_documents', 'output_by_scenario', 'output_horizontally',
-        'output_age_calculations', 'riskgroup_diabetes', 'riskgroup_hiv',
-        'riskgroup_prison', 'riskgroup_indigenous', 'riskgroup_urbanpoor',
-        'riskgroup_ruralpoor',
-        'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ',
-        'is_timevariant_organs', 'is_treatment_history',
-        'is_vary_force_infection_by_riskgroup']
+    bool_keys \
+        = ['output_flow_diagram', 'output_compartment_populations', 'output_riskgroup_fractions',
+           'output_age_fractions', 'output_by_subgroups', 'output_fractions', 'output_scaleups', 'output_gtb_plots',
+           'output_plot_economics', 'output_plot_riskgroup_checks', 'output_param_plots', 'output_popsize_plot',
+           'output_likelihood_plot', 'output_uncertainty', 'write_uncertainty_outcome_params', 'output_spreadsheets',
+           'output_documents', 'output_by_scenario', 'output_horizontally', 'output_age_calculations',
+           'riskgroup_diabetes', 'riskgroup_hiv', 'riskgroup_prison', 'riskgroup_indigenous', 'riskgroup_urbanpoor',
+           'riskgroup_ruralpoor', 'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ',
+           'is_timevariant_organs', 'is_treatment_history', 'is_vary_force_infection_by_riskgroup']
     for i in range(1, 15):
         bool_keys.append('scenario_' + str(i))
     for key in bool_keys:
@@ -243,7 +239,9 @@ def get_autumn_params():
     # distribute the boolean checkbox options
     for key in bool_keys:
         name = params[key]['label']
-        if 'riskgroup_' in key or 'n_' in key:
+        if 'Plot' in name or 'Draw' in name:
+            param_groups[5]['keys'].append(key)
+        elif 'riskgroup_' in key or key[:2] == 'n_':
             param_groups[1]['keys'].append(key)
         elif 'is_' in key:
             param_groups[2]['keys'].append(key)
@@ -251,8 +249,6 @@ def get_autumn_params():
             param_groups[3]['keys'].append(key)
         elif 'uncertainty' in name or 'uncertainty' in key:
             param_groups[4]['keys'].append(key)
-        elif 'Plot' in name or 'Draw' in name:
-            param_groups[5]['keys'].append(key)
         else:
             param_groups[6]['keys'].append(key)
 

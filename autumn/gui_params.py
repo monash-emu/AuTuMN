@@ -4,6 +4,16 @@ import autumn.tool_kit as tool_kit
 
 
 def find_button_name_from_string(working_string):
+    """
+    Find the string to attach to a boolean check box for the GUI, either from a dictionary, or using a specific approach
+    for things like scenario names.
+
+    Args:
+        working_string: AuTuMN's name for the boolean quantity
+    Returns:
+        A more user-friendly string for the GUI
+    """
+
     button_name_dictionary \
         = {'output_uncertainty':
                'Run uncertainty',
@@ -85,8 +95,16 @@ def find_button_name_from_string(working_string):
 
 
 def get_autumn_params():
+    """
+    Collate all the parameters and the groups to put them into.
+
+
+    :return:
+    """
+
     params = collections.OrderedDict()
 
+    # collate the boolean keys
     bool_keys = [
         'output_flow_diagram', 'output_compartment_populations', 'output_riskgroup_fractions',
         'output_age_fractions', 'output_by_subgroups', 'output_fractions', 'output_scaleups',
@@ -100,15 +118,15 @@ def get_autumn_params():
         'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ',
         'is_timevariant_organs', 'is_treatment_history',
         'is_vary_force_infection_by_riskgroup']
-
     for i in range(1, 15):
         bool_keys.append('scenario_' + str(i))
-
     for key in bool_keys:
-        params[key] = {'value': False,
-                       'type': 'boolean',
-                       'label': find_button_name_from_string(key)}
+        params[key] \
+            = {'value': False,
+               'type': 'boolean',
+               'label': find_button_name_from_string(key)}
 
+    # set some boolean keys to on (True) by default
     default_boolean_keys = [
         # 'output_uncertainty',
         'write_uncertainty_outcome_params',
@@ -132,11 +150,10 @@ def get_autumn_params():
         # 'riskgroup_indigenous',
         # 'is_timevariant_organs'
     ]
-
     for k in default_boolean_keys:
         params[k]['value'] = True
 
-    # model running options
+    # drop down lists
     options \
         = ['Afghanistan', 'Albania', 'Angola', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan', 'Bahrain',
            'Bangladesh', 'Belarus', 'Belgium', 'Benin', 'Bhutan', 'Botswana', 'Brazil', 'Bulgaria', 'Burundi',
@@ -146,26 +163,25 @@ def get_autumn_params():
         = {'type': 'drop_down',
            'options': options,
            'value': 'Fiji'}
-
-    options = ['Runge Kutta', 'Explicit']
+    options \
+        = ['Runge Kutta', 'Explicit']
     params['integration_method'] \
         = {'type': 'drop_down',
            'options': options,
            'value': options[1]}
-
-    options = ['Method 1', 'Method 2', 'Method 3', 'Method 4', 'Method 5']
+    options \
+        = ['Method 1', 'Method 2', 'Method 3', 'Method 4', 'Method 5']
     params['fitting_method'] \
         = {'type': 'drop_down',
            'options': options,
            'value': options[-1]}
-
     params['default_smoothness'] \
         = {'type': 'slider',
            'label': 'Default fitting smoothness',
            'value': 1.0,
            'interval': 0.1,
-           'min': 0.0,
-           'max': 5.0}
+           'min': 0.,
+           'max': 5.}
     params['time_step'] \
         = {'type': 'slider',
            'label': 'Integration time step',
@@ -219,16 +235,16 @@ def get_autumn_params():
 
     for key in bool_keys:
         name = params[key]['label']
-        if 'Plot' in name or 'Draw' in name:
-            param_groups[5]['keys'].append(key)
-        elif 'uncertainty' in name or 'uncertainty' in key:
-            param_groups[4]['keys'].append(key)
+        if 'riskgroup_' in key or 'n_' in key:
+            param_groups[1]['keys'].append(key)
         elif 'is_' in key:
             param_groups[2]['keys'].append(key)
-        elif 'riskgroup_' in key or 'n_' in key:
-            param_groups[1]['keys'].append(key)
         elif 'scenario_' in key:
             param_groups[3]['keys'].append(key)
+        elif 'uncertainty' in name or 'uncertainty' in key:
+            param_groups[4]['keys'].append(key)
+        elif 'Plot' in name or 'Draw' in name:
+            param_groups[5]['keys'].append(key)
         else:
             param_groups[6]['keys'].append(key)
 

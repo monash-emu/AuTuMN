@@ -1,78 +1,80 @@
+
 import collections
 import autumn.tool_kit as tool_kit
 
+
 def find_button_name_from_string(working_string):
-    button_name_dictionary = {
-        'output_uncertainty':
-            'Run uncertainty',
-        'write_uncertainty_outcome_params':
-            'Record parameters',
-        'output_spreadsheets':
-            'Write to spreadsheets',
-        'output_documents':
-            'Write to documents',
-        'output_by_scenario':
-            'Output by scenario',
-        'output_horizontally':
-            'Write horizontally',
-        'output_gtb_plots':
-            'Plot outcomes',
-        'output_compartment_populations':
-            'Plot compartment sizes',
-        'output_by_subgroups':
-            'Plot outcomes by sub-groups',
-        'output_age_fractions':
-            'Plot proportions by age',
-        'output_riskgroup_fractions':
-            'Plot proportions by risk group',
-        'output_flow_diagram':
-            'Draw flow diagram',
-        'output_fractions':
-            'Plot compartment fractions',
-        'output_scaleups':
-            'Plot scale-up functions',
-        'output_plot_economics':
-            'Plot economics graphs',
-        'output_plot_riskgroup_checks':
-            'Plot risk group checks',
-        'output_age_calculations':
-            'Plot age calculation weightings',
-        'output_param_plots':
-            'Plot parameter progression',
-        'output_popsize_plot':
-            'Plot "popsizes" for cost-coverage curves',
-        'output_likelihood_plot':
-            'Plot log likelihoods over runs',
-        'riskgroup_diabetes':
-            'Type II diabetes',
-        'riskgroup_hiv':
-            'HIV',
-        'riskgroup_prison':
-            'Prison',
-        'riskgroup_urbanpoor':
-            'Urban poor',
-        'riskgroup_ruralpoor':
-            'Rural poor',
-        'riskgroup_indigenous':
-            'Indigenous',
-        'is_lowquality':
-            'Low quality care',
-        'is_amplification':
-            'Resistance amplification',
-        'is_timevariant_organs':
-            'Time-variant organ status',
-        'is_misassignment':
-            'Strain mis-assignment',
-        'is_vary_detection_by_organ':
-            'Vary case detection by organ status',
-        'n_organs':
-            'Number of organ strata',
-        'n_strains':
-            'Number of strains',
-        'is_vary_force_infection_by_riskgroup':
-            'Heterogeneous mixing',
-        'is_treatment_history':
-            'Treatment history'}
+    button_name_dictionary \
+        = {'output_uncertainty':
+               'Run uncertainty',
+           'write_uncertainty_outcome_params':
+               'Record parameters',
+           'output_spreadsheets':
+               'Write to spreadsheets',
+           'output_documents':
+               'Write to documents',
+           'output_by_scenario':
+               'Output by scenario',
+           'output_horizontally':
+               'Write horizontally',
+           'output_gtb_plots':
+               'Plot outcomes',
+           'output_compartment_populations':
+               'Plot compartment sizes',
+           'output_by_subgroups':
+               'Plot outcomes by sub-groups',
+           'output_age_fractions':
+               'Plot proportions by age',
+           'output_riskgroup_fractions':
+               'Plot proportions by risk group',
+           'output_flow_diagram':
+               'Draw flow diagram',
+           'output_fractions':
+               'Plot compartment fractions',
+           'output_scaleups':
+               'Plot scale-up functions',
+           'output_plot_economics':
+               'Plot economics graphs',
+           'output_plot_riskgroup_checks':
+               'Plot risk group checks',
+           'output_age_calculations':
+               'Plot age calculation weightings',
+           'output_param_plots':
+               'Plot parameter progression',
+           'output_popsize_plot':
+               'Plot "popsizes" for cost-coverage curves',
+           'output_likelihood_plot':
+               'Plot log likelihoods over runs',
+           'riskgroup_diabetes':
+               'Type II diabetes',
+           'riskgroup_hiv':
+               'HIV',
+           'riskgroup_prison':
+               'Prison',
+           'riskgroup_urbanpoor':
+               'Urban poor',
+           'riskgroup_ruralpoor':
+               'Rural poor',
+           'riskgroup_indigenous':
+               'Indigenous',
+           'is_lowquality':
+               'Low quality care',
+           'is_amplification':
+               'Resistance amplification',
+           'is_timevariant_organs':
+               'Time-variant organ status',
+           'is_misassignment':
+               'Strain mis-assignment',
+           'is_vary_detection_by_organ':
+               'Vary case detection by organ status',
+           'n_organs':
+               'Number of organ strata',
+           'n_strains':
+               'Number of strains',
+           'is_vary_force_infection_by_riskgroup':
+               'Heterogeneous mixing',
+           'is_treatment_history':
+               'Treatment history'}
 
     if working_string in button_name_dictionary:
         return button_name_dictionary[working_string]
@@ -103,11 +105,9 @@ def get_autumn_params():
         bool_keys.append('scenario_' + str(i))
 
     for key in bool_keys:
-        params[key] = {
-            'value': False,
-            'type': 'boolean',
-            'label': find_button_name_from_string(key),
-        }
+        params[key] = {'value': False,
+                       'type': 'boolean',
+                       'label': find_button_name_from_string(key)}
 
     default_boolean_keys = [
         # 'output_uncertainty',
@@ -137,88 +137,74 @@ def get_autumn_params():
         params[k]['value'] = True
 
     # model running options
-    options = [
-        'Afghanistan', 'Albania', 'Angola', 'Argentina', 'Armenia', 'Australia', 'Austria',
-        'Azerbaijan', 'Bahrain', 'Bangladesh', 'Belarus', 'Belgium', 'Benin',
-        'Bhutan', 'Botswana', 'Brazil', 'Bulgaria', 'Burundi', 'Cameroon', 'Chad',
-        'Chile', 'Croatia', 'Djibouti', 'Ecuador', 'Estonia', 'Ethiopia', 'Fiji', 'Gabon', 'Georgia',
-        'Ghana', 'Guatemala', 'Guinea',
-        'Philippines', 'Romania'
-    ]
-    params['country'] = {
-        'type': 'drop_down',
-        'options': options,
-        'value': 'Fiji'
-    }
+    options \
+        = ['Afghanistan', 'Albania', 'Angola', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan', 'Bahrain',
+           'Bangladesh', 'Belarus', 'Belgium', 'Benin', 'Bhutan', 'Botswana', 'Brazil', 'Bulgaria', 'Burundi',
+           'Cameroon', 'Chad', 'Chile', 'Croatia', 'Djibouti', 'Ecuador', 'Estonia', 'Ethiopia', 'Fiji', 'Gabon',
+           'Georgia', 'Ghana', 'Guatemala', 'Guinea', 'Philippines', 'Romania']
+    params['country'] \
+        = {'type': 'drop_down',
+           'options': options,
+           'value': 'Fiji'}
 
     options = ['Runge Kutta', 'Explicit']
-    params['integration_method'] = {
-        'type': 'drop_down',
-        'options': options,
-        'value': options[1]
-    }
+    params['integration_method'] \
+        = {'type': 'drop_down',
+           'options': options,
+           'value': options[1]}
 
     options = ['Method 1', 'Method 2', 'Method 3', 'Method 4', 'Method 5']
-    params['fitting_method'] = {
-        'type': 'drop_down',
-        'options': options,
-        'value': options[-1]
-    }
+    params['fitting_method'] \
+        = {'type': 'drop_down',
+           'options': options,
+           'value': options[-1]}
 
-    params['default_smoothness'] = {
-        'type': 'slider',
-        'label': 'Default fitting smoothness',
-        'value': 1.0,
-        'interval': 0.1,
-        'min': 0.0,
-        'max': 5.0,
-    }
-    params['time_step'] = {
-        'type': 'slider',
-        'label': 'Integration time step',
-        'value': 0.5,
-        'min': 0.005,
-        'max': 0.5,
-        'interval': 0.005
-    }
+    params['default_smoothness'] \
+        = {'type': 'slider',
+           'label': 'Default fitting smoothness',
+           'value': 1.0,
+           'interval': 0.1,
+           'min': 0.0,
+           'max': 5.0}
+    params['time_step'] \
+        = {'type': 'slider',
+           'label': 'Integration time step',
+           'value': 0.5,
+           'min': 0.005,
+           'max': 0.5,
+           'interval': 0.005}
 
     # model stratifications options
     options = ['Pos / Neg / Extra', 'Pos / Neg', 'Unstratified']
-    params['n_organs'] = {
-        'type': 'drop_down',
-        'options': options,
-        'value': options[0]
-    }
+    params['n_organs'] \
+        = {'type': 'drop_down',
+           'options': options,
+           'value': options[0]}
 
     options = ['Single strain', 'DS / MDR', 'DS / MDR / XDR']
-    params['n_strains'] = {
-        'type': 'drop_down',
-        'options': options,
-        'value': options[0]
-    }
+    params['n_strains'] \
+        = {'type': 'drop_down',
+           'options': options,
+           'value': options[0]}
 
     # uncertainty options
-    params['uncertainty_runs'] = {
-        'type': 'integer',
-        'value': 2,
-        'label': 'Number of uncertainty runs'
-    }
-    params['burn_in_runs'] = {
-        'type': 'integer',
-        'value': 0,
-        'label': 'Number of burn-in runs'
-    }
-    params['search_width'] = {
-        'type': 'double',
-        'value': 0.05,
-        'label': 'Relative search width'
-    }
+    params['uncertainty_runs'] \
+        = {'type': 'integer',
+           'value': 2,
+           'label': 'Number of uncertainty runs'}
+    params['burn_in_runs'] \
+        = {'type': 'integer',
+           'value': 0,
+           'label': 'Number of burn-in runs'}
+    params['search_width'] \
+        = {'type': 'double',
+           'value': 0.05,
+           'label': 'Relative search width'}
     options = ['No saving or loading', 'Load', 'Save']
-    params['pickle_uncertainty'] = {
-        'type': 'drop_down',
-        'options': options,
-        'value': options[0]
-    }
+    params['pickle_uncertainty'] \
+        = {'type': 'drop_down',
+           'options': options,
+           'value': options[0]}
 
     for key, value in params.items():
         if not value.get('label'):
@@ -236,21 +222,20 @@ def get_autumn_params():
 
     for key in bool_keys:
         name = params[key]['label']
-        if ('Plot' in name or 'Draw' in name):
+        if 'Plot' in name or 'Draw' in name:
             param_groups[5]['keys'].append(key)
-        elif ('uncertainty' in name or 'uncertainty' in key):
+        elif 'uncertainty' in name or 'uncertainty' in key:
             param_groups[4]['keys'].append(key)
         elif 'is_' in key:
             param_groups[2]['keys'].append(key)
-        elif ('riskgroup_' in key or 'n_' in key):
+        elif 'riskgroup_' in key or 'n_' in key:
             param_groups[1]['keys'].append(key)
         elif 'scenario_' in key:
             param_groups[3]['keys'].append(key)
         else:
             param_groups[6]['keys'].append(key)
 
-    for k in ['country', 'integration_method', 'fitting_method',
-              'default_smoothness', 'time_step']:
+    for k in ['country', 'integration_method', 'fitting_method', 'default_smoothness', 'time_step']:
         param_groups[0]['keys'].append(k)
 
     for k in ['n_organs', 'n_strains']:
@@ -260,10 +245,8 @@ def get_autumn_params():
               'search_width', 'pickle_uncertainty']:
         param_groups[4]['keys'].append(k)
 
-    return {
-        'params': params,
-        'param_groups': param_groups
-    }
+    return {'params': params,
+            'param_groups': param_groups}
 
 
 def convert_params_to_inputs(params):
@@ -286,10 +269,8 @@ def convert_params_to_inputs(params):
                 inputs[key] = param['value']
             elif param['value']:
                 i_scenario = int(key[9:])
-                inputs['scenarios_to_run'] \
-                    += [i_scenario]
-                inputs['scenario_names_to_run'] \
-                    += [tool_kit.find_scenario_string_from_number(i_scenario)]
+                inputs['scenarios_to_run'] += [i_scenario]
+                inputs['scenario_names_to_run'] += [tool_kit.find_scenario_string_from_number(i_scenario)]
         elif param['type'] == 'drop_down':
             if key == 'fitting_method':
                 inputs[key] = int(value[-1])

@@ -97,6 +97,9 @@ def find_button_name_from_string(working_string):
 def get_autumn_params():
     """
     Collate all the parameters and the groups to put them into.
+
+    Returns:
+        A single dictionary with key params for the individual parameters and key param_groups for the classification
     """
 
     params = collections.OrderedDict()
@@ -216,11 +219,11 @@ def get_autumn_params():
         = {'type': 'double',
            'value': 0.05,
            'label': 'Relative search width'}
-    options = ['No saving or loading', 'Load', 'Save']
+    saving_options = ['No saving or loading', 'Load', 'Save']
     params['pickle_uncertainty'] \
         = {'type': 'drop_down',
-           'options': options,
-           'value': options[0]}
+           'options': saving_options,
+           'value': saving_options[0]}
 
     # set a default label for the key if none has been specified
     for key, value in params.items():
@@ -253,6 +256,7 @@ def get_autumn_params():
         else:
             param_groups[6]['keys'].append(key)
 
+    # distribute other inputs
     for k in ['country', 'integration_method', 'fitting_method', 'default_smoothness', 'time_step']:
         param_groups[0]['keys'].append(k)
     for k in ['n_organs', 'n_strains']:
@@ -260,24 +264,35 @@ def get_autumn_params():
     for k in ['uncertainty_runs', 'burn_in_runs', 'search_width', 'pickle_uncertainty']:
         param_groups[4]['keys'].append(k)
 
+    # return single data structure with parameters and parameter groupings
     return {'params': params,
             'param_groups': param_groups}
 
 
 def convert_params_to_inputs(params):
-    organ_stratification_keys = {
-        'Pos / Neg / Extra': 3,
-        'Pos / Neg': 2,
-        'Unstratified': 0}
-    strain_stratification_keys = {
-        'Single strain': 0,
-        'DS / MDR': 2,
-        'DS / MDR / XDR': 3}
+    """
+    Collates all the inputs once the user has hit Run.
 
-    # don't try to change the following three lines to a dictionary literal creation - code inexplicably crashes
-    inputs = {}
-    inputs['scenarios_to_run'] = [0]
-    inputs['scenario_names_to_run'] = ['baseline']
+    Args:
+        params: The set of parameters specified by the user
+    Returns:
+        inputs: Unprocessed inputs for use by the inputs module
+    """
+
+    # keys for drop-down lists to be converted to integers
+    organ_stratification_keys \
+        = {'Unstratified': 0,
+           'Pos / Neg': 2,
+           'Pos / Neg / Extra': 3}
+    strain_stratification_keys \
+        = {'Single strain': 0,
+           'DS / MDR': 2,
+           'DS / MDR / XDR': 3}
+
+    # starting inputs always includes the baseline scenario
+    inputs = {'scenarios_to_run': [0], 'scenario_names_to_run': ['baseline']}
+
+    # add all of the user inputs
     for key, param in params.iteritems():
         value = param['value']
         if param['type'] == 'boolean':
@@ -285,8 +300,8 @@ def convert_params_to_inputs(params):
                 inputs[key] = param['value']
             elif param['value']:
                 i_scenario = int(key[9:])
-                inputs['scenarios_to_run'] += [i_scenario]
-                inputs['scenario_names_to_run'] += [tool_kit.find_scenario_string_from_number(i_scenario)]
+                inputs['scenarios_to_run'].append(i_scenario)
+                inputs['scenario_names_to_run'].append(tool_kit.find_scenario_string_from_number(i_scenario))
         elif param['type'] == 'drop_down':
             if key == 'fitting_method':
                 inputs[key] = int(value[-1])

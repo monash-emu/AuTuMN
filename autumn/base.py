@@ -7,7 +7,7 @@ import scipy.stats
 from graphviz import Digraph
 
 # AuTuMN imports
-from autumn.economics import get_cost_from_coverage, get_coverage_from_cost
+from economics import get_cost_from_coverage, get_coverage_from_cost
 
 
 def add_unique_tuple_to_list(a_list, a_tuple):
@@ -513,8 +513,8 @@ class BaseModel:
                     dt_is_ok = False
                     cpt_reduce_step += 1
                     if cpt_reduce_step > 50:
-                        print 'integration did not complete. The following compartments became negative:'
-                        print [self.labels[i] for i in range(len(y_candidate)) if y_candidate[i] < 0.]
+                        print('integration did not complete. The following compartments became negative:')
+                        print([self.labels[i] for i in range(len(y_candidate)) if y_candidate[i] < 0.])
                         break
 
             # adjustments for risk groups

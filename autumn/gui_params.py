@@ -210,15 +210,12 @@ def get_autumn_params():
         if not value.get('label'):
             value['label'] = key
 
-    param_groups = [
-        {'keys': [], 'name': 'Model running'},
-        {'keys': [], 'name': 'Model Stratifications'},
-        {'keys': [], 'name': 'Elaborations'},
-        {'keys': [], 'name': 'Scenarios to run'},
-        {'keys': [], 'name': 'Uncertainty'},
-        {'keys': [], 'name': 'Plotting'},
-        {'keys': [], 'name': 'MS Office outputs'}
-    ]
+    param_group_keys \
+        = ['Model running', 'Model Stratifications', 'Elaborations', 'Scenarios to run', 'Uncertainty', 'Plotting',
+           'MS Office outputs']
+    param_groups = []
+    for group in param_group_keys:
+        param_groups.append({'keys': [], 'name': group})
 
     for key in bool_keys:
         name = params[key]['label']
@@ -259,6 +256,7 @@ def convert_params_to_inputs(params):
         'DS / MDR': 2,
         'DS / MDR / XDR': 3}
 
+    # don't try to change the following three lines to a dictionary literal creation - code inexplicably crashes
     inputs = {}
     inputs['scenarios_to_run'] = [0]
     inputs['scenario_names_to_run'] = ['baseline']

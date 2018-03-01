@@ -97,10 +97,20 @@ class Inputs:
 
         # increment comorbidity
         elif self.run_mode == 'increment_comorbidity':
-            self.comorbidity_to_increment = 'diabetes'
+            self.comorbidity_to_increment = gui_inputs['comorbidity_to_increment'].lower()
             self.comorbidity_prevalences = {1: .05, 2: .1, 3: .2, 4: .3, 5: .4, 6: .5}
 
         # model structure
+        organ_stratification_keys \
+            = {'Unstratified': 0,
+               'Pos / Neg': 2,
+               'Pos / Neg / Extra': 3}
+        strain_stratification_keys \
+            = {'Single strain': 0,
+               'DS / MDR': 2,
+               'DS / MDR / XDR': 3}
+        self.gui_inputs['n_organs'] = organ_stratification_keys[gui_inputs['organ_strata']]
+        self.gui_inputs['n_strains'] = strain_stratification_keys[gui_inputs['strains']]
         self.available_strains = ['_ds', '_mdr', '_xdr']
         self.available_organs = ['_smearpos', '_smearneg', '_extrapul']
         self.agegroups = None

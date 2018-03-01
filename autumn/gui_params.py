@@ -77,9 +77,9 @@ def find_button_name_from_string(working_string):
                'Strain mis-assignment',
            'is_vary_detection_by_organ':
                'Vary case detection by organ status',
-           'n_organs':
+           'organ_strata':
                'Number of organ strata',
-           'n_strains':
+           'strains':
                'Number of strains',
            'is_vary_force_infection_by_riskgroup':
                'Heterogeneous mixing',
@@ -192,12 +192,12 @@ def get_autumn_params():
 
     # model stratification
     organ_options = ['Pos / Neg / Extra', 'Pos / Neg', 'Unstratified']
-    params['n_organs'] \
+    params['organ_strata'] \
         = {'type': 'drop_down',
            'options': organ_options,
            'value': organ_options[0]}
     strain_options = ['Single strain', 'DS / MDR', 'DS / MDR / XDR']
-    params['n_strains'] \
+    params['strains'] \
         = {'type': 'drop_down',
            'options': strain_options,
            'value': strain_options[0]}
@@ -228,6 +228,13 @@ def get_autumn_params():
            'options': saving_options,
            'value': saving_options[0]}
 
+    # increment comorbidity
+    comorbidity_types = ['Diabetes']
+    params['comorbidity_to_increment'] \
+        = {'type': 'drop_down',
+           'options': comorbidity_types,
+           'value': comorbidity_types[0]}
+
     # set a default label for the key if none has been specified
     for key, value in params.items():
         if not value.get('label'):
@@ -238,7 +245,7 @@ def get_autumn_params():
     # initialise the groups
     param_group_keys \
         = ['Model running', 'Model Stratifications', 'Elaborations', 'Scenarios to run', 'Uncertainty', 'Plotting',
-           'MS Office outputs']
+           'MS Office outputs', 'Comorbidity incrementing']
     param_groups = []
     for group in param_group_keys:
         param_groups.append({'keys': [], 'name': group})
@@ -262,10 +269,12 @@ def get_autumn_params():
     # distribute other inputs
     for k in ['run_mode', 'country', 'integration_method', 'fitting_method', 'default_smoothness', 'time_step']:
         param_groups[0]['keys'].append(k)
-    for k in ['n_organs', 'n_strains']:
+    for k in ['organ_strata', 'strains']:
         param_groups[1]['keys'].append(k)
     for k in ['uncertainty_runs', 'burn_in_runs', 'search_width', 'pickle_uncertainty']:
         param_groups[4]['keys'].append(k)
+    for k in ['comorbidity_to_increment']:
+        param_groups[7]['keys'].append(k)
 
     # return single data structure with parameters and parameter groupings
     return {'params': params,
@@ -281,16 +290,6 @@ def convert_params_to_inputs(params):
     Returns:
         inputs: Unprocessed inputs for use by the inputs module
     """
-
-    # keys for drop-down lists to be converted to integers
-    organ_stratification_keys \
-        = {'Unstratified': 0,
-           'Pos / Neg': 2,
-           'Pos / Neg / Extra': 3}
-    strain_stratification_keys \
-        = {'Single strain': 0,
-           'DS / MDR': 2,
-           'DS / MDR / XDR': 3}
 
     # starting inputs always includes the baseline scenario
     inputs = {'scenarios_to_run': [0], 'scenario_names_to_run': ['baseline']}
@@ -308,10 +307,6 @@ def convert_params_to_inputs(params):
         elif param['type'] == 'drop_down':
             if key == 'fitting_method':
                 inputs[key] = int(value[-1])
-            elif key == 'n_organs':
-                inputs[key] = organ_stratification_keys[value]
-            elif key == 'n_strains':
-                inputs[key] = strain_stratification_keys[value]
             else:
                 inputs[key] = value
         else:

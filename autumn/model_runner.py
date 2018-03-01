@@ -168,7 +168,6 @@ class ModelRunner:
         self.uncertainty_percentiles = {}
         self.n_centiles_for_shading = 100
         self.percentiles = [2.5, 50., 97.5] + list(numpy.linspace(0., 100., self.n_centiles_for_shading * 2 + 1))
-        self.intervention_uncertainty = self.inputs.intervention_uncertainty
         self.adjust_population = True
 
         # optimisation attributes - note that this is currently dead

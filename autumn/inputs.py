@@ -42,9 +42,10 @@ def find_latest_value_from_year_dict(dictionary, ceiling):
 class Inputs:
     def __init__(self, gui_inputs, js_gui=None):
 
-        # GUI inputs
+        # most basic inputs
         self.gui_inputs = gui_inputs
-        self.country = gui_inputs['country']
+        for attribute in ['country', 'scenarios_to_run']:
+            setattr(self, attribute, gui_inputs[attribute])
         self.scenarios = self.gui_inputs['scenarios_to_run']
         run_mode_conversion \
             = {'Scenario analysis': 'scenario',
@@ -57,13 +58,10 @@ class Inputs:
         self.original_data, self.derived_data, self.time_variants, self.model_constants, self.scaleup_data, \
             self.scaleup_fns = None, {}, {}, {}, {}, {}
 
-        self.intervention_uncertainty = False
-
         # uncertainty
         if self.run_mode == 'epi_uncertainty':
-            self.param_ranges_unc = []
-            self.int_ranges_unc = []
-            self.data_to_fit = {}
+            self.param_ranges_unc, self.int_ranges_unc, self.data_to_fit = [], [], {}
+
             # for incidence for ex, width of normal posterior relative to CI width in data
             self.outputs_unc \
                 = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
@@ -74,7 +72,10 @@ class Inputs:
 
         # intervention uncertainty
         elif self.run_mode == 'int_uncertainty':
-            self.uncertainty_intervention = 'int_perc_dots_contributor'
+
+            # some of these attributes may be unnecessary for intervention uncertainty - need to fix later
+            self.param_ranges_unc, self.int_ranges_unc, self.alternative_distribution_dict = [], [], {}
+            self.uncertainty_intervention = gui_inputs['uncertainty_interventions']
             self.scenarios.append(15)
             self.n_samples = 20
             self.intervention_param_dict \
@@ -128,15 +129,12 @@ class Inputs:
         self.organs_for_detection = ['']
 
         # interventions
-        self.irrelevant_time_variants = []
-        self.relevant_interventions = {}
-        self.interventions_to_cost = {}
-        self.intervention_startdates = {}
+        self.irrelevant_time_variants, self.relevant_interventions, self.interventions_to_cost, \
+            self.intervention_startdates, self.freeze_times = [], {}, {}, {}, {}
         self.interventions_available_for_costing \
             = ['vaccination', 'xpert', 'treatment_support_relative', 'treatment_support_absolute', 'smearacf',
                'xpertacf', 'ipt_age0to5', 'ipt_age5to15', 'decentralisation', 'improve_dst', 'bulgaria_improve_dst',
                'firstline_dst', 'intensive_screening', 'ipt_age15up', 'dot_groupcontributor', 'awareness_raising']
-        self.freeze_times = {}
 
         # miscellaneous
         self.mode = 'epi_uncertainty'
@@ -1277,8 +1275,9 @@ class Inputs:
         """
 
         # specify the parameters to be used for uncertainty
-        if self.gui_inputs['output_uncertainty'] or self.intervention_uncertainty:
+        if self.run_mode == 'epi_uncertainty' or self.run_mode == 'int_uncertainty':
             self.find_uncertainty_distributions()
+        if self.run_mode == 'epi_uncertainty':
             self.get_data_to_fit()
 
     def find_uncertainty_distributions(self):
@@ -1315,9 +1314,9 @@ class Inputs:
         """
 
         # decide whether calibration or uncertainty analysis is being run
-        if self.mode == 'calibration':
+        if self.run_mode == 'calibration':
             var_to_iterate = self.calib_outputs
-        elif self.mode == 'epi_uncertainty':
+        elif self.run_mode == 'epi_uncertainty':
             var_to_iterate = self.outputs_unc
 
         inc_conversion_dict = {'incidence': 'e_inc_100k',

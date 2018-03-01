@@ -975,7 +975,7 @@ class Project:
             self.find_uncertainty_indices()
             for output_type in ['epi', 'cost']:
                 self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles('epi_uncertainty', output_type)
-        if self.inputs.intervention_uncertainty:
+        if self.inputs.run_mode == 'int_uncertainty':
             for output_type in ['epi', 'cost']:
                 self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles('int_uncertainty', output_type)
 
@@ -984,7 +984,7 @@ class Project:
             self.write_automatic_calibration_outputs()
 
         # write spreadsheets - with sheet for each scenario or each output
-        if self.gui_inputs['output_spreadsheets'] or self.inputs.intervention_uncertainty:
+        if self.gui_inputs['output_spreadsheets'] or self.inputs.run_mode == 'int_uncertainty':
             if self.gui_inputs['output_by_scenario']:
                 self.model_runner.add_comment_to_gui_window('Writing scenario spreadsheets')
                 self.write_xls_by_scenario()
@@ -997,7 +997,7 @@ class Project:
             if self.gui_inputs['output_by_scenario']:
                 print('Writing scenario documents')
                 self.write_docs_by_scenario()
-                if self.inputs.intervention_uncertainty:
+                if self.inputs.run_mode == 'int_uncertainty':
                     self.find_relative_changes(year=2035.)
             else:
                 print('Writing output indicator documents')
@@ -1052,7 +1052,7 @@ class Project:
         # general prelims to work out what to write
         horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
         result_types = ['epi_', 'raw_cost_', 'inflated_cost_', 'discounted_cost_', 'discounted_inflated_cost_']
-        if self.inputs.intervention_uncertainty: scenarios = [15]
+        if self.inputs.run_mode == 'int_uncertainty': scenarios = [15]
 
         # write a new file for each scenario and for each broad category of output
         for result_type in result_types:
@@ -1079,7 +1079,7 @@ class Project:
                     for out, output in enumerate(self.model_runner.epi_outputs_to_analyse):
 
                         # with uncertainty
-                        if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
+                        if self.gui_inputs['output_uncertainty'] or self.inputs.run_mode == 'int_uncertainty':
 
                             # scenario names and confidence interval titles
                             strings_to_write = [t_k.capitalise_and_remove_underscore(output), 'Lower', 'Upper']
@@ -1154,7 +1154,7 @@ class Project:
 
         # general prelims to work out what to write
         horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
-        if self.inputs.intervention_uncertainty: scenarios, string_to_add = [15]
+        if self.inputs.run_mode == 'int_uncertainty': scenarios, string_to_add = [15]
 
         # write a new file for each output
         for inter in self.model_runner.epi_outputs_to_analyse:
@@ -1177,7 +1177,7 @@ class Project:
                 scenario_name = t_k.find_scenario_string_from_number(scenario)
 
                 # with uncertainty
-                if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
+                if self.gui_inputs['output_uncertainty'] or self.inputs.run_mode == 'int_uncertainty':
 
                     # scenario names and confidence interval titles
                     strings_to_write = [t_k.capitalise_and_remove_underscore(scenario_name), 'Lower', 'Upper']
@@ -1267,7 +1267,7 @@ class Project:
         """
 
         horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
-        if self.inputs.intervention_uncertainty: scenarios = [15]
+        if self.inputs.run_mode == 'int_uncertainty': scenarios = [15]
 
         for scenario in scenarios:
 
@@ -1294,7 +1294,7 @@ class Project:
                     row_cells[0].text = str(year)
 
                     # with uncertainty
-                    if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
+                    if self.gui_inputs['output_uncertainty'] or self.inputs.run_mode == 'int_uncertainty':
                         lower_point_upper \
                             = tuple(self.uncertainty_centiles['epi'][scenario][output][
                                     0:3, t_k.find_first_list_element_at_least_value(
@@ -1325,7 +1325,7 @@ class Project:
             table = document.add_table(rows=len(self.years_to_write) + 1, cols=len(self.scenario_names) + 1)
 
             horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
-            if self.inputs.intervention_uncertainty: scenarios = [15]
+            if self.inputs.run_mode == 'int_uncertainty': scenarios = [15]
 
             for s, scenario in enumerate(scenarios):
                 scenario_name = t_k.find_scenario_string_from_number(scenario)
@@ -1340,7 +1340,7 @@ class Project:
                     row_cells[0].text = str(year)
 
                     # with uncertainty
-                    if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
+                    if self.gui_inputs['output_uncertainty'] or self.inputs.run_mode == 'int_uncertainty':
                         lower_point_upper \
                             = tuple(self.uncertainty_centiles['epi'][scenario][output][0:3,
                                 t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][
@@ -1445,7 +1445,7 @@ class Project:
         # plot main outputs
         if self.gui_inputs['output_gtb_plots']:
             purposes = ['scenario']
-            if self.gui_inputs['output_uncertainty'] or self.inputs.intervention_uncertainty:
+            if self.gui_inputs['output_uncertainty'] or self.inputs.run_mode == 'int_uncertainty':
                 purposes.extend(['ci_plot', 'progress', 'shaded'])
             for purpose in purposes:
                 self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose=purpose)
@@ -1540,14 +1540,14 @@ class Project:
 
         # preliminaries
         start_time = self.inputs.model_constants['plot_start_time']
-        if self.inputs.intervention_uncertainty or len(self.scenarios) > 1:
+        if self.inputs.run_mode == 'int_uncertainty' or len(self.scenarios) > 1:
             start_time = self.inputs.model_constants['before_intervention_time']
         colour, indices, yaxis_label, title, patch_colour = find_standard_output_styles(outputs, lightening_factor=0.3)
         subplot_grid = find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
 
         # local variables relevant to the type of analysis requested
-        if self.inputs.intervention_uncertainty:
+        if self.inputs.run_mode == 'int_uncertainty':
             uncertainty_scenario, scenarios, start_index, uncertainty_type, linewidth, linecolour, runs, \
                 self.accepted_indices = 15, [0, 15], 0, 'int_uncertainty', 1., 'r', self.inputs.n_samples, []
             self.start_time_index = 0
@@ -1571,7 +1571,7 @@ class Project:
             if purpose == 'ci_plot':
                 for scenario in scenarios:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
-                    if not self.inputs.intervention_uncertainty:
+                    if not self.inputs.run_mode == 'int_uncertainty':
                         uncertainty_scenario, start_index, linecolour \
                             = scenario, self.find_start_index(scenario), self.output_colours[scenario][1]
 
@@ -1595,17 +1595,17 @@ class Project:
             elif purpose == 'progress':
 
                 # get relevant data according to whether intervention or baseline uncertainty is being run
-                if not self.inputs.intervention_uncertainty:
+                if not self.inputs.run_mode == 'int_uncertainty':
                     runs = len(self.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output])
 
                 # plot the runs
                 for run in range(runs):
-                    if run in self.accepted_indices or self.plot_rejected_runs or self.inputs.intervention_uncertainty:
+                    if run in self.accepted_indices or self.plot_rejected_runs or self.inputs.run_mode == 'int_uncertainty':
                         if run in self.accepted_indices:
                             linewidth = 1.2
                             colour = str(1. - float(run) / float(len(
                                 self.outputs[uncertainty_type]['epi'][uncertainty_scenario][output])))
-                        elif self.inputs.intervention_uncertainty:
+                        elif self.inputs.run_mode == 'int_uncertainty':
                             linewidth, colour = .8, '.4'
                         else:
                             linewidth, colour = .2, 'y'
@@ -1620,7 +1620,7 @@ class Project:
 
                 # plot with uncertainty confidence intervals
                 start_index = self.find_start_index(0)
-                if self.inputs.intervention_uncertainty: start_index = 0
+                if self.inputs.run_mode == 'int_uncertainty': start_index = 0
 
                 # plot shaded areas as patches
                 patch_colours = [cm.Blues(x) for x in numpy.linspace(0., 1., self.model_runner.n_centiles_for_shading)]
@@ -1632,9 +1632,9 @@ class Project:
                     ax.add_patch(patches.Polygon(patch, color=patch_colours[i]))
 
             # plot scenarios without uncertainty
-            if purpose == 'scenario' or self.inputs.intervention_uncertainty:
+            if purpose == 'scenario' or self.inputs.run_mode == 'int_uncertainty':
 
-                if self.inputs.intervention_uncertainty:
+                if self.inputs.run_mode == 'int_uncertainty':
                     scenarios = [0]
 
                 # plot model estimates
@@ -1664,7 +1664,7 @@ class Project:
 
             # find limits to the axes
             y_absolute_limit = None
-            if self.inputs.intervention_uncertainty or len(scenarios) > 1:
+            if self.inputs.run_mode == 'int_uncertainty' or len(scenarios) > 1:
                 y_absolute_limit = -1.e15  # an absurd negative value to start from
                 plot_start_time_index = t_k.find_first_list_element_at_least_value(
                     self.model_runner.outputs['manual']['epi'][0]['times'], start_time)
@@ -1679,7 +1679,7 @@ class Project:
 
             self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
                            legend=(o == len(outputs) - 1 and len(scenarios) > 1
-                                   and not self.inputs.intervention_uncertainty),
+                                   and not self.inputs.run_mode == 'int_uncertainty'),
                            y_axis_type='raw', y_label=yaxis_label[o], y_absolute_limit=y_absolute_limit)
 
         # fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
@@ -1739,7 +1739,7 @@ class Project:
                             color='.3', linewidth=0.3, label=None, alpha=alpha)
 
             # plot the targets (and milestones) and the fitted exponential function to achieve them
-            if self.gui_inputs['output_uncertainty'] and not self.inputs.intervention_uncertainty:
+            if self.gui_inputs['output_uncertainty'] and not self.inputs.run_mode == 'int_uncertainty':
                 base_value = self.uncertainty_centiles['epi'][uncertainty_scenario][output][
                              self.model_runner.percentiles.index(50), :][t_k.find_first_list_element_at_least_value(
                                 self.outputs['manual']['epi'][uncertainty_scenario]['times'], 2015.)]
@@ -2793,7 +2793,7 @@ class Project:
                 if run in self.accepted_indices:
                     linewidth, colour = 1.2, str(
                         1. - float(run) / float(len(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'])))
-                elif self.inputs.intervention_uncertainty:
+                elif self.inputs.run_mode == 'int_uncertainty':
                     linewidth, colour = .8, '.4'
                 else:
                     linewidth, colour = .2, 'y'

@@ -227,6 +227,14 @@ def get_autumn_params():
         = {'type': 'drop_down',
            'options': saving_options,
            'value': saving_options[0]}
+    available_uncertainty_interventions \
+        = ['int_prop_treatment_support_relative', 'int_prop_decentralisation', 'int_prop_xpert', 'int_prop_ipt',
+           'int_prop_acf', 'int_prop_awareness_raising', 'int_perc_shortcourse_mdr', 'int_perc_firstline_dst',
+           'int_perc_treatment_support_relative_ds', 'int_perc_dots_contributor', 'int_perc_dots_groupcontributor']
+    params['uncertainty_interventions'] \
+        = {'type': 'drop_down',
+           'options': available_uncertainty_interventions,
+           'value': available_uncertainty_interventions[0]}
 
     # increment comorbidity
     comorbidity_types = ['Diabetes']
@@ -244,8 +252,8 @@ def get_autumn_params():
 
     # initialise the groups
     param_group_keys \
-        = ['Model running', 'Model Stratifications', 'Elaborations', 'Scenarios to run', 'Uncertainty', 'Plotting',
-           'MS Office outputs', 'Comorbidity incrementing']
+        = ['Model running', 'Model Stratifications', 'Elaborations', 'Scenarios to run', 'Epidemiological uncertainty',
+           'Intervention uncertainty', 'Comorbidity incrementing', 'Plotting', 'MS Office outputs']
     param_groups = []
     for group in param_group_keys:
         param_groups.append({'keys': [], 'name': group})
@@ -254,7 +262,7 @@ def get_autumn_params():
     for key in bool_keys:
         name = params[key]['label']
         if 'Plot' in name or 'Draw' in name:
-            param_groups[5]['keys'].append(key)
+            param_groups[7]['keys'].append(key)
         elif 'riskgroup_' in key or key[:2] == 'n_':
             param_groups[1]['keys'].append(key)
         elif 'is_' in key:
@@ -264,7 +272,7 @@ def get_autumn_params():
         elif 'uncertainty' in name or 'uncertainty' in key:
             param_groups[4]['keys'].append(key)
         else:
-            param_groups[6]['keys'].append(key)
+            param_groups[8]['keys'].append(key)
 
     # distribute other inputs
     for k in ['run_mode', 'country', 'integration_method', 'fitting_method', 'default_smoothness', 'time_step']:
@@ -273,8 +281,10 @@ def get_autumn_params():
         param_groups[1]['keys'].append(k)
     for k in ['uncertainty_runs', 'burn_in_runs', 'search_width', 'pickle_uncertainty']:
         param_groups[4]['keys'].append(k)
+    for k in ['uncertainty_interventions']:
+        param_groups[5]['keys'].append(k)
     for k in ['comorbidity_to_increment']:
-        param_groups[7]['keys'].append(k)
+        param_groups[6]['keys'].append(k)
 
     # return single data structure with parameters and parameter groupings
     return {'params': params,

@@ -298,18 +298,8 @@ def convert_params_to_inputs(params):
     Args:
         params: The set of parameters specified by the user
     Returns:
-        inputs: Unprocessed inputs for use by the inputs module
+        Unprocessed inputs for use by the inputs module
     """
 
-    # starting inputs always includes the baseline scenario
-    inputs = {}
-
-    # add all of the user inputs
-    for key, param in params.iteritems():
-        if param['type'] == 'drop_down' and key == 'fitting_method':
-            inputs[key] = int(param['value'][-1])
-        else:
-            inputs[key] = param['value']
-
-    return inputs
+    return {key: param['value'] for key, param in params.iteritems()}
 

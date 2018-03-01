@@ -48,6 +48,7 @@ class Inputs:
 
         gui_inputs['scenarios_to_run'] = [0]
         gui_inputs['scenario_names_to_run'] = ['baseline']
+        gui_inputs['fitting_method'] = int(gui_inputs['fitting_method'][-1])
 
         for key in gui_inputs:
             if 'scenario_' in key and len(key) < 14 and gui_inputs[key]:

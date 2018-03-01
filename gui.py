@@ -29,7 +29,7 @@ class App:
         self.frame.pack()
         self.figure_frame = Toplevel(master)
         self.figure_frame.title('Tracking parameters over model runs')
-        self.master.minsize(1500, 500)
+        self.master.minsize(1950, 500)
         self.master.title('AuTuMN - version 1.0')
 
         self.title_font = 'Helvetica 10 bold italic'

@@ -3,97 +3,6 @@ import collections
 import autumn.tool_kit as tool_kit
 
 
-def find_button_name_from_string(working_string):
-    """
-    Find the string to attach to a boolean check box for the GUI, either from a dictionary, or using a specific approach
-    for things like scenario names.
-
-    Args:
-        working_string: AuTuMN's name for the boolean quantity
-    Returns:
-        A more user-friendly string for the GUI
-    """
-
-    button_name_dictionary \
-        = {'output_uncertainty':
-               'Run uncertainty',
-           'write_uncertainty_outcome_params':
-               'Record parameters',
-           'output_spreadsheets':
-               'Write to spreadsheets',
-           'output_documents':
-               'Write to documents',
-           'output_by_scenario':
-               'Output by scenario',
-           'output_horizontally':
-               'Write horizontally',
-           'output_gtb_plots':
-               'Plot outcomes',
-           'output_compartment_populations':
-               'Plot compartment sizes',
-           'output_by_subgroups':
-               'Plot outcomes by sub-groups',
-           'output_age_fractions':
-               'Plot proportions by age',
-           'output_riskgroup_fractions':
-               'Plot proportions by risk group',
-           'output_flow_diagram':
-               'Draw flow diagram',
-           'output_fractions':
-               'Plot compartment fractions',
-           'output_scaleups':
-               'Plot scale-up functions',
-           'output_plot_economics':
-               'Plot economics graphs',
-           'output_plot_riskgroup_checks':
-               'Plot risk group checks',
-           'output_age_calculations':
-               'Plot age calculation weightings',
-           'output_param_plots':
-               'Plot parameter progression',
-           'output_popsize_plot':
-               'Plot "popsizes" for cost-coverage curves',
-           'output_likelihood_plot':
-               'Plot log likelihoods over runs',
-           'riskgroup_diabetes':
-               'Type II diabetes',
-           'riskgroup_hiv':
-               'HIV',
-           'riskgroup_prison':
-               'Prison',
-           'riskgroup_urbanpoor':
-               'Urban poor',
-           'riskgroup_ruralpoor':
-               'Rural poor',
-           'riskgroup_indigenous':
-               'Indigenous',
-           'is_lowquality':
-               'Low quality care',
-           'is_amplification':
-               'Resistance amplification',
-           'is_timevariant_organs':
-               'Time-variant organ status',
-           'is_misassignment':
-               'Strain mis-assignment',
-           'is_vary_detection_by_organ':
-               'Vary case detection by organ status',
-           'organ_strata':
-               'Number of organ strata',
-           'strains':
-               'Number of strains',
-           'is_vary_force_infection_by_riskgroup':
-               'Heterogeneous mixing',
-           'is_treatment_history':
-               'Treatment history'}
-
-    if working_string in button_name_dictionary:
-        return button_name_dictionary[working_string]
-    elif 'scenario_' in working_string:
-        return tool_kit.capitalise_first_letter(tool_kit.replace_underscore_with_space(working_string))
-    else:
-        return working_string
-
-
 def get_autumn_params():
     """
     Collate all the parameters and the groups to put them into.
@@ -103,6 +12,8 @@ def get_autumn_params():
     """
 
     params = collections.OrderedDict()
+
+    ''' booleans '''
 
     # collate the boolean keys
     bool_keys \
@@ -120,7 +31,7 @@ def get_autumn_params():
         params[key] \
             = {'value': False,
                'type': 'boolean',
-               'label': find_button_name_from_string(key)}
+               'label': tool_kit.find_button_name_from_string(key)}
 
     # set some boolean keys to on (True) by default
     default_boolean_keys = [
@@ -178,7 +89,7 @@ def get_autumn_params():
     params['default_smoothness'] \
         = {'type': 'slider',
            'label': 'Default fitting smoothness',
-           'value': 1.0,
+           'value': 1.,
            'interval': 0.1,
            'min': 0.,
            'max': 5.}

@@ -95,7 +95,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
         # this code just stops the code checker complaining about attributes being undefined in instantiation
         self.compartment_types, self.organ_status, self.strains, self.agegroups, self.mixing, \
-            self.vary_detection_by_organ, self.organs_for_detection, self.riskgroups_for_detection, \
+            self.is_vary_detection_by_organ, self.organs_for_detection, self.riskgroups_for_detection, \
             self.vary_detection_by_riskgroup, self.vary_force_infection_by_riskgroup, self.histories, \
             self.relevant_interventions, self.scaleup_fns, self.interventions_to_cost, self.is_lowquality, \
             self.is_amplification, self.is_misassignment, self.is_timevariant_organs, self.country, self.time_step, \
@@ -104,7 +104,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
         # model attributes to be set directly to inputs object attributes
         for attribute in ['compartment_types', 'organ_status', 'strains', 'riskgroups', 'agegroups', 'mixing',
-                          'vary_detection_by_organ', 'organs_for_detection', 'riskgroups_for_detection',
+                          'is_vary_detection_by_organ', 'organs_for_detection', 'riskgroups_for_detection',
                           'vary_detection_by_riskgroup', 'vary_force_infection_by_riskgroup', 'histories']:
             setattr(self, attribute, getattr(inputs, attribute))
 
@@ -389,7 +389,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         Master case detection method to collate all the methods relating to case detection.
         """
 
-        if self.vary_detection_by_organ:
+        if self.is_vary_detection_by_organ:
             self.calculate_case_detection_by_organ()
             self.adjust_smearneg_detection_for_xpert()
 
@@ -484,7 +484,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         """
 
         organs = copy.copy(self.organs_for_detection)
-        if self.vary_detection_by_organ:
+        if self.is_vary_detection_by_organ:
             organs.append('')
         for organ in organs:
 
@@ -1136,7 +1136,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                     agegroup, riskgroup, strain, history, organ = strata
                     if active_tb_presentations_intervention == 'firstline_dst' and organ == '_extrapul':
                         continue
-                    detection_organ = organ if self.vary_detection_by_organ else ''
+                    detection_organ = organ if self.is_vary_detection_by_organ else ''
                     detection_riskgroup = riskgroup if self.vary_detection_by_riskgroup else ''
                     # the number of tests effectively realised may be greater than the number of presenting TB cases
                     if active_tb_presentations_intervention == 'xpert':
@@ -1367,7 +1367,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             organ, riskgroup, history, agegroup = strata
             for strain_number, strain in enumerate(self.strains):
                 detection_riskgroup = riskgroup if self.vary_detection_by_riskgroup else ''
-                detection_organ = organ if self.vary_detection_by_organ else ''
+                detection_organ = organ if self.is_vary_detection_by_organ else ''
                 end = organ + strain + riskgroup + history + agegroup
 
                 # with misassignment
@@ -1401,7 +1401,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                 self.organ_status, self.strains, self.riskgroups, self.histories, self.agegroups):
             organ, strain, riskgroup, history, agegroup = strata
 
-            detection_organ = organ if self.vary_detection_by_organ else ''
+            detection_organ = organ if self.is_vary_detection_by_organ else ''
             end = ''.join(strata)
 
             self.set_var_transfer_rate_flow('active' + end, 'missed' + end, 'program_rate_missed' + detection_organ)

@@ -46,28 +46,34 @@ class Inputs:
         self.gui_inputs = gui_inputs
         self.country = gui_inputs['country']
         self.scenarios = self.gui_inputs['scenarios_to_run']
+        run_mode_conversion \
+            = {'Scenario analysis': 'scenario',
+               'Epidemiological uncertainty': 'epi_uncertainty',
+               'Intervention uncertainty': 'int_uncertainty',
+               'Increment comorbidity': 'increment_comorbidity'}
+        self.run_mode = run_mode_conversion[gui_inputs['run_mode']]
 
         # parameter structures
-        self.original_data = None
-        self.derived_data = {}
-        self.time_variants = {}
-        self.model_constants = {}
-        self.scaleup_data = {}
-        self.scaleup_fns = {}
+        self.original_data, self.derived_data, self.time_variants, self.model_constants, self.scaleup_data, \
+            self.scaleup_fns = None, {}, {}, {}, {}, {}
+
+        self.intervention_uncertainty = False
 
         # uncertainty
-        self.param_ranges_unc = []
-        self.int_ranges_unc = []
-        self.data_to_fit = {}
-        # for incidence for ex, width of normal posterior relative to CI width in data
-        self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
-        self.alternative_distribution_dict = {'tb_prop_casefatality_untreated_smearpos': ['beta_mean_stdev', .7, .15],
-                                              'tb_timeperiod_activeuntreated': ['gamma_mean_stdev', 3., .5],
-                                              'tb_multiplier_treated_protection': ['gamma_mean_stdev', 1., .6]}
+        if self.run_mode == 'epi_uncertainty':
+            self.param_ranges_unc = []
+            self.int_ranges_unc = []
+            self.data_to_fit = {}
+            # for incidence for ex, width of normal posterior relative to CI width in data
+            self.outputs_unc \
+                = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
+            self.alternative_distribution_dict \
+                = {'tb_prop_casefatality_untreated_smearpos': ['beta_mean_stdev', .7, .15],
+                   'tb_timeperiod_activeuntreated': ['gamma_mean_stdev', 3., .5],
+                   'tb_multiplier_treated_protection': ['gamma_mean_stdev', 1., .6]}
 
         # intervention uncertainty
-        self.intervention_uncertainty = False
-        if self.intervention_uncertainty:
+        elif self.run_mode == 'int_uncertainty':
             self.uncertainty_intervention = 'int_perc_dots_contributor'
             self.scenarios.append(15)
             self.n_samples = 20
@@ -84,13 +90,13 @@ class Inputs:
                    'int_perc_firstline_dst': [],
                    'int_perc_treatment_support_relative_ds': ['int_prop_treatment_support_improvement_ds'],
                    'int_perc_dots_contributor': ['int_prop_detection_dots_contributor'],
-                   'int_perc_dots_groupcontributor': ['int_prop_detection_dots_contributor', 'int_prop_detection_ngo_ruralpoor']
+                   'int_perc_dots_groupcontributor': ['int_prop_detection_dots_contributor',
+                                                      'int_prop_detection_ngo_ruralpoor']
                    }
             self.gui_inputs['output_by_scenario'] = True
 
         # increment comorbidity
-        self.increment_comorbidity = False
-        if self.increment_comorbidity:
+        elif self.run_mode == 'increment_comorbidity':
             self.comorbidity_to_increment = 'diabetes'
             self.comorbidity_prevalences = {1: .05, 2: .1, 3: .2, 4: .3, 5: .4, 6: .5}
 
@@ -116,7 +122,7 @@ class Inputs:
         self.relevant_interventions = {}
         self.interventions_to_cost = {}
         self.intervention_startdates = {}
-        self.potential_interventions_to_cost \
+        self.interventions_available_for_costing \
             = ['vaccination', 'xpert', 'treatment_support_relative', 'treatment_support_absolute', 'smearacf',
                'xpertacf', 'ipt_age0to5', 'ipt_age5to15', 'decentralisation', 'improve_dst', 'bulgaria_improve_dst',
                'firstline_dst', 'intensive_screening', 'ipt_age15up', 'dot_groupcontributor', 'awareness_raising']
@@ -1051,16 +1057,16 @@ class Inputs:
         """
 
         if len(self.strains) > 1:
-            self.potential_interventions_to_cost += ['shortcourse_mdr']
-            self.potential_interventions_to_cost += ['treatment_support_relative_ds']
-            self.potential_interventions_to_cost += ['treatment_support_relative_mdr']
+            self.interventions_available_for_costing += ['shortcourse_mdr']
+            self.interventions_available_for_costing += ['treatment_support_relative_ds']
+            self.interventions_available_for_costing += ['treatment_support_relative_mdr']
         for organ in self.organ_status:
-            self.potential_interventions_to_cost += ['ambulatorycare' + organ]
+            self.interventions_available_for_costing += ['ambulatorycare' + organ]
         if self.gui_inputs['is_lowquality']:
-            self.potential_interventions_to_cost += ['engage_lowquality']
+            self.interventions_available_for_costing += ['engage_lowquality']
         for riskgroup in ['_prison', '_indigenous', '_urbanpoor', '_ruralpoor']:
             if self.gui_inputs['riskgroup' + riskgroup]:
-                self.potential_interventions_to_cost += ['xpertacf' + riskgroup, 'cxrxpertacf' + riskgroup]
+                self.interventions_available_for_costing += ['xpertacf' + riskgroup, 'cxrxpertacf' + riskgroup]
 
     def find_interventions_to_cost(self):
         """
@@ -1070,11 +1076,11 @@ class Inputs:
 
         for scenario in self.scenarios:
             self.interventions_to_cost[scenario] = []
-            for intervention in self.potential_interventions_to_cost:
+            for intervention in self.interventions_available_for_costing:
                 if 'int_prop_' + intervention in self.relevant_interventions[scenario]:
                     self.interventions_to_cost[scenario] += [intervention]
 
-        if self.intervention_uncertainty:
+        if self.run_mode == 'int_uncertainty':
             self.interventions_to_cost[15] = self.interventions_to_cost[0]
 
     # actually has to be called later and is just required for optimisation
@@ -1105,7 +1111,7 @@ class Inputs:
         self.find_data_for_functions_or_params()
 
         # find scale-up functions or constant parameters
-        if self.increment_comorbidity:
+        if self.run_mode == 'increment_comorbidity':
             self.create_comorbidity_scaleups()
         self.find_constant_functions()
         self.find_scaleups()

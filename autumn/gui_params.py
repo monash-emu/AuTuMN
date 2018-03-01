@@ -203,6 +203,13 @@ def get_autumn_params():
            'value': strain_options[0]}
 
     # uncertainty options
+    uncertainty_options \
+        = ['Scenario analysis', 'Epidemiological uncertainty', 'Intervention uncertainty', 'Optimisation (unavailable)',
+           'Increment comorbidity']
+    params['run_mode'] \
+        = {'type': 'drop_down',
+           'options': uncertainty_options,
+           'value': uncertainty_options[0]}
     params['uncertainty_runs'] \
         = {'type': 'integer',
            'value': 2,
@@ -253,7 +260,7 @@ def get_autumn_params():
             param_groups[6]['keys'].append(key)
 
     # distribute other inputs
-    for k in ['country', 'integration_method', 'fitting_method', 'default_smoothness', 'time_step']:
+    for k in ['run_mode', 'country', 'integration_method', 'fitting_method', 'default_smoothness', 'time_step']:
         param_groups[0]['keys'].append(k)
     for k in ['n_organs', 'n_strains']:
         param_groups[1]['keys'].append(k)

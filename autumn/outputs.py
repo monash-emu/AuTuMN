@@ -1634,7 +1634,8 @@ class Project:
             # plot scenarios without uncertainty
             if purpose == 'scenario' or self.inputs.intervention_uncertainty:
 
-                if self.inputs.intervention_uncertainty: scenarios = [0]
+                if self.inputs.intervention_uncertainty:
+                    scenarios = [0]
 
                 # plot model estimates
                 for scenario in scenarios:  # reversing to ensure black baseline plotted over the top
@@ -1642,10 +1643,10 @@ class Project:
 
                     # work out colour depending on whether purpose is scenario analysis or incrementing comorbidities
                     colour = self.output_colours[scenario][1]
-                    if self.inputs.increment_comorbidity and scenario:
+                    if self.inputs.run_mode == 'increment_comorbidity' and scenario:
                         colour = cm.Reds(.2 + .8 * self.inputs.comorbidity_prevalences[scenario])
                         label = str(int(self.inputs.comorbidity_prevalences[scenario] * 1e2)) + '%'
-                    elif self.inputs.increment_comorbidity:
+                    elif self.inputs.run_mode == 'increment_comorbidity' and scenario:
                         colour, label = 'k', 'Baseline'
                     else:
                         label = t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario))

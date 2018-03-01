@@ -15,7 +15,6 @@ import inputs
 import economics
 
 
-
 ''' static functions relevant to model runner only '''
 
 
@@ -234,9 +233,9 @@ class ModelRunner:
         # or run the manual scenarios as requested by user
         else:
             self.run_manual_calibration()
-            if self.gui_inputs['output_uncertainty']:
+            if self.inputs.run_mode == 'epi_uncertainty':
                 self.run_epi_uncertainty()
-            if self.intervention_uncertainty:
+            if self.inputs.run_mode == 'int_uncertainty':
                 self.run_intervention_uncertainty()
 
         # save uncertainty if requested

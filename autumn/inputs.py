@@ -43,9 +43,20 @@ class Inputs:
     def __init__(self, gui_inputs, js_gui=None):
 
         # most basic inputs
-        self.gui_inputs = gui_inputs
-        for attribute in ['country', 'scenarios_to_run']:
+        for attribute in ['country']:
             setattr(self, attribute, gui_inputs[attribute])
+
+        gui_inputs['scenarios_to_run'] = [0]
+        gui_inputs['scenario_names_to_run'] = ['baseline']
+
+        for key in gui_inputs:
+            if 'scenario_' in key and len(key) < 14 and gui_inputs[key]:
+                n_scenario = int(key[9:])
+                gui_inputs['scenarios_to_run'].append(n_scenario)
+                gui_inputs['scenario_names_to_run'].append(tool_kit.find_scenario_string_from_number(n_scenario))
+
+        self.gui_inputs = gui_inputs
+
         self.scenarios = self.gui_inputs['scenarios_to_run']
         run_mode_conversion \
             = {'Scenario analysis': 'scenario',

@@ -154,8 +154,8 @@ class ModelRunner:
 
         # conversion of inputs to attributes
         self.gui_inputs = gui_inputs
-        self.scenarios = self.gui_inputs['scenarios_to_run']
         self.inputs = inputs.Inputs(gui_inputs, js_gui=js_gui)
+        self.scenarios = self.inputs.gui_inputs['scenarios_to_run']
         self.inputs.read_and_load_data()
 
         # preparing for basic runs

@@ -302,25 +302,14 @@ def convert_params_to_inputs(params):
     """
 
     # starting inputs always includes the baseline scenario
-    inputs = {'scenarios_to_run': [0], 'scenario_names_to_run': ['baseline']}
+    inputs = {}
 
     # add all of the user inputs
     for key, param in params.iteritems():
-        value = param['value']
-        if param['type'] == 'boolean':
-            if 'scenario_' not in key:
-                inputs[key] = param['value']
-            elif param['value']:
-                i_scenario = int(key[9:])
-                inputs['scenarios_to_run'].append(i_scenario)
-                inputs['scenario_names_to_run'].append(tool_kit.find_scenario_string_from_number(i_scenario))
-        elif param['type'] == 'drop_down':
-            if key == 'fitting_method':
-                inputs[key] = int(value[-1])
-            else:
-                inputs[key] = value
+        if param['type'] == 'drop_down' and key == 'fitting_method':
+            inputs[key] = int(param['value'][-1])
         else:
-            inputs[key] = value
+            inputs[key] = param['value']
 
     return inputs
 

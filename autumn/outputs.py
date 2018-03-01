@@ -1449,7 +1449,7 @@ class Project:
                 purposes.extend(['ci_plot', 'progress', 'shaded'])
             for purpose in purposes:
                 self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose=purpose)
-            if self.gui_inputs['n_strains'] > 1:
+            if self.inputs.n_strains > 1:
                 self.plot_resistant_strain_outputs(['incidence', 'mortality', 'prevalence', 'perc_incidence'])
 
         # plot scale-up functions - currently only doing this for the baseline model run
@@ -1517,10 +1517,10 @@ class Project:
         if self.gui_inputs['output_uncertainty'] and self.gui_inputs['output_likelihood_plot']: self.plot_likelihoods()
 
         # plot percentage of MDR for different uncertainty runs
-        if self.gui_inputs['output_uncertainty'] and self.gui_inputs['n_strains'] > 1: self.plot_perc_mdr_progress()
+        if self.gui_inputs['output_uncertainty'] and self.inputs.n_strains > 1: self.plot_perc_mdr_progress()
 
         # for debugging
-        if self.gui_inputs['n_strains'] > 1:
+        if self.inputs.n_strains > 1:
             self.plot_cases_by_division(['_asds', '_asmdr'],
                                         restriction_1='_mdr', restriction_2='treatment', exclusion_string='latent')
 

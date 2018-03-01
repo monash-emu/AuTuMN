@@ -60,12 +60,20 @@ class Inputs:
 
         self.scenarios = self.gui_inputs['scenarios_to_run']
 
+        # initialising some basic attributes by data type now, rather than purpose
         self.n_samples = 0
-        (self.uncertainty_intervention, self.comorbidity_to_increment, self.run_mode, self.original_data) = [None] * 4
-        (self.param_ranges_unc, self.int_ranges_unc, self.outputs_unc) = [[]] * 3
+        (self.uncertainty_intervention, self.comorbidity_to_increment, self.run_mode, self.original_data,
+         self.agegroups) \
+            = [None] * 5
+        (self.param_ranges_unc, self.int_ranges_unc, self.outputs_unc, self.riskgroups, self.treatment_outcome_types) \
+            = [[]] * 5
         (self.original_data, self.derived_data, self.time_variants, self.model_constants, self.scaleup_data,
-            self.scaleup_fns, self.intervention_param_dict, self.comorbidity_prevalences,
-            self.alternative_distribution_dict, self.data_to_fit) = {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
+         self.scaleup_fns, self.intervention_param_dict, self.comorbidity_prevalences,
+         self.alternative_distribution_dict, self.data_to_fit, self.mixing, self.relevant_interventions,
+         self.interventions_to_cost, self.intervention_startdates, self.freeze_times) \
+            = {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
+        (self.riskgroups_for_detection, self.organs_for_detection, self.strains, self.organ_status, self.histories) \
+            = [['']] * 5
 
         # model structure
         organ_stratification_keys \
@@ -77,39 +85,30 @@ class Inputs:
                'DS / MDR': 2,
                'DS / MDR / XDR': 3}
         self.n_organs = organ_stratification_keys[self.gui_inputs['organ_strata']]
-        self.gui_inputs['n_strains'] = strain_stratification_keys[self.gui_inputs['strains']]
+        self.n_strains = strain_stratification_keys[self.gui_inputs['strains']]
         self.available_strains = ['_ds', '_mdr', '_xdr']
         self.available_organs = ['_smearpos', '_smearneg', '_extrapul']
-        self.agegroups = None
-        self.strains = ['']
-        self.organ_status = ['']
-        self.riskgroups = []
         self.vary_force_infection_by_riskgroup = self.gui_inputs['is_vary_force_infection_by_riskgroup']
-        self.mixing = {}
-        self.compartment_types = ['susceptible_fully', 'susceptible_immune', 'latent_early', 'latent_late', 'active',
-                                  'detect', 'missed', 'treatment_infect', 'treatment_noninfect']
-        self.histories = ['']
+        self.compartment_types \
+            = ['susceptible_fully', 'susceptible_immune', 'latent_early', 'latent_late', 'active',
+               'detect', 'missed', 'treatment_infect', 'treatment_noninfect']
+
+        # booleans to shift to GUI
         self.vary_detection_by_organ = False
         self.vary_detection_by_riskgroup = False
-        self.riskgroups_for_detection = ['']
-        self.organs_for_detection = ['']
+        self.include_relapse_in_ds_outcomes = True
 
-        # interventions
-        self.irrelevant_time_variants, self.relevant_interventions, self.interventions_to_cost, \
-            self.intervention_startdates, self.freeze_times = [], {}, {}, {}, {}
+        self.irrelevant_time_variants = []
         self.interventions_available_for_costing \
             = ['vaccination', 'xpert', 'treatment_support_relative', 'treatment_support_absolute', 'smearacf',
                'xpertacf', 'ipt_age0to5', 'ipt_age5to15', 'decentralisation', 'improve_dst', 'bulgaria_improve_dst',
                'firstline_dst', 'intensive_screening', 'ipt_age15up', 'dot_groupcontributor', 'awareness_raising']
 
-        # miscellaneous
         self.js_gui = js_gui
         if self.js_gui:
             self.js_gui('init')
         self.plot_count = 0
         self.emit_delay = .1
-        self.treatment_outcome_types = []
-        self.include_relapse_in_ds_outcomes = True
 
     ''' master method '''
 
@@ -471,7 +470,7 @@ class Inputs:
         """
 
         # unstratified by strain
-        if self.gui_inputs['n_strains'] == 0:
+        if self.n_strains == 0:
 
             # if the model isn't stratified by strain, use DS-TB time-periods for the single strain
             for timeperiod in ['tb_timeperiod_infect_ontreatment', 'tb_timeperiod_ontreatment']:
@@ -479,7 +478,7 @@ class Inputs:
 
         # stratified
         else:
-            self.strains = self.available_strains[:self.gui_inputs['n_strains']]
+            self.strains = self.available_strains[:self.n_strains]
             if self.gui_inputs['is_misassignment']:
                 self.treatment_outcome_types = copy.copy(self.strains)
 
@@ -1368,10 +1367,10 @@ class Inputs:
         to allow for those elaborations.
         """
 
-        if self.gui_inputs['is_misassignment'] and self.gui_inputs['n_strains'] <= 1:
+        if self.gui_inputs['is_misassignment'] and self.n_strains <= 1:
             self.add_comment_to_gui_window('Misassignment requested, but not implemented as single strain model only')
             self.gui_inputs['is_misassignment'] = False
-        if self.gui_inputs['is_amplification'] and self.gui_inputs['n_strains'] <= 1:
+        if self.gui_inputs['is_amplification'] and self.n_strains <= 1:
             self.add_comment_to_gui_window(
                 'Resistance amplification requested, but not implemented as single strain model only')
             self.gui_inputs['is_amplification'] = False

@@ -843,7 +843,9 @@ def find_button_name_from_string(working_string):
            'is_vary_force_infection_by_riskgroup':
                'Heterogeneous mixing',
            'is_treatment_history':
-               'Treatment history'}
+               'Treatment history',
+           'is_vary_detection_by_riskgroup':
+               'Vary detection by risk group'}
 
     if working_string in button_name_dictionary:
         return button_name_dictionary[working_string]

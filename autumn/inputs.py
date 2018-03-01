@@ -43,7 +43,7 @@ class Inputs:
     def __init__(self, gui_inputs, js_gui=None):
 
         # most basic inputs
-        for attribute in ['country', 'is_vary_detection_by_organ']:
+        for attribute in ['country', 'is_vary_detection_by_organ', 'is_vary_detection_by_riskgroup']:
             setattr(self, attribute, gui_inputs[attribute])
 
         gui_inputs['scenarios_to_run'] = [0]
@@ -94,7 +94,7 @@ class Inputs:
                'detect', 'missed', 'treatment_infect', 'treatment_noninfect']
 
         # booleans to shift to GUI
-        self.vary_detection_by_riskgroup = False
+        # self.is_vary_detection_by_riskgroup = False
         self.include_relapse_in_ds_outcomes = True
 
         self.irrelevant_time_variants = []
@@ -1070,12 +1070,12 @@ class Inputs:
         the scenarios).
         """
 
-        self.vary_detection_by_riskgroup = False
+        self.is_vary_detection_by_riskgroup = False
         for scenario in self.scenarios:
             for intervention in self.relevant_interventions[scenario]:
                 if 'acf' in intervention or 'intensive_screening' in intervention or 'groupcontributor' in intervention:
-                    self.vary_detection_by_riskgroup = True
-        self.riskgroups_for_detection = self.riskgroups if self.vary_detection_by_riskgroup else ['']
+                    self.is_vary_detection_by_riskgroup = True
+        self.riskgroups_for_detection = self.riskgroups if self.is_vary_detection_by_riskgroup else ['']
 
     def find_potential_interventions_to_cost(self):
         """

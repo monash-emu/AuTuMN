@@ -96,7 +96,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         # this code just stops the code checker complaining about attributes being undefined in instantiation
         self.compartment_types, self.organ_status, self.strains, self.agegroups, self.mixing, \
             self.is_vary_detection_by_organ, self.organs_for_detection, self.riskgroups_for_detection, \
-            self.vary_detection_by_riskgroup, self.vary_force_infection_by_riskgroup, self.histories, \
+            self.is_vary_detection_by_riskgroup, self.vary_force_infection_by_riskgroup, self.histories, \
             self.relevant_interventions, self.scaleup_fns, self.interventions_to_cost, self.is_lowquality, \
             self.is_amplification, self.is_misassignment, self.is_timevariant_organs, self.country, self.time_step, \
             self.integration_method = [None] * 21
@@ -105,7 +105,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         # model attributes to be set directly to inputs object attributes
         for attribute in ['compartment_types', 'organ_status', 'strains', 'riskgroups', 'agegroups', 'mixing',
                           'is_vary_detection_by_organ', 'organs_for_detection', 'riskgroups_for_detection',
-                          'vary_detection_by_riskgroup', 'vary_force_infection_by_riskgroup', 'histories']:
+                          'is_vary_detection_by_riskgroup', 'vary_force_infection_by_riskgroup', 'histories']:
             setattr(self, attribute, getattr(inputs, attribute))
 
         # model attributes to set to only the relevant scenario key from an inputs dictionary
@@ -399,7 +399,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             self.adjust_case_detection_for_dots_contributor()
 
         self.calculate_detect_missed_vars()
-        if self.vary_detection_by_riskgroup:
+        if self.is_vary_detection_by_riskgroup:
             self.calculate_acf_rate()
             self.calculate_intensive_screening_rate()
             self.adjust_case_detection_for_acf()
@@ -1137,7 +1137,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                     if active_tb_presentations_intervention == 'firstline_dst' and organ == '_extrapul':
                         continue
                     detection_organ = organ if self.is_vary_detection_by_organ else ''
-                    detection_riskgroup = riskgroup if self.vary_detection_by_riskgroup else ''
+                    detection_riskgroup = riskgroup if self.is_vary_detection_by_riskgroup else ''
                     # the number of tests effectively realised may be greater than the number of presenting TB cases
                     if active_tb_presentations_intervention == 'xpert':
                         multiplier = (self.params['int_number_tests_per_tb_presentation'] + 1.)
@@ -1366,7 +1366,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         for strata in itertools.product(self.organ_status, self.riskgroups, self.histories, self.agegroups):
             organ, riskgroup, history, agegroup = strata
             for strain_number, strain in enumerate(self.strains):
-                detection_riskgroup = riskgroup if self.vary_detection_by_riskgroup else ''
+                detection_riskgroup = riskgroup if self.is_vary_detection_by_riskgroup else ''
                 detection_organ = organ if self.is_vary_detection_by_organ else ''
                 end = organ + strain + riskgroup + history + agegroup
 

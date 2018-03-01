@@ -24,7 +24,8 @@ def get_autumn_params():
            'output_documents', 'output_by_scenario', 'output_horizontally', 'output_age_calculations',
            'riskgroup_diabetes', 'riskgroup_hiv', 'riskgroup_prison', 'riskgroup_indigenous', 'riskgroup_urbanpoor',
            'riskgroup_ruralpoor', 'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ',
-           'is_timevariant_organs', 'is_treatment_history', 'is_vary_force_infection_by_riskgroup']
+           'is_timevariant_organs', 'is_treatment_history', 'is_vary_force_infection_by_riskgroup',
+           'is_vary_detection_by_riskgroup']
     for i in range(1, 15):
         bool_keys.append('scenario_' + str(i))
     for key in bool_keys:
@@ -43,6 +44,7 @@ def get_autumn_params():
         # 'is_lowquality',
         # 'output_riskgroup_fractions',
         'is_vary_detection_by_organ',
+        # 'is_vary_detection_by_riskgroup',
         'is_treatment_history',
         # 'riskgroup_prison',
         'output_likelihood_plot',

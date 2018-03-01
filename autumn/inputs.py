@@ -59,59 +59,13 @@ class Inputs:
         self.gui_inputs = gui_inputs
 
         self.scenarios = self.gui_inputs['scenarios_to_run']
-        run_mode_conversion \
-            = {'Scenario analysis': 'scenario',
-               'Epidemiological uncertainty': 'epi_uncertainty',
-               'Intervention uncertainty': 'int_uncertainty',
-               'Increment comorbidity': 'increment_comorbidity'}
-        self.run_mode = run_mode_conversion[gui_inputs['run_mode']]
 
-        # parameter structures
-        self.original_data, self.derived_data, self.time_variants, self.model_constants, self.scaleup_data, \
-            self.scaleup_fns = None, {}, {}, {}, {}, {}
-
-        # uncertainty
-        if self.run_mode == 'epi_uncertainty':
-            self.param_ranges_unc, self.int_ranges_unc, self.data_to_fit = [], [], {}
-
-            # for incidence for ex, width of normal posterior relative to CI width in data
-            self.outputs_unc \
-                = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
-            self.alternative_distribution_dict \
-                = {'tb_prop_casefatality_untreated_smearpos': ['beta_mean_stdev', .7, .15],
-                   'tb_timeperiod_activeuntreated': ['gamma_mean_stdev', 3., .5],
-                   'tb_multiplier_treated_protection': ['gamma_mean_stdev', 1., .6]}
-
-        # intervention uncertainty
-        elif self.run_mode == 'int_uncertainty':
-
-            # some of these attributes may be unnecessary for intervention uncertainty - need to fix later
-            self.param_ranges_unc, self.int_ranges_unc, self.alternative_distribution_dict = [], [], {}
-            self.uncertainty_intervention = gui_inputs['uncertainty_interventions']
-            self.scenarios.append(15)
-            self.n_samples = 20
-            self.intervention_param_dict \
-                = {'int_prop_treatment_support_relative': ['int_prop_treatment_support_improvement'],
-                   'int_prop_decentralisation': ['int_ideal_detection'],
-                   'int_prop_xpert': ['int_prop_xpert_smearneg_sensitivity', 'int_prop_xpert_sensitivity_mdr',
-                                      'int_timeperiod_await_treatment_smearneg_xpert'],
-                   'int_prop_ipt': ['int_prop_ipt_effectiveness', 'int_prop_ltbi_test_sensitivity',
-                                    'int_prop_infections_in_household'],
-                   'int_prop_acf': ['int_prop_acf_detections_per_round'],
-                   'int_prop_awareness_raising': ['int_multiplier_detection_with_raised_awareness'],
-                   'int_perc_shortcourse_mdr': ['int_prop_treatment_success_shortcoursemdr'],
-                   'int_perc_firstline_dst': [],
-                   'int_perc_treatment_support_relative_ds': ['int_prop_treatment_support_improvement_ds'],
-                   'int_perc_dots_contributor': ['int_prop_detection_dots_contributor'],
-                   'int_perc_dots_groupcontributor': ['int_prop_detection_dots_contributor',
-                                                      'int_prop_detection_ngo_ruralpoor']
-                   }
-            self.gui_inputs['output_by_scenario'] = True
-
-        # increment comorbidity
-        elif self.run_mode == 'increment_comorbidity':
-            self.comorbidity_to_increment = gui_inputs['comorbidity_to_increment'].lower()
-            self.comorbidity_prevalences = {1: .05, 2: .1, 3: .2, 4: .3, 5: .4, 6: .5}
+        self.n_samples = 0
+        (self.uncertainty_intervention, self.comorbidity_to_increment, self.run_mode, self.original_data) = [None] * 4
+        (self.param_ranges_unc, self.int_ranges_unc, self.outputs_unc) = [[]] * 3
+        (self.original_data, self.derived_data, self.time_variants, self.model_constants, self.scaleup_data,
+            self.scaleup_fns, self.intervention_param_dict, self.comorbidity_prevalences,
+            self.alternative_distribution_dict, self.data_to_fit) = {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
 
         # model structure
         organ_stratification_keys \
@@ -122,8 +76,8 @@ class Inputs:
             = {'Single strain': 0,
                'DS / MDR': 2,
                'DS / MDR / XDR': 3}
-        self.gui_inputs['n_organs'] = organ_stratification_keys[gui_inputs['organ_strata']]
-        self.gui_inputs['n_strains'] = strain_stratification_keys[gui_inputs['strains']]
+        self.gui_inputs['n_organs'] = organ_stratification_keys[self.gui_inputs['organ_strata']]
+        self.gui_inputs['n_strains'] = strain_stratification_keys[self.gui_inputs['strains']]
         self.available_strains = ['_ds', '_mdr', '_xdr']
         self.available_organs = ['_smearpos', '_smearneg', '_extrapul']
         self.agegroups = None
@@ -164,6 +118,8 @@ class Inputs:
         """
         Master method of this object, calling all sub-methods to read and process data and define model structure.
         """
+
+        self.define_run_mode()
 
         # read all required data
         self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
@@ -213,6 +169,60 @@ class Inputs:
 
         # perform checks (undeveloped still)
         self.checks()
+
+    ''' most general methods'''
+
+    def define_run_mode(self):
+
+        # running mode
+        run_mode_conversion \
+            = {'Scenario analysis': 'scenario',
+               'Epidemiological uncertainty': 'epi_uncertainty',
+               'Intervention uncertainty': 'int_uncertainty',
+               'Increment comorbidity': 'increment_comorbidity'}
+        self.run_mode = run_mode_conversion[self.gui_inputs['run_mode']]
+
+        # uncertainty
+        if self.run_mode == 'epi_uncertainty':
+
+            # for incidence for ex, width of normal posterior relative to CI width in data
+            self.outputs_unc \
+                = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
+            self.alternative_distribution_dict \
+                = {'tb_prop_casefatality_untreated_smearpos': ['beta_mean_stdev', .7, .15],
+                   'tb_timeperiod_activeuntreated': ['gamma_mean_stdev', 3., .5],
+                   'tb_multiplier_treated_protection': ['gamma_mean_stdev', 1., .6]}
+
+        # intervention uncertainty
+        elif self.run_mode == 'int_uncertainty':
+
+            # some of these attributes may be unnecessary for intervention uncertainty - need to fix later
+            self.param_ranges_unc, self.int_ranges_unc, self.alternative_distribution_dict = [], [], {}
+            self.uncertainty_intervention = self.gui_inputs['uncertainty_interventions']
+            self.scenarios.append(15)
+            self.n_samples = 20
+            self.intervention_param_dict \
+                = {'int_prop_treatment_support_relative': ['int_prop_treatment_support_improvement'],
+                   'int_prop_decentralisation': ['int_ideal_detection'],
+                   'int_prop_xpert': ['int_prop_xpert_smearneg_sensitivity', 'int_prop_xpert_sensitivity_mdr',
+                                      'int_timeperiod_await_treatment_smearneg_xpert'],
+                   'int_prop_ipt': ['int_prop_ipt_effectiveness', 'int_prop_ltbi_test_sensitivity',
+                                    'int_prop_infections_in_household'],
+                   'int_prop_acf': ['int_prop_acf_detections_per_round'],
+                   'int_prop_awareness_raising': ['int_multiplier_detection_with_raised_awareness'],
+                   'int_perc_shortcourse_mdr': ['int_prop_treatment_success_shortcoursemdr'],
+                   'int_perc_firstline_dst': [],
+                   'int_perc_treatment_support_relative_ds': ['int_prop_treatment_support_improvement_ds'],
+                   'int_perc_dots_contributor': ['int_prop_detection_dots_contributor'],
+                   'int_perc_dots_groupcontributor': ['int_prop_detection_dots_contributor',
+                                                      'int_prop_detection_ngo_ruralpoor']
+                   }
+            self.gui_inputs['output_by_scenario'] = True
+
+        # increment comorbidity
+        elif self.run_mode == 'increment_comorbidity':
+            self.comorbidity_to_increment = self.gui_inputs['comorbidity_to_increment'].lower()
+            self.comorbidity_prevalences = {1: .05, 2: .1, 3: .2, 4: .3, 5: .4, 6: .5}
 
     ''' constant parameter processing methods '''
 

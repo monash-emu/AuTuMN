@@ -76,7 +76,7 @@ class Inputs:
             = {'Single strain': 0,
                'DS / MDR': 2,
                'DS / MDR / XDR': 3}
-        self.gui_inputs['n_organs'] = organ_stratification_keys[self.gui_inputs['organ_strata']]
+        self.n_organs = organ_stratification_keys[self.gui_inputs['organ_strata']]
         self.gui_inputs['n_strains'] = strain_stratification_keys[self.gui_inputs['strains']]
         self.available_strains = ['_ds', '_mdr', '_xdr']
         self.available_organs = ['_smearpos', '_smearneg', '_extrapul']
@@ -103,7 +103,6 @@ class Inputs:
                'firstline_dst', 'intensive_screening', 'ipt_age15up', 'dot_groupcontributor', 'awareness_raising']
 
         # miscellaneous
-        self.mode = 'epi_uncertainty'
         self.js_gui = js_gui
         if self.js_gui:
             self.js_gui('init')
@@ -266,7 +265,7 @@ class Inputs:
         """
 
         # proportion progressing to the only infectious compartment for models unstratified by organ status
-        if self.gui_inputs['n_organs'] < 2:
+        if self.n_organs < 2:
             self.model_constants['epi_prop'] = 1.
 
         # infectiousness of smear-positive and extrapulmonary patients
@@ -497,8 +496,8 @@ class Inputs:
         have smear-positive, smear-negative or extrapulmonary disease.
         """
 
-        if self.gui_inputs['n_organs'] > 1:
-            self.organ_status = self.available_organs[:self.gui_inputs['n_organs']]
+        if self.n_organs > 1:
+            self.organ_status = self.available_organs[:self.n_organs]
 
     def define_ipt_structure(self):
 
@@ -1380,7 +1379,7 @@ class Inputs:
         #     self.add_comment_to_gui_window(
         #         'Heterogeneous mixing requested, but not implemented as no risk groups are present')
         #     self.vary_force_infection_by_riskgroup = False
-        if self.gui_inputs['n_organs'] <= 1 and self.gui_inputs['is_timevariant_organs']:
+        if self.n_organs <= 1 and self.gui_inputs['is_timevariant_organs']:
             self.add_comment_to_gui_window(
                 'Time-variant organ status requested, but not implemented as no stratification by organ status')
             self.gui_inputs['is_timevariant_organs'] = False

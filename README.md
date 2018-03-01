@@ -16,6 +16,8 @@ pluggable API to other system. Applied to tuberculosis.
 
 ## current questions for Bosco:
 - can we get the age sliders set up too
+- is the project structure correct - I thought the root files should also be included
+- why can't I load the dependencies for Python 3.6
 - should we move all the parameterisation to the GUI - if so, with sliders or some other form of input
 - related to last question, how can we best incorporate some more numerical inputs
 - can we have different default running settings for different countries

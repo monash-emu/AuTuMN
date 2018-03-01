@@ -24,8 +24,7 @@ def get_autumn_params():
            'output_documents', 'output_by_scenario', 'output_horizontally', 'output_age_calculations',
            'riskgroup_diabetes', 'riskgroup_hiv', 'riskgroup_prison', 'riskgroup_indigenous', 'riskgroup_urbanpoor',
            'riskgroup_ruralpoor', 'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ',
-           'is_timevariant_organs', 'is_treatment_history', 'is_vary_force_infection_by_riskgroup',
-           'vary_detection_by_organ']
+           'is_timevariant_organs', 'is_treatment_history', 'is_vary_force_infection_by_riskgroup']
     for i in range(1, 15):
         bool_keys.append('scenario_' + str(i))
     for key in bool_keys:
@@ -123,15 +122,15 @@ def get_autumn_params():
            'options': uncertainty_options,
            'value': uncertainty_options[0]}
     params['uncertainty_runs'] \
-        = {'type': 'number',
+        = {'type': 'integer',
            'value': 2,
            'label': 'Number of uncertainty runs'}
     params['burn_in_runs'] \
-        = {'type': 'number',
+        = {'type': 'integer',
            'value': 0,
            'label': 'Number of burn-in runs'}
     params['search_width'] \
-        = {'type': 'number',
+        = {'type': 'double',
            'value': 0.05,
            'label': 'Relative search width'}
     saving_options = ['No saving or loading', 'Load', 'Save']

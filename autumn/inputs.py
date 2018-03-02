@@ -71,15 +71,15 @@ class Inputs:
          self.agegroups) \
             = [None for i in range(5)]
         (self.param_ranges_unc, self.int_ranges_unc, self.outputs_unc, self.riskgroups, self.treatment_outcome_types,
-         self.irrelevant_time_variants) \
-            = [[] for i in range(6)]
+         self.irrelevant_time_variants, self.organ_status) \
+            = [[] for i in range(7)]
         (self.original_data, self.derived_data, self.time_variants, self.model_constants, self.scaleup_data,
          self.scaleup_fns, self.intervention_param_dict, self.comorbidity_prevalences,
          self.alternative_distribution_dict, self.data_to_fit, self.mixing, self.relevant_interventions,
          self.interventions_to_cost, self.intervention_startdates, self.freeze_times) \
             = [{} for i in range(15)]
-        (self.riskgroups_for_detection, self.organs_for_detection, self.strains, self.organ_status, self.histories) \
-            = [[''] for i in range(5)]
+        (self.riskgroups_for_detection, self.organs_for_detection, self.strains, self.histories) \
+            = [[''] for i in range(4)]
         (self.is_vary_detection_by_organ, self.is_vary_detection_by_riskgroup, self.is_include_relapse_in_ds_outcomes,
          self.is_vary_force_infection_by_riskgroup) \
             = [False for i in range(4)]
@@ -100,7 +100,6 @@ class Inputs:
                'xpertacf', 'ipt_age0to5', 'ipt_age5to15', 'decentralisation', 'improve_dst', 'bulgaria_improve_dst',
                'firstline_dst', 'intensive_screening', 'ipt_age15up', 'dot_groupcontributor', 'awareness_raising']
         self.available_strains = ['_ds', '_mdr', '_xdr']
-        self.available_organs = ['_smearpos', '_smearneg', '_extrapul']
         self.intervention_param_dict \
             = {'int_prop_treatment_support_relative': ['int_prop_treatment_support_improvement'],
                'int_prop_decentralisation': ['int_ideal_detection'],
@@ -128,6 +127,7 @@ class Inputs:
         self.add_comment_to_gui_window('Preparing inputs for model run.\n')
         self.find_scenarios_to_run()
         self.define_run_mode()
+        self.define_organ_strata()
         self.find_model_strata()
 
         # read all required data
@@ -217,17 +217,29 @@ class Inputs:
             prevalences = [0.05] + list(numpy.linspace(.1, .5, 5))
             self.comorbidity_prevalences = {i: prevalences[i] for i in range(len(prevalences))}
 
-    def find_model_strata(self):
+    def define_organ_strata(self):
+        """
+        Define the organ status strata for the model. Convert from GUI input structure to number of strata. Then, create
+        list of organ states. If unstratified, need list of an empty string for iteration.
+        """
 
         organ_stratification_keys \
             = {'Unstratified': 0,
                'Pos / Neg': 2,
                'Pos / Neg / Extra': 3}
+        self.n_organs = organ_stratification_keys[self.gui_inputs['organ_strata']]
+        available_organs = ['_smearpos', '_smearneg', '_extrapul']
+        self.organ_status = available_organs[:self.n_organs] if self.n_organs > 1 else ['']
+
+    def find_model_strata(self):
+        """
+        Find the number of strata present for organ status and strains.
+        """
+
         strain_stratification_keys \
             = {'Single strain': 0,
                'DS / MDR': 2,
                'DS / MDR / XDR': 3}
-        self.n_organs = organ_stratification_keys[self.gui_inputs['organ_strata']]
         self.n_strains = strain_stratification_keys[self.gui_inputs['strains']]
 
     def find_scenarios_to_run(self):
@@ -404,7 +416,6 @@ class Inputs:
 
         self.define_age_structure()
         self.define_strain_structure()
-        self.define_organ_structure()
 
     def define_age_structure(self):
         """
@@ -507,16 +518,6 @@ class Inputs:
                     for treated_as in self.strains:
                         if self.strains.index(treated_as) < self.strains.index(strain):
                             self.treatment_outcome_types.append(strain + '_as' + treated_as[1:])
-
-    def define_organ_structure(self):
-        """
-        Defines the organ status stratification from the number of statuses selected.
-        Note that "organ" is the simplest single-word term that I can currently think of to describe whether patients
-        have smear-positive, smear-negative or extrapulmonary disease.
-        """
-
-        if self.n_organs > 1:
-            self.organ_status = self.available_organs[:self.n_organs]
 
     def define_ipt_structure(self):
 

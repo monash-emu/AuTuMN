@@ -14,6 +14,12 @@ pluggable API to other system. Applied to tuberculosis.
 - uncertainty for economics (an extension to intervention uncertainty)
 - document Bulgaria interventions properly in handbook
 
+## Major outstanding tasks
+- low quality health sector
+- HIV
+- optimisation
+- outputs link to GUI
+
 ## current questions for Bosco:
 - can we get the age sliders set up too
 - should we move all the parameterisation to the GUI - if so, with sliders or some other form of input

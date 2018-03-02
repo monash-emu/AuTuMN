@@ -43,7 +43,8 @@ class Inputs:
     def __init__(self, gui_inputs, js_gui=None):
 
         # most basic inputs
-        for attribute in ['country', 'is_vary_detection_by_organ', 'is_vary_detection_by_riskgroup']:
+        for attribute in ['country', 'is_vary_detection_by_organ', 'is_vary_detection_by_riskgroup',
+                          'is_include_relapse_in_ds_outcomes']:
             setattr(self, attribute, gui_inputs[attribute])
 
         gui_inputs['scenarios_to_run'] = [0]
@@ -71,7 +72,7 @@ class Inputs:
          self.scaleup_fns, self.intervention_param_dict, self.comorbidity_prevalences,
          self.alternative_distribution_dict, self.data_to_fit, self.mixing, self.relevant_interventions,
          self.interventions_to_cost, self.intervention_startdates, self.freeze_times) \
-            = {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
+            = [{} for i in range(15)]
         (self.riskgroups_for_detection, self.organs_for_detection, self.strains, self.organ_status, self.histories) \
             = [[''] for i in range(5)]
 
@@ -92,10 +93,6 @@ class Inputs:
         self.compartment_types \
             = ['susceptible_fully', 'susceptible_immune', 'latent_early', 'latent_late', 'active',
                'detect', 'missed', 'treatment_infect', 'treatment_noninfect']
-
-        # booleans to shift to GUI
-        # self.is_vary_detection_by_riskgroup = False
-        self.include_relapse_in_ds_outcomes = True
 
         self.irrelevant_time_variants = []
         self.interventions_available_for_costing \

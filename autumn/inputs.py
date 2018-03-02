@@ -42,22 +42,22 @@ def find_latest_value_from_year_dict(dictionary, ceiling):
 class Inputs:
     def __init__(self, gui_inputs, js_gui=None):
 
-        # most basic, general inputs
+        # most general inputs, including attributes that need to be converted from keys to input dictionary
+        self.gui_inputs = gui_inputs
         self.js_gui = js_gui
         if self.js_gui:
             self.js_gui('init')
         for attribute in \
                 ['country', 'is_vary_detection_by_organ', 'is_vary_detection_by_riskgroup',
-                 'is_include_relapse_in_ds_outcomes', 'is_vary_force_infection_by_riskgroup']:
+                 'is_include_relapse_in_ds_outcomes', 'is_vary_force_infection_by_riskgroup', 'fitting_method']:
             setattr(self, attribute, gui_inputs[attribute])
-        self.gui_inputs = gui_inputs
 
+        # scenario processing
         gui_inputs['scenarios_to_run'] = [0]
         gui_inputs['scenario_names_to_run'] = ['baseline']
-        gui_inputs['fitting_method'] = int(gui_inputs['fitting_method'][-1])
         for key in gui_inputs:
             if 'scenario_' in key and len(key) < 14 and gui_inputs[key]:
-                n_scenario = int(key[9:])
+                n_scenario = tool_kit.find_scenario_number_from_string(key)
                 gui_inputs['scenarios_to_run'].append(n_scenario)
                 gui_inputs['scenario_names_to_run'].append(tool_kit.find_scenario_string_from_number(n_scenario))
         self.scenarios = self.gui_inputs['scenarios_to_run']
@@ -67,10 +67,10 @@ class Inputs:
             = [0 for i in range(4)]
         self.emit_delay = .1
         (self.uncertainty_intervention, self.comorbidity_to_increment, self.run_mode, self.original_data,
-        self.agegroups) \
+         self.agegroups) \
             = [None for i in range(5)]
         (self.param_ranges_unc, self.int_ranges_unc, self.outputs_unc, self.riskgroups, self.treatment_outcome_types,
-        self.irrelevant_time_variants) \
+         self.irrelevant_time_variants) \
             = [[] for i in range(6)]
         (self.original_data, self.derived_data, self.time_variants, self.model_constants, self.scaleup_data,
          self.scaleup_fns, self.intervention_param_dict, self.comorbidity_prevalences,
@@ -1239,7 +1239,7 @@ class Inputs:
                     self.scaleup_fns[scenario][param] \
                         = scale_up_function(self.scaleup_data[scenario][param].keys(),
                                             self.scaleup_data[scenario][param].values(),
-                                            self.gui_inputs['fitting_method'], smoothness,
+                                            int(self.gui_inputs['fitting_method'][-1]), smoothness,
                                             bound_low=0., bound_up=upper_bound,
                                             intervention_end=scenario_for_function,
                                             intervention_start_date=self.model_constants['scenario_start_time'])

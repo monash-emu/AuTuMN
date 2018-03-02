@@ -630,7 +630,7 @@ class ModelRunner:
                                self.outputs['manual']['epi'][0]['times'], float(year))] for year in years_to_compare]
 
                 # calculate likelihood
-                prior_log_likelihood, posterior_log_likelihood = [0.] * 2
+                prior_log_likelihood, posterior_log_likelihood = 0., 0.
 
                 # calculate prior
                 for p, param in enumerate(self.inputs.param_ranges_unc):

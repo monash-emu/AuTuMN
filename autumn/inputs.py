@@ -105,6 +105,7 @@ class Inputs:
     def read_and_load_data(self):
         """
         Master method of this object, calling all sub-methods to read and process data and define model structure.
+        Effectively the initialisation of the model and the model runner objects occurs through here.
         """
 
         self.add_comment_to_gui_window('Preparing inputs for model run.\n')
@@ -214,7 +215,8 @@ class Inputs:
         # increment comorbidity
         elif self.run_mode == 'increment_comorbidity':
             self.comorbidity_to_increment = self.gui_inputs['comorbidity_to_increment'].lower()
-            self.comorbidity_prevalences = {1: .05, 2: .1, 3: .2, 4: .3, 5: .4, 6: .5}
+            prevalences = [0.05] + list(numpy.linspace(.1, .5, 5))
+            self.comorbidity_prevalences = {i: prevalences[i] for i in range(len(prevalences))}
 
     def find_model_strata(self):
 

@@ -1,10 +1,13 @@
 
-import autumn.spreadsheet as spreadsheet
+# external imports
 import copy
-import tool_kit
-from curve import scale_up_function, freeze_curve
 import numpy
 import itertools
+
+# AuTuMN imports
+import spreadsheet
+import tool_kit
+from curve import scale_up_function, freeze_curve
 
 
 def make_constant_function(value):
@@ -41,6 +44,16 @@ def find_latest_value_from_year_dict(dictionary, ceiling):
 
 class Inputs:
     def __init__(self, gui_inputs, js_gui=None):
+        """
+        As much data processing occurs here as possible, with GUI modules intended to be restricted to just loading of
+        data in its rawest form, while as little processing is done in the model runner and model objects as possible.
+        As most of this module is about processing the data and creating attributes to this object, instantiation does
+        the minimum amount possible - mostly just setting the necessary attributes to empty versions of themselves.
+
+        Args:
+            gui_inputs: Raw inputs from GUI
+            js_gui: The JavaScript GUI
+        """
 
         # most general inputs, including attributes that need to be converted from keys to input dictionary
         self.gui_inputs = gui_inputs
@@ -51,16 +64,6 @@ class Inputs:
                 ['country', 'is_vary_detection_by_organ', 'is_vary_detection_by_riskgroup',
                  'is_include_relapse_in_ds_outcomes', 'is_vary_force_infection_by_riskgroup', 'fitting_method']:
             setattr(self, attribute, gui_inputs[attribute])
-
-        # scenario processing
-        gui_inputs['scenarios_to_run'] = [0]
-        gui_inputs['scenario_names_to_run'] = ['baseline']
-        for key in gui_inputs:
-            if 'scenario_' in key and len(key) < 14 and gui_inputs[key]:
-                n_scenario = tool_kit.find_scenario_number_from_string(key)
-                gui_inputs['scenarios_to_run'].append(n_scenario)
-                gui_inputs['scenario_names_to_run'].append(tool_kit.find_scenario_string_from_number(n_scenario))
-        self.scenarios = self.gui_inputs['scenarios_to_run']
 
         # initialising attributes by data type now, rather than purpose
         (self.n_samples, self.plot_count, self.n_organs, self.n_strains) \
@@ -101,6 +104,8 @@ class Inputs:
         self.define_run_mode()
 
         self.find_model_strata()
+
+        self.find_scenarios_to_run()
 
         # read all required data
         self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
@@ -217,6 +222,18 @@ class Inputs:
                'DS / MDR / XDR': 3}
         self.n_organs = organ_stratification_keys[self.gui_inputs['organ_strata']]
         self.n_strains = strain_stratification_keys[self.gui_inputs['strains']]
+
+    def find_scenarios_to_run(self):
+
+        # scenario processing
+        self.gui_inputs['scenarios_to_run'] = [0]
+        self.gui_inputs['scenario_names_to_run'] = ['baseline']
+        for key in self.gui_inputs:
+            if 'scenario_' in key and len(key) < 14 and self.gui_inputs[key]:
+                n_scenario = tool_kit.find_scenario_number_from_string(key)
+                self.gui_inputs['scenarios_to_run'].append(n_scenario)
+                self.gui_inputs['scenario_names_to_run'].append(tool_kit.find_scenario_string_from_number(n_scenario))
+        self.scenarios = self.gui_inputs['scenarios_to_run']
 
     ''' constant parameter processing methods '''
 

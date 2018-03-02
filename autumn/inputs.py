@@ -43,7 +43,7 @@ class Inputs:
     def __init__(self, gui_inputs, js_gui=None):
 
         # most basic inputs
-        for attribute in ['country']:
+        for attribute in ['country', 'is_vary_detection_by_organ', 'is_vary_detection_by_riskgroup']:
             setattr(self, attribute, gui_inputs[attribute])
 
         gui_inputs['scenarios_to_run'] = [0]
@@ -94,8 +94,7 @@ class Inputs:
                'detect', 'missed', 'treatment_infect', 'treatment_noninfect']
 
         # booleans to shift to GUI
-        self.vary_detection_by_organ = False
-        self.vary_detection_by_riskgroup = False
+        # self.is_vary_detection_by_riskgroup = False
         self.include_relapse_in_ds_outcomes = True
 
         self.irrelevant_time_variants = []
@@ -1041,19 +1040,19 @@ class Inputs:
         """
 
         # start with user request
-        self.vary_detection_by_organ = self.gui_inputs['is_vary_detection_by_organ']
+        # self.is_vary_detection_by_organ = self.gui_inputs['is_is_vary_detection_by_organ']
 
         # turn off and warn if model unstratified by organ status
-        if len(self.organ_status) == 1 and self.vary_detection_by_organ:
-            self.vary_detection_by_organ = False
+        if len(self.organ_status) == 1 and self.is_vary_detection_by_organ:
+            self.is_vary_detection_by_organ = False
             self.add_comment_to_gui_window(
                 'Requested variation by organ status turned off, as model is unstratified by organ status.')
 
         for scenario in self.scenarios:
             # turn on and warn if Xpert requested but variation not requested
             if len(self.organ_status) > 1 and 'int_prop_xpert' in self.relevant_interventions[scenario] \
-                    and not self.vary_detection_by_organ:
-                self.vary_detection_by_organ = True
+                    and not self.is_vary_detection_by_organ:
+                self.is_vary_detection_by_organ = True
                 self.add_comment_to_gui_window(
                     'Variation in detection by organ status added for Xpert implementation, although not requested.')
 
@@ -1063,7 +1062,7 @@ class Inputs:
                     'Effect of Xpert on smear-negative detection not simulated as model unstratified by organ status.')
 
         # set relevant attributes
-        self.organs_for_detection = self.organ_status if self.vary_detection_by_organ else ['']
+        self.organs_for_detection = self.organ_status if self.is_vary_detection_by_organ else ['']
 
     def determine_riskgroup_detection_variation(self):
         """
@@ -1071,12 +1070,12 @@ class Inputs:
         the scenarios).
         """
 
-        self.vary_detection_by_riskgroup = False
+        self.is_vary_detection_by_riskgroup = False
         for scenario in self.scenarios:
             for intervention in self.relevant_interventions[scenario]:
                 if 'acf' in intervention or 'intensive_screening' in intervention or 'groupcontributor' in intervention:
-                    self.vary_detection_by_riskgroup = True
-        self.riskgroups_for_detection = self.riskgroups if self.vary_detection_by_riskgroup else ['']
+                    self.is_vary_detection_by_riskgroup = True
+        self.riskgroups_for_detection = self.riskgroups if self.is_vary_detection_by_riskgroup else ['']
 
     def find_potential_interventions_to_cost(self):
         """

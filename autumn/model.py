@@ -96,7 +96,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         # this code just stops the code checker complaining about attributes being undefined in instantiation
         self.compartment_types, self.organ_status, self.strains, self.agegroups, self.mixing, \
             self.is_vary_detection_by_organ, self.organs_for_detection, self.riskgroups_for_detection, \
-            self.is_vary_detection_by_riskgroup, self.vary_force_infection_by_riskgroup, self.histories, \
+            self.is_vary_detection_by_riskgroup, self.is_vary_force_infection_by_riskgroup, self.histories, \
             self.relevant_interventions, self.scaleup_fns, self.interventions_to_cost, self.is_lowquality, \
             self.is_amplification, self.is_misassignment, self.is_timevariant_organs, self.country, self.time_step, \
             self.integration_method = [None] * 21
@@ -105,7 +105,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         # model attributes to be set directly to inputs object attributes
         for attribute in ['compartment_types', 'organ_status', 'strains', 'riskgroups', 'agegroups', 'mixing',
                           'is_vary_detection_by_organ', 'organs_for_detection', 'riskgroups_for_detection',
-                          'is_vary_detection_by_riskgroup', 'vary_force_infection_by_riskgroup', 'histories']:
+                          'is_vary_detection_by_riskgroup', 'is_vary_force_infection_by_riskgroup', 'histories']:
             setattr(self, attribute, getattr(inputs, attribute))
 
         # model attributes to set to only the relevant scenario key from an inputs dictionary
@@ -138,7 +138,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                     self.inappropriate_regimens.append(strain + '_as' + as_strain[1:])
 
         # to loop force of infection code over all risk groups if variable, or otherwise to just run once
-        self.force_riskgroups = copy.copy(self.riskgroups) if self.vary_force_infection_by_riskgroup else ['']
+        self.force_riskgroups = copy.copy(self.riskgroups) if self.is_vary_force_infection_by_riskgroup else ['']
 
         # treatment strings
         self.outcomes = ['_success', '_death', '_default']
@@ -973,7 +973,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
         for strain in self.strains:
             self.set_initial_force_infection(strain)
-            if self.vary_force_infection_by_riskgroup:
+            if self.is_vary_force_infection_by_riskgroup:
                 self.adjust_force_infection_for_mixing(strain)
             self.adjust_force_infection_for_immunity(strain)
             self.adjust_force_infection_for_ipt(strain)
@@ -989,7 +989,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         transmission_modifier = self.vars['transmission_modifier'] if 'transmission_modifier' in self.vars else 1.
 
         # whether directly calculating the force of infection or a temporary "infectiousness" from which it is derived
-        force_string = 'infectiousness' if self.vary_force_infection_by_riskgroup else 'rate_force'
+        force_string = 'infectiousness' if self.is_vary_force_infection_by_riskgroup else 'rate_force'
 
         for riskgroup in self.force_riskgroups:
 
@@ -1251,7 +1251,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         for strata in itertools.product(
                 self.force_types, self.strains, self.riskgroups, self.histories, self.agegroups):
             force_type, strain, riskgroup, history, agegroup, = strata
-            force_riskgroup = riskgroup if self.vary_force_infection_by_riskgroup else ''
+            force_riskgroup = riskgroup if self.is_vary_force_infection_by_riskgroup else ''
 
             # source compartment is split by riskgropup, history and agegroup - plus force type for
             # the susceptibles and strain for the latents

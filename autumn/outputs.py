@@ -1463,7 +1463,7 @@ class Project:
             # self.plot_force_infection()
 
         # plot mixing matrix if relevant
-        if self.inputs.vary_force_infection_by_riskgroup and len(self.inputs.riskgroups) > 1:
+        if self.inputs.is_vary_force_infection_by_riskgroup and len(self.inputs.riskgroups) > 1:
             self.plot_mixing_matrix()
 
         # plot economic outputs

@@ -43,8 +43,12 @@ class Inputs:
     def __init__(self, gui_inputs, js_gui=None):
 
         # most basic inputs
-        for attribute in ['country', 'is_vary_detection_by_organ', 'is_vary_detection_by_riskgroup',
-                          'is_include_relapse_in_ds_outcomes']:
+        self.js_gui = js_gui
+        if self.js_gui:
+            self.js_gui('init')
+        for attribute in \
+                ['country', 'is_vary_detection_by_organ', 'is_vary_detection_by_riskgroup',
+                 'is_include_relapse_in_ds_outcomes', 'is_vary_force_infection_by_riskgroup']:
             setattr(self, attribute, gui_inputs[attribute])
 
         gui_inputs['scenarios_to_run'] = [0]
@@ -62,7 +66,7 @@ class Inputs:
         self.scenarios = self.gui_inputs['scenarios_to_run']
 
         # initialising some basic attributes by data type now, rather than purpose
-        self.n_samples = 0
+        self.n_samples, self.plot_count, self.emit_delay = 0, 0, .1
         (self.uncertainty_intervention, self.comorbidity_to_increment, self.run_mode, self.original_data,
          self.agegroups) \
             = [None for i in range(5)]
@@ -89,7 +93,6 @@ class Inputs:
         self.n_strains = strain_stratification_keys[self.gui_inputs['strains']]
         self.available_strains = ['_ds', '_mdr', '_xdr']
         self.available_organs = ['_smearpos', '_smearneg', '_extrapul']
-        self.vary_force_infection_by_riskgroup = self.gui_inputs['is_vary_force_infection_by_riskgroup']
         self.compartment_types \
             = ['susceptible_fully', 'susceptible_immune', 'latent_early', 'latent_late', 'active',
                'detect', 'missed', 'treatment_infect', 'treatment_noninfect']
@@ -99,12 +102,6 @@ class Inputs:
             = ['vaccination', 'xpert', 'treatment_support_relative', 'treatment_support_absolute', 'smearacf',
                'xpertacf', 'ipt_age0to5', 'ipt_age5to15', 'decentralisation', 'improve_dst', 'bulgaria_improve_dst',
                'firstline_dst', 'intensive_screening', 'ipt_age15up', 'dot_groupcontributor', 'awareness_raising']
-
-        self.js_gui = js_gui
-        if self.js_gui:
-            self.js_gui('init')
-        self.plot_count = 0
-        self.emit_delay = .1
 
     ''' master method '''
 
@@ -147,7 +144,7 @@ class Inputs:
         self.find_scaleup_functions()
 
         # create mixing matrix (has to be run after scale-up functions, so can't go in model structure method)
-        self.mixing = self.create_mixing_matrix() if self.vary_force_infection_by_riskgroup else {}
+        self.mixing = self.create_mixing_matrix() if self.is_vary_force_infection_by_riskgroup else {}
 
         # define compartmental structure
         self.define_compartment_structure()
@@ -1369,10 +1366,10 @@ class Inputs:
             self.add_comment_to_gui_window(
                 'Resistance amplification requested, but not implemented as single strain model only')
             self.gui_inputs['is_amplification'] = False
-        # if len(self.riskgroups) == 0 and self.vary_force_infection_by_riskgroup:
+        # if len(self.riskgroups) == 0 and self.is_vary_force_infection_by_riskgroup:
         #     self.add_comment_to_gui_window(
         #         'Heterogeneous mixing requested, but not implemented as no risk groups are present')
-        #     self.vary_force_infection_by_riskgroup = False
+        #     self.is_vary_force_infection_by_riskgroup = False
         if self.n_organs <= 1 and self.gui_inputs['is_timevariant_organs']:
             self.add_comment_to_gui_window(
                 'Time-variant organ status requested, but not implemented as no stratification by organ status')
@@ -1402,7 +1399,7 @@ class Inputs:
         """
 
         if self.js_gui:
-            self.js_gui('console', {"message": comment})
+            self.js_gui('console', {'message': comment})
 
     def checks(self):
         """

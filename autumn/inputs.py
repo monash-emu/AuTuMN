@@ -64,16 +64,16 @@ class Inputs:
         self.n_samples = 0
         (self.uncertainty_intervention, self.comorbidity_to_increment, self.run_mode, self.original_data,
          self.agegroups) \
-            = [None] * 5
+            = [None for i in range(5)]
         (self.param_ranges_unc, self.int_ranges_unc, self.outputs_unc, self.riskgroups, self.treatment_outcome_types) \
-            = [[]] * 5
+            = [[] for i in range(5)]
         (self.original_data, self.derived_data, self.time_variants, self.model_constants, self.scaleup_data,
          self.scaleup_fns, self.intervention_param_dict, self.comorbidity_prevalences,
          self.alternative_distribution_dict, self.data_to_fit, self.mixing, self.relevant_interventions,
          self.interventions_to_cost, self.intervention_startdates, self.freeze_times) \
             = {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
         (self.riskgroups_for_detection, self.organs_for_detection, self.strains, self.organ_status, self.histories) \
-            = [['']] * 5
+            = [[''] for i in range(5)]
 
         # model structure
         organ_stratification_keys \
@@ -1305,7 +1305,6 @@ class Inputs:
         Populate a dictionary of uncertainty parameters from the inputs dictionary in a format that matches code for
         uncertainty.
         """
-
         for param in self.model_constants:
             if ('tb_' in param or 'start_time' in param) \
                     and '_uncertainty' in param and type(self.model_constants[param]) == dict:

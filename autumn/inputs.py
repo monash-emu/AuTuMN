@@ -42,7 +42,7 @@ def find_latest_value_from_year_dict(dictionary, ceiling):
 class Inputs:
     def __init__(self, gui_inputs, js_gui=None):
 
-        # most basic inputs
+        # most basic, general inputs
         self.js_gui = js_gui
         if self.js_gui:
             self.js_gui('init')
@@ -50,28 +50,28 @@ class Inputs:
                 ['country', 'is_vary_detection_by_organ', 'is_vary_detection_by_riskgroup',
                  'is_include_relapse_in_ds_outcomes', 'is_vary_force_infection_by_riskgroup']:
             setattr(self, attribute, gui_inputs[attribute])
+        self.gui_inputs = gui_inputs
 
         gui_inputs['scenarios_to_run'] = [0]
         gui_inputs['scenario_names_to_run'] = ['baseline']
         gui_inputs['fitting_method'] = int(gui_inputs['fitting_method'][-1])
-
         for key in gui_inputs:
             if 'scenario_' in key and len(key) < 14 and gui_inputs[key]:
                 n_scenario = int(key[9:])
                 gui_inputs['scenarios_to_run'].append(n_scenario)
                 gui_inputs['scenario_names_to_run'].append(tool_kit.find_scenario_string_from_number(n_scenario))
-
-        self.gui_inputs = gui_inputs
-
         self.scenarios = self.gui_inputs['scenarios_to_run']
 
-        # initialising some basic attributes by data type now, rather than purpose
-        self.n_samples, self.plot_count, self.emit_delay = 0, 0, .1
+        # initialising attributes by data type now, rather than purpose
+        (self.n_samples, self.plot_count, self.n_organs, self.n_strains) \
+            = [0 for i in range(4)]
+        self.emit_delay = .1
         (self.uncertainty_intervention, self.comorbidity_to_increment, self.run_mode, self.original_data,
-         self.agegroups) \
+        self.agegroups) \
             = [None for i in range(5)]
-        (self.param_ranges_unc, self.int_ranges_unc, self.outputs_unc, self.riskgroups, self.treatment_outcome_types) \
-            = [[] for i in range(5)]
+        (self.param_ranges_unc, self.int_ranges_unc, self.outputs_unc, self.riskgroups, self.treatment_outcome_types,
+        self.irrelevant_time_variants) \
+            = [[] for i in range(6)]
         (self.original_data, self.derived_data, self.time_variants, self.model_constants, self.scaleup_data,
          self.scaleup_fns, self.intervention_param_dict, self.comorbidity_prevalences,
          self.alternative_distribution_dict, self.data_to_fit, self.mixing, self.relevant_interventions,
@@ -80,28 +80,16 @@ class Inputs:
         (self.riskgroups_for_detection, self.organs_for_detection, self.strains, self.organ_status, self.histories) \
             = [[''] for i in range(5)]
 
-        # model structure
-        organ_stratification_keys \
-            = {'Unstratified': 0,
-               'Pos / Neg': 2,
-               'Pos / Neg / Extra': 3}
-        strain_stratification_keys \
-            = {'Single strain': 0,
-               'DS / MDR': 2,
-               'DS / MDR / XDR': 3}
-        self.n_organs = organ_stratification_keys[self.gui_inputs['organ_strata']]
-        self.n_strains = strain_stratification_keys[self.gui_inputs['strains']]
-        self.available_strains = ['_ds', '_mdr', '_xdr']
-        self.available_organs = ['_smearpos', '_smearneg', '_extrapul']
+        # lists of strings for features available to the models
         self.compartment_types \
             = ['susceptible_fully', 'susceptible_immune', 'latent_early', 'latent_late', 'active',
                'detect', 'missed', 'treatment_infect', 'treatment_noninfect']
-
-        self.irrelevant_time_variants = []
         self.interventions_available_for_costing \
             = ['vaccination', 'xpert', 'treatment_support_relative', 'treatment_support_absolute', 'smearacf',
                'xpertacf', 'ipt_age0to5', 'ipt_age5to15', 'decentralisation', 'improve_dst', 'bulgaria_improve_dst',
                'firstline_dst', 'intensive_screening', 'ipt_age15up', 'dot_groupcontributor', 'awareness_raising']
+        self.available_strains = ['_ds', '_mdr', '_xdr']
+        self.available_organs = ['_smearpos', '_smearneg', '_extrapul']
 
     ''' master method '''
 
@@ -111,6 +99,8 @@ class Inputs:
         """
 
         self.define_run_mode()
+
+        self.find_model_strata()
 
         # read all required data
         self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
@@ -214,6 +204,19 @@ class Inputs:
         elif self.run_mode == 'increment_comorbidity':
             self.comorbidity_to_increment = self.gui_inputs['comorbidity_to_increment'].lower()
             self.comorbidity_prevalences = {1: .05, 2: .1, 3: .2, 4: .3, 5: .4, 6: .5}
+
+    def find_model_strata(self):
+
+        organ_stratification_keys \
+            = {'Unstratified': 0,
+               'Pos / Neg': 2,
+               'Pos / Neg / Extra': 3}
+        strain_stratification_keys \
+            = {'Single strain': 0,
+               'DS / MDR': 2,
+               'DS / MDR / XDR': 3}
+        self.n_organs = organ_stratification_keys[self.gui_inputs['organ_strata']]
+        self.n_strains = strain_stratification_keys[self.gui_inputs['strains']]
 
     ''' constant parameter processing methods '''
 

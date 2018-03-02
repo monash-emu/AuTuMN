@@ -60,14 +60,11 @@ class Inputs:
         self.js_gui = js_gui
         if self.js_gui:
             self.js_gui('init')
-        for attribute in \
-                ['country', 'is_vary_detection_by_organ', 'is_vary_detection_by_riskgroup',
-                 'is_include_relapse_in_ds_outcomes', 'is_vary_force_infection_by_riskgroup', 'fitting_method']:
-            setattr(self, attribute, gui_inputs[attribute])
 
         # initialising attributes by data type now, rather than purpose
-        (self.n_samples, self.plot_count, self.n_organs, self.n_strains) \
-            = [0 for i in range(4)]
+        self.country = ''
+        (self.n_samples, self.plot_count, self.n_organs, self.n_strains, self.fitting_method) \
+            = [0 for i in range(5)]
         self.emit_delay = .1
         (self.uncertainty_intervention, self.comorbidity_to_increment, self.run_mode, self.original_data,
          self.agegroups) \
@@ -82,6 +79,15 @@ class Inputs:
             = [{} for i in range(15)]
         (self.riskgroups_for_detection, self.organs_for_detection, self.strains, self.organ_status, self.histories) \
             = [[''] for i in range(5)]
+        (self.is_vary_detection_by_organ, self.is_vary_detection_by_riskgroup, self.is_include_relapse_in_ds_outcomes,
+         self.is_vary_force_infection_by_riskgroup) \
+            = [False for i in range(4)]
+
+        # set some attributes direct from GUI inputs
+        for attribute in \
+                ['country', 'is_vary_detection_by_organ', 'is_vary_detection_by_riskgroup',
+                 'is_include_relapse_in_ds_outcomes', 'is_vary_force_infection_by_riskgroup', 'fitting_method']:
+            setattr(self, attribute, gui_inputs[attribute])
 
         # lists of strings for features available to the models
         self.compartment_types \
@@ -101,15 +107,15 @@ class Inputs:
         Master method of this object, calling all sub-methods to read and process data and define model structure.
         """
 
+        self.add_comment_to_gui_window('Preparing inputs for model run.\n')
         self.define_run_mode()
-
         self.find_model_strata()
-
         self.find_scenarios_to_run()
 
         # read all required data
         self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
         self.original_data = spreadsheet.read_input_data_xls(True, self.find_keys_of_sheets_to_read(), self.country)
+        self.add_comment_to_gui_window('Spreadsheet reading complete.\n')
 
         # define treatment history structure (should ideally go in define_model_structure, but can't)
         self.define_treatment_history_structure()

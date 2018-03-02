@@ -141,14 +141,14 @@ def get_autumn_params():
         = {'type': 'drop_down',
            'options': saving_options,
            'value': saving_options[0]}
-    available_uncertainty_interventions \
+    available_uncertainty_intervention \
         = ['int_prop_treatment_support_relative', 'int_prop_decentralisation', 'int_prop_xpert', 'int_prop_ipt',
            'int_prop_acf', 'int_prop_awareness_raising', 'int_perc_shortcourse_mdr', 'int_perc_firstline_dst',
            'int_perc_treatment_support_relative_ds', 'int_perc_dots_contributor', 'int_perc_dots_groupcontributor']
-    params['uncertainty_interventions'] \
+    params['uncertainty_intervention'] \
         = {'type': 'drop_down',
-           'options': available_uncertainty_interventions,
-           'value': available_uncertainty_interventions[0]}
+           'options': available_uncertainty_intervention,
+           'value': available_uncertainty_intervention[0]}
 
     # increment comorbidity
     comorbidity_types = ['Diabetes']
@@ -195,7 +195,7 @@ def get_autumn_params():
         param_groups[1]['keys'].append(k)
     for k in ['uncertainty_runs', 'burn_in_runs', 'search_width', 'pickle_uncertainty']:
         param_groups[4]['keys'].append(k)
-    for k in ['uncertainty_interventions']:
+    for k in ['uncertainty_intervention']:
         param_groups[5]['keys'].append(k)
     for k in ['comorbidity_to_increment']:
         param_groups[6]['keys'].append(k)

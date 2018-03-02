@@ -63,8 +63,9 @@ class Inputs:
 
         # initialising attributes by data type now, rather than purpose
         self.country = ''
-        (self.n_samples, self.plot_count, self.n_organs, self.n_strains, self.fitting_method) \
-            = [0 for i in range(5)]
+        self.n_samples = 20
+        (self.plot_count, self.n_organs, self.n_strains, self.fitting_method) \
+            = [0 for i in range(4)]
         self.emit_delay = .1
         (self.uncertainty_intervention, self.comorbidity_to_increment, self.run_mode, self.original_data,
          self.agegroups) \
@@ -86,10 +87,11 @@ class Inputs:
         # set some attributes direct from GUI inputs
         for attribute in \
                 ['country', 'is_vary_detection_by_organ', 'is_vary_detection_by_riskgroup',
-                 'is_include_relapse_in_ds_outcomes', 'is_vary_force_infection_by_riskgroup', 'fitting_method']:
+                 'is_include_relapse_in_ds_outcomes', 'is_vary_force_infection_by_riskgroup', 'fitting_method',
+                 'uncertainty_intervention']:
             setattr(self, attribute, gui_inputs[attribute])
 
-        # lists of strings for features available to the models
+        # various lists of strings for features available to the models or running modes
         self.compartment_types \
             = ['susceptible_fully', 'susceptible_immune', 'latent_early', 'latent_late', 'active',
                'detect', 'missed', 'treatment_infect', 'treatment_noninfect']
@@ -99,6 +101,21 @@ class Inputs:
                'firstline_dst', 'intensive_screening', 'ipt_age15up', 'dot_groupcontributor', 'awareness_raising']
         self.available_strains = ['_ds', '_mdr', '_xdr']
         self.available_organs = ['_smearpos', '_smearneg', '_extrapul']
+        self.intervention_param_dict \
+            = {'int_prop_treatment_support_relative': ['int_prop_treatment_support_improvement'],
+               'int_prop_decentralisation': ['int_ideal_detection'],
+               'int_prop_xpert': ['int_prop_xpert_smearneg_sensitivity', 'int_prop_xpert_sensitivity_mdr',
+                                  'int_timeperiod_await_treatment_smearneg_xpert'],
+               'int_prop_ipt': ['int_prop_ipt_effectiveness', 'int_prop_ltbi_test_sensitivity',
+                                'int_prop_infections_in_household'],
+               'int_prop_acf': ['int_prop_acf_detections_per_round'],
+               'int_prop_awareness_raising': ['int_multiplier_detection_with_raised_awareness'],
+               'int_perc_shortcourse_mdr': ['int_prop_treatment_success_shortcoursemdr'],
+               'int_perc_firstline_dst': [],
+               'int_perc_treatment_support_relative_ds': ['int_prop_treatment_support_improvement_ds'],
+               'int_perc_dots_contributor': ['int_prop_detection_dots_contributor'],
+               'int_perc_dots_groupcontributor': ['int_prop_detection_dots_contributor',
+                                                  'int_prop_detection_ngo_ruralpoor']}
 
     ''' master method '''
 
@@ -109,9 +126,9 @@ class Inputs:
         """
 
         self.add_comment_to_gui_window('Preparing inputs for model run.\n')
+        self.find_scenarios_to_run()
         self.define_run_mode()
         self.find_model_strata()
-        self.find_scenarios_to_run()
 
         # read all required data
         self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
@@ -166,6 +183,9 @@ class Inputs:
     ''' most general methods'''
 
     def define_run_mode(self):
+        """
+        Defines a few basic structures specific to the mode of running for the model runner object.
+        """
 
         # running mode
         run_mode_conversion \
@@ -188,28 +208,7 @@ class Inputs:
 
         # intervention uncertainty
         elif self.run_mode == 'int_uncertainty':
-
-            # some of these attributes may be unnecessary for intervention uncertainty - need to fix later
-            self.param_ranges_unc, self.int_ranges_unc, self.alternative_distribution_dict = [], [], {}
-            self.uncertainty_intervention = self.gui_inputs['uncertainty_interventions']
             self.scenarios.append(15)
-            self.n_samples = 20
-            self.intervention_param_dict \
-                = {'int_prop_treatment_support_relative': ['int_prop_treatment_support_improvement'],
-                   'int_prop_decentralisation': ['int_ideal_detection'],
-                   'int_prop_xpert': ['int_prop_xpert_smearneg_sensitivity', 'int_prop_xpert_sensitivity_mdr',
-                                      'int_timeperiod_await_treatment_smearneg_xpert'],
-                   'int_prop_ipt': ['int_prop_ipt_effectiveness', 'int_prop_ltbi_test_sensitivity',
-                                    'int_prop_infections_in_household'],
-                   'int_prop_acf': ['int_prop_acf_detections_per_round'],
-                   'int_prop_awareness_raising': ['int_multiplier_detection_with_raised_awareness'],
-                   'int_perc_shortcourse_mdr': ['int_prop_treatment_success_shortcoursemdr'],
-                   'int_perc_firstline_dst': [],
-                   'int_perc_treatment_support_relative_ds': ['int_prop_treatment_support_improvement_ds'],
-                   'int_perc_dots_contributor': ['int_prop_detection_dots_contributor'],
-                   'int_perc_dots_groupcontributor': ['int_prop_detection_dots_contributor',
-                                                      'int_prop_detection_ngo_ruralpoor']
-                   }
             self.gui_inputs['output_by_scenario'] = True
 
         # increment comorbidity

@@ -19,6 +19,7 @@ pluggable API to other system. Applied to tuberculosis.
 - HIV
 - optimisation
 - outputs link to GUI
+- full code review
 
 ## current questions for Bosco:
 - can we get the age sliders set up too

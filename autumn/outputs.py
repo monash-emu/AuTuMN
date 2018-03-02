@@ -14,7 +14,6 @@ import copy
 import model_runner
 import scipy
 
-
 def find_smallest_factors_of_integer(n):
     """
     Quick method to iterate through integers to find the smallest whole number fractions.
@@ -1741,7 +1740,7 @@ class Project:
             # plot the targets (and milestones) and the fitted exponential function to achieve them
             if self.gui_inputs['output_uncertainty'] and not self.inputs.run_mode == 'int_uncertainty':
                 base_value = self.uncertainty_centiles['epi'][uncertainty_scenario][output][
-                             self.model_runner.percentiles.index(50), :][t_k.find_first_list_element_at_least_value(
+                             self.model_runner.percentiles.index(50.), :][t_k.find_first_list_element_at_least_value(
                                 self.outputs['manual']['epi'][uncertainty_scenario]['times'], 2015.)]
             else:
                 base_value = self.outputs['manual']['epi'][uncertainty_scenario][output][

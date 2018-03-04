@@ -71,15 +71,15 @@ class Inputs:
          self.agegroups) \
             = [None for i in range(5)]
         (self.param_ranges_unc, self.int_ranges_unc, self.outputs_unc, self.riskgroups, self.treatment_outcome_types,
-         self.irrelevant_time_variants, self.organ_status, self.scenarios) \
-            = [[] for i in range(8)]
+         self.irrelevant_time_variants, self.organ_status, self.scenarios, self.histories) \
+            = [[] for i in range(9)]
         (self.original_data, self.derived_data, self.time_variants, self.model_constants, self.scaleup_data,
          self.scaleup_fns, self.intervention_param_dict, self.comorbidity_prevalences,
          self.alternative_distribution_dict, self.data_to_fit, self.mixing, self.relevant_interventions,
          self.interventions_to_cost, self.intervention_startdates, self.freeze_times) \
             = [{} for i in range(15)]
-        (self.riskgroups_for_detection, self.organs_for_detection, self.strains, self.histories) \
-            = [[''] for i in range(4)]
+        (self.riskgroups_for_detection, self.organs_for_detection, self.strains) \
+            = [[''] for i in range(3)]
         (self.is_vary_detection_by_organ, self.is_vary_detection_by_riskgroup, self.is_include_relapse_in_ds_outcomes,
          self.is_vary_force_infection_by_riskgroup) \
             = [False for i in range(4)]
@@ -124,19 +124,18 @@ class Inputs:
         Effectively the initialisation of the model and the model runner objects occurs through here.
         """
 
+        # decide on run mode, basic model stratifications and scenarios to be run
         self.add_comment_to_gui_window('Preparing inputs for model run.\n')
-        self.find_scenarios_to_run()
         self.define_run_mode()
         self.define_organ_strata()
         self.define_strain_strata()
+        self.define_treatment_history_strata()
+        self.find_scenarios_to_run()
 
         # read all required data
         self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
         self.original_data = spreadsheet.read_input_data_xls(True, self.find_keys_of_sheets_to_read(), self.country)
         self.add_comment_to_gui_window('Spreadsheet reading complete.\n')
-
-        # define treatment history structure (should ideally go in define_model_structure, but can't)
-        self.define_treatment_history_structure()
 
         # process constant parameters (age breakpoints come from sheets still, so has to come before defining structure)
         self.process_model_constants()
@@ -180,7 +179,7 @@ class Inputs:
         # perform checks (undeveloped still)
         self.checks()
 
-    ''' most general methods'''
+    ''' most general methods '''
 
     def define_run_mode(self):
         """
@@ -241,6 +240,15 @@ class Inputs:
                'DS / MDR': 2,
                'DS / MDR / XDR': 3}
         self.n_strains = strain_stratification_keys[self.gui_inputs['strains']]
+
+    def define_treatment_history_strata(self):
+        """
+        Define the structure for tracking patients' treatment histories (i.e. whether they are treatment naive "_new"
+        patients, or whether they are previously treated "_treated" patients. Note that the list was set to an empty
+        string (for no stratification) in initialisation of this object.
+        """
+
+        self.histories = ['_new', '_treated'] if self.gui_inputs['is_treatment_history'] else ['']
 
     def find_scenarios_to_run(self):
         """
@@ -397,16 +405,6 @@ class Inputs:
                 - self.model_constants['tb_timeperiod_infect_ontreatment' + strain]
 
     ''' methods to define model structure '''
-
-    def define_treatment_history_structure(self):
-        """
-        Define the structure for tracking patients' treatment histories (i.e. whether they are treatment naive "_new"
-        patients, or whether they are previously treated "_treated" patients. Note that the list was set to an empty
-        string (for no stratification) in initialisation of this object.
-        """
-
-        if self.gui_inputs['is_treatment_history']:
-            self.histories = ['_new', '_treated']
 
     def define_model_structure(self):
         """

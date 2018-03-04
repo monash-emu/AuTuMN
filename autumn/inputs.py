@@ -71,8 +71,8 @@ class Inputs:
          self.agegroups) \
             = [None for i in range(5)]
         (self.param_ranges_unc, self.int_ranges_unc, self.outputs_unc, self.riskgroups, self.treatment_outcome_types,
-         self.irrelevant_time_variants, self.organ_status) \
-            = [[] for i in range(7)]
+         self.irrelevant_time_variants, self.organ_status, self.scenarios) \
+            = [[] for i in range(8)]
         (self.original_data, self.derived_data, self.time_variants, self.model_constants, self.scaleup_data,
          self.scaleup_fns, self.intervention_param_dict, self.comorbidity_prevalences,
          self.alternative_distribution_dict, self.data_to_fit, self.mixing, self.relevant_interventions,
@@ -128,7 +128,7 @@ class Inputs:
         self.find_scenarios_to_run()
         self.define_run_mode()
         self.define_organ_strata()
-        self.find_model_strata()
+        self.define_strain_strata()
 
         # read all required data
         self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
@@ -231,9 +231,9 @@ class Inputs:
         available_organs = ['_smearpos', '_smearneg', '_extrapul']
         self.organ_status = available_organs[:self.n_organs] if self.n_organs > 1 else ['']
 
-    def find_model_strata(self):
+    def define_strain_strata(self):
         """
-        Find the number of strata present for organ status and strains.
+        Find the number of strata present for TB strains being simulated.
         """
 
         strain_stratification_keys \
@@ -243,16 +243,15 @@ class Inputs:
         self.n_strains = strain_stratification_keys[self.gui_inputs['strains']]
 
     def find_scenarios_to_run(self):
+        """
+        Find the scenarios to be run. Only applicable to certain run modes, but code is currently run for any mode.
+        """
 
         # scenario processing
-        self.gui_inputs['scenarios_to_run'] = [0]
-        self.gui_inputs['scenario_names_to_run'] = ['baseline']
-        for key in self.gui_inputs:
-            if 'scenario_' in key and len(key) < 14 and self.gui_inputs[key]:
-                n_scenario = tool_kit.find_scenario_number_from_string(key)
-                self.gui_inputs['scenarios_to_run'].append(n_scenario)
-                self.gui_inputs['scenario_names_to_run'].append(tool_kit.find_scenario_string_from_number(n_scenario))
-        self.scenarios = self.gui_inputs['scenarios_to_run']
+        self.scenarios = [0]
+        self.scenarios \
+            += [tool_kit.find_scenario_number_from_string(key) for key in self.gui_inputs
+                if 'scenario_' in key and len(key) < 12 and self.gui_inputs[key]]
 
     ''' constant parameter processing methods '''
 

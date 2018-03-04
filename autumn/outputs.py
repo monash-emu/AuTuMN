@@ -729,8 +729,7 @@ class Project:
         for centile in centile_order_to_write: self.order_to_write.append(self.model_runner.percentiles.index(centile))
 
         # extract some characteristics from the models within model runner
-        self.scenarios = self.gui_inputs['scenarios_to_run']
-        self.scenario_names = self.gui_inputs['scenario_names_to_run']
+        self.scenarios = self.inputs.scenarios
         self.programs = self.inputs.interventions_to_cost
         self.gtb_available_outputs = ['incidence', 'mortality', 'prevalence', 'notifications']
         self.level_conversion_dict = {'lower_limit': '_lo', 'upper_limit': '_hi', 'point_estimate': ''}

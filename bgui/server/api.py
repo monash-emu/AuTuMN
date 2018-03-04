@@ -6,7 +6,7 @@ import traceback
 import json
 
 from flask import abort, jsonify, current_app, request, helpers, json, make_response
-from flask.ext.login import LoginManager, current_user
+from flask_login import LoginManager, current_user
 from werkzeug.utils import secure_filename
 
 import conn
@@ -91,7 +91,13 @@ def run_fn(fn_name, args, kwargs):
 
     if hasattr(handler, fn_name):
         fn = getattr(handler, fn_name)
-        print('>> RPC.handler.%s args=%s kwargs=%s' % (fn_name, args, kwargs))
+        args_str = str(args)
+        if len(args_str) > 30:
+            args_str = args_str[:30] + '...'
+        kwargs_str = str(kwargs)
+        if len(kwargs_str) > 30:
+            args_str = kwargs_str[:30] + '...'
+        print('>> RPC.handler.%s args=%s kwargs=%s' % (fn_name, args_str, kwargs_str))
     else:
         print('>> Function "%s" does not exist' % (fn_name))
         raise ValueError('Function "%s" does not exist' % (fn_name))

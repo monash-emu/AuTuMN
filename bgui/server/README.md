@@ -44,7 +44,6 @@ corresponds to the port expected in the web-client.
 - `run_server.py` - entry point to web-server, starts up Twisted
 - `api.py` - definition of the Flask app 
 - `config.py` - configuration of the SQLAlchemy database and save folder
-- `requirements.txt` - python modules to be installed
 - `handlers.py` - the URL handlers for the RPC-JSON protocol
 - `conn.py` -  central place to store Flask and SQLAlchemy global variables
 - `dbmodel.py` - SQLALchemy database definition and accessor function

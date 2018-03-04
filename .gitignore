@@ -9,10 +9,8 @@ bgui/server/database.sqlite
 bgui/client/src/config.js
 saved_optimisation_analyses/
 saved_uncertainty_analyses/
-*png
 *pkl
 saved_*
 projects
-venv
-venv1/
+venv*
 env*

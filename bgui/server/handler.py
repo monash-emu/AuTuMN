@@ -22,7 +22,7 @@ import json
 import traceback
 
 from flask import session, abort
-from flask.ext.login import current_user, login_user, logout_user
+from flask_login import current_user, login_user, logout_user
 
 import dbmodel
 

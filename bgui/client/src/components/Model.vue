@@ -71,7 +71,10 @@
                   </md-input-container>
                 </div>
 
-                <div v-else-if="params[key].type == 'number'">
+                <div v-else-if="
+                    (params[key].type === 'number') ||
+                    (params[key].type === 'double') ||
+                    (params[key].type === 'integer')">
                   <md-input-container>
                     <label>{{ params[key].label }}</label>
                     <md-input
@@ -165,7 +168,7 @@
 
 <script>
   import rpc from '../modules/rpc'
-  import _ from 'lodash'
+  import util from '../modules/util'
   import vueSlider from 'vue-slider-component'
   import Vue from 'vue'
   import VueScrollTo from 'vue-scrollto'
@@ -193,6 +196,7 @@
           this.paramGroups = res.data.paramGroups
           this.params = res.data.params
           this.paramGroup = this.paramGroups[0]
+          console.log(util.jstr(this.params))
         })
     },
     methods: {

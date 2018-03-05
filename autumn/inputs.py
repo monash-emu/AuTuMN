@@ -124,12 +124,10 @@ class Inputs:
         Effectively the initialisation of the model and the model runner objects occurs through here.
         """
 
-        # decide on run mode, basic model stratifications and scenarios to be run
+        # decide on run mode, basic model strata and scenarios to be run
         self.add_comment_to_gui_window('Preparing inputs for model run.\n')
         self.define_run_mode()
-        self.define_organ_strata()
-        self.define_strain_strata()
-        self.define_treatment_history_strata()
+        self.define_model_strata()
         self.find_scenarios_to_run()
 
         # read all required data
@@ -141,7 +139,7 @@ class Inputs:
         self.process_model_constants()
 
         # define model structure
-        self.define_model_structure()
+        self.detail_model_structure()
 
         # process time-variant parameters
         self.process_time_variants()
@@ -212,6 +210,15 @@ class Inputs:
             self.comorbidity_to_increment = self.gui_inputs['comorbidity_to_increment'].lower()
             prevalences = [0.05] + list(numpy.linspace(.1, .5, 5))
             self.comorbidity_prevalences = {i: prevalences[i] for i in range(len(prevalences))}
+
+    def define_model_strata(self):
+        """
+        Method to group the methods defining strata setting.
+        """
+
+        self.define_organ_strata()
+        self.define_strain_strata()
+        self.define_treatment_history_strata()
 
     def define_organ_strata(self):
         """
@@ -400,21 +407,21 @@ class Inputs:
 
     ''' methods to define model structure '''
 
-    def define_model_structure(self):
+    def detail_model_structure(self):
         """
         Master method to define all aspects of model structure.
         """
 
-        self.define_age_structure()
-        self.define_strain_structure()
+        self.detail_age_structure()
+        self.detail_strain_structure()
 
-    def define_age_structure(self):
+    def detail_age_structure(self):
         """
         Define the model's age structure based on the breakpoints provided in spreadsheets.
         """
 
         # describe and work out age stratification structure for model from the list of age breakpoints
-        self.agegroups, _ = tool_kit.get_agegroups_from_breakpoints(self.model_constants['age_breakpoints'])
+        self.agegroups = tool_kit.get_agegroups_from_breakpoints(self.model_constants['age_breakpoints'])[0]
 
         # find ageing rates and age-weighted parameters
         if len(self.agegroups) > 1:
@@ -427,7 +434,7 @@ class Inputs:
         """
 
         for agegroup in self.agegroups:
-            age_limits, _ = tool_kit.interrogate_age_string(agegroup)
+            age_limits = tool_kit.interrogate_age_string(agegroup)[0]
             if 'up' not in agegroup:
                 self.model_constants['ageing_rate' + agegroup] = 1. / (age_limits[1] - age_limits[0])
 
@@ -445,7 +452,7 @@ class Inputs:
             for constant in self.model_constants:
                 if param in constant:
                     prog_param_string, prog_stem = tool_kit.find_string_from_starting_letters(constant, '_age')
-                    prog_age_dict[prog_param_string], _ = tool_kit.interrogate_age_string(prog_param_string)
+                    prog_age_dict[prog_param_string] = tool_kit.interrogate_age_string(prog_param_string)[0]
                     prog_param_vals[prog_param_string] = self.model_constants[constant]
 
             param_breakpoints = tool_kit.find_age_breakpoints_from_dicts(prog_age_dict)
@@ -485,7 +492,7 @@ class Inputs:
             if 'riskgroup_prop' + riskgroup not in self.model_constants:
                 self.model_constants['riskgroup_prop' + riskgroup] = 0.
 
-    def define_strain_structure(self):
+    def detail_strain_structure(self):
         """
         Finds the strains to be present in the model from a list of available strains and the integer value for the
         number of strains selected.
@@ -1427,3 +1434,4 @@ class Inputs:
             if time[-5:] == '_time' and '_step_time' not in time:
                 assert self.model_constants[time] >= self.model_constants['start_time'], \
                     '% is before model start time' % self.model_constants[time]
+

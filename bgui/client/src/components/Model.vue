@@ -96,6 +96,16 @@
                   </vue-slider>
                 </div>
 
+                <div v-else-if="params[key].type == 'breakpoint'">
+                  <label>{{ params[key].label }}</label>
+                  <div style="height: 2.5em"></div>
+                  <vue-slider
+                      :max="params[key].max"
+                      :interval="params[key].interval"
+                      v-model="params[key].value">
+                  </vue-slider>
+                </div>
+
               </md-layout>
             </md-layout>
           </md-whiteframe>

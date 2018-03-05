@@ -172,6 +172,9 @@ def get_autumn_params():
     for group in param_group_keys:
         param_groups.append({'keys': [], 'name': group})
 
+    param_groups[5]['attr'] = {'webgui': True}
+    param_groups[6]['attr'] = {'webgui': True}
+
     # distribute the boolean checkbox options
     for key in bool_keys:
         name = params[key]['label']
@@ -199,6 +202,11 @@ def get_autumn_params():
         param_groups[5]['keys'].append(k)
     for k in ['comorbidity_to_increment']:
         param_groups[6]['keys'].append(k)
+
+    # params['age_groups'] \
+    #     = {'type': 'breakpoints',
+    #        'value': []}
+    # param_groups[1]['keys'].append('age_groups')
 
     # return single data structure with parameters and parameter groupings
     return {'params': params,

@@ -29,7 +29,7 @@ class App:
         self.frame.pack()
         self.figure_frame = Toplevel(master)
         self.figure_frame.title('Tracking parameters over model runs')
-        self.master.minsize(1950, 500)
+        self.master.minsize(1500, 500)
         self.master.title('AuTuMN - version 1.0')
 
         self.title_font = 'Helvetica 10 bold italic'
@@ -100,12 +100,16 @@ class App:
                     variable=param['tk_var'])
 
     def set_tk_controls_in_frame(self):
-        for column, param_group in enumerate(self.param_groups):
+        column = 0
+        for param_group in self.param_groups:
+            if ('attr' in param_group) and param_group['attr']['webgui']:
+                continue
             row = 0
             title = Label(self.frame, text=param_group['name'])
             title.grid(row=row, column=column, sticky=NW, pady=10)
             title.config(font=self.title_font)
             self.frame.grid_columnconfigure(column, minsize=200)
+            # print('tkcontrol', param_group['name'], column, row)
             row += 1
             if column == 0:
                 # model running button
@@ -131,6 +135,7 @@ class App:
                 self.runtime_outputs = Text(self.frame)
                 self.runtime_outputs.grid(row=row, column=0, rowspan=5, columnspan=3)
                 self.runtime_outputs.config(height=9)
+            column += 1
 
     def execute(self):
         """

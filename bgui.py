@@ -19,8 +19,8 @@ def open_page_delayed():
             not_loaded = True
     print("Opening webclient at", url)
     webbrowser.open(url)
-threading.Thread(target=open_page_delayed).start()
 
+threading.Thread(target=open_page_delayed).start()
 os.chdir('bgui/server')
 subprocess.call(["python", "run_server.py"])
 

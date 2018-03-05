@@ -129,7 +129,6 @@ class Inputs:
         self.define_run_mode()
         self.define_model_strata()
         self.find_scenarios_to_run()
-
         self.reconcile_user_inputs()
 
         # read all required data
@@ -166,9 +165,6 @@ class Inputs:
 
         # uncertainty-related analysis
         self.process_uncertainty_parameters()
-
-        # make sure user inputs make sense
-        self.correct_user_inputs()
 
         # perform checks (undeveloped)
         self.checks()
@@ -265,10 +261,28 @@ class Inputs:
                 if key.startswith('scenario_') and len(key) < 12 and self.gui_inputs[key]]
 
     def reconcile_user_inputs(self):
+        """
+        Method to ensure that user inputs make sense within the model, including that elaborations that are specific to
+        particular ways of structuring the model are turned off with a warning if the model doesn't have the structure
+        to allow for those elaborations.
+        """
 
+        if self.n_organs <= 1 and self.gui_inputs['is_timevariant_organs']:
+            self.add_comment_to_gui_window(
+                'Time-variant organ status requested, but not implemented as no stratification by organ status')
+            self.gui_inputs['is_timevariant_organs'] = False
+        if self.gui_inputs['is_amplification'] and self.n_strains <= 1:
+            self.add_comment_to_gui_window(
+                'Resistance amplification requested, but not implemented as single strain model only')
+            self.gui_inputs['is_amplification'] = False
         if self.gui_inputs['is_misassignment'] and self.n_strains <= 1:
-            self.add_comment_to_gui_window('Misassignment requested, but not implemented as single strain model only')
+            self.add_comment_to_gui_window(
+                'Misassignment requested, but not implemented as single strain model only')
             self.gui_inputs['is_misassignment'] = False
+        if not self.riskgroups and self.is_vary_force_infection_by_riskgroup:
+            self.add_comment_to_gui_window(
+                'Heterogeneous mixing requested, but not implemented as no risk groups are present')
+            self.is_vary_force_infection_by_riskgroup = False
 
     ''' constant parameter processing methods '''
 
@@ -1377,26 +1391,6 @@ class Inputs:
                     'Warning: Calibrated output %s is not directly available from the data' % output['key'])
 
     ''' miscellaneous methods '''
-
-    def correct_user_inputs(self):
-        """
-        Method to ensure that user inputs make sense within the model, including that elaborations that are specific to
-        particular ways of structuring the model are turned off with a warning if the model doesn't have the structure
-        to allow for those elaborations.
-        """
-
-        if self.gui_inputs['is_amplification'] and self.n_strains <= 1:
-            self.add_comment_to_gui_window(
-                'Resistance amplification requested, but not implemented as single strain model only')
-            self.gui_inputs['is_amplification'] = False
-        # if len(self.riskgroups) == 0 and self.is_vary_force_infection_by_riskgroup:
-        #     self.add_comment_to_gui_window(
-        #         'Heterogeneous mixing requested, but not implemented as no risk groups are present')
-        #     self.is_vary_force_infection_by_riskgroup = False
-        if self.n_organs <= 1 and self.gui_inputs['is_timevariant_organs']:
-            self.add_comment_to_gui_window(
-                'Time-variant organ status requested, but not implemented as no stratification by organ status')
-            self.gui_inputs['is_timevariant_organs'] = False
 
     def find_keys_of_sheets_to_read(self):
         """

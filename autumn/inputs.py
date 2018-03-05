@@ -156,16 +156,13 @@ class Inputs:
         self.classify_interventions()
 
         # add compartment for IPT if implemented
-        self.define_ipt_structure()
+        self.elaborate_model_structure()
 
         # calculate time-variant functions
         self.find_scaleup_functions()
 
         # create mixing matrix (has to be run after scale-up functions, so can't go in model structure method)
         self.mixing = self.create_mixing_matrix() if self.is_vary_force_infection_by_riskgroup else {}
-
-        # define compartmental structure
-        self.define_compartment_structure()
 
         # uncertainty-related analysis
         self.process_uncertainty_parameters()
@@ -176,7 +173,7 @@ class Inputs:
         # make sure user inputs make sense
         self.reconcile_user_inputs()
 
-        # perform checks (undeveloped still)
+        # perform checks (undeveloped)
         self.checks()
 
     ''' most general methods '''
@@ -259,7 +256,7 @@ class Inputs:
         self.scenarios = [0]
         self.scenarios \
             += [tool_kit.find_scenario_number_from_string(key) for key in self.gui_inputs
-                if 'scenario_' in key and len(key) < 12 and self.gui_inputs[key]]
+                if key.startswith('scenario_') and len(key) < 12 and self.gui_inputs[key]]
 
     ''' constant parameter processing methods '''
 
@@ -343,9 +340,6 @@ class Inputs:
 
         # find the time non-infectious on treatment from the total time on treatment and the time infectious
         self.find_noninfectious_period()
-
-        # derive some basic parameters for IPT
-        # self.find_ipt_params()
 
     def find_latency_progression_rates(self):
         """
@@ -480,11 +474,11 @@ class Inputs:
                         'Stratification requested for %s risk group, but proportions not specified'
                         % tool_kit.find_title_from_dictionary(riskgroup))
 
-        # add the null group
-        if len(self.riskgroups) == 0:
-            self.riskgroups.append('')
-        else:
+        # add the null group according to whether there are any risk groups
+        if self.riskgroups:
             self.riskgroups.append('_norisk')
+        else:
+            self.riskgroups.append('')
 
         # ensure some starting proportion of births go to the risk group stratum if value not loaded earlier
         for riskgroup in self.riskgroups:
@@ -515,13 +509,6 @@ class Inputs:
                     for treated_as in self.strains:
                         if self.strains.index(treated_as) < self.strains.index(strain):
                             self.treatment_outcome_types.append(strain + '_as' + treated_as[1:])
-
-    def define_ipt_structure(self):
-
-        for scenario in self.scenarios:
-            if 'agestratified_ipt' in self.relevant_interventions[scenario] \
-                    or 'ipt' in self.relevant_interventions[scenario]:
-                self.compartment_types.append('onipt')
 
     def create_mixing_matrix(self):
         """
@@ -559,13 +546,16 @@ class Inputs:
             mixing[to_riskgroup]['_norisk'] = 1. - sum(mixing[to_riskgroup].values())
         return mixing
 
-    def define_compartment_structure(self):
+    def elaborate_model_structure(self):
         """
-        Determines the compartment types required for model run,
-        not including stratifications by age and risk groups, etc.
+        Add any additional elaborations to the model structure for extra processes - specifically, IPT, low-quality
+        health care and novel vaccinations.
         """
 
-        # add elaboration compartments to default list of mandatory compartments
+        for scenario in self.scenarios:
+            if 'agestratified_ipt' in self.relevant_interventions[scenario] \
+                    or 'ipt' in self.relevant_interventions[scenario]:
+                self.compartment_types.append('onipt')
         if self.gui_inputs['is_lowquality']:
             self.compartment_types += ['lowquality']
         if 'int_prop_novel_vaccination' in self.relevant_interventions:

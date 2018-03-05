@@ -136,7 +136,7 @@ class Inputs:
         self.original_data = spreadsheet.read_input_data_xls(True, self.find_keys_of_sheets_to_read(), self.country)
         self.add_comment_to_gui_window('Spreadsheet reading complete.\n')
 
-        # process constant parameters (age breakpoints come from sheets still, so has to come before defining structure)
+        # process constant parameters (age breakpoints come from sheets, so has to come before detailing structure)
         self.process_model_constants()
 
         # define model structure
@@ -155,13 +155,13 @@ class Inputs:
         self.classify_interventions()
 
         # add compartment for IPT, low-quality health care and novel vaccination if implemented
-        self.elaborate_model_structure()
-
-        # calculate time-variant functions
-        self.find_scaleup_functions()
+        self.extend_model_structure()
 
         # create mixing matrix (has to be run after scale-up functions, so can't go in model structure method)
         self.mixing = self.create_mixing_matrix() if self.is_vary_force_infection_by_riskgroup else {}
+
+        # calculate time-variant functions
+        self.find_scaleup_functions()
 
         # uncertainty-related analysis
         self.process_uncertainty_parameters()
@@ -284,6 +284,24 @@ class Inputs:
                 'Heterogeneous mixing requested, but not implemented as no risk groups are present')
             self.is_vary_force_infection_by_riskgroup = False
 
+    def find_keys_of_sheets_to_read(self):
+        """
+        Find keys of spreadsheets to read. Pretty simplistic at this stage, but expected to get more complicated as
+        other sheets (like diabetes) are added as optional.
+        """
+
+        # where sheets are available from multiple years, use _ and the year to choose the sheet, which will be dropped
+        keys_of_sheets_to_read \
+            = ['bcg_2016', 'rate_birth_2015', 'life_expectancy_2015', 'gtb_2015', 'gtb_2016', 'notifications_2016',
+               'outcomes_2015', 'default_parameters', 'country_constants', 'default_constants', 'country_programs',
+               'default_programs']
+
+        # add any optional sheets required for specific model being run (currently just diabetes)
+        if 'riskgroup_diabetes' in self.gui_inputs:
+            keys_of_sheets_to_read.append('diabetes')
+
+        return keys_of_sheets_to_read
+
     ''' constant parameter processing methods '''
 
     # populate with first round of unprocessed parameters (called before model structure defined)
@@ -348,13 +366,12 @@ class Inputs:
         # reference group for susceptibility
         self.model_constants['tb_multiplier_fully_protection'] = 1.
 
-    # derive further parameters (called after model structure defined)
+    # derive further parameters (called after model structure fully defined)
 
     def find_additional_parameters(self):
         """
-        Find additional parameters.
-        Includes methods that require the model structure to be defined,
-        so that this can't be run with process_model_constants.
+        Find additional parameters. Includes methods that require the model structure to be defined, so that this can't
+        be run with process_model_constants.
         """
 
         # find risk group-specific parameters
@@ -426,9 +443,11 @@ class Inputs:
 
     ''' methods to define model structure '''
 
+    # first category of structure methods can come before spreadsheet reading
+
     def detail_model_structure(self):
         """
-        Master method to define all aspects of model structure.
+        Master method to define aspects of model structure, including compartmental classification.
         """
 
         self.detail_age_structure()
@@ -466,14 +485,12 @@ class Inputs:
         for param in ['early_progression_age', 'late_progression_age', 'tb_multiplier_child_infectiousness_age']:
 
             # extract age-stratified parameters in the appropriate form
-            prog_param_vals = {}
-            prog_age_dict = {}
+            prog_param_vals, prog_age_dict = {}, {}
             for constant in self.model_constants:
                 if param in constant:
                     prog_param_string, prog_stem = tool_kit.find_string_from_starting_letters(constant, '_age')
                     prog_age_dict[prog_param_string] = tool_kit.interrogate_age_string(prog_param_string)[0]
                     prog_param_vals[prog_param_string] = self.model_constants[constant]
-
             param_breakpoints = tool_kit.find_age_breakpoints_from_dicts(prog_age_dict)
 
             # find and set age-adjusted parameters
@@ -483,6 +500,33 @@ class Inputs:
                                                         whether_to_plot=self.gui_inputs['output_age_calculations'])
             for agegroup in self.agegroups:
                 self.model_constants[prog_stem + agegroup] = prog_age_adjusted_params[agegroup]
+
+    def detail_strain_structure(self):
+        """
+        Finds the strains to be present in the model from a list of available strains and the integer value for the
+        number of strains selected.
+        """
+
+        # unstratified by strain
+        if self.n_strains == 0:
+
+            # if the model isn't stratified by strain, use DS-TB time-periods for the single strain
+            for timeperiod in ['tb_timeperiod_infect_ontreatment', 'tb_timeperiod_ontreatment']:
+                self.model_constants[timeperiod] = self.model_constants[timeperiod + '_ds']
+
+        # stratified
+        else:
+            self.strains = self.available_strains[:self.n_strains]
+            if self.gui_inputs['is_misassignment']:
+                self.treatment_outcome_types = copy.copy(self.strains)
+
+                # if misassigned strain treated with weaker regimen
+                for strain in self.strains[1:]:
+                    for treated_as in self.strains:
+                        if self.strains.index(treated_as) < self.strains.index(strain):
+                            self.treatment_outcome_types.append(strain + '_as' + treated_as[1:])
+
+    # second category of structure methods must come after spreadsheet reading
 
     def define_riskgroup_structure(self):
         """
@@ -511,30 +555,22 @@ class Inputs:
             if 'riskgroup_prop' + riskgroup not in self.model_constants:
                 self.model_constants['riskgroup_prop' + riskgroup] = 0.
 
-    def detail_strain_structure(self):
+    # last category of model structure methods must come after interventions classified and time-variants defined
+
+    def extend_model_structure(self):
         """
-        Finds the strains to be present in the model from a list of available strains and the integer value for the
-        number of strains selected.
+        Add any additional elaborations to the model structure for extra processes - specifically, IPT, low-quality
+        health care and novel vaccinations.
         """
 
-        # unstratified by strain
-        if self.n_strains == 0:
-
-            # if the model isn't stratified by strain, use DS-TB time-periods for the single strain
-            for timeperiod in ['tb_timeperiod_infect_ontreatment', 'tb_timeperiod_ontreatment']:
-                self.model_constants[timeperiod] = self.model_constants[timeperiod + '_ds']
-
-        # stratified
-        else:
-            self.strains = self.available_strains[:self.n_strains]
-            if self.gui_inputs['is_misassignment']:
-                self.treatment_outcome_types = copy.copy(self.strains)
-
-                # if misassigned strain treated with weaker regimen
-                for strain in self.strains[1:]:
-                    for treated_as in self.strains:
-                        if self.strains.index(treated_as) < self.strains.index(strain):
-                            self.treatment_outcome_types.append(strain + '_as' + treated_as[1:])
+        for scenario in self.scenarios:
+            if 'agestratified_ipt' in self.relevant_interventions[scenario] \
+                    or 'ipt' in self.relevant_interventions[scenario]:
+                self.compartment_types.append('onipt')
+        if self.gui_inputs['is_lowquality']:
+            self.compartment_types += ['lowquality']
+        if 'int_prop_novel_vaccination' in self.relevant_interventions:
+            self.compartment_types += ['susceptible_novelvac']
 
     def create_mixing_matrix(self):
         """
@@ -572,21 +608,6 @@ class Inputs:
             mixing[to_riskgroup]['_norisk'] = 1. - sum(mixing[to_riskgroup].values())
         return mixing
 
-    def elaborate_model_structure(self):
-        """
-        Add any additional elaborations to the model structure for extra processes - specifically, IPT, low-quality
-        health care and novel vaccinations.
-        """
-
-        for scenario in self.scenarios:
-            if 'agestratified_ipt' in self.relevant_interventions[scenario] \
-                    or 'ipt' in self.relevant_interventions[scenario]:
-                self.compartment_types.append('onipt')
-        if self.gui_inputs['is_lowquality']:
-            self.compartment_types += ['lowquality']
-        if 'int_prop_novel_vaccination' in self.relevant_interventions:
-            self.compartment_types += ['susceptible_novelvac']
-
     ''' time variant parameter processing methods '''
 
     def process_time_variants(self):
@@ -596,8 +617,6 @@ class Inputs:
         Note that the order of call is important and can lead to errors if changed.
         """
 
-        self.extract_freeze_times()  # goes first to remove from time-variants before they are processed
-        self.find_organ_proportions()
         if 'country_programs' in self.original_data:
             self.time_variants.update(self.original_data['country_programs'])
         self.add_time_variant_defaults()  # add any necessary time-variants from defaults if not in country programs
@@ -606,6 +625,7 @@ class Inputs:
         self.find_treatment_outcomes()
         self.find_irrelevant_treatment_timevariants()
         self.add_demo_dictionaries_to_timevariants()
+        self.find_organ_proportions()
         if self.gui_inputs['is_timevariant_organs']:
             self.add_organ_status_to_timevariants()
         else:
@@ -614,23 +634,6 @@ class Inputs:
         self.adjust_param_for_reporting('program_prop_detect', 'Bulgaria', 0.95)  # Bulgaria thought CDR over-estimated
 
     # general and demographic methods
-
-    def extract_freeze_times(self):
-        """
-        Extract the freeze_times for each scenario, if specified.
-        """
-
-        if 'country_programs' in self.original_data and 'freeze_times' in self.original_data['country_programs']:
-            self.freeze_times.update(self.original_data['country_programs'].pop('freeze_times'))
-
-    def find_organ_proportions(self):
-        """
-        Calculates dictionaries with proportion of cases progressing to each organ status by year, and adds these to
-        the derived_data attribute of the object.
-        """
-
-        self.derived_data.update(tool_kit.calculate_proportion_dict(self.original_data['notifications'],
-                                                                    ['new_sp', 'new_sn', 'new_ep']))
 
     def add_time_variant_defaults(self):
         """
@@ -891,6 +894,15 @@ class Inputs:
             # if there are no data available from the user sheets
             else:
                 self.time_variants['demo_' + demo_parameter] = self.original_data[demo_parameter]
+
+    def find_organ_proportions(self):
+        """
+        Calculates dictionaries with proportion of cases progressing to each organ status by year, and adds these to
+        the derived_data attribute of the object.
+        """
+
+        self.derived_data.update(tool_kit.calculate_proportion_dict(self.original_data['notifications'],
+                                                                    ['new_sp', 'new_sn', 'new_ep']))
 
     def add_organ_status_to_timevariants(self):
         """
@@ -1391,24 +1403,6 @@ class Inputs:
                     'Warning: Calibrated output %s is not directly available from the data' % output['key'])
 
     ''' miscellaneous methods '''
-
-    def find_keys_of_sheets_to_read(self):
-        """
-        Find keys of spreadsheets to read. Pretty simplistic at this stage, but expected to get more complicated as
-        other sheets (like diabetes) are added as optional.
-        """
-
-        # where sheets are available from multiple years, use _ and the year to choose the sheet, which will be dropped
-        keys_of_sheets_to_read \
-            = ['bcg_2016', 'rate_birth_2015', 'life_expectancy_2015', 'gtb_2015', 'gtb_2016', 'notifications_2016',
-               'outcomes_2015', 'default_parameters', 'country_constants', 'default_constants', 'country_programs',
-               'default_programs']
-
-        # add any optional sheets required for specific model being run (currently just diabetes)
-        if 'riskgroup_diabetes' in self.gui_inputs:
-            keys_of_sheets_to_read.append('diabetes')
-
-        return keys_of_sheets_to_read
 
     def add_comment_to_gui_window(self, comment):
         """

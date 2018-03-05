@@ -34,35 +34,6 @@ def get_autumn_params():
                'type': 'boolean',
                'label': tool_kit.find_button_name_from_string(key)}
 
-    # set some boolean keys to on (True) by default
-    default_boolean_keys = [
-        # 'output_uncertainty',
-        'write_uncertainty_outcome_params',
-        'output_param_plots',
-        # 'is_amplification',
-        # 'is_misassignment',
-        # 'is_lowquality',
-        # 'output_riskgroup_fractions',
-        'is_vary_detection_by_organ',
-        'is_include_relapse_in_ds_outcomes',
-        # 'is_vary_detection_by_riskgroup',
-        'is_treatment_history',
-        # 'riskgroup_prison',
-        'output_likelihood_plot',
-        # 'riskgroup_urbanpoor',
-        'output_scaleups',
-        # 'output_by_subgroups',
-        # 'riskgroup_ruralpoor',
-        'output_gtb_plots',
-        # 'is_vary_force_infection_by_riskgroup',
-        'riskgroup_diabetes',
-        # 'riskgroup_hiv',
-        # 'riskgroup_indigenous',
-        # 'is_timevariant_organs'
-    ]
-    for k in default_boolean_keys:
-        params[k]['value'] = True
-
     ''' drop down and sliders '''
 
     # countries
@@ -153,6 +124,35 @@ def get_autumn_params():
     for key, value in params.items():
         if not value.get('label'):
             value['label'] = key
+
+    # set some boolean keys to on (True) by default
+    default_boolean_keys = [
+        # 'output_uncertainty',
+        'write_uncertainty_outcome_params',
+        'output_param_plots',
+        # 'is_amplification',
+        # 'is_misassignment',
+        # 'is_lowquality',
+        # 'output_riskgroup_fractions',
+        'is_vary_detection_by_organ',
+        'is_include_relapse_in_ds_outcomes',
+        # 'is_vary_detection_by_riskgroup',
+        'is_treatment_history',
+        # 'riskgroup_prison',
+        'output_likelihood_plot',
+        # 'riskgroup_urbanpoor',
+        'output_scaleups',
+        # 'output_by_subgroups',
+        # 'riskgroup_ruralpoor',
+        'output_gtb_plots',
+        # 'is_vary_force_infection_by_riskgroup',
+        'riskgroup_diabetes',
+        # 'riskgroup_hiv',
+        # 'riskgroup_indigenous',
+        # 'is_timevariant_organs'
+    ]
+    for k in default_boolean_keys:
+        params[k]['value'] = True
 
     # set default values for drop down lists
     for param in params:

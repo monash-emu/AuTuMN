@@ -4,9 +4,9 @@
 projects
 saved_*
 Pipfile.lock
-bgui/server/config.py
+#bgui/server/config.py
 bgui/server/database.sqlite
-bgui/client/src/config.js
+#bgui/client/src/config.js
 saved_optimisation_analyses/
 saved_uncertainty_analyses/
 *pkl

@@ -14,6 +14,7 @@ pluggable API to other system. Applied to tuberculosis.
 - setup.py file to load all dependent modules
 - uncertainty for economics (an extension to intervention uncertainty)
 - document Bulgaria interventions properly in handbook
+- The model would not run without age-stratification (detected when running Bulgaria)
 
 ## Major outstanding tasks
 - low quality health sector

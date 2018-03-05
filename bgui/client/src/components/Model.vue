@@ -96,14 +96,31 @@
                   </vue-slider>
                 </div>
 
-                <div v-else-if="params[key].type == 'breakpoint'">
+                <div v-else-if="params[key].type == 'breakpoints'">
                   <label>{{ params[key].label }}</label>
                   <div style="height: 2.5em"></div>
-                  <vue-slider
-                      :max="params[key].max"
-                      :interval="params[key].interval"
-                      v-model="params[key].value">
-                  </vue-slider>
+                  <md-layout
+                    md-row
+                    style="width: 200px"
+                    v-for="(breakpoint, i) of params[key].value"
+                    :key="i">
+                    <vue-slider
+                      style="width: 130px"
+                      :max="100"
+                      :interval="1"
+                      v-model="params[key].value[i]">
+                    </vue-slider>
+                    <md-button
+                      class="md-icon-button md-raised"
+                      @click="deleteBreakpoint(params, key, i)">
+                      <md-icon>delete</md-icon>
+                    </md-button>
+                  </md-layout>
+                  <md-button
+                    class="md-icon-button md-raised"
+                    @click="addBreakpoint(params, key)">
+                    <md-icon>add</md-icon>
+                  </md-button>
                 </div>
 
               </md-layout>
@@ -232,6 +249,12 @@
               this.$data.isRunning = false
             }
           })
+      },
+      deleteBreakpoint(params, key, i) {
+
+      },
+      addBreakpoint(params, key) {
+
       },
       selectParamGroup (i) {
         this.paramGroup = this.paramGroups[i]

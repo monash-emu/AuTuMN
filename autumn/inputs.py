@@ -130,6 +130,8 @@ class Inputs:
         self.define_model_strata()
         self.find_scenarios_to_run()
 
+        self.reconcile_user_inputs()
+
         # read all required data
         self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
         self.original_data = spreadsheet.read_input_data_xls(True, self.find_keys_of_sheets_to_read(), self.country)
@@ -144,16 +146,16 @@ class Inputs:
         # process time-variant parameters
         self.process_time_variants()
 
-        # has to go after time variants so that the proportion in each risk-group has been specified
+        # has to go after time variants so that the starting proportion in each risk group can be specified
         self.define_riskgroup_structure()
 
-        # find parameters that require processing (including processes that require model structure to be defined)
+        # find parameters that require processing (requires model structure to be defined)
         self.find_additional_parameters()
 
         # classify interventions as to whether they apply and are to be costed
         self.classify_interventions()
 
-        # add compartment for IPT if implemented
+        # add compartment for IPT, low-quality health care and novel vaccination if implemented
         self.elaborate_model_structure()
 
         # calculate time-variant functions
@@ -165,11 +167,8 @@ class Inputs:
         # uncertainty-related analysis
         self.process_uncertainty_parameters()
 
-        # optimisation-related methods
-        self.find_intervention_startdates()  # currently sitting with intervention classification methods, though
-
         # make sure user inputs make sense
-        self.reconcile_user_inputs()
+        self.correct_user_inputs()
 
         # perform checks (undeveloped)
         self.checks()
@@ -264,6 +263,12 @@ class Inputs:
         self.scenarios \
             += [tool_kit.find_scenario_number_from_string(key) for key in self.gui_inputs
                 if key.startswith('scenario_') and len(key) < 12 and self.gui_inputs[key]]
+
+    def reconcile_user_inputs(self):
+
+        if self.gui_inputs['is_misassignment'] and self.n_strains <= 1:
+            self.add_comment_to_gui_window('Misassignment requested, but not implemented as single strain model only')
+            self.gui_inputs['is_misassignment'] = False
 
     ''' constant parameter processing methods '''
 
@@ -992,8 +997,7 @@ class Inputs:
             if 'perc_' in time_variant \
                     or (len(self.strains) < 2 and 'line_dst' in time_variant) \
                     or (len(self.strains) < 3 and 'secondline_dst' in time_variant) \
-                    or ('_inappropriate' in time_variant
-                        and (len(self.strains) < 2 or not self.gui_inputs['is_misassignment'])) \
+                    or ('_inappropriate' in time_variant and not self.gui_inputs['is_misassignment']) \
                     or (len(self.organ_status) == 1 and 'smearneg' in time_variant) \
                     or ('lowquality' in time_variant and not self.gui_inputs['is_lowquality']) \
                     or (len(self.strains) > 1 and 'treatment_' in time_variant and 'timeperiod_' not in time_variant
@@ -1374,16 +1378,13 @@ class Inputs:
 
     ''' miscellaneous methods '''
 
-    def reconcile_user_inputs(self):
+    def correct_user_inputs(self):
         """
         Method to ensure that user inputs make sense within the model, including that elaborations that are specific to
         particular ways of structuring the model are turned off with a warning if the model doesn't have the structure
         to allow for those elaborations.
         """
 
-        if self.gui_inputs['is_misassignment'] and self.n_strains <= 1:
-            self.add_comment_to_gui_window('Misassignment requested, but not implemented as single strain model only')
-            self.gui_inputs['is_misassignment'] = False
         if self.gui_inputs['is_amplification'] and self.n_strains <= 1:
             self.add_comment_to_gui_window(
                 'Resistance amplification requested, but not implemented as single strain model only')

@@ -148,7 +148,7 @@ class Inputs:
         # has to go after time variants so that the starting proportion in each risk group can be specified
         self.define_riskgroup_structure()
 
-        # find parameters that require processing (requires model structure to be defined)
+        # find parameters that require processing after model structure has been defined
         self.find_additional_parameters()
 
         # classify interventions as to whether they apply and are to be costed
@@ -482,24 +482,24 @@ class Inputs:
         """
 
         model_breakpoints = [float(i) for i in self.model_constants['age_breakpoints']]  # convert list of ints to float
-        for param in ['early_progression_age', 'late_progression_age', 'tb_multiplier_child_infectiousness_age']:
+        for param_type in ['early_progression_age', 'late_progression_age', 'tb_multiplier_child_infectiousness_age']:
 
             # extract age-stratified parameters in the appropriate form
-            prog_param_vals, prog_age_dict = {}, {}
-            for constant in self.model_constants:
-                if param in constant:
-                    prog_param_string, prog_stem = tool_kit.find_string_from_starting_letters(constant, '_age')
-                    prog_age_dict[prog_param_string] = tool_kit.interrogate_age_string(prog_param_string)[0]
-                    prog_param_vals[prog_param_string] = self.model_constants[constant]
-            param_breakpoints = tool_kit.find_age_breakpoints_from_dicts(prog_age_dict)
+            param_vals, age_breaks, stem = {}, {}, None
+            for param in self.model_constants:
+                if param_type in param:
+                    age_string, stem = tool_kit.find_string_from_starting_letters(param, '_age')
+                    age_breaks[age_string] = tool_kit.interrogate_age_string(age_string)[0]
+                    param_vals[age_string] = self.model_constants[param]
+            param_breakpoints = tool_kit.find_age_breakpoints_from_dicts(age_breaks)
 
             # find and set age-adjusted parameters
-            prog_age_adjusted_params = \
-                tool_kit.adapt_params_to_stratification(param_breakpoints, model_breakpoints, prog_param_vals,
-                                                        parameter_name=param,
+            age_adjusted_values = \
+                tool_kit.adapt_params_to_stratification(param_breakpoints, model_breakpoints, param_vals,
+                                                        parameter_name=param_type,
                                                         whether_to_plot=self.gui_inputs['output_age_calculations'])
             for agegroup in self.agegroups:
-                self.model_constants[prog_stem + agegroup] = prog_age_adjusted_params[agegroup]
+                self.model_constants[stem + agegroup] = age_adjusted_values[agegroup]
 
     def detail_strain_structure(self):
         """
@@ -664,15 +664,13 @@ class Inputs:
 
         # vaccination
         if self.time_variants['int_perc_vaccination']['load_data'] == u'yes':
-            for year in self.original_data['bcg']:
-                if year not in self.time_variants['int_perc_vaccination']:
-                    self.time_variants['int_perc_vaccination'][year] = self.original_data['bcg'][year]
+            self.time_variants['int_perc_vaccination'] \
+                = dict(self.original_data['bcg'], **self.time_variants['int_perc_vaccination'])
 
         # case detection
         if self.time_variants['program_perc_detect']['load_data'] == u'yes':
-            for year in self.original_data['gtb']['c_cdr']:
-                if year not in self.time_variants['program_perc_detect']:
-                    self.time_variants['program_perc_detect'][year] = self.original_data['gtb']['c_cdr'][year]
+            self.time_variants['program_perc_detect'] \
+                = dict(self.original_data['gtb']['c_cdr'], **self.time_variants['program_perc_detect'])
 
     def convert_percentages_to_proportions(self):
         """

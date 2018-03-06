@@ -81,8 +81,8 @@ class Inputs:
         (self.riskgroups_for_detection, self.organs_for_detection, self.strains) \
             = [[''] for i in range(3)]
         (self.is_vary_detection_by_organ, self.is_vary_detection_by_riskgroup, self.is_include_relapse_in_ds_outcomes,
-         self.is_vary_force_infection_by_riskgroup) \
-            = [False for i in range(4)]
+         self.is_vary_force_infection_by_riskgroup, self.is_include_hiv_treatment_outcomes) \
+            = [False for i in range(5)]
 
         # set some attributes direct from GUI inputs
         for attribute in \
@@ -884,8 +884,7 @@ class Inputs:
                     and self.time_variants['demo_' + demo_parameter]['load_data'] == u'yes':
                 for year in self.original_data[demo_parameter]:
                     if year not in self.time_variants['demo_' + demo_parameter]:
-                        self.time_variants['demo_' + demo_parameter][year] \
-                            = self.original_data[demo_parameter][year]
+                        self.time_variants['demo_' + demo_parameter][year] = self.original_data[demo_parameter][year]
 
             # if there are no data available from the user sheets
             else:

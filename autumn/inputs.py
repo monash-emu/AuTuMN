@@ -386,7 +386,8 @@ class Inputs:
 
     def find_riskgroup_progressions(self):
         """
-        Adjust the progression rates to active disease for various risk groups.
+        Adjust the progression parameters from latency to active disease for various risk groups. Early progression
+        parameters currently still proportions rather than rates.
         """
 
         for riskgroup in self.riskgroups:
@@ -397,20 +398,14 @@ class Inputs:
 
             # make adjustments for each age group if required
             for agegroup in self.agegroups:
-                if 'riskgroup_multiplier' + riskgroup + '_progression' in self.model_constants\
-                        and tool_kit.interrogate_age_string(agegroup)[0][0] >= start_age:
-                    self.model_constants['tb_prop_early_progression' + riskgroup + agegroup] \
-                        = tool_kit.apply_odds_ratio_to_proportion(
-                        self.model_constants['tb_prop_early_progression' + agegroup],
-                        self.model_constants['riskgroup_multiplier' + riskgroup + '_progression'])
-                    self.model_constants['tb_rate_late_progression' + riskgroup + agegroup] \
-                        = self.model_constants['tb_rate_late_progression' + agegroup] \
-                        * self.model_constants['riskgroup_multiplier' + riskgroup + '_progression']
-                else:
-                    self.model_constants['tb_prop_early_progression' + riskgroup + agegroup] \
-                        = self.model_constants['tb_prop_early_progression' + agegroup]
-                    self.model_constants['tb_rate_late_progression' + riskgroup + agegroup] \
-                        = self.model_constants['tb_rate_late_progression' + agegroup]
+                riskgroup_modifier = self.model_constants['riskgroup_multiplier' + riskgroup + '_progression'] \
+                    if 'riskgroup_multiplier' + riskgroup + '_progression' in self.model_constants \
+                       and tool_kit.interrogate_age_string(agegroup)[0][0] >= start_age else 1.
+                self.model_constants['tb_rate_late_progression' + riskgroup + agegroup] \
+                    = self.model_constants['tb_rate_late_progression' + agegroup] * riskgroup_modifier
+                self.model_constants['tb_prop_early_progression' + riskgroup + agegroup] \
+                    = tool_kit.apply_odds_ratio_to_proportion(
+                    self.model_constants['tb_prop_early_progression' + agegroup], riskgroup_modifier)
 
     def find_latency_progression_rates(self):
         """

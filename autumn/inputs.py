@@ -271,6 +271,10 @@ class Inputs:
             self.add_comment_to_gui_window(
                 'Time-variant organ status requested, but not implemented as no stratification by organ status')
             self.gui_inputs['is_timevariant_organs'] = False
+        if len(self.organ_status) == 1 and self.is_vary_detection_by_organ:
+            self.is_vary_detection_by_organ = False
+            self.add_comment_to_gui_window(
+                'Requested variation by organ status turned off, as model is unstratified by organ status.')
         if self.gui_inputs['is_amplification'] and self.n_strains <= 1:
             self.add_comment_to_gui_window(
                 'Resistance amplification requested, but not implemented as single strain model only')
@@ -1003,8 +1007,8 @@ class Inputs:
                     self.irrelevant_time_variants += [time_variant]
 
             # exclude time-variants that are percentages, irrelevant drug-susceptibility testing programs, inappropriate
-            # treatment time-variants for single strain models, smear-negative parameters for unstratified models,
-            # low-quality care sector interventions for models not including this.
+            # treatment time-variants for single strain models, smear-negative parameters for unstratified models and
+            # low-quality care sector interventions for models not including this
             if 'perc_' in time_variant \
                     or (len(self.strains) < 2 and 'line_dst' in time_variant) \
                     or (len(self.strains) < 3 and 'secondline_dst' in time_variant) \
@@ -1019,7 +1023,7 @@ class Inputs:
 
     def find_relevant_interventions(self):
         """
-        Code to create lists of the programmatic interventions that are relevant to a particular scenario being run.
+        Create lists of the programmatic interventions that are relevant to a particular scenario being run.
 
         Creates:
             self.relevant_interventions: A dict with keys scenarios and values lists of scenario-relevant programs
@@ -1068,16 +1072,8 @@ class Inputs:
     def determine_organ_detection_variation(self):
         """
         Work out what we're doing with variation of detection rates by organ status (consistently for all scenarios).
+        Note that self.is_vary_detection_by_organ is set to False by default in instantiation.
         """
-
-        # start with user request
-        # self.is_vary_detection_by_organ = self.gui_inputs['is_is_vary_detection_by_organ']
-
-        # turn off and warn if model unstratified by organ status
-        if len(self.organ_status) == 1 and self.is_vary_detection_by_organ:
-            self.is_vary_detection_by_organ = False
-            self.add_comment_to_gui_window(
-                'Requested variation by organ status turned off, as model is unstratified by organ status.')
 
         for scenario in self.scenarios:
             # turn on and warn if Xpert requested but variation not requested
@@ -1098,10 +1094,9 @@ class Inputs:
     def determine_riskgroup_detection_variation(self):
         """
         Set variation in detection by risk-group according to whether ACF or intensive screening implemented (in any of
-        the scenarios).
+        the scenarios). Note that self.is_vary_detection_by_riskgroup is set to False by default in instantiation.
         """
 
-        self.is_vary_detection_by_riskgroup = False
         for scenario in self.scenarios:
             for intervention in self.relevant_interventions[scenario]:
                 if 'acf' in intervention or 'intensive_screening' in intervention or 'groupcontributor' in intervention:
@@ -1115,9 +1110,8 @@ class Inputs:
         """
 
         if len(self.strains) > 1:
-            self.interventions_available_for_costing += ['shortcourse_mdr']
-            self.interventions_available_for_costing += ['treatment_support_relative_ds']
-            self.interventions_available_for_costing += ['treatment_support_relative_mdr']
+            self.interventions_available_for_costing \
+                += ['shortcourse_mdr', 'treatment_support_relative_ds', 'treatment_support_relative_mdr']
         for organ in self.organ_status:
             self.interventions_available_for_costing += ['ambulatorycare' + organ]
         if self.gui_inputs['is_lowquality']:
@@ -1143,20 +1137,20 @@ class Inputs:
 
     # actually has to be called later and is just required for optimisation
 
-    def find_intervention_startdates(self):
-        """
-        Find the dates when the different interventions start and populate self.intervention_startdates
-        """
-
-        for scenario in self.scenarios:
-            self.intervention_startdates[scenario] = {}
-            for intervention in self.interventions_to_cost[scenario]:
-                self.intervention_startdates[scenario][intervention] = None
-                years_pos_coverage \
-                    = [key for (key, value)
-                       in self.scaleup_data[scenario]['int_prop_' + intervention].items() if value > 0.]
-                if years_pos_coverage:  # i.e. some coverage present from start
-                    self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
+    # def find_intervention_startdates(self):
+    #     """
+    #     Find the dates when the different interventions start and populate self.intervention_startdates
+    #     """
+    #
+    #     for scenario in self.scenarios:
+    #         self.intervention_startdates[scenario] = {}
+    #         for intervention in self.interventions_to_cost[scenario]:
+    #             self.intervention_startdates[scenario][intervention] = None
+    #             years_pos_coverage \
+    #                 = [key for (key, value)
+    #                    in self.scaleup_data[scenario]['int_prop_' + intervention].items() if value > 0.]
+    #             if years_pos_coverage:  # i.e. some coverage present from start
+    #                 self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
 
     ''' finding scale-up functions and related methods '''
 
@@ -1198,15 +1192,13 @@ class Inputs:
             for time_variant in self.time_variants:
                 if time_variant not in self.irrelevant_time_variants:
                     self.scaleup_data[scenario][str(time_variant)] = {}
-                    for i in self.time_variants[time_variant]:
-                        if i == 'scenario_' + str(scenario):
+                    for scaleup_key in self.time_variants[time_variant]:
+                        if type(scaleup_key) == str and scaleup_key == 'scenario_' + str(scenario):
                             self.scaleup_data[scenario][str(time_variant)]['scenario'] \
-                                = self.time_variants[time_variant][i]
-                        elif type(i) == str:
-                            if 'scenario_' not in i:
-                                self.scaleup_data[scenario][str(time_variant)][i] = self.time_variants[time_variant][i]
-                        else:
-                            self.scaleup_data[scenario][str(time_variant)][i] = self.time_variants[time_variant][i]
+                                = self.time_variants[time_variant][scaleup_key]
+                        elif scaleup_key == 'smoothness' or type(scaleup_key) == int:
+                            self.scaleup_data[scenario][str(time_variant)][scaleup_key] \
+                                = self.time_variants[time_variant][scaleup_key]
 
     def find_constant_functions(self):
         """

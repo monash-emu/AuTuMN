@@ -876,17 +876,16 @@ class Inputs:
         Similarly to previous methods, only performed if requested and only populated where absent.
         """
 
-        # for the two types of demographic parameters
+        # for each type of demographic parameters
         for demo_parameter in ['life_expectancy', 'rate_birth']:
 
             # if there are data available from the user-derived sheets and loading external data is requested
             if 'demo_' + demo_parameter in self.time_variants \
                     and self.time_variants['demo_' + demo_parameter]['load_data'] == u'yes':
-                for year in self.original_data[demo_parameter]:
-                    if year not in self.time_variants['demo_' + demo_parameter]:
-                        self.time_variants['demo_' + demo_parameter][year] = self.original_data[demo_parameter][year]
+                self.time_variants['demo_' + demo_parameter] \
+                    = dict(self.original_data[demo_parameter], **self.time_variants['demo_' + demo_parameter])
 
-            # if there are no data available from the user sheets
+            # otherwise
             else:
                 self.time_variants['demo_' + demo_parameter] = self.original_data[demo_parameter]
 

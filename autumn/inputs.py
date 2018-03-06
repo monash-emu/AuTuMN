@@ -81,14 +81,14 @@ class Inputs:
         (self.riskgroups_for_detection, self.organs_for_detection, self.strains) \
             = [[''] for i in range(3)]
         (self.is_vary_detection_by_organ, self.is_vary_detection_by_riskgroup, self.is_include_relapse_in_ds_outcomes,
-         self.is_vary_force_infection_by_riskgroup) \
-            = [False for i in range(4)]
+         self.is_vary_force_infection_by_riskgroup, self.is_include_hiv_treatment_outcomes) \
+            = [False for i in range(5)]
 
         # set some attributes direct from GUI inputs
         for attribute in \
                 ['country', 'is_vary_detection_by_organ', 'is_vary_detection_by_riskgroup',
                  'is_include_relapse_in_ds_outcomes', 'is_vary_force_infection_by_riskgroup', 'fitting_method',
-                 'uncertainty_intervention']:
+                 'uncertainty_intervention', 'is_include_hiv_treatment_outcomes']:
             setattr(self, attribute, gui_inputs[attribute])
 
         # various lists of strings for features available to the models or running modes
@@ -148,7 +148,7 @@ class Inputs:
         # has to go after time variants so that the starting proportion in each risk group can be specified
         self.define_riskgroup_structure()
 
-        # find parameters that require processing (requires model structure to be defined)
+        # find parameters that require processing after model structure has been defined
         self.find_additional_parameters()
 
         # classify interventions as to whether they apply and are to be costed
@@ -271,6 +271,10 @@ class Inputs:
             self.add_comment_to_gui_window(
                 'Time-variant organ status requested, but not implemented as no stratification by organ status')
             self.gui_inputs['is_timevariant_organs'] = False
+        if len(self.organ_status) == 1 and self.is_vary_detection_by_organ:
+            self.is_vary_detection_by_organ = False
+            self.add_comment_to_gui_window(
+                'Requested variation by organ status turned off, as model is unstratified by organ status.')
         if self.gui_inputs['is_amplification'] and self.n_strains <= 1:
             self.add_comment_to_gui_window(
                 'Resistance amplification requested, but not implemented as single strain model only')
@@ -384,6 +388,29 @@ class Inputs:
         # find the time non-infectious on treatment from the total time on treatment and the time infectious
         self.find_noninfectious_period()
 
+    def find_riskgroup_progressions(self):
+        """
+        Adjust the progression parameters from latency to active disease for various risk groups. Early progression
+        parameters currently still proportions rather than rates.
+        """
+
+        for riskgroup in self.riskgroups:
+
+            # find age above which adjustments should be made, with default assumption of applying to all age-groups
+            start_age = self.model_constants['riskgroup_startage' + riskgroup] \
+                if 'riskgroup_startage' + riskgroup in self.model_constants else -1.
+
+            # make adjustments for each age group if required
+            for agegroup in self.agegroups:
+                riskgroup_modifier = self.model_constants['riskgroup_multiplier' + riskgroup + '_progression'] \
+                    if 'riskgroup_multiplier' + riskgroup + '_progression' in self.model_constants \
+                       and tool_kit.interrogate_age_string(agegroup)[0][0] >= start_age else 1.
+                self.model_constants['tb_rate_late_progression' + riskgroup + agegroup] \
+                    = self.model_constants['tb_rate_late_progression' + agegroup] * riskgroup_modifier
+                self.model_constants['tb_prop_early_progression' + riskgroup + agegroup] \
+                    = tool_kit.apply_odds_ratio_to_proportion(
+                    self.model_constants['tb_prop_early_progression' + agegroup], riskgroup_modifier)
+
     def find_latency_progression_rates(self):
         """
         Find early progression rates by age group and by risk group status - i.e. early progression to active TB and
@@ -400,35 +427,6 @@ class Inputs:
 
                 # stabilisation rate is one minus early progression proportion divided by early time period
                 self.model_constants['tb_rate_stabilise' + riskgroup + agegroup] = (1. - prop_early) / time_early
-
-    def find_riskgroup_progressions(self):
-        """
-        Code to adjust the progression rates to active disease for various risk groups.
-        """
-
-        for riskgroup in self.riskgroups:
-
-            # find age above which adjustments should be made, with default assumption of applying to all age-groups
-            start_age = -1.
-            if 'riskgroup_startage' + riskgroup in self.model_constants:
-                start_age = self.model_constants['riskgroup_startage' + riskgroup]
-
-            # make adjustments for each age group if required
-            for agegroup in self.agegroups:
-                if 'riskgroup_multiplier' + riskgroup + '_progression' in self.model_constants\
-                        and tool_kit.interrogate_age_string(agegroup)[0][0] >= start_age:
-                    self.model_constants['tb_prop_early_progression' + riskgroup + agegroup] \
-                        = tool_kit.apply_odds_ratio_to_proportion(
-                        self.model_constants['tb_prop_early_progression' + agegroup],
-                        self.model_constants['riskgroup_multiplier' + riskgroup + '_progression'])
-                    self.model_constants['tb_rate_late_progression' + riskgroup + agegroup] \
-                        = self.model_constants['tb_rate_late_progression' + agegroup] \
-                        * self.model_constants['riskgroup_multiplier' + riskgroup + '_progression']
-                else:
-                    self.model_constants['tb_prop_early_progression' + riskgroup + agegroup] \
-                        = self.model_constants['tb_prop_early_progression' + agegroup]
-                    self.model_constants['tb_rate_late_progression' + riskgroup + agegroup] \
-                        = self.model_constants['tb_rate_late_progression' + agegroup]
 
     def find_noninfectious_period(self):
         """
@@ -482,24 +480,24 @@ class Inputs:
         """
 
         model_breakpoints = [float(i) for i in self.model_constants['age_breakpoints']]  # convert list of ints to float
-        for param in ['early_progression_age', 'late_progression_age', 'tb_multiplier_child_infectiousness_age']:
+        for param_type in ['early_progression_age', 'late_progression_age', 'tb_multiplier_child_infectiousness_age']:
 
             # extract age-stratified parameters in the appropriate form
-            prog_param_vals, prog_age_dict = {}, {}
-            for constant in self.model_constants:
-                if param in constant:
-                    prog_param_string, prog_stem = tool_kit.find_string_from_starting_letters(constant, '_age')
-                    prog_age_dict[prog_param_string] = tool_kit.interrogate_age_string(prog_param_string)[0]
-                    prog_param_vals[prog_param_string] = self.model_constants[constant]
-            param_breakpoints = tool_kit.find_age_breakpoints_from_dicts(prog_age_dict)
+            param_vals, age_breaks, stem = {}, {}, None
+            for param in self.model_constants:
+                if param_type in param:
+                    age_string, stem = tool_kit.find_string_from_starting_letters(param, '_age')
+                    age_breaks[age_string] = tool_kit.interrogate_age_string(age_string)[0]
+                    param_vals[age_string] = self.model_constants[param]
+            param_breakpoints = tool_kit.find_age_breakpoints_from_dicts(age_breaks)
 
             # find and set age-adjusted parameters
-            prog_age_adjusted_params = \
-                tool_kit.adapt_params_to_stratification(param_breakpoints, model_breakpoints, prog_param_vals,
-                                                        parameter_name=param,
+            age_adjusted_values = \
+                tool_kit.adapt_params_to_stratification(param_breakpoints, model_breakpoints, param_vals,
+                                                        parameter_name=param_type,
                                                         whether_to_plot=self.gui_inputs['output_age_calculations'])
             for agegroup in self.agegroups:
-                self.model_constants[prog_stem + agegroup] = prog_age_adjusted_params[agegroup]
+                self.model_constants[stem + agegroup] = age_adjusted_values[agegroup]
 
     def detail_strain_structure(self):
         """
@@ -545,10 +543,8 @@ class Inputs:
                         % tool_kit.find_title_from_dictionary(riskgroup))
 
         # add the null group according to whether there are any risk groups
-        if self.riskgroups:
-            self.riskgroups.append('_norisk')
-        else:
-            self.riskgroups.append('')
+        norisk_string = '_norisk' if self.riskgroups else ''
+        self.riskgroups.append(norisk_string)
 
         # ensure some starting proportion of births go to the risk group stratum if value not loaded earlier
         for riskgroup in self.riskgroups:
@@ -664,15 +660,13 @@ class Inputs:
 
         # vaccination
         if self.time_variants['int_perc_vaccination']['load_data'] == u'yes':
-            for year in self.original_data['bcg']:
-                if year not in self.time_variants['int_perc_vaccination']:
-                    self.time_variants['int_perc_vaccination'][year] = self.original_data['bcg'][year]
+            self.time_variants['int_perc_vaccination'] \
+                = dict(self.original_data['bcg'], **self.time_variants['int_perc_vaccination'])
 
         # case detection
         if self.time_variants['program_perc_detect']['load_data'] == u'yes':
-            for year in self.original_data['gtb']['c_cdr']:
-                if year not in self.time_variants['program_perc_detect']:
-                    self.time_variants['program_perc_detect'][year] = self.original_data['gtb']['c_cdr'][year]
+            self.time_variants['program_perc_detect'] \
+                = dict(self.original_data['gtb']['c_cdr'], **self.time_variants['program_perc_detect'])
 
     def convert_percentages_to_proportions(self):
         """
@@ -700,33 +694,30 @@ class Inputs:
         self.calculate_treatment_outcome_proportions()
         self.add_treatment_outcomes_to_timevariants()
 
-    def aggregate_treatment_outcomes(self, include_hiv=True):
+    def aggregate_treatment_outcomes(self):
         """
         Sums the treatment outcome numbers from the Global TB Report to get aggregate values for the number of patients
         achieving 1) success, 2) death on treatment, 3) unfavourable outcomes other than death on treatment (termed
         default here.
-
-        Args:
-            include_hiv: Whether to include the HIV patients in calculations
-                (because may not be needed for models with explicit HIV strata)
         """
 
         ''' up to 2011 fields for DS-TB '''
 
-        # create string conversion structures for communcation between GTB report and AuTuMN
+        # create string conversion structures for communication between GTB report and AuTuMN
         hiv_statuses_to_include = ['']
-        if include_hiv:
+        if self.is_include_hiv_treatment_outcomes:
             hiv_statuses_to_include.append('hiv_')
-        pre2011_map_gtb_to_autumn = {'_cmplt': '_success',
-                                     '_cur': '_success',
-                                     '_def': '_default',
-                                     '_fail': '_default',
-                                     '_died': '_death'}
+        pre2011_map_gtb_to_autumn \
+            = {'_cmplt': '_success',
+               '_cur': '_success',
+               '_def': '_default',
+               '_fail': '_default',
+               '_died': '_death'}
 
         # by each outcome, find total number of patients achieving that outcome (up to 2011, with or without HIV)
         for outcome in pre2011_map_gtb_to_autumn:
-            self.derived_data[self.strains[0] + '_new' + pre2011_map_gtb_to_autumn[outcome]] = {}
-            self.derived_data[self.strains[0] + '_treated' + pre2011_map_gtb_to_autumn[outcome]] = {}
+            for status in ['_new', '_treated']:
+                self.derived_data[self.strains[0] + status + pre2011_map_gtb_to_autumn[outcome]] = {}
 
         # needs another loop to prevent the default dictionaries being blanked after working out default
         for outcome in pre2011_map_gtb_to_autumn:
@@ -752,12 +743,13 @@ class Inputs:
 
         # create string conversion structures
         hiv_statuses_to_include = ['newrel']
-        if include_hiv:
+        if self.is_include_hiv_treatment_outcomes:
             hiv_statuses_to_include.append('tbhiv')
-        post2011_map_gtb_to_autumn = {'_succ': '_success',
-                                      '_fail': '_default',
-                                      '_lost': '_default',
-                                      '_died': '_death'}
+        post2011_map_gtb_to_autumn \
+            = {'_succ': '_success',
+               '_fail': '_default',
+               '_lost': '_default',
+               '_died': '_death'}
 
         # by each outcome, find total number of patients achieving that outcome
         for outcome in post2011_map_gtb_to_autumn:
@@ -880,18 +872,16 @@ class Inputs:
         Similarly to previous methods, only performed if requested and only populated where absent.
         """
 
-        # for the two types of demographic parameters
+        # for each type of demographic parameters
         for demo_parameter in ['life_expectancy', 'rate_birth']:
 
             # if there are data available from the user-derived sheets and loading external data is requested
             if 'demo_' + demo_parameter in self.time_variants \
                     and self.time_variants['demo_' + demo_parameter]['load_data'] == u'yes':
-                for year in self.original_data[demo_parameter]:
-                    if year not in self.time_variants['demo_' + demo_parameter]:
-                        self.time_variants['demo_' + demo_parameter][year] \
-                            = self.original_data[demo_parameter][year]
+                self.time_variants['demo_' + demo_parameter] \
+                    = dict(self.original_data[demo_parameter], **self.time_variants['demo_' + demo_parameter])
 
-            # if there are no data available from the user sheets
+            # otherwise
             else:
                 self.time_variants['demo_' + demo_parameter] = self.original_data[demo_parameter]
 
@@ -917,10 +907,9 @@ class Inputs:
 
             # populate absent values from derived data if input data available
             if 'epi_prop' + organ in self.time_variants:
-                for year in self.derived_data['prop_new' + name_conversion_dict[organ]]:
-                    if year not in self.time_variants['epi_prop' + organ]:
-                        self.time_variants['epi_prop' + organ][year] \
-                            = self.derived_data['prop_new' + name_conversion_dict[organ]][year]
+                self.time_variants['epi_prop' + organ] \
+                    = dict(self.derived_data['prop_new' + name_conversion_dict[organ]],
+                           **self.time_variants['epi_prop' + organ])
 
             # otherwise if no input data available, just take the derived data straight from the loaded sheets
             else:
@@ -935,7 +924,7 @@ class Inputs:
 
         name_conversion_dict = {'_smearpos': '_sp', '_smearneg': '_sn', '_extrapul': '_ep'}
 
-        # if specific values requested
+        # if specific values requested by user
         if 'epi_prop_smearpos' in self.model_constants and 'epi_prop_smearneg' in self.model_constants:
             self.model_constants['epi_prop_extrapul'] \
                 = 1. - self.model_constants['epi_prop_smearpos'] - self.model_constants['epi_prop_smearneg']
@@ -961,8 +950,8 @@ class Inputs:
         for time_variant in self.time_variants:
 
             # add zero at starting time for model run to all program proportions
-            if ('program_prop' in time_variant or 'int_prop' in time_variant) and '_death' not in time_variant\
-                    and '_dots_contributor' not in time_variant\
+            if ('program_prop' in time_variant or 'int_prop' in time_variant) and '_death' not in time_variant \
+                    and '_dots_contributor' not in time_variant \
                     and '_dot_groupcontributor' not in time_variant:
                 self.time_variants[time_variant][int(self.model_constants['start_time'])] = 0.
 
@@ -1018,8 +1007,8 @@ class Inputs:
                     self.irrelevant_time_variants += [time_variant]
 
             # exclude time-variants that are percentages, irrelevant drug-susceptibility testing programs, inappropriate
-            # treatment time-variants for single strain models, smear-negative parameters for unstratified models,
-            # low-quality care sector interventions for models not including this.
+            # treatment time-variants for single strain models, smear-negative parameters for unstratified models and
+            # low-quality care sector interventions for models not including this
             if 'perc_' in time_variant \
                     or (len(self.strains) < 2 and 'line_dst' in time_variant) \
                     or (len(self.strains) < 3 and 'secondline_dst' in time_variant) \
@@ -1034,7 +1023,7 @@ class Inputs:
 
     def find_relevant_interventions(self):
         """
-        Code to create lists of the programmatic interventions that are relevant to a particular scenario being run.
+        Create lists of the programmatic interventions that are relevant to a particular scenario being run.
 
         Creates:
             self.relevant_interventions: A dict with keys scenarios and values lists of scenario-relevant programs
@@ -1083,16 +1072,8 @@ class Inputs:
     def determine_organ_detection_variation(self):
         """
         Work out what we're doing with variation of detection rates by organ status (consistently for all scenarios).
+        Note that self.is_vary_detection_by_organ is set to False by default in instantiation.
         """
-
-        # start with user request
-        # self.is_vary_detection_by_organ = self.gui_inputs['is_is_vary_detection_by_organ']
-
-        # turn off and warn if model unstratified by organ status
-        if len(self.organ_status) == 1 and self.is_vary_detection_by_organ:
-            self.is_vary_detection_by_organ = False
-            self.add_comment_to_gui_window(
-                'Requested variation by organ status turned off, as model is unstratified by organ status.')
 
         for scenario in self.scenarios:
             # turn on and warn if Xpert requested but variation not requested
@@ -1113,10 +1094,9 @@ class Inputs:
     def determine_riskgroup_detection_variation(self):
         """
         Set variation in detection by risk-group according to whether ACF or intensive screening implemented (in any of
-        the scenarios).
+        the scenarios). Note that self.is_vary_detection_by_riskgroup is set to False by default in instantiation.
         """
 
-        self.is_vary_detection_by_riskgroup = False
         for scenario in self.scenarios:
             for intervention in self.relevant_interventions[scenario]:
                 if 'acf' in intervention or 'intensive_screening' in intervention or 'groupcontributor' in intervention:
@@ -1130,9 +1110,8 @@ class Inputs:
         """
 
         if len(self.strains) > 1:
-            self.interventions_available_for_costing += ['shortcourse_mdr']
-            self.interventions_available_for_costing += ['treatment_support_relative_ds']
-            self.interventions_available_for_costing += ['treatment_support_relative_mdr']
+            self.interventions_available_for_costing \
+                += ['shortcourse_mdr', 'treatment_support_relative_ds', 'treatment_support_relative_mdr']
         for organ in self.organ_status:
             self.interventions_available_for_costing += ['ambulatorycare' + organ]
         if self.gui_inputs['is_lowquality']:
@@ -1158,20 +1137,20 @@ class Inputs:
 
     # actually has to be called later and is just required for optimisation
 
-    def find_intervention_startdates(self):
-        """
-        Find the dates when the different interventions start and populate self.intervention_startdates
-        """
-
-        for scenario in self.scenarios:
-            self.intervention_startdates[scenario] = {}
-            for intervention in self.interventions_to_cost[scenario]:
-                self.intervention_startdates[scenario][intervention] = None
-                years_pos_coverage \
-                    = [key for (key, value)
-                       in self.scaleup_data[scenario]['int_prop_' + intervention].items() if value > 0.]
-                if years_pos_coverage:  # i.e. some coverage present from start
-                    self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
+    # def find_intervention_startdates(self):
+    #     """
+    #     Find the dates when the different interventions start and populate self.intervention_startdates
+    #     """
+    #
+    #     for scenario in self.scenarios:
+    #         self.intervention_startdates[scenario] = {}
+    #         for intervention in self.interventions_to_cost[scenario]:
+    #             self.intervention_startdates[scenario][intervention] = None
+    #             years_pos_coverage \
+    #                 = [key for (key, value)
+    #                    in self.scaleup_data[scenario]['int_prop_' + intervention].items() if value > 0.]
+    #             if years_pos_coverage:  # i.e. some coverage present from start
+    #                 self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
 
     ''' finding scale-up functions and related methods '''
 
@@ -1213,15 +1192,13 @@ class Inputs:
             for time_variant in self.time_variants:
                 if time_variant not in self.irrelevant_time_variants:
                     self.scaleup_data[scenario][str(time_variant)] = {}
-                    for i in self.time_variants[time_variant]:
-                        if i == 'scenario_' + str(scenario):
+                    for scaleup_key in self.time_variants[time_variant]:
+                        if type(scaleup_key) == str and scaleup_key == 'scenario_' + str(scenario):
                             self.scaleup_data[scenario][str(time_variant)]['scenario'] \
-                                = self.time_variants[time_variant][i]
-                        elif type(i) == str:
-                            if 'scenario_' not in i:
-                                self.scaleup_data[scenario][str(time_variant)][i] = self.time_variants[time_variant][i]
-                        else:
-                            self.scaleup_data[scenario][str(time_variant)][i] = self.time_variants[time_variant][i]
+                                = self.time_variants[time_variant][scaleup_key]
+                        elif scaleup_key == 'smoothness' or type(scaleup_key) == int:
+                            self.scaleup_data[scenario][str(time_variant)][scaleup_key] \
+                                = self.time_variants[time_variant][scaleup_key]
 
     def find_constant_functions(self):
         """
@@ -1378,17 +1355,16 @@ class Inputs:
         """
 
         # decide whether calibration or uncertainty analysis is being run
-        if self.run_mode == 'calibration':
-            var_to_iterate = self.calib_outputs
-        elif self.run_mode == 'epi_uncertainty':
-            var_to_iterate = self.outputs_unc
+        var_to_iterate = self.calib_outputs if self.run_mode == 'calibration' else self.outputs_unc
 
-        inc_conversion_dict = {'incidence': 'e_inc_100k',
-                               'incidence_low': 'e_inc_100k_lo',
-                               'incidence_high': 'e_inc_100k_hi'}
-        mort_conversion_dict = {'mortality': 'e_mort_exc_tbhiv_100k',
-                                'mortality_low': 'e_mort_exc_tbhiv_100k_lo',
-                                'mortality_high': 'e_mort_exc_tbhiv_100k_hi'}
+        inc_conversion_dict \
+            = {'incidence': 'e_inc_100k',
+               'incidence_low': 'e_inc_100k_lo',
+               'incidence_high': 'e_inc_100k_hi'}
+        mort_conversion_dict \
+            = {'mortality': 'e_mort_exc_tbhiv_100k',
+               'mortality_low': 'e_mort_exc_tbhiv_100k_lo',
+               'mortality_high': 'e_mort_exc_tbhiv_100k_hi'}
 
         # work through vars to be used and populate into the data fitting dictionary
         for output in var_to_iterate:

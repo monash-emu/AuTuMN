@@ -88,7 +88,7 @@ class Inputs:
         for attribute in \
                 ['country', 'is_vary_detection_by_organ', 'is_vary_detection_by_riskgroup',
                  'is_include_relapse_in_ds_outcomes', 'is_vary_force_infection_by_riskgroup', 'fitting_method',
-                 'uncertainty_intervention']:
+                 'uncertainty_intervention', 'is_include_hiv_treatment_outcomes']:
             setattr(self, attribute, gui_inputs[attribute])
 
         # various lists of strings for features available to the models or running modes
@@ -698,33 +698,30 @@ class Inputs:
         self.calculate_treatment_outcome_proportions()
         self.add_treatment_outcomes_to_timevariants()
 
-    def aggregate_treatment_outcomes(self, include_hiv=True):
+    def aggregate_treatment_outcomes(self):
         """
         Sums the treatment outcome numbers from the Global TB Report to get aggregate values for the number of patients
         achieving 1) success, 2) death on treatment, 3) unfavourable outcomes other than death on treatment (termed
         default here.
-
-        Args:
-            include_hiv: Whether to include the HIV patients in calculations
-                (because may not be needed for models with explicit HIV strata)
         """
 
         ''' up to 2011 fields for DS-TB '''
 
-        # create string conversion structures for communcation between GTB report and AuTuMN
+        # create string conversion structures for communication between GTB report and AuTuMN
         hiv_statuses_to_include = ['']
-        if include_hiv:
+        if self.is_include_hiv_treatment_outcomes:
             hiv_statuses_to_include.append('hiv_')
-        pre2011_map_gtb_to_autumn = {'_cmplt': '_success',
-                                     '_cur': '_success',
-                                     '_def': '_default',
-                                     '_fail': '_default',
-                                     '_died': '_death'}
+        pre2011_map_gtb_to_autumn \
+            = {'_cmplt': '_success',
+               '_cur': '_success',
+               '_def': '_default',
+               '_fail': '_default',
+               '_died': '_death'}
 
         # by each outcome, find total number of patients achieving that outcome (up to 2011, with or without HIV)
         for outcome in pre2011_map_gtb_to_autumn:
-            self.derived_data[self.strains[0] + '_new' + pre2011_map_gtb_to_autumn[outcome]] = {}
-            self.derived_data[self.strains[0] + '_treated' + pre2011_map_gtb_to_autumn[outcome]] = {}
+            for status in ['_new', '_treated']:
+                self.derived_data[self.strains[0] + status + pre2011_map_gtb_to_autumn[outcome]] = {}
 
         # needs another loop to prevent the default dictionaries being blanked after working out default
         for outcome in pre2011_map_gtb_to_autumn:
@@ -750,12 +747,13 @@ class Inputs:
 
         # create string conversion structures
         hiv_statuses_to_include = ['newrel']
-        if include_hiv:
+        if self.is_include_hiv_treatment_outcomes:
             hiv_statuses_to_include.append('tbhiv')
-        post2011_map_gtb_to_autumn = {'_succ': '_success',
-                                      '_fail': '_default',
-                                      '_lost': '_default',
-                                      '_died': '_death'}
+        post2011_map_gtb_to_autumn \
+            = {'_succ': '_success',
+               '_fail': '_default',
+               '_lost': '_default',
+               '_died': '_death'}
 
         # by each outcome, find total number of patients achieving that outcome
         for outcome in post2011_map_gtb_to_autumn:
@@ -1376,17 +1374,16 @@ class Inputs:
         """
 
         # decide whether calibration or uncertainty analysis is being run
-        if self.run_mode == 'calibration':
-            var_to_iterate = self.calib_outputs
-        elif self.run_mode == 'epi_uncertainty':
-            var_to_iterate = self.outputs_unc
+        var_to_iterate = self.calib_outputs if self.run_mode == 'calibration' else self.outputs_unc
 
-        inc_conversion_dict = {'incidence': 'e_inc_100k',
-                               'incidence_low': 'e_inc_100k_lo',
-                               'incidence_high': 'e_inc_100k_hi'}
-        mort_conversion_dict = {'mortality': 'e_mort_exc_tbhiv_100k',
-                                'mortality_low': 'e_mort_exc_tbhiv_100k_lo',
-                                'mortality_high': 'e_mort_exc_tbhiv_100k_hi'}
+        inc_conversion_dict \
+            = {'incidence': 'e_inc_100k',
+               'incidence_low': 'e_inc_100k_lo',
+               'incidence_high': 'e_inc_100k_hi'}
+        mort_conversion_dict \
+            = {'mortality': 'e_mort_exc_tbhiv_100k',
+               'mortality_low': 'e_mort_exc_tbhiv_100k_lo',
+               'mortality_high': 'e_mort_exc_tbhiv_100k_hi'}
 
         # work through vars to be used and populate into the data fitting dictionary
         for output in var_to_iterate:

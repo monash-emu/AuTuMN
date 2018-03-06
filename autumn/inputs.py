@@ -1228,7 +1228,6 @@ class Inputs:
             self.scenarios.append(scenario)
             for attribute in ['scaleup_data', 'interventions_to_cost', 'relevant_interventions']:
                 getattr(self, attribute)[scenario] = copy.deepcopy(getattr(self, attribute)[0])
-                self.mixing = {}
             self.scaleup_data[scenario]['riskgroup_prop_' + self.comorbidity_to_increment]['scenario'] \
                 = self.comorbidity_prevalences[scenario]
 
@@ -1241,22 +1240,19 @@ class Inputs:
         """
 
         for scenario in self.scenarios:
-            scenario_name = tool_kit.find_scenario_string_from_number(scenario)
 
             # define scale-up functions from these datasets
             for param in self.scaleup_data[scenario]:
                 if param not in self.scaleup_fns[scenario]:  # if not already set as constant previously
 
                     # extract and remove the smoothness parameter from the dictionary
-                    smoothness = self.gui_inputs['default_smoothness']
-                    if 'smoothness' in self.scaleup_data[scenario][param]:
-                        smoothness = self.scaleup_data[scenario][param].pop('smoothness')
+                    smoothness = self.scaleup_data[scenario][param].pop('smoothness') \
+                        if 'smoothness' in self.scaleup_data[scenario][param] else self.gui_inputs['default_smoothness']
 
                     # if the parameter is being modified for the scenario being run
-                    scenario_for_function = None
-                    if 'scenario' in self.scaleup_data[scenario][param]:
-                        scenario_for_function = [self.model_constants['scenario_full_time'],
-                                                 self.scaleup_data[scenario][param].pop('scenario')]
+                    scenario_for_function = [self.model_constants['scenario_full_time'],
+                                             self.scaleup_data[scenario][param].pop('scenario')] \
+                        if 'scenario' in self.scaleup_data[scenario][param] else None
 
                     # upper bound depends on whether the parameter is a proportion
                     upper_bound = 1. if 'prop_' in param else None
@@ -1271,11 +1267,11 @@ class Inputs:
                                             intervention_start_date=self.model_constants['scenario_start_time'])
 
                     # freeze at point in time if necessary
-                    if scenario_name in self.freeze_times \
-                            and self.freeze_times[scenario_name] < self.model_constants['recent_time']:
-                        self.scaleup_fns[scenario][param] \
-                            = freeze_curve(self.scaleup_fns[scenario][param],
-                                           self.freeze_times[scenario_name])
+                    # if scenario_name in self.freeze_times \
+                    #         and self.freeze_times[scenario_name] < self.model_constants['recent_time']:
+                    #     self.scaleup_fns[scenario][param] \
+                    #         = freeze_curve(self.scaleup_fns[scenario][param],
+                    #                        self.freeze_times[scenario_name])
 
     def set_fixed_infectious_proportion(self):
         """
@@ -1395,8 +1391,8 @@ class Inputs:
         """
 
         # check that all entered times occur after the model start time
-        for time in self.model_constants:
-            if time[-5:] == '_time' and '_step_time' not in time:
-                assert self.model_constants[time] >= self.model_constants['start_time'], \
-                    '% is before model start time' % self.model_constants[time]
+        for time_param in self.model_constants:
+            if time_param[-5:] == '_time' and '_step_time' not in time_param:
+                assert self.model_constants[time_param] >= self.model_constants['start_time'], \
+                    '% is before model start time' % self.model_constants[time_param]
 

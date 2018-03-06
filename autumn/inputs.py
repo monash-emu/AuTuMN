@@ -384,34 +384,16 @@ class Inputs:
         # find the time non-infectious on treatment from the total time on treatment and the time infectious
         self.find_noninfectious_period()
 
-    def find_latency_progression_rates(self):
-        """
-        Find early progression rates by age group and by risk group status - i.e. early progression to active TB and
-        stabilisation into late latency.
-        """
-
-        time_early = self.model_constants['tb_timeperiod_early_latent']
-        for agegroup in self.agegroups:
-            for riskgroup in self.riskgroups:
-                prop_early = self.model_constants['tb_prop_early_progression' + riskgroup + agegroup]
-
-                # early progression rate is early progression proportion divided by early time period
-                self.model_constants['tb_rate_early_progression' + riskgroup + agegroup] = prop_early / time_early
-
-                # stabilisation rate is one minus early progression proportion divided by early time period
-                self.model_constants['tb_rate_stabilise' + riskgroup + agegroup] = (1. - prop_early) / time_early
-
     def find_riskgroup_progressions(self):
         """
-        Code to adjust the progression rates to active disease for various risk groups.
+        Adjust the progression rates to active disease for various risk groups.
         """
 
         for riskgroup in self.riskgroups:
 
             # find age above which adjustments should be made, with default assumption of applying to all age-groups
-            start_age = -1.
-            if 'riskgroup_startage' + riskgroup in self.model_constants:
-                start_age = self.model_constants['riskgroup_startage' + riskgroup]
+            start_age = self.model_constants['riskgroup_startage' + riskgroup] \
+                if 'riskgroup_startage' + riskgroup in self.model_constants else -1.
 
             # make adjustments for each age group if required
             for agegroup in self.agegroups:
@@ -429,6 +411,23 @@ class Inputs:
                         = self.model_constants['tb_prop_early_progression' + agegroup]
                     self.model_constants['tb_rate_late_progression' + riskgroup + agegroup] \
                         = self.model_constants['tb_rate_late_progression' + agegroup]
+
+    def find_latency_progression_rates(self):
+        """
+        Find early progression rates by age group and by risk group status - i.e. early progression to active TB and
+        stabilisation into late latency.
+        """
+
+        time_early = self.model_constants['tb_timeperiod_early_latent']
+        for agegroup in self.agegroups:
+            for riskgroup in self.riskgroups:
+                prop_early = self.model_constants['tb_prop_early_progression' + riskgroup + agegroup]
+
+                # early progression rate is early progression proportion divided by early time period
+                self.model_constants['tb_rate_early_progression' + riskgroup + agegroup] = prop_early / time_early
+
+                # stabilisation rate is one minus early progression proportion divided by early time period
+                self.model_constants['tb_rate_stabilise' + riskgroup + agegroup] = (1. - prop_early) / time_early
 
     def find_noninfectious_period(self):
         """
@@ -545,10 +544,8 @@ class Inputs:
                         % tool_kit.find_title_from_dictionary(riskgroup))
 
         # add the null group according to whether there are any risk groups
-        if self.riskgroups:
-            self.riskgroups.append('_norisk')
-        else:
-            self.riskgroups.append('')
+        norisk_string = '_norisk' if self.riskgroups else ''
+        self.riskgroups.append(norisk_string)
 
         # ensure some starting proportion of births go to the risk group stratum if value not loaded earlier
         for riskgroup in self.riskgroups:
@@ -911,10 +908,9 @@ class Inputs:
 
             # populate absent values from derived data if input data available
             if 'epi_prop' + organ in self.time_variants:
-                for year in self.derived_data['prop_new' + name_conversion_dict[organ]]:
-                    if year not in self.time_variants['epi_prop' + organ]:
-                        self.time_variants['epi_prop' + organ][year] \
-                            = self.derived_data['prop_new' + name_conversion_dict[organ]][year]
+                self.time_variants['epi_prop' + organ] \
+                    = dict(self.derived_data['prop_new' + name_conversion_dict[organ]],
+                           **self.time_variants['epi_prop' + organ])
 
             # otherwise if no input data available, just take the derived data straight from the loaded sheets
             else:
@@ -929,7 +925,7 @@ class Inputs:
 
         name_conversion_dict = {'_smearpos': '_sp', '_smearneg': '_sn', '_extrapul': '_ep'}
 
-        # if specific values requested
+        # if specific values requested by user
         if 'epi_prop_smearpos' in self.model_constants and 'epi_prop_smearneg' in self.model_constants:
             self.model_constants['epi_prop_extrapul'] \
                 = 1. - self.model_constants['epi_prop_smearpos'] - self.model_constants['epi_prop_smearneg']
@@ -955,8 +951,8 @@ class Inputs:
         for time_variant in self.time_variants:
 
             # add zero at starting time for model run to all program proportions
-            if ('program_prop' in time_variant or 'int_prop' in time_variant) and '_death' not in time_variant\
-                    and '_dots_contributor' not in time_variant\
+            if ('program_prop' in time_variant or 'int_prop' in time_variant) and '_death' not in time_variant \
+                    and '_dots_contributor' not in time_variant \
                     and '_dot_groupcontributor' not in time_variant:
                 self.time_variants[time_variant][int(self.model_constants['start_time'])] = 0.
 

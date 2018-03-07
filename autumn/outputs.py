@@ -969,7 +969,7 @@ class Project:
         """
 
         # processing methods that are only required for outputs
-        if self.gui_inputs['output_uncertainty']:
+        if self.inputs.run_mode == 'epi_uncertainty':
             self.find_uncertainty_indices()
             for output_type in ['epi', 'cost']:
                 self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles('epi_uncertainty', output_type)
@@ -978,7 +978,7 @@ class Project:
                 self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles('int_uncertainty', output_type)
 
         # write automatic calibration values back to sheets
-        if self.gui_inputs['output_uncertainty'] and self.gui_inputs['write_uncertainty_outcome_params']:
+        if self.inputs.run_mode == 'epi_uncertainty' and self.gui_inputs['write_uncertainty_outcome_params']:
             self.write_automatic_calibration_outputs()
 
         # write spreadsheets - with sheet for each scenario or each output
@@ -1077,7 +1077,7 @@ class Project:
                     for out, output in enumerate(self.model_runner.epi_outputs_to_analyse):
 
                         # with uncertainty
-                        if self.gui_inputs['output_uncertainty'] or self.inputs.run_mode == 'int_uncertainty':
+                        if self.inputs.run_mode == 'epi_uncertainty' or self.inputs.run_mode == 'int_uncertainty':
 
                             # scenario names and confidence interval titles
                             strings_to_write = [t_k.capitalise_and_remove_underscore(output), 'Lower', 'Upper']
@@ -1175,7 +1175,7 @@ class Project:
                 scenario_name = t_k.find_scenario_string_from_number(scenario)
 
                 # with uncertainty
-                if self.gui_inputs['output_uncertainty'] or self.inputs.run_mode == 'int_uncertainty':
+                if self.inputs.run_mode == 'epi_uncertainty' or self.inputs.run_mode == 'int_uncertainty':
 
                     # scenario names and confidence interval titles
                     strings_to_write = [t_k.capitalise_and_remove_underscore(scenario_name), 'Lower', 'Upper']
@@ -1292,7 +1292,7 @@ class Project:
                     row_cells[0].text = str(year)
 
                     # with uncertainty
-                    if self.gui_inputs['output_uncertainty'] or self.inputs.run_mode == 'int_uncertainty':
+                    if self.inputs.run_mode == 'epi_uncertainty' or self.inputs.run_mode == 'int_uncertainty':
                         lower_point_upper \
                             = tuple(self.uncertainty_centiles['epi'][scenario][output][
                                     0:3, t_k.find_first_list_element_at_least_value(
@@ -1338,7 +1338,7 @@ class Project:
                     row_cells[0].text = str(year)
 
                     # with uncertainty
-                    if self.gui_inputs['output_uncertainty'] or self.inputs.run_mode == 'int_uncertainty':
+                    if self.inputs.run_mode == 'epi_uncertainty' or self.inputs.run_mode == 'int_uncertainty':
                         lower_point_upper \
                             = tuple(self.uncertainty_centiles['epi'][scenario][output][0:3,
                                 t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][
@@ -1443,7 +1443,7 @@ class Project:
         # plot main outputs
         if self.gui_inputs['output_gtb_plots']:
             purposes = ['scenario']
-            if self.gui_inputs['output_uncertainty'] or self.inputs.run_mode == 'int_uncertainty':
+            if self.inputs.run_mode == 'epi_uncertainty' or self.inputs.run_mode == 'int_uncertainty':
                 purposes.extend(['ci_plot', 'progress', 'shaded'])
             for purpose in purposes:
                 self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose=purpose)
@@ -1500,7 +1500,7 @@ class Project:
             self.plot_riskgroup_checks()
 
         # save figure that is produced in the uncertainty running process
-        if self.gui_inputs['output_uncertainty'] and self.gui_inputs['output_param_plots']:
+        if self.inputs.run_mode == 'epi_uncertainty' and self.gui_inputs['output_param_plots']:
             param_tracking_figure = self.set_and_update_figure()
             # param_tracking_figure = self.model_runner.plot_progressive_parameters_tk(from_runner=False,
             #                                                                          input_figure=param_tracking_figure)
@@ -1512,10 +1512,10 @@ class Project:
         if self.gui_inputs['output_popsize_plot']: self.plot_popsizes()
 
         # plot likelihood estimates
-        if self.gui_inputs['output_uncertainty'] and self.gui_inputs['output_likelihood_plot']: self.plot_likelihoods()
+        if self.inputs.run_mode == 'epi_uncertainty' and self.gui_inputs['output_likelihood_plot']: self.plot_likelihoods()
 
         # plot percentage of MDR for different uncertainty runs
-        if self.gui_inputs['output_uncertainty'] and self.inputs.n_strains > 1: self.plot_perc_mdr_progress()
+        if self.inputs.run_mode == 'epi_uncertainty' and self.inputs.n_strains > 1: self.plot_perc_mdr_progress()
 
         # for debugging
         if self.inputs.n_strains > 1:
@@ -1583,8 +1583,7 @@ class Project:
 
                     # upper and lower confidence bounds
                     for centile in [2.5, 97.5]:
-                        ax.plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][
-                                    self.model_runner.percentiles.index(centile), :][start_index:],
+                        ax.plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][0][start_index:],
                                 self.uncertainty_centiles['epi'][uncertainty_scenario][output][
                                     self.model_runner.percentiles.index(centile), :][start_index:],
                                 color=linecolour, linestyle='--', linewidth=.5, label=None)
@@ -1737,7 +1736,7 @@ class Project:
                             color='.3', linewidth=0.3, label=None, alpha=alpha)
 
             # plot the targets (and milestones) and the fitted exponential function to achieve them
-            if self.gui_inputs['output_uncertainty'] and not self.inputs.run_mode == 'int_uncertainty':
+            if self.inputs.run_mode == 'epi_uncertainty' and not self.inputs.run_mode == 'int_uncertainty':
                 base_value = self.uncertainty_centiles['epi'][uncertainty_scenario][output][
                              self.model_runner.percentiles.index(50.), :][t_k.find_first_list_element_at_least_value(
                                 self.outputs['manual']['epi'][uncertainty_scenario]['times'], 2015.)]

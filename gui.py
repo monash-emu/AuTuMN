@@ -178,10 +178,6 @@ class App:
 
         """
 
-        # for some unknown reason, this code has started bugging - commented out
-        # if not self.gui_outputs['output_uncertainty']:
-        #     self.figure_frame.withdraw()
-
         self.model_runner = autumn.model_runner.TbRunner(
             self.gui_outputs, js_gui=self.handle_message)
         self.model_runner.master_runner()

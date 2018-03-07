@@ -124,23 +124,17 @@ class Inputs:
         Effectively the initialisation of the model and the model runner objects occurs through here.
         """
 
-        # decide on run mode, basic model strata and scenarios to be run
-        self.add_comment_to_gui_window('Preparing inputs for model run.\n')
-        self.define_run_mode()
-        self.define_model_strata()
-        self.find_scenarios_to_run()
-        self.reconcile_user_inputs()
+        # get GUI inputs
+        self.find_user_inputs()
 
-        # read all required data
-        self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
-        self.original_data = spreadsheet.read_input_data_xls(True, self.find_keys_of_sheets_to_read(), self.country)
-        self.add_comment_to_gui_window('Spreadsheet reading complete.\n')
+        # read data from sheets
+        self.read_data()
 
-        # process constant parameters (age breakpoints come from sheets, so has to come before detailing structure)
+        # process constant parameters - age breakpoints come from sheets, so has to come before detailing structure
         self.process_model_constants()
 
         # define model structure
-        self.detail_model_structure()
+        self.define_compartmental_structure()
 
         # process time-variant parameters
         self.process_time_variants()
@@ -148,28 +142,33 @@ class Inputs:
         # has to go after time variants so that the starting proportion in each risk group can be specified
         self.define_riskgroup_structure()
 
-        # find parameters that require processing after model structure has been defined
-        self.find_additional_parameters()
+        # find parameters that require processing after stratified model structure has been defined
+        self.find_stratified_parameters()
 
         # classify interventions as to whether they apply and are to be costed
         self.classify_interventions()
 
         # add compartment for IPT, low-quality health care and novel vaccination if implemented
-        self.extend_model_structure()
-
-        # create mixing matrix (has to be run after scale-up functions, so can't go in model structure method)
-        self.mixing = self.create_mixing_matrix() if self.is_vary_force_infection_by_riskgroup else {}
+        self.extend_model_structure_for_interventions()
 
         # calculate time-variant functions
         self.find_scaleup_functions()
-
-        # uncertainty-related analysis
-        self.process_uncertainty_parameters()
 
         # perform checks (undeveloped)
         self.checks()
 
     ''' most general methods '''
+
+    def find_user_inputs(self):
+        """
+        Decide on run mode, basic model strata and scenarios to be run.
+        """
+
+        self.add_comment_to_gui_window('Preparing inputs for model run.\n')
+        self.define_run_mode()
+        self.define_model_strata()
+        self.find_scenarios_to_run()
+        self.reconcile_user_inputs()
 
     def define_run_mode(self):
         """
@@ -288,6 +287,15 @@ class Inputs:
                 'Heterogeneous mixing requested, but not implemented as no risk groups are present')
             self.is_vary_force_infection_by_riskgroup = False
 
+    def read_data(self):
+        """
+        Simple method to read spreadsheet inputs.
+        """
+
+        self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
+        self.original_data = spreadsheet.read_input_data_xls(True, self.find_keys_of_sheets_to_read(), self.country)
+        self.add_comment_to_gui_window('Spreadsheet reading complete.\n')
+
     def find_keys_of_sheets_to_read(self):
         """
         Find keys of spreadsheets to read. Pretty simplistic at this stage, but expected to get more complicated as
@@ -308,7 +316,7 @@ class Inputs:
 
     ''' constant parameter processing methods '''
 
-    # populate with first round of unprocessed parameters (called before model structure defined)
+    # populate with first round of unprocessed parameters, before model structure defined
 
     def process_model_constants(self):
         """
@@ -318,11 +326,14 @@ class Inputs:
         # note ordering to list of sheets to be worked through is important for hierarchical loading of constants
         sheets_with_constants = ['country_constants', 'default_constants']
         if self.gui_inputs['riskgroup_diabetes']:
-            sheets_with_constants += ['diabetes']
+            sheets_with_constants.append('diabetes')
         self.add_model_constant_defaults(sheets_with_constants)
 
         # add "by definition" hard-coded parameters
         self.add_universal_parameters()
+
+        # uncertainty-related analysis
+        self.process_uncertainty_parameters()
 
     def add_model_constant_defaults(self, other_sheets_with_constants):
         """
@@ -370,9 +381,76 @@ class Inputs:
         # reference group for susceptibility
         self.model_constants['tb_multiplier_fully_protection'] = 1.
 
-    # derive further parameters (called after model structure fully defined)
+    def process_uncertainty_parameters(self):
+        """
+        Master method to uncertainty processing, calling other relevant methods.
+        """
 
-    def find_additional_parameters(self):
+        # specify the parameters to be used for uncertainty
+        if self.run_mode == 'epi_uncertainty' or self.run_mode == 'int_uncertainty':
+            self.find_uncertainty_distributions()
+        if self.run_mode == 'epi_uncertainty':
+            self.get_data_to_fit()
+
+    def find_uncertainty_distributions(self):
+        """
+        Populate a dictionary of uncertainty parameters from the inputs dictionary in a format that matches code for
+        uncertainty.
+        """
+        for param in self.model_constants:
+            if ('tb_' in param or 'start_time' in param) \
+                    and '_uncertainty' in param and type(self.model_constants[param]) == dict:
+                self.param_ranges_unc += [{'key': param[:-12],
+                                           'bounds': [self.model_constants[param]['lower'],
+                                                      self.model_constants[param]['upper']],
+                                           'distribution': 'uniform'}]
+            elif 'int_' in param and '_uncertainty' in param and type(self.model_constants[param]) == dict:
+                self.int_ranges_unc += [{'key': param[:-12],
+                                         'bounds': [self.model_constants[param]['lower'],
+                                                    self.model_constants[param]['upper']],
+                                         'distribution': 'uniform'}]
+
+        # change distributions for parameters hard-coded to alternative distributions in instantiation above
+        for n_param in range(len(self.param_ranges_unc)):
+            if self.param_ranges_unc[n_param]['key'] in self.alternative_distribution_dict:
+                self.param_ranges_unc[n_param]['distribution'] \
+                    = self.alternative_distribution_dict[self.param_ranges_unc[n_param]['key']][0]
+                if len(self.alternative_distribution_dict[self.param_ranges_unc[n_param]['key']]) > 1:
+                    self.param_ranges_unc[n_param]['additional_params'] \
+                        = self.alternative_distribution_dict[self.param_ranges_unc[n_param]['key']][1:]
+
+    def get_data_to_fit(self):
+        """
+        Extract data for model fitting. Choices currently hard-coded above.
+        """
+
+        # decide whether calibration or uncertainty analysis is being run
+        var_to_iterate = self.calib_outputs if self.run_mode == 'calibration' else self.outputs_unc
+
+        inc_conversion_dict \
+            = {'incidence': 'e_inc_100k',
+               'incidence_low': 'e_inc_100k_lo',
+               'incidence_high': 'e_inc_100k_hi'}
+        mort_conversion_dict \
+            = {'mortality': 'e_mort_exc_tbhiv_100k',
+               'mortality_low': 'e_mort_exc_tbhiv_100k_lo',
+               'mortality_high': 'e_mort_exc_tbhiv_100k_hi'}
+
+        # work through vars to be used and populate into the data fitting dictionary
+        for output in var_to_iterate:
+            if output['key'] == 'incidence':
+                for key in inc_conversion_dict:
+                    self.data_to_fit[key] = self.original_data['gtb'][inc_conversion_dict[key]]
+            elif output['key'] == 'mortality':
+                for key in mort_conversion_dict:
+                    self.data_to_fit[key] = self.original_data['gtb'][mort_conversion_dict[key]]
+            else:
+                self.add_comment_to_gui_window(
+                    'Warning: Calibrated output %s is not directly available from the data' % output['key'])
+
+    # derive parameters specific to stratification, after model structure fully defined
+
+    def find_stratified_parameters(self):
         """
         Find additional parameters. Includes methods that require the model structure to be defined, so that this can't
         be run with process_model_constants.
@@ -443,7 +521,7 @@ class Inputs:
 
     # first category of structure methods can come before spreadsheet reading
 
-    def detail_model_structure(self):
+    def define_compartmental_structure(self):
         """
         Master method to define aspects of model structure, including compartmental classification.
         """
@@ -551,22 +629,8 @@ class Inputs:
             if 'riskgroup_prop' + riskgroup not in self.model_constants:
                 self.model_constants['riskgroup_prop' + riskgroup] = 0.
 
-    # last category of model structure methods must come after interventions classified and time-variants defined
-
-    def extend_model_structure(self):
-        """
-        Add any additional elaborations to the model structure for extra processes - specifically, IPT, low-quality
-        health care and novel vaccinations.
-        """
-
-        for scenario in self.scenarios:
-            if 'agestratified_ipt' in self.relevant_interventions[scenario] \
-                    or 'ipt' in self.relevant_interventions[scenario]:
-                self.compartment_types.append('onipt')
-        if self.gui_inputs['is_lowquality']:
-            self.compartment_types += ['lowquality']
-        if 'int_prop_novel_vaccination' in self.relevant_interventions:
-            self.compartment_types += ['susceptible_novelvac']
+        # create mixing matrix (has to be run after scale-up data collation, so can't go in model structure method)
+        self.mixing = self.create_mixing_matrix() if self.is_vary_force_infection_by_riskgroup else {}
 
     def create_mixing_matrix(self):
         """
@@ -603,6 +667,23 @@ class Inputs:
                     % to_riskgroup)
             mixing[to_riskgroup]['_norisk'] = 1. - sum(mixing[to_riskgroup].values())
         return mixing
+
+    # last category of model structure methods must come after interventions classified and time-variants defined
+
+    def extend_model_structure_for_interventions(self):
+        """
+        Add any additional elaborations to the model structure for extra processes - specifically, IPT, low-quality
+        health care and novel vaccinations.
+        """
+
+        for scenario in self.scenarios:
+            if 'agestratified_ipt' in self.relevant_interventions[scenario] \
+                    or 'ipt' in self.relevant_interventions[scenario]:
+                self.compartment_types.append('onipt')
+        if self.gui_inputs['is_lowquality']:
+            self.compartment_types += ['lowquality']
+        if 'int_prop_novel_vaccination' in self.relevant_interventions:
+            self.compartment_types += ['susceptible_novelvac']
 
     ''' time variant parameter processing methods '''
 
@@ -833,7 +914,7 @@ class Inputs:
                         self.time_variants['program_prop_' + converter[outcome] + strain + history + outcome][year] \
                             = self.derived_data['prop_' + converter[outcome] + strain + history + outcome][year]
 
-    # miscellaneous methods
+    # miscellaneous time-variant parameter methods
 
     def find_irrelevant_treatment_timevariants(self):
         """
@@ -1200,6 +1281,19 @@ class Inputs:
                             self.scaleup_data[scenario][str(time_variant)][scaleup_key] \
                                 = self.time_variants[time_variant][scaleup_key]
 
+    def create_comorbidity_scaleups(self):
+        """
+        Another method that is hard-coded and not elegantly embedded with the GUI, but aiming towards creating better
+        appearing outputs when we want to look at what varying levels of comorbidities do over time.
+        """
+
+        for scenario in self.comorbidity_prevalences:
+            self.scenarios.append(scenario)
+            for attribute in ['scaleup_data', 'interventions_to_cost', 'relevant_interventions']:
+                getattr(self, attribute)[scenario] = copy.deepcopy(getattr(self, attribute)[0])
+            self.scaleup_data[scenario]['riskgroup_prop_' + self.comorbidity_to_increment]['scenario'] \
+                = self.comorbidity_prevalences[scenario]
+
     def find_constant_functions(self):
         """
         Method that can be used to set some variables that might usually be time-variant to be constant instead,
@@ -1217,19 +1311,6 @@ class Inputs:
                 for organ in ['pos', 'neg']:
                     self.scaleup_fns[scenario]['epi_prop_smear' + organ] \
                         = make_constant_function(self.model_constants['epi_prop_smear' + organ])
-
-    def create_comorbidity_scaleups(self):
-        """
-        Another method that is hard-coded and not elegantly embedded with the GUI, but aiming towards creating better
-        appearing outputs when we want to look at what varying levels of comorbidities do over time.
-        """
-
-        for scenario in self.comorbidity_prevalences:
-            self.scenarios.append(scenario)
-            for attribute in ['scaleup_data', 'interventions_to_cost', 'relevant_interventions']:
-                getattr(self, attribute)[scenario] = copy.deepcopy(getattr(self, attribute)[0])
-            self.scaleup_data[scenario]['riskgroup_prop_' + self.comorbidity_to_increment]['scenario'] \
-                = self.comorbidity_prevalences[scenario]
 
     def find_scaleups(self):
         """
@@ -1304,75 +1385,6 @@ class Inputs:
             for treatment_support_type in ['_relative', '_absolute']:
                 self.model_constants['econ' + param + '_treatment_support' + treatment_support_type] \
                     = self.model_constants['econ' + param + '_treatment_support']
-
-    ''' uncertainty-related methods '''
-
-    def process_uncertainty_parameters(self):
-        """
-        Master method to uncertainty processing, calling other relevant methods.
-        """
-
-        # specify the parameters to be used for uncertainty
-        if self.run_mode == 'epi_uncertainty' or self.run_mode == 'int_uncertainty':
-            self.find_uncertainty_distributions()
-        if self.run_mode == 'epi_uncertainty':
-            self.get_data_to_fit()
-
-    def find_uncertainty_distributions(self):
-        """
-        Populate a dictionary of uncertainty parameters from the inputs dictionary in a format that matches code for
-        uncertainty.
-        """
-        for param in self.model_constants:
-            if ('tb_' in param or 'start_time' in param) \
-                    and '_uncertainty' in param and type(self.model_constants[param]) == dict:
-                self.param_ranges_unc += [{'key': param[:-12],
-                                           'bounds': [self.model_constants[param]['lower'],
-                                                      self.model_constants[param]['upper']],
-                                           'distribution': 'uniform'}]
-            elif 'int_' in param and '_uncertainty' in param and type(self.model_constants[param]) == dict:
-                self.int_ranges_unc += [{'key': param[:-12],
-                                         'bounds': [self.model_constants[param]['lower'],
-                                                    self.model_constants[param]['upper']],
-                                         'distribution': 'uniform'}]
-
-        # change distributions for parameters hard-coded to alternative distributions in instantiation above
-        for n_param in range(len(self.param_ranges_unc)):
-            if self.param_ranges_unc[n_param]['key'] in self.alternative_distribution_dict:
-                self.param_ranges_unc[n_param]['distribution'] \
-                    = self.alternative_distribution_dict[self.param_ranges_unc[n_param]['key']][0]
-                if len(self.alternative_distribution_dict[self.param_ranges_unc[n_param]['key']]) > 1:
-                    self.param_ranges_unc[n_param]['additional_params'] \
-                        = self.alternative_distribution_dict[self.param_ranges_unc[n_param]['key']][1:]
-
-    def get_data_to_fit(self):
-        """
-        Extract data for model fitting. Choices currently hard-coded above.
-        """
-
-        # decide whether calibration or uncertainty analysis is being run
-        var_to_iterate = self.calib_outputs if self.run_mode == 'calibration' else self.outputs_unc
-
-        inc_conversion_dict \
-            = {'incidence': 'e_inc_100k',
-               'incidence_low': 'e_inc_100k_lo',
-               'incidence_high': 'e_inc_100k_hi'}
-        mort_conversion_dict \
-            = {'mortality': 'e_mort_exc_tbhiv_100k',
-               'mortality_low': 'e_mort_exc_tbhiv_100k_lo',
-               'mortality_high': 'e_mort_exc_tbhiv_100k_hi'}
-
-        # work through vars to be used and populate into the data fitting dictionary
-        for output in var_to_iterate:
-            if output['key'] == 'incidence':
-                for key in inc_conversion_dict:
-                    self.data_to_fit[key] = self.original_data['gtb'][inc_conversion_dict[key]]
-            elif output['key'] == 'mortality':
-                for key in mort_conversion_dict:
-                    self.data_to_fit[key] = self.original_data['gtb'][mort_conversion_dict[key]]
-            else:
-                self.add_comment_to_gui_window(
-                    'Warning: Calibrated output %s is not directly available from the data' % output['key'])
 
     ''' miscellaneous methods '''
 

@@ -20,7 +20,7 @@ def get_autumn_params():
         = ['output_flow_diagram', 'output_compartment_populations', 'output_riskgroup_fractions',
            'output_age_fractions', 'output_by_subgroups', 'output_fractions', 'output_scaleups', 'output_gtb_plots',
            'output_plot_economics', 'output_plot_riskgroup_checks', 'output_param_plots', 'output_popsize_plot',
-           'output_likelihood_plot', 'output_uncertainty', 'write_uncertainty_outcome_params', 'output_spreadsheets',
+           'output_likelihood_plot', 'write_uncertainty_outcome_params', 'output_spreadsheets',
            'output_documents', 'output_by_scenario', 'output_horizontally', 'output_age_calculations',
            'riskgroup_diabetes', 'riskgroup_hiv', 'riskgroup_prison', 'riskgroup_indigenous', 'riskgroup_urbanpoor',
            'riskgroup_ruralpoor', 'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ',
@@ -127,7 +127,6 @@ def get_autumn_params():
 
     # set some boolean keys to on (True) by default
     default_boolean_keys = [
-        # 'output_uncertainty',
         'write_uncertainty_outcome_params',
         'output_param_plots',
         # 'is_amplification',

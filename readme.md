@@ -10,18 +10,19 @@ pluggable API to other system. Applied to tuberculosis.
 ```> python gui.py```
 
 ## TODO
-- work through inputs - up to about line 250 of inputs.py
 - setup.py file to load all dependent modules
-- uncertainty for economics (an extension to intervention uncertainty)
 - document Bulgaria interventions properly in handbook
-- The model would not run without age-stratification (detected when running Bulgaria)
+- the model would not run without age-stratification (detected when running Bulgaria)
 
-## Major outstanding tasks
+## major outstanding tasks
 - low quality health sector
 - HIV
 - optimisation
 - outputs link to GUI
 - full code review
+
+## medium-term elaborations hoping to add too
+- uncertainty for economics (an extension to intervention uncertainty)
 
 ## current questions for Bosco:
 - can we get the age sliders set up too

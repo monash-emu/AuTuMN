@@ -119,6 +119,8 @@ class App:
                 row += 1
             for key in param_group['keys']:
                 param = self.params[key]
+                if 'tk_control' not in param:
+                    continue
                 if 'tk_label' in param:
                     param['tk_label'].grid(row=row, column=column, sticky=SW)
                     row += 1
@@ -143,10 +145,14 @@ class App:
         """
 
         for param in self.params.values():
+            if 'tk_var' not in param:
+                continue
             if param['type'] == 'boolean':
                 param['value'] = bool(param['tk_var'].get())
             else:
                 param['value'] = param['tk_var'].get()
+
+        print(self.params)
 
         self.gui_outputs = gui_params.convert_params_to_inputs(self.params)
 

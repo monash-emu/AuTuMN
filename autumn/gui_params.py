@@ -117,6 +117,9 @@ def get_autumn_params():
     params['n_centiles_for_shading'] \
         = {'type': 'integer',
            'value': 100}
+    params['n_samples'] \
+        = {'type': 'integer',
+           'value': 20}
 
     # increment comorbidity
     comorbidity_types = ['Diabetes']
@@ -202,7 +205,7 @@ def get_autumn_params():
         param_groups[1]['keys'].append(k)
     for k in ['uncertainty_runs', 'burn_in_runs', 'search_width', 'pickle_uncertainty', 'n_centiles_for_shading']:
         param_groups[4]['keys'].append(k)
-    for k in ['uncertainty_intervention']:
+    for k in ['uncertainty_intervention', 'n_samples']:
         param_groups[5]['keys'].append(k)
     for k in ['comorbidity_to_increment']:
         param_groups[6]['keys'].append(k)

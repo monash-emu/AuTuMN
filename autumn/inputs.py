@@ -62,14 +62,12 @@ class Inputs:
             self.js_gui('init')
 
         # initialising attributes by data type now, rather than purpose
-        self.country = ''
-        self.n_samples = 20
-        (self.plot_count, self.n_organs, self.n_strains, self.fitting_method) \
-            = [0 for i in range(4)]
+        (self.plot_count, self.n_organs, self.n_strains, self.fitting_method, self.n_samples) \
+            = [0 for i in range(5)]
         self.emit_delay = .1
         (self.uncertainty_intervention, self.comorbidity_to_increment, self.run_mode, self.original_data,
-         self.agegroups) \
-            = [None for i in range(5)]
+         self.agegroups, self.country) \
+            = [None for i in range(6)]
         (self.param_ranges_unc, self.int_ranges_unc, self.outputs_unc, self.riskgroups, self.treatment_outcome_types,
          self.irrelevant_time_variants, self.organ_status, self.scenarios, self.histories) \
             = [[] for i in range(9)]

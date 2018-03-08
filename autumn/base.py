@@ -31,33 +31,24 @@ class BaseModel:
     """
 
     def __init__(self):
-        self.inputs = None
-        self.labels = []
-        self.init_compartments = {}
-        self.compartments = {}
-        self.params = {}
-        self.times = []
-        self.time = 0.
-        self.start_time = 0.
-        self.time_step = 1.
-        self.scaleup_fns = {}
-        self.vars = {}
-        self.var_labels = None
-        self.var_array = None
-        self.flow_array = None
-        self.fraction_array = None
-        self.flows = {}
-        self.graph = None
-        self.loaded_compartments = None
+        (self.labels, self.relevant_interventions, self.times) \
+            = [[] for i in range(3)]
+        (self.init_compartments, self.compartments, self.params, self.vars, self.scaleup_fns, self.flows, \
+         self.compartment_soln, self.flows_by_type) \
+            = [{} for i in range(8)]
+        (self.time, self.start_time) \
+            = [0. for i in range(2)]
+        (self.inputs, self.var_labels, self.var_array, self.flow_array, self.fraction_array, self.graph,
+         self.loaded_compartments, self.integration_method) \
+            = [None for i in range(8)]
         self.scenario = 0
+        self.time_step = 1.
         self.run_costing = True
-        self.compartment_soln = {}
-        self.integration_method = None
-        self.relevant_interventions = []
-        flow_types = ['var_entry', 'fixed_infection_death', 'var_infection_death', 'fixed_transfer', 'var_transfer',
-                      'linked_transfer']
-        self.flows_by_type = {}
-        for flow_type in flow_types: self.flows_by_type[flow_type] = []
+        flow_types \
+            = ['var_entry', 'fixed_infection_death', 'var_infection_death', 'fixed_transfer', 'var_transfer',
+               'linked_transfer']
+        for flow_type in flow_types:
+            self.flows_by_type[flow_type] = []
         self.flow_type_index = {
             'var_entry': {'to': 0, 'rate': 1},
             'fixed_infection_death': {'from': 0, 'rate': 1},

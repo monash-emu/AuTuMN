@@ -7,7 +7,7 @@ import itertools
 # AuTuMN imports
 import spreadsheet
 import tool_kit
-from curve import scale_up_function, freeze_curve
+from curve import scale_up_function
 
 
 def make_constant_function(value):
@@ -81,14 +81,15 @@ class Inputs:
         (self.riskgroups_for_detection, self.organs_for_detection, self.strains) \
             = [[''] for i in range(3)]
         (self.is_vary_detection_by_organ, self.is_vary_detection_by_riskgroup, self.is_include_relapse_in_ds_outcomes,
-         self.is_vary_force_infection_by_riskgroup, self.is_include_hiv_treatment_outcomes) \
-            = [False for i in range(5)]
+         self.is_vary_force_infection_by_riskgroup, self.is_include_hiv_treatment_outcomes, self.is_adjust_population) \
+            = [False for i in range(6)]
 
         # set some attributes direct from GUI inputs
         for attribute in \
                 ['country', 'is_vary_detection_by_organ', 'is_vary_detection_by_riskgroup',
                  'is_include_relapse_in_ds_outcomes', 'is_vary_force_infection_by_riskgroup', 'fitting_method',
-                 'uncertainty_intervention', 'is_include_hiv_treatment_outcomes']:
+                 'uncertainty_intervention', 'is_include_hiv_treatment_outcomes', 'is_adjust_population',
+                 'n_centiles_for_shading']:
             setattr(self, attribute, gui_inputs[attribute])
 
         # various lists of strings for features available to the models or running modes

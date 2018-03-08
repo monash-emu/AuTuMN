@@ -135,8 +135,8 @@ class App:
                 console_label.grid(row=row, column=0, sticky=SW)
                 row += 1
                 self.runtime_outputs = Text(self.frame)
-                self.runtime_outputs.grid(row=row, column=0, rowspan=5, columnspan=3)
-                self.runtime_outputs.config(height=9)
+                self.runtime_outputs.grid(row=row, column=0, rowspan=14, columnspan=2)
+                self.runtime_outputs.config(height=7, width=50)
             column += 1
 
     def execute(self):

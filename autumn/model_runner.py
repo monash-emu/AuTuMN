@@ -152,64 +152,48 @@ class ModelRunner:
             js_gui: JavaScript GUI inputs
         """
 
-        # conversion of inputs to attributes
         self.gui_inputs = gui_inputs
         self.inputs = inputs.Inputs(gui_inputs, js_gui=js_gui)
         self.inputs.read_and_load_data()
-        self.scenarios = self.inputs.scenarios
-
-        # preparing for basic runs
-        self.models = {}
-        self.interventions_to_cost = self.inputs.interventions_to_cost
-
-        # uncertainty-related attributes
-        self.outputs_unc = []
-        self.is_last_run_success = False
-        self.uncertainty_percentiles = {}
-        self.n_centiles_for_shading = 100
+        (self.scenarios, self.standard_rate_outputs, self.divide_population, self.epi_outputs_to_analyse, \
+         self.outputs_unc, self.interventions_to_cost) \
+            = [[] for i in range(6)]
+        (self.models, self.from_labels, self.to_labels, self.multipliers, self.uncertainty_percentiles) \
+            = [{} for i in range(5)]
+        (self.is_last_run_success, self.is_adjust_population) \
+            = [False for i in range(2)]
+        (self.n_centiles_for_shading, self.plot_count) \
+            = [0 for i in range(2)]
+        for attribute in ['scenarios', 'interventions_to_cost', 'is_adjust_population', 'n_centiles_for_shading']:
+            setattr(self, attribute, getattr(self.inputs, attribute))
+        self.outputs = {'epi_uncertainty': {}}
         self.percentiles = [2.5, 50., 97.5] + list(numpy.linspace(0., 100., self.n_centiles_for_shading * 2 + 1))
-        self.adjust_population = True
-
-        # optimisation attributes - note that this is currently dead
-        self.optimisation = False  # leave True even if loading optimisation results
-        self.opti_outputs_dir = 'saved_optimisation_analyses'
-        self.indicator_to_minimise = 'incidence'  # currently must be 'incidence' or 'mortality'
-        self.annual_envelope = [112.5e6]  # size of funding envelope in scenarios to be run
-        self.save_opti = True
-        self.load_optimisation = False  # optimisation will not be run if true
-        self.total_funding = None  # funding for entire period
-        self.f_tol = {'incidence': 0.5,
-                      'mortality': 0.05}  # stopping condition for optimisation algorithm (differs by indicator)
-        self.year_end_opti = 2035.  # model is run until that date during optimisation
-        self.acceptable_combinations = []  # list of intervention combinations that can be considered with funding
-        self.opti_results = {}  # store all the results that we need for optimisation
-        self.optimised_combinations = []
-        self.optimal_allocation = {}
-        self.interventions_considered_for_opti \
-            = ['engage_lowquality', 'xpert', 'cxrxpertacf_prison', 'cxrxpertacf_urbanpoor', 'ipt_age0to5',
-               'intensive_screening']  # interventions that must appear in optimal plan
-        self.interventions_forced_for_opti = ['engage_lowquality', 'ipt_age0to5', 'intensive_screening']
-
-        # output-related attributes
         self.additional_cost_types = ['inflated', 'discounted', 'discounted_inflated']
         self.cost_types = self.additional_cost_types + ['raw']
-        self.standard_rate_outputs = []
-        self.from_labels = {}
-        self.to_labels = {}
-        self.divide_population = []
-        self.multipliers = {}
         self.non_disease_compartment_strings = ['susceptible']
-
-        # new single main output attribute
-        self.epi_outputs_to_analyse = []
-        self.outputs = {'epi_uncertainty': {}}
-
-        # GUI-related
-        self.emit_delay = 0.1
-        self.plot_count = 0
-        self.js_gui = js_gui
+        self.emit_delay, self.js_gui = 0.1, js_gui
         if self.js_gui:
             self.js_gui('init')
+
+        # optimisation attributes - note that this is currently dead
+        # self.optimisation = False  # leave True even if loading optimisation results
+        # self.opti_outputs_dir = 'saved_optimisation_analyses'
+        # self.indicator_to_minimise = 'incidence'  # currently must be 'incidence' or 'mortality'
+        # self.annual_envelope = [112.5e6]  # size of funding envelope in scenarios to be run
+        # self.save_opti = True
+        # self.load_optimisation = False  # optimisation will not be run if true
+        # self.total_funding = None  # funding for entire period
+        # self.f_tol = {'incidence': 0.5,
+        #               'mortality': 0.05}  # stopping condition for optimisation algorithm (differs by indicator)
+        # self.year_end_opti = 2035.  # model is run until that date during optimisation
+        # self.acceptable_combinations = []  # list of intervention combinations that can be considered with funding
+        # self.opti_results = {}  # store all the results that we need for optimisation
+        # self.optimised_combinations = []
+        # self.optimal_allocation = {}
+        # self.interventions_considered_for_opti \
+        #     = ['engage_lowquality', 'xpert', 'cxrxpertacf_prison', 'cxrxpertacf_urbanpoor', 'ipt_age0to5',
+        #        'intensive_screening']  # interventions that must appear in optimal plan
+        # self.interventions_forced_for_opti = ['engage_lowquality', 'ipt_age0to5', 'intensive_screening']
 
     ''' master methods to run other methods '''
 
@@ -243,14 +227,14 @@ class ModelRunner:
             t_k.pickle_save(self.outputs, storage_file_name)
 
         # master optimisation method
-        if self.optimisation and not self.load_optimisation:
-            self.run_optimisation()
-
+        # if self.optimisation and not self.load_optimisation:
+        #     self.run_optimisation()
+        #
         # prepare file for saving, save and load as requested
-        if not os.path.isdir(self.opti_outputs_dir):
-            os.makedirs(self.opti_outputs_dir)
-        self.load_opti_results()
-        self.save_opti_results()
+        # if not os.path.isdir(self.opti_outputs_dir):
+        #     os.makedirs(self.opti_outputs_dir)
+        # self.load_opti_results()
+        # self.save_opti_results()
 
         # notify user that model running has finished
         self.add_comment_to_gui_window('Model running complete')
@@ -692,7 +676,7 @@ class ModelRunner:
                     self.make_disease_specific_adjustments(last_run_output_index, years_to_compare)
 
                     # make algorithmic adjustments
-                    if self.adjust_population:
+                    if self.is_adjust_population:
                         self.adjust_start_population(last_run_output_index)
 
                 else:

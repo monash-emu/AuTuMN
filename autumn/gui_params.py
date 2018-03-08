@@ -25,7 +25,8 @@ def get_autumn_params():
            'riskgroup_diabetes', 'riskgroup_hiv', 'riskgroup_prison', 'riskgroup_indigenous', 'riskgroup_urbanpoor',
            'riskgroup_ruralpoor', 'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ',
            'is_timevariant_organs', 'is_treatment_history', 'is_vary_force_infection_by_riskgroup',
-           'is_vary_detection_by_riskgroup', 'is_include_relapse_in_ds_outcomes', 'is_include_hiv_treatment_outcomes']
+           'is_vary_detection_by_riskgroup', 'is_include_relapse_in_ds_outcomes', 'is_include_hiv_treatment_outcomes',
+           'is_adjust_population']
     for i in range(1, 15):
         bool_keys.append('scenario_' + str(i))
     for key in bool_keys:
@@ -113,6 +114,9 @@ def get_autumn_params():
     params['uncertainty_intervention'] \
         = {'type': 'drop_down',
            'options': available_uncertainty_intervention}
+    params['n_centiles_for_shading'] \
+        = {'type': 'integer',
+           'value': 100}
 
     # increment comorbidity
     comorbidity_types = ['Diabetes']
@@ -127,6 +131,7 @@ def get_autumn_params():
 
     # set some boolean keys to on (True) by default
     default_boolean_keys = [
+        'is_adjust_population',
         'write_uncertainty_outcome_params',
         'output_param_plots',
         # 'is_amplification',
@@ -195,7 +200,7 @@ def get_autumn_params():
         param_groups[0]['keys'].append(k)
     for k in ['organ_strata', 'strains']:
         param_groups[1]['keys'].append(k)
-    for k in ['uncertainty_runs', 'burn_in_runs', 'search_width', 'pickle_uncertainty']:
+    for k in ['uncertainty_runs', 'burn_in_runs', 'search_width', 'pickle_uncertainty', 'n_centiles_for_shading']:
         param_groups[4]['keys'].append(k)
     for k in ['uncertainty_intervention']:
         param_groups[5]['keys'].append(k)

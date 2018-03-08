@@ -1002,7 +1002,7 @@ class Project:
                 self.write_docs_by_output()
 
         # write optimisation spreadsheets
-        self.write_opti_outputs_spreadsheet()
+        # self.write_opti_outputs_spreadsheet()
 
         # self.find_average_costs()
 
@@ -1523,9 +1523,9 @@ class Project:
                                         restriction_1='_mdr', restriction_2='treatment', exclusion_string='latent')
 
         # optimisation plotting
-        if self.model_runner.optimisation:
-            self.plot_optimised_epi_outputs()
-            self.plot_piecharts_opti()
+        # if self.model_runner.optimisation:
+        #     self.plot_optimised_epi_outputs()
+        #     self.plot_piecharts_opti()
 
     def plot_outputs_against_gtb(self, outputs, purpose='scenario'):
         """

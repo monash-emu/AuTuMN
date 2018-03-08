@@ -15,10 +15,10 @@ pluggable API to other system. Applied to tuberculosis.
 - the model would not run without age-stratification (detected when running Bulgaria)
 
 ## major outstanding tasks
+- outputs link to GUI
 - low quality health sector
 - HIV
 - optimisation
-- outputs link to GUI
 - full code review
 
 ## medium-term elaborations hoping to add too

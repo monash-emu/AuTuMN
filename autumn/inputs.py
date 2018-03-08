@@ -423,9 +423,6 @@ class Inputs:
         Extract data for model fitting. Choices currently hard-coded above.
         """
 
-        # decide whether calibration or uncertainty analysis is being run
-        var_to_iterate = self.calib_outputs if self.run_mode == 'calibration' else self.outputs_unc
-
         inc_conversion_dict \
             = {'incidence': 'e_inc_100k',
                'incidence_low': 'e_inc_100k_lo',
@@ -436,7 +433,7 @@ class Inputs:
                'mortality_high': 'e_mort_exc_tbhiv_100k_hi'}
 
         # work through vars to be used and populate into the data fitting dictionary
-        for output in var_to_iterate:
+        for output in self.outputs_unc:
             if output['key'] == 'incidence':
                 for key in inc_conversion_dict:
                     self.data_to_fit[key] = self.original_data['gtb'][inc_conversion_dict[key]]
@@ -1406,4 +1403,3 @@ class Inputs:
             if time_param[-5:] == '_time' and '_step_time' not in time_param:
                 assert self.model_constants[time_param] >= self.model_constants['start_time'], \
                     '% is before model start time' % self.model_constants[time_param]
-

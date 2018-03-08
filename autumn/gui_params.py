@@ -33,7 +33,7 @@ def get_autumn_params():
         params[key] \
             = {'value': False,
                'type': 'boolean',
-               'label': tool_kit.find_button_name_from_string(key)}
+               'label': tool_kit.find_title_from_dictionary(key)}
 
     ''' drop down and sliders '''
 

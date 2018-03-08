@@ -14,6 +14,7 @@ import copy
 import model_runner
 import scipy
 
+
 def find_smallest_factors_of_integer(n):
     """
     Quick method to iterate through integers to find the smallest whole number fractions.

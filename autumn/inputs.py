@@ -23,7 +23,7 @@ def make_constant_function(value):
         constant: The constant function
     """
 
-    def constant(time):
+    def constant(_):
         return value
     return constant
 
@@ -63,24 +63,24 @@ class Inputs:
 
         # initialising attributes by data type now, rather than purpose
         (self.plot_count, self.n_organs, self.n_strains, self.fitting_method, self.n_samples) \
-            = [0 for i in range(5)]
+            = [0 for _ in range(5)]
         self.emit_delay = .1
         (self.uncertainty_intervention, self.comorbidity_to_increment, self.run_mode, self.original_data,
          self.agegroups, self.country) \
-            = [None for i in range(6)]
+            = [None for _ in range(6)]
         (self.param_ranges_unc, self.int_ranges_unc, self.outputs_unc, self.riskgroups, self.treatment_outcome_types,
          self.irrelevant_time_variants, self.organ_status, self.scenarios, self.histories) \
-            = [[] for i in range(9)]
+            = [[] for _ in range(9)]
         (self.original_data, self.derived_data, self.time_variants, self.model_constants, self.scaleup_data,
          self.scaleup_fns, self.intervention_param_dict, self.comorbidity_prevalences,
          self.alternative_distribution_dict, self.data_to_fit, self.mixing, self.relevant_interventions,
          self.interventions_to_cost, self.intervention_startdates, self.freeze_times) \
-            = [{} for i in range(15)]
+            = [{} for _ in range(15)]
         (self.riskgroups_for_detection, self.organs_for_detection, self.strains) \
-            = [[''] for i in range(3)]
+            = [[''] for _ in range(3)]
         (self.is_vary_detection_by_organ, self.is_vary_detection_by_riskgroup, self.is_include_relapse_in_ds_outcomes,
          self.is_vary_force_infection_by_riskgroup, self.is_include_hiv_treatment_outcomes, self.is_adjust_population) \
-            = [False for i in range(6)]
+            = [False for _ in range(6)]
 
         # set some attributes direct from GUI inputs
         for attribute in \

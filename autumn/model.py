@@ -102,12 +102,14 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
          self.integration_method)\
             = [None for i in range(21)]
 
+        self.inappropriate_regimens = []
         self.riskgroups = {}
 
         # model attributes to be set directly to inputs object attributes
         for attribute in ['compartment_types', 'organ_status', 'strains', 'riskgroups', 'agegroups', 'mixing',
                           'is_vary_detection_by_organ', 'organs_for_detection', 'riskgroups_for_detection',
-                          'is_vary_detection_by_riskgroup', 'is_vary_force_infection_by_riskgroup', 'histories']:
+                          'is_vary_detection_by_riskgroup', 'is_vary_force_infection_by_riskgroup', 'histories',
+                          'inappropriate_regimens']:
             setattr(self, attribute, getattr(inputs, attribute))
 
         # model attributes to set to only the relevant scenario key from an inputs dictionary
@@ -131,13 +133,6 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
         # list of infectious compartments
         self.infectious_tags = ['active', 'missed', 'detect', 'treatment', 'lowquality']
-
-        # list out the inappropriate regimens
-        self.inappropriate_regimens = []
-        for s, strain in enumerate(self.strains):
-            for a, as_strain in enumerate(self.strains):
-                if s > a:
-                    self.inappropriate_regimens.append(strain + '_as' + as_strain[1:])
 
         # to loop force of infection code over all risk groups if variable, or otherwise to just run once
         self.force_riskgroups = copy.copy(self.riskgroups) if self.is_vary_force_infection_by_riskgroup else ['']

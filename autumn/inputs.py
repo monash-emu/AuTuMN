@@ -69,8 +69,9 @@ class Inputs:
          self.agegroups, self.country) \
             = [None for _ in range(6)]
         (self.param_ranges_unc, self.int_ranges_unc, self.outputs_unc, self.riskgroups, self.treatment_outcome_types,
-         self.irrelevant_time_variants, self.organ_status, self.scenarios, self.histories) \
-            = [[] for _ in range(9)]
+         self.irrelevant_time_variants, self.organ_status, self.scenarios, self.histories,
+         self.inappropriate_regimens) \
+            = [[] for _ in range(10)]
         (self.original_data, self.derived_data, self.time_variants, self.model_constants, self.scaleup_data,
          self.scaleup_fns, self.intervention_param_dict, self.comorbidity_prevalences,
          self.alternative_distribution_dict, self.data_to_fit, self.mixing, self.relevant_interventions,
@@ -597,6 +598,8 @@ class Inputs:
                     for treated_as in self.strains:
                         if self.strains.index(treated_as) < self.strains.index(strain):
                             self.treatment_outcome_types.append(strain + '_as' + treated_as[1:])
+
+        self.inappropriate_regimens = [regimen for regimen in self.treatment_outcome_types if '_as' in regimen]
 
     # second category of structure methods must come after spreadsheet reading
 

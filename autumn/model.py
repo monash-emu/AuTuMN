@@ -94,12 +94,14 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         self.start_time = inputs.model_constants['start_time']
 
         # this code just stops the code checker complaining about attributes being undefined in instantiation
-        self.compartment_types, self.organ_status, self.strains, self.agegroups, self.mixing, \
-            self.is_vary_detection_by_organ, self.organs_for_detection, self.riskgroups_for_detection, \
-            self.is_vary_detection_by_riskgroup, self.is_vary_force_infection_by_riskgroup, self.histories, \
-            self.relevant_interventions, self.scaleup_fns, self.interventions_to_cost, self.is_lowquality, \
-            self.is_amplification, self.is_misassignment, self.is_timevariant_organs, self.country, self.time_step, \
-            self.integration_method = [None] * 21
+        (self.compartment_types, self.organ_status, self.strains, self.agegroups, self.mixing,
+         self.is_vary_detection_by_organ, self.organs_for_detection, self.riskgroups_for_detection,
+         self.is_vary_detection_by_riskgroup, self.is_vary_force_infection_by_riskgroup, self.histories,
+         self.relevant_interventions, self.scaleup_fns, self.interventions_to_cost, self.is_lowquality,
+         self.is_amplification, self.is_misassignment, self.is_timevariant_organs, self.country, self.time_step,
+         self.integration_method)\
+            = [None for i in range(21)]
+
         self.riskgroups = {}
 
         # model attributes to be set directly to inputs object attributes
@@ -114,7 +116,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
         # model attributes to be set directly to attributes from the GUI object
         for attribute in ['is_lowquality', 'is_amplification', 'is_misassignment', 'is_timevariant_organs', 'country',
-                          'time_step', 'integration_method']:
+                          'time_step', 'integration_method', 'is_shortcourse_improves_outcomes']:
             setattr(self, attribute, gui_inputs[attribute])
 
         # set fixed parameters from inputs object
@@ -150,9 +152,6 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
         # list of risk groups affected by ngo activities for detection
         self.contributor_groups = ['_ruralpoor']
-
-        # whether short-course MDR-TB regimen improves outcomes
-        self.shortcourse_improves_outcomes = True
 
         # create time ticker
         self.next_time_point = copy.copy(self.start_time)
@@ -718,7 +717,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         self.split_treatment_props_by_riskgroup()
         self.vars['epi_prop_amplification'] = self.params['tb_prop_amplification'] \
             if self.time > self.params['mdr_introduce_time'] else 0.
-        if 'int_prop_shortcourse_mdr' in self.relevant_interventions and self.shortcourse_improves_outcomes \
+        if 'int_prop_shortcourse_mdr' in self.relevant_interventions and self.is_shortcourse_improves_outcomes \
                 and '_mdr' in self.strains:
             for history in self.histories:
                 self.adjust_treatment_outcomes_shortcourse(history)

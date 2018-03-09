@@ -265,6 +265,28 @@ def make_related_line_styles(labels, strain_or_organ):
     return colours, patterns, compartment_full_names, markers
 
 
+def make_default_line_styles(n, return_all=True):
+        """
+        Produces a standard set of line styles that isn't adapted to the data being plotted.
+
+        Args:
+            n: The number of line-styles
+            return_all: Whether to return all of the styles up to n or just the last one
+        Returns:
+            line_styles: A list of standard line-styles, or if return_all is False, then the single style
+        """
+
+        # iterate through a standard set of line styles
+        for i in range(n):
+            line_styles = []
+            for line in ['-', ':', '-.', '--']:
+                for colour in 'krbgmcy':
+                    line_styles.append(line + colour)
+
+        styles_to_return = line_styles if return_all else line_styles[n - 1]
+        return styles_to_return
+
+
 def make_legend_to_single_axis(ax, scenario_handles, scenario_labels):
     """
     Standardised format to legend at side of single axis plot.
@@ -850,30 +872,6 @@ class Project:
         self.figure_number += 1
         return fig
 
-    def make_default_line_styles(self, n, return_all=True):
-        """
-        Produces a standard set of line styles that isn't adapted to the data being plotted.
-
-        Args:
-            n: The number of line-styles
-            return_all: Whether to return all of the styles up to n or just the last one
-        Returns:
-            line_styles: A list of standard line-styles, or if return_all is False,
-                then the single item (for methods that are iterating through plots.
-        """
-
-        # iterate through a standard set of line styles
-        for i in range(n):
-            line_styles = []
-            for line in ["-", ":", "-.", "--"]:
-                for colour in "krbgmcy":
-                    line_styles.append(line + colour)
-
-        if return_all:
-            return line_styles
-        else:
-            return line_styles[n - 1]
-
     def tidy_axis(self, ax, subplot_grid, title='', start_time=0., legend=False, x_label='', y_label='',
                   x_axis_type='time', y_axis_type='scaled', x_sig_figs=0, y_sig_figs=0,
                   end_time=None, y_relative_limit=0.95, y_absolute_limit=None):
@@ -942,26 +940,18 @@ class Project:
             for tick in axis_to_change.get_major_ticks(): tick.label.set_fontsize(get_nice_font_size(subplot_grid))
             axis_to_change.grid(self.grid)
 
-    def save_figure(self, fig, last_part_of_name_for_figure):
+    def save_figure(self, fig, end_figure_name):
         """
         Simple method to standardise names for output figure files.
 
         Args:
-            last_part_of_name_for_figure: The part of the figure name that is variable and input from the
-                plotting method.
+            end_figure_name: The part of the figure name that is variable and is input by the plotting method
+            fig: Figure for saving
         """
-        for format in self.figure_formats:
-            filename = os.path.join(self.out_dir_project, self.country + last_part_of_name_for_figure + '.' + format)
+
+        for file_format in self.figure_formats:
+            filename = os.path.join(self.out_dir_project, self.country + end_figure_name + '.' + file_format)
             fig.savefig(filename, dpi=300)
-
-    def save_opti_figure(self, fig, last_part_of_name_for_figure):
-
-        """
-        Same as previous method, when applied to optimisation outputs.
-        """
-
-        png = os.path.join(self.model_runner.opti_outputs_dir, self.country + last_part_of_name_for_figure + '.png')
-        fig.savefig(png, dpi=300)
 
     ''' methods for pre-processing model runner outputs to more interpretable forms '''
 
@@ -1427,7 +1417,7 @@ class Project:
         """
 
         # find some general output colours
-        output_colours = self.make_default_line_styles(5, True)
+        output_colours = make_default_line_styles(5, True)
         for s, scenario in enumerate(self.scenarios):
             self.output_colours[scenario] = output_colours[s]
             self.program_colours[scenario] = {}
@@ -1949,7 +1939,7 @@ class Project:
 
         # Standard prelims
         fig = self.set_and_update_figure()
-        line_styles = self.make_default_line_styles(len(functions), True)
+        line_styles = make_default_line_styles(len(functions), True)
         start_time = self.inputs.model_constants['plot_start_time']
         x_vals = numpy.linspace(start_time, self.inputs.model_constants['plot_end_time'], 1e3)
 
@@ -2291,7 +2281,7 @@ class Project:
         strata = getattr(self.inputs, strata_string)
         if len(strata) == 0: return
 
-        colours = self.make_default_line_styles(len(strata), return_all=True)
+        colours = make_default_line_styles(len(strata), return_all=True)
 
         # prelims
         fig = self.set_and_update_figure()
@@ -2355,7 +2345,7 @@ class Project:
 
             # standard prelims
             fig = self.set_and_update_figure()
-            colours = self.make_default_line_styles(len(stratification), return_all=True)
+            colours = make_default_line_styles(len(stratification), return_all=True)
 
             # run plotting from early in the model run and from the standard start time for plotting
             for t, time in enumerate(['plot_start_time', 'early_time']):
@@ -2654,7 +2644,7 @@ class Project:
 
         fig = self.set_and_update_figure()
         ax = make_single_axis(fig)
-        output_colours = self.make_default_line_styles(5, True)
+        output_colours = make_default_line_styles(5, True)
         bar_width = .7
         last_data = list(numpy.zeros(len(self.inputs.riskgroups)))
         for r, to_riskgroup in enumerate(self.inputs.riskgroups):
@@ -2705,7 +2695,7 @@ class Project:
         """
 
         # prelims
-        riskgroup_styles = self.make_default_line_styles(5, True)
+        riskgroup_styles = make_default_line_styles(5, True)
         fig = self.set_and_update_figure()
         ax_left = fig.add_subplot(1, 2, 1)
         ax_right = fig.add_subplot(1, 2, 2)
@@ -2859,7 +2849,7 @@ class Project:
                                  self.model_runner.opti_results[plot], plots[plot][1], linewidth=2.0, label=plot)
             self.tidy_axis(plots[plot][0], [1, 1], y_axis_type='raw', y_label=plots[plot][2], x_sig_figs=1,
                            title='Annual funding (US$)', x_axis_type='scaled', x_label='$US ', legend='for_single')
-        self.save_opti_figure(fig, '_optimised_outputs')
+        self.save_figure(fig, '_optimised_outputs')
 
     def plot_piecharts_opti(self):
 
@@ -2909,7 +2899,7 @@ class Project:
         ax.axis('off')
         fig.tight_layout()  # reduces the margins to maximize the size of the pies
         fig.suptitle('Optimal allocation of resource')
-        self.save_opti_figure(fig, '_optimal_allocation')
+        self.save_figure(fig, '_optimal_allocation')
 
     ''' miscellaneous '''
 

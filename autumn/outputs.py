@@ -1503,10 +1503,11 @@ class Project:
         # save figure that is produced in the uncertainty running process
         if self.inputs.run_mode == 'epi_uncertainty' and self.gui_inputs['output_param_plots']:
             param_tracking_figure = self.set_and_update_figure()
-            # param_tracking_figure = self.model_runner.plot_progressive_parameters_tk(from_runner=False,
-            #                                                                          input_figure=param_tracking_figure)
+            #param_tracking_figure = self.model_runner.plot_progressive_parameters_tk(from_runner=False,
+            #                                                                         input_figure=param_tracking_figure)
             self.save_figure(param_tracking_figure, '_param_tracking')
             self.plot_param_histograms()
+            self.plot_param_timeseries()
             self.plot_priors()
 
         # plot popsizes for checking cost-coverage curves
@@ -2544,6 +2545,26 @@ class Project:
             ax.hist(param_values)
             ax.set_title(t_k.find_title_from_dictionary(param))
         self.save_figure(fig, '_param_histogram')
+
+    def plot_param_timeseries(self):
+        """
+        Plot accepted parameter progress over time.
+        """
+        fig = self.set_and_update_figure()
+        subplot_grid = find_subplot_numbers(len(self.model_runner.outputs['epi_uncertainty']['all_parameters']))
+
+        # loop through parameters used in uncertainty
+        for p, param in enumerate(self.model_runner.outputs['epi_uncertainty']['all_parameters']):
+            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
+
+            # restrict to those accepted and after burn-in complete
+            param_values = [self.model_runner.outputs['epi_uncertainty']['all_parameters'][param][i]
+                            for i in self.accepted_no_burn_in_indices]
+
+            # plot
+            ax.plot(param_values)
+            ax.set_title(t_k.find_title_from_dictionary(param))
+        self.save_figure(fig, '_param_timeseries')
 
     def plot_priors(self):
         """

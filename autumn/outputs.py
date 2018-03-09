@@ -2884,6 +2884,6 @@ class Project:
 
         operating_system = platform.system()
         if 'Windows' in operating_system:
-            os.system('start ' + ' ' + self.out_dir_project)
+            os.system('start  ' + self.out_dir_project)
         elif 'Darwin' in operating_system:
-            os.system('open ' + ' ' + self.out_dir_project)
+            os.system('open  ' + self.out_dir_project)

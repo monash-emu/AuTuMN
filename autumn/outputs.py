@@ -819,7 +819,7 @@ class Project:
             if self.gui_inputs['output_by_scenario']:
                 self.write_docs_by_scenario()
                 if self.run_mode == 'int_uncertainty':
-                    self.find_relative_changes(year=2035.)
+                    self.print_int_uncertainty_relative_change(year=2035.)
             else:
                 self.write_docs_by_output()
 
@@ -995,7 +995,7 @@ class Project:
                         = numpy.percentile(matrix_to_analyse, self.model_runner.percentiles, axis=0)
         return uncertainty_centiles
 
-    ''' methods for outputting to documents and spreadsheets '''
+    ''' methods for outputting to documents and spreadsheets and console '''
 
     def write_automatic_calibration_outputs(self):
         """
@@ -1304,28 +1304,23 @@ class Project:
                         row_cells[s + 1].text = '%.1f' % point
             document.save(path)
 
-    def find_relative_changes(self, year):
+    def print_int_uncertainty_relative_change(self, year):
         """
-        Print some text giving percentage change in output indicators relative to baseline.
+        Print some text giving percentage change in output indicators relative to baseline under intervention
+        uncertainty.
 
         Args:
-            year: Year for the comparisons to be made at
+            year: Year for the comparisons to be made against
         """
 
-        scenario, string_to_add = 15, 'manual_'
-        changes = {}
+        scenario, changes = 15, {}
         for output in self.model_runner.epi_outputs_to_analyse:
             absolute_values \
-                = self.uncertainty_centiles['epi'][scenario][output][0:3,
-                    t_k.find_first_list_element_at_least_value(self.model_runner.outputs['int_uncertainty']['epi'][
-                                                                   scenario]['times'][0], year)]
-
+                = self.uncertainty_centiles['epi'][scenario][output][0:3, t_k.find_first_list_element_at_least_value(
+                  self.model_runner.outputs['int_uncertainty']['epi'][scenario]['times'][0], year)]
             baseline = self.model_runner.outputs['manual']['epi'][0][output][
-                t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][0]['times'],
-                                                           year)]
+               t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][0]['times'], year)]
             changes[output] = [(i / baseline - 1.) * 1e2 for i in absolute_values]
-            # swap tuple items so that the reporting order becomes: median (lower - upper)
-            changes[output][0], changes[output][1] = changes[output][1], changes[output][0]
             print(output + '\n%.1f\n(%.1f to %.1f)' % tuple(changes[output]))
 
     def find_average_costs(self):

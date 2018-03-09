@@ -880,10 +880,12 @@ class Project:
         """
 
         # add the sub-plot title with slightly larger titles than the rest of the text on the panel
-        if title: ax.set_title(title, fontsize=get_nice_font_size(subplot_grid) + 2.)
+        if title:
+            ax.set_title(title, fontsize=get_nice_font_size(subplot_grid) + 2.)
 
         # default end time for plots to end at
-        if not end_time: end_time = self.inputs.model_constants['plot_end_time']
+        if not end_time:
+            end_time = self.inputs.model_constants['plot_end_time']
 
         # add a legend if needed
         if legend == 'for_single':
@@ -966,30 +968,31 @@ class Project:
         self.accepted_indices = self.outputs['epi_uncertainty']['accepted_indices']
         self.accepted_no_burn_in_indices = [i for i in self.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
 
-    def find_uncertainty_centiles(self, run_type, output_type):
+    def find_uncertainty_centiles(self, mode, output_type):
         """
         Find percentiles from uncertainty dictionaries.
 
         Args:
+            mode: The run mode being considered
             output_type: Whether the output to be calculated is 'epi' or 'cost'
         Updates:
             self.percentiles: Adds all the required percentiles to this dictionary.
         """
 
         uncertainty_centiles = {}
-        for scenario in self.outputs[run_type][output_type]:
+        for scenario in self.outputs[mode][output_type]:
             uncertainty_centiles[scenario] = {}
-            for output in self.outputs[run_type][output_type][scenario]:
+            for output in self.outputs[mode][output_type][scenario]:
                 if output != 'times':
 
                     # use all runs for scenario analysis (as only those that were accepted are saved)
                     if scenario:
-                        matrix_to_analyse = self.outputs[run_type][output_type][scenario][output]
+                        matrix_to_analyse = self.outputs[mode][output_type][scenario][output]
 
-                    # select the baseline runs for analysis from the larger number that were saved
+                    # select the baseline runs for analysis from the broader set of saved results
                     else:
-                        matrix_to_analyse = self.outputs[run_type][output_type][scenario][output][
-                                            self.accepted_no_burn_in_indices, :]
+                        matrix_to_analyse \
+                            = self.outputs[mode][output_type][scenario][output][self.accepted_no_burn_in_indices, :]
 
                     uncertainty_centiles[scenario][output] \
                         = numpy.percentile(matrix_to_analyse, self.model_runner.percentiles, axis=0)
@@ -1016,7 +1019,7 @@ class Project:
             country_input_book = xl.load_workbook(path)
             country_sheet = country_input_book['constants']
 
-            # find the integration run with the best likelihood
+            # find the integration run with the highest likelihood
             best_likelihood_index = self.outputs['epi_uncertainty']['loglikelihoods'].index(
                 max(self.outputs['epi_uncertainty']['loglikelihoods']))
 
@@ -1033,9 +1036,9 @@ class Project:
         """
 
         # general prelims to work out what to write
-        horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
+        horizontal = self.gui_inputs['output_horizontally']
         result_types = ['epi_', 'raw_cost_', 'inflated_cost_', 'discounted_cost_', 'discounted_inflated_cost_']
-        if self.run_mode == 'int_uncertainty': scenarios = [15]
+        scenarios = [15] if self.run_mode == 'int_uncertainty' else self.scenarios
 
         # write a new file for each scenario and for each broad category of output
         for result_type in result_types:
@@ -1047,16 +1050,15 @@ class Project:
                 workbook = xl.Workbook()
                 sheet = workbook.active
                 sheet.title = scenario_name
-                sheet.cell(row=1, column=1).value = 'Year'  # year text cell
+                sheet.cell(row=1, column=1).value = 'Year'
+
+                # year column
+                for y, year in enumerate(self.years_to_write):
+                    (row, column) = [1, y + 2] if horizontal else [y + 2, 1]
+                    sheet.cell(row=row, column=column).value = year
 
                 # epi outputs
                 if result_type == 'epi_':
-
-                    # write year column
-                    for y, year in enumerate(self.years_to_write):
-                        row, column = y + 2, 1
-                        if horizontal: column, row = row, column
-                        sheet.cell(row=row, column=column).value = year
 
                     # loop over outputs
                     for out, output in enumerate(self.model_runner.epi_outputs_to_analyse):
@@ -1068,15 +1070,13 @@ class Project:
                             strings_to_write = [t_k.capitalise_and_remove_underscore(output), 'Lower', 'Upper']
 
                             for ci in range(len(strings_to_write)):
-                                row, column = 1, out * 3 + 2 + ci
-                                if horizontal: column, row = row, column
+                                (row, column) = [out * 3 + 2 + ci, 1] if horizontal else [1, out * 3 + 2 + ci]
                                 sheet.cell(row=row, column=column).value = strings_to_write[ci]
 
                             # data columns
                             for y, year in enumerate(self.years_to_write):
                                 for o, order in enumerate(self.order_to_write):
-                                    row, column = y + 2, out * 3 + 2 + o
-                                    if horizontal: column, row = row, column
+                                    (row, column) = [out * 3 + 2 + o, y + 2] if horizontal else [y + 2, out * 3 + 2 + o]
                                     sheet.cell(row=row, column=column).value \
                                         = self.uncertainty_centiles['epi'][scenario][output][
                                             order, t_k.find_first_list_element_at_least_value(
@@ -1086,14 +1086,12 @@ class Project:
                         else:
 
                             # names across top
-                            row, column = 1, out + 2
-                            if horizontal: column, row = row, column
+                            (row, column) = [out + 2, 1] if horizontal else [1, out + 2]
                             sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(output)
 
                             # columns of data
                             for y, year in enumerate(self.years_to_write):
-                                row, column = y + 2, out + 2
-                                if horizontal: column, row = row, column
+                                (row, column) = [out + 2, y + 2] if horizontal else [y + 2, out + 2]
                                 sheet.cell(row=row, column=column).value \
                                     = self.outputs['manual']['epi'][scenario][output][
                                         t_k.find_first_list_element_at_least_value(
@@ -1102,32 +1100,20 @@ class Project:
                 # economic outputs (uncertainty unavailable)
                 elif 'cost_' in result_type:
 
-                    # year text cell
-                    sheet.cell(row=1, column=1).value = 'Year'
-
-                    # year column
-                    for y, year in enumerate(self.years_to_write):
-                        row, column = y + 2, 1
-                        if horizontal: column, row = row, column
-                        sheet.cell(row=row, column=column).value = year
-
                     # loop over interventions
                     for inter, intervention in enumerate(self.inputs.interventions_to_cost[scenario]):
 
                         # names across top
-                        row, column = 1, inter + 2
-                        if horizontal: column, row = row, column
+                        (row, column) = [inter + 2, 1] if horizontal else [1, inter + 2]
                         sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(intervention)
 
                         # data columns
                         for y, year in enumerate(self.years_to_write):
-                            row, column = y + 2, inter + 2
-                            if horizontal: column, row = row, column
+                            (row, column) = [inter + 2, y + 2] if horizontal else [y + 2, inter + 2]
                             sheet.cell(row=row, column=column).value \
                                 = self.outputs['manual']['cost'][scenario][result_type + intervention][
                                         t_k.find_first_list_element_at_least_value(
                                             self.outputs['manual']['cost'][scenario]['times'], year)]
-
                 workbook.save(path)
 
     def write_xls_by_output(self):
@@ -2913,5 +2899,3 @@ class Project:
             os.system('start ' + ' ' + self.out_dir_project)
         elif 'Darwin' in operating_system:
             os.system('open ' + ' ' + self.out_dir_project)
-
-

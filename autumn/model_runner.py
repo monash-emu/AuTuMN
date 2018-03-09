@@ -853,10 +853,17 @@ class ModelRunner:
 
         new_params = []
 
+        # Manually define the width of the interval containing 95% of the proposal Gaussian density
+        overwritten_abs_search_width = {'tb_n_contact': 5., 'start_time': 40.}
+
         # iterate through the parameters being used
         for p, param_dict in enumerate(self.inputs.param_ranges_unc):
             bounds, random = param_dict['bounds'], -100.
-            sd = self.gui_inputs['search_width'] * (bounds[1] - bounds[0]) / (2. * 1.96)
+            if param_dict['key'] in overwritten_abs_search_width.keys():
+                abs_search_width = overwritten_abs_search_width[param_dict['key']]
+            else:
+                abs_search_width = self.gui_inputs['search_width'] * (bounds[1] - bounds[0])
+            sd = abs_search_width / (2. * 1.96)
 
             # search for new parameters and add to dictionary
             while random < bounds[0] or random > bounds[1]:

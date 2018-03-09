@@ -687,51 +687,54 @@ def write_param_to_sheet(country_sheet, working_list, median_run_index):
 
 
 class Project:
-    def __init__(self, model_runner, gui_inputs):
+    def __init__(self, runner, gui_inputs):
         """
         Initialises an object of class Project, that will contain all the information (data + outputs) for writing a
         report for a country.
 
         Args:
-            model_runner: The main model runner object used to execute all the analyses
+            runner: The main model runner object used to execute all the analyses
             gui_inputs: All inputs from the graphical user interface
         """
 
-        self.model_runner = model_runner
-        self.inputs = self.model_runner.inputs
+        self.model_runner = runner
         self.gui_inputs = gui_inputs
-        self.outputs = self.model_runner.outputs
+
+        self.inputs = None
+        (self.output_colours, self.uncertainty_output_colours, self.program_colours, self.classified_scaleups,
+         self.outputs) \
+            = [{} for _ in range(4)]
+        (self.grid, self.plot_rejected_runs, self.plot_true_outcomes) \
+            = [False for _ in range(3)]
+        (self.accepted_no_burn_in_indices, self.order_to_write, self.scenarios, self.interventions_to_cost) \
+            = [[] for _ in range(4)]
+        self.uncertainty_centiles = {'epi': {}, 'cost': {}}
+        for attribute in ['inputs', 'outputs']:
+            setattr(self, attribute, getattr(self.model_runner, attribute))
+        for attribute in ['scenarios', 'interventions_to_cost']:
+            setattr(self, attribute, getattr(self.model_runner.inputs, attribute))
+
         self.country = self.gui_inputs['country'].lower()
-        self.name = 'test_' + self.country
-        self.out_dir_project = os.path.join('projects', self.name)
-        self.figure_formats = ['png']   # possibly several formats. e.g. ['png', 'pdf']
-        if not os.path.isdir(self.out_dir_project): os.makedirs(self.out_dir_project)
-        self.years_to_write = range(int(self.inputs.model_constants['report_start_time']),
-                                    int(self.inputs.model_constants['report_end_time']),
-                                    int(self.inputs.model_constants['report_step_time']))
-        self.figure_number = 1
-        self.classifications = ['demo_', 'econ_', 'epi_prop_smear', 'program_prop_', 'program_timeperiod_',
-                                'program_prop_novel', 'program_prop_treatment', 'program_prop_detect',
-                                'int_prop_vaccination', 'program_prop_treatment_success',
-                                'program_prop_treatment_death', 'transmission_modifier', 'algorithm']
-        self.output_colours = {}
-        self.uncertainty_output_colours = {}
-        self.program_colours = {}
-        self.suptitle_size = 13
-        self.classified_scaleups = {}
-        self.grid = False
-        self.plot_rejected_runs = False
+        self.out_dir_project = os.path.join('projects', 'test_' + self.country)
+        self.figure_formats = ['png']   # allow for multiple formats. e.g. ['png', 'pdf']
+        if not os.path.isdir(self.out_dir_project):
+            os.makedirs(self.out_dir_project)
+        self.years_to_write \
+            = range(int(self.inputs.model_constants['report_start_time']),
+                    int(self.inputs.model_constants['report_end_time']),
+                    int(self.inputs.model_constants['report_step_time']))
+        self.figure_number, self.title_size = 1, 13
+        self.classifications \
+            = ['demo_', 'econ_', 'epi_prop_smear', 'program_prop_', 'program_timeperiod_',
+               'program_prop_novel', 'program_prop_treatment', 'program_prop_detect',
+               'int_prop_vaccination', 'program_prop_treatment_success',
+               'program_prop_treatment_death', 'transmission_modifier', 'algorithm']
 
         # pre-analysis processing attributes
-        self.accepted_no_burn_in_indices = []
-        self.uncertainty_centiles = {'epi': {}, 'cost': {}}
         self.quantities_to_write_back = ['all_parameters', 'all_compartment_values', 'adjustments']
-        centile_order_to_write, self.order_to_write = [50, 2.5, 97.5], []
-        for centile in centile_order_to_write: self.order_to_write.append(self.model_runner.percentiles.index(centile))
+        for centile in [50, 2.5, 97.5]:
+            self.order_to_write.append(self.model_runner.percentiles.index(centile))
 
-        # extract some characteristics from the models within model runner
-        self.scenarios = self.inputs.scenarios
-        self.programs = self.inputs.interventions_to_cost
         self.gtb_available_outputs = ['incidence', 'mortality', 'prevalence', 'notifications']
         self.level_conversion_dict = {'lower_limit': '_lo', 'upper_limit': '_hi', 'point_estimate': ''}
 
@@ -743,7 +746,6 @@ class Project:
             = t_k.find_first_list_element_at_least_value(self.outputs['manual']['epi'][0]['times'],
                                                          self.inputs.model_constants['plot_start_time'])
 
-        self.plot_true_outcomes = False
 
     ''' general methods for use by specific methods below '''
 
@@ -1437,7 +1439,7 @@ class Project:
         for s, scenario in enumerate(self.scenarios):
             self.output_colours[scenario] = output_colours[s]
             self.program_colours[scenario] = {}
-            for p, program in enumerate(self.programs[scenario]):
+            for p, program in enumerate(self.interventions_to_cost[scenario]):
                 # +1 is to avoid starting from black, which doesn't look as nice for programs as for baseline scenario
                 self.program_colours[scenario][program] = output_colours[p + 1]
 
@@ -1777,7 +1779,7 @@ class Project:
 
         # finish off
         fig.suptitle(t_k.capitalise_first_letter(self.country) + ' resistant strain outputs',
-                     fontsize=self.suptitle_size)
+                     fontsize=self.title_size)
         self.save_figure(fig, '_resistant_strain')
 
     def classify_scaleups(self):
@@ -1861,7 +1863,7 @@ class Project:
                 # finish off
                 title = self.inputs.country + ' ' + t_k.find_title_from_dictionary(classification) + ' parameter'
                 if len(function_list) > 1: title += 's'
-                fig.suptitle(title, fontsize=self.suptitle_size)
+                fig.suptitle(title, fontsize=self.title_size)
                 self.save_figure(fig, '_' + classification + '_scale_ups')
 
     def plot_individual_scaleups_against_data(self):
@@ -1940,7 +1942,7 @@ class Project:
 
             # finish off
             fig.suptitle(t_k.capitalise_first_letter(t_k.find_title_from_dictionary(function)),
-                         fontsize=self.suptitle_size)
+                         fontsize=self.title_size)
             self.save_figure(fig, '_' + function + '_scale_up')
 
     def plot_programmatic_scaleups(self):
@@ -1980,8 +1982,8 @@ class Project:
             fig = self.set_and_update_figure()
 
             # subplots by program
-            subplot_grid = find_subplot_numbers(len(self.programs[scenario]))
-            for p, program in enumerate(self.programs[scenario]):
+            subplot_grid = find_subplot_numbers(len(self.interventions_to_cost[scenario]))
+            for p, program in enumerate(self.interventions_to_cost[scenario]):
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
 
                 # make times that each curve is produced for from control panel inputs
@@ -2015,7 +2017,7 @@ class Project:
                     ax.plot(x_values, y_values, color=(darkness, darkness, darkness), label=str(int(time)))
 
                 self.tidy_axis(ax, subplot_grid, title=t_k.find_title_from_dictionary('program_prop_' + program),
-                               x_axis_type='scaled', legend=(p == len(self.programs) - 1), y_axis_type='proportion',
+                               x_axis_type='scaled', legend=(p == len(self.interventions_to_cost) - 1), y_axis_type='proportion',
                                x_label='$US ')
 
             # finish off with title and save file for scenario
@@ -2107,13 +2109,13 @@ class Project:
 
             # finishing off with title and save
             fig_individual.suptitle('Individual program costs for ' + t_k.find_scenario_string_from_number(scenario),
-                                    fontsize=self.suptitle_size)
+                                    fontsize=self.title_size)
             self.save_figure(fig_individual, '_' + str(scenario) + '_timecost_individual')
             fig_stacked.suptitle('Stacked program costs for ' + t_k.find_scenario_string_from_number(scenario),
-                                 fontsize=self.suptitle_size)
+                                 fontsize=self.title_size)
             self.save_figure(fig_stacked, '_' + str(scenario) + '_timecost_stacked')
             fig_relative.suptitle('Relative program costs for ' + t_k.find_scenario_string_from_number(scenario),
-                                  fontsize=self.suptitle_size)
+                                  fontsize=self.title_size)
             self.save_figure(fig_relative, '_' + str(scenario) + '_timecost_relative')
 
     def plot_cost_over_time_stacked_bars(self, cost_type='raw'):
@@ -2279,7 +2281,7 @@ class Project:
                                title=t_k.capitalise_first_letter(output) + ', ' + stratum_string,
                                legend=(output == len(outputs_to_plot) - 1 and s == len(strata) - 1))
         fig.suptitle(t_k.capitalise_and_remove_underscore(self.country) + ' burden by sub-group',
-                     fontsize=self.suptitle_size)
+                     fontsize=self.title_size)
         self.save_figure(fig, '_output_by_' + strata_string)
 
     def plot_proportion_cases_by_stratum(self, strata_string='agegroups'):
@@ -2330,7 +2332,7 @@ class Project:
         self.tidy_axis(ax, [1, 1], start_time=self.inputs.model_constants['recent_time'],
                        y_axis_type='proportion', y_label='Proportion', legend=True)
 
-        fig.suptitle('Proportion of notifications by age', fontsize=self.suptitle_size)
+        fig.suptitle('Proportion of notifications by age', fontsize=self.title_size)
         self.save_figure(fig, '_proportion_notifications_by_age')
 
     def plot_stratified_populations(self, age_or_risk='age'):
@@ -2420,7 +2422,7 @@ class Project:
                                title='Proportion of population from ' + title_time_text, legend=(t == 1))
 
             # finish up
-            fig.suptitle('Population by ' + t_k.find_title_from_dictionary(age_or_risk), fontsize=self.suptitle_size)
+            fig.suptitle('Population by ' + t_k.find_title_from_dictionary(age_or_risk), fontsize=self.title_size)
             self.save_figure(fig, '_riskgroup_proportions')
 
     def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):
@@ -2520,7 +2522,7 @@ class Project:
         # end bits
         self.tidy_axis(ax, [1, 1], y_axis_type='proportion', start_time=self.inputs.model_constants['plot_start_time'],
                        single_axis_room_for_legend=True)
-        fig.suptitle('Population by risk group', fontsize=self.suptitle_size)
+        fig.suptitle('Population by risk group', fontsize=self.title_size)
         self.save_figure(fig, '_riskgroup_checks')
 
     def plot_param_histograms(self):
@@ -2768,7 +2770,7 @@ class Project:
         ax.plot(self.accepted_indices, accepted_log_likelihoods, marker='o', color='k')
 
         # finishing up
-        fig.suptitle('Progression of likelihood', fontsize=self.suptitle_size)
+        fig.suptitle('Progression of likelihood', fontsize=self.title_size)
         ax.set_xlabel('All runs', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         ax.set_ylabel('Likelihood', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         self.save_figure(fig, '_likelihoods')
@@ -2803,7 +2805,7 @@ class Project:
                         label=t_k.capitalise_and_remove_underscore('baseline'))
 
         # finishing up
-        fig.suptitle('Progression of MDR-TB proportion', fontsize=self.suptitle_size)
+        fig.suptitle('Progression of MDR-TB proportion', fontsize=self.title_size)
         ax.set_xlabel('', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         ax.set_ylabel('% of MDR-TB in TB incidence', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         self.save_figure(fig, '_perc_mdr_progress')

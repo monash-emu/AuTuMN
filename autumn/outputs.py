@@ -748,9 +748,8 @@ class Project:
             = [{} for _ in range(5)]
         (self.grid, self.plot_rejected_runs, self.plot_true_outcomes) \
             = [False for _ in range(3)]
-        (self.accepted_no_burn_in_indices, self.order_to_write, self.scenarios, self.interventions_to_cost,
-         self.accepted_indices) \
-            = [[] for _ in range(5)]
+        (self.accepted_no_burn_in_indices, self.scenarios, self.interventions_to_cost, self.accepted_indices) \
+            = [[] for _ in range(4)]
         self.uncertainty_centiles = {'epi': {}, 'cost': {}}
         for attribute in ['inputs', 'outputs']:
             setattr(self, attribute, getattr(self.model_runner, attribute))
@@ -772,8 +771,6 @@ class Project:
                'int_prop_vaccination', 'program_prop_treatment_success',
                'program_prop_treatment_death', 'transmission_modifier', 'algorithm']
         self.quantities_to_write_back = ['all_parameters', 'all_compartment_values', 'adjustments']
-        for centile in [50, 2.5, 97.5]:
-            self.order_to_write.append(self.model_runner.percentiles.index(centile))
         self.gtb_available_outputs = ['incidence', 'mortality', 'prevalence', 'notifications']
         self.level_conversion_dict = {'lower_limit': '_lo', 'upper_limit': '_hi', 'point_estimate': ''}
 
@@ -1075,12 +1072,12 @@ class Project:
 
                             # data columns
                             for y, year in enumerate(self.years_to_write):
-                                for o, order in enumerate(self.order_to_write):
+                                for o in range(3):
                                     (row, column) = [out * 3 + 2 + o, y + 2] if horizontal else [y + 2, out * 3 + 2 + o]
                                     sheet.cell(row=row, column=column).value \
                                         = self.uncertainty_centiles['epi'][scenario][output][
-                                            order, t_k.find_first_list_element_at_least_value(
-                                                self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
+                                        o, t_k.find_first_list_element_at_least_value(
+                                            self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
 
                         # without uncertainty
                         else:
@@ -1157,12 +1154,12 @@ class Project:
 
                     # write the columns of data
                     for y, year in enumerate(self.years_to_write):
-                        for o, order in enumerate(self.order_to_write):
+                        for o in range(3):
                             (row, column) = [s * 3 + 2 + o, y + 2] if horizontal else [y + 2, s * 3 + 2 + o]
                             sheet.cell(row=row, column=column).value \
                                 = self.uncertainty_centiles['epi'][scenario][inter][
-                                    order, t_k.find_first_list_element_at_least_value(
-                                        self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
+                                o, t_k.find_first_list_element_at_least_value(
+                                    self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
 
                 # without uncertainty
                 else:
@@ -1271,15 +1268,13 @@ class Project:
         """
 
         # write a new file for each output
+        scenarios = [15] if self.run_mode == 'int_uncertainty' else self.scenarios
         for output in self.model_runner.epi_outputs_to_analyse:
 
             # initialise document, years of interest and table
             path = os.path.join(self.out_dir_project, output) + ".docx"
             document = Document()
-            table = document.add_table(rows=len(self.years_to_write) + 1, cols=len(self.scenario_names) + 1)
-
-            horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
-            if self.run_mode == 'int_uncertainty': scenarios = [15]
+            table = document.add_table(rows=len(self.years_to_write) + 1, cols=len(self.scenarios) + 1)
 
             for s, scenario in enumerate(scenarios):
                 scenario_name = t_k.find_scenario_string_from_number(scenario)
@@ -1294,12 +1289,12 @@ class Project:
                     row_cells[0].text = str(year)
 
                     # with uncertainty
-                    if self.run_mode == 'epi_uncertainty' or self.run_mode == 'int_uncertainty':
-                        lower_point_upper \
+                    if 'uncertainty' in self.run_mode:
+                        point_lower_upper \
                             = tuple(self.uncertainty_centiles['epi'][scenario][output][0:3,
-                                t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][
-                                                                               scenario]['times'], year)])
-                        row_cells[s + 1].text = '%.1f\n(%.1f to %.1f)' % lower_point_upper
+                                    t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual'][
+                                                                                   'epi'][scenario]['times'], year)])
+                        row_cells[s + 1].text = '%.1f\n(%.1f to %.1f)' % point_lower_upper
 
                     # without
                     else:
@@ -1307,7 +1302,6 @@ class Project:
                             t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual'][
                                                                            'epi'][scenario]['times'], year)]
                         row_cells[s + 1].text = '%.1f' % point
-
             document.save(path)
 
     def find_relative_changes(self, year):
@@ -1319,7 +1313,6 @@ class Project:
         """
 
         scenario, string_to_add = 15, 'manual_'
-        scenario_name = t_k.find_scenario_string_from_number(scenario)
         changes = {}
         for output in self.model_runner.epi_outputs_to_analyse:
             absolute_values \
@@ -1531,18 +1524,15 @@ class Project:
                             = scenario, self.find_start_index(scenario), self.output_colours[scenario][1]
 
                     # median
-                    ax.plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][
-                                self.model_runner.percentiles.index(50), :][start_index:],
-                            self.uncertainty_centiles['epi'][uncertainty_scenario][output][
-                                self.model_runner.percentiles.index(50), :][start_index:],
+                    ax.plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][0, :][start_index:],
+                            self.uncertainty_centiles['epi'][uncertainty_scenario][output][0, :][start_index:],
                             color=linecolour, linestyle=self.output_colours[scenario][0],
                             linewidth=linewidth, label=t_k.capitalise_and_remove_underscore(scenario_name))
 
                     # upper and lower confidence bounds
-                    for centile in [2.5, 97.5]:
+                    for index in [1, 2]:
                         ax.plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][0][start_index:],
-                                self.uncertainty_centiles['epi'][uncertainty_scenario][output][
-                                    self.model_runner.percentiles.index(centile), :][start_index:],
+                                self.uncertainty_centiles['epi'][uncertainty_scenario][output][index, :][start_index:],
                                 color=linecolour, linestyle='--', linewidth=.5, label=None)
 
             # plot progressive model run outputs for uncertainty analyses
@@ -1694,9 +1684,9 @@ class Project:
 
             # plot the targets (and milestones) and the fitted exponential function to achieve them
             if self.run_mode == 'epi_uncertainty' and not self.run_mode == 'int_uncertainty':
-                base_value = self.uncertainty_centiles['epi'][uncertainty_scenario][output][
-                             self.model_runner.percentiles.index(50.), :][t_k.find_first_list_element_at_least_value(
-                                self.outputs['manual']['epi'][uncertainty_scenario]['times'], 2015.)]
+                base_value = self.uncertainty_centiles['epi'][uncertainty_scenario][output][0, :][
+                    t_k.find_first_list_element_at_least_value(
+                        self.outputs['manual']['epi'][uncertainty_scenario]['times'], 2015.)]
             else:
                 base_value = self.outputs['manual']['epi'][uncertainty_scenario][output][
                     t_k.find_first_list_element_at_least_value(

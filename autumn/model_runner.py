@@ -167,7 +167,7 @@ class ModelRunner:
         for attribute in ['scenarios', 'interventions_to_cost', 'is_adjust_population', 'n_centiles_for_shading']:
             setattr(self, attribute, getattr(self.inputs, attribute))
         self.outputs = {'epi_uncertainty': {}}
-        self.percentiles = [2.5, 50., 97.5] + list(numpy.linspace(0., 100., self.n_centiles_for_shading * 2 + 1))
+        self.percentiles = [50., 2.5, 97.5] + list(numpy.linspace(0., 100., self.n_centiles_for_shading * 2 + 1))
         self.additional_cost_types = ['inflated', 'discounted', 'discounted_inflated']
         self.cost_types = self.additional_cost_types + ['raw']
         self.non_disease_compartment_strings = ['susceptible']

@@ -1214,6 +1214,35 @@ class Project:
                                                                                'times'], year)]
                 workbook.save(path)
 
+    def write_opti_outputs_spreadsheet(self):
+
+        # prelims
+        path = os.path.join(self.model_runner.opti_outputs_dir, 'opti_results.xlsx')
+        wb = xl.Workbook()
+        sheet = wb.active
+        sheet.title = 'optimisation'
+
+        # write row names
+        row_names = ['envelope', 'incidence', 'mortality']
+        for row, name in enumerate(row_names):
+            sheet.cell(row=row + 1, column=1).value = name
+        row_index = {}
+        for i, intervention in enumerate(self.model_runner.interventions_considered_for_opti):
+            sheet.cell(row=i + 4, column=1).value = intervention
+            row_index[intervention] = i + 4
+
+        # populate cells with content
+        for env, envelope in enumerate(self.model_runner.opti_results['annual_envelope']):
+            sheet.cell(row=1, column=env + 1).value = envelope
+            sheet.cell(row=2, column=env + 1).value = self.model_runner.opti_results['incidence'][env]
+            sheet.cell(row=3, column=env + 1).value = self.model_runner.opti_results['mortality'][env]
+            for intervention in self.model_runner.opti_results['best_allocation'][env].keys():
+                sheet.cell(row=row_index[intervention], column=env + 1).value = \
+                    self.model_runner.opti_results['best_allocation'][env][intervention]
+
+        # save workbook
+        wb.save(path)
+
     def write_docs_by_scenario(self):
         """
         Write word documents using the docx package. Writes with or without uncertainty according to whether Run
@@ -1323,7 +1352,11 @@ class Project:
             changes[output] = [(i / baseline - 1.) * 1e2 for i in absolute_values]
             print(output + '\n%.1f\n(%.1f to %.1f)' % tuple(changes[output]))
 
-    def find_average_costs(self):
+    def print_average_costs(self):
+        """
+        Incompletely developed method to display the mean cost of an intervention over the course of its implementation
+        under baseline conditions.
+        """
 
         for scenario in self.scenarios:
             print('\n' + t_k.find_scenario_string_from_number(scenario))
@@ -1334,39 +1367,6 @@ class Project:
                     = numpy.mean(self.model_runner.outputs['manual']['cost'][scenario]['raw_cost_' + inter])
                 print('%.1f' % mean_cost[inter])
             print('total: %.1f' % sum(mean_cost.values()))
-
-    def write_opti_outputs_spreadsheet(self):
-
-        if self.model_runner.optimisation:
-
-            # make filename
-            path = os.path.join(self.model_runner.opti_outputs_dir, 'opti_results.xlsx')
-
-            # get active sheet
-            wb = xl.Workbook()
-            sheet = wb.active
-            sheet.title = 'optimisation'
-
-            # write row names
-            sheet.cell(row=1, column=1).value = 'envelope'
-            sheet.cell(row=2, column=1).value = 'incidence'
-            sheet.cell(row=3, column=1).value = 'mortality'
-            row_index = {}
-            for i, intervention in enumerate(self.model_runner.interventions_considered_for_opti):
-                sheet.cell(row=i + 4, column=1).value = intervention
-                row_index[intervention] = i + 4
-
-            # populate cells with content
-            for env, envelope in enumerate(self.model_runner.opti_results['annual_envelope']):
-                sheet.cell(row=1, column=env + 1).value = envelope
-                sheet.cell(row=2, column=env + 1).value = self.model_runner.opti_results['incidence'][env]
-                sheet.cell(row=3, column=env + 1).value = self.model_runner.opti_results['mortality'][env]
-                for intervention in self.model_runner.opti_results['best_allocation'][env].keys():
-                    sheet.cell(row=row_index[intervention], column=env + 1).value = \
-                        self.model_runner.opti_results['best_allocation'][env][intervention]
-
-            # save workbook
-            wb.save(path)
 
     ''' plotting methods '''
 

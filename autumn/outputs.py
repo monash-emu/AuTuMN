@@ -1122,23 +1122,22 @@ class Project:
         """
 
         # general prelims to work out what to write
-        horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
-        if self.run_mode == 'int_uncertainty': scenarios, string_to_add = [15]
+        horizontal = self.gui_inputs['output_horizontally']
+        scenarios = [15] if self.run_mode == 'int_uncertainty' else self.scenarios
 
         # write a new file for each output
         for inter in self.model_runner.epi_outputs_to_analyse:
 
             # prepare sheet
             path = os.path.join(self.out_dir_project, 'epi_' + inter) + '.xlsx'
-            wb = xl.Workbook()
-            sheet = wb.active
+            workbook = xl.Workbook()
+            sheet = workbook.active
             sheet.title = inter
-            sheet.cell(row=1, column=1).value = 'Year'  # year text cell
+            sheet.cell(row=1, column=1).value = 'Year'
 
             # write the year column
             for y, year in enumerate(self.years_to_write):
-                row, column = y + 2, 1
-                if horizontal: column, row = row, column
+                (row, column) = [1, y + 2] if horizontal else [y + 2, 1]
                 sheet.cell(row=row, column=column).value = year
 
             # cycle over scenarios
@@ -1153,15 +1152,13 @@ class Project:
 
                     # write the scenario names and confidence interval titles
                     for ci in range(len(strings_to_write)):
-                        row, column = 1, s * 3 + 2 + ci
-                        if horizontal: column, row = row, column
+                        (row, column) = [s * 3 + 2 + ci, 1] if horizontal else [1, s * 3 + 2 + ci]
                         sheet.cell(row=row, column=column).value = strings_to_write[ci]
 
                     # write the columns of data
                     for y, year in enumerate(self.years_to_write):
                         for o, order in enumerate(self.order_to_write):
-                            row, column = y + 2, s * 3 + 2 + o
-                            if horizontal: column, row = row, column
+                            (row, column) = [s * 3 + 2 + o, y + 2] if horizontal else [y + 2, s * 3 + 2 + o]
                             sheet.cell(row=row, column=column).value \
                                 = self.uncertainty_centiles['epi'][scenario][inter][
                                     order, t_k.find_first_list_element_at_least_value(
@@ -1171,23 +1168,19 @@ class Project:
                 else:
 
                     # write scenario names across first row
-                    row, column = 1, s + 2
-                    if horizontal: column, row = row, column
+                    (row, column) = [s + 2, 1] if horizontal else [1, s + 2]
                     sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(scenario_name)
 
                     # write columns of data
                     for y, year in enumerate(self.years_to_write):
-                        row, column = y + 2, s + 2
-                        if horizontal: column, row = row, column
+                        (row, column) = [s + 2, y + 2] if horizontal else [y + 2, s + 2]
                         sheet.cell(row=row, column=column).value \
                             = self.model_runner.outputs['manual']['epi'][scenario][inter][
                                 t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][
                                                                                scenario]['times'], year)]
+            workbook.save(path)
 
-            # wave workbook
-            wb.save(path)
-
-        # CODE PROBABLY WRONG because interventions can differ by scenario
+        # code probably could bug because interventions can differ by scenario
         for inter in self.inputs.interventions_to_cost[0]:
             for cost_type in ['raw_cost_', 'inflated_cost_', 'discounted_cost_', 'discounted_inflated_cost_']:
 
@@ -1195,8 +1188,8 @@ class Project:
                 path = os.path.join(self.out_dir_project, cost_type + inter) + '.xlsx'
 
                 # get active sheet
-                wb = xl.Workbook()
-                sheet = wb.active
+                workbook = xl.Workbook()
+                sheet = workbook.active
                 sheet.title = inter
 
                 # write the year text cell
@@ -1204,8 +1197,7 @@ class Project:
 
                 # write the year text column
                 for y, year in enumerate(self.years_to_write):
-                    row, column = y + 2, 1
-                    if horizontal: column, row = row, column
+                    (row, column) = [1, y + 2] if horizontal else [y + 2, 1]
                     sheet.cell(row=row, column=column).value = year
 
                 # cycle over scenarios
@@ -1213,21 +1205,17 @@ class Project:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
 
                     # scenario names
-                    row, column = 1, s + 2
-                    if horizontal: column, row = row, column
+                    (row, column) = [s + 2, 1] if horizontal else [1, s + 2]
                     sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(scenario_name)
 
                     # data columns
                     for y, year in enumerate(self.years_to_write):
-                        row, column = y + 2, s + 2
-                        if horizontal: column, row = row, column
+                        (row, column) = [s + 2, y + 2] if horizontal else [y + 2, s + 2]
                         sheet.cell(row=row, column=column).value \
                             = self.outputs['manual']['cost'][scenario][cost_type + inter][
                                 t_k.find_first_list_element_at_least_value(self.outputs['manual']['cost'][scenario][
                                                                                'times'], year)]
-
-                # save workbook
-                wb.save(path)
+                workbook.save(path)
 
     def write_docs_by_scenario(self):
         """

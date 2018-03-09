@@ -649,9 +649,9 @@ class ModelRunner:
 
                 # record starting population
                 if self.gui_inputs['write_uncertainty_outcome_params']:
-                    for compartment_type in self.outputs['epi_uncertainty']['all_compartment_values']:
+                    for compartment_type in self.outputs['epi_uncertainty']['all_compartment_values'].keys():
                         self.outputs['epi_uncertainty']['all_compartment_values'][compartment_type].append(
-                            self.inputs.model_constants[compartment_type])
+                            self.models[0].params[compartment_type])
 
                 # record uncertainty calculations for all runs
                 if accepted:

@@ -1223,9 +1223,7 @@ class Project:
         uncertainty selected in the GUI. Currently only working for epidemiological outputs.
         """
 
-        horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
-        if self.run_mode == 'int_uncertainty': scenarios = [15]
-
+        scenarios = [15] if self.run_mode == 'int_uncertainty' else self.scenarios
         for scenario in scenarios:
 
             # initialise document and table
@@ -1238,7 +1236,7 @@ class Project:
             # for each epidemiological indicator
             for o, output in enumerate(self.model_runner.epi_outputs_to_analyse):
 
-                # outputs across the top
+                # titles across the top
                 row_cells = table.rows[0].cells
                 row_cells[0].text = 'Year'
                 row_cells[o + 1].text = t_k.capitalise_and_remove_underscore(output)
@@ -1251,12 +1249,12 @@ class Project:
                     row_cells[0].text = str(year)
 
                     # with uncertainty
-                    if self.run_mode == 'epi_uncertainty' or self.run_mode == 'int_uncertainty':
-                        lower_point_upper \
+                    if 'uncertainty' in self.run_mode:
+                        point_lower_upper \
                             = tuple(self.uncertainty_centiles['epi'][scenario][output][
                                     0:3, t_k.find_first_list_element_at_least_value(
                                         self.model_runner.outputs['manual']['epi'][scenario]['times'], year)])
-                        row_cells[o + 1].text = '%.1f\n(%.1f to %.1f)' % lower_point_upper
+                        row_cells[o + 1].text = '%.1f\n(%.1f to %.1f)' % point_lower_upper
 
                     # without
                     else:
@@ -1264,7 +1262,6 @@ class Project:
                             t_k.find_first_list_element_at_least_value(
                                 self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
                         row_cells[o + 1].text = '%.1f' % point
-
             document.save(path)
 
     def write_docs_by_output(self):

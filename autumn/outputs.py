@@ -700,20 +700,22 @@ class Project:
         self.model_runner = runner
         self.gui_inputs = gui_inputs
 
-        self.inputs = None
+        (self.inputs, self.run_mode) \
+            = [None for _ in range(2)]
         (self.output_colours, self.uncertainty_output_colours, self.program_colours, self.classified_scaleups,
          self.outputs) \
-            = [{} for _ in range(4)]
+            = [{} for _ in range(5)]
         (self.grid, self.plot_rejected_runs, self.plot_true_outcomes) \
             = [False for _ in range(3)]
-        (self.accepted_no_burn_in_indices, self.order_to_write, self.scenarios, self.interventions_to_cost) \
-            = [[] for _ in range(4)]
+        (self.accepted_no_burn_in_indices, self.order_to_write, self.scenarios, self.interventions_to_cost,
+         self.accepted_indices) \
+            = [[] for _ in range(5)]
         self.uncertainty_centiles = {'epi': {}, 'cost': {}}
         for attribute in ['inputs', 'outputs']:
             setattr(self, attribute, getattr(self.model_runner, attribute))
-        for attribute in ['scenarios', 'interventions_to_cost']:
+        for attribute in ['scenarios', 'interventions_to_cost', 'run_mode']:
             setattr(self, attribute, getattr(self.model_runner.inputs, attribute))
-
+        self.figure_number, self.title_size = 1, 13
         self.country = self.gui_inputs['country'].lower()
         self.out_dir_project = os.path.join('projects', 'test_' + self.country)
         self.figure_formats = ['png']   # allow for multiple formats. e.g. ['png', 'pdf']
@@ -723,29 +725,79 @@ class Project:
             = range(int(self.inputs.model_constants['report_start_time']),
                     int(self.inputs.model_constants['report_end_time']),
                     int(self.inputs.model_constants['report_step_time']))
-        self.figure_number, self.title_size = 1, 13
         self.classifications \
             = ['demo_', 'econ_', 'epi_prop_smear', 'program_prop_', 'program_timeperiod_',
                'program_prop_novel', 'program_prop_treatment', 'program_prop_detect',
                'int_prop_vaccination', 'program_prop_treatment_success',
                'program_prop_treatment_death', 'transmission_modifier', 'algorithm']
-
-        # pre-analysis processing attributes
         self.quantities_to_write_back = ['all_parameters', 'all_compartment_values', 'adjustments']
         for centile in [50, 2.5, 97.5]:
             self.order_to_write.append(self.model_runner.percentiles.index(centile))
-
         self.gtb_available_outputs = ['incidence', 'mortality', 'prevalence', 'notifications']
         self.level_conversion_dict = {'lower_limit': '_lo', 'upper_limit': '_hi', 'point_estimate': ''}
 
         # to have a look at some individual vars scaling over time
         self.vars_to_view = ['riskgroup_prop_diabetes']
 
-        # comes up so often that we need to find this index, that best done in instantiation
+        # comes up so often that we need to find this index, that easiest to do in instantiation
         self.start_time_index \
             = t_k.find_first_list_element_at_least_value(self.outputs['manual']['epi'][0]['times'],
                                                          self.inputs.model_constants['plot_start_time'])
 
+    ''' master method to call the others '''
+
+    def master_outputs_runner(self):
+        """
+        Method to work through all the fundamental output methods, which then call all the specific output
+        methods for plotting and writing as required.
+        """
+
+        self.model_runner.add_comment_to_gui_window('Creating outputs')
+
+        # processing methods that are only required for outputs
+        if self.run_mode == 'epi_uncertainty':
+            self.find_uncertainty_indices()
+            for output_type in ['epi', 'cost']:
+                self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles('epi_uncertainty', output_type)
+        elif self.run_mode == 'int_uncertainty':
+            for output_type in ['epi', 'cost']:
+                self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles('int_uncertainty', output_type)
+
+        # write automatic calibration values back to sheets
+        if self.inputs.run_mode == 'epi_uncertainty' and self.gui_inputs['write_uncertainty_outcome_params']:
+            self.write_automatic_calibration_outputs()
+
+        # write spreadsheets with sheet for each scenario or each output
+        if self.gui_inputs['output_spreadsheets'] or self.inputs.run_mode == 'int_uncertainty':
+            if self.gui_inputs['output_by_scenario']:
+                self.model_runner.add_comment_to_gui_window('Writing scenario spreadsheets')
+                self.write_xls_by_scenario()
+            else:
+                self.model_runner.add_comment_to_gui_window('Writing output indicator spreadsheets')
+                self.write_xls_by_output()
+
+        # write documents - with document for each scenario or each output
+        if self.gui_inputs['output_documents']:
+            if self.gui_inputs['output_by_scenario']:
+                print('Writing scenario documents')
+                self.write_docs_by_scenario()
+                if self.inputs.run_mode == 'int_uncertainty':
+                    self.find_relative_changes(year=2035.)
+            else:
+                print('Writing output indicator documents')
+                self.write_docs_by_output()
+
+        # write optimisation spreadsheets
+        # self.write_opti_outputs_spreadsheet()
+
+        # self.find_average_costs()
+
+        # master plotting method
+        self.model_runner.add_comment_to_gui_window('Creating plot figures')
+        self.run_plotting()
+
+        # open the directory to which everything has been written to save the user a click or two
+        self.open_output_directory()
 
     ''' general methods for use by specific methods below '''
 
@@ -964,56 +1016,6 @@ class Project:
         return uncertainty_centiles
 
     ''' methods for outputting to documents and spreadsheets '''
-
-    def master_outputs_runner(self):
-        """
-        Method to work through all the fundamental output methods, which then call all the specific output
-        methods for plotting and writing as required.
-        """
-
-        # processing methods that are only required for outputs
-        if self.inputs.run_mode == 'epi_uncertainty':
-            self.find_uncertainty_indices()
-            for output_type in ['epi', 'cost']:
-                self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles('epi_uncertainty', output_type)
-        if self.inputs.run_mode == 'int_uncertainty':
-            for output_type in ['epi', 'cost']:
-                self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles('int_uncertainty', output_type)
-
-        # write automatic calibration values back to sheets
-        if self.inputs.run_mode == 'epi_uncertainty' and self.gui_inputs['write_uncertainty_outcome_params']:
-            self.write_automatic_calibration_outputs()
-
-        # write spreadsheets - with sheet for each scenario or each output
-        if self.gui_inputs['output_spreadsheets'] or self.inputs.run_mode == 'int_uncertainty':
-            if self.gui_inputs['output_by_scenario']:
-                self.model_runner.add_comment_to_gui_window('Writing scenario spreadsheets')
-                self.write_xls_by_scenario()
-            else:
-                self.model_runner.add_comment_to_gui_window('Writing output indicator spreadsheets')
-                self.write_xls_by_output()
-
-        # write documents - with document for each scenario or each output
-        if self.gui_inputs['output_documents']:
-            if self.gui_inputs['output_by_scenario']:
-                print('Writing scenario documents')
-                self.write_docs_by_scenario()
-                if self.inputs.run_mode == 'int_uncertainty':
-                    self.find_relative_changes(year=2035.)
-            else:
-                print('Writing output indicator documents')
-                self.write_docs_by_output()
-
-        # write optimisation spreadsheets
-        # self.write_opti_outputs_spreadsheet()
-
-        # self.find_average_costs()
-
-        # master plotting method
-        self.run_plotting()
-
-        # open the directory to which everything has been written to save the user a click or two
-        self.open_output_directory()
 
     def write_automatic_calibration_outputs(self):
         """

@@ -3,6 +3,7 @@ import openpyxl as xl
 import tool_kit as t_k
 from docx import Document
 from matplotlib import pyplot, patches, style, cm
+from matplotlib.ticker import FuncFormatter
 import numpy
 import pylab
 import platform
@@ -1398,10 +1399,10 @@ class Project:
         if self.gui_inputs['output_scaleups']:
             if self.vars_to_view:
                 self.individual_var_viewer()
-            self.classify_scaleups()
-            self.plot_scaleup_fns_against_data()
-            self.plot_individual_scaleups_against_data()
-            self.plot_programmatic_scaleups()
+            # self.classify_scaleups()
+            # self.plot_scaleup_fns_against_data()
+            # self.plot_individual_scaleups_against_data()
+            # self.plot_programmatic_scaleups()
 
             # not technically a scale-up function in the same sense, but put in here anyway
             # self.plot_force_infection()
@@ -1733,14 +1734,16 @@ class Project:
         """
 
         for var in self.vars_to_view:
-            fig = self.set_and_update_figure()
-            ax = fig.add_subplot(1, 1, 1)
+            pyplot.style.use('ggplot')
+            fig = pyplot.figure()
+            ax = fig.add_axes([.15, .15, 0.7, 0.7])
             for scenario in reversed(self.scenarios):
                 ax.plot(self.model_runner.models[scenario].times, self.model_runner.models[scenario].get_var_soln(var),
                         color=self.output_colours[scenario][1])
-            self.tidy_axis(ax, [1, 1], start_time=self.inputs.model_constants['plot_start_time'])
-            fig.suptitle(t_k.find_title_from_dictionary(var))
-            self.save_figure(fig, '_var_' + var)
+            ax.tick_params(axis='both', length=6, pad=8)
+            ax.yaxis.set_major_formatter(FuncFormatter('{0:.0%}'.format))
+            ax.set_title(t_k.find_title_from_dictionary(var), y=1.04)
+            self.save_figure(fig, '_' + var)
 
     def plot_scaleup_fns_against_data(self):
         """

@@ -1387,7 +1387,7 @@ class Project:
         # plot main outputs
         if self.gui_inputs['output_gtb_plots']:
             purposes = ['scenario']
-            if self.run_mode == 'epi_uncertainty' or self.run_mode == 'int_uncertainty':
+            if '_uncertainty' in self.run_mode:
                 purposes.extend(['ci_plot', 'progress', 'shaded'])
             for purpose in purposes:
                 self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose=purpose)
@@ -1396,7 +1396,8 @@ class Project:
 
         # plot scale-up functions - currently only doing this for the baseline model run
         if self.gui_inputs['output_scaleups']:
-            if self.vars_to_view: self.individual_var_viewer()
+            if self.vars_to_view:
+                self.individual_var_viewer()
             self.classify_scaleups()
             self.plot_scaleup_fns_against_data()
             self.plot_individual_scaleups_against_data()
@@ -1445,32 +1446,26 @@ class Project:
 
         # save figure that is produced in the uncertainty running process
         if self.run_mode == 'epi_uncertainty' and self.gui_inputs['output_param_plots']:
-            param_tracking_figure = self.set_and_update_figure()
-            #param_tracking_figure = self.model_runner.plot_progressive_parameters_tk(from_runner=False,
-            #                                                                         input_figure=param_tracking_figure)
-            self.save_figure(param_tracking_figure, '_param_tracking')
             self.plot_param_histograms()
             self.plot_param_timeseries()
             self.plot_priors()
 
         # plot popsizes for checking cost-coverage curves
-        if self.gui_inputs['output_popsize_plot']: self.plot_popsizes()
+        if self.gui_inputs['output_popsize_plot']:
+            self.plot_popsizes()
 
         # plot likelihood estimates
-        if self.run_mode == 'epi_uncertainty' and self.gui_inputs['output_likelihood_plot']: self.plot_likelihoods()
+        if self.run_mode == 'epi_uncertainty' and self.gui_inputs['output_likelihood_plot']:
+            self.plot_likelihoods()
 
         # plot percentage of MDR for different uncertainty runs
-        if self.run_mode == 'epi_uncertainty' and self.inputs.n_strains > 1: self.plot_perc_mdr_progress()
+        if self.run_mode == 'epi_uncertainty' and self.inputs.n_strains > 1:
+            self.plot_perc_mdr_progress()
 
         # for debugging
         if self.inputs.n_strains > 1:
             self.plot_cases_by_division(['_asds', '_asmdr'],
                                         restriction_1='_mdr', restriction_2='treatment', exclusion_string='latent')
-
-        # optimisation plotting
-        # if self.model_runner.optimisation:
-        #     self.plot_optimised_epi_outputs()
-        #     self.plot_piecharts_opti()
 
     def plot_outputs_against_gtb(self, outputs, purpose='scenario'):
         """
@@ -1737,16 +1732,15 @@ class Project:
         list, which is now an attribute of this object (i.e. vars_to_view).
         """
 
-        for function in self.vars_to_view:
+        for var in self.vars_to_view:
             fig = self.set_and_update_figure()
             ax = fig.add_subplot(1, 1, 1)
             for scenario in reversed(self.scenarios):
-                ax.plot(self.model_runner.models[scenario].times,
-                        self.model_runner.models[scenario].get_var_soln(function),
+                ax.plot(self.model_runner.models[scenario].times, self.model_runner.models[scenario].get_var_soln(var),
                         color=self.output_colours[scenario][1])
             self.tidy_axis(ax, [1, 1], start_time=self.inputs.model_constants['plot_start_time'])
-            fig.suptitle(t_k.find_title_from_dictionary(function))
-            self.save_figure(fig, '_var_' + function)
+            fig.suptitle(t_k.find_title_from_dictionary(var))
+            self.save_figure(fig, '_var_' + var)
 
     def plot_scaleup_fns_against_data(self):
         """

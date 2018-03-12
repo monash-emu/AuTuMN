@@ -728,6 +728,35 @@ def write_param_to_sheet(country_sheet, working_list, median_run_index):
                 country_sheet.cell(row=max_row + 1, column=2).value = value
 
 
+def reverse_inputs_if_condition(inputs, condition):
+    """
+    Very simple method to reverse a list if requested.
+
+    Args:
+        inputs: A list of the inputs
+        condition: Boolean for whether to reverse or not
+    Returns:
+        The list reversed if condition and the list unchanged otherwise
+    """
+
+    return inputs[::-1] if condition else inputs
+
+
+def add_title_to_plot(fig, n_panels, content):
+    """
+    Function to add title to the top of a figure and handle multiple panels if necessary.
+
+    Args:
+        fig: The figure object to have a title added to it
+        n_panels: Integer for the total number of panels on the figure
+        content: Unprocessed string to determine text for the title
+    """
+
+    title_height = {1: .92, 2: .98}
+    title_font_size = {1: 14, 2: 11}
+    fig.suptitle(t_k.find_title_from_dictionary(content), y=title_height[n_panels], fontsize=title_font_size[n_panels])
+
+
 class Project:
     def __init__(self, runner, gui_inputs):
         """
@@ -1052,7 +1081,7 @@ class Project:
 
                 # year column
                 for y, year in enumerate(self.years_to_write):
-                    (row, column) = [1, y + 2] if horizontal else [y + 2, 1]
+                    row, column = reverse_inputs_if_condition([y + 2, 1], horizontal)
                     sheet.cell(row=row, column=column).value = year
 
                 # epi outputs
@@ -1068,13 +1097,13 @@ class Project:
                             strings_to_write = [t_k.capitalise_and_remove_underscore(output), 'Lower', 'Upper']
 
                             for ci in range(len(strings_to_write)):
-                                (row, column) = [out * 3 + 2 + ci, 1] if horizontal else [1, out * 3 + 2 + ci]
+                                row, column = reverse_inputs_if_condition([1, out * 3 + 2 + ci], horizontal)
                                 sheet.cell(row=row, column=column).value = strings_to_write[ci]
 
                             # data columns
                             for y, year in enumerate(self.years_to_write):
                                 for o in range(3):
-                                    (row, column) = [out * 3 + 2 + o, y + 2] if horizontal else [y + 2, out * 3 + 2 + o]
+                                    row, column = reverse_inputs_if_condition([y + 2, out * 3 + 2 + o], horizontal)
                                     sheet.cell(row=row, column=column).value \
                                         = self.uncertainty_centiles['epi'][scenario][output][
                                         o, t_k.find_first_list_element_at_least_value(
@@ -1084,12 +1113,12 @@ class Project:
                         else:
 
                             # names across top
-                            (row, column) = [out + 2, 1] if horizontal else [1, out + 2]
+                            row, column = reverse_inputs_if_condition([1, out + 2], horizontal)
                             sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(output)
 
                             # columns of data
                             for y, year in enumerate(self.years_to_write):
-                                (row, column) = [out + 2, y + 2] if horizontal else [y + 2, out + 2]
+                                row, column = reverse_inputs_if_condition([y + 2, out + 2], horizontal)
                                 sheet.cell(row=row, column=column).value \
                                     = self.outputs['manual']['epi'][scenario][output][
                                         t_k.find_first_list_element_at_least_value(
@@ -1102,12 +1131,12 @@ class Project:
                     for inter, intervention in enumerate(self.inputs.interventions_to_cost[scenario]):
 
                         # names across top
-                        (row, column) = [inter + 2, 1] if horizontal else [1, inter + 2]
+                        row, column = reverse_inputs_if_condition([1, inter + 2], horizontal)
                         sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(intervention)
 
                         # data columns
                         for y, year in enumerate(self.years_to_write):
-                            (row, column) = [inter + 2, y + 2] if horizontal else [y + 2, inter + 2]
+                            row, column = reverse_inputs_if_condition([y + 2, inter + 2], horizontal)
                             sheet.cell(row=row, column=column).value \
                                 = self.outputs['manual']['cost'][scenario][result_type + intervention][
                                         t_k.find_first_list_element_at_least_value(
@@ -1135,7 +1164,7 @@ class Project:
 
             # write the year column
             for y, year in enumerate(self.years_to_write):
-                (row, column) = [1, y + 2] if horizontal else [y + 2, 1]
+                row, column = reverse_inputs_if_condition([y + 2, 1], horizontal)
                 sheet.cell(row=row, column=column).value = year
 
             # cycle over scenarios
@@ -1150,13 +1179,13 @@ class Project:
 
                     # write the scenario names and confidence interval titles
                     for ci in range(len(strings_to_write)):
-                        (row, column) = [s * 3 + 2 + ci, 1] if horizontal else [1, s * 3 + 2 + ci]
+                        row, column = reverse_inputs_if_condition([1, s * 3 + 2 + ci], horizontal)
                         sheet.cell(row=row, column=column).value = strings_to_write[ci]
 
                     # write the columns of data
                     for y, year in enumerate(self.years_to_write):
                         for o in range(3):
-                            (row, column) = [s * 3 + 2 + o, y + 2] if horizontal else [y + 2, s * 3 + 2 + o]
+                            row, column = reverse_inputs_if_condition([y + 2, s * 3 + 2 + o], horizontal)
                             sheet.cell(row=row, column=column).value \
                                 = self.uncertainty_centiles['epi'][scenario][inter][
                                 o, t_k.find_first_list_element_at_least_value(
@@ -1166,12 +1195,12 @@ class Project:
                 else:
 
                     # write scenario names across first row
-                    (row, column) = [s + 2, 1] if horizontal else [1, s + 2]
+                    row, column = reverse_inputs_if_condition([1, s + 2], horizontal)
                     sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(scenario_name)
 
                     # write columns of data
                     for y, year in enumerate(self.years_to_write):
-                        (row, column) = [s + 2, y + 2] if horizontal else [y + 2, s + 2]
+                        row, column = reverse_inputs_if_condition([y + 2, s + 2], horizontal)
                         sheet.cell(row=row, column=column).value \
                             = self.model_runner.outputs['manual']['epi'][scenario][inter][
                                 t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][
@@ -1195,7 +1224,7 @@ class Project:
 
                 # write the year text column
                 for y, year in enumerate(self.years_to_write):
-                    (row, column) = [1, y + 2] if horizontal else [y + 2, 1]
+                    row, column = reverse_inputs_if_condition([y + 2, 1], horizontal)
                     sheet.cell(row=row, column=column).value = year
 
                 # cycle over scenarios
@@ -1203,12 +1232,12 @@ class Project:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
 
                     # scenario names
-                    (row, column) = [s + 2, 1] if horizontal else [1, s + 2]
+                    row, column = reverse_inputs_if_condition([1, s + 2], horizontal)
                     sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(scenario_name)
 
                     # data columns
                     for y, year in enumerate(self.years_to_write):
-                        (row, column) = [s + 2, y + 2] if horizontal else [y + 2, s + 2]
+                        row, column = reverse_inputs_if_condition([y + 2, s + 2], horizontal)
                         sheet.cell(row=row, column=column).value \
                             = self.outputs['manual']['cost'][scenario][cost_type + inter][
                                 t_k.find_first_list_element_at_least_value(self.outputs['manual']['cost'][scenario][
@@ -1398,8 +1427,8 @@ class Project:
         # plot scale-up functions - currently only doing this for the baseline model run
         if self.gui_inputs['output_scaleups']:
             if self.vars_to_view:
-                self.individual_var_viewer()
-            # self.classify_scaleups()
+                self.plot_scaleup_vars()
+            self.classify_scaleups()
             # self.plot_scaleup_fns_against_data()
             # self.plot_individual_scaleups_against_data()
             # self.plot_programmatic_scaleups()
@@ -1724,26 +1753,96 @@ class Project:
 
         for classification in self.classifications:
             self.classified_scaleups[classification] = []
-            for fn in self.model_runner.models[0].scaleup_fns:
-                if classification in fn: self.classified_scaleups[classification] += [fn]
+            for var in self.model_runner.models[0].scaleup_fns:
+                if classification in var:
+                    self.classified_scaleups[classification] += [var]
 
-    def individual_var_viewer(self):
+    def initialise_figures_axes(self, n_panels):
         """
-        Function that can be used to visualise a particular var or several vars, by adding them to the function input
-        list, which is now an attribute of this object (i.e. vars_to_view).
+        Initialise the subplots (or single plot) according to the number of panels required.
+
+        Args:
+            n_panels: The number of panels needed
+        Returns:
+            fig: The figure object
+            axes: A list containing each of the axes
         """
 
-        for var in self.vars_to_view:
-            pyplot.style.use('ggplot')
-            fig = pyplot.figure()
-            ax = fig.add_axes([.15, .15, 0.7, 0.7])
-            for scenario in reversed(self.scenarios):
-                ax.plot(self.model_runner.models[scenario].times, self.model_runner.models[scenario].get_var_soln(var),
-                        color=self.output_colours[scenario][1])
-            ax.tick_params(axis='both', length=6, pad=8)
-            ax.yaxis.set_major_formatter(FuncFormatter('{0:.0%}'.format))
-            ax.set_title(t_k.find_title_from_dictionary(var), y=1.04)
+        pyplot.style.use('ggplot')
+        fig = pyplot.figure(self.figure_number)
+        self.figure_number += 1
+        axes = []
+        if n_panels == 1:
+            axes.append(fig.add_axes([.15, .15, 0.7, 0.7]))
+        elif n_panels == 2:
+            fig.set_figheight(4)
+            axes.append(fig.add_subplot(1, 2, 1))
+            axes.append(fig.add_subplot(1, 2, 2, sharey=axes[0]))
+        return fig, axes
+
+    def plot_scaleup_vars(self, n_panels=2):
+        """
+        Method that can be used to visualise each scale-up variable, not plotted against the data it is fit to and only
+        on a single panel.
+
+        Args:
+            n_panels: Number of panels to plot the data onto
+        """
+
+        end_time = self.inputs.model_constants['plot_end_time']
+        for var in self.model_runner.models[0].scaleup_fns:
+            fig, axes = self.initialise_figures_axes(n_panels)
+            for n_axis in range(n_panels):
+
+                # find time to plot from and x-values
+                start_time = self.inputs.model_constants['plot_start_time'] if n_axis == n_panels - 1 \
+                    else self.inputs.model_constants['early_time']
+
+                # plot
+                self.plot_scaleup_var_to_axis(axes[n_axis], [start_time, end_time], var)
+                self.plot_scaleup_data_to_axis(axes[n_axis], [start_time, end_time], var)
+
+                # clean up axes
+                axes[n_axis].tick_params(axis='both', length=6, pad=8)
+                if 'prop_' in var and axes[n_axis].get_ylim()[1] > 1.:
+                    axes[n_axis].set_ylim(top=1.)
+                if 'prop_' in var:
+                    axes[n_axis].yaxis.set_major_formatter(FuncFormatter('{0:.0%}'.format))
+                axes[n_axis].set_ylim(bottom=0.)
+                axes[n_axis].set_xlim(left=start_time, right=end_time)
+            add_title_to_plot(fig, n_panels, var)
             self.save_figure(fig, '_' + var)
+
+    def plot_scaleup_var_to_axis(self, axis, time_limits, var):
+        """
+        Add the scale-up var function output to an axis.
+
+        Args:
+            axis: The axis to add the line to
+            time_limits: The limits of the horizontal axis in years
+            var: String for the var to plot
+        """
+
+        x_vals = numpy.linspace(time_limits[0], time_limits[1], int(1e3))
+        for scenario in reversed(self.scenarios):
+            y_vals = map(self.model_runner.models[scenario].scaleup_fns[var], x_vals)
+            axis.plot(x_vals, y_vals, color=self.output_colours[scenario][1],
+                      label=t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario)))
+
+    def plot_scaleup_data_to_axis(self, axis, time_limits, var):
+        """
+        Plot data that a scale-up function had been fitted to if it is in the desired range.
+
+        Args:
+            axis: Axis to plot onto
+            time_limits: The limits of the horizontal axis in years
+            var: String of the var to plot
+        """
+
+        if var in self.inputs.scaleup_data[0]:
+            data_to_plot = {key: value for key, value in self.inputs.scaleup_data[0][var].items()
+                            if int(time_limits[0]) <= key <= int(time_limits[1])}
+            axis.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
 
     def plot_scaleup_fns_against_data(self):
         """
@@ -1765,121 +1864,40 @@ class Project:
                 x_vals = numpy.linspace(start_time, end_time, 1e3)
 
                 # iterate through functions
-                for f, function in enumerate(function_list):
+                for v, var in enumerate(function_list):
 
                     # initialise axis
-                    ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], f + 1)
+                    ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], v + 1)
 
                     # iterate through the scenarios
                     for scenario in reversed(self.scenarios):
 
                         # line plot of scaling parameter functions
                         ax.plot(x_vals,
-                                map(self.model_runner.models[scenario].scaleup_fns[function],
+                                map(self.model_runner.models[scenario].scaleup_fns[var],
                                     x_vals),
                                 color=self.output_colours[scenario][1],
                                 label=t_k.capitalise_and_remove_underscore(
                                     t_k.find_scenario_string_from_number(scenario)))
 
                     # plot the raw data from which the scale-up functions were produced
-                    if function in self.inputs.scaleup_data[0]:
-                        data_to_plot = self.inputs.scaleup_data[0][function]
+                    if var in self.inputs.scaleup_data[0]:
+                        data_to_plot = self.inputs.scaleup_data[0][var]
                         ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
 
                     # adjust tick font size and add panel title
-                    if 'prop_' in function:
-                        y_axis_type = 'proportion'
-                    else:
-                        y_axis_type = 'raw'
+                    y_axis_type = 'proportion' if 'prop_' in var else 'raw'
 
                     self.tidy_axis(ax, subplot_grid, start_time=start_time,
-                                   title=t_k.capitalise_first_letter(t_k.find_title_from_dictionary(function)),
-                                   legend=(f == len(function_list) - 1), y_axis_type=y_axis_type)
+                                   title=t_k.capitalise_first_letter(t_k.find_title_from_dictionary(var)),
+                                   legend=(v == len(function_list) - 1), y_axis_type=y_axis_type)
 
                 # finish off
                 title = self.inputs.country + ' ' + t_k.find_title_from_dictionary(classification) + ' parameter'
-                if len(function_list) > 1: title += 's'
+                if len(function_list) > 1:
+                    title += 's'
                 fig.suptitle(title, fontsize=self.title_size)
                 self.save_figure(fig, '_' + classification + '_scale_ups')
-
-    def plot_individual_scaleups_against_data(self):
-        """
-        This method more intended for technical appendices to papers, where it is important to be comprehensive in
-        presenting every fitted time-variant parameter that is used.
-
-        Several pieces of dodgy code here in an attempt to get figures looking correct for Fiji paper supplement.
-        """
-
-        # different figure for each type of function
-        for function in self.model_runner.models[0].scaleup_fns:
-
-            # standard prelims
-            fig = self.set_and_update_figure()
-            fig.set_figheight(4)
-            subplot_grid = [1, 2]
-            end_time = 2020.
-
-            for i in range(2):
-
-                # initialise axis
-                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1)
-
-                start_time = self.inputs.model_constants['early_time']
-                if i:
-                    start_time = self.inputs.model_constants['plot_start_time']
-                elif 'diabetes' in function:
-                    start_time = 1900.
-                elif 'vacc' in function:
-                    start_time = 1920.
-                x_vals = numpy.linspace(start_time, end_time, 1e3)
-
-                # iterate through the scenarios
-                for scenario in reversed(self.scenarios):
-
-                    # line plot of scaling parameter functions
-                    ax.plot(x_vals,
-                            map(self.model_runner.models[scenario].scaleup_fns[function], x_vals),
-                            color=self.output_colours[scenario][1],
-                            label=t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario)))
-
-                if function in self.inputs.scaleup_data[0]:
-                    data_to_plot = self.inputs.scaleup_data[0][function]
-                    ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
-
-                # adjust tick font size and add panel title
-                if 'prop_' in function and not i:
-                    y_axis_type = 'proportion'
-                    y_label = 'Proportion'
-                elif 'prop_' in function and i:
-                    y_axis_type = 'proportion'
-                    y_label = ''
-                elif 'life_expectancy' in function and not i:
-                    y_axis_type = 'raw'
-                    y_label = 'Years'
-                elif 'life_expectancy' in function and i:
-                    y_axis_type = 'raw'
-                    y_label = ''
-                else:
-                    y_axis_type = 'raw'
-
-                # little fudge to get height for birth rate displaying correctly for Fiji
-                y_relative_limit = 0.95
-                if function == 'demo_rate_birth' and i:
-                    y_relative_limit = 1.1
-                    y_label = ''
-                elif function == 'demo_rate_birth':
-                    y_relative_limit = 1.1
-                    y_label = 'Births per 1,000 per year'
-                elif ('program_' in function and 'death' in function) or 'diabetes' in function:
-                    y_axis_type = 'limited_proportion'
-
-                self.tidy_axis(ax, subplot_grid, start_time=start_time, legend=False, y_axis_type=y_axis_type,
-                               end_time=end_time, y_label=y_label, y_relative_limit=y_relative_limit)
-
-            # finish off
-            fig.suptitle(t_k.capitalise_first_letter(t_k.find_title_from_dictionary(function)),
-                         fontsize=self.title_size)
-            self.save_figure(fig, '_' + function + '_scale_up')
 
     def plot_programmatic_scaleups(self):
 

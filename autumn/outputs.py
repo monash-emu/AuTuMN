@@ -1426,8 +1426,7 @@ class Project:
 
         # plot scale-up functions - currently only doing this for the baseline model run
         if self.gui_inputs['output_scaleups']:
-            if self.vars_to_view:
-                self.plot_scaleup_vars()
+            self.plot_scaleup_vars()
             self.classify_scaleups()
             # self.plot_scaleup_fns_against_data()
             # self.plot_individual_scaleups_against_data()
@@ -1780,15 +1779,13 @@ class Project:
             axes.append(fig.add_subplot(1, 2, 2, sharey=axes[0]))
         return fig, axes
 
-    def plot_scaleup_vars(self, n_panels=2):
+    def plot_scaleup_vars(self):
         """
         Method that can be used to visualise each scale-up variable, not plotted against the data it is fit to and only
         on a single panel.
-
-        Args:
-            n_panels: Number of panels to plot the data onto
         """
 
+        n_panels = 2 if self.gui_inputs['plot_option_vars_two_panels'] else 1
         end_time = self.inputs.model_constants['plot_end_time']
         for var in self.model_runner.models[0].scaleup_fns:
             fig, axes = self.initialise_figures_axes(n_panels)

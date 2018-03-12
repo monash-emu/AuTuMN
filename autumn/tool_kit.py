@@ -616,6 +616,8 @@ def find_title_from_dictionary(working_string, forward=True, capital_first_lette
                 'engage low-quality sector',
            'engage_lowquality':
                 'engage low-quality sector',
+           'xpertacf':
+                'Xpert-based ACF',
            'xpertacf_prison':
                 'Xpert ACF, prisons',
            'xpertacf_indigenous':
@@ -635,29 +637,29 @@ def find_title_from_dictionary(working_string, forward=True, capital_first_lette
             'xpert':
                 'Xpert replaces smear',
             'baseline':
-                'Baseline scenario',
+                'baseline scenario',
             'plot_start_time':
                 'plotting start time',
             'early_time':
                 'start of model run',
             'program_prop_decentralisation':
-                'Decentralisation coverage',
+                'decentralisation coverage',
             'tb_n_contact':
-                'Effective contact rate',
+                'effective contact rate',
             'tb_prop_early_progression':
-                'Early progression proportion',
+                'early progression proportion',
             'tb_prop_amplification':
-                'Amplification proportion',
+                'amplification proportion',
             'tb_rate_late_progression':
-                'Late progression rate',
+                'late progression rate',
             'tb_prop_casefatality_untreated':
-                'Untreated case fatality',
+                'untreated case fatality',
             'tb_prop_casefatality_untreated_smearpos':
-                'Untreated smear-positive case fatality',
+                'untreated smear-positive case fatality',
             'tb_prop_casefatality_untreated_smearneg':
-                'Untreated smear-negative case fatality',
+                'untreated smear-negative case fatality',
             'decentralisation':
-                'Decentralisation',
+                'decentralisation',
             '_prison':
                 'prisoners',
             '_ruralpoor':

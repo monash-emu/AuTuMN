@@ -26,7 +26,7 @@ def get_autumn_params():
            'riskgroup_ruralpoor', 'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ',
            'is_timevariant_organs', 'is_treatment_history', 'is_vary_force_infection_by_riskgroup',
            'is_vary_detection_by_riskgroup', 'is_include_relapse_in_ds_outcomes', 'is_include_hiv_treatment_outcomes',
-           'is_adjust_population', 'is_shortcourse_improves_outcomes']
+           'is_adjust_population', 'is_shortcourse_improves_outcomes', 'plot_option_vars_two_panels']
     for i in range(1, 15):
         bool_keys.append('scenario_' + str(i))
     for key in bool_keys:
@@ -135,6 +135,7 @@ def get_autumn_params():
     # set some boolean keys to on (True) by default
     default_boolean_keys = [
         'is_adjust_population',
+        'plot_option_vars_two_panels',
         'write_uncertainty_outcome_params',
         # 'output_param_plots',
         'is_shortcourse_improves_outcomes',
@@ -176,17 +177,19 @@ def get_autumn_params():
     # initialise the groups
     param_group_keys \
         = ['Model running', 'Model Stratifications', 'Elaborations', 'Scenarios to run', 'Epidemiological uncertainty',
-           'Intervention uncertainty', 'Comorbidity incrementing', 'Plotting', 'MS Office outputs']
+           'Intervention uncertainty', 'Comorbidity incrementing', 'Plots', 'Plot options', 'MS Office outputs']
     param_groups = []
     for group in param_group_keys:
         param_groups.append({'keys': [], 'name': group})
-    for tab in [5, 6]:
+    for tab in [5, 6, 8]:
         param_groups[tab]['attr'] = {'webgui': True}
 
     # distribute the boolean checkbox options
     for key in bool_keys:
         name = params[key]['label']
-        if 'Plot' in name or 'Draw' in name:
+        if 'plot_option' in key:
+            param_groups[8]['keys'].append(key)
+        elif 'Plot' in name or 'Draw' in name:
             param_groups[7]['keys'].append(key)
         elif 'riskgroup_' in key or key.startswith('n_'):
             param_groups[1]['keys'].append(key)
@@ -197,7 +200,7 @@ def get_autumn_params():
         elif 'uncertainty' in name or 'uncertainty' in key:
             param_groups[4]['keys'].append(key)
         else:
-            param_groups[8]['keys'].append(key)
+            param_groups[9]['keys'].append(key)
 
     # distribute other inputs
     for k in ['run_mode', 'country', 'integration_method', 'fitting_method', 'default_smoothness', 'time_step']:

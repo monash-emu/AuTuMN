@@ -745,7 +745,7 @@ def add_title_to_plot(fig, n_panels, content):
     fig.suptitle(t_k.find_title_from_dictionary(content), y=title_height[n_panels], fontsize=title_font_size[n_panels])
 
 
-def tidy_x_axis(axis, n_panels, start, end, axis_type='year'):
+def tidy_x_axis(axis, start, end):
 
     axis.set_xlim(left=start, right=end)
     if len(axis.get_xticks()) > 7:
@@ -754,12 +754,27 @@ def tidy_x_axis(axis, n_panels, start, end, axis_type='year'):
     axis.tick_params(axis='x', length=6, pad=8)
 
 
-def tidy_y_axis(axis, n_panels, n_axis, var):
+def tidy_y_axis(axis, var, left_axis=True):
+    """
+    General approach to tidying up the vertical axis of a plot, depends on whether it is the left-most panel.
 
-    axis.tick_params(axis='both', length=6, pad=8)
+    Args:
+        axis: The axis itself
+        var: The name of the variable being plotted (which can be used to determine what sort of variable it is)
+        left_axis: Boolean for whether the axis is the left-most panel
+    """
+
+    # axis range
     if 'prop_' in var and axis.get_ylim()[1] > 1.:
-        axis.set_ylim(top=1.)
-    if 'prop_' in var:
+        axis.set_ylim(top=1.004)
+
+    # ticks
+    axis.tick_params(axis='both', length=6, pad=8)
+
+    # labels
+    if not left_axis:
+        pyplot.setp(axis.get_yticklabels(), visible=False)
+    elif 'prop_' in var:
         axis.yaxis.set_major_formatter(FuncFormatter('{0:.0%}'.format))
     axis.set_ylim(bottom=0.)
 
@@ -1799,13 +1814,17 @@ class Project:
         fig = pyplot.figure(self.figure_number)
         self.figure_number += 1
         axes = []
+        n_rows, n_cols = find_subplot_grid(n_panels)
         if n_panels == 1:
             axes.append(fig.add_axes([.15, .15, 0.7, 0.7]))
         elif n_panels == 2:
             fig.set_figheight(4)
             axes.append(fig.add_subplot(1, 2, 1))
             axes.append(fig.add_subplot(1, 2, 2, sharey=axes[0]))
-        return fig, axes
+        else:
+            for axis in n_panels:
+                axes.append(fig.add_subplot(n_rows, n_cols, axis))
+        return fig, axes, n_rows, n_cols
 
     def plot_scaleup_vars(self):
         """
@@ -1815,7 +1834,7 @@ class Project:
 
         n_panels = 2 if self.gui_inputs['plot_option_vars_two_panels'] else 1
         for var in self.model_runner.models[0].scaleup_fns:
-            fig, axes = self.initialise_figures_axes(n_panels)
+            fig, axes, n_rows, n_cols = self.initialise_figures_axes(n_panels)
             for n_axis in range(n_panels):
 
                 # find time to plot from and x-values
@@ -1830,8 +1849,8 @@ class Project:
                     self.plot_scaleup_data_to_axis(axes[n_axis], [start_time, end_time], var)
 
                 # clean up axes
-                tidy_x_axis(axes[n_axis], n_panels, start_time, end_time)
-                tidy_y_axis(axes[n_axis], n_panels, n_axis, var)
+                tidy_x_axis(axes[n_axis], start_time, end_time)
+                tidy_y_axis(axes[n_axis], var, left_axis=n_axis % n_cols == 0)
             add_title_to_plot(fig, n_panels, var)
             self.save_figure(fig, '_' + var)
 

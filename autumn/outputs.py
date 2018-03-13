@@ -73,18 +73,6 @@ def make_single_axis(fig):
     return fig.add_axes([0.1, 0.1, 0.6, 0.75])
 
 
-def make_axes_with_room_for_legend():
-    """
-    Create axes for a figure with a single plot with a reasonable amount of space around.
-
-    Returns:
-        The axes that can be plotted on
-    """
-
-    fig = pyplot.figure()
-    return fig.add_axes([0.1, 0.1, 0.6, 0.75])
-
-
 def set_axes_props(ax, xlabel=None, ylabel=None, title=None, is_legend=True, axis_labels=None, side='left'):
 
     frame_colour = "grey"
@@ -763,6 +751,37 @@ def tidy_x_axis(axis, n_panels, start, end, axis_type='year'):
     if len(axis.get_xticks()) > 7:
         for label in axis.xaxis.get_ticklabels()[::2]:
             label.set_visible(False)
+    axis.tick_params(axis='x', length=6, pad=8)
+
+
+def tidy_y_axis(axis, n_panels, n_axis, var):
+
+    axis.tick_params(axis='both', length=6, pad=8)
+    if 'prop_' in var and axis.get_ylim()[1] > 1.:
+        axis.set_ylim(top=1.)
+    if 'prop_' in var:
+        axis.yaxis.set_major_formatter(FuncFormatter('{0:.0%}'.format))
+    axis.set_ylim(bottom=0.)
+
+
+def find_subplot_grid(n_plots):
+    """
+    Find a convenient number of rows and columns for a required number of subplots. First take the root of the number of
+    subplots and round up to find the smallest square that could accommodate all of them. Next find out how many rows
+    that many subplots would fill out by dividing the number of plots by the number of columns and rounding up. This
+    will potentially leave a few panels blank at the end and number of rows will equal the number of columns or the
+    number of rows will be on fewer.
+
+    Args:
+        n_plots: The number of subplots needed
+    Returns:
+        n_rows: The number of rows of subplots
+        n_cols: The number of columns of subplots
+    """
+
+    n_cols = int(numpy.ceil(n_plots ** .5))
+    n_rows = int(numpy.ceil(float(n_plots) / float(n_cols)))
+    return n_rows, n_cols
 
 
 class Project:
@@ -974,7 +993,8 @@ class Project:
 
         # set size of font for x-ticks and add a grid if requested
         for axis_to_change in [ax.xaxis, ax.yaxis]:
-            for tick in axis_to_change.get_major_ticks(): tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+            for tick in axis_to_change.get_major_ticks():
+                tick.label.set_fontsize(get_nice_font_size(subplot_grid))
             axis_to_change.grid(self.grid)
 
     def save_figure(self, fig, end_figure_name):
@@ -1810,13 +1830,8 @@ class Project:
                     self.plot_scaleup_data_to_axis(axes[n_axis], [start_time, end_time], var)
 
                 # clean up axes
-                axes[n_axis].tick_params(axis='both', length=6, pad=8)
-                if 'prop_' in var and axes[n_axis].get_ylim()[1] > 1.:
-                    axes[n_axis].set_ylim(top=1.)
-                if 'prop_' in var:
-                    axes[n_axis].yaxis.set_major_formatter(FuncFormatter('{0:.0%}'.format))
-                axes[n_axis].set_ylim(bottom=0.)
                 tidy_x_axis(axes[n_axis], n_panels, start_time, end_time)
+                tidy_y_axis(axes[n_axis], n_panels, n_axis, var)
             add_title_to_plot(fig, n_panels, var)
             self.save_figure(fig, '_' + var)
 

@@ -814,7 +814,11 @@ def find_title_from_dictionary(working_string, forward=True, capital_first_lette
            'shortcourse_improves_outcomes':
                 'short course MDR improves outcomes',
            'vars_two_panels':
-               'Plot scale-up functions on two panels'}
+               'Plot scale-up functions on two panels',
+           'nonsuccess_new_death':
+               'death among non-success outcomes, new cases',
+           'nonsuccess_treated_death':
+               'death among non-success outcomes, previously treated'}
 
     list_of_code_strings = []
     list_of_interface_strings = []

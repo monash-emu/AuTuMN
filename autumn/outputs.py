@@ -757,6 +757,14 @@ def add_title_to_plot(fig, n_panels, content):
     fig.suptitle(t_k.find_title_from_dictionary(content), y=title_height[n_panels], fontsize=title_font_size[n_panels])
 
 
+def tidy_x_axis(axis, n_panels, start, end, axis_type='year'):
+
+    axis.set_xlim(left=start, right=end)
+    if len(axis.get_xticks()) > 7:
+        for label in axis.xaxis.get_ticklabels()[::2]:
+            label.set_visible(False)
+
+
 class Project:
     def __init__(self, runner, gui_inputs):
         """
@@ -1808,7 +1816,7 @@ class Project:
                 if 'prop_' in var:
                     axes[n_axis].yaxis.set_major_formatter(FuncFormatter('{0:.0%}'.format))
                 axes[n_axis].set_ylim(bottom=0.)
-                axes[n_axis].set_xlim(left=start_time, right=end_time)
+                tidy_x_axis(axes[n_axis], n_panels, start_time, end_time)
             add_title_to_plot(fig, n_panels, var)
             self.save_figure(fig, '_' + var)
 
@@ -1842,88 +1850,6 @@ class Project:
             data_to_plot = {key: value for key, value in self.inputs.scaleup_data[0][var].items()
                             if int(time_limits[0]) <= key <= int(time_limits[1])}
             axis.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
-
-    def plot_scaleup_fns_against_data(self):
-        """
-        Plot each scale-up function as a separate panel against the data it is fitted to.
-        """
-
-        # different figure for each type of function
-        for classification in self.classified_scaleups:
-            if len(self.classified_scaleups[classification]) > 0:
-
-                # find the list of the scale-up functions to work with and some x-values
-                function_list = self.classified_scaleups[classification]
-
-                # standard prelims
-                fig = self.set_and_update_figure()
-                subplot_grid = find_subplot_numbers(len(function_list))
-                start_time, end_time \
-                    = self.inputs.model_constants['plot_start_time'], self.inputs.model_constants['recent_time']
-                x_vals = numpy.linspace(start_time, end_time, 1e3)
-
-                # iterate through functions
-                for v, var in enumerate(function_list):
-
-                    # initialise axis
-                    ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], v + 1)
-
-                    # iterate through the scenarios
-                    for scenario in reversed(self.scenarios):
-
-                        # line plot of scaling parameter functions
-                        ax.plot(x_vals,
-                                map(self.model_runner.models[scenario].scaleup_fns[var],
-                                    x_vals),
-                                color=self.output_colours[scenario][1],
-                                label=t_k.capitalise_and_remove_underscore(
-                                    t_k.find_scenario_string_from_number(scenario)))
-
-                    # plot the raw data from which the scale-up functions were produced
-                    if var in self.inputs.scaleup_data[0]:
-                        data_to_plot = self.inputs.scaleup_data[0][var]
-                        ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
-
-                    # adjust tick font size and add panel title
-                    y_axis_type = 'proportion' if 'prop_' in var else 'raw'
-
-                    self.tidy_axis(ax, subplot_grid, start_time=start_time,
-                                   title=t_k.capitalise_first_letter(t_k.find_title_from_dictionary(var)),
-                                   legend=(v == len(function_list) - 1), y_axis_type=y_axis_type)
-
-                # finish off
-                title = self.inputs.country + ' ' + t_k.find_title_from_dictionary(classification) + ' parameter'
-                if len(function_list) > 1:
-                    title += 's'
-                fig.suptitle(title, fontsize=self.title_size)
-                self.save_figure(fig, '_' + classification + '_scale_ups')
-
-    def plot_programmatic_scaleups(self):
-
-        """
-        Plots only the programmatic time-variant functions on a single set of axes.
-        """
-
-        # Functions to plot are those in the program_prop_ category of the classified scaleups
-        functions = self.classified_scaleups['program_prop_']
-
-        # Standard prelims
-        fig = self.set_and_update_figure()
-        line_styles = make_default_line_styles(len(functions), True)
-        start_time = self.inputs.model_constants['plot_start_time']
-        x_vals = numpy.linspace(start_time, self.inputs.model_constants['plot_end_time'], 1e3)
-
-        # Plot functions for baseline model run only
-        ax = make_single_axis(fig)
-        for figure_number, function in enumerate(functions):
-            ax.plot(x_vals, map(self.inputs.scaleup_fns[0][function], x_vals), line_styles[figure_number],
-                    label=t_k.find_title_from_dictionary(function))
-
-        # Finish off
-        self.tidy_axis(ax, [1, 1], title=t_k.capitalise_first_letter(self.country) + ' '
-                                         + t_k.find_title_from_dictionary('program_prop_') + ' parameters',
-                       start_time=start_time, legend='for_single', y_axis_type='proportion')
-        self.save_figure(fig, '_programmatic_scale_ups')
 
     def plot_cost_coverage_curves(self):
         """

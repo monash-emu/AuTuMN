@@ -742,38 +742,56 @@ def add_title_to_plot(fig, n_panels, content):
 
     title_height = {1: .92, 2: .98}
     title_font_size = {1: 14, 2: 11}
-    fig.suptitle(t_k.find_title_from_dictionary(content), y=title_height[n_panels], fontsize=title_font_size[n_panels])
+    fig.suptitle(t_k.find_title_from_dictionary(content), y=title_height[n_panels],
+                 fontsize=title_font_size[n_panels])
 
 
-def tidy_x_axis(axis, start, end):
+def tidy_x_axis(axis, start, end, n_cols):
+    """
+    Function to tidy x-axis of a plot panel - currently only used in the scale-up vars, but intended to be written in
+    such a way as to be extendable to other types of plotting.
 
+    Args:
+        axis: The plotting axis
+        start: Lowest x-value being plotted
+        end: Highest x-value being plotted
+        n_cols: Number of columns of subplots in figure
+    """
+
+    # range
     axis.set_xlim(left=start, right=end)
+
+    # ticks and their labels
+    font_sizes = {1: 7, 2: 7}
     if len(axis.get_xticks()) > 7:
         for label in axis.xaxis.get_ticklabels()[::2]:
             label.set_visible(False)
-    axis.tick_params(axis='x', length=6, pad=8)
+    axis.tick_params(axis='x', length=5, pad=6, labelsize=font_sizes[n_cols])
 
 
-def tidy_y_axis(axis, var, left_axis=True, max_value=1e6, space_at_top=.1):
+def tidy_y_axis(axis, var, n_rows, left_axis=True, max_value=1e6, space_at_top=.1):
     """
     General approach to tidying up the vertical axis of a plot, depends on whether it is the left-most panel.
 
     Args:
         axis: The axis itself
         var: The name of the variable being plotted (which can be used to determine what sort of variable it is)
+        n_rows: The number of rows of subplots on the figure
         left_axis: Boolean for whether the axis is the left-most panel
         max_value: The maximum value in the data being plotted
+        space_at_top: Relative amount of space to leave at the top, above the maximum value of the plotted data
     """
 
     # axis range
     axis.set_ylim(bottom=0.)
     if 'prop_' in var and axis.get_ylim()[1] > 1.:
         axis.set_ylim(top=1.004)
-    elif axis.get_ylim()[1] < max_value * 1. + space_at_top:
-        axis.set_ylim(top=max_value * 1. + space_at_top)
+    elif axis.get_ylim()[1] < max_value * (1. + space_at_top):
+        axis.set_ylim(top=max_value * (1. + space_at_top))
 
     # ticks
-    axis.tick_params(axis='both', length=6, pad=8)
+    font_sizes = {1: 7, 2: 7}
+    axis.tick_params(axis='y', length=5, pad=6, labelsize=font_sizes[n_rows])
 
     # labels
     if not left_axis:
@@ -1821,7 +1839,7 @@ class Project:
         if n_panels == 1:
             axes.append(fig.add_axes([.15, .15, 0.7, 0.7]))
         elif n_panels == 2:
-            fig.set_figheight(4)
+            fig.set_figheight(3.5)
             axes.append(fig.add_subplot(1, 2, 1))
             axes.append(fig.add_subplot(1, 2, 2, sharey=axes[0]))
         else:
@@ -1852,10 +1870,11 @@ class Project:
                     max_data = self.plot_scaleup_data_to_axis(axes[n_axis], [start_time, end_time], var)
 
                 # clean up axes
-                tidy_x_axis(axes[n_axis], start_time, end_time)
-                tidy_y_axis(axes[n_axis], var, left_axis=n_axis % n_cols == 0,
+                tidy_x_axis(axes[n_axis], start_time, end_time, n_cols)
+                tidy_y_axis(axes[n_axis], var, n_rows, left_axis=n_axis % n_cols == 0,
                             max_value=float(max([max_var, max_data])))
-            add_title_to_plot(fig, n_panels, var)
+            if self.gui_inputs['plot_option_title']:
+                add_title_to_plot(fig, n_panels, var)
             self.save_figure(fig, '_' + var)
 
     def plot_scaleup_var_to_axis(self, axis, time_limits, var):

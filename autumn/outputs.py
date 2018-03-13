@@ -767,6 +767,7 @@ def tidy_y_axis(axis, var, left_axis=True):
     # axis range
     if 'prop_' in var and axis.get_ylim()[1] > 1.:
         axis.set_ylim(top=1.004)
+    axis.set_ylim(bottom=0.)
 
     # ticks
     axis.tick_params(axis='both', length=6, pad=8)
@@ -776,7 +777,6 @@ def tidy_y_axis(axis, var, left_axis=True):
         pyplot.setp(axis.get_yticklabels(), visible=False)
     elif 'prop_' in var:
         axis.yaxis.set_major_formatter(FuncFormatter('{0:.0%}'.format))
-    axis.set_ylim(bottom=0.)
 
 
 def find_subplot_grid(n_plots):

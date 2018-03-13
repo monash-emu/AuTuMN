@@ -754,7 +754,7 @@ def tidy_x_axis(axis, start, end):
     axis.tick_params(axis='x', length=6, pad=8)
 
 
-def tidy_y_axis(axis, var, left_axis=True):
+def tidy_y_axis(axis, var, left_axis=True, max_value=1e6, space_at_top=.1):
     """
     General approach to tidying up the vertical axis of a plot, depends on whether it is the left-most panel.
 
@@ -762,12 +762,15 @@ def tidy_y_axis(axis, var, left_axis=True):
         axis: The axis itself
         var: The name of the variable being plotted (which can be used to determine what sort of variable it is)
         left_axis: Boolean for whether the axis is the left-most panel
+        max_value: The maximum value in the data being plotted
     """
 
     # axis range
+    axis.set_ylim(bottom=0.)
     if 'prop_' in var and axis.get_ylim()[1] > 1.:
         axis.set_ylim(top=1.004)
-    axis.set_ylim(bottom=0.)
+    elif axis.get_ylim()[1] < max_value * 1. + space_at_top:
+        axis.set_ylim(top=max_value * 1. + space_at_top)
 
     # ticks
     axis.tick_params(axis='both', length=6, pad=8)
@@ -1844,13 +1847,14 @@ class Project:
                     else self.inputs.model_constants['scenario_end_time']
 
                 # plot
-                self.plot_scaleup_var_to_axis(axes[n_axis], [start_time, end_time], var)
+                max_var = self.plot_scaleup_var_to_axis(axes[n_axis], [start_time, end_time], var)
                 if self.gui_inputs['plot_option_overlay_input_data']:
-                    self.plot_scaleup_data_to_axis(axes[n_axis], [start_time, end_time], var)
+                    max_data = self.plot_scaleup_data_to_axis(axes[n_axis], [start_time, end_time], var)
 
                 # clean up axes
                 tidy_x_axis(axes[n_axis], start_time, end_time)
-                tidy_y_axis(axes[n_axis], var, left_axis=n_axis % n_cols == 0)
+                tidy_y_axis(axes[n_axis], var, left_axis=n_axis % n_cols == 0,
+                            max_value=float(max([max_var, max_data])))
             add_title_to_plot(fig, n_panels, var)
             self.save_figure(fig, '_' + var)
 
@@ -1865,10 +1869,13 @@ class Project:
         """
 
         x_vals = numpy.linspace(time_limits[0], time_limits[1], int(1e3))
+        maximum_values = []
         for scenario in reversed(self.scenarios):
             y_vals = map(self.model_runner.models[scenario].scaleup_fns[var], x_vals)
             axis.plot(x_vals, y_vals, color=self.output_colours[scenario][1],
                       label=t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario)))
+            maximum_values.append(max(y_vals))
+        return max(maximum_values)
 
     def plot_scaleup_data_to_axis(self, axis, time_limits, var):
         """
@@ -1884,6 +1891,7 @@ class Project:
             data_to_plot = {key: value for key, value in self.inputs.scaleup_data[0][var].items()
                             if int(time_limits[0]) <= key <= int(time_limits[1])}
             axis.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
+            return max(data_to_plot.values())
 
     def plot_cost_coverage_curves(self):
         """

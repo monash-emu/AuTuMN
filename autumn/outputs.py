@@ -1786,18 +1786,20 @@ class Project:
         """
 
         n_panels = 2 if self.gui_inputs['plot_option_vars_two_panels'] else 1
-        end_time = self.inputs.model_constants['plot_end_time']
         for var in self.model_runner.models[0].scaleup_fns:
             fig, axes = self.initialise_figures_axes(n_panels)
             for n_axis in range(n_panels):
 
                 # find time to plot from and x-values
-                start_time = self.inputs.model_constants['plot_start_time'] if n_axis == n_panels - 1 \
+                start_time = float(self.gui_inputs['plot_option_start_time']) if n_axis == n_panels - 1 \
                     else self.inputs.model_constants['early_time']
+                end_time = float(self.gui_inputs['plot_option_end_time']) if n_axis == n_panels - 1 \
+                    else self.inputs.model_constants['scenario_end_time']
 
                 # plot
                 self.plot_scaleup_var_to_axis(axes[n_axis], [start_time, end_time], var)
-                self.plot_scaleup_data_to_axis(axes[n_axis], [start_time, end_time], var)
+                if self.gui_inputs['plot_option_overlay_input_data']:
+                    self.plot_scaleup_data_to_axis(axes[n_axis], [start_time, end_time], var)
 
                 # clean up axes
                 axes[n_axis].tick_params(axis='both', length=6, pad=8)

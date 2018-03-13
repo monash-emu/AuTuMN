@@ -515,11 +515,12 @@ def find_title_from_dictionary(working_string, forward=True, capital_first_lette
     Args:
         working_string: AuTuMN's name for the boolean quantity
         forward: Whether to go from code string to GUI string or the other way
+        capital_first_letter: Boolean for whether to capitalise the first letter of the string
     Returns:
         The converted string
     """
 
-    for starting_string_to_trim in ['int_prop_', 'program_prop_', 'econ_program_', 'is_']:
+    for starting_string_to_trim in ['int_prop_', 'program_prop_', 'econ_program_', 'is_', 'plot_option_']:
         if working_string.startswith(starting_string_to_trim):
             working_string = working_string[len(starting_string_to_trim):]
 
@@ -811,7 +812,9 @@ def find_title_from_dictionary(working_string, forward=True, capital_first_lette
            'adjust_population':
                 'adjust population to target',
            'shortcourse_improves_outcomes':
-                'short course MDR improves outcomes'}
+                'short course MDR improves outcomes',
+           'vars_two_panels':
+               'Plot scale-up functions on two panels'}
 
     list_of_code_strings = []
     list_of_interface_strings = []

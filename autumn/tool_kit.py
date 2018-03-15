@@ -507,7 +507,7 @@ def adjust_country_name(country, purpose):
     return country
 
 
-def find_title_from_dictionary(working_string, forward=True):
+def find_title_from_dictionary(working_string, forward=True, capital_first_letter=True):
     """
     Master function to convert between strings used in the code and ones to present to the user - either through the GUI
     or for creating figures in the outputs module. Now goes in both directions.
@@ -515,167 +515,152 @@ def find_title_from_dictionary(working_string, forward=True):
     Args:
         working_string: AuTuMN's name for the boolean quantity
         forward: Whether to go from code string to GUI string or the other way
+        capital_first_letter: Boolean for whether to capitalise the first letter of the string
     Returns:
         The converted string
     """
 
+    for starting_string_to_trim in ['int_prop_', 'program_prop_', 'econ_program_', 'is_', 'plot_option_']:
+        if working_string.startswith(starting_string_to_trim):
+            working_string = working_string[len(starting_string_to_trim):]
+
     conversion_dictionary \
-        = {'int_prop_vaccination':
-               'vaccination coverage',
-           'program_prop_treatment_success':
+        = {'vaccination':
+               'BCG vaccination',
+           'treatment_success':
                'treatment success rate',
-           'program_prop_treatment_new_death':
+           'treatment_new_death':
                'death on treatment, new cases',
-           'program_prop_treatment_treated_death':
+           'treatment_treated_death':
                'death on treatment, previously treated',
-           'int_prop_ipt_age0to5':
-               'Isoniazid preventive therapy in under-5s',
-           'program_prop_treatment_new_success':
+           'ipt_age0to5':
+               'IPT coverage in under-5s',
+           'ipt_age5to15':
+               'IPT coverage in ages 5 to 15',
+           'ipt':
+               'IPT coverage, all ages',
+           'treatment_new_success':
                'treatment success, new cases',
-           'program_prop_treatment_treated_success':
+           'treatment_treated_success':
                'treatment success, previously treated',
-           'program_prop_xpert':
-               'GeneXpert coverage',
-           'program_prop_detect':
+           'detect':
                'case detection rate',
-           'program_prop_treatment_death':
+           'treatment_death':
                'death rate on treatment',
-           'program_prop_algorithm_sensitivity':
-               'Diagnostic algorithm sensitivity',
-           'program_prop_ipt':
-               'All ages IPT coverage',
-           'program_prop_shortcourse_mdr':
-               'Short-course MDR-TB regimen',
-           'econ_program_unitcost_ipt':
+           'algorithm_sensitivity':
+               'diagnostic algorithm sensitivity',
+           'shortcourse_mdr':
+               'short-course MDR-TB regimen',
+           'unitcost_ipt':
                'IPT unit cost',
            'program_cost_vaccination':
-               'Vaccination program cost (?dummy)',
-           'econ_program_unitcost_vaccination':
-              'Unit cost of BCG',
-           'econ_program_totalcost_ipt':
+               'vaccination program cost (?dummy)',
+           'unitcost_vaccination':
+               'unit cost of BCG',
+           'totalcost_ipt':
                'IPT program cost',
-           'econ_program_totalcost_vaccination':
-               'Vaccination program cost',
+           'totalcost_vaccination':
+               'vaccination program cost',
            'demo_rate_birth':
-               'Birth rate',
+               'birth rate',
            'demo_life_expectancy':
-               'Life expectancy',
+               'life expectancy',
            'econ_inflation':
-               'Inflation rate',
+               'inflation rate',
            'econ_cpi':
-               'Consumer price index',
+               'consumer price index',
            'program_timeperiod_await_treatment_smearpos':
-               'Smear-positive',
+               'smear-positive',
            'program_timeperiod_await_treatment_smearneg':
-               'Smear-negative',
+               'smear-negative',
            'program_timeperiod_await_treatment_extrapul':
-               'Extrapulmonary',
+               'extrapulmonary',
            'program_prop_':
-                'programmatic time-variant',
-            'econ':
-                'economic',
-            'econ_':
-                'economic',
-            'demo':
-                'demographic',
-            'demo_':
-                'demographic',
-            'program_other':
-                'unclassified',
-            'start_time':
-                'run starting time',
-            'recent_time':
-                ' over recent years',
-            '_diabetes':
-                'Diabetes',
-            'riskgroup_prop_diabetes':
-                'Diabetes prevalence',
-            'riskgroup_prop_prison':
-                'Prison population',
-            'riskgroup_prop_ruralpoor':
-                'Roma population',
-            '_hiv':
-                'HIV',
-            '_nocomorb':
-                'No risk group',
-            'age':
-                'age group',
-            'comorbidity':
+               'programmatic time-variant',
+           'econ':
+               'economic',
+           'econ_':
+               'economic',
+           'demo':
+               'demographic',
+           'demo_':
+               'demographic',
+           'program_other':
+               'unclassified',
+           'start_time':
+               'run starting time',
+           'recent_time':
+               ' over recent years',
+           '_diabetes':
+               'diabetes',
+           'riskgroup_prop_diabetes':
+               'diabetes prevalence',
+           'riskgroup_prop_prison':
+               'prison population',
+           'riskgroup_prop_ruralpoor':
+               'Roma population',
+           '_hiv':
+               'HIV',
+           '_nocomorb':
+               'general population',
+           'age':
+               'age group',
+           'comorbidity':
                 'risk group',
-            'program_prop_xpertacf':
-                'Xpert-based ACF coverage',
-            'program_prop_smearacf':
-                'Smear-based ACF coverage',
-            'program_prop_treatment_support':
-                'Treatment support coverage',
-            'program_prop_ipt_age0to5':
-                'IPT in under 5s coverage',
-            'program_prop_ipt_age5to15':
-                'IPT in 5 to 15s coverage',
-            'program_timeperiod':
+           'smearacf':
+                'smear-based ACF',
+           'treatment_support':
+                'treatment support',
+           'program_timeperiod':
                 'programmatic time to treatment',
-            'program_prop_engage_lowquality':
-                'Engage low-quality sector',
-            'engage_lowquality':
-                'Engage low-quality sector',
-            'program_prop_xpertacf_prison':
-                'Prison ACF',
-            'program_prop_xpertacf_indigenous':
-                'Indigenous ACF',
-            'program_prop_xpertacf_urbanpoor':
-                'Urban poor ACF',
-            'program_prop_xpertacf_ruralpoor':
-                'Rural poor ACF',
-            'epi_':
+           'program_prop_engage_lowquality':
+                'engage low-quality sector',
+           'engage_lowquality':
+                'engage low-quality sector',
+           'xpertacf':
+                'Xpert-based ACF',
+           'xpertacf_prison':
+                'Xpert ACF, prisons',
+           'xpertacf_indigenous':
+                'Xpert ACF, indigenous',
+           'xpertacf_urbanpoor':
+                'Xpert ACF, urban poor',
+           'xpertacf_ruralpoor':
+                'Xpert ACF, rural poor',
+           'epi_':
                 'epidemiological',
-            'epi_prop_smear':
+           'epi_prop_smear':
                 'organ status',
-            'epi_prop_smearneg':
+           'epi_prop_smearneg':
                 'Proportion smear-negative',
-            'epi_prop_smearpos':
+           'epi_prop_smearpos':
                 'Proportion smear-positive',
-            'xpertacf':
-                'ACF using Xpert',
-            'vaccination':
-                'BCG vaccination',
-            'smearacf':
-                'ACF using sputum smear',
-            'treatment_support':
-                'Treatment support',
             'xpert':
                 'Xpert replaces smear',
-            'shortcourse_mdr':
-                'Short-course MDR-TB regimen',
             'baseline':
-                'Baseline scenario',
-            'ipt_age5to15':
-                'IPT in ages 5 to 15',
-            'ipt_age0to5':
-                'IPT in under 5s',
+                'baseline scenario',
             'plot_start_time':
                 'plotting start time',
             'early_time':
                 'start of model run',
             'program_prop_decentralisation':
-                'Decentralisation coverage',
+                'decentralisation coverage',
             'tb_n_contact':
-                'Effective contact rate',
+                'effective contact rate',
             'tb_prop_early_progression':
-                'Early progression proportion',
+                'early progression proportion',
             'tb_prop_amplification':
-                'Amplification proportion',
+                'amplification proportion',
             'tb_rate_late_progression':
-                'Late progression rate',
+                'late progression rate',
             'tb_prop_casefatality_untreated':
-                'Untreated case fatality',
+                'untreated case fatality',
             'tb_prop_casefatality_untreated_smearpos':
-                'Untreated smear-positive case fatality',
+                'untreated smear-positive case fatality',
             'tb_prop_casefatality_untreated_smearneg':
-                'Untreated smear-negative case fatality',
+                'untreated smear-negative case fatality',
             'decentralisation':
-                'Decentralisation',
-            'ipt':
-                'IPT',
+                'decentralisation',
             '_prison':
                 'prisoners',
             '_ruralpoor':
@@ -689,23 +674,23 @@ def find_title_from_dictionary(working_string, forward=True):
             '_mdr':
                 'MDR-TB',
             'bulgaria_improve_dst':
-                'Improve DST (Bulgaria implementation)',
+                'improve DST (Bulgaria implementation)',
             'food_voucher_ds':
-                'Food vouchers, DS-TB',
+                'food vouchers, DS-TB',
             'food_voucher_mdr':
-                'Food vouchers, MDR-TB',
+                'food vouchers, MDR-TB',
             'program_prop_firstline_dst':
                 'DST availability',
             'int_prop_firstline_dst':
                 'DST availability',
             'program_prop_treatment_success_mdr':
-                'Treatment success MDR-TB',
+                'treatment success MDR-TB',
             'program_prop_treatment_success_ds':
-                'Treatment success DS-TB',
+                'treatment success DS-TB',
             'program_prop_treatment_death_mdr':
-                'Death on treatment MDR-TB',
+                'death on treatment MDR-TB',
             'program_prop_treatment_death_ds':
-                'Death on treatment DS-TB',
+                'death on treatment DS-TB',
             'program_prop_treatment':
                 'treatment outcome',
             'program_timeperiod_':
@@ -723,111 +708,117 @@ def find_title_from_dictionary(working_string, forward=True):
             'program_prop_vaccination':
                 'BCG vaccination',
             'program_prop_treatment_ds_new_death':
-                'Death on treatment DS-TB, new cases',
+                'death on treatment DS-TB, new cases',
             'program_prop_treatment_ds_new_success':
-                'Treatment success DS-TB, new cases',
+                'treatment success DS-TB, new cases',
             'program_prop_treatment_ds_treated_death':
-                'Death on treatment DS-TB, previously treated',
+                'death on treatment DS-TB, previously treated',
             'program_prop_treatment_ds_treated_success':
-                'Treatment success DS-TB, previously treated',
+                'treatment success DS-TB, previously treated',
             'program_prop_treatment_mdr_new_success':
-                'Treatment success MDR-TB',
+                'treatment success MDR-TB',
             'program_prop_treatment_mdr_treated_death':
-                'Death on treatment MDR-TB',
+                'death on treatment MDR-TB',
             'program_prop_treatment_inappropriate_new_death':
-                'Death on treatment MDR-TB on inappropriate regimen',
+                'death on treatment MDR-TB on inappropriate regimen',
             'program_prop_treatment_inappropriate_new_success':
-                'Treatment success MDR-TB on inappropriate regimen',
+                'treatment success MDR-TB on inappropriate regimen',
             'program_prop_nonsuccess_new_death':
-                'Death on treatment, new cases',
+                'death on treatment, new cases',
             'program_prop_nonsuccess_treated_death':
-                'Death on treatment, previously treated',
+                'death on treatment, previously treated',
             'program_prop_nonsuccess_ds_new_death':
-                'Death on treatment DS-TB, new cases',
+                'death on treatment DS-TB, new cases',
             'program_prop_nonsuccess_ds_treated_death':
-                'Death on treatment DS-TB, previously treated',
+                'death on treatment DS-TB, previously treated',
             'program_prop_nonsuccess_mdr_new_death':
-                'Death on treatment MDR-TB',
+                'death on treatment MDR-TB',
             'program_prop_nonsuccess_inappropriate_death':
-                'Death on treatment MDR-TB on inappropriate regimen',
+                'death on treatment MDR-TB on inappropriate regimen',
             'write_uncertainty_outcome_params':
-               'Record parameters',
+                'record parameters',
            'output_spreadsheets':
-               'Write to spreadsheets',
+                'write to spreadsheets',
            'output_documents':
-               'Write to documents',
+                'write to documents',
            'output_by_scenario':
-               'Output by scenario',
+                'output by scenario',
            'output_horizontally':
-               'Write horizontally',
+                'write horizontally',
            'output_gtb_plots':
-               'Plot outcomes',
+                'plot outcomes',
            'output_compartment_populations':
-               'Plot compartment sizes',
+                'plot compartment sizes',
            'output_by_subgroups':
-               'Plot outcomes by sub-groups',
+                'plot outcomes by sub-groups',
            'output_age_fractions':
-               'Plot proportions by age',
+                'plot proportions by age',
            'output_riskgroup_fractions':
-               'Plot proportions by risk group',
+                'plot proportions by risk group',
            'output_flow_diagram':
-               'Draw flow diagram',
+                'draw flow diagram',
            'output_fractions':
-               'Plot compartment fractions',
+                'plot compartment fractions',
            'output_scaleups':
-               'Plot scale-up functions',
+                'plot scale-up functions',
            'output_plot_economics':
-               'Plot economics graphs',
+                'plot economics graphs',
            'output_plot_riskgroup_checks':
-               'Plot risk group checks',
+                'plot risk group checks',
            'output_age_calculations':
-               'Plot age calculation weightings',
+                'plot age calculation weightings',
            'output_param_plots':
-               'Plot parameter progression',
+                'plot parameter progression',
            'output_popsize_plot':
-               'Plot "popsizes" for cost-coverage curves',
+                'plot "popsizes" for cost-coverage curves',
            'output_likelihood_plot':
-               'Plot log likelihoods over runs',
+                'plot log likelihoods over runs',
            'riskgroup_diabetes':
-               'Type II diabetes',
+                'type II diabetes',
            'riskgroup_hiv':
-               'HIV',
+                'HIV',
            'riskgroup_prison':
-               'Prison',
+                'prison',
            'riskgroup_urbanpoor':
-               'Urban poor',
+                'urban poor',
            'riskgroup_ruralpoor':
-               'Rural poor',
+                'rural poor',
            'riskgroup_indigenous':
-               'Indigenous',
-           'is_lowquality':
-               'Low quality care',
-           'is_amplification':
-               'Resistance amplification',
-           'is_timevariant_organs':
-               'Time-variant organ status',
-           'is_misassignment':
-               'Strain mis-assignment',
-           'is_vary_detection_by_organ':
-               'Vary case detection by organ status',
+                'indigenous',
+           'lowquality':
+                'low quality care',
+           'amplification':
+                'resistance amplification',
+           'timevariant_organs':
+                'time-variant organ status',
+           'misassignment':
+                'strain mis-assignment',
+           'vary_detection_by_organ':
+                'vary case detection by organ status',
            'organ_strata':
-               'Number of organ strata',
+                'number of organ strata',
            'strains':
-               'Number of strains',
-           'is_vary_force_infection_by_riskgroup':
-               'Heterogeneous mixing',
-           'is_treatment_history':
-               'Treatment history',
-           'is_vary_detection_by_riskgroup':
-               'Vary detection by risk group',
-           'is_include_relapse_in_ds_outcomes':
-               'Include relapse treatment outcomes (DS-TB)',
-           'is_include_hiv_treatment_outcomes':
-               'Include HIV treatment outcomes',
-           'is_adjust_population':
-               'Adjust population to target',
-           'is_shortcourse_improves_outcomes':
-               'Short course MDR improves outcomes'}
+                'number of strains',
+           'vary_force_infection_by_riskgroup':
+                'heterogeneous mixing',
+           'treatment_history':
+                'treatment history',
+           'vary_detection_by_riskgroup':
+                'vary detection by risk group',
+           'include_relapse_in_ds_outcomes':
+                'include relapse treatment outcomes (DS-TB)',
+           'include_hiv_treatment_outcomes':
+                'include HIV treatment outcomes',
+           'adjust_population':
+                'adjust population to target',
+           'shortcourse_improves_outcomes':
+                'short course MDR improves outcomes',
+           'vars_two_panels':
+               'Plot scale-up functions on two panels',
+           'nonsuccess_new_death':
+               'death among non-success outcomes, new cases',
+           'nonsuccess_treated_death':
+               'death among non-success outcomes, previously treated'}
 
     list_of_code_strings = []
     list_of_interface_strings = []
@@ -836,13 +827,13 @@ def find_title_from_dictionary(working_string, forward=True):
         list_of_interface_strings.append(value)
 
     if forward and working_string in list_of_code_strings:
-        return list_of_interface_strings[list_of_code_strings.index(working_string)]
+        converted_string = list_of_interface_strings[list_of_code_strings.index(working_string)]
     elif working_string in list_of_interface_strings:
-        return list_of_code_strings[list_of_interface_strings.index(working_string)]
-    elif 'scenario_' in working_string:
-        return capitalise_first_letter(replace_underscore_with_space(working_string))
+        converted_string = list_of_code_strings[list_of_interface_strings.index(working_string)]
     else:
-        return working_string
+        converted_string = replace_underscore_with_space(working_string)
+
+    return capitalise_first_letter(converted_string) if capital_first_letter else converted_string
 
 
 def find_string_from_starting_letters(string_to_analyse, string_start_to_find):

@@ -26,7 +26,8 @@ def get_autumn_params():
            'riskgroup_ruralpoor', 'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ',
            'is_timevariant_organs', 'is_treatment_history', 'is_vary_force_infection_by_riskgroup',
            'is_vary_detection_by_riskgroup', 'is_include_relapse_in_ds_outcomes', 'is_include_hiv_treatment_outcomes',
-           'is_adjust_population', 'is_shortcourse_improves_outcomes']
+           'is_adjust_population', 'is_shortcourse_improves_outcomes', 'plot_option_vars_two_panels',
+           'plot_option_overlay_input_data', 'plot_option_title']
     for i in range(1, 15):
         bool_keys.append('scenario_' + str(i))
     for key in bool_keys:
@@ -62,16 +63,16 @@ def get_autumn_params():
         = {'type': 'slider',
            'label': 'Default fitting smoothness',
            'value': 1.,
-           'interval': 0.1,
+           'interval': .1,
            'min': 0.,
            'max': 5.}
     params['time_step'] \
         = {'type': 'slider',
            'label': 'Integration time step',
-           'value': 0.5,
-           'min': 0.005,
-           'max': 0.5,
-           'interval': 0.005}
+           'value': .5,
+           'min': 5e-3,
+           'max': .5,
+           'interval': 5e-3}
 
     # model stratification
     organ_options = ['Pos / Neg / Extra', 'Pos / Neg', 'Unstratified']
@@ -101,7 +102,7 @@ def get_autumn_params():
            'label': 'Number of burn-in runs'}
     params['search_width'] \
         = {'type': 'double',
-           'value': 0.05,
+           'value': 5e-2,
            'label': 'Relative search width'}
     saving_options = ['No saving or loading', 'Load', 'Save']
     params['pickle_uncertainty'] \
@@ -120,6 +121,12 @@ def get_autumn_params():
     params['n_samples'] \
         = {'type': 'integer',
            'value': 20}
+    params['plot_option_start_time'] \
+        = {'type': 'double',
+           'value': 1980.}
+    params['plot_option_end_time'] \
+        = {'type': 'double',
+           'value': 2020.}
 
     # increment comorbidity
     comorbidity_types = ['Diabetes']
@@ -135,8 +142,11 @@ def get_autumn_params():
     # set some boolean keys to on (True) by default
     default_boolean_keys = [
         'is_adjust_population',
+        'plot_option_vars_two_panels',
+        'plot_option_overlay_input_data',
+        'plot_option_title',
         'write_uncertainty_outcome_params',
-        'output_param_plots',
+        # 'output_param_plots',
         'is_shortcourse_improves_outcomes',
         # 'is_amplification',
         # 'is_misassignment',
@@ -148,12 +158,12 @@ def get_autumn_params():
         'is_include_hiv_treatment_outcomes',
         'is_treatment_history',
         # 'riskgroup_prison',
-        'output_likelihood_plot',
+        # 'output_likelihood_plot',
         # 'riskgroup_urbanpoor',
         'output_scaleups',
         # 'output_by_subgroups',
         # 'riskgroup_ruralpoor',
-        'output_gtb_plots',
+        # 'output_gtb_plots',
         # 'is_vary_force_infection_by_riskgroup',
         'riskgroup_diabetes',
         # 'riskgroup_hiv',
@@ -176,17 +186,19 @@ def get_autumn_params():
     # initialise the groups
     param_group_keys \
         = ['Model running', 'Model Stratifications', 'Elaborations', 'Scenarios to run', 'Epidemiological uncertainty',
-           'Intervention uncertainty', 'Comorbidity incrementing', 'Plotting', 'MS Office outputs']
+           'Intervention uncertainty', 'Comorbidity incrementing', 'Plots', 'Plot options', 'MS Office outputs']
     param_groups = []
     for group in param_group_keys:
         param_groups.append({'keys': [], 'name': group})
-    for tab in [5, 6]:
+    for tab in [5, 6, 8]:
         param_groups[tab]['attr'] = {'webgui': True}
 
     # distribute the boolean checkbox options
     for key in bool_keys:
         name = params[key]['label']
-        if 'Plot' in name or 'Draw' in name:
+        if 'plot_option' in key:
+            param_groups[8]['keys'].append(key)
+        elif 'Plot' in name or 'Draw' in name:
             param_groups[7]['keys'].append(key)
         elif 'riskgroup_' in key or key.startswith('n_'):
             param_groups[1]['keys'].append(key)
@@ -197,7 +209,7 @@ def get_autumn_params():
         elif 'uncertainty' in name or 'uncertainty' in key:
             param_groups[4]['keys'].append(key)
         else:
-            param_groups[8]['keys'].append(key)
+            param_groups[9]['keys'].append(key)
 
     # distribute other inputs
     for k in ['run_mode', 'country', 'integration_method', 'fitting_method', 'default_smoothness', 'time_step']:
@@ -210,6 +222,8 @@ def get_autumn_params():
         param_groups[5]['keys'].append(k)
     for k in ['comorbidity_to_increment']:
         param_groups[6]['keys'].append(k)
+    for k in ['plot_option_start_time', 'plot_option_end_time']:
+        param_groups[8]['keys'].append(k)
 
     params['age_groups'] \
         = {'type': 'breakpoints',

@@ -3,6 +3,7 @@ import openpyxl as xl
 import tool_kit as t_k
 from docx import Document
 from matplotlib import pyplot, patches, style, cm
+from matplotlib.ticker import FuncFormatter
 import numpy
 import pylab
 import platform
@@ -69,18 +70,6 @@ def make_single_axis(fig):
         ax: The axes that can be plotted on
     """
 
-    return fig.add_axes([0.1, 0.1, 0.6, 0.75])
-
-
-def make_axes_with_room_for_legend():
-    """
-    Create axes for a figure with a single plot with a reasonable amount of space around.
-
-    Returns:
-        The axes that can be plotted on
-    """
-
-    fig = pyplot.figure()
     return fig.add_axes([0.1, 0.1, 0.6, 0.75])
 
 
@@ -263,6 +252,47 @@ def make_related_line_styles(labels, strain_or_organ):
         compartment_full_names[label] = compartment_full_name
         markers[label] = marker
     return colours, patterns, compartment_full_names, markers
+
+
+def make_default_line_styles(n, return_all=True):
+        """
+        Produces a standard set of line styles that isn't adapted to the data being plotted.
+
+        Args:
+            n: The number of line-styles
+            return_all: Whether to return all of the styles up to n or just the last one
+        Returns:
+            line_styles: A list of standard line-styles, or if return_all is False, then the single style
+        """
+
+        # iterate through a standard set of line styles
+        for i in range(n):
+            line_styles = []
+            for line in ['-', ':', '-.', '--']:
+                for colour in 'krbgmcy':
+                    line_styles.append(line + colour)
+
+        styles_to_return = line_styles if return_all else line_styles[n - 1]
+        return styles_to_return
+
+
+def make_legend_to_single_axis(ax, scenario_handles, scenario_labels):
+    """
+    Standardised format to legend at side of single axis plot.
+
+    Args:
+        ax: The axis that needs a legend
+        scenario_handles: The elements for the legend
+        scenario_labels: List of strings to name the elements of the legend
+    """
+
+    ax.legend(scenario_handles,
+              scenario_labels,
+              bbox_to_anchor=(1.05, 1),
+              loc=2,
+              borderaxespad=0.,
+              frameon=False,
+              prop={'size': 7})
 
 
 def get_line_style(label, strain_or_organ):
@@ -686,64 +716,212 @@ def write_param_to_sheet(country_sheet, working_list, median_run_index):
                 country_sheet.cell(row=max_row + 1, column=2).value = value
 
 
+def reverse_inputs_if_condition(inputs, condition):
+    """
+    Very simple method to reverse a list if requested.
+
+    Args:
+        inputs: A list of the inputs
+        condition: Boolean for whether to reverse or not
+    Returns:
+        The list reversed if condition and the list unchanged otherwise
+    """
+
+    return inputs[::-1] if condition else inputs
+
+
+def add_title_to_plot(fig, n_panels, content):
+    """
+    Function to add title to the top of a figure and handle multiple panels if necessary.
+
+    Args:
+        fig: The figure object to have a title added to it
+        n_panels: Integer for the total number of panels on the figure
+        content: Unprocessed string to determine text for the title
+    """
+
+    title_height = {1: .92, 2: .98}
+    title_font_size = {1: 14, 2: 11}
+    fig.suptitle(t_k.find_title_from_dictionary(content), y=title_height[n_panels],
+                 fontsize=title_font_size[n_panels])
+
+
+def tidy_x_axis(axis, start, end, n_cols):
+    """
+    Function to tidy x-axis of a plot panel - currently only used in the scale-up vars, but intended to be written in
+    such a way as to be extendable to other types of plotting.
+
+    Args:
+        axis: The plotting axis
+        start: Lowest x-value being plotted
+        end: Highest x-value being plotted
+        n_cols: Number of columns of subplots in figure
+    """
+
+    # range
+    axis.set_xlim(left=start, right=end)
+
+    # ticks and their labels
+    font_sizes = {1: 7, 2: 7}
+    if len(axis.get_xticks()) > 7:
+        for label in axis.xaxis.get_ticklabels()[::2]:
+            label.set_visible(False)
+    axis.tick_params(axis='x', length=5, pad=6, labelsize=font_sizes[n_cols])
+
+
+def tidy_y_axis(axis, var, n_rows, left_axis=True, max_value=1e6, space_at_top=.1):
+    """
+    General approach to tidying up the vertical axis of a plot, depends on whether it is the left-most panel.
+
+    Args:
+        axis: The axis itself
+        var: The name of the variable being plotted (which can be used to determine what sort of variable it is)
+        n_rows: The number of rows of subplots on the figure
+        left_axis: Boolean for whether the axis is the left-most panel
+        max_value: The maximum value in the data being plotted
+        space_at_top: Relative amount of space to leave at the top, above the maximum value of the plotted data
+    """
+
+    # axis range
+    axis.set_ylim(bottom=0.)
+    if 'prop_' in var and axis.get_ylim()[1] > 1.:
+        axis.set_ylim(top=1.004)
+    elif axis.get_ylim()[1] < max_value * (1. + space_at_top):
+        axis.set_ylim(top=max_value * (1. + space_at_top))
+
+    # ticks
+    font_sizes = {1: 7, 2: 7}
+    axis.tick_params(axis='y', length=5, pad=6, labelsize=font_sizes[n_rows])
+
+    # labels
+    if not left_axis:
+        pyplot.setp(axis.get_yticklabels(), visible=False)
+    elif 'prop_' in var:
+        axis.yaxis.set_major_formatter(FuncFormatter('{0:.0%}'.format))
+
+
+def find_subplot_grid(n_plots):
+    """
+    Find a convenient number of rows and columns for a required number of subplots. First take the root of the number of
+    subplots and round up to find the smallest square that could accommodate all of them. Next find out how many rows
+    that many subplots would fill out by dividing the number of plots by the number of columns and rounding up. This
+    will potentially leave a few panels blank at the end and number of rows will equal the number of columns or the
+    number of rows will be on fewer.
+
+    Args:
+        n_plots: The number of subplots needed
+    Returns:
+        n_rows: The number of rows of subplots
+        n_cols: The number of columns of subplots
+    """
+
+    n_cols = int(numpy.ceil(n_plots ** .5))
+    n_rows = int(numpy.ceil(float(n_plots) / float(n_cols)))
+    return n_rows, n_cols
+
+
 class Project:
-    def __init__(self, model_runner, gui_inputs):
+    def __init__(self, runner, gui_inputs):
         """
         Initialises an object of class Project, that will contain all the information (data + outputs) for writing a
         report for a country.
 
         Args:
-            model_runner: The main model runner object used to execute all the analyses
+            runner: The main model runner object used to execute all the analyses
             gui_inputs: All inputs from the graphical user interface
         """
 
-        self.model_runner = model_runner
-        self.inputs = self.model_runner.inputs
+        self.model_runner = runner
         self.gui_inputs = gui_inputs
-        self.outputs = self.model_runner.outputs
-        self.country = self.gui_inputs['country'].lower()
-        self.name = 'test_' + self.country
-        self.out_dir_project = os.path.join('projects', self.name)
-        self.figure_formats = ['png']   # possibly several formats. e.g. ['png', 'pdf']
-        if not os.path.isdir(self.out_dir_project): os.makedirs(self.out_dir_project)
-        self.years_to_write = range(int(self.inputs.model_constants['report_start_time']),
-                                    int(self.inputs.model_constants['report_end_time']),
-                                    int(self.inputs.model_constants['report_step_time']))
-        self.figure_number = 1
-        self.classifications = ['demo_', 'econ_', 'epi_prop_smear', 'program_prop_', 'program_timeperiod_',
-                                'program_prop_novel', 'program_prop_treatment', 'program_prop_detect',
-                                'int_prop_vaccination', 'program_prop_treatment_success',
-                                'program_prop_treatment_death', 'transmission_modifier', 'algorithm']
-        self.output_colours = {}
-        self.uncertainty_output_colours = {}
-        self.program_colours = {}
-        self.suptitle_size = 13
-        self.classified_scaleups = {}
-        self.grid = False
-        self.plot_rejected_runs = False
 
-        # pre-analysis processing attributes
-        self.accepted_no_burn_in_indices = []
+        (self.inputs, self.run_mode) \
+            = [None for _ in range(2)]
+        (self.output_colours, self.uncertainty_output_colours, self.program_colours, self.classified_scaleups,
+         self.outputs) \
+            = [{} for _ in range(5)]
+        (self.grid, self.plot_rejected_runs, self.plot_true_outcomes) \
+            = [False for _ in range(3)]
+        (self.accepted_no_burn_in_indices, self.scenarios, self.interventions_to_cost, self.accepted_indices) \
+            = [[] for _ in range(4)]
         self.uncertainty_centiles = {'epi': {}, 'cost': {}}
+        for attribute in ['inputs', 'outputs']:
+            setattr(self, attribute, getattr(self.model_runner, attribute))
+        for attribute in ['scenarios', 'interventions_to_cost', 'run_mode']:
+            setattr(self, attribute, getattr(self.model_runner.inputs, attribute))
+        self.figure_number, self.title_size = 1, 13
+        self.country = self.gui_inputs['country'].lower()
+        self.out_dir_project = os.path.join('projects', 'test_' + self.country)
+        self.figure_formats = ['png']   # allow for multiple formats. e.g. ['png', 'pdf']
+        if not os.path.isdir(self.out_dir_project):
+            os.makedirs(self.out_dir_project)
+        self.years_to_write \
+            = range(int(self.inputs.model_constants['report_start_time']),
+                    int(self.inputs.model_constants['report_end_time']),
+                    int(self.inputs.model_constants['report_step_time']))
+        self.classifications \
+            = ['demo_', 'econ_', 'epi_prop_smear', 'program_prop_', 'program_timeperiod_',
+               'program_prop_novel', 'program_prop_treatment', 'program_prop_detect',
+               'int_prop_vaccination', 'program_prop_treatment_success',
+               'program_prop_treatment_death', 'transmission_modifier', 'algorithm']
         self.quantities_to_write_back = ['all_parameters', 'all_compartment_values', 'adjustments']
-        centile_order_to_write, self.order_to_write = [50, 2.5, 97.5], []
-        for centile in centile_order_to_write: self.order_to_write.append(self.model_runner.percentiles.index(centile))
-
-        # extract some characteristics from the models within model runner
-        self.scenarios = self.inputs.scenarios
-        self.programs = self.inputs.interventions_to_cost
         self.gtb_available_outputs = ['incidence', 'mortality', 'prevalence', 'notifications']
         self.level_conversion_dict = {'lower_limit': '_lo', 'upper_limit': '_hi', 'point_estimate': ''}
 
         # to have a look at some individual vars scaling over time
         self.vars_to_view = ['riskgroup_prop_diabetes']
 
-        # comes up so often that we need to find this index, that best done in instantiation
+        # comes up so often that we need to find this index, that easiest to do in instantiation
         self.start_time_index \
             = t_k.find_first_list_element_at_least_value(self.outputs['manual']['epi'][0]['times'],
                                                          self.inputs.model_constants['plot_start_time'])
 
-        self.plot_true_outcomes = False
+    ''' master method to call the others '''
+
+    def master_outputs_runner(self):
+        """
+        Method to work through all the fundamental output methods, which then call all the specific output
+        methods for plotting and writing as required.
+        """
+
+        self.model_runner.add_comment_to_gui_window('Creating outputs')
+
+        # processing methods that are only required for outputs
+        if self.run_mode == 'epi_uncertainty':
+            self.find_uncertainty_indices()
+            for output_type in ['epi', 'cost']:
+                self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles('epi_uncertainty', output_type)
+        elif self.run_mode == 'int_uncertainty':
+            for output_type in ['epi', 'cost']:
+                self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles('int_uncertainty', output_type)
+
+        # write automatic calibration values back to sheets
+        if self.run_mode == 'epi_uncertainty' and self.gui_inputs['write_uncertainty_outcome_params']:
+            self.write_automatic_calibration_outputs()
+
+        # write spreadsheets with sheet for each scenario or each output
+        if self.gui_inputs['output_spreadsheets']:
+            self.model_runner.add_comment_to_gui_window('Writing output spreadsheets')
+            if self.gui_inputs['output_by_scenario']:
+                self.write_xls_by_scenario()
+            else:
+                self.write_xls_by_output()
+
+        # write documents - with document for each scenario or each output
+        if self.gui_inputs['output_documents']:
+            self.model_runner.add_comment_to_gui_window('Writing output documents')
+            if self.gui_inputs['output_by_scenario']:
+                self.write_docs_by_scenario()
+                if self.run_mode == 'int_uncertainty':
+                    self.print_int_uncertainty_relative_change(year=2035.)
+            else:
+                self.write_docs_by_output()
+
+        # master plotting method
+        self.model_runner.add_comment_to_gui_window('Creating plot figures')
+        self.run_plotting()
+
+        # open the directory to which everything has been written to save the user a click or two
+        self.open_output_directory()
 
     ''' general methods for use by specific methods below '''
 
@@ -752,10 +930,9 @@ class Project:
         Finds the index number for a var in the var arrays. (Arbitrarily uses the baseline model from the model runner.)
 
         Args:
-            var: String for the var that we're looking for.
-
+            var: String for the var that we're looking for
         Returns:
-            The var's index (unnamed).
+            The var's index
         """
 
         return self.model_runner.models[0].var_labels.index(var)
@@ -771,10 +948,8 @@ class Project:
             Index that can be used to find starting point in epidemiological output lists
         """
 
-        if scenario:
-            return 0
-        else:
-            return self.start_time_index
+        index = 0 if scenario else self.start_time_index
+        return index
 
     def set_and_update_figure(self):
         """
@@ -787,49 +962,6 @@ class Project:
         self.figure_number += 1
         return fig
 
-    def make_legend_to_single_axis(self, ax, scenario_handles, scenario_labels):
-
-        """
-        Standardised format to legend at side of single axis plot.
-
-        Args:
-            ax: The axis that needs a legend.
-            scenario_handles: The elements for the legend.
-            scenario_labels: List of strings to name the elements of the legend.
-        """
-
-        ax.legend(scenario_handles,
-                  scenario_labels,
-                  bbox_to_anchor=(1.05, 1),
-                  loc=2,
-                  borderaxespad=0.,
-                  frameon=False,
-                  prop={'size': 7})
-
-    def make_default_line_styles(self, n, return_all=True):
-        """
-        Produces a standard set of line styles that isn't adapted to the data being plotted.
-
-        Args:
-            n: The number of line-styles
-            return_all: Whether to return all of the styles up to n or just the last one
-        Returns:
-            line_styles: A list of standard line-styles, or if return_all is False,
-                then the single item (for methods that are iterating through plots.
-        """
-
-        # iterate through a standard set of line styles
-        for i in range(n):
-            line_styles = []
-            for line in ["-", ":", "-.", "--"]:
-                for colour in "krbgmcy":
-                    line_styles.append(line + colour)
-
-        if return_all:
-            return line_styles
-        else:
-            return line_styles[n - 1]
-
     def tidy_axis(self, ax, subplot_grid, title='', start_time=0., legend=False, x_label='', y_label='',
                   x_axis_type='time', y_axis_type='scaled', x_sig_figs=0, y_sig_figs=0,
                   end_time=None, y_relative_limit=0.95, y_absolute_limit=None):
@@ -838,10 +970,12 @@ class Project:
         """
 
         # add the sub-plot title with slightly larger titles than the rest of the text on the panel
-        if title: ax.set_title(title, fontsize=get_nice_font_size(subplot_grid) + 2.)
+        if title:
+            ax.set_title(title, fontsize=get_nice_font_size(subplot_grid) + 2.)
 
         # default end time for plots to end at
-        if not end_time: end_time = self.inputs.model_constants['plot_end_time']
+        if not end_time:
+            end_time = self.inputs.model_constants['plot_end_time']
 
         # add a legend if needed
         if legend == 'for_single':
@@ -895,29 +1029,22 @@ class Project:
 
         # set size of font for x-ticks and add a grid if requested
         for axis_to_change in [ax.xaxis, ax.yaxis]:
-            for tick in axis_to_change.get_major_ticks(): tick.label.set_fontsize(get_nice_font_size(subplot_grid))
+            for tick in axis_to_change.get_major_ticks():
+                tick.label.set_fontsize(get_nice_font_size(subplot_grid))
             axis_to_change.grid(self.grid)
 
-    def save_figure(self, fig, last_part_of_name_for_figure):
+    def save_figure(self, fig, end_figure_name):
         """
         Simple method to standardise names for output figure files.
 
         Args:
-            last_part_of_name_for_figure: The part of the figure name that is variable and input from the
-                plotting method.
+            end_figure_name: The part of the figure name that is variable and is input by the plotting method
+            fig: Figure for saving
         """
-        for format in self.figure_formats:
-            filename = os.path.join(self.out_dir_project, self.country + last_part_of_name_for_figure + '.' + format)
+
+        for file_format in self.figure_formats:
+            filename = os.path.join(self.out_dir_project, self.country + end_figure_name + '.' + file_format)
             fig.savefig(filename, dpi=300)
-
-    def save_opti_figure(self, fig, last_part_of_name_for_figure):
-
-        """
-        Same as previous method, when applied to optimisation outputs.
-        """
-
-        png = os.path.join(self.model_runner.opti_outputs_dir, self.country + last_part_of_name_for_figure + '.png')
-        fig.savefig(png, dpi=300)
 
     ''' methods for pre-processing model runner outputs to more interpretable forms '''
 
@@ -932,86 +1059,37 @@ class Project:
         self.accepted_indices = self.outputs['epi_uncertainty']['accepted_indices']
         self.accepted_no_burn_in_indices = [i for i in self.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
 
-    def find_uncertainty_centiles(self, run_type, output_type):
+    def find_uncertainty_centiles(self, mode, output_type):
         """
         Find percentiles from uncertainty dictionaries.
 
         Args:
+            mode: The run mode being considered
             output_type: Whether the output to be calculated is 'epi' or 'cost'
         Updates:
             self.percentiles: Adds all the required percentiles to this dictionary.
         """
 
         uncertainty_centiles = {}
-        for scenario in self.outputs[run_type][output_type]:
+        for scenario in self.outputs[mode][output_type]:
             uncertainty_centiles[scenario] = {}
-            for output in self.outputs[run_type][output_type][scenario]:
+            for output in self.outputs[mode][output_type][scenario]:
                 if output != 'times':
 
                     # use all runs for scenario analysis (as only those that were accepted are saved)
                     if scenario:
-                        matrix_to_analyse = self.outputs[run_type][output_type][scenario][output]
+                        matrix_to_analyse = self.outputs[mode][output_type][scenario][output]
 
-                    # select the baseline runs for analysis from the larger number that were saved
+                    # select the baseline runs for analysis from the broader set of saved results
                     else:
-                        matrix_to_analyse = self.outputs[run_type][output_type][scenario][output][
-                                            self.accepted_no_burn_in_indices, :]
+                        matrix_to_analyse \
+                            = self.outputs[mode][output_type][scenario][output][self.accepted_no_burn_in_indices, :]
 
                     uncertainty_centiles[scenario][output] \
                         = numpy.percentile(matrix_to_analyse, self.model_runner.percentiles, axis=0)
         return uncertainty_centiles
 
-    ''' methods for outputting to documents and spreadsheets '''
-
-    def master_outputs_runner(self):
-        """
-        Method to work through all the fundamental output methods, which then call all the specific output
-        methods for plotting and writing as required.
-        """
-
-        # processing methods that are only required for outputs
-        if self.inputs.run_mode == 'epi_uncertainty':
-            self.find_uncertainty_indices()
-            for output_type in ['epi', 'cost']:
-                self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles('epi_uncertainty', output_type)
-        if self.inputs.run_mode == 'int_uncertainty':
-            for output_type in ['epi', 'cost']:
-                self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles('int_uncertainty', output_type)
-
-        # write automatic calibration values back to sheets
-        if self.inputs.run_mode == 'epi_uncertainty' and self.gui_inputs['write_uncertainty_outcome_params']:
-            self.write_automatic_calibration_outputs()
-
-        # write spreadsheets - with sheet for each scenario or each output
-        if self.gui_inputs['output_spreadsheets'] or self.inputs.run_mode == 'int_uncertainty':
-            if self.gui_inputs['output_by_scenario']:
-                self.model_runner.add_comment_to_gui_window('Writing scenario spreadsheets')
-                self.write_xls_by_scenario()
-            else:
-                self.model_runner.add_comment_to_gui_window('Writing output indicator spreadsheets')
-                self.write_xls_by_output()
-
-        # write documents - with document for each scenario or each output
-        if self.gui_inputs['output_documents']:
-            if self.gui_inputs['output_by_scenario']:
-                print('Writing scenario documents')
-                self.write_docs_by_scenario()
-                if self.inputs.run_mode == 'int_uncertainty':
-                    self.find_relative_changes(year=2035.)
-            else:
-                print('Writing output indicator documents')
-                self.write_docs_by_output()
-
-        # write optimisation spreadsheets
-        # self.write_opti_outputs_spreadsheet()
-
-        # self.find_average_costs()
-
-        # master plotting method
-        self.run_plotting()
-
-        # open the directory to which everything has been written to save the user a click or two
-        self.open_output_directory()
+    ''' methods for outputting to documents and spreadsheets and console '''
 
     def write_automatic_calibration_outputs(self):
         """
@@ -1032,7 +1110,7 @@ class Project:
             country_input_book = xl.load_workbook(path)
             country_sheet = country_input_book['constants']
 
-            # find the integration run with the best likelihood
+            # find the integration run with the highest likelihood
             best_likelihood_index = self.outputs['epi_uncertainty']['loglikelihoods'].index(
                 max(self.outputs['epi_uncertainty']['loglikelihoods']))
 
@@ -1049,9 +1127,9 @@ class Project:
         """
 
         # general prelims to work out what to write
-        horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
+        horizontal = self.gui_inputs['output_horizontally']
         result_types = ['epi_', 'raw_cost_', 'inflated_cost_', 'discounted_cost_', 'discounted_inflated_cost_']
-        if self.inputs.run_mode == 'int_uncertainty': scenarios = [15]
+        scenarios = [15] if self.run_mode == 'int_uncertainty' else self.scenarios
 
         # write a new file for each scenario and for each broad category of output
         for result_type in result_types:
@@ -1063,53 +1141,48 @@ class Project:
                 workbook = xl.Workbook()
                 sheet = workbook.active
                 sheet.title = scenario_name
-                sheet.cell(row=1, column=1).value = 'Year'  # year text cell
+                sheet.cell(row=1, column=1).value = 'Year'
+
+                # year column
+                for y, year in enumerate(self.years_to_write):
+                    row, column = reverse_inputs_if_condition([y + 2, 1], horizontal)
+                    sheet.cell(row=row, column=column).value = year
 
                 # epi outputs
                 if result_type == 'epi_':
-
-                    # write year column
-                    for y, year in enumerate(self.years_to_write):
-                        row, column = y + 2, 1
-                        if horizontal: column, row = row, column
-                        sheet.cell(row=row, column=column).value = year
 
                     # loop over outputs
                     for out, output in enumerate(self.model_runner.epi_outputs_to_analyse):
 
                         # with uncertainty
-                        if self.inputs.run_mode == 'epi_uncertainty' or self.inputs.run_mode == 'int_uncertainty':
+                        if self.run_mode == 'epi_uncertainty' or self.run_mode == 'int_uncertainty':
 
                             # scenario names and confidence interval titles
                             strings_to_write = [t_k.capitalise_and_remove_underscore(output), 'Lower', 'Upper']
 
                             for ci in range(len(strings_to_write)):
-                                row, column = 1, out * 3 + 2 + ci
-                                if horizontal: column, row = row, column
+                                row, column = reverse_inputs_if_condition([1, out * 3 + 2 + ci], horizontal)
                                 sheet.cell(row=row, column=column).value = strings_to_write[ci]
 
                             # data columns
                             for y, year in enumerate(self.years_to_write):
-                                for o, order in enumerate(self.order_to_write):
-                                    row, column = y + 2, out * 3 + 2 + o
-                                    if horizontal: column, row = row, column
+                                for o in range(3):
+                                    row, column = reverse_inputs_if_condition([y + 2, out * 3 + 2 + o], horizontal)
                                     sheet.cell(row=row, column=column).value \
                                         = self.uncertainty_centiles['epi'][scenario][output][
-                                            order, t_k.find_first_list_element_at_least_value(
-                                                self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
+                                        o, t_k.find_first_list_element_at_least_value(
+                                            self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
 
                         # without uncertainty
                         else:
 
                             # names across top
-                            row, column = 1, out + 2
-                            if horizontal: column, row = row, column
+                            row, column = reverse_inputs_if_condition([1, out + 2], horizontal)
                             sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(output)
 
                             # columns of data
                             for y, year in enumerate(self.years_to_write):
-                                row, column = y + 2, out + 2
-                                if horizontal: column, row = row, column
+                                row, column = reverse_inputs_if_condition([y + 2, out + 2], horizontal)
                                 sheet.cell(row=row, column=column).value \
                                     = self.outputs['manual']['epi'][scenario][output][
                                         t_k.find_first_list_element_at_least_value(
@@ -1118,32 +1191,20 @@ class Project:
                 # economic outputs (uncertainty unavailable)
                 elif 'cost_' in result_type:
 
-                    # year text cell
-                    sheet.cell(row=1, column=1).value = 'Year'
-
-                    # year column
-                    for y, year in enumerate(self.years_to_write):
-                        row, column = y + 2, 1
-                        if horizontal: column, row = row, column
-                        sheet.cell(row=row, column=column).value = year
-
                     # loop over interventions
                     for inter, intervention in enumerate(self.inputs.interventions_to_cost[scenario]):
 
                         # names across top
-                        row, column = 1, inter + 2
-                        if horizontal: column, row = row, column
+                        row, column = reverse_inputs_if_condition([1, inter + 2], horizontal)
                         sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(intervention)
 
                         # data columns
                         for y, year in enumerate(self.years_to_write):
-                            row, column = y + 2, inter + 2
-                            if horizontal: column, row = row, column
+                            row, column = reverse_inputs_if_condition([y + 2, inter + 2], horizontal)
                             sheet.cell(row=row, column=column).value \
                                 = self.outputs['manual']['cost'][scenario][result_type + intervention][
                                         t_k.find_first_list_element_at_least_value(
                                             self.outputs['manual']['cost'][scenario]['times'], year)]
-
                 workbook.save(path)
 
     def write_xls_by_output(self):
@@ -1152,23 +1213,22 @@ class Project:
         """
 
         # general prelims to work out what to write
-        horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
-        if self.inputs.run_mode == 'int_uncertainty': scenarios, string_to_add = [15]
+        horizontal = self.gui_inputs['output_horizontally']
+        scenarios = [15] if self.run_mode == 'int_uncertainty' else self.scenarios
 
         # write a new file for each output
         for inter in self.model_runner.epi_outputs_to_analyse:
 
             # prepare sheet
             path = os.path.join(self.out_dir_project, 'epi_' + inter) + '.xlsx'
-            wb = xl.Workbook()
-            sheet = wb.active
+            workbook = xl.Workbook()
+            sheet = workbook.active
             sheet.title = inter
-            sheet.cell(row=1, column=1).value = 'Year'  # year text cell
+            sheet.cell(row=1, column=1).value = 'Year'
 
             # write the year column
             for y, year in enumerate(self.years_to_write):
-                row, column = y + 2, 1
-                if horizontal: column, row = row, column
+                row, column = reverse_inputs_if_condition([y + 2, 1], horizontal)
                 sheet.cell(row=row, column=column).value = year
 
             # cycle over scenarios
@@ -1176,48 +1236,42 @@ class Project:
                 scenario_name = t_k.find_scenario_string_from_number(scenario)
 
                 # with uncertainty
-                if self.inputs.run_mode == 'epi_uncertainty' or self.inputs.run_mode == 'int_uncertainty':
+                if self.run_mode == 'epi_uncertainty' or self.run_mode == 'int_uncertainty':
 
                     # scenario names and confidence interval titles
                     strings_to_write = [t_k.capitalise_and_remove_underscore(scenario_name), 'Lower', 'Upper']
 
                     # write the scenario names and confidence interval titles
                     for ci in range(len(strings_to_write)):
-                        row, column = 1, s * 3 + 2 + ci
-                        if horizontal: column, row = row, column
+                        row, column = reverse_inputs_if_condition([1, s * 3 + 2 + ci], horizontal)
                         sheet.cell(row=row, column=column).value = strings_to_write[ci]
 
                     # write the columns of data
                     for y, year in enumerate(self.years_to_write):
-                        for o, order in enumerate(self.order_to_write):
-                            row, column = y + 2, s * 3 + 2 + o
-                            if horizontal: column, row = row, column
+                        for o in range(3):
+                            row, column = reverse_inputs_if_condition([y + 2, s * 3 + 2 + o], horizontal)
                             sheet.cell(row=row, column=column).value \
                                 = self.uncertainty_centiles['epi'][scenario][inter][
-                                    order, t_k.find_first_list_element_at_least_value(
-                                        self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
+                                o, t_k.find_first_list_element_at_least_value(
+                                    self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
 
                 # without uncertainty
                 else:
 
                     # write scenario names across first row
-                    row, column = 1, s + 2
-                    if horizontal: column, row = row, column
+                    row, column = reverse_inputs_if_condition([1, s + 2], horizontal)
                     sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(scenario_name)
 
                     # write columns of data
                     for y, year in enumerate(self.years_to_write):
-                        row, column = y + 2, s + 2
-                        if horizontal: column, row = row, column
+                        row, column = reverse_inputs_if_condition([y + 2, s + 2], horizontal)
                         sheet.cell(row=row, column=column).value \
                             = self.model_runner.outputs['manual']['epi'][scenario][inter][
                                 t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][
                                                                                scenario]['times'], year)]
+            workbook.save(path)
 
-            # wave workbook
-            wb.save(path)
-
-        # CODE PROBABLY WRONG because interventions can differ by scenario
+        # code probably could bug because interventions can differ by scenario
         for inter in self.inputs.interventions_to_cost[0]:
             for cost_type in ['raw_cost_', 'inflated_cost_', 'discounted_cost_', 'discounted_inflated_cost_']:
 
@@ -1225,8 +1279,8 @@ class Project:
                 path = os.path.join(self.out_dir_project, cost_type + inter) + '.xlsx'
 
                 # get active sheet
-                wb = xl.Workbook()
-                sheet = wb.active
+                workbook = xl.Workbook()
+                sheet = workbook.active
                 sheet.title = inter
 
                 # write the year text cell
@@ -1234,8 +1288,7 @@ class Project:
 
                 # write the year text column
                 for y, year in enumerate(self.years_to_write):
-                    row, column = y + 2, 1
-                    if horizontal: column, row = row, column
+                    row, column = reverse_inputs_if_condition([y + 2, 1], horizontal)
                     sheet.cell(row=row, column=column).value = year
 
                 # cycle over scenarios
@@ -1243,21 +1296,46 @@ class Project:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
 
                     # scenario names
-                    row, column = 1, s + 2
-                    if horizontal: column, row = row, column
+                    row, column = reverse_inputs_if_condition([1, s + 2], horizontal)
                     sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(scenario_name)
 
                     # data columns
                     for y, year in enumerate(self.years_to_write):
-                        row, column = y + 2, s + 2
-                        if horizontal: column, row = row, column
+                        row, column = reverse_inputs_if_condition([y + 2, s + 2], horizontal)
                         sheet.cell(row=row, column=column).value \
                             = self.outputs['manual']['cost'][scenario][cost_type + inter][
                                 t_k.find_first_list_element_at_least_value(self.outputs['manual']['cost'][scenario][
                                                                                'times'], year)]
+                workbook.save(path)
 
-                # save workbook
-                wb.save(path)
+    def write_opti_outputs_spreadsheet(self):
+
+        # prelims
+        path = os.path.join(self.model_runner.opti_outputs_dir, 'opti_results.xlsx')
+        wb = xl.Workbook()
+        sheet = wb.active
+        sheet.title = 'optimisation'
+
+        # write row names
+        row_names = ['envelope', 'incidence', 'mortality']
+        for row, name in enumerate(row_names):
+            sheet.cell(row=row + 1, column=1).value = name
+        row_index = {}
+        for i, intervention in enumerate(self.model_runner.interventions_considered_for_opti):
+            sheet.cell(row=i + 4, column=1).value = intervention
+            row_index[intervention] = i + 4
+
+        # populate cells with content
+        for env, envelope in enumerate(self.model_runner.opti_results['annual_envelope']):
+            sheet.cell(row=1, column=env + 1).value = envelope
+            sheet.cell(row=2, column=env + 1).value = self.model_runner.opti_results['incidence'][env]
+            sheet.cell(row=3, column=env + 1).value = self.model_runner.opti_results['mortality'][env]
+            for intervention in self.model_runner.opti_results['best_allocation'][env].keys():
+                sheet.cell(row=row_index[intervention], column=env + 1).value = \
+                    self.model_runner.opti_results['best_allocation'][env][intervention]
+
+        # save workbook
+        wb.save(path)
 
     def write_docs_by_scenario(self):
         """
@@ -1265,9 +1343,7 @@ class Project:
         uncertainty selected in the GUI. Currently only working for epidemiological outputs.
         """
 
-        horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
-        if self.inputs.run_mode == 'int_uncertainty': scenarios = [15]
-
+        scenarios = [15] if self.run_mode == 'int_uncertainty' else self.scenarios
         for scenario in scenarios:
 
             # initialise document and table
@@ -1280,7 +1356,7 @@ class Project:
             # for each epidemiological indicator
             for o, output in enumerate(self.model_runner.epi_outputs_to_analyse):
 
-                # outputs across the top
+                # titles across the top
                 row_cells = table.rows[0].cells
                 row_cells[0].text = 'Year'
                 row_cells[o + 1].text = t_k.capitalise_and_remove_underscore(output)
@@ -1293,12 +1369,12 @@ class Project:
                     row_cells[0].text = str(year)
 
                     # with uncertainty
-                    if self.inputs.run_mode == 'epi_uncertainty' or self.inputs.run_mode == 'int_uncertainty':
-                        lower_point_upper \
+                    if 'uncertainty' in self.run_mode:
+                        point_lower_upper \
                             = tuple(self.uncertainty_centiles['epi'][scenario][output][
                                     0:3, t_k.find_first_list_element_at_least_value(
                                         self.model_runner.outputs['manual']['epi'][scenario]['times'], year)])
-                        row_cells[o + 1].text = '%.1f\n(%.1f to %.1f)' % lower_point_upper
+                        row_cells[o + 1].text = '%.1f\n(%.1f to %.1f)' % point_lower_upper
 
                     # without
                     else:
@@ -1306,7 +1382,6 @@ class Project:
                             t_k.find_first_list_element_at_least_value(
                                 self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
                         row_cells[o + 1].text = '%.1f' % point
-
             document.save(path)
 
     def write_docs_by_output(self):
@@ -1316,15 +1391,13 @@ class Project:
         """
 
         # write a new file for each output
+        scenarios = [15] if self.run_mode == 'int_uncertainty' else self.scenarios
         for output in self.model_runner.epi_outputs_to_analyse:
 
             # initialise document, years of interest and table
             path = os.path.join(self.out_dir_project, output) + ".docx"
             document = Document()
-            table = document.add_table(rows=len(self.years_to_write) + 1, cols=len(self.scenario_names) + 1)
-
-            horizontal, scenarios = self.gui_inputs['output_horizontally'], self.scenarios
-            if self.inputs.run_mode == 'int_uncertainty': scenarios = [15]
+            table = document.add_table(rows=len(self.years_to_write) + 1, cols=len(self.scenarios) + 1)
 
             for s, scenario in enumerate(scenarios):
                 scenario_name = t_k.find_scenario_string_from_number(scenario)
@@ -1339,12 +1412,12 @@ class Project:
                     row_cells[0].text = str(year)
 
                     # with uncertainty
-                    if self.inputs.run_mode == 'epi_uncertainty' or self.inputs.run_mode == 'int_uncertainty':
-                        lower_point_upper \
+                    if 'uncertainty' in self.run_mode:
+                        point_lower_upper \
                             = tuple(self.uncertainty_centiles['epi'][scenario][output][0:3,
-                                t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][
-                                                                               scenario]['times'], year)])
-                        row_cells[s + 1].text = '%.1f\n(%.1f to %.1f)' % lower_point_upper
+                                    t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual'][
+                                                                                   'epi'][scenario]['times'], year)])
+                        row_cells[s + 1].text = '%.1f\n(%.1f to %.1f)' % point_lower_upper
 
                     # without
                     else:
@@ -1352,35 +1425,32 @@ class Project:
                             t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual'][
                                                                            'epi'][scenario]['times'], year)]
                         row_cells[s + 1].text = '%.1f' % point
-
             document.save(path)
 
-    def find_relative_changes(self, year):
+    def print_int_uncertainty_relative_change(self, year):
         """
-        Print some text giving percentage change in output indicators relative to baseline.
+        Print some text giving percentage change in output indicators relative to baseline under intervention
+        uncertainty.
 
         Args:
-            year: Year for the comparisons to be made at
+            year: Year for the comparisons to be made against
         """
 
-        scenario, string_to_add = 15, 'manual_'
-        scenario_name = t_k.find_scenario_string_from_number(scenario)
-        changes = {}
+        scenario, changes = 15, {}
         for output in self.model_runner.epi_outputs_to_analyse:
             absolute_values \
-                = self.uncertainty_centiles['epi'][scenario][output][0:3,
-                    t_k.find_first_list_element_at_least_value(self.model_runner.outputs['int_uncertainty']['epi'][
-                                                                   scenario]['times'][0], year)]
-
+                = self.uncertainty_centiles['epi'][scenario][output][0:3, t_k.find_first_list_element_at_least_value(
+                  self.model_runner.outputs['int_uncertainty']['epi'][scenario]['times'][0], year)]
             baseline = self.model_runner.outputs['manual']['epi'][0][output][
-                t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][0]['times'],
-                                                           year)]
+               t_k.find_first_list_element_at_least_value(self.model_runner.outputs['manual']['epi'][0]['times'], year)]
             changes[output] = [(i / baseline - 1.) * 1e2 for i in absolute_values]
-            # swap tuple items so that the reporting order becomes: median (lower - upper)
-            changes[output][0], changes[output][1] = changes[output][1], changes[output][0]
             print(output + '\n%.1f\n(%.1f to %.1f)' % tuple(changes[output]))
 
-    def find_average_costs(self):
+    def print_average_costs(self):
+        """
+        Incompletely developed method to display the mean cost of an intervention over the course of its implementation
+        under baseline conditions.
+        """
 
         for scenario in self.scenarios:
             print('\n' + t_k.find_scenario_string_from_number(scenario))
@@ -1392,39 +1462,6 @@ class Project:
                 print('%.1f' % mean_cost[inter])
             print('total: %.1f' % sum(mean_cost.values()))
 
-    def write_opti_outputs_spreadsheet(self):
-
-        if self.model_runner.optimisation:
-
-            # make filename
-            path = os.path.join(self.model_runner.opti_outputs_dir, 'opti_results.xlsx')
-
-            # get active sheet
-            wb = xl.Workbook()
-            sheet = wb.active
-            sheet.title = 'optimisation'
-
-            # write row names
-            sheet.cell(row=1, column=1).value = 'envelope'
-            sheet.cell(row=2, column=1).value = 'incidence'
-            sheet.cell(row=3, column=1).value = 'mortality'
-            row_index = {}
-            for i, intervention in enumerate(self.model_runner.interventions_considered_for_opti):
-                sheet.cell(row=i + 4, column=1).value = intervention
-                row_index[intervention] = i + 4
-
-            # populate cells with content
-            for env, envelope in enumerate(self.model_runner.opti_results['annual_envelope']):
-                sheet.cell(row=1, column=env + 1).value = envelope
-                sheet.cell(row=2, column=env + 1).value = self.model_runner.opti_results['incidence'][env]
-                sheet.cell(row=3, column=env + 1).value = self.model_runner.opti_results['mortality'][env]
-                for intervention in self.model_runner.opti_results['best_allocation'][env].keys():
-                    sheet.cell(row=row_index[intervention], column=env + 1).value = \
-                        self.model_runner.opti_results['best_allocation'][env][intervention]
-
-            # save workbook
-            wb.save(path)
-
     ''' plotting methods '''
 
     def run_plotting(self):
@@ -1433,18 +1470,18 @@ class Project:
         """
 
         # find some general output colours
-        output_colours = self.make_default_line_styles(5, True)
+        output_colours = make_default_line_styles(5, True)
         for s, scenario in enumerate(self.scenarios):
             self.output_colours[scenario] = output_colours[s]
             self.program_colours[scenario] = {}
-            for p, program in enumerate(self.programs[scenario]):
+            for p, program in enumerate(self.interventions_to_cost[scenario]):
                 # +1 is to avoid starting from black, which doesn't look as nice for programs as for baseline scenario
                 self.program_colours[scenario][program] = output_colours[p + 1]
 
         # plot main outputs
         if self.gui_inputs['output_gtb_plots']:
             purposes = ['scenario']
-            if self.inputs.run_mode == 'epi_uncertainty' or self.inputs.run_mode == 'int_uncertainty':
+            if '_uncertainty' in self.run_mode:
                 purposes.extend(['ci_plot', 'progress', 'shaded'])
             for purpose in purposes:
                 self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose=purpose)
@@ -1453,11 +1490,11 @@ class Project:
 
         # plot scale-up functions - currently only doing this for the baseline model run
         if self.gui_inputs['output_scaleups']:
-            if self.vars_to_view: self.individual_var_viewer()
+            self.plot_scaleup_vars()
             self.classify_scaleups()
-            self.plot_scaleup_fns_against_data()
-            self.plot_individual_scaleups_against_data()
-            self.plot_programmatic_scaleups()
+            # self.plot_scaleup_fns_against_data()
+            # self.plot_individual_scaleups_against_data()
+            # self.plot_programmatic_scaleups()
 
             # not technically a scale-up function in the same sense, but put in here anyway
             # self.plot_force_infection()
@@ -1501,33 +1538,27 @@ class Project:
             self.plot_riskgroup_checks()
 
         # save figure that is produced in the uncertainty running process
-        if self.inputs.run_mode == 'epi_uncertainty' and self.gui_inputs['output_param_plots']:
-            param_tracking_figure = self.set_and_update_figure()
-            #param_tracking_figure = self.model_runner.plot_progressive_parameters_tk(from_runner=False,
-            #                                                                         input_figure=param_tracking_figure)
-            self.save_figure(param_tracking_figure, '_param_tracking')
+        if self.run_mode == 'epi_uncertainty' and self.gui_inputs['output_param_plots']:
             self.plot_param_histograms()
             self.plot_param_timeseries()
             self.plot_priors()
 
         # plot popsizes for checking cost-coverage curves
-        if self.gui_inputs['output_popsize_plot']: self.plot_popsizes()
+        if self.gui_inputs['output_popsize_plot']:
+            self.plot_popsizes()
 
         # plot likelihood estimates
-        if self.inputs.run_mode == 'epi_uncertainty' and self.gui_inputs['output_likelihood_plot']: self.plot_likelihoods()
+        if self.run_mode == 'epi_uncertainty' and self.gui_inputs['output_likelihood_plot']:
+            self.plot_likelihoods()
 
         # plot percentage of MDR for different uncertainty runs
-        if self.inputs.run_mode == 'epi_uncertainty' and self.inputs.n_strains > 1: self.plot_perc_mdr_progress()
+        if self.run_mode == 'epi_uncertainty' and self.inputs.n_strains > 1:
+            self.plot_perc_mdr_progress()
 
         # for debugging
         if self.inputs.n_strains > 1:
             self.plot_cases_by_division(['_asds', '_asmdr'],
                                         restriction_1='_mdr', restriction_2='treatment', exclusion_string='latent')
-
-        # optimisation plotting
-        # if self.model_runner.optimisation:
-        #     self.plot_optimised_epi_outputs()
-        #     self.plot_piecharts_opti()
 
     def plot_outputs_against_gtb(self, outputs, purpose='scenario'):
         """
@@ -1540,14 +1571,14 @@ class Project:
 
         # preliminaries
         start_time = self.inputs.model_constants['plot_start_time']
-        if self.inputs.run_mode == 'int_uncertainty' or len(self.scenarios) > 1:
+        if self.run_mode == 'int_uncertainty' or len(self.scenarios) > 1:
             start_time = self.inputs.model_constants['before_intervention_time']
         colour, indices, yaxis_label, title, patch_colour = find_standard_output_styles(outputs, lightening_factor=0.3)
         subplot_grid = find_subplot_numbers(len(outputs))
         fig = self.set_and_update_figure()
 
         # local variables relevant to the type of analysis requested
-        if self.inputs.run_mode == 'int_uncertainty':
+        if self.run_mode == 'int_uncertainty':
             uncertainty_scenario, scenarios, start_index, uncertainty_type, linewidth, linecolour, runs, \
                 self.accepted_indices = 15, [0, 15], 0, 'int_uncertainty', 1., 'r', self.inputs.n_samples, []
             self.start_time_index = 0
@@ -1571,40 +1602,37 @@ class Project:
             if purpose == 'ci_plot':
                 for scenario in scenarios:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
-                    if not self.inputs.run_mode == 'int_uncertainty':
+                    if not self.run_mode == 'int_uncertainty':
                         uncertainty_scenario, start_index, linecolour \
                             = scenario, self.find_start_index(scenario), self.output_colours[scenario][1]
 
                     # median
-                    ax.plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][
-                                self.model_runner.percentiles.index(50), :][start_index:],
-                            self.uncertainty_centiles['epi'][uncertainty_scenario][output][
-                                self.model_runner.percentiles.index(50), :][start_index:],
+                    ax.plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][0, :][start_index:],
+                            self.uncertainty_centiles['epi'][uncertainty_scenario][output][0, :][start_index:],
                             color=linecolour, linestyle=self.output_colours[scenario][0],
                             linewidth=linewidth, label=t_k.capitalise_and_remove_underscore(scenario_name))
 
                     # upper and lower confidence bounds
-                    for centile in [2.5, 97.5]:
+                    for index in [1, 2]:
                         ax.plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][0][start_index:],
-                                self.uncertainty_centiles['epi'][uncertainty_scenario][output][
-                                    self.model_runner.percentiles.index(centile), :][start_index:],
+                                self.uncertainty_centiles['epi'][uncertainty_scenario][output][index, :][start_index:],
                                 color=linecolour, linestyle='--', linewidth=.5, label=None)
 
             # plot progressive model run outputs for uncertainty analyses
             elif purpose == 'progress':
 
                 # get relevant data according to whether intervention or baseline uncertainty is being run
-                if not self.inputs.run_mode == 'int_uncertainty':
+                if not self.run_mode == 'int_uncertainty':
                     runs = len(self.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output])
 
                 # plot the runs
                 for run in range(runs):
-                    if run in self.accepted_indices or self.plot_rejected_runs or self.inputs.run_mode == 'int_uncertainty':
+                    if run in self.accepted_indices or self.plot_rejected_runs or self.run_mode == 'int_uncertainty':
                         if run in self.accepted_indices:
                             linewidth = 1.2
                             colour = str(1. - float(run) / float(len(
                                 self.outputs[uncertainty_type]['epi'][uncertainty_scenario][output])))
-                        elif self.inputs.run_mode == 'int_uncertainty':
+                        elif self.run_mode == 'int_uncertainty':
                             linewidth, colour = .8, '.4'
                         else:
                             linewidth, colour = .2, 'y'
@@ -1619,7 +1647,7 @@ class Project:
 
                 # plot with uncertainty confidence intervals
                 start_index = self.find_start_index(0)
-                if self.inputs.run_mode == 'int_uncertainty': start_index = 0
+                if self.run_mode == 'int_uncertainty': start_index = 0
 
                 # plot shaded areas as patches
                 patch_colours = [cm.Blues(x) for x in numpy.linspace(0., 1., self.model_runner.n_centiles_for_shading)]
@@ -1631,9 +1659,9 @@ class Project:
                     ax.add_patch(patches.Polygon(patch, color=patch_colours[i]))
 
             # plot scenarios without uncertainty
-            if purpose == 'scenario' or self.inputs.run_mode == 'int_uncertainty':
+            if purpose == 'scenario' or self.run_mode == 'int_uncertainty':
 
-                if self.inputs.run_mode == 'int_uncertainty':
+                if self.run_mode == 'int_uncertainty':
                     scenarios = [0]
 
                 # plot model estimates
@@ -1642,10 +1670,10 @@ class Project:
 
                     # work out colour depending on whether purpose is scenario analysis or incrementing comorbidities
                     colour = self.output_colours[scenario][1]
-                    if self.inputs.run_mode == 'increment_comorbidity' and scenario:
+                    if self.run_mode == 'increment_comorbidity' and scenario:
                         colour = cm.Reds(.2 + .8 * self.inputs.comorbidity_prevalences[scenario])
                         label = str(int(self.inputs.comorbidity_prevalences[scenario] * 1e2)) + '%'
-                    elif self.inputs.run_mode == 'increment_comorbidity' and scenario:
+                    elif self.run_mode == 'increment_comorbidity' and scenario:
                         colour, label = 'k', 'Baseline'
                     else:
                         label = t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario))
@@ -1663,7 +1691,7 @@ class Project:
 
             # find limits to the axes
             y_absolute_limit = None
-            if self.inputs.run_mode == 'int_uncertainty' or len(scenarios) > 1:
+            if self.run_mode == 'int_uncertainty' or len(scenarios) > 1:
                 y_absolute_limit = -1.e15  # an absurd negative value to start from
                 plot_start_time_index = t_k.find_first_list_element_at_least_value(
                     self.model_runner.outputs['manual']['epi'][0]['times'], start_time)
@@ -1678,7 +1706,7 @@ class Project:
 
             self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
                            legend=(o == len(outputs) - 1 and len(scenarios) > 1
-                                   and not self.inputs.run_mode == 'int_uncertainty'),
+                                   and not self.run_mode == 'int_uncertainty'),
                            y_axis_type='raw', y_label=yaxis_label[o], y_absolute_limit=y_absolute_limit)
 
         # fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
@@ -1738,10 +1766,10 @@ class Project:
                             color='.3', linewidth=0.3, label=None, alpha=alpha)
 
             # plot the targets (and milestones) and the fitted exponential function to achieve them
-            if self.inputs.run_mode == 'epi_uncertainty' and not self.inputs.run_mode == 'int_uncertainty':
-                base_value = self.uncertainty_centiles['epi'][uncertainty_scenario][output][
-                             self.model_runner.percentiles.index(50.), :][t_k.find_first_list_element_at_least_value(
-                                self.outputs['manual']['epi'][uncertainty_scenario]['times'], 2015.)]
+            if self.run_mode == 'epi_uncertainty' and not self.run_mode == 'int_uncertainty':
+                base_value = self.uncertainty_centiles['epi'][uncertainty_scenario][output][0, :][
+                    t_k.find_first_list_element_at_least_value(
+                        self.outputs['manual']['epi'][uncertainty_scenario]['times'], 2015.)]
             else:
                 base_value = self.outputs['manual']['epi'][uncertainty_scenario][output][
                     t_k.find_first_list_element_at_least_value(
@@ -1778,7 +1806,7 @@ class Project:
 
         # finish off
         fig.suptitle(t_k.capitalise_first_letter(self.country) + ' resistant strain outputs',
-                     fontsize=self.suptitle_size)
+                     fontsize=self.title_size)
         self.save_figure(fig, '_resistant_strain')
 
     def classify_scaleups(self):
@@ -1788,188 +1816,101 @@ class Project:
 
         for classification in self.classifications:
             self.classified_scaleups[classification] = []
-            for fn in self.model_runner.models[0].scaleup_fns:
-                if classification in fn: self.classified_scaleups[classification] += [fn]
+            for var in self.model_runner.models[0].scaleup_fns:
+                if classification in var:
+                    self.classified_scaleups[classification] += [var]
 
-    def individual_var_viewer(self):
+    def initialise_figures_axes(self, n_panels):
         """
-        Function that can be used to visualise a particular var or several vars, by adding them to the function input
-        list, which is now an attribute of this object (i.e. vars_to_view).
-        """
+        Initialise the subplots (or single plot) according to the number of panels required.
 
-        for function in self.vars_to_view:
-            fig = self.set_and_update_figure()
-            ax = fig.add_subplot(1, 1, 1)
-            for scenario in reversed(self.scenarios):
-                ax.plot(self.model_runner.models[scenario].times,
-                        self.model_runner.models[scenario].get_var_soln(function),
-                        color=self.output_colours[scenario][1])
-            self.tidy_axis(ax, [1, 1], start_time=self.inputs.model_constants['plot_start_time'])
-            fig.suptitle(t_k.find_title_from_dictionary(function))
-            self.save_figure(fig, '_var_' + function)
-
-    def plot_scaleup_fns_against_data(self):
-        """
-        Plot each scale-up function as a separate panel against the data it is fitted to.
+        Args:
+            n_panels: The number of panels needed
+        Returns:
+            fig: The figure object
+            axes: A list containing each of the axes
         """
 
-        # different figure for each type of function
-        for classification in self.classified_scaleups:
-            if len(self.classified_scaleups[classification]) > 0:
+        pyplot.style.use('ggplot')
+        fig = pyplot.figure(self.figure_number)
+        self.figure_number += 1
+        axes = []
+        n_rows, n_cols = find_subplot_grid(n_panels)
+        if n_panels == 1:
+            axes.append(fig.add_axes([.15, .15, 0.7, 0.7]))
+        elif n_panels == 2:
+            fig.set_figheight(3.5)
+            axes.append(fig.add_subplot(1, 2, 1))
+            axes.append(fig.add_subplot(1, 2, 2, sharey=axes[0]))
+        else:
+            for axis in n_panels:
+                axes.append(fig.add_subplot(n_rows, n_cols, axis))
+        return fig, axes, n_rows, n_cols
 
-                # find the list of the scale-up functions to work with and some x-values
-                function_list = self.classified_scaleups[classification]
-
-                # standard prelims
-                fig = self.set_and_update_figure()
-                subplot_grid = find_subplot_numbers(len(function_list))
-                start_time, end_time \
-                    = self.inputs.model_constants['plot_start_time'], self.inputs.model_constants['recent_time']
-                x_vals = numpy.linspace(start_time, end_time, 1e3)
-
-                # iterate through functions
-                for f, function in enumerate(function_list):
-
-                    # initialise axis
-                    ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], f + 1)
-
-                    # iterate through the scenarios
-                    for scenario in reversed(self.scenarios):
-
-                        # line plot of scaling parameter functions
-                        ax.plot(x_vals,
-                                map(self.model_runner.models[scenario].scaleup_fns[function],
-                                    x_vals),
-                                color=self.output_colours[scenario][1],
-                                label=t_k.capitalise_and_remove_underscore(
-                                    t_k.find_scenario_string_from_number(scenario)))
-
-                    # plot the raw data from which the scale-up functions were produced
-                    if function in self.inputs.scaleup_data[0]:
-                        data_to_plot = self.inputs.scaleup_data[0][function]
-                        ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
-
-                    # adjust tick font size and add panel title
-                    if 'prop_' in function:
-                        y_axis_type = 'proportion'
-                    else:
-                        y_axis_type = 'raw'
-
-                    self.tidy_axis(ax, subplot_grid, start_time=start_time,
-                                   title=t_k.capitalise_first_letter(t_k.find_title_from_dictionary(function)),
-                                   legend=(f == len(function_list) - 1), y_axis_type=y_axis_type)
-
-                # finish off
-                title = self.inputs.country + ' ' + t_k.find_title_from_dictionary(classification) + ' parameter'
-                if len(function_list) > 1: title += 's'
-                fig.suptitle(title, fontsize=self.suptitle_size)
-                self.save_figure(fig, '_' + classification + '_scale_ups')
-
-    def plot_individual_scaleups_against_data(self):
+    def plot_scaleup_vars(self):
         """
-        This method more intended for technical appendices to papers, where it is important to be comprehensive in
-        presenting every fitted time-variant parameter that is used.
-
-        Several pieces of dodgy code here in an attempt to get figures looking correct for Fiji paper supplement.
+        Method that can be used to visualise each scale-up variable, not plotted against the data it is fit to and only
+        on a single panel.
         """
 
-        # different figure for each type of function
-        for function in self.model_runner.models[0].scaleup_fns:
+        n_panels = 2 if self.gui_inputs['plot_option_vars_two_panels'] else 1
+        for var in self.model_runner.models[0].scaleup_fns:
+            fig, axes, n_rows, n_cols = self.initialise_figures_axes(n_panels)
+            for n_axis in range(n_panels):
 
-            # standard prelims
-            fig = self.set_and_update_figure()
-            fig.set_figheight(4)
-            subplot_grid = [1, 2]
-            end_time = 2020.
+                # find time to plot from and x-values
+                start_time = float(self.gui_inputs['plot_option_start_time']) if n_axis == n_panels - 1 \
+                    else self.inputs.model_constants['early_time']
+                end_time = float(self.gui_inputs['plot_option_end_time']) if n_axis == n_panels - 1 \
+                    else self.inputs.model_constants['scenario_end_time']
 
-            for i in range(2):
+                # plot
+                max_var = self.plot_scaleup_var_to_axis(axes[n_axis], [start_time, end_time], var)
+                if self.gui_inputs['plot_option_overlay_input_data']:
+                    max_data = self.plot_scaleup_data_to_axis(axes[n_axis], [start_time, end_time], var)
 
-                # initialise axis
-                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i + 1)
+                # clean up axes
+                tidy_x_axis(axes[n_axis], start_time, end_time, n_cols)
+                tidy_y_axis(axes[n_axis], var, n_rows, left_axis=n_axis % n_cols == 0,
+                            max_value=float(max([max_var, max_data])))
+            if self.gui_inputs['plot_option_title']:
+                add_title_to_plot(fig, n_panels, var)
+            self.save_figure(fig, '_' + var)
 
-                start_time = self.inputs.model_constants['early_time']
-                if i:
-                    start_time = self.inputs.model_constants['plot_start_time']
-                elif 'diabetes' in function:
-                    start_time = 1900.
-                elif 'vacc' in function:
-                    start_time = 1920.
-                x_vals = numpy.linspace(start_time, end_time, 1e3)
-
-                # iterate through the scenarios
-                for scenario in reversed(self.scenarios):
-
-                    # line plot of scaling parameter functions
-                    ax.plot(x_vals,
-                            map(self.model_runner.models[scenario].scaleup_fns[function], x_vals),
-                            color=self.output_colours[scenario][1],
-                            label=t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario)))
-
-                if function in self.inputs.scaleup_data[0]:
-                    data_to_plot = self.inputs.scaleup_data[0][function]
-                    ax.scatter(data_to_plot.keys(), data_to_plot.values(), color='k', s=6)
-
-                # adjust tick font size and add panel title
-                if 'prop_' in function and not i:
-                    y_axis_type = 'proportion'
-                    y_label = 'Proportion'
-                elif 'prop_' in function and i:
-                    y_axis_type = 'proportion'
-                    y_label = ''
-                elif 'life_expectancy' in function and not i:
-                    y_axis_type = 'raw'
-                    y_label = 'Years'
-                elif 'life_expectancy' in function and i:
-                    y_axis_type = 'raw'
-                    y_label = ''
-                else:
-                    y_axis_type = 'raw'
-
-                # little fudge to get height for birth rate displaying correctly for Fiji
-                y_relative_limit = 0.95
-                if function == 'demo_rate_birth' and i:
-                    y_relative_limit = 1.1
-                    y_label = ''
-                elif function == 'demo_rate_birth':
-                    y_relative_limit = 1.1
-                    y_label = 'Births per 1,000 per year'
-                elif ('program_' in function and 'death' in function) or 'diabetes' in function:
-                    y_axis_type = 'limited_proportion'
-
-                self.tidy_axis(ax, subplot_grid, start_time=start_time, legend=False, y_axis_type=y_axis_type,
-                               end_time=end_time, y_label=y_label, y_relative_limit=y_relative_limit)
-
-            # finish off
-            fig.suptitle(t_k.capitalise_first_letter(t_k.find_title_from_dictionary(function)),
-                         fontsize=self.suptitle_size)
-            self.save_figure(fig, '_' + function + '_scale_up')
-
-    def plot_programmatic_scaleups(self):
-
+    def plot_scaleup_var_to_axis(self, axis, time_limits, var):
         """
-        Plots only the programmatic time-variant functions on a single set of axes.
+        Add the scale-up var function output to an axis.
+
+        Args:
+            axis: The axis to add the line to
+            time_limits: The limits of the horizontal axis in years
+            var: String for the var to plot
         """
 
-        # Functions to plot are those in the program_prop_ category of the classified scaleups
-        functions = self.classified_scaleups['program_prop_']
+        x_vals = numpy.linspace(time_limits[0], time_limits[1], int(1e3))
+        maximum_values = []
+        for scenario in reversed(self.scenarios):
+            y_vals = map(self.model_runner.models[scenario].scaleup_fns[var], x_vals)
+            axis.plot(x_vals, y_vals, color=self.output_colours[scenario][1],
+                      label=t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario)))
+            maximum_values.append(max(y_vals))
+        return max(maximum_values)
 
-        # Standard prelims
-        fig = self.set_and_update_figure()
-        line_styles = self.make_default_line_styles(len(functions), True)
-        start_time = self.inputs.model_constants['plot_start_time']
-        x_vals = numpy.linspace(start_time, self.inputs.model_constants['plot_end_time'], 1e3)
+    def plot_scaleup_data_to_axis(self, axis, time_limits, var):
+        """
+        Plot data that a scale-up function had been fitted to if it is in the desired range.
 
-        # Plot functions for baseline model run only
-        ax = make_single_axis(fig)
-        for figure_number, function in enumerate(functions):
-            ax.plot(x_vals, map(self.inputs.scaleup_fns[0][function], x_vals), line_styles[figure_number],
-                    label=t_k.find_title_from_dictionary(function))
+        Args:
+            axis: Axis to plot onto
+            time_limits: The limits of the horizontal axis in years
+            var: String of the var to plot
+        """
 
-        # Finish off
-        self.tidy_axis(ax, [1, 1], title=t_k.capitalise_first_letter(self.country) + ' '
-                                         + t_k.find_title_from_dictionary('program_prop_') + ' parameters',
-                       start_time=start_time, legend='for_single', y_axis_type='proportion')
-        self.save_figure(fig, '_programmatic_scale_ups')
+        if var in self.inputs.scaleup_data[0]:
+            data_to_plot = {key: value for key, value in self.inputs.scaleup_data[0][var].items()
+                            if int(time_limits[0]) <= key <= int(time_limits[1])}
+            axis.scatter(data_to_plot.keys(), data_to_plot.values(), color='crimson', s=6, zorder=10)
+            return max(data_to_plot.values())
 
     def plot_cost_coverage_curves(self):
         """
@@ -1981,8 +1922,8 @@ class Project:
             fig = self.set_and_update_figure()
 
             # subplots by program
-            subplot_grid = find_subplot_numbers(len(self.programs[scenario]))
-            for p, program in enumerate(self.programs[scenario]):
+            subplot_grid = find_subplot_numbers(len(self.interventions_to_cost[scenario]))
+            for p, program in enumerate(self.interventions_to_cost[scenario]):
                 ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
 
                 # make times that each curve is produced for from control panel inputs
@@ -2016,7 +1957,7 @@ class Project:
                     ax.plot(x_values, y_values, color=(darkness, darkness, darkness), label=str(int(time)))
 
                 self.tidy_axis(ax, subplot_grid, title=t_k.find_title_from_dictionary('program_prop_' + program),
-                               x_axis_type='scaled', legend=(p == len(self.programs) - 1), y_axis_type='proportion',
+                               x_axis_type='scaled', legend=(p == len(self.interventions_to_cost) - 1), y_axis_type='proportion',
                                x_label='$US ')
 
             # finish off with title and save file for scenario
@@ -2108,13 +2049,13 @@ class Project:
 
             # finishing off with title and save
             fig_individual.suptitle('Individual program costs for ' + t_k.find_scenario_string_from_number(scenario),
-                                    fontsize=self.suptitle_size)
+                                    fontsize=self.title_size)
             self.save_figure(fig_individual, '_' + str(scenario) + '_timecost_individual')
             fig_stacked.suptitle('Stacked program costs for ' + t_k.find_scenario_string_from_number(scenario),
-                                 fontsize=self.suptitle_size)
+                                 fontsize=self.title_size)
             self.save_figure(fig_stacked, '_' + str(scenario) + '_timecost_stacked')
             fig_relative.suptitle('Relative program costs for ' + t_k.find_scenario_string_from_number(scenario),
-                                  fontsize=self.suptitle_size)
+                                  fontsize=self.title_size)
             self.save_figure(fig_relative, '_' + str(scenario) + '_timecost_relative')
 
     def plot_cost_over_time_stacked_bars(self, cost_type='raw'):
@@ -2280,7 +2221,7 @@ class Project:
                                title=t_k.capitalise_first_letter(output) + ', ' + stratum_string,
                                legend=(output == len(outputs_to_plot) - 1 and s == len(strata) - 1))
         fig.suptitle(t_k.capitalise_and_remove_underscore(self.country) + ' burden by sub-group',
-                     fontsize=self.suptitle_size)
+                     fontsize=self.title_size)
         self.save_figure(fig, '_output_by_' + strata_string)
 
     def plot_proportion_cases_by_stratum(self, strata_string='agegroups'):
@@ -2297,7 +2238,7 @@ class Project:
         strata = getattr(self.inputs, strata_string)
         if len(strata) == 0: return
 
-        colours = self.make_default_line_styles(len(strata), return_all=True)
+        colours = make_default_line_styles(len(strata), return_all=True)
 
         # prelims
         fig = self.set_and_update_figure()
@@ -2331,7 +2272,7 @@ class Project:
         self.tidy_axis(ax, [1, 1], start_time=self.inputs.model_constants['recent_time'],
                        y_axis_type='proportion', y_label='Proportion', legend=True)
 
-        fig.suptitle('Proportion of notifications by age', fontsize=self.suptitle_size)
+        fig.suptitle('Proportion of notifications by age', fontsize=self.title_size)
         self.save_figure(fig, '_proportion_notifications_by_age')
 
     def plot_stratified_populations(self, age_or_risk='age'):
@@ -2361,7 +2302,7 @@ class Project:
 
             # standard prelims
             fig = self.set_and_update_figure()
-            colours = self.make_default_line_styles(len(stratification), return_all=True)
+            colours = make_default_line_styles(len(stratification), return_all=True)
 
             # run plotting from early in the model run and from the standard start time for plotting
             for t, time in enumerate(['plot_start_time', 'early_time']):
@@ -2421,7 +2362,7 @@ class Project:
                                title='Proportion of population from ' + title_time_text, legend=(t == 1))
 
             # finish up
-            fig.suptitle('Population by ' + t_k.find_title_from_dictionary(age_or_risk), fontsize=self.suptitle_size)
+            fig.suptitle('Population by ' + t_k.find_title_from_dictionary(age_or_risk), fontsize=self.title_size)
             self.save_figure(fig, '_riskgroup_proportions')
 
     def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):
@@ -2521,7 +2462,7 @@ class Project:
         # end bits
         self.tidy_axis(ax, [1, 1], y_axis_type='proportion', start_time=self.inputs.model_constants['plot_start_time'],
                        single_axis_room_for_legend=True)
-        fig.suptitle('Population by risk group', fontsize=self.suptitle_size)
+        fig.suptitle('Population by risk group', fontsize=self.title_size)
         self.save_figure(fig, '_riskgroup_checks')
 
     def plot_param_histograms(self):
@@ -2660,7 +2601,7 @@ class Project:
 
         fig = self.set_and_update_figure()
         ax = make_single_axis(fig)
-        output_colours = self.make_default_line_styles(5, True)
+        output_colours = make_default_line_styles(5, True)
         bar_width = .7
         last_data = list(numpy.zeros(len(self.inputs.riskgroups)))
         for r, to_riskgroup in enumerate(self.inputs.riskgroups):
@@ -2711,7 +2652,7 @@ class Project:
         """
 
         # prelims
-        riskgroup_styles = self.make_default_line_styles(5, True)
+        riskgroup_styles = make_default_line_styles(5, True)
         fig = self.set_and_update_figure()
         ax_left = fig.add_subplot(1, 2, 1)
         ax_right = fig.add_subplot(1, 2, 2)
@@ -2789,7 +2730,7 @@ class Project:
         ax.plot(self.accepted_indices, accepted_log_likelihoods, marker='o', color='k')
 
         # finishing up
-        fig.suptitle('Progression of likelihood', fontsize=self.suptitle_size)
+        fig.suptitle('Progression of likelihood', fontsize=self.title_size)
         ax.set_xlabel('All runs', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         ax.set_ylabel('Likelihood', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         self.save_figure(fig, '_likelihoods')
@@ -2812,7 +2753,7 @@ class Project:
                 if run in self.accepted_indices:
                     linewidth, colour = 1.2, str(
                         1. - float(run) / float(len(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'])))
-                elif self.inputs.run_mode == 'int_uncertainty':
+                elif self.run_mode == 'int_uncertainty':
                     linewidth, colour = .8, '.4'
                 else:
                     linewidth, colour = .2, 'y'
@@ -2824,7 +2765,7 @@ class Project:
                         label=t_k.capitalise_and_remove_underscore('baseline'))
 
         # finishing up
-        fig.suptitle('Progression of MDR-TB proportion', fontsize=self.suptitle_size)
+        fig.suptitle('Progression of MDR-TB proportion', fontsize=self.title_size)
         ax.set_xlabel('', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         ax.set_ylabel('% of MDR-TB in TB incidence', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         self.save_figure(fig, '_perc_mdr_progress')
@@ -2865,7 +2806,7 @@ class Project:
                                  self.model_runner.opti_results[plot], plots[plot][1], linewidth=2.0, label=plot)
             self.tidy_axis(plots[plot][0], [1, 1], y_axis_type='raw', y_label=plots[plot][2], x_sig_figs=1,
                            title='Annual funding (US$)', x_axis_type='scaled', x_label='$US ', legend='for_single')
-        self.save_opti_figure(fig, '_optimised_outputs')
+        self.save_figure(fig, '_optimised_outputs')
 
     def plot_piecharts_opti(self):
 
@@ -2915,7 +2856,7 @@ class Project:
         ax.axis('off')
         fig.tight_layout()  # reduces the margins to maximize the size of the pies
         fig.suptitle('Optimal allocation of resource')
-        self.save_opti_figure(fig, '_optimal_allocation')
+        self.save_figure(fig, '_optimal_allocation')
 
     ''' miscellaneous '''
 
@@ -2926,8 +2867,6 @@ class Project:
 
         operating_system = platform.system()
         if 'Windows' in operating_system:
-            os.system('start ' + ' ' + self.out_dir_project)
+            os.system('start  ' + self.out_dir_project)
         elif 'Darwin' in operating_system:
-            os.system('open ' + ' ' + self.out_dir_project)
-
-
+            os.system('open  ' + self.out_dir_project)

@@ -592,6 +592,20 @@ class ModelRunner:
         weights = find_uncertainty_output_weights(years_to_compare, 1, [1., 2.])
         self.add_comment_to_gui_window('"Weights": \n' + str(weights))
 
+        # find values of mu and sd for the likelihood calculation
+        mu_values, sd_values, mean_sd_value = {}, {}, {}
+        for output_dict in self.outputs_unc:
+            mu_values[output_dict['key']] = {}
+            sd_values[output_dict['key']] = {}
+            # the GTB values for the output of interest
+            working_output_dictionary = self.get_fitting_data()[output_dict['key']]
+            for y, year in enumerate(years_to_compare):
+                if year in working_output_dictionary.keys():
+                    mu_values[output_dict['key']][year], sd_values[output_dict['key']][year] = \
+                        working_output_dictionary[year]
+
+            mean_sd_value[output_dict['key']] = numpy.mean(sd_values[output_dict['key']].values())
+
         # start main uncertainty loop
         while n_accepted < self.gui_inputs['uncertainty_runs']:
 
@@ -625,15 +639,16 @@ class ModelRunner:
                     prior_log_likelihood += find_log_probability_density(
                         param['distribution'], param_val, param['bounds'], additional_params=param['additional_params'])
 
-                # calculate posterior
+                # calculate likelihood
                 for output_dict in self.outputs_unc:
-
-                    # the GTB values for the output of interest
-                    working_output_dictionary = self.get_fitting_data()[output_dict['key']]
                     for y, year in enumerate(years_to_compare):
                         if year in working_output_dictionary.keys():
                             model_result_for_output = outputs_for_comparison[y]
-                            mu, sd = working_output_dictionary[year]
+                            mu = mu_values[output_dict['key']][year]
+                            if self.average_sd_for_likelihood:
+                                sd = mean_sd_value[output_dict['key']]
+                            else:
+                                sd = sd_values[output_dict['key']][year]
                             posterior_log_likelihood += norm.logpdf(model_result_for_output, mu, sd) * weights[y]
 
                 # determine acceptance
@@ -854,7 +869,7 @@ class ModelRunner:
         new_params = []
 
         # Manually define the width of the interval containing 95% of the proposal Gaussian density
-        overwritten_abs_search_width = {'tb_n_contact': 5., 'start_time': 40.}
+        overwritten_abs_search_width = {'tb_n_contact': 2., 'start_time': 40.}
 
         # iterate through the parameters being used
         for p, param_dict in enumerate(self.inputs.param_ranges_unc):
@@ -1199,6 +1214,7 @@ class TbRunner(ModelRunner):
                              'posterior_width': None,
                              'width_multiplier': 2.  # width of normal posterior relative to range of allowed values
                              }]
+        self.average_sd_for_likelihood = True  # whether to use a common sd for all data points iun the likelihood calculation
         self.standard_rate_outputs = ['incidence', 'notifications', 'infections']
         self.from_labels \
             = {'incidence': ['latent'],

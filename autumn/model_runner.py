@@ -597,24 +597,23 @@ class ModelRunner:
         for scenario in self.scenarios:
             self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
-        # find weights for outputs that are being calibrated to
-        years_to_compare = range(2010, 2016)
-        weights = find_uncertainty_output_weights(years_to_compare, 4, [1., 2.])
-        self.add_comment_to_gui_window('"Weights": \n' + str(weights))
-
-        # find values of mu and sd for the likelihood calculation
-        mu_values, sd_values, mean_sd_value = {}, {}, {}
+        # find values of mu and sd for the likelihood calculation. Process uncertainty weights in the same loop.
+        years_to_compare = range(2010, 2017)
+        mu_values, sd_values, mean_sd_value, weights = {}, {}, {}, {}
         for output_dict in self.outputs_unc:
             mu_values[output_dict['key']] = {}
             sd_values[output_dict['key']] = {}
             # the GTB values for the output of interest
             working_output_dictionary = self.get_fitting_data()[output_dict['key']]
+            available_years = []
             for y, year in enumerate(years_to_compare):
                 if year in working_output_dictionary.keys():
+                    available_years.append(year)
                     mu_values[output_dict['key']][year], sd_values[output_dict['key']][year] = \
                         working_output_dictionary[year]
-
             mean_sd_value[output_dict['key']] = numpy.mean(sd_values[output_dict['key']].values())
+            weights[output_dict['key']] = find_uncertainty_output_weights(available_years, 4)
+            self.add_comment_to_gui_window('"Weights for ": ' + output_dict['key'] + '\n' + str(weights))
 
         # start main uncertainty loop
         while n_accepted < self.gui_inputs['uncertainty_runs']:
@@ -651,12 +650,16 @@ class ModelRunner:
 
                 # calculate likelihood
                 for output_dict in self.outputs_unc:
+                    index_for_available_years = 0
                     for y, year in enumerate(years_to_compare):
                         if year in working_output_dictionary.keys():
                             model_result_for_output = outputs_for_comparison[y]
                             mu = mu_values[output_dict['key']][year]
-                            sd = mean_sd_value[output_dict['key']] if self.average_sd_for_likelihood else sd_values[output_dict['key']][year]
-                            posterior_log_likelihood += norm.logpdf(model_result_for_output, mu, sd) * weights[y]
+                            sd = mean_sd_value[output_dict['key']] if self.average_sd_for_likelihood else \
+                                sd_values[output_dict['key']][year]
+                            posterior_log_likelihood += norm.logpdf(model_result_for_output, mu, sd) * \
+                                                        weights[output_dict['key']][index_for_available_years]
+                            index_for_available_years += 1
 
                 # determine acceptance
                 log_likelihood = prior_log_likelihood + posterior_log_likelihood

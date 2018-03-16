@@ -70,8 +70,6 @@ def read_input_data_xls(from_test, sheets_to_read, country):
         else:
             data_read_from_sheets['gtb'][gtb_key] = data_read_from_sheets['gtb_2016'][gtb_key]
 
-
-
     return data_read_from_sheets
 
 
@@ -295,7 +293,8 @@ class SpreadsheetReader:
             if row[0] == self.first_cell:
                 self.dictionary_keys = row
             elif row[0] == self.country_to_read:
-                for i in range(len(self.dictionary_keys)): self.data[self.dictionary_keys[i]] = row[i]
+                for i in range(len(self.dictionary_keys)):
+                    self.data[self.dictionary_keys[i]] = row[i]
 
     def parse_col(self, col):
         """

@@ -26,7 +26,7 @@ pluggable API to other system. Applied to tuberculosis.
 
 ## current questions for Bosco:
 - can we get the age sliders set up too
-- should we move all the parameterisation to the GUI - if so, with sliders or some other form of input
-- related to last question, how can we best incorporate some more numerical inputs
 - can we have different default running settings for different countries
+- run from server
+- display graphs
 

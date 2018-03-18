@@ -1558,19 +1558,11 @@ class Project:
             self.model_runner.models[0].make_flow_diagram(
                 os.path.join(self.out_dir_project, self.country + '_flow_diagram' + '.png'))
 
-        # plot risk group proportions
-        if self.gui_inputs['output_plot_riskgroup_checks'] and len(self.model_runner.models[0].riskgroups) > 1:
-            self.plot_riskgroup_checks()
-
         # save figure that is produced in the uncertainty running process
         if self.run_mode == 'epi_uncertainty' and self.gui_inputs['output_param_plots']:
             self.plot_param_histograms()
             self.plot_param_timeseries()
             self.plot_priors()
-
-        # plot popsizes for checking cost-coverage curves
-        if self.gui_inputs['output_popsize_plot']:
-            self.plot_popsizes()
 
         # plot likelihood estimates
         if self.run_mode == 'epi_uncertainty' and self.gui_inputs['output_likelihood_plot']:

@@ -1491,10 +1491,6 @@ class Project:
         # plot scale-up functions - currently only doing this for the baseline model run
         if self.gui_inputs['output_scaleups']:
             self.plot_scaleup_vars()
-            self.classify_scaleups()
-            # self.plot_scaleup_fns_against_data()
-            # self.plot_individual_scaleups_against_data()
-            # self.plot_programmatic_scaleups()
 
             # not technically a scale-up function in the same sense, but put in here anyway
             # self.plot_force_infection()
@@ -1703,7 +1699,6 @@ class Project:
                     if y_absolute_limit_scenario > y_absolute_limit: y_absolute_limit = y_absolute_limit_scenario
                 y_absolute_limit *= 1.02  # to allow for some space between curves and top border of the box
 
-
             self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
                            legend=(o == len(outputs) - 1 and len(scenarios) > 1
                                    and not self.run_mode == 'int_uncertainty'),
@@ -1809,17 +1804,6 @@ class Project:
                      fontsize=self.title_size)
         self.save_figure(fig, '_resistant_strain')
 
-    def classify_scaleups(self):
-        """
-        Classifies the time variant parameters according to their type (e.g. programmatic, economic, demographic, etc.).
-        """
-
-        for classification in self.classifications:
-            self.classified_scaleups[classification] = []
-            for var in self.model_runner.models[0].scaleup_fns:
-                if classification in var:
-                    self.classified_scaleups[classification] += [var]
-
     def initialise_figures_axes(self, n_panels):
         """
         Initialise the subplots (or single plot) according to the number of panels required.
@@ -1847,14 +1831,21 @@ class Project:
                 axes.append(fig.add_subplot(n_rows, n_cols, axis))
         return fig, axes, n_rows, n_cols
 
-    def plot_scaleup_vars(self):
+    def plot_scaleup_vars(self, additional_vars=[]):
         """
         Method that can be used to visualise each scale-up variable, not plotted against the data it is fit to and only
         on a single panel.
+
+        Args:
+            additional_vars: Optional list of strings for other vars to output - those not set in advance as functions
         """
 
+        # prelims
         n_panels = 2 if self.gui_inputs['plot_option_vars_two_panels'] else 1
-        for var in self.model_runner.models[0].scaleup_fns:
+        vars_to_plot = self.model_runner.models[0].scaleup_fns.keys()
+        for additional_var in additional_vars:
+            vars_to_plot.append(additional_var)
+        for var in vars_to_plot:
             fig, axes, n_rows, n_cols = self.initialise_figures_axes(n_panels)
             for n_axis in range(n_panels):
 
@@ -1866,13 +1857,14 @@ class Project:
 
                 # plot
                 max_var = self.plot_scaleup_var_to_axis(axes[n_axis], [start_time, end_time], var)
-                if self.gui_inputs['plot_option_overlay_input_data']:
-                    max_data = self.plot_scaleup_data_to_axis(axes[n_axis], [start_time, end_time], var)
+                max_data = self.plot_scaleup_data_to_axis(axes[n_axis], [start_time, end_time], var)
 
                 # clean up axes
                 tidy_x_axis(axes[n_axis], start_time, end_time, n_cols)
                 tidy_y_axis(axes[n_axis], var, n_rows, left_axis=n_axis % n_cols == 0,
                             max_value=float(max([max_var, max_data])))
+
+            # clean up figure
             if self.gui_inputs['plot_option_title']:
                 add_title_to_plot(fig, n_panels, var)
             self.save_figure(fig, '_' + var)
@@ -1887,10 +1879,23 @@ class Project:
             var: String for the var to plot
         """
 
-        x_vals = numpy.linspace(time_limits[0], time_limits[1], int(1e3))
         maximum_values = []
         for scenario in reversed(self.scenarios):
-            y_vals = map(self.model_runner.models[scenario].scaleup_fns[var], x_vals)
+
+            # if available as a scale-up function
+            if var in self.model_runner.models[scenario].scaleup_fns:
+                x_vals = numpy.linspace(time_limits[0], time_limits[1], int(1e3))
+                y_vals = map(self.model_runner.models[scenario].scaleup_fns[var], x_vals)
+
+            # otherwise if a different type of var, such as additional calculated ones
+            else:
+                start_time_index \
+                    = t_k.find_first_list_element_at_least_value(self.outputs['manual']['epi'][scenario]['times'],
+                                                                 time_limits[scenario])
+                x_vals = self.model_runner.models[scenario].times[start_time_index:]
+                y_vals = self.model_runner.models[scenario].get_var_soln(var)[start_time_index:]
+
+            # plot and find the maximum value
             axis.plot(x_vals, y_vals, color=self.output_colours[scenario][1],
                       label=t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario)))
             maximum_values.append(max(y_vals))
@@ -1906,7 +1911,7 @@ class Project:
             var: String of the var to plot
         """
 
-        if var in self.inputs.scaleup_data[0]:
+        if self.gui_inputs['plot_option_overlay_input_data'] and var in self.inputs.scaleup_data[0]:
             data_to_plot = {key: value for key, value in self.inputs.scaleup_data[0][var].items()
                             if int(time_limits[0]) <= key <= int(time_limits[1])}
             axis.scatter(data_to_plot.keys(), data_to_plot.values(), color='crimson', s=6, zorder=10)
@@ -2566,33 +2571,6 @@ class Project:
                 axis_to_change.grid(self.grid)
 
         self.save_figure(fig, '_priors')
-
-    def plot_force_infection(self):
-        """
-        View the force of infection vars.
-        """
-
-        # separate plot for each strain
-        for strain in self.model_runner.models[0].strains:
-            fig = self.set_and_update_figure()
-            ax = fig.add_subplot(1, 1, 1)
-
-            # loop over risk groups and plot line for each - now need to restrict to single age-group, as IPT modifies
-            # the force of infection for some age-groups.
-            for riskgroup in self.model_runner.models[0].riskgroups:
-                data_to_plot = self.model_runner.models[0].get_var_soln(
-                            'rate_force' + strain + riskgroup
-                            + self.model_runner.models[0].agegroups[-1])[
-                        self.start_time_index:]
-                ax.plot(self.model_runner.models[0].times[self.start_time_index:],
-                        data_to_plot * 1e2,
-                        label=t_k.capitalise_first_letter(t_k.find_title_from_dictionary(riskgroup)))
-
-            # finish off
-            self.tidy_axis(ax, [1, 1], start_time=self.inputs.model_constants['plot_start_time'],
-                           y_axis_type='scaled', legend=True)
-            fig.suptitle('Percentage annual risk of infection, ' + t_k.find_title_from_dictionary(strain))
-            self.save_figure(fig, '_rate_force' + strain)
 
     def plot_mixing_matrix(self):
         """

@@ -565,6 +565,8 @@ def find_title_from_dictionary(working_string, forward=True, capital_first_lette
                'birth rate',
            'demo_life_expectancy':
                'life expectancy',
+           'rate_force':
+               'force of infection',
            'econ_inflation':
                'inflation rate',
            'econ_cpi':

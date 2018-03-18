@@ -663,7 +663,7 @@ class Inputs:
                     # otherwise use the latest value for the proportion of the population with that risk factor
                     else:
                         mixing[to_riskgroup][from_riskgroup] \
-                            = find_latest_value_from_year_dict(self.scaleup_data[0]['riskgroup_prop' + from_riskgroup],
+                            = find_latest_value_from_year_dict(self.time_variants['riskgroup_prop' + from_riskgroup],
                                                                self.model_constants['current_time'])
 
             # give the remainder to the "_norisk" group without any risk factors

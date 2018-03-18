@@ -949,6 +949,40 @@ class Project:
         index = 0 if scenario else self.start_time_index
         return index
 
+    def find_time_index(self, time, scenario):
+        """
+        Still thinking about this method and whether it is worthwhile.
+        """
+
+        return t_k.find_first_list_element_at_least_value(self.outputs['manual']['epi'][scenario]['times'], time)
+
+    def initialise_figures_axes(self, n_panels):
+        """
+        Initialise the subplots (or single plot) according to the number of panels required.
+
+        Args:
+            n_panels: The number of panels needed
+        Returns:
+            fig: The figure object
+            axes: A list containing each of the axes
+        """
+
+        pyplot.style.use('ggplot')
+        fig = pyplot.figure(self.figure_number)
+        self.figure_number += 1
+        axes = []
+        n_rows, n_cols = find_subplot_grid(n_panels)
+        if n_panels == 1:
+            axes.append(fig.add_axes([.15, .15, 0.7, 0.7]))
+        elif n_panels == 2:
+            fig.set_figheight(3.5)
+            axes.append(fig.add_subplot(1, 2, 1))
+            axes.append(fig.add_subplot(1, 2, 2, sharey=axes[0]))
+        else:
+            for axis in n_panels:
+                axes.append(fig.add_subplot(n_rows, n_cols, axis))
+        return fig, axes, n_rows, n_cols
+
     def set_and_update_figure(self):
         """
         If called at the start of each plotting function, will create a figure that is numbered according to
@@ -1490,9 +1524,6 @@ class Project:
         if self.gui_inputs['output_scaleups']:
             self.plot_scaleup_vars()
 
-            # not technically a scale-up function in the same sense, but put in here anyway
-            # self.plot_force_infection()
-
         # plot mixing matrix if relevant
         if self.inputs.is_vary_force_infection_by_riskgroup and len(self.inputs.riskgroups) > 1:
             self.plot_mixing_matrix()
@@ -1802,33 +1833,6 @@ class Project:
                      fontsize=self.title_size)
         self.save_figure(fig, '_resistant_strain')
 
-    def initialise_figures_axes(self, n_panels):
-        """
-        Initialise the subplots (or single plot) according to the number of panels required.
-
-        Args:
-            n_panels: The number of panels needed
-        Returns:
-            fig: The figure object
-            axes: A list containing each of the axes
-        """
-
-        pyplot.style.use('ggplot')
-        fig = pyplot.figure(self.figure_number)
-        self.figure_number += 1
-        axes = []
-        n_rows, n_cols = find_subplot_grid(n_panels)
-        if n_panels == 1:
-            axes.append(fig.add_axes([.15, .15, 0.7, 0.7]))
-        elif n_panels == 2:
-            fig.set_figheight(3.5)
-            axes.append(fig.add_subplot(1, 2, 1))
-            axes.append(fig.add_subplot(1, 2, 2, sharey=axes[0]))
-        else:
-            for axis in n_panels:
-                axes.append(fig.add_subplot(n_rows, n_cols, axis))
-        return fig, axes, n_rows, n_cols
-
     def plot_scaleup_vars(self):
         """
         Method that can be used to visualise each scale-up variable, not plotted against the data it is fit to and only
@@ -1893,10 +1897,6 @@ class Project:
                       label=t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario)))
             maximum_values.append(max(y_vals))
         return max(maximum_values)
-
-    def find_time_index(self, time, scenario):
-
-        return t_k.find_first_list_element_at_least_value(self.outputs['manual']['epi'][scenario]['times'], time)
 
     def plot_scaleup_data_to_axis(self, axis, time_limits, var):
         """

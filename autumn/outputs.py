@@ -871,9 +871,7 @@ class Project:
         self.vars_to_view = ['riskgroup_prop_diabetes']
 
         # comes up so often that we need to find this index, that easiest to do in instantiation
-        self.start_time_index \
-            = t_k.find_first_list_element_at_least_value(self.outputs['manual']['epi'][0]['times'],
-                                                         self.inputs.model_constants['plot_start_time'])
+        self.start_time_index = self.find_time_index(self.inputs.model_constants['plot_start_time'], 0)
 
     ''' master method to call the others '''
 
@@ -1889,9 +1887,7 @@ class Project:
 
             # otherwise if a different type of var, such as additional calculated ones
             else:
-                start_time_index \
-                    = t_k.find_first_list_element_at_least_value(self.outputs['manual']['epi'][scenario]['times'],
-                                                                 time_limits[scenario])
+                start_time_index = self.find_time_index(time_limits[scenario], scenario)
                 x_vals = self.model_runner.models[scenario].times[start_time_index:]
                 y_vals = self.model_runner.models[scenario].get_var_soln(var)[start_time_index:]
 
@@ -1900,6 +1896,10 @@ class Project:
                       label=t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario)))
             maximum_values.append(max(y_vals))
         return max(maximum_values)
+
+    def find_time_index(self, time, scenario):
+
+        return t_k.find_first_list_element_at_least_value(self.outputs['manual']['epi'][scenario]['times'], time)
 
     def plot_scaleup_data_to_axis(self, axis, time_limits, var):
         """

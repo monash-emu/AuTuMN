@@ -180,6 +180,7 @@ def get_autumn_params():
             params[param]['value'] = params[param]['options'][0]
     params['fitting_method']['value'] = params['fitting_method']['options'][-1]
     params['integration_method']['value'] = params['integration_method']['options'][1]
+    # params['strains']['value'] = params['strains']['options'][1]
     params['country']['value'] = 'Fiji'
 
     ''' parameter groupings '''

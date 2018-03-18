@@ -1922,7 +1922,7 @@ class Project:
             data_to_plot = {key: value for key, value in self.inputs.scaleup_data[0][var].items()
                             if int(time_limits[0]) <= key <= int(time_limits[1])}
             axis.scatter(data_to_plot.keys(), data_to_plot.values(), color=self.colour_theme['data'], s=7, zorder=10)
-            return max(data_to_plot.values())
+            return max(data_to_plot.values()) if data_to_plot else 0.
 
     def plot_cost_coverage_curves(self):
         """

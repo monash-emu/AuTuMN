@@ -282,7 +282,14 @@ class Inputs:
             self.add_comment_to_gui_window(
                 'Misassignment requested, but not implemented as single strain model only')
             self.gui_inputs['is_misassignment'] = False
-        if not self.riskgroups and self.is_vary_force_infection_by_riskgroup:
+        # test presence of riskgroups
+        is_any_riskgroup = False
+        for gui_input_name in self.gui_inputs.keys():
+            if 'riskgroup' in gui_input_name:
+                if self.gui_inputs[gui_input_name]:
+                    is_any_riskgroup = True
+                    break
+        if not is_any_riskgroup and self.is_vary_force_infection_by_riskgroup:
             self.add_comment_to_gui_window(
                 'Heterogeneous mixing requested, but not implemented as no risk groups are present')
             self.is_vary_force_infection_by_riskgroup = False

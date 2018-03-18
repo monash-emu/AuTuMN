@@ -1829,20 +1829,17 @@ class Project:
                 axes.append(fig.add_subplot(n_rows, n_cols, axis))
         return fig, axes, n_rows, n_cols
 
-    def plot_scaleup_vars(self, additional_vars=[]):
+    def plot_scaleup_vars(self):
         """
         Method that can be used to visualise each scale-up variable, not plotted against the data it is fit to and only
         on a single panel.
-
-        Args:
-            additional_vars: Optional list of strings for other vars to output - those not set in advance as functions
         """
 
         # prelims
         n_panels = 2 if self.gui_inputs['plot_option_vars_two_panels'] else 1
         vars_to_plot = self.model_runner.models[0].scaleup_fns.keys()
-        for additional_var in additional_vars:
-            vars_to_plot.append(additional_var)
+        if self.gui_inputs['plot_option_plot_all_vars']:
+            vars_to_plot = t_k.combine_two_lists_no_duplicate(vars_to_plot, self.model_runner.models[0].vars)
         for var in vars_to_plot:
             fig, axes, n_rows, n_cols = self.initialise_figures_axes(n_panels)
             for n_axis in range(n_panels):

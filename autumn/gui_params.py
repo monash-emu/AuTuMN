@@ -27,7 +27,7 @@ def get_autumn_params():
            'is_timevariant_organs', 'is_treatment_history', 'is_vary_force_infection_by_riskgroup',
            'is_vary_detection_by_riskgroup', 'is_include_relapse_in_ds_outcomes', 'is_include_hiv_treatment_outcomes',
            'is_adjust_population', 'is_shortcourse_improves_outcomes', 'plot_option_vars_two_panels',
-           'plot_option_overlay_input_data', 'plot_option_title']
+           'plot_option_overlay_input_data', 'plot_option_title', 'plot_option_plot_all_vars']
     for i in range(1, 15):
         bool_keys.append('scenario_' + str(i))
     for key in bool_keys:
@@ -148,6 +148,7 @@ def get_autumn_params():
         'write_uncertainty_outcome_params',
         # 'output_param_plots',
         'is_shortcourse_improves_outcomes',
+        # 'plot_option_plot_all_vars',
         # 'is_amplification',
         # 'is_misassignment',
         # 'is_lowquality',

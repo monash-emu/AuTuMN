@@ -124,6 +124,22 @@ def find_common_elements_multiple_lists(list_of_lists):
     return intersection
 
 
+def combine_two_lists_no_duplicate(list_1, list_2):
+    """
+    Method to combine two lists, drop one copy of the elements present in both and return a list comprised of the
+    elements present in either list - but with only one copy of each.
+
+    Args:
+        list_1: First list
+        list_2: Second list
+    Returns:
+        The combined list, as described above
+    """
+
+    additional_unique_elements_list_2 = [i for i in list_2 if i not in list_1]
+    return list_1 + additional_unique_elements_list_2
+
+
 def calculate_proportion_dict(data, relevant_keys, percent=False, floor=0., underscore=True):
     """
     General method to calculate proportions from absolute values provided as dictionaries.

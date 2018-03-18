@@ -873,6 +873,24 @@ class Project:
         # comes up so often that we need to find this index, that easiest to do in instantiation
         self.start_time_index = self.find_time_index(self.inputs.model_constants['plot_start_time'], 0)
 
+        self.colour_theme \
+            = {0: (0., 0., 0.),
+               1: (0., 0., 125. / 255.),
+               2: (210. / 255., 70. / 255., 0.),
+               3: (100. / 255., 150. / 255., 1.),
+               4: (65. / 255., 65. / 255., 65. / 255.),
+               5: (220. / 255., 25. / 255., 25. / 255.),
+               6: (120. / 255., 55. / 255., 20. / 255.),
+               7: (120. / 255., 55. / 255., 110. / 255.),
+               8: (135. / 255., 135. / 255., 30. / 255.),
+               9: (120. / 255., 120. / 255., 120. / 255.),
+               10: (220. / 255., 20. / 255., 170. / 255.),
+               11: (20. / 255., 65. / 255., 20. / 255.),
+               12: (15. / 255., 145. / 255., 25. / 255.),
+               13: (15. / 255., 185. / 255., 240. / 255.),
+               14: (10. / 255., 0., 110. / 255.),
+               'data': (150. / 255., 0., 0.)}
+
     ''' master method to call the others '''
 
     def master_outputs_runner(self):
@@ -1885,7 +1903,7 @@ class Project:
                 y_vals = self.model_runner.models[scenario].get_var_soln(var)[start_time_index:]
 
             # plot and find the maximum value
-            axis.plot(x_vals, y_vals, color=self.output_colours[scenario][1],
+            axis.plot(x_vals, y_vals, color=self.colour_theme[scenario],
                       label=t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario)))
             maximum_values.append(max(y_vals))
         return max(maximum_values)
@@ -1903,7 +1921,7 @@ class Project:
         if self.gui_inputs['plot_option_overlay_input_data'] and var in self.inputs.scaleup_data[0]:
             data_to_plot = {key: value for key, value in self.inputs.scaleup_data[0][var].items()
                             if int(time_limits[0]) <= key <= int(time_limits[1])}
-            axis.scatter(data_to_plot.keys(), data_to_plot.values(), color='crimson', s=6, zorder=10)
+            axis.scatter(data_to_plot.keys(), data_to_plot.values(), color=self.colour_theme['data'], s=7, zorder=10)
             return max(data_to_plot.values())
 
     def plot_cost_coverage_curves(self):

@@ -2442,31 +2442,6 @@ class Project:
         pyplot.savefig(os.path.join(self.out_dir_project, self.country + '_totalcost' + '.png'),
                        bbox_extra_artists=(lgd,), bbox_inches='tight')
 
-    def plot_riskgroup_checks(self):
-        """
-        Plots actual risk group fractions against targets. Probably almost redundant, as this is a test of code, rather
-        than really giving and epidemiological information.
-        """
-
-        # standard prelims
-        fig = self.set_and_update_figure()
-        ax = make_single_axis(fig)
-
-        # plotting
-        for riskgroup in self.model_runner.models[0].riskgroups:
-            ax.plot(self.model_runner.models[0].times,
-                    self.model_runner.models[0].actual_risk_props[riskgroup], 'g-',
-                    label='Actual ' + riskgroup)
-            ax.plot(self.model_runner.models[0].times,
-                    self.model_runner.models[0].target_risk_props[riskgroup][1:], 'k--',
-                    label='Target ' + riskgroup)
-
-        # end bits
-        self.tidy_axis(ax, [1, 1], y_axis_type='proportion', start_time=self.inputs.model_constants['plot_start_time'],
-                       single_axis_room_for_legend=True)
-        fig.suptitle('Population by risk group', fontsize=self.title_size)
-        self.save_figure(fig, '_riskgroup_checks')
-
     def plot_param_histograms(self):
         """
         Simple function to plot histograms of parameter values used in uncertainty analysis.
@@ -2597,28 +2572,6 @@ class Project:
         ax.tick_params(length=0.)
         ax.set_xticklabels(xlabels)
         self.save_figure(fig, '_mixing')
-
-    def plot_popsizes(self):
-        """
-        Plot popsizes over recent time for each program in baseline scenario.
-        """
-
-        # prelims
-        fig = self.set_and_update_figure()
-        ax = make_single_axis(fig)
-
-        # plotting
-        for var in self.model_runner.models[0].var_labels:
-            if 'popsize_' in var:
-                ax.plot(self.model_runner.models[0].times[self.start_time_index:],
-                        self.model_runner.models[0].get_var_soln(var)[self.start_time_index:],
-                        label=t_k.find_title_from_dictionary(var[8:]))
-
-        # finishing up
-        self.tidy_axis(ax, [1, 1], legend='for_single', start_time=self.inputs.model_constants['plot_start_time'],
-                       y_label=' persons', y_axis_type='scaled')
-        fig.suptitle('Population sizes for cost-coverage curves under baseline scenario')
-        self.save_figure(fig, '_popsizes')
 
     def plot_case_detection_rate(self):
         """

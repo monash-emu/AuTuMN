@@ -1639,11 +1639,12 @@ class Project:
         for o, output in enumerate(outputs):
 
             # overlay first so it's at the back
-            gtb_ci_plot = 'hatch' if purpose == 'shaded' else 'patch'
-            gtb_string = self.gtb_indices[output] if output in self.gtb_indices else ''
-            max_value = self.plot_gtb_data_to_axis(axes[o], output, start_time, gtb_string, compare_gtb=False,
-                                                   gtb_ci_plot=gtb_ci_plot, plot_targets=True,
-                                                   uncertainty_scenario=uncertainty_scenario)
+            if self.gui_inputs['plot_option_overlay_gtb']:
+                gtb_ci_plot = 'hatch' if purpose == 'shaded' else 'patch'
+                gtb_string = self.gtb_indices[output] if output in self.gtb_indices else ''
+                max_value = self.plot_gtb_data_to_axis(axes[o], output, start_time, gtb_string, compare_gtb=False,
+                                                       gtb_ci_plot=gtb_ci_plot, plot_targets=True,
+                                                       uncertainty_scenario=uncertainty_scenario)
 
             # plot with uncertainty confidence intervals
             if purpose == 'ci':
@@ -1661,10 +1662,10 @@ class Project:
                                  linewidth=linewidth, label=t_k.capitalise_and_remove_underscore(scenario_name))
 
                     # upper and lower confidence bounds
-                    for gtb_string in [1, 2]:
+                    for ci in [1, 2]:
                         axes[o].plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][0][
                                      start_index:],
-                                     self.uncertainty_centiles['epi'][uncertainty_scenario][output][gtb_string, :][
+                                     self.uncertainty_centiles['epi'][uncertainty_scenario][output][ci, :][
                                      start_index:],
                                      color=linecolour, linestyle='--', linewidth=.5, label=None)
 
@@ -1824,7 +1825,7 @@ class Project:
                         self.outputs['manual']['epi'][uncertainty_scenario]['times'], 2015.)]
 
             # plot the milestones and targets
-            if plot_targets and (output == 'incidence' or output == 'mortality'):
+            if self.gui_inputs['plot_option_overlay_targets'] and (output == 'incidence' or output == 'mortality'):
                 plot_endtb_targets(ax, output, base_value, '.7')
 
         return max(gtb_data['point_estimate'].values())

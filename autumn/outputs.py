@@ -1620,20 +1620,15 @@ class Project:
             purpose: Reason for plotting or type of plot, can be either 'scenario', 'ci_plot' or 'progress'
         """
 
-        # preliminaries
+        # prelims
         start_time = self.inputs.model_constants['before_intervention_time'] \
             if self.run_mode == 'int_uncertainty' or len(self.scenarios) > 1 \
             else self.inputs.model_constants['plot_start_time']
         fig, axes, n_rows, n_cols = self.initialise_figures_axes(len(outputs))
-
-        # local variables relevant to the type of analysis requested
-        if self.run_mode == 'int_uncertainty':
-            uncertainty_scenario, scenarios, start_index, uncertainty_type, linewidth, linecolour, runs, \
-                self.accepted_indices = 15, [0, 15], 0, 'int_uncertainty', 1., 'r', self.inputs.n_samples, []
-            self.start_time_index = 0
-        else:
-            uncertainty_scenario, scenarios, uncertainty_type, linewidth \
-                = 0, self.scenarios[::-1], 'epi_uncertainty', 1.5
+        start_index, line_colour, runs = 0, 'r', self.inputs.n_samples
+        uncertainty_scenario, scenarios, line_width, self.accepted_indices, self.start_time_index \
+            = (15, [0, 15], 1., [], 0) if self.run_mode == 'int_uncertainty' \
+            else (0, self.scenarios[::-1], 1.5, self.accepted_indices, self.start_time_index)
 
         # loop through indicators
         for o, output in enumerate(outputs):
@@ -1650,23 +1645,23 @@ class Project:
                 for scenario in scenarios:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
                     if not self.run_mode == 'int_uncertainty':
-                        uncertainty_scenario, start_index, linecolour \
+                        uncertainty_scenario, start_index, line_colour \
                             = scenario, self.find_start_index(scenario), self.output_colours[scenario][1]
 
                     # median
-                    axes[o].plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][0, :][
+                    axes[o].plot(self.outputs[self.run_mode]['epi'][uncertainty_scenario]['times'][0, :][
                                  start_index:],
                                  self.uncertainty_centiles['epi'][uncertainty_scenario][output][0, :][start_index:],
-                                 color=linecolour, linestyle=self.output_colours[scenario][0],
-                                 linewidth=linewidth, label=t_k.capitalise_and_remove_underscore(scenario_name))
+                                 color=line_colour, linestyle=self.output_colours[scenario][0],
+                                 linewidth=line_width, label=t_k.capitalise_and_remove_underscore(scenario_name))
 
                     # upper and lower confidence bounds
                     for ci in [1, 2]:
-                        axes[o].plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][0][
+                        axes[o].plot(self.outputs[self.run_mode]['epi'][uncertainty_scenario]['times'][0][
                                      start_index:],
                                      self.uncertainty_centiles['epi'][uncertainty_scenario][output][ci, :][
                                      start_index:],
-                                     color=linecolour, linestyle='--', linewidth=.5, label=None)
+                                     color=line_colour, linestyle='--', linewidth=.5, label=None)
 
             # plot progressive model run outputs for uncertainty analyses
             elif purpose == 'progress':
@@ -1679,17 +1674,17 @@ class Project:
                 for run in range(runs):
                     if run in self.accepted_indices or self.plot_rejected_runs or self.run_mode == 'int_uncertainty':
                         if run in self.accepted_indices:
-                            linewidth = 1.2
+                            line_width = 1.2
                             colour = str(1. - float(run) / float(len(
-                                self.outputs[uncertainty_type]['epi'][uncertainty_scenario][output])))
+                                self.outputs[self.run_mode]['epi'][uncertainty_scenario][output])))
                         elif self.run_mode == 'int_uncertainty':
-                            linewidth, colour = .8, '.4'
+                            line_width, colour = .8, '.4'
                         else:
-                            linewidth, colour = .2, 'y'
-                        axes[o].plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][run,
+                            line_width, colour = .2, 'y'
+                        axes[o].plot(self.outputs[self.run_mode]['epi'][uncertainty_scenario]['times'][run,
                                      self.start_time_index:],
-                                     self.outputs[uncertainty_type]['epi'][uncertainty_scenario][output][run,
-                                     self.start_time_index:], linewidth=linewidth, color=colour,
+                                     self.outputs[self.run_mode]['epi'][uncertainty_scenario][output][run,
+                                     self.start_time_index:], linewidth=line_width, color=colour,
                                      label=t_k.capitalise_and_remove_underscore('baseline'))
 
             elif purpose == 'shaded':
@@ -1702,7 +1697,7 @@ class Project:
                 patch_colours = [cm.Blues(x) for x in numpy.linspace(0., 1., self.model_runner.n_centiles_for_shading)]
                 for i in range(self.model_runner.n_centiles_for_shading):
                     patch = create_patch_from_list(
-                        self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][0, start_index:],
+                        self.outputs[self.run_mode]['epi'][uncertainty_scenario]['times'][0, start_index:],
                         self.uncertainty_centiles['epi'][uncertainty_scenario][output][i + 3, :][start_index:],
                         self.uncertainty_centiles['epi'][uncertainty_scenario][output][-i - 1, :][start_index:])
                     axes[o].add_patch(patches.Polygon(patch, color=patch_colours[i]))

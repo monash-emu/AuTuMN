@@ -1643,7 +1643,7 @@ class Project:
                 gtb_ci_plot = 'hatch' if purpose == 'shaded' else 'patch'
                 gtb_string = self.gtb_indices[output] if output in self.gtb_indices else ''
                 max_value = self.plot_gtb_data_to_axis(axes[o], output, start_time, gtb_string, compare_gtb=False,
-                                                       gtb_ci_plot=gtb_ci_plot, plot_targets=True)
+                                                       gtb_ci_plot=gtb_ci_plot)
 
             # plot with uncertainty confidence intervals
             if purpose == 'ci':

@@ -460,57 +460,39 @@ def find_exponential_constants(times, y_values):
     return a, b
 
 
-def plot_endtb_targets(ax, output, base_value, plot_colour, annotate=True):
+def plot_endtb_targets(ax, output, base_value, plot_colour):
     """
     Plot the End TB Targets and the direction that we need to head to achieve them.
 
     Args:
         ax: The axis to be plotted on to
-        o: Output number
         output: Output string
-        gtb_data: GTB data values
+        base_value: The value of the output at the reference time
         plot_colour: List of colours for plotting
     """
 
-    # End TB Targets
+    # End TB Targets data to use
     times = [2015., 2020., 2025., 2030., 2035.]
     target_text = ['', 'M', 'M', 'S', 'E']  # M for milestone, S for Sustainable Development Goal, E for End TB Target
+    target_props_dict \
+        = {'mortality': [1., .65, .25, .1, .05],
+           'incidence': [1., .8, .5, .2, .1]}
 
-    if output == 'mortality':
+    # find the actual target values
+    target_values = [base_value * target for target in target_props_dict[output]]
 
-        # find targets
-        target_props = [1., .65, .25, .1, .05]
-        target_values = [base_value * t for t in target_props]
+    # plot the individual targets themselves
+    ax.plot(times[1:], target_values[1:], marker='o', markersize=4, color=plot_colour, markeredgewidth=0., linewidth=0.)
 
-        # plot the individual targets themselves
-        ax.plot(times[1:], target_values[1:],
-                marker='o', markersize=4, color=plot_colour, markeredgewidth=0., linewidth=0.)
-
-        # cycle through times and plot
-        for t in range(len(times) - 1):
-            times_to_plot, output_to_reach_target = find_times_from_exp_function(t, times, target_values)
-            ax.plot(times_to_plot, output_to_reach_target, color=plot_colour, linewidth=.5)
-
-    elif output == 'incidence':
-
-        # find targets
-        target_props = [1., .8, .5, .2, .1]
-        target_values = [base_value * t for t in target_props]
-
-        # plot the individual targets themselves
-        ax.plot(times[1:], target_values[1:],
-                marker='o', markersize=4, color=plot_colour, markeredgewidth=0., linewidth=0.)
-
-        # cycle through times and plot
-        for t in range(len(times) - 1):
-            times_to_plot, output_to_reach_target = find_times_from_exp_function(t, times, target_values)
-            ax.plot(times_to_plot, output_to_reach_target, color=plot_colour, linewidth=.5)
+    # cycle through times and plot
+    for t in range(len(times) - 1):
+        times_to_plot, output_to_reach_target = find_times_from_exp_function(t, times, target_values)
+        ax.plot(times_to_plot, output_to_reach_target, color=plot_colour, linewidth=.5)
 
     # annotate points with letters if requested
-    if annotate:
-        for i, text in enumerate(target_props):
-            ax.annotate(target_text[i], (times[i], target_values[i] + target_values[1] / 20.),
-                        horizontalalignment='center', verticalalignment='bottom', fontsize=8, color=plot_colour)
+    for t, text in enumerate(target_props_dict[output]):
+        ax.annotate(target_text[t], (times[t], target_values[t] + target_values[1] / 20.),
+                    horizontalalignment='center', verticalalignment='bottom', fontsize=8, color=plot_colour)
 
 
 def find_times_from_exp_function(t, times, target_values, number_x_values=1e2):
@@ -1659,9 +1641,9 @@ class Project:
             # overlay first so it's at the back
             gtb_ci_plot = 'hatch' if purpose == 'shaded' else 'patch'
             gtb_string = self.gtb_indices[output] if output in self.gtb_indices else ''
-            max_value = self.overlay_gtb_data(axes[o], output, start_time, gtb_string, compare_gtb=False,
-                                              gtb_ci_plot=gtb_ci_plot, plot_targets=True,
-                                              uncertainty_scenario=uncertainty_scenario)
+            max_value = self.plot_gtb_data_to_axis(axes[o], output, start_time, gtb_string, compare_gtb=False,
+                                                   gtb_ci_plot=gtb_ci_plot, plot_targets=True,
+                                                   uncertainty_scenario=uncertainty_scenario)
 
             # plot with uncertainty confidence intervals
             if purpose == 'ci':
@@ -1778,8 +1760,8 @@ class Project:
         # fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb_' + purpose)
 
-    def overlay_gtb_data(self, ax, output, start_time, output_index, compare_gtb=False, gtb_ci_plot='hatch',
-                         plot_targets=True, uncertainty_scenario=0):
+    def plot_gtb_data_to_axis(self, ax, output, start_time, output_index, compare_gtb=False, gtb_ci_plot='hatch',
+                              plot_targets=True, uncertainty_scenario=0):
         """
         Method to plot the data loaded directly from the GTB report in the background.
 

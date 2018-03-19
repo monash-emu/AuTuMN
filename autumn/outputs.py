@@ -1643,8 +1643,7 @@ class Project:
                 gtb_ci_plot = 'hatch' if purpose == 'shaded' else 'patch'
                 gtb_string = self.gtb_indices[output] if output in self.gtb_indices else ''
                 max_value = self.plot_gtb_data_to_axis(axes[o], output, start_time, gtb_string, compare_gtb=False,
-                                                       gtb_ci_plot=gtb_ci_plot, plot_targets=True,
-                                                       uncertainty_scenario=uncertainty_scenario)
+                                                       gtb_ci_plot=gtb_ci_plot, plot_targets=True)
 
             # plot with uncertainty confidence intervals
             if purpose == 'ci':
@@ -1761,8 +1760,7 @@ class Project:
         # fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb_' + purpose)
 
-    def plot_gtb_data_to_axis(self, ax, output, start_time, output_index, compare_gtb=False, gtb_ci_plot='hatch',
-                              plot_targets=True, uncertainty_scenario=0):
+    def plot_gtb_data_to_axis(self, ax, output, start_time, output_index, compare_gtb=False, gtb_ci_plot='hatch'):
         """
         Method to plot the data loaded directly from the GTB report in the background.
 
@@ -1773,14 +1771,13 @@ class Project:
             output_index: String to index the GTB data
             compare_gtb: Whether to plot the targets/milestones relative to GTB data rather than modelled outputs
             gtb_ci_plot: How to display the confidence intervals of the GTB data
-            plot_targets: Whether to display the End TB Targets and the lines to achieve them
-            uncertainty_scenario: Either 0 to index the baseline or 15 to index the intervention uncertainty scenario
         Returns:
             The maximum value from the point estimate data being plotted
         """
 
         # prelims
         gtb_data, gtb_data_lists, gtb_index, colour, line_width, alpha = {}, {}, 0, '.2', 0., 1.
+        uncertainty_scenario = 15 if self.run_mode == 'int_uncertainty' else 0
 
         # notifications
         if output == 'notifications':

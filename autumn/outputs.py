@@ -2621,64 +2621,6 @@ class Project:
         # finish off figure
         self.finish_off_figure(fig, n_plots, '_mixing', 'Source of contacts by risk group')
 
-    def plot_case_detection_rate(self):
-        """
-        Method to visualise case detection rates across scenarios and sub-groups, to better understand the impact of
-        ACF on improving detection rates relative to passive case finding alone.
-        """
-
-        # prelims
-        riskgroup_styles = make_default_line_styles(5, True)
-        fig = self.set_and_update_figure()
-        ax_left = fig.add_subplot(1, 2, 1)
-        ax_right = fig.add_subplot(1, 2, 2)
-        separation = 0.
-        separation_increment = .003  # artificial shifting of lines away from each other
-
-        # specify interventions of interest for this plotting function - needs to be changed for each country
-        interventions_affecting_case_detection = [0, 5, 6]
-
-        # loop over scenarios
-        for scenario in interventions_affecting_case_detection:
-            scenario_name = t_k.find_scenario_string_from_number(scenario)
-            manual_scenario_name = scenario
-            if scenario in self.scenarios:
-                start_index = self.find_start_index(scenario)
-
-                # Repeat for each sub-group
-                for r, riskgroup in enumerate(self.model_runner.models[manual_scenario_name].riskgroups[::-1]):
-
-                    # Find weighted case detection rate over organ statuses
-                    case_detection = numpy.zeros(len(self.model_runner.models[manual_scenario_name].times[
-                                                     start_index:]))
-                    for organ in self.inputs.organ_status:
-                        case_detection_increment \
-                            = [i * j for i, j in zip(self.model_runner.models[manual_scenario_name].get_var_soln(
-                                                         'program_rate_detect' + organ + riskgroup)[start_index:],
-                                                     self.model_runner.models[manual_scenario_name].get_var_soln(
-                                                         'epi_prop' + organ)[start_index:])]
-                        case_detection \
-                            = model_runner.elementwise_list_addition(case_detection, case_detection_increment)
-                    case_detection = [i + separation for i in case_detection]
-                    delay_to_presentation = [12. / i for i in case_detection]  # Convert rate to delay
-                    ax_left.plot(self.model_runner.models[manual_scenario_name].times[start_index:],
-                                 case_detection,
-                                 color=self.output_colours[scenario][1], linestyle=riskgroup_styles[r * 7][:-1])
-                    ax_right.plot(self.model_runner.models[manual_scenario_name].times[start_index:],
-                                  delay_to_presentation,
-                                  label=t_k.capitalise_first_letter(t_k.find_title_from_dictionary(riskgroup)) + ', '
-                                        + t_k.replace_underscore_with_space(scenario_name),
-                                  color=self.output_colours[scenario][1], linestyle=riskgroup_styles[r * 7][:-1])
-                    separation += separation_increment
-
-            # Finish off
-            self.tidy_axis(ax_left, [1, 2], start_time=self.inputs.model_constants['plot_start_time'],
-                           y_axis_type='raw', title='Case detection rates', y_label='Presentation rate (per year)')
-            self.tidy_axis(ax_right, [1, 2], legend=True, start_time=self.inputs.model_constants['plot_start_time'],
-                           y_axis_type='raw', title='Delay to presentation', y_label='Months')
-            ax_right.legend(prop={'size': 8}, frameon=False)
-        self.save_figure(fig, '_case_detection')
-
     def plot_likelihoods(self):
         """
         Method to plot likelihoods over runs, differentiating accepted and rejected runs to illustrate progression.

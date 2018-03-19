@@ -746,60 +746,6 @@ def add_title_to_plot(fig, n_panels, content):
                  fontsize=title_font_size[n_panels])
 
 
-def tidy_x_axis(axis, start, end, n_cols):
-    """
-    Function to tidy x-axis of a plot panel - currently only used in the scale-up vars, but intended to be written in
-    such a way as to be extendable to other types of plotting.
-
-    Args:
-        axis: The plotting axis
-        start: Lowest x-value being plotted
-        end: Highest x-value being plotted
-        n_cols: Number of columns of subplots in figure
-    """
-
-    # range
-    axis.set_xlim(left=start, right=end)
-
-    # ticks and their labels
-    font_sizes = {1: 7, 2: 7}
-    if len(axis.get_xticks()) > 7:
-        for label in axis.xaxis.get_ticklabels()[::2]:
-            label.set_visible(False)
-    axis.tick_params(axis='x', length=5, pad=6, labelsize=font_sizes[n_cols])
-
-
-def tidy_y_axis(axis, var, n_rows, left_axis=True, max_value=1e6, space_at_top=.1):
-    """
-    General approach to tidying up the vertical axis of a plot, depends on whether it is the left-most panel.
-
-    Args:
-        axis: The axis itself
-        var: The name of the variable being plotted (which can be used to determine what sort of variable it is)
-        n_rows: The number of rows of subplots on the figure
-        left_axis: Boolean for whether the axis is the left-most panel
-        max_value: The maximum value in the data being plotted
-        space_at_top: Relative amount of space to leave at the top, above the maximum value of the plotted data
-    """
-
-    # axis range
-    axis.set_ylim(bottom=0.)
-    if 'prop_' in var and axis.get_ylim()[1] > 1.:
-        axis.set_ylim(top=1.004)
-    elif axis.get_ylim()[1] < max_value * (1. + space_at_top):
-        axis.set_ylim(top=max_value * (1. + space_at_top))
-
-    # ticks
-    font_sizes = {1: 7, 2: 7}
-    axis.tick_params(axis='y', length=5, pad=6, labelsize=font_sizes[n_rows])
-
-    # labels
-    if not left_axis:
-        pyplot.setp(axis.get_yticklabels(), visible=False)
-    elif 'prop_' in var:
-        axis.yaxis.set_major_formatter(FuncFormatter('{0:.0%}'.format))
-
-
 def find_subplot_grid(n_plots):
     """
     Find a convenient number of rows and columns for a required number of subplots. First take the root of the number of
@@ -818,6 +764,19 @@ def find_subplot_grid(n_plots):
     n_cols = int(numpy.ceil(n_plots ** .5))
     n_rows = int(numpy.ceil(float(n_plots) / float(n_cols)))
     return n_rows, n_cols
+
+
+def add_legend_to_plot(axis, n_plots):
+    """
+    Not much here yet, but will intended to be extended.
+
+    Args:
+        axis: The axis to add a legend to
+        n_plots: The total number of plots on the figure
+    """
+
+    if n_plots == 1:
+        axis.legend(bbox_to_anchor=(1.3, 1), fontsize=8)
 
 
 class Project:
@@ -873,6 +832,14 @@ class Project:
         # comes up so often that we need to find this index, that easiest to do in instantiation
         self.start_time_index = self.find_time_index(self.inputs.model_constants['plot_start_time'], 0)
 
+        # standard graphing themes
+        self.tick_length = 5
+        self.x_font_sizes \
+            = {1: 7,
+               2: 7}
+        self.y_font_sizes \
+            = {1: 7,
+               2: 7}
         self.colour_theme \
             = {0: (0., 0., 0.),
                1: (0., 0., 125. / 255.),
@@ -974,12 +941,13 @@ class Project:
 
         return t_k.find_first_list_element_at_least_value(self.outputs['manual']['epi'][scenario]['times'], time)
 
-    def initialise_figures_axes(self, n_panels):
+    def initialise_figures_axes(self, n_panels, room_for_legend=False):
         """
         Initialise the subplots (or single plot) according to the number of panels required.
 
         Args:
             n_panels: The number of panels needed
+            room_for_legend: Whether room is needed for a legend - applies to single axis plots only
         Returns:
             fig: The figure object
             axes: A list containing each of the axes
@@ -990,8 +958,9 @@ class Project:
         self.figure_number += 1
         axes = []
         n_rows, n_cols = find_subplot_grid(n_panels)
+        horizontal_position_one_axis = .08 if room_for_legend else .15
         if n_panels == 1:
-            axes.append(fig.add_axes([.15, .15, 0.7, 0.7]))
+            axes.append(fig.add_axes([horizontal_position_one_axis, .15, 0.7, 0.7]))
         elif n_panels == 2:
             fig.set_figheight(3.5)
             axes.append(fig.add_subplot(1, 2, 1))
@@ -1011,6 +980,56 @@ class Project:
         fig = pyplot.figure(self.figure_number)
         self.figure_number += 1
         return fig
+
+    def tidy_x_axis(self, axis, start, end, n_cols):
+        """
+        Function to tidy x-axis of a plot panel - currently only used in the scale-up vars, but intended to be written in
+        such a way as to be extendable to other types of plotting.
+
+        Args:
+            axis: The plotting axis
+            start: Lowest x-value being plotted
+            end: Highest x-value being plotted
+            n_cols: Number of columns of subplots in figure
+        """
+
+        # range
+        axis.set_xlim(left=start, right=end)
+
+        # ticks and their labels
+        if len(axis.get_xticks()) > 7:
+            for label in axis.xaxis.get_ticklabels()[::2]:
+                label.set_visible(False)
+        axis.tick_params(axis='x', length=self.tick_length, pad=6, labelsize=self.x_font_sizes[n_cols])
+
+    def tidy_y_axis(self, axis, quantity, n_rows, left_axis=True, max_value=1e6, space_at_top=.1):
+        """
+        General approach to tidying up the vertical axis of a plot, depends on whether it is the left-most panel.
+
+        Args:
+            axis: The axis itself
+            quantity: The name of the quantity being plotted (which can be used to determine what sort of variable it is)
+            n_rows: The number of rows of subplots on the figure
+            left_axis: Boolean for whether the axis is the left-most panel
+            max_value: The maximum value in the data being plotted
+            space_at_top: Relative amount of space to leave at the top, above the maximum value of the plotted data
+        """
+
+        # axis range
+        axis.set_ylim(bottom=0.)
+        if 'prop_' in quantity and axis.get_ylim()[1] > 1.:
+            axis.set_ylim(top=1.004)
+        elif axis.get_ylim()[1] < max_value * (1. + space_at_top):
+            axis.set_ylim(top=max_value * (1. + space_at_top))
+
+        # ticks
+        axis.tick_params(axis='y', length=self.tick_length, pad=6, labelsize=self.y_font_sizes[n_rows])
+
+        # labels
+        if not left_axis:
+            pyplot.setp(axis.get_yticklabels(), visible=False)
+        elif 'prop_' in quantity:
+            axis.yaxis.set_major_formatter(FuncFormatter('{0:.0%}'.format))
 
     def tidy_axis(self, ax, subplot_grid, title='', start_time=0., legend=False, x_label='', y_label='',
                   x_axis_type='time', y_axis_type='scaled', x_sig_figs=0, y_sig_figs=0,
@@ -1094,6 +1113,23 @@ class Project:
 
         for file_format in self.figure_formats:
             filename = os.path.join(self.out_dir_project, self.country + end_figure_name + '.' + file_format)
+            fig.savefig(filename, dpi=300)
+
+    def finish_off_figure(self, fig, n_plots, end_filename, title_text):
+        """
+        Slight extension of save_figure to include adding main title to figure.
+
+        Args:
+            fig: The figure to add the title to
+            n_plots: The total number of plots in the figure
+            end_filename: The end of the string for the file name
+            title_text: Text for the title of the figure
+        """
+
+        if self.gui_inputs['plot_option_title']:
+            add_title_to_plot(fig, n_plots, title_text)
+        for file_format in self.figure_formats:
+            filename = os.path.join(self.out_dir_project, self.country + end_filename + '.' + file_format)
             fig.savefig(filename, dpi=300)
 
     ''' methods for pre-processing model runner outputs to more interpretable forms '''
@@ -1869,14 +1905,12 @@ class Project:
                 max_data = self.plot_scaleup_data_to_axis(axes[n_axis], [start_time, end_time], var)
 
                 # clean up axes
-                tidy_x_axis(axes[n_axis], start_time, end_time, n_cols)
-                tidy_y_axis(axes[n_axis], var, n_rows, left_axis=n_axis % n_cols == 0,
-                            max_value=float(max([max_var, max_data])))
+                self.tidy_x_axis(axes[n_axis], start_time, end_time, n_cols)
+                self.tidy_y_axis(axes[n_axis], var, n_rows, left_axis=n_axis % n_cols == 0,
+                                 max_value=float(max([max_var, max_data])))
 
-            # clean up figure
-            if self.gui_inputs['plot_option_title']:
-                add_title_to_plot(fig, n_panels, var)
-            self.save_figure(fig, '_' + var)
+            # finish off figure
+            self.finish_off_figure(fig, n_panels, '_' + var, var)
 
     def plot_scaleup_var_to_axis(self, axis, time_limits, var):
         """
@@ -2559,29 +2593,33 @@ class Project:
         Method to visualise the mixing matrix with bar charts.
         """
 
-        fig = self.set_and_update_figure()
-        ax = make_single_axis(fig)
-        output_colours = make_default_line_styles(5, True)
-        bar_width = .7
-        last_data = list(numpy.zeros(len(self.inputs.riskgroups)))
-        for r, to_riskgroup in enumerate(self.inputs.riskgroups):
-            this_data = []
-            for from_riskgroup in self.inputs.riskgroups:
-                this_data.append(self.inputs.mixing[from_riskgroup][to_riskgroup])
-            next_data = [last + this for last, this in zip(last_data, this_data)]
+        # prelims
+        n_plots = 1
+        fig, axes, _, _ = self.initialise_figures_axes(n_plots, room_for_legend=True)
+        last_data, bar_width, ax, x_positions = list(numpy.zeros(len(self.inputs.riskgroups))), .7, axes[0], []
+
+        # plot bars
+        for to, to_group in enumerate(self.inputs.riskgroups):
+            current_data = [self.inputs.mixing[from_group][to_group] for from_group in self.inputs.riskgroups]
+            next_data = [last + current for last, current in zip(last_data, current_data)]
             x_positions = numpy.linspace(.5, .5 + len(next_data) - 1., len(next_data))
-            ax.bar(x_positions, this_data, width=bar_width, bottom=last_data, color=output_colours[r][1],
-                   label=t_k.capitalise_and_remove_underscore(t_k.find_title_from_dictionary(to_riskgroup)))
+            ax.bar(x_positions, current_data, width=bar_width, bottom=last_data, color=self.colour_theme[to],
+                   label=t_k.find_title_from_dictionary(to_group))
             last_data = next_data
-        xlabels = [t_k.capitalise_first_letter(t_k.find_title_from_dictionary(last)) for last in self.inputs.riskgroups]
-        self.tidy_axis(ax, [1, 1], y_label='Proportion',
-                       x_axis_type='raw', y_axis_type='proportion', legend='for_single', title='Source of contacts')
-        ax.set_xlim(0.2, max(x_positions) + 1.)
-        x_label_positions = [x + bar_width / 2. for x in x_positions]
-        ax.set_xticks(x_label_positions)
-        ax.tick_params(length=0.)
-        ax.set_xticklabels(xlabels)
-        self.save_figure(fig, '_mixing')
+
+        # locally managing x-axis, as plot type is a special case
+        ax.set_xlim(.2, max(x_positions) + 1.)
+        ax.set_xticks([x + bar_width / 2. for x in x_positions])
+        ax.tick_params(axis='x', length=0.)
+        ax.set_xticklabels([t_k.find_title_from_dictionary(group) for group in self.inputs.riskgroups],
+                           fontsize=self.x_font_sizes[1])
+
+        # general approach fine for y-axis and legend
+        self.tidy_y_axis(ax, 'prop_', n_plots, max_value=1., space_at_top=0.)
+        add_legend_to_plot(ax, n_plots)
+
+        # finish off figure
+        self.finish_off_figure(fig, n_plots, '_mixing', 'Source of contacts by risk group')
 
     def plot_case_detection_rate(self):
         """

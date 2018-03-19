@@ -158,14 +158,14 @@ def get_autumn_params():
         # 'is_vary_detection_by_riskgroup',
         'is_include_hiv_treatment_outcomes',
         'is_treatment_history',
-        # 'riskgroup_prison',
+        'riskgroup_prison',
         # 'output_likelihood_plot',
         # 'riskgroup_urbanpoor',
         'output_scaleups',
         # 'output_by_subgroups',
-        # 'riskgroup_ruralpoor',
+        'riskgroup_ruralpoor',
         # 'output_gtb_plots',
-        # 'is_vary_force_infection_by_riskgroup',
+        'is_vary_force_infection_by_riskgroup',
         'riskgroup_diabetes',
         # 'riskgroup_hiv',
         # 'riskgroup_indigenous',
@@ -180,8 +180,8 @@ def get_autumn_params():
             params[param]['value'] = params[param]['options'][0]
     params['fitting_method']['value'] = params['fitting_method']['options'][-1]
     params['integration_method']['value'] = params['integration_method']['options'][1]
-    # params['strains']['value'] = params['strains']['options'][1]
-    params['country']['value'] = 'Fiji'
+    params['strains']['value'] = params['strains']['options'][1]
+    params['country']['value'] = 'Bulgaria'
 
     ''' parameter groupings '''
 

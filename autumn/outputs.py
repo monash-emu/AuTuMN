@@ -533,12 +533,6 @@ def find_times_from_exp_function(t, times, target_values, number_x_values=1e2):
     return times_to_plot, output_to_reach_target
 
 
-def save_png(png):
-    # should be redundant once Project module complete
-
-    if png is not None: pylab.savefig(png, dpi=300)
-
-
 def plot_comparative_age_parameters(data_strat_list, data_value_list, model_value_list, model_strat_list,
                                     parameter_name):
 
@@ -588,7 +582,6 @@ def plot_comparative_age_parameters(data_strat_list, data_value_list, model_valu
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
     base = os.path.join(out_dir, parameter_name)
-    save_png(base + '_param_adjustment.png')
 
 
 def find_subplot_numbers(n):
@@ -857,6 +850,15 @@ class Project:
                13: (15. / 255., 185. / 255., 240. / 255.),
                14: (10. / 255., 0., 110. / 255.),
                'data': (150. / 255., 0., 0.)}
+        self.gtb_indices \
+            = {'incidence': 'e_inc_100k',
+               'mortality': 'e_mort_exc_tbhiv_100k',
+               'prevalence': 'e_prev_100k'}
+        self.gtb_patch_colours \
+            = {'incidence': self.colour_theme[1],
+               'mortality': self.colour_theme[2],
+               'prevalence': self.colour_theme[3],
+               'notifications': (0., 0., 0.)}
 
     ''' master method to call the others '''
 
@@ -966,8 +968,8 @@ class Project:
             axes.append(fig.add_subplot(1, 2, 1))
             axes.append(fig.add_subplot(1, 2, 2, sharey=axes[0]))
         else:
-            for axis in n_panels:
-                axes.append(fig.add_subplot(n_rows, n_cols, axis))
+            for axis in range(n_panels):
+                axes.append(fig.add_subplot(n_rows, n_cols, axis + 1))
         return fig, axes, n_rows, n_cols
 
     def set_and_update_figure(self):
@@ -1131,8 +1133,6 @@ class Project:
         for file_format in self.figure_formats:
             filename = os.path.join(self.out_dir_project, self.country + end_filename + '.' + file_format)
             fig.savefig(filename, dpi=300)
-
-    ''' methods for pre-processing model runner outputs to more interpretable forms '''
 
     def find_uncertainty_indices(self):
         """
@@ -1566,11 +1566,9 @@ class Project:
 
         # plot main outputs
         if self.gui_inputs['output_gtb_plots']:
-            purposes = ['scenario']
-            if '_uncertainty' in self.run_mode:
-                purposes.extend(['ci_plot', 'progress', 'shaded'])
-            for purpose in purposes:
-                self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose=purpose)
+            purposes = ['scenario', 'ci', 'progress', 'shaded'] if '_uncertainty' in self.run_mode else ['scenario']
+            for p in purposes:
+                self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose=p)
             if self.inputs.n_strains > 1:
                 self.plot_resistant_strain_outputs(['incidence', 'mortality', 'prevalence', 'perc_incidence'])
 
@@ -1641,12 +1639,10 @@ class Project:
         """
 
         # preliminaries
-        start_time = self.inputs.model_constants['plot_start_time']
-        if self.run_mode == 'int_uncertainty' or len(self.scenarios) > 1:
-            start_time = self.inputs.model_constants['before_intervention_time']
-        colour, indices, yaxis_label, title, patch_colour = find_standard_output_styles(outputs, lightening_factor=0.3)
-        subplot_grid = find_subplot_numbers(len(outputs))
-        fig = self.set_and_update_figure()
+        start_time = self.inputs.model_constants['before_intervention_time'] \
+            if self.run_mode == 'int_uncertainty' or len(self.scenarios) > 1 \
+            else self.inputs.model_constants['plot_start_time']
+        fig, axes, n_rows, n_cols = self.initialise_figures_axes(len(outputs))
 
         # local variables relevant to the type of analysis requested
         if self.run_mode == 'int_uncertainty':
@@ -1660,17 +1656,14 @@ class Project:
         # loop through indicators
         for o, output in enumerate(outputs):
 
-            # preliminaries
-            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
-
             # overlay first so it's at the back
             gtb_ci_plot = 'hatch' if purpose == 'shaded' else 'patch'
-            self.overlay_gtb_data(
-                ax, o, output, start_time, indices, patch_colour, compare_gtb=False, gtb_ci_plot=gtb_ci_plot,
-                plot_targets=True, uncertainty_scenario=uncertainty_scenario, alpha=1.)
+            gtb_string = self.gtb_indices[output] if output in self.gtb_indices else ''
+            self.overlay_gtb_data(axes[o], output, start_time, gtb_string, compare_gtb=False, gtb_ci_plot=gtb_ci_plot,
+                                  plot_targets=True, uncertainty_scenario=uncertainty_scenario, alpha=1.)
 
             # plot with uncertainty confidence intervals
-            if purpose == 'ci_plot':
+            if purpose == 'ci':
                 for scenario in scenarios:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
                     if not self.run_mode == 'int_uncertainty':
@@ -1678,16 +1671,19 @@ class Project:
                             = scenario, self.find_start_index(scenario), self.output_colours[scenario][1]
 
                     # median
-                    ax.plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][0, :][start_index:],
-                            self.uncertainty_centiles['epi'][uncertainty_scenario][output][0, :][start_index:],
-                            color=linecolour, linestyle=self.output_colours[scenario][0],
-                            linewidth=linewidth, label=t_k.capitalise_and_remove_underscore(scenario_name))
+                    axes[o].plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][0, :][
+                                 start_index:],
+                                 self.uncertainty_centiles['epi'][uncertainty_scenario][output][0, :][start_index:],
+                                 color=linecolour, linestyle=self.output_colours[scenario][0],
+                                 linewidth=linewidth, label=t_k.capitalise_and_remove_underscore(scenario_name))
 
                     # upper and lower confidence bounds
-                    for index in [1, 2]:
-                        ax.plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][0][start_index:],
-                                self.uncertainty_centiles['epi'][uncertainty_scenario][output][index, :][start_index:],
-                                color=linecolour, linestyle='--', linewidth=.5, label=None)
+                    for gtb_string in [1, 2]:
+                        axes[o].plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][0][
+                                     start_index:],
+                                     self.uncertainty_centiles['epi'][uncertainty_scenario][output][gtb_string, :][
+                                     start_index:],
+                                     color=linecolour, linestyle='--', linewidth=.5, label=None)
 
             # plot progressive model run outputs for uncertainty analyses
             elif purpose == 'progress':
@@ -1707,12 +1703,11 @@ class Project:
                             linewidth, colour = .8, '.4'
                         else:
                             linewidth, colour = .2, 'y'
-                        ax.plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][run,
-                                self.start_time_index:],
-                                self.outputs[uncertainty_type]['epi'][uncertainty_scenario][output][run,
-                                self.start_time_index:],
-                                linewidth=linewidth, color=colour,
-                                label=t_k.capitalise_and_remove_underscore('baseline'))
+                        axes[o].plot(self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][run,
+                                     self.start_time_index:],
+                                     self.outputs[uncertainty_type]['epi'][uncertainty_scenario][output][run,
+                                     self.start_time_index:], linewidth=linewidth, color=colour,
+                                     label=t_k.capitalise_and_remove_underscore('baseline'))
 
             elif purpose == 'shaded':
 
@@ -1727,7 +1722,7 @@ class Project:
                         self.outputs[uncertainty_type]['epi'][uncertainty_scenario]['times'][0, start_index:],
                         self.uncertainty_centiles['epi'][uncertainty_scenario][output][i + 3, :][start_index:],
                         self.uncertainty_centiles['epi'][uncertainty_scenario][output][-i - 1, :][start_index:])
-                    ax.add_patch(patches.Polygon(patch, color=patch_colours[i]))
+                    axes[o].add_patch(patches.Polygon(patch, color=patch_colours[i]))
 
             # plot scenarios without uncertainty
             if purpose == 'scenario' or self.run_mode == 'int_uncertainty':
@@ -1750,18 +1745,17 @@ class Project:
                         label = t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario))
 
                     # plot
-                    ax.plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
-                            self.outputs['manual']['epi'][scenario][output][start_index:],
-                            color=colour, linestyle=self.output_colours[scenario][0], linewidth=1.5, label=label)
+                    axes[o].plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
+                                 self.outputs['manual']['epi'][scenario][output][start_index:],
+                                 color=colour, linestyle=self.output_colours[scenario][0], linewidth=1.5, label=label)
 
                 # plot true mortality
                 if output == 'mortality' and self.plot_true_outcomes:
-                    ax.plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
-                            self.outputs['manual']['epi'][scenario]['true_' + output][start_index:],
-                            color=colour, linestyle=':', linewidth=1)
+                    axes[o].plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
+                                 self.outputs['manual']['epi'][scenario]['true_' + output][start_index:],
+                                 color=colour, linestyle=':', linewidth=1)
 
             # find limits to the axes
-            y_absolute_limit = None
             if self.run_mode == 'int_uncertainty' or len(scenarios) > 1:
                 y_absolute_limit = -1.e15  # an absurd negative value to start from
                 plot_start_time_index = t_k.find_first_list_element_at_least_value(
@@ -1770,30 +1764,29 @@ class Project:
                     relevant_start_index = plot_start_time_index
                     if scenario != 0:
                         relevant_start_index = 0
-                    y_absolute_limit_scenario = max(self.model_runner.outputs['manual']['epi'][scenario][output][relevant_start_index:])
+                    y_absolute_limit_scenario \
+                        = max(self.model_runner.outputs['manual']['epi'][scenario][output][relevant_start_index:])
                     if y_absolute_limit_scenario > y_absolute_limit: y_absolute_limit = y_absolute_limit_scenario
                 y_absolute_limit *= 1.02  # to allow for some space between curves and top border of the box
 
-            self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
-                           legend=(o == len(outputs) - 1 and len(scenarios) > 1
-                                   and not self.run_mode == 'int_uncertainty'),
-                           y_axis_type='raw', y_label=yaxis_label[o], y_absolute_limit=y_absolute_limit)
+            # self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
+            #                legend=(o == len(outputs) - 1 and len(scenarios) > 1
+            #                        and not self.run_mode == 'int_uncertainty'),
+            #                y_axis_type='raw', y_label=yaxis_label[o], y_absolute_limit=y_absolute_limit)
 
         # fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
         self.save_figure(fig, '_gtb_' + purpose)
 
-    def overlay_gtb_data(self, ax, o, output, start_time, indices, patch_colour, compare_gtb=False, gtb_ci_plot='hatch',
+    def overlay_gtb_data(self, ax, output, start_time, index, compare_gtb=False, gtb_ci_plot='hatch',
                          plot_targets=True, uncertainty_scenario=0, alpha=1.):
         """
         Method to plot the data loaded directly from the GTB report in the background.
 
         Args:
             ax: Axis for plotting
-            o: Order of output
             output: String for output
             start_time:
-            indices:
-            patch_colour:
+            index:
             compare_gtb: Whether to plot the targets/milestones relative to GTB data rather than modelled outputs
             gtb_ci_plot: How to display the confidence intervals of the GTB data
             plot_targets: Whether to display the End TB Targets and the lines to achieve them
@@ -1802,8 +1795,7 @@ class Project:
         """
 
         # prelims
-        gtb_data = {}
-        gtb_data_lists = {}
+        gtb_data, gtb_data_lists = {}, {}
 
         # notifications
         if output == 'notifications':
@@ -1814,22 +1806,22 @@ class Project:
         # extract the relevant data from the Global TB Report and use to plot a patch (for inc, prev and mortality)
         elif output in self.gtb_available_outputs:
             for level in self.level_conversion_dict:
-                gtb_data[level] = self.inputs.original_data['gtb'][indices[o] + self.level_conversion_dict[level]]
+                gtb_data[level] = self.inputs.original_data['gtb'][index + self.level_conversion_dict[level]]
                 gtb_data_lists.update(extract_dict_to_list_key_ordering(gtb_data[level], level))
             gtb_index = t_k.find_first_list_element_at_least_value(gtb_data_lists['times'], start_time)
             if gtb_ci_plot == 'patch':
-                colour, hatch, fill, linewidth, alpha = patch_colour[o], None, True, 1., 1.
+                hatch, fill, linewidth, alpha, colour = None, True, 0., .5, self.gtb_patch_colours[output]
             elif gtb_ci_plot == 'hatch':
-                colour, hatch, fill, linewidth, alpha = '.3', '/', False, 0., 1.
+                colour, hatch, fill, linewidth, alpha = '.3', '/', False, 0., .8
             ax.add_patch(patches.Polygon(create_patch_from_list(gtb_data_lists['times'][gtb_index:],
                                                                 gtb_data_lists['lower_limit'][gtb_index:],
                                                                 gtb_data_lists['upper_limit'][gtb_index:]),
-                                         color=colour, hatch=hatch, fill=fill, linewidth=linewidth))
+                                         color=colour, hatch=hatch, fill=fill, linewidth=linewidth, alpha=alpha))
 
         # plot point estimates
         if output in self.gtb_available_outputs:
             ax.plot(gtb_data['point_estimate'].keys()[gtb_index:], gtb_data['point_estimate'].values()[gtb_index:],
-                    color='.3', linewidth=0.8, label=None, alpha=alpha)
+                    color=self.gtb_patch_colours[output], linewidth=0.8, label=None, alpha=alpha)
             if gtb_ci_plot == 'hatch' and output != 'notifications':
                 for limit in ['lower_limit', 'upper_limit']:
                     ax.plot(gtb_data[limit].keys()[gtb_index:], gtb_data[limit].values()[gtb_index:],
@@ -2709,72 +2701,74 @@ class Project:
                                title=compartment_type + restriction_1 + restriction_2)
         self.save_figure(fig, '_mdr_by_compartment_type')
 
-    def plot_optimised_epi_outputs(self):
-        """
-        Plot incidence and mortality over funding. This corresponds to the outputs obtained under optimal allocation.
-        """
+    ''' currently inactive optimisation plotting methods '''
 
-        fig = self.set_and_update_figure()
-        left_ax = make_single_axis(fig)
-        right_ax = left_ax.twinx()
-        plots = {'incidence': [left_ax, 'b^', 'TB incidence per 100,000 per year'],
-                'mortality': [right_ax, 'r+', 'TB mortality per 100,000 per year']}
-        for plot in plots:
-            plots[plot][0].plot(self.model_runner.opti_results['annual_envelope'],
-                                 self.model_runner.opti_results[plot], plots[plot][1], linewidth=2.0, label=plot)
-            self.tidy_axis(plots[plot][0], [1, 1], y_axis_type='raw', y_label=plots[plot][2], x_sig_figs=1,
-                           title='Annual funding (US$)', x_axis_type='scaled', x_label='$US ', legend='for_single')
-        self.save_figure(fig, '_optimised_outputs')
-
-    def plot_piecharts_opti(self):
-
-        n_envelopes = len(self.model_runner.opti_results['annual_envelope'])
-        subplot_grid = find_subplot_numbers(n_envelopes + 1)
-        font_size = get_nice_font_size(subplot_grid)
-
-        fig = self.set_and_update_figure()
-        colors = ['#000037', '#7398B5', '#D94700', '#DBE4E9', '#62000E', '#3D5F00', '#240445', 'black', 'red',
-                  'yellow', 'blue']  # AuTuMN colours
-        color_dict = {}
-        for i, intervention in enumerate(self.model_runner.interventions_considered_for_opti):
-            color_dict[intervention] = colors[i]
-
-        interventions_for_legend = []
-        for i, funding in enumerate(self.model_runner.opti_results['annual_envelope']):
-            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i+1)
-            temp_dict = self.model_runner.opti_results['best_allocation'][i]
-            temp_dict = {key: val for key, val in temp_dict.iteritems() if val > 0.0001}
-            labels = temp_dict.keys()
-            fracs = temp_dict.values()
-            dynamic_colors = [color_dict[lab] for lab in labels]
-            ax.pie(fracs, autopct='%1.1f%%', startangle=90, pctdistance=0.8, radius=0.8, colors=dynamic_colors, \
-                   textprops={'backgroundcolor': 'white', 'fontsize': font_size})
-            ax.axis('equal')
-            circle = pyplot.Circle((0, 0), 0.4, color='w')
-            ax.add_artist(circle)
-            ax.text(0, 0, get_string_for_funding(funding), horizontalalignment='center', verticalalignment='center')
-            if len(interventions_for_legend) == 0:
-                # The legend will contain interventions sorted by proportion of funding for the smallest funding
-                interventions_for_legend = sorted(temp_dict, key=temp_dict.get, reverse=True)
-            else:
-                # we need to add interventions that were not selected for lower funding amounts
-                for intervention in temp_dict.keys():
-                    if intervention not in interventions_for_legend:
-                        interventions_for_legend.append(intervention)
-
-        # Generate a gost pie chart that include all interventions to be able to build the full legend
-        ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], n_envelopes + 1)
-        fracs = numpy.random.uniform(0, 1, size=len(interventions_for_legend))
-        dynamic_colors = [color_dict[lab] for lab in interventions_for_legend]
-        patches, texts = ax.pie(fracs, colors=dynamic_colors)
-        ax.cla()  # Clear the gost pie chart
-
-        ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], n_envelopes + 1)
-        ax.legend(patches, interventions_for_legend, loc='right', fontsize=2.0*font_size)
-        ax.axis('off')
-        fig.tight_layout()  # reduces the margins to maximize the size of the pies
-        fig.suptitle('Optimal allocation of resource')
-        self.save_figure(fig, '_optimal_allocation')
+    # def plot_optimised_epi_outputs(self):
+    #     """
+    #     Plot incidence and mortality over funding. This corresponds to the outputs obtained under optimal allocation.
+    #     """
+    #
+    #     fig = self.set_and_update_figure()
+    #     left_ax = make_single_axis(fig)
+    #     right_ax = left_ax.twinx()
+    #     plots = {'incidence': [left_ax, 'b^', 'TB incidence per 100,000 per year'],
+    #             'mortality': [right_ax, 'r+', 'TB mortality per 100,000 per year']}
+    #     for plot in plots:
+    #         plots[plot][0].plot(self.model_runner.opti_results['annual_envelope'],
+    #                              self.model_runner.opti_results[plot], plots[plot][1], linewidth=2.0, label=plot)
+    #         self.tidy_axis(plots[plot][0], [1, 1], y_axis_type='raw', y_label=plots[plot][2], x_sig_figs=1,
+    #                        title='Annual funding (US$)', x_axis_type='scaled', x_label='$US ', legend='for_single')
+    #     self.save_figure(fig, '_optimised_outputs')
+    #
+    # def plot_piecharts_opti(self):
+    #
+    #     n_envelopes = len(self.model_runner.opti_results['annual_envelope'])
+    #     subplot_grid = find_subplot_numbers(n_envelopes + 1)
+    #     font_size = get_nice_font_size(subplot_grid)
+    #
+    #     fig = self.set_and_update_figure()
+    #     colors = ['#000037', '#7398B5', '#D94700', '#DBE4E9', '#62000E', '#3D5F00', '#240445', 'black', 'red',
+    #               'yellow', 'blue']  # AuTuMN colours
+    #     color_dict = {}
+    #     for i, intervention in enumerate(self.model_runner.interventions_considered_for_opti):
+    #         color_dict[intervention] = colors[i]
+    #
+    #     interventions_for_legend = []
+    #     for i, funding in enumerate(self.model_runner.opti_results['annual_envelope']):
+    #         ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i+1)
+    #         temp_dict = self.model_runner.opti_results['best_allocation'][i]
+    #         temp_dict = {key: val for key, val in temp_dict.iteritems() if val > 0.0001}
+    #         labels = temp_dict.keys()
+    #         fracs = temp_dict.values()
+    #         dynamic_colors = [color_dict[lab] for lab in labels]
+    #         ax.pie(fracs, autopct='%1.1f%%', startangle=90, pctdistance=0.8, radius=0.8, colors=dynamic_colors, \
+    #                textprops={'backgroundcolor': 'white', 'fontsize': font_size})
+    #         ax.axis('equal')
+    #         circle = pyplot.Circle((0, 0), 0.4, color='w')
+    #         ax.add_artist(circle)
+    #         ax.text(0, 0, get_string_for_funding(funding), horizontalalignment='center', verticalalignment='center')
+    #         if len(interventions_for_legend) == 0:
+    #             # The legend will contain interventions sorted by proportion of funding for the smallest funding
+    #             interventions_for_legend = sorted(temp_dict, key=temp_dict.get, reverse=True)
+    #         else:
+    #             # we need to add interventions that were not selected for lower funding amounts
+    #             for intervention in temp_dict.keys():
+    #                 if intervention not in interventions_for_legend:
+    #                     interventions_for_legend.append(intervention)
+    #
+    #     # Generate a gost pie chart that include all interventions to be able to build the full legend
+    #     ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], n_envelopes + 1)
+    #     fracs = numpy.random.uniform(0, 1, size=len(interventions_for_legend))
+    #     dynamic_colors = [color_dict[lab] for lab in interventions_for_legend]
+    #     patches, texts = ax.pie(fracs, colors=dynamic_colors)
+    #     ax.cla()  # Clear the gost pie chart
+    #
+    #     ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], n_envelopes + 1)
+    #     ax.legend(patches, interventions_for_legend, loc='right', fontsize=2.0*font_size)
+    #     ax.axis('off')
+    #     fig.tight_layout()  # reduces the margins to maximize the size of the pies
+    #     fig.suptitle('Optimal allocation of resource')
+    #     self.save_figure(fig, '_optimal_allocation')
 
     ''' miscellaneous '''
 

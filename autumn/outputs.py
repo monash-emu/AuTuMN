@@ -1620,57 +1620,48 @@ class Project:
             purpose: Reason for plotting or type of plot, can be either 'scenario', 'ci_plot' or 'progress'
         """
 
-        # prelims
+        # adapt extent of horizontal axis depending on the purppose and whether we are focusing on interventions
         start_time = self.inputs.model_constants['before_intervention_time'] \
             if self.run_mode == 'int_uncertainty' or len(self.scenarios) > 1 \
             else self.inputs.model_constants['plot_start_time']
+
+        # other basic prelims
         fig, axes, n_rows, n_cols = self.initialise_figures_axes(len(outputs))
-        start_index, line_colour, runs = 0, 'r', self.inputs.n_samples
+        start_index, line_colour = 0, 'r'
         uncertainty_scenario, scenarios, line_width, self.accepted_indices, self.start_time_index \
             = (15, [0, 15], 1., [], 0) if self.run_mode == 'int_uncertainty' \
             else (0, self.scenarios[::-1], 1.5, self.accepted_indices, self.start_time_index)
 
-        # loop through indicators
+        # loop through output indicators
         for o, output in enumerate(outputs):
 
-            # overlay first so it's at the back
+            # overlay GTB data
             if self.gui_inputs['plot_option_overlay_gtb']:
-                gtb_ci_plot = 'hatch' if purpose == 'shaded' else 'patch'
-                gtb_string = self.gtb_indices[output] if output in self.gtb_indices else ''
-                max_value = self.plot_gtb_data_to_axis(axes[o], output, start_time, gtb_string, compare_gtb=False,
-                                                       gtb_ci_plot=gtb_ci_plot)
+                max_gtb = self.plot_gtb_data_to_axis(
+                    axes[o], output, start_time, self.gtb_indices[output] if output in self.gtb_indices else '',
+                    compare_gtb=False, gtb_ci_plot='hatch' if purpose == 'shaded' else 'patch')
 
             # plot with uncertainty confidence intervals
             if purpose == 'ci':
                 for scenario in scenarios:
-                    scenario_name = t_k.find_scenario_string_from_number(scenario)
-                    if not self.run_mode == 'int_uncertainty':
-                        uncertainty_scenario, start_index, line_colour \
-                            = scenario, self.find_start_index(scenario), self.output_colours[scenario][1]
+                    start_index = start_index if self.run_mode == 'int_uncertainty' else self.find_start_index(scenario)
 
-                    # median
-                    axes[o].plot(self.outputs[self.run_mode]['epi'][uncertainty_scenario]['times'][0, :][
-                                 start_index:],
-                                 self.uncertainty_centiles['epi'][uncertainty_scenario][output][0, :][start_index:],
-                                 color=line_colour, linestyle=self.output_colours[scenario][0],
-                                 linewidth=line_width, label=t_k.capitalise_and_remove_underscore(scenario_name))
-
-                    # upper and lower confidence bounds
-                    for ci in [1, 2]:
-                        axes[o].plot(self.outputs[self.run_mode]['epi'][uncertainty_scenario]['times'][0][
-                                     start_index:],
-                                     self.uncertainty_centiles['epi'][uncertainty_scenario][output][ci, :][
-                                     start_index:],
-                                     color=line_colour, linestyle='--', linewidth=.5, label=None)
+                    # loop over median, upper and lower confidence bounds
+                    for ci in range(3):
+                        axes[o].plot(
+                            self.outputs[self.run_mode]['epi'][scenario]['times'][0][start_index:],
+                            self.uncertainty_centiles['epi'][scenario][output][ci, :][start_index:],
+                            color='k', label=None,
+                            linewidth=.7 if ci == 0 else .5,
+                            linestyle='-' if ci == 0 else '--')
+                        max_data = max(self.uncertainty_centiles['epi'][scenario][output][2, :][start_index:])
 
             # plot progressive model run outputs for uncertainty analyses
             elif purpose == 'progress':
 
-                # get relevant data according to whether intervention or baseline uncertainty is being run
-                if not self.run_mode == 'int_uncertainty':
-                    runs = len(self.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output])
-
                 # plot the runs
+                runs = self.inputs.n_samples if self.run_mode == 'int_uncertainty' \
+                    else len(self.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output])
                 for run in range(runs):
                     if run in self.accepted_indices or self.plot_rejected_runs or self.run_mode == 'int_uncertainty':
                         if run in self.accepted_indices:

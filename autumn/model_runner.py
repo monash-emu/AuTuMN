@@ -167,13 +167,13 @@ class ModelRunner:
         self.inputs.read_and_load_data()
         (self.scenarios, self.standard_rate_outputs, self.divide_population, self.epi_outputs_to_analyse, \
          self.outputs_unc, self.interventions_to_cost) \
-            = [[] for i in range(6)]
+            = [[] for _ in range(6)]
         (self.models, self.from_labels, self.to_labels, self.multipliers, self.uncertainty_percentiles) \
-            = [{} for i in range(5)]
+            = [{} for _ in range(5)]
         (self.is_last_run_success, self.is_adjust_population) \
-            = [False for i in range(2)]
+            = [False for _ in range(2)]
         (self.n_centiles_for_shading, self.plot_count) \
-            = [0 for i in range(2)]
+            = [0 for _ in range(2)]
         for attribute in ['scenarios', 'interventions_to_cost', 'is_adjust_population', 'n_centiles_for_shading']:
             setattr(self, attribute, getattr(self.inputs, attribute))
         self.outputs = {'epi_uncertainty': {}}

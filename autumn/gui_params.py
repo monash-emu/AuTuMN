@@ -118,7 +118,8 @@ def get_autumn_params():
            'options': available_uncertainty_intervention}
     params['n_centiles_for_shading'] \
         = {'type': 'integer',
-           'value': 100}
+           'value': 100,
+           'min': 5}
     params['n_samples'] \
         = {'type': 'integer',
            'value': 20}

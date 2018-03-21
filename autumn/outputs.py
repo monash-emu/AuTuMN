@@ -1680,6 +1680,8 @@ class Project:
 
                 # plot with uncertainty confidence intervals
                 start_index = 0 if self.run_mode == 'int_uncertainty' else self.find_start_index(0)
+                max_data_values[output].append(
+                    max(self.uncertainty_centiles['epi'][uncertainty_scenario][output][-5, :][start_index:]))
 
                 # plot shaded areas as patches
                 for i in range(self.model_runner.n_centiles_for_shading):

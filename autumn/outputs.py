@@ -1628,8 +1628,8 @@ class Project:
         # other basic prelims
         fig, axes, n_rows, n_cols = self.initialise_figures_axes(len(outputs))
         start_index, max_data_values = 0, {}
-        uncertainty_scenario, scenarios, self.start_time_index = (15, [0, 15], 0) \
-            if self.run_mode == 'int_uncertainty' else (0, self.scenarios[::-1], self.start_time_index)
+        scenarios, uncertainty_scenario, self.start_time_index = ([0, 15], 15, 0) \
+            if self.run_mode == 'int_uncertainty' else (self.scenarios[::-1], 0, self.start_time_index)
 
         # loop through output indicators
         for o, output in enumerate(outputs):
@@ -1682,13 +1682,14 @@ class Project:
                 start_index = 0 if self.run_mode == 'int_uncertainty' else self.find_start_index(0)
 
                 # plot shaded areas as patches
-                patch_colours = [cm.Blues(x) for x in numpy.linspace(0., 1., self.model_runner.n_centiles_for_shading)]
                 for i in range(self.model_runner.n_centiles_for_shading):
+                    prop_progress = float(i) / float(self.model_runner.n_centiles_for_shading - 1)
+                    patch_colour = (1. - prop_progress, 1. - prop_progress, 1 - prop_progress * .2)
                     patch = create_patch_from_list(
                         self.outputs[self.run_mode]['epi'][uncertainty_scenario]['times'][0, start_index:],
                         self.uncertainty_centiles['epi'][uncertainty_scenario][output][i + 3, :][start_index:],
                         self.uncertainty_centiles['epi'][uncertainty_scenario][output][-i - 1, :][start_index:])
-                    axes[o].add_patch(patches.Polygon(patch, color=patch_colours[i]))
+                    axes[o].add_patch(patches.Polygon(patch, color=patch_colour))
 
             # plot scenarios without uncertainty
             if purpose == 'scenario' or self.run_mode == 'int_uncertainty':

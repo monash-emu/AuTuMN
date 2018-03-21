@@ -1627,10 +1627,9 @@ class Project:
 
         # other basic prelims
         fig, axes, n_rows, n_cols = self.initialise_figures_axes(len(outputs))
-        start_index, line_colour, max_data_values = 0, 'r', {}
-        uncertainty_scenario, scenarios, line_width, self.accepted_indices, self.start_time_index \
-            = (15, [0, 15], 1., [], 0) if self.run_mode == 'int_uncertainty' \
-            else (0, self.scenarios[::-1], 1.5, self.accepted_indices, self.start_time_index)
+        start_index, max_data_values = 0, {}
+        uncertainty_scenario, scenarios, self.start_time_index = (15, [0, 15], 0) \
+            if self.run_mode == 'int_uncertainty' else (0, self.scenarios[::-1], self.start_time_index)
 
         # loop through output indicators
         for o, output in enumerate(outputs):

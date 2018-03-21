@@ -5,14 +5,12 @@ from docx import Document
 from matplotlib import pyplot, patches, style
 from matplotlib.ticker import FuncFormatter
 import numpy
-import pylab
 import platform
 import os
 import warnings
 import economics
 import pandas
 import copy
-import model_runner
 import scipy
 
 
@@ -715,8 +713,8 @@ def add_title_to_plot(fig, n_panels, content):
         content: Unprocessed string to determine text for the title
     """
 
-    title_height = {1: .92, 2: .98}
-    title_font_size = {1: 14, 2: 11}
+    title_height = {1: .92, 2: .98, 4: .96}
+    title_font_size = {1: 14, 2: 11, 4: 10}
     fig.suptitle(t_k.find_title_from_dictionary(content), y=title_height[n_panels],
                  fontsize=title_font_size[n_panels])
 
@@ -1641,49 +1639,39 @@ class Project:
                     axes[o], output, start_time, self.gtb_indices[output] if output in self.gtb_indices else '',
                     compare_gtb=False, gtb_ci_plot='hatch' if purpose == 'shaded' else 'patch'))
 
-            # plot with uncertainty confidence intervals
+            # plot with uncertainty confidence intervals (median, lower, upper)
             if purpose == 'ci':
                 for scenario in scenarios:
                     start_index = 0 if self.run_mode == 'int_uncertainty' else self.find_start_index(scenario)
-
-                    # loop over median, upper and lower confidence bounds
+                    max_data_values[output].append(
+                        max(self.uncertainty_centiles['epi'][scenario][output][2, :][start_index:]))
                     for ci in range(3):
                         axes[o].plot(
                             self.outputs[self.run_mode]['epi'][scenario]['times'][0][start_index:],
                             self.uncertainty_centiles['epi'][scenario][output][ci, :][start_index:],
-                            color='k', label=None,
-                            linewidth=.7 if ci == 0 else .5,
-                            linestyle='-' if ci == 0 else '--')
-                        max_data_values[output].append(
-                            max(self.uncertainty_centiles['epi'][scenario][output][2, :][start_index:]))
+                            color='k', label=None, linewidth=.7 if ci == 0 else .5, linestyle='-' if ci == 0 else '--')
 
             # plot progressive model run outputs for uncertainty analyses
             elif purpose == 'progress':
-
-                # plot the runs
-                runs = self.inputs.n_samples if self.run_mode == 'int_uncertainty' \
+                runs_to_loop = self.inputs.n_samples if self.run_mode == 'int_uncertainty' \
                     else len(self.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output])
-                for run in range(runs):
+                for run in range(runs_to_loop):
                     if run in self.accepted_indices or self.plot_rejected_runs or self.run_mode == 'int_uncertainty':
-                        line_style = '.' if self.run_mode == 'epi_uncertainty' and run not in self.accepted_indices \
-                            else '-'
+                        dotted = '.' if self.run_mode == 'epi_uncertainty' and run not in self.accepted_indices else '-'
                         colour = str(1. - float(run) / float(len(
                             self.outputs[self.run_mode]['epi'][uncertainty_scenario][output]))) \
                             if self.run_mode == 'epi_uncertainty' else '.4'
                         plot_data = self.outputs[self.run_mode]['epi'][uncertainty_scenario][
-                                                               output][run, self.start_time_index:]
+                                        output][run, self.start_time_index:]
                         max_data_values[output].append(max(plot_data))
                         axes[o].plot(self.outputs[self.run_mode]['epi'][uncertainty_scenario]['times'][run,
-                                     self.start_time_index:], plot_data, color=colour, linestyle=line_style)
+                                     self.start_time_index:], plot_data, color=colour, linestyle=dotted)
 
+            # plot with shaded patches
             elif purpose == 'shaded':
-
-                # plot with uncertainty confidence intervals
                 start_index = 0 if self.run_mode == 'int_uncertainty' else self.find_start_index(0)
                 max_data_values[output].append(
                     max(self.uncertainty_centiles['epi'][uncertainty_scenario][output][-5, :][start_index:]))
-
-                # plot shaded areas as patches
                 for i in range(self.model_runner.n_centiles_for_shading):
                     prop_progress = float(i) / float(self.model_runner.n_centiles_for_shading - 1)
                     patch_colour = (1. - prop_progress, 1. - prop_progress, 1 - prop_progress * .2)
@@ -1695,13 +1683,9 @@ class Project:
 
             # plot scenarios without uncertainty
             if purpose == 'scenario' or self.run_mode == 'int_uncertainty':
-
-                # plot model estimates
                 scenarios = [0] if self.run_mode == 'int_uncertainty' else scenarios
                 for scenario in scenarios:
                     start_index = self.find_start_index(scenario)
-
-                    # work out colour depending on whether purpose is scenario analysis or incrementing comorbidities
                     colour = (1. - self.inputs.comorbidity_prevalences[scenario] * .2,
                               1. - self.inputs.comorbidity_prevalences[scenario],
                               1. - self.inputs.comorbidity_prevalences[scenario]) \
@@ -1709,12 +1693,10 @@ class Project:
                     label = str(int(self.inputs.comorbidity_prevalences[scenario] * 1e2)) + '%' \
                         if self.run_mode == 'increment_comorbidity' \
                         else t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario))
-
-                    # plot
+                    max_data_values[output].append(max(self.outputs['manual']['epi'][scenario][output][start_index:]))
                     axes[o].plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
                                  self.outputs['manual']['epi'][scenario][output][start_index:],
                                  color=colour, linestyle=self.output_colours[scenario][0], linewidth=1.5, label=label)
-                    max_data_values[output].append(max(self.outputs['manual']['epi'][scenario][output][start_index:]))
 
             # # find limits to the axes
             # if self.run_mode == 'int_uncertainty' or len(scenarios) > 1:
@@ -1733,8 +1715,7 @@ class Project:
             #                        and not self.run_mode == 'int_uncertainty'),
             #                y_axis_type='raw', y_label=yaxis_label[o], y_absolute_limit=y_absolute_limit)
 
-        # fig.suptitle(t_k.capitalise_first_letter(self.country) + ' model outputs', fontsize=self.suptitle_size)
-        self.save_figure(fig, '_gtb_' + purpose)
+        self.finish_off_figure(fig, len(outputs), '_gtb_' + purpose, 'Main epidemiological outputs')
 
     def plot_gtb_data_to_axis(self, ax, output, start_time, output_index, compare_gtb=False, gtb_ci_plot='hatch'):
         """
@@ -1864,7 +1845,6 @@ class Project:
                 self.tidy_y_axis(axes[n_axis], var, n_rows, left_axis=n_axis % n_cols == 0,
                                  max_value=float(max([max_var, max_data])))
 
-            # finish off figure
             self.finish_off_figure(fig, n_panels, '_' + var, var)
 
     def plot_scaleup_var_to_axis(self, axis, time_limits, var):

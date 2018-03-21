@@ -2,7 +2,7 @@
 import openpyxl as xl
 import tool_kit as t_k
 from docx import Document
-from matplotlib import pyplot, patches, style, cm
+from matplotlib import pyplot, patches, style
 from matplotlib.ticker import FuncFormatter
 import numpy
 import pylab
@@ -1702,19 +1702,19 @@ class Project:
                     start_index = self.find_start_index(scenario)
 
                     # work out colour depending on whether purpose is scenario analysis or incrementing comorbidities
-                    colour = self.output_colours[scenario][1]
-                    if self.run_mode == 'increment_comorbidity' and scenario:
-                        colour = cm.Reds(.2 + .8 * self.inputs.comorbidity_prevalences[scenario])
-                        label = str(int(self.inputs.comorbidity_prevalences[scenario] * 1e2)) + '%'
-                    elif self.run_mode == 'increment_comorbidity' and scenario:
-                        colour, label = 'k', 'Baseline'
-                    else:
-                        label = t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario))
+                    colour = (1. - self.inputs.comorbidity_prevalences[scenario] * .2,
+                              1. - self.inputs.comorbidity_prevalences[scenario],
+                              1. - self.inputs.comorbidity_prevalences[scenario]) \
+                        if self.run_mode == 'increment_comorbidity' else self.colour_theme[scenario]
+                    label = str(int(self.inputs.comorbidity_prevalences[scenario] * 1e2)) + '%' \
+                        if self.run_mode == 'increment_comorbidity' \
+                        else t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario))
 
                     # plot
                     axes[o].plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
                                  self.outputs['manual']['epi'][scenario][output][start_index:],
                                  color=colour, linestyle=self.output_colours[scenario][0], linewidth=1.5, label=label)
+                    max_data_values[output].append(max(self.outputs['manual']['epi'][scenario][output][start_index:]))
 
             # # find limits to the axes
             # if self.run_mode == 'int_uncertainty' or len(scenarios) > 1:

@@ -803,7 +803,7 @@ class Project:
         self.vars_to_view = ['riskgroup_prop_diabetes']
 
         # comes up so often that we need to find this index, that easiest to do in instantiation
-        self.start_time_index = self.find_time_index(self.inputs.model_constants['plot_start_time'], 0)
+        self.start_time_index = self.find_start_time_index(self.inputs.model_constants['plot_start_time'], 0)
 
         # standard graphing themes
         self.tick_length = 5
@@ -913,15 +913,15 @@ class Project:
             Index that can be used to find starting point in epidemiological output lists
         """
 
-        index = 0 if scenario else self.start_time_index
-        return index
+        return 0 if scenario else self.start_time_index
 
-    def find_time_index(self, time, scenario):
-        """
-        Still thinking about this method and whether it is worthwhile.
+    def find_start_time_index(self, time, scenario, analysis='epi'):
         """
 
-        return t_k.find_first_list_element_at_least_value(self.outputs['manual']['epi'][scenario]['times'], time)
+        """
+
+        return 0 if scenario or self.run_mode == 'int_uncertainty' \
+            else t_k.find_first_list_element_at_least_value(self.outputs['manual'][analysis][scenario]['times'], time)
 
     def initialise_figures_axes(self, n_panels, room_for_legend=False):
         """
@@ -1618,16 +1618,14 @@ class Project:
             purpose: Reason for plotting or type of plot, can be either 'scenario', 'ci_plot' or 'progress'
         """
 
-        # adapt limit of horizontal axis depending on whether intervention outcomes are the focus
+        # prelims
+        fig, axes, n_rows, n_cols = self.initialise_figures_axes(len(outputs))
         start_time = self.inputs.model_constants['before_intervention_time'] \
             if self.run_mode == 'int_uncertainty' or (len(self.scenarios) > 1 and purpose == 'scenario') \
             else self.inputs.model_constants['plot_start_time']
-
-        # other basic prelims
-        fig, axes, n_rows, n_cols = self.initialise_figures_axes(len(outputs))
         start_index, max_data_values = 0, {}
-        scenarios, uncertainty_scenario, self.start_time_index = ([0, 15], 15, 0) \
-            if self.run_mode == 'int_uncertainty' else (self.scenarios[::-1], 0, self.start_time_index)
+        scenarios, uncertainty_scenario = ([0, 15], 15) if self.run_mode == 'int_uncertainty' \
+            else (self.scenarios[::-1], 0)
 
         # loop through output indicators
         for o, output in enumerate(outputs):
@@ -1642,7 +1640,7 @@ class Project:
             # plot with uncertainty confidence intervals (median, lower, upper)
             if purpose == 'ci':
                 for scenario in scenarios:
-                    start_index = 0 if self.run_mode == 'int_uncertainty' else self.find_start_index(scenario)
+                    start_index = self.find_start_time_index(start_time, scenario)
                     max_data_values[output].append(
                         max(self.uncertainty_centiles['epi'][scenario][output][2, :][start_index:]))
                     for ci in range(3):
@@ -1657,19 +1655,23 @@ class Project:
                     else len(self.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output])
                 for run in range(runs_to_loop):
                     if run in self.accepted_indices or self.plot_rejected_runs or self.run_mode == 'int_uncertainty':
+                        start_index = self.find_start_time_index(start_time, 0)
                         dotted = '.' if self.run_mode == 'epi_uncertainty' and run not in self.accepted_indices else '-'
                         colour = str(1. - float(run) / float(len(
                             self.outputs[self.run_mode]['epi'][uncertainty_scenario][output]))) \
                             if self.run_mode == 'epi_uncertainty' else '.4'
-                        plot_data = self.outputs[self.run_mode]['epi'][uncertainty_scenario][
-                                        output][run, self.start_time_index:]
+                        plot_data = self.outputs[self.run_mode]['epi'][uncertainty_scenario][output][run, start_index:]
                         max_data_values[output].append(max(plot_data))
                         axes[o].plot(self.outputs[self.run_mode]['epi'][uncertainty_scenario]['times'][run,
-                                     self.start_time_index:], plot_data, color=colour, linestyle=dotted)
+                                     start_index:], plot_data, color=colour, linestyle=dotted)
 
             # plot with shaded patches
             elif purpose == 'shaded':
-                start_index = 0 if self.run_mode == 'int_uncertainty' else self.find_start_index(0)
+                axes[o].patch.set_facecolor((1., 1., 1.))
+                for side in ['top', 'bottom', 'left', 'right']:
+                    axes[o].spines[side].set_color('.6')
+                axes[o].grid(color='.8')
+                start_index = self.find_start_time_index(start_time, 0)
                 max_data_values[output].append(
                     max(self.uncertainty_centiles['epi'][uncertainty_scenario][output][-5, :][start_index:]))
                 for i in range(self.model_runner.n_centiles_for_shading):
@@ -1685,7 +1687,7 @@ class Project:
             if purpose == 'scenario' or self.run_mode == 'int_uncertainty':
                 scenarios = [0] if self.run_mode == 'int_uncertainty' else scenarios
                 for scenario in scenarios:
-                    start_index = self.find_start_index(scenario)
+                    start_index = self.find_start_time_index(start_time, scenario)
                     colour = (1. - self.inputs.comorbidity_prevalences[scenario] * .2,
                               1. - self.inputs.comorbidity_prevalences[scenario],
                               1. - self.inputs.comorbidity_prevalences[scenario]) \
@@ -1867,7 +1869,7 @@ class Project:
 
             # otherwise if a different type of var, such as additional calculated ones
             else:
-                start_time_index = self.find_time_index(time_limits[scenario], scenario)
+                start_time_index = self.find_start_time_index(time_limits[0], scenario)
                 x_vals = self.model_runner.models[scenario].times[start_time_index:]
                 y_vals = self.model_runner.models[scenario].get_var_soln(var)[start_time_index:]
 

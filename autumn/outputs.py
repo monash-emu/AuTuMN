@@ -1020,6 +1020,10 @@ class Project:
         elif 'prop_' in quantity:
             axis.yaxis.set_major_formatter(FuncFormatter('{0:.0%}'.format))
 
+    def add_legend_to_plot(self, axis, n_cols):
+
+        axis.legend(fontsize=self.y_font_sizes[n_cols])
+
     def tidy_axis(self, ax, subplot_grid, title='', start_time=0., legend=False, x_label='', y_label='',
                   x_axis_type='time', y_axis_type='scaled', x_sig_figs=0, y_sig_figs=0,
                   end_time=None, y_relative_limit=0.95, y_absolute_limit=None):
@@ -1632,7 +1636,7 @@ class Project:
             else self.gui_inputs['plot_option_start_time']
         start_index, max_data_values = 0, {}
         scenarios, uncertainty_scenario = ([0, 15], 15) if self.run_mode == 'int_uncertainty' \
-            else (self.scenarios[::-1], 0)
+            else (self.scenarios, 0)
 
         # loop through output indicators
         for o, output in enumerate(outputs):
@@ -1705,11 +1709,14 @@ class Project:
                     max_data_values[output].append(max(self.outputs['manual']['epi'][scenario][output][start_index:]))
                     axes[o].plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
                                  self.outputs['manual']['epi'][scenario][output][start_index:],
-                                 color=colour, linestyle=self.output_colours[scenario][0], linewidth=1.5, label=label)
+                                 color=colour, linestyle=self.output_colours[scenario][0], linewidth=1.5, label=label,
+                                 zorder=1 if scenario else 4)
 
             # finishing off axis and figure
             self.tidy_x_axis(axes[o], start_time, 2035., n_cols)
             self.tidy_y_axis(axes[o], output, n_rows, max_value=max(max_data_values[output]))
+            if o == len(outputs) - 1 and purpose == 'scenario' and len(self.scenarios) > 1:
+                self.add_legend_to_plot(axes[o], n_cols)
         self.finish_off_figure(fig, len(outputs), '_gtb_' + purpose,
                                'Main epidemiological outputs, ' + t_k.capitalise_first_letter(self.country))
 

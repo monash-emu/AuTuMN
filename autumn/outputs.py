@@ -917,11 +917,18 @@ class Project:
 
     def find_start_time_index(self, time, scenario, analysis='epi'):
         """
-
+        There are various messy legacy approaches to this, but now trying to reconcile all these approaches to finding
+        the starting index for plotting into one method.
         """
 
-        return 0 if scenario or self.run_mode == 'int_uncertainty' \
-            else t_k.find_first_list_element_at_least_value(self.outputs['manual'][analysis][scenario]['times'], time)
+        if (self.run_mode == 'scenario' and scenario) or self.run_mode == 'int_uncertainty':
+            return 0
+        elif self.run_mode == 'epi_uncertainty':
+            return t_k.find_first_list_element_at_least_value(
+                list(self.outputs[self.run_mode][analysis][scenario]['times'][0, :]), time)
+        else:
+            return t_k. find_first_list_element_at_least_value(
+                self.outputs['manual']['epi'][scenario]['times'], time)
 
     def initialise_figures_axes(self, n_panels, room_for_legend=False):
         """
@@ -1622,7 +1629,7 @@ class Project:
         fig, axes, n_rows, n_cols = self.initialise_figures_axes(len(outputs))
         start_time = self.inputs.model_constants['before_intervention_time'] \
             if self.run_mode == 'int_uncertainty' or (len(self.scenarios) > 1 and purpose == 'scenario') \
-            else self.inputs.model_constants['plot_start_time']
+            else self.gui_inputs['plot_option_start_time']
         start_index, max_data_values = 0, {}
         scenarios, uncertainty_scenario = ([0, 15], 15) if self.run_mode == 'int_uncertainty' \
             else (self.scenarios[::-1], 0)
@@ -1700,24 +1707,11 @@ class Project:
                                  self.outputs['manual']['epi'][scenario][output][start_index:],
                                  color=colour, linestyle=self.output_colours[scenario][0], linewidth=1.5, label=label)
 
-            # # find limits to the axes
-            # if self.run_mode == 'int_uncertainty' or len(scenarios) > 1:
-            #     y_absolute_limit = -1.e15  # an absurd negative value to start from
-            #     plot_start_time_index = t_k.find_first_list_element_at_least_value(
-            #         self.model_runner.outputs['manual']['epi'][0]['times'], start_time)
-            #     for scenario in self.model_runner.outputs['manual']['epi'].keys():
-            #         relevant_start_index = plot_start_time_index if scenario == 0 else 0
-            #         y_absolute_limit_scenario \
-            #             = max(self.model_runner.outputs['manual']['epi'][scenario][output][relevant_start_index:])
-            #         if y_absolute_limit_scenario > y_absolute_limit: y_absolute_limit = y_absolute_limit_scenario
-            #     y_absolute_limit *= 1.02  # to allow for some space between curves and top border of the box
-            #
-            # self.tidy_axis(ax, subplot_grid, title=title[o], start_time=start_time,
-            #                legend=(o == len(outputs) - 1 and len(scenarios) > 1
-            #                        and not self.run_mode == 'int_uncertainty'),
-            #                y_axis_type='raw', y_label=yaxis_label[o], y_absolute_limit=y_absolute_limit)
-
-        self.finish_off_figure(fig, len(outputs), '_gtb_' + purpose, 'Main epidemiological outputs')
+            # finishing off axis and figure
+            self.tidy_x_axis(axes[o], start_time, 2035., n_cols)
+            self.tidy_y_axis(axes[o], output, n_rows, max_value=max(max_data_values[output]))
+        self.finish_off_figure(fig, len(outputs), '_gtb_' + purpose,
+                               'Main epidemiological outputs, ' + t_k.capitalise_first_letter(self.country))
 
     def plot_gtb_data_to_axis(self, ax, output, start_time, output_index, compare_gtb=False, gtb_ci_plot='hatch'):
         """

@@ -125,7 +125,7 @@ def get_autumn_params():
            'value': 20}
     params['plot_option_start_time'] \
         = {'type': 'double',
-           'value': 1980.}
+           'value': 1990.}
     params['plot_option_end_time'] \
         = {'type': 'double',
            'value': 2020.}

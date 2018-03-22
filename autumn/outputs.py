@@ -1715,6 +1715,7 @@ class Project:
             # finishing off axis and figure
             self.tidy_x_axis(axes[o], start_time, 2035., n_cols)
             self.tidy_y_axis(axes[o], output, n_rows, max_value=max(max_data_values[output]))
+            axes[o].set_title(t_k.capitalise_first_letter(output), fontsize=self.y_font_sizes[n_rows])
             if o == len(outputs) - 1 and purpose == 'scenario' and len(self.scenarios) > 1:
                 self.add_legend_to_plot(axes[o], n_cols)
         self.finish_off_figure(fig, len(outputs), '_gtb_' + purpose,

@@ -593,10 +593,6 @@ class ModelRunner:
             if compartment_type in self.inputs.model_constants:
                 self.outputs['epi_uncertainty']['all_compartment_values'][compartment_type] = []
 
-        # instantiate model objects
-        for scenario in self.scenarios:
-            self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
-
         # find values of mu and sd for the likelihood calculation. Process uncertainty weights in the same loop.
         years_to_compare = range(2010, 2017)
         mu_values, sd_values, mean_sd_value, weights = {}, {}, {}, {}
@@ -617,6 +613,9 @@ class ModelRunner:
 
         # start main uncertainty loop
         while n_accepted < self.gui_inputs['uncertainty_runs']:
+            # instantiate model objects
+            for scenario in self.scenarios:
+                self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
 
             # set timer
             start_timer_run = datetime.datetime.now()

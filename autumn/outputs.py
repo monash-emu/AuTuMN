@@ -1646,7 +1646,7 @@ class Project:
             if self.gui_inputs['plot_option_overlay_gtb']:
                 max_data_values[output].append(self.plot_gtb_data_to_axis(
                     axes[o], output, start_time, self.gtb_indices[output] if output in self.gtb_indices else '',
-                    compare_gtb=False, gtb_ci_plot='hatch' if purpose == 'shaded' else 'patch'))
+                    gtb_ci_plot='hatch' if purpose == 'shaded' else 'patch'))
 
             # plot with uncertainty confidence intervals (median, lower, upper)
             if purpose == 'ci':
@@ -1712,6 +1712,9 @@ class Project:
                                  color=colour, linestyle=self.output_colours[scenario][0], linewidth=1.5, label=label,
                                  zorder=1 if scenario else 4)
 
+            # add plotting of End TB Targets
+            self.plot_targets_to_axis(axes[o], output)
+
             # finishing off axis and figure
             self.tidy_x_axis(axes[o], start_time, 2035., n_cols)
             self.tidy_y_axis(axes[o], output, n_rows, max_value=max(max_data_values[output]))
@@ -1721,7 +1724,36 @@ class Project:
         self.finish_off_figure(fig, len(outputs), '_gtb_' + purpose,
                                'Main epidemiological outputs, ' + t_k.capitalise_first_letter(self.country))
 
-    def plot_gtb_data_to_axis(self, ax, output, start_time, output_index, compare_gtb=False, gtb_ci_plot='hatch'):
+    def plot_targets_to_axis(self, axis, output, compare_gtb=False):
+        """
+        Plot End TB Target values to outputs axis.
+
+        Args:
+            axis: Plot axis to plot on to
+            output: Output type
+            compare_gtb: Whether to compare against reported (True) or modelled (False) outputs
+        """
+
+        uncertainty_scenario = 15 if self.run_mode == 'int_uncertainty' else 0
+
+        # find the baseline value to compare the targets against
+        if compare_gtb:
+            base_value = self.inputs.original_data['notifications']['c_newinc'][2016] \
+                if output == 'notifications' else self.inputs.original_data['gtb'][
+                self.gtb_indices[output] + self.level_conversion_dict['point_estimate']][2016]
+        elif self.run_mode == 'epi_uncertainty':
+            base_value = self.uncertainty_centiles['epi'][0][output][0, t_k.find_first_list_element_at_least_value(
+                self.outputs['epi_uncertainty']['epi'][uncertainty_scenario]['times'][0], 2015.)]
+        else:
+            base_value = self.outputs['manual']['epi'][uncertainty_scenario][output][
+                t_k.find_first_list_element_at_least_value(
+                    self.outputs['manual']['epi'][uncertainty_scenario]['times'], 2015.)]
+
+        # plot the milestones and targets
+        if self.gui_inputs['plot_option_overlay_targets'] and (output == 'incidence' or output == 'mortality'):
+            plot_endtb_targets(axis, output, base_value, '.7')
+
+    def plot_gtb_data_to_axis(self, ax, output, start_time, output_index, gtb_ci_plot='hatch'):
         """
         Method to plot the data loaded directly from the GTB report in the background.
 
@@ -1730,7 +1762,6 @@ class Project:
             output: String for output
             start_time: Starting time for plot axis
             output_index: String to index the GTB data
-            compare_gtb: Whether to plot the targets/milestones relative to GTB data rather than modelled outputs
             gtb_ci_plot: How to display the confidence intervals of the GTB data
         Returns:
             The maximum value from the point estimate data being plotted
@@ -1738,7 +1769,6 @@ class Project:
 
         # prelims
         gtb_data, gtb_data_lists, gtb_index, colour, line_width, alpha = {}, {}, 0, '.2', 0., 1.
-        uncertainty_scenario = 15 if self.run_mode == 'int_uncertainty' else 0
 
         # notifications
         if output == 'notifications':
@@ -1769,22 +1799,6 @@ class Project:
                 for limit in ['lower_limit', 'upper_limit']:
                     ax.plot(gtb_data[limit].keys()[gtb_index:], gtb_data[limit].values()[gtb_index:],
                             color=colour, linewidth=line_width, label=None, alpha=alpha)
-
-            # find the baseline value to compare the targets against
-            if compare_gtb:
-                base_value = gtb_data['point_estimate'][2016]
-            elif self.run_mode == 'epi_uncertainty':
-                base_value = self.uncertainty_centiles['epi'][uncertainty_scenario][output][0, :][
-                    t_k.find_first_list_element_at_least_value(
-                        self.outputs['manual']['epi'][uncertainty_scenario]['times'], 2015.)]
-            else:
-                base_value = self.outputs['manual']['epi'][uncertainty_scenario][output][
-                    t_k.find_first_list_element_at_least_value(
-                        self.outputs['manual']['epi'][uncertainty_scenario]['times'], 2015.)]
-
-            # plot the milestones and targets
-            if self.gui_inputs['plot_option_overlay_targets'] and (output == 'incidence' or output == 'mortality'):
-                plot_endtb_targets(ax, output, base_value, '.7')
 
         return max(gtb_data['point_estimate'].values())
 

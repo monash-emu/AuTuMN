@@ -1643,7 +1643,7 @@ class Project:
             max_data_values[output] = []
 
             # overlay GTB data
-            if self.gui_inputs['plot_option_overlay_gtb']:
+            if self.gui_inputs['plot_option_overlay_gtb'] and output in self.gtb_available_outputs:
                 max_data_values[output].append(self.plot_gtb_data_to_axis(
                     axes[o], output, start_time, self.gtb_indices[output] if output in self.gtb_indices else '',
                     gtb_ci_plot='hatch' if purpose == 'shaded' else 'patch'))
@@ -1713,7 +1713,8 @@ class Project:
                                  zorder=1 if scenario else 4)
 
             # add plotting of End TB Targets
-            self.plot_targets_to_axis(axes[o], output)
+            if self.gui_inputs['plot_option_overlay_targets'] and (output == 'incidence' or output == 'mortality'):
+                self.plot_targets_to_axis(axes[o], output)
 
             # finishing off axis and figure
             self.tidy_x_axis(axes[o], start_time, 2035., n_cols)
@@ -1750,8 +1751,7 @@ class Project:
                     self.outputs['manual']['epi'][uncertainty_scenario]['times'], 2015.)]
 
         # plot the milestones and targets
-        if self.gui_inputs['plot_option_overlay_targets'] and (output == 'incidence' or output == 'mortality'):
-            plot_endtb_targets(axis, output, base_value, '.7')
+        plot_endtb_targets(axis, output, base_value, '.7')
 
     def plot_gtb_data_to_axis(self, ax, output, start_time, output_index, gtb_ci_plot='hatch'):
         """
@@ -1777,7 +1777,7 @@ class Project:
             gtb_index = t_k.find_first_list_element_at_least_value(gtb_data_lists['times'], start_time)
 
         # extract data other outputs
-        elif output in self.gtb_available_outputs:
+        else:
             for level in self.level_conversion_dict:
                 gtb_data[level] = self.inputs.original_data['gtb'][output_index + self.level_conversion_dict[level]]
                 gtb_data_lists.update(extract_dict_to_list_key_ordering(gtb_data[level], level))
@@ -1792,13 +1792,12 @@ class Project:
                                          color=colour, hatch=hatch, fill=fill, linewidth=0., alpha=alpha, zorder=4))
 
         # plot point estimates
-        if output in self.gtb_available_outputs:
-            ax.plot(gtb_data['point_estimate'].keys()[gtb_index:], gtb_data['point_estimate'].values()[gtb_index:],
-                    color=colour, linewidth=.8, label=None, alpha=alpha)
-            if gtb_ci_plot == 'hatch' and output != 'notifications':
-                for limit in ['lower_limit', 'upper_limit']:
-                    ax.plot(gtb_data[limit].keys()[gtb_index:], gtb_data[limit].values()[gtb_index:],
-                            color=colour, linewidth=line_width, label=None, alpha=alpha)
+        ax.plot(gtb_data['point_estimate'].keys()[gtb_index:], gtb_data['point_estimate'].values()[gtb_index:],
+                color=colour, linewidth=.8, label=None, alpha=alpha)
+        if gtb_ci_plot == 'hatch' and output != 'notifications':
+            for limit in ['lower_limit', 'upper_limit']:
+                ax.plot(gtb_data[limit].keys()[gtb_index:], gtb_data[limit].values()[gtb_index:],
+                        color=colour, linewidth=line_width, label=None, alpha=alpha)
 
         return max(gtb_data['point_estimate'].values())
 

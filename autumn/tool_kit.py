@@ -763,7 +763,7 @@ def find_title_from_dictionary(working_string, forward=True, capital_first_lette
                 'output by scenario',
            'output_horizontally':
                 'write horizontally',
-           'output_gtb_plots':
+           'output_epi_plots':
                 'plot outcomes',
            'output_compartment_populations':
                 'plot compartment sizes',
@@ -836,7 +836,17 @@ def find_title_from_dictionary(working_string, forward=True, capital_first_lette
            'nonsuccess_new_death':
                'death among non-success outcomes, new cases',
            'nonsuccess_treated_death':
-               'death among non-success outcomes, previously treated'}
+               'death among non-success outcomes, previously treated',
+           'incidence_mdr':
+               'MDR-TB incidence',
+           'mortality_mdr':
+               'MDR-TB mortality',
+           'prevalence_mdr':
+               'MDR-TB prevalence',
+           'perc_incidence_mdr':
+               'MDR-TB percentage incidence',
+           'mdr-tb-related':
+               'MDR-TB-related'}
 
     list_of_code_strings = []
     list_of_interface_strings = []

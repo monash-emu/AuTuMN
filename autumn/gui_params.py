@@ -18,7 +18,7 @@ def get_autumn_params():
     # collate the boolean keys
     bool_keys \
         = ['output_flow_diagram', 'output_compartment_populations', 'output_riskgroup_fractions',
-           'output_age_fractions', 'output_by_subgroups', 'output_fractions', 'output_scaleups', 'output_gtb_plots',
+           'output_age_fractions', 'output_by_subgroups', 'output_fractions', 'output_scaleups', 'output_epi_plots',
            'output_plot_economics', 'output_plot_riskgroup_checks', 'output_param_plots', 'output_popsize_plot',
            'output_likelihood_plot', 'write_uncertainty_outcome_params', 'output_spreadsheets',
            'output_documents', 'output_by_scenario', 'output_horizontally', 'output_age_calculations',
@@ -153,8 +153,8 @@ def get_autumn_params():
         # 'output_param_plots',
         'is_shortcourse_improves_outcomes',
         # 'plot_option_plot_all_vars',
-        # 'is_amplification',
-        # 'is_misassignment',
+        'is_amplification',
+        'is_misassignment',
         # 'is_lowquality',
         # 'output_riskgroup_fractions',
         'is_vary_detection_by_organ',
@@ -168,7 +168,7 @@ def get_autumn_params():
         # 'output_scaleups',
         # 'output_by_subgroups',
         'riskgroup_ruralpoor',
-        'output_gtb_plots',
+        'output_epi_plots',
         # 'is_vary_force_infection_by_riskgroup',
         'riskgroup_diabetes',
         # 'riskgroup_hiv',
@@ -184,8 +184,8 @@ def get_autumn_params():
             params[param]['value'] = params[param]['options'][0]
     params['fitting_method']['value'] = params['fitting_method']['options'][-1]
     params['integration_method']['value'] = params['integration_method']['options'][1]
-    params['strains']['value'] = params['strains']['options'][0]
-    params['country']['value'] = 'Fiji'
+    params['strains']['value'] = params['strains']['options'][1]
+    params['country']['value'] = 'Bulgaria'
 
     ''' parameter groupings '''
 

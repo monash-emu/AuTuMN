@@ -713,8 +713,8 @@ def add_title_to_plot(fig, n_panels, content):
         content: Unprocessed string to determine text for the title
     """
 
-    title_height = {1: .92, 2: .98, 4: .96}
-    title_font_size = {1: 14, 2: 11, 4: 10}
+    title_height = {1: .92, 2: .98, 3: .96, 4: .96}
+    title_font_size = {1: 14, 2: 11, 3: 10, 4: 10}
     fig.suptitle(t_k.find_title_from_dictionary(content), y=title_height[n_panels],
                  fontsize=title_font_size[n_panels])
 
@@ -1555,13 +1555,15 @@ class Project:
                 # +1 is to avoid starting from black, which doesn't look as nice for programs as for baseline scenario
                 self.program_colours[scenario][program] = output_colours[p + 1]
 
-        # plot main outputs
-        if self.gui_inputs['output_gtb_plots']:
+        # plot epidemiological outputs
+        if self.gui_inputs['output_epi_plots']:
             purposes = ['scenario', 'ci', 'progress', 'shaded'] if '_uncertainty' in self.run_mode else ['scenario']
             for purpose in purposes:
-                self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose)
+                self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose, 'main')
             if self.inputs.n_strains > 1:
-                self.plot_resistant_strain_outputs(['incidence', 'mortality', 'prevalence', 'perc_incidence'])
+                mdr_indicators = [ind + '_mdr' for ind in self.gtb_available_outputs if ind != 'notifications']
+                mdr_indicators.append('perc_incidence_mdr')
+                self.plot_outputs_against_gtb(mdr_indicators, 'scenario', 'mdr-tb-related')
 
         # plot scale-up functions - currently only doing this for the baseline model run
         if self.gui_inputs['output_scaleups']:
@@ -1579,7 +1581,8 @@ class Project:
             # self.plot_cost_over_time_stacked_bars()
 
         # plot compartment population sizes
-        if self.gui_inputs['output_compartment_populations']: self.plot_populations()
+        if self.gui_inputs['output_compartment_populations']:
+            self.plot_populations()
 
         # plot fractions
         # if self.gui_inputs['output_fractions']: self.plot_fractions('strain')
@@ -1611,22 +1614,19 @@ class Project:
         if self.run_mode == 'epi_uncertainty' and self.gui_inputs['output_likelihood_plot']:
             self.plot_likelihoods()
 
-        # plot percentage of MDR for different uncertainty runs
-        if self.run_mode == 'epi_uncertainty' and self.inputs.n_strains > 1:
-            self.plot_perc_mdr_progress()
-
         # for debugging
         if self.inputs.n_strains > 1:
             self.plot_cases_by_division(['_asds', '_asmdr'],
                                         restriction_1='_mdr', restriction_2='treatment', exclusion_string='latent')
 
-    def plot_outputs_against_gtb(self, outputs, purpose):
+    def plot_outputs_against_gtb(self, outputs, purpose, descriptor):
         """
         Produces the plot for the main outputs, loops over multiple scenarios.
 
         Args:
             outputs: A list of the outputs to be plotted
             purpose: Reason for plotting or type of plot, can be either 'scenario', 'ci_plot' or 'progress'
+            descriptor: String for the filename and title of the plot
         """
 
         # prelims
@@ -1719,11 +1719,12 @@ class Project:
             # finishing off axis and figure
             self.tidy_x_axis(axes[o], start_time, 2035., n_cols)
             self.tidy_y_axis(axes[o], output, n_rows, max_value=max(max_data_values[output]))
-            axes[o].set_title(t_k.capitalise_first_letter(output), fontsize=self.y_font_sizes[n_rows])
+            axes[o].set_title(t_k.find_title_from_dictionary(output), fontsize=self.y_font_sizes[n_rows])
             if o == len(outputs) - 1 and purpose == 'scenario' and len(self.scenarios) > 1:
                 self.add_legend_to_plot(axes[o], n_cols)
-        self.finish_off_figure(fig, len(outputs), '_gtb_' + purpose,
-                               'Main epidemiological outputs, ' + t_k.capitalise_first_letter(self.country))
+        self.finish_off_figure(fig, len(outputs), '_' + descriptor + '_gtb_' + purpose,
+                               t_k.find_title_from_dictionary(descriptor) + ' epidemiological outputs, '
+                               + t_k.capitalise_first_letter(self.country))
 
     def plot_targets_to_axis(self, axis, output, compare_gtb=False):
         """
@@ -1800,37 +1801,6 @@ class Project:
                         color=colour, linewidth=line_width, label=None, alpha=alpha)
 
         return max(gtb_data['point_estimate'].values())
-
-    def plot_resistant_strain_outputs(self, outputs):
-        """
-        Plot outputs for MDR-TB. Will extend to all resistant strains as needed, which should be pretty easy.
-        Sparsely commented because largely shadows plot_outputs_against_gtb (without plotting the patch for the GTB
-        outputs).
-
-        Args:
-            outputs: The outputs to be plotted (after adding the strain name to the end).
-        """
-
-        # prelims
-        subplot_grid = find_subplot_numbers(len(outputs))
-        fig = self.set_and_update_figure()
-        colour, indices, yaxis_label, title, _ = find_standard_output_styles(outputs)
-
-        # cycle over each output and plot
-        for o, output in enumerate(outputs):
-            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], o + 1)
-            for scenario in self.scenarios[::-1]:
-                ax.plot(self.model_runner.outputs['manual']['epi'][scenario]['times'],
-                        self.model_runner.outputs['manual']['epi'][scenario][output + '_mdr'],
-                        color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0])
-            self.tidy_axis(ax, subplot_grid, title=title[o], y_label=yaxis_label[o],
-                           start_time=self.inputs.model_constants['recent_time'],
-                           legend=(o == len(outputs) - 1))
-
-        # finish off
-        fig.suptitle(t_k.capitalise_first_letter(self.country) + ' resistant strain outputs',
-                     fontsize=self.title_size)
-        self.save_figure(fig, '_resistant_strain')
 
     def plot_scaleup_vars(self):
         """
@@ -2604,41 +2574,6 @@ class Project:
         ax.set_xlabel('All runs', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         ax.set_ylabel('Likelihood', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         self.save_figure(fig, '_likelihoods')
-
-    def plot_perc_mdr_progress(self):
-        """
-        Plot the percentage of MDR-TB among incident TB cases over time, for the different accepted runs.
-        """
-
-        fig = self.set_and_update_figure()
-        ax = make_single_axis(fig)
-
-        # plot the target
-        ax.plot(self.inputs.model_constants['current_time'], self.inputs.model_constants['tb_perc_mdr_prevalence'],
-                marker='o', markersize=5, markeredgewidth=0., linewidth=0.)
-
-        # plot the runs
-        for run in range(len(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'])):
-            if run in self.accepted_indices or self.plot_rejected_runs:
-                if run in self.accepted_indices:
-                    linewidth, colour = 1.2, str(
-                        1. - float(run) / float(len(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'])))
-                elif self.run_mode == 'int_uncertainty':
-                    linewidth, colour = .8, '.4'
-                else:
-                    linewidth, colour = .2, 'y'
-                ax.plot(self.outputs['epi_uncertainty']['epi'][0]['times'][run,
-                        self.start_time_index:],
-                        self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'][run,
-                        self.start_time_index:],
-                        linewidth=linewidth, color=colour,
-                        label=t_k.capitalise_and_remove_underscore('baseline'))
-
-        # finishing up
-        fig.suptitle('Progression of MDR-TB proportion', fontsize=self.title_size)
-        ax.set_xlabel('', fontsize=get_nice_font_size([1, 1]), labelpad=1)
-        ax.set_ylabel('% of MDR-TB in TB incidence', fontsize=get_nice_font_size([1, 1]), labelpad=1)
-        self.save_figure(fig, '_perc_mdr_progress')
 
     def plot_cases_by_division(self, divisions, restriction_1='', restriction_2='',
                                exclusion_string='we all love futsal'):

@@ -806,11 +806,8 @@ class Project:
         self.start_time_index = self.find_start_time_index(self.inputs.model_constants['plot_start_time'], 0)
 
         # standard graphing themes
-        self.tick_length = 5
-        self.x_font_sizes \
-            = {1: 7,
-               2: 7}
-        self.y_font_sizes \
+        self.tick_length = 3
+        self.label_font_sizes \
             = {1: 7,
                2: 7}
         self.colour_theme \
@@ -940,6 +937,7 @@ class Project:
         Returns:
             fig: The figure object
             axes: A list containing each of the axes
+            max_dims: The number of rows or columns of sub-plots, whichever is greater
         """
 
         pyplot.style.use('ggplot')
@@ -957,7 +955,7 @@ class Project:
         else:
             for axis in range(n_panels):
                 axes.append(fig.add_subplot(n_rows, n_cols, axis + 1))
-        return fig, axes, n_rows, n_cols
+        return fig, axes, max([n_rows, n_cols]), n_cols
 
     def set_and_update_figure(self):
         """
@@ -970,7 +968,7 @@ class Project:
         self.figure_number += 1
         return fig
 
-    def tidy_x_axis(self, axis, start, end, n_cols):
+    def tidy_x_axis(self, axis, start, end, max_dim):
         """
         Function to tidy x-axis of a plot panel - currently only used in the scale-up vars, but intended to be written in
         such a way as to be extendable to other types of plotting.
@@ -979,7 +977,7 @@ class Project:
             axis: The plotting axis
             start: Lowest x-value being plotted
             end: Highest x-value being plotted
-            n_cols: Number of columns of subplots in figure
+            max_dim: Maximum number of rows or columns of subplots in figure
         """
 
         # range
@@ -989,16 +987,16 @@ class Project:
         if len(axis.get_xticks()) > 7:
             for label in axis.xaxis.get_ticklabels()[::2]:
                 label.set_visible(False)
-        axis.tick_params(axis='x', length=self.tick_length, pad=6, labelsize=self.x_font_sizes[n_cols])
+        axis.tick_params(axis='x', length=self.tick_length, pad=6, labelsize=self.label_font_sizes[max_dim])
 
-    def tidy_y_axis(self, axis, quantity, n_rows, left_axis=True, max_value=1e6, space_at_top=.1):
+    def tidy_y_axis(self, axis, quantity, max_dims, left_axis=True, max_value=1e6, space_at_top=.1):
         """
         General approach to tidying up the vertical axis of a plot, depends on whether it is the left-most panel.
 
         Args:
             axis: The axis itself
             quantity: The name of the quantity being plotted (which can be used to determine what sort of variable it is)
-            n_rows: The number of rows of subplots on the figure
+            max_dims: Maximum number of rows or columns of subplots on the figure
             left_axis: Boolean for whether the axis is the left-most panel
             max_value: The maximum value in the data being plotted
             space_at_top: Relative amount of space to leave at the top, above the maximum value of the plotted data
@@ -1012,7 +1010,7 @@ class Project:
             axis.set_ylim(top=max_value * (1. + space_at_top))
 
         # ticks
-        axis.tick_params(axis='y', length=self.tick_length, pad=6, labelsize=self.y_font_sizes[n_rows])
+        axis.tick_params(axis='y', length=self.tick_length, pad=6, labelsize=self.label_font_sizes[max_dims])
 
         # labels
         if not left_axis:
@@ -1020,9 +1018,9 @@ class Project:
         elif 'prop_' in quantity:
             axis.yaxis.set_major_formatter(FuncFormatter('{0:.0%}'.format))
 
-    def add_legend_to_plot(self, axis, n_cols):
+    def add_legend_to_plot(self, axis, max_dims):
 
-        axis.legend(fontsize=self.y_font_sizes[n_cols])
+        axis.legend(fontsize=self.label_font_sizes[max_dims])
 
     def tidy_axis(self, ax, subplot_grid, title='', start_time=0., legend=False, x_label='', y_label='',
                   x_axis_type='time', y_axis_type='scaled', x_sig_figs=0, y_sig_figs=0,
@@ -1546,15 +1544,15 @@ class Project:
         Master plotting method to call all the methods that produce specific plots.
         """
 
-        # plot epidemiological outputs
+        # plot epidemiological outputs, overall and MDR-TB
         if self.gui_inputs['output_epi_plots']:
             purposes = ['scenario', 'ci', 'progress', 'shaded'] if '_uncertainty' in self.run_mode else ['scenario']
             for purpose in purposes:
-                self.plot_outputs_against_gtb(self.gtb_available_outputs, purpose, 'main')
+                self.plot_epi_outputs(self.gtb_available_outputs, purpose, 'main')
             if self.inputs.n_strains > 1:
                 mdr_indicators = [ind + '_mdr' for ind in self.gtb_available_outputs if ind != 'notifications']
                 mdr_indicators.append('perc_incidence_mdr')
-                self.plot_outputs_against_gtb(mdr_indicators, 'scenario', 'mdr-tb-related')
+                self.plot_epi_outputs(mdr_indicators, 'scenario', 'mdr-tb-related')
 
         # plot scale-up functions
         if self.gui_inputs['output_scaleups']:
@@ -1594,10 +1592,12 @@ class Project:
             self.plot_proportion_cases_by_stratum()
 
         # plot proportions of population
-        if self.gui_inputs['output_age_fractions']: self.plot_stratified_populations(age_or_risk='age')
+        if self.gui_inputs['output_age_fractions']:
+            self.plot_stratified_populations(age_or_risk='age')
 
         # plot risk group proportions
-        if self.gui_inputs['output_riskgroup_fractions']: self.plot_stratified_populations(age_or_risk='risk')
+        if self.gui_inputs['output_riskgroup_fractions']:
+            self.plot_stratified_populations(age_or_risk='risk')
 
         # make a flow-diagram
         if self.gui_inputs['output_flow_diagram']:
@@ -1619,7 +1619,7 @@ class Project:
             self.plot_cases_by_division(['_asds', '_asmdr'],
                                         restriction_1='_mdr', restriction_2='treatment', exclusion_string='latent')
 
-    def plot_outputs_against_gtb(self, outputs, purpose, descriptor):
+    def plot_epi_outputs(self, outputs, purpose, descriptor):
         """
         Produces the plot for the main outputs, loops over multiple scenarios.
 
@@ -1630,7 +1630,7 @@ class Project:
         """
 
         # prelims
-        fig, axes, n_rows, n_cols = self.initialise_figures_axes(len(outputs))
+        fig, axes, max_dims, _ = self.initialise_figures_axes(len(outputs))
         start_time = self.inputs.model_constants['before_intervention_time'] \
             if self.run_mode == 'int_uncertainty' or (len(self.scenarios) > 1 and purpose == 'scenario') \
             else self.gui_inputs['plot_option_start_time']
@@ -1717,11 +1717,11 @@ class Project:
                 self.plot_targets_to_axis(axes[o], output)
 
             # finishing off axis and figure
-            self.tidy_x_axis(axes[o], start_time, 2035., n_cols)
-            self.tidy_y_axis(axes[o], output, n_rows, max_value=max(max_data_values[output]))
-            axes[o].set_title(t_k.find_title_from_dictionary(output), fontsize=self.y_font_sizes[n_rows])
+            self.tidy_x_axis(axes[o], start_time, 2035., max_dims)
+            self.tidy_y_axis(axes[o], output, max_dims, max_value=max(max_data_values[output]))
+            axes[o].set_title(t_k.find_title_from_dictionary(output), fontsize=self.label_font_sizes[max_dims])
             if o == len(outputs) - 1 and purpose == 'scenario' and len(self.scenarios) > 1:
-                self.add_legend_to_plot(axes[o], n_cols)
+                self.add_legend_to_plot(axes[o], max_dims)
         self.finish_off_figure(fig, len(outputs), '_' + descriptor + '_gtb_' + purpose,
                                t_k.find_title_from_dictionary(descriptor) + ' epidemiological outputs, '
                                + t_k.capitalise_first_letter(self.country))
@@ -1814,7 +1814,7 @@ class Project:
         if self.gui_inputs['plot_option_plot_all_vars']:
             vars_to_plot = t_k.combine_two_lists_no_duplicate(vars_to_plot, self.model_runner.models[0].vars)
         for var in vars_to_plot:
-            fig, axes, n_rows, n_cols = self.initialise_figures_axes(n_panels)
+            fig, axes, max_dims, n_cols = self.initialise_figures_axes(n_panels)
             for n_axis in range(n_panels):
 
                 # find time to plot from and x-values
@@ -1828,8 +1828,8 @@ class Project:
                 max_data = self.plot_scaleup_data_to_axis(axes[n_axis], [start_time, end_time], var)
 
                 # clean up axes
-                self.tidy_x_axis(axes[n_axis], start_time, end_time, n_cols)
-                self.tidy_y_axis(axes[n_axis], var, n_rows, left_axis=n_axis % n_cols == 0,
+                self.tidy_x_axis(axes[n_axis], start_time, end_time, max_dims)
+                self.tidy_y_axis(axes[n_axis], var, max_dims, left_axis=n_axis % n_cols == 0,
                                  max_value=float(max([max_var, max_data])))
 
             self.finish_off_figure(fig, n_panels, '_' + var, var)
@@ -2534,7 +2534,7 @@ class Project:
         ax.set_xticks([x + bar_width / 2. for x in x_positions])
         ax.tick_params(axis='x', length=0.)
         ax.set_xticklabels([t_k.find_title_from_dictionary(group) for group in self.inputs.riskgroups],
-                           fontsize=self.x_font_sizes[1])
+                           fontsize=self.label_font_sizes[1])
 
         # general approach fine for y-axis and legend
         self.tidy_y_axis(ax, 'prop_', n_plots, max_value=1., space_at_top=0.)

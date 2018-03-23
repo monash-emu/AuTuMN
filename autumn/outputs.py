@@ -739,19 +739,6 @@ def find_subplot_grid(n_plots):
     return n_rows, n_cols
 
 
-def add_legend_to_plot(axis, n_plots):
-    """
-    Not much here yet, but will intended to be extended.
-
-    Args:
-        axis: The axis to add a legend to
-        n_plots: The total number of plots on the figure
-    """
-
-    if n_plots == 1:
-        axis.legend(bbox_to_anchor=(1.3, 1), fontsize=8)
-
-
 class Project:
     def __init__(self, runner, gui_inputs):
         """
@@ -808,7 +795,7 @@ class Project:
         # standard graphing themes
         self.tick_length = 3
         self.label_font_sizes \
-            = {1: 7,
+            = {1: 8,
                2: 7}
         self.colour_theme \
             = {0: (0., 0., 0.),
@@ -1019,8 +1006,18 @@ class Project:
             axis.yaxis.set_major_formatter(FuncFormatter('{0:.0%}'.format))
 
     def add_legend_to_plot(self, axis, max_dims):
+        """
+        Add legend to plot, with font size determined by the maximum number of dimensions of subplot panels.
 
-        axis.legend(fontsize=self.label_font_sizes[max_dims])
+        Args:
+            axis: The axis to have the legend added
+            max_dims: The number of rows or columns of subplots, whichever is the greater
+        """
+
+        if max_dims == 1:
+            axis.legend(bbox_to_anchor=(1.3, 1), fontsize=self.label_font_sizes[max_dims])
+        else:
+            axis.legend(fontsize=self.label_font_sizes[max_dims])
 
     def tidy_axis(self, ax, subplot_grid, title='', start_time=0., legend=False, x_label='', y_label='',
                   x_axis_type='time', y_axis_type='scaled', x_sig_figs=0, y_sig_figs=0,
@@ -1544,6 +1541,10 @@ class Project:
         Master plotting method to call all the methods that produce specific plots.
         """
 
+        # plot mixing matrix if relevant
+        if self.inputs.is_vary_force_infection_by_riskgroup and len(self.inputs.riskgroups) > 1:
+            self.plot_mixing_matrix()
+
         # plot epidemiological outputs, overall and MDR-TB
         if self.gui_inputs['output_epi_plots']:
             purposes = ['scenario', 'ci', 'progress', 'shaded'] if '_uncertainty' in self.run_mode else ['scenario']
@@ -1557,10 +1558,6 @@ class Project:
         # plot scale-up functions
         if self.gui_inputs['output_scaleups']:
             self.plot_scaleup_vars()
-
-        # plot mixing matrix if relevant
-        if self.inputs.is_vary_force_infection_by_riskgroup and len(self.inputs.riskgroups) > 1:
-            self.plot_mixing_matrix()
 
         # find some general output colours
         output_colours = make_default_line_styles(5, True)
@@ -2516,8 +2513,7 @@ class Project:
         """
 
         # prelims
-        n_plots = 1
-        fig, axes, _, _ = self.initialise_figures_axes(n_plots, room_for_legend=True)
+        fig, axes, max_dims, _ = self.initialise_figures_axes(1, room_for_legend=True)
         last_data, bar_width, ax, x_positions = list(numpy.zeros(len(self.inputs.riskgroups))), .7, axes[0], []
 
         # plot bars
@@ -2537,11 +2533,11 @@ class Project:
                            fontsize=self.label_font_sizes[1])
 
         # general approach fine for y-axis and legend
-        self.tidy_y_axis(ax, 'prop_', n_plots, max_value=1., space_at_top=0.)
-        add_legend_to_plot(ax, n_plots)
+        self.tidy_y_axis(ax, 'prop_', max_dims, max_value=1., space_at_top=0.)
+        self.add_legend_to_plot(ax, max_dims)
 
         # finish off figure
-        self.finish_off_figure(fig, n_plots, '_mixing', 'Source of contacts by risk group')
+        self.finish_off_figure(fig, max_dims, '_mixing', 'Source of contacts by risk group')
 
     def plot_likelihoods(self):
         """

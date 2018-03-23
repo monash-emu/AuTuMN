@@ -91,8 +91,7 @@ def get_autumn_params():
            'Increment comorbidity']
     params['run_mode'] \
         = {'type': 'drop_down',
-           'options': uncertainty_options,
-           'value': uncertainty_options[0]}
+           'options': uncertainty_options}
     params['uncertainty_runs'] \
         = {'type': 'integer',
            'value': 2,
@@ -153,8 +152,8 @@ def get_autumn_params():
         # 'output_param_plots',
         'is_shortcourse_improves_outcomes',
         # 'plot_option_plot_all_vars',
-        'is_amplification',
-        'is_misassignment',
+        # 'is_amplification',
+        # 'is_misassignment',
         # 'is_lowquality',
         # 'output_riskgroup_fractions',
         'is_vary_detection_by_organ',
@@ -162,12 +161,12 @@ def get_autumn_params():
         # 'is_vary_detection_by_riskgroup',
         'is_include_hiv_treatment_outcomes',
         'is_treatment_history',
-        'riskgroup_prison',
+        # 'riskgroup_prison',
         # 'output_likelihood_plot',
         # 'riskgroup_urbanpoor',
         # 'output_scaleups',
-        # 'output_by_subgroups',
-        'riskgroup_ruralpoor',
+        'output_by_subgroups',
+        # 'riskgroup_ruralpoor',
         'output_epi_plots',
         # 'is_vary_force_infection_by_riskgroup',
         'riskgroup_diabetes',
@@ -184,8 +183,8 @@ def get_autumn_params():
             params[param]['value'] = params[param]['options'][0]
     params['fitting_method']['value'] = params['fitting_method']['options'][-1]
     params['integration_method']['value'] = params['integration_method']['options'][1]
-    params['strains']['value'] = params['strains']['options'][1]
-    params['country']['value'] = 'Bulgaria'
+    params['strains']['value'] = params['strains']['options'][0]
+    params['country']['value'] = 'Fiji'
 
     ''' parameter groupings '''
 

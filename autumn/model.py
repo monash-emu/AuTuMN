@@ -100,7 +100,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
          self.relevant_interventions, self.scaleup_fns, self.interventions_to_cost, self.is_lowquality,
          self.is_amplification, self.is_misassignment, self.is_timevariant_organs, self.country, self.time_step,
          self.integration_method)\
-            = [None for i in range(21)]
+            = [None for _ in range(21)]
 
         self.inappropriate_regimens = []
         self.riskgroups = {}

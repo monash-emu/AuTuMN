@@ -32,15 +32,15 @@ class BaseModel:
 
     def __init__(self):
         (self.labels, self.relevant_interventions, self.times) \
-            = [[] for i in range(3)]
+            = [[] for _ in range(3)]
         (self.init_compartments, self.compartments, self.params, self.vars, self.scaleup_fns, self.flows, \
          self.compartment_soln, self.flows_by_type) \
-            = [{} for i in range(8)]
+            = [{} for _ in range(8)]
         (self.time, self.start_time) \
-            = [0. for i in range(2)]
+            = [0. for _ in range(2)]
         (self.inputs, self.var_labels, self.var_array, self.flow_array, self.fraction_array, self.graph,
          self.loaded_compartments, self.integration_method) \
-            = [None for i in range(8)]
+            = [None for _ in range(8)]
         self.scenario = 0
         self.time_step = 1.
         self.run_costing = True
@@ -439,8 +439,10 @@ class BaseModel:
         self.var_array = numpy.zeros((n_time, len(self.var_labels)))
 
         # populate arrays for initial state
-        for i_label, var_label in enumerate(self.var_labels): self.var_array[0, i_label] = self.vars[var_label]
-        for i_label, label in enumerate(self.labels): self.flow_array[0, i_label] = self.flows[label]
+        for i_label, var_label in enumerate(self.var_labels):
+            self.var_array[0, i_label] = self.vars[var_label]
+        for i_label, label in enumerate(self.labels):
+            self.flow_array[0, i_label] = self.flows[label]
 
         # initialisation of iterative objects that will be used during integration
         y_candidate = numpy.zeros((len(y)))
@@ -465,7 +467,8 @@ class BaseModel:
 
                 # explicit Euler integration
                 if self.integration_method == 'Explicit':
-                    for i in range(n_compartment): y_candidate[i] = y[i] + adaptive_dt * k1[i]
+                    for i in range(n_compartment):
+                        y_candidate[i] = y[i] + adaptive_dt * k1[i]
 
                 # Runge-Kutta 4 integration
                 elif self.integration_method == 'Runge Kutta':
@@ -519,7 +522,8 @@ class BaseModel:
             for i_label, label in enumerate(self.labels):
                 self.flow_array[i_time + 1, i_label] = self.flows[label]
 
-        if self.run_costing: self.calculate_economics_diagnostics()
+        if self.run_costing:
+            self.calculate_economics_diagnostics()
 
     def process_uncertainty_params(self):
         """
@@ -541,10 +545,10 @@ class BaseModel:
         Assertion(s) run during simulation. Currently only checks that compartments are positive.
         """
 
-        for label in self.labels: assert self.compartments[label] >= 0.
+        for label in self.labels:
+            assert self.compartments[label] >= 0.
 
     ''' output/diagnostic calculations '''
-
 
     def get_compartment_soln(self, label):
         """
@@ -602,6 +606,13 @@ class BaseModel:
         for label in self.labels:
             state_compartments[label] = self.compartment_soln[label][i_time]
         return state_compartments
+
+    def reset_compartment_values(self):
+        """
+        Simple method to reset the sizes of all compartments back to their original values.
+        """
+
+        self.compartments = {compartment: value for compartment, value in self.init_compartments.items()}
 
     def calculate_outgoing_compartment_flows(self, from_compartment, to_compartment=''):
         """
@@ -733,6 +744,10 @@ class BaseModel:
                 aggregates['remainder'] = tool_kit.elementwise_list_addition(self.compartment_soln[compartment],
                                                                              aggregates['remainder'])
         return aggregates, compartments_to_divide_over
+
+    def calculate_economics_diagnostics(self):
+
+        pass
 
     ''' flow diagram '''
 

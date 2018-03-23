@@ -53,6 +53,7 @@ def find_uncertainty_output_weights(output_series, approach, relative_weights=(1
         weights.append(0.5)
         return weights
 
+
 def find_log_probability_density(distribution, param_val, bounds, additional_params=None):
     """
     Find the log probability density for the parameter value being considered. Uniform is the default distribution if no
@@ -615,7 +616,8 @@ class ModelRunner:
         while n_accepted < self.gui_inputs['uncertainty_runs']:
             # instantiate model objects
             for scenario in self.scenarios:
-                self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
+                # self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
+                self.models[scenario].reset_compartment_values()
 
             # set timer
             start_timer_run = datetime.datetime.now()

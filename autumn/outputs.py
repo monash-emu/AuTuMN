@@ -1546,15 +1546,6 @@ class Project:
         Master plotting method to call all the methods that produce specific plots.
         """
 
-        # find some general output colours
-        output_colours = make_default_line_styles(5, True)
-        for s, scenario in enumerate(self.scenarios):
-            self.output_colours[scenario] = output_colours[s]
-            self.program_colours[scenario] = {}
-            for p, program in enumerate(self.interventions_to_cost[scenario]):
-                # +1 is to avoid starting from black, which doesn't look as nice for programs as for baseline scenario
-                self.program_colours[scenario][program] = output_colours[p + 1]
-
         # plot epidemiological outputs
         if self.gui_inputs['output_epi_plots']:
             purposes = ['scenario', 'ci', 'progress', 'shaded'] if '_uncertainty' in self.run_mode else ['scenario']
@@ -1565,13 +1556,22 @@ class Project:
                 mdr_indicators.append('perc_incidence_mdr')
                 self.plot_outputs_against_gtb(mdr_indicators, 'scenario', 'mdr-tb-related')
 
-        # plot scale-up functions - currently only doing this for the baseline model run
+        # plot scale-up functions
         if self.gui_inputs['output_scaleups']:
             self.plot_scaleup_vars()
 
         # plot mixing matrix if relevant
         if self.inputs.is_vary_force_infection_by_riskgroup and len(self.inputs.riskgroups) > 1:
             self.plot_mixing_matrix()
+
+        # find some general output colours
+        output_colours = make_default_line_styles(5, True)
+        for s, scenario in enumerate(self.scenarios):
+            self.output_colours[scenario] = output_colours[s]
+            self.program_colours[scenario] = {}
+            for p, program in enumerate(self.interventions_to_cost[scenario]):
+                # +1 is to avoid starting from black, which doesn't look as nice for programs as for baseline scenario
+                self.program_colours[scenario][program] = output_colours[p + 1]
 
         # plot economic outputs
         if self.gui_inputs['output_plot_economics']:
@@ -1709,7 +1709,7 @@ class Project:
                     max_data_values[output].append(max(self.outputs['manual']['epi'][scenario][output][start_index:]))
                     axes[o].plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
                                  self.outputs['manual']['epi'][scenario][output][start_index:],
-                                 color=colour, linestyle=self.output_colours[scenario][0], linewidth=1.5, label=label,
+                                 color=colour, linewidth=1.5, label=label,
                                  zorder=1 if scenario else 4)
 
             # add plotting of End TB Targets

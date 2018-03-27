@@ -1,3 +1,17 @@
+'''
+Defines the flask app - URL responses for a WSGI gateway.
+
+This file is designed to be run from `run_server.py`,
+which starts a Twisted server to handle the flask app.
+
+To test with only the flask app:
+
+    export FLASK_APP=api.py
+    flask run
+
+'''
+
+from __future__ import print_function
 import os
 import sys
 import logging
@@ -5,22 +19,19 @@ from functools import wraps
 import traceback
 import json
 
-from flask import abort, jsonify, current_app, request, helpers, json, make_response
+from flask import abort, jsonify, current_app, request, helpers, \
+    json, make_response, send_from_directory, send_file
 from flask_login import LoginManager, current_user
 from werkzeug.utils import secure_filename
 
-import conn
-import dbmodel
-import handler
-import _version
+from . import conn
+from . import dbmodel
+from . import handler
 
 # Load app from singleton global module
-
 app = conn.app
 
-
 # Setup logger
-
 stream_handler = logging.StreamHandler(sys.stdout)
 stream_handler.setLevel(logging.DEBUG)
 stream_handler.setFormatter(logging.Formatter(
@@ -32,7 +43,6 @@ app.logger.setLevel(logging.DEBUG)
 
 
 # Setup login manager with dbmodel.UserDb
-
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -77,30 +87,30 @@ def get_post_data_json():
     return json.loads(request.data)
 
 
-def run_fn(fn_name, args, kwargs):
-    if fn_name.startswith('admin_'):
+def run_fn(method, args, kwargs):
+    if method.startswith('admin_'):
         if (current_user.is_anonymous()) \
                 or not current_user.is_authenticated() \
                 or not current_user.is_admin:
             return app.login_manager.unauthorized()
-    elif fn_name.startswith('login_'):
+    elif method.startswith('login_'):
         if not current_user.is_authenticated():
             return app.login_manager.unauthorized()
-    elif not fn_name.startswith('public_'):
-        raise ValueError('Function "%s" not valid' % (fn_name))
+    elif not method.startswith('public_'):
+        raise ValueError('Function "%s" not valid' % (method))
 
-    if hasattr(handler, fn_name):
-        fn = getattr(handler, fn_name)
+    if hasattr(handler, method):
+        fn = getattr(handler, method)
         args_str = str(args)
         if len(args_str) > 30:
             args_str = args_str[:30] + '...'
         kwargs_str = str(kwargs)
         if len(kwargs_str) > 30:
             args_str = kwargs_str[:30] + '...'
-        print('>> RPC.handler.%s args=%s kwargs=%s' % (fn_name, args_str, kwargs_str))
+        print('>> RPC.handler.%s args=%s kwargs=%s' % (method, args_str, kwargs_str))
     else:
-        print('>> Function "%s" does not exist' % (fn_name))
-        raise ValueError('Function "%s" does not exist' % (fn_name))
+        print('>> Function "%s" does not exist' % (method))
+        raise ValueError('Function "%s" does not exist' % (method))
 
     return fn(*args, **kwargs)
 
@@ -109,7 +119,7 @@ def run_fn(fn_name, args, kwargs):
 
 @app.route('/api', methods=['GET'])
 def root():
-    return json.dumps({"rpcJsonVersion": _version.__version__})
+    return json.dumps({"rpcJsonVersion": "2.0"})
 
 
 @app.route('/api/rpc-run', methods=['POST'])
@@ -197,6 +207,24 @@ def receive_uploaded_file():
         return jsonify(result)
 
 
+# These routes are to load in the compiled web-client from the
+# same IP:PORT as the server
+this_dir = os.path.dirname(__file__)
+app.static_folder = os.path.join(this_dir, '../client/dist/static')
+
+@app.route('/')
+def index():
+    return send_file(os.path.join(this_dir, '../client/dist/index.html'))
+
+
+# Route to load files saved on the server from uploads
+
+@app.route('/file/<path:path>', methods=['GET'])
+def get_file(path):
+    save_dir = os.path.abspath(current_app.config['SAVE_FOLDER'])
+    return send_from_directory(save_dir, path)
+
+
 # http://reputablejournal.com/adventures-with-flask-cors.html#.WW6-INOGMm8
 # Allow Cross-Origin-Resource-Sharing, mainly for working with hot reloading webclient
 @app.after_request
@@ -208,7 +236,3 @@ def after_request(response):
     return response
 
 
-# Main loop
-
-if __name__ == '__main__':
-    app.run(threaded=True, debug=True, use_debugger=False, port=3000)

@@ -538,8 +538,13 @@ class Inputs:
         Define the model's age structure based on the breakpoints provided in spreadsheets.
         """
 
+        self.add_comment_to_gui_window('Original breakpoints ' + str(self.model_constants['age_breakpoints']) +'.\n')
+        breakpoints = self.gui_inputs['age_breakpoints']
+        self.model_constants['age_breakpoints'] = breakpoints
+        self.add_comment_to_gui_window('GUI breakpoints ' + str(breakpoints) +'.\n')
+
         # describe and work out age stratification structure for model from the list of age breakpoints
-        self.agegroups = tool_kit.get_agegroups_from_breakpoints(self.model_constants['age_breakpoints'])[0]
+        self.agegroups = tool_kit.get_agegroups_from_breakpoints(breakpoints)[0]
 
         # find ageing rates and age-weighted parameters
         if len(self.agegroups) > 1:

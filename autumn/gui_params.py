@@ -230,11 +230,11 @@ def get_autumn_params():
     for k in ['plot_option_start_time', 'plot_option_end_time']:
         param_groups[8]['keys'].append(k)
 
-    params['age_groups'] \
+    params['age_breakpoints'] \
         = {'type': 'breakpoints',
            'label': 'Age Breakpoints',
-           'value': [0, 15, 30, 55]}
-    param_groups[1]['keys'].append('age_groups')
+           'value': [5, 15, 25]}
+    param_groups[1]['keys'].append('age_breakpoints')
 
     # return single data structure with parameters and parameter groupings
     return {'params': params,

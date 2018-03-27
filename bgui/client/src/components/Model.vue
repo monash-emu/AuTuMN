@@ -108,7 +108,8 @@
                       style="width: 130px"
                       :max="100"
                       :interval="1"
-                      v-model="params[key].value[i]">
+                      v-model="params[key].value[i]"
+                      @drag-end="breakpointCallback(params, key)">
                     </vue-slider>
                     <md-button
                       class="md-icon-button md-raised"
@@ -251,16 +252,25 @@
           })
       },
       deleteBreakpoint(params, key, i) {
-
+        this.params[key].value.splice(i, 1)
       },
       addBreakpoint(params, key) {
-
+        this.params[key].value.push(_.max(this.params[key].value))
+      },
+      breakpointCallback(params, key) {
+        // this.params[key].value.sort()
       },
       selectParamGroup (i) {
         this.paramGroup = this.paramGroups[i]
       },
       run () {
         let params = this.$data.params
+        for (let param of _.values(this.params)) {
+          if (param.type === "breakpoints") {
+            param.value = _.sortedUniq(param.value)
+            console.log(util.jstr(param))
+          }
+        }
         this.$data.isRunning = true
         this.$data.consoleLines = []
         rpc

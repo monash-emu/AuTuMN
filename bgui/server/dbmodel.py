@@ -74,6 +74,7 @@ class JSONEncodedDict(TypeDecorator):
 class UserDb(db.Model):
 
     __tablename__ = 'users'
+    __table_args__ = {'extend_existing': True}
 
     id = db.Column(GUID(), default=uuid.uuid4, primary_key=True)
     username = db.Column(db.String(255))
@@ -111,6 +112,7 @@ class UserDb(db.Model):
 class ObjectDb(db.Model):
 
     __tablename__ = 'objects'
+    __table_args__ = {'extend_existing': True}
 
     id = db.Column(GUID(), default=uuid.uuid4, nullable=False, unique=True, primary_key=True)
     user_id = db.Column(GUID(True), db.ForeignKey('users.id'))

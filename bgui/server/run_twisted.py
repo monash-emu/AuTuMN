@@ -1,14 +1,7 @@
-"""
-Runs a twisted server to
-1. serve static files from ../client/dist
-2. handle the JSON-api at /api
-3. from the same port: 3000
-
-It pipes a synchronous flask server through the asynchronous
-twisted server.
-"""
-
+import os
 import sys
+import shutil
+
 from twisted.internet import reactor
 from twisted.internet.endpoints import serverFromString
 from twisted.logger import globalLogBeginner, FileLogObserver, formatEvent
@@ -17,15 +10,22 @@ from twisted.web.server import Site
 from twisted.web.static import File
 from twisted.web.wsgi import WSGIResource
 from twisted.python.threadpool import ThreadPool
-from . import api
+
+# Hack to load sibling modules in "__main__" script
+sys.path.insert(0, os.path.abspath(".."))
+# Auto-generates config.py if not found
+if not os.path.isfile("config.py"):
+    shutil.copy("config_default.py", "config.py")
+from server import config
+from server.api import app
 
 
-def run():
+def run_app_in_twisted():
     globalLogBeginner.beginLoggingTo([
         FileLogObserver(sys.stdout, lambda _: formatEvent(_) + "\n")])
 
     threadpool = ThreadPool(maxthreads=30)
-    wsgi_app = WSGIResource(reactor, threadpool, api.app)
+    wsgi_app = WSGIResource(reactor, threadpool, app)
 
     class ServerResource(Resource):
         isLeaf = True
@@ -55,20 +55,15 @@ def run():
 
     site = Site(base_resource)
 
-    try:
-        port = str(sys.argv[1])
-    except IndexError:
-        port = "3000"
-
     # Start the threadpool now, shut it down when we're closing
     threadpool.start()
     reactor.addSystemEventTrigger('before', 'shutdown', threadpool.stop)
 
-    endpoint = serverFromString(reactor, "tcp:port=" + port)
+    endpoint = serverFromString(reactor, "tcp:port=" + str(config.PORT))
     endpoint.listen(site)
 
     reactor.run()
 
 
 if __name__ == "__main__":
-    run()
+    run_app_in_twisted()

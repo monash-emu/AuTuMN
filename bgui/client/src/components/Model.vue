@@ -275,13 +275,14 @@ export default {
       this.paramGroup = this.paramGroups[i]
     },
     async run () {
-      let params = this.$data.params
+      let params = _.cloneDeep(this.params)
       for (let param of _.values(this.params)) {
         if (param.type === 'breakpoints') {
           param.value = _.sortedUniq(param.value)
           console.log(util.jstr(param))
         }
       }
+      this.filenames = []
       this.isRunning = true
       this.consoleLines = []
 

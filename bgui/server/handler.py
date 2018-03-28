@@ -157,14 +157,14 @@ def public_run_autumn(params):
     print(">> handler.public_run_autumn", json.dumps(model_inputs, indent=2))
 
     try:
-        # model_runner = autumn.model_runner.TbRunner(
-        #     model_inputs, bgui_model_output)
-        # model_runner.master_runner()
-        #
-        # project = autumn.outputs.Project(model_runner, model_inputs)
-        # out_dir = project.master_outputs_runner()
+        model_runner = autumn.model_runner.TbRunner(
+            model_inputs, bgui_model_output)
+        model_runner.master_runner()
 
-        out_dir = "/Users/boscoh/Projects/AuTuMN/projects/test_fiji"
+        project = autumn.outputs.Project(model_runner, model_inputs)
+        out_dir = project.master_outputs_runner()
+
+        # out_dir = "/Users/boscoh/Projects/AuTuMN/projects/test_fiji"
 
         save_dir = current_app.config['SAVE_FOLDER']
         filenames = glob.glob(os.path.join(out_dir, '*'))

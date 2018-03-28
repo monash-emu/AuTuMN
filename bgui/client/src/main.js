@@ -14,6 +14,10 @@ import store from './store'
 Vue.config.productionTip = false
 Vue.use(VueMaterial)
 
+Vue.material.registerTheme('default', {
+  primary: 'black',
+})
+
 document.title = config.title
 
 async function init () {

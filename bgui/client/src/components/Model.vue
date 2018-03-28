@@ -12,7 +12,7 @@
             overflow: auto">
 
           <md-whiteframe
-              style="width: 180px; padding-top: 30px ">
+              style="width: 230px; padding-top: 30px ">
 
             <h2 class="md-heading"
                 style="padding-left: 15px">
@@ -183,17 +183,18 @@
                   </div>
                 </md-layout>
 
-                <md-whiteframe
-                  style="
-                    width: 100%">
+                <md-layout md-gutter="32">
                   <md-card
+                      style="
+                        width:600px; margin-top: 1em; margin-right: 1em"
                       v-for="(filename, i) in filenames"
                       :key="i">
-                    <img
-                        style="width:500px"
-                        :src="filename">
+                    <md-card-media>
+                      <img
+                          :src="filename"/>
+                    </md-card-media>
                   </md-card>
-                </md-whiteframe>
+                </md-layout>
               </md-layout>
 
             </div>
@@ -256,7 +257,7 @@ export default {
       }
       if (res.result.is_running) {
         this.isRunning = true
-        setTimeout(() => { this.checkRun() }, 2000)
+        setTimeout(this.checkRun, 2000)
       } else {
         this.isRunning = false
       }
@@ -283,19 +284,19 @@ export default {
       }
       this.isRunning = true
       this.consoleLines = []
+
+      setTimeout(this.checkRun, 2000)
+
       let res = await rpc.rpcRun('public_run_autumn', params)
-      console.log('>> Home.run res', res)
       if (!res.result) {
         this.consoleLines.push('Error: model crashed')
         this.isRunning = false
       } else {
-        console.log('what')
         this.filenames = _.map(
-          res.result.filenames, f => `${config.apiUrl}/file/${f}`)
-        console.log(this.filenames)
-        this.checkRun()
+          res.result.filenames,
+          f => `${config.apiUrl}/file/${f}`)
+        console.log('>> Model.run filenames', this.filenames)
       }
-      setTimeout(() => this.checkRun(), 1000)
     }
   }
 }

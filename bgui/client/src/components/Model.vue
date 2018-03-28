@@ -218,8 +218,8 @@
                   <vue-slider
                       style="width: 500px"
                       :max="100"
-                      :interval="10"
                       :min="10"
+                      :interval="1"
                       v-model="width"
                       @callback="changeWidth(width)">
                   </vue-slider>

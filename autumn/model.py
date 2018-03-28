@@ -72,7 +72,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         7. Calculating the diagnostic solutions
     """
 
-    def __init__(self, scenario=0, inputs=None, gui_inputs=None):
+    def __init__(self, scenario=0, inputs=None, gui_inputs=None, js_gui=None):
         """
         Instantiation, partly inherited from the lower level model objects through nested inheritance.
 
@@ -89,6 +89,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         # model attributes set from model runner object
         self.inputs = inputs
         self.scenario = scenario
+        self.js_gui = js_gui
 
         # start_time can't stay as a model constant, as it must be set for each scenario individually
         self.start_time = inputs.model_constants['start_time']
@@ -297,7 +298,11 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         """
 
         if self.time > self.next_time_point:
-            print(int(self.time))
+            message = 'Integrated time ' + str(int(self.time))
+            if self.js_gui:
+                self.js_gui('console', {'message': message})
+            else:
+                print(message)
             self.next_time_point += 10.
 
     def calculate_demographic_vars(self):

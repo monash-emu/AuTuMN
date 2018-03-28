@@ -300,7 +300,7 @@ class Inputs:
         """
 
         self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
-        self.original_data = spreadsheet.read_input_data_xls(True, self.find_keys_of_sheets_to_read(), self.country)
+        self.original_data = spreadsheet.read_input_data_xls(True, self.find_keys_of_sheets_to_read(), self.country, self.js_gui)
         self.add_comment_to_gui_window('Spreadsheet reading complete.\n')
 
     def find_keys_of_sheets_to_read(self):

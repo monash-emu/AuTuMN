@@ -694,7 +694,7 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
         return curve
 
     else:
-        print('method ' + method + 'does not exist.')
+        raise Exception('method ' + method + 'does not exist.')
 
     def curve(t):
         t = t / coef

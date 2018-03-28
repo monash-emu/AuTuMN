@@ -260,7 +260,7 @@ class ModelRunner:
         for scenario in self.scenarios:
 
             # name, initialise and describe model, with appropriate times for scenario runs if required
-            self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
+            self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs, self.js_gui)
             if scenario > 0:
                 self.prepare_new_model_from_baseline(scenario)
             self.add_comment_to_gui_window(
@@ -966,7 +966,7 @@ class ModelRunner:
         for sample in range(self.inputs.n_samples):
 
             # prepare for integration of scenario
-            self.models[15] = model.ConsolidatedModel(15, self.inputs, self.gui_inputs)
+            self.models[15] = model.ConsolidatedModel(15, self.inputs, self.gui_inputs, self.js_gui)
             self.prepare_new_model_from_baseline(15)
             self.models[15].relevant_interventions.append(self.inputs.uncertainty_intervention)
             for param in self.outputs['int_uncertainty']['parameter_values']:
@@ -1049,7 +1049,7 @@ class ModelRunner:
         self.optimised_combinations = []
 
         # initialise a new model that will be run from recent_time and set basic attributes for optimisation
-        self.models['optimisation'] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs)
+        self.models['optimisation'] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs, self.js_gui)
         self.prepare_new_model_from_baseline(0)
         self.models['optimisation'].eco_drives_epi = True
         self.models['optimisation'].inputs.model_constants['scenario_end_time'] = self.year_end_opti
@@ -1068,8 +1068,11 @@ class ModelRunner:
                 intervention = self.interventions_considered_for_opti[combination[i]]
                 dict_optimised_combi['interventions'].append(intervention)
 
-            print('Optimisation of the distribution across: ')
-            print(dict_optimised_combi['interventions'])
+            if self.js_gui:
+                self.js_gui('console', {
+                    'message': 'Optimisation of the distribution across: \n' +
+                                str(dict_optimised_combi['interventions'])
+                })
 
             # function to minimise: incidence in 2035
             def minimisation_function(x):
@@ -1160,7 +1163,7 @@ class ModelRunner:
         """
 
         # prepare new model to run full scenario duration
-        self.models['optimisation'] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs)
+        self.models['optimisation'] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs, self.js_gui)
         self.prepare_new_model_from_baseline(0)
         self.models['optimisation'].eco_drives_epi = True
         self.models['optimisation'].interventions_considered_for_opti = self.interventions_considered_for_opti

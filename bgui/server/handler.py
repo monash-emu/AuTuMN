@@ -171,6 +171,7 @@ def public_run_autumn(params):
         filenames = [os.path.relpath(p, save_dir) for p in filenames]
 
         result = {
+            'project': os.path.relpath(out_dir, save_dir),
             'success': True,
             'filenames': filenames,
         }
@@ -186,7 +187,22 @@ def public_run_autumn(params):
 
 def public_get_autumn_params():
     result = gui_params.get_autumn_params()
+    save_dir = current_app.config['SAVE_FOLDER']
+    project_dirs = glob.glob(os.path.join(save_dir, '*'))
+    project_dirs = [os.path.relpath(p, save_dir) for p in project_dirs]
     return {
         'params': result['params'],
-        'paramGroups': result['param_groups']
+        'paramGroups': result['param_groups'],
+        'projects': project_dirs
+    }
+
+def public_get_project_images(project):
+    save_dir = current_app.config['SAVE_FOLDER']
+    out_dir = os.path.join(save_dir, project)
+    filenames = glob.glob(os.path.join(out_dir, '*'))
+    filenames = [os.path.relpath(p, save_dir) for p in filenames]
+
+    return {
+        'success': True,
+        'filenames': filenames,
     }

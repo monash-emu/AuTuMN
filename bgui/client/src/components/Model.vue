@@ -5,17 +5,20 @@
       <md-layout md-row>
 
         <md-layout
-            md-row
-            style="
+          md-row
+          style="
             width: 50%;
             height: calc(100vh - 48px);
             overflow: auto">
 
           <md-whiteframe
-              style="width: 230px; padding-top: 30px ">
+            style="
+              width: 230px;
+              padding-top: 30px ">
 
-            <h2 class="md-heading"
-                style="padding-left: 15px">
+            <h2
+              class="md-heading"
+              style="padding-left: 15px">
               Parameter sets
             </h2>
 
@@ -30,7 +33,8 @@
             </md-list>
           </md-whiteframe>
 
-          <md-whiteframe style="width: 220px">
+          <md-whiteframe
+              style="width: 220px">
 
             <md-layout
                 v-if="paramGroup"
@@ -140,7 +144,10 @@
                 </h2>
 
                 <div style="width: 100%">
-                  <md-layout md-row>
+                  <md-layout
+                      md-row
+                      md-vertical-align="center">
+
                     <md-button
                         md-flex=true
                         class="md-raised"
@@ -183,14 +190,49 @@
                   </div>
                 </md-layout>
 
-                <md-layout md-gutter="32">
-                  <md-card
+                <h2
+                    class="md-heading"
+                    style="margin-top: 1.5em;">
+                  Graphs
+                </h2>
+
+                <md-layout
+                  md-flex="100"
+                  md-vertical-align="center">
+                  <md-input-container
                       style="
-                        width:600px; margin-top: 1em; margin-right: 1em"
+                          width: 200px;">
+                    <label>Existing Projects</label>
+                    <md-select
+                        v-model="project"
+                        @change="changeProject">
+                      <md-option
+                          v-for="(p, i) in projects"
+                          v-bind:value="p"
+                          :key="i">
+                        {{p}}
+                      </md-option>
+                    </md-select>
+                  </md-input-container>
+
+                  <vue-slider
+                      style="width: 500px"
+                      :max="2000"
+                      :interval="1"
+                      v-model="width"
+                      @drag-end="changeWidth(width)">
+                  </vue-slider>
+                </md-layout>
+
+                <md-layout style="width: 100%">
+                  <md-card
+                      :style="imageStyle"
                       v-for="(filename, i) in filenames"
                       :key="i">
-                    <md-card-media>
+                    <md-card-media
+                        >
                       <img
+                          :style="imageStyle"
                           :src="filename"/>
                     </md-card-media>
                   </md-card>
@@ -232,17 +274,23 @@ export default {
       isRunning: false,
       consoleLines: [],
       filenames: [],
+      project: null,
+      projects: [],
       paramGroup: null,
-      iParamGroup: -1
+      iParamGroup: -1,
+      width: 300,
+      imageStyle: 'width: 600px',
     }
   },
   async created () {
     this.checkRun()
     let res = await rpc.rpcRun('public_get_autumn_params')
     if (res.result) {
+      console.log('> Model.created', res.result)
       this.paramGroups = res.result.paramGroups
       this.params = res.result.params
       this.paramGroup = this.paramGroups[0]
+      this.projects = res.result.projects
     }
   },
   methods: {
@@ -284,6 +332,7 @@ export default {
       }
       this.filenames = []
       this.isRunning = true
+      this.project = ''
       this.consoleLines = []
 
       setTimeout(this.checkRun, 2000)
@@ -293,11 +342,27 @@ export default {
         this.consoleLines.push('Error: model crashed')
         this.isRunning = false
       } else {
+        this.project = res.result.project
         this.filenames = _.map(
           res.result.filenames,
           f => `${config.apiUrl}/file/${f}`)
         console.log('>> Model.run filenames', this.filenames)
       }
+    },
+    async changeProject (project) {
+      console.log('> Model.changeProject', project)
+      let res = await rpc.rpcRun('public_get_project_images', project)
+      if (res.result) {
+        this.filenames = _.map(
+          res.result.filenames,
+          f => `${config.apiUrl}/file/${f}`)
+        console.log('>> Model.changeProject filenames', this.filenames)
+      }
+    },
+    changeWidth (width) {
+      console.log('> Model.changeWidth', width)
+      this.imageStyle = `width: ${this.width}px`
+      console.log('> Model.changeWidth', this.imageStyle)
     }
   }
 }

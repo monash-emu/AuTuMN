@@ -12,12 +12,3 @@ saved_*
 projects
 venv*
 env*
-build/logo.png
-dist/static/css/app.cded5da22aeed919999cbaa856ae8abb.css
-dist/static/css/app.cded5da22aeed919999cbaa856ae8abb.css.map
-dist/static/js/app.242b3859e85e610be9cb.js
-dist/static/js/app.242b3859e85e610be9cb.js.map
-dist/static/js/manifest.3ad1d5771e9b13dbdad2.js
-dist/static/js/manifest.3ad1d5771e9b13dbdad2.js.map
-dist/static/js/vendor.3069aedbb288181731a2.js
-dist/static/js/vendor.3069aedbb288181731a2.js.map

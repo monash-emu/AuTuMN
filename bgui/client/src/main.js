@@ -15,7 +15,7 @@ Vue.config.productionTip = false
 Vue.use(VueMaterial)
 
 Vue.material.registerTheme('default', {
-  primary: 'black',
+  primary: 'black'
 })
 
 document.title = config.title

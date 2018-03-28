@@ -217,10 +217,11 @@
 
                   <vue-slider
                       style="width: 500px"
-                      :max="2000"
-                      :interval="1"
+                      :max="100"
+                      :interval="10"
+                      :min="10"
                       v-model="width"
-                      @drag-end="changeWidth(width)">
+                      @callback="changeWidth(width)">
                   </vue-slider>
                 </md-layout>
 
@@ -229,10 +230,9 @@
                       :style="imageStyle"
                       v-for="(filename, i) in filenames"
                       :key="i">
-                    <md-card-media
-                        >
+                    <md-card-media>
                       <img
-                          :style="imageStyle"
+                          style="width: 100%"
                           :src="filename"/>
                     </md-card-media>
                   </md-card>
@@ -278,8 +278,8 @@ export default {
       projects: [],
       paramGroup: null,
       iParamGroup: -1,
-      width: 300,
-      imageStyle: 'width: 600px',
+      width: 50,
+      imageStyle: 'width: 50%'
     }
   },
   async created () {
@@ -361,7 +361,7 @@ export default {
     },
     changeWidth (width) {
       console.log('> Model.changeWidth', width)
-      this.imageStyle = `width: ${this.width}px`
+      this.imageStyle = `width: ${this.width}%`
       console.log('> Model.changeWidth', this.imageStyle)
     }
   }

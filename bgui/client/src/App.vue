@@ -12,13 +12,9 @@
 </style>
 
 <script>
-  import Navbar from './components/Navbar.vue'
-  import auth from './modules/auth'
-  import router from './router'
-
-  export default {
-    name: 'app',
-    components: {Navbar},
-  }
+import Navbar from './components/Navbar.vue'
+export default {
+  name: 'app',
+  components: {Navbar}
+}
 </script>
-

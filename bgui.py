@@ -1,4 +1,5 @@
 from __future__ import print_function
+import sys
 import subprocess
 import os
 import webbrowser
@@ -22,5 +23,5 @@ def open_page_delayed():
 
 threading.Thread(target=open_page_delayed).start()
 os.chdir('bgui/server')
-subprocess.call(["python", "run_server.py"])
+subprocess.call([sys.executable, "run_server.py"])
 

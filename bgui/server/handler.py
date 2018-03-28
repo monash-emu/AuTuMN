@@ -5,9 +5,9 @@ handler.py
 RPC-JSON API Web-handlers
 
 To use define functions with name
-- public_* public handlers
-- login_* requires login first
-- admin_* requires admin login
+- public* public handlers
+- login* requires login first
+- admin* requires admin login
 
 All handlers must return a JSON dictionary, except for downloadable functions
 Handlers can take parameters, which are expected to be only JSON-compatible
@@ -15,53 +15,54 @@ Python data structures.
 """
 
 from __future__ import print_function
-
 import os
-import sys
-import json
-import traceback
+import time
 
-from flask import session, abort
-from flask_login import current_user, login_user, logout_user
+from flask import session
+from flask_login import current_app, current_user, login_user, logout_user
 
-import dbmodel
+from . import dbmodel
 
 
 # User handlers
 
-def admin_retrieve_users():
-    return {'users': map(dbmodel.parse_user, dbmodel.load_users())}
+def adminGetUsers():
+    return {
+        'users': map(dbmodel.parse_user, dbmodel.load_users())
+    }
 
 
-def public_create_user(user_attr):
+def publicRegisterUser(user_attr):
     username = dbmodel.check_user_attr(user_attr)['username']
+
     try:
         dbmodel.load_user(username=username)
+        raise Exception("User already exists")
     except:
-        print(">> public_create_user user_attr", user_attr)
+
+        print("> publicCreateUser user_attr", user_attr)
+
         created_user_attr = dbmodel.create_user(user_attr)
         return {
             'success': True,
             'user': created_user_attr
         }
-    else:
-        abort(409)
 
 
-def public_retrieve_current_user():
+def publicGetCurrentUser():
     return dbmodel.parse_user(current_user)
 
 
-def login_update_user(user_attr):
+def loginUpdateUser(user_attr):
     return {
         'success': True,
         'user': dbmodel.update_user_from_attr(user_attr)
     }
 
 
-def public_login_user(user_attr):
+def publicLoginUser(user_attr):
     if not dbmodel.is_current_user_anonymous():
-        print(">> public_login_user already logged-in")
+        print("> publicLoginUser already logged-in")
         return {
             'success': True,
             'user': dbmodel.parse_user(current_user)
@@ -73,34 +74,42 @@ def public_login_user(user_attr):
         kwargs['username'] = user_attr['username']
     if user_attr['email']:
         kwargs['email'] = user_attr['email']
-    print(">> public_login_user loading", kwargs)
 
-    try:
-        user = dbmodel.load_user(**kwargs)
-    except:
-        pass
-    else:
-        if user.check_password(user_attr['password']):
-            login_user(user)
-            return {
-                'success': True,
-                'user': dbmodel.parse_user(user)
-            }
+    print("> publicLoginUser loading", kwargs, user_attr['password'])
+    user = dbmodel.load_user(**kwargs)
 
-    abort(401)
+    if user.check_password(user_attr['password']):
+        login_user(user)
+        return {
+            'success': True,
+            'user': dbmodel.parse_user(user)
+        }
+
+    raise Exception("User not found")
 
 
-def admin_delete_user(user_id):
+def adminDeleteUser(user_id):
     username = dbmodel.delete_user(user_id)['username']
-    print(">> admin_delete_user " + username)
+    print("> admin_delete_user ", username)
+    return adminGetUsers()
 
 
-def public_logout_user():
+def publicLogoutUser():
     logout_user()
     session.clear()
+    return {'success': True}
 
 
-# model handlers
+
+
+#############################################################
+# PROJECT SPECIFIC HANDLERS
+#############################################################
+
+import sys
+import json
+import traceback
+import glob
 
 bgui_output_lines = []
 is_bgui_running = False
@@ -153,15 +162,25 @@ def public_run_autumn(params):
         model_runner.master_runner()
 
         project = autumn.outputs.Project(model_runner, model_inputs)
-        project.master_outputs_runner()
+        out_dir = project.master_outputs_runner()
 
-        result = {'success': True}
+        save_dir = current_app.config['SAVE_FOLDER']
+        filenames = glob.glob(os.path.join(out_dir, '*'))
+        filenames = [os.path.relpath(p, save_dir) for p in filenames]
+
+        result = {
+            'success': True,
+            'filenames': filenames,
+            'out_dir': out_dir,
+            'save_dir': save_dir
+        }
 
     except Exception:
         result = {'success': False}
         traceback.print_exc()
 
     is_bgui_running = False
+
     return result
 
 

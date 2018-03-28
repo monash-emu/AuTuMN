@@ -188,7 +188,9 @@ class App:
             self.gui_outputs, js_gui=self.handle_message)
         self.model_runner.master_runner()
         project = outputs.Project(self.model_runner, self.gui_outputs)
-        project.master_outputs_runner()
+        out_dir_project = project.master_outputs_runner()
+        # open the directory to which everything has been written to save the user a click or two
+        project.open_output_directory(out_dir_project)
 
     def handle_message(self, command, data={}):
         if command == 'console':

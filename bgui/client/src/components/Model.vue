@@ -100,26 +100,26 @@
                   <label>{{ params[key].label }}</label>
                   <div style="height: 2.5em"></div>
                   <md-layout
-                    md-row
-                    style="width: 200px"
-                    v-for="(breakpoint, i) of params[key].value"
-                    :key="i">
+                      md-row
+                      style="width: 200px"
+                      v-for="(breakpoint, i) of params[key].value"
+                      :key="i">
                     <vue-slider
-                      style="width: 130px"
-                      :max="100"
-                      :interval="1"
-                      v-model="params[key].value[i]"
-                      @drag-end="breakpointCallback(params, key)">
+                        style="width: 130px"
+                        :max="100"
+                        :interval="1"
+                        v-model="params[key].value[i]"
+                        @drag-end="breakpointCallback(params, key)">
                     </vue-slider>
                     <md-button
-                      class="md-icon-button md-raised"
-                      @click="deleteBreakpoint(params, key, i)">
+                        class="md-icon-button md-raised"
+                        @click="deleteBreakpoint(params, key, i)">
                       <md-icon>delete</md-icon>
                     </md-button>
                   </md-layout>
                   <md-button
-                    class="md-icon-button md-raised"
-                    @click="addBreakpoint(params, key)">
+                      class="md-icon-button md-raised"
+                      @click="addBreakpoint(params, key)">
                     <md-icon>add</md-icon>
                   </md-button>
                 </div>
@@ -129,7 +129,7 @@
           </md-whiteframe>
 
           <md-layout md-flex>
-            <div style="padding: 30px 15px">
+            <div style="width: 100%; padding: 30px 15px">
               <md-layout
                   md-column
                   md-align="start"
@@ -162,8 +162,9 @@
                 </h2>
 
                 <md-layout
-                    md-flex="100"
-                    style="background-color: #EEE;">
+                    style="
+                      width: 100%;
+                      background-color: #EEE;">
                   <div
                       id="console-output"
                       style="
@@ -172,13 +173,27 @@
                       font-family: Courier, fixed;
                       font-size: 0.9em">
 
-                    <div style="margin: 0 8px" v-for="line in consoleLines">
+                    <div
+                        style="margin: 0 8px"
+                        v-for="(line, i) in consoleLines"
+                        :key="i">
                       {{ line }}
                     </div>
 
                   </div>
                 </md-layout>
 
+                <md-whiteframe
+                  style="
+                    width: 100%">
+                  <md-card
+                      v-for="(filename, i) in filenames"
+                      :key="i">
+                    <img
+                        style="width:500px"
+                        :src="filename">
+                  </md-card>
+                </md-whiteframe>
               </md-layout>
 
             </div>
@@ -195,102 +210,93 @@
 </style>
 
 <script>
-  import rpc from '../modules/rpc'
-  import util from '../modules/util'
-  import vueSlider from 'vue-slider-component'
-  import Vue from 'vue'
-  import VueScrollTo from 'vue-scrollto'
+import rpc from '../modules/rpc'
+import util from '../modules/util'
+import vueSlider from 'vue-slider-component'
+import Vue from 'vue'
+import VueScrollTo from 'vue-scrollto'
 
-  Vue.use(VueScrollTo)
+import _ from 'lodash'
+import config from '../config'
 
-  export default {
-    name: 'experiments',
-    components: {vueSlider},
-    data () {
-      return {
-        paramGroups: [],
-        params: {},
-        isRunning: false,
-        consoleLines: [],
-        paramGroup: null,
-        iParamGroup: -1,
-      }
-    },
-    created () {
-      this.checkRun()
-      rpc
-        .rpcRun('public_get_autumn_params')
-        .then(res => {
-          this.paramGroups = res.data.paramGroups
-          this.params = res.data.params
-          this.paramGroup = this.paramGroups[0]
-          console.log(util.jstr(this.params))
-        })
-    },
-    methods: {
-      checkRun () {
-        rpc
-          .rpcRun(
-            'public_check_autumn_run')
-          .then((res) => {
-            console.log('>> Home.checkRun', res.data.is_running, res.data.console)
-            if (res.data.console) {
-              this.$data.consoleLines = res.data.console
-              if (this.$el.querySelector) {
-                let container = this.$el.querySelector('#console-output')
-                container.scrollTop = container.scrollHeight
-              }
-            }
-            if (res.data.is_running) {
-              this.$data.isRunning = true
-              setTimeout(() => {
-                this.checkRun()
-              }, 2000)
-            } else {
-              this.$data.isRunning = false
-            }
-          })
-      },
-      deleteBreakpoint(params, key, i) {
-        this.params[key].value.splice(i, 1)
-      },
-      addBreakpoint(params, key) {
-        this.params[key].value.push(_.max(this.params[key].value))
-      },
-      breakpointCallback(params, key) {
-        // this.params[key].value.sort()
-      },
-      selectParamGroup (i) {
-        this.paramGroup = this.paramGroups[i]
-      },
-      run () {
-        let params = this.$data.params
-        for (let param of _.values(this.params)) {
-          if (param.type === "breakpoints") {
-            param.value = _.sortedUniq(param.value)
-            console.log(util.jstr(param))
-          }
+Vue.use(VueScrollTo)
+
+export default {
+  name: 'experiments',
+  components: {vueSlider},
+  data () {
+    return {
+      paramGroups: [],
+      params: {},
+      isRunning: false,
+      consoleLines: [],
+      filenames: [],
+      paramGroup: null,
+      iParamGroup: -1
+    }
+  },
+  async created () {
+    this.checkRun()
+    let res = await rpc.rpcRun('public_get_autumn_params')
+    if (res.result) {
+      this.paramGroups = res.result.paramGroups
+      this.params = res.result.params
+      this.paramGroup = this.paramGroups[0]
+    }
+  },
+  methods: {
+    async checkRun () {
+      let res = await rpc.rpcRun('public_check_autumn_run')
+      if (res.result) {
+        this.consoleLines = res.result.console
+        if (this.$el.querySelector) {
+          let container = this.$el.querySelector('#console-output')
+          container.scrollTop = container.scrollHeight
         }
-        this.$data.isRunning = true
-        this.$data.consoleLines = []
-        rpc
-          .rpcRun(
-            'public_run_autumn', params)
-          .then((res) => {
-            console.log('>> Home.run res', res)
-            if (!res.data.success) {
-              this.$data.consoleLines.push('Error: model crashed')
-            } else {
-              this.checkRun()
-            }
-          })
-          .catch((res) => {
-            this.$data.isRunning = false
-          })
-        setTimeout(() => this.checkRun(), 1000)
       }
+      if (res.result.is_running) {
+        this.isRunning = true
+        setTimeout(() => { this.checkRun() }, 2000)
+      } else {
+        this.isRunning = false
+      }
+    },
+    deleteBreakpoint (params, key, i) {
+      this.params[key].value.splice(i, 1)
+    },
+    addBreakpoint (params, key) {
+      this.params[key].value.push(_.max(this.params[key].value))
+    },
+    breakpointCallback (params, key) {
+      // this.params[key].value.sort()
+    },
+    selectParamGroup (i) {
+      this.paramGroup = this.paramGroups[i]
+    },
+    async run () {
+      let params = this.$data.params
+      for (let param of _.values(this.params)) {
+        if (param.type === 'breakpoints') {
+          param.value = _.sortedUniq(param.value)
+          console.log(util.jstr(param))
+        }
+      }
+      this.isRunning = true
+      this.consoleLines = []
+      let res = await rpc.rpcRun('public_run_autumn', params)
+      console.log('>> Home.run res', res)
+      if (!res.result) {
+        this.consoleLines.push('Error: model crashed')
+        this.isRunning = false
+      } else {
+        console.log('what')
+        this.filenames = _.map(
+          res.result.filenames, f => `${config.apiUrl}/file/${f}`)
+        console.log(this.filenames)
+        this.checkRun()
+      }
+      setTimeout(() => this.checkRun(), 1000)
     }
   }
-
+}
 </script>
-

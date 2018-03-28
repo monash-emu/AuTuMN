@@ -869,8 +869,7 @@ class Project:
         self.model_runner.add_comment_to_gui_window('Creating plot figures')
         self.run_plotting()
 
-        # open the directory to which everything has been written to save the user a click or two
-        self.open_output_directory()
+        return os.path.abspath(self.out_dir_project)
 
     ''' general methods for use by specific methods below '''
 
@@ -2663,13 +2662,13 @@ class Project:
 
     ''' miscellaneous '''
 
-    def open_output_directory(self):
+    def open_output_directory(self, out_dir_project):
         """
         Opens the directory into which all the outputs have been placed.
         """
 
         operating_system = platform.system()
         if 'Windows' in operating_system:
-            os.system('start  ' + self.out_dir_project)
+            os.system('start  ' + out_dir_project)
         elif 'Darwin' in operating_system:
-            os.system('open  ' + self.out_dir_project)
+            os.system('open  ' + out_dir_project)

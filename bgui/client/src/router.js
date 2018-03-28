@@ -1,11 +1,12 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-Vue.use(Router)
 
 import Model from './components/Model'
 import Login from './components/Login'
 import Register from './components/Register'
 import EditUser from './components/EditUser'
+
+Vue.use(Router)
 
 let router = new Router({
   routes: [
@@ -28,7 +29,7 @@ let router = new Router({
       path: '/edit-user',
       name: 'editUser',
       component: EditUser
-    },
+    }
   ]
 })
 

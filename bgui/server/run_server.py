@@ -7,10 +7,8 @@ if not os.path.isfile("config.py"):
     shutil.copy("config_default.py", "config.py")
 
 # Hack to load sibling modules in "__main__" script
-try:
-    import server
-except:
-    sys.path.insert(0, os.path.abspath(".."))
+this_dir = os.path.dirname(__file__)
+sys.path.insert(0, os.path.join(this_dir, os.path.pardir))
 from server.config import PORT
 from server.api import app
 

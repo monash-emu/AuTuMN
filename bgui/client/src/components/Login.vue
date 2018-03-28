@@ -1,80 +1,81 @@
 <template>
-  <div style="padding: 1em">
+  <md-layout md-align="center">
+    <md-whiteframe style="margin-top: 4em; padding: 3em">
+      <md-layout md-flex="50" md-align="center" md-column>
 
-    <h2 class="md-display-2">
-      {{ title }}
-    </h2>
+        <h2 class="md-display-2">
+          Login to {{ title }}
+        </h2>
 
-    <form novalidate class="login-screen"
-          v-on:submit.prevent="submit">
+        <form novalidate class="login-screen"
+              v-on:submit.prevent="submit">
 
-      <md-input-container>
-        <label>E-mail address</label>
-        <md-input
-            type='text'
-            v-model='email'
-            placeholder='E-mail address'>
-        </md-input>
-      </md-input-container>
+          <md-input-container>
+            <label>E-mail address</label>
+            <md-input
+              type='text'
+              v-model='email'
+              placeholder='E-mail address'>
+            </md-input>
+          </md-input-container>
 
-      <md-input-container>
-        <label>Password</label>
-        <md-input
-            type='password'
-            v-model='password'
-            placeholder='Password'>
-        </md-input>
-      </md-input-container>
+          <md-input-container>
+            <label>Password</label>
+            <md-input
+              type='password'
+              v-model='rawPassword'
+              placeholder='Password'>
+            </md-input>
+          </md-input-container>
 
-      <md-button type="submit" class="md-raised md-primary">login</md-button>
+          <md-button type="submit" class="md-raised md-primary">login</md-button>
 
-      <br>
-      <br>
-      <br>
-      New to Versus? &nbsp;
-      <router-link to="/register">Register</router-link>
+          <div v-if="error" style="color: red">
+            {{ error }}
+          </div>
 
-      <div v-if="msg" class="card error">
-        {{ msg }}
-      </div>
+          <div style="margin-top: 3em">
+            New to {{ title }}? &nbsp;
+            <router-link to="/register">Register</router-link>
+          </div>
 
-    </form>
+        </form>
 
-  </div>
+      </md-layout>
+    </md-whiteframe>
+  </md-layout>
 </template>
 
 <script>
-  import axios from 'axios'
-  import Router from 'vue-router'
-  import auth from '../modules/auth'
+import auth from '../modules/auth'
+import config from '../config'
 
-  export default {
-    name: 'Login',
-    data() {
-      return {
-        title: 'Login to AuTuMN',
-        email: '',
-        password: '',
-        msg: ''
+export default {
+  name: 'Login',
+  data () {
+    return {
+      title: config.title,
+      email: '',
+      rawPassword: '',
+      error: ''
+    }
+  },
+  methods: {
+    async submit () {
+      let payload = {
+        email: this.$data.email,
+        rawPassword: this.$data.rawPassword
       }
-    },
-    methods: {
-      submit(e) {
-        let payload = {
-          email: this.$data.email,
-          password: this.$data.password
-        }
-        console.log('>> Login.submit', payload)
-        auth
-          .login(payload)
-          .then((res) => {
-            if (res.data.success) {
-              this.$router.push('/')
-            } else {
-              this.$data.msg = res.data.msg
-            }
-          })
+      console.log('> Login.submit', payload)
+      let response = await auth.login(payload)
+      console.log('> Login.submit response', response)
+
+      if (response.result) {
+        this.$router.push('/')
+      } else {
+        this.error = response.error.message
       }
     }
   }
+}
 </script>

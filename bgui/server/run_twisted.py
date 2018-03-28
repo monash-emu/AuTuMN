@@ -19,6 +19,7 @@ if not os.path.isfile("config.py"):
 from server import config
 from server.api import app
 
+import autoreload
 
 def run_app_in_twisted():
     globalLogBeginner.beginLoggingTo([
@@ -47,11 +48,14 @@ def run_app_in_twisted():
             request.responseHeaders.setRawHeaders(b'expires', [b'0'])
             return r
 
-    # static files served from here
+    # web-client files served from here
     base_resource = File('../client/dist')
 
     # api requests must go through /api
     base_resource.putChild('api', ServerResource(wsgi_app))
+
+    # downloadable files go here
+    base_resource.putChild('file', File(config.SAVE_FOLDER))
 
     site = Site(base_resource)
 
@@ -66,4 +70,4 @@ def run_app_in_twisted():
 
 
 if __name__ == "__main__":
-    run_app_in_twisted()
+    autoreload.main(run_app_in_twisted)

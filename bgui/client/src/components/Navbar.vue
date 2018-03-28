@@ -1,62 +1,81 @@
 <template>
-  <md-toolbar class="md-dense">
+  <md-toolbar
+    class="md-dense">
+
+    <md-icon md-src="./static/logo.png"/>
 
     <h2
-        class="md-title"
-        style="cursor: pointer; flex: 1"
-        @click="home()">
-      AuTuMN - TB Epi Modelling
+      class="md-title"
+      style="
+        padding-left: 1em;
+        cursor: pointer;
+        flex: 1"
+      @click="home()">
+      {{ title }}
     </h2>
 
-    <md-menu v-if="user.authenticated">
+    <div v-if="isUser">
 
-      <md-button md-menu-trigger>
-        {{user.name}}
-      </md-button>
+      <md-menu v-if="user.authenticated">
 
-      <md-menu-content>
-        <md-menu-item @click="editUser">Edit User</md-menu-item>
-        <md-menu-item @click="logout">Logout</md-menu-item>
-      </md-menu-content>
+        <md-button md-menu-trigger>
+          {{user.name}}
+        </md-button>
 
-    </md-menu>
+        <md-menu-content>
 
-    <router-link
-        v-else to='/login'
+          <md-menu-item @click="editUser">
+            Edit User
+          </md-menu-item>
+
+          <md-menu-item @click="logout">
+            Logout
+          </md-menu-item>
+
+        </md-menu-content>
+
+      </md-menu>
+
+      <router-link
+        v-else
+        to='/login'
         tag='md-button'>
-      Login
-    </router-link>
+        Login
+      </router-link>
+
+    </div>
 
   </md-toolbar>
 </template>
 
 <script>
+import auth from '../modules/auth'
+import config from '../config'
 
-  import auth from '../modules/auth'
-  import router from '../router'
-
-  export default {
-    name: 'navbar',
-    data () {
-      return {
-        user: auth.user
-      }
+export default {
+  name: 'navbar',
+  data () {
+    return {
+      title: config.title,
+      isUser: config.isUser
+    }
+  },
+  computed: {
+    user: function () {
+      return this.$store.state.user
+    }
+  },
+  methods: {
+    editUser () {
+      this.$router.push('/edit-user')
     },
-    methods: {
-      editUser () {
-        router.push('/edit-user')
-      },
-      home () {
-        router.push('/')
-      },
-      logout () {
-        auth
-          .logout()
-          .then(() => {
-            this.$router.push('/login')
-          })
-      }
+    home () {
+      this.$router.push('/')
+    },
+    async logout () {
+      await auth.logout()
+      this.$router.push('/login')
     }
   }
+}
 </script>
-

@@ -1,101 +1,100 @@
 <template>
-  <div style="padding: 1em">
-    <h2 class="md-display-2">
-      {{ title }}
-    </h2>
-    <form v-on:submit.prevent="submit">
-      <md-input-container>
-        <label>User name</label>
-        <md-input
-            type='text'
-            v-model='name'
-            placeholder='User name'>
-        </md-input>
-      </md-input-container>
-      <md-input-container>
-        <label>E-mail address</label>
-        <md-input
-            type='text'
-            v-model='email'
-            placeholder='E-mail address'>
-        </md-input>
-      </md-input-container>
-      <md-input-container>
-        <label>Password</label>
-        <md-input
-            type='password'
-            v-model='password'
-            placeholder='Password'>
-        </md-input>
-      </md-input-container>
-      <md-input-container>
-        <label>Confirm Password</label>
-        <md-input
-            type='password'
-            v-model='passwordv'
-            placeholder='Confirm Password'>
-        </md-input>
-      </md-input-container>
-      <md-button type="submit" class="md-raised md-primary">
-        Register
-      </md-button>
-      <div v-if="errors.length" class="card error">
-        <ul>
-          <li v-for="err in errors">
-            {{ err }}
-          </li>
-        </ul>
-      </div>
-    </form>
-  </div>
+  <md-layout md-align="center">
+    <md-whiteframe style="margin-top: 4em; padding: 3em">
+      <md-layout md-flex="50" md-align="center" md-column>
+
+        <h2 class="md-display-2">
+          Register to {{ title }}
+        </h2>
+
+        <form v-on:submit.prevent="submit">
+          <md-input-container>
+            <label>User name</label>
+            <md-input
+              type='text'
+              v-model='name'
+              placeholder='User name'>
+            </md-input>
+          </md-input-container>
+          <md-input-container>
+            <label>E-mail address</label>
+            <md-input
+              type='text'
+              v-model='email'
+              placeholder='E-mail address'>
+            </md-input>
+          </md-input-container>
+          <md-input-container>
+            <label>Password</label>
+            <md-input
+              type='password'
+              v-model='rawPassword'
+              placeholder='Password'>
+            </md-input>
+          </md-input-container>
+          <md-input-container>
+            <label>Confirm Password</label>
+            <md-input
+              type='password'
+              v-model='rawPasswordConfirm'
+              placeholder='Confirm Password'>
+            </md-input>
+          </md-input-container>
+          <md-button type="submit" class="md-raised md-primary">
+            Register
+          </md-button>
+          <div v-if="error" style="color: red">
+            {{error}}
+          </div>
+        </form>
+
+      </md-layout>
+    </md-whiteframe>
+  </md-layout>
 </template>
 
 <script>
-import axios from 'axios'
-import Router from 'vue-router'
 import auth from '../modules/auth'
+import config from '../config'
 
 export default {
   name: 'Register',
-  data() {
+  data () {
     return {
-      title: 'Please register to Versus',
+      title: config.title,
       name: '',
       email: '',
-      password: '',
-      passwordv: '',
+      rawPassword: '',
+      rawPasswordConfirm: '',
       user: auth.user,
-      errors: []
+      error: ''
     }
   },
   methods: {
-    submit(e) {
+    async submit () {
       let payload = {
         name: this.$data.name,
         email: this.$data.email,
-        password: this.$data.password,
-        passwordv: this.$data.password
+        rawPassword: this.$data.rawPassword,
+        rawPasswordConfirm: this.$data.rawPasswordConfirm
       }
-      auth
-        .register(payload)
-        .then((res) => {
-          if (res.data.success) {
-            console.log('>> Register.submit success', res.data)
-            return auth.login({
-              email: payload.email,
-              password: payload.password
-            })
-          } else {
-            console.log('>> Register.submit fail', res.data)
-            this.$data.errors = res.data.errors
-            return { data: { success: false } }
-          }
+      let response = await auth.register(payload)
+
+      if (response.result) {
+        console.log('> Register.submit register success', response.result)
+        response = await auth.login({
+          email: payload.email,
+          rawPassword: payload.rawPassword
         })
-        .then((res) => {
-          if (res.data.success) {
-            this.$router.push('/')
-          }
-        })
+      }
+
+      if (response.result) {
+        console.log('> Register.submit login success', response.result)
+        this.$router.push('/')
+      } else {
+        console.log('> Register.submit fail', response.error)
+        this.error = response.error.message
+      }
     }
   }
 }

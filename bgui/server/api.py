@@ -87,35 +87,30 @@ def get_post_data_json():
     return json.loads(request.data)
 
 
-def run_fn(method, args, kwargs):
-    if method.startswith('admin_'):
+def run_method(method, params):
+    if method.startswith('admin'):
         if (current_user.is_anonymous()) \
                 or not current_user.is_authenticated() \
                 or not current_user.is_admin:
             return app.login_manager.unauthorized()
-    elif method.startswith('login_'):
+    elif method.startswith('login'):
         if not current_user.is_authenticated():
             return app.login_manager.unauthorized()
-    elif not method.startswith('public_'):
+    elif not method.startswith('public'):
         raise ValueError('Function "%s" not valid' % (method))
 
     if hasattr(handler, method):
         fn = getattr(handler, method)
-        args_str = str(args)
-        if len(args_str) > 30:
-            args_str = args_str[:30] + '...'
-        kwargs_str = str(kwargs)
-        if len(kwargs_str) > 30:
-            args_str = kwargs_str[:30] + '...'
-        print('>> RPC.handler.%s args=%s kwargs=%s' % (method, args_str, kwargs_str))
+        print('> run_method %s params=%s' % (method, params))
     else:
-        print('>> Function "%s" does not exist' % (method))
+        print('> run_method: error: function "%s" does not exist' % (method))
         raise ValueError('Function "%s" does not exist' % (method))
 
-    return fn(*args, **kwargs)
+    return fn(*params)
 
 
 # NOTE: twisted wgsi only serves url's with /api/*
+
 
 @app.route('/api', methods=['GET'])
 def root():
@@ -127,53 +122,81 @@ def root():
 def run_remote_procedure():
     """
     post-data:
-        'name': string name of function in handler
-        'args': list of arguments for the function
-        'kwargs: dictionary of keyword arguments
+        'method': string name of function in handler
+        'params': list of arguments for the function
     """
     json = get_post_data_json()
-    fn_name = json['name']
-    args = json.get('args', [])
-    kwargs = json.get('kwargs', {})
+    method = json['method']
+    params = json.get('params', [])
 
-    result = run_fn(fn_name, args, kwargs)
-
-    if result is None:
-        return ''
-    else:
-        return jsonify(result)
+    try:
+        result = run_method(method, params)
+        return jsonify({
+            "result": result,
+            "jsonrpc": "2.0"
+        })
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({
+            "error": {
+                "code": -1,
+                "message": str(e)
+            },
+            "jsonrpc": "2.0"
+        })
 
 
 @app.route('/api/rpc-download', methods=['POST'])
 @report_exception_decorator
 def send_downloadable_file():
     """
-    url-args:
-        'procedure': string name of function in handler
-        'args': list of arguments for the function
+    post-body-json:
+        'method': string name of function in handler
+        'params': list of arguments for the function
     """
     post_data = get_post_data_json()
+    method = post_data['method']
+    params = post_data.get('params', [])
 
-    fn_name = post_data['name']
+    try:
+        result = run_method(method, params)
+        filename = result['filename']
+        dirname = os.path.dirname(filename)
+        basename = os.path.basename(filename)
 
-    args = post_data.get('args', [])
-    kwargs = post_data.get('kwargs', {})
+        response = helpers.send_from_directory(
+            dirname,
+            basename,
+            as_attachment=True,
+            attachment_filename=basename)
 
-    result = run_fn(fn_name, args, kwargs)
+        response.status_code = 201
 
-    response = helpers.send_from_directory(
-        result['dirname'],
-        result['basename'],
-        as_attachment=True,
-        attachment_filename=result['basename'])
+        response.headers['data'] = json.dumps({
+            'result': result['data'],
+            "jsonrpc": "2.0"
+        })
 
-    response.status_code = 201
+        response.headers['filename'] = basename
+        response.headers['Access-Control-Expose-Headers'] = 'data, filename'
 
-    if 'data' in result:
-        response.headers['data'] = json.dumps(result['data'])
-    response.headers['filename'] = result['basename']
+        return response
 
-    return response
+    except Exception as e:
+        print(traceback.format_exc())
+
+        response = make_response()
+        response.headers['data'] = json.dumps({
+            "error": {
+                "code": -1,
+                "message": str(e)
+            },
+            "jsonrpc": "2.0"
+        })
+        response.headers['filename'] = ''
+        response.headers['Access-Control-Expose-Headers'] = 'data, filename'
+
+        return response
 
 
 @app.route('/api/rpc-upload', methods=['POST'])
@@ -182,47 +205,66 @@ def receive_uploaded_file():
     """
     file-upload
     request-form:
-        name: name of project
-        args: string of JSON.stringify object
+        method: name of function
+        params: string of JSON.stringify object
     """
-    file = request.files['file']
-    filename = secure_filename(file.filename)
+    files = request.files.getlist('uploadFiles')
+
     dirname = current_app.config['SAVE_FOLDER']
     if not (os.path.exists(dirname)):
         os.makedirs(dirname)
-    uploaded_fname = os.path.join(dirname, filename)
-    file.save(uploaded_fname)
-    print('> Saved uploaded file "%s"' % (uploaded_fname))
 
-    fn_name = request.form.get('name')
-    args = json.loads(request.form.get('args', '[]'))
-    kwargs = json.loads(request.form.get('kwargs', '{}'))
-    args.insert(0, uploaded_fname)
+    server_filenames = []
+    for file in files:
+        basename = secure_filename(file.filename)
+        filename = os.path.join(dirname, basename)
+        file.save(filename)
+        server_filenames.append(filename)
+        print('> api.receive_uploaded_file', basename)
 
-    result = run_fn(fn_name, args, kwargs)
+    method = request.form.get('method')
+    params = json.loads(request.form.get('params', '[]'))
+    params.insert(0, server_filenames)
 
-    if result is None:
-        return ''
-    else:
-        return jsonify(result)
+    try:
+        result = run_method(method, params)
+        return jsonify({
+            "result": result,
+            "jsonrpc": "2.0"
+        })
+    except Exception as e:
+        print(traceback.format_exc())
+
+        return jsonify({
+            "error": {
+                "code": -1,
+                "message": str(e)
+            },
+            "jsonrpc": "2.0"
+        })
+
+
+this_dir = os.getcwd()
+
+# Set SAVE_FOLDER to absolute path on initialization as directories
+# can get scrambled later on
+app.config['SAVE_FOLDER'] = os.path.abspath(os.path.join(os.getcwd(), app.config['SAVE_FOLDER']))
+
+# Route to load files saved on the server from uploads
+@app.route('/file/<path:path>', methods=['GET'])
+def serve_saved_file(path):
+    print("> api.get_file", app.config['SAVE_FOLDER'], path)
+    return send_from_directory(app.config['SAVE_FOLDER'], path)
 
 
 # These routes are to load in the compiled web-client from the
 # same IP:PORT as the server
-this_dir = os.path.dirname(__file__)
 app.static_folder = os.path.join(this_dir, '../client/dist/static')
 
 @app.route('/')
 def index():
+    print("> api.index")
     return send_file(os.path.join(this_dir, '../client/dist/index.html'))
-
-
-# Route to load files saved on the server from uploads
-
-@app.route('/file/<path:path>', methods=['GET'])
-def get_file(path):
-    save_dir = os.path.abspath(current_app.config['SAVE_FOLDER'])
-    return send_from_directory(save_dir, path)
 
 
 # http://reputablejournal.com/adventures-with-flask-cors.html#.WW6-INOGMm8
